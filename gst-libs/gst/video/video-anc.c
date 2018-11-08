@@ -84,40 +84,60 @@ gst_video_vbi_parser_copy (const GstVideoVBIParser * parser)
   return res;
 }
 
-/* Smallest ANC size (which would have a size Data Count of 0 though) */
-#define SMALLEST_ANC_SIZE 7
-
+/* See SMPTE S291 */
 static GstVideoVBIParserResult
 get_ancillary_16 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
 {
   gboolean found = FALSE;
-  guint16 *data = (guint16 *) parser->work_data;
+  const guint16 *data = (const guint16 *) parser->work_data;
 
   g_return_val_if_fail (parser != NULL, GST_VIDEO_VBI_PARSER_RESULT_ERROR);
   g_return_val_if_fail (anc != NULL, GST_VIDEO_VBI_PARSER_RESULT_ERROR);
 
-  while (parser->offset + SMALLEST_ANC_SIZE < parser->work_data_size) {
+  /* 3 words are needed at least to detect what kind of packet we look at
+   *
+   * - ADF (SMPTE S291 3.2.1) in case of component ancillary format:
+   *       0x000 0x3ff 0x3ff (followed by DID, SDID)
+   * - ADF (SMPTE S291 3.2.2) in case of composite ancillary format:
+   *       0x3fc DID   SDID
+   */
+  while (parser->offset + 3 < parser->work_data_size) {
     guint8 DID, SDID, DC;
-    guint i;
+    guint i = 0, j;
+    guint checksum = 0;
+    gboolean composite;
 
-    /* Look for ADF
-     * FIXME : This assumes 10bit data with parity ! */
-    if (data[parser->offset] != 0x000 ||
-        data[parser->offset + 1] != 0x3ff ||
-        data[parser->offset + 2] != 0x3ff) {
+    /* Look for ADF */
+    if (data[parser->offset] == 0x3fc) {
+      /* composite */
+      i += 1;
+      composite = TRUE;
+    } else if (data[parser->offset] == 0x000 &&
+        data[parser->offset + 1] == 0x3ff &&
+        data[parser->offset + 1] == 0x3ff) {
+      /* component */
+      i += 3;
+      composite = FALSE;
+    } else {
       parser->offset += 1;
       continue;
     }
 
-    /* FIXME : Add parity and checksum checks at some point if using
-     * 10bit data */
+    /* TODO: Might want to check parity bits here but the checksum in
+     * the end should really be enough */
+
+    /* 4 words: DID, SDID, DC, [DATA], checksum */
+    if (parser->offset + i + 4 >= parser->work_data_size)
+      goto not_enough_data;
 
     /* We have a valid ADF */
-    DID = data[parser->offset + 3] & 0xff;
-    SDID = data[parser->offset + 4] & 0xff;
-    DC = data[parser->offset + 5] & 0xff;
-    /* Check if we have enough room to get the User Data */
-    if (parser->offset + SMALLEST_ANC_SIZE + DC >= parser->work_data_size)
+    DID = data[parser->offset + i] & 0xff;
+    SDID = data[parser->offset + i + 1] & 0xff;
+    DC = data[parser->offset + i + 2] & 0xff;
+    i += 3;
+
+    /* Check if we have enough room to get the User Data and checksum */
+    if (parser->offset + i + DC + 1 >= parser->work_data_size)
       goto not_enough_data;
 
     /* We found a valid ANC \o/ */
@@ -125,10 +145,29 @@ get_ancillary_16 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
     anc->SDID_block_number = SDID;
     anc->data_count = DC;
     memset (anc->data, 0, 256);
-    for (i = 0; i < anc->data_count; i++)
-      anc->data[i] = data[parser->offset + 6 + i] & 0xff;
+
+    /* i is at the beginning of the user data now */
+    for (j = 0; j < anc->data_count; j++)
+      anc->data[j] = data[parser->offset + i + j] & 0xff;
+    i += DC;
+
+    /* Checksum calculation SMPTE S291 3.2.1 */
+    for (j = (composite ? 1 : 3); j < i; j++)
+      checksum += data[parser->offset + j] & 0x1ff;
+    checksum &= 0x1ff;
+    checksum |= (!(checksum >> 8)) << 9;
+
+    if (checksum != (data[parser->offset + i] & 0x3ff)) {
+      GST_WARNING ("ADF checksum mismatch: expected 0x%03x, got 0x%03x",
+          checksum, (data[parser->offset + i] & 0x3ff));
+      parser->offset += 1;
+      continue;
+    }
+
+    i += 1;
+
     found = TRUE;
-    parser->offset += SMALLEST_ANC_SIZE + DC;
+    parser->offset += i;
     break;
   }
 
@@ -140,39 +179,63 @@ get_ancillary_16 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
   /* ERRORS */
 not_enough_data:
   {
-    GST_WARNING ("ANC requires more User Data that available line size");
+    GST_WARNING ("ANC requires more User Data than available line size");
     /* Avoid further calls to go in the same error */
     parser->offset = parser->work_data_size;
     return GST_VIDEO_VBI_PARSER_RESULT_ERROR;
   }
 }
 
+/* See SMPTE S291 */
 static GstVideoVBIParserResult
 get_ancillary_8 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
 {
   gboolean found = FALSE;
-  guint8 *data = parser->work_data;
+  const guint8 *data = parser->work_data;
 
   g_return_val_if_fail (parser != NULL, GST_VIDEO_VBI_PARSER_RESULT_ERROR);
   g_return_val_if_fail (anc != NULL, GST_VIDEO_VBI_PARSER_RESULT_ERROR);
 
-  while (parser->offset + SMALLEST_ANC_SIZE < parser->work_data_size) {
+  /* 3 words are needed at least to detect what kind of packet we look at
+   *
+   * - ADF (SMPTE S291 3.2.1) in case of component ancillary format:
+   *       0x000 0x3ff 0x3ff (followed by DID, SDID)
+   * - ADF (SMPTE S291 3.2.2) in case of composite ancillary format:
+   *       0x3fc DID   SDID
+   */
+  while (parser->offset + 3 < parser->work_data_size) {
     guint8 DID, SDID, DC;
-    guint i;
+    guint i = 0, j;
+    gboolean composite;
+    guint checksum = 0;
 
-    /* Look for 8bit ADF (0x00 0xff 0xff) */
-    if (data[parser->offset] != 0x00 ||
-        data[parser->offset + 1] != 0xff || data[parser->offset + 2] != 0xff) {
+    /* Look for ADF */
+    if (data[parser->offset] == 0xfc) {
+      /* composite */
+      composite = TRUE;
+      i += 1;
+    } else if (data[parser->offset] == 0x00 &&
+        data[parser->offset + 1] == 0xff && data[parser->offset + 1] == 0xff) {
+      /* component */
+      composite = FALSE;
+      i += 3;
+    } else {
       parser->offset += 1;
       continue;
     }
 
+    /* 4 words: DID, SDID, DC, [DATA], checksum */
+    if (parser->offset + i + 4 >= parser->work_data_size)
+      goto not_enough_data;
+
     /* We have a valid ADF */
-    DID = data[parser->offset + 3];
-    SDID = data[parser->offset + 4];
-    DC = data[parser->offset + 5];
-    /* Check if we have enough room to get the User Data */
-    if (parser->offset + SMALLEST_ANC_SIZE + DC >= parser->work_data_size)
+    DID = data[parser->offset + i];
+    SDID = data[parser->offset + i + 1];
+    DC = data[parser->offset + i + 2];
+    i += 3;
+
+    /* Check if we have enough room to get the User Data and checksum */
+    if (parser->offset + i + DC + 1 >= parser->work_data_size)
       goto not_enough_data;
 
     /* We found a valid ANC \o/ */
@@ -180,10 +243,28 @@ get_ancillary_8 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
     anc->SDID_block_number = SDID;
     anc->data_count = DC;
     memset (anc->data, 0, 256);
-    for (i = 0; i < anc->data_count; i++)
-      anc->data[i] = data[parser->offset + 6 + i];
+
+    /* i is at the beginning of the user data now */
+    for (j = 0; j < anc->data_count; j++)
+      anc->data[j] = data[parser->offset + i + j] & 0xff;
+    i += DC;
+
+    /* Checksum calculation SMPTE S291 3.2.1 */
+    for (j = (composite ? 1 : 3); j < i; j++)
+      checksum += data[parser->offset + j];
+    checksum &= 0xff;
+
+    if (checksum != data[parser->offset + i]) {
+      GST_WARNING ("ADF checksum mismatch: expected 0x%02x, got 0x%02x",
+          checksum, data[parser->offset + i]);
+      parser->offset += 1;
+      continue;
+    }
+
+    i += 1;
+
     found = TRUE;
-    parser->offset += SMALLEST_ANC_SIZE + DC;
+    parser->offset += i;
     break;
   }
 
@@ -195,7 +276,7 @@ get_ancillary_8 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
   /* ERRORS */
 not_enough_data:
   {
-    GST_WARNING ("ANC requires more User Data that available line size");
+    GST_WARNING ("ANC requires more User Data than available line size");
     /* Avoid further calls to go in the same error */
     parser->offset = parser->work_data_size;
     return GST_VIDEO_VBI_PARSER_RESULT_ERROR;

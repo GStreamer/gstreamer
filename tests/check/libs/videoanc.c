@@ -54,6 +54,7 @@ GST_START_TEST (parse_8bit)
   line[38] = 0x60;
   line[40] = 0x70;
   line[42] = 0x80;
+  line[44] = 0xf9;              /* checksum */
 
   gst_video_vbi_parser_add_line (parser, line);
 
@@ -84,6 +85,7 @@ GST_START_TEST (parse_8bit)
   line[31] = 0x03;
   line[33] = 0x02;
   line[35] = 0x01;
+  line[37] = 0x75;              /* checksum */
 
   gst_video_vbi_parser_add_line (parser, line);
 
@@ -146,6 +148,7 @@ GST_START_TEST (parse_10bit)
   GST_WRITE_UINT32_LE (line + 44, (0x260 << 10));
 
   GST_WRITE_UINT32_LE (line + 48, (0x170 << 0) | (0x180 << 20));
+  GST_WRITE_UINT32_LE (line + 52, (0x2f9 << 10));
 
   gst_video_vbi_parser_add_line (parser, line);
 
@@ -174,9 +177,10 @@ GST_START_TEST (parse_10bit)
   GST_WRITE_UINT32_LE (line + 32, (0x101 << 0) | (0x102 << 20) | (0x104 << 10));
   GST_WRITE_UINT32_LE (line + 36, (0x203 << 10) | (0x203 << 0) | (0x102 << 20));
   GST_WRITE_UINT32_LE (line + 40, (0x104 << 0) | (0x250 << 20) | (0x101 << 10));
-  GST_WRITE_UINT32_LE (line + 44, (0x260 << 10));
+  GST_WRITE_UINT32_LE (line + 44, (0x275 << 0) | (0x260 << 10));
 
   GST_WRITE_UINT32_LE (line + 48, (0x170 << 0) | (0x180 << 20));
+  GST_WRITE_UINT32_LE (line + 52, (0x2f9 << 10));
 
   gst_video_vbi_parser_add_line (parser, line);
 
