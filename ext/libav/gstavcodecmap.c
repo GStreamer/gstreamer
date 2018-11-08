@@ -1014,6 +1014,12 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           NULL);
       break;
 
+    case AV_CODEC_ID_METASOUND:
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode,
+          "audio/x-voxware", NULL);
+      break;
+
     case AV_CODEC_ID_IMC:
       caps =
           gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-imc",
