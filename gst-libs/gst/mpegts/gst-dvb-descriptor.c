@@ -57,6 +57,18 @@
 #define BCD_28(a) (BCD_DEC(a[3]) + 10 * BCD(a[2]) + 1000 * BCD(a[1]) + 100000 * BCD(a[0]))
 #define BCD_32(a) (BCD(a[3]) + 100 * BCD(a[2]) + 10000 * BCD(a[1]) + 1000000 * BCD(a[0]))
 
+#define DEFINE_STATIC_COPY_FUNCTION(type, name) \
+static type * _##name##_copy (type * source) \
+{ \
+  return g_slice_dup (type, source); \
+}
+
+#define DEFINE_STATIC_FREE_FUNCTION(type, name) \
+static void _##name##_free (type * source) \
+{ \
+  g_slice_free (type, source); \
+}
+
 /* GST_MTS_DESC_DVB_NETWORK_NAME (0x40) */
 /**
  * gst_mpegts_descriptor_parse_dvb_network_name:
@@ -119,11 +131,17 @@ gst_mpegts_descriptor_from_dvb_network_name (const gchar * name)
 }
 
 /* GST_MTS_DESC_DVB_SERVICE_LIST (0x41) */
-static void
-_gst_mpegts_dvb_service_list_item_free (GstMpegtsDVBServiceListItem * item)
-{
-  g_slice_free (GstMpegtsDVBServiceListItem, item);
-}
+
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsDVBServiceListItem,
+    gst_mpegts_dvb_service_list_item);
+
+DEFINE_STATIC_FREE_FUNCTION (GstMpegtsDVBServiceListItem,
+    gst_mpegts_dvb_service_list_item);
+
+G_DEFINE_BOXED_TYPE (GstMpegtsDVBServiceListItem,
+    gst_mpegts_dvb_service_list_item,
+    (GBoxedCopyFunc) _gst_mpegts_dvb_service_list_item_copy,
+    (GFreeFunc) _gst_mpegts_dvb_service_list_item_free);
 
 /**
  * gst_mpegts_descriptor_parse_dvb_service_list:
@@ -192,6 +210,18 @@ gst_mpegts_descriptor_parse_dvb_stuffing (const GstMpegtsDescriptor *
 }
 
 /* GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM (0x43) */
+
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsSatelliteDeliverySystemDescriptor,
+    gst_mpegts_satellite_delivery_system_descriptor);
+
+DEFINE_STATIC_FREE_FUNCTION (GstMpegtsSatelliteDeliverySystemDescriptor,
+    gst_mpegts_satellite_delivery_system_descriptor);
+
+G_DEFINE_BOXED_TYPE (GstMpegtsSatelliteDeliverySystemDescriptor,
+    gst_mpegts_satellite_delivery_system_descriptor,
+    (GBoxedCopyFunc) _gst_mpegts_satellite_delivery_system_descriptor_copy,
+    (GFreeFunc) _gst_mpegts_satellite_delivery_system_descriptor_free);
+
 /**
  * gst_mpegts_descriptor_parse_satellite_delivery_system:
  * @descriptor: a %GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM #GstMpegtsDescriptor
@@ -294,16 +324,9 @@ gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegtsDescriptor
 }
 
 /* GST_MTS_DESC_DVB_CABLE_DELIVERY_SYSTEM (0x44) */
-static GstMpegtsCableDeliverySystemDescriptor
-    * _gst_mpegts_dvb_cable_delivery_system_descriptor_copy
-    (GstMpegtsCableDeliverySystemDescriptor * source)
-{
-  GstMpegtsCableDeliverySystemDescriptor *copy;
 
-  copy = g_slice_dup (GstMpegtsCableDeliverySystemDescriptor, source);
-
-  return copy;
-}
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsCableDeliverySystemDescriptor,
+    gst_mpegts_dvb_cable_delivery_system_descriptor);
 
 void gst_mpegts_dvb_cable_delivery_system_descriptor_free
     (GstMpegtsCableDeliverySystemDescriptor * source)
@@ -610,12 +633,38 @@ G_DEFINE_BOXED_TYPE (GstMpegtsDVBLinkageDescriptor,
     (GBoxedCopyFunc) _gst_mpegts_dvb_linkage_descriptor_copy,
     (GFreeFunc) gst_mpegts_dvb_linkage_descriptor_free);
 
-static void
-_gst_mpegts_dvb_linkage_extened_event_free (GstMpegtsDVBLinkageExtendedEvent *
-    item)
-{
-  g_slice_free (GstMpegtsDVBLinkageExtendedEvent, item);
-}
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsDVBLinkageMobileHandOver,
+    gst_mpegts_dvb_linkage_mobile_hand_over);
+
+DEFINE_STATIC_FREE_FUNCTION (GstMpegtsDVBLinkageMobileHandOver,
+    gst_mpegts_dvb_linkage_mobile_hand_over);
+
+G_DEFINE_BOXED_TYPE (GstMpegtsDVBLinkageMobileHandOver,
+    gst_mpegts_dvb_linkage_mobile_hand_over,
+    (GBoxedCopyFunc) _gst_mpegts_dvb_linkage_mobile_hand_over_copy,
+    (GFreeFunc) _gst_mpegts_dvb_linkage_mobile_hand_over_free);
+
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsDVBLinkageEvent,
+    gst_mpegts_dvb_linkage_event);
+
+DEFINE_STATIC_FREE_FUNCTION (GstMpegtsDVBLinkageEvent,
+    gst_mpegts_dvb_linkage_event);
+
+G_DEFINE_BOXED_TYPE (GstMpegtsDVBLinkageEvent,
+    gst_mpegts_dvb_linkage_event,
+    (GBoxedCopyFunc) _gst_mpegts_dvb_linkage_event_copy,
+    (GFreeFunc) _gst_mpegts_dvb_linkage_event_free);
+
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsDVBLinkageExtendedEvent,
+    gst_mpegts_dvb_linkage_extended_event);
+
+DEFINE_STATIC_FREE_FUNCTION (GstMpegtsDVBLinkageExtendedEvent,
+    gst_mpegts_dvb_linkage_extended_event);
+
+G_DEFINE_BOXED_TYPE (GstMpegtsDVBLinkageExtendedEvent,
+    gst_mpegts_dvb_linkage_extended_event,
+    (GBoxedCopyFunc) _gst_mpegts_dvb_linkage_extended_event_copy,
+    (GFreeFunc) _gst_mpegts_dvb_linkage_extended_event_free);
 
 /**
  * gst_mpegts_descriptor_parse_dvb_linkage:
@@ -709,7 +758,7 @@ gst_mpegts_descriptor_parse_dvb_linkage (const GstMpegtsDescriptor * descriptor,
     case GST_MPEGTS_DVB_LINKAGE_EXTENDED_EVENT:{
       GPtrArray *ext_events;
       ext_events = g_ptr_array_new_with_free_func ((GDestroyNotify)
-          _gst_mpegts_dvb_linkage_extened_event_free);
+          _gst_mpegts_dvb_linkage_extended_event_free);
 
       res->linkage_data = (gpointer) ext_events;
 
@@ -1065,6 +1114,16 @@ G_DEFINE_BOXED_TYPE (GstMpegtsExtendedEventDescriptor,
     (GBoxedCopyFunc) _gst_mpegts_extended_event_descriptor_copy,
     (GFreeFunc) gst_mpegts_extended_event_descriptor_free);
 
+static GstMpegtsExtendedEventItem *
+_gst_mpegts_extended_event_item_copy (GstMpegtsExtendedEventItem * source)
+{
+  GstMpegtsExtendedEventItem *copy =
+      g_slice_dup (GstMpegtsExtendedEventItem, source);
+  copy->item_description = g_strdup (source->item_description);
+  copy->item = g_strdup (source->item);
+  return copy;
+}
+
 static void
 _gst_mpegts_extended_event_item_free (GstMpegtsExtendedEventItem * item)
 {
@@ -1072,6 +1131,11 @@ _gst_mpegts_extended_event_item_free (GstMpegtsExtendedEventItem * item)
   g_free (item->item_description);
   g_slice_free (GstMpegtsExtendedEventItem, item);
 }
+
+G_DEFINE_BOXED_TYPE (GstMpegtsExtendedEventItem,
+    gst_mpegts_extended_event_item,
+    (GBoxedCopyFunc) _gst_mpegts_extended_event_item_copy,
+    (GFreeFunc) _gst_mpegts_extended_event_item_free);
 
 /**
  * gst_mpegts_descriptor_parse_dvb_extended_event:
@@ -1283,27 +1347,14 @@ gst_mpegts_descriptor_parse_dvb_ca_identifier (const GstMpegtsDescriptor *
 
 /* GST_MTS_DESC_DVB_CONTENT (0x54) */
 
-static GstMpegtsContent *
-_gst_mpegts_content_copy (GstMpegtsContent * source)
-{
-  GstMpegtsContent *copy;
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsContent, gst_mpegts_content);
 
-  copy = g_slice_dup (GstMpegtsContent, source);
-
-  return copy;
-}
-
-static void
-_gst_mpegts_content_free (GstMpegtsContent * content)
-{
-  g_slice_free (GstMpegtsContent, content);
-}
+DEFINE_STATIC_FREE_FUNCTION (GstMpegtsContent, gst_mpegts_content);
 
 G_DEFINE_BOXED_TYPE (GstMpegtsContent,
     gst_mpegts_content,
     (GBoxedCopyFunc) _gst_mpegts_content_copy,
     (GFreeFunc) _gst_mpegts_content_free);
-
 
 /**
  * gst_mpegts_descriptor_parse_dvb_content:
@@ -1346,6 +1397,17 @@ gst_mpegts_descriptor_parse_dvb_content (const GstMpegtsDescriptor
 }
 
 /* GST_MTS_DESC_DVB_PARENTAL_RATING (0x55) */
+
+static GstMpegtsDVBParentalRatingItem *
+_gst_mpegts_dvb_parental_rating_item_copy (GstMpegtsDVBParentalRatingItem *
+    source)
+{
+  GstMpegtsDVBParentalRatingItem *copy =
+      g_slice_dup (GstMpegtsDVBParentalRatingItem, source);
+  copy->country_code = g_strdup (source->country_code);
+  return copy;
+}
+
 static void
 _gst_mpegts_dvb_parental_rating_item_free (GstMpegtsDVBParentalRatingItem *
     item)
@@ -1353,6 +1415,11 @@ _gst_mpegts_dvb_parental_rating_item_free (GstMpegtsDVBParentalRatingItem *
   g_free (item->country_code);
   g_slice_free (GstMpegtsDVBParentalRatingItem, item);
 }
+
+G_DEFINE_BOXED_TYPE (GstMpegtsDVBParentalRatingItem,
+    gst_mpegts_dvb_parental_rating_item,
+    (GBoxedCopyFunc) _gst_mpegts_dvb_parental_rating_item_copy,
+    (GFreeFunc) _gst_mpegts_dvb_parental_rating_item_free);
 
 /**
  * gst_mpegts_descriptor_parse_dvb_parental_rating:
@@ -1424,6 +1491,19 @@ gst_mpegts_descriptor_parse_dvb_parental_rating (const GstMpegtsDescriptor
 }
 
 /* GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM (0x5A) */
+
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsTerrestrialDeliverySystemDescriptor,
+    gst_mpegts_terrestrial_delivery_system_descriptor);
+
+DEFINE_STATIC_FREE_FUNCTION (GstMpegtsTerrestrialDeliverySystemDescriptor,
+    gst_mpegts_terrestrial_delivery_system_descriptor);
+
+G_DEFINE_BOXED_TYPE (GstMpegtsTerrestrialDeliverySystemDescriptor,
+    gst_mpegts_terrestrial_delivery_system_descriptor,
+    (GBoxedCopyFunc) _gst_mpegts_terrestrial_delivery_system_descriptor_copy,
+    (GFreeFunc) _gst_mpegts_terrestrial_delivery_system_descriptor_free);
+
+
 /**
  * gst_mpegts_descriptor_parse_terrestrial_delivery_system:
  * @descriptor: a %GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM #GstMpegtsDescriptor
@@ -1600,6 +1680,18 @@ gst_mpegts_descriptor_parse_terrestrial_delivery_system (const
 }
 
 /* GST_MTS_DESC_DVB_MULTILINGUAL_NETWORK_NAME (0x5B) */
+
+static GstMpegtsDvbMultilingualNetworkNameItem
+    * _gst_mpegts_dvb_multilingual_network_name_item_copy
+    (GstMpegtsDvbMultilingualNetworkNameItem * source)
+{
+  GstMpegtsDvbMultilingualNetworkNameItem *copy =
+      g_slice_dup (GstMpegtsDvbMultilingualNetworkNameItem, source);
+  copy->language_code = g_strdup (source->language_code);
+  copy->network_name = g_strdup (source->network_name);
+  return copy;
+}
+
 static void
     _gst_mpegts_dvb_multilingual_network_name_item_free
     (GstMpegtsDvbMultilingualNetworkNameItem * item)
@@ -1608,6 +1700,11 @@ static void
   g_free (item->language_code);
   g_slice_free (GstMpegtsDvbMultilingualNetworkNameItem, item);
 }
+
+G_DEFINE_BOXED_TYPE (GstMpegtsDvbMultilingualNetworkNameItem,
+    gst_mpegts_dvb_multilingual_network_name_item,
+    (GBoxedCopyFunc) _gst_mpegts_dvb_multilingual_network_name_item_copy,
+    (GFreeFunc) _gst_mpegts_dvb_multilingual_network_name_item_free);
 
 /**
  * gst_mpegts_descriptor_parse_dvb_multilingual_network_name:
@@ -1655,6 +1752,18 @@ gst_mpegts_descriptor_parse_dvb_multilingual_network_name (const
 }
 
 /* GST_MTS_DESC_DVB_MULTILINGUAL_BOUQUET_NAME (0x5C) */
+
+static GstMpegtsDvbMultilingualBouquetNameItem
+    * _gst_mpegts_dvb_multilingual_bouquet_name_item_copy
+    (GstMpegtsDvbMultilingualBouquetNameItem * source)
+{
+  GstMpegtsDvbMultilingualBouquetNameItem *copy =
+      g_slice_dup (GstMpegtsDvbMultilingualBouquetNameItem, source);
+  copy->bouquet_name = g_strdup (source->bouquet_name);
+  copy->language_code = g_strdup (source->language_code);
+  return copy;
+}
+
 static void
     _gst_mpegts_dvb_multilingual_bouquet_name_item_free
     (GstMpegtsDvbMultilingualBouquetNameItem * item)
@@ -1663,6 +1772,11 @@ static void
   g_free (item->bouquet_name);
   g_slice_free (GstMpegtsDvbMultilingualBouquetNameItem, item);
 }
+
+G_DEFINE_BOXED_TYPE (GstMpegtsDvbMultilingualBouquetNameItem,
+    gst_mpegts_dvb_multilingual_bouquet_name_item,
+    (GBoxedCopyFunc) _gst_mpegts_dvb_multilingual_bouquet_name_item_copy,
+    (GFreeFunc) _gst_mpegts_dvb_multilingual_bouquet_name_item_free);
 
 /**
  * gst_mpegts_descriptor_parse_dvb_multilingual_bouquet_name:
@@ -1710,6 +1824,19 @@ gst_mpegts_descriptor_parse_dvb_multilingual_bouquet_name (const
 }
 
 /* GST_MTS_DESC_DVB_MULTILINGUAL_SERVICE_NAME (0x5D) */
+
+static GstMpegtsDvbMultilingualServiceNameItem
+    * _gst_mpegts_dvb_multilingual_service_name_item_copy
+    (GstMpegtsDvbMultilingualServiceNameItem * source)
+{
+  GstMpegtsDvbMultilingualServiceNameItem *copy =
+      g_slice_dup (GstMpegtsDvbMultilingualServiceNameItem, source);
+  copy->language_code = g_strdup (source->language_code);
+  copy->service_name = g_strdup (source->service_name);
+  copy->provider_name = g_strdup (source->provider_name);
+  return copy;
+}
+
 static void
     _gst_mpegts_dvb_multilingual_service_name_item_free
     (GstMpegtsDvbMultilingualServiceNameItem * item)
@@ -1719,6 +1846,11 @@ static void
   g_free (item->language_code);
   g_slice_free (GstMpegtsDvbMultilingualServiceNameItem, item);
 }
+
+G_DEFINE_BOXED_TYPE (GstMpegtsDvbMultilingualServiceNameItem,
+    gst_mpegts_dvb_multilingual_service_name_item,
+    (GBoxedCopyFunc) _gst_mpegts_dvb_multilingual_service_name_item_copy,
+    (GFreeFunc) _gst_mpegts_dvb_multilingual_service_name_item_free);
 
 /**
  * gst_mpegts_descriptor_parse_dvb_multilingual_service_name:
@@ -1772,6 +1904,18 @@ gst_mpegts_descriptor_parse_dvb_multilingual_service_name (const
 }
 
 /* GST_MTS_DESC_DVB_MULTILINGUAL_COMPONENT (0x5E) */
+
+static GstMpegtsDvbMultilingualComponentItem
+    * _gst_mpegts_dvb_multilingual_component_item_copy
+    (GstMpegtsDvbMultilingualComponentItem * source)
+{
+  GstMpegtsDvbMultilingualComponentItem *copy =
+      g_slice_dup (GstMpegtsDvbMultilingualComponentItem, source);
+  copy->description = g_strdup (source->description);
+  copy->language_code = g_strdup (source->language_code);
+  return copy;
+}
+
 static void
     _gst_mpegts_dvb_multilingual_component_item_free
     (GstMpegtsDvbMultilingualComponentItem * item)
@@ -1780,6 +1924,11 @@ static void
   g_free (item->description);
   g_slice_free (GstMpegtsDvbMultilingualComponentItem, item);
 }
+
+G_DEFINE_BOXED_TYPE (GstMpegtsDvbMultilingualComponentItem,
+    gst_mpegts_dvb_multilingual_component_item,
+    (GBoxedCopyFunc) _gst_mpegts_dvb_multilingual_component_item_copy,
+    (GFreeFunc) _gst_mpegts_dvb_multilingual_component_item_free);
 
 /**
  * gst_mpegts_descriptor_parse_dvb_multilingual_component:
@@ -2101,11 +2250,26 @@ G_DEFINE_BOXED_TYPE (GstMpegtsT2DeliverySystemDescriptor,
     (GBoxedCopyFunc) _gst_mpegts_t2_delivery_system_descriptor_copy,
     (GFreeFunc) gst_mpegts_t2_delivery_system_descriptor_free);
 
-static void
-    _gst_mpegts_t2_delivery_system_cell_extension_free
-    (GstMpegtsT2DeliverySystemCellExtension * ext)
+DEFINE_STATIC_COPY_FUNCTION (GstMpegtsT2DeliverySystemCellExtension,
+    gst_mpegts_t2_delivery_system_cell_extension);
+
+DEFINE_STATIC_FREE_FUNCTION (GstMpegtsT2DeliverySystemCellExtension,
+    gst_mpegts_t2_delivery_system_cell_extension);
+
+G_DEFINE_BOXED_TYPE (GstMpegtsT2DeliverySystemCellExtension,
+    gst_mpegts_t2_delivery_system_cell_extension,
+    (GBoxedCopyFunc) _gst_mpegts_t2_delivery_system_cell_extension_copy,
+    (GFreeFunc) _gst_mpegts_t2_delivery_system_cell_extension_free);
+
+static GstMpegtsT2DeliverySystemCell *
+_gst_mpegts_t2_delivery_system_cell_copy (GstMpegtsT2DeliverySystemCell
+    * source)
 {
-  g_slice_free (GstMpegtsT2DeliverySystemCellExtension, ext);
+  GstMpegtsT2DeliverySystemCell *copy =
+      g_slice_dup (GstMpegtsT2DeliverySystemCell, source);
+  copy->centre_frequencies = g_array_ref (source->centre_frequencies);
+  copy->sub_cells = g_ptr_array_ref (source->sub_cells);
+  return copy;
 }
 
 static void
@@ -2115,6 +2279,11 @@ _gst_mpegts_t2_delivery_system_cell_free (GstMpegtsT2DeliverySystemCell * cell)
   g_array_unref (cell->centre_frequencies);
   g_slice_free (GstMpegtsT2DeliverySystemCell, cell);
 }
+
+G_DEFINE_BOXED_TYPE (GstMpegtsT2DeliverySystemCell,
+    gst_mpegts_t2_delivery_system_cell,
+    (GBoxedCopyFunc) _gst_mpegts_t2_delivery_system_cell_copy,
+    (GFreeFunc) _gst_mpegts_t2_delivery_system_cell_free);
 
 /**
  * gst_mpegts_descriptor_parse_dvb_t2_delivery_system:
