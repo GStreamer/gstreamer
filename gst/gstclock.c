@@ -167,6 +167,14 @@ struct _GstClockPrivate
   gboolean synced;
 };
 
+typedef struct
+{
+  GstClockEntry entry;
+  GWeakRef clock;
+} GstClockEntryImpl;
+
+#define GST_CLOCK_ENTRY_CLOCK_WEAK_REF(entry) (&((GstClockEntryImpl *)(entry))->clock)
+
 /* seqlocks */
 #define read_seqbegin(clock)                                   \
   g_atomic_int_get (&clock->priv->post_count);
@@ -241,7 +249,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 {
   GstClockEntry *entry;
 
-  entry = g_slice_new (GstClockEntry);
+  entry = (GstClockEntry *) g_slice_new (GstClockEntryImpl);
 
   /* FIXME: add tracer hook for struct allocations such as clock entries */
 
@@ -256,7 +264,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
   entry->_clock = clock;
 #endif
 #endif
-  g_weak_ref_init (&entry->ABI.abi.clock, clock);
+  g_weak_ref_init (GST_CLOCK_ENTRY_CLOCK_WEAK_REF (entry), clock);
   entry->type = type;
   entry->time = time;
   entry->interval = interval;
@@ -362,11 +370,11 @@ _gst_clock_id_free (GstClockID id)
   if (entry->destroy_data)
     entry->destroy_data (entry->user_data);
 
-  g_weak_ref_clear (&entry->ABI.abi.clock);
+  g_weak_ref_clear (GST_CLOCK_ENTRY_CLOCK_WEAK_REF (entry));
 
   /* FIXME: add tracer hook for struct allocations such as clock entries */
 
-  g_slice_free (GstClockEntry, id);
+  g_slice_free (GstClockEntryImpl, (GstClockEntryImpl *) id);
 }
 
 /**
@@ -536,7 +544,7 @@ gst_clock_id_wait (GstClockID id, GstClockTimeDiff * jitter)
   entry = (GstClockEntry *) id;
   requested = GST_CLOCK_ENTRY_TIME (entry);
 
-  clock = g_weak_ref_get (&entry->ABI.abi.clock);
+  clock = g_weak_ref_get (GST_CLOCK_ENTRY_CLOCK_WEAK_REF (entry));
   if (G_UNLIKELY (clock == NULL))
     goto invalid_entry;
 
@@ -620,7 +628,7 @@ gst_clock_id_wait_async (GstClockID id,
 
   entry = (GstClockEntry *) id;
   requested = GST_CLOCK_ENTRY_TIME (entry);
-  clock = g_weak_ref_get (&entry->ABI.abi.clock);
+  clock = g_weak_ref_get (GST_CLOCK_ENTRY_CLOCK_WEAK_REF (entry));
   if (G_UNLIKELY (clock == NULL))
     goto invalid_entry;
 
@@ -685,7 +693,7 @@ gst_clock_id_unschedule (GstClockID id)
   g_return_if_fail (id != NULL);
 
   entry = (GstClockEntry *) id;
-  clock = g_weak_ref_get (&entry->ABI.abi.clock);
+  clock = g_weak_ref_get (GST_CLOCK_ENTRY_CLOCK_WEAK_REF (entry));
   if (G_UNLIKELY (clock == NULL))
     goto invalid_entry;
 
@@ -1400,7 +1408,7 @@ gst_clock_id_get_clock (GstClockID id)
   g_return_val_if_fail (id != NULL, NULL);
 
   entry = (GstClockEntry *) id;
-  return g_weak_ref_get (&entry->ABI.abi.clock);
+  return g_weak_ref_get (GST_CLOCK_ENTRY_CLOCK_WEAK_REF (entry));
 }
 
 /**
@@ -1430,7 +1438,7 @@ gst_clock_id_uses_clock (GstClockID id, GstClock * clock)
   g_return_val_if_fail (clock != NULL, FALSE);
 
   entry = (GstClockEntry *) id;
-  entry_clock = g_weak_ref_get (&entry->ABI.abi.clock);
+  entry_clock = g_weak_ref_get (GST_CLOCK_ENTRY_CLOCK_WEAK_REF (entry));
   if (entry_clock == clock)
     ret = TRUE;
 

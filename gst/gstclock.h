@@ -410,12 +410,7 @@ struct _GstClockEntry {
   gboolean               woken_up;
 
   /*< private >*/
-  union {
-    gpointer _gst_reserved[GST_PADDING];
-    struct {
-      GWeakRef clock;
-    } abi;
-  } ABI;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 #include <gst/gstobject.h>
