@@ -1,0 +1,69 @@
+stages:
+  - "manifest"
+  - "build"
+
+variables:
+  GIT_STRATEGY: none
+
+manifest:
+  image: "fedora"
+  stage: "manifest"
+  script:
+    - dnf install -y python3-requests
+    - curl -o build_manifest.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/master/gitlab/build_manifest.py
+    - python3 build_manifest.py
+    - cat manifest.xml
+  artifacts:
+    expire_in: "2 days"
+    paths:
+      - "manifest.xml"
+
+.build:
+  stage: "build"
+  dependencies:
+    - "manifest"
+  variables:
+    CC: "ccache gcc"
+    CXX: "ccache g++"
+    CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
+    CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
+    MAIN_DIR: '${CI_PROJECT_DIR}'
+    MESON_ARGS: >
+      -Dpython=enabled
+      -Dlibav=enabled
+      -Dugly=enabled
+      -Dbad=enabled
+      -Ddevtools=enabled
+      -Dges=enabled
+      -Drtsp_server=enabled
+      -Dvaapi=disabled
+      -Dsharp=disabled
+
+  script:
+    # Not sure why, but permission errors else
+    # https://gitlab.freedesktop.org/alatiera/gstreamer/-/jobs/41441
+    - cp -r /gst-build/ . && cd gst-build
+    - ./git-update --no-interaction --manifest="${CI_PROJECT_DIR}/manifest.xml"
+    - meson build/ $MESON_ARGS
+    - ninja -C build/
+  after_script:
+    - cd gst-build/
+    # Clean the artifacts packages to avoid copying "useless" build products.
+    - rm $(find build -name "*.o") $(find -name "*.a")
+    # Clean the .git repos since we won't need them anymore
+    - rm -rf subprojects/*/.git/
+    - rm -rf build/subprojects/*/.git/
+  cache:
+    paths:
+      - "${CCACHE_DIR}"
+  artifacts:
+    expire_in: 6hours
+    when: always
+    paths:
+      - "manifest.xml"
+      - "gst-build/"
+
+build fedora x86_64:
+  extends: .build
+  image: "registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora-build:9e0abc3c3be3cf09d0f2272710439b41fbbafdaf"
+
