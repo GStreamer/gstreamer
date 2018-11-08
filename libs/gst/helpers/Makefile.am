@@ -32,9 +32,14 @@ endif
 
 EXTRA_DIST = ptp_helper_post_install.sh
 
+DISTCLEANFILES = libgstreamer-gdb.py
+
 # install gdb scripts
 gdbdir = $(datadir)/gstreamer-@GST_API_VERSION@/gdb
 dist_gdb_DATA = gst_gdb.py glib_gobject_helper.py
 
 install-data-hook:
 	$(INSTALL) -D $(builddir)/libgstreamer-gdb.py $(DESTDIR)$(datadir)/gdb/auto-load$(libdir)/libgstreamer-@GST_API_VERSION@.so.0.$(GST_CURRENT).$(GST_REVISION)-gdb.py
+
+uninstall-hook:
+	rm -f "$(DESTDIR)$(datadir)/gdb/auto-load$(libdir)/libgstreamer-@GST_API_VERSION@.so.0.$(GST_CURRENT).$(GST_REVISION)-gdb.py"
