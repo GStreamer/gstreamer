@@ -2,8 +2,12 @@ stages:
   - test
   - "build runtime"
   - "build base"
+  - "manifest"
+  - "build"
 
 test manifest:
+  variables:
+    GIT_STRATEGY: fetch
   image: "fedora"
   stage: "test"
   before_script:
@@ -24,6 +28,7 @@ test manifest:
     # When using dind, it's wise to use the overlayfs driver for
     # improved performance.
     DOCKER_DRIVER: "overlay2"
+    GIT_STRATEGY: fetch
   script:
     - export IMAGE="${CI_REGISTRY_IMAGE}/${ARCH}/${TAG}"
     - export REF="${IMAGE}:${CI_COMMIT_SHA}"
@@ -46,7 +51,7 @@ test manifest:
       - "docker/*/**"
 
 
-fedora amd64 run:
+fedora amd64 run docker:
   stage: "build runtime"
   variables:
     ARCH: "amd64"
@@ -55,7 +60,7 @@ fedora amd64 run:
     DOCKERFILE: "docker/runtime-images/Dockerfile-fedora"
   extends: .base
 
-fedora amd64 build:
+fedora amd64 build docker:
   stage: "build base"
   variables:
     ARCH: "amd64"
@@ -64,3 +69,4 @@ fedora amd64 build:
     DOCKERFILE: "docker/build-base-images/Dockerfile-fedora"
   extends: .base
 
+include: "gitlab/ci_template.yml"
