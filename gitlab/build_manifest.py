@@ -32,8 +32,7 @@ GSTREAMER_MODULES: List[Tuple[str, int]] = [
 MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 <manifest>
   <remote fetch="{}" name="user"/>
-  <remote fetch="https://gitlab.freedesktop.org/gstreamer/" name="gstreamer"/>
-  <remote fetch="git://anongit.freedesktop.org/gstreamer/" name="origin"/>
+  <remote fetch="https://gitlab.freedesktop.org/gstreamer/" name="origin"/>
 {}
 </manifest>"""
 
@@ -201,14 +200,14 @@ def find_repository_sha(module: Tuple[str, int], branchname: str) -> Tuple[str, 
     if branch is not None:
         print("Found mathcing branch in upstream project")
         print(f"gstreamer/{branchname}")
-        return 'gstreamer', branch['commit']['id']
+        return 'origin', branch['commit']['id']
 
     # Fallback to using upstream master branch
     branch = get_project_branch(module[1], 'master')
     if branch is not None:
         print("Falling back to master branch on upstream project")
         print(f"gstreamer/master")
-        return 'gstreamer', branch['commit']['id']
+        return 'origin', branch['commit']['id']
 
     # This should never occur given the upstream fallback above
     print("If something reaches that point, please file a bug")
@@ -229,11 +228,11 @@ def test_find_repository_sha():
 
     # This should fallback to upstream master branch since no matching branch was found
     remote, git_ref = find_repository_sha(("gst-plugins-good", 1353), "totally-valid-branch-name")
-    assert remote == "gstreamer"
+    assert remote == "origin"
 
     # This should fallback to upstream master branch since no repository was found
     remote, git_ref = find_repository_sha(("totally-valid-project-name", 42), "1.2")
-    assert remote == "gstreamer"
+    assert remote == "origin"
     # This is now the sha of the last commit
     # assert git_ref == "master"
 
