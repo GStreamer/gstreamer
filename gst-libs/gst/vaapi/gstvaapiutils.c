@@ -331,6 +331,14 @@ string_of_va_chroma_format (guint chroma_format)
 #if VA_CHECK_VERSION(0,38,1)
       MAP (YUV420_10BPP);
 #endif
+#if VA_CHECK_VERSION(1,2,0)
+      MAP (YUV422_10);
+      MAP (YUV444_10);
+      MAP (YUV420_12);
+      MAP (YUV422_12);
+      MAP (YUV444_12);
+      MAP (RGB32_10);
+#endif
 #undef MAP
     default:
       break;
@@ -401,6 +409,9 @@ to_GstVaapiChromaType (guint va_rt_format)
     case VA_RT_FORMAT_RGB16:
       chroma_type = GST_VAAPI_CHROMA_TYPE_RGB16;
       break;
+    case VA_RT_FORMAT_RGBP:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_RGBP;
+      break;
 #endif
 #if VA_CHECK_VERSION(0,38,1)
     case VA_RT_FORMAT_YUV420_10BPP:
@@ -410,6 +421,21 @@ to_GstVaapiChromaType (guint va_rt_format)
 #if VA_CHECK_VERSION(1,2,0)
     case VA_RT_FORMAT_YUV422_10:
       chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_10BPP;
+      break;
+    case VA_RT_FORMAT_YUV444_10:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444_10BPP;
+      break;
+    case VA_RT_FORMAT_YUV420_12:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_12BPP;
+      break;
+    case VA_RT_FORMAT_YUV422_12:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_12BPP;
+      break;
+    case VA_RT_FORMAT_YUV444_12:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444_12BPP;
+      break;
+    case VA_RT_FORMAT_RGB32_10:
+      chroma_type = GST_VAAPI_CHROMA_TYPE_RGB32_10BPP;
       break;
 #endif
     default:
@@ -454,6 +480,9 @@ from_GstVaapiChromaType (guint chroma_type)
     case GST_VAAPI_CHROMA_TYPE_RGB16:
       format = VA_RT_FORMAT_RGB16;
       break;
+    case GST_VAAPI_CHROMA_TYPE_RGBP:
+      format = VA_RT_FORMAT_RGBP;
+      break;
 #endif
 #if VA_CHECK_VERSION(0,38,1)
     case GST_VAAPI_CHROMA_TYPE_YUV420_10BPP:
@@ -463,6 +492,21 @@ from_GstVaapiChromaType (guint chroma_type)
 #if VA_CHECK_VERSION(1,2,0)
     case GST_VAAPI_CHROMA_TYPE_YUV422_10BPP:
       format = VA_RT_FORMAT_YUV422_10;
+      break;
+    case GST_VAAPI_CHROMA_TYPE_YUV444_10BPP:
+      format = VA_RT_FORMAT_YUV444_10;
+      break;
+    case GST_VAAPI_CHROMA_TYPE_YUV420_12BPP:
+      format = VA_RT_FORMAT_YUV420_12;
+      break;
+    case GST_VAAPI_CHROMA_TYPE_YUV422_12BPP:
+      format = VA_RT_FORMAT_YUV422_12;
+      break;
+    case GST_VAAPI_CHROMA_TYPE_YUV444_12BPP:
+      format = VA_RT_FORMAT_YUV444_12;
+      break;
+    case GST_VAAPI_CHROMA_TYPE_RGB32_10BPP:
+      format = VA_RT_FORMAT_RGB32_10;
       break;
 #endif
     default:
