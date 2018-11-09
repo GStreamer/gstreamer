@@ -1752,6 +1752,8 @@ redirect_stdout (void)
   } else {
     close (pipefd[0]);
     dup2 (pipefd[1], STDOUT_FILENO);
+    if (isatty (STDERR_FILENO))
+      dup2 (pipefd[1], STDERR_FILENO);
     close (pipefd[1]);
     close (STDIN_FILENO);
   }
@@ -1952,8 +1954,10 @@ main (int argc, char *argv[])
 
 #ifdef G_OS_UNIX
   fflush (stdout);
+  fflush (stderr);
   /* So that the pipe we create in redirect_stdout() is closed */
   close (STDOUT_FILENO);
+  close (STDERR_FILENO);
   wait (NULL);
 #endif
 
