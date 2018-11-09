@@ -146,6 +146,13 @@ get_ancillary_16 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
     anc->data_count = DC;
     memset (anc->data, 0, 256);
 
+    /* FIXME: We assume here the same data format for the user data as for the
+     * DID/SDID: 10 bits with parity in the upper 2 bits. In theory some
+     * standards could define this differently and even have full 10 bits of
+     * user data but there does not seem to be a single such standard after
+     * all these years.
+     */
+
     /* i is at the beginning of the user data now */
     for (j = 0; j < anc->data_count; j++)
       anc->data[j] = data[parser->offset + i + j] & 0xff;
