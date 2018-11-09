@@ -353,7 +353,8 @@ gst_egl_image_from_texture (GstGLContext * context, GstGLMemory * gl_mem,
  * target.
  */
 static int
-_drm_rgba_fourcc_from_info (GstVideoInfo * info, int plane)
+_drm_rgba_fourcc_from_info (GstVideoInfo * info, int plane,
+    GstGLFormat * out_format)
 {
   GstVideoFormat format = GST_VIDEO_INFO_FORMAT (info);
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -372,10 +373,12 @@ _drm_rgba_fourcc_from_info (GstVideoInfo * info, int plane)
   switch (format) {
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
+      *out_format = GST_GL_RGB565;
       return DRM_FORMAT_RGB565;
 
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
+      *out_format = GST_GL_RGB;
       return rgb_fourcc;
 
     case GST_VIDEO_FORMAT_RGBA:
@@ -387,19 +390,23 @@ _drm_rgba_fourcc_from_info (GstVideoInfo * info, int plane)
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_AYUV:
+      *out_format = GST_GL_RGBA;
       return rgba_fourcc;
 
     case GST_VIDEO_FORMAT_GRAY8:
+      *out_format = GST_GL_RED;
       return DRM_FORMAT_R8;
 
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_GRAY16_BE:
+      *out_format = GST_GL_RG;
       return rg_fourcc;
 
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
+      *out_format = plane == 0 ? GST_GL_RED : GST_GL_RG;
       return plane == 0 ? DRM_FORMAT_R8 : rg_fourcc;
 
     case GST_VIDEO_FORMAT_I420:
@@ -407,6 +414,7 @@ _drm_rgba_fourcc_from_info (GstVideoInfo * info, int plane)
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y444:
+      *out_format = GST_GL_RED;
       return DRM_FORMAT_R8;
 
     default:
@@ -437,16 +445,14 @@ GstEGLImage *
 gst_egl_image_from_dmabuf (GstGLContext * context,
     gint dmabuf, GstVideoInfo * in_info, gint plane, gsize offset)
 {
-  GstGLFormat format;
+  GstGLFormat format = 0;
   guintptr attribs[13];
   EGLImageKHR img;
   gint atti = 0;
   gint fourcc;
   gint i;
 
-  fourcc = _drm_rgba_fourcc_from_info (in_info, plane);
-  format = gst_gl_format_from_video_info (context, in_info, plane);
-
+  fourcc = _drm_rgba_fourcc_from_info (in_info, plane, &format);
   GST_DEBUG ("fourcc %.4s (%d) plane %d (%dx%d)",
       (char *) &fourcc, fourcc, plane,
       GST_VIDEO_INFO_COMP_WIDTH (in_info, plane),
