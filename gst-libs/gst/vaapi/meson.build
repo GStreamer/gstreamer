@@ -202,7 +202,8 @@ gstlibvaapi_deps = [ gstbase_dep,
                      gstvideo_dep,
                      gstgl_dep,
                      gstcodecparsers_dep,
-                     libva_dep ]
+                     libva_dep,
+                     libm ]
 if USE_DRM
   gstlibvaapi_deps  += [libva_drm_dep, libdrm_dep, libudev_dep]
 endif
