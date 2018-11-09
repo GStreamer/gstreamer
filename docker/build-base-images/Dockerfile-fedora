@@ -1,4 +1,4 @@
-FROM registry.freedesktop.org/thiblahute/gst-ci/amd64/fedora-runtime
+FROM registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora-runtime
 # Add rpmfusion repositories and install all build dependencies of GStreamer
 RUN dnf builddep -y \
         gstreamer1 \
