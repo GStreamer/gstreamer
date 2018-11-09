@@ -69,9 +69,6 @@ void gst_avdtp_connection_set_device (GstAvdtpConnection * conn,
     const char *device);
 void gst_avdtp_connection_set_transport (GstAvdtpConnection * conn,
     const char *transport);
-guint gst_avdtp_connection_get_volume (GstAvdtpConnection * conn);
-void gst_avdtp_connection_set_volume (GstAvdtpConnection * conn,
-    guint16 volume);
 void gst_avdtp_connection_notify_volume (GstAvdtpConnection * conn,
     GObject * target, const gchar * property);
 gboolean gst_avdtp_connection_conf_recv_stream_fd (GstAvdtpConnection * conn);

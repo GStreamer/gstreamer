@@ -722,22 +722,6 @@ gst_avdtp_connection_get_caps (GstAvdtpConnection * conn)
   return caps;
 }
 
-guint
-gst_avdtp_connection_get_volume (GstAvdtpConnection * conn)
-{
-  if (conn->data.is_acquired)
-    return bluez_media_transport1_get_volume (conn->data.conn);
-  else
-    return 127;
-}
-
-void
-gst_avdtp_connection_set_volume (GstAvdtpConnection * conn, guint16 volume)
-{
-  if (conn->data.is_acquired)
-    bluez_media_transport1_set_volume (conn->data.conn, volume);
-}
-
 void
 gst_avdtp_connection_notify_volume (GstAvdtpConnection * conn,
     GObject * target, const gchar * property)
