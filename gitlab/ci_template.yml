@@ -61,7 +61,7 @@ manifest:
     when: always
     paths:
       - "manifest.xml"
-      - "gst-build/"
+      # - "gst-build/"
 
 build fedora x86_64:
   extends: .build
