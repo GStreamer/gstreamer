@@ -488,6 +488,7 @@ struct DmabufUpload
   GstGLUpload *upload;
 
   GstEGLImage *eglimage[GST_VIDEO_MAX_PLANES];
+  GstGLFormat formats[GST_VIDEO_MAX_PLANES];
   GstBuffer *outbuf;
   GstGLVideoAllocationParams *params;
   guint n_mem;
@@ -719,6 +720,7 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
       return FALSE;
 
     _set_cached_eglimage (mems[i], dmabuf->eglimage[i], cache_id);
+    dmabuf->formats[i] = dmabuf->eglimage[i]->format;
   }
 
   return TRUE;
@@ -743,8 +745,8 @@ _dma_buf_upload_perform_gl_thread (GstGLContext * context,
 
   /* FIXME: buffer pool */
   dmabuf->outbuf = gst_buffer_new ();
-  gst_gl_memory_setup_buffer (allocator, dmabuf->outbuf, dmabuf->params, NULL,
-      (gpointer *) dmabuf->eglimage, dmabuf->n_mem);
+  gst_gl_memory_setup_buffer (allocator, dmabuf->outbuf, dmabuf->params,
+      dmabuf->formats, (gpointer *) dmabuf->eglimage, dmabuf->n_mem);
   gst_object_unref (allocator);
 }
 
