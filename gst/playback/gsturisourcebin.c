@@ -1003,15 +1003,13 @@ update_queue_values (GstURISourceBin * urisrc)
 
   for (cur = urisrc->out_slots; cur != NULL; cur = g_slist_next (cur)) {
     OutputSlotInfo *slot = (OutputSlotInfo *) (cur->data);
-    guint64 bitrate;
     guint byte_limit;
 
-    if (cumulative_bitrate > 0) {
-      if (g_object_class_find_property (G_OBJECT_GET_CLASS (slot->queue),
-              "bitrate")) {
-        g_object_get (G_OBJECT (slot->queue), "bitrate", &bitrate, NULL);
-      }
-
+    if (cumulative_bitrate > 0
+        && g_object_class_find_property (G_OBJECT_GET_CLASS (slot->queue),
+            "bitrate")) {
+      guint64 bitrate;
+      g_object_get (G_OBJECT (slot->queue), "bitrate", &bitrate, NULL);
       byte_limit =
           gst_util_uint64_scale (buffer_size, bitrate, cumulative_bitrate);
     } else {
