@@ -418,14 +418,10 @@ if need_platform_egl != 'no'
     egl_dep = cc.find_library('EGL', required : false)
   endif
 
-  if egl_dep.found() and not cc.has_header('EGL/egl.h',
-                                           dependencies : egl_dep,
-                                           include_directories : compat_includes)
+  if egl_dep.found() and not cc.has_header('EGL/egl.h', dependencies : egl_dep)
     egl_dep = unneeded_dep
   endif
-  if egl_dep.found() and not cc.has_header('EGL/eglext.h',
-                                           dependencies : egl_dep,
-                                           include_directories : compat_includes)
+  if egl_dep.found() and not cc.has_header('EGL/eglext.h', dependencies : egl_dep)
     egl_dep = unneeded_dep
   endif
 
