@@ -10,7 +10,9 @@ androidmedia_sources = [
   'gst-android-graphics-imageformat.c',
   'gst-android-hardware-camera.c',
   'gst-android-hardware-sensor.c',
-  'gstjniutils.c'
+  'gstjniutils.c',
+  'jni/gstamc-codec-jni.c',
+  'jni/gstamc-format-jni.c',
 ]
 
 androidmedia_java_sources = [
