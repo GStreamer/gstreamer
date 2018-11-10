@@ -1290,15 +1290,14 @@ print_plugin_features (GstPlugin * plugin)
       if (extensions) {
         guint i = 0;
 
-        g_print ("  %s: %s: ", gst_plugin_get_name (plugin),
-            gst_plugin_feature_get_name (feature));
+        g_print ("  %s: ", gst_plugin_feature_get_name (feature));
         while (extensions[i]) {
           g_print ("%s%s", i > 0 ? ", " : "", extensions[i]);
           i++;
         }
         g_print ("\n");
       } else
-        g_print ("  %s: %s: no extensions\n", gst_plugin_get_name (plugin),
+        g_print ("  %s: no extensions\n",
             gst_plugin_feature_get_name (feature));
 
       num_typefinders++;
