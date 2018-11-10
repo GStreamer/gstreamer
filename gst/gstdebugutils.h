@@ -45,6 +45,9 @@ G_BEGIN_DECLS
  * Available details for pipeline graphs produced by GST_DEBUG_BIN_TO_DOT_FILE()
  * and GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS().
  */
+/* FIXME: For GST_DEBUG_GRAPH_SHOW_VERBOSE ~0 -> 0xffffffff see
+ * https://bugzilla.gnome.org/show_bug.cgi?id=732633
+*/
 typedef enum {
   GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE         = (1<<0),
   GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS       = (1<<1),
@@ -52,7 +55,7 @@ typedef enum {
   GST_DEBUG_GRAPH_SHOW_STATES             = (1<<3),
   GST_DEBUG_GRAPH_SHOW_FULL_PARAMS        = (1<<4),
   GST_DEBUG_GRAPH_SHOW_ALL                = ((1<<4)-1),
-  GST_DEBUG_GRAPH_SHOW_VERBOSE            = (-1)
+  GST_DEBUG_GRAPH_SHOW_VERBOSE            = (gint) (0xffffffff)
 } GstDebugGraphDetails;
 
 
