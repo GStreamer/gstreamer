@@ -81,7 +81,6 @@ def get_subprocess_env(options, gst_version):
 
     sharedlib_reg = re.compile(r'\.so|\.dylib|\.dll')
     typelib_reg = re.compile(r'.*\.typelib$')
-    pluginpath_reg = re.compile(r'lib.*' + re.escape(os.path.normpath('/gstreamer-1.0/')))
 
     if os.name is 'nt':
         lib_path_envvar = 'PATH'
@@ -133,15 +132,15 @@ def get_subprocess_env(options, gst_version):
             elif sharedlib_reg.search(filename):
                 if not target['type'].startswith('shared'):
                     continue
-                if target['installed']:
-                    if pluginpath_reg.search(os.path.normpath(stringify(target['install_filename']))):
-                        prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(options.builddir, root))
-                        continue
 
                 prepend_env_var(env, lib_path_envvar,
                                 os.path.join(options.builddir, root))
             elif target['type'] == 'executable' and target['installed']:
                 paths.add(os.path.join(options.builddir, root))
+
+    with open(os.path.join(options.builddir, 'GstPluginsPath.json')) as f:
+        for plugin_path in json.load(f):
+            prepend_env_var(env, 'GST_PLUGIN_PATH', plugin_path)
 
     for p in paths:
         prepend_env_var(env, 'PATH', p)

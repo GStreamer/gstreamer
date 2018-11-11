@@ -80,16 +80,12 @@ foreach sp : subprojects
     subproj = subproject(project_name, required: is_required)
   endif
 
-  if subproj.found()
-    if build_infos.has_key('build-hotdoc', default: false)
-      foreach plugin: subproj.get_variable('plugins')
-        all_plugins += plugin.full_path()
-      endforeach
-      if documented_projects != ''
-        documented_projects += ','
-      endif
-
-      documented_projects += project_name
+  if subproj.found() and build_infos.has_key('build-hotdoc', default: false)
+    foreach plugin: subproj.get_variable('plugins')
+      all_plugins += plugin.full_path()
+    endforeach
+    if documented_projects != ''
+      documented_projects += ','
     endif
     documented_projects  += project_name
 
@@ -122,6 +118,10 @@ else
     message('Not building documentation as hotdoc was not found')
   endif
 endif
+
+cmdres = run_command(python3, find_program('scripts/generate_plugins_path.py'), '--builddir',
+    meson.build_root(), all_plugins)
+assert(cmdres.returncode() == 0, 'Could not create plugins path: @0@'.format(cmdres.stderr()))
 
 message('Building subprojects: ' + ', '.join(subprojects_names))
 setenv = find_program('gst-uninstalled.py')
