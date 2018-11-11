@@ -24,10 +24,8 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/audio/audio.h>
-#include <jni.h>
-
-#include "gstjniutils.h"
 #include "gstamc-codec.h"
+#include "gstamc-codeclist.h"
 #include "gstamc-format.h"
 
 G_BEGIN_DECLS
@@ -39,13 +37,10 @@ struct _GstAmcCodecType {
   gchar *mime;
 
   gint *color_formats;
-  gint n_color_formats;
+  gsize n_color_formats;
 
-  struct {
-    gint profile;
-    gint level;
-  } *profile_levels;
-  gint n_profile_levels;
+  GstAmcCodecProfileLevel * profile_levels;
+  gsize n_profile_levels;
 };
 
 struct _GstAmcCodecInfo {
@@ -55,7 +50,6 @@ struct _GstAmcCodecInfo {
   GstAmcCodecType *supported_types;
   gint n_supported_types;
 };
-
 
 extern GQuark gst_amc_codec_info_quark;
 

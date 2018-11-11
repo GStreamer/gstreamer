@@ -12,6 +12,7 @@ androidmedia_sources = [
   'gst-android-hardware-sensor.c',
   'gstjniutils.c',
   'jni/gstamc-codec-jni.c',
+  'jni/gstamc-codeclist-jni.c',
   'jni/gstamc-format-jni.c',
 ]
 
