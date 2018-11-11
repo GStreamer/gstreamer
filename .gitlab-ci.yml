@@ -64,6 +64,14 @@ test manifest:
       - "docker/**"
       - "docker/*/**"
 
+alpine amd64 manifest builder docker:
+  stage: "build runtime"
+  variables:
+    ARCH: "amd64"
+    TAG: "alpine-manifest-build"
+    CONTEXT_DIR: "docker/runtime-images/"
+    DOCKERFILE: "docker/runtime-images/Dockerfile-manifest-builder"
+  extends: .base
 
 fedora amd64 run docker:
   stage: "build runtime"
