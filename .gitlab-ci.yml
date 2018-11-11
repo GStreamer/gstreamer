@@ -14,6 +14,9 @@ test manifest:
     - dnf install -y python3-pytest python3-pytest-cov python3-requests
   script:
     - pytest-3 --junitxml=junit.xml --cov=build_manifest gitlab/build_manifest.py
+  only:
+    changes:
+      - "gitlab/build_manifest.py"
   coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:
     reports:
