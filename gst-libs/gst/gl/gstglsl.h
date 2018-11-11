@@ -110,6 +110,9 @@ typedef enum
  *
  * Since: 1.8
  */
+/* FIXME: For GST_GLSL_PROFILE_ANY ~0 -> 0xffffffff see
+ * https://bugzilla.gnome.org/show_bug.cgi?id=732633
+*/
 typedef enum
 {
   /* XXX: maybe make GstGLAPI instead */
@@ -119,7 +122,7 @@ typedef enum
   GST_GLSL_PROFILE_CORE = (1 << 1),
   GST_GLSL_PROFILE_COMPATIBILITY = (1 << 2),
 
-  GST_GLSL_PROFILE_ANY = -1,
+  GST_GLSL_PROFILE_ANY = (gint) (0xffffffff),
 } GstGLSLProfile;
 
 GST_GL_API
