@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import requests
 import sys
+import subprocess
 
 from typing import Dict, Tuple, List
 from urllib.parse import urlparse
@@ -243,17 +245,33 @@ def test_find_repository_sha():
 
 
 if __name__ == "__main__":
-    projects: str = ''
-    project_template: str = "  <project name=\"{}\" remote=\"{}\" revision=\"{}\" />\n"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--self-update", action="store_true", default=False)
+    parser.add_argument(dest="output", default='manifest.xml', nargs='?')
+    options = parser.parse_args()
+
+    current_branch: str = os.environ['CI_COMMIT_REF_NAME']
     user_remote_url: str = os.path.dirname(os.environ['CI_PROJECT_URL'])
     if not user_remote_url.endswith('/'):
         user_remote_url += '/'
 
+    if options.self_update:
+        remote, sha = find_repository_sha(("gst-ci", "1343"), current_branch)
+        if remote == 'user':
+            remote = user_remote_url + 'gst-ci'
+        else:
+            remote = "https://gitlab.freedesktop.org/gstreamer/gst-ci"
+
+        subprocess.check_call(['git', 'fetch', remote, sha])
+        subprocess.check_call(['git', 'checkout', '--detach', 'FETCH_HEAD'])
+        sys.exit(0)
+
+    projects: str = ''
+    project_template: str = "  <project name=\"{}\" remote=\"{}\" revision=\"{}\" />\n"
     for module in GSTREAMER_MODULES:
         print(f"Checking {module}:", end=' ')
-        current_branch: str = os.environ['CI_COMMIT_REF_NAME']
         remote, revision = find_repository_sha(module, current_branch)
         projects += project_template.format(module[0], remote, revision)
 
-    with open('manifest.xml', mode='w') as manifest:
+    with open(options.output, mode='w') as manifest:
         print(MANIFEST_TEMPLATE.format(user_remote_url, projects), file=manifest)

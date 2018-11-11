@@ -6,13 +6,13 @@ variables:
   GIT_STRATEGY: none
 
 manifest:
-  image: "fedora"
+  image: registry.freedesktop.org/gstreamer/gst-ci/amd64/alpine-manifest-build:latest
   stage: "manifest"
   script:
-    - dnf install -y python3-requests
-    - curl -o build_manifest.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/master/gitlab/build_manifest.py
-    - python3 build_manifest.py
-    - cat manifest.xml
+    - cd /gst-ci
+    - gitlab/build_manifest.py --self-update
+    - gitlab/build_manifest.py ${CI_PROJECT_DIR}/manifest.xml
+    - cat ${CI_PROJECT_DIR}/manifest.xml
   artifacts:
     expire_in: "2 days"
     paths:
