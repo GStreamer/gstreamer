@@ -244,11 +244,11 @@ This tutorial has shown:
 
 It has been a pleasure having you here, and see you soon\!
 
-  [information]: images/icons/emoticons/information.png
+  [information]: images/icons/emoticons/information.svg
   [Mac]: installing/on-mac-osx.md
   [Windows]: installing/on-windows.md
   [Mac OS X]: installing/on-mac-osx.md#building-the-tutorials
   [1]: installing/on-windows.md#running-the-tutorials
   [iOS]: installing/for-ios-development.md#building-the-tutorials
   [android]: installing/for-android-development.md#building-the-tutorials
-  [warning]: images/icons/emoticons/warning.png
+  [warning]: images/icons/emoticons/warning.svg

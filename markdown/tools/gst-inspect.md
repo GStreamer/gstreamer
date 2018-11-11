@@ -184,4 +184,4 @@ should produce:
                             flags: readable, writable
                             Boolean. Default: false
 
-  [information]: images/icons/emoticons/information.png
+  [information]: images/icons/emoticons/information.svg

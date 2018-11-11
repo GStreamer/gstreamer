@@ -356,4 +356,4 @@ the dependencies and your software). The resulting files will be in the
 current working directory.
 
 
- [warning]: images/icons/emoticons/warning.png
+ [warning]: images/icons/emoticons/warning.svg

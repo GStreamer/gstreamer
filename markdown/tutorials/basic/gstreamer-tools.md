@@ -25,7 +25,7 @@ GStreamer](installing/index.md) section to find our where this is),
 and you are ready to start typing the commands given in this tutorial.
 
 
-> ![Information](images/icons/emoticons/information.png)
+> ![Information](images/icons/emoticons/information.svg)
 >
 > On Linux, you should use the GStreamer version installed with your
 > distribution, the tools should be installed with a package named `gstreamer1`

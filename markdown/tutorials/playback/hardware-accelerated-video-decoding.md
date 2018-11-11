@@ -183,4 +183,4 @@ accelerated video decoding. Particularly,
 
 It has been a pleasure having you here, and see you soon!
 
-  [warning]: images/icons/emoticons/warning.png
+  [warning]: images/icons/emoticons/warning.svg

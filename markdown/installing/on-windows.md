@@ -59,7 +59,7 @@ your architecture from here:
 Execute the installers and choose an installation folder. The suggested
 default is usually OK.
 
-> ![Warning](images/icons/emoticons/warning.png)
+> ![Warning](images/icons/emoticons/warning.svg)
 >`If you plan to use Visual Studio, **close it before installing GStreamer**. The installer will define new environment variables which will not be picked up by Visual Studio if it is open.
 
 > On **Windows 8** and **Windows 10**, it might be necessary to log out and log back in to your account after the installation for the newly defined environment variables to be picked up by Visual Studio.
@@ -104,7 +104,7 @@ make sure Visual Studio has the necessary permissions to write the
 output files, copy the entire `tutorials` folder to a place of your
 liking, and work from there.
 
-> ![Information](images/icons/emoticons/information.png)
+> ![Information](images/icons/emoticons/information.svg)
 > **64-bit Users**
 >
 >Use `%GSTREAMER_ROOT_X86_64%` if you have installed GStreamer binaries for 64-bit platforms. Both GStreamer binaries (32 and 64-bit) can be installed simultaneously, and hence the separate environment variables.
@@ -172,7 +172,7 @@ default.
 
 ![](images/WindowsInstall10.png)
 
-> ![Warning](images/icons/emoticons/warning.png)
+> ![Warning](images/icons/emoticons/warning.svg)
 > **Depending on the GStreamer libraries you need to use, you will have to add more property pages, besides `gstreamer-1.0`**  (each property page corresponds to one GStreamer library).
 >
 > The tutorial's project files already contain all necessary property pages. When developing your own applications, the GStreamer documentation will tell you what library a function belongs to, and therefore, what property pages you need to add.
@@ -213,7 +213,7 @@ sheet found in `%GSTREAMER_ROOT_X86%``\``share\vs\2010\msvc` to your
 project. This will make your application use the ubiquitous
 `MSVCRT.DLL` saving you some troubles in the future.
 
-> ![Information](images/icons/emoticons/information.png)
+> ![Information](images/icons/emoticons/information.svg)
 > If you did not install the WinDDK to the standard path `C:\WinDDK\7600.16385.1`, you will need to tell Visual Studio where it is. Unfortunately, there is no automated way to do this. Once you have added the `x86.props` or `x86_64.props` to your project, go to the Property Manager, expand your project and its subfolders until you find the property sheet called `config`. Double click to edit it, and select the section called “User Macros” in the list on the left. You should see a macro called `WINDOWS_DRIVER_KIT`. Double click to edit it, and set its value to the root folder where you installed the DDK. This is the folder containing a file called `samples.txt`.
 >
 >That's it. Accept the changes, right click on the `config` property sheet and select “Save”. The path to the DDK is now stored in `config.props` and you do not need to perform this operation anymore.

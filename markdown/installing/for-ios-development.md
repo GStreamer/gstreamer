@@ -1,6 +1,6 @@
 # Installing for iOS development
 
-![](images/icons/emoticons/information.png) All versions starting from iOS 6 are supported
+![](images/icons/emoticons/information.svg) All versions starting from iOS 6 are supported
 
 ### Prerequisites
 

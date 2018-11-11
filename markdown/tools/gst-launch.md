@@ -475,4 +475,4 @@ out which part of the code caused that warning to be triggered and under what
 circumstances. Simply set `G_DEBUG` as mentioned above and run the program under
 gdb (or let it core dump). Then get a stack trace in the usual way.
 
-  [information]: images/icons/emoticons/information.png
+  [information]: images/icons/emoticons/information.svg

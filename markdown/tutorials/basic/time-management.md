@@ -193,7 +193,7 @@ static void handle_message (CustomData *data, GstMessage *msg) {
 }
 ```
 
-> ![Information](images/icons/emoticons/information.png)
+> ![Information](images/icons/emoticons/information.svg)
 > Need help?
 >
 > If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](installing/on-linux.md#InstallingonLinux-Build), [Mac OS X](installing/on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](installing/on-windows.md#InstallingonWindows-Build), or use this specific command on Linux:

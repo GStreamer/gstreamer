@@ -1,6 +1,6 @@
 # Installing for Android development
 
-![information] All versions starting from 2.3.1 Gingerbread are supported
+> ![information] All versions starting from 2.3.1 Gingerbread are supported
 
 ## Prerequisites
 
@@ -340,14 +340,14 @@ and used as follows:
 
 Build and run your application as explained in the [Building the tutorials] section.
 
-  [information]: images/icons/emoticons/information.png
+  [information]: images/icons/emoticons/information.svg
   [Android SDK]: http://developer.android.com/sdk/index.html
   [Android NDK]: http://developer.android.com/tools/sdk/ndk/index.html
   [Java Native Interface]: http://en.wikipedia.org/wiki/Java_Native_Interface
   [Android JNI tips here]: http://developer.android.com/guide/practices/jni.html
   [prebuilt binaries]: https://gstreamer.freedesktop.org/data/pkg/android/
   [language bindings]: http://en.wikipedia.org/wiki/Language_binding
-  [warning]: images/icons/emoticons/warning.png
+  [warning]: images/icons/emoticons/warning.svg
   [Android NDK System Requirements]: http://developer.android.com/tools/sdk/ndk/index.html#Reqs
   [this project]: http://code.google.com/p/mingw-and-ndk/downloads/detail?name=android-ndk-r8b-ma-windows.7z&can=2&q=
   [7-Zip archiving utility]: http://www.7-zip.org/

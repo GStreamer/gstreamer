@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
 ```
 
 
-> ![Information](images/icons/emoticons/information.png)
+> ![Information](images/icons/emoticons/information.svg)
 > Need help?
 >
 > If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](installing/on-linux.md#InstallingonLinux-Build), [Mac OS X](installing/on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](installing/on-windows.md#InstallingonWindows-Build), or use this specific command on Linux:
@@ -360,7 +360,7 @@ just like before.
 And with this we are done. When testing this tutorial, keep in mind that
 backward playback is not optimal in many elements.
 
-> ![Warning](images/icons/emoticons/warning.png)
+> ![Warning](images/icons/emoticons/warning.svg)
 >
 >Changing the playback rate might only work with local files. If you cannot modify it, try changing the URI passed to `playbin` in line 114 to a local URI, starting with `file:///`
 </table>

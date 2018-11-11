@@ -35,7 +35,7 @@ There are 3 sets of files in the SDK:
 Get **both the runtime and the development installers** from [here](https://gstreamer.freedesktop.org/data/pkg/osx/).
 
 
-> ![Warning](images/icons/emoticons/warning.png)
+> ![Warning](images/icons/emoticons/warning.svg)
 > On Mac OS X 10.6 (Snow Leopard) you have to install Python 2.7 manually. It is included in later versions of OS X already. You can get it from [here](http://www.python.org/getit).
 
 The downloads are

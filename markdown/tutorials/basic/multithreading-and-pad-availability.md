@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-> ![Information](images/icons/emoticons/information.png)
+> ![Information](images/icons/emoticons/information.svg)
 > Need help?
 >
 > If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](installing/on-linux.md#InstallingonLinux-Build), [Mac OS X](installing/on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](installing/on-windows.md#InstallingonWindows-Build), or use this specific command on Linux:
@@ -250,7 +250,7 @@ This code block adds all elements to the pipeline and then links the
 ones that can be automatically linked (the ones with Always Pads, as the
 comment says).
 
-> ![Warning](images/icons/emoticons/warning.png)
+> ![Warning](images/icons/emoticons/warning.svg)
 > `gst_element_link_many()` can actually link elements with Request Pads. It internally requests the Pads so you do not have worry about the elements being linked having Always or Request Pads. Strange as it might seem, this is actually inconvenient, because you still need to release the requested Pads afterwards, and, if the Pad was requested automatically by `gst_element_link_many()`, it is easy to forget. Stay out of trouble by always requesting Request Pads manually, as shown in the next code block.
 
 ``` c

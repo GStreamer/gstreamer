@@ -1409,4 +1409,4 @@ here into an acceptable Android media player.
 As usual, it has been a pleasure having you here, and see you soon!
 
   [screenshot]: images/tutorials/android-media-player-screenshot.png
-  [information]: images/icons/emoticons/information.png
+  [information]: images/icons/emoticons/information.svg

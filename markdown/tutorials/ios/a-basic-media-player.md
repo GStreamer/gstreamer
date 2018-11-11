@@ -1203,5 +1203,5 @@ GStreamer understands. More particularly, it has shown:
 The next tutorial adds the missing bits to turn the application built
 here into an acceptable iOS media player.
 
-  [information]: images/icons/emoticons/information.png
+  [information]: images/icons/emoticons/information.svg
   [screenshot]: images/tutorials/ios-a-basic-media-player-screenshot.png

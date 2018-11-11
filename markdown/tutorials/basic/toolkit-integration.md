@@ -38,7 +38,7 @@ comes through the `GstVideoOverlay` interface, that allows the application to
 tell a video sink the handler of the window that should receive the
 rendering.
 
-> ![Information](images/icons/emoticons/information.png)
+> ![Information](images/icons/emoticons/information.svg)
 > **GObject interfaces**
 >
 > A `GObject` *interface* (which GStreamer uses) is a set of functions that an element can implement. If it does, then it is said to support that particular interface. For example, video sinks usually create their own windows to display video, but, if they are also capable of rendering to an external window, they can choose to implement the `GstVideoOverlay` interface and provide functions to specify this external window. From the application developer point of view, if a certain interface is supported, you can use it and forget about which kind of element is implementing it. Moreover, if you are using `playbin`, it will automatically expose some of the interfaces supported by its internal elements: You can use your interface functions directly on `playbin` without knowing who is implementing them!
@@ -452,7 +452,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-> ![Information](images/icons/emoticons/information.png)
+> ![Information](images/icons/emoticons/information.svg)
 > Need help?
 >
 > If you need help to compile this code, refer to the **Building the tutorials**  section for your platform: [Linux](installing/on-linux.md#InstallingonLinux-Build), [Mac OS X](installing/on-mac-osx.md#InstallingonMacOSX-Build) or [Windows](installing/on-windows.md#InstallingonWindows-Build), or use this specific command on Linux:

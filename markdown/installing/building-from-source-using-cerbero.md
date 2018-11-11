@@ -235,7 +235,7 @@ To cross compile for iOS from OS X, use the configuration file
 
     cerbero -c config/cross-ios-universal.cbc <command>
 
-  [Warning]: images/icons/emoticons/warning.png
+  [Warning]: images/icons/emoticons/warning.svg
   [Python 3.5+]: https://www.python.org/downloads/
   [Git]: https://github.com/git-for-windows/git/releases/latest
   [Msys/MinGW]: https://sourceforge.net/projects/mingw/files/Installer/mingw-get-inst/

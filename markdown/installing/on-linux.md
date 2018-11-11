@@ -7,7 +7,7 @@ GStreamer is included in all Linux distributions. We recommend using the latest 
 All the commands given in this section are intended to be typed in from
 a terminal.
 
-> ![Warning](images/icons/emoticons/warning.png)
+> ![Warning](images/icons/emoticons/warning.svg)
 Make sure you have superuser (root) access rights to install GStreamer.
 
 ## Install GStreamer on Fedora
@@ -64,7 +64,7 @@ gcc basic-tutorial-1.c -o basic-tutorial-1 `pkg-config --cflags --libs gstreamer
 Using the file name of the tutorial you are interested in
 (`basic-tutorial-1` in this example).
 
-> ![Warning](images/icons/emoticons/warning.png) Depending on the GStreamer libraries you need to use, you will have to add more packages to the `pkg-config` command, besides `gstreamer-1.0`
+> ![Warning](images/icons/emoticons/warning.svg) Depending on the GStreamer libraries you need to use, you will have to add more packages to the `pkg-config` command, besides `gstreamer-1.0`
 > At the bottom of each tutorial's source code you will find the command for that specific tutorial, including the required libraries, in the required order.
 > When developing your own applications, the GStreamer documentation will tell you what library a function belongs to.
 

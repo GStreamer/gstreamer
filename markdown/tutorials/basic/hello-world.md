@@ -224,7 +224,7 @@ It has been a pleasure having you here, and see you soon!
   [Installing on Linux]: installing/on-linux.md
   [Installing on Mac OS X]: installing/on-mac-osx.md
   [Installing on Windows]: installing/on-windows.md
-  [Information]: images/icons/emoticons/information.png
+  [Information]: images/icons/emoticons/information.svg
   [Linux]: installing/on-linux.md#InstallingonLinux-Build
   [Mac OS X]: installing/on-mac-osx.md#InstallingonMacOSX-Build
   [Windows]: installing/on-windows.md#InstallingonWindows-Build

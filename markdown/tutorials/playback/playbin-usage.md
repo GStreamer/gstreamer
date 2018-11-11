@@ -580,7 +580,7 @@ code of the tutorial and any accessory files needed to build it.
 It has been a pleasure having you here, and see you soon!
 
   [Playback tutorial 2: Subtitle management]: tutorials/playback/subtitle-management.md
-  [information]: images/icons/emoticons/information.png
+  [information]: images/icons/emoticons/information.svg
   [Mac]: installing/on-mac-osx.md
   [Windows]: installing/on-windows.md
   [Mac OS X]: installing/on-mac-osx.md#building-the-tutorials

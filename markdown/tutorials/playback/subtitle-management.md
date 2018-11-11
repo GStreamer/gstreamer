@@ -385,4 +385,4 @@ Remember that attached to this page you should find the complete source
 code of the tutorial and any accessory files needed to build it.
 It has been a pleasure having you here, and see you soon\!
 
-  [information]: images/icons/emoticons/information.png
+  [information]: images/icons/emoticons/information.svg

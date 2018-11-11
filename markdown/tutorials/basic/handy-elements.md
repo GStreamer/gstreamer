@@ -221,7 +221,7 @@ It is useful in situations where the timestamps are going to be lost
 will require all samples to be present. It is cumbersome to exemplify
 this, so no example is given.
 
-![Warning](images/icons/emoticons/warning.png)
+![Warning](images/icons/emoticons/warning.svg)
 Most of the time, `audiorate` is not what you want.
 
 ## Multithreading
