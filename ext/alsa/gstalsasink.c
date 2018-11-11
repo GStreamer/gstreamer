@@ -197,7 +197,8 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_CARD_NAME,
       g_param_spec_string ("card-name", "Card name",
           "Human-readable name of the sound card", DEFAULT_CARD_NAME,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_DOC_SHOW_DEFAULT));
 }
 
 static void

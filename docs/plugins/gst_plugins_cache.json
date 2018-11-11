@@ -486,7 +486,7 @@
                         "blurb": "Human-readable name of the sound card",
                         "construct": false,
                         "construct-only": false,
-                        "default": "HDA Intel PCH",
+                        "default": "",
                         "type-name": "gchararray",
                         "writable": false
                     },

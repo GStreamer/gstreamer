@@ -172,7 +172,8 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_CARD_NAME,
       g_param_spec_string ("card-name", "Card name",
           "Human-readable name of the sound card",
-          DEFAULT_PROP_CARD_NAME, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          DEFAULT_PROP_CARD_NAME, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS
+          | GST_PARAM_DOC_SHOW_DEFAULT));
 
   g_object_class_install_property (gobject_class, PROP_USE_DRIVER_TIMESTAMP,
       g_param_spec_boolean ("use-driver-timestamps", "Use driver timestamps",
