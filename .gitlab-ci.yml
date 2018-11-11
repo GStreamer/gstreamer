@@ -22,6 +22,9 @@ test manifest:
     reports:
       junit:
         - "junit.xml"
+  only:
+    changes:
+      - gitlab/build_manifest.py
 
 .base:
   image: "docker:stable"
