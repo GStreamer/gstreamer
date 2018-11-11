@@ -35,6 +35,7 @@ except ImportError:  # python <3.3
 # make it happen. For properties, the best way is to use th
 # GST_PARAM_DOC_SHOW_DEFAULT flag.
 UNSTABLE_VALUE = "unstable-values"
+BUILD_ROOT = "@BUILD_ROOT@"
 
 
 def dict_recursive_update(d, u):
@@ -85,13 +86,31 @@ if __name__ == "__main__":
         cmd.append(plugin_path)
         gst_plugins_paths.append(os.path.dirname(plugin_path))
 
-    if subenv.get('GST_REGISTRY_UPDATE') != 'no' and len(cmd) >= 2:
-        data = subprocess.check_output(cmd, env=subenv)
+    try:
+        with open(os.path.join(BUILD_ROOT, 'GstPluginsPath.json')) as f:
+            plugin_paths = os.pathsep.join(json.load(f))
+    except FileNotFoundError:
+        plugin_paths = ""
+
+    if plugin_paths:
+        subenv['GST_PLUGIN_PATH'] = subenv.get('GST_PLUGIN_PATH', '') + ':' + plugin_paths
+
+    # Hide stderr unless an actual error happens as we have cases where we get g_warnings
+    # and other issues because plugins are being built while `gst_init` is called
+    stderrlogfile = output_filename + '.stderr'
+    with open(stderrlogfile, 'w') as log:
         try:
-            plugins = json.loads(data.decode(), object_pairs_hook=OrderedDict)
-        except json.decoder.JSONDecodeError:
-            print("Could not decode:\n%s" % data.decode(), file=sys.stderr)
+            data = subprocess.check_output(cmd, env=subenv, stderr=log)
+        except subprocess.CalledProcessError as e:
+            log.flush()
+            with open(stderrlogfile, 'r') as f:
+                print(f.read(), file=sys.stderr)
             raise
+    try:
+        plugins = json.loads(data.decode(), object_pairs_hook=OrderedDict)
+    except json.decoder.JSONDecodeError:
+        print("Could not decode:\n%s" % data.decode(), file=sys.stderr)
+        raise
 
     new_cache = dict_recursive_update(cache, plugins)
 

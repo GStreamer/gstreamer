@@ -18,11 +18,16 @@ hotdoc_plugin_scanner = executable('gst-hotdoc-plugins-scanner',
   install: true,
 )
 
+conf = configuration_data()
+# We pass the build root so the doc cache generator can try
+# to find GstPluginsPath.json to set GST_PLUGIN_PATH and
+# thus handle plugins dependencies.
+conf.set('BUILD_ROOT', meson.build_root())
 configure_file(
     input: 'gst-plugins-doc-cache-generator.py',
     output: 'gst-plugins-doc-cache-generator',
-    copy: true,
-    install_dir : helpers_install_dir,
+    install_dir: helpers_install_dir,
+    configuration: conf
 )
 
 plugins_cache_generator = find_program(join_paths(meson.current_build_dir(), 'gst-plugins-doc-cache-generator'))
