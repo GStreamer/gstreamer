@@ -25,6 +25,7 @@ dnf install -y \
     libaom-devel \
     ccache \
     cmake \
+    clang-devel \
     elfutils \
     elfutils-libs \
     elfutils-devel \
@@ -53,9 +54,15 @@ dnf install -y \
     libnice-devel \
     libunwind \
     libunwind-devel \
+    libyaml-devel \
+    libxml2-devel \
+    libxslt-devel \
+    llvm-devel \
+    make \
     neon \
     neon-devel \
     nunit \
+    npm \
     opencv \
     opencv-devel \
     openjpeg2 \
@@ -69,6 +76,7 @@ dnf install -y \
     x264 \
     x264-libs \
     x264-devel \
+    python3-devel \
     python3-gobject \
     python3-cairo \
     python3-cairo-devel \
@@ -151,7 +159,7 @@ dnf debuginfo-install -y gtk3 \
     zip \
     zlib
 
-pip3 install meson==0.49.2 git+https://github.com/axiros/terminal_markdown_viewer
+pip3 install meson==0.49.2 git+https://github.com/axiros/terminal_markdown_viewer hotdoc==0.9.1
 
 # Install the dependencies of gstreamer
 dnf builddep -y gstreamer1 \
@@ -177,8 +185,11 @@ dnf remove -y "gstreamer1*devel"
 # it leads to build issues in examples.
 dnf remove -y "qt5-qtbase-devel"
 
+# FIXME: Why does installing directly with dnf *fails* ?
+dnf download glib2-doc
+rpm -i glib2-doc*.rpm
+
 # get gst-build and make all subprojects available
 git clone git://anongit.freedesktop.org/gstreamer/gst-build /gst-build/
 cd /gst-build
 meson subprojects download
-
