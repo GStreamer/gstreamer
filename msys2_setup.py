@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import tempfile
 
-from common import git
+from scripts.common import git
 from setup import GstBuildConfigurer
 
 

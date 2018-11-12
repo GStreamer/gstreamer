@@ -5,9 +5,9 @@ import subprocess
 import xml.etree.ElementTree as ET
 import sys
 
-from common import git
-from common import Colors
-from common import accept_command
+from scripts.common import git
+from scripts.common import Colors
+from scripts.common import accept_command
 
 
 SCRIPTDIR = os.path.normpath(os.path.dirname(__file__))

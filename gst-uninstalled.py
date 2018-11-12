@@ -16,9 +16,9 @@ import pathlib
 from distutils.sysconfig import get_python_lib
 from distutils.util import strtobool
 
-from common import get_meson
-from common import git
-from common import win32_get_short_path_name
+from scripts.common import get_meson
+from scripts.common import git
+from scripts.common import win32_get_short_path_name
 
 SCRIPTDIR = os.path.dirname(os.path.realpath(__file__))
 PREFIX_DIR = os.path.join(SCRIPTDIR, 'prefix')

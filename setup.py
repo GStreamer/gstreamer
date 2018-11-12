@@ -7,8 +7,8 @@ import sys
 import shutil
 import subprocess
 
-from common import get_meson
-from common import accept_command
+from scripts.common import get_meson
+from scripts.common import accept_command
 
 
 PROJECTNAME = "GStreamer build"

@@ -105,8 +105,13 @@ foreach custom_subproj: get_option('custom_subprojects').split(',')
     endif
 endforeach
 
-if build_machine.system() == 'windows'
-  message('Disabling hotdoc while building on Windows')
+if meson.is_cross_build() or build_machine.system() == 'windows'
+    if get_option('doc').enabled()
+        error('Documentation enabled but building the doc while cross building or building on windows is not supported yet.')
+    endif
+
+    message('Documentation not built as building the docmentation while cross building or building on windows is not supported yet.')
+    subdir_done()
 else
   hotdoc_p = find_program('hotdoc', required : get_option('doc'))
   if hotdoc_p.found()
