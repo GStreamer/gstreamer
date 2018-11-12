@@ -499,6 +499,11 @@ else
   cdata.set('DISABLE_ORC', 1)
 endif
 
+gnustl_dep = declare_dependency()
+if host_system == 'android'
+  gnustl_dep = dependency('gnustl', required : false)
+endif
+
 if gst_dep.type_name() == 'internal'
   gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
 else
