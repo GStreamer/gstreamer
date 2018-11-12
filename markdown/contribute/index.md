@@ -327,3 +327,38 @@ issue or merge request.
 If you do not get a response, this is usually not a sign of people *ignoring*
 the issue, but usually just means that it's fallen through the cracks or
 people have been busy with other things.
+
+# Workflows for GStreamer developers
+
+## Backporting to a stable branch
+
+Before backporting any changes to a stable branch, they should first be
+applied to the `master` branch, and should obviously not have caused any known
+outstanding regressions. The only exception here are changes that do not apply
+to the `master` branch anymore.
+
+Existing merge request against the `master` branch, including merged ones,
+that should be considered for backporting in the future should be labeled with
+the `Needs backport` label unless there is any specific urgency to get it
+backported. All merge requests with the (`Needs backport`)[needs-backport]
+label will be regularly considered for backporting by GStreamer developers.
+
+### Creating a merge request for backports
+
+When creating a merge request for backporting changes, include one or more
+changes in the merge request and ideally all from the (list)[needs-backport]
+after reviewing them and potentially fixing them to work cleanly with the
+stable branch.
+
+If there are specific commits or areas of commits where further feedback is
+needed, please create a task list in the description of the merge request and
+@ the committer or whoever has knowledge about this commit.
+
+Add another task to the task list in the merge request's description for the
+module's maintainer(s) to confirm the merge and @ one or more maintainers.
+
+Only once the CI succeeded for the merge request and all tasks are solved,
+especially the confirmation from the maintainer(s), the merge request can be
+merged.
+
+[needs-backport]: https://gitlab.freedesktop.org/groups/gstreamer/-/merge_requests?state=merged&label_name[]=Needs%20backport
