@@ -73,3 +73,10 @@ fedora amd64 build docker:
   extends: .base
 
 include: "gitlab/ci_template.yml"
+
+# Overwrite the job with the same name that comes from the include template,
+# in order to use the `:latest` tag of the image built
+build fedora x86_64:
+  # This comes from the `include:` above
+  extends: .build
+  image: "${CI_REGISTRY_IMAGE}/amd64/fedora-build:latest"
