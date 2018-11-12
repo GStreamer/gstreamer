@@ -29,6 +29,11 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_funnel_debug);
 #define GST_CAT_DEFAULT gst_rtp_funnel_debug
 
+struct _GstRtpFunnelPadClass
+{
+  GstPadClass class;
+};
+
 struct _GstRtpFunnelPad
 {
   GstPad pad;
@@ -56,6 +61,11 @@ gst_rtp_funnel_pad_init (GstRtpFunnelPad * pad)
 {
   (void) pad;
 }
+
+struct _GstRtpFunnelClass
+{
+  GstElementClass class;
+};
 
 struct _GstRtpFunnel
 {

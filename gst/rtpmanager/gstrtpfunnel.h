@@ -27,13 +27,21 @@
 
 G_BEGIN_DECLS
 
-G_DECLARE_FINAL_TYPE (GstRtpFunnel, gst_rtp_funnel, GST, RTP_FUNNEL, GstElement)
+typedef struct _GstRtpFunnelClass GstRtpFunnelClass;
+typedef struct _GstRtpFunnel GstRtpFunnel;
+
 #define GST_TYPE_RTP_FUNNEL (gst_rtp_funnel_get_type())
 #define GST_RTP_FUNNEL_CAST(obj) ((GstRtpFunnel *)(obj))
 
-G_DECLARE_FINAL_TYPE (GstRtpFunnelPad, gst_rtp_funnel_pad, GST, RTP_FUNNEL_PAD, GstPad)
+GType gst_rtp_funnel_get_type (void);
+
+typedef struct _GstRtpFunnelPadClass GstRtpFunnelPadClass;
+typedef struct _GstRtpFunnelPad GstRtpFunnelPad;
+
 #define GST_TYPE_RTP_FUNNEL_PAD (gst_rtp_funnel_pad_get_type())
 #define GST_RTP_FUNNEL_PAD_CAST(obj) ((GstRtpFunnelPad *)(obj))
+
+GType gst_rtp_funnel_pad_get_type (void);
 
 G_END_DECLS
 
