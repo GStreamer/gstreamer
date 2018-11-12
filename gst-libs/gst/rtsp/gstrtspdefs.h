@@ -341,6 +341,9 @@ typedef enum {
   GST_RTSP_HDR_SEEK_STYLE,          /* Seek-Type          Rr     opt.      PLAY */
   GST_RTSP_HDR_ACCEPT_RANGES,       /* Accept-Ranges      Rr     opt.      SETUP, GET_PARAMETER */
 
+  /* Onvif extensions */
+  GST_RTSP_HDR_FRAMES,              /* Frames             Rr     opt.      PLAY */
+
   GST_RTSP_HDR_LAST
 } GstRTSPHeaderField;
 
