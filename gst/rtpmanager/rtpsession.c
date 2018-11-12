@@ -499,7 +499,8 @@ rtp_session_class_init (RTPSessionClass * klass)
   g_object_class_install_property (gobject_class, PROP_SDES,
       g_param_spec_boxed ("sdes", "SDES",
           "The SDES items of this session",
-          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
+          | GST_PARAM_DOC_SHOW_DEFAULT));
 
   g_object_class_install_property (gobject_class, PROP_NUM_SOURCES,
       g_param_spec_uint ("num-sources", "Num Sources",

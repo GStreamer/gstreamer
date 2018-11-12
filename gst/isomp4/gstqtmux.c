@@ -582,7 +582,8 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           "File that will be used temporarily to store data from the stream "
           "when creating a faststart file. If null a filepath will be "
           "created automatically", DEFAULT_FAST_START_TEMP_FILE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_DOC_SHOW_DEFAULT));
   g_object_class_install_property (gobject_class, PROP_MOOV_RECOV_FILE,
       g_param_spec_string ("moov-recovery-file",
           "File to store data for posterior moov atom recovery",
