@@ -27,6 +27,7 @@ GSTREAMER_MODULES: List[Tuple[str, int]] = [
     ('gst-omx', 1350),
     ('gst-python', 1355),
     ('gst-rtsp-server', 1362),
+    ('gstreamer-vaapi', 1359),
 ]
 
 MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
