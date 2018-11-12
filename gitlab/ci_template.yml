@@ -65,5 +65,5 @@ manifest:
 
 build fedora x86_64:
   extends: .build
-  image: "registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora-build:9e0abc3c3be3cf09d0f2272710439b41fbbafdaf"
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora-build:1858a709e6d400716241c9b63dc50b28fa71c48a'
 
