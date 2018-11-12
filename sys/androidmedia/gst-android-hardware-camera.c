@@ -2503,13 +2503,14 @@ done:
 
 void
 gst_ah_camera_set_preview_texture (GstAHCamera * self,
-    GstAmcSurfaceTexture * surfaceTexture)
+    GstAmcSurfaceTextureJNI * surfaceTexture)
 {
   JNIEnv *env = gst_amc_jni_get_env ();
   GError *err = NULL;
 
   gst_amc_jni_call_void_method (env, &err, self->object,
-      android_hardware_camera.setPreviewTexture, surfaceTexture->jobject);
+      android_hardware_camera.setPreviewTexture,
+      gst_amc_surface_texture_jni_get_jobject (surfaceTexture));
   if (err) {
     GST_ERROR ("Failed to call android.hardware.Camera.setPreviewTexture: %s",
         err->message);

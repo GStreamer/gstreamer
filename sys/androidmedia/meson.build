@@ -3,7 +3,6 @@ androidmedia_sources = [
   'gstahssrc.c',
   'gstamcaudiodec.c',
   'gstamc.c',
-  'gstamcsurface.c',
   'gstamcsurfacetexture.c',
   'gstamcvideodec.c',
   'gstamcvideoenc.c',
@@ -14,6 +13,8 @@ androidmedia_sources = [
   'jni/gstamc-codec-jni.c',
   'jni/gstamc-codeclist-jni.c',
   'jni/gstamc-format-jni.c',
+  'jni/gstamcsurface.c',
+  'jni/gstamcsurfacetexture-jni.c',
 ]
 
 androidmedia_java_sources = [

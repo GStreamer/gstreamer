@@ -1828,6 +1828,9 @@ amc_init (GstPlugin * plugin)
   if (!gst_amc_format_static_init ())
     return FALSE;
 
+  if (!gst_amc_surface_texture_static_init ())
+    return FALSE;
+
   /* Set this to TRUE to allow registering decoders that have
    * any unknown color formats, or encoders that only have
    * unknown color formats

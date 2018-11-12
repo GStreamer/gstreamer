@@ -131,7 +131,7 @@ gst_amc_surface_dispose (GObject * object)
 }
 
 GstAmcSurface *
-gst_amc_surface_new (GstAmcSurfaceTexture * texture, GError ** err)
+gst_amc_surface_new (GstAmcSurfaceTextureJNI * texture, GError ** err)
 {
   GstAmcSurface *surface;
   GstAmcSurfaceClass *klass;
@@ -142,7 +142,7 @@ gst_amc_surface_new (GstAmcSurfaceTexture * texture, GError ** err)
   klass = GST_AMC_SURFACE_GET_CLASS (surface);
 
   surface->jobject = gst_amc_jni_new_object (env, err, TRUE, klass->jklass,
-      klass->constructor, texture->jobject);
+      klass->constructor, gst_amc_surface_texture_jni_get_jobject (texture));
   if (surface->jobject == NULL) {
     g_object_unref (surface);
     return NULL;

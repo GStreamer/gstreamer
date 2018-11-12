@@ -29,6 +29,14 @@
 #include <glib.h>
 #include <gst/gst.h>
 
+#if GLIB_SIZEOF_VOID_P == 8
+#define JLONG_TO_GPOINTER(value) (gpointer)(value)
+#define GPOINTER_TO_JLONG(value) (jlong)(value)
+#else
+#define JLONG_TO_GPOINTER(value) (gpointer)(jint)(value)
+#define GPOINTER_TO_JLONG(value) (jlong)(jint)(value)
+#endif
+
 jclass    gst_amc_jni_get_class              (JNIEnv * env,
                                              GError ** err,
                                              const gchar * name);

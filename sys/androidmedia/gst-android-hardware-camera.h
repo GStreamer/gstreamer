@@ -29,7 +29,7 @@
 #include <jni.h>
 
 #include "gst-android-graphics-imageformat.h"
-#include "gstamcsurfacetexture.h"
+#include "jni/gstamcsurfacetexture-jni.h"
 
 G_BEGIN_DECLS
 
@@ -150,7 +150,7 @@ gboolean gst_ah_camera_set_error_callback (GstAHCamera * self,
 gboolean gst_ah_camera_set_preview_callback_with_buffer (GstAHCamera * self,
     GstAHCPreviewCallback cb, gpointer user_data);
 void gst_ah_camera_set_preview_texture (GstAHCamera * self,
-    GstAmcSurfaceTexture * surfaceTexture);
+    GstAmcSurfaceTextureJNI * surfaceTexture);
 gboolean gst_ah_camera_start_preview (GstAHCamera * self);
 gboolean gst_ah_camera_start_smooth_zoom (GstAHCamera * self, gint value);
 gboolean gst_ah_camera_stop_preview (GstAHCamera * self);

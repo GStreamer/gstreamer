@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 
 #include "gstamc-format.h"
+#include "gstamcsurfacetexture.h"
 
 G_BEGIN_DECLS
 
@@ -52,7 +53,7 @@ gboolean gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer, GError **
 GstAmcCodec * gst_amc_codec_new (const gchar *name, GError **err);
 void gst_amc_codec_free (GstAmcCodec * codec);
 
-gboolean gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, jobject surface, gint flags, GError **err);
+gboolean gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, GstAmcSurfaceTexture * surface_texture, gint flags, GError **err);
 GstAmcFormat * gst_amc_codec_get_output_format (GstAmcCodec * codec, GError **err);
 
 gboolean gst_amc_codec_start (GstAmcCodec * codec, GError **err);
@@ -68,6 +69,8 @@ gint gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec, GstAmcBufferInfo 
 
 gboolean gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index, const GstAmcBufferInfo *info, GError **err);
 gboolean gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index, gboolean render, GError **err);
+
+GstAmcSurfaceTexture * gst_amc_codec_new_surface_texture (GError ** err);
 
 G_END_DECLS
 

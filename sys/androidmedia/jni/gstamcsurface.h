@@ -26,7 +26,7 @@
 
 #include <glib-object.h>
 #include <jni.h>
-#include "gstamcsurfacetexture.h"
+#include "jni/gstamcsurfacetexture-jni.h"
 
 G_BEGIN_DECLS
 
@@ -46,7 +46,7 @@ struct _GstAmcSurface
 
   /* instance members */
   jobject jobject;
-  GstAmcSurfaceTexture *texture;
+  GstAmcSurfaceTextureJNI *texture;
 };
 
 struct _GstAmcSurfaceClass
@@ -63,7 +63,7 @@ struct _GstAmcSurfaceClass
 
 GType gst_amc_surface_get_type (void);
 
-GstAmcSurface * gst_amc_surface_new           (GstAmcSurfaceTexture *texture,
+GstAmcSurface * gst_amc_surface_new           (GstAmcSurfaceTextureJNI *texture,
                                               GError ** err);
 
 gboolean gst_amc_surface_is_valid             (GstAmcSurface *surface,

@@ -2176,7 +2176,7 @@ gst_ahc_src_open (GstAHCSrc * self)
   if (self->camera) {
     GST_DEBUG_OBJECT (self, "Opened camera");
 
-    self->texture = gst_amc_surface_texture_new (&err);
+    self->texture = gst_amc_surface_texture_jni_new (&err);
     if (self->texture == NULL) {
       GST_ERROR_OBJECT (self,
           "Failed to create surface texture object: %s", err->message);
@@ -2222,9 +2222,11 @@ gst_ahc_src_close (GstAHCSrc * self)
   }
   self->camera = NULL;
 
-  if (self->texture && !gst_amc_surface_texture_release (self->texture, &err)) {
-    GST_ERROR_OBJECT (self,
-        "Failed to release surface texture object: %s", err->message);
+  if (self->texture
+      && !gst_amc_surface_texture_release ((GstAmcSurfaceTexture *)
+          self->texture, &err)) {
+    GST_ERROR_OBJECT (self, "Failed to release surface texture object: %s",
+        err->message);
     g_clear_error (&err);
   }
 

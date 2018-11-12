@@ -30,7 +30,7 @@
 #include <gst/base/gstdataqueue.h>
 
 #include "gst-android-hardware-camera.h"
-#include "gstamcsurfacetexture.h"
+#include "jni/gstamcsurfacetexture-jni.h"
 
 G_BEGIN_DECLS
 
@@ -60,7 +60,7 @@ struct _GstAHCSrc
   GstPushSrc parent;
 
   GstAHCamera *camera;
-  GstAmcSurfaceTexture *texture;
+  GstAmcSurfaceTextureJNI *texture;
   GList *data;
   GstDataQueue *queue;
   gint buffer_size;

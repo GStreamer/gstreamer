@@ -27,6 +27,8 @@
 #include "../gstamc-codec.h"
 #include "../gstamc-constants.h"
 #include "gstamc-internal-jni.h"
+#include "gstamcsurfacetexture-jni.h"
+#include "gstamcsurface.h"
 
 struct _GstAmcCodec
 {
@@ -34,6 +36,7 @@ struct _GstAmcCodec
 
   RealBuffer *input_buffers, *output_buffers;
   gsize n_input_buffers, n_output_buffers;
+  GstAmcSurface *surface;
 };
 
 static struct
@@ -503,22 +506,34 @@ gst_amc_codec_free (GstAmcCodec * codec)
   codec->output_buffers = NULL;
   codec->n_output_buffers = 0;
 
+  g_clear_object (&codec->surface);
+
   gst_amc_jni_object_unref (env, codec->object);
   g_slice_free (GstAmcCodec, codec);
 }
 
 gboolean
 gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format,
-    jobject surface, gint flags, GError ** err)
+    GstAmcSurfaceTexture * surface, gint flags, GError ** err)
 {
   JNIEnv *env;
 
   g_return_val_if_fail (codec != NULL, FALSE);
   g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (GST_IS_AMC_SURFACE_TEXTURE_JNI (surface), FALSE);
 
   env = gst_amc_jni_get_env ();
+
+  if (surface) {
+    g_object_unref (codec->surface);
+    codec->surface =
+        gst_amc_surface_new ((GstAmcSurfaceTextureJNI *) surface, err);
+    if (!codec->surface)
+      return FALSE;
+  }
+
   return gst_amc_jni_call_void_method (env, err, codec->object,
-      media_codec.configure, format->object, surface, NULL, flags);
+      media_codec.configure, format->object, codec->surface, NULL, flags);
 }
 
 GstAmcFormat *
@@ -933,4 +948,10 @@ gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index,
   env = gst_amc_jni_get_env ();
   return gst_amc_jni_call_void_method (env, err, codec->object,
       media_codec.release_output_buffer, index, render);
+}
+
+GstAmcSurfaceTexture *
+gst_amc_codec_new_surface_texture (GError ** err)
+{
+  return (GstAmcSurfaceTexture *) gst_amc_surface_texture_jni_new (err);
 }
