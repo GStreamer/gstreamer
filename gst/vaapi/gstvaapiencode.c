@@ -591,7 +591,6 @@ static gboolean
 gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
-  gboolean ret;
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
@@ -609,12 +608,6 @@ gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
     gst_video_codec_state_unref (encode->input_state);
   encode->input_state = gst_video_codec_state_ref (state);
   encode->input_state_changed = TRUE;
-
-  ret = gst_pad_start_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode),
-      (GstTaskFunction) gst_vaapiencode_buffer_loop, encode, NULL);
-
-  if (!ret)
-    return FALSE;
 
   /* Store some tags */
   {
@@ -650,15 +643,23 @@ gst_vaapiencode_handle_frame (GstVideoEncoder * venc,
     GstVideoCodecFrame * frame)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
+  GstPad *const srcpad = GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode);
   GstVaapiEncoderStatus status;
   GstVaapiVideoMeta *meta;
   GstVaapiSurfaceProxy *proxy;
   GstFlowReturn ret;
   GstBuffer *buf;
+  GstTaskState task_state;
 #if USE_H264_FEI_ENCODER
   GstVaapiFeiVideoMeta *feimeta = NULL;
   GstVaapiEncodeClass *const klass = GST_VAAPIENCODE_GET_CLASS (venc);
 #endif
+
+  task_state = gst_pad_get_task_state (srcpad);
+  if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED)
+    if (!gst_pad_start_task (srcpad,
+            (GstTaskFunction) gst_vaapiencode_buffer_loop, encode, NULL))
+      goto error_task_failed;
 
   buf = NULL;
   ret = gst_vaapi_plugin_base_get_input_buffer (GST_VAAPI_PLUGIN_BASE (encode),
@@ -697,6 +698,13 @@ gst_vaapiencode_handle_frame (GstVideoEncoder * venc,
   return GST_FLOW_OK;
 
   /* ERRORS */
+error_task_failed:
+  {
+    GST_ELEMENT_ERROR (venc, RESOURCE, FAILED,
+        ("Failed to start encoding thread."), (NULL));
+    gst_video_codec_frame_unref (frame);
+    return GST_FLOW_ERROR;
+  }
 error_buffer_invalid:
   {
     if (buf)
