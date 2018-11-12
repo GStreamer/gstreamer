@@ -123,7 +123,8 @@ gst_dtls_srtp_dec_class_init (GstDtlsSrtpDecClass * klass)
       g_param_spec_string ("pem",
       "PEM string",
       "A string containing a X509 certificate and RSA private key in PEM format",
-      DEFAULT_PEM, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      DEFAULT_PEM,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT);
 
   properties[PROP_PEER_PEM] =
       g_param_spec_string ("peer-pem",

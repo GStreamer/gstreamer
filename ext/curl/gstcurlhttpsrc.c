@@ -362,7 +362,8 @@ gst_curl_http_src_class_init (GstCurlHttpSrcClass * klass)
       g_param_spec_string ("user-agent", "User-Agent",
           "URI of resource requested",
           GSTCURL_HANDLE_DEFAULT_CURLOPT_USERAGENT "/<curl-version>",
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_DOC_SHOW_DEFAULT));
 
   g_object_class_install_property (gobject_class, PROP_COMPRESS,
       g_param_spec_boolean ("compress", "Compress",
