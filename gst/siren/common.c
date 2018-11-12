@@ -62,7 +62,7 @@ static int siren_initialized = 0;
 /*
   STEPSIZE = 2.0 * log(sqrt(2));
 */
-#define STEPSIZE 0.3010299957
+#define STEPSIZE 0.3010299957f
 
 void
 siren_init (void)
@@ -77,9 +77,9 @@ siren_init (void)
   region_size_inverse = 1.0f / region_size;
 
   for (i = 0; i < 64; i++) {
-    region_power = (float) pow (10, (i - 24) * STEPSIZE);
-    standard_deviation[i] = (float) sqrt (region_power);
-    deviation_inverse[i] = (float) 1.0 / standard_deviation[i];
+    region_power = powf (10.0f, (i - 24) * STEPSIZE);
+    standard_deviation[i] = sqrtf (region_power);
+    deviation_inverse[i] = 1.0f / standard_deviation[i];
   }
 
   for (i = 0; i < 63; i++)
