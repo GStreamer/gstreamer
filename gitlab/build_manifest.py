@@ -72,7 +72,7 @@ def request_raw(path: str, headers: Dict[str, str], project_url: str) -> List[Di
     base_url: str = urlparse(project_url).hostname
     url: str = f"https://{base_url}/api/v4/{path}"
     print(f"GET {url}")
-    print(f"Headers: {headers}")
+    # print(f"Headers: {headers}")
     resp = requests.get(url, headers=headers)
 
     print(f"Request returned: {resp.status_code}")
@@ -94,7 +94,7 @@ def request(path: str) -> List[Dict[str, str]]:
     try:
         headers: Dict[str, str] = {'Private-Token': os.environ["READ_PROJECTS_TOKEN"] }
     except KeyError:
-        print("Custom token was not set, group api querries will fail")
+        # print("Custom token was not set, group api querries will fail")
         # JOB_TOKEN is the default placeholder of CI_JOB_TOKEN
         headers: Dict[str, str] = {'JOB_TOKEN': "xxxxxxxxxxxxxxxxxxxx" }
 
