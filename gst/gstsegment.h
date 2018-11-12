@@ -73,6 +73,11 @@ typedef enum {
  *                     playback, request that elements only decode keyframes
  *                     and skip all other content, for formats that have
  *                     keyframes. (Since: 1.6)
+ * @GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED: When doing fast forward or fast reverse
+ *                     playback, request that elements only decode keyframes and
+ *                     forward predicted frames and skip all other content (for example
+ *                     B-Frames), for formats that have keyframes and forward predicted
+ *                     frames. (Since: 1.18)
  * @GST_SEEK_FLAG_TRICKMODE_NO_AUDIO: when doing fast forward or fast reverse
  *                     playback, request that audio decoder elements skip
  *                     decoding and output only gap events or silence. (Since: 1.6)
@@ -137,6 +142,7 @@ typedef enum {
   /* Careful to restart next flag with 1<<7 here */
   GST_SEEK_FLAG_TRICKMODE_KEY_UNITS = (1 << 7),
   GST_SEEK_FLAG_TRICKMODE_NO_AUDIO  = (1 << 8),
+  GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED = (1 << 9),
 } GstSeekFlags;
 
 /**
@@ -148,6 +154,8 @@ typedef enum {
  * @GST_SEGMENT_FLAG_SEGMENT: send SEGMENT_DONE instead of EOS
  * @GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS: Decode only keyframes, where
  *                                        possible (Since: 1.6)
+ * @GST_SEGMENT_FLAG_TRICKMODE_FORWARD_PREDICTED: Decode only keyframes or forward
+ *                                        predicted frames, where possible (Since: 1.18)
  * @GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO: Do not decode any audio, where
  *                                        possible (Since: 1.6)
  * @GST_SEGMENT_FLAG_SKIP: Deprecated backward compatibility flag, replaced
@@ -166,6 +174,7 @@ typedef enum { /*< flags >*/
   GST_SEGMENT_FLAG_SKIP            = GST_SEEK_FLAG_TRICKMODE,
   GST_SEGMENT_FLAG_SEGMENT         = GST_SEEK_FLAG_SEGMENT,
   GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS = GST_SEEK_FLAG_TRICKMODE_KEY_UNITS,
+  GST_SEGMENT_FLAG_TRICKMODE_FORWARD_PREDICTED = GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED,
   GST_SEGMENT_FLAG_TRICKMODE_NO_AUDIO      = GST_SEEK_FLAG_TRICKMODE_NO_AUDIO
 } GstSegmentFlags;
 
