@@ -13,11 +13,13 @@ RUN dnf builddep -y \
         gstreamer1-plugins-bad-freeworld \
         gstreamer1-libav \
         gstreamer1-rtsp-server  \
+        gstreamer1-vaapi \
         python3-gstreamer1 \
     && \
     rpm -e \
         gstreamer1-devel \
         gstreamer1-plugins-base-devel \
+        gstreamer1-plugins-bad-free-devel \
     && \
     dnf install -y \
         ccache \
