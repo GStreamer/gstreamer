@@ -36,7 +36,7 @@ manifest:
       -Ddevtools=enabled
       -Dges=enabled
       -Drtsp_server=enabled
-      -Dvaapi=disabled
+      -Dvaapi=enabled
       -Dsharp=disabled
 
   script:
