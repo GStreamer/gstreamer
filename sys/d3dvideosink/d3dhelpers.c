@@ -2299,7 +2299,6 @@ d3d_create_internal_window (GstD3DVideoSink * sink)
 {
   GThread *thread;
   D3DInternalWindowDat dat;
-  gulong i;
   gint64 end_time;
   gboolean timeout = FALSE;
 
