@@ -1117,6 +1117,14 @@ gst_net_time_provider_get_type
 
 
 <SECTION>
+<FILE>gstnetutils</FILE>
+<TITLE>GstNetUtils</TITLE>
+<INCLUDE>gst/net/net.h</INCLUDE>
+gst_net_utils_set_socket_tos
+</SECTION>
+
+
+<SECTION>
 <FILE>gstptpclock</FILE>
 <TITLE>GstPtpClock</TITLE>
 <INCLUDE>gst/net/net.h</INCLUDE>

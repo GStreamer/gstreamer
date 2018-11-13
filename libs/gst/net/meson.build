@@ -16,6 +16,7 @@ gst_net_headers = [
  'gstnetcontrolmessagemeta.h',
  'gstnettimepacket.h',
  'gstnettimeprovider.h',
+ 'gstnetutils.h',
  'gstptpclock.h',
  'net-prelude.h',
  'net.h',

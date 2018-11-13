@@ -10,6 +10,7 @@ libgstnet_@GST_API_VERSION@_include_HEADERS = \
     gstnetcontrolmessagemeta.h \
     gstnettimepacket.h \
     gstnettimeprovider.h \
+    gstnetutils.h \
     gstptpclock.h
 
 libgstnet_@GST_API_VERSION@_la_SOURCES = \
@@ -22,7 +23,7 @@ libgstnet_@GST_API_VERSION@_la_SOURCES = \
     gstntppacket.c \
     gstnetutils.c
 
-noinst_HEADERS = gstptp_private.h gstntppacket.h gstnetutils.h
+noinst_HEADERS = gstptp_private.h gstntppacket.h
 
 libgstnet_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) $(GIO_CFLAGS) -DBUILDING_GST_NET
 libgstnet_@GST_API_VERSION@_la_LIBADD = $(GST_OBJ_LIBS) $(GIO_LIBS) \

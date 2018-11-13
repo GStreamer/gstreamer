@@ -24,12 +24,13 @@
 
 #include <glib.h>
 #include <gio/gio.h>
+#include <gst/net/net-prelude.h>
 
 G_BEGIN_DECLS
 
-G_GNUC_INTERNAL
-gboolean    gst_net_utils_set_socket_dscp (GSocket  * socket,
-                                           gint       qos_dscp);
+GST_NET_API
+gboolean    gst_net_utils_set_socket_tos (GSocket  * socket,
+                                          gint       qos_dscp);
 
 G_END_DECLS
 

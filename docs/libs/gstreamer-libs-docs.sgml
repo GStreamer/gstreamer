@@ -83,6 +83,7 @@
       <xi:include href="xml/gstnettimepacket.xml" />
       <xi:include href="xml/gstnettimeprovider.xml" />
       <xi:include href="xml/gstptpclock.xml" />
+      <xi:include href="xml/gstnetutils.xml" />
     </chapter>
 
     <chapter id="gstreamer-check">

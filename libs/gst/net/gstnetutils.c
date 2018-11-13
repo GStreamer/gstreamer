@@ -17,6 +17,17 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:gstnetutils
+ * @title: GstNetUtils
+ * @short_description: Network utility functions.
+ *
+ * GstNetUtils gathers network utility functions, enabling use for all
+ * gstreamer plugins.
+ *
+ * Since: 1.18
+ *
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -35,16 +46,18 @@
 #endif
 
 /**
- * gst_net_time_packet_util_set_dscp:
+ * gst_net_utils_set_socket_tos:
  * @socket: Socket to configure
  * @qos_dscp: QoS DSCP value
  *
  * Configures IP_TOS value of socket, i.e. sets QoS DSCP.
  *
  * Returns: TRUE if successful, FALSE in case an error occurred.
+ *
+ * Since: 1.18
  */
 gboolean
-gst_net_utils_set_socket_dscp (GSocket * socket, gint qos_dscp)
+gst_net_utils_set_socket_tos (GSocket * socket, gint qos_dscp)
 {
   gboolean ret = FALSE;
 

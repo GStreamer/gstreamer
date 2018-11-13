@@ -214,7 +214,7 @@ gst_net_time_provider_thread (gpointer data)
     /* before next sending check if need to change QoS */
     new_qos_dscp = self->priv->qos_dscp;
     if (cur_qos_dscp != new_qos_dscp &&
-        gst_net_utils_set_socket_dscp (socket, new_qos_dscp)) {
+        gst_net_utils_set_socket_tos (socket, new_qos_dscp)) {
       GST_DEBUG_OBJECT (self, "changed QoS DSCP to: %d", new_qos_dscp);
       cur_qos_dscp = new_qos_dscp;
     }
