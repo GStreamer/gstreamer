@@ -6,11 +6,10 @@ variables:
   GIT_STRATEGY: none
 
 manifest:
-  image: registry.freedesktop.org/thiblahute/gst-ci/amd64/alpine-manifest-build:latest
+  image: registry.freedesktop.org/gstreamer/gst-ci/amd64/alpine-manifest-build:latest
   stage: "manifest"
   script:
     - cd /gst-ci
-    - git fetch https://gitlab.freedesktop.org/thiblahute/gst-ci.git simple_manifest && git checkout FETCH_HEAD # REMOVEME!
     - gitlab/build_manifest.py --self-update
     - gitlab/build_manifest.py ${CI_PROJECT_DIR}/manifest.xml
     - cat ${CI_PROJECT_DIR}/manifest.xml
