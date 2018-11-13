@@ -525,7 +525,7 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf)
     time = gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME,
         GST_BUFFER_PTS (buf));
   } else {
-    GST_ERROR_OBJECT (self,
+    GST_INFO_OBJECT (self,
         "Buffer doesn't contain any valid DTS or PTS timestamp");
     goto done;
   }
