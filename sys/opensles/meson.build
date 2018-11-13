@@ -11,7 +11,7 @@ if opensles_option.disabled()
   subdir_done()
 endif
 
-have_opensles_h = cc.has_header('SLES/OpenSLES.h', required : false)
+have_opensles_h = cc.has_header('SLES/OpenSLES.h')
 if not have_opensles_h and opensles_option.enabled()
   error('opensles plugin enabled but SLES/OpenSLES.h not found')
 endif
