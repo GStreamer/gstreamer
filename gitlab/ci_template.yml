@@ -34,6 +34,30 @@ manifest:
     paths:
       - "manifest.xml"
 
+gst indent:
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/gst-indent:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
+  stage: 'preparation'
+  variables:
+    GIT_STRATEGY: 'fetch'
+  script:
+    # man indent. grep RETURN VALUE, grab a beer on my behalf...
+    - indent --version || true
+    - curl -o gst-indent https://gitlab.freedesktop.org/gstreamer/gstreamer/raw/master/tools/gst-indent
+    - chmod +x gst-indent
+    - ./gst-indent $(find . -name "*.c")
+    - |
+      if [[ $(git diff) ]]; then
+          git diff --color=always
+          echo 'style diverges, please run gst-indent first'
+          exit 1
+      else
+          echo "Code is properly formatted"
+      fi
+  except:
+    variables:
+      # No point on trying to format C files in those repositories
+      - $CI_PROJECT_NAME == "gstreamer-sharp"
+
 .build:
   stage: 'full builds'
   dependencies:
