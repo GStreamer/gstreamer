@@ -904,6 +904,134 @@ GST_START_TEST (basesrc_create_bufferlist)
 
 GST_END_TEST;
 
+typedef struct
+{
+  GstBaseSrc parent;
+  GstSegment *segment;
+  gboolean n_output_buffers;
+} TimeSrc;
+
+typedef GstBaseSrcClass TimeSrcClass;
+
+static GType time_src_get_type (void);
+
+G_DEFINE_TYPE (TimeSrc, time_src, GST_TYPE_BASE_SRC);
+
+static void
+time_src_init (TimeSrc * src)
+{
+  gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
+  gst_base_src_set_automatic_eos (GST_BASE_SRC (src), FALSE);
+  src->n_output_buffers = 0;
+}
+
+/* This test src outputs a compressed format, with a single GOP
+ * starting at PTS 0.
+ *
+ * This means that in reverse playback, we may want to output
+ * buffers outside the segment bounds, and decide when to EOS
+ * from the create function.
+ */
+static GstFlowReturn
+time_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
+    GstBuffer ** p_buf)
+{
+  TimeSrc *src = (TimeSrc *) bsrc;
+
+  if (src->segment->position >= src->segment->stop)
+    return GST_FLOW_EOS;
+
+  *p_buf = gst_buffer_new ();
+  GST_BUFFER_PTS (*p_buf) = src->segment->position;
+  GST_BUFFER_DURATION (*p_buf) = GST_SECOND;
+  src->segment->position += GST_SECOND;
+
+  src->n_output_buffers++;
+
+  return GST_FLOW_OK;
+}
+
+static gboolean
+time_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
+{
+  TimeSrc *src = (TimeSrc *) bsrc;
+  fail_unless (segment->format == GST_FORMAT_TIME);
+
+  if (src->segment)
+    gst_segment_free (src->segment);
+
+  src->segment = gst_segment_copy (segment);
+
+  ((TimeSrc *) bsrc)->segment->position = 0;
+
+  return TRUE;
+}
+
+static gboolean
+time_src_is_seekable (GstBaseSrc * bsrc)
+{
+  return TRUE;
+}
+
+static void
+time_src_class_init (TimeSrcClass * klass)
+{
+  GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
+
+  gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
+      &src_template);
+
+  gstbasesrc_class->create = time_src_create;
+  gstbasesrc_class->do_seek = time_src_do_seek;
+  gstbasesrc_class->is_seekable = time_src_is_seekable;
+}
+
+GST_START_TEST (basesrc_time_automatic_eos)
+{
+  GstElement *src, *sink;
+  GstElement *pipe;
+  GstBus *bus;
+
+  src = g_object_new (time_src_get_type (), NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+
+  pipe = gst_pipeline_new (NULL);
+
+  gst_bin_add (GST_BIN (pipe), src);
+  gst_bin_add (GST_BIN (pipe), sink);
+
+  gst_element_link (src, sink);
+
+  gst_element_set_state (pipe, GST_STATE_PAUSED);
+  gst_element_get_state (pipe, NULL, NULL, GST_CLOCK_TIME_NONE);
+
+  gst_element_seek (pipe, -1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET,
+      GST_SECOND, GST_SEEK_TYPE_SET, 2 * GST_SECOND);
+
+  gst_element_set_state (pipe, GST_STATE_PLAYING);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipe));
+
+  gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_EOS);
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+
+  /* - One preroll buffer
+   * - One (1-second) buffer outside the segment, our "keyframe"
+   * - One buffer inside the segment
+   */
+  fail_unless_equals_int (((TimeSrc *) src)->n_output_buffers, 3);
+
+  if (((TimeSrc *) src)->segment)
+    gst_segment_free (((TimeSrc *) src)->segment);
+
+  gst_object_unref (bus);
+  gst_object_unref (pipe);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_basesrc_suite (void)
 {
@@ -920,6 +1048,7 @@ gst_basesrc_suite (void)
   tcase_add_test (tc, basesrc_seek_events_rate_update);
   tcase_add_test (tc, basesrc_seek_on_last_buffer);
   tcase_add_test (tc, basesrc_create_bufferlist);
+  tcase_add_test (tc, basesrc_time_automatic_eos);
 
   return s;
 }

@@ -656,6 +656,12 @@ gst_base_src_set_dynamic_size (GstBaseSrc * src, gboolean dynamic)
  * that can't return an authoritative size and only know that they're EOS
  * when trying to read more should set this to %FALSE.
  *
+ * When @src operates in %GST_FORMAT_TIME, #GstBaseSrc will send an EOS
+ * when a buffer outside of the currently configured segment is pushed if
+ * @automatic_eos is %TRUE. Since 1.16, if @automatic_eos is %FALSE an
+ * EOS will be pushed only when the #GstBaseSrc.create implementation
+ * returns %GST_FLOW_EOS.
+ *
  * Since: 1.4
  */
 void
@@ -2931,7 +2937,8 @@ gst_base_src_loop (GstPad * pad)
       /* positive rate, check if we reached the stop */
       if (src->segment.stop != -1) {
         if (position >= src->segment.stop) {
-          eos = TRUE;
+          if (g_atomic_int_get (&src->priv->automatic_eos))
+            eos = TRUE;
           position = src->segment.stop;
         }
       }
@@ -2939,7 +2946,8 @@ gst_base_src_loop (GstPad * pad)
       /* negative rate, check if we reached the start. start is always set to
        * something different from -1 */
       if (position <= src->segment.start) {
-        eos = TRUE;
+        if (g_atomic_int_get (&src->priv->automatic_eos))
+          eos = TRUE;
         position = src->segment.start;
       }
       /* when going reverse, all buffers are DISCONT */
