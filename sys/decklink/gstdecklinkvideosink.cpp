@@ -484,7 +484,7 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     flags = bmdVideoOutputRP188;
 
   if (self->caption_line > 0)
-    flags |= bmdVideoOutputVANC;
+    flags = (BMDVideoOutputFlags) (flags | bmdVideoOutputVANC);
 
   ret = self->output->output->EnableVideoOutput (mode->mode, flags);
   if (ret != S_OK) {
