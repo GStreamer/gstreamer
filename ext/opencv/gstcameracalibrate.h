@@ -93,7 +93,7 @@ struct _GstCameraCalibrate
   int flags;
   int mode;
   clock_t prevTimestamp;
-  std::vector<std::vector<cv::Point2f>> imagePoints;
+  std::vector<std::vector<cv::Point2f> > imagePoints;
   cv::Mat cameraMatrix, distCoeffs;
 
   // opaque string containing opencv calibration settings
