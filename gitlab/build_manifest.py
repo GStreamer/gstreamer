@@ -45,7 +45,7 @@ def preserve_ci_vars(func):
     def wrapper():
         try:
             url = os.environ["CI_PROJECT_URL"]
-            user = os.environ["GITLAB_USER_LOGIN"]
+            user = os.environ["CI_PROJECT_NAMESPACE"]
         except KeyError:
             url = "invalid"
             user = ""
@@ -57,7 +57,7 @@ def preserve_ci_vars(func):
         func()
 
         os.environ["CI_PROJECT_URL"] = url
-        os.environ["GITLAB_USER_LOGIN"] = user
+        os.environ["CI_PROJECT_NAMESPACE"] = user
 
         if private:
             os.environ["READ_PROJECTS_TOKEN"] = private
@@ -177,10 +177,14 @@ def test_search_user_namespace():
     res = search_user_namespace("alatiera", "404-project-not-found")
     assert res is None
 
+    # Passing a group namespace instead of user should return None
+    res = search_user_namespace("gstreamer", "gst-plugins-good")
+    assert res is None
+
 
 def find_repository_sha(module: Tuple[str, int], branchname: str) -> Tuple[str, str]:
-    user_login: str = os.environ["GITLAB_USER_LOGIN"]
-    project = search_user_namespace(user_login, module[0])
+    namespace: str = os.environ["CI_PROJECT_NAMESPACE"]
+    project = search_user_namespace(namespace, module[0])
 
     # Find a fork in the User's namespace
     if project:
@@ -219,7 +223,7 @@ def find_repository_sha(module: Tuple[str, int], branchname: str) -> Tuple[str, 
 @preserve_ci_vars
 def test_find_repository_sha():
     os.environ["CI_PROJECT_URL"] = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good"
-    os.environ["GITLAB_USER_LOGIN"] = "alatiera"
+    os.environ["CI_PROJECT_NAMESPACE"] = "alatiera"
     del os.environ["READ_PROJECTS_TOKEN"]
 
     # This should find the repository in the user namespace
