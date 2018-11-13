@@ -339,6 +339,9 @@ gst_rtp_gst_pay_create_from_adapter (GstRtpGSTPay * rtpgstpay,
     GST_DEBUG_OBJECT (rtpgstpay, "take %u bytes from adapter", payload_len);
     paybuf = gst_adapter_take_buffer_fast (rtpgstpay->adapter, payload_len);
 
+    if (GST_BUFFER_FLAG_IS_SET (paybuf, GST_BUFFER_FLAG_DELTA_UNIT))
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+
     /* create a new group to hold the rtp header and the payload */
     gst_rtp_copy_meta (GST_ELEMENT_CAST (rtpgstpay), outbuf, paybuf, 0);
     outbuf = gst_buffer_append (outbuf, paybuf);
