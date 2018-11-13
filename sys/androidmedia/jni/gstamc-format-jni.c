@@ -33,7 +33,6 @@ static struct
   jmethodID create_audio_format;
   jmethodID create_video_format;
   jmethodID to_string;
-  jmethodID contains_key;
   jmethodID get_float;
   jmethodID set_float;
   jmethodID get_integer;
@@ -85,9 +84,6 @@ gst_amc_format_static_init (void)
   media_format.to_string =
       (*env)->GetMethodID (env, media_format.klass, "toString",
       "()Ljava/lang/String;");
-  media_format.contains_key =
-      (*env)->GetMethodID (env, media_format.klass, "containsKey",
-      "(Ljava/lang/String;)Z");
   media_format.get_float =
       (*env)->GetMethodID (env, media_format.klass, "getFloat",
       "(Ljava/lang/String;)F");
@@ -113,11 +109,10 @@ gst_amc_format_static_init (void)
       (*env)->GetMethodID (env, media_format.klass, "setByteBuffer",
       "(Ljava/lang/String;Ljava/nio/ByteBuffer;)V");
   if (!media_format.create_audio_format || !media_format.create_video_format
-      || !media_format.contains_key || !media_format.get_float
-      || !media_format.set_float || !media_format.get_integer
-      || !media_format.set_integer || !media_format.get_string
-      || !media_format.set_string || !media_format.get_byte_buffer
-      || !media_format.set_byte_buffer) {
+      || !media_format.get_float || !media_format.set_float
+      || !media_format.get_integer || !media_format.set_integer
+      || !media_format.get_string || !media_format.set_string
+      || !media_format.get_byte_buffer || !media_format.set_byte_buffer) {
     ret = FALSE;
     GST_ERROR ("Failed to get format methods");
     if ((*env)->ExceptionCheck (env)) {
@@ -238,34 +233,6 @@ gst_amc_format_to_string (GstAmcFormat * format, GError ** err)
   ret = gst_amc_jni_string_to_gchar (env, v_str, TRUE);
 
 done:
-
-  return ret;
-}
-
-gboolean
-gst_amc_format_contains_key (GstAmcFormat * format, const gchar * key,
-    GError ** err)
-{
-  JNIEnv *env;
-  gboolean ret = FALSE;
-  jstring key_str = NULL;
-
-  g_return_val_if_fail (format != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-
-  env = gst_amc_jni_get_env ();
-
-  key_str = gst_amc_jni_string_from_gchar (env, err, FALSE, key);
-  if (!key_str)
-    goto done;
-
-  if (!gst_amc_jni_call_boolean_method (env, err, format->object,
-          media_format.contains_key, &ret, key_str))
-    goto done;
-
-done:
-  if (key_str)
-    gst_amc_jni_object_local_unref (env, key_str);
 
   return ret;
 }

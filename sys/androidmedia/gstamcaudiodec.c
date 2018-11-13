@@ -379,9 +379,8 @@ gst_amc_audio_dec_set_src_caps (GstAmcAudioDec * self, GstAmcFormat * format)
   }
 
   /* Not always present */
-  if (gst_amc_format_contains_key (format, "channel-mask", NULL))
-    gst_amc_format_get_int (format, "channel-mask", (gint *) & channel_mask,
-        NULL);
+  gst_amc_format_get_int (format, "channel-mask", (gint *) & channel_mask,
+      NULL);
 
   gst_amc_audio_channel_mask_to_positions (channel_mask, channels,
       self->positions);

@@ -36,8 +36,6 @@ void gst_amc_format_free (GstAmcFormat * format);
 
 gchar * gst_amc_format_to_string (GstAmcFormat * format, GError **err);
 
-gboolean gst_amc_format_contains_key (GstAmcFormat *format, const gchar *key, GError **err);
-
 gboolean gst_amc_format_get_float (GstAmcFormat *format, const gchar *key, gfloat *value, GError **err);
 gboolean gst_amc_format_set_float (GstAmcFormat *format, const gchar *key, gfloat value, GError **err);
 gboolean gst_amc_format_get_int (GstAmcFormat *format, const gchar *key, gint *value, GError **err);
