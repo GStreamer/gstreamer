@@ -5270,6 +5270,9 @@ gst_rtsp_stream_query_stop (GstRTSPStream * stream, gint64 * stop)
   if (sink) {
     GstQuery *query;
     GstFormat format;
+    gdouble rate;
+    gint64 start_value;
+    gint64 stop_value;
 
     query = gst_query_new_segment (GST_FORMAT_TIME);
     if (!gst_element_query (sink, query)) {
@@ -5278,9 +5281,11 @@ gst_rtsp_stream_query_stop (GstRTSPStream * stream, gint64 * stop)
       gst_object_unref (sink);
       return FALSE;
     }
-    gst_query_parse_segment (query, NULL, &format, NULL, stop);
+    gst_query_parse_segment (query, &rate, &format, &start_value, &stop_value);
     if (format != GST_FORMAT_TIME)
       *stop = -1;
+    else
+      *stop = rate > 0.0 ? stop_value : start_value;
     gst_query_unref (query);
     gst_object_unref (sink);
   } else if (pad) {

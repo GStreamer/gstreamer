@@ -2746,9 +2746,7 @@ gst_rtsp_media_seek_full_with_rate (GstRTSPMedia * media,
   if (start != GST_CLOCK_TIME_NONE)
     start_type = GST_SEEK_TYPE_SET;
 
-  if (priv->range_stop == stop)
-    stop = GST_CLOCK_TIME_NONE;
-  else if (stop != GST_CLOCK_TIME_NONE)
+  if (stop != GST_CLOCK_TIME_NONE)
     stop_type = GST_SEEK_TYPE_SET;
 
   /* we force a seek if any seek flag is set, or if the the rate
@@ -2792,6 +2790,16 @@ gst_rtsp_media_seek_full_with_rate (GstRTSPMedia * media,
       res = TRUE;
     } else {
       gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
+
+      if (rate < 0.0) {
+        GstClockTime temp_time = start;
+        GstSeekType temp_type = start_type;
+
+        start = stop;
+        start_type = stop_type;
+        stop = temp_time;
+        stop_type = temp_type;
+      }
 
       res = gst_element_seek (priv->pipeline, rate, GST_FORMAT_TIME,
           flags, start_type, start, stop_type, stop);
