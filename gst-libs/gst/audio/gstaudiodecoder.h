@@ -322,6 +322,9 @@ gboolean          gst_audio_decoder_set_output_format  (GstAudioDecoder    * dec
                                                         const GstAudioInfo * info);
 
 GST_AUDIO_API
+gboolean          gst_audio_decoder_set_output_caps  (GstAudioDecoder * dec,
+                                                      GstCaps         * caps);
+GST_AUDIO_API
 GstCaps *         gst_audio_decoder_proxy_getcaps (GstAudioDecoder * decoder,
                                                    GstCaps         * caps,
                                                    GstCaps         * filter);

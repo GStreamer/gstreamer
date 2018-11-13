@@ -158,6 +158,7 @@ typedef struct _GstAudioDecoderContext
 
   /* (output) audio format */
   GstAudioInfo info;
+  GstCaps *caps;
   gboolean output_format_changed;
 
   /* parsing state */
@@ -513,6 +514,7 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
 
     GST_OBJECT_LOCK (dec);
     gst_caps_replace (&dec->priv->ctx.input_caps, NULL);
+    gst_caps_replace (&dec->priv->ctx.caps, NULL);
     gst_caps_replace (&dec->priv->ctx.allocation_caps, NULL);
 
     memset (&dec->priv->ctx, 0, sizeof (dec->priv->ctx));
@@ -625,10 +627,11 @@ gst_audio_decoder_negotiate_default (GstAudioDecoder * dec)
 
   g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), FALSE);
   g_return_val_if_fail (GST_AUDIO_INFO_IS_VALID (&dec->priv->ctx.info), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (dec->priv->ctx.caps), FALSE);
 
   klass = GST_AUDIO_DECODER_GET_CLASS (dec);
 
-  caps = gst_audio_info_to_caps (&dec->priv->ctx.info);
+  caps = dec->priv->ctx.caps;
   if (dec->priv->ctx.allocation_caps == NULL)
     dec->priv->ctx.allocation_caps = gst_caps_ref (caps);
 
@@ -697,7 +700,6 @@ done:
 
   if (query)
     gst_query_unref (query);
-  gst_caps_unref (caps);
 
   return res;
 
@@ -767,21 +769,58 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
     const GstAudioInfo * info)
 {
   gboolean res = TRUE;
-  guint old_rate;
   GstCaps *caps = NULL;
-  GstCaps *templ_caps;
 
   g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), FALSE);
   g_return_val_if_fail (GST_AUDIO_INFO_IS_VALID (info), FALSE);
 
-  GST_DEBUG_OBJECT (dec, "Setting output format");
-
-  GST_AUDIO_DECODER_STREAM_LOCK (dec);
-
   /* If the audio info can't be converted to caps,
    * it was invalid */
   caps = gst_audio_info_to_caps (info);
-  if (!caps)
+  if (!caps) {
+    GST_WARNING_OBJECT (dec, "invalid output format");
+    return FALSE;
+  }
+
+  res = gst_audio_decoder_set_output_caps (dec, caps);
+  gst_caps_unref (caps);
+
+  return res;
+}
+
+/**
+ * gst_audio_decoder_set_output_caps:
+ * @dec: a #GstAudioDecoder
+ * @caps: (transfer none): (fixed) #GstCaps
+ *
+ * Configure output caps on the srcpad of @dec. Similar to
+ * gst_audio_decoder_set_output_format(), but allows subclasses to specify
+ * output caps that can't be expressed via #GstAudioInfo e.g. caps that have
+ * caps features.
+ *
+ * Returns: %TRUE on success.
+ *
+ * Since: 1.16
+ **/
+gboolean
+gst_audio_decoder_set_output_caps (GstAudioDecoder * dec, GstCaps * caps)
+{
+  gboolean res = TRUE;
+  guint old_rate;
+  GstCaps *templ_caps;
+  GstAudioInfo info;
+
+  g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), FALSE);
+
+  GST_DEBUG_OBJECT (dec, "Setting srcpad caps %" GST_PTR_FORMAT, caps);
+
+  GST_AUDIO_DECODER_STREAM_LOCK (dec);
+
+  if (!gst_caps_is_fixed (caps))
+    goto refuse_caps;
+
+  /* check if caps can be parsed */
+  if (!gst_audio_info_from_caps (&info, caps))
     goto refuse_caps;
 
   /* Only allow caps that are a subset of the template caps */
@@ -804,15 +843,14 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
 
   /* copy the GstAudioInfo */
   GST_OBJECT_LOCK (dec);
-  dec->priv->ctx.info = *info;
+  dec->priv->ctx.info = info;
   GST_OBJECT_UNLOCK (dec);
+
+  gst_caps_replace (&dec->priv->ctx.caps, caps);
   dec->priv->ctx.output_format_changed = TRUE;
 
 done:
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
-
-  if (caps)
-    gst_caps_unref (caps);
 
   return res;
 
@@ -882,7 +920,7 @@ gst_audio_decoder_setup (GstAudioDecoder * dec)
   gst_query_unref (query);
 
   /* normalize to bool */
-  dec->priv->agg = ! !res;
+  dec->priv->agg = !!res;
 }
 
 static GstFlowReturn
