@@ -35,14 +35,8 @@
 #include "gstmultiudpsink.h"
 
 #include <string.h>
-#ifdef HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
 
-#ifndef G_OS_WIN32
-#include <netinet/in.h>
-#endif
-
+#include "gst/net/net.h"
 #include "gst/glib-compat-private.h"
 
 GST_DEBUG_CATEGORY_STATIC (multiudpsink_debug);
@@ -1036,30 +1030,8 @@ gst_multiudpsink_setup_qos_dscp (GstMultiUDPSink * sink, GSocket * socket)
   if (socket == NULL)
     return;
 
-#ifdef IP_TOS
-  {
-    gint tos;
-    gint fd;
-
-    fd = g_socket_get_fd (socket);
-
-    GST_DEBUG_OBJECT (sink, "setting TOS to %d", sink->qos_dscp);
-
-    /* Extract and shift 6 bits of DSFIELD */
-    tos = (sink->qos_dscp & 0x3f) << 2;
-
-    if (setsockopt (fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos)) < 0) {
-      GST_ERROR_OBJECT (sink, "could not set TOS: %s", g_strerror (errno));
-    }
-#ifdef IPV6_TCLASS
-    if (g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6) {
-      if (setsockopt (fd, IPPROTO_IPV6, IPV6_TCLASS, &tos, sizeof (tos)) < 0) {
-        GST_ERROR_OBJECT (sink, "could not set TCLASS: %s", g_strerror (errno));
-      }
-    }
-#endif
-  }
-#endif
+  if (!gst_net_utils_set_socket_tos (socket, sink->qos_dscp))
+    GST_ERROR_OBJECT (sink, "could not set qos dscp: %d", sink->qos_dscp);
 }
 
 static void
