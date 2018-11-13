@@ -60,6 +60,15 @@ gst_net_utils_set_socket_dscp (GSocket * socket, gint qos_dscp)
   } else {
     ret = TRUE;
   }
+#ifdef IPV6_TCLASS
+  if (g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6) {
+    if (setsockopt (fd, IPPROTO_IPV6, IPV6_TCLASS, &tos, sizeof (tos)) < 0) {
+      GST_ERROR ("could not set TCLASS: %s", g_strerror (errno));
+    } else {
+      ret = TRUE;
+    }
+  }
+#endif
 #endif
 
   return ret;
