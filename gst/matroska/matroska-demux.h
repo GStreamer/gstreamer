@@ -100,6 +100,8 @@ typedef struct _GstMatroskaDemux {
   gboolean                 building_index;
   guint64                  index_offset;
   GstEvent                *seek_event;
+  GstEvent                *deferred_seek_event;
+  GstPad                  *deferred_seek_pad;
   gboolean                 need_segment;
   guint32                  segment_seqnum;
 

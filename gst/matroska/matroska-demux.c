@@ -357,6 +357,11 @@ gst_matroska_demux_reset (GstElement * element)
 
   demux->cached_length = G_MAXUINT64;
 
+  if (demux->deferred_seek_event)
+    gst_event_unref (demux->deferred_seek_event);
+  demux->deferred_seek_event = NULL;
+  demux->deferred_seek_pad = NULL;
+
   gst_flow_combiner_clear (demux->flowcombiner);
 }
 
@@ -1898,9 +1903,13 @@ gst_matroska_demux_element_send_event (GstElement * element, GstEvent * event)
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
     /* no seeking until we are (safely) ready */
     if (demux->common.state != GST_MATROSKA_READ_STATE_DATA) {
-      GST_DEBUG_OBJECT (demux, "not ready for seeking yet");
-      gst_event_unref (event);
-      return FALSE;
+      GST_DEBUG_OBJECT (demux,
+          "not ready for seeking yet, deferring seek: %" GST_PTR_FORMAT, event);
+      if (demux->deferred_seek_event)
+        gst_event_unref (demux->deferred_seek_event);
+      demux->deferred_seek_event = event;
+      demux->deferred_seek_pad = NULL;
+      return TRUE;
     }
     res = gst_matroska_demux_handle_seek_event (demux, NULL, event);
   } else {
@@ -3009,9 +3018,14 @@ gst_matroska_demux_handle_src_event (GstPad * pad, GstObject * parent,
     case GST_EVENT_SEEK:
       /* no seeking until we are (safely) ready */
       if (demux->common.state != GST_MATROSKA_READ_STATE_DATA) {
-        GST_DEBUG_OBJECT (demux, "not ready for seeking yet");
-        gst_event_unref (event);
-        return FALSE;
+        GST_DEBUG_OBJECT (demux,
+            "not ready for seeking yet, deferring seek event: %" GST_PTR_FORMAT,
+            event);
+        if (demux->deferred_seek_event)
+          gst_event_unref (demux->deferred_seek_event);
+        demux->deferred_seek_event = event;
+        demux->deferred_seek_pad = pad;
+        return TRUE;
       }
 
       {
@@ -5322,6 +5336,20 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
                     demux->first_cluster_offset + cluster.size);
               }
               demux->common.offset = demux->first_cluster_offset;
+            }
+
+            if (demux->deferred_seek_event) {
+              GstEvent *seek_event;
+              GstPad *seek_pad;
+              seek_event = demux->deferred_seek_event;
+              seek_pad = demux->deferred_seek_pad;
+              demux->deferred_seek_event = NULL;
+              demux->deferred_seek_pad = NULL;
+              GST_DEBUG_OBJECT (demux,
+                  "Handling deferred seek event: %" GST_PTR_FORMAT, seek_event);
+              gst_matroska_demux_handle_seek_event (demux, seek_pad,
+                  seek_event);
+              gst_event_unref (seek_event);
             }
 
             /* send initial segment - we wait till we know the first
