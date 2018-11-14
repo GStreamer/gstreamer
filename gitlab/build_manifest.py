@@ -190,20 +190,21 @@ def find_repository_sha(module: Tuple[str, int], branchname: str) -> Tuple[str, 
     if module[0] == os.environ['CI_PROJECT_NAME']:
         return 'user', os.environ['CI_COMMIT_SHA']
 
-    project = search_user_namespace(namespace, module[0])
-    # Find a fork in the User's namespace
-    if project:
-        id = project['id']
-        print(f"User project found, id: {id}")
-        # If we have a branch with same name, use it.
-        branch = get_project_branch(id, branchname)
-        if branch is not None:
-            path = project['namespace']['path']
-            print("Found mathcing branch in user's namespace")
-            print(f"{path}/{branchname}")
+    if branchname != "master":
+        project = search_user_namespace(namespace, module[0])
+        # Find a fork in the User's namespace
+        if project:
+            id = project['id']
+            print(f"User project found, id: {id}")
+            # If we have a branch with same name, use it.
+            branch = get_project_branch(id, branchname)
+            if branch is not None:
+                path = project['namespace']['path']
+                print("Found matching branch in user's namespace")
+                print(f"{path}/{branchname}")
 
-            return 'user', branch['commit']['id']
-        print(f"Did not found user branch named {branchname}")
+                return 'user', branch['commit']['id']
+            print(f"Did not find user branch named {branchname}")
 
     # Check upstream project for a branch
     branch = get_project_branch(module[1], branchname)
