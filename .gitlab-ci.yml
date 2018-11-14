@@ -121,6 +121,18 @@ android 28 amd64 docker:
     changes:
       - 'docker/android/*'
 
+cerbero fedora amd64 docker:
+  stage: "build docker"
+  variables:
+    ARCH: "amd64"
+    TAG: "cerbero-fedora"
+    CONTEXT_DIR: "docker/cerbero/"
+    DOCKERFILE: "docker/cerbero/Dockerfile-fedora"
+  extends: .base
+  only:
+    changes:
+      - 'docker/cerbero/Dockerfile-fedora'
+
 include: "gitlab/ci_template.yml"
 
 # Test the build job against the latest build image tag and the local manifest
