@@ -318,6 +318,7 @@ gst_vaapipostproc_stop (GstBaseTransform * trans)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
 
+  g_mutex_lock (&postproc->postproc_lock);
   ds_reset (&postproc->deinterlace_state);
   gst_vaapi_plugin_base_close (GST_VAAPI_PLUGIN_BASE (postproc));
 
@@ -325,6 +326,7 @@ gst_vaapipostproc_stop (GstBaseTransform * trans)
   gst_video_info_init (&postproc->sinkpad_info);
   gst_video_info_init (&postproc->srcpad_info);
   gst_video_info_init (&postproc->filter_pool_info);
+  g_mutex_unlock (&postproc->postproc_lock);
 
   return TRUE;
 }
