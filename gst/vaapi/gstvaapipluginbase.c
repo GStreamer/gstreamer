@@ -1266,18 +1266,18 @@ extract_allowed_surface_formats (GstVaapiDisplay * display, GArray * formats)
 
   for (i = 0; i < formats->len; i++) {
     const GstVideoFormat format = g_array_index (formats, GstVideoFormat, i);
-    GstVaapiChromaType chroma_type;
     GstVaapiSurface *surface;
     GstVaapiImage *image;
+    GstVideoInfo vi;
 
     if (format == GST_VIDEO_FORMAT_UNKNOWN)
       continue;
-    chroma_type = gst_vaapi_video_format_get_chroma_type (format);
-    if (chroma_type == 0)
-      continue;
-    surface = gst_vaapi_surface_new (display, chroma_type, 64, 64);
+
+    gst_video_info_set_format (&vi, format, 64, 64);
+    surface = gst_vaapi_surface_new_full (display, &vi, 0);
     if (!surface)
       continue;
+
     image = gst_vaapi_image_new (display, format, 64, 64);
     if (!image) {
       gst_vaapi_object_unref (surface);
