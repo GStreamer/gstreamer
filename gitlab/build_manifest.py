@@ -186,8 +186,11 @@ def test_search_user_namespace():
 
 def find_repository_sha(module: Tuple[str, int], branchname: str) -> Tuple[str, str]:
     namespace: str = os.environ["CI_PROJECT_NAMESPACE"]
-    project = search_user_namespace(namespace, module[0])
 
+    if module[0] == os.environ['CI_PROJECT_NAME']:
+        return 'user', os.environ['CI_COMMIT_SHA']
+
+    project = search_user_namespace(namespace, module[0])
     # Find a fork in the User's namespace
     if project:
         id = project['id']
@@ -242,6 +245,13 @@ def test_find_repository_sha():
     assert remote == "origin"
     # This is now the sha of the last commit
     # assert git_ref == "master"
+
+    os.environ["CI_PROJECT_NAME"] = "the_project"
+    os.environ["CI_COMMIT_SHA"] = "MySha"
+
+    remote, git_ref = find_repository_sha(("the_project", 199), "whatever")
+    assert remote == "user"
+    assert git_ref == "MySha"
 
 
 if __name__ == "__main__":
