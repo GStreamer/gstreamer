@@ -121,12 +121,12 @@ _gst_dtls_init_openssl (void)
       g_assert_not_reached ();
     }
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
     GST_INFO_OBJECT (NULL, "initializing openssl %lx", OPENSSL_VERSION_NUMBER);
     SSL_library_init ();
     SSL_load_error_strings ();
     ERR_load_BIO_strings ();
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
     {
       gint i;
       gint num_locks;
@@ -199,7 +199,7 @@ gst_dtls_agent_init (GstDtlsAgent * self)
   SSL_CTX_set_cipher_list (priv->ssl_context,
       "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
   SSL_CTX_set_read_ahead (priv->ssl_context, 1);
-#if OPENSSL_VERSION_NUMBER >= 0x1000200fL
+#if (OPENSSL_VERSION_NUMBER >= 0x1000200fL) && (OPENSSL_VERSION_NUMBER < 0x10100000L)
   SSL_CTX_set_ecdh_auto (priv->ssl_context, 1);
 #endif
 }

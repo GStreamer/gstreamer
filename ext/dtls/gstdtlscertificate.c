@@ -45,7 +45,14 @@
 #endif
 #endif
 
+#include <openssl/bn.h>
+#include <openssl/rsa.h>
 #include <openssl/ssl.h>
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#define X509_getm_notBefore X509_get_notBefore
+#define X509_getm_notAfter X509_get_notAfter
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_dtls_certificate_debug);
 #define GST_CAT_DEFAULT gst_dtls_certificate_debug
@@ -238,8 +245,8 @@ init_generated (GstDtlsCertificate * self)
 
   X509_set_version (priv->x509, 2);
   ASN1_INTEGER_set (X509_get_serialNumber (priv->x509), 0);
-  X509_gmtime_adj (X509_get_notBefore (priv->x509), 0);
-  X509_gmtime_adj (X509_get_notAfter (priv->x509), 31536000L);  /* A year */
+  X509_gmtime_adj (X509_getm_notBefore (priv->x509), 0);
+  X509_gmtime_adj (X509_getm_notAfter (priv->x509), 31536000L);  /* A year */
   X509_set_pubkey (priv->x509, priv->private_key);
 
   name = X509_get_subject_name (priv->x509);
