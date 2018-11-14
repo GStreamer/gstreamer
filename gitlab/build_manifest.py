@@ -278,11 +278,11 @@ if __name__ == "__main__":
         sys.exit(0)
 
     projects: str = ''
-    project_template: str = "  <project name=\"{}.git\" remote=\"{}\" revision=\"{}\" />\n"
+    project_template: str = "  <project path=\"%(name)s\" name=\"%(name)s.git\" remote=\"%(remote)s\" revision=\"%(revision)s\" />\n"
     for module in GSTREAMER_MODULES:
         print(f"Checking {module}:", end=' ')
         remote, revision = find_repository_sha(module, current_branch)
-        projects += project_template.format(module[0], remote, revision)
+        projects += project_template % {'name': module[0], 'remote': remote, 'revision': revision}
 
     with open(options.output, mode='w') as manifest:
         print(MANIFEST_TEMPLATE.format(user_remote_url, projects), file=manifest)
