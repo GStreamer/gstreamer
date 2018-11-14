@@ -278,7 +278,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     projects: str = ''
-    project_template: str = "  <project name=\"{}\" remote=\"{}\" revision=\"{}\" />\n"
+    project_template: str = "  <project name=\"{}.git\" remote=\"{}\" revision=\"{}\" />\n"
     for module in GSTREAMER_MODULES:
         print(f"Checking {module}:", end=' ')
         remote, revision = find_repository_sha(module, current_branch)
