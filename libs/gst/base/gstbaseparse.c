@@ -3343,28 +3343,6 @@ gst_base_parse_pull_range (GstBaseParse * parse, guint size,
     return ret;
   }
 
-  if (gst_buffer_get_size (parse->priv->cache) >= size) {
-    *buffer =
-        gst_buffer_copy_region (parse->priv->cache, GST_BUFFER_COPY_ALL, 0,
-        size);
-    GST_BUFFER_OFFSET (*buffer) = parse->priv->offset;
-    return GST_FLOW_OK;
-  }
-
-  /* Not possible to get enough data, try a last time with
-   * requesting exactly the size we need */
-  gst_buffer_unref (parse->priv->cache);
-  parse->priv->cache = NULL;
-
-  ret = gst_pad_pull_range (parse->sinkpad, parse->priv->offset, size,
-      &parse->priv->cache);
-
-  if (ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (parse, "pull_range returned %d", ret);
-    *buffer = NULL;
-    return ret;
-  }
-
   if (gst_buffer_get_size (parse->priv->cache) < size) {
     GST_DEBUG_OBJECT (parse, "Returning short buffer at offset %"
         G_GUINT64_FORMAT ": wanted %u bytes, got %" G_GSIZE_FORMAT " bytes",
