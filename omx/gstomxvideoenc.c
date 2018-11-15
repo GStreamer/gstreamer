@@ -2054,8 +2054,6 @@ gst_omx_video_enc_enable (GstOMXVideoEnc * self, GstBuffer * input)
 
   /* Is downstream using our buffer pool? */
   if (buffer_is_from_input_pool (self, input)) {
-    /* We're done allocating as we received the first buffer from upstream */
-    GST_OMX_BUFFER_POOL (input->pool)->allocating = FALSE;
     self->in_pool_used = TRUE;
   }
 
@@ -3059,7 +3057,6 @@ create_input_pool (GstOMXVideoEnc * self, GstCaps * caps, guint num_buffers)
   pool =
       gst_omx_buffer_pool_new (GST_ELEMENT_CAST (self), self->enc,
       self->enc_in_port, GST_OMX_BUFFER_MODE_DMABUF);
-  GST_OMX_BUFFER_POOL (pool)->allocating = TRUE;
 
   g_signal_connect_object (pool, "allocate",
       G_CALLBACK (pool_request_allocate_cb), self, 0);

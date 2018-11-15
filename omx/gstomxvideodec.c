@@ -1165,14 +1165,11 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
       goto done;
     }
 
-    GST_OMX_BUFFER_POOL (self->out_port_pool)->allocating = TRUE;
     /* This now allocates all the buffers */
     if (!gst_buffer_pool_set_active (self->out_port_pool, TRUE)) {
       GST_INFO_OBJECT (self, "Failed to activate internal pool");
       gst_object_unref (self->out_port_pool);
       self->out_port_pool = NULL;
-    } else {
-      GST_OMX_BUFFER_POOL (self->out_port_pool)->allocating = FALSE;
     }
   } else if (self->out_port_pool) {
     gst_object_unref (self->out_port_pool);

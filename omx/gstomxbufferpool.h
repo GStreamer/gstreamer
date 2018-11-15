@@ -68,8 +68,6 @@ struct _GstOMXBufferPool
   GstAllocator *allocator;
 
   /* Set from outside this pool */
-  /* TRUE if we're currently allocating all our buffers */
-  gboolean allocating;
   /* TRUE if the pool is not used anymore */
   gboolean deactivated;
 

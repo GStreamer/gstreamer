@@ -405,8 +405,6 @@ gst_omx_buffer_pool_alloc_buffer (GstBufferPool * bpool,
   GstBuffer *buf;
   GstOMXBuffer *omx_buf;
 
-  g_return_val_if_fail (pool->allocating, GST_FLOW_ERROR);
-
   omx_buf = g_ptr_array_index (pool->port->buffers, pool->current_buffer_index);
   g_return_val_if_fail (omx_buf != NULL, GST_FLOW_ERROR);
 
@@ -659,7 +657,7 @@ gst_omx_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
 
   g_assert (pool->component && pool->port);
 
-  if (!pool->allocating) {
+  if (gst_buffer_pool_is_active (bpool)) {
     omx_buf = gst_omx_buffer_get_omx_buf (buffer);
     if (pool->port->port_def.eDir == OMX_DirOutput && !omx_buf->used &&
         !pool->deactivated) {
