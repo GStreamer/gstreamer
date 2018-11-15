@@ -5328,8 +5328,6 @@ static const VideoFormat formats[] = {
       DPTH10_10_10, PSTR0, PLANE0, OFFS0, SUB422, PACK_v210),
   MAKE_YUV_FORMAT (v216, "raw video", GST_MAKE_FOURCC ('v', '2', '1', '6'),
       DPTH16_16_16, PSTR488, PLANE0, OFFS204, SUB422, PACK_v216),
-  MAKE_YUV_FORMAT (Y210, "raw video", GST_MAKE_FOURCC ('Y', '2', '1', '0'),
-      DPTH10_10_10, PSTR488, PLANE0, OFFS0, SUB422, PACK_Y210),
   MAKE_YUV_FORMAT (NV12, "raw video", GST_MAKE_FOURCC ('N', 'V', '1', '2'),
       DPTH888, PSTR122, PLANE011, OFFS001, SUB420, PACK_NV12),
   MAKE_YUV_FORMAT (NV21, "raw video", GST_MAKE_FOURCC ('N', 'V', '2', '1'),
@@ -5476,6 +5474,8 @@ static const VideoFormat formats[] = {
   MAKE_YUV_C_LE_FORMAT (NV12_10LE40, "raw video",
       GST_MAKE_FOURCC ('R', 'K', '2', '0'), DPTH10_10_10, PSTR0, PLANE011,
       OFFS0, SUB420, PACK_NV12_10LE40),
+  MAKE_YUV_FORMAT (Y210, "raw video", GST_MAKE_FOURCC ('Y', '2', '1', '0'),
+      DPTH10_10_10, PSTR488, PLANE0, OFFS0, SUB422, PACK_Y210),
 };
 
 static GstVideoFormat

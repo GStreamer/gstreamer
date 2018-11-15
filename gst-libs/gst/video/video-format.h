@@ -114,6 +114,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_Y444_12BE: planar 4:4:4 YUV, 12 bits per channel (Since: 1.12)
  * @GST_VIDEO_FORMAT_Y444_12LE: planar 4:4:4 YUV, 12 bits per channel (Since: 1.12)
  * @GST_VIDEO_FORMAT_NV12_10LE40: Fully packed variant of NV12_10LE32 (Since: 1.16)
+ * @GST_VIDEO_FORMAT_Y210: packed 4:2:2 YUV, 10 bits per channel (Since: 1.16)
  *
  * Enum value describing the most common video formats.
  */
@@ -141,7 +142,6 @@ typedef enum {
   GST_VIDEO_FORMAT_Y444,
   GST_VIDEO_FORMAT_v210,
   GST_VIDEO_FORMAT_v216,
-  GST_VIDEO_FORMAT_Y210,
   GST_VIDEO_FORMAT_NV12,
   GST_VIDEO_FORMAT_NV21,
   GST_VIDEO_FORMAT_GRAY8,
@@ -201,6 +201,7 @@ typedef enum {
   GST_VIDEO_FORMAT_NV12_10LE32,
   GST_VIDEO_FORMAT_NV16_10LE32,
   GST_VIDEO_FORMAT_NV12_10LE40,
+  GST_VIDEO_FORMAT_Y210,
 } GstVideoFormat;
 
 #define GST_VIDEO_MAX_PLANES 4
