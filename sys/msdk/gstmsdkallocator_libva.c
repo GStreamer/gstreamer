@@ -296,6 +296,9 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         data->B = data->R + 2;
         data->A = data->R + 3;
         break;
+      default:
+        g_assert_not_reached ();
+        break;
     }
   } else {
     VACodedBufferSegment *coded_buffer_segment;
