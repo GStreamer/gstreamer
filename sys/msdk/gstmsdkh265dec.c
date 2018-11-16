@@ -96,7 +96,6 @@ gst_msdkh265dec_configure (GstMsdkDec * decoder)
   }
 
   decoder->param.mfx.CodecId = MFX_CODEC_HEVC;
-  decoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
 
   /* This is a deprecated attribute in msdk-2017 version, but some
    * customers still using this for low-latency streaming of non-b-frame
