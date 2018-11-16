@@ -267,6 +267,7 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
 
     switch (mem_id->image.format.fourcc) {
       case VA_FOURCC_NV12:
+      case VA_FOURCC_P010:
         data->Pitch = mem_id->image.pitches[0];
         data->Y = buf + mem_id->image.offsets[0];
         data->UV = buf + mem_id->image.offsets[1];
