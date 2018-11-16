@@ -61,6 +61,7 @@ static const struct fourcc_map gst_msdk_fourcc_mfx_to_va[] = {
   FOURCC_MFX_TO_VA (YV12, YV12),
   FOURCC_MFX_TO_VA (RGB4, ARGB),
   FOURCC_MFX_TO_VA (P8, P208),
+  FOURCC_MFX_TO_VA (P010, P010),
   {0, 0}
 };
 
