@@ -78,6 +78,7 @@ ensure_data (GstMsdkSystemMemory * mem)
 
   switch (GST_VIDEO_INFO_FORMAT (info)) {
     case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_P010_10LE:
       mem->surface->Data.Y = mem->cached_data[0];
       mem->surface->Data.UV = mem->cached_data[1];
       mem->surface->Data.Pitch = mem->destination_pitches[0];
