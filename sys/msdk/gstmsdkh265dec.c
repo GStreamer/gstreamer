@@ -45,20 +45,21 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkh265dec_debug);
 #define GST_CAT_DEFAULT gst_msdkh265dec_debug
 
+/* TODO: update both sink and src dynamically */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h265, "
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
         "stream-format = (string) byte-stream , alignment = (string) au , "
-        "profile = (string) main ")
+        "profile = (string) { main, main-10 } ")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { NV12 }, "
+        "format = (string) { NV12, P010_10LE }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 16, MAX ], height = (int) [ 16, MAX ],"
         "interlace-mode = (string) progressive;"
