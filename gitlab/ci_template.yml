@@ -110,3 +110,108 @@ build android arm64 api28:
       --cross-file /android_arm64_28.txt
   before_script:
     - cat /android_arm64_28.txt
+
+# Template for Cerbero GStreamer Build
+#
+# Parameters:
+# CONFIG: The name of the configuration file to use
+#
+# Produces runtime and devel tarball packages.
+.cerbero:
+  stage: "full builds"
+  dependencies:
+    - "manifest"
+  variables:
+    CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
+    CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
+    CERBERO_HOME: "${CI_PROJECT_DIR}/cerbero-build"
+    CERBERO_SOURCES: "${CI_PROJECT_DIR}/cerbero-sources"
+    CERBERO_DEPS: "cerbero-deps.tar.gz"
+    CERBERO: ./cerbero-uninstalled -c config/${CONFIG} -c localconf.cbc -m manifest.xml
+  before_script:
+    # FIXME Wrong namespace
+    # Workaround build-tools having hardcoded internal path 
+    - mkdir -p /builds/gstreamer
+    - ln -sf ${CI_PROJECT_DIR} /builds/gstreamer/cerbero
+    - rsync -aH /cerbero/ .
+    - mkdir -p ${CERBERO_HOME}
+    - test -f ${CERBERO_DEPS} && tar -C ${CERBERO_HOME} -xf ${CERBERO_DEPS}
+    - echo "home_dir = \"${CERBERO_HOME}\"" >> localconf.cbc
+    - echo "local_sources = \"${CERBERO_SOURCES}\"" >> localconf.cbc
+    - ./cerbero-uninstalled --self-update manifest.xml
+    - ccache -z
+  script:
+    - $CERBERO show-config
+    - $CERBERO fetch-bootstrap --build-tools-only
+    - $CERBERO fetch-package --deps --reset-rdeps --full-reset gstreamer-1.0
+    - $CERBERO fetch-cache
+    - $CERBERO bootstrap --offline --build-tools-only
+    - $CERBERO package --offline -t -o ${CI_PROJECT_DIR} gstreamer-1.0
+    - ccache -s
+  cache:
+    paths:
+      - "${CCACHE_DIR}"
+      - "${CERBERO_SOURCES}"
+  artifacts:
+    name: "${CI_JOB_NAME}_${CI_COMMIT_SHA}"
+    expire_in: '2 days'
+    when: 'always'
+    paths:
+      - "manifest.xml"
+      - "cerbero-build/logs"
+      - "*.tar.bz2"
+  dependencies:
+    - "manifest"
+
+# Template for Cerbero GStreamer Deps
+#
+# This template is used by cerbero/ project to pre-built the GStreamer
+# depedencies. When available, the .cerbero jobs will download this artifact
+# in order to speed up the build.
+#
+# Parameters:
+# CONFIG: The name of the configuration file to use
+# ARCH: The architecture name (Cerbero naming)
+#
+# Produce an artifact with the dist/ and .cache for the ARCH along
+# with the associated build-tools.
+.cerbero deps:
+  extends: .cerbero
+  stage: "build"
+  script:
+    - $CERBERO show-config
+    - $CERBERO fetch-bootstrap --build-tools-only
+    - $CERBERO fetch-package --deps gstreamer-1.0
+    - $CERBERO bootstrap --offline --build-tools-only
+    - $CERBERO build-deps --offline
+          gstreamer-1.0 gst-plugins-base-1.0 gst-plugins-good-1.0
+          gst-plugins-bad-1.0 gst-plugins-ugly-1.0 gst-rtsp-server-1.0
+          gst-libav-1.0 gst-validate gst-editing-services-1.0 libnice
+    - $CERBERO fetch-cache --skip-fetch --job-id=${CI_JOB_ID}
+    - tar -C ${CERBERO_HOME} -czf $CERBERO_DEPS
+              build-tools build-tools.cache
+              dist/${ARCH} ${ARCH}.cache
+    - ccache -s
+  only:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+  artifacts:
+    name: "${CI_JOB_NAME}_${CI_COMMIT_SHA}"
+    expire_in: '10 days'
+    when: 'always'
+    paths:
+      - "manifest.xml"
+      - "cerbero-build/logs"
+      - "cerbero-build/cerbero-deps.log"
+      - "${CERBERO_DEPS}"
+
+.build cerbero fedora x86_64:
+  extends: '.cerbero'
+  variables:
+    CONFIG: "linux.config"
+
+# FIXME uncomment and set the SHA when docker is ready
+# This indirection allow overriding the image without passing again CONFIG and ARCH
+#build cerbero fedora x86_64:
+#  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:SHA'
+#  extends: '.build cerbero fedora x86_64'

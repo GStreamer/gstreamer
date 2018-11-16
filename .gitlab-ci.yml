@@ -155,3 +155,10 @@ build android 28 local:
   except:
     refs:
       - "master@gstreamer/gst-ci"
+
+build cerbero fedora x86_64 local:
+  extends: '.build cerbero fedora x86_64'
+  image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
+  except:
+    refs:
+      - "master@gstreamer/gst-ci"
