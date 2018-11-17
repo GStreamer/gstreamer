@@ -2628,7 +2628,8 @@ gst_rtsp_media_get_status (GstRTSPMedia * media)
  * @flags: The minimal set of #GstSeekFlags to use
  *
  * Seek the pipeline of @media to @range. @media must be prepared with
- * gst_rtsp_media_prepare().
+ * gst_rtsp_media_prepare(). In order to perform the seek operation,
+ * the pipeline must contain all needed transport parts (transport sinks).
  *
  * Returns: %TRUE on success.
  */
@@ -2737,8 +2738,6 @@ gst_rtsp_media_seek_full (GstRTSPMedia * media, GstRTSPTimeRange * range,
       res = TRUE;
     } else {
       gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
-      if (priv->blocked)
-        media_streams_set_blocked (media, TRUE);
 
       /* FIXME, we only do forwards playback, no trick modes yet */
       res = gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME,
