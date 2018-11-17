@@ -2572,6 +2572,9 @@ media_unblock_linked (GstRTSPMedia * media)
   GstRTSPMediaPrivate *priv = media->priv;
 
   GST_DEBUG ("media %p unblocking linked streams", media);
+  /* media is not blocked any longer, as it contains active streams,
+   * streams that are complete */
+  priv->blocked = FALSE;
   g_ptr_array_foreach (priv->streams, (GFunc) stream_unblock, media);
 }
 
