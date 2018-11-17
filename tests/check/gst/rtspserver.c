@@ -192,7 +192,7 @@ start_server (gboolean set_shared_factory)
 }
 
 static void
-start_tcp_server (void)
+start_tcp_server (gboolean set_shared_factory)
 {
   GstRTSPMountPoints *mounts;
   gchar *service;
@@ -206,6 +206,7 @@ start_tcp_server (void)
   gst_rtsp_media_factory_set_launch (factory,
       "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
   gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
+  gst_rtsp_media_factory_set_shared (factory, set_shared_factory);
   g_object_unref (mounts);
 
   /* set port to any */
@@ -1236,7 +1237,7 @@ GST_START_TEST (test_play_tcp)
   GstRTSPTransport *video_transport = NULL;
   GstRTSPTransport *audio_transport = NULL;
 
-  start_tcp_server ();
+  start_tcp_server (FALSE);
 
   conn = connect_to_server (test_port, TEST_MOUNT_POINT);
 
@@ -1910,7 +1911,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_play_smpte_range_tcp)
 {
-  start_tcp_server ();
+  start_tcp_server (FALSE);
 
   do_test_play_tcp_full ("npt=5-");
   do_test_play_tcp_full ("smpte=0:00:00-");
@@ -1925,14 +1926,21 @@ GST_START_TEST (test_play_smpte_range_tcp)
 GST_END_TEST;
 
 static gpointer
-thread_func (gpointer data)
+thread_func_udp (gpointer data)
 {
   do_test_play_full (NULL, GST_RTSP_LOWER_TRANS_UDP, (GMutex *) data);
   return NULL;
 }
 
-/* Test adding and removing clients to a 'Shared' media. */
-GST_START_TEST (test_shared)
+static gpointer
+thread_func_tcp (gpointer data)
+{
+  do_test_play_tcp_full (NULL);
+  return NULL;
+}
+
+static void
+test_shared (gpointer (thread_func) (gpointer data))
 {
   GMutex lock1, lock2, lock3, lock4;
   GThread *thread1, *thread2, *thread3, *thread4;
@@ -1944,7 +1952,10 @@ GST_START_TEST (test_shared)
   g_mutex_init (&lock3);
   g_mutex_init (&lock4);
 
-  start_server (TRUE);
+  if (thread_func == thread_func_tcp)
+    start_tcp_server (TRUE);
+  else
+    start_server (TRUE);
 
   /* Start the first receiver thread. */
   g_mutex_lock (&lock1);
@@ -1979,6 +1990,22 @@ GST_START_TEST (test_shared)
 
   stop_server ();
   iterate ();
+}
+
+/* Test adding and removing clients to a 'Shared' media.
+ * CASE: unicast UDP */
+GST_START_TEST (test_shared_udp)
+{
+  test_shared (thread_func_udp);
+}
+
+GST_END_TEST;
+
+/* Test adding and removing clients to a 'Shared' media.
+ * CASE: unicast TCP */
+GST_START_TEST (test_shared_tcp)
+{
+  test_shared (thread_func_tcp);
 }
 
 GST_END_TEST;
@@ -2407,7 +2434,8 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_play_specific_server_port);
   tcase_add_test (tc, test_play_smpte_range);
   tcase_add_test (tc, test_play_smpte_range_tcp);
-  tcase_add_test (tc, test_shared);
+  tcase_add_test (tc, test_shared_udp);
+  tcase_add_test (tc, test_shared_tcp);
   tcase_add_test (tc, test_announce_without_sdp);
   tcase_add_test (tc, test_record_tcp);
   tcase_add_test (tc, test_multiple_transports);
