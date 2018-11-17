@@ -767,10 +767,10 @@ _append_value (GQuark field_id, const GValue * value, GString * string)
   else
     val_str = gst_value_serialize (value);
 
+  g_string_append (string, "\n    - ");
   g_string_append (string, g_quark_to_string (field_id));
   g_string_append_len (string, "=", 1);
   g_string_append (string, val_str);
-  g_string_append_len (string, " ", 1);
 
   g_free (val_str);
 
@@ -803,10 +803,14 @@ gst_validate_print_action (GstValidateAction * action, const gchar * message)
     g_string_append_printf (string, "%s",
         gst_structure_get_name (action->structure));
 
-    g_string_append_len (string, ": ", 2);
+    g_string_append_len (string, " ( ", 3);
     gst_structure_foreach (action->structure,
         (GstStructureForeachFunc) _append_value, string);
-    g_string_append_len (string, "\n", 1);
+
+    if (gst_structure_n_fields (action->structure))
+      g_string_append (string, "\n)\n");
+    else
+      g_string_append (string, ")\n");
     message = string->str;
   }
 
@@ -890,7 +894,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       if (_action_check_and_set_printed (action))
         goto out;
 
-      g_string_assign (string, "Executing ");
+      g_string_assign (string, "\nExecuting ");
 
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
       gint i;
