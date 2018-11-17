@@ -2942,6 +2942,16 @@ GST_START_TEST (test_overlay_composition_over_transparency)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_format_enum_stability)
+{
+  /* When adding new formats, adding a format in the middle of the enum will
+   * break the API. This check picks the last known format and checks that
+   * it's value isn't changing. This test should ideall be updated when a new
+   * format is added, though will stay valid. */
+  fail_unless_equals_int (GST_VIDEO_FORMAT_Y210, 82);
+}
+
+GST_END_TEST;
 
 static Suite *
 video_suite (void)
@@ -2982,6 +2992,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_overlay_blend);
   tcase_add_test (tc_chain, test_video_center_rect);
   tcase_add_test (tc_chain, test_overlay_composition_over_transparency);
+  tcase_add_test (tc_chain, test_video_format_enum_stability);
 
   return s;
 }
