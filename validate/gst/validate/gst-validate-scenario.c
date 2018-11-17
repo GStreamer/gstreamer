@@ -279,6 +279,9 @@ gst_validate_action_get_type (void)
 static GstValidateAction *gst_validate_action_new (GstValidateScenario *
     scenario, GstValidateActionType * type);
 static gboolean execute_next_action (GstValidateScenario * scenario);
+static gboolean
+gst_validate_scenario_load (GstValidateScenario * scenario,
+    const gchar * scenario_name, const gchar * relative_scenario);
 
 static GstValidateAction *
 _action_copy (GstValidateAction * act)
@@ -2899,6 +2902,22 @@ _load_scenario_file (GstValidateScenario * scenario,
       }
 
       continue;
+    } else if (!g_strcmp0 (type, "include")) {
+      const gchar *location = gst_structure_get_string (structure, "location");
+
+      if (!location) {
+        GST_ERROR_OBJECT (scenario,
+            "Mandatory field 'location' not present in structure: %"
+            GST_PTR_FORMAT, structure);
+        goto failed;
+      }
+
+      if (!gst_validate_scenario_load (scenario, location, scenario_file)) {
+        GST_ERROR ("Failed including scenario %s", location);
+        goto failed;
+      }
+
+      continue;
     } else if (!(action_type = _find_action_type (type))) {
       if (gst_structure_has_field (structure, "optional-action-type")) {
         GST_INFO_OBJECT (scenario,
@@ -2946,15 +2965,31 @@ failed:
 
 static gboolean
 gst_validate_scenario_load (GstValidateScenario * scenario,
-    const gchar * scenario_name)
+    const gchar * scenario_name, const gchar * relative_scenario)
 {
   gchar **scenarios = NULL;
   guint i;
   gboolean found_actions = FALSE, is_config, ret = TRUE;
-  const gchar *scenarios_path = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
+  gchar *scenarios_path = g_strdup (g_getenv ("GST_VALIDATE_SCENARIOS_PATH"));
 
-  gchar **env_scenariodir =
-      scenarios_path ? g_strsplit (scenarios_path, ":", 0) : NULL;
+  gchar **env_scenariodir;
+
+  if (relative_scenario) {
+    gchar *relative_dir = g_path_get_dirname (relative_scenario);
+    gchar *tmp_scenarios_path =
+        g_strdup_printf ("%s%c%s", relative_dir, G_SEARCHPATH_SEPARATOR,
+        scenarios_path);
+
+    GST_ERROR ("Checking %s", relative_dir);
+
+    g_free (scenarios_path);
+    scenarios_path = tmp_scenarios_path;
+  }
+
+  env_scenariodir =
+      scenarios_path ? g_strsplit (scenarios_path, G_SEARCHPATH_SEPARATOR_S,
+      0) : NULL;
+  g_free (scenarios_path);
 
   if (!scenario_name)
     goto invalid_name;
@@ -2973,8 +3008,11 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
         goto check_scenario;
     }
 
-    lfilename =
-        g_strdup_printf ("%s" GST_VALIDATE_SCENARIO_SUFFIX, scenarios[i]);
+    if (g_str_has_suffix (scenarios[i], GST_VALIDATE_SCENARIO_SUFFIX))
+      lfilename = g_strdup (scenarios[i]);
+    else
+      lfilename =
+          g_strdup_printf ("%s" GST_VALIDATE_SCENARIO_SUFFIX, scenarios[i]);
 
     tldir = g_build_filename ("data", "scenarios", lfilename, NULL);
 
@@ -3333,7 +3371,7 @@ gst_validate_scenario_factory_create (GstValidateRunner *
       runner, NULL);
 
   GST_LOG ("Creating scenario %s", scenario_name);
-  if (!gst_validate_scenario_load (scenario, scenario_name)) {
+  if (!gst_validate_scenario_load (scenario, scenario_name, NULL)) {
     g_object_unref (scenario);
 
     return NULL;
@@ -4472,6 +4510,20 @@ init_scenarios (void)
         }),
       "Sets the debug level to be used, same format as\n"
       "setting the GST_DEBUG env variable",
+      GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE ("include",
+      NULL, /* This is handled directly when loading a scenario */
+      ((GstValidateActionParameter [])
+        {
+          {
+            .name = "location",
+            .description = "The location of the sub scenario to include.",
+            .mandatory = TRUE,
+            .types = "string"},
+          {NULL}
+        }),
+      "Include a sub scenario file.",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("emit-signal", _execute_emit_signal,
