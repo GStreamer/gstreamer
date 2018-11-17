@@ -841,60 +841,52 @@ static void
 print_action_parameter (GString * string, GstValidateActionType * type,
     GstValidateActionParameter * param)
 {
-  gint nw = 0;
-
-  gchar *desc, *tmp;
-  gchar *param_head = g_strdup_printf ("    %s", param->name);
-  gchar *tmp_head = g_strdup_printf ("\n %-30s : %s",
-      param_head, "something");
-
-
-  while (tmp_head[nw] != ':')
-    nw++;
-
-  g_free (tmp_head);
-
-  tmp = g_strdup_printf ("\n%*s", nw + 1, " ");
+  gchar *desc;
+  g_string_append_printf (string, "\n\n* `%s`:(%s): ", param->name,
+      param->mandatory ? "mandatory" : "optional");
 
   if (g_strcmp0 (param->description, "")) {
-    desc =
-        g_regex_replace (newline_regex, param->description,
-        -1, 0, tmp, 0, NULL);
+    desc = g_strdup (param->description);
   } else {
-    desc = g_strdup ("No description");
+    desc = g_strdup ("__No description__");
   }
 
-  g_string_append_printf (string, "\n %-30s : %s", param_head, desc);
+  g_string_append (string, desc);
   g_free (desc);
 
   if (param->possible_variables) {
-    gchar *tmp1 = g_strdup_printf ("\n%*s", nw + 4, " ");
     desc =
         g_regex_replace (newline_regex,
-        param->possible_variables, -1, 0, tmp1, 0, NULL);
-    g_string_append_printf (string, "%sPossible variables:%s%s", tmp,
-        tmp1, desc);
-
-    g_free (tmp1);
+        param->possible_variables, -1, 0, "\n\n  * ", 0, NULL);
+    g_string_append_printf (string, "\n\n  Possible variables:\n\n  * %s",
+        desc);
   }
 
-  if (param->types) {
-    gchar *tmp1 = g_strdup_printf ("\n%*s", nw + 4, " ");
-    desc = g_regex_replace (newline_regex, param->types, -1, 0, tmp1, 0, NULL);
-    g_string_append_printf (string, "%sPossible types:%s%s", tmp, tmp1, desc);
+  if (param->types)
+    g_string_append_printf (string, "\n\n  Possible types: `%s`", param->types);
 
-    g_free (tmp1);
-  }
+  if (!param->mandatory)
+    g_string_append_printf (string, "\n\n  Default: %s", param->def);
 
-  if (!param->mandatory) {
-    g_string_append_printf (string, "%sDefault: %s", tmp, param->def);
-  }
+}
 
-  g_string_append_printf (string, "%s%s", tmp,
-      param->mandatory ? "Mandatory." : "Optional.");
+static void
+print_action_parameter_prototype (GString * string,
+    GstValidateActionParameter * param, gboolean is_first)
+{
+  if (!is_first)
+    g_string_append (string, ",");
+  g_string_append (string, "\n    ");
 
-  g_free (tmp);
-  g_free (param_head);
+  if (!param->mandatory)
+    g_string_append (string, "[");
+
+  g_string_append (string, param->name);
+  if (param->types)
+    g_string_append_printf (string, "=(%s)", param->types);
+
+  if (!param->mandatory)
+    g_string_append (string, "]");
 }
 
 void
@@ -915,8 +907,8 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
     } else if (*(GType *) source == GST_TYPE_VALIDATE_ACTION_TYPE) {
       gint i;
-      gchar *desc;
       gboolean has_parameters = FALSE;
+      gboolean is_first = TRUE;
 
       GstValidateActionParameter playback_time_param = {
         .name = "playback-time",
@@ -924,8 +916,8 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
         .mandatory = FALSE,
         .types = "double,string",
         .possible_variables =
-            "position: The current position in the stream\n"
-            "duration: The duration of the stream",
+            "`position`: The current position in the stream\n"
+            "`duration`: The duration of the stream",
         .def = "0.0"
       };
 
@@ -944,21 +936,37 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
 
       GstValidateActionType *type = GST_VALIDATE_ACTION_TYPE (source);
 
-      g_string_assign (string, "\nAction type:");
+      g_string_append_printf (string, "\n## %s\n\n", type->name);
+
+      g_string_append_printf (string, "\n``` validate-scenario\n%s,",
+          type->name);
+
+      if (!IS_CONFIG_ACTION_TYPE (type->flags)) {
+        print_action_parameter_prototype (string, &playback_time_param,
+            is_first);
+        is_first = FALSE;
+      }
+
+      for (i = 0; type->parameters[i].name; i++) {
+        print_action_parameter_prototype (string, &type->parameters[i],
+            is_first);
+        is_first = FALSE;
+      }
+
+      g_string_append (string, ";\n```\n");
+
+      g_string_append_printf (string, "\n%s", type->description);
       g_string_append_printf (string,
-          "\n  Name: %s\n  Implementer namespace: %s",
-          type->name, type->implementer_namespace);
+          "\n * Implementer namespace: %s", type->implementer_namespace);
 
       if (IS_CONFIG_ACTION_TYPE (type->flags))
         g_string_append_printf (string,
-            "\n    Is config action (meaning it will be executing right "
+            "\n * Is config action (meaning it will be executing right "
             "at the beginning of the execution of the pipeline)");
 
 
-      desc = g_regex_replace (newline_regex, type->description, -1, 0, "\n    ",
-          0, NULL);
-      g_string_append_printf (string, "\n\n  Description: \n    %s", desc);
-      g_free (desc);
+      if (type->parameters || !IS_CONFIG_ACTION_TYPE (type->flags))
+        g_string_append_printf (string, "\n\n### Parameters");
 
       if (!IS_CONFIG_ACTION_TYPE (type->flags)) {
         g_string_append_printf (string, "\n\n  Parameters:");
@@ -981,12 +989,12 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
         g_string_append_printf (string,
             "\n     optional                   : "
             "Don't raise an error if this action hasn't been executed or failed"
-            "\n%-32s  Possible types:"
+            "\n%-32s  ### Possible types:"
             "\n%-32s    boolean" "\n%-32s  Default: false", "", "", "");
       }
 
       if (!has_parameters)
-        g_string_append_printf (string, "\n\n  No Parameters");
+        g_string_append_printf (string, "\n\n  ### No Parameters");
     } else if (GST_IS_VALIDATE_REPORTER (source) &&
         gst_validate_reporter_get_name (source)) {
       g_string_printf (string, "\n%s --> ",

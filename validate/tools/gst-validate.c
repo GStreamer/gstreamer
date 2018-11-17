@@ -335,7 +335,9 @@ main (int argc, gchar ** argv)
     {"inspect-action-type", 't', 0, G_OPTION_ARG_NONE, &inspect_action_type,
           "Inspect the available action types with which to write scenarios."
           " Specify an action type if you want its full description."
-          " If no action type is given the full list of available ones gets printed.",
+          " If no action type is given the full list of available ones gets printed."
+          "Note that passing \"all\" as action type name, makes it output the"
+          " full documentation for all types.",
         NULL},
     {"set-media-info", '\0', 0, G_OPTION_ARG_FILENAME, &media_info,
           "Set a media_info XML file descriptor to share information about the"

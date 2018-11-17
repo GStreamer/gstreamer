@@ -4606,10 +4606,15 @@ gst_validate_print_action_types (const gchar ** wanted_types,
 {
   GList *tmp;
   gint nfound = 0;
+  gboolean print_all = (num_wanted_types == 1
+      && !g_strcmp0 (wanted_types[0], "all"));
+
+  if (print_all)
+    gst_validate_printf (NULL, "# GstValidate action types");
 
   for (tmp = gst_validate_list_action_types (); tmp; tmp = tmp->next) {
     GstValidateActionType *atype = (GstValidateActionType *) tmp->data;
-    gboolean print = FALSE;
+    gboolean print = print_all;
 
     if (num_wanted_types) {
       gint n;
@@ -4641,7 +4646,7 @@ gst_validate_print_action_types (const gchar ** wanted_types,
     }
   }
 
-  if (num_wanted_types && num_wanted_types > nfound) {
+  if (!print_all && num_wanted_types && num_wanted_types > nfound) {
     return FALSE;
   }
 
@@ -4834,8 +4839,9 @@ init_scenarios (void)
           .description = "The starting value of the seek",
           .mandatory = TRUE,
           .types = "double or string (GstClockTime)",
-          .possible_variables = "position: The current position in the stream\n"
-            "duration: The duration of the stream",
+          .possible_variables =
+            "`position`: The current position in the stream\n"
+            "`duration`: The duration of the stream",
            NULL
         },
         {
@@ -4876,8 +4882,9 @@ init_scenarios (void)
           .description = "The stop value of the seek",
           .mandatory = FALSE,
           .types = "double or string (GstClockTime)",
-          .possible_variables = "position: The current position in the stream\n"
-            "duration: The duration of the stream",
+          .possible_variables =
+            "`position`: The current position in the stream\n"
+            "`duration`: The duration of the stream",
           .def ="GST_CLOCK_TIME_NONE",
         },
         {NULL}
