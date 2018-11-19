@@ -29,8 +29,11 @@
 #define orc_memcpy memcpy
 #endif
 
+#ifdef HAVE_JNI_H
 #include "gstahcsrc.h"
 #include "gstahssrc.h"
+#include "gstjniutils.h"
+#endif
 
 #include "gstamc.h"
 #include "gstamc-constants.h"
@@ -38,7 +41,6 @@
 #include "gstamcvideodec.h"
 #include "gstamcvideoenc.h"
 #include "gstamcaudiodec.h"
-#include "gstjniutils.h"
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -196,7 +198,7 @@ scan_codecs (GstPlugin * plugin)
       valid_codec = FALSE;
       goto next_codec;
     }
-
+#ifdef HAVE_JNI_H
     /* FIXME: Non-Google codecs usually just don't work and hang forever
      * or crash when not used from a process that started the Java
      * VM via the non-public AndroidRuntime class. Can we somehow
@@ -208,6 +210,7 @@ scan_codecs (GstPlugin * plugin)
       valid_codec = FALSE;
       goto next_codec;
     }
+#endif
 
     if (g_str_has_prefix (name_str, "OMX.ARICENT.")) {
       GST_INFO ("Skipping possible broken codec '%s'", name_str);
@@ -1848,6 +1851,7 @@ amc_init (GstPlugin * plugin)
   return TRUE;
 }
 
+#ifdef HAVE_JNI_H
 static gboolean
 ahc_init (GstPlugin * plugin)
 {
@@ -1885,6 +1889,7 @@ ahs_init (GstPlugin * plugin)
 
   return TRUE;
 }
+#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -1893,17 +1898,21 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (gst_amc_debug, "amc", 0, "android-media-codec");
 
+#ifdef HAVE_JNI_H
   if (!gst_amc_jni_initialize ())
     return FALSE;
+#endif
 
   if (amc_init (plugin))
     init_ok = TRUE;
 
+#ifdef HAVE_JNI_H
   if (ahc_init (plugin))
     init_ok = TRUE;
 
   if (ahs_init (plugin))
     init_ok = TRUE;
+#endif
 
   return init_ok;
 }
