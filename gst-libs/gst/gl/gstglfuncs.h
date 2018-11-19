@@ -93,11 +93,11 @@ G_BEGIN_DECLS
   ret (GSTGLAPI *name) args;
 #define GST_GL_EXT_END()
 
-typedef struct _GstGLFuncs
+struct _GstGLFuncs
 {
 #include <gst/gl/glprototypes/all_functions.h>
   gpointer padding[GST_PADDING_LARGE*6];
-} GstGLFuncs;
+};
 
 #undef GST_GL_EXT_BEGIN
 #undef GST_GL_EXT_FUNCTION

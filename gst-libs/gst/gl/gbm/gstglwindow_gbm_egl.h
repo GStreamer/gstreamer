@@ -24,6 +24,7 @@
 #include <gbm.h>
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gstegl.h>
+#include <gst/gl/gbm/gstgldisplay_gbm.h>
 
 G_BEGIN_DECLS
 
@@ -36,8 +37,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstGLWindowGBMEGL        GstGLWindowGBMEGL;
 typedef struct _GstGLWindowGBMEGLClass   GstGLWindowGBMEGLClass;
-
-typedef struct _GstGLDisplayGBM GstGLDisplayGBM;
 
 struct _GstGLWindowGBMEGL {
   /*< private >*/
