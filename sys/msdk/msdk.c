@@ -274,6 +274,12 @@ gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
   mfx_info->ChromaFormat =
       gst_msdk_get_mfx_chroma_from_format (GST_VIDEO_INFO_FORMAT (info));
 
+  if (mfx_info->FourCC == MFX_FOURCC_P010) {
+    mfx_info->BitDepthLuma = 10;
+    mfx_info->BitDepthChroma = 10;
+    mfx_info->Shift = 1;
+  }
+
   return;
 }
 
