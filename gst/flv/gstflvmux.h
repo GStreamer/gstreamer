@@ -38,6 +38,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstFlvMuxPad GstFlvMuxPad;
 typedef struct _GstFlvMuxPadClass GstFlvMuxPadClass;
+typedef struct _GstFlvMux GstFlvMux;
+typedef struct _GstFlvMuxClass GstFlvMuxClass;
 
 #define GST_TYPE_FLV_MUX \
   (gst_flv_mux_get_type ())
@@ -70,9 +72,9 @@ struct _GstFlvMuxPad
   gboolean info_changed;
 };
 
-typedef struct _GstFlvMuxPadClass {
+struct _GstFlvMuxPadClass {
   GstAggregatorPadClass parent;
-} GstFlvMuxPadClass;
+};
 
 typedef enum
 {
@@ -80,7 +82,7 @@ typedef enum
   GST_FLV_MUX_STATE_DATA
 } GstFlvMuxState;
 
-typedef struct _GstFlvMux {
+struct _GstFlvMux {
   GstAggregator   aggregator;
 
   GstPad         *srcpad;
@@ -101,11 +103,11 @@ typedef struct _GstFlvMux {
   GstClockTime last_dts;
 
   gboolean sent_header;
-} GstFlvMux;
+};
 
-typedef struct _GstFlvMuxClass {
+struct _GstFlvMuxClass {
   GstAggregatorClass parent;
-} GstFlvMuxClass;
+};
 
 GType    gst_flv_mux_pad_get_type(void);
 GType    gst_flv_mux_get_type    (void);
