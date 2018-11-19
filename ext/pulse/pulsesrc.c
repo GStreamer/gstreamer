@@ -112,12 +112,6 @@ static GstStateChangeReturn gst_pulsesrc_change_state (GstElement *
 
 static GstClockTime gst_pulsesrc_get_time (GstClock * clock, GstPulseSrc * src);
 
-static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (_PULSE_CAPS_PCM)
-    );
-
 #define gst_pulsesrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPulseSrc, gst_pulsesrc, GST_TYPE_AUDIO_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL));
@@ -129,6 +123,7 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
   GstAudioSrcClass *gstaudiosrc_class = GST_AUDIO_SRC_CLASS (klass);
   GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstCaps *caps;
   gchar *clientname;
 
   gobject_class->finalize = gst_pulsesrc_finalize;
@@ -222,7 +217,11 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
       "PulseAudio Audio Source",
       "Source/Audio",
       "Captures audio from a PulseAudio server", "Lennart Poettering");
-  gst_element_class_add_static_pad_template (gstelement_class, &pad_template);
+
+  caps = gst_pulse_fix_pcm_caps (gst_caps_from_string (_PULSE_CAPS_PCM));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
+  gst_caps_unref (caps);
 
   /**
    * GstPulseSrc:volume:

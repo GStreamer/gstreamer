@@ -1815,11 +1815,6 @@ static gboolean gst_pulsesink_query (GstBaseSink * sink, GstQuery * query);
 static GstStateChangeReturn gst_pulsesink_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (PULSE_SINK_TEMPLATE_CAPS));
-
 #define gst_pulsesink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPulseSink, gst_pulsesink, GST_TYPE_AUDIO_BASE_SINK,
     gst_pulsesink_init_contexts ();
@@ -1891,6 +1886,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   GstBaseSinkClass *bc;
   GstAudioBaseSinkClass *gstaudiosink_class = GST_AUDIO_BASE_SINK_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstCaps *caps;
   gchar *clientname;
 
   gobject_class->finalize = gst_pulsesink_finalize;
@@ -1983,7 +1979,12 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "PulseAudio Audio Sink",
       "Sink/Audio", "Plays audio to a PulseAudio server", "Lennart Poettering");
-  gst_element_class_add_static_pad_template (gstelement_class, &pad_template);
+
+  caps =
+      gst_pulse_fix_pcm_caps (gst_caps_from_string (PULSE_SINK_TEMPLATE_CAPS));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps));
+  gst_caps_unref (caps);
 }
 
 static void

@@ -40,6 +40,8 @@
                      "S24BE, S24LE, S24_32BE, S24_32LE, U8 }"
 #endif
 
+/* NOTE! that we do NOT actually support rate=MAX. This must be fixed up using
+ * gst_pulse_fix_pcm_caps() before being used. */
 #define _PULSE_CAPS_LINEAR \
     "audio/x-raw, " \
       "format = (string) " _PULSE_FORMATS ", " \
@@ -90,5 +92,6 @@ pa_proplist *gst_pulse_make_proplist (const GstStructure *properties);
 GstStructure *gst_pulse_make_structure (pa_proplist *properties);
 
 GstCaps * gst_pulse_format_info_to_caps (pa_format_info * format);
+GstCaps * gst_pulse_fix_pcm_caps (GstCaps * incaps);
 
 #endif
