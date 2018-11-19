@@ -343,6 +343,7 @@ typedef enum {
 
   /* Onvif extensions */
   GST_RTSP_HDR_FRAMES,              /* Frames             Rr     opt.      PLAY */
+  GST_RTSP_HDR_RATE_CONTROL,        /* Rate-control       Rr     opt.      PLAY */
 
   GST_RTSP_HDR_LAST
 } GstRTSPHeaderField;

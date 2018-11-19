@@ -185,6 +185,7 @@ static struct rtsp_header rtsp_headers[] = {
 
   /* Onvif extensions */
   {"Frames", FALSE},
+  {"Rate-Control", FALSE},
 
   {NULL, FALSE}
 };
