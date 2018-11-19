@@ -473,8 +473,7 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
       goto alternate_no_feature;
   }
 
-  if ((info->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED ||
-          info->interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE) &&
+  if (GST_VIDEO_INFO_IS_INTERLACED (info) &&
       (s = gst_structure_get_string (structure, "field-order"))) {
     GST_VIDEO_INFO_FIELD_ORDER (info) = gst_video_field_order_from_string (s);
   } else {
