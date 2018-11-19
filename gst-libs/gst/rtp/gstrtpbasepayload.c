@@ -56,6 +56,8 @@ struct _GstRTPBasePayloadPrivate
   gint64 prop_max_ptime;
   gint64 caps_max_ptime;
 
+  gboolean onvif_no_rate_control;
+
   gboolean negotiated;
 
   gboolean delay_segment;
@@ -89,6 +91,7 @@ enum
 #define DEFAULT_PTIME_MULTIPLE          0
 #define DEFAULT_RUNNING_TIME            GST_CLOCK_TIME_NONE
 #define DEFAULT_SOURCE_INFO             FALSE
+#define DEFAULT_ONVIF_NO_RATE_CONTROL   FALSE
 
 enum
 {
@@ -106,6 +109,7 @@ enum
   PROP_PTIME_MULTIPLE,
   PROP_STATS,
   PROP_SOURCE_INFO,
+  PROP_ONVIF_NO_RATE_CONTROL,
   PROP_LAST
 };
 
@@ -318,6 +322,21 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
           "Write CSRC based on buffer meta RTP source information",
           DEFAULT_SOURCE_INFO, G_PARAM_READWRITE));
 
+  /**
+   * GstRTPBasePayload:onvif-no-rate-control:
+   *
+   * Make the payloader timestamp packets according to the Rate-Control=no
+   * behaviour specified in the ONVIF replay spec.
+   *
+   * Since: 1.16
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_ONVIF_NO_RATE_CONTROL, g_param_spec_boolean ("onvif-no-rate-control",
+          "ONVIF no rate control",
+          "Enable ONVIF Rate-Control=no timestamping mode",
+          DEFAULT_ONVIF_NO_RATE_CONTROL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = gst_rtp_base_payload_change_state;
 
   klass->get_caps = gst_rtp_base_payload_getcaps_default;
@@ -378,6 +397,7 @@ gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload, gpointer g_class)
   rtpbasepayload->ptime_multiple = DEFAULT_PTIME_MULTIPLE;
   rtpbasepayload->priv->base_offset = GST_BUFFER_OFFSET_NONE;
   rtpbasepayload->priv->base_rtime_hz = GST_BUFFER_OFFSET_NONE;
+  rtpbasepayload->priv->onvif_no_rate_control = DEFAULT_ONVIF_NO_RATE_CONTROL;
 
   rtpbasepayload->media = NULL;
   rtpbasepayload->encoding_name = NULL;
@@ -1264,8 +1284,12 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
     guint64 rtime_hz;
 
     /* no offset, use the gstreamer pts */
-    rtime_ns = gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
-        data.pts);
+    if (priv->onvif_no_rate_control)
+      rtime_ns = data.pts;
+    else
+      rtime_ns =
+          gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
+          data.pts);
 
     if (!GST_CLOCK_TIME_IS_VALID (rtime_ns)) {
       GST_LOG_OBJECT (payload, "Clipped pts, using base RTP timestamp");
@@ -1538,6 +1562,9 @@ gst_rtp_base_payload_set_property (GObject * object, guint prop_id,
       gst_rtp_base_payload_set_source_info_enabled (rtpbasepayload,
           g_value_get_boolean (value));
       break;
+    case PROP_ONVIF_NO_RATE_CONTROL:
+      priv->onvif_no_rate_control = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1604,6 +1631,9 @@ gst_rtp_base_payload_get_property (GObject * object, guint prop_id,
     case PROP_SOURCE_INFO:
       g_value_set_boolean (value,
           gst_rtp_base_payload_is_source_info_enabled (rtpbasepayload));
+      break;
+    case PROP_ONVIF_NO_RATE_CONTROL:
+      g_value_set_boolean (value, priv->onvif_no_rate_control);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
