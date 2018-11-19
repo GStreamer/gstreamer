@@ -460,10 +460,6 @@ gst_curl_http_sink_set_mime_type (GstCurlBaseSink * bcsink, GstCaps * caps)
   GstStructure *structure;
   const gchar *mime_type;
 
-  if (sink->content_type != NULL) {
-    return;
-  }
-
   structure = gst_caps_get_structure (caps, 0);
   mime_type = gst_structure_get_name (structure);
 
