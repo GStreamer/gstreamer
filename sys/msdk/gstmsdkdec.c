@@ -476,6 +476,7 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
   GstVideoInfo *vinfo;
   GstVideoAlignment align;
   GstCaps *allocation_caps = NULL;
+  GstVideoFormat format;
   guint width, height;
   const gchar *format_str;
 
@@ -487,9 +488,19 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
   height =
       thiz->param.mfx.FrameInfo.CropH ? thiz->param.mfx.
       FrameInfo.CropH : GST_VIDEO_INFO_HEIGHT (&thiz->input_state->info);
+
+  format =
+      gst_msdk_get_video_format_from_mfx_fourcc (thiz->param.mfx.
+      FrameInfo.FourCC);
+
+  if (format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_WARNING_OBJECT (thiz, "Failed to find a valid video format\n");
+    return FALSE;
+  }
+
   output_state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (thiz),
-      GST_VIDEO_FORMAT_NV12, width, height, thiz->input_state);
+      format, width, height, thiz->input_state);
   if (!output_state)
     return FALSE;
 

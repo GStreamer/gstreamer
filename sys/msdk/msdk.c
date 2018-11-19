@@ -312,3 +312,16 @@ gst_msdk_get_surface_from_buffer (GstBuffer * buf)
 
   return NULL;
 }
+
+GstVideoFormat
+gst_msdk_get_video_format_from_mfx_fourcc (mfxU32 fourcc)
+{
+  const struct map *m = gst_msdk_video_format_to_mfx_map;
+
+  for (; m->mfx_fourcc != 0; m++) {
+    if (m->mfx_fourcc == fourcc)
+      return m->format;
+  }
+
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
