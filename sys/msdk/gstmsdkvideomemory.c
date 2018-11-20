@@ -415,6 +415,7 @@ gst_msdk_dmabuf_memory_new_with_surface (GstAllocator * allocator,
   mem = gst_dmabuf_allocator_alloc (allocator, fd, size);
   if (!mem) {
     GST_ERROR ("failed ! dmabuf fd: %d", fd);
+    close (fd);
     return NULL;
   }
 
