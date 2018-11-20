@@ -1060,6 +1060,7 @@ error_create_dmabuf_handle:
 error_create_dmabuf_memory:
   {
     GST_ERROR ("failed to create DMABUF memory");
+    close (dmabuf_fd);
     gst_vaapi_buffer_proxy_unref (dmabuf_proxy);
     return NULL;
   }
