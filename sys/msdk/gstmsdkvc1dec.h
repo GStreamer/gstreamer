@@ -55,6 +55,7 @@ typedef struct _GstMsdkVC1DecClass GstMsdkVC1DecClass;
 struct _GstMsdkVC1Dec
 {
   GstMsdkDec base;
+  guint output_order;
 };
 
 struct _GstMsdkVC1DecClass

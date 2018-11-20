@@ -55,18 +55,74 @@ G_DEFINE_TYPE (GstMsdkMPEG2Dec, gst_msdkmpeg2dec, GST_TYPE_MSDKDEC);
 static gboolean
 gst_msdkmpeg2dec_configure (GstMsdkDec * decoder)
 {
+  GstMsdkMPEG2Dec *mpeg2dec = GST_MSDKMPEG2DEC (decoder);
   decoder->param.mfx.CodecId = MFX_CODEC_MPEG2;
+
+  /* This is a deprecated attribute in msdk-2017 version, but some
+   * customers still using this for low-latency streaming of non-b-frame
+   * encoded streams */
+  decoder->param.mfx.DecodedOrder = mpeg2dec->output_order;
   return TRUE;
+}
+
+static void
+gst_msdkdec_mpeg2_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMsdkMPEG2Dec *thiz = GST_MSDKMPEG2DEC (object);
+  GstState state;
+
+  GST_OBJECT_LOCK (thiz);
+  state = GST_STATE (thiz);
+
+  if (!gst_msdkdec_prop_check_state (state, pspec)) {
+    GST_WARNING_OBJECT (thiz, "setting property in wrong state");
+    GST_OBJECT_UNLOCK (thiz);
+    return;
+  }
+  switch (prop_id) {
+    case GST_MSDKDEC_PROP_OUTPUT_ORDER:
+      thiz->output_order = g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (thiz);
+  return;
+}
+
+static void
+gst_msdkdec_mpeg2_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstMsdkMPEG2Dec *thiz = GST_MSDKMPEG2DEC (object);
+
+  GST_OBJECT_LOCK (thiz);
+  switch (prop_id) {
+    case GST_MSDKDEC_PROP_OUTPUT_ORDER:
+      g_value_set_enum (value, thiz->output_order);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (thiz);
 }
 
 static void
 gst_msdkmpeg2dec_class_init (GstMsdkMPEG2DecClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstMsdkDecClass *decoder_class;
 
+  gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
   decoder_class = GST_MSDKDEC_CLASS (klass);
+
+  gobject_class->set_property = gst_msdkdec_mpeg2_set_property;
+  gobject_class->get_property = gst_msdkdec_mpeg2_get_property;
 
   decoder_class->configure = GST_DEBUG_FUNCPTR (gst_msdkmpeg2dec_configure);
 
@@ -76,10 +132,13 @@ gst_msdkmpeg2dec_class_init (GstMsdkMPEG2DecClass * klass)
       "MPEG2 video decoder based on Intel Media SDK",
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 
+  gst_msdkdec_prop_install_output_oder_property (gobject_class);
+
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
 }
 
 static void
 gst_msdkmpeg2dec_init (GstMsdkMPEG2Dec * thiz)
 {
+  thiz->output_order = PROP_OUTPUT_ORDER_DEFAULT;
 }

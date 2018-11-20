@@ -22,7 +22,8 @@ libgstmsdk_la_SOURCES = \
 	gstmsdkvpp.c \
 	gstmsdk.c \
 	msdk-enums.c \
-	gstmsdkvpputil.c
+	gstmsdkvpputil.c \
+	gstmsdkdecproputil.c
 
 # Causes linking libgstmsdk.la with CXXLINK, required by libmfx
 nodist_EXTRA_libgstmsdk_la_SOURCES = not_present.cxx
@@ -50,7 +51,8 @@ noinst_HEADERS = \
 	gstmsdkdec.h \
 	gstmsdkenc.h \
 	gstmsdkvpp.h \
-	gstmsdkvpputil.h
+	gstmsdkvpputil.h \
+	gstmsdkdecproputil.h
 
 # Conditional build for vp9 decoder
 libgstmsdk_vp9dec_source_c = gstmsdkvp9dec.c

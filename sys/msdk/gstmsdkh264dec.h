@@ -53,6 +53,7 @@ typedef struct _GstMsdkH264DecClass GstMsdkH264DecClass;
 struct _GstMsdkH264Dec
 {
   GstMsdkDec base;
+  guint output_order;
 };
 
 struct _GstMsdkH264DecClass

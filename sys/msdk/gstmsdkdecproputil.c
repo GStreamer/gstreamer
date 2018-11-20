@@ -1,8 +1,5 @@
 /* GStreamer Intel MSDK plugin
- * Copyright (c) 2018, Intel Corporation
- *
- * Author: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
- *
+ * Copyright (c) 2016, Intel Corporation
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,45 +24,30 @@
  * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
  * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
  * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGDECE
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __GST_MSDKVP9DEC_H__
-#define __GST_MSDKVP9DEC_H__
+#include "gstmsdkdecproputil.h"
 
-#include "gstmsdkdec.h"
-
-G_BEGIN_DECLS
-
-#define GST_TYPE_MSDKVP9DEC \
-  (gst_msdkvp9dec_get_type())
-#define GST_MSDKVP9DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MSDKVP9DEC,GstMsdkVP9Dec))
-#define GST_MSDKVP9DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MSDKVP9DEC,GstMsdkVP9DecClass))
-#define GST_IS_MSDKVP9DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MSDKVP9DEC))
-#define GST_IS_MSDKVP9DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKVP9DEC))
-
-typedef struct _GstMsdkVP9Dec GstMsdkVP9Dec;
-typedef struct _GstMsdkVP9DecClass GstMsdkVP9DecClass;
-
-struct _GstMsdkVP9Dec
+void
+gst_msdkdec_prop_install_output_oder_property (GObjectClass * gobject_class)
 {
-  GstMsdkDec base;
-  guint output_order;
-};
+  g_object_class_install_property (gobject_class, GST_MSDKDEC_PROP_OUTPUT_ORDER,
+      g_param_spec_enum ("output-order", "DecodedFramesOutputOrder",
+          "Decoded frames output order",
+          gst_msdkdec_output_order_get_type (),
+          PROP_OUTPUT_ORDER_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+}
 
-struct _GstMsdkVP9DecClass
+gboolean
+gst_msdkdec_prop_check_state (GstState state, GParamSpec * pspec)
 {
-  GstMsdkDecClass parent_class;
-};
-
-GType gst_msdkvp9dec_get_type (void);
-
-G_END_DECLS
-
-#endif /* __GST_MSDKVP9DEC_H__ */
+  if ((state != GST_STATE_READY && state != GST_STATE_NULL) &&
+      !(pspec->flags & GST_PARAM_MUTABLE_PLAYING)) {
+    return FALSE;
+  }
+  return TRUE;
+}

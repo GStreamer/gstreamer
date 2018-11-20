@@ -85,17 +85,71 @@ gst_msdkvp8dec_configure (GstMsdkDec * decoder)
   decoder->param.mfx.FrameInfo.Height =
       GST_ROUND_UP_16 (decoder->param.mfx.FrameInfo.CropH);
 
+  /* This is a deprecated attribute in msdk-2017 version, but some
+   * customers still using this for low-latency streaming of non-b-frame
+   * encoded streams */
+  decoder->param.mfx.DecodedOrder = vp8dec->output_order;
   return TRUE;
+}
+
+static void
+gst_msdkdec_vp8_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMsdkVP8Dec *thiz = GST_MSDKVP8DEC (object);
+  GstState state;
+
+  GST_OBJECT_LOCK (thiz);
+  state = GST_STATE (thiz);
+
+  if (!gst_msdkdec_prop_check_state (state, pspec)) {
+    GST_WARNING_OBJECT (thiz, "setting property in wrong state");
+    GST_OBJECT_UNLOCK (thiz);
+    return;
+  }
+  switch (prop_id) {
+    case GST_MSDKDEC_PROP_OUTPUT_ORDER:
+      thiz->output_order = g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (thiz);
+  return;
+}
+
+static void
+gst_msdkdec_vp8_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstMsdkVP8Dec *thiz = GST_MSDKVP8DEC (object);
+
+  GST_OBJECT_LOCK (thiz);
+  switch (prop_id) {
+    case GST_MSDKDEC_PROP_OUTPUT_ORDER:
+      g_value_set_enum (value, thiz->output_order);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (thiz);
 }
 
 static void
 gst_msdkvp8dec_class_init (GstMsdkVP8DecClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstMsdkDecClass *decoder_class;
 
+  gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
   decoder_class = GST_MSDKDEC_CLASS (klass);
+
+  gobject_class->set_property = gst_msdkdec_vp8_set_property;
+  gobject_class->get_property = gst_msdkdec_vp8_get_property;
 
   decoder_class->configure = GST_DEBUG_FUNCPTR (gst_msdkvp8dec_configure);
 
@@ -105,10 +159,13 @@ gst_msdkvp8dec_class_init (GstMsdkVP8DecClass * klass)
       "VP8 video decoder based on Intel Media SDK",
       "Hyunjun Ko <zzoon@igalia.com>");
 
+  gst_msdkdec_prop_install_output_oder_property (gobject_class);
+
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
 }
 
 static void
 gst_msdkvp8dec_init (GstMsdkVP8Dec * thiz)
 {
+  thiz->output_order = PROP_OUTPUT_ORDER_DEFAULT;
 }
