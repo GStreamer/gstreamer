@@ -293,6 +293,8 @@ struct _RTPSession {
   gboolean      is_doing_ptp;
 
   GList         *conflicting_addresses;
+
+  gboolean timestamp_sender_reports;
 };
 
 /**

@@ -75,6 +75,7 @@ enum
 #define DEFAULT_MAX_MISORDER_TIME    2000
 #define DEFAULT_RTP_PROFILE          GST_RTP_PROFILE_AVP
 #define DEFAULT_RTCP_REDUCED_SIZE    FALSE
+#define DEFAULT_RTCP_DISABLE_SR_TIMESTAMP FALSE
 
 enum
 {
@@ -99,7 +100,8 @@ enum
   PROP_MAX_MISORDER_TIME,
   PROP_STATS,
   PROP_RTP_PROFILE,
-  PROP_RTCP_REDUCED_SIZE
+  PROP_RTCP_REDUCED_SIZE,
+  PROP_RTCP_DISABLE_SR_TIMESTAMP
 };
 
 /* update average packet size */
@@ -583,6 +585,21 @@ rtp_session_class_init (RTPSessionClass * klass)
           DEFAULT_RTCP_REDUCED_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * RTPSession::disable-sr-timestamp:
+   *
+   * Whether sender reports should be timestamped.
+   *
+   * Since: 1.16
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_RTCP_DISABLE_SR_TIMESTAMP,
+      g_param_spec_boolean ("disable-sr-timestamp",
+          "Disable Sender Report Timestamp",
+          "Whether sender reports should be timestamped",
+          DEFAULT_RTCP_DISABLE_SR_TIMESTAMP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   klass->get_source_by_ssrc =
       GST_DEBUG_FUNCPTR (rtp_session_get_source_by_ssrc);
   klass->send_rtcp = GST_DEBUG_FUNCPTR (rtp_session_send_rtcp);
@@ -663,6 +680,7 @@ rtp_session_init (RTPSession * sess)
       DEFAULT_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD;
   sess->rtp_profile = DEFAULT_RTP_PROFILE;
   sess->reduced_size_rtcp = DEFAULT_RTCP_REDUCED_SIZE;
+  sess->timestamp_sender_reports = !DEFAULT_RTCP_DISABLE_SR_TIMESTAMP;
 
   sess->is_doing_ptp = TRUE;
 }
@@ -850,6 +868,9 @@ rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_RTCP_REDUCED_SIZE:
       sess->reduced_size_rtcp = g_value_get_boolean (value);
       break;
+    case PROP_RTCP_DISABLE_SR_TIMESTAMP:
+      sess->timestamp_sender_reports = !g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -928,6 +949,9 @@ rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RTCP_REDUCED_SIZE:
       g_value_set_boolean (value, sess->reduced_size_rtcp);
+      break;
+    case PROP_RTCP_DISABLE_SR_TIMESTAMP:
+      g_value_set_boolean (value, !sess->timestamp_sender_reports);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3403,7 +3427,9 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
 
     /* fill in sender report info */
     gst_rtcp_packet_sr_set_sender_info (packet, own->ssrc,
-        ntptime, rtptime, packet_count, octet_count);
+        sess->timestamp_sender_reports ? ntptime : 0,
+        sess->timestamp_sender_reports ? rtptime : 0,
+        packet_count, octet_count);
   } else {
     /* we are only receiver, create RR */
     GST_DEBUG ("create RR for SSRC %08x", own->ssrc);

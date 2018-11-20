@@ -1691,6 +1691,45 @@ GST_START_TEST (test_request_nack_packing)
 
 GST_END_TEST;
 
+GST_START_TEST (test_disable_sr_timestamp)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket rtcp_packet;
+  guint64 ntptime;
+  guint32 rtptime;
+
+  g_object_set (h->internal_session, "disable-sr-timestamp", TRUE, NULL);
+
+  /* Push RTP buffer to make sure RTCP-thread have started */
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_send_rtp (h, generate_test_buffer (0, 0xDEADBEEF)));
+
+  /* crank the RTCP-thread and pull out rtcp, generating a stats-callback */
+  session_harness_crank_clock (h);
+  buf = session_harness_pull_rtcp (h);
+
+  gst_rtcp_buffer_map (buf, GST_MAP_READWRITE, &rtcp);
+
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
+
+  fail_unless_equals_int (GST_RTCP_TYPE_SR,
+      gst_rtcp_packet_get_type (&rtcp_packet));
+
+  gst_rtcp_packet_sr_get_sender_info (&rtcp_packet, NULL, &ntptime, &rtptime,
+      NULL, NULL);
+
+  fail_unless_equals_uint64 (ntptime, 0);
+  fail_unless (rtptime == 0);
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buf);
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
 
 static Suite *
 rtpsession_suite (void)
@@ -1719,6 +1758,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_dont_send_rtcp_while_idle);
   tcase_add_test (tc_chain, test_send_rtcp_when_signalled);
   tcase_add_test (tc_chain, test_change_sent_sdes);
+  tcase_add_test (tc_chain, test_disable_sr_timestamp);
   return s;
 }
 
