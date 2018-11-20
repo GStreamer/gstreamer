@@ -50,7 +50,7 @@ need_data (GstElement * appsrc, guint unused, MyContext * ctx)
   ctx->timestamp += GST_BUFFER_DURATION (buffer);
 
   g_signal_emit_by_name (appsrc, "push-buffer", buffer, &ret);
-  gst_buffer_unref(buffer);
+  gst_buffer_unref (buffer);
 }
 
 /* called when a new media pipeline is constructed. We can query the
