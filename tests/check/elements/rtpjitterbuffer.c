@@ -2042,47 +2042,87 @@ GST_START_TEST (test_deadline_ts_offset)
 
 GST_END_TEST;
 
-GST_START_TEST (test_push_big_gap)
+GST_START_TEST (test_big_gap_seqnum)
 {
   GstHarness *h = gst_harness_new ("rtpjitterbuffer");
-  GstBuffer *buf;
   const gint num_consecutive = 5;
+  const guint gap = 20000;
   gint i;
+  guint seqnum_org;
+  GstClockTime dts_base;
+  guint seqnum_base;
+  guint32 rtpts_base;
+  GstClockTime expected_ts;
 
-  gst_harness_set_src_caps (h, generate_caps ());
+  g_object_set (h->element, "do-lost", TRUE, "do-retransmission", TRUE, NULL);
+  seqnum_org = construct_deterministic_initial_state (h, 100);
 
-  for (i = 0; i < num_consecutive; i++)
-    fail_unless_equals_int (GST_FLOW_OK,
-        gst_harness_push (h, generate_test_buffer (1000 + i)));
+  /* a sudden jump in sequence-numbers (and rtptime), but packets keep arriving
+     at the same pace */
+  dts_base = seqnum_org * TEST_BUF_DURATION;
+  seqnum_base = seqnum_org + gap;
+  rtpts_base = seqnum_base * TEST_RTP_TS_DURATION;
 
-  fail_unless (gst_harness_crank_single_clock_wait (h));
+  for (i = 0; i < num_consecutive; i++) {
+    fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h,
+            generate_test_buffer_full (dts_base + i * TEST_BUF_DURATION,
+                seqnum_base + i, rtpts_base + i * TEST_RTP_TS_DURATION)));
+  }
 
   for (i = 0; i < num_consecutive; i++) {
     GstBuffer *buf = gst_harness_pull (h);
-    fail_unless_equals_int (1000 + i, get_rtp_seq_num (buf));
+    guint expected_seqnum = seqnum_base + i;
+    fail_unless_equals_int (expected_seqnum, get_rtp_seq_num (buf));
+
+    expected_ts = dts_base + i * TEST_BUF_DURATION;
+    fail_unless_equals_int (expected_ts, GST_BUFFER_PTS (buf));
     gst_buffer_unref (buf);
   }
 
-  /* Push more packets from a different sequence number domain
-   * to trigger "big gap" logic. */
-  for (i = 0; i < num_consecutive; i++)
-    fail_unless_equals_int (GST_FLOW_OK,
-        gst_harness_push (h, generate_test_buffer (20000 + i)));
+  fail_unless_equals_int (0, gst_harness_events_in_queue (h));
 
-  fail_unless (gst_harness_crank_single_clock_wait (h));
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_big_gap_arrival_time)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  const gint num_consecutive = 5;
+  const guint gap = 20000;
+  gint i;
+  guint seqnum_org;
+  GstClockTime dts_base;
+  guint seqnum_base;
+  guint32 rtpts_base;
+  GstClockTime expected_ts;
+
+  g_object_set (h->element, "do-lost", TRUE, "do-retransmission", TRUE, NULL);
+  seqnum_org = construct_deterministic_initial_state (h, 100);
+
+  /* packets are being held back on the wire, then continues */
+  dts_base = (seqnum_org + gap) * TEST_BUF_DURATION;
+  seqnum_base = seqnum_org;
+  rtpts_base = seqnum_base * TEST_RTP_TS_DURATION;
+
+  for (i = 0; i < num_consecutive; i++) {
+    fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h,
+            generate_test_buffer_full (dts_base + i * TEST_BUF_DURATION,
+                seqnum_base + i, rtpts_base + i * TEST_RTP_TS_DURATION)));
+  }
 
   for (i = 0; i < num_consecutive; i++) {
     GstBuffer *buf = gst_harness_pull (h);
-    fail_unless_equals_int (20000 + i, get_rtp_seq_num (buf));
+    guint expected_seqnum = seqnum_base + i;
+    fail_unless_equals_int (expected_seqnum, get_rtp_seq_num (buf));
+
+    expected_ts = dts_base + i * TEST_BUF_DURATION;
+    fail_unless_equals_int (expected_ts, GST_BUFFER_PTS (buf));
     gst_buffer_unref (buf);
   }
 
-  /* Final buffer should be pushed straight through */
-  fail_unless_equals_int (GST_FLOW_OK,
-      gst_harness_push (h, generate_test_buffer (20000 + num_consecutive)));
-  buf = gst_harness_pull (h);
-  fail_unless_equals_int (20000 + num_consecutive, get_rtp_seq_num (buf));
-  gst_buffer_unref (buf);
+  fail_unless_equals_int (0, gst_harness_events_in_queue (h));
 
   gst_harness_teardown (h);
 }
@@ -2316,7 +2356,8 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_rtx_timer_reuse);
 
   tcase_add_test (tc_chain, test_deadline_ts_offset);
-  tcase_add_test (tc_chain, test_push_big_gap);
+  tcase_add_test (tc_chain, test_big_gap_seqnum);
+  tcase_add_test (tc_chain, test_big_gap_arrival_time);
   tcase_add_test (tc_chain, test_fill_queue);
 
   tcase_add_loop_test (tc_chain,

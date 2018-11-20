@@ -46,15 +46,13 @@ gst_rtp_packet_rate_ctx_update (RTPPacketRateCtx * ctx, guint16 seqnum,
   gst_rtp_buffer_ext_timestamp (&new_ts, ts);
 
   if (!ctx->probed) {
-    ctx->last_seqnum = seqnum;
-    ctx->last_ts = new_ts;
     ctx->probed = TRUE;
-    return ctx->avg_packet_rate;
+    goto done;
   }
 
   diff_seqnum = gst_rtp_buffer_compare_seqnum (ctx->last_seqnum, seqnum);
-  if (diff_seqnum <= 0 || new_ts <= ctx->last_ts) {
-    return ctx->avg_packet_rate;
+  if (diff_seqnum <= 0 || new_ts <= ctx->last_ts || diff_seqnum > 1) {
+    goto done;
   }
 
   diff_ts = new_ts - ctx->last_ts;
@@ -74,6 +72,7 @@ gst_rtp_packet_rate_ctx_update (RTPPacketRateCtx * ctx, guint16 seqnum,
     ctx->avg_packet_rate = (ctx->avg_packet_rate + new_packet_rate + 1) / 2;
   }
 
+done:
   ctx->last_seqnum = seqnum;
   ctx->last_ts = new_ts;
 
@@ -89,7 +88,7 @@ gst_rtp_packet_rate_ctx_get (RTPPacketRateCtx * ctx)
 guint32
 gst_rtp_packet_rate_ctx_get_max_dropout (RTPPacketRateCtx * ctx, gint32 time_ms)
 {
-  if (time_ms <= 0 || !ctx->probed) {
+  if (time_ms <= 0 || !ctx->probed || ctx->avg_packet_rate == -1) {
     return RTP_DEF_DROPOUT;
   }
 
@@ -100,7 +99,7 @@ guint32
 gst_rtp_packet_rate_ctx_get_max_misorder (RTPPacketRateCtx * ctx,
     gint32 time_ms)
 {
-  if (time_ms <= 0 || !ctx->probed) {
+  if (time_ms <= 0 || !ctx->probed || ctx->avg_packet_rate == -1) {
     return RTP_DEF_MISORDER;
   }
 
