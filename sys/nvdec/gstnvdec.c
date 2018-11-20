@@ -694,10 +694,17 @@ handle_pending_frames (GstNvDec * nvdec)
           vinfo = &state->info;
           vinfo->fps_n = fps_n;
           vinfo->fps_d = fps_d;
-          if (format->progressive_sequence)
+          if (format->progressive_sequence) {
             vinfo->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-          else
+
+            /* nvdec doesn't seem to deal with interlacing with hevc so rely
+             * on upstream's value */
+            if (format->codec == cudaVideoCodec_HEVC) {
+              vinfo->interlace_mode = nvdec->input_state->info.interlace_mode;
+            }
+          } else {
             vinfo->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
+          }
 
           GST_LOG_OBJECT (decoder,
               "Reading colorimetry information full-range %d matrix %d transfer %d primaries %d",
