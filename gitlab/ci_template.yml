@@ -68,7 +68,7 @@ gst indent:
     CXX: "ccache g++"
     CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
     CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
-    MAIN_DIR: "${CI_PROJECT_DIR}"
+    MAIN_DIR: "${CI_PROJECT_DIR}/validate-output/"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
 
   script:
@@ -114,6 +114,46 @@ build android arm64 api28:
       --cross-file /android_arm64_28.txt
   before_script:
     - cat /android_arm64_28.txt
+
+.test:
+  stage: 'test'
+  variables:
+    MAIN_DIR: "${CI_PROJECT_DIR}/validate-output/"
+    # Disable colored output to avoid weird rendering issues
+    GST_DEBUG_COLOR: 'no'
+  script:
+    - cd gst-build/
+    - >
+      ./gst-uninstalled.py
+      gst-validate-launcher ${TEST_SUITE}
+      -fs
+      -j=1
+      --mute
+      --shuffle
+      --no-display
+      --meson-no-rebuild
+      -M "${CI_PROJECT_DIR}/validate-output/"
+      --xunit-file "${CI_PROJECT_DIR}/validate-output/logs/xunit.xml"
+  artifacts:
+    expire_in: 2 days
+    when: always
+    paths:
+      - 'gst-build/build/meson-logs/'
+      - 'validate-output/logs'
+    reports:
+      junit:
+        - "validate-output/logs/*.xml"
+
+.test fedora x86_64:
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
+  extends: '.test'
+  dependencies:
+    - build fedora x86_64
+
+check fedora:
+  extends: '.test fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst*"
 
 # Template for Cerbero GStreamer Build
 #

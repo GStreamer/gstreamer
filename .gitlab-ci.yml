@@ -162,3 +162,17 @@ build cerbero fedora x86_64 local:
   except:
     refs:
       - "master@gstreamer/gst-ci"
+
+.test fedora x86_64 local:
+  image: '${CI_REGISTRY_IMAGE}/amd64/fedora:latest'
+  extends: '.test'
+  dependencies:
+    - build fedora x86_64 local
+  except:
+    refs:
+      - "master@gstreamer/gst-ci"
+
+check fedora local:
+  extends: '.test fedora x86_64 local'
+  variables:
+    TEST_SUITE: 'check.gst*'
