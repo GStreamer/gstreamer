@@ -27,7 +27,7 @@ manifest:
     CXX: "ccache g++"
     CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
     CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
-    MAIN_DIR: '${CI_PROJECT_DIR}'
+    MAIN_DIR: "${CI_PROJECT_DIR}"
     MESON_ARGS: >
       -Dpython=enabled
       -Dlibav=enabled
