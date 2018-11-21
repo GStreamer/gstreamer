@@ -71,9 +71,9 @@ typedef gboolean  (*GstV4l2UpdateFpsFunction) (GstV4l2Object * v4l2object);
 /* On Android NDK r18b the ioctl() signature uses 'unsigned' instead of
  * 'unsigned long' for the 2nd parameter */
 #ifdef __ANDROID__
-typedef ioctl_req_t unsigned
+typedef unsigned ioctl_req_t;
 #else
-typedef ioctl_req_t gulong
+typedef gulong ioctl_req_t;
 #endif
 
 #define GST_V4L2_WIDTH(o)        (GST_VIDEO_INFO_WIDTH (&(o)->info))
