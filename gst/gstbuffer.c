@@ -603,7 +603,7 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
     for (i = 0; i < len && left > 0; i++) {
       GstMemory *mem = GST_BUFFER_MEM_PTR (src, i);
 
-      bsize = gst_memory_get_sizes (mem, NULL, NULL);
+      bsize = mem->size;
 
       if (bsize <= skip) {
         /* don't copy buffer */
@@ -1165,11 +1165,8 @@ _get_mapped (GstBuffer * buffer, guint idx, GstMapInfo * info,
 GstMemory *
 gst_buffer_peek_memory (GstBuffer * buffer, guint idx)
 {
-  guint len;
-
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-  len = GST_BUFFER_MEM_LEN (buffer);
-  g_return_val_if_fail (idx < len, NULL);
+  g_return_val_if_fail (idx < GST_BUFFER_MEM_LEN (buffer), NULL);
 
   return GST_BUFFER_MEM_PTR (buffer, idx);
 }
@@ -1322,7 +1319,8 @@ gst_buffer_remove_memory (GstBuffer * buffer, guint idx)
 void
 gst_buffer_remove_all_memory (GstBuffer * buffer)
 {
-  gst_buffer_remove_memory_range (buffer, 0, -1);
+  if (GST_BUFFER_MEM_LEN (buffer))
+    gst_buffer_remove_memory_range (buffer, 0, -1);
 }
 
 /**
@@ -1397,7 +1395,7 @@ gst_buffer_find_memory (GstBuffer * buffer, gsize offset, gsize size,
     gsize s;
 
     mem = GST_BUFFER_MEM_PTR (buffer, i);
-    s = gst_memory_get_sizes (mem, NULL, NULL);
+    s = mem->size;
 
     if (s <= offset) {
       /* block before offset, or empty block, skip */
@@ -1523,7 +1521,16 @@ gst_buffer_get_sizes (GstBuffer * buffer, gsize * offset, gsize * maxsize)
 gsize
 gst_buffer_get_size (GstBuffer * buffer)
 {
-  return gst_buffer_get_sizes_range (buffer, 0, -1, NULL, NULL);
+  guint i;
+  gsize size, len;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+
+  /* FAST PATH */
+  len = GST_BUFFER_MEM_LEN (buffer);
+  for (i = 0, size = 0; i < len; i++)
+    size += GST_BUFFER_MEM_PTR (buffer, i)->size;
+  return size;
 }
 
 /**
@@ -1565,6 +1572,16 @@ gst_buffer_get_sizes_range (GstBuffer * buffer, guint idx, gint length,
     /* common case */
     mem = GST_BUFFER_MEM_PTR (buffer, idx);
     size = gst_memory_get_sizes (mem, offset, maxsize);
+  } else if (offset == NULL && maxsize == NULL) {
+    /* FAST PATH ! */
+    guint i, end;
+
+    size = 0;
+    end = idx + length;
+    for (i = idx; i < end; i++) {
+      mem = GST_BUFFER_MEM_PTR (buffer, i);
+      size += mem->size;
+    }
   } else {
     guint i, end;
     gsize extra, offs;
@@ -1682,7 +1699,7 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
     gsize left, noffs;
 
     mem = GST_BUFFER_MEM_PTR (buffer, i);
-    bsize = gst_memory_get_sizes (mem, NULL, NULL);
+    bsize = mem->size;
 
     noffs = 0;
     /* last buffer always gets resized to the remaining size */
