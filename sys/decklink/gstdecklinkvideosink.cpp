@@ -640,20 +640,21 @@ gst_decklink_video_sink_convert_to_internal_clock (GstDecklinkVideoSink * self,
         GST_TIME_FORMAT, GST_TIME_ARGS (*timestamp));
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (self->paused_start_time)) {
+  if (GST_CLOCK_TIME_IS_VALID (self->paused_start_time) &&
+      GST_CLOCK_TIME_IS_VALID (self->playing_base_time)) {
+    /* add the time since we were last playing. */
+    *timestamp += self->paused_start_time + self->playing_base_time;
+  } else {
     /* only valid whil we're in PAUSED and most likely without a set clock,
      * we update based on our internal clock */
     *timestamp += gst_clock_get_internal_time (self->output->clock);
-  } else {
-    /* add the time since we were last playing. */
-    *timestamp += self->playing_start_time;
   }
 
   GST_LOG_OBJECT (self, "Output timestamp %" GST_TIME_FORMAT
       " using paused start at %" GST_TIME_FORMAT " playing start at %"
       GST_TIME_FORMAT, GST_TIME_ARGS (*timestamp),
       GST_TIME_ARGS (self->paused_start_time),
-      GST_TIME_ARGS (self->playing_start_time));
+      GST_TIME_ARGS (self->playing_base_time));
 }
 
 static GstFlowReturn
@@ -1211,6 +1212,9 @@ gst_decklink_video_sink_change_state (GstElement * element,
           GST_STATE_CHANGE_FAILURE)
         ret = GST_STATE_CHANGE_FAILURE;
       break;
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      self->playing_exit_time = gst_clock_get_internal_time (self->output->clock);
+      break;
     default:
       break;
   }
@@ -1259,12 +1263,11 @@ gst_decklink_video_sink_state_changed (GstElement * element,
   GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (element);
 
   if (new_state == GST_STATE_PLAYING) {
-    self->paused_start_time = GST_CLOCK_TIME_NONE;
-    self->playing_start_time =
-        gst_clock_get_internal_time (self->output->clock);
-    GST_DEBUG_OBJECT (self,
-        "playing entered, new playing start time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (self->playing_start_time));
+    self->playing_base_time = gst_clock_get_internal_time (self->output->clock) - self->playing_exit_time;
+    GST_DEBUG_OBJECT (self, "playing entered paused start time %"
+        GST_TIME_FORMAT "playing base time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (self->paused_start_time),
+        GST_TIME_ARGS (self->playing_base_time));
   }
 
   if (new_state == GST_STATE_PAUSED) {
