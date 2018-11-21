@@ -6,8 +6,8 @@ variables:
   GIT_STRATEGY: none
 
 manifest:
-  image: registry.freedesktop.org/gstreamer/gst-ci/amd64/alpine-manifest-build:latest
-  stage: "manifest"
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/alpine-manifest-build:10ffa6f1af6fed20a8857d2c7426d81cf162e3d1'
+  stage: 'manifest'
   script:
     - cd /gst-ci
     - gitlab/build_manifest.py --self-update
