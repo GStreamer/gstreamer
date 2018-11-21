@@ -30,19 +30,8 @@
 
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
-#ifdef HAVE_DYNLINK_HEADERS_NVDEC
-#include <dynlink_nvcuvid.h>
-#else
-#include <nvcuvid.h>
+#include "nvcuvid.h"
 #include <cudaGL.h>
-#endif
-
-#ifdef HAVE_DYNLINK_HEADERS_NVDEC
-/* missing from dynlink headers */
-CUresult CUDAAPI (*cuGetErrorName)(CUresult error, const char **pStr);
-CUresult CUDAAPI (*cuGetErrorString)(CUresult error, const char **pStr);
-CUresult CUDAAPI (*cuGraphicsGLRegisterImage)(CUgraphicsResource *pCudaResource, GLuint image, GLenum target, unsigned int Flags);
-#endif
 
 G_BEGIN_DECLS
 
