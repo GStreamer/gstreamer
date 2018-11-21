@@ -83,7 +83,7 @@ fields and methods.
 ``` c
 #define GST_VIDEO_MAX_PLANES 4
 
-struct GstMetaVideo {
+struct GstVideoMeta {
   GstMeta       meta;
 
   GstBuffer         *buffer;
@@ -100,14 +100,14 @@ struct GstMetaVideo {
   gint               stride[GST_VIDEO_MAX_PLANES];   /* stride of the image lines. Can be negative when
                                                     * the image is upside-down */
 
-  gpointer (*map)    (GstMetaVideo *meta, guint plane, gpointer * data, gint *stride,
+  gpointer (*map)    (GstVideoMeta *meta, guint plane, gpointer * data, gint *stride,
                       GstMapFlags flags);
-  gboolean (*unmap)  (GstMetaVideo *meta, guint plane, gpointer data);
+  gboolean (*unmap)  (GstVideoMeta *meta, guint plane, gpointer data);
 };
 
-gpointer gst_meta_video_map   (GstMetaVideo *meta, guint plane, gpointer * data,
+gpointer gst_meta_video_map   (GstVideoMeta *meta, guint plane, gpointer * data,
                                gint *stride, GstMapflags flags);
-gboolean gst_meta_video_unmap (GstMetaVideo *meta, guint plane, gpointer data);
+gboolean gst_meta_video_unmap (GstVideoMeta *meta, guint plane, gpointer data);
 ```
 
 `GstMeta` derived structures define the API of the metadata. The API can
@@ -186,7 +186,7 @@ GstMetaTiming         |  |                                  | |
                       +- |  clock_rate                      | |
                          +  . . . . . . . . . . . . . . . . + |
                          |  next                           <--+
-GstMetaVideo       +- +- |  info                           ------> GstMetaInfo
+GstVideoMeta       +- +- |  info                           ------> GstMetaInfo
                    |  |  |                                  | |
                    |  |  |  flags                           | |
                    |  |  |  n_planes                        | |
@@ -195,7 +195,7 @@ GstMetaVideo       +- +- |  info                           ------> GstMetaInfo
                    |  |  |  unmap                           | |
                    +- |  |                                  | |
                       |  |  private fields                  | |
-GstMetaVideoImpl      |  |  ...                             | |
+GstVideoMetaImpl      |  |  ...                             | |
                       |  |  ...                             | |
                       +- |                                  | |
                          +  . . . . . . . . . . . . . . . . + .
@@ -354,7 +354,7 @@ implement the actions needed to update the metadata of the subbuffer.
 
 It might not make sense for some metadata to work with subbuffers. For
 example when we take a subbuffer of a buffer with a video frame, the
-`GstMetaVideo` simply becomes invalid and is removed from the new
+`GstVideoMeta` simply becomes invalid and is removed from the new
 subbuffer.
 
 ## Relationship with GstCaps
