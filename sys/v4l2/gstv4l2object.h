@@ -68,6 +68,14 @@ typedef gboolean  (*GstV4l2GetInOutFunction)  (GstV4l2Object * v4l2object, gint 
 typedef gboolean  (*GstV4l2SetInOutFunction)  (GstV4l2Object * v4l2object, gint input);
 typedef gboolean  (*GstV4l2UpdateFpsFunction) (GstV4l2Object * v4l2object);
 
+/* On Android NDK r18b the ioctl() signature uses 'unsigned' instead of
+ * 'unsigned long' for the 2nd parameter */
+#ifdef __ANDROID__
+typedef ioctl_req_t unsigned
+#else
+typedef ioctl_req_t gulong
+#endif
+
 #define GST_V4L2_WIDTH(o)        (GST_VIDEO_INFO_WIDTH (&(o)->info))
 #define GST_V4L2_HEIGHT(o)       (GST_VIDEO_INFO_HEIGHT (&(o)->info))
 #define GST_V4L2_PIXELFORMAT(o)  ((o)->fmtdesc->pixelformat)
@@ -192,7 +200,7 @@ struct _GstV4l2Object {
   gint (*fd_open) (gint fd, gint v4l2_flags);
   gint (*close) (gint fd);
   gint (*dup) (gint fd);
-  gint (*ioctl) (gint fd, gulong request, ...);
+  gint (*ioctl) (gint fd, ioctl_req_t request, ...);
   gssize (*read) (gint fd, gpointer buffer, gsize n);
   gpointer (*mmap) (gpointer start, gsize length, gint prot, gint flags,
       gint fd,  off_t offset);
