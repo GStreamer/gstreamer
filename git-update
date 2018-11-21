@@ -23,12 +23,13 @@ def manifest_get_commits(manifest):
             remotes[child.attrib['name']] = child.attrib['fetch']
         if child.tag == 'project':
             name = child.attrib['name']
+            path = child.attrib.get('path', name)
 
             remote = child.attrib.get('remote')
             if remote:
-                res[name] = ['FETCH_HEAD', [os.path.join(remotes[remote], name), child.attrib['revision']]]
+                res[path] = ['FETCH_HEAD', [os.path.join(remotes[remote], name), child.attrib['revision']]]
             else:
-                res[name] = [child.attrib["revision"], []]
+                res[path] = [child.attrib["revision"], []]
 
     return res
 
