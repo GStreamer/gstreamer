@@ -94,7 +94,7 @@ gst indent:
     when: always
     paths:
       - "manifest.xml"
-      # - "gst-build/"
+      - "gst-build/"
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
