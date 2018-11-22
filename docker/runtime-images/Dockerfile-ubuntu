@@ -3,7 +3,6 @@ FROM ubuntu:18.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # upgrade and install all runtime dependencies for gstreamer
-
 RUN apt-get update && \
     apt-get -y upgrade && \
     apt-get -y install --no-install-recommends\
