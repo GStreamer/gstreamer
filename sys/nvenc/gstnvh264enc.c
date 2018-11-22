@@ -40,6 +40,18 @@ GST_DEBUG_CATEGORY_STATIC (gst_nv_h264_enc_debug);
 #define parent_class gst_nv_h264_enc_parent_class
 G_DEFINE_TYPE (GstNvH264Enc, gst_nv_h264_enc, GST_TYPE_NV_BASE_ENC);
 
+#if HAVE_NVENC_GST_GL
+#define GL_CAPS_STR \
+  ";" \
+  "video/x-raw(memory:GLMemory), " \
+  "format = (string) { NV12, Y444 }, " \
+  "width = (int) [ 16, 4096 ], height = (int) [ 16, 2160 ], " \
+  "framerate = (fraction) [0, MAX]," \
+  "interlace-mode = { progressive, mixed, interleaved } "
+#else
+#define GL_CAPS_STR ""
+#endif
+
 /* *INDENT-OFF* */
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -48,14 +60,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "width = (int) [ 16, 4096 ], height = (int) [ 16, 2160 ], "
         "framerate = (fraction) [0, MAX],"
         "interlace-mode = { progressive, mixed, interleaved } "
-#if HAVE_NVENC_GST_GL
-        ";"
-        "video/x-raw(memory:GLMemory), "
-        "format = (string) { NV12, Y444 }, "
-        "width = (int) [ 16, 4096 ], height = (int) [ 16, 2160 ], "
-        "framerate = (fraction) [0, MAX],"
-        "interlace-mode = { progressive, mixed, interleaved } "
-#endif
+        GL_CAPS_STR
     ));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
