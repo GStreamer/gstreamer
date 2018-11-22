@@ -831,7 +831,7 @@ gst_gl_context_clear_shader (GstGLContext * context)
   g_return_if_fail (shader->priv->program_handle != 0);                     \
   location = _get_uniform_location (shader, name);
 
-#if G_HAVE_ISO_VARARGS
+#ifdef G_HAVE_ISO_VARARGS
 
 #define set_uniform_v(gl_suffix, c_type, debug_stride, debug_str, ...)      \
 void \

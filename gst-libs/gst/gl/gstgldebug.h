@@ -94,7 +94,7 @@ void                gst_gl_async_debug_thaw                     (GstGLAsyncDebug
  *
  * Stores a debug message in @ad for later output
  */
-#if G_HAVE_ISO_VARARGS
+#ifdef G_HAVE_ISO_VARARGS
 #define GST_GL_ASYNC_CAT_LEVEL_LOG(ad,cat,level,object,format,...)              \
     gst_gl_async_debug_store_log_msg (ad, cat, level, __FILE__, GST_FUNCTION,   \
         __LINE__, object, format, __VA_ARGS__)
@@ -149,7 +149,7 @@ void        gst_gl_async_debug_store_log_msg_valist (GstGLAsyncDebug * ad,
 #define gst_gl_async_debug_output_log_msg(ad) G_STMT_START{ }G_STMT_END
 #define gst_gl_async_debug_store_log_msg_valist(ad,cat,level,file,function,line,object,format,args) G_STMT_START{ }G_STMT_END
 
-#if G_HAVE_ISO_VARARGS
+#ifdef G_HAVE_ISO_VARARGS
 
 #define gst_gl_insert_debug_marker(...) G_STMT_START{ }G_STMT_END
 #define gst_gl_async_debug_store_log_msg(...) G_STMT_START{ }G_STMT_END
