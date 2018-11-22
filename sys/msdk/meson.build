@@ -45,8 +45,11 @@ if msdk_root == '' and msdk_option.enabled()
 endif
 
 if msdk_root != ''
-  msdk_libdir = [msdk_root + '/lib/lin_x64', msdk_root + '/lib/x64', msdk_root + '/lib64']
+  msdk_libdir = [msdk_root + '/lib/lin_x64', msdk_root + '/lib/x64', msdk_root + '/lib64', msdk_root + '/lib']
   msdk_incdir = include_directories(msdk_root + '/include')
+  if cxx.has_header('mfx/mfxdefs.h', args: '-I' + msdk_root + '/include')
+    cdata.set('HAVE_MFX_MFXDEFS_H', 1)
+  endif
   msdk_lib = cxx.find_library('mfx', dirs: msdk_libdir, required: msdk_option)
   if host_machine.system() == 'windows'
     legacy_stdio_dep = cc.find_library('legacy_stdio_definitions', required: msdk_option)
