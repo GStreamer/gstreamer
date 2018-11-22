@@ -22,7 +22,8 @@ RUN  \
     git \
     xvfb \
     python3-pip \
-    wget
+    wget \
+    unzip
 
 RUN pip3 install meson
 
@@ -30,6 +31,13 @@ ENV GST_BUILD_PATH="/gst-build/"
 
 # Configure git for various usage
 RUN git config --global user.email "gst-build@gstreamer.net" && git config --global user.name "Gstbuild Runner"
+
+# Setup Android toolchain
+COPY android-download-ndk.sh .
+COPY android-create-toolchain.sh .
+RUN ./android-download-ndk.sh
+RUN ./android-create-toolchain.sh arm64 28
+RUN rm -rf /android-ndk
 
 # get gst-build and make all subprojects available
 RUN git clone git://anongit.freedesktop.org/gstreamer/gst-build $GST_BUILD_PATH && \
