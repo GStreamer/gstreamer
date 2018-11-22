@@ -58,11 +58,6 @@ test manifest:
         docker push ${REF}
         docker push ${LATEST}
       fi
-  only:
-    changes:
-      - ".gitlab-ci.yml"
-      - "docker/**"
-      - "docker/*/**"
 
 alpine amd64 manifest builder docker:
   stage: "build runtime"
@@ -72,6 +67,10 @@ alpine amd64 manifest builder docker:
     CONTEXT_DIR: "docker/runtime-images/"
     DOCKERFILE: "docker/runtime-images/Dockerfile-manifest-builder"
   extends: .base
+  only:
+    changes:
+      - 'docker/runtime-images/Dockerfile-manifest-builder'
+      - 'gitlab/build_manifest.py'
 
 fedora amd64 run docker:
   stage: "build runtime"
@@ -81,6 +80,9 @@ fedora amd64 run docker:
     CONTEXT_DIR: "docker/runtime-images/"
     DOCKERFILE: "docker/runtime-images/Dockerfile-fedora"
   extends: .base
+  only:
+    changes:
+      - 'docker/runtime-images/Dockerfile-fedora'
 
 fedora amd64 build docker:
   stage: "build base"
@@ -90,6 +92,9 @@ fedora amd64 build docker:
     CONTEXT_DIR: "docker/build-base-images/"
     DOCKERFILE: "docker/build-base-images/Dockerfile-fedora"
   extends: .base
+  only:
+    changes:
+      - 'docker/build-base-images/Dockerfile-fedora'
 
 include: "gitlab/ci_template.yml"
 
