@@ -14,3 +14,4 @@ option('custom_subprojects', type : 'string', value : '', description : 'Comma-s
 option('examples', type : 'feature', value : 'auto', description : 'Build examples')
 option('gtk_doc', type : 'feature', value : 'auto', description : 'Generate API documentation with gtk-doc')
 option('introspection', type : 'feature', value : 'auto', description : 'Generate introspection data')
+option('nls', type : 'feature', value : 'auto', description : 'Enable native language support (translations)')
