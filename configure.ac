@@ -1003,26 +1003,6 @@ AG_GST_CHECK_FEATURE(NVDEC, [nvdec], nvdec, [
 dnl *** NVENC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NVENC, true)
 AG_GST_CHECK_FEATURE(NVENC, [NVIDIA Encode API], nvenc, [
-  dnl nvEncodeAPI.h header
-  HAVE_NVENCODEAPI_H=no
-  AC_ARG_VAR(NVENCODE_CFLAGS, [C compiler flags for NvEncodeAPI.h])
-  save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$NVENCODE_CFLAGS $save_CPPFLAGS"
-  AC_CHECK_HEADER([nvEncodeAPI.h], [
-      AC_PREPROC_IFELSE([AC_LANG_SOURCE([[#include <nvEncodeAPI.h>
-          #if NVENCAPI_MAJOR_VERSION < 5
-          #error "Need nvEncodeAPI.h >= 5.0"
-          #endif
-          ]])], [
-          HAVE_NVENCODEAPI_H=yes
-          ], [
-          AC_MSG_WARN([nvEncodeAPI.h must be >= 5.0])
-          ])
-      ],
-      AC_MSG_WARN([Could not find nvEncodeAPI.h]))
-  AC_SUBST(NVENCODE_CFLAGS)
-  CPPFLAGS="$save_CPPFLAGS"
-
   dnl libnvnidia-encode library
   HAVE_NVENCODE_LIB=no
   AC_ARG_VAR(NVENCODE_LIBS, [linker flags for nvidia-encode])
@@ -1039,7 +1019,6 @@ AG_GST_CHECK_FEATURE(NVENC, [NVIDIA Encode API], nvenc, [
       -a "x$HAVE_CUDART_H" = "xyes" \
       -a "x$HAVE_CUDA_LIB" = "xyes" \
       -a "x$HAVE_CUDART_LIB" = "xyes" \
-      -a "x$HAVE_NVENCODEAPI_H" = "xyes" \
       -a "x$HAVE_NVENCODE_LIB" = "xyes"; then
     HAVE_NVENC="yes"
     if test "x$GST_GL_HAVE_API_GL" = "x1"; then

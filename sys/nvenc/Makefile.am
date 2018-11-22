@@ -17,15 +17,14 @@ libgstnvenc_la_CFLAGS = \
 	$(GST_PBUTILS_CFLAGS) \
 	$(GST_VIDEO_CFLAGS) \
 	$(GST_CFLAGS) \
-	$(CUDA_CFLAGS) \
-	$(NVENCODE_CFLAGS)
+	$(CUDA_CFLAGS)
 
 libgstnvenc_la_LIBADD = \
 	$(GST_PBUTILS_LIBS) \
 	$(GST_VIDEO_LIBS) \
 	$(GST_LIBS) \
 	$(CUDA_LIBS) \
-	$(NVENCODE_LIBS)
+	$(GMODULE_NO_EXPORT_LIBS)
 
 if USE_NVENC_GST_GL
 libgstnvenc_la_CFLAGS += $(GST_GL_CFLAGS)

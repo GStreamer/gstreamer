@@ -106,7 +106,9 @@ endif
 
 if cuda_dep.found() and cudart_dep.found()
   subdir('nvdec')
-  #subdir('nvenc')
+  subdir('nvenc')
 elif get_option('nvdec').enabled()
   error('The nvdec plugin was enabled explicitly, but required CUDA dependencies were not found.')
+elif get_option('nvenc').enabled()
+  error('The nvenc plugin was enabled explicitly, but required CUDA dependencies were not found.')
 endif

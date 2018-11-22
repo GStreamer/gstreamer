@@ -24,6 +24,21 @@
 #include "gstnvenc.h"
 #include "gstnvh264enc.h"
 #include "gstnvh265enc.h"
+#include <gmodule.h>
+
+#ifdef _WIN32
+#ifdef _WIN64
+#define NVENC_LIBRARY_NAME "nvEncodeAPI64.dll"
+#else
+#define NVENC_LIBRARY_NAME "nvEncodeAPI.dll"
+#endif
+#else
+#define NVENC_LIBRARY_NAME "libnvidia-encode.so.1"
+#endif
+
+typedef NVENCSTATUS NVENCAPI
+tNvEncodeAPICreateInstance (NV_ENCODE_API_FUNCTION_LIST * functionList);
+tNvEncodeAPICreateInstance *nvEncodeAPICreateInstance;
 
 GST_DEBUG_CATEGORY (gst_nvenc_debug);
 #define GST_CAT_DEFAULT gst_nvenc_debug
@@ -328,12 +343,35 @@ gst_nvenc_destroy_cuda_context (CUcontext ctx)
 }
 
 static gboolean
+load_nvenc_library (void)
+{
+  GModule *module;
+
+  module = g_module_open (NVENC_LIBRARY_NAME, G_MODULE_BIND_LAZY);
+  if (module == NULL) {
+    GST_ERROR ("%s", g_module_error ());
+    return FALSE;
+  }
+
+  if (!g_module_symbol (module, "NvEncodeAPICreateInstance",
+          (gpointer *) & nvEncodeAPICreateInstance)) {
+    GST_ERROR ("%s", g_module_error ());
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_nvenc_debug, "nvenc", 0, "Nvidia NVENC encoder");
 
   nvenc_api.version = NV_ENCODE_API_FUNCTION_LIST_VER;
-  if (NvEncodeAPICreateInstance (&nvenc_api) != NV_ENC_SUCCESS) {
+  if (!load_nvenc_library ())
+    return FALSE;
+
+  if (nvEncodeAPICreateInstance (&nvenc_api) != NV_ENC_SUCCESS) {
     GST_ERROR ("Failed to get NVEncodeAPI function table!");
   } else {
     GST_INFO ("Created NVEncodeAPI instance, got function table");
