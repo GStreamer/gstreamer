@@ -1253,8 +1253,9 @@ GST_START_TEST (test_interlace_mode)
   GstCaps *caps;
   GstStructure *structure;
   GstCapsFeatures *features;
-  const char *mode_str;
+  const char *mode_str, *order_str;
   int mode;
+  GstVideoFieldOrder order;
 
   gst_video_info_init (&vinfo);
 
@@ -1283,6 +1284,7 @@ GST_START_TEST (test_interlace_mode)
   fail_unless (gst_video_info_set_interlaced_format (&vinfo,
           GST_VIDEO_FORMAT_YV12, GST_VIDEO_INTERLACE_MODE_ALTERNATE, 320, 240));
   fail_unless (GST_VIDEO_INFO_SIZE (&vinfo) == 57600);
+  GST_VIDEO_INFO_FIELD_ORDER (&vinfo) = GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
 
   caps = gst_video_info_to_caps (&vinfo);
   fail_unless (caps != NULL);
@@ -1291,6 +1293,9 @@ GST_START_TEST (test_interlace_mode)
   mode_str = gst_structure_get_string (structure, "interlace-mode");
   mode = gst_video_interlace_mode_from_string (mode_str);
   fail_unless (mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE);
+  order_str = gst_structure_get_string (structure, "field-order");
+  order = gst_video_field_order_from_string (order_str);
+  fail_unless (order == GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST);
   /* 'alternate' mode must always be accompanied by interlaced caps feature. */
   features = gst_caps_get_features (caps, 0);
   fail_unless (gst_caps_features_contains (features,
@@ -1300,6 +1305,8 @@ GST_START_TEST (test_interlace_mode)
   fail_unless (gst_video_info_from_caps (&vinfo, caps));
   fail_unless (GST_VIDEO_INFO_INTERLACE_MODE (&vinfo) ==
       GST_VIDEO_INTERLACE_MODE_ALTERNATE);
+  fail_unless (GST_VIDEO_INFO_FIELD_ORDER (&vinfo) ==
+      GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST);
 
   gst_caps_unref (caps);
 }
