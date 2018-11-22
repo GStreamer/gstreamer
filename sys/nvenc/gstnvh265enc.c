@@ -121,7 +121,7 @@ gst_nv_h265_enc_class_init (GstNvH265EncClass * klass)
       "Encode HEVC video streams using NVIDIA's hardware-accelerated NVENC encoder API",
       "Tim-Philipp Müller <tim@centricular.com>, "
       "Matthew Waters <matthew@centricular.com>, "
-      "Seungha Yang <pudding8757@gmail.com.com>");
+      "Seungha Yang <pudding8757@gmail.com>");
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_h265_enc_debug,
       "nvh265enc", 0, "Nvidia HEVC encoder");
