@@ -11,7 +11,8 @@ from urllib.parse import urlparse
 # from pprint import pprint
 
 GSTREAMER_MODULES: List[str] = [
-    # 'orc',
+    'orc',
+    'cerbero',
     'gst-build',
     'gstreamer',
     'gst-plugins-base',
