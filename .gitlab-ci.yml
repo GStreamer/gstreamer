@@ -93,6 +93,18 @@ fedora amd64 build docker:
     changes:
       - 'docker/build-base-images/Dockerfile-fedora'
 
+ubuntu amd64 run docker:
+  stage: "build runtime"
+  variables:
+    ARCH: "amd64"
+    TAG: "ubuntu-runtime"
+    CONTEXT_DIR: "docker/runtime-images/"
+    DOCKERFILE: "docker/runtime-images/Dockerfile-ubuntu"
+  extends: .base
+  only:
+    changes:
+      - 'docker/runtime-images/Dockerfile-ubuntu'
+
 include: "gitlab/ci_template.yml"
 
 # Test the build job against the latest build image tag and the local manifest
