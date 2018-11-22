@@ -1825,7 +1825,7 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
   GST_DEBUG_OBJECT (jitterbuffer, "adding event");
   item = alloc_item (event, ITEM_TYPE_EVENT, -1, -1, -1, 0, -1);
   rtp_jitter_buffer_insert (priv->jbuf, item, &head, NULL);
-  if (head)
+  if (head || priv->eos)
     JBUF_SIGNAL_EVENT (priv);
 
   return TRUE;
@@ -3625,7 +3625,13 @@ handle_next_buffer (GstRtpJitterBuffer * jitterbuffer)
       GST_DEBUG_OBJECT (jitterbuffer,
           "Sequence number GAP detected: expected %d instead of %d (%d missing)",
           next_seqnum, seqnum, gap);
-      result = GST_FLOW_WAIT;
+      /* if we have reached EOS, just keep processing */
+      if (priv->eos) {
+        result = pop_and_push_next (jitterbuffer, seqnum);
+        result = GST_FLOW_OK;
+      } else {
+        result = GST_FLOW_WAIT;
+      }
     }
   }
 
