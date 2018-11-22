@@ -105,11 +105,31 @@ ubuntu amd64 run docker:
     changes:
       - 'docker/runtime-images/Dockerfile-ubuntu'
 
+ubuntu amd64 build docker:
+  stage: "build base"
+  variables:
+    ARCH: "amd64"
+    TAG: "ubuntu-build"
+    CONTEXT_DIR: "docker/build-base-images/"
+    DOCKERFILE: "docker/build-base-images/Dockerfile-ubuntu"
+  extends: .base
+  only:
+    changes:
+      - 'docker/build-base-images/Dockerfile-ubuntu'
+
 include: "gitlab/ci_template.yml"
 
 # Test the build job against the latest build image tag and the local manifest
 build fedora x86_64 local:
   extends: '.build'
   image: "${CI_REGISTRY_IMAGE}/amd64/fedora-build:latest"
+  dependencies:
+    - 'manifest'
+
+build ubuntu x86_64 local:
+  extends: '.build'
+  variables:
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dlibav=disabled"
+  image: "${CI_REGISTRY_IMAGE}/amd64/ubuntu-build:latest"
   dependencies:
     - 'manifest'

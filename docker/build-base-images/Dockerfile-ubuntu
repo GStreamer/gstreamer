@@ -1,4 +1,4 @@
-FROM registry.freedesktop.org/gstreamer/gst-ci/ubuntu-runtime
+FROM registry.freedesktop.org/gstreamer/gst-ci/amd64/ubuntu-runtime
 
 # make source packages available in order to figure out build dependencies
 RUN  \

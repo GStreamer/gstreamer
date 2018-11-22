@@ -4,6 +4,16 @@ stages:
 
 variables:
   GIT_STRATEGY: none
+  DEFAULT_MESON_ARGS: >
+    -Dpython=enabled
+    -Dlibav=enabled
+    -Dugly=enabled
+    -Dbad=enabled
+    -Ddevtools=enabled
+    -Dges=enabled
+    -Drtsp_server=enabled
+    -Dvaapi=enabled
+    -Dsharp=disabled
 
 manifest:
   image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/alpine-manifest-build:10ffa6f1af6fed20a8857d2c7426d81cf162e3d1'
@@ -26,16 +36,7 @@ manifest:
     CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
     CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
     MAIN_DIR: "${CI_PROJECT_DIR}"
-    MESON_ARGS: >
-      -Dpython=enabled
-      -Dlibav=enabled
-      -Dugly=enabled
-      -Dbad=enabled
-      -Ddevtools=enabled
-      -Dges=enabled
-      -Drtsp_server=enabled
-      -Dvaapi=enabled
-      -Dsharp=disabled
+    MESON_ARGS: "${DEFAULT_MESON_ARGS}"
 
   script:
     # Not sure why, but permission errors else
