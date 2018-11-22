@@ -428,6 +428,7 @@ start_pipeline (void)
   return TRUE;
 
 err:
+  g_print ("State change failure\n");
   if (pipeline)
     g_clear_object (&pipeline);
   return FALSE;
@@ -517,6 +518,7 @@ do_join_room (const gchar * text)
   }
 
   app_state = ROOM_JOINED;
+  g_print ("Room joined\n");
   /* Start recording, but not transmitting */
   if (!start_pipeline ()) {
     cleanup_and_quit_loop ("ERROR: Failed to start pipeline",

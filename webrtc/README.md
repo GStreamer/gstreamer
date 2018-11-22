@@ -18,6 +18,12 @@ One thing to note is that it's written in Python 2, so you may need to replace a
 
 ## Building GStreamer manually from source
 
+Here are the commands for Ubuntu 18.04.
+
+```
+sudo apt-get install -y gstreamer1.0-tools gstreamer1.0-nice gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-plugins-good libgstreamer1.0-dev git libglib2.0-dev libgstreamer-plugins-bad1.0-dev libsoup2.4-dev libjson-glib-dev
+```
+
 For hacking on the webrtc plugin, you may want to build manually using the git repositories:
 
  - http://cgit.freedesktop.org/gstreamer/gstreamer
@@ -61,7 +67,7 @@ http://blog.nirbheek.in/2018/02/gstreamer-webrtc.html
 
 #### Running the C version
 
-* Build the sources in the `gst/` directory on your machine
+* Build the sources in the `gst/` directory on your machine. Use `make` or
 
 ```console
 $ gcc webrtc-sendrecv.c $(pkg-config --cflags --libs gstreamer-webrtc-1.0 gstreamer-sdp-1.0 libsoup-2.4 json-glib-1.0) -o webrtc-sendrecv
