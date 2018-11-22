@@ -68,3 +68,13 @@ build fedora x86_64:
   dependencies:
     - "manifest"
 
+build android arm64 api28:
+  extends: '.build'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/ubuntu-build:a1726fee5841b776fcdaeda2e0ad628ce037a3c6'
+  variables:
+    MESON_ARGS: >
+      -Dbad=enabled
+      -Dbad:androidmedia=enabled
+      --cross-file /android_arm64_28.txt
+  dependencies:
+    - "manifest"
