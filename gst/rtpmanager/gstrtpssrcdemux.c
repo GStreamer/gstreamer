@@ -579,7 +579,7 @@ forward_event (GstPad * pad, gpointer user_data)
   if (newevent)
     fdata->res &= gst_pad_push_event (pad, newevent);
 
-  return TRUE;
+  return FALSE;
 }
 
 
