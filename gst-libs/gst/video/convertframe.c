@@ -766,7 +766,9 @@ gst_video_convert_sample_async (GstSample * sample,
   g_source_unref (source);
   gst_object_unref (bus);
 
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
+    goto state_change_failed;
 
   gst_caps_unref (to_caps_copy);
 
@@ -777,6 +779,20 @@ gst_video_convert_sample_async (GstSample * sample,
 no_pipeline:
   {
     gst_caps_unref (to_caps_copy);
+
+    g_mutex_lock (&ctx->mutex);
+    convert_frame_finish (ctx, NULL, error);
+    g_mutex_unlock (&ctx->mutex);
+    gst_video_convert_frame_context_unref (ctx);
+
+    return;
+  }
+state_change_failed:
+  {
+    gst_caps_unref (to_caps_copy);
+
+    error = g_error_new (GST_CORE_ERROR, GST_CORE_ERROR_STATE_CHANGE,
+        "failed to change state to PLAYING");
 
     g_mutex_lock (&ctx->mutex);
     convert_frame_finish (ctx, NULL, error);
