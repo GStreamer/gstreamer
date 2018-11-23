@@ -1,15 +1,19 @@
 stages:
-  - "test"
   - "build runtime"
   - "build base"
-  - "manifest"
+  - "preparation"
+  # Test just one basic build, if succeds procced to test the rest
   - "build"
+  - "test"
+  # Run multiple builds and tests, multi-distro, multi-arch
+  - "full builds"
+  - "full tests"
 
 test manifest:
   variables:
     GIT_STRATEGY: fetch
   image: "fedora"
-  stage: "test"
+  stage: "preparation"
   before_script:
     - dnf install -y python3-pytest python3-pytest-cov python3-requests
   script:
@@ -122,6 +126,7 @@ include: "gitlab/ci_template.yml"
 # Test the build job against the latest build image tag and the local manifest
 build fedora x86_64 local:
   extends: '.build'
+  stage: 'build'
   image: "${CI_REGISTRY_IMAGE}/amd64/fedora-build:latest"
 
 build ubuntu x86_64 local:

@@ -1,6 +1,11 @@
 stages:
-  - "manifest"
-  - "build"
+  - 'preparation'
+  # Test just one basic build, if it succeeds proceed to test the rest
+  - 'build'
+  - 'test'
+  # Run multiple builds and tests, multi-distro, multi-arch
+  - 'full builds'
+  - 'full tests'
 
 variables:
   GIT_STRATEGY: none
@@ -17,7 +22,7 @@ variables:
 
 manifest:
   image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/alpine-manifest-build:10ffa6f1af6fed20a8857d2c7426d81cf162e3d1'
-  stage: 'manifest'
+  stage: 'preparation'
   script:
     - cd /gst-ci
     - gitlab/build_manifest.py --self-update
@@ -29,7 +34,7 @@ manifest:
       - "manifest.xml"
 
 .build:
-  stage: "build"
+  stage: 'full builds'
   dependencies:
     - "manifest"
   variables:
@@ -66,6 +71,7 @@ manifest:
 
 build fedora x86_64:
   extends: '.build'
+  stage: 'build'
   image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora-build:2414895a53408ed8a0410a52560f8090b3f74696'
 
 build android arm64 api28:
