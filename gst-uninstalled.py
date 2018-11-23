@@ -81,9 +81,12 @@ def get_subprocess_env(options, gst_version):
     targets = json.loads(targets_s.decode())
     paths = set()
     mono_paths = set()
+    srcdir_path = pathlib.Path(options.srcdir)
     for target in targets:
         filename = target['filename']
         root = os.path.dirname(filename)
+        if srcdir_path / "subprojects/gst-devtools/validate/plugins" in (srcdir_path / root).parents:
+            continue
         if filename.endswith('.dll'):
             mono_paths.add(os.path.join(options.builddir, root))
         if typelib_reg.search(filename):
