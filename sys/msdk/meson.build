@@ -25,39 +25,10 @@ msdk_sources = [
   'msdk.c',
 ]
 
-msdk_headers = [
-  'gstmsdkallocator.h',
-  'gstmsdkbufferpool.h',
-  'gstmsdkcontext.h',
-  'gstmsdkcontextutil.h',
-  'gstmsdkdec.h',
-  'gstmsdkdecproputil.h',
-  'gstmsdkenc.h',
-  'gstmsdkh264dec.h',
-  'gstmsdkh264enc.h',
-  'gstmsdkh265dec.h',
-  'gstmsdkh265enc.h',
-  'gstmsdkmjpegdec.h',
-  'gstmsdkmjpegenc.h',
-  'gstmsdkmpeg2dec.h',
-  'gstmsdkmpeg2enc.h',
-  'gstmsdksystemmemory.h',
-  'gstmsdkvc1dec.h',
-  'gstmsdkvideomemory.h',
-  'gstmsdkvp8dec.h',
-  'gstmsdkvp8enc.h',
-  'gstmsdkvp9dec.h',
-  'gstmsdkvpp.h',
-  'gstmsdkvpputil.h',
-  'msdk-enums.h',
-  'msdk.h',
-]
-
 if host_machine.system() == 'windows'
   msdk_sources += ['msdk_d3d.c', 'gstmsdkallocator_d3d.c' ]
 else
   msdk_sources += ['msdk_libva.c', 'gstmsdkallocator_libva.c']
-  msdk_headers += ['msdk_libva.h', 'gstmsdkallocator_libva.h']
 endif
 
 have_msdk = false
@@ -96,7 +67,7 @@ if msdk_root != ''
 
   if msdk_dep_found
     gstmsdktag = library('gstmsdk',
-      msdk_sources + msdk_headers,
+      msdk_sources,
       c_args : gst_plugins_bad_args,
       include_directories : [configinc],
       dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstallocators_dep, msdk_dep],
