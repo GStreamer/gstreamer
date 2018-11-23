@@ -846,6 +846,64 @@ pack_Y210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+#define PACK_Y410 GST_VIDEO_FORMAT_AYUV64, unpack_Y410, 1, pack_Y410
+static void
+unpack_Y410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  int i;
+  const guint8 *restrict s = GET_LINE (y);
+  guint16 *restrict d = dest;
+  guint32 AVYU;
+  guint16 A, Y, U, V;
+
+  for (i = 0; i < width; i++) {
+    AVYU = GST_READ_UINT32_LE (s + 4 * i);
+
+    U = ((AVYU >> 0) & 0x3ff) << 6;
+    Y = ((AVYU >> 10) & 0x3ff) << 6;
+    V = ((AVYU >> 20) & 0x3ff) << 6;
+    A = ((AVYU >> 30) & 0x03) << 14;
+
+    if (!(flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)) {
+      U |= (U >> 10);
+      Y |= (Y >> 10);
+      V |= (V >> 10);
+      A |= (A >> 10);
+    }
+
+    d[4 * i + 0] = A;
+    d[4 * i + 1] = Y;
+    d[4 * i + 2] = U;
+    d[4 * i + 3] = V;
+  }
+}
+
+static void
+pack_Y410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  int i;
+  guint32 *restrict d = GET_LINE (y);
+  const guint16 *restrict s = src;
+  guint32 AVYU;
+  guint16 A, Y, U, V;
+
+  for (i = 0; i < width; i++) {
+    A = s[4 * i] & 0xc000;
+    Y = s[4 * i + 1] & 0xffc0;
+    U = s[4 * i + 2] & 0xffc0;
+    V = s[4 * i + 3] & 0xffc0;
+
+    AVYU = (U >> 6) | (Y << 4) | (V << 14) | (A << 16);
+
+    GST_WRITE_UINT32_LE (d + i, AVYU);
+  }
+}
+
 #define PACK_Y41B GST_VIDEO_FORMAT_AYUV, unpack_Y41B, 1, pack_Y41B
 static void
 unpack_Y41B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
@@ -5168,6 +5226,7 @@ typedef struct
 #define DPTH10_10_10     10, 3, { 0, 0, 0, 0 }, { 10, 10, 10, 0 }
 #define DPTH10_10_10_10  10, 4, { 0, 0, 0, 0 }, { 10, 10, 10, 10 }
 #define DPTH10_10_10_HI  16, 3, { 6, 6, 6, 0 }, { 10, 10, 10, 0 }
+#define DPTH10_10_10_2   10, 4, { 0, 0, 0, 0 }, { 10, 10, 10, 2}
 #define DPTH12_12_12     12, 3, { 0, 0, 0, 0 }, { 12, 12, 12, 0 }
 #define DPTH12_12_12_12  12, 4, { 0, 0, 0, 0 }, { 12, 12, 12, 12 }
 #define DPTH16           16, 1, { 0, 0, 0, 0 }, { 16, 0, 0, 0 }
@@ -5476,6 +5535,8 @@ static const VideoFormat formats[] = {
       OFFS0, SUB420, PACK_NV12_10LE40),
   MAKE_YUV_FORMAT (Y210, "raw video", GST_MAKE_FOURCC ('Y', '2', '1', '0'),
       DPTH10_10_10, PSTR488, PLANE0, OFFS0, SUB422, PACK_Y210),
+  MAKE_YUV_FORMAT (Y410, "raw video", GST_MAKE_FOURCC ('Y', '4', '1', '0'),
+      DPTH10_10_10_2, PSTR0, PLANE0, OFFS0, SUB4444, PACK_Y410),
 };
 
 static GstVideoFormat
@@ -5718,6 +5779,9 @@ gst_video_format_from_fourcc (guint32 fourcc)
       return GST_VIDEO_FORMAT_NV16_10LE32;
     case GST_MAKE_FOURCC ('R', 'K', '2', '0'):
       return GST_VIDEO_FORMAT_NV12_10LE40;
+    case GST_MAKE_FOURCC ('Y', '4', '1', '0'):
+      return GST_VIDEO_FORMAT_Y410;
+
     default:
       return GST_VIDEO_FORMAT_UNKNOWN;
   }
