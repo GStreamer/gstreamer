@@ -121,9 +121,15 @@ include: "gitlab/ci_template.yml"
 
 # Test the build job against the latest build image tag and the local manifest
 build fedora x86_64 local:
-  extends: '.build fedora x86_64'
+  extends: '.build'
   image: "${CI_REGISTRY_IMAGE}/amd64/fedora-build:latest"
+  dependencies:
+    - 'manifest'
 
-build android arm64 api28 local:
-  extends: '.build android arm64 api28'
+build ubuntu x86_64 local:
+  extends: '.build'
+  variables:
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dlibav=disabled"
   image: "${CI_REGISTRY_IMAGE}/amd64/ubuntu-build:latest"
+  dependencies:
+    - 'manifest'

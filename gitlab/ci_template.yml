@@ -62,13 +62,15 @@ manifest:
       - "manifest.xml"
       # - "gst-build/"
 
-.build fedora x86_64:
+build fedora x86_64:
   extends: '.build'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora-build:2414895a53408ed8a0410a52560f8090b3f74696'
   dependencies:
     - "manifest"
 
-.build android arm64 api28:
+build android arm64 api28:
   extends: '.build'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/ubuntu-build:a1726fee5841b776fcdaeda2e0ad628ce037a3c6'
   variables:
     MESON_ARGS: >
       -Dbad=enabled
@@ -76,11 +78,3 @@ manifest:
       --cross-file /android_arm64_28.txt
   dependencies:
     - "manifest"
-
-build fedora x86_64:
-  extends: '.build fedora x86_64'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora-build:2414895a53408ed8a0410a52560f8090b3f74696'
-
-build android arm64 api28:
-  extends: '.build android arm64 api28'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/ubuntu-build:a1726fee5841b776fcdaeda2e0ad628ce037a3c6'
