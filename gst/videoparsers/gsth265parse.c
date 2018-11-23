@@ -184,6 +184,9 @@ gst_h265_parse_reset_frame (GstH265Parse * h265parse)
   h265parse->sei_pos = -1;
   h265parse->keyframe = FALSE;
   h265parse->header = FALSE;
+  h265parse->have_vps_in_frame = FALSE;
+  h265parse->have_sps_in_frame = FALSE;
+  h265parse->have_pps_in_frame = FALSE;
   gst_adapter_clear (h265parse->frame_out);
 }
 
@@ -551,6 +554,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       GST_DEBUG_OBJECT (h265parse, "triggering src caps check");
       h265parse->update_caps = TRUE;
       h265parse->have_vps = TRUE;
+      h265parse->have_vps_in_frame = TRUE;
       if (h265parse->push_codec && h265parse->have_pps) {
         /* VPS/SPS/PPS found in stream before the first pre_push_frame, no need
          * to forcibly push at start */
@@ -580,6 +584,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       GST_DEBUG_OBJECT (h265parse, "triggering src caps check");
       h265parse->update_caps = TRUE;
       h265parse->have_sps = TRUE;
+      h265parse->have_sps_in_frame = TRUE;
       if (h265parse->push_codec && h265parse->have_pps) {
         /* SPS and PPS found in stream before the first pre_push_frame, no need
          * to forcibly push at start */
@@ -615,6 +620,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
         h265parse->update_caps = TRUE;
       }
       h265parse->have_pps = TRUE;
+      h265parse->have_pps_in_frame = TRUE;
       if (h265parse->push_codec && h265parse->have_sps) {
         /* SPS and PPS found in stream before the first pre_push_frame, no need
          * to forcibly push at start */
@@ -1948,6 +1954,12 @@ gst_h265_parse_handle_vps_sps_pps_nals (GstH265Parse * h265parse,
   gint i;
   gboolean send_done = FALSE;
   GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+  if (h265parse->have_vps_in_frame && h265parse->have_sps_in_frame
+      && h265parse->have_pps_in_frame) {
+    GST_DEBUG_OBJECT (h265parse, "VPS/SPS/PPS exist in frame, will not insert");
+    return TRUE;
+  }
 
   if (h265parse->align == GST_H265_PARSE_ALIGN_NAL) {
     /* send separate config NAL buffers */
