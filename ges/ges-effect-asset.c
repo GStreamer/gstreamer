@@ -149,7 +149,7 @@ ges_effect_assect_id_get_type_and_bindesc (const char *id,
     const gchar *klass =
         gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
 
-    if (g_strrstr (klass, "Effect")) {
+    if (g_strrstr (klass, "Effect") || g_strrstr (klass, "Filter")) {
       if (g_strrstr (klass, "Audio")) {
         *track_type = GES_TRACK_TYPE_AUDIO;
         break;
