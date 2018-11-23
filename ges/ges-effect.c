@@ -239,11 +239,45 @@ ges_effect_finalize (GObject * object)
   G_OBJECT_CLASS (ges_effect_parent_class)->finalize (object);
 }
 
+static void
+ghost_compatible_pads (GstElement * bin, GstElement * child,
+    GstCaps * valid_caps, gint * n_src, gint * n_sink)
+{
+  GList *tmp;
+
+  for (tmp = child->pads; tmp; tmp = tmp->next) {
+    GstCaps *caps;
+    GstPad *pad = tmp->data;
+
+    if (GST_PAD_PEER (pad))
+      continue;
+
+    caps = gst_pad_query_caps (pad, NULL);
+
+    if (gst_caps_can_intersect (caps, valid_caps)) {
+      gchar *name =
+          g_strdup_printf ("%s_%d", GST_PAD_IS_SINK (pad) ? "sink" : "src",
+          GST_PAD_IS_SINK (pad) ? *n_sink++ : *n_src++);
+
+      GST_DEBUG_OBJECT (bin, "Ghosting pad: %" GST_PTR_FORMAT, pad);
+      gst_element_add_pad (GST_ELEMENT (bin), gst_ghost_pad_new (name, pad));
+      g_free (name);
+    } else {
+      GST_DEBUG_OBJECT (pad, "Can't ghost pad %" GST_PTR_FORMAT, caps);
+    }
+
+    gst_caps_unref (caps);
+  }
+}
+
 static GstElement *
 ges_effect_create_element (GESTrackElement * object)
 {
+  GList *tmp;
   GstElement *effect;
   gchar *bin_desc;
+  GstCaps *valid_caps;
+  gint n_src = 0, n_sink = 0;
 
   GError *error = NULL;
   GESEffect *self = GES_EFFECT (object);
@@ -256,29 +290,47 @@ ges_effect_create_element (GESTrackElement * object)
     bin_desc = g_strconcat ("videoconvert name=pre_video_convert ! ",
         self->priv->bin_description, " ! videoconvert name=post_video_convert",
         NULL);
+    valid_caps = gst_caps_from_string ("video/x-raw(ANY)");
   } else if (type == GES_TRACK_TYPE_AUDIO) {
     bin_desc =
         g_strconcat ("audioconvert ! audioresample !",
         self->priv->bin_description, NULL);
+    valid_caps = gst_caps_from_string ("audio/x-raw(ANY)");
   } else {
     g_assert_not_reached ();
   }
 
-  effect = gst_parse_bin_from_description (bin_desc, TRUE, &error);
-
+  effect = gst_parse_bin_from_description (bin_desc, FALSE, &error);
   g_free (bin_desc);
-
   if (error != NULL) {
     GST_ERROR ("An error occured while creating the GstElement: %s",
         error->message);
     g_error_free (error);
-    return NULL;
+    goto fail;
+  }
+
+  for (tmp = GST_BIN_CHILDREN (effect); tmp; tmp = tmp->next) {
+    ghost_compatible_pads (effect, tmp->data, valid_caps, &n_src, &n_sink);
+
+    if (n_src > 1) {
+      GST_ERROR ("More than 1 source pad in the effect, that is not possible");
+
+      goto fail;
+    }
   }
 
   ges_track_element_add_children_props (object, effect, NULL,
       blacklisted_factories, NULL);
 
+done:
+  gst_clear_caps (&valid_caps);
+
   return effect;
+
+fail:
+  gst_clear_object (&effect);
+
+  goto done;
 }
 
 /**
