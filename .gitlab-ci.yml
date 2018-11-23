@@ -123,13 +123,9 @@ include: "gitlab/ci_template.yml"
 build fedora x86_64 local:
   extends: '.build'
   image: "${CI_REGISTRY_IMAGE}/amd64/fedora-build:latest"
-  dependencies:
-    - 'manifest'
 
 build ubuntu x86_64 local:
   extends: '.build'
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dlibav=disabled"
   image: "${CI_REGISTRY_IMAGE}/amd64/ubuntu-build:latest"
-  dependencies:
-    - 'manifest'

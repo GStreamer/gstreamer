@@ -30,6 +30,8 @@ manifest:
 
 .build:
   stage: "build"
+  dependencies:
+    - "manifest"
   variables:
     CC: "ccache gcc"
     CXX: "ccache g++"
@@ -65,8 +67,6 @@ manifest:
 build fedora x86_64:
   extends: '.build'
   image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora-build:2414895a53408ed8a0410a52560f8090b3f74696'
-  dependencies:
-    - "manifest"
 
 build android arm64 api28:
   extends: '.build'
@@ -76,5 +76,3 @@ build android arm64 api28:
       -Dbad=enabled
       -Dbad:androidmedia=enabled
       --cross-file /android_arm64_28.txt
-  dependencies:
-    - "manifest"
