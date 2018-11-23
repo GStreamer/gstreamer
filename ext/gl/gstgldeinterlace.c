@@ -62,6 +62,8 @@ static void gst_gl_deinterlace_get_property (GObject * object,
 
 static gboolean gst_gl_deinterlace_start (GstBaseTransform * trans);
 static gboolean gst_gl_deinterlace_reset (GstBaseTransform * trans);
+static GstCaps *gst_gl_deinterlace_transform_internal_caps (GstGLFilter * filter,
+    GstPadDirection direction, GstCaps * caps, GstCaps * caps_filter);
 static gboolean gst_gl_deinterlace_init_fbo (GstGLFilter * filter);
 static gboolean gst_gl_deinterlace_filter (GstGLFilter * filter,
     GstBuffer * inbuf, GstBuffer * outbuf);
@@ -264,6 +266,8 @@ gst_gl_deinterlace_class_init (GstGLDeinterlaceClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_deinterlace_start;
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_deinterlace_reset;
 
+  GST_GL_FILTER_CLASS (klass)->transform_internal_caps =
+      gst_gl_deinterlace_transform_internal_caps;
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_deinterlace_filter;
   GST_GL_FILTER_CLASS (klass)->filter_texture =
       gst_gl_deinterlace_filter_texture;
@@ -325,6 +329,26 @@ gst_gl_deinterlace_reset (GstBaseTransform * trans)
   }
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (trans);
+}
+
+static GstCaps *
+gst_gl_deinterlace_transform_internal_caps (GstGLFilter * filter,
+    GstPadDirection direction, GstCaps * caps, GstCaps * caps_filter)
+{
+  gint len;
+  GstCaps *res;
+  GstStructure *s;
+
+  res = gst_caps_copy (caps);
+
+  for (len = gst_caps_get_size (res); len > 0; len--) {
+    s = gst_caps_get_structure (res, len - 1);
+    if (direction == GST_PAD_SINK) {
+      gst_structure_remove_field (s, "interlace-mode");
+    }
+  }
+
+  return res;
 }
 
 static void
