@@ -340,7 +340,9 @@ gst_video_convert_sample (GstSample * sample, const GstCaps * to_caps,
    * appsrc, this should preroll the converted buffer in appsink */
   GST_DEBUG ("running conversion pipeline to caps %" GST_PTR_FORMAT,
       to_caps_copy);
-  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE)
+    goto state_change_failed;
 
   /* feed buffer in appsrc */
   GST_DEBUG ("feeding buffer %p, size %" G_GSIZE_FORMAT ", caps %"
@@ -403,6 +405,7 @@ gst_video_convert_sample (GstSample * sample, const GstCaps * to_caps,
 
   /* ERRORS */
 no_pipeline:
+state_change_failed:
   {
     gst_caps_unref (to_caps_copy);
 
