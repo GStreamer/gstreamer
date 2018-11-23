@@ -196,6 +196,8 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->header = FALSE;
   h264parse->frame_start = FALSE;
   h264parse->aud_insert = TRUE;
+  h264parse->have_sps_in_frame = FALSE;
+  h264parse->have_pps_in_frame = FALSE;
   gst_adapter_clear (h264parse->frame_out);
 }
 
@@ -743,6 +745,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       GST_DEBUG_OBJECT (h264parse, "triggering src caps check");
       h264parse->update_caps = TRUE;
       h264parse->have_sps = TRUE;
+      h264parse->have_sps_in_frame = TRUE;
       if (h264parse->push_codec && h264parse->have_pps) {
         /* SPS and PPS found in stream before the first pre_push_frame, no need
          * to forcibly push at start */
@@ -777,6 +780,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         h264parse->update_caps = TRUE;
       }
       h264parse->have_pps = TRUE;
+      h264parse->have_pps_in_frame = TRUE;
       if (h264parse->push_codec && h264parse->have_sps) {
         /* SPS and PPS found in stream before the first pre_push_frame, no need
          * to forcibly push at start */
@@ -2313,6 +2317,11 @@ gst_h264_parse_handle_sps_pps_nals (GstH264Parse * h264parse,
   gint i;
   gboolean send_done = FALSE;
   GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+  if (h264parse->have_sps_in_frame && h264parse->have_pps_in_frame) {
+    GST_DEBUG_OBJECT (h264parse, "SPS/PPS exist in frame, will not insert");
+    return TRUE;
+  }
 
   if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
     /* send separate config NAL buffers */

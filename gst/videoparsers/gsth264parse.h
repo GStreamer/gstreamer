@@ -85,6 +85,10 @@ struct _GstH264Parse
   gboolean have_sps;
   gboolean have_pps;
 
+  /* per frame sps/pps check for periodic push codec decision */
+  gboolean have_sps_in_frame;
+  gboolean have_pps_in_frame;
+
   gboolean sent_codec_tag;
 
   /* collected SPS and PPS NALUs */
