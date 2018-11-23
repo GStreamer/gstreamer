@@ -8,7 +8,9 @@ libgstnvcodec_la_SOURCES = \
 	gstnvh265enc.c \
 	gstcudaloader.c \
 	gstnvdec.c \
-	gstcuvidloader.c
+	gstcuvidloader.c \
+	gstcudacontext.c \
+	gstcudautils.c
 
 noinst_HEADERS = \
 	gstnvdec.h \
@@ -21,7 +23,9 @@ noinst_HEADERS = \
 	cuviddec.h \
 	nvcuvid.h \
 	gstcuvidloader.h \
-	stub/cuda.h
+	stub/cuda.h \
+	gstcudacontext.h \
+	gstcudautils.h
 
 libgstnvcodec_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \

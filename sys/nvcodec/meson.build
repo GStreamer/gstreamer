@@ -7,6 +7,8 @@ nvcodec_sources = [
   'gstcudaloader.c',
   'gstnvdec.c',
   'gstcuvidloader.c',
+  'gstcudacontext.c',
+  'gstcudautils.c',
 ]
 
 if get_option('nvcodec').disabled()
