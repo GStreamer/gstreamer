@@ -155,6 +155,7 @@ draw_cb (gpointer data)
   /* No display connected */
   if (!display->drm_mode_info) {
     GST_ERROR ("No display connected");
+    gst_object_unref (context);
     return;
   };
 
@@ -205,6 +206,7 @@ draw_cb (gpointer data)
 
     if (ret != 0) {
       GST_ERROR ("Could not set DRM CRTC: %s (%d)", g_strerror (errno), errno);
+      gst_object_unref (context);
       /* XXX: it is not possible to communicate the error to the pipeline */
       return;
     }
@@ -305,6 +307,7 @@ gst_gl_window_gbm_init_surface (GstGLWindowGBMEGL * window_egl)
   GstGLContextEGL *context_egl = GST_GL_CONTEXT_EGL (context);
   EGLint gbm_format;
   int hdisplay, vdisplay;
+  gboolean ret = TRUE;
 
   if (drm_mode_info) {
     vdisplay = drm_mode_info->vdisplay;
@@ -320,7 +323,8 @@ gst_gl_window_gbm_init_surface (GstGLWindowGBMEGL * window_egl)
           EGL_NATIVE_VISUAL_ID, &gbm_format)) {
     GST_ERROR ("eglGetConfigAttrib failed: %s",
         gst_egl_get_error_string (eglGetError ()));
-    return FALSE;
+    ret = FALSE;
+    goto cleanup;
   }
 
   /* Create a GBM surface that shall contain the BOs we are
@@ -333,7 +337,10 @@ gst_gl_window_gbm_init_surface (GstGLWindowGBMEGL * window_egl)
 
   GST_DEBUG ("Successfully created GBM surface");
 
-  return TRUE;
+cleanup:
+
+  gst_object_unref (context);
+  return ret;
 }
 
 

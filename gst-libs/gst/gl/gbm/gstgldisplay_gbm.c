@@ -82,6 +82,9 @@ gst_gl_display_gbm_finalize (GObject * object)
   gst_gl_display_gbm_shutdown_gbm (display_gbm);
   gst_gl_display_gbm_shutdown_drm (display_gbm);
 
+  if (display_gbm->drm_fd >= 0)
+    close (display_gbm->drm_fd);
+
   G_OBJECT_CLASS (gst_gl_display_gbm_parent_class)->finalize (object);
 }
 
