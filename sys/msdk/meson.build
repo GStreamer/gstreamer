@@ -1,13 +1,11 @@
 msdk_sources = [
   'gstmsdk.c',
+  'gstmsdkbufferpool.c',
   'gstmsdkcontext.c',
   'gstmsdkcontextutil.c',
-  'gstmsdksystemmemory.c',
-  'gstmsdkvideomemory.c',
-  'gstmsdkbufferpool.c',
   'gstmsdkdec.c',
+  'gstmsdkdecproputil.c',
   'gstmsdkenc.c',
-  'gstmsdkvpp.c',
   'gstmsdkh264dec.c',
   'gstmsdkh264enc.c',
   'gstmsdkh265dec.c',
@@ -16,19 +14,50 @@ msdk_sources = [
   'gstmsdkmjpegenc.c',
   'gstmsdkmpeg2dec.c',
   'gstmsdkmpeg2enc.c',
+  'gstmsdksystemmemory.c',
+  'gstmsdkvc1dec.c',
+  'gstmsdkvideomemory.c',
   'gstmsdkvp8dec.c',
   'gstmsdkvp8enc.c',
-  'gstmsdkvc1dec.c',
-  'msdk.c',
-  'msdk-enums.c',
+  'gstmsdkvpp.c',
   'gstmsdkvpputil.c',
-  'gstmsdkdecproputil.c',
+  'msdk-enums.c',
+  'msdk.c',
+]
+
+msdk_headers = [
+  'gstmsdkallocator.h',
+  'gstmsdkbufferpool.h',
+  'gstmsdkcontext.h',
+  'gstmsdkcontextutil.h',
+  'gstmsdkdec.h',
+  'gstmsdkdecproputil.h',
+  'gstmsdkenc.h',
+  'gstmsdkh264dec.h',
+  'gstmsdkh264enc.h',
+  'gstmsdkh265dec.h',
+  'gstmsdkh265enc.h',
+  'gstmsdkmjpegdec.h',
+  'gstmsdkmjpegenc.h',
+  'gstmsdkmpeg2dec.h',
+  'gstmsdkmpeg2enc.h',
+  'gstmsdksystemmemory.h',
+  'gstmsdkvc1dec.h',
+  'gstmsdkvideomemory.h',
+  'gstmsdkvp8dec.h',
+  'gstmsdkvp8enc.h',
+  'gstmsdkvp9dec.h',
+  'gstmsdkvpp.h',
+  'gstmsdkvpputil.h',
+  'msdk-enums.h',
+  'msdk.h',
 ]
 
 if host_machine.system() == 'windows'
   msdk_sources += ['msdk_d3d.c', 'gstmsdkallocator_d3d.c' ]
 else
   msdk_sources += ['msdk_libva.c', 'gstmsdkallocator_libva.c']
+  msdk_headers += ['msdk_libva.h', 'gstmsdkallocator_libva.h']
 endif
 
 have_msdk = false
@@ -67,7 +96,7 @@ if msdk_root != ''
 
   if msdk_dep_found
     gstmsdktag = library('gstmsdk',
-      msdk_sources,
+      msdk_sources + msdk_headers,
       c_args : gst_plugins_bad_args,
       include_directories : [configinc],
       dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstallocators_dep, msdk_dep],
