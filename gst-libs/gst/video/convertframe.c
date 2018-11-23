@@ -317,7 +317,6 @@ gst_video_convert_sample (GstSample * sample, const GstCaps * to_caps,
   from_caps = gst_sample_get_caps (sample);
   g_return_val_if_fail (from_caps != NULL, NULL);
 
-
   to_caps_copy = gst_caps_new_empty ();
   n = gst_caps_get_size (to_caps);
   for (i = 0; i < n; i++) {
@@ -764,7 +763,7 @@ gst_video_convert_sample_async (GstSample * sample,
   gst_object_unref (bus);
 
   if (gst_element_set_state (pipeline,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
+          GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE)
     goto state_change_failed;
 
   gst_caps_unref (to_caps_copy);
