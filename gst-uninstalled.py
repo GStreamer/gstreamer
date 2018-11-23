@@ -221,7 +221,7 @@ if __name__ == "__main__":
                 args.append("--rcfile")
                 args.append(tmprc.name)
     try:
-        exit(subprocess.call(args, cwd=options.srcdir, close_fds=False,
+        exit(subprocess.call(args, close_fds=False,
                              env=get_subprocess_env(options, gst_version)))
     except subprocess.CalledProcessError as e:
         exit(e.returncode)
