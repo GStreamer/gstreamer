@@ -596,7 +596,8 @@ omx_event_to_debug_struct (OMX_EVENTTYPE event,
           data1, "param-config", G_TYPE_UINT, data2, NULL);
     case OMX_EventBufferFlag:
       return gst_structure_new (name, "port", G_TYPE_UINT,
-          data1, "flags", gst_omx_buffer_flags_to_string (data2), NULL);
+          data1, "flags", G_TYPE_STRING, gst_omx_buffer_flags_to_string (data2),
+          NULL);
     case OMX_EventKhronosExtensions:
     case OMX_EventVendorStartUnused:
     case OMX_EventMax:
