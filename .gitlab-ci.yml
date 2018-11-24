@@ -41,20 +41,21 @@ test manifest:
     - export REF="${IMAGE}:${CI_COMMIT_SHA}"
     - export LATEST="${IMAGE}:latest"
 
-    - docker build --pull -f ${DOCKERFILE} -t ${REF} ${CONTEXT_DIR}
-    - docker image tag ${REF} ${LATEST}
+    - docker build --pull -f ${DOCKERFILE} -t ${LATEST} ${CONTEXT_DIR}
 
     # If we are in a fork, push the image to the reigstry regardless the branch
     - |
       if [ "$CI_PROJECT_NAMESPACE" != "gstreamer" ]; then
         docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-        docker push ${REF}
         docker push ${LATEST}
       fi
 
     # Push the images to the upstream registry
     - |
       if [ "$CI_COMMIT_REF_NAME" = "master" -a "$CI_PROJECT_NAMESPACE" = "gstreamer" ]; then
+        # Tag the image with the git ref
+        docker image tag ${LATEST} ${REF}
+        # Push the tags
         docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
         docker push ${REF}
         docker push ${LATEST}
