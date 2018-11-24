@@ -20,6 +20,7 @@ option('memory-alignment', type: 'combo',
 # Feature options
 option('check', type : 'feature', value : 'auto', description : 'Build unit test libraries')
 option('libunwind', type : 'feature', value : 'auto', description : 'Use libunwind to generate backtraces')
+option('libdw', type : 'feature', value : 'auto', description : 'Use libdw to generate better backtraces from libunwind')
 option('bash-completion', type : 'feature', value : 'auto', description : 'Install bash completion files')
 
 # Common feature options

@@ -347,7 +347,7 @@ endif
 
 backtrace_deps = []
 unwind_dep = dependency('libunwind', required : get_option('libunwind'))
-dw_dep = dependency('libdw', required: get_option('libunwind'))
+dw_dep = dependency('libdw', required: get_option('libdw'))
 backtrace_deps = [unwind_dep, dw_dep]
 if unwind_dep.found()
   cdata.set('HAVE_UNWIND', 1)
