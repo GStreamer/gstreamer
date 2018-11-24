@@ -57,6 +57,7 @@ gst indent:
     variables:
       # No point on trying to format C files in those repositories
       - $CI_PROJECT_NAME == "gstreamer-sharp"
+      - $CI_PROJECT_NAME == "cerbero"
 
 .build:
   stage: 'full builds'
@@ -94,6 +95,9 @@ gst indent:
     paths:
       - "manifest.xml"
       # - "gst-build/"
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
 
 build fedora x86_64:
   extends: '.build'
