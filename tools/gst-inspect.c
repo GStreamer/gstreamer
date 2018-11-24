@@ -45,51 +45,52 @@
 
 gboolean colored_output = TRUE;
 
-/* Console colors (true-color) */
+/* Console colors */
 
-/* Escape values for various colors */
-#define BLUE      "\033[38;2;38;139;210m"
-#define BRBLUE    "\033[38;2;131;148;150m"
-#define BRGREEN   "\033[38;2;88;110;117m"
-#define BRRED     "\033[38;2;203;75;22m"
-#define BRMAGENTA "\033[38;2;108;113;196m"      /* VIOLET */
-#define CYAN      "\033[38;2;42;161;152m"
-#define GREEN     "\033[38;2;133;153;0m"
-#define MAGENTA   "\033[38;2;211;54;130m"
-#define YELLOW    "\033[38;2;176;130;26m"
+/* Escape values for colors */
+#define BLUE      "\033[34m"
+#define BRBLUE    "\033[94m"
+#define BRCYAN    "\033[96m"
+#define BRMAGENTA "\033[95m"
+#define BRYELLOW  "\033[33m"
+#define CYAN      "\033[36m"
+#define GREEN     "\033[32m"
+#define MAGENTA   "\033[35m"
+#define YELLOW    "\033[33m"
 
 /* General colors */
 #define RESET_COLOR           (colored_output? "\033[0m": "")
-#define HEADING_COLOR         (colored_output? YELLOW : "")
+#define HEADING_COLOR         (colored_output? BRYELLOW : "")
 #define PROP_NAME_COLOR       (colored_output? BLUE: "")
-#define PROP_VALUE_COLOR      (colored_output? CYAN : "")
-#define PROP_ATTR_NAME_COLOR  (colored_output? BRRED : "")
-#define PROP_ATTR_VALUE_COLOR (colored_output? BRGREEN : "")
+#define PROP_VALUE_COLOR      (colored_output? RESET_COLOR: "")
+#define PROP_ATTR_NAME_COLOR  (colored_output? BRYELLOW : "")
+#define PROP_ATTR_VALUE_COLOR (colored_output? CYAN: "")
 /* FIXME: find a good color that works on both dark & light bg. */
 #define DESC_COLOR            (colored_output? RESET_COLOR: "")
 
 /* Datatype-related colors */
-#define DATATYPE_COLOR        (colored_output? MAGENTA : "")
+#define DATATYPE_COLOR        (colored_output? GREEN : "")
 #define CHILD_LINK_COLOR      (colored_output? BRMAGENTA : "")
 
 /* Caps colors */
-#define FIELD_NAME_COLOR      (colored_output? BLUE : "")
-#define FIELD_VALUE_COLOR     (colored_output? BRGREEN : "")
+#define FIELD_NAME_COLOR      (colored_output? CYAN: "")
+#define FIELD_VALUE_COLOR     (colored_output? BLUE : "")
 #define CAPS_TYPE_COLOR       (colored_output? YELLOW : "")
 #define STRUCT_NAME_COLOR     (colored_output? YELLOW : "")
 #define CAPS_FEATURE_COLOR    (colored_output? GREEN : "")
 
 /* Plugin listing colors */
-#define PLUGIN_NAME_COLOR     (colored_output? BRMAGENTA : "")
-#define ELEMENT_NAME_COLOR    (colored_output? GREEN: "")
-#define ELEMENT_DETAIL_COLOR  (colored_output? BRBLUE: "")
+#define PLUGIN_NAME_COLOR     (colored_output? BLUE : "")
+#define ELEMENT_NAME_COLOR    (colored_output? GREEN : "")
+/* FIXME: find a good color that works on both dark & light bg. */
+#define ELEMENT_DETAIL_COLOR  (colored_output? RESET_COLOR : "")
 #define PLUGIN_FEATURE_COLOR  (colored_output? BRBLUE: "")
 
 /* Feature listing colors */
 #define FEATURE_NAME_COLOR    (colored_output? GREEN : "")
 #define FEATURE_DIR_COLOR     (colored_output? BRMAGENTA : "")
 #define FEATURE_RANK_COLOR    (colored_output? CYAN : "")
-#define FEATURE_PROTO_COLOR   (colored_output? BRRED : "")
+#define FEATURE_PROTO_COLOR   (colored_output? BRYELLOW : "")
 
 static char *_name = NULL;
 static int indent = 0;
@@ -1955,7 +1956,7 @@ main (int argc, char *argv[])
   guint minver_min = GST_VERSION_MINOR;
   guint minver_micro = 0;
   gchar *types = NULL;
-  const gchar *colorterm, *no_colors;
+  const gchar *no_colors;
 #ifndef GST_DISABLE_OPTION_PARSING
   GOptionEntry options[] = {
     {"print-all", 'a', 0, G_OPTION_ARG_NONE, &print_all,
@@ -2025,10 +2026,7 @@ main (int argc, char *argv[])
 
   no_colors = g_getenv ("GST_INSPECT_NO_COLORS");
   /* We only support truecolor */
-  colorterm = g_getenv ("COLORTERM");
-  colored_output &= ((no_colors == NULL) &&
-      ((g_strcmp0 (colorterm, "truecolor") == 0) ||
-          (g_strcmp0 (colorterm, "24bit") == 0)));
+  colored_output &= (no_colors == NULL);
 
 #ifdef G_OS_UNIX
   if (isatty (STDOUT_FILENO)) {
