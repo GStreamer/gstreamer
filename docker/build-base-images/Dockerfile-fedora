@@ -53,8 +53,10 @@ RUN dnf builddep -y \
         xorg-x11-server-utils \
         xorg-x11-server-Xvfb \
         ninja-build && \
+        cmake && \
+        rsync && \
     dnf clean all && \
-    pip3 install meson && \
+    pip3 install meson hotdoc && \
     export PATH="$PATH:/usr/local/lib/python3.6/site-packages"
 
 ENV GST_BUILD_PATH="/gst-build/"
