@@ -41,7 +41,7 @@
 #   include <sys/wait.h>
 #endif
 
-#define DEFAULT_PAGER "less -F -X"
+#define DEFAULT_PAGER "less -F -X -R"
 
 gboolean colored_output = TRUE;
 
