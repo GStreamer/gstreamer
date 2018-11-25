@@ -69,6 +69,9 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_handdetect_debug);
 #define GST_CAT_DEFAULT gst_handdetect_debug
+#if (CV_MAJOR_VERSION < 4)
+#define CASCADE_DO_CANNY_PRUNING CV_HAAR_DO_CANNY_PRUNING
+#endif
 
 /* define HAAR files */
 #define HAAR_FILE_FIST GST_HAAR_CASCADES_DIR G_DIR_SEPARATOR_S "fist.xml"
@@ -413,13 +416,8 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
     Mat roi (image, Rect (filter->cvGray->origin,
             filter->cvGray->origin, filter->cvGray->width,
             filter->cvGray->height));
-#if (CV_MAJOR_VERSION >= 4)
     filter->cvCascade_fist->detectMultiScale (roi, hands, 1.1, 2,
         CASCADE_DO_CANNY_PRUNING, cvSize (24, 24), cvSize (0, 0));
-#else
-    filter->cvCascade_fist->detectMultiScale (roi, hands, 1.1, 2,
-        CV_HAAR_DO_CANNY_PRUNING, cvSize (24, 24), cvSize (0, 0));
-#endif
 
     /* if FIST gesture detected */
     if (!hands.empty ()) {
