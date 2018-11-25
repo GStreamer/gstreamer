@@ -51,6 +51,8 @@ struct _GstAspectRatioCrop
   gint ar_num; /* if < 1 then don't change ar */
   gint ar_denom;
 
+  GstCaps *renegotiation_caps;
+
   GMutex crop_lock;
 };
 
