@@ -80,8 +80,6 @@ gst indent:
   dependencies:
     - "manifest"
   variables:
-    CC: "ccache gcc"
-    CXX: "ccache g++"
     CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
     CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
     MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS}"
