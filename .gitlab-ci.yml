@@ -9,11 +9,7 @@ deploy:
   - ninja -C build/ GStreamer-doc
   - mv build/GStreamer-doc/html documentation/
   - ARTIFACTS_PATH=$(echo "${CI_JOB_URL}/artifacts/documentation/index.html" |sed "s/${CI_PROJECT_NAMESPACE}/-/g" | sed "s/gitlab/${CI_PROJECT_NAMESPACE}.pages/g")
-  - echo ""
-  - echo "=========================================="
-  - echo "You can find the result at $ARTIFACTS_PATH"
-  - echo "=========================================="
-  - echo ""
+  - printf "\n\n==========================================\n= You can find the result at $ARTIFACTS_PATH =\n==========================================\n\n"
 
   artifacts:
     paths:
