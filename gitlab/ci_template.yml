@@ -20,7 +20,6 @@ variables:
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
   DEFAULT_MESON_ARGS: >
-    --werror
     -Dpython=enabled
     -Dlibav=enabled
     -Dugly=enabled
@@ -82,7 +81,7 @@ gst indent:
   variables:
     CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
     CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS}"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} --werror"
 
   script:
     - ccache -z
@@ -345,6 +344,64 @@ valgrind ges:
       - "manifest.xml"
       - "${CERBERO_HOME}/logs"
       - "*.tar.bz2"
+
+.build windows:
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/windows:v4'
+  stage: 'build'
+  dependencies:
+    - 'manifest'
+  tags:
+    - 'docker'
+    - 'windows'
+    - '1607'
+  variables:
+    MESON_ARGS: >
+      ${DEFAULT_MESON_ARGS}
+      -Dpython=disabled
+      -Dlibav=disabled
+      -Dvaapi=disabled
+      -Ddevtools=disabled
+  script:
+    # For some reason, options are separated by newline instead of space, so we
+    # have to replace them first.
+    - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
+    # Gitlab executes PowerShell in docker, but VsDevCmd.bat is a batch script.
+    # Environment variables substitutions is done by PowerShell before calling
+    # cmd.exe, that's why we use $env:FOO instead of %FOO%
+    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
+        cd C:\gst-build &&
+        python git-update --no-interaction --manifest=$env:CI_PROJECT_DIR/manifest.xml &&
+        meson build $env:MESON_ARGS &&
+        ninja -C build"
+  after_script:
+    # FIXME: cleanup build dir for artifacts.
+
+build vs2017 amd64:
+  extends: '.build windows'
+  variables:
+    ARCH: 'amd64'
+
+build vs2017 x86:
+  extends: '.build windows'
+  variables:
+    ARCH: 'x86'
+
+build msys2 :
+  extends: '.build windows'
+  script:
+    - $env:PATH += ";C:\msys64\usr\bin;C:\msys64\mingw64/bin;C:\msys64\mingw32/bin"
+    # FIXME: This should be done in Dockerfile, but doesn't work there. Needs to investigate why.
+    - C:\msys64\usr\bin\bash -c "pacman-key --init && pacman-key --populate msys2 && pacman-key --refresh-keys || true"
+    - C:\msys64\usr\bin\bash -c "pacman -Syu --noconfirm"
+    - C:\msys64\usr\bin\bash -c "pacman -Sy --noconfirm --needed mingw-w64-x86_64-toolchain ninja"
+    # For some reason, options are separated by newline instead of space, so we
+    # have to replace them first.
+    - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
+    - C:\msys64\usr\bin\bash -c "cd /c/gst-build &&
+        python git-update --no-interaction --manifest=$env:CI_PROJECT_DIR/manifest.xml &&
+        meson build $env:MESON_ARGS &&
+        ninja -C build"
+
 
 # Template for Cerbero GStreamer Deps
 #
