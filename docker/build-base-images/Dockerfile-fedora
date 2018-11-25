@@ -52,9 +52,8 @@ RUN dnf builddep -y \
         python3-cairo-devel \
         xorg-x11-server-utils \
         xorg-x11-server-Xvfb \
-        ninja-build && \
+        ninja-build \
         cmake && \
-        rsync && \
     dnf clean all && \
     pip3 install meson hotdoc && \
     export PATH="$PATH:/usr/local/lib/python3.6/site-packages"
