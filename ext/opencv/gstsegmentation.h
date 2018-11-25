@@ -50,7 +50,9 @@
 #include <opencv2/video.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/bgsegm.hpp>
-
+#if (CV_MAJOR_VERSION >= 4)
+#include <opencv2/core/types_c.h>
+#endif
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */

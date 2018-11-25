@@ -10,6 +10,9 @@ opencv_headers = [
 ]
 
 opencv_dep = dependency('opencv', version : '>= 3.0.0', required : get_option('opencv'))
+if not opencv_dep.found()
+  opencv_dep = dependency('opencv4', version : '>= 4.0.0', required : get_option('opencv'))
+endif
 if opencv_dep.found()
   gstopencv = library('gstopencv-' + api_version,
     opencv_sources,

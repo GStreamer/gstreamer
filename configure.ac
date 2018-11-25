@@ -1846,7 +1846,7 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
   dnl a new version and the no-backward-compatibility define. (There doesn't
   dnl seem to be a switch to suppress the warnings the cvcompat.h header
   dnl causes.)
-  PKG_CHECK_MODULES(OPENCV, opencv >= 3.0.0 opencv < 3.5.0 , [
+  PKG_CHECK_MODULES([OPENCV], [opencv >= 3.0.0 opencv < 3.5.0] , [
     AC_PROG_CXX
     AC_LANG([C++])
     OLD_CPPFLAGS=$CPPFLAGS
@@ -1872,8 +1872,41 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
       HAVE_OPENCV="yes"
     fi
   ], [
+    PKG_CHECK_MODULES([OPENCV], [opencv4 >= 4.0.0 opencv4 < 4.1.0] , [
+    AC_PROG_CXX
+    AC_LANG([C++])
+    OLD_CPPFLAGS=$CPPFLAGS
+    CPPFLAGS=$OPENCV_CFLAGS
+    something_not_found=no
+    AC_CHECK_HEADERS([opencv2/bgsegm.hpp \
+                      opencv2/calib3d.hpp \
+                      opencv2/core.hpp \
+                      opencv2/imgcodecs/legacy/constants_c.h \
+                      opencv2/imgproc/imgproc_c.h \
+                      opencv2/core/types_c.h \
+                      opencv2/core/core_c.h \
+                      opencv2/imgproc.hpp \
+                      opencv2/objdetect.hpp \
+                      opencv2/opencv.hpp \
+                      opencv2/video.hpp \
+                      opencv2/bgsegm.hpp], [], [something_not_found=yes])
+
+    CPPFLAGS=$OLD_CPPFLAGS
+    AC_LANG([C])
+
+    if test $something_not_found = "yes"; then
+      AC_MSG_RESULT([not all opencv2 headers were found])
+      HAVE_OPENCV="no"
+    else
+      HAVE_OPENCV="yes"
+    fi
+  ], [
     HAVE_OPENCV="no"
   ])
+  ])
+  OPENCV_PREFIX="`$PKG_CONFIG --variable=prefix opencv`"
+  AC_DEFINE_UNQUOTED(OPENCV_PREFIX, "$OPENCV_PREFIX", [opencv install prefix])
+  AC_SUBST(OPENCV_PREFIX)
   OPENCV_PREFIX="`$PKG_CONFIG --variable=prefix opencv`"
   AC_DEFINE_UNQUOTED(OPENCV_PREFIX, "$OPENCV_PREFIX", [opencv install prefix])
   AC_SUBST(OPENCV_PREFIX)

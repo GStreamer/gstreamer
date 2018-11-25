@@ -61,6 +61,9 @@
 #include "gst/opencv/gstopencvutils.h"
 #include "gstcvsmooth.h"
 #include <opencv2/imgproc.hpp>
+#if (CV_MAJOR_VERSION >= 4)
+#include <opencv2/imgproc/imgproc_c.h>
+#endif
 
 
 GST_DEBUG_CATEGORY_STATIC (gst_cv_smooth_debug);

@@ -65,6 +65,9 @@
 
 #include "gstfaceblur.h"
 #include <opencv2/imgproc.hpp>
+#if (CV_MAJOR_VERSION >= 4)
+#include <opencv2/imgproc/imgproc_c.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_face_blur_debug);
 #define GST_CAT_DEFAULT gst_face_blur_debug
@@ -73,7 +76,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_face_blur_debug);
     G_DIR_SEPARATOR_S OPENCV_PATH_NAME G_DIR_SEPARATOR_S "haarcascades" \
     G_DIR_SEPARATOR_S "haarcascade_frontalface_default.xml"
 #define DEFAULT_SCALE_FACTOR 1.25
+#if (CV_MAJOR_VERSION >= 4)
+#define DEFAULT_FLAGS CASCADE_DO_CANNY_PRUNING
+#else
 #define DEFAULT_FLAGS CV_HAAR_DO_CANNY_PRUNING
+#endif
 #define DEFAULT_MIN_NEIGHBORS 3
 #define DEFAULT_MIN_SIZE_WIDTH 30
 #define DEFAULT_MIN_SIZE_HEIGHT 30

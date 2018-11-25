@@ -49,6 +49,9 @@
 #include <errno.h>
 #include "MotionCells.h"
 #include <opencv2/imgproc.hpp>
+#if (CV_MAJOR_VERSION >= 4)
+#include <opencv2/imgproc/imgproc_c.h>
+#endif
 
 MotionCells::MotionCells ()
 {

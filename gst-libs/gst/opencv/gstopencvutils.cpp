@@ -25,6 +25,9 @@
 
 #include "gstopencvutils.h"
 #include <opencv2/core.hpp>
+#if (CV_MAJOR_VERSION >= 4)
+#include <opencv2/core/types_c.h>
+#endif
 
 /*
 The various opencv image containers or headers store the following information:

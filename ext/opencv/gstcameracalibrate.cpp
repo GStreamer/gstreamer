@@ -85,6 +85,9 @@
 #include "gstcameracalibrate.h"
 
 #include <opencv2/imgproc.hpp>
+#if (CV_MAJOR_VERSION >= 4)
+#include <opencv2/imgproc/imgproc_c.h>
+#endif
 #include <opencv2/calib3d.hpp>
 
 #include <gst/opencv/gstopencvutils.h>

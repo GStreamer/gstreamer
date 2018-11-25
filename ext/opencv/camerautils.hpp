@@ -21,7 +21,7 @@
 #define __GST_CAMERA_UTILS_H__
 
 #include <gst/gst.h>
-#include <cv.h>
+#include <opencv2/core.hpp>
 
 G_BEGIN_DECLS
 

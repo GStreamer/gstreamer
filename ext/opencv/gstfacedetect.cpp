@@ -82,6 +82,9 @@ using namespace std;
 
 #include "gstfacedetect.h"
 #include <opencv2/imgproc.hpp>
+#if (CV_MAJOR_VERSION >= 4)
+#include <opencv2/imgproc/imgproc_c.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_face_detect_debug);
 #define GST_CAT_DEFAULT gst_face_detect_debug
@@ -94,7 +97,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_face_detect_debug);
 #define DEFAULT_MOUTH_PROFILE HAAR_CASCADES_DIR "haarcascade_mcs_mouth.xml"
 #define DEFAULT_EYES_PROFILE HAAR_CASCADES_DIR "haarcascade_mcs_eyepair_small.xml"
 #define DEFAULT_SCALE_FACTOR 1.25
+#if (CV_MAJOR_VERSION >= 4)
+#define DEFAULT_FLAGS CASCADE_DO_CANNY_PRUNING
+#else
 #define DEFAULT_FLAGS CV_HAAR_DO_CANNY_PRUNING
+#endif
 #define DEFAULT_MIN_NEIGHBORS 3
 #define DEFAULT_MIN_SIZE_WIDTH 30
 #define DEFAULT_MIN_SIZE_HEIGHT 30

@@ -63,6 +63,9 @@
 /* element header */
 #include "gsthanddetect.h"
 #include <opencv2/imgproc.hpp>
+#if (CV_MAJOR_VERSION >= 4)
+#include <opencv2/imgproc/imgproc_c.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_handdetect_debug);
 #define GST_CAT_DEFAULT gst_handdetect_debug
@@ -410,8 +413,13 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
     Mat roi (image, Rect (filter->cvGray->origin,
             filter->cvGray->origin, filter->cvGray->width,
             filter->cvGray->height));
+#if (CV_MAJOR_VERSION >= 4)
+    filter->cvCascade_fist->detectMultiScale (roi, hands, 1.1, 2,
+        CASCADE_DO_CANNY_PRUNING, cvSize (24, 24), cvSize (0, 0));
+#else
     filter->cvCascade_fist->detectMultiScale (roi, hands, 1.1, 2,
         CV_HAAR_DO_CANNY_PRUNING, cvSize (24, 24), cvSize (0, 0));
+#endif
 
     /* if FIST gesture detected */
     if (!hands.empty ()) {
@@ -498,8 +506,13 @@ gst_handdetect_transform_ip (GstOpencvVideoFilter * transform,
       }
     } else {
       /* if NO FIST gesture, detecting PALM gesture */
+#if (CV_MAJOR_VERSION >= 4)
+      filter->cvCascade_palm->detectMultiScale (roi, hands, 1.1, 2,
+          CASCADE_DO_CANNY_PRUNING, cvSize (24, 24), cvSize (0, 0));
+#else
       filter->cvCascade_palm->detectMultiScale (roi, hands, 1.1, 2,
           CV_HAAR_DO_CANNY_PRUNING, cvSize (24, 24), cvSize (0, 0));
+#endif
       /* if PALM detected */
       if (!hands.empty ()) {
         int min_distance, distance;

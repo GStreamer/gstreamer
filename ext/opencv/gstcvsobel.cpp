@@ -60,6 +60,9 @@
 
 #include "gstcvsobel.h"
 #include <opencv2/imgproc.hpp>
+#if (CV_MAJOR_VERSION >= 4)
+#include <opencv2/imgproc/imgproc_c.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_cv_sobel_debug);
 #define GST_CAT_DEFAULT gst_cv_sobel_debug
