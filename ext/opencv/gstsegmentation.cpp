@@ -97,7 +97,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_segmentation_debug);
 #define GST_CAT_DEFAULT gst_segmentation_debug
 
 using namespace cv;
-using namespace cv::bgsegm;
+using namespace
+    cv::bgsegm;
 
 /* Filter signals and args */
 enum
@@ -125,12 +126,17 @@ typedef enum
 #define DEFAULT_LEARNING_RATE  0.01
 
 #define GST_TYPE_SEGMENTATION_METHOD (gst_segmentation_method_get_type ())
-static GType
+static
+    GType
 gst_segmentation_method_get_type (void)
 {
-  static GType etype = 0;
+  static
+      GType
+      etype = 0;
   if (etype == 0) {
-    static const GEnumValue values[] = {
+    static const
+        GEnumValue
+        values[] = {
       {METHOD_BOOK, "Codebook-based segmentation (Bradski2008)", "codebook"},
       {METHOD_MOG, "Mixture-of-Gaussians segmentation (Bowden2001)", "mog"},
       {METHOD_MOG2, "Mixture-of-Gaussians segmentation (Zivkovic2004)", "mog2"},
@@ -143,55 +149,79 @@ gst_segmentation_method_get_type (void)
 
 G_DEFINE_TYPE (GstSegmentation, gst_segmentation, GST_TYPE_OPENCV_VIDEO_FILTER);
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
+static
+    GstStaticPadTemplate
+    sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGBA")));
 
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+static
+    GstStaticPadTemplate
+    src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGBA")));
 
 
-static void gst_segmentation_set_property (GObject * object, guint prop_id,
+static void
+gst_segmentation_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_segmentation_get_property (GObject * object, guint prop_id,
+static void
+gst_segmentation_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_segmentation_transform_ip (GstOpencvVideoFilter * filter,
+static
+    GstFlowReturn
+gst_segmentation_transform_ip (GstOpencvVideoFilter * filter,
     GstBuffer * buffer, IplImage * img);
 
-static gboolean gst_segmentation_stop (GstBaseTransform * basesrc);
-static gboolean gst_segmentation_set_caps (GstOpencvVideoFilter * filter, gint in_width,
+static
+    gboolean
+gst_segmentation_stop (GstBaseTransform * basesrc);
+static
+    gboolean
+gst_segmentation_set_caps (GstOpencvVideoFilter * filter, gint in_width,
     gint in_height, gint in_depth, gint in_channels,
     gint out_width, gint out_height, gint out_depth, gint out_channels);
-static void gst_segmentation_release_all_pointers (GstSegmentation * filter);
+static void
+gst_segmentation_release_all_pointers (GstSegmentation * filter);
 
 /* Codebook algorithm + connected components functions*/
-static int update_codebook (unsigned char *p, codeBook * c,
+static int
+update_codebook (unsigned char *p, codeBook * c,
     unsigned *cbBounds, int numChannels);
-static int clear_stale_entries (codeBook * c);
-static unsigned char background_diff (unsigned char *p, codeBook * c,
+static int
+clear_stale_entries (codeBook * c);
+static unsigned char
+background_diff (unsigned char *p, codeBook * c,
     int numChannels, int *minMod, int *maxMod);
-static void find_connected_components (IplImage * mask, int poly1_hull0,
+static void
+find_connected_components (IplImage * mask, int poly1_hull0,
     float perimScale, CvMemStorage * mem_storage, CvSeq * contours);
 
 /* MOG (Mixture-of-Gaussians functions */
-static int initialise_mog (GstSegmentation * filter);
-static int run_mog_iteration (GstSegmentation * filter);
-static int run_mog2_iteration (GstSegmentation * filter);
-static int finalise_mog (GstSegmentation * filter);
+static int
+initialise_mog (GstSegmentation * filter);
+static int
+run_mog_iteration (GstSegmentation * filter);
+static int
+run_mog2_iteration (GstSegmentation * filter);
+static int
+finalise_mog (GstSegmentation * filter);
 
 /* initialize the segmentation's class */
 static void
 gst_segmentation_class_init (GstSegmentationClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstBaseTransformClass *basesrc_class = GST_BASE_TRANSFORM_CLASS (klass);
-  GstOpencvVideoFilterClass *cvfilter_class =
-      (GstOpencvVideoFilterClass *) klass;
+  GObjectClass *
+      gobject_class;
+  GstElementClass *
+      element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseTransformClass *
+      basesrc_class = GST_BASE_TRANSFORM_CLASS (klass);
+  GstOpencvVideoFilterClass *
+      cvfilter_class = (GstOpencvVideoFilterClass *) klass;
 
   gobject_class = (GObjectClass *) klass;
 
@@ -251,7 +281,8 @@ static void
 gst_segmentation_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstSegmentation *filter = GST_SEGMENTATION (object);
+  GstSegmentation *
+      filter = GST_SEGMENTATION (object);
 
   switch (prop_id) {
     case PROP_METHOD:
@@ -273,7 +304,8 @@ static void
 gst_segmentation_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstSegmentation *filter = GST_SEGMENTATION (object);
+  GstSegmentation *
+      filter = GST_SEGMENTATION (object);
 
   switch (prop_id) {
     case PROP_METHOD:
@@ -291,12 +323,14 @@ gst_segmentation_get_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
+static
+    gboolean
 gst_segmentation_set_caps (GstOpencvVideoFilter * filter, gint in_width,
     gint in_height, gint in_depth, gint in_channels,
     gint out_width, gint out_height, gint out_depth, gint out_channels)
 {
-  GstSegmentation *segmentation = GST_SEGMENTATION (filter);
+  GstSegmentation *
+      segmentation = GST_SEGMENTATION (filter);
   CvSize size;
 
   size = cvSize (in_width, in_height);
@@ -333,10 +367,12 @@ gst_segmentation_set_caps (GstOpencvVideoFilter * filter, gint in_width,
 }
 
 /* Clean up */
-static gboolean
+static
+    gboolean
 gst_segmentation_stop (GstBaseTransform * basesrc)
 {
-  GstSegmentation *filter = GST_SEGMENTATION (basesrc);
+  GstSegmentation *
+      filter = GST_SEGMENTATION (basesrc);
 
   if (filter->cvRGB != NULL)
     gst_segmentation_release_all_pointers (filter);
@@ -360,12 +396,15 @@ gst_segmentation_release_all_pointers (GstSegmentation * filter)
   finalise_mog (filter);
 }
 
-static GstFlowReturn
-gst_segmentation_transform_ip (GstOpencvVideoFilter * cvfilter, GstBuffer * buffer,
-        IplImage * img)
+static
+    GstFlowReturn
+gst_segmentation_transform_ip (GstOpencvVideoFilter * cvfilter,
+    GstBuffer * buffer, IplImage * img)
 {
-  GstSegmentation *filter = GST_SEGMENTATION (cvfilter);
-  int j;
+  GstSegmentation *
+      filter = GST_SEGMENTATION (cvfilter);
+  int
+      j;
 
   filter->framecount++;
 
@@ -381,9 +420,12 @@ gst_segmentation_transform_ip (GstOpencvVideoFilter * cvfilter, GstBuffer * buff
    * [2] "Real-time Foreground-Background Segmentation using Codebook Model",
    * Real-time Imaging, Volume 11, Issue 3, Pages 167-256, June 2005. */
   if (METHOD_BOOK == filter->method) {
-    unsigned cbBounds[3] = { 10, 5, 5 };
-    int minMod[3] = { 20, 20, 20 }, maxMod[3] = {
-    20, 20, 20};
+    unsigned
+    cbBounds[3] = { 10, 5, 5 };
+    int
+    minMod[3] = { 20, 20, 20 }, maxMod[3] = {
+      20, 20, 20
+    };
 
     if (filter->framecount < 30) {
       /* Learning background phase: update_codebook on every frame */
@@ -498,9 +540,14 @@ update_codebook (unsigned char *p, codeBook * c, unsigned *cbBounds,
     int numChannels)
 {
 /* c->t+=1; */
-  unsigned int high[3], low[3];
-  int n, i;
-  int matchChannel;
+  unsigned int
+      high[3],
+      low[3];
+  int
+      n,
+      i;
+  int
+      matchChannel;
 
   for (n = 0; n < numChannels; n++) {
     high[n] = p[n] + cbBounds[n];
@@ -539,13 +586,15 @@ update_codebook (unsigned char *p, codeBook * c, unsigned *cbBounds,
 /*  OVERHEAD TO TRACK POTENTIAL STALE ENTRIES */
   for (int s = 0; s < c->numEntries; s++) {
 /*  Track which codebook entries are going stale: */
-    int negRun = c->t - c->cb[s]->t_last_update;
+    int
+        negRun = c->t - c->cb[s]->t_last_update;
     if (c->cb[s]->stale < negRun)
       c->cb[s]->stale = negRun;
   }
 /*  ENTER A NEW CODEWORD IF NEEDED */
   if (i == c->numEntries) {     /* if no existing codeword found, make one */
-    code_element **foo =
+    code_element **
+        foo =
         (code_element **) g_malloc (sizeof (code_element *) *
         (c->numEntries + 1));
     for (int ii = 0; ii < c->numEntries; ii++) {
@@ -592,12 +641,18 @@ update_codebook (unsigned char *p, codeBook * c, unsigned *cbBounds,
 int
 clear_stale_entries (codeBook * c)
 {
-  int staleThresh = c->t >> 1;
-  int *keep = (int *) g_malloc (sizeof (int) * (c->numEntries));
-  int keepCnt = 0;
-  code_element **foo;
-  int k;
-  int numCleared;
+  int
+      staleThresh = c->t >> 1;
+  int *
+      keep = (int *) g_malloc (sizeof (int) * (c->numEntries));
+  int
+      keepCnt = 0;
+  code_element **
+      foo;
+  int
+      k;
+  int
+      numCleared;
 /*  SEE WHICH CODEBOOK ENTRIES ARE TOO STALE */
   for (int i = 0; i < c->numEntries; i++) {
     if (c->cb[i]->stale > staleThresh)
@@ -657,9 +712,11 @@ unsigned char
 background_diff (unsigned char *p, codeBook * c, int numChannels,
     int *minMod, int *maxMod)
 {
-  int matchChannel;
+  int
+      matchChannel;
 /*  SEE IF THIS FITS AN EXISTING CODEWORD */
-  int i;
+  int
+      i;
   for (i = 0; i < c->numEntries; i++) {
     matchChannel = 0;
     for (int n = 0; n < numChannels; n++) {
@@ -715,11 +772,17 @@ find_connected_components (IplImage * mask, int poly1_hull0, float perimScale,
     CvMemStorage * mem_storage, CvSeq * contours)
 {
   CvContourScanner scanner;
-  CvSeq *c;
-  int numCont = 0;
+  CvSeq *
+      c;
+  int
+      numCont = 0;
   /* Just some convenience variables */
-  const CvScalar CVX_WHITE = CV_RGB (0xff, 0xff, 0xff);
-  const CvScalar CVX_BLACK = CV_RGB (0x00, 0x00, 0x00);
+  const
+      CvScalar
+      CVX_WHITE = CV_RGB (0xff, 0xff, 0xff);
+  const
+      CvScalar
+      CVX_BLACK = CV_RGB (0x00, 0x00, 0x00);
 
   /* CLEAN UP RAW MASK */
   cvMorphologyEx (mask, mask, 0, 0, CV_MOP_OPEN, CVCLOSE_ITR);
@@ -735,15 +798,18 @@ find_connected_components (IplImage * mask, int poly1_hull0, float perimScale,
       CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, cvPoint (0, 0));
 
   while ((c = cvFindNextContour (scanner)) != NULL) {
-    double len = cvContourArea (c, CV_WHOLE_SEQ, 0);
+    double
+        len = cvContourArea (c, CV_WHOLE_SEQ, 0);
     /* calculate perimeter len threshold: */
-    double q = (mask->height + mask->width) / perimScale;
+    double
+        q = (mask->height + mask->width) / perimScale;
     /* Get rid of blob if its perimeter is too small: */
     if (len < q) {
       cvSubstituteContour (scanner, NULL);
     } else {
       /* Smooth its edges if its large enough */
-      CvSeq *c_new;
+      CvSeq *
+          c_new;
       if (poly1_hull0) {
         /* Polygonal approximation */
         c_new =
@@ -772,8 +838,9 @@ find_connected_components (IplImage * mask, int poly1_hull0, float perimScale,
 int
 initialise_mog (GstSegmentation * filter)
 {
-  filter->img_input_as_cvMat = (void *) new Mat (cvarrToMat (filter->cvYUV, false));
-  filter->img_fg_as_cvMat = (void *) new Mat (cvarrToMat(filter->cvFG, false));
+  filter->img_input_as_cvMat = (void *) new
+      Mat (cvarrToMat (filter->cvYUV, false));
+  filter->img_fg_as_cvMat = (void *) new Mat (cvarrToMat (filter->cvFG, false));
 
   filter->mog = bgsegm::createBackgroundSubtractorMOG ();
   filter->mog2 = createBackgroundSubtractorMOG2 ();
@@ -799,9 +866,8 @@ run_mog_iteration (GstSegmentation * filter)
      European Workshop on Advanced Video-Based Surveillance Systems, 2001
    */
 
-  filter->mog->apply (*((Mat *) filter->
-          img_input_as_cvMat), *((Mat *) filter->img_fg_as_cvMat),
-      filter->learning_rate);
+  filter->mog->apply (*((Mat *) filter->img_input_as_cvMat),
+      *((Mat *) filter->img_fg_as_cvMat), filter->learning_rate);
 
   return (0);
 }
@@ -810,9 +876,8 @@ int
 run_mog2_iteration (GstSegmentation * filter)
 {
   ((Mat *) filter->img_input_as_cvMat)->data =
-       (uchar *) filter->cvYUV->imageData;
-  ((Mat *) filter->img_fg_as_cvMat)->data =
-       (uchar *) filter->cvFG->imageData;
+      (uchar *) filter->cvYUV->imageData;
+  ((Mat *) filter->img_fg_as_cvMat)->data = (uchar *) filter->cvFG->imageData;
 
   /*
      BackgroundSubtractorMOG2 [1], Gaussian Mixture-based Background/Foreground
@@ -827,9 +892,8 @@ run_mog2_iteration (GstSegmentation * filter)
      Letters, vol. 27, no. 7, pages 773-780, 2006.
    */
 
-  filter->mog2->apply (*((Mat *) filter->
-          img_input_as_cvMat), *((Mat *) filter->img_fg_as_cvMat),
-      filter->learning_rate);
+  filter->mog2->apply (*((Mat *) filter->img_input_as_cvMat),
+      *((Mat *) filter->img_fg_as_cvMat), filter->learning_rate);
 
   return (0);
 }

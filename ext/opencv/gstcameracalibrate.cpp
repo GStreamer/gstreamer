@@ -128,10 +128,11 @@ enum
   PROP_SETTINGS
 };
 
-enum {
- DETECTION = 0,
- CAPTURING = 1,
- CALIBRATED = 2
+enum
+{
+  DETECTION = 0,
+  CAPTURING = 1,
+  CALIBRATED = 2
 };
 
 #define GST_TYPE_CAMERA_CALIBRATION_PATTERN (camera_calibration_pattern_get_type ())
@@ -142,19 +143,23 @@ camera_calibration_pattern_get_type (void)
   static GType camera_calibration_pattern_type = 0;
   static const GEnumValue camera_calibration_pattern[] = {
     {GST_CAMERA_CALIBRATION_PATTERN_CHESSBOARD, "Chessboard", "chessboard"},
-    {GST_CAMERA_CALIBRATION_PATTERN_CIRCLES_GRID, "Circle Grids", "circle_grids"},
-    {GST_CAMERA_CALIBRATION_PATTERN_ASYMMETRIC_CIRCLES_GRID, "Asymmetric Circle Grids", "asymmetric_circle_grids"},
+    {GST_CAMERA_CALIBRATION_PATTERN_CIRCLES_GRID, "Circle Grids",
+        "circle_grids"},
+    {GST_CAMERA_CALIBRATION_PATTERN_ASYMMETRIC_CIRCLES_GRID,
+        "Asymmetric Circle Grids", "asymmetric_circle_grids"},
     {0, NULL, NULL},
   };
 
   if (!camera_calibration_pattern_type) {
     camera_calibration_pattern_type =
-        g_enum_register_static ("GstCameraCalibrationPattern", camera_calibration_pattern);
+        g_enum_register_static ("GstCameraCalibrationPattern",
+        camera_calibration_pattern);
   }
   return camera_calibration_pattern_type;
 }
 
-G_DEFINE_TYPE (GstCameraCalibrate, gst_camera_calibrate, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE (GstCameraCalibrate, gst_camera_calibrate,
+    GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_camera_calibrate_dispose (GObject * object);
 static void gst_camera_calibrate_set_property (GObject * object, guint prop_id,
@@ -162,8 +167,9 @@ static void gst_camera_calibrate_set_property (GObject * object, guint prop_id,
 static void gst_camera_calibrate_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn gst_camera_calibrate_transform_frame_ip (
-    GstOpencvVideoFilter * cvfilter, GstBuffer * frame, IplImage * img);
+static GstFlowReturn
+gst_camera_calibrate_transform_frame_ip (GstOpencvVideoFilter * cvfilter,
+    GstBuffer * frame, IplImage * img);
 
 /* clean up */
 static void
@@ -178,7 +184,8 @@ gst_camera_calibrate_class_init (GstCameraCalibrateClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstOpencvVideoFilterClass *opencvfilter_class = GST_OPENCV_VIDEO_FILTER_CLASS (klass);
+  GstOpencvVideoFilterClass *opencvfilter_class =
+      GST_OPENCV_VIDEO_FILTER_CLASS (klass);
   GstCaps *caps;
   GstPadTemplate *templ;
 
@@ -223,22 +230,26 @@ gst_camera_calibrate_class_init (GstCameraCalibrateClass * klass)
   g_object_class_install_property (gobject_class, PROP_CORNER_SUB_PIXEL,
       g_param_spec_boolean ("corner-sub-pixel", "Corner Sub Pixel",
           "Improve corner detection accuracy for chessboard",
-          DEFAULT_CORNER_SUB_PIXEL, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          DEFAULT_CORNER_SUB_PIXEL,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_ZERO_TANGENT_DISTORTION,
-      g_param_spec_boolean ("zero-tangent-distorsion", "Zero Tangent Distorsion",
-          "Assume zero tangential distortion",
-          DEFAULT_ZERO_TANGENT_DISTORTION, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+      g_param_spec_boolean ("zero-tangent-distorsion",
+          "Zero Tangent Distorsion", "Assume zero tangential distortion",
+          DEFAULT_ZERO_TANGENT_DISTORTION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_CENTER_PRINCIPAL_POINT,
       g_param_spec_boolean ("center-principal-point", "Center Principal Point",
           "Fix the principal point at the center",
-          DEFAULT_CENTER_PRINCIPAL_POINT, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          DEFAULT_CENTER_PRINCIPAL_POINT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_USE_FISHEYE,
       g_param_spec_boolean ("use-fisheye", "Use Fisheye",
           "Use fisheye camera model for calibration",
-          DEFAULT_USE_FISHEYE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          DEFAULT_USE_FISHEYE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_DELAY,
       g_param_spec_int ("delay", "Delay",
@@ -248,14 +259,15 @@ gst_camera_calibrate_class_init (GstCameraCalibrateClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FRAME_COUNT,
       g_param_spec_int ("frame-count", "Frame Count",
-          "The number of frames to use from the input for calibration", 1, G_MAXINT,
-          DEFAULT_FRAME_COUNT,
+          "The number of frames to use from the input for calibration", 1,
+          G_MAXINT, DEFAULT_FRAME_COUNT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_SHOW_CORNERS,
       g_param_spec_boolean ("show-corners", "Show Corners",
           "Show corners",
-          DEFAULT_SHOW_CORNERS, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          DEFAULT_SHOW_CORNERS,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_SETTINGS,
       g_param_spec_string ("settings", "Settings",
@@ -289,7 +301,7 @@ gst_camera_calibrate_init (GstCameraCalibrate * calib)
   calib->boardSize.width = DEFAULT_BOARD_WIDTH;
   calib->boardSize.height = DEFAULT_BOARD_HEIGHT;
   calib->squareSize = DEFAULT_SQUARE_SIZE;
-  calib->aspectRatio  = DEFAULT_ASPECT_RATIO;
+  calib->aspectRatio = DEFAULT_ASPECT_RATIO;
   calib->cornerSubPix = DEFAULT_CORNER_SUB_PIXEL;
   calib->calibZeroTangentDist = DEFAULT_ZERO_TANGENT_DISTORTION;
   calib->calibFixPrincipalPoint = DEFAULT_CENTER_PRINCIPAL_POINT;
@@ -299,28 +311,33 @@ gst_camera_calibrate_init (GstCameraCalibrate * calib)
   calib->showCorners = DEFAULT_SHOW_CORNERS;
 
   calib->flags = cv::CALIB_FIX_K4 | cv::CALIB_FIX_K5;
-  if (calib->calibFixPrincipalPoint) calib->flags |= cv::CALIB_FIX_PRINCIPAL_POINT;
-  if (calib->calibZeroTangentDist)   calib->flags |= cv::CALIB_ZERO_TANGENT_DIST;
-  if (calib->aspectRatio)            calib->flags |= cv::CALIB_FIX_ASPECT_RATIO;
+  if (calib->calibFixPrincipalPoint)
+    calib->flags |= cv::CALIB_FIX_PRINCIPAL_POINT;
+  if (calib->calibZeroTangentDist)
+    calib->flags |= cv::CALIB_ZERO_TANGENT_DIST;
+  if (calib->aspectRatio)
+    calib->flags |= cv::CALIB_FIX_ASPECT_RATIO;
 
   if (calib->useFisheye) {
-   /* the fisheye model has its own enum, so overwrite the flags */
-   calib->flags = cv::fisheye::CALIB_FIX_SKEW | cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC |
-       /*cv::fisheye::CALIB_FIX_K1 |*/
-       cv::fisheye::CALIB_FIX_K2 | cv::fisheye::CALIB_FIX_K3 | cv::fisheye::CALIB_FIX_K4;
+    /* the fisheye model has its own enum, so overwrite the flags */
+    calib->flags =
+        cv::fisheye::CALIB_FIX_SKEW | cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC |
+        /*cv::fisheye::CALIB_FIX_K1 | */
+        cv::fisheye::CALIB_FIX_K2 | cv::fisheye::CALIB_FIX_K3 | cv::
+        fisheye::CALIB_FIX_K4;
   }
 
-  calib->mode = CAPTURING; //DETECTION;
+  calib->mode = CAPTURING;      //DETECTION;
   calib->prevTimestamp = 0;
 
-  calib->imagePoints.clear();
+  calib->imagePoints.clear ();
   calib->cameraMatrix = 0;
   calib->distCoeffs = 0;
 
   calib->settings = NULL;
 
-  gst_opencv_video_filter_set_in_place (
-      GST_OPENCV_VIDEO_FILTER_CAST (calib), TRUE);
+  gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (calib),
+      TRUE);
 }
 
 static void
@@ -435,7 +452,7 @@ gst_camera_calibrate_get_property (GObject * object, guint prop_id,
   }
 }
 
-void camera_calibrate_run(GstCameraCalibrate *calib, IplImage *img);
+void camera_calibrate_run (GstCameraCalibrate * calib, IplImage * img);
 
 /*
  * Performs the camera calibration
@@ -446,23 +463,24 @@ gst_camera_calibrate_transform_frame_ip (GstOpencvVideoFilter * cvfilter,
 {
   GstCameraCalibrate *calib = GST_CAMERA_CALIBRATE (cvfilter);
 
-  camera_calibrate_run(calib, img);
+  camera_calibrate_run (calib, img);
 
   return GST_FLOW_OK;
 }
 
-bool camera_calibrate_calibrate(GstCameraCalibrate *calib,
-    cv::Size imageSize, cv::Mat& cameraMatrix, cv::Mat& distCoeffs,
-    std::vector<std::vector<cv::Point2f> > imagePoints );
+bool camera_calibrate_calibrate (GstCameraCalibrate * calib,
+    cv::Size imageSize, cv::Mat & cameraMatrix, cv::Mat & distCoeffs,
+    std::vector < std::vector < cv::Point2f > >imagePoints);
 
-void camera_calibrate_run(GstCameraCalibrate *calib, IplImage *img)
+void
+camera_calibrate_run (GstCameraCalibrate * calib, IplImage * img)
 {
-  cv::Mat view = cv::cvarrToMat(img);
+  cv::Mat view = cv::cvarrToMat (img);
 
   // For camera only take new samples after delay time
   if (calib->mode == CAPTURING) {
     // get_input
-    cv::Size imageSize = view.size();
+    cv::Size imageSize = view.size ();
 
     /* find_pattern
      * FIXME find ways to reduce CPU usage
@@ -471,9 +489,10 @@ void camera_calibrate_run(GstCameraCalibrate *calib, IplImage *img)
      * in a separate element that gets composited back into the main stream
      * (video is tee-d into it and can then be decimated, scaled, etc..) */
 
-    std::vector<cv::Point2f> pointBuf;
+    std::vector < cv::Point2f > pointBuf;
     bool found;
-    int chessBoardFlags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
+    int chessBoardFlags =
+        cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE;
 
     if (!calib->useFisheye) {
       /* fast check erroneously fails with high distortions like fisheye */
@@ -481,15 +500,19 @@ void camera_calibrate_run(GstCameraCalibrate *calib, IplImage *img)
     }
 
     /* Find feature points on the input format */
-    switch(calib->calibrationPattern) {
+    switch (calib->calibrationPattern) {
       case GST_CAMERA_CALIBRATION_PATTERN_CHESSBOARD:
-        found = cv::findChessboardCorners(view, calib->boardSize, pointBuf, chessBoardFlags);
+        found =
+            cv::findChessboardCorners (view, calib->boardSize, pointBuf,
+            chessBoardFlags);
         break;
       case GST_CAMERA_CALIBRATION_PATTERN_CIRCLES_GRID:
-        found = cv::findCirclesGrid(view, calib->boardSize, pointBuf);
+        found = cv::findCirclesGrid (view, calib->boardSize, pointBuf);
         break;
       case GST_CAMERA_CALIBRATION_PATTERN_ASYMMETRIC_CIRCLES_GRID:
-        found = cv::findCirclesGrid(view, calib->boardSize, pointBuf, cv::CALIB_CB_ASYMMETRIC_GRID );
+        found =
+            cv::findCirclesGrid (view, calib->boardSize, pointBuf,
+            cv::CALIB_CB_ASYMMETRIC_GRID);
         break;
       default:
         found = FALSE;
@@ -499,33 +522,41 @@ void camera_calibrate_run(GstCameraCalibrate *calib, IplImage *img)
     bool blinkOutput = FALSE;
     if (found) {
       /* improve the found corners' coordinate accuracy for chessboard */
-      if (calib->calibrationPattern == GST_CAMERA_CALIBRATION_PATTERN_CHESSBOARD && calib->cornerSubPix) {
+      if (calib->calibrationPattern == GST_CAMERA_CALIBRATION_PATTERN_CHESSBOARD
+          && calib->cornerSubPix) {
         /* FIXME findChessboardCorners and alike do a cv::COLOR_BGR2GRAY (and a histogram balance)
          * the color convert should be done once (if needed) and shared
          * FIXME keep viewGray around to avoid reallocating it each time... */
         cv::Mat viewGray;
-        cv::cvtColor(view, viewGray, cv::COLOR_BGR2GRAY);
-        cv::cornerSubPix(viewGray, pointBuf, cv::Size(11, 11), cv::Size(-1, -1),
-            cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1));
+        cv::cvtColor (view, viewGray, cv::COLOR_BGR2GRAY);
+        cv::cornerSubPix (viewGray, pointBuf, cv::Size (11, 11), cv::Size (-1,
+                -1),
+            cv::TermCriteria (cv::TermCriteria::EPS + cv::TermCriteria::COUNT,
+                30, 0.1));
       }
 
       /* take new samples after delay time */
-      if ((calib->mode == CAPTURING) && ((clock() - calib->prevTimestamp) > calib->delay * 1e-3 * CLOCKS_PER_SEC)) {
-        calib->imagePoints.push_back(pointBuf);
-        calib->prevTimestamp = clock();
+      if ((calib->mode == CAPTURING)
+          && ((clock () - calib->prevTimestamp) >
+              calib->delay * 1e-3 * CLOCKS_PER_SEC)) {
+        calib->imagePoints.push_back (pointBuf);
+        calib->prevTimestamp = clock ();
         blinkOutput = true;
       }
 
       /* draw the corners */
       if (calib->showCorners) {
-        cv::drawChessboardCorners(view, calib->boardSize, cv::Mat(pointBuf), found);
+        cv::drawChessboardCorners (view, calib->boardSize, cv::Mat (pointBuf),
+            found);
       }
     }
 
     /* if got enough frames then stop calibration and show result */
-    if (calib->mode == CAPTURING && calib->imagePoints.size() >= (size_t)calib->nrFrames) {
+    if (calib->mode == CAPTURING
+        && calib->imagePoints.size () >= (size_t) calib->nrFrames) {
 
-      if (camera_calibrate_calibrate(calib, imageSize, calib->cameraMatrix, calib->distCoeffs, calib->imagePoints)) {
+      if (camera_calibrate_calibrate (calib, imageSize, calib->cameraMatrix,
+              calib->distCoeffs, calib->imagePoints)) {
         calib->mode = CALIBRATED;
 
         GstPad *sink_pad = GST_BASE_TRANSFORM_SINK_PAD (calib);
@@ -535,21 +566,27 @@ void camera_calibrate_run(GstCameraCalibrate *calib, IplImage *img)
 
         /* set settings property */
         g_free (calib->settings);
-        calib->settings = camera_serialize_undistort_settings(calib->cameraMatrix, calib->distCoeffs);
+        calib->settings =
+            camera_serialize_undistort_settings (calib->cameraMatrix,
+            calib->distCoeffs);
 
         /* create calibrated event and send upstream and downstream */
         sink_event = gst_camera_event_new_calibrated (calib->settings);
-        GST_LOG_OBJECT (sink_pad, "Sending upstream event %s.", GST_EVENT_TYPE_NAME (sink_event));
+        GST_LOG_OBJECT (sink_pad, "Sending upstream event %s.",
+            GST_EVENT_TYPE_NAME (sink_event));
         if (!gst_pad_push_event (sink_pad, sink_event)) {
-          GST_WARNING_OBJECT (sink_pad, "Sending upstream event %p (%s) failed.",
-              sink_event, GST_EVENT_TYPE_NAME (sink_event));
+          GST_WARNING_OBJECT (sink_pad,
+              "Sending upstream event %p (%s) failed.", sink_event,
+              GST_EVENT_TYPE_NAME (sink_event));
         }
 
         src_event = gst_camera_event_new_calibrated (calib->settings);
-        GST_LOG_OBJECT (src_pad, "Sending downstream event %s.", GST_EVENT_TYPE_NAME (src_event));
+        GST_LOG_OBJECT (src_pad, "Sending downstream event %s.",
+            GST_EVENT_TYPE_NAME (src_event));
         if (!gst_pad_push_event (src_pad, src_event)) {
-          GST_WARNING_OBJECT (src_pad, "Sending downstream event %p (%s) failed.",
-              src_event, GST_EVENT_TYPE_NAME (src_event));
+          GST_WARNING_OBJECT (src_pad,
+              "Sending downstream event %p (%s) failed.", src_event,
+              GST_EVENT_TYPE_NAME (src_event));
         }
       } else {
         /* failed to calibrate, go back to detection mode */
@@ -558,7 +595,7 @@ void camera_calibrate_run(GstCameraCalibrate *calib, IplImage *img)
     }
 
     if (calib->mode == CAPTURING && blinkOutput) {
-      bitwise_not(view, view);
+      bitwise_not (view, view);
     }
 
   }
@@ -572,141 +609,146 @@ void camera_calibrate_run(GstCameraCalibrate *calib, IplImage *img)
   std::string msg = (calib->mode == CAPTURING) ? "100/100" :
       (calib->mode == CALIBRATED) ? "Calibrated" : "Waiting...";
   int baseLine = 0;
-  cv::Size textSize = cv::getTextSize(msg, 1, 1, 1, &baseLine);
-  cv::Point textOrigin(view.cols - 2 * textSize.width - 10, view.rows - 2 * baseLine - 10);
+  cv::Size textSize = cv::getTextSize (msg, 1, 1, 1, &baseLine);
+  cv::Point textOrigin (view.cols - 2 * textSize.width - 10,
+      view.rows - 2 * baseLine - 10);
 
   if (calib->mode == CAPTURING) {
-    msg = cv::format("%d/%d", (int)calib->imagePoints.size(), calib->nrFrames);
+    msg =
+        cv::format ("%d/%d", (int) calib->imagePoints.size (), calib->nrFrames);
   }
 
-  const cv::Scalar RED(0,0,255);
-  const cv::Scalar GREEN(0,255,0);
+  const cv::Scalar RED (0, 0, 255);
+  const cv::Scalar GREEN (0, 255, 0);
 
-  cv::putText(view, msg, textOrigin, 1, 1, calib->mode == CALIBRATED ?  GREEN : RED);
+  cv::putText (view, msg, textOrigin, 1, 1,
+      calib->mode == CALIBRATED ? GREEN : RED);
 }
 
-static double camera_calibrate_calc_reprojection_errors (
-    const std::vector<std::vector<cv::Point3f> >& objectPoints,
-    const std::vector<std::vector<cv::Point2f> >& imagePoints,
-    const std::vector<cv::Mat>& rvecs, const std::vector<cv::Mat>& tvecs,
-    const cv::Mat& cameraMatrix , const cv::Mat& distCoeffs,
-    std::vector<float>& perViewErrors, bool fisheye)
+static double
+camera_calibrate_calc_reprojection_errors (const std::vector < std::vector <
+    cv::Point3f > >&objectPoints,
+    const std::vector < std::vector < cv::Point2f > >&imagePoints,
+    const std::vector < cv::Mat > &rvecs, const std::vector < cv::Mat > &tvecs,
+    const cv::Mat & cameraMatrix, const cv::Mat & distCoeffs,
+    std::vector < float >&perViewErrors, bool fisheye)
 {
-  std::vector<cv::Point2f> imagePoints2;
+  std::vector < cv::Point2f > imagePoints2;
   size_t totalPoints = 0;
   double totalErr = 0, err;
-  perViewErrors.resize(objectPoints.size());
+  perViewErrors.resize (objectPoints.size ());
 
-  for(size_t i = 0; i < objectPoints.size(); ++i)
-  {
-    if (fisheye)
-    {
-      cv::fisheye::projectPoints(objectPoints[i], imagePoints2,
+  for (size_t i = 0; i < objectPoints.size (); ++i) {
+    if (fisheye) {
+      cv::fisheye::projectPoints (objectPoints[i], imagePoints2,
           rvecs[i], tvecs[i], cameraMatrix, distCoeffs);
-    }
-    else
-    {
-      cv::projectPoints(objectPoints[i], rvecs[i], tvecs[i],
+    } else {
+      cv::projectPoints (objectPoints[i], rvecs[i], tvecs[i],
           cameraMatrix, distCoeffs, imagePoints2);
     }
-    err = cv::norm(imagePoints[i], imagePoints2, cv::NORM_L2);
+    err = cv::norm (imagePoints[i], imagePoints2, cv::NORM_L2);
 
-    size_t n = objectPoints[i].size();
-    perViewErrors[i] = (float) std::sqrt(err*err/n);
-    totalErr        += err*err;
-    totalPoints     += n;
+    size_t n = objectPoints[i].size ();
+    perViewErrors[i] = (float) std::sqrt (err * err / n);
+    totalErr += err * err;
+    totalPoints += n;
   }
 
-  return std::sqrt(totalErr/totalPoints);
+  return std::sqrt (totalErr / totalPoints);
 }
 
-static void camera_calibrate_calc_corners (cv::Size boardSize, float squareSize,
-    std::vector<cv::Point3f>& corners, gint patternType /*= CHESSBOARD*/)
+static void
+camera_calibrate_calc_corners (cv::Size boardSize, float squareSize,
+    std::vector < cv::Point3f > &corners, gint patternType /*= CHESSBOARD*/ )
 {
-  corners.clear();
+  corners.clear ();
 
-  switch(patternType) {
+  switch (patternType) {
     case GST_CAMERA_CALIBRATION_PATTERN_CHESSBOARD:
     case GST_CAMERA_CALIBRATION_PATTERN_CIRCLES_GRID:
-      for( int i = 0; i < boardSize.height; ++i)
-        for( int j = 0; j < boardSize.width; ++j)
-          corners.push_back(cv::Point3f(j * squareSize, i * squareSize, 0));
+      for (int i = 0; i < boardSize.height; ++i)
+        for (int j = 0; j < boardSize.width; ++j)
+          corners.push_back (cv::Point3f (j * squareSize, i * squareSize, 0));
       break;
     case GST_CAMERA_CALIBRATION_PATTERN_ASYMMETRIC_CIRCLES_GRID:
-      for( int i = 0; i < boardSize.height; i++)
-        for( int j = 0; j < boardSize.width; j++)
-          corners.push_back(cv::Point3f((2 * j + i % 2) * squareSize, i * squareSize, 0));
+      for (int i = 0; i < boardSize.height; i++)
+        for (int j = 0; j < boardSize.width; j++)
+          corners.push_back (cv::Point3f ((2 * j + i % 2) * squareSize,
+                  i * squareSize, 0));
       break;
     default:
       break;
   }
 }
 
-static bool camera_calibrate_calibrate_full(GstCameraCalibrate *calib,
-    cv::Size& imageSize, cv::Mat& cameraMatrix, cv::Mat& distCoeffs,
-    std::vector<std::vector<cv::Point2f> > imagePoints,
-    std::vector<cv::Mat>& rvecs, std::vector<cv::Mat>& tvecs,
-    std::vector<float>& reprojErrs, double& totalAvgErr)
+static bool
+camera_calibrate_calibrate_full (GstCameraCalibrate * calib,
+    cv::Size & imageSize, cv::Mat & cameraMatrix, cv::Mat & distCoeffs,
+    std::vector < std::vector < cv::Point2f > >imagePoints,
+    std::vector < cv::Mat > &rvecs, std::vector < cv::Mat > &tvecs,
+    std::vector < float >&reprojErrs, double &totalAvgErr)
 {
-  cameraMatrix = cv::Mat::eye(3, 3, CV_64F);
+  cameraMatrix = cv::Mat::eye (3, 3, CV_64F);
   if (calib->flags & cv::CALIB_FIX_ASPECT_RATIO) {
-    cameraMatrix.at<double>(0,0) = calib->aspectRatio;
+    cameraMatrix.at < double >(0, 0) = calib->aspectRatio;
   }
   if (calib->useFisheye) {
-    distCoeffs = cv::Mat::zeros(4, 1, CV_64F);
+    distCoeffs = cv::Mat::zeros (4, 1, CV_64F);
   } else {
-    distCoeffs = cv::Mat::zeros(8, 1, CV_64F);
+    distCoeffs = cv::Mat::zeros (8, 1, CV_64F);
   }
 
-  std::vector<std::vector<cv::Point3f> > objectPoints(1);
+  std::vector < std::vector < cv::Point3f > >objectPoints (1);
   camera_calibrate_calc_corners (calib->boardSize, calib->squareSize,
       objectPoints[0], calib->calibrationPattern);
 
-  objectPoints.resize(imagePoints.size(), objectPoints[0]);
+  objectPoints.resize (imagePoints.size (), objectPoints[0]);
 
   /* Find intrinsic and extrinsic camera parameters */
   double rms;
 
   if (calib->useFisheye) {
     cv::Mat _rvecs, _tvecs;
-    rms = cv::fisheye::calibrate(objectPoints, imagePoints, imageSize,
+    rms = cv::fisheye::calibrate (objectPoints, imagePoints, imageSize,
         cameraMatrix, distCoeffs, _rvecs, _tvecs, calib->flags);
 
-    rvecs.reserve(_rvecs.rows);
-    tvecs.reserve(_tvecs.rows);
-    for(int i = 0; i < int(objectPoints.size()); i++){
-      rvecs.push_back(_rvecs.row(i));
-      tvecs.push_back(_tvecs.row(i));
+    rvecs.reserve (_rvecs.rows);
+    tvecs.reserve (_tvecs.rows);
+    for (int i = 0; i < int (objectPoints.size ()); i++) {
+      rvecs.push_back (_rvecs.row (i));
+      tvecs.push_back (_tvecs.row (i));
     }
   } else {
-    rms = cv::calibrateCamera(objectPoints, imagePoints, imageSize,
+    rms = cv::calibrateCamera (objectPoints, imagePoints, imageSize,
         cameraMatrix, distCoeffs, rvecs, tvecs, calib->flags);
   }
 
   GST_LOG_OBJECT (calib,
       "Re-projection error reported by calibrateCamera: %f", rms);
 
-  bool ok = checkRange(cameraMatrix) && checkRange(distCoeffs);
+  bool ok = checkRange (cameraMatrix) && checkRange (distCoeffs);
 
-  totalAvgErr = camera_calibrate_calc_reprojection_errors (objectPoints, imagePoints,
+  totalAvgErr =
+      camera_calibrate_calc_reprojection_errors (objectPoints, imagePoints,
       rvecs, tvecs, cameraMatrix, distCoeffs, reprojErrs, calib->useFisheye);
 
   return ok;
 }
 
-bool camera_calibrate_calibrate(GstCameraCalibrate *calib,
-    cv::Size imageSize, cv::Mat& cameraMatrix, cv::Mat& distCoeffs,
-    std::vector<std::vector<cv::Point2f> > imagePoints)
+bool
+camera_calibrate_calibrate (GstCameraCalibrate * calib,
+    cv::Size imageSize, cv::Mat & cameraMatrix, cv::Mat & distCoeffs,
+    std::vector < std::vector < cv::Point2f > >imagePoints)
 {
-  std::vector<cv::Mat> rvecs, tvecs;
-  std::vector<float> reprojErrs;
+  std::vector < cv::Mat > rvecs, tvecs;
+  std::vector < float >reprojErrs;
   double totalAvgErr = 0;
 
-  bool ok = camera_calibrate_calibrate_full(calib,
+  bool ok = camera_calibrate_calibrate_full (calib,
       imageSize, cameraMatrix, distCoeffs, imagePoints,
       rvecs, tvecs, reprojErrs, totalAvgErr);
   GST_LOG_OBJECT (calib, (ok ? "Calibration succeeded" : "Calibration failed"));
-  /* + ". avg re projection error = " + totalAvgErr);*/
+  /* + ". avg re projection error = " + totalAvgErr); */
 
   return ok;
 }
@@ -720,8 +762,7 @@ gst_camera_calibrate_plugin_init (GstPlugin * plugin)
 {
   /* debug category for filtering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_camera_calibrate_debug, "cameracalibrate",
-      0,
-      "Performs camera calibration");
+      0, "Performs camera calibration");
 
   return gst_element_register (plugin, "cameracalibrate", GST_RANK_NONE,
       GST_TYPE_CAMERA_CALIBRATE);

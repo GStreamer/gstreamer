@@ -146,19 +146,22 @@ gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
   g_object_class_install_property (gobject_class, PROP_APERTURE_SIZE,
       g_param_spec_int ("aperture-size", "aperture size",
           "Size of the extended Laplace Kernel (1, 3, 5 or 7)", 1, 7,
-          DEFAULT_APERTURE_SIZE, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          DEFAULT_APERTURE_SIZE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_SCALE,
-      g_param_spec_double ("scale", "scale factor",
-          "Scale factor", 0.0, G_MAXDOUBLE,
-          DEFAULT_SCALE_FACTOR, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+      g_param_spec_double ("scale", "scale factor", "Scale factor", 0.0,
+          G_MAXDOUBLE, DEFAULT_SCALE_FACTOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_SHIFT,
       g_param_spec_double ("shift", "Shift",
           "Value added to the scaled source array elements", 0.0, G_MAXDOUBLE,
-          DEFAULT_SHIFT, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          DEFAULT_SHIFT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_MASK,
       g_param_spec_boolean ("mask", "Mask",
           "Sets whether the detected edges should be used as a mask on the original input or not",
-          DEFAULT_MASK, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          DEFAULT_MASK,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_add_static_pad_template (element_class, &src_factory);
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
@@ -190,15 +193,17 @@ gst_cv_laplace_cv_set_caps (GstOpencvVideoFilter * trans, gint in_width,
   GstCvLaplace *filter = GST_CV_LAPLACE (trans);
 
   if (filter->intermediary_img != NULL) {
-      cvReleaseImage (&filter->intermediary_img);
-      cvReleaseImage (&filter->cvGray);
-      cvReleaseImage (&filter->Laplace);
+    cvReleaseImage (&filter->intermediary_img);
+    cvReleaseImage (&filter->cvGray);
+    cvReleaseImage (&filter->Laplace);
   }
 
   filter->intermediary_img =
       cvCreateImage (cvSize (out_width, out_height), IPL_DEPTH_16S, 1);
-  filter->cvGray = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
-  filter->Laplace = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
+  filter->cvGray =
+      cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
+  filter->Laplace =
+      cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
 
   return TRUE;
 }

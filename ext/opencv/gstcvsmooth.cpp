@@ -371,11 +371,11 @@ gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     IplImage * img)
 {
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
-  Mat mat = cvarrToMat(img);
+  Mat mat = cvarrToMat (img);
 
   if (filter->positionx != 0 || filter->positiony != 0 ||
       filter->width != G_MAXINT || filter->height != G_MAXINT) {
-    Size mat_size = mat.size();
+    Size mat_size = mat.size ();
 
     /* if the effect would start outside the image, just skip it */
     if (filter->positionx >= mat_size.width
@@ -385,12 +385,12 @@ gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     if (filter->width <= 0 || filter->height <= 0)
       return GST_FLOW_OK;
 
-    Rect mat_rect(filter->positionx,
+    Rect mat_rect (filter->positionx,
         filter->positiony,
-        MIN(filter->width, mat_size.width - filter->positionx),
-        MIN(filter->height, mat_size.height - filter->positiony));
+        MIN (filter->width, mat_size.width - filter->positionx),
+        MIN (filter->height, mat_size.height - filter->positiony));
 
-    mat = mat(mat_rect);
+    mat = mat (mat_rect);
   }
 
   switch (filter->type) {

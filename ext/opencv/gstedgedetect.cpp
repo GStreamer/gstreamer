@@ -248,12 +248,14 @@ gst_edge_detect_set_caps (GstOpencvVideoFilter * transform,
   GstEdgeDetect *filter = GST_EDGE_DETECT (transform);
 
   if (filter->cvEdge != NULL) {
-      cvReleaseImage (&filter->cvGray);
-      cvReleaseImage (&filter->cvEdge);
+    cvReleaseImage (&filter->cvGray);
+    cvReleaseImage (&filter->cvEdge);
   }
 
-  filter->cvGray = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
-  filter->cvEdge = cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
+  filter->cvGray =
+      cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
+  filter->cvEdge =
+      cvCreateImage (cvSize (in_width, in_height), IPL_DEPTH_8U, 1);
 
   return TRUE;
 }

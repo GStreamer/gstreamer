@@ -98,7 +98,8 @@ enum
   PROP_SETTINGS
 };
 
-G_DEFINE_TYPE (GstCameraUndistort, gst_camera_undistort, GST_TYPE_OPENCV_VIDEO_FILTER);
+G_DEFINE_TYPE (GstCameraUndistort, gst_camera_undistort,
+    GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static void gst_camera_undistort_dispose (GObject * object);
 static void gst_camera_undistort_set_property (GObject * object, guint prop_id,
@@ -109,16 +110,19 @@ static void gst_camera_undistort_get_property (GObject * object, guint prop_id,
 static gboolean gst_camera_undistort_set_info (GstOpencvVideoFilter * cvfilter,
     gint in_width, gint in_height, gint in_depth, gint in_channels,
     gint out_width, gint out_height, gint out_depth, gint out_channels);
-static GstFlowReturn gst_camera_undistort_transform_frame (
-    GstOpencvVideoFilter * cvfilter,
-    GstBuffer * frame, IplImage * img,
-    GstBuffer * outframe, IplImage * outimg);
+static GstFlowReturn gst_camera_undistort_transform_frame (GstOpencvVideoFilter
+    * cvfilter, GstBuffer * frame, IplImage * img, GstBuffer * outframe,
+    IplImage * outimg);
 
-static gboolean gst_camera_undistort_sink_event (GstBaseTransform *trans, GstEvent *event);
-static gboolean gst_camera_undistort_src_event (GstBaseTransform *trans, GstEvent *event);
+static gboolean gst_camera_undistort_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
+static gboolean gst_camera_undistort_src_event (GstBaseTransform * trans,
+    GstEvent * event);
 
-static void camera_undistort_run(GstCameraUndistort *undist, IplImage *img, IplImage *outimg);
-static gboolean camera_undistort_init_undistort_rectify_map(GstCameraUndistort *undist);
+static void camera_undistort_run (GstCameraUndistort * undist, IplImage * img,
+    IplImage * outimg);
+static gboolean camera_undistort_init_undistort_rectify_map (GstCameraUndistort
+    * undist);
 
 /* initialize the cameraundistort's class */
 static void
@@ -127,7 +131,8 @@ gst_camera_undistort_class_init (GstCameraUndistortClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
-  GstOpencvVideoFilterClass *opencvfilter_class = GST_OPENCV_VIDEO_FILTER_CLASS (klass);
+  GstOpencvVideoFilterClass *opencvfilter_class =
+      GST_OPENCV_VIDEO_FILTER_CLASS (klass);
 
   GstCaps *caps;
   GstPadTemplate *templ;
@@ -136,19 +141,17 @@ gst_camera_undistort_class_init (GstCameraUndistortClass * klass)
   gobject_class->set_property = gst_camera_undistort_set_property;
   gobject_class->get_property = gst_camera_undistort_get_property;
 
-  trans_class->sink_event =
-      GST_DEBUG_FUNCPTR (gst_camera_undistort_sink_event);
-  trans_class->src_event =
-      GST_DEBUG_FUNCPTR (gst_camera_undistort_src_event);
+  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_camera_undistort_sink_event);
+  trans_class->src_event = GST_DEBUG_FUNCPTR (gst_camera_undistort_src_event);
 
   opencvfilter_class->cv_set_caps = gst_camera_undistort_set_info;
-  opencvfilter_class->cv_trans_func =
-      gst_camera_undistort_transform_frame;
+  opencvfilter_class->cv_trans_func = gst_camera_undistort_transform_frame;
 
   g_object_class_install_property (gobject_class, PROP_SHOW_UNDISTORTED,
       g_param_spec_boolean ("undistort", "Apply camera corrections",
           "Apply camera corrections",
-          DEFAULT_SHOW_UNDISTORTED, (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          DEFAULT_SHOW_UNDISTORTED,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_ALPHA,
       g_param_spec_float ("alpha", "Pixels",
@@ -164,8 +167,7 @@ gst_camera_undistort_class_init (GstCameraUndistortClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "cameraundistort",
       "Filter/Effect/Video",
-      "Performs camera undistort",
-      "Philippe Renon <philippe_renon@yahoo.fr>");
+      "Performs camera undistort", "Philippe Renon <philippe_renon@yahoo.fr>");
 
   /* add sink and source pad templates */
   caps = gst_opencv_caps_from_cv_image_type (CV_16UC1);
@@ -238,7 +240,7 @@ gst_camera_undistort_set_property (GObject * object, guint prop_id,
       }
       str = g_value_get_string (value);
       if (str)
-          undist->settings = g_strdup (str);
+        undist->settings = g_strdup (str);
       undist->settingsChanged = TRUE;
       break;
     default:
@@ -275,9 +277,12 @@ gst_camera_undistort_get_property (GObject * object, guint prop_id,
 gboolean
 gst_camera_undistort_set_info (GstOpencvVideoFilter * cvfilter,
     gint in_width, gint in_height,
-    __attribute__((unused)) gint in_depth, __attribute__((unused)) gint in_channels,
-    __attribute__((unused)) gint out_width, __attribute__((unused)) gint out_height,
-    __attribute__((unused)) gint out_depth, __attribute__((unused)) gint out_channels)
+    __attribute__((unused)) gint in_depth,
+    __attribute__((unused)) gint in_channels,
+    __attribute__((unused)) gint out_width,
+    __attribute__((unused)) gint out_height,
+    __attribute__((unused)) gint out_depth,
+    __attribute__((unused)) gint out_channels)
 {
   GstCameraUndistort *undist = GST_CAMERA_UNDISTORT (cvfilter);
 
@@ -302,7 +307,8 @@ gst_camera_undistort_transform_frame (GstOpencvVideoFilter * cvfilter,
 }
 
 static void
-camera_undistort_run (GstCameraUndistort *undist, IplImage *img, IplImage *outimg)
+camera_undistort_run (GstCameraUndistort * undist, IplImage * img,
+    IplImage * outimg)
 {
   const cv::Mat view = cv::cvarrToMat (img);
   cv::Mat outview = cv::cvarrToMat (outimg);
@@ -313,9 +319,10 @@ camera_undistort_run (GstCameraUndistort *undist, IplImage *img, IplImage *outim
     undist->settingsChanged = FALSE;
     undist->doUndistort = FALSE;
     if (undist->showUndistorted && undist->settings) {
-      if (camera_deserialize_undistort_settings (
-        undist->settings, undist->cameraMatrix, undist->distCoeffs)) {
-        undist->doUndistort = camera_undistort_init_undistort_rectify_map (undist);
+      if (camera_deserialize_undistort_settings (undist->settings,
+              undist->cameraMatrix, undist->distCoeffs)) {
+        undist->doUndistort =
+            camera_undistort_init_undistort_rectify_map (undist);
       }
     }
   }
@@ -329,37 +336,38 @@ camera_undistort_run (GstCameraUndistort *undist, IplImage *img, IplImage *outim
       const cv::Scalar CROP_COLOR (0, 255, 0);
       cv::rectangle (outview, undist->validPixROI, CROP_COLOR);
     }
-  }
-  else {
-   /* FIXME should use pass through to avoid this copy when not undistorting */
-   view.copyTo (outview);
+  } else {
+    /* FIXME should use pass through to avoid this copy when not undistorting */
+    view.copyTo (outview);
   }
 }
 
 /* compute undistort */
 static gboolean
-camera_undistort_init_undistort_rectify_map (GstCameraUndistort *undist)
+camera_undistort_init_undistort_rectify_map (GstCameraUndistort * undist)
 {
   cv::Size newImageSize;
   cv::Rect validPixROI;
-  cv::Mat newCameraMatrix = cv::getOptimalNewCameraMatrix (
-        undist->cameraMatrix, undist->distCoeffs, undist->imageSize,
-        undist->alpha, newImageSize, &validPixROI);
+  cv::Mat newCameraMatrix =
+      cv::getOptimalNewCameraMatrix (undist->cameraMatrix, undist->distCoeffs,
+      undist->imageSize, undist->alpha, newImageSize, &validPixROI);
   undist->validPixROI = validPixROI;
 
-  cv::initUndistortRectifyMap (undist->cameraMatrix, undist->distCoeffs, cv::Mat(),
-        newCameraMatrix, undist->imageSize, CV_16SC2, undist->map1, undist->map2);
+  cv::initUndistortRectifyMap (undist->cameraMatrix, undist->distCoeffs,
+      cv::Mat (), newCameraMatrix, undist->imageSize, CV_16SC2, undist->map1,
+      undist->map2);
 
   return TRUE;
 }
 
 static gboolean
-camera_undistort_calibration_event (GstCameraUndistort *undist, GstEvent *event)
+camera_undistort_calibration_event (GstCameraUndistort * undist,
+    GstEvent * event)
 {
   g_free (undist->settings);
 
   if (!gst_camera_event_parse_calibrated (event, &(undist->settings))) {
-      return FALSE;
+    return FALSE;
   }
 
   undist->settingsChanged = TRUE;
@@ -368,35 +376,41 @@ camera_undistort_calibration_event (GstCameraUndistort *undist, GstEvent *event)
 }
 
 static gboolean
-gst_camera_undistort_sink_event (GstBaseTransform *trans, GstEvent *event)
+gst_camera_undistort_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstCameraUndistort *undist = GST_CAMERA_UNDISTORT (trans);
 
   const GstStructure *structure = gst_event_get_structure (event);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_BOTH && structure) {
-    if (strcmp (gst_structure_get_name (structure), GST_CAMERA_EVENT_CALIBRATED_NAME) == 0) {
+    if (strcmp (gst_structure_get_name (structure),
+            GST_CAMERA_EVENT_CALIBRATED_NAME) == 0) {
       return camera_undistort_calibration_event (undist, event);
     }
   }
 
-  return GST_BASE_TRANSFORM_CLASS (gst_camera_undistort_parent_class)->sink_event (trans, event);
+  return
+      GST_BASE_TRANSFORM_CLASS (gst_camera_undistort_parent_class)->sink_event
+      (trans, event);
 }
 
 static gboolean
-gst_camera_undistort_src_event (GstBaseTransform *trans, GstEvent *event)
+gst_camera_undistort_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstCameraUndistort *undist = GST_CAMERA_UNDISTORT (trans);
 
   const GstStructure *structure = gst_event_get_structure (event);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_BOTH && structure) {
-    if (strcmp (gst_structure_get_name (structure), GST_CAMERA_EVENT_CALIBRATED_NAME) == 0) {
+    if (strcmp (gst_structure_get_name (structure),
+            GST_CAMERA_EVENT_CALIBRATED_NAME) == 0) {
       return camera_undistort_calibration_event (undist, event);
     }
   }
 
-  return GST_BASE_TRANSFORM_CLASS (gst_camera_undistort_parent_class)->src_event (trans, event);
+  return
+      GST_BASE_TRANSFORM_CLASS (gst_camera_undistort_parent_class)->src_event
+      (trans, event);
 }
 
 /* entry point to initialize the plug-in
@@ -408,8 +422,7 @@ gst_camera_undistort_plugin_init (GstPlugin * plugin)
 {
   /* debug category for filtering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_camera_undistort_debug, "cameraundistort",
-      0,
-      "Performs camera undistortion");
+      0, "Performs camera undistortion");
 
   return gst_element_register (plugin, "cameraundistort", GST_RANK_NONE,
       GST_TYPE_CAMERA_UNDISTORT);

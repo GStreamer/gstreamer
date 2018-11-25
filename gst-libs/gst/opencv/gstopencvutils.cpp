@@ -92,7 +92,7 @@ gst_opencv_parse_iplimage_params_from_caps (GstCaps * caps, gint * width,
   }
 
   return gst_opencv_iplimage_params_from_video_info (&info, width, height,
-          ipldepth, channels, err);
+      ipldepth, channels, err);
 }
 
 gboolean
@@ -118,7 +118,7 @@ gst_opencv_iplimage_params_from_video_info (GstVideoInfo * info, gint * width,
 
 gboolean
 gst_opencv_cv_image_type_from_video_format (GstVideoFormat format,
-    int * cv_type, GError ** err)
+    int *cv_type, GError ** err)
 {
   const gchar *format_str;
 

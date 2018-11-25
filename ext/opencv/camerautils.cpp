@@ -22,20 +22,22 @@
 #include <opencv2/opencv.hpp>
 
 gchar *
-camera_serialize_undistort_settings (cv::Mat &cameraMatrix, cv::Mat &distCoeffs)
+camera_serialize_undistort_settings (cv::Mat & cameraMatrix,
+    cv::Mat & distCoeffs)
 {
-  cv::FileStorage fs(".xml", cv::FileStorage::WRITE + cv::FileStorage::MEMORY);
+  cv::FileStorage fs (".xml", cv::FileStorage::WRITE + cv::FileStorage::MEMORY);
   fs << "cameraMatrix" << cameraMatrix;
   fs << "distCoeffs" << distCoeffs;
-  std::string buf = fs.releaseAndGetString();
+  std::string buf = fs.releaseAndGetString ();
 
-  return g_strdup(buf.c_str());
+  return g_strdup (buf.c_str ());
 }
 
 gboolean
-camera_deserialize_undistort_settings (gchar * str, cv::Mat &cameraMatrix, cv::Mat &distCoeffs)
+camera_deserialize_undistort_settings (gchar * str, cv::Mat & cameraMatrix,
+    cv::Mat & distCoeffs)
 {
-  cv::FileStorage fs(str, cv::FileStorage::READ + cv::FileStorage::MEMORY);
+  cv::FileStorage fs (str, cv::FileStorage::READ + cv::FileStorage::MEMORY);
   fs["cameraMatrix"] >> cameraMatrix;
   fs["distCoeffs"] >> distCoeffs;
 

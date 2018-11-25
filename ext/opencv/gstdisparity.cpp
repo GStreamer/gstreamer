@@ -644,8 +644,8 @@ initialise_sbm (GstDisparity * filter)
   filter->depth_map_as_cvMat =
       (void *) new Mat (cvarrToMat (filter->cvGray_depth_map1, false));
 
-  filter->sbm = StereoBM::create();
-  filter->sgbm = StereoSGBM::create(1,64,3);
+  filter->sbm = StereoBM::create ();
+  filter->sgbm = StereoSGBM::create (1, 64, 3);
 
   filter->sbm->setBlockSize (9);
   filter->sbm->setNumDisparities (32);
@@ -676,8 +676,8 @@ initialise_sbm (GstDisparity * filter)
 int
 run_sbm_iteration (GstDisparity * filter)
 {
-  ((StereoBM *) filter->
-          sbm)->compute (*((Mat *) filter->img_left_as_cvMat_gray),
+  ((StereoBM *) filter->sbm)->
+      compute (*((Mat *) filter->img_left_as_cvMat_gray),
       *((Mat *) filter->img_right_as_cvMat_gray),
       *((Mat *) filter->depth_map_as_cvMat));
 
@@ -687,8 +687,8 @@ run_sbm_iteration (GstDisparity * filter)
 int
 run_sgbm_iteration (GstDisparity * filter)
 {
-  ((StereoSGBM *) filter->
-          sgbm)->compute (*((Mat *) filter->img_left_as_cvMat_gray),
+  ((StereoSGBM *) filter->sgbm)->
+      compute (*((Mat *) filter->img_left_as_cvMat_gray),
       *((Mat *) filter->img_right_as_cvMat_gray),
       *((Mat *) filter->depth_map_as_cvMat));
 
@@ -702,8 +702,8 @@ finalise_sbm (GstDisparity * filter)
   delete (Mat *) filter->img_left_as_cvMat_gray;
   delete (Mat *) filter->img_right_as_cvMat_gray;
 
-  filter->sbm.release();
-  filter->sgbm.release();
+  filter->sbm.release ();
+  filter->sgbm.release ();
 
   return (0);
 }
