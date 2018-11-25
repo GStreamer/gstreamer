@@ -362,7 +362,7 @@ decide if we are still iterating the right list.
 GST_OBJECT_LOCK (lock);
 /* grab list and cookie */
 cookie = object->list_cookie;
-list = object-list;
+list = object->list;
 while (list) {
   GstObject *item = GST_OBJECT (list->data);
   /* need to ref the item before releasing the lock */
