@@ -10,6 +10,7 @@ stages:
 variables:
   GIT_STRATEGY: none
   DEFAULT_MESON_ARGS: >
+    --werror
     -Dpython=enabled
     -Dlibav=enabled
     -Dugly=enabled
