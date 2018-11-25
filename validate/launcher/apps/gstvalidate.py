@@ -26,6 +26,7 @@ import shlex
 import socket
 import subprocess
 import configparser
+import json
 from launcher.loggable import Loggable
 
 from launcher.baseclasses import GstValidateTest, Test, \
@@ -173,6 +174,34 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         self._pipeline_template = pipeline_template
         self._pipelines_descriptions = pipelines_descriptions
         self._valid_scenarios = valid_scenarios
+
+    @classmethod
+    def from_json(self, test_manager, json_file):
+        with open(json_file, 'r') as f:
+            descriptions = json.load(f)
+
+        name = os.path.basename(json_file).replace('.json', '')
+        pipelines_descriptions = []
+        for test_name, defs in descriptions.items():
+            desc = [test_name]
+            pipeline = defs['pipeline']
+            scenarios = []
+            for scenario in defs['scenarios']:
+                scenario_name = scenario_file = scenario['name']
+                actions = scenario.get('actions')
+                if actions:
+                    scenario_dir = os.path.join(
+                        test_manager.options.privatedir, name, test_name)
+                    scenario_file = os.path.join(
+                        scenario_dir, scenario_name + '.scenario')
+                    os.makedirs(scenario_dir, exist_ok=True)
+                    with open(scenario_file, 'w') as f:
+                        f.write('\n'.join(actions) + '\n')
+                scenarios.append(scenario_file)
+            extra_datas = {'scenarios': scenarios}
+            pipelines_descriptions.append([test_name, pipeline, extra_datas])
+
+        return GstValidatePipelineTestsGenerator(name, test_manager, pipelines_descriptions=pipelines_descriptions)
 
     def get_fname(self, scenario, protocol=None, name=None):
         if name is None:
