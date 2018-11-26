@@ -568,6 +568,7 @@ _validate_action_execute (GstValidateScenario * scenario,
 
   DECLARE_AND_GET_TIMELINE (scenario, action);
 
+  gst_structure_remove_field (action->structure, "playback-time");
   if (gst_structure_has_name (action->structure, "add-keyframe") ||
       gst_structure_has_name (action->structure, "remove-keyframe")) {
     func = _ges_add_remove_keyframe_from_struct;
