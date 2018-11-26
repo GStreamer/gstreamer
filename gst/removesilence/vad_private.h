@@ -35,7 +35,11 @@ void vad_set_hysteresis(VADFilter *p, guint64 hysteresis);
 
 guint64 vad_get_hysteresis(VADFilter *p);
 
-VADFilter* vad_new(guint64 hysteresis);
+void vad_set_threshold(VADFilter *p, gint threshold_db);
+
+gint vad_get_threshold_as_db(VADFilter *p);
+
+VADFilter* vad_new(guint64 hysteresis, gint threshold);
 
 void vad_reset(VADFilter *p);
 

@@ -52,6 +52,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_remove_silence_debug);
 #define MINIMUM_SILENCE_TIME_MIN  0
 #define MINIMUM_SILENCE_TIME_MAX  10000000000
 #define MINIMUM_SILENCE_TIME_DEF  0
+#define DEFAULT_VAD_THRESHOLD -60
 
 /* Filter signals and args */
 enum
@@ -65,6 +66,7 @@ enum
   PROP_0,
   PROP_REMOVE,
   PROP_HYSTERESIS,
+  PROP_THRESHOLD,
   PROP_SQUASH,
   PROP_SILENT,
   PROP_MINIMUM_SILENCE_BUFFERS,
@@ -132,6 +134,12 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
           "Set the hysteresis (on samples) used on the internal VAD",
           1, G_MAXUINT64, DEFAULT_VAD_HYSTERESIS, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_THRESHOLD,
+      g_param_spec_int ("threshold",
+          "Threshold",
+          "Set the silence threshold used on the internal VAD in dB",
+          -70, 70, DEFAULT_VAD_THRESHOLD, G_PARAM_READWRITE));
+
   g_object_class_install_property (gobject_class, PROP_SQUASH,
       g_param_spec_boolean ("squash", "Squash",
           "Set to true to retimestamp buffers when silence is removed and so avoid timestamp gap",
@@ -180,7 +188,7 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
 static void
 gst_remove_silence_init (GstRemoveSilence * filter)
 {
-  filter->vad = vad_new (DEFAULT_VAD_HYSTERESIS);
+  filter->vad = vad_new (DEFAULT_VAD_HYSTERESIS, DEFAULT_VAD_THRESHOLD);
   filter->remove = FALSE;
   filter->squash = FALSE;
   filter->ts_offset = 0;
@@ -221,6 +229,9 @@ gst_remove_silence_set_property (GObject * object, guint prop_id,
     case PROP_HYSTERESIS:
       vad_set_hysteresis (filter->vad, g_value_get_uint64 (value));
       break;
+    case PROP_THRESHOLD:
+      vad_set_threshold (filter->vad, g_value_get_int (value));
+      break;
     case PROP_SQUASH:
       filter->squash = g_value_get_boolean (value);
       break;
@@ -251,6 +262,9 @@ gst_remove_silence_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HYSTERESIS:
       g_value_set_uint64 (value, vad_get_hysteresis (filter->vad));
+      break;
+    case PROP_THRESHOLD:
+      g_value_set_int (value, vad_get_threshold_as_db (filter->vad));
       break;
     case PROP_SQUASH:
       g_value_set_boolean (value, filter->squash);

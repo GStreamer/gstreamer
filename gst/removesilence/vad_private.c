@@ -22,11 +22,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <glib.h>
 #include "vad_private.h"
 
 #define VAD_POWER_ALPHA     0x0800      /* Q16 */
-#define VAD_POWER_THRESHOLD 0x000010C7  /* -60 dB (square wave) */
 #define VAD_ZCR_THRESHOLD   0
 #define VAD_BUFFER_SIZE     256
 
@@ -59,15 +59,17 @@ struct _vad_s
   guint64 hysteresis;
   guint64 vad_samples;
   guint64 vad_power;
+  guint64 threshold;
   long vad_zcr;
 };
 
 VADFilter *
-vad_new (guint64 hysteresis)
+vad_new (guint64 hysteresis, gint threshold)
 {
   VADFilter *vad = malloc (sizeof (VADFilter));
   vad_reset (vad);
   vad->hysteresis = hysteresis;
+  vad_set_threshold (vad, threshold);
   return vad;
 }
 
@@ -97,6 +99,19 @@ guint64
 vad_get_hysteresis (struct _vad_s *p)
 {
   return p->hysteresis;
+}
+
+void
+vad_set_threshold (struct _vad_s *p, gint threshold_db)
+{
+  gint power = (gint) (threshold_db / 10.0);
+  p->threshold = (guint64) (pow (10, (power)) * 4294967295);
+}
+
+gint
+vad_get_threshold_as_db (struct _vad_s *p)
+{
+  return (gint) (10 * log10 (p->threshold / 4294967295.0));
 }
 
 gint
@@ -129,7 +144,7 @@ vad_update (struct _vad_s * p, gint16 * data, gint len)
         ((sample & 0x8000) != (p->cqueue.base.s[tail] & 0x8000)) ? 1 : -1;
   }
 
-  frame_type = (p->vad_power > VAD_POWER_THRESHOLD
+  frame_type = (p->vad_power > p->threshold
       && p->vad_zcr < VAD_ZCR_THRESHOLD) ? VAD_VOICE : VAD_SILENCE;
 
   if (p->vad_state != frame_type) {
