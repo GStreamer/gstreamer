@@ -782,10 +782,12 @@ GST_END_TEST;
 typedef void (*ValidateSDPFunc) (struct test_webrtc * t, GstElement * element,
     GstWebRTCSessionDescription * desc, gpointer user_data);
 
+struct validate_sdp;
 struct validate_sdp
 {
   ValidateSDPFunc validate;
   gpointer user_data;
+  struct validate_sdp *next;
 };
 
 static GstWebRTCSessionDescription *
@@ -803,7 +805,10 @@ _check_validate_sdp (struct test_webrtc *t, GstElement * element,
   gst_structure_get (reply, field,
       GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);
 
-  validate->validate (t, element, offer, validate->user_data);
+  while (validate) {
+    validate->validate (t, element, offer, validate->user_data);
+    validate = validate->next;
+  }
 
   return offer;
 }
@@ -854,8 +859,9 @@ GST_START_TEST (test_media_direction)
   struct test_webrtc *t = create_audio_video_test ();
   const gchar *expected_offer[] = { "sendrecv", "sendrecv" };
   const gchar *expected_answer[] = { "sendrecv", "recvonly" };
-  struct validate_sdp offer = { on_sdp_media_direction, expected_offer };
-  struct validate_sdp answer = { on_sdp_media_direction, expected_answer };
+  struct validate_sdp offer = { on_sdp_media_direction, expected_offer, NULL };
+  struct validate_sdp answer =
+      { on_sdp_media_direction, expected_answer, NULL };
   GstHarness *h;
 
   /* check the default media directions for transceivers */
@@ -920,7 +926,7 @@ on_sdp_media_payload_types (struct test_webrtc *t, GstElement * element,
 GST_START_TEST (test_payload_types)
 {
   struct test_webrtc *t = create_audio_video_test ();
-  struct validate_sdp offer = { on_sdp_media_payload_types, NULL };
+  struct validate_sdp offer = { on_sdp_media_payload_types, NULL, NULL };
   GstWebRTCRTPTransceiver *trans;
   GArray *transceivers;
 
@@ -983,8 +989,8 @@ GST_START_TEST (test_media_setup)
   struct test_webrtc *t = create_audio_test ();
   const gchar *expected_offer[] = { "actpass" };
   const gchar *expected_answer[] = { "active" };
-  struct validate_sdp offer = { on_sdp_media_setup, expected_offer };
-  struct validate_sdp answer = { on_sdp_media_setup, expected_answer };
+  struct validate_sdp offer = { on_sdp_media_setup, expected_offer, NULL };
+  struct validate_sdp answer = { on_sdp_media_setup, expected_answer, NULL };
 
   /* check the default dtls setup negotiation values */
 
@@ -1388,8 +1394,9 @@ GST_START_TEST (test_add_recvonly_transceiver)
   GstWebRTCRTPTransceiver *trans;
   const gchar *expected_offer[] = { "recvonly" };
   const gchar *expected_answer[] = { "sendonly" };
-  struct validate_sdp offer = { on_sdp_media_direction, expected_offer };
-  struct validate_sdp answer = { on_sdp_media_direction, expected_answer };
+  struct validate_sdp offer = { on_sdp_media_direction, expected_offer, NULL };
+  struct validate_sdp answer =
+      { on_sdp_media_direction, expected_answer, NULL };
   GstCaps *caps;
   GstHarness *h;
 
@@ -1440,8 +1447,9 @@ GST_START_TEST (test_recvonly_sendonly)
   GstWebRTCRTPTransceiver *trans;
   const gchar *expected_offer[] = { "recvonly", "sendonly" };
   const gchar *expected_answer[] = { "sendonly", "recvonly" };
-  struct validate_sdp offer = { on_sdp_media_direction, expected_offer };
-  struct validate_sdp answer = { on_sdp_media_direction, expected_answer };
+  struct validate_sdp offer = { on_sdp_media_direction, expected_offer, NULL };
+  struct validate_sdp answer =
+      { on_sdp_media_direction, expected_answer, NULL };
   GstCaps *caps;
   GstHarness *h;
   GArray *transceivers;
@@ -1526,8 +1534,8 @@ GST_START_TEST (test_data_channel_create)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL };
+  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
+  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
   gchar *label;
 
   t->on_negotiation_needed = NULL;
@@ -1586,8 +1594,8 @@ GST_START_TEST (test_data_channel_remote_notify)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL };
+  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
+  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1661,8 +1669,8 @@ GST_START_TEST (test_data_channel_transfer_string)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL };
+  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
+  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1743,8 +1751,8 @@ GST_START_TEST (test_data_channel_transfer_data)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL };
+  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
+  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1801,8 +1809,8 @@ GST_START_TEST (test_data_channel_create_after_negotiate)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL };
+  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
+  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1862,8 +1870,8 @@ GST_START_TEST (test_data_channel_low_threshold)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL };
+  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
+  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1935,8 +1943,8 @@ GST_START_TEST (test_data_channel_max_message_size)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL };
+  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
+  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1990,8 +1998,8 @@ GST_START_TEST (test_data_channel_pre_negotiated)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel1 = NULL, *channel2 = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL };
+  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
+  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
   GstStructure *s;
   gint n_ready = 0;
 
@@ -2128,8 +2136,8 @@ GST_START_TEST (test_bundle_audio_video_max_bundle_max_bundle)
     bundle,
     answer_bundle_only,
   };
-  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data };
-  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data };
+  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data, NULL };
+  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data, NULL };
 
   gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
       "max-bundle");
@@ -2185,8 +2193,8 @@ GST_START_TEST (test_bundle_audio_video_max_compat_max_bundle)
     bundle,
     bundle_only,
   };
-  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data };
-  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data };
+  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data, NULL };
+  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data, NULL };
 
   gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
       "max-compat");
@@ -2244,8 +2252,8 @@ GST_START_TEST (test_bundle_audio_video_max_bundle_none)
     answer_bundle,
     answer_bundle_only,
   };
-  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data };
-  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data };
+  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data, NULL };
+  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data, NULL };
 
   gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
       "max-bundle");
@@ -2302,8 +2310,8 @@ GST_START_TEST (test_bundle_audio_video_data)
     bundle,
     answer_bundle_only,
   };
-  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data };
-  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data };
+  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data, NULL };
+  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data, NULL };
 
   gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
       "max-bundle");
@@ -2341,8 +2349,9 @@ GST_START_TEST (test_duplicate_nego)
   struct test_webrtc *t = create_audio_video_test ();
   const gchar *expected_offer[] = { "sendrecv", "sendrecv" };
   const gchar *expected_answer[] = { "sendrecv", "recvonly" };
-  struct validate_sdp offer = { on_sdp_media_direction, expected_offer };
-  struct validate_sdp answer = { on_sdp_media_direction, expected_answer };
+  struct validate_sdp offer = { on_sdp_media_direction, expected_offer, NULL };
+  struct validate_sdp answer =
+      { on_sdp_media_direction, expected_answer, NULL };
   GstHarness *h;
 
   /* check that negotiating twice succeeds */
