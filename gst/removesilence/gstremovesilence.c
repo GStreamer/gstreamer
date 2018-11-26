@@ -46,6 +46,12 @@
 GST_DEBUG_CATEGORY_STATIC (gst_remove_silence_debug);
 #define GST_CAT_DEFAULT gst_remove_silence_debug
 #define DEFAULT_VAD_HYSTERESIS  480     /* 60 mseg */
+#define MINIMUM_SILENCE_BUFFERS_MIN  0
+#define MINIMUM_SILENCE_BUFFERS_MAX  10000
+#define MINIMUM_SILENCE_BUFFERS_DEF  0
+#define MINIMUM_SILENCE_TIME_MIN  0
+#define MINIMUM_SILENCE_TIME_MAX  10000000000
+#define MINIMUM_SILENCE_TIME_DEF  0
 
 /* Filter signals and args */
 enum
@@ -60,7 +66,9 @@ enum
   PROP_REMOVE,
   PROP_HYSTERESIS,
   PROP_SQUASH,
-  PROP_SILENT
+  PROP_SILENT,
+  PROP_MINIMUM_SILENCE_BUFFERS,
+  PROP_MINIMUM_SILENCE_TIME
 };
 
 
@@ -134,6 +142,21 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
           "Disable/enable bus message notifications for silent detected/finished",
           TRUE, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_MINIMUM_SILENCE_BUFFERS,
+      g_param_spec_uint ("minimum-silence-buffers", "Minimum silence buffers",
+          "Define the minimum number of consecutive silence buffers before "
+          "removing silence, 0 means disabled",
+          MINIMUM_SILENCE_BUFFERS_MIN, MINIMUM_SILENCE_BUFFERS_MAX,
+          MINIMUM_SILENCE_BUFFERS_DEF, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_MINIMUM_SILENCE_TIME,
+      g_param_spec_uint64 ("minimum_silence_time",
+          "Minimum silence time",
+          "Define the minimum silence time in nanoseconds before removing "
+          " silence, 0 means disabled",
+          MINIMUM_SILENCE_TIME_MIN, MINIMUM_SILENCE_TIME_MAX,
+          MINIMUM_SILENCE_TIME_DEF, G_PARAM_READWRITE));
+
   gst_element_class_set_static_metadata (gstelement_class,
       "RemoveSilence",
       "Filter/Effect/Audio",
@@ -163,6 +186,10 @@ gst_remove_silence_init (GstRemoveSilence * filter)
   filter->ts_offset = 0;
   filter->silence_detected = FALSE;
   filter->silent = TRUE;
+  filter->consecutive_silence_buffers = 0;
+  filter->minimum_silence_buffers = MINIMUM_SILENCE_BUFFERS_DEF;
+  filter->minimum_silence_time = MINIMUM_SILENCE_TIME_DEF;
+  filter->consecutive_silence_time = 0;
 
   if (!filter->vad) {
     GST_DEBUG ("Error initializing VAD !!");
@@ -200,6 +227,12 @@ gst_remove_silence_set_property (GObject * object, guint prop_id,
     case PROP_SILENT:
       filter->silent = g_value_get_boolean (value);
       break;
+    case PROP_MINIMUM_SILENCE_BUFFERS:
+      filter->minimum_silence_buffers = g_value_get_uint (value);
+      break;
+    case PROP_MINIMUM_SILENCE_TIME:
+      filter->minimum_silence_time = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -225,6 +258,12 @@ gst_remove_silence_get_property (GObject * object, guint prop_id,
     case PROP_SILENT:
       g_value_set_boolean (value, filter->silent);
       break;
+    case PROP_MINIMUM_SILENCE_BUFFERS:
+      g_value_set_uint (value, filter->minimum_silence_buffers);
+      break;
+    case PROP_MINIMUM_SILENCE_TIME:
+      g_value_set_uint64 (value, filter->minimum_silence_time);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -237,6 +276,7 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
   GstRemoveSilence *filter = NULL;
   int frame_type;
   GstMapInfo map;
+  gboolean consecutive_silence_reached;
 
   filter = GST_REMOVE_SILENCE (trans);
 
@@ -247,7 +287,25 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
 
   if (frame_type == VAD_SILENCE) {
     GST_DEBUG ("Silence detected");
-    if (!filter->silence_detected) {
+    filter->consecutive_silence_buffers++;
+    if (GST_BUFFER_DURATION_IS_VALID (inbuf)) {
+      filter->consecutive_silence_time += inbuf->duration;
+    } else {
+      GST_WARNING
+          ("Invalid buffer duration, consecutive_silence_time update not possible");
+    }
+    if (filter->minimum_silence_buffers == 0
+        && filter->minimum_silence_time == 0) {
+      consecutive_silence_reached = TRUE;
+    } else {
+      consecutive_silence_reached =
+          (filter->minimum_silence_buffers > 0
+          && filter->consecutive_silence_buffers >=
+          filter->minimum_silence_buffers)
+          || (filter->minimum_silence_time > 0
+          && filter->consecutive_silence_time >= filter->minimum_silence_time);
+    }
+    if (!filter->silence_detected && consecutive_silence_reached) {
       if (!filter->silent) {
         if (GST_BUFFER_PTS_IS_VALID (inbuf)) {
           GstStructure *s;
@@ -261,7 +319,7 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
       filter->silence_detected = TRUE;
     }
 
-    if (filter->remove) {
+    if (filter->remove && consecutive_silence_reached) {
       GST_DEBUG ("Removing silence");
       if (filter->squash) {
         if (GST_BUFFER_DURATION_IS_VALID (inbuf)) {
@@ -274,6 +332,8 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
     }
 
   } else {
+    filter->consecutive_silence_buffers = 0;
+    filter->consecutive_silence_time = 0;
     if (filter->silence_detected) {
       if (!filter->silent) {
         if (GST_BUFFER_PTS_IS_VALID (inbuf)) {

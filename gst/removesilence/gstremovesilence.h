@@ -48,6 +48,10 @@ typedef struct _GstRemoveSilence {
   guint64 ts_offset;
   gboolean silence_detected;
   gboolean silent;
+  guint64 consecutive_silence_buffers;
+  guint16 minimum_silence_buffers;
+  guint64 consecutive_silence_time;
+  guint64 minimum_silence_time;
 } GstRemoveSilence;
 
 typedef struct _GstRemoveSilenceClass {
