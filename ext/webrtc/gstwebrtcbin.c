@@ -62,7 +62,21 @@
  *
  * On the receiving side, RTPTransceiver's are created in response to setting
  * a remote description.  Output pads for the receiving streams in the set
- * description are also created.
+ * description are also created when data is received.
+ *
+ * A TransportStream is created when needed in order to transport the data over
+ * the necessary DTLS/ICE channel to the peer.  The exact configuration depends
+ * on the negotiated SDP's between the peers based on the bundle and rtcp
+ * configuration.  Some cases are outlined below for a simple single
+ * audio/video/data session:
+ *
+ * - max-bundle (requires rtcp-muxing) uses a single transport for all
+ *   media/data transported.  Renegotiation involves adding/removing the
+ *   necessary streams to the existing transports.
+ * - max-compat without rtcp-mux involves two TransportStream per media stream
+ *   to transport the rtp and the rtcp packets and a single TransportStream for
+ *   all data channels.  Each stream change involves modifying the associated
+ *   TransportStream/s as necessary.
  */
 
 /*
@@ -2908,6 +2922,9 @@ _connect_output_stream (GstWebRTCBin * webrtc,
   g_free (pad_name);
 
   gst_element_sync_state_with_parent (GST_ELEMENT (stream->receive_bin));
+
+  /* The webrtcbin src_%u output pads will be created when rtpbin receives
+   * data on that stream in on_rtpbin_pad_added() */
 }
 
 typedef struct
