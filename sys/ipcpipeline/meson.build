@@ -23,8 +23,8 @@ if not have_socketpair and get_option('ipcpipeline').enabled()
   error('ipcpipeline plugin enabled but socketpair() not found')
 endif
 
-
-if have_socket_h and have_pipe and have_socketpair
+build_ipcpipeline = have_socket_h and have_pipe and have_socketpair
+if build_ipcpipeline
   gstipcpipeline = library('gstipcpipeline',
     ipcpipeline_sources,
     c_args : gst_plugins_bad_args,
