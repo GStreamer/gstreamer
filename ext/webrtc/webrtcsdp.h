@@ -38,7 +38,7 @@ const gchar *                       _sdp_source_to_string                   (SDP
 
 
 G_GNUC_INTERNAL
-gboolean                            validate_sdp                            (GstWebRTCBin * webrtc,
+gboolean                            validate_sdp                            (GstWebRTCSignalingState state,
                                                                              SDPSource source,
                                                                              GstWebRTCSessionDescription * sdp,
                                                                              GError ** error);

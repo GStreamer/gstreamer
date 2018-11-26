@@ -26,6 +26,21 @@
 
 G_BEGIN_DECLS
 
+#define GST_WEBRTC_BIN_ERROR gst_webrtc_bin_error_quark ()
+GQuark gst_webrtc_bin_error_quark (void);
+
+typedef enum
+{
+  GST_WEBRTC_BIN_ERROR_FAILED,
+  GST_WEBRTC_BIN_ERROR_INVALID_SYNTAX,
+  GST_WEBRTC_BIN_ERROR_INVALID_MODIFICATION,
+  GST_WEBRTC_BIN_ERROR_INVALID_STATE,
+  GST_WEBRTC_BIN_ERROR_BAD_SDP,
+  GST_WEBRTC_BIN_ERROR_FINGERPRINT,
+  GST_WEBRTC_BIN_ERROR_SCTP_FAILURE,
+  GST_WEBRTC_BIN_ERROR_DATA_CHANNEL_FAILURE,
+} GstWebRTCError;
+
 GstPadTemplate *        _find_pad_template          (GstElement * element,
                                                      GstPadDirection direction,
                                                      GstPadPresence presence,

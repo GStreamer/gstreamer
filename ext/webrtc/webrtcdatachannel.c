@@ -39,6 +39,7 @@
 #include <gst/sctp/sctpsendmeta.h>
 
 #include "gstwebrtcbin.h"
+#include "utils.h"
 
 #define GST_CAT_DEFAULT gst_webrtc_data_channel_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);

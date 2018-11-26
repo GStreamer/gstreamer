@@ -24,6 +24,12 @@
 #include "utils.h"
 #include "gstwebrtcbin.h"
 
+GQuark
+gst_webrtc_bin_error_quark (void)
+{
+  return g_quark_from_static_string ("gst-webrtc-bin-error-quark");
+}
+
 GstPadTemplate *
 _find_pad_template (GstElement * element, GstPadDirection direction,
     GstPadPresence presence, const gchar * name)

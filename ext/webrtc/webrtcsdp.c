@@ -24,7 +24,6 @@
 #include "webrtcsdp.h"
 
 #include "utils.h"
-#include "gstwebrtcbin.h"
 
 #include <string.h>
 
@@ -44,10 +43,9 @@ _sdp_source_to_string (SDPSource source)
 }
 
 static gboolean
-_check_valid_state_for_sdp_change (GstWebRTCBin * webrtc, SDPSource source,
-    GstWebRTCSDPType type, GError ** error)
+_check_valid_state_for_sdp_change (GstWebRTCSignalingState state,
+    SDPSource source, GstWebRTCSDPType type, GError ** error)
 {
-  GstWebRTCSignalingState state = webrtc->signaling_state;
 #define STATE(val) GST_WEBRTC_SIGNALING_STATE_ ## val
 #define TYPE(val) GST_WEBRTC_SDP_TYPE_ ## val
 
@@ -82,14 +80,14 @@ _check_valid_state_for_sdp_change (GstWebRTCBin * webrtc, SDPSource source,
     return TRUE;
 
   {
-    gchar *state = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
-        webrtc->signaling_state);
+    gchar *state_str = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
+        state);
     gchar *type_str = _enum_value_to_string (GST_TYPE_WEBRTC_SDP_TYPE, type);
     g_set_error (error, GST_WEBRTC_BIN_ERROR,
         GST_WEBRTC_BIN_ERROR_INVALID_STATE,
-        "Not in the correct state (%s) for setting %s %s description", state,
-        _sdp_source_to_string (source), type_str);
-    g_free (state);
+        "Not in the correct state (%s) for setting %s %s description",
+        state_str, _sdp_source_to_string (source), type_str);
+    g_free (state_str);
     g_free (type_str);
   }
 
@@ -100,8 +98,8 @@ _check_valid_state_for_sdp_change (GstWebRTCBin * webrtc, SDPSource source,
 }
 
 static gboolean
-_check_sdp_crypto (GstWebRTCBin * webrtc, SDPSource source,
-    GstWebRTCSessionDescription * sdp, GError ** error)
+_check_sdp_crypto (SDPSource source, GstWebRTCSessionDescription * sdp,
+    GError ** error)
 {
   const gchar *message_fingerprint, *fingerprint;
   const GstSDPKey *key;
@@ -278,7 +276,7 @@ _media_has_dtls_id (const GstSDPMedia * media, guint media_idx, GError ** error)
 }
 #endif
 gboolean
-validate_sdp (GstWebRTCBin * webrtc, SDPSource source,
+validate_sdp (GstWebRTCSignalingState state, SDPSource source,
     GstWebRTCSessionDescription * sdp, GError ** error)
 {
   const gchar *group, *bundle_ice_ufrag = NULL, *bundle_ice_pwd = NULL;
@@ -286,9 +284,9 @@ validate_sdp (GstWebRTCBin * webrtc, SDPSource source,
   gboolean is_bundle = FALSE;
   int i;
 
-  if (!_check_valid_state_for_sdp_change (webrtc, source, sdp->type, error))
+  if (!_check_valid_state_for_sdp_change (state, source, sdp->type, error))
     return FALSE;
-  if (!_check_sdp_crypto (webrtc, source, sdp, error))
+  if (!_check_sdp_crypto (source, sdp, error))
     return FALSE;
 /* not explicitly required
   if (ICE && !_check_trickle_ice (sdp->sdp))

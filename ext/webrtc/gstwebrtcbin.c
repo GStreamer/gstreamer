@@ -174,12 +174,6 @@ _have_dtls_elements (GstWebRTCBin * webrtc)
   return TRUE;
 }
 
-GQuark
-gst_webrtc_bin_error_quark (void)
-{
-  return g_quark_from_static_string ("gst-webrtc-bin-error-quark");
-}
-
 G_DEFINE_TYPE (GstWebRTCBinPad, gst_webrtc_bin_pad, GST_TYPE_GHOST_PAD);
 
 static void
@@ -3484,7 +3478,7 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     g_free (type_str);
   }
 
-  if (!validate_sdp (webrtc, sd->source, sd->sdp, &error)) {
+  if (!validate_sdp (webrtc->signaling_state, sd->source, sd->sdp, &error)) {
     GST_ERROR_OBJECT (webrtc, "%s", error->message);
     g_clear_error (&error);
     goto out;

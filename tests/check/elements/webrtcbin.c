@@ -29,6 +29,10 @@
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 #include <gst/webrtc/webrtc.h>
+#include "../../../ext/webrtc/webrtcsdp.h"
+#include "../../../ext/webrtc/webrtcsdp.c"
+#include "../../../ext/webrtc/utils.h"
+#include "../../../ext/webrtc/utils.c"
 
 #define OPUS_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=OPUS,media=audio,clock-rate=48000,ssrc=(uint)3384078950"
 #define VP8_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=VP8,media=video,clock-rate=90000,ssrc=(uint)3484078950"
@@ -785,7 +789,7 @@ struct validate_sdp
 };
 
 static GstWebRTCSessionDescription *
-validate_sdp (struct test_webrtc *t, GstElement * element,
+_check_validate_sdp (struct test_webrtc *t, GstElement * element,
     GstPromise * promise, gpointer user_data)
 {
   struct validate_sdp *validate = user_data;
@@ -862,9 +866,9 @@ GST_START_TEST (test_media_direction)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -922,7 +926,7 @@ GST_START_TEST (test_payload_types)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   /* We don't really care about the answer here */
   t->on_answer_created = NULL;
@@ -986,9 +990,9 @@ GST_START_TEST (test_media_setup)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -1396,9 +1400,9 @@ GST_START_TEST (test_add_recvonly_transceiver)
   t->on_pad_added = _pad_added_fakesink;
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   /* setup recvonly transceiver */
@@ -1449,9 +1453,9 @@ GST_START_TEST (test_recvonly_sendonly)
   t->on_pad_added = _pad_added_fakesink;
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   /* setup recvonly transceiver */
@@ -1493,32 +1497,6 @@ GST_START_TEST (test_recvonly_sendonly)
 
 GST_END_TEST;
 
-static gboolean
-_message_media_is_datachannel (const GstSDPMessage * msg, guint media_id)
-{
-  const GstSDPMedia *media;
-
-  if (!msg)
-    return FALSE;
-
-  if (gst_sdp_message_medias_len (msg) <= media_id)
-    return FALSE;
-
-  media = gst_sdp_message_get_media (msg, media_id);
-
-  if (g_strcmp0 (gst_sdp_media_get_media (media), "application") != 0)
-    return FALSE;
-
-  if (gst_sdp_media_formats_len (media) != 1)
-    return FALSE;
-
-  if (g_strcmp0 (gst_sdp_media_get_format (media, 0),
-          "webrtc-datachannel") != 0)
-    return FALSE;
-
-  return TRUE;
-}
-
 static void
 on_sdp_has_datachannel (struct test_webrtc *t, GstElement * element,
     GstWebRTCSessionDescription * desc, gpointer user_data)
@@ -1554,9 +1532,9 @@ GST_START_TEST (test_data_channel_create)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -1613,9 +1591,9 @@ GST_START_TEST (test_data_channel_remote_notify)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel;
 
@@ -1688,9 +1666,9 @@ GST_START_TEST (test_data_channel_transfer_string)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_transfer_string;
 
@@ -1770,9 +1748,9 @@ GST_START_TEST (test_data_channel_transfer_data)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_transfer_data;
 
@@ -1828,9 +1806,9 @@ GST_START_TEST (test_data_channel_create_after_negotiate)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_create_data_channel;
 
@@ -1889,9 +1867,9 @@ GST_START_TEST (test_data_channel_low_threshold)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_check_low_threshold_emitted;
 
@@ -1962,9 +1940,9 @@ GST_START_TEST (test_data_channel_max_message_size)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_transfer_large_data;
 
@@ -2019,9 +1997,9 @@ GST_START_TEST (test_data_channel_pre_negotiated)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -2077,48 +2055,6 @@ typedef struct
   const gchar **bundled;
   const gchar **bundled_only;
 } BundleCheckData;
-
-static gboolean
-_parse_bundle (GstSDPMessage * sdp, GStrv * bundled)
-{
-  const gchar *group;
-  gboolean ret = FALSE;
-
-  group = gst_sdp_message_get_attribute_val (sdp, "group");
-
-  if (group && g_str_has_prefix (group, "BUNDLE ")) {
-    *bundled = g_strsplit (group + strlen ("BUNDLE "), " ", 0);
-
-    if (!(*bundled)[0]) {
-      GST_ERROR
-          ("Invalid format for BUNDLE group, expected at least one mid (%s)",
-          group);
-      goto done;
-    }
-  } else {
-    ret = TRUE;
-    goto done;
-  }
-
-  ret = TRUE;
-
-done:
-  return ret;
-}
-
-static gboolean
-_media_has_attribute_key (const GstSDPMedia * media, const gchar * key)
-{
-  int i;
-  for (i = 0; i < gst_sdp_media_attributes_len (media); i++) {
-    const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, i);
-
-    if (g_strcmp0 (attr->key, key) == 0)
-      return TRUE;
-  }
-
-  return FALSE;
-}
 
 static void
 _check_bundled_sdp_media (struct test_webrtc *t, GstElement * element,
@@ -2202,9 +2138,9 @@ GST_START_TEST (test_bundle_audio_video_max_bundle_max_bundle)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -2259,9 +2195,9 @@ GST_START_TEST (test_bundle_audio_video_max_compat_max_bundle)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -2317,9 +2253,9 @@ GST_START_TEST (test_bundle_audio_video_max_bundle_none)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -2376,9 +2312,9 @@ GST_START_TEST (test_bundle_audio_video_data)
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
-  t->on_offer_created = validate_sdp;
+  t->on_offer_created = _check_validate_sdp;
   t->answer_data = &answer;
-  t->on_answer_created = validate_sdp;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
