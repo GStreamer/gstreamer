@@ -40,7 +40,7 @@
 typedef enum
 {
   STATE_NEW,
-  STATE_NEGOTATION_NEEDED,
+  STATE_NEGOTIATION_NEEDED,
   STATE_OFFER_CREATED,
   STATE_ANSWER_CREATED,
   STATE_EOS,
@@ -269,7 +269,7 @@ _on_negotiation_needed (GstElement * webrtc, struct test_webrtc *t)
   if (t->on_negotiation_needed)
     t->on_negotiation_needed (t, webrtc, t->negotiation_data);
   if (t->state == STATE_NEW)
-    t->state = STATE_NEGOTATION_NEEDED;
+    t->state = STATE_NEGOTIATION_NEEDED;
   g_cond_broadcast (&t->cond);
   g_mutex_unlock (&t->lock);
 }
@@ -2336,6 +2336,47 @@ GST_START_TEST (test_bundle_audio_video_data)
 
 GST_END_TEST;
 
+GST_START_TEST (test_duplicate_nego)
+{
+  struct test_webrtc *t = create_audio_video_test ();
+  const gchar *expected_offer[] = { "sendrecv", "sendrecv" };
+  const gchar *expected_answer[] = { "sendrecv", "recvonly" };
+  struct validate_sdp offer = { on_sdp_media_direction, expected_offer };
+  struct validate_sdp answer = { on_sdp_media_direction, expected_answer };
+  GstHarness *h;
+
+  /* check that negotiating twice succeeds */
+
+  h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
+  add_fake_audio_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  t->on_negotiation_needed = NULL;
+  t->offer_data = &offer;
+  t->on_offer_created = _check_validate_sdp;
+  t->answer_data = &answer;
+  t->on_answer_created = _check_validate_sdp;
+  t->on_ice_candidate = NULL;
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
+  test_webrtc_create_offer (t, t->webrtc1);
+  test_webrtc_wait_for_answer_error_eos (t);
+  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+
+  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+
+  test_webrtc_create_offer (t, t->webrtc1);
+  test_webrtc_wait_for_answer_error_eos (t);
+  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -2370,6 +2411,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_bundle_audio_video_max_bundle_max_bundle);
     tcase_add_test (tc, test_bundle_audio_video_max_bundle_none);
     tcase_add_test (tc, test_bundle_audio_video_max_compat_max_bundle);
+    tcase_add_test (tc, test_duplicate_nego);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
