@@ -664,6 +664,36 @@ _check_validate_sdp (struct test_webrtc *t, GstElement * element,
   return offer;
 }
 
+static void
+test_validate_sdp (struct test_webrtc *t, struct validate_sdp *offer,
+    struct validate_sdp *answer)
+{
+  if (offer) {
+    t->offer_data = offer;
+    t->on_offer_created = _check_validate_sdp;
+  } else {
+    t->offer_data = NULL;
+    t->on_offer_created = NULL;
+  }
+  if (answer) {
+    t->answer_data = answer;
+    t->on_answer_created = _check_validate_sdp;
+  } else {
+    t->answer_data = NULL;
+    t->on_answer_created = NULL;
+  }
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
+  test_webrtc_create_offer (t, t->webrtc1);
+
+  test_webrtc_wait_for_answer_error_eos (t);
+  fail_unless (t->state == STATE_ANSWER_CREATED);
+}
+
 GST_START_TEST (test_sdp_no_media)
 {
   struct test_webrtc *t = test_webrtc_new ();
@@ -675,20 +705,8 @@ GST_START_TEST (test_sdp_no_media)
   /* check that a no stream connection creates 0 media sections */
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
+  test_validate_sdp (t, &offer, &answer);
 
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless (t->state == STATE_ANSWER_CREATED);
   test_webrtc_free (t);
 }
 
@@ -721,6 +739,7 @@ create_audio_test (void)
   GstHarness *h;
 
   t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
   t->on_pad_added = _pad_added_fakesink;
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
@@ -741,22 +760,7 @@ GST_START_TEST (test_audio)
   /* check that a single stream connection creates the associated number
    * of media sections */
 
-  t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
-  t->on_ice_candidate = NULL;
-
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  test_validate_sdp (t, &offer, &answer);
   test_webrtc_free (t);
 }
 
@@ -765,15 +769,8 @@ GST_END_TEST;
 static struct test_webrtc *
 create_audio_video_test (void)
 {
-  struct test_webrtc *t = test_webrtc_new ();
+  struct test_webrtc *t = create_audio_test ();
   GstHarness *h;
-
-  t->on_negotiation_needed = NULL;
-  t->on_pad_added = _pad_added_fakesink;
-
-  h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
-  add_fake_audio_src_harness (h, 96);
-  t->harnesses = g_list_prepend (t->harnesses, h);
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
   add_fake_video_src_harness (h, 97);
@@ -793,22 +790,7 @@ GST_START_TEST (test_audio_video)
   /* check that a dual stream connection creates the associated number
    * of media sections */
 
-  t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
-  t->on_ice_candidate = NULL;
-
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  test_validate_sdp (t, &offer, &answer);
   test_webrtc_free (t);
 }
 
@@ -860,9 +842,14 @@ GST_START_TEST (test_media_direction)
   struct test_webrtc *t = create_audio_video_test ();
   const gchar *expected_offer[] = { "sendrecv", "sendrecv" };
   const gchar *expected_answer[] = { "sendrecv", "recvonly" };
-  struct validate_sdp offer = { on_sdp_media_direction, expected_offer, NULL };
-  struct validate_sdp answer =
+  struct validate_sdp offer_direction =
+      { on_sdp_media_direction, expected_offer, NULL };
+  struct validate_sdp offer =
+      { _count_num_sdp_media, GUINT_TO_POINTER (2), &offer_direction };
+  struct validate_sdp answer_direction =
       { on_sdp_media_direction, expected_answer, NULL };
+  struct validate_sdp answer =
+      { _count_num_sdp_media, GUINT_TO_POINTER (2), &answer_direction };
   GstHarness *h;
 
   /* check the default media directions for transceivers */
@@ -871,22 +858,7 @@ GST_START_TEST (test_media_direction)
   add_fake_audio_src_harness (h, 96);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
-  t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
-  t->on_ice_candidate = NULL;
-
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  test_validate_sdp (t, &offer, &answer);
   test_webrtc_free (t);
 }
 
@@ -898,8 +870,6 @@ on_sdp_media_payload_types (struct test_webrtc *t, GstElement * element,
 {
   const GstSDPMedia *vmedia;
   guint j;
-
-  fail_unless_equals_int (gst_sdp_message_medias_len (desc->sdp), 2);
 
   vmedia = gst_sdp_message_get_media (desc->sdp, 1);
 
@@ -927,16 +897,11 @@ on_sdp_media_payload_types (struct test_webrtc *t, GstElement * element,
 GST_START_TEST (test_payload_types)
 {
   struct test_webrtc *t = create_audio_video_test ();
-  struct validate_sdp offer = { on_sdp_media_payload_types, NULL, NULL };
+  struct validate_sdp payloads = { on_sdp_media_payload_types, NULL, NULL };
+  struct validate_sdp offer =
+      { _count_num_sdp_media, GUINT_TO_POINTER (2), &payloads };
   GstWebRTCRTPTransceiver *trans;
   GArray *transceivers;
-
-  t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->on_ice_candidate = NULL;
-  /* We don't really care about the answer here */
-  t->on_answer_created = NULL;
 
   g_signal_emit_by_name (t->webrtc1, "get-transceivers", &transceivers);
   fail_unless_equals_int (transceivers->len, 2);
@@ -945,15 +910,8 @@ GST_START_TEST (test_payload_types)
       NULL);
   g_array_unref (transceivers);
 
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  /* We don't really care about the answer here */
+  test_validate_sdp (t, &offer, NULL);
   test_webrtc_free (t);
 }
 
@@ -994,23 +952,7 @@ GST_START_TEST (test_media_setup)
   struct validate_sdp answer = { on_sdp_media_setup, expected_answer, NULL };
 
   /* check the default dtls setup negotiation values */
-
-  t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
-  t->on_ice_candidate = NULL;
-
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  test_validate_sdp (t, &offer, &answer);
   test_webrtc_free (t);
 }
 
@@ -1322,20 +1264,8 @@ GST_START_TEST (test_session_stats)
   GstPromise *p;
 
   /* test that the stats generated without any streams are sane */
-
   t->on_negotiation_needed = NULL;
-  t->on_offer_created = NULL;
-  t->on_answer_created = NULL;
-
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  test_validate_sdp (t, NULL, NULL);
 
   p = gst_promise_new_with_change_func (_on_stats, t, NULL);
   g_signal_emit_by_name (t->webrtc1, "get-stats", NULL, p);
@@ -1403,15 +1333,9 @@ GST_START_TEST (test_add_recvonly_transceiver)
 
   /* add a transceiver that will only receive an opus stream and check that
    * the created offer is marked as recvonly */
-
   t->on_negotiation_needed = NULL;
-  t->on_pad_added = _pad_added_fakesink;
-  t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
 
   /* setup recvonly transceiver */
   caps = gst_caps_from_string (OPUS_RTP_CAPS (96));
@@ -1426,16 +1350,8 @@ GST_START_TEST (test_add_recvonly_transceiver)
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
   add_fake_audio_src_harness (h, 96);
   t->harnesses = g_list_prepend (t->harnesses, h);
+  test_validate_sdp (t, &offer, &answer);
 
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
   test_webrtc_free (t);
 }
 
@@ -1457,15 +1373,9 @@ GST_START_TEST (test_recvonly_sendonly)
 
   /* add a transceiver that will only receive an opus stream and check that
    * the created offer is marked as recvonly */
-
   t->on_negotiation_needed = NULL;
-  t->on_pad_added = _pad_added_fakesink;
-  t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
 
   /* setup recvonly transceiver */
   caps = gst_caps_from_string (OPUS_RTP_CAPS (96));
@@ -1492,15 +1402,8 @@ GST_START_TEST (test_recvonly_sendonly)
   add_fake_audio_src_harness (h, 96);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  test_validate_sdp (t, &offer, &answer);
 
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
   test_webrtc_free (t);
 }
 
@@ -1540,10 +1443,6 @@ GST_START_TEST (test_data_channel_create)
   gchar *label;
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -1559,10 +1458,8 @@ GST_START_TEST (test_data_channel_create)
   g_signal_connect (channel, "on-error",
       G_CALLBACK (on_channel_error_not_reached), NULL);
 
-  test_webrtc_create_offer (t, t->webrtc1);
+  test_validate_sdp (t, &offer, &answer);
 
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
   g_object_unref (channel);
   g_free (label);
   test_webrtc_free (t);
@@ -2145,22 +2042,7 @@ GST_START_TEST (test_bundle_audio_video_max_bundle_max_bundle)
   gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
       "max-bundle");
 
-  t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
-  t->on_ice_candidate = NULL;
-
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  test_validate_sdp (t, &offer, &answer);
 
   test_webrtc_free (t);
 }
@@ -2202,22 +2084,7 @@ GST_START_TEST (test_bundle_audio_video_max_compat_max_bundle)
   gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
       "max-bundle");
 
-  t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
-  t->on_ice_candidate = NULL;
-
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  test_validate_sdp (t, &offer, &answer);
 
   test_webrtc_free (t);
 }
@@ -2260,22 +2127,7 @@ GST_START_TEST (test_bundle_audio_video_max_bundle_none)
       "max-bundle");
   gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy", "none");
 
-  t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
-  t->on_ice_candidate = NULL;
-
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  test_validate_sdp (t, &offer, &answer);
 
   test_webrtc_free (t);
 }
@@ -2319,13 +2171,6 @@ GST_START_TEST (test_bundle_audio_video_data)
   gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
       "max-bundle");
 
-  t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
-  t->on_ice_candidate = NULL;
-
   fail_if (gst_element_set_state (t->webrtc1,
           GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
   fail_if (gst_element_set_state (t->webrtc2,
@@ -2334,10 +2179,7 @@ GST_START_TEST (test_bundle_audio_video_data)
   g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
       &channel);
 
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
+  test_validate_sdp (t, &offer, &answer);
 
   g_object_unref (channel);
   test_webrtc_free (t);
@@ -2362,26 +2204,10 @@ GST_START_TEST (test_duplicate_nego)
   t->harnesses = g_list_prepend (t->harnesses, h);
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
-  t->on_ice_candidate = NULL;
-
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-
-  test_webrtc_create_offer (t, t->webrtc1);
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
-
+  test_validate_sdp (t, &offer, &answer);
   test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_validate_sdp (t, &offer, &answer);
 
-  test_webrtc_create_offer (t, t->webrtc1);
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless_equals_int (STATE_ANSWER_CREATED, t->state);
   test_webrtc_free (t);
 }
 
