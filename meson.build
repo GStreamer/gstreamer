@@ -86,7 +86,7 @@ gstvalidate_dep = dependency('gst-validate-1.0', version : gst_req, required : f
   fallback : ['gst-devtools', 'validate_dep'])
 
 gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
-libxml_dep = dependency('libxml-2.0', fallback: ['libxml2-2.9.7', 'xml2lib_dep'])
+libxml_dep = dependency('libxml-2.0', fallback: ['libxml2', 'xml2lib_dep'])
 
 # TODO Properly port to Gtk 3
 # gtk_dep = dependency('gtk+-3.0', required : false)
