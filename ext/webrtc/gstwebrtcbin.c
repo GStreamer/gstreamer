@@ -265,7 +265,8 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCBin, gst_webrtc_bin, GST_TYPE_BIN,
     G_ADD_PRIVATE (GstWebRTCBin)
     GST_DEBUG_CATEGORY_INIT (gst_webrtc_bin_debug, "webrtcbin", 0,
-        "webrtcbin element"););
+        "webrtcbin element");
+    );
 
 static GstPad *_connect_input_stream (GstWebRTCBin * webrtc,
     GstWebRTCBinPad * pad);
@@ -1911,6 +1912,26 @@ _media_add_ssrcs (GstSDPMedia * media, GstCaps * caps, GstWebRTCBin * webrtc,
         (GstStructureForeachFunc) _media_add_rtx_ssrc, &data);
 }
 
+static void
+_add_fingerprint_to_media (GstWebRTCDTLSTransport * transport,
+    GstSDPMedia * media)
+{
+  gchar *cert, *fingerprint, *val;
+
+  g_object_get (transport, "certificate", &cert, NULL);
+
+  fingerprint =
+      _generate_fingerprint_from_certificate (cert, G_CHECKSUM_SHA256);
+  g_free (cert);
+  val =
+      g_strdup_printf ("%s %s",
+      _g_checksum_to_webrtc_string (G_CHECKSUM_SHA256), fingerprint);
+  g_free (fingerprint);
+
+  gst_sdp_media_add_attribute (media, "fingerprint", val);
+  g_free (val);
+}
+
 /* based off https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-18#section-5.2.1 */
 static gboolean
 sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
@@ -2035,8 +2056,6 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
   g_free (sdp_mid);
 
   if (trans->sender) {
-    gchar *cert, *fingerprint, *val;
-
     if (!trans->sender->transport) {
       TransportStream *item;
 
@@ -2047,18 +2066,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
       webrtc_transceiver_set_transport (WEBRTC_TRANSCEIVER (trans), item);
     }
 
-    g_object_get (trans->sender->transport, "certificate", &cert, NULL);
-
-    fingerprint =
-        _generate_fingerprint_from_certificate (cert, G_CHECKSUM_SHA256);
-    g_free (cert);
-    val =
-        g_strdup_printf ("%s %s",
-        _g_checksum_to_webrtc_string (G_CHECKSUM_SHA256), fingerprint);
-    g_free (fingerprint);
-
-    gst_sdp_media_add_attribute (media, "fingerprint", val);
-    g_free (val);
+    _add_fingerprint_to_media (trans->sender->transport, media);
   }
 
   gst_caps_unref (caps);
@@ -2188,23 +2196,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 
     _get_or_create_data_channel_transports (webrtc,
         bundled_mids ? 0 : webrtc->priv->transceivers->len);
-    {
-      gchar *cert, *fingerprint, *val;
-
-      g_object_get (webrtc->priv->sctp_transport->transport, "certificate",
-          &cert, NULL);
-
-      fingerprint =
-          _generate_fingerprint_from_certificate (cert, G_CHECKSUM_SHA256);
-      g_free (cert);
-      val =
-          g_strdup_printf ("%s %s",
-          _g_checksum_to_webrtc_string (G_CHECKSUM_SHA256), fingerprint);
-      g_free (fingerprint);
-
-      gst_sdp_media_add_attribute (&media, "fingerprint", val);
-      g_free (val);
-    }
+    _add_fingerprint_to_media (webrtc->priv->sctp_transport->transport, &media);
 
     gst_sdp_message_add_media (ret, &media);
   }
@@ -2405,7 +2397,6 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
     GstWebRTCRTPTransceiverDirection offer_dir, answer_dir;
     GstWebRTCDTLSSetup offer_setup, answer_setup;
     GstCaps *offer_caps, *answer_caps = NULL;
-    gchar *cert;
     guint j;
     guint k;
     gint target_pt = -1;
@@ -2502,23 +2493,8 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
         g_string_append_printf (bundled_mids, " %s", mid);
       }
 
-      {
-        gchar *cert, *fingerprint, *val;
-
-        g_object_get (webrtc->priv->sctp_transport->transport, "certificate",
-            &cert, NULL);
-
-        fingerprint =
-            _generate_fingerprint_from_certificate (cert, G_CHECKSUM_SHA256);
-        g_free (cert);
-        val =
-            g_strdup_printf ("%s %s",
-            _g_checksum_to_webrtc_string (G_CHECKSUM_SHA256), fingerprint);
-        g_free (fingerprint);
-
-        gst_sdp_media_add_attribute (media, "fingerprint", val);
-        g_free (val);
-      }
+      _add_fingerprint_to_media (webrtc->priv->sctp_transport->transport,
+          media);
     } else if (g_strcmp0 (gst_sdp_media_get_media (offer_media), "audio") == 0
         || g_strcmp0 (gst_sdp_media_get_media (offer_media), "video") == 0) {
       gst_sdp_media_set_proto (media, "UDP/TLS/RTP/SAVPF");
@@ -2653,23 +2629,9 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
         }
         webrtc_transceiver_set_transport (trans, item);
       }
+
       /* set the a=fingerprint: for this transport */
-      g_object_get (trans->stream->transport, "certificate", &cert, NULL);
-
-      {
-        gchar *fingerprint, *val;
-
-        fingerprint =
-            _generate_fingerprint_from_certificate (cert, G_CHECKSUM_SHA256);
-        g_free (cert);
-        val =
-            g_strdup_printf ("%s %s",
-            _g_checksum_to_webrtc_string (G_CHECKSUM_SHA256), fingerprint);
-        g_free (fingerprint);
-
-        gst_sdp_media_add_attribute (media, "fingerprint", val);
-        g_free (val);
-      }
+      _add_fingerprint_to_media (trans->stream->transport, media);
 
       gst_caps_unref (offer_caps);
     } else {
