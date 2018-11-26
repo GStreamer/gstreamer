@@ -849,6 +849,8 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       /* arranged for a fallback sps.id, so use that one and only warn */
       if (pres != GST_H264_PARSER_OK) {
         GST_WARNING_OBJECT (h264parse, "failed to parse SPS:");
+        h264parse->state |= GST_H264_PARSE_STATE_GOT_SPS;
+        h264parse->header |= TRUE;
         return FALSE;
       }
 
