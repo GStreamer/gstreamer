@@ -59,7 +59,8 @@ enum
   PROP_0,
   PROP_REMOVE,
   PROP_HYSTERESIS,
-  PROP_SQUASH
+  PROP_SQUASH,
+  PROP_SILENT
 };
 
 
@@ -128,6 +129,11 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
           "Set to true to retimestamp buffers when silence is removed and so avoid timestamp gap",
           FALSE, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_SILENT,
+      g_param_spec_boolean ("silent", "Silent",
+          "Disable/enable bus message notifications for silent detected/finished",
+          TRUE, G_PARAM_READWRITE));
+
   gst_element_class_set_static_metadata (gstelement_class,
       "RemoveSilence",
       "Filter/Effect/Audio",
@@ -156,6 +162,7 @@ gst_remove_silence_init (GstRemoveSilence * filter)
   filter->squash = FALSE;
   filter->ts_offset = 0;
   filter->silence_detected = FALSE;
+  filter->silent = TRUE;
 
   if (!filter->vad) {
     GST_DEBUG ("Error initializing VAD !!");
@@ -190,6 +197,9 @@ gst_remove_silence_set_property (GObject * object, guint prop_id,
     case PROP_SQUASH:
       filter->squash = g_value_get_boolean (value);
       break;
+    case PROP_SILENT:
+      filter->silent = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -211,6 +221,9 @@ gst_remove_silence_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SQUASH:
       g_value_set_boolean (value, filter->squash);
+      break;
+    case PROP_SILENT:
+      g_value_set_boolean (value, filter->silent);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -235,13 +248,15 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
   if (frame_type == VAD_SILENCE) {
     GST_DEBUG ("Silence detected");
     if (!filter->silence_detected) {
-      if (GST_BUFFER_PTS_IS_VALID (inbuf)) {
-        GstStructure *s;
-        GstMessage *m;
-        s = gst_structure_new ("removesilence", "silence_detected",
-            G_TYPE_UINT64, GST_BUFFER_PTS (inbuf) - filter->ts_offset, NULL);
-        m = gst_message_new_element (GST_OBJECT (filter), s);
-        gst_element_post_message (GST_ELEMENT (filter), m);
+      if (!filter->silent) {
+        if (GST_BUFFER_PTS_IS_VALID (inbuf)) {
+          GstStructure *s;
+          GstMessage *m;
+          s = gst_structure_new ("removesilence", "silence_detected",
+              G_TYPE_UINT64, GST_BUFFER_PTS (inbuf) - filter->ts_offset, NULL);
+          m = gst_message_new_element (GST_OBJECT (filter), s);
+          gst_element_post_message (GST_ELEMENT (filter), m);
+        }
       }
       filter->silence_detected = TRUE;
     }
@@ -260,13 +275,15 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
 
   } else {
     if (filter->silence_detected) {
-      if (GST_BUFFER_PTS_IS_VALID (inbuf)) {
-        GstStructure *s;
-        GstMessage *m;
-        s = gst_structure_new ("removesilence", "silence_finished",
-            G_TYPE_UINT64, GST_BUFFER_PTS (inbuf) - filter->ts_offset, NULL);
-        m = gst_message_new_element (GST_OBJECT (filter), s);
-        gst_element_post_message (GST_ELEMENT (filter), m);
+      if (!filter->silent) {
+        if (GST_BUFFER_PTS_IS_VALID (inbuf)) {
+          GstStructure *s;
+          GstMessage *m;
+          s = gst_structure_new ("removesilence", "silence_finished",
+              G_TYPE_UINT64, GST_BUFFER_PTS (inbuf) - filter->ts_offset, NULL);
+          m = gst_message_new_element (GST_OBJECT (filter), s);
+          gst_element_post_message (GST_ELEMENT (filter), m);
+        }
       }
       filter->silence_detected = FALSE;
     }
