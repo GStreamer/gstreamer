@@ -33,7 +33,7 @@ cuda_incdir = ''
 if host_machine.system() == 'windows'
   # On windows, CUDA_PATH env will be set by installer
   cuda_root = run_command(python3, '-c', 'import os; print(os.environ.get("CUDA_PATH"))').stdout().strip()
-  if cuda_root != ''
+  if cuda_root != '' and cuda_root != 'None'
     arc = ''
     if build_machine.cpu_family() == 'x86_64'
       arc = 'x64'
