@@ -265,8 +265,7 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCBin, gst_webrtc_bin, GST_TYPE_BIN,
     G_ADD_PRIVATE (GstWebRTCBin)
     GST_DEBUG_CATEGORY_INIT (gst_webrtc_bin_debug, "webrtcbin", 0,
-        "webrtcbin element");
-    );
+        "webrtcbin element"););
 
 static GstPad *_connect_input_stream (GstWebRTCBin * webrtc,
     GstWebRTCBinPad * pad);
@@ -3149,8 +3148,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
         gst_object_unref (pad);
       } else {
         GST_DEBUG_OBJECT (webrtc,
-            "creating new pad send pad for transceiver %" GST_PTR_FORMAT,
-            trans);
+            "creating new send pad for transceiver %" GST_PTR_FORMAT, trans);
         pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, media_idx);
         pad->trans = gst_object_ref (rtp_trans);
         _connect_input_stream (webrtc, pad);
