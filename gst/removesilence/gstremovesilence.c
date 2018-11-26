@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 2011 Tiago Katcipis <tiagokatcipis@gmail.com>
  * Copyright (C) 2011 Paulo Pizarro  <paulo.pizarro@gmail.com>
+ * Copyright (C) 2012-2016 Nicola Murino  <nicola.murino@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -57,7 +58,8 @@ enum
 {
   PROP_0,
   PROP_REMOVE,
-  PROP_HYSTERESIS
+  PROP_HYSTERESIS,
+  PROP_SQUASH
 };
 
 
@@ -121,12 +123,18 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
           "Set the hysteresis (on samples) used on the internal VAD",
           1, G_MAXUINT64, DEFAULT_VAD_HYSTERESIS, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_SQUASH,
+      g_param_spec_boolean ("squash", "Squash",
+          "Set to true to retimestamp buffers when silence is removed and so avoid timestamp gap",
+          FALSE, G_PARAM_READWRITE));
+
   gst_element_class_set_static_metadata (gstelement_class,
       "RemoveSilence",
       "Filter/Effect/Audio",
       "Removes all the silence periods from the audio stream.",
       "Tiago Katcipis <tiagokatcipis@gmail.com>\n \
-       Paulo Pizarro  <paulo.pizarro@gmail.com>");
+       Paulo Pizarro  <paulo.pizarro@gmail.com>\n \
+       Nicola Murino  <nicola.murino@gmail.com>");
 
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
@@ -145,6 +153,8 @@ gst_remove_silence_init (GstRemoveSilence * filter)
 {
   filter->vad = vad_new (DEFAULT_VAD_HYSTERESIS);
   filter->remove = FALSE;
+  filter->squash = FALSE;
+  filter->ts_offset = 0;
 
   if (!filter->vad) {
     GST_DEBUG ("Error initializing VAD !!");
@@ -176,6 +186,9 @@ gst_remove_silence_set_property (GObject * object, guint prop_id,
     case PROP_HYSTERESIS:
       vad_set_hysteresis (filter->vad, g_value_get_uint64 (value));
       break;
+    case PROP_SQUASH:
+      filter->squash = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -194,6 +207,9 @@ gst_remove_silence_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HYSTERESIS:
       g_value_set_uint64 (value, vad_get_hysteresis (filter->vad));
+      break;
+    case PROP_SQUASH:
+      g_value_set_boolean (value, filter->squash);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -220,9 +236,25 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
 
     if (filter->remove) {
       GST_DEBUG ("Removing silence");
+      if (filter->squash) {
+        if (GST_BUFFER_DURATION_IS_VALID (inbuf)) {
+          filter->ts_offset += inbuf->duration;
+        } else {
+          GST_WARNING ("Invalid buffer duration: ts_offset not updated");
+        }
+      }
       return GST_BASE_TRANSFORM_FLOW_DROPPED;
     }
 
+  }
+
+  if (filter->squash && filter->ts_offset > 0) {
+    if (GST_BUFFER_PTS_IS_VALID (inbuf)) {
+      inbuf = gst_buffer_make_writable (inbuf);
+      GST_BUFFER_PTS (inbuf) -= filter->ts_offset;
+    } else {
+      GST_WARNING ("Invalid buffer pts, update not possibile");
+    }
   }
 
   return GST_FLOW_OK;

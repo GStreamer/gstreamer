@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 2011 Tiago Katcipis <tiagokatcipis@gmail.com>
  * Copyright (C) 2011 Paulo Pizarro  <paulo.pizarro@gmail.com>
+ * Copyright (C) 2012-2016 Nicola Murino  <nicola.murino@gmail.com>
  *
  *
  * This library is free software; you can redistribute it and/or
@@ -43,6 +44,8 @@ typedef struct _GstRemoveSilence {
   GstBaseTransform parent;
   VADFilter* vad;
   gboolean remove;
+  gboolean squash;
+  guint64 ts_offset;
 } GstRemoveSilence;
 
 typedef struct _GstRemoveSilenceClass {
