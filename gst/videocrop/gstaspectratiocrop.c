@@ -205,7 +205,7 @@ gst_aspect_ratio_crop_finalize (GObject * object)
   aspect_ratio_crop = GST_ASPECT_RATIO_CROP (object);
 
   g_mutex_clear (&aspect_ratio_crop->crop_lock);
-  gst_caps_unref (aspect_ratio_crop->renegotiation_caps);
+  gst_clear_caps (&aspect_ratio_crop->renegotiation_caps);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
