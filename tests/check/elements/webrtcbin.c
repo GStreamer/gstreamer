@@ -2213,6 +2213,47 @@ GST_START_TEST (test_duplicate_nego)
 
 GST_END_TEST;
 
+GST_START_TEST (test_dual_audio)
+{
+  struct test_webrtc *t = create_audio_test ();
+  const gchar *expected_offer[] = { "sendrecv", "sendrecv", };
+  const gchar *expected_answer[] = { "sendrecv", "recvonly" };
+  struct validate_sdp offer = { on_sdp_media_direction, expected_offer, NULL };
+  struct validate_sdp answer =
+      { on_sdp_media_direction, expected_answer, NULL };
+  GstHarness *h;
+  GstWebRTCRTPTransceiver *trans;
+  GArray *transceivers;
+
+  /* test that each mline gets a unique transceiver even with the same caps */
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
+  add_fake_audio_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
+  add_fake_audio_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  t->on_negotiation_needed = NULL;
+  test_validate_sdp (t, &offer, &answer);
+
+  g_signal_emit_by_name (t->webrtc1, "get-transceivers", &transceivers);
+  fail_unless (transceivers != NULL);
+  fail_unless_equals_int (2, transceivers->len);
+
+  trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 0);
+  fail_unless (trans != NULL);
+  fail_unless_equals_int (trans->mline, 0);
+
+  trans = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 1);
+  fail_unless (trans != NULL);
+  fail_unless_equals_int (trans->mline, 1);
+
+  g_array_unref (transceivers);
+  test_webrtc_free (t);
+}
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -2247,6 +2288,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_bundle_audio_video_max_bundle_max_bundle);
     tcase_add_test (tc, test_bundle_audio_video_max_bundle_none);
     tcase_add_test (tc, test_bundle_audio_video_max_compat_max_bundle);
+    tcase_add_test (tc, test_dual_audio);
     tcase_add_test (tc, test_duplicate_nego);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);

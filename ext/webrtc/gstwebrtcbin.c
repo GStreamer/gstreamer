@@ -2396,6 +2396,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
   GString *bundled_mids = NULL;
   gchar *bundle_ufrag = NULL;
   gchar *bundle_pwd = NULL;
+  GList *seen_transceivers = NULL;
 
   if (!webrtc->pending_remote_description) {
     GST_ERROR_OBJECT (webrtc,
@@ -2576,6 +2577,13 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
         rtp_trans =
             g_array_index (webrtc->priv->transceivers,
             GstWebRTCRTPTransceiver *, j);
+
+        if (g_list_find (seen_transceivers, rtp_trans)) {
+          /* Don't double allocate a transceiver to multiple mlines */
+          rtp_trans = NULL;
+          continue;
+        }
+
         trans_caps =
             _find_codec_preferences (webrtc, rtp_trans, GST_PAD_SINK, j);
 
@@ -2590,7 +2598,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
           if (answer_caps && !gst_caps_is_empty (answer_caps)) {
             GST_LOG_OBJECT (webrtc,
                 "found compatible transceiver %" GST_PTR_FORMAT
-                " for offer media %u", trans, i);
+                " for offer media %u", rtp_trans, i);
             if (trans_caps)
               gst_caps_unref (trans_caps);
             break;
@@ -2619,6 +2627,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
         answer_dir = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
         answer_caps = gst_caps_ref (offer_caps);
       }
+      seen_transceivers = g_list_prepend (seen_transceivers, rtp_trans);
 
       if (!rtp_trans) {
         trans = _create_webrtc_transceiver (webrtc, answer_dir, i);
@@ -2723,6 +2732,8 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 out:
   if (bundled)
     g_strfreev (bundled);
+
+  g_list_free (seen_transceivers);
 
   return ret;
 }
