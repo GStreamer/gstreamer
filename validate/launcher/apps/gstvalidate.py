@@ -183,7 +183,6 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         name = os.path.basename(json_file).replace('.json', '')
         pipelines_descriptions = []
         for test_name, defs in descriptions.items():
-            desc = [test_name]
             pipeline = defs['pipeline']
             scenarios = []
             for scenario in defs['scenarios']:
@@ -246,8 +245,11 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                     continue
 
                 if self.test_manager.options.mute:
-                    audiosink = self.get_fakesink_for_media_type("audio", needs_clock)
-                    videosink = self.get_fakesink_for_media_type("video", needs_clock)
+                    needs_clock = scenario.needs_clock_sync()
+                    audiosink = self.get_fakesink_for_media_type(
+                        "audio", needs_clock)
+                    videosink = self.get_fakesink_for_media_type(
+                        "video", needs_clock)
                 else:
                     audiosink = 'autoaudiosink'
                     videosink = 'autovideosink'
@@ -427,7 +429,7 @@ class GstValidateMixerTestsGenerator(GstValidatePipelineTestsGenerator):
 
                 if self.test_manager.options.mute:
                     pipe_arguments["sink"] = self.get_fakesink_for_media_type(self.media_type,
-                        scenario.needs_clock_sync())
+                                                                              scenario.needs_clock_sync())
                 else:
                     pipe_arguments["sink"] = "auto%ssink" % self.media_type
 
@@ -944,8 +946,8 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 uri = test.media_descriptor.get_uri()
 
                 if protocol in [Protocols.HTTP, Protocols.HLS, Protocols.DASH] and \
-                        ("127.0.0.1:%s" % (self.options.http_server_port) in uri or
-                         "127.0.0.1:8079" in uri):
+                        ("127.0.0.1:%s" % (
+                            self.options.http_server_port) in uri or "127.0.0.1:8079" in uri):
                     return True
         return False
 
