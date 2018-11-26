@@ -621,12 +621,32 @@ _pad_added_fakesink (struct test_webrtc *t, GstElement * element,
   t->harnesses = g_list_prepend (t->harnesses, h);
 }
 
-static GstWebRTCSessionDescription *
+static void
 _count_num_sdp_media (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  guint expected = GPOINTER_TO_UINT (user_data);
+
+  fail_unless_equals_int (gst_sdp_message_medias_len (desc->sdp), expected);
+}
+
+typedef void (*ValidateSDPFunc) (struct test_webrtc * t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data);
+
+struct validate_sdp;
+struct validate_sdp
+{
+  ValidateSDPFunc validate;
+  gpointer user_data;
+  struct validate_sdp *next;
+};
+
+static GstWebRTCSessionDescription *
+_check_validate_sdp (struct test_webrtc *t, GstElement * element,
     GstPromise * promise, gpointer user_data)
 {
+  struct validate_sdp *validate = user_data;
   GstWebRTCSessionDescription *offer = NULL;
-  guint expected = GPOINTER_TO_UINT (user_data);
   const GstStructure *reply;
   const gchar *field;
 
@@ -636,7 +656,10 @@ _count_num_sdp_media (struct test_webrtc *t, GstElement * element,
   gst_structure_get (reply, field,
       GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);
 
-  fail_unless_equals_int (gst_sdp_message_medias_len (offer->sdp), expected);
+  while (validate) {
+    validate->validate (t, element, offer, validate->user_data);
+    validate = validate->next;
+  }
 
   return offer;
 }
@@ -644,14 +667,18 @@ _count_num_sdp_media (struct test_webrtc *t, GstElement * element,
 GST_START_TEST (test_sdp_no_media)
 {
   struct test_webrtc *t = test_webrtc_new ();
+  struct validate_sdp offer =
+      { _count_num_sdp_media, GUINT_TO_POINTER (0), NULL };
+  struct validate_sdp answer =
+      { _count_num_sdp_media, GUINT_TO_POINTER (0), NULL };
 
   /* check that a no stream connection creates 0 media sections */
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = GUINT_TO_POINTER (0);
-  t->on_offer_created = _count_num_sdp_media;
-  t->answer_data = GUINT_TO_POINTER (0);
-  t->on_answer_created = _count_num_sdp_media;
+  t->offer_data = &offer;
+  t->on_offer_created = _check_validate_sdp;
+  t->answer_data = &answer;
+  t->on_answer_created = _check_validate_sdp;
 
   fail_if (gst_element_set_state (t->webrtc1,
           GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
@@ -706,15 +733,19 @@ create_audio_test (void)
 GST_START_TEST (test_audio)
 {
   struct test_webrtc *t = create_audio_test ();
+  struct validate_sdp offer =
+      { _count_num_sdp_media, GUINT_TO_POINTER (1), NULL };
+  struct validate_sdp answer =
+      { _count_num_sdp_media, GUINT_TO_POINTER (1), NULL };
 
   /* check that a single stream connection creates the associated number
    * of media sections */
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = GUINT_TO_POINTER (1);
-  t->on_offer_created = _count_num_sdp_media;
-  t->answer_data = GUINT_TO_POINTER (1);
-  t->on_answer_created = _count_num_sdp_media;
+  t->offer_data = &offer;
+  t->on_offer_created = _check_validate_sdp;
+  t->answer_data = &answer;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -754,15 +785,19 @@ create_audio_video_test (void)
 GST_START_TEST (test_audio_video)
 {
   struct test_webrtc *t = create_audio_video_test ();
+  struct validate_sdp offer =
+      { _count_num_sdp_media, GUINT_TO_POINTER (2), NULL };
+  struct validate_sdp answer =
+      { _count_num_sdp_media, GUINT_TO_POINTER (2), NULL };
 
   /* check that a dual stream connection creates the associated number
    * of media sections */
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = GUINT_TO_POINTER (2);
-  t->on_offer_created = _count_num_sdp_media;
-  t->answer_data = GUINT_TO_POINTER (2);
-  t->on_answer_created = _count_num_sdp_media;
+  t->offer_data = &offer;
+  t->on_offer_created = _check_validate_sdp;
+  t->answer_data = &answer;
+  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -778,40 +813,6 @@ GST_START_TEST (test_audio_video)
 }
 
 GST_END_TEST;
-
-typedef void (*ValidateSDPFunc) (struct test_webrtc * t, GstElement * element,
-    GstWebRTCSessionDescription * desc, gpointer user_data);
-
-struct validate_sdp;
-struct validate_sdp
-{
-  ValidateSDPFunc validate;
-  gpointer user_data;
-  struct validate_sdp *next;
-};
-
-static GstWebRTCSessionDescription *
-_check_validate_sdp (struct test_webrtc *t, GstElement * element,
-    GstPromise * promise, gpointer user_data)
-{
-  struct validate_sdp *validate = user_data;
-  GstWebRTCSessionDescription *offer = NULL;
-  const GstStructure *reply;
-  const gchar *field;
-
-  field = t->offerror == 1 && t->webrtc1 == element ? "offer" : "answer";
-
-  reply = gst_promise_get_reply (promise);
-  gst_structure_get (reply, field,
-      GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);
-
-  while (validate) {
-    validate->validate (t, element, offer, validate->user_data);
-    validate = validate->next;
-  }
-
-  return offer;
-}
 
 static void
 on_sdp_media_direction (struct test_webrtc *t, GstElement * element,
