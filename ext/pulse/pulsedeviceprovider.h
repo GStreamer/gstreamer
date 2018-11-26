@@ -50,6 +50,8 @@ struct _GstPulseDeviceProvider {
 
   gchar *server;
   gchar *client_name;
+  gchar *default_source_name;
+  gchar *default_sink_name;
 
   pa_threaded_mainloop *mainloop;
   pa_context *context;
@@ -84,6 +86,7 @@ struct _GstPulseDevice {
   GstPulseDeviceType type;
   guint             device_index;
   gchar            *internal_name;
+  gboolean         is_default;
   const gchar      *element;
 };
 
