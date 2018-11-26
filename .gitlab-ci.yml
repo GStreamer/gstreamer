@@ -64,16 +64,16 @@ test manifest:
       fi
 
 alpine amd64 manifest builder docker:
-  stage: "build runtime"
+  stage: "build docker"
   variables:
     ARCH: "amd64"
-    TAG: "alpine-manifest-build"
-    CONTEXT_DIR: "docker/runtime-images/"
-    DOCKERFILE: "docker/runtime-images/Dockerfile-manifest-builder"
+    TAG: "build-manifest"
+    CONTEXT_DIR: "docker/build_manifest/"
+    DOCKERFILE: "docker/build_manifest/Dockerfile"
   extends: .base
   only:
     changes:
-      - 'docker/runtime-images/Dockerfile-manifest-builder'
+      - 'docker/build_manifest/*'
       - 'gitlab/build_manifest.py'
 
 fedora amd64 docker:
