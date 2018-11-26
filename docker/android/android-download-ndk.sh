@@ -19,7 +19,7 @@
 # Author: Xavier Claessens <xavier.claessens@collabora.com>
 #
 
-set -e
+set -eu
 
 # Download Android NDK
 ANDROID_NDK_VERSION="r18b"

@@ -1,7 +1,4 @@
 stages:
-  - "build runtime"
-  - "build base"
-  # Eventually will replace both of the above stages
   - "build docker"
   - "preparation"
   # Test just one basic build, if succeds procced to test the rest
@@ -88,29 +85,18 @@ fedora amd64 docker:
     changes:
       - 'docker/fedora/*'
 
-ubuntu amd64 run docker:
-  stage: "build runtime"
+# Cross compile image
+android 28 amd64 docker:
+  stage: "build docker"
   variables:
     ARCH: "amd64"
-    TAG: "ubuntu-runtime"
-    CONTEXT_DIR: "docker/runtime-images/"
-    DOCKERFILE: "docker/runtime-images/Dockerfile-ubuntu"
+    TAG: "android_28"
+    CONTEXT_DIR: "docker/android/"
+    DOCKERFILE: "docker/android/Dockerfile"
   extends: .base
   only:
     changes:
-      - 'docker/runtime-images/Dockerfile-ubuntu'
-
-ubuntu amd64 build docker:
-  stage: "build base"
-  variables:
-    ARCH: "amd64"
-    TAG: "ubuntu-build"
-    CONTEXT_DIR: "docker/build-base-images/"
-    DOCKERFILE: "docker/build-base-images/Dockerfile-ubuntu"
-  extends: .base
-  only:
-    changes:
-      - 'docker/build-base-images/Dockerfile-ubuntu'
+      - 'docker/android/*'
 
 include: "gitlab/ci_template.yml"
 
@@ -120,8 +106,11 @@ build fedora x86_64 local:
   stage: 'build'
   image: "${CI_REGISTRY_IMAGE}/amd64/fedora:latest"
 
-build ubuntu x86_64 local:
+build android 28 local:
   extends: '.build'
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dlibav=disabled"
-  image: "${CI_REGISTRY_IMAGE}/amd64/ubuntu-build:latest"
+    MESON_ARGS: >
+      -Dbad=enabled
+      -Dbad:androidmedia=enabled
+      --cross-file /android_arm64_28.txt
+  image: "${CI_REGISTRY_IMAGE}/amd64/android_28:latest"

@@ -83,3 +83,5 @@ build android arm64 api28:
       -Dbad=enabled
       -Dbad:androidmedia=enabled
       --cross-file /android_arm64_28.txt
+  before_script:
+    - cat /android_arm64_28.txt

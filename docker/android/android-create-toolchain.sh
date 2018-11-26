@@ -19,7 +19,7 @@
 # Author: Xavier Claessens <xavier.claessens@collabora.com>
 #
 
-set -e
+set -eu
 
 arch=$1
 api=$2
