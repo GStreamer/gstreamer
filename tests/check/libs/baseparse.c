@@ -34,6 +34,10 @@ static gboolean have_eos = FALSE;
 static gboolean have_data = FALSE;
 static gint buffer_count = 0;
 static gboolean caps_set = FALSE;
+static gchar *raw_buffer = NULL;
+static gint raw_buffer_size = 0;
+static gint buffer_pull_count = 0;
+static gint current_offset = 0;
 
 #define TEST_VIDEO_WIDTH 640
 #define TEST_VIDEO_HEIGHT 480
@@ -453,6 +457,111 @@ GST_START_TEST (parser_reverse_playback)
 
 GST_END_TEST;
 
+static GstFlowReturn
+_sink_chain_pull_short_read (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
+{
+  GstMapInfo map;
+  gint buffer_size = 0;
+  gint compare_result = 0;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  buffer_size = map.size;
+
+  fail_unless (current_offset + buffer_size <= raw_buffer_size);
+  compare_result = memcmp (map.data, &raw_buffer[current_offset], buffer_size);
+  fail_unless_equals_int (compare_result, 0);
+
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_unref (buffer);
+
+  have_data = TRUE;
+  buffer_count++;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+_src_getrange_pull_short_read (GstPad * pad, GstObject * parent,
+    guint64 offset, guint length, GstBuffer ** buffer)
+{
+  GstBuffer *buf = NULL;
+  gchar *data = NULL;
+  guint buffer_size = 0;
+
+  if (offset == raw_buffer_size) {
+    /* pulled all buffer */
+    return GST_FLOW_EOS;
+  }
+
+  if (offset + length <= raw_buffer_size) {
+    buffer_size = length;
+  } else {
+    /* buffer size is less than request size */
+    buffer_size = raw_buffer_size - offset;
+  }
+
+  data = g_malloc (buffer_size);
+  memcpy (data, &raw_buffer[offset], buffer_size);
+  buf = gst_buffer_new_wrapped (data, buffer_size);
+
+  GST_BUFFER_PTS (buffer) =
+      gst_util_uint64_scale_round (buffer_pull_count,
+      GST_SECOND * TEST_VIDEO_FPS_D, TEST_VIDEO_FPS_N);
+  GST_BUFFER_DURATION (buf) =
+      gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
+      TEST_VIDEO_FPS_N);
+
+  *buffer = buf;
+  current_offset = offset;
+  buffer_pull_count++;
+
+  return GST_FLOW_OK;
+}
+
+GST_START_TEST (parser_pull_short_read)
+{
+  gint i, j;
+  raw_buffer_size = (64 * 1024) + 512;
+  raw_buffer = g_malloc (raw_buffer_size);
+
+  for (i = 0; i < raw_buffer_size; i++) {
+    j = i % 26;
+    raw_buffer[i] = 'a' + j;
+  }
+
+  have_eos = FALSE;
+  have_data = FALSE;
+  buffer_count = 0;
+  loop = g_main_loop_new (NULL, FALSE);
+
+  setup_parsertester ();
+  gst_pad_set_getrange_function (mysrcpad, _src_getrange_pull_short_read);
+  gst_pad_set_query_function (mysrcpad, _src_query);
+  gst_pad_set_chain_function (mysinkpad, _sink_chain_pull_short_read);
+  gst_pad_set_event_function (mysinkpad, _sink_event);
+  gst_base_parse_set_min_frame_size (GST_BASE_PARSE (parsetest), 1024);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (parsetest, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  g_main_loop_run (loop);
+  fail_unless_equals_int (have_eos, TRUE);
+  fail_unless_equals_int (have_data, TRUE);
+  fail_unless_equals_int (buffer_pull_count, buffer_count);
+
+  gst_element_set_state (parsetest, GST_STATE_NULL);
+
+  check_no_error_received ();
+  cleanup_parsertest ();
+
+  g_main_loop_unref (loop);
+  loop = NULL;
+}
+
+GST_END_TEST;
+
 static void
 baseparse_setup (void)
 {
@@ -482,6 +591,7 @@ gst_baseparse_suite (void)
   tcase_add_test (tc, parser_empty_stream);
   tcase_add_test (tc, parser_reverse_playback_on_passthrough);
   tcase_add_test (tc, parser_reverse_playback);
+  tcase_add_test (tc, parser_pull_short_read);
 
   return s;
 }
