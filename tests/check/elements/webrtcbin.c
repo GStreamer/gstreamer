@@ -2353,11 +2353,11 @@ webrtcbin_suite (void)
   sctpenc = gst_registry_lookup_feature (registry, "sctpenc");
   sctpdec = gst_registry_lookup_feature (registry, "sctpdec");
 
-  tcase_add_test (tc, test_sdp_no_media);
   tcase_add_test (tc, test_no_nice_elements_request_pad);
   tcase_add_test (tc, test_no_nice_elements_state_change);
-  tcase_add_test (tc, test_session_stats);
   if (nicesrc && nicesink && dtlssrtpenc && dtlssrtpdec) {
+    tcase_add_test (tc, test_sdp_no_media);
+    tcase_add_test (tc, test_session_stats);
     tcase_add_test (tc, test_audio);
     tcase_add_test (tc, test_audio_video);
     tcase_add_test (tc, test_media_direction);
