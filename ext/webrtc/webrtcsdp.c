@@ -736,3 +736,127 @@ _get_sctp_max_message_size_from_media (const GstSDPMedia * media)
 
   return 65536;
 }
+
+gboolean
+_message_media_is_datachannel (const GstSDPMessage * msg, guint media_id)
+{
+  const GstSDPMedia *media;
+
+  if (!msg)
+    return FALSE;
+
+  if (gst_sdp_message_medias_len (msg) <= media_id)
+    return FALSE;
+
+  media = gst_sdp_message_get_media (msg, media_id);
+
+  if (g_strcmp0 (gst_sdp_media_get_media (media), "application") != 0)
+    return FALSE;
+
+  if (gst_sdp_media_formats_len (media) != 1)
+    return FALSE;
+
+  if (g_strcmp0 (gst_sdp_media_get_format (media, 0),
+          "webrtc-datachannel") != 0)
+    return FALSE;
+
+  return TRUE;
+}
+
+void
+_get_ice_credentials_from_sdp_media (const GstSDPMessage * sdp, guint media_idx,
+    gchar ** ufrag, gchar ** pwd)
+{
+  int i;
+
+  *ufrag = NULL;
+  *pwd = NULL;
+
+  {
+    /* search in the corresponding media section */
+    const GstSDPMedia *media = gst_sdp_message_get_media (sdp, media_idx);
+    const gchar *tmp_ufrag =
+        gst_sdp_media_get_attribute_val (media, "ice-ufrag");
+    const gchar *tmp_pwd = gst_sdp_media_get_attribute_val (media, "ice-pwd");
+    if (tmp_ufrag && tmp_pwd) {
+      *ufrag = g_strdup (tmp_ufrag);
+      *pwd = g_strdup (tmp_pwd);
+      return;
+    }
+  }
+
+  /* then in the sdp message itself */
+  for (i = 0; i < gst_sdp_message_attributes_len (sdp); i++) {
+    const GstSDPAttribute *attr = gst_sdp_message_get_attribute (sdp, i);
+
+    if (g_strcmp0 (attr->key, "ice-ufrag") == 0) {
+      g_assert (!*ufrag);
+      *ufrag = g_strdup (attr->value);
+    } else if (g_strcmp0 (attr->key, "ice-pwd") == 0) {
+      g_assert (!*pwd);
+      *pwd = g_strdup (attr->value);
+    }
+  }
+  if (!*ufrag && !*pwd) {
+    /* Check in the medias themselves. According to JSEP, they should be
+     * identical FIXME: only for bundle-d streams */
+    for (i = 0; i < gst_sdp_message_medias_len (sdp); i++) {
+      const GstSDPMedia *media = gst_sdp_message_get_media (sdp, i);
+      const gchar *tmp_ufrag =
+          gst_sdp_media_get_attribute_val (media, "ice-ufrag");
+      const gchar *tmp_pwd = gst_sdp_media_get_attribute_val (media, "ice-pwd");
+      if (tmp_ufrag && tmp_pwd) {
+        *ufrag = g_strdup (tmp_ufrag);
+        *pwd = g_strdup (tmp_pwd);
+        break;
+      }
+    }
+  }
+}
+
+gboolean
+_parse_bundle (GstSDPMessage * sdp, GStrv * bundled)
+{
+  const gchar *group;
+  gboolean ret = FALSE;
+
+  group = gst_sdp_message_get_attribute_val (sdp, "group");
+
+  if (group && g_str_has_prefix (group, "BUNDLE ")) {
+    *bundled = g_strsplit (group + strlen ("BUNDLE "), " ", 0);
+
+    if (!(*bundled)[0]) {
+      GST_ERROR ("Invalid format for BUNDLE group, expected at least "
+          "one mid (%s)", group);
+      goto done;
+    }
+  } else {
+    ret = TRUE;
+    goto done;
+  }
+
+  ret = TRUE;
+
+done:
+  return ret;
+}
+
+gboolean
+_get_bundle_index (GstSDPMessage * sdp, GStrv bundled, guint * idx)
+{
+  gboolean ret = FALSE;
+  guint i;
+
+  for (i = 0; i < gst_sdp_message_medias_len (sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (sdp, i);
+    const gchar *mid = gst_sdp_media_get_attribute_val (media, "mid");
+
+    if (!g_strcmp0 (mid, bundled[0])) {
+      *idx = i;
+      ret = TRUE;
+      break;
+    }
+  }
+
+  return ret;
+}

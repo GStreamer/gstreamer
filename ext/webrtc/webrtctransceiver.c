@@ -69,6 +69,34 @@ webrtc_transceiver_set_transport (WebRTCTransceiver * trans,
         (GstObject *) stream->rtcp_transport);
 }
 
+GstWebRTCDTLSTransport *
+webrtc_transceiver_get_dtls_transport (GstWebRTCRTPTransceiver * trans)
+{
+  g_return_val_if_fail (WEBRTC_IS_TRANSCEIVER (trans), NULL);
+
+  if (trans->sender) {
+    return trans->sender->transport;
+  } else if (trans->receiver) {
+    return trans->receiver->transport;
+  }
+
+  return NULL;
+}
+
+GstWebRTCDTLSTransport *
+webrtc_transceiver_get_rtcp_dtls_transport (GstWebRTCRTPTransceiver * trans)
+{
+  g_return_val_if_fail (WEBRTC_IS_TRANSCEIVER (trans), NULL);
+
+  if (trans->sender) {
+    return trans->sender->rtcp_transport;
+  } else if (trans->receiver) {
+    return trans->receiver->rtcp_transport;
+  }
+
+  return NULL;
+}
+
 static void
 webrtc_transceiver_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
