@@ -46,6 +46,7 @@ typedef struct _GstRemoveSilence {
   gboolean remove;
   gboolean squash;
   guint64 ts_offset;
+  gboolean silence_detected;
 } GstRemoveSilence;
 
 typedef struct _GstRemoveSilenceClass {

@@ -155,6 +155,7 @@ gst_remove_silence_init (GstRemoveSilence * filter)
   filter->remove = FALSE;
   filter->squash = FALSE;
   filter->ts_offset = 0;
+  filter->silence_detected = FALSE;
 
   if (!filter->vad) {
     GST_DEBUG ("Error initializing VAD !!");
@@ -233,6 +234,17 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
 
   if (frame_type == VAD_SILENCE) {
     GST_DEBUG ("Silence detected");
+    if (!filter->silence_detected) {
+      if (GST_BUFFER_PTS_IS_VALID (inbuf)) {
+        GstStructure *s;
+        GstMessage *m;
+        s = gst_structure_new ("removesilence", "silence_detected",
+            G_TYPE_UINT64, GST_BUFFER_PTS (inbuf) - filter->ts_offset, NULL);
+        m = gst_message_new_element (GST_OBJECT (filter), s);
+        gst_element_post_message (GST_ELEMENT (filter), m);
+      }
+      filter->silence_detected = TRUE;
+    }
 
     if (filter->remove) {
       GST_DEBUG ("Removing silence");
@@ -246,6 +258,18 @@ gst_remove_silence_transform_ip (GstBaseTransform * trans, GstBuffer * inbuf)
       return GST_BASE_TRANSFORM_FLOW_DROPPED;
     }
 
+  } else {
+    if (filter->silence_detected) {
+      if (GST_BUFFER_PTS_IS_VALID (inbuf)) {
+        GstStructure *s;
+        GstMessage *m;
+        s = gst_structure_new ("removesilence", "silence_finished",
+            G_TYPE_UINT64, GST_BUFFER_PTS (inbuf) - filter->ts_offset, NULL);
+        m = gst_message_new_element (GST_OBJECT (filter), s);
+        gst_element_post_message (GST_ELEMENT (filter), m);
+      }
+      filter->silence_detected = FALSE;
+    }
   }
 
   if (filter->squash && filter->ts_offset > 0) {
