@@ -255,7 +255,14 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   if (thiz->use_video_memory)
     gst_msdk_set_frame_allocator (thiz->context);
 
-  if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_FORMAT_NV12) {
+  /* Check 10bit input */
+  if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) == 10) {
+    if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_FORMAT_P010_10LE) {
+      GST_WARNING_OBJECT (thiz,
+          "P010_10LE is the only supported 10bit format\n");
+      goto failed;
+    }
+  } else if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_FORMAT_NV12) {
     if (thiz->use_video_memory)
       thiz->vpp_param.IOPattern =
           MFX_IOPATTERN_IN_VIDEO_MEMORY | MFX_IOPATTERN_OUT_VIDEO_MEMORY;
@@ -298,7 +305,6 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
         g_assert_not_reached ();
         break;
     }
-
     thiz->vpp_param.vpp.Out = thiz->vpp_param.vpp.In;
     thiz->vpp_param.vpp.Out.FourCC = MFX_FOURCC_NV12;
     thiz->vpp_param.vpp.Out.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
@@ -380,8 +386,18 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   thiz->param.mfx.FrameInfo.AspectRatioW = info->par_n;
   thiz->param.mfx.FrameInfo.AspectRatioH = info->par_d;
   thiz->param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
-  thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
   thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
+
+  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_P010_10LE) {
+    thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_P010;
+    thiz->param.mfx.FrameInfo.BitDepthLuma = 10;
+    thiz->param.mfx.FrameInfo.BitDepthChroma = 10;
+    thiz->param.mfx.FrameInfo.Shift = 1;
+  } else {
+    thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_NV12;
+    thiz->param.mfx.FrameInfo.BitDepthLuma = 8;
+    thiz->param.mfx.FrameInfo.BitDepthChroma = 8;
+  }
 
   /* ensure bitrate control parameters */
   ensure_bitrate_control (thiz);
