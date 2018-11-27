@@ -104,6 +104,7 @@ gst_hls_sink2_finalize (GObject * object)
   g_free (sink->location);
   g_free (sink->playlist_location);
   g_free (sink->playlist_root);
+  g_free (sink->current_location);
   if (sink->playlist)
     gst_m3u8_playlist_free (sink->playlist);
 
