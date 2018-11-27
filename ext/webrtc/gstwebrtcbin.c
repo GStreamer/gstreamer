@@ -1222,7 +1222,7 @@ _check_if_negotiation_is_needed (GstWebRTCBin * webrtc)
       const GstSDPMedia *media;
       GstWebRTCRTPTransceiverDirection local_dir, remote_dir;
 
-      if (trans->mline == -1) {
+      if (trans->mline == -1 || trans->mid == NULL) {
         GST_LOG_OBJECT (webrtc, "unassociated transceiver %i %" GST_PTR_FORMAT,
             i, trans);
         return TRUE;
