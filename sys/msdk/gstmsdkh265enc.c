@@ -64,7 +64,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
         "stream-format = (string) byte-stream , alignment = (string) au , "
-        "profile = (string) main")
+        "profile = (string) { main, main-10 } ")
     );
 
 #define gst_msdkh265enc_parent_class parent_class
@@ -102,7 +102,11 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
   }
 
   encoder->param.mfx.CodecId = MFX_CODEC_HEVC;
-  encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
+
+  if (encoder->param.mfx.FrameInfo.FourCC == MFX_FOURCC_P010)
+    encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN10;
+  else
+    encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_MAIN;
 
   /* IdrInterval field of MediaSDK HEVC encoder behaves differently
    * than other encoders. IdrInteval == 1 indicate every
@@ -169,7 +173,10 @@ gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
 
   gst_structure_set (structure, "alignment", G_TYPE_STRING, "au", NULL);
 
-  gst_structure_set (structure, "profile", G_TYPE_STRING, "main", NULL);
+  if (encoder->param.mfx.FrameInfo.FourCC == MFX_FOURCC_P010)
+    gst_structure_set (structure, "profile", G_TYPE_STRING, "main-10", NULL);
+  else
+    gst_structure_set (structure, "profile", G_TYPE_STRING, "main", NULL);
 
   level = level_to_string (encoder->param.mfx.CodecLevel);
   if (level)
