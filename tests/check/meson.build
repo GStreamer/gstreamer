@@ -83,6 +83,7 @@ good_tests = [
   [ 'elements/rtpstorage' ],
   [ 'elements/rtpred' ],
   [ 'elements/rtpulpfec' ],
+  [ 'elements/rtpssrcdemux' ],
   [ 'elements/souphttpsrc', not libsoup_dep.found(), [libsoup_dep] ],
   [ 'elements/spectrum' ],
   [ 'elements/shapewipe' ],

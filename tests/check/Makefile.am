@@ -256,6 +256,7 @@ check_rtpmanager = \
 	elements/rtpred \
 	elements/rtpulpfec \
 	elements/rtpfunnel
+	elements/rtpssrcdemux \
 else
 check_rtpmanager =
 endif
