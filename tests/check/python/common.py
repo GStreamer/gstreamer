@@ -26,6 +26,8 @@ gi.require_version("GES", "1.0")
 from gi.repository import Gst  # noqa
 from gi.repository import GES  # noqa
 from gi.repository import GLib  # noqa
+import contextlib  # noqa
+import os  #noqa
 import unittest  # noqa
 import tempfile  # noqa
 
@@ -80,6 +82,23 @@ def create_project(with_group=False, saved=False):
         project.save(timeline, uri, None, overwrite=True)
 
     return timeline
+
+
+@contextlib.contextmanager
+def created_project_file(xges):
+    _, xges_path = tempfile.mkstemp(suffix=".xges")
+    with open(xges_path, "w") as f:
+        f.write(xges)
+
+    yield Gst.filename_to_uri(os.path.abspath(xges_path))
+
+    os.remove(xges_path)
+
+
+def get_asset_uri(name):
+    python_tests_dir = os.path.dirname(os.path.abspath(__file__))
+    assets_dir = os.path.join(python_tests_dir, "..", "assets")
+    return Gst.filename_to_uri(os.path.join(assets_dir, name))
 
 
 class GESTest(unittest.TestCase):

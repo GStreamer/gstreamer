@@ -959,8 +959,18 @@ _create_auto_transition_from_transitions (GESTimeline * timeline,
       _find_transition_from_auto_transitions (timeline, layer, track, prev,
       next, transition_duration);
 
-  if (auto_transition)
+
+  if (auto_transition) {
+    if (timeline->priv->needs_rollback) {
+      GST_WARNING_OBJECT (timeline,
+          "Created an auto transition where we have 3 overlapping clips"
+          " removing it as this case is NOT allowed nor supported");
+      g_signal_emit_by_name (auto_transition, "destroy-me");
+      timeline->priv->needs_rollback = FALSE;
+      return NULL;
+    }
     return auto_transition;
+  }
 
 
   /* Try to find a transition that perfectly fits with the one that
@@ -2343,28 +2353,6 @@ layer_auto_transition_changed_cb (GESLayer * layer,
     }
   }
   g_list_free_full (clips, gst_object_unref);
-
-  if (timeline->priv->needs_rollback) {
-    GList *tmp, *trans;
-
-    ges_layer_set_auto_transition (layer, FALSE);
-    GST_ERROR_OBJECT (layer, "Has overlapping transition, "
-        " we can't handle that, setting auto_transition"
-        " to FALSE, and removing all transitions");
-    trans = g_list_copy (timeline->priv->auto_transitions);
-    for (tmp = trans; tmp; tmp = tmp->next) {
-      g_signal_emit_by_name (tmp->data, "destroy-me");
-    }
-
-    g_list_free (trans);
-
-    trans = ges_layer_get_clips (layer);
-    for (tmp = trans; tmp; tmp = tmp->next) {
-      if (GES_IS_TRANSITION_CLIP (tmp->data))
-        ges_layer_remove_clip (layer, tmp->data);
-    }
-    g_list_free_full (trans, gst_object_unref);
-  }
 }
 
 static void

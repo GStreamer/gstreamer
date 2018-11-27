@@ -29,9 +29,7 @@ from gi.repository import GES  # noqa
 import unittest  # noqa
 from unittest import mock
 
-from .common import create_main_loop
-from .common import create_project
-from .common import GESSimpleTimelineTest  # noqa
+from . import common  # noqa
 
 Gst.init(None)
 GES.init()
@@ -40,8 +38,8 @@ GES.init()
 class TestTimeline(unittest.TestCase):
 
     def test_signals_not_emitted_when_loading(self):
-        mainloop = create_main_loop()
-        timeline = create_project(with_group=True, saved=True)
+        mainloop = common.create_main_loop()
+        timeline = common.create_project(with_group=True, saved=True)
 
         # Reload the project, check the group.
         project = GES.Project.new(uri=timeline.get_asset().props.uri)
@@ -66,7 +64,7 @@ class TestTimeline(unittest.TestCase):
         handle.assert_not_called()
 
 
-class TestSplitting(GESSimpleTimelineTest):
+class TestSplitting(common.GESSimpleTimelineTest):
     def setUp(self):
         self.track_types = [GES.TrackType.AUDIO]
         super(TestSplitting, self).setUp()
@@ -118,7 +116,7 @@ class TestSplitting(GESSimpleTimelineTest):
         ])
 
 
-class TestEditing(GESSimpleTimelineTest):
+class TestEditing(common.GESSimpleTimelineTest):
 
     def test_transition_disappears_when_moving_to_another_layer(self):
         self.timeline.props.auto_transition = True
@@ -176,7 +174,7 @@ class TestEditing(GESSimpleTimelineTest):
         self.assertEquals(len(self.layer.get_clips()), 4)
 
 
-class TestSnapping(GESSimpleTimelineTest):
+class TestSnapping(common.GESSimpleTimelineTest):
 
     def test_snapping(self):
         self.timeline.props.auto_transition = True
@@ -216,7 +214,7 @@ class TestSnapping(GESSimpleTimelineTest):
         self.assertEqual(clip1.props.duration, split_position)
         self.assertEqual(clip2.props.start, split_position)
 
-class TestTransitions(GESSimpleTimelineTest):
+class TestTransitions(common.GESSimpleTimelineTest):
 
     def test_emission_order_for_transition_clip_added_signal(self):
         self.timeline.props.auto_transition = True
@@ -244,6 +242,75 @@ class TestTransitions(GESSimpleTimelineTest):
         # transition and once for the audio transition.
         self.assertEqual(
             signals, ["notify::start", "clip-added", "clip-added"])
+
+    def create_xges(self):
+        uri = common.get_asset_uri("png.png")
+        return """<ges version='0.4'>
+  <project properties='properties;' metadatas='metadatas, author=(string)&quot;&quot;, render-scale=(double)100, format-version=(string)0.4;'>
+    <ressources>
+      <asset id='GESTitleClip' extractable-type-name='GESTitleClip' properties='properties;' metadatas='metadatas;' />
+      <asset id='bar-wipe-lr' extractable-type-name='GESTransitionClip' properties='properties;' metadatas='metadatas, description=(string)GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR;' />
+      <asset id='%(uri)s' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)4, duration=(guint64)18446744073709551615;' metadatas='metadatas, video-codec=(string)PNG, file-size=(guint64)73294;' />
+      <asset id='crossfade' extractable-type-name='GESTransitionClip' properties='properties;' metadatas='metadatas, description=(string)GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE;' />
+    </ressources>
+    <timeline properties='properties, auto-transition=(boolean)true, snapping-distance=(guint64)31710871;' metadatas='metadatas, duration=(guint64)13929667032;'>
+      <track caps='video/x-raw(ANY)' track-type='4' track-id='0' properties='properties, async-handling=(boolean)false, message-forward=(boolean)true, caps=(string)&quot;video/x-raw\(ANY\)&quot;, restriction-caps=(string)&quot;video/x-raw\,\ width\=\(int\)1920\,\ height\=\(int\)1080\,\ framerate\=\(fraction\)30/1&quot;, mixing=(boolean)true;' metadatas='metadatas;'/>
+      <track caps='audio/x-raw(ANY)' track-type='2' track-id='1' properties='properties, async-handling=(boolean)false, message-forward=(boolean)true, caps=(string)&quot;audio/x-raw\(ANY\)&quot;, restriction-caps=(string)&quot;audio/x-raw\,\ format\=\(string\)S32LE\,\ channels\=\(int\)2\,\ rate\=\(int\)44100\,\ layout\=\(string\)interleaved&quot;, mixing=(boolean)true;' metadatas='metadatas;'/>
+      <layer priority='0' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='0' asset-id='%(uri)s' type-name='GESUriClip' layer-priority='0' track-types='6' start='0' duration='4558919302' inpoint='0' rate='0' properties='properties, name=(string)uriclip25263, mute=(boolean)false, is-image=(boolean)false;' />
+        <clip id='1' asset-id='bar-wipe-lr' type-name='GESTransitionClip' layer-priority='0' track-types='4' start='3225722559' duration='1333196743' inpoint='0' rate='0' properties='properties, name=(string)transitionclip84;'  children-properties='properties, GESVideoTransition::border=(uint)0, GESVideoTransition::invert=(boolean)false;'/>
+        <clip id='2' asset-id='%(uri)s' type-name='GESUriClip' layer-priority='0' track-types='6' start='3225722559' duration='3479110239' inpoint='4558919302' rate='0' properties='properties, name=(string)uriclip25265, mute=(boolean)false, is-image=(boolean)false;' />
+      </layer>
+      <layer priority='1' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
+        <clip id='3' asset-id='%(uri)s' type-name='GESUriClip' layer-priority='1' track-types='4' start='8566459322' duration='1684610449' inpoint='0' rate='0' properties='properties, name=(string)uriclip25266, mute=(boolean)false, is-image=(boolean)true;' />
+        <clip id='4' asset-id='GESTitleClip' type-name='GESTitleClip' layer-priority='1' track-types='6' start='8566459322' duration='4500940746' inpoint='0' rate='0' properties='properties, name=(string)titleclip69;' />
+        <clip id='5' asset-id='%(uri)s' type-name='GESUriClip' layer-priority='1' track-types='4' start='9566459322' duration='4363207710' inpoint='0' rate='0' properties='properties, name=(string)uriclip25275, mute=(boolean)false, is-image=(boolean)true;' />
+      </layer>
+      <groups>
+      </groups>
+    </timeline>
+</project>
+</ges>""" % {"uri": uri}
+
+    def test_auto_transition(self):
+        xges = self.create_xges()
+        with common.created_project_file(xges) as proj_uri:
+            project = GES.Project.new(proj_uri)
+            timeline = project.extract()
+
+            mainloop = common.create_main_loop()
+            mainloop.run(until_empty=True)
+
+            layers = timeline.get_layers()
+            self.assertEqual(len(layers), 2)
+
+            self.assertTrue(layers[0].props.auto_transition)
+            self.assertTrue(layers[1].props.auto_transition)
+
+    def test_transition_type(self):
+        xges = self.create_xges()
+        with common.created_project_file(xges) as proj_uri:
+            project = GES.Project.new(proj_uri)
+            timeline = project.extract()
+
+            mainloop = common.create_main_loop()
+            mainloop.run(until_empty=True)
+
+            layers = timeline.get_layers()
+            self.assertEqual(len(layers), 2)
+
+            clips = layers[0].get_clips()
+            clip1 = clips[0]
+            clip2 = clips[-1]
+            # There should be a transition because clip1 intersects clip2
+            self.assertLess(clip1.props.start, clip2.props.start)
+            self.assertLess(clip2.props.start, clip1.props.start + clip1.props.duration)
+            self.assertLess(clip1.props.start + clip1.props.duration, clip2.props.start + clip2.props.duration)
+            self.assertEqual(len(clips), 3)
+
+            # Even though 3 clips overlap 1 transition will be created
+            clips = layers[1].get_clips()
+            self.assertEqual(len(clips), 4)
 
 
 class TestPriorities(GESSimpleTimelineTest):
