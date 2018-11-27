@@ -50,7 +50,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { NV12, I420, YV12, YUY2, UYVY, BGRA }, "
+        "format = (string) { NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 16, MAX ], height = (int) [ 16, MAX ],"
         "interlace-mode = (string) progressive" ";"
