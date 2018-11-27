@@ -65,6 +65,7 @@ static const GstVideoFormatMap gst_vaapi_video_formats[] = {
   DEF_YUV (YUY2, ('Y', 'U', 'Y', '2'), 16, 422),
   DEF_YUV (UYVY, ('U', 'Y', 'V', 'Y'), 16, 422),
   DEF_YUV (Y210, ('Y', '2', '1', '0'), 32, 422_10BPP),
+  DEF_YUV (Y410, ('Y', '4', '1', '0'), 32, 444_10BPP),
   DEF_YUV (AYUV, ('A', 'Y', 'U', 'V'), 32, 444),
   DEF_YUV (GRAY8, ('Y', '8', '0', '0'), 8, 400),
   DEF_YUV (P010_10LE, ('P', '0', '1', '0'), 24, 420_10BPP),
@@ -308,6 +309,8 @@ gst_vaapi_video_format_from_chroma (guint chroma_type)
       return GST_VIDEO_FORMAT_AYUV;
     case GST_VAAPI_CHROMA_TYPE_YUV422_10BPP:
       return GST_VIDEO_FORMAT_Y210;
+    case GST_VAAPI_CHROMA_TYPE_YUV444_10BPP:
+      return GST_VIDEO_FORMAT_Y410;
     default:
       return GST_VIDEO_FORMAT_UNKNOWN;
   }

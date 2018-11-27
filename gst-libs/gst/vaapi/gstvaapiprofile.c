@@ -137,6 +137,8 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
       "video/x-h265", "main-422-10"},
   {GST_VAAPI_PROFILE_H265_MAIN_444, VAProfileHEVCMain444,
       "video/x-h265", "main-444"},
+  {GST_VAAPI_PROFILE_H265_MAIN_444_10, VAProfileHEVCMain444_10,
+      "video/x-h265", "main-444-10"},
 #endif
 #if VA_CHECK_VERSION(0,38,0)
   {GST_VAAPI_PROFILE_VP9_0, VAProfileVP9Profile0,

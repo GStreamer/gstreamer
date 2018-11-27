@@ -172,6 +172,17 @@ gst_vaapi_utils_h265_get_profile (GstH265SPS * sps)
           && sps->profile_tier_level.lower_bit_rate_constraint_flag == 1) {
         profile = GST_VAAPI_PROFILE_H265_MAIN_444;
         break;
+      } else if (sps->profile_tier_level.max_12bit_constraint_flag == 1
+          && sps->profile_tier_level.max_10bit_constraint_flag == 1
+          && sps->profile_tier_level.max_8bit_constraint_flag == 0
+          && sps->profile_tier_level.max_422chroma_constraint_flag == 0
+          && sps->profile_tier_level.max_420chroma_constraint_flag == 0
+          && sps->profile_tier_level.max_monochrome_constraint_flag == 0
+          && sps->profile_tier_level.intra_constraint_flag == 0
+          && sps->profile_tier_level.one_picture_only_constraint_flag == 0
+          && sps->profile_tier_level.lower_bit_rate_constraint_flag == 1) {
+        profile = GST_VAAPI_PROFILE_H265_MAIN_444_10;
+        break;
       }
     default:
       GST_DEBUG ("unsupported profile_idc value");
@@ -337,7 +348,10 @@ gst_vaapi_utils_h265_get_chroma_type (guint chroma_format_idc,
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_10BPP;
       break;
     case 3:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444;
+      if (luma_bit_depth == 8)
+        chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444;
+      else if (luma_bit_depth > 8)
+        chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444_10BPP;
       break;
     default:
       GST_DEBUG ("unsupported chroma_format_idc value");
