@@ -255,7 +255,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   if (thiz->use_video_memory)
     gst_msdk_set_frame_allocator (thiz->context);
 
-  if (info->finfo->format != GST_VIDEO_FORMAT_NV12) {
+  if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_FORMAT_NV12) {
     if (thiz->use_video_memory)
       thiz->vpp_param.IOPattern =
           MFX_IOPATTERN_IN_VIDEO_MEMORY | MFX_IOPATTERN_OUT_VIDEO_MEMORY;
@@ -272,7 +272,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
     thiz->vpp_param.vpp.In.AspectRatioW = info->par_n;
     thiz->vpp_param.vpp.In.AspectRatioH = info->par_d;
     thiz->vpp_param.vpp.In.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
-    switch (info->finfo->format) {
+    switch (GST_VIDEO_INFO_FORMAT (info)) {
       case GST_VIDEO_FORMAT_NV12:
         thiz->vpp_param.vpp.In.FourCC = MFX_FOURCC_NV12;
         thiz->vpp_param.vpp.In.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
