@@ -64,7 +64,7 @@ Some of the main components are:
   needs based on the requested pads; it also contains an rtpjitterbuffer.
 * <tt><a href="/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-rtpjitterbuffer.html">rtpjitterbuffer</a></tt>
   is an RTP buffer that controls network jitter and reorders packets. It also
-  dumps packets that arrive to late, handles packet retransmission and lost
+  dumps packets that arrive too late, handles packet retransmission and lost
   packet notification and adjusts for sender-receiver clock drift.
 * <tt><a href="/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-rtpptdemux.html">rtpptdemux</a></tt>
   is an element that usually sits on the rtpbin src
