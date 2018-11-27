@@ -8,24 +8,29 @@ This document provides instructions and guidelines for submitting issues,
 feature requests and patches to GStreamer. The following applies to all
 these operations:
 
-- Please use [Freedesktop.org Gitlab][gitlab] to perform any of the aforementioned
-  operations. You will need to create a Freedekstop.org Gitlab account if you
-  don't have one yet (yep, that's just how it is. Sorry for the inconvenience).
+- Please use [freedesktop.org GitLab][gitlab] to perform any of the aforementioned
+  operations. You will need to create a freedesktop.org GitLab account if you
+  don't have one yet (yep, that's just how it is. Sorry for the inconvenience)
+  If you don't want to create a new account you should also be able to sign in
+  with a Google, GitHub or Twitter account.
 
 ## How to File Issues and Request for Enhancements
 
 ### Where to File Issues and Feature Requests
 
-- Create a new issue if there is no report for this problem yet.
+- Create a new issue if there is no existing report for this problem yet.
   The GStreamer [bugs page][bugs] also has shortcuts for the major components
   and simple search functionality if you'd like to browse or search for
-  existing issues.
+  existing issues, or use the [GitLab search bar for the GStreamer project][gitlab]
+  at the top of the page.
 
 - If you are filing a feature request (i.e. anything that is not supposed to
   work already, that is anything not an issue), please add the *Enhancement* label.
-  Feel free to add any other appropriate already existing labels.  Please don't
+  Feel free to add any other appropriate already existing labels. Please don't
   create new labels just for your issue. This won't affect the way we prioritise
-  the issue, but it will make triaging easier for us.
+  the issue, but it will make triaging easier for us. In particular, do not add
+  the *Blocker* label to an issue just because an issue is important to you.
+  This label should be added only by GStreamer maintainers.
 
 - If your issue is about a specific plugin, element or utility library,
   please prefix the issue summary with `element-name:`, `plugin-name:` or `lib:`
@@ -42,9 +47,13 @@ these operations:
   is too long and only contains fill words at the beginning, the important
   information will be cut off and not show up in the list view or mail client.
 
-- If you don't know in which component the problem is, just select "don't know"
-  and we'll move it to the right component once we have a better idea what the
-  problem is.
+- If you don't know which component to file the issue against, just pick the one
+  that seems the most likely to you, or file it against the gstreamer-project
+  component. If in doubt just pop into our IRC channel `#gstreamer` on the
+  [freenode IRC network](https://freenode.net), which you can connect to using
+  any IRC client application or the [freenode IRC webchat](https://webchat.freenode.net).
+  In any case, if it's not the right component someone will move the issue
+  once they have a better idea what the problem is and where it belongs.
 
 - Please mention:
 
@@ -79,18 +88,86 @@ these operations:
 
 ### Where to Submit Patches
 
-After completing the common steps:
+Patches need to be submitted through [GitLab][gitlab] in form of a
+"Merge Request" (MR), which is the same as a "Pull Request" (PR)
+in GitHub, and uses the same [workflow][gitlab-merge-request-workflow].
 
-- Once you have created an issue you can submit a merge request, see below for
-  more details.
+[gitlab-merge-request-workflow]: https://docs.gitlab.com/ce/user/project/merge_requests/index.html#overview
+
+In order to submit a merge request you first need a personal fork of the
+project / gstreamer module in question. To fork a module go to
+the module in question (e.g. <https://gitlab.freedesktop.org/gstreamer/gstreamer>)
+and hit the fork button. A new repository will be created in your user namespace
+(<https://gitlab.freedesktop.org/$USERNAME/gstreamer>). You will be redirected
+there automatically once the forking process is finished. For big repositories
+the forking might take a few minutes.
+
+Once this is done you can add your personal fork as new remote to your existing checkout with
+
+    git remote add my-personal-gitlab-fork git@gitlab.freedesktop.org:$USERNAME/gstreamer.git
+
+Check with
+
+    git fetch my-personal-gitlab-fork
+
+that it is accessible and working.
+
+If you have not done so already, you may need to first
+[set up SSH keys in your GitLab User Settings](https://gitlab.freedesktop.org/profile/keys).
+
+Next, you make a git branch with one or more commits you want to submit
+for review and merging. For that you will first need a local branch which
+you can create with e.g.
+
+    git checkout -b fix-xyz
+
+You can then push that branch to your personal fork git repository with
+
+    git push my-personal-gitlab-fork
+
+You can use
+
+    git push --dry-run my-personal-gitlab-fork
+
+for testing to see what would happen without actually doing anything yet.
+
+After you have pushed the branch to your personal fork you will see a link
+on the terminal with which you can create a merge request for the upstream
+repository. You can also do this later by going to the
+branch list of your personal repository at
+<https://gitlab.freedesktop.org/$USERNAME/gstreamer/branches>
+and then hitting the 'Merge Request' button when ready. This will open a new
+page where you can enter a description of the changes you are submitting.
+
+Couple of additional points:
+
+- If you are submitting a Merge Request for an issue (or multipe issues) that
+  already exist, please add 'Fixes #123' to the commit message of one of your
+  commits, so that there is a cross-reference in GitLab and the issue will be
+  closed automatically when your Merge Request is merged.
+
+- You do not have to file an issue to go with each Merge Request, it's fine
+  to just submit a Merge Request on its own.
+
+- **Please enable the "Allow commits from members who can merge to the target branch"**
+  **checkbox when submitting merge requests** as otherwise maintainers can't
+  rebase your Merge Request when they want to merge it, which means they
+  won't be able to merge it.
+
+- If your proposed changes are proposed for review but not ready to be merged
+  yet, please prefix the Merge Request title with `WIP:` for Work-in-Progress.
+  That will prevent us from inadvertently merging it and make clear its status.
+
+- Please make sure the 'Author' field in your commit messages has your full and
+  proper name and e-mail address. You can check with e.g. `git log` or `gitk`.
 
 - If your change is for an enhancement (anything that is not supposed to work
   already, i.e. anything not a bug) or adds new API, please add the
   *Enhancement* label. This won't affect the way we prioritise your issue,
   but it does make triaging easier for us.
 
-- If your merge request is against a specific plugin or element or utility library,
-  please prefix the merge request summary with `element-name:`, `plugin-name:`
+- If your Merge Request is against a specific plugin or element or utility library,
+  please prefix the Merge Request summary with `element-name:`, `plugin-name:`
   or `lib:` and keep the rest of the description as short and precise as possible.
 
   Examples:
@@ -104,11 +181,6 @@ After completing the common steps:
   notification mails can quickly identify what your change is about. If your text
   is too long and only contains fill words at the beginning, the important
   information will be cut off and not show up in the list view or mail client.
-
-- Please enable the "Allow commits from members who can merge to the target branch"
-  checkbox when submitting merge requests as otherwise maintainers might
-  request you to rebase your Merge Request multiple times even if no manual
-  changes are required.
 
 - Make liberal use of the reference syntax available to help cross-linking
   different issues and merge requests. e.g. `#100` references issue 100 in the
@@ -151,7 +223,7 @@ After completing the common steps:
 ### How to Prepare a Merge Request for Submission
 
 If possible at all, you should prepare a merge request against a current git
-checkout, ideally against the tip of the master branch.  The gitlab mrege request
+checkout, ideally against the tip of the master branch.  The gitlab merge request
 UI will contain information about whether the merge request can be applied to the
 current code. If a merge request was prepared against an old commit and
 does not apply any longer to master you may be asked to provide an updated
@@ -166,11 +238,10 @@ modifications, `meson.build` modifications, and all new files.
 The easiest way to create a merge request is to create one or more local commits
 for your changes in a branch in a local git repository. This should be a git
 clone checkout of your fork of the module in question.  To fork a module go to
-the module in question (e.g.
-[https://gitlab.freedesktop.org/gstreamer/gstreamer](https://gitlab.freedesktop.org/gstreamer/gstreamer))
+the module in question (e.g. <https://gitlab.freedesktop.org/gstreamer/gstreamer>)
 and hit the fork button.  A new repository will be created in your user namespace
-and should accessible as
-[https://gitlab.freedesktop.org/$USERNAME/gstreamer](https://gitlab.freedesktop.org/$USERNAME/gstreamer).
+and should be accessible as
+<https://gitlab.freedesktop.org/$USERNAME/gstreamer>.
 You should clone this repository with valid ssh credentials to be able to
 automatically push code to your fork.
 
@@ -304,10 +375,10 @@ full issue URL at the end of the commit message.
 We do not use `Signed-off by:` lines in GStreamer, please create commits
 without those.
 
-### After Submitting your Patch
+### After Submitting your Merge Request
 
-Whenever you submit a new merge request, add a comment to an existing issue or
-merge request, Gitlab will send a notification e-mail to GStreamer
+Whenever you submit a new Merge Request, add a comment to an existing issue or
+Merge Request, GitLab will send a notification e-mail to GStreamer
 developers. This means that there is usually no need to advertise the fact that
 you have done so in other forums such as on IRC or on the mailing list, unless
 you have been asked to file an issue there, in which case it's nice to follow up
@@ -327,6 +398,27 @@ issue or merge request.
 If you do not get a response, this is usually not a sign of people *ignoring*
 the issue, but usually just means that it's fallen through the cracks or
 people have been busy with other things.
+
+### Updating Your Merge Request and Addressing Review Comments
+
+When someone reviews your changes, they may leave review comments for
+particular sections of code or in general. These will usually each start
+a new "Discussion" which is basically a thread for each comment.
+
+When you believe that you have addressed the issue raised in a discussion,
+either by updating the code or answering the questions raised, you should
+"Resolve the Discussion" using the button.
+
+This way it is easy to see for maintainers and for yourself what's left to do
+and if there are any open questions/issues.
+
+Whenever you have made changes to your patches locally you can just
+`git push -f my-personal-gitlab-fork your-branch` to your personal fork,
+and GitLab will pick up the changes automatically. You do _not_ need to submit
+a new Merge Request whenever you make changes to an already-submitted patchset,
+and in fact you shouldn't do that because it means all the previous discussion
+context is lost and it's also not easy for reviewers to see what changed.
+Just update your existing branch.
 
 # Workflows for GStreamer developers
 
