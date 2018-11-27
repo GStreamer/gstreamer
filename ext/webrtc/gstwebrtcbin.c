@@ -1149,14 +1149,17 @@ _all_sinks_have_caps (GstWebRTCBin * webrtc)
   for (; l; l = g_list_next (l)) {
     if (!GST_IS_WEBRTC_BIN_PAD (l->data))
       continue;
-    if (!GST_WEBRTC_BIN_PAD (l->data)->received_caps)
+    if (GST_PAD_DIRECTION (l->data) == GST_PAD_SINK
+        && !GST_WEBRTC_BIN_PAD (l->data)->received_caps) {
       goto done;
+    }
   }
 
   l = webrtc->priv->pending_pads;
   for (; l; l = g_list_next (l)) {
-    if (!GST_IS_WEBRTC_BIN_PAD (l->data))
+    if (!GST_IS_WEBRTC_BIN_PAD (l->data)) {
       goto done;
+    }
   }
 
   res = TRUE;
