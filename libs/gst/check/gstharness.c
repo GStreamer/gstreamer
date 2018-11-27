@@ -550,7 +550,6 @@ gst_harness_setup_src_pad (GstHarness * h,
   /* sending pad */
   h->srcpad = gst_pad_new_from_static_template (src_tmpl, "src");
   g_assert (h->srcpad);
-  gst_object_ref_sink (h->srcpad);
   g_object_set_data (G_OBJECT (h->srcpad), HARNESS_KEY, h);
 
   gst_pad_set_query_function (h->srcpad, gst_harness_src_query);
@@ -578,7 +577,6 @@ gst_harness_setup_sink_pad (GstHarness * h,
   /* receiving pad */
   h->sinkpad = gst_pad_new_from_static_template (sink_tmpl, "sink");
   g_assert (h->sinkpad);
-  gst_object_ref_sink (h->sinkpad);
   g_object_set_data (G_OBJECT (h->sinkpad), HARNESS_KEY, h);
 
   gst_pad_set_chain_function (h->sinkpad, gst_harness_chain);
@@ -689,7 +687,7 @@ gst_harness_new_empty (void)
 /**
  * gst_harness_add_element_full: (skip)
  * @h: a #GstHarness
- * @element (transfer floating): a #GstElement to add to the harness
+ * @element: a #GstElement to add to the harness (transfer none)
  * @hsrc: (allow-none): a #GstStaticPadTemplate describing the harness srcpad.
  * %NULL will not create a harness srcpad.
  * @element_sinkpad_name: (allow-none): a #gchar with the name of the element
@@ -720,7 +718,7 @@ gst_harness_add_element_full (GstHarness * h, GstElement * element,
   g_return_if_fail (h->element == NULL);
 
   element_clock = GST_ELEMENT_CLOCK (element);
-  h->element = gst_object_ref_sink (element);
+  h->element = gst_object_ref (element);
   check_element_type (element, &has_sinkpad, &has_srcpad);
 
   /* setup the loose srcpad linked to the element sinkpad */
@@ -770,7 +768,7 @@ gst_harness_add_element_full (GstHarness * h, GstElement * element,
 
 /**
  * gst_harness_new_full: (skip)
- * @element: (transfer floating): a #GstElement to attach the harness to
+ * @element: a #GstElement to attach the harness to (transfer none)
  * @hsrc: (allow-none): a #GstStaticPadTemplate describing the harness srcpad.
  * %NULL will not create a harness srcpad.
  * @element_sinkpad_name: (allow-none): a #gchar with the name of the element
@@ -806,7 +804,7 @@ gst_harness_new_full (GstElement * element,
 
 /**
  * gst_harness_new_with_element: (skip)
- * @element: (transfer floating): a #GstElement to attach the harness to
+ * @element: a #GstElement to attach the harness to (transfer none)
  * @element_sinkpad_name: (allow-none): a #gchar with the name of the element
  * sinkpad that is then linked to the harness srcpad. %NULL does not attach a
  * sinkpad
