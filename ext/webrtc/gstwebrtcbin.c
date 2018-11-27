@@ -3367,6 +3367,8 @@ _find_compatible_unassociated_transceiver (GstWebRTCRTPTransceiver * p1,
     return FALSE;
   if (p1->mline != -1)
     return FALSE;
+  if (p1->stopped)
+    return FALSE;
 
   return TRUE;
 }
