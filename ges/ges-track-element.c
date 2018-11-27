@@ -1432,7 +1432,9 @@ ges_track_element_remove_control_binding (GESTrackElement * object,
  * @object: the #GESTrackElement on which to set a control binding
  * @source: the #GstControlSource to set on the binding.
  * @property_name: The name of the property to control.
- * @binding_type: The type of binding to create. Only "direct" is available for now.
+ * @binding_type: The type of binding to create. Currently the following values are valid:
+ *   - "direct": See #gst_direct_control_binding_new
+ *   - "direct-absolute": See #gst_direct_control_binding_new_absolute
  *
  * Creates a #GstControlBinding and adds it to the #GstElement concerned by the
  * property. Use the same syntax as #ges_track_element_lookup_child for
