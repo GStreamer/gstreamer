@@ -461,6 +461,56 @@ parse_packet_extension (GstMpegvParse * mpvparse, GstMapInfo * info, guint off)
   }
 }
 
+/* A53-4 Table 6.7 */
+#define A53_USER_DATA_ID_GA94 0x47413934
+#define A53_USER_DATA_ID_DTG1 0x44544731
+
+/* A53-4 Table 6.9 */
+#define A53_USER_DATA_TYPE_CODE_MPEG_CC_DATA 0x03
+#define A53_USER_DATA_TYPE_CODE_BAR_DATA 0x06
+
+/* CEA-708 Table 2 */
+#define CEA_708_PROCESS_CC_DATA_FLAG 0x40
+
+static void
+parse_user_data_packet (GstMpegvParse * mpvparse, const guint8 * data,
+    guint size)
+{
+  if (size < 2) {
+    GST_DEBUG_OBJECT (mpvparse, "user data packet too short, ignoring");
+    return;
+  }
+
+  /* A53 part 4 closed captions */
+  if (size > 6 && GST_READ_UINT32_BE (data) == A53_USER_DATA_ID_GA94
+      && data[4] == A53_USER_DATA_TYPE_CODE_MPEG_CC_DATA
+      && (data[5] & CEA_708_PROCESS_CC_DATA_FLAG) != 0 && data[6] == 0xff) {
+    guint8 cc_count = data[5] & 0x1f;
+    guint cc_size = cc_count * 3;
+
+    data += 7;
+    size -= 7;
+
+    if (cc_size == 0 || cc_size > size) {
+      GST_DEBUG_OBJECT (mpvparse, "ignoring closed captions, not enough data");
+      return;
+    }
+
+    /* Shouldn't really happen so let's not go out of our way to handle it */
+    if (mpvparse->closedcaptions_size > 0)
+      GST_WARNING_OBJECT (mpvparse, "unused pending closed captions!");
+
+    g_assert (cc_size <= sizeof (mpvparse->closedcaptions));
+    memcpy (mpvparse->closedcaptions, data, cc_size);
+    mpvparse->closedcaptions_size = cc_size;
+    mpvparse->closedcaptions_type = GST_VIDEO_CAPTION_TYPE_CEA708_RAW;
+    GST_DEBUG_OBJECT (mpvparse, "CEA-708 closed captions, %u bytes", cc_size);
+    return;
+  }
+
+  GST_MEMDUMP_OBJECT (mpvparse, "unhandled user data packet", data, size);
+}
+
 /* caller guarantees at least start code in @buf at @off ( - 4)*/
 /* for off == 4 initial code; returns TRUE if code starts a frame
  * otherwise returns TRUE if code terminates preceding frame */
@@ -513,6 +563,18 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
         if (mpvparse->ext_count < G_N_ELEMENTS (mpvparse->ext_offsets))
           mpvparse->ext_offsets[mpvparse->ext_count++] = off;
       }
+      checkconfig = FALSE;
+      break;
+    case GST_MPEG_VIDEO_PACKET_USER_DATA:
+      GST_LOG_OBJECT (mpvparse, "USER_DATA packet of %d bytes", packet->size);
+
+      if (packet->size < 0) {
+        GST_LOG_OBJECT (mpvparse, "no size yet, need more data");
+        *need_more = TRUE;
+        return FALSE;
+      }
+
+      parse_user_data_packet (mpvparse, info->data + off, packet->size);
       checkconfig = FALSE;
       break;
     default:
@@ -1002,6 +1064,24 @@ gst_mpegv_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     meta->num_slices = mpvparse->slice_count;
     meta->slice_offset = mpvparse->slice_offset;
   }
+
+  if (mpvparse->closedcaptions_size > 0) {
+    GstBuffer *buf;
+
+    if (frame->out_buffer) {
+      buf = frame->out_buffer = gst_buffer_make_writable (frame->out_buffer);
+    } else {
+      buf = frame->buffer = gst_buffer_make_writable (frame->buffer);
+    }
+
+    gst_buffer_add_video_caption_meta (buf,
+        mpvparse->closedcaptions_type, mpvparse->closedcaptions,
+        mpvparse->closedcaptions_size);
+
+    mpvparse->closedcaptions_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
+    mpvparse->closedcaptions_size = 0;
+  }
+
   return GST_FLOW_OK;
 }
 

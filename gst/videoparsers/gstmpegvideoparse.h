@@ -87,6 +87,11 @@ struct _GstMpegvParse {
   gboolean picext_updated;
   gboolean quantmatrext_updated;
 
+  /* pending closed captions */
+  guint8 closedcaptions[96];
+  guint closedcaptions_size;
+  GstVideoCaptionType closedcaptions_type;
+
   /* properties */
   gboolean drop;
   gboolean gop_split;
