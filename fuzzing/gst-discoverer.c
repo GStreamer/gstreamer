@@ -28,13 +28,13 @@
 #include <gst/pbutils/pbutils.h>
 
 #ifndef LOCAL_FUZZ_BUILD
-GST_PLUGIN_STATIC_DECLARE(coreelements);
-GST_PLUGIN_STATIC_DECLARE(playback);
-GST_PLUGIN_STATIC_DECLARE(typefindfunctions);
-GST_PLUGIN_STATIC_DECLARE(app);
-GST_PLUGIN_STATIC_DECLARE(ogg);
-GST_PLUGIN_STATIC_DECLARE(theora);
-GST_PLUGIN_STATIC_DECLARE(vorbis);
+GST_PLUGIN_STATIC_DECLARE (coreelements);
+GST_PLUGIN_STATIC_DECLARE (playback);
+GST_PLUGIN_STATIC_DECLARE (typefindfunctions);
+GST_PLUGIN_STATIC_DECLARE (app);
+GST_PLUGIN_STATIC_DECLARE (ogg);
+GST_PLUGIN_STATIC_DECLARE (theora);
+GST_PLUGIN_STATIC_DECLARE (vorbis);
 #endif
 
 /* push-based discoverer fuzzing target
@@ -57,34 +57,34 @@ const guint8 *fuzztesting_data;
 size_t fuzztesting_size;
 
 static void
-appsrc_configuration (GstDiscoverer *dc, GstElement *source, gpointer data)
+appsrc_configuration (GstDiscoverer * dc, GstElement * source, gpointer data)
 {
   GstBuffer *buf;
   GstFlowReturn ret;
-  
+
   /* Create buffer from fuzztesting_data which shouldn't be freed */
-  buf = gst_buffer_new_wrapped_full (0, (gpointer) fuzztesting_data, fuzztesting_size,
-				     0, fuzztesting_size, NULL, NULL);
+  buf =
+      gst_buffer_new_wrapped_full (0, (gpointer) fuzztesting_data,
+      fuzztesting_size, 0, fuzztesting_size, NULL, NULL);
   g_object_set (G_OBJECT (source), "size", fuzztesting_size, NULL);
-  g_signal_emit_by_name (G_OBJECT(source), "push-buffer", buf, &ret);
+  g_signal_emit_by_name (G_OBJECT (source), "push-buffer", buf, &ret);
   gst_buffer_unref (buf);
 }
 
 static void
-custom_logger (const gchar   *log_domain,
-	       GLogLevelFlags log_level,
-	       const gchar   *message,
-	       gpointer       unused_data)
+custom_logger (const gchar * log_domain,
+    GLogLevelFlags log_level, const gchar * message, gpointer unused_data)
 {
   if (log_level & G_LOG_LEVEL_CRITICAL) {
     g_printerr ("CRITICAL ERROR : %s\n", message);
-    abort();
+    abort ();
   } else if (log_level & G_LOG_LEVEL_WARNING) {
     g_printerr ("WARNING : %s\n", message);
   }
 }
 
-int LLVMFuzzerTestOneInput(const guint8 *data, size_t size)
+int
+LLVMFuzzerTestOneInput (const guint8 * data, size_t size)
 {
   GError *err = NULL;
   GstDiscoverer *dc;
@@ -94,25 +94,25 @@ int LLVMFuzzerTestOneInput(const guint8 *data, size_t size)
 
   if (!initialized) {
     /* We want critical warnings to assert so we can fix them */
-    g_log_set_always_fatal(G_LOG_LEVEL_CRITICAL);
+    g_log_set_always_fatal (G_LOG_LEVEL_CRITICAL);
     g_log_set_default_handler (custom_logger, NULL);
 
     /* Only initialize and register plugins once */
     gst_init (NULL, NULL);
 
 #ifndef LOCAL_FUZZ_BUILD
-    GST_PLUGIN_STATIC_REGISTER(coreelements);
-    GST_PLUGIN_STATIC_REGISTER(playback);
-    GST_PLUGIN_STATIC_REGISTER(typefindfunctions);
-    GST_PLUGIN_STATIC_REGISTER(app);
-    GST_PLUGIN_STATIC_REGISTER(ogg);
-    GST_PLUGIN_STATIC_REGISTER(theora);
-    GST_PLUGIN_STATIC_REGISTER(vorbis);
+    GST_PLUGIN_STATIC_REGISTER (coreelements);
+    GST_PLUGIN_STATIC_REGISTER (playback);
+    GST_PLUGIN_STATIC_REGISTER (typefindfunctions);
+    GST_PLUGIN_STATIC_REGISTER (app);
+    GST_PLUGIN_STATIC_REGISTER (ogg);
+    GST_PLUGIN_STATIC_REGISTER (theora);
+    GST_PLUGIN_STATIC_REGISTER (vorbis);
 #endif
 
     initialized = TRUE;
   }
-  
+
   dc = gst_discoverer_new (timeout * GST_SECOND, &err);
   if (G_UNLIKELY (dc == NULL)) {
     g_print ("Error initializing: %s\n", err->message);
@@ -122,17 +122,16 @@ int LLVMFuzzerTestOneInput(const guint8 *data, size_t size)
 
   fuzztesting_data = data;
   fuzztesting_size = size;
-  
+
   /* Connect to source-setup signal to give the data */
   g_signal_connect (dc, "source-setup", (GCallback) appsrc_configuration, NULL);
-  
+
   info = gst_discoverer_discover_uri (dc, "appsrc://", &err);
   g_clear_error (&err);
   if (info)
     gst_discoverer_info_unref (info);
-  
+
   g_object_unref (dc);
-  
+
   return 0;
- }
- 
+}
