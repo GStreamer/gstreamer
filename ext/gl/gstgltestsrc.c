@@ -510,11 +510,6 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
 
-  if (!gst_gl_ensure_element_data (src, &src->display, &src->other_context))
-    return FALSE;
-
-  gst_gl_display_filter_gl_api (src->display, SUPPORTED_GL_APIS);
-
   src->running_time = 0;
   src->n_frames = 0;
   src->negotiated = FALSE;
@@ -734,18 +729,6 @@ gst_gl_test_src_change_state (GstElement * element, GstStateChange transition)
   GST_DEBUG_OBJECT (src, "changing state: %s => %s",
       gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
       gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_gl_ensure_element_data (element, &src->display,
-              &src->other_context))
-        return GST_STATE_CHANGE_FAILURE;
-
-      gst_gl_display_filter_gl_api (src->display, SUPPORTED_GL_APIS);
-      break;
-    default:
-      break;
-  }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
   if (ret == GST_STATE_CHANGE_FAILURE)
