@@ -142,9 +142,6 @@ struct _GstRtpSsrcDemuxPad
   GstPad *rtp_pad;
   GstCaps *caps;
   GstPad *rtcp_pad;
-
-  gboolean pushed_initial_rtp_events;
-  gboolean pushed_initial_rtcp_events;
 };
 
 /* find a src pad for a given SSRC, returns NULL if the SSRC was not found
@@ -197,6 +194,7 @@ struct ForwardStickyEventData
   guint32 ssrc;
 };
 
+/* With internal stream lock held */
 static gboolean
 forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
@@ -210,6 +208,7 @@ forward_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
   return TRUE;
 }
 
+/* With internal stream lock held */
 static void
 forward_initial_events (GstRtpSsrcDemux * demux, guint32 ssrc, GstPad * pad,
     PadType padtype)
@@ -240,28 +239,17 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   gchar *padname;
   GstRtpSsrcDemuxPad *demuxpad;
   GstPad *retpad;
-  gulong rtp_block, rtcp_block;
 
   GST_PAD_LOCK (demux);
 
   demuxpad = find_demux_pad_for_ssrc (demux, ssrc);
   if (demuxpad != NULL) {
-    gboolean forward = FALSE;
-
     switch (padtype) {
       case RTP_PAD:
         retpad = gst_object_ref (demuxpad->rtp_pad);
-        if (!demuxpad->pushed_initial_rtp_events) {
-          forward = TRUE;
-          demuxpad->pushed_initial_rtp_events = TRUE;
-        }
         break;
       case RTCP_PAD:
         retpad = gst_object_ref (demuxpad->rtcp_pad);
-        if (!demuxpad->pushed_initial_rtcp_events) {
-          forward = TRUE;
-          demuxpad->pushed_initial_rtcp_events = TRUE;
-        }
         break;
       default:
         retpad = NULL;
@@ -270,8 +258,6 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
 
     GST_PAD_UNLOCK (demux);
 
-    if (forward)
-      forward_initial_events (demux, ssrc, retpad, padtype);
     return retpad;
   }
 
@@ -312,15 +298,8 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   gst_pad_use_fixed_caps (rtcp_pad);
   gst_pad_set_active (rtcp_pad, TRUE);
 
-  if (padtype == RTP_PAD) {
-    demuxpad->pushed_initial_rtp_events = TRUE;
-    forward_initial_events (demux, ssrc, rtp_pad, padtype);
-  } else if (padtype == RTCP_PAD) {
-    demuxpad->pushed_initial_rtcp_events = TRUE;
-    forward_initial_events (demux, ssrc, rtcp_pad, padtype);
-  } else {
-    g_assert_not_reached ();
-  }
+  forward_initial_events (demux, ssrc, rtp_pad, RTP_PAD);
+  forward_initial_events (demux, ssrc, rtcp_pad, RTCP_PAD);
 
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtp_pad);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), rtcp_pad);
@@ -340,18 +319,10 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   gst_object_ref (rtp_pad);
   gst_object_ref (rtcp_pad);
 
-  rtp_block = gst_pad_add_probe (rtp_pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-      NULL, NULL, NULL);
-  rtcp_block = gst_pad_add_probe (rtcp_pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-      NULL, NULL, NULL);
-
-  GST_PAD_UNLOCK (demux);
-
   g_signal_emit (G_OBJECT (demux),
       gst_rtp_ssrc_demux_signals[SIGNAL_NEW_SSRC_PAD], 0, ssrc, rtp_pad);
 
-  gst_pad_remove_probe (rtp_pad, rtp_block);
-  gst_pad_remove_probe (rtcp_pad, rtcp_block);
+  GST_PAD_UNLOCK (demux);
 
   gst_object_unref (rtp_pad);
   gst_object_unref (rtcp_pad);
@@ -565,11 +536,7 @@ forward_event (GstPad * pad, gpointer user_data)
   for (walk = fdata->demux->srcpads; walk; walk = walk->next) {
     GstRtpSsrcDemuxPad *dpad = (GstRtpSsrcDemuxPad *) walk->data;
 
-    /* Only forward the event if the initial events have been through first,
-     * the initial events should be forwarded before any other event
-     * or buffer is pushed */
-    if ((pad == dpad->rtp_pad && dpad->pushed_initial_rtp_events) ||
-        (pad == dpad->rtcp_pad && dpad->pushed_initial_rtcp_events)) {
+    if (pad == dpad->rtp_pad || pad == dpad->rtcp_pad) {
       newevent = add_ssrc_and_ref (fdata->event, dpad->ssrc);
       break;
     }
