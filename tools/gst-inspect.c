@@ -61,7 +61,7 @@ gboolean colored_output = TRUE;
 /* General colors */
 #define RESET_COLOR           (colored_output? "\033[0m": "")
 #define HEADING_COLOR         (colored_output? BRYELLOW : "")
-#define PROP_NAME_COLOR       (colored_output? BLUE: "")
+#define PROP_NAME_COLOR       (colored_output? BRBLUE : "")
 #define PROP_VALUE_COLOR      (colored_output? RESET_COLOR: "")
 #define PROP_ATTR_NAME_COLOR  (colored_output? BRYELLOW : "")
 #define PROP_ATTR_VALUE_COLOR (colored_output? CYAN: "")
@@ -74,13 +74,13 @@ gboolean colored_output = TRUE;
 
 /* Caps colors */
 #define FIELD_NAME_COLOR      (colored_output? CYAN: "")
-#define FIELD_VALUE_COLOR     (colored_output? BLUE : "")
+#define FIELD_VALUE_COLOR     (colored_output? BRBLUE : "")
 #define CAPS_TYPE_COLOR       (colored_output? YELLOW : "")
 #define STRUCT_NAME_COLOR     (colored_output? YELLOW : "")
 #define CAPS_FEATURE_COLOR    (colored_output? GREEN : "")
 
 /* Plugin listing colors */
-#define PLUGIN_NAME_COLOR     (colored_output? BLUE : "")
+#define PLUGIN_NAME_COLOR     (colored_output? BRBLUE : "")
 #define ELEMENT_NAME_COLOR    (colored_output? GREEN : "")
 /* FIXME: find a good color that works on both dark & light bg. */
 #define ELEMENT_DETAIL_COLOR  (colored_output? RESET_COLOR : "")
