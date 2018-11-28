@@ -172,6 +172,7 @@ $GST/gstreamer/plugins\
 :$GST/gst-rpicamsrc/src/.libs\
 :$GST/gst-rtsp-server/gst/rtsp-sink/.libs\
 :$GST/gst-editing-services/plugins/nle/.libs\
+:$GST/prefix/lib/gstreamer-1.0\
 ${GST_PLUGIN_PATH:+:$GST_PLUGIN_PATH}"
 
 export GST_PRESET_PATH="\
