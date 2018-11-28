@@ -175,6 +175,7 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
     case MFX_RATECONTROL_AVBR:
       mfx->Accuracy = thiz->accuracy;
       mfx->Convergence = thiz->convergence;
+      break;
 
     case MFX_RATECONTROL_VBR:
       option2->MaxFrameSize = thiz->max_frame_size * 1000;
