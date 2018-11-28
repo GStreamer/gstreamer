@@ -125,7 +125,7 @@ gst_msdk_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
           GST_BUFFER_POOL_OPTION_MSDK_USE_VIDEO_MEMORY))
     priv->memory_type = GST_MSDK_MEMORY_TYPE_VIDEO;
 
-  if ((priv->memory_type | GST_MSDK_MEMORY_TYPE_VIDEO) && (!priv->context
+  if ((priv->memory_type & GST_MSDK_MEMORY_TYPE_VIDEO) && (!priv->context
           || !priv->alloc_response)) {
     GST_ERROR_OBJECT (pool,
         "No MSDK context or Allocation response for using video memory");
