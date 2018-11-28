@@ -321,7 +321,12 @@ if need_api_opengl != 'no' or need_platform_glx != 'no'
     endif
   endif
 
-  glx_dep = gl_dep
+  if host_system == 'darwin'
+    glx_dep = cc.find_library('GL', required : false)
+  else
+    glx_dep = gl_dep
+  endif
+
   if need_api_opengl == 'no'
     gl_dep = unneeded_dep
   endif
@@ -572,7 +577,7 @@ if need_win_x11 != 'no'
     gl_winsys_deps += [x11_dep, xcb_dep]
     enabled_gl_winsys += 'x11'
 
-    if need_platform_glx != 'no' and glx_dep.found()
+    if need_platform_glx != 'no' and glx_dep.found() and cc.has_function ('glXMakeCurrent', dependencies : glx_dep)
       glconf.set('GST_GL_HAVE_PLATFORM_GLX', 1)
       gl_sources += [
         'x11/gstglcontext_glx.c',
