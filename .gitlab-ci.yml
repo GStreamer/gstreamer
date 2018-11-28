@@ -1,5 +1,5 @@
 deploy:
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora-build:latest'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:latest'
   stage: deploy
 
   script:
