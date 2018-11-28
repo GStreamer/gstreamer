@@ -1,5 +1,5 @@
 
-noinst_PROGRAMS = webrtc webrtcbidirectional webrtcswap webrtctransceiver
+noinst_PROGRAMS = webrtc webrtcbidirectional webrtcswap webrtctransceiver webrtcrenego
 
 webrtc_SOURCES = webrtc.c
 webrtc_CFLAGS=\
@@ -48,6 +48,19 @@ webrtctransceiver_CFLAGS=\
 	$(GST_CFLAGS) \
 	$(GST_SDP_CFLAGS)
 webrtctransceiver_LDADD=\
+	$(GST_PLUGINS_BASE_LIBS) \
+	$(GST_LIBS) \
+	$(GST_SDP_LIBS) \
+	$(top_builddir)/gst-libs/gst/webrtc/libgstwebrtc-@GST_API_VERSION@.la
+
+webrtcrenego_SOURCES = webrtcrenego.c
+webrtcrenego_CFLAGS=\
+	-I$(top_srcdir)/gst-libs \
+	-I$(top_builddir)/gst-libs \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_CFLAGS) \
+	$(GST_SDP_CFLAGS)
+webrtcrenego_LDADD=\
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(GST_SDP_LIBS) \

@@ -61,6 +61,10 @@ struct _TransportStream
 
   GArray                   *ptmap;                  /* array of PtMapItem's */
   GArray                   *remote_ssrcmap;         /* array of SsrcMapItem's */
+  gboolean                  output_connected;       /* whether receive bin is connected to rtpbin */
+
+  GstElement               *rtxsend;
+  GstElement               *rtxreceive;
 };
 
 struct _TransportStreamClass
@@ -72,6 +76,9 @@ TransportStream *       transport_stream_new        (GstWebRTCBin * webrtc,
                                                      guint session_id);
 int                     transport_stream_get_pt     (TransportStream * stream,
                                                      const gchar * encoding_name);
+int *                   transport_stream_get_all_pt (TransportStream * stream,
+                                                     const gchar * encoding_name,
+                                                     gsize * pt_len);
 GstCaps *               transport_stream_get_caps_for_pt    (TransportStream * stream,
                                                              guint pt);
 

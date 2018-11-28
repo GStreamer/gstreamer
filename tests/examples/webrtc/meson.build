@@ -1,4 +1,4 @@
-examples = ['webrtc', 'webrtcbidirectional', 'webrtcswap', 'webrtctransceiver']
+examples = ['webrtc', 'webrtcbidirectional', 'webrtcswap', 'webrtctransceiver', 'webrtcrenego']
 
 foreach example : examples
   exe_name = example

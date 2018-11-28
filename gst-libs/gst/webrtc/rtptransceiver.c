@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstWebRTCRTPTransceiver,
     gst_webrtc_rtp_transceiver, GST_TYPE_OBJECT,
     GST_DEBUG_CATEGORY_INIT (gst_webrtc_rtp_transceiver_debug,
-        "webrtctransceiver", 0, "webrtctransceiver");
+        "webrtcrtptransceiver", 0, "webrtcrtptransceiver");
     );
 
 enum

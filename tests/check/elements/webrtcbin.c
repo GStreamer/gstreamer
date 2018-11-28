@@ -41,6 +41,8 @@
 #define TEST_GET_OFFEROR(t) (TEST_IS_OFFER_ELEMENT(t, t->webrtc1) ? (t)->webrtc1 : t->webrtc2)
 #define TEST_GET_ANSWERER(t) (TEST_IS_OFFER_ELEMENT(t, t->webrtc1) ? (t)->webrtc2 : t->webrtc1)
 
+#define TEST_SDP_IS_LOCAL(t, e, d) ((TEST_IS_OFFER_ELEMENT (t, e) ^ ((d)->type == GST_WEBRTC_SDP_TYPE_OFFER)) == 0)
+
 typedef enum
 {
   STATE_NEW,
@@ -626,12 +628,12 @@ _pad_added_fakesink (struct test_webrtc *t, GstElement * element,
 }
 
 static void
-_count_num_sdp_media (struct test_webrtc *t, GstElement * element,
-    GstWebRTCSessionDescription * desc, gpointer user_data)
+on_negotiation_needed_hit (struct test_webrtc *t, GstElement * element,
+    gpointer user_data)
 {
-  guint expected = GPOINTER_TO_UINT (user_data);
+  guint *flag = (guint *) user_data;
 
-  fail_unless_equals_int (gst_sdp_message_medias_len (desc->sdp), expected);
+  *flag = 1;
 }
 
 typedef void (*ValidateSDPFunc) (struct test_webrtc * t, GstElement * element,
@@ -644,6 +646,9 @@ struct validate_sdp
   gpointer user_data;
   struct validate_sdp *next;
 };
+
+#define VAL_SDP_INIT(name,func,data,next) \
+    struct validate_sdp name = { func, data, next }
 
 static GstWebRTCSessionDescription *
 _check_validate_sdp (struct test_webrtc *t, GstElement * element,
@@ -698,13 +703,20 @@ test_validate_sdp (struct test_webrtc *t, struct validate_sdp *offer,
   fail_unless (t->state == STATE_ANSWER_CREATED);
 }
 
+static void
+_count_num_sdp_media (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  guint expected = GPOINTER_TO_UINT (user_data);
+
+  fail_unless_equals_int (gst_sdp_message_medias_len (desc->sdp), expected);
+}
+
 GST_START_TEST (test_sdp_no_media)
 {
   struct test_webrtc *t = test_webrtc_new ();
-  struct validate_sdp offer =
-      { _count_num_sdp_media, GUINT_TO_POINTER (0), NULL };
-  struct validate_sdp answer =
-      { _count_num_sdp_media, GUINT_TO_POINTER (0), NULL };
+  VAL_SDP_INIT (offer, _count_num_sdp_media, GUINT_TO_POINTER (0), NULL);
+  VAL_SDP_INIT (answer, _count_num_sdp_media, GUINT_TO_POINTER (0), NULL);
 
   /* check that a no stream connection creates 0 media sections */
 
@@ -756,10 +768,8 @@ create_audio_test (void)
 GST_START_TEST (test_audio)
 {
   struct test_webrtc *t = create_audio_test ();
-  struct validate_sdp offer =
-      { _count_num_sdp_media, GUINT_TO_POINTER (1), NULL };
-  struct validate_sdp answer =
-      { _count_num_sdp_media, GUINT_TO_POINTER (1), NULL };
+  VAL_SDP_INIT (offer, _count_num_sdp_media, GUINT_TO_POINTER (1), NULL);
+  VAL_SDP_INIT (answer, _count_num_sdp_media, GUINT_TO_POINTER (1), NULL);
 
   /* check that a single stream connection creates the associated number
    * of media sections */
@@ -786,10 +796,8 @@ create_audio_video_test (void)
 GST_START_TEST (test_audio_video)
 {
   struct test_webrtc *t = create_audio_video_test ();
-  struct validate_sdp offer =
-      { _count_num_sdp_media, GUINT_TO_POINTER (2), NULL };
-  struct validate_sdp answer =
-      { _count_num_sdp_media, GUINT_TO_POINTER (2), NULL };
+  VAL_SDP_INIT (offer, _count_num_sdp_media, GUINT_TO_POINTER (2), NULL);
+  VAL_SDP_INIT (answer, _count_num_sdp_media, GUINT_TO_POINTER (2), NULL);
 
   /* check that a dual stream connection creates the associated number
    * of media sections */
@@ -850,15 +858,14 @@ GST_START_TEST (test_media_direction)
   struct test_webrtc *t = create_audio_video_test ();
   const gchar *expected_offer[] = { "sendrecv", "sendrecv" };
   const gchar *expected_answer[] = { "sendrecv", "recvonly" };
-  struct validate_sdp offer_direction =
-      { on_sdp_media_direction, expected_offer, NULL };
-  struct validate_sdp offer =
-      { _count_num_sdp_media, GUINT_TO_POINTER (2), &offer_direction };
-  struct validate_sdp answer_direction =
-      { on_sdp_media_direction, expected_answer, NULL };
-  struct validate_sdp answer =
-      { _count_num_sdp_media, GUINT_TO_POINTER (2), &answer_direction };
   GstHarness *h;
+  VAL_SDP_INIT (offer_direction, on_sdp_media_direction, expected_offer, NULL);
+  VAL_SDP_INIT (offer, _count_num_sdp_media, GUINT_TO_POINTER (2),
+      &offer_direction);
+  VAL_SDP_INIT (answer_direction, on_sdp_media_direction, expected_answer,
+      NULL);
+  VAL_SDP_INIT (answer, _count_num_sdp_media, GUINT_TO_POINTER (2),
+      &answer_direction);
 
   /* check the default media directions for transceivers */
 
@@ -905,9 +912,8 @@ on_sdp_media_payload_types (struct test_webrtc *t, GstElement * element,
 GST_START_TEST (test_payload_types)
 {
   struct test_webrtc *t = create_audio_video_test ();
-  struct validate_sdp payloads = { on_sdp_media_payload_types, NULL, NULL };
-  struct validate_sdp offer =
-      { _count_num_sdp_media, GUINT_TO_POINTER (2), &payloads };
+  VAL_SDP_INIT (payloads, on_sdp_media_payload_types, NULL, NULL);
+  VAL_SDP_INIT (offer, _count_num_sdp_media, GUINT_TO_POINTER (2), &payloads);
   GstWebRTCRTPTransceiver *trans;
   GArray *transceivers;
 
@@ -956,8 +962,8 @@ GST_START_TEST (test_media_setup)
   struct test_webrtc *t = create_audio_test ();
   const gchar *expected_offer[] = { "actpass" };
   const gchar *expected_answer[] = { "active" };
-  struct validate_sdp offer = { on_sdp_media_setup, expected_offer, NULL };
-  struct validate_sdp answer = { on_sdp_media_setup, expected_answer, NULL };
+  VAL_SDP_INIT (offer, on_sdp_media_setup, expected_offer, NULL);
+  VAL_SDP_INIT (answer, on_sdp_media_setup, expected_answer, NULL);
 
   /* check the default dtls setup negotiation values */
   test_validate_sdp (t, &offer, &answer);
@@ -1333,9 +1339,8 @@ GST_START_TEST (test_add_recvonly_transceiver)
   GstWebRTCRTPTransceiver *trans;
   const gchar *expected_offer[] = { "recvonly" };
   const gchar *expected_answer[] = { "sendonly" };
-  struct validate_sdp offer = { on_sdp_media_direction, expected_offer, NULL };
-  struct validate_sdp answer =
-      { on_sdp_media_direction, expected_answer, NULL };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer, NULL);
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer, NULL);
   GstCaps *caps;
   GstHarness *h;
 
@@ -1372,9 +1377,8 @@ GST_START_TEST (test_recvonly_sendonly)
   GstWebRTCRTPTransceiver *trans;
   const gchar *expected_offer[] = { "recvonly", "sendonly" };
   const gchar *expected_answer[] = { "sendonly", "recvonly" };
-  struct validate_sdp offer = { on_sdp_media_direction, expected_offer, NULL };
-  struct validate_sdp answer =
-      { on_sdp_media_direction, expected_answer, NULL };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer, NULL);
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer, NULL);
   GstCaps *caps;
   GstHarness *h;
   GArray *transceivers;
@@ -1446,8 +1450,8 @@ GST_START_TEST (test_data_channel_create)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
+  VAL_SDP_INIT (offer, on_sdp_has_datachannel, NULL, NULL);
+  VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
   gchar *label;
 
   t->on_negotiation_needed = NULL;
@@ -1500,8 +1504,8 @@ GST_START_TEST (test_data_channel_remote_notify)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
+  VAL_SDP_INIT (offer, on_sdp_has_datachannel, NULL, NULL);
+  VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1575,8 +1579,8 @@ GST_START_TEST (test_data_channel_transfer_string)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
+  VAL_SDP_INIT (offer, on_sdp_has_datachannel, NULL, NULL);
+  VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1657,8 +1661,8 @@ GST_START_TEST (test_data_channel_transfer_data)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
+  VAL_SDP_INIT (offer, on_sdp_has_datachannel, NULL, NULL);
+  VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1715,8 +1719,8 @@ GST_START_TEST (test_data_channel_create_after_negotiate)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
+  VAL_SDP_INIT (offer, on_sdp_has_datachannel, NULL, NULL);
+  VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1776,8 +1780,8 @@ GST_START_TEST (test_data_channel_low_threshold)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
+  VAL_SDP_INIT (offer, on_sdp_has_datachannel, NULL, NULL);
+  VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1849,8 +1853,8 @@ GST_START_TEST (test_data_channel_max_message_size)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
+  VAL_SDP_INIT (offer, on_sdp_has_datachannel, NULL, NULL);
+  VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
   t->offer_data = &offer;
@@ -1904,8 +1908,8 @@ GST_START_TEST (test_data_channel_pre_negotiated)
 {
   struct test_webrtc *t = test_webrtc_new ();
   GObject *channel1 = NULL, *channel2 = NULL;
-  struct validate_sdp offer = { on_sdp_has_datachannel, NULL, NULL };
-  struct validate_sdp answer = { on_sdp_has_datachannel, NULL, NULL };
+  VAL_SDP_INIT (offer, on_sdp_has_datachannel, NULL, NULL);
+  VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
   GstStructure *s;
   gint n_ready = 0;
 
@@ -2028,17 +2032,16 @@ GST_START_TEST (test_bundle_audio_video_max_bundle_max_bundle)
   const gchar *offer_bundle_only[] = { "video1", NULL };
   const gchar *answer_bundle_only[] = { NULL };
 
-  struct validate_sdp count =
-      { _count_num_sdp_media, GUINT_TO_POINTER (2), NULL };
-  struct validate_sdp bundle_tag = { _check_bundle_tag, bundle, &count };
-  struct validate_sdp offer_non_reject =
-      { _count_non_rejected_media, GUINT_TO_POINTER (1), &bundle_tag };
-  struct validate_sdp answer_non_reject =
-      { _count_non_rejected_media, GUINT_TO_POINTER (2), &bundle_tag };
-  struct validate_sdp offer =
-      { _check_bundle_only_media, &offer_bundle_only, &offer_non_reject };
-  struct validate_sdp answer =
-      { _check_bundle_only_media, &answer_bundle_only, &answer_non_reject };
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (2), NULL);
+  VAL_SDP_INIT (bundle_tag, _check_bundle_tag, bundle, &count);
+  VAL_SDP_INIT (offer_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (1), &bundle_tag);
+  VAL_SDP_INIT (answer_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (2), &bundle_tag);
+  VAL_SDP_INIT (offer, _check_bundle_only_media, &offer_bundle_only,
+      &offer_non_reject);
+  VAL_SDP_INIT (answer, _check_bundle_only_media, &answer_bundle_only,
+      &answer_non_reject);
 
   /* We set a max-bundle policy on the offering webrtcbin,
    * this means that all the offered medias should be part
@@ -2068,13 +2071,12 @@ GST_START_TEST (test_bundle_audio_video_max_compat_max_bundle)
   const gchar *bundle[] = { "audio0", "video1", NULL };
   const gchar *bundle_only[] = { NULL };
 
-  struct validate_sdp count =
-      { _count_num_sdp_media, GUINT_TO_POINTER (2), NULL };
-  struct validate_sdp bundle_tag = { _check_bundle_tag, bundle, &count };
-  struct validate_sdp count_non_reject =
-      { _count_non_rejected_media, GUINT_TO_POINTER (2), &bundle_tag };
-  struct validate_sdp bundle_sdp =
-      { _check_bundle_only_media, &bundle_only, &count_non_reject };
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (2), NULL);
+  VAL_SDP_INIT (bundle_tag, _check_bundle_tag, bundle, &count);
+  VAL_SDP_INIT (count_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (2), &bundle_tag);
+  VAL_SDP_INIT (bundle_sdp, _check_bundle_only_media, &bundle_only,
+      &count_non_reject);
 
   /* We set a max-compat policy on the offering webrtcbin,
    * this means that all the offered medias should be part
@@ -2106,18 +2108,17 @@ GST_START_TEST (test_bundle_audio_video_max_bundle_none)
   const gchar *answer_bundle[] = { NULL };
   const gchar *answer_bundle_only[] = { NULL };
 
-  struct validate_sdp count =
-      { _count_num_sdp_media, GUINT_TO_POINTER (2), NULL };
-  struct validate_sdp count_non_reject =
-      { _count_non_rejected_media, GUINT_TO_POINTER (1), &count };
-  struct validate_sdp offer_bundle_tag =
-      { _check_bundle_tag, offer_bundle, &count_non_reject };
-  struct validate_sdp answer_bundle_tag =
-      { _check_bundle_tag, answer_bundle, &count_non_reject };
-  struct validate_sdp offer =
-      { _check_bundle_only_media, &offer_bundle_only, &offer_bundle_tag };
-  struct validate_sdp answer =
-      { _check_bundle_only_media, &answer_bundle_only, &answer_bundle_tag };
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (2), NULL);
+  VAL_SDP_INIT (count_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (1), &count);
+  VAL_SDP_INIT (offer_bundle_tag, _check_bundle_tag, offer_bundle,
+      &count_non_reject);
+  VAL_SDP_INIT (answer_bundle_tag, _check_bundle_tag, answer_bundle,
+      &count_non_reject);
+  VAL_SDP_INIT (offer, _check_bundle_only_media, &offer_bundle_only,
+      &offer_bundle_tag);
+  VAL_SDP_INIT (answer, _check_bundle_only_media, &answer_bundle_only,
+      &answer_bundle_tag);
 
   /* We set a max-bundle policy on the offering webrtcbin,
    * this means that all the offered medias should be part
@@ -2148,17 +2149,16 @@ GST_START_TEST (test_bundle_audio_video_data)
   const gchar *answer_bundle_only[] = { NULL };
   GObject *channel = NULL;
 
-  struct validate_sdp count =
-      { _count_num_sdp_media, GUINT_TO_POINTER (3), NULL };
-  struct validate_sdp bundle_tag = { _check_bundle_tag, bundle, &count };
-  struct validate_sdp offer_non_reject =
-      { _count_non_rejected_media, GUINT_TO_POINTER (1), &bundle_tag };
-  struct validate_sdp answer_non_reject =
-      { _count_non_rejected_media, GUINT_TO_POINTER (3), &bundle_tag };
-  struct validate_sdp offer =
-      { _check_bundle_only_media, &offer_bundle_only, &offer_non_reject };
-  struct validate_sdp answer =
-      { _check_bundle_only_media, &answer_bundle_only, &answer_non_reject };
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (3), NULL);
+  VAL_SDP_INIT (bundle_tag, _check_bundle_tag, bundle, &count);
+  VAL_SDP_INIT (offer_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (1), &bundle_tag);
+  VAL_SDP_INIT (answer_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (3), &bundle_tag);
+  VAL_SDP_INIT (offer, _check_bundle_only_media, &offer_bundle_only,
+      &offer_non_reject);
+  VAL_SDP_INIT (answer, _check_bundle_only_media, &answer_bundle_only,
+      &answer_non_reject);
 
   /* We set a max-bundle policy on the offering webrtcbin,
    * this means that all the offered medias should be part
@@ -2196,19 +2196,23 @@ GST_START_TEST (test_duplicate_nego)
   struct test_webrtc *t = create_audio_video_test ();
   const gchar *expected_offer[] = { "sendrecv", "sendrecv" };
   const gchar *expected_answer[] = { "sendrecv", "recvonly" };
-  struct validate_sdp offer = { on_sdp_media_direction, expected_offer, NULL };
-  struct validate_sdp answer =
-      { on_sdp_media_direction, expected_answer, NULL };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer, NULL);
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer, NULL);
   GstHarness *h;
+  guint negotiation_flag = 0;
 
   /* check that negotiating twice succeeds */
+
+  t->on_negotiation_needed = on_negotiation_needed_hit;
+  t->negotiation_data = &negotiation_flag;
 
   h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
   add_fake_audio_src_harness (h, 96);
   t->harnesses = g_list_prepend (t->harnesses, h);
 
-  t->on_negotiation_needed = NULL;
   test_validate_sdp (t, &offer, &answer);
+  fail_unless_equals_int (negotiation_flag, 1);
+
   test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
   test_validate_sdp (t, &offer, &answer);
 
@@ -2222,9 +2226,8 @@ GST_START_TEST (test_dual_audio)
   struct test_webrtc *t = create_audio_test ();
   const gchar *expected_offer[] = { "sendrecv", "sendrecv", };
   const gchar *expected_answer[] = { "sendrecv", "recvonly" };
-  struct validate_sdp offer = { on_sdp_media_direction, expected_offer, NULL };
-  struct validate_sdp answer =
-      { on_sdp_media_direction, expected_answer, NULL };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer, NULL);
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer, NULL);
   GstHarness *h;
   GstWebRTCRTPTransceiver *trans;
   GArray *transceivers;
@@ -2257,6 +2260,431 @@ GST_START_TEST (test_dual_audio)
   g_array_unref (transceivers);
   test_webrtc_free (t);
 }
+
+GST_END_TEST;
+
+static void
+sdp_increasing_session_version (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  GstWebRTCSessionDescription *previous;
+  const GstSDPOrigin *our_origin, *previous_origin;
+  const gchar *prop;
+  guint64 our_v, previous_v;
+
+  prop =
+      TEST_SDP_IS_LOCAL (t, element,
+      desc) ? "current-local-description" : "current-remote-description";
+  g_object_get (element, prop, &previous, NULL);
+
+  our_origin = gst_sdp_message_get_origin (desc->sdp);
+  previous_origin = gst_sdp_message_get_origin (previous->sdp);
+
+  our_v = g_ascii_strtoull (our_origin->sess_version, NULL, 10);
+  previous_v = g_ascii_strtoull (previous_origin->sess_version, NULL, 10);
+
+  ck_assert_int_lt (previous_v, our_v);
+
+  gst_webrtc_session_description_free (previous);
+}
+
+static void
+sdp_equal_session_id (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  GstWebRTCSessionDescription *previous;
+  const GstSDPOrigin *our_origin, *previous_origin;
+  const gchar *prop;
+
+  prop =
+      TEST_SDP_IS_LOCAL (t, element,
+      desc) ? "current-local-description" : "current-remote-description";
+  g_object_get (element, prop, &previous, NULL);
+
+  our_origin = gst_sdp_message_get_origin (desc->sdp);
+  previous_origin = gst_sdp_message_get_origin (previous->sdp);
+
+  fail_unless_equals_string (previous_origin->sess_id, our_origin->sess_id);
+  gst_webrtc_session_description_free (previous);
+}
+
+static void
+sdp_media_equal_attribute (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, GstWebRTCSessionDescription * previous,
+    const gchar * attr)
+{
+  guint i, n;
+
+  n = MIN (gst_sdp_message_medias_len (previous->sdp),
+      gst_sdp_message_medias_len (desc->sdp));
+
+  for (i = 0; i < n; i++) {
+    const GstSDPMedia *our_media, *other_media;
+    const gchar *our_mid, *other_mid;
+
+    our_media = gst_sdp_message_get_media (desc->sdp, i);
+    other_media = gst_sdp_message_get_media (previous->sdp, i);
+
+    our_mid = gst_sdp_media_get_attribute_val (our_media, attr);
+    other_mid = gst_sdp_media_get_attribute_val (other_media, attr);
+
+    fail_unless_equals_string (our_mid, other_mid);
+  }
+}
+
+static void
+sdp_media_equal_mid (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  GstWebRTCSessionDescription *previous;
+  const gchar *prop;
+
+  prop =
+      TEST_SDP_IS_LOCAL (t, element,
+      desc) ? "current-local-description" : "current-remote-description";
+  g_object_get (element, prop, &previous, NULL);
+
+  sdp_media_equal_attribute (t, element, desc, previous, "mid");
+
+  gst_webrtc_session_description_free (previous);
+}
+
+static void
+sdp_media_equal_ice_params (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  GstWebRTCSessionDescription *previous;
+  const gchar *prop;
+
+  prop =
+      TEST_SDP_IS_LOCAL (t, element,
+      desc) ? "current-local-description" : "current-remote-description";
+  g_object_get (element, prop, &previous, NULL);
+
+  sdp_media_equal_attribute (t, element, desc, previous, "ice-ufrag");
+  sdp_media_equal_attribute (t, element, desc, previous, "ice-pwd");
+
+  gst_webrtc_session_description_free (previous);
+}
+
+static void
+sdp_media_equal_fingerprint (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  GstWebRTCSessionDescription *previous;
+  const gchar *prop;
+
+  prop =
+      TEST_SDP_IS_LOCAL (t, element,
+      desc) ? "current-local-description" : "current-remote-description";
+  g_object_get (element, prop, &previous, NULL);
+
+  sdp_media_equal_attribute (t, element, desc, previous, "fingerprint");
+
+  gst_webrtc_session_description_free (previous);
+}
+
+GST_START_TEST (test_renego_add_stream)
+{
+  struct test_webrtc *t = create_audio_video_test ();
+  const gchar *expected_offer[] = { "sendrecv", "sendrecv", "sendrecv" };
+  const gchar *expected_answer[] = { "sendrecv", "recvonly", "recvonly" };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer, NULL);
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer, NULL);
+  VAL_SDP_INIT (renego_mid, sdp_media_equal_mid, NULL, NULL);
+  VAL_SDP_INIT (renego_ice_params, sdp_media_equal_ice_params, NULL,
+      &renego_mid);
+  VAL_SDP_INIT (renego_sess_id, sdp_equal_session_id, NULL, &renego_ice_params);
+  VAL_SDP_INIT (renego_sess_ver, sdp_increasing_session_version, NULL,
+      &renego_sess_id);
+  VAL_SDP_INIT (renego_fingerprint, sdp_media_equal_fingerprint, NULL,
+      &renego_sess_ver);
+  GstHarness *h;
+
+  /* negotiate an AV stream and then renegotiate an extra stream */
+  h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
+  add_fake_audio_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_2", NULL);
+  add_fake_audio_src_harness (h, 98);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  offer.next = &renego_fingerprint;
+  answer.next = &renego_fingerprint;
+
+  /* renegotiate! */
+  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_renego_stream_add_data_channel)
+{
+  struct test_webrtc *t = create_audio_video_test ();
+  const gchar *expected_offer[] = { "sendrecv", "sendrecv" };
+  const gchar *expected_answer[] = { "sendrecv", "recvonly" };
+
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer, NULL);
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer, NULL);
+  VAL_SDP_INIT (renego_mid, sdp_media_equal_mid, NULL, NULL);
+  VAL_SDP_INIT (renego_ice_params, sdp_media_equal_ice_params, NULL,
+      &renego_mid);
+  VAL_SDP_INIT (renego_sess_id, sdp_equal_session_id, NULL, &renego_ice_params);
+  VAL_SDP_INIT (renego_sess_ver, sdp_increasing_session_version, NULL,
+      &renego_sess_id);
+  VAL_SDP_INIT (renego_fingerprint, sdp_media_equal_fingerprint, NULL,
+      &renego_sess_ver);
+  GObject *channel;
+  GstHarness *h;
+
+  /* negotiate an AV stream and then renegotiate a data channel */
+  h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
+  add_fake_audio_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
+      &channel);
+
+  offer.next = &renego_fingerprint;
+  answer.next = &renego_fingerprint;
+
+  /* renegotiate! */
+  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_validate_sdp (t, &offer, &answer);
+
+  g_object_unref (channel);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_renego_data_channel_add_stream)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  const gchar *expected_offer[] = { NULL, "sendrecv" };
+  const gchar *expected_answer[] = { NULL, "recvonly" };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer, NULL);
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer, NULL);
+  VAL_SDP_INIT (renego_mid, sdp_media_equal_mid, NULL, NULL);
+  VAL_SDP_INIT (renego_ice_params, sdp_media_equal_ice_params, NULL,
+      &renego_mid);
+  VAL_SDP_INIT (renego_sess_id, sdp_equal_session_id, NULL, &renego_ice_params);
+  VAL_SDP_INIT (renego_sess_ver, sdp_increasing_session_version, NULL,
+      &renego_sess_id);
+  VAL_SDP_INIT (renego_fingerprint, sdp_media_equal_fingerprint, NULL,
+      &renego_sess_ver);
+  GObject *channel;
+  GstHarness *h;
+
+  /* negotiate an AV stream and then renegotiate a data channel */
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_pad_added = _pad_added_fakesink;
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+
+  g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
+      &channel);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
+  add_fake_audio_src_harness (h, 97);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  offer.next = &renego_fingerprint;
+  answer.next = &renego_fingerprint;
+
+  /* renegotiate! */
+  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_validate_sdp (t, &offer, &answer);
+
+  g_object_unref (channel);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_bundle_renego_add_stream)
+{
+  struct test_webrtc *t = create_audio_video_test ();
+  const gchar *expected_offer[] = { "sendrecv", "sendrecv", "sendrecv" };
+  const gchar *expected_answer[] = { "sendrecv", "recvonly", "recvonly" };
+  const gchar *bundle[] = { "audio0", "video1", "audio2", NULL };
+  const gchar *offer_bundle_only[] = { "video1", "audio2", NULL };
+  const gchar *answer_bundle_only[] = { NULL };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer, NULL);
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer, NULL);
+
+  VAL_SDP_INIT (renego_mid, sdp_media_equal_mid, NULL, NULL);
+  VAL_SDP_INIT (renego_ice_params, sdp_media_equal_ice_params, NULL,
+      &renego_mid);
+  VAL_SDP_INIT (renego_sess_id, sdp_equal_session_id, NULL, &renego_ice_params);
+  VAL_SDP_INIT (renego_sess_ver, sdp_increasing_session_version, NULL,
+      &renego_sess_id);
+  VAL_SDP_INIT (renego_fingerprint, sdp_media_equal_fingerprint, NULL,
+      &renego_sess_ver);
+  VAL_SDP_INIT (bundle_tag, _check_bundle_tag, bundle, &renego_fingerprint);
+  VAL_SDP_INIT (offer_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (1), &bundle_tag);
+  VAL_SDP_INIT (answer_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (3), &bundle_tag);
+  VAL_SDP_INIT (offer_bundle_only_sdp, _check_bundle_only_media,
+      &offer_bundle_only, &offer_non_reject);
+  VAL_SDP_INIT (answer_bundle_only_sdp, _check_bundle_only_media,
+      &answer_bundle_only, &answer_non_reject);
+  GstHarness *h;
+
+  /* We set a max-bundle policy on the offering webrtcbin,
+   * this means that all the offered medias should be part
+   * of the group:BUNDLE attribute, and they should be marked
+   * as bundle-only
+   */
+  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
+      "max-bundle");
+  /* We also set a max-bundle policy on the answering webrtcbin,
+   * this means that all the offered medias should be part
+   * of the group:BUNDLE attribute, but need not be marked
+   * as bundle-only.
+   */
+  gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
+      "max-bundle");
+
+  /* negotiate an AV stream and then renegotiate an extra stream */
+  h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
+  add_fake_audio_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_2", NULL);
+  add_fake_audio_src_harness (h, 98);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  offer.next = &offer_bundle_only_sdp;
+  answer.next = &answer_bundle_only_sdp;
+
+  /* renegotiate! */
+  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_bundle_max_compat_max_bundle_renego_add_stream)
+{
+  struct test_webrtc *t = create_audio_video_test ();
+  const gchar *expected_offer[] = { "sendrecv", "sendrecv", "sendrecv" };
+  const gchar *expected_answer[] = { "sendrecv", "recvonly", "recvonly" };
+  const gchar *bundle[] = { "audio0", "video1", "audio2", NULL };
+  const gchar *bundle_only[] = { NULL };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer, NULL);
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer, NULL);
+
+  VAL_SDP_INIT (renego_mid, sdp_media_equal_mid, NULL, NULL);
+  VAL_SDP_INIT (renego_ice_params, sdp_media_equal_ice_params, NULL,
+      &renego_mid);
+  VAL_SDP_INIT (renego_sess_id, sdp_equal_session_id, NULL, &renego_ice_params);
+  VAL_SDP_INIT (renego_sess_ver, sdp_increasing_session_version, NULL,
+      &renego_sess_id);
+  VAL_SDP_INIT (renego_fingerprint, sdp_media_equal_fingerprint, NULL,
+      &renego_sess_ver);
+  VAL_SDP_INIT (bundle_tag, _check_bundle_tag, bundle, &renego_fingerprint);
+  VAL_SDP_INIT (count_non_reject, _count_non_rejected_media,
+      GUINT_TO_POINTER (3), &bundle_tag);
+  VAL_SDP_INIT (bundle_sdp, _check_bundle_only_media, &bundle_only,
+      &count_non_reject);
+  GstHarness *h;
+
+  /* We set a max-compat policy on the offering webrtcbin,
+   * this means that all the offered medias should be part
+   * of the group:BUNDLE attribute, and they should *not* be marked
+   * as bundle-only
+   */
+  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
+      "max-compat");
+  /* We set a max-bundle policy on the answering webrtcbin,
+   * this means that all the offered medias should be part
+   * of the group:BUNDLE attribute, but need not be marked
+   * as bundle-only.
+   */
+  gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
+      "max-bundle");
+
+  /* negotiate an AV stream and then renegotiate an extra stream */
+  h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
+  add_fake_audio_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  h = gst_harness_new_with_element (t->webrtc1, "sink_2", NULL);
+  add_fake_audio_src_harness (h, 98);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  offer.next = &bundle_sdp;
+  answer.next = &bundle_sdp;
+
+  /* renegotiate! */
+  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_renego_transceiver_set_direction)
+{
+  struct test_webrtc *t = create_audio_test ();
+  const gchar *expected_offer[] = { "sendrecv" };
+  const gchar *expected_answer[] = { "sendrecv" };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer, NULL);
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer, NULL);
+  GstWebRTCRTPTransceiver *transceiver;
+  GstHarness *h;
+  GstPad *pad;
+
+  /* negotiate an AV stream and then change the transceiver direction */
+  h = gst_harness_new_with_element (t->webrtc2, "sink_0", NULL);
+  add_fake_audio_src_harness (h, 96);
+  t->harnesses = g_list_prepend (t->harnesses, h);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  /* renegotiate an inactive transceiver! */
+  pad = gst_element_get_static_pad (t->webrtc1, "sink_0");
+  g_object_get (pad, "transceiver", &transceiver, NULL);
+  fail_unless (transceiver != NULL);
+  gst_webrtc_rtp_transceiver_set_direction (transceiver,
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE);
+  expected_offer[0] = "inactive";
+  expected_answer[0] = "inactive";
+
+  /* TODO: also validate EOS events from the inactive change */
+
+  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_validate_sdp (t, &offer, &answer);
+
+  gst_object_unref (pad);
+  gst_object_unref (transceiver);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
 
 static Suite *
 webrtcbin_suite (void)
@@ -2294,6 +2722,10 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_bundle_audio_video_max_compat_max_bundle);
     tcase_add_test (tc, test_dual_audio);
     tcase_add_test (tc, test_duplicate_nego);
+    tcase_add_test (tc, test_renego_add_stream);
+    tcase_add_test (tc, test_bundle_renego_add_stream);
+    tcase_add_test (tc, test_bundle_max_compat_max_bundle_renego_add_stream);
+    tcase_add_test (tc, test_renego_transceiver_set_direction);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
@@ -2304,6 +2736,8 @@ webrtcbin_suite (void)
       tcase_add_test (tc, test_data_channel_max_message_size);
       tcase_add_test (tc, test_data_channel_pre_negotiated);
       tcase_add_test (tc, test_bundle_audio_video_data);
+      tcase_add_test (tc, test_renego_stream_add_data_channel);
+      tcase_add_test (tc, test_renego_data_channel_add_stream);
     } else {
       GST_WARNING ("Some required elements were not found. "
           "All datachannel tests are disabled. sctpenc %p, sctpdec %p", sctpenc,

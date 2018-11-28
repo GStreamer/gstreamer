@@ -47,6 +47,8 @@ GstPadTemplate *        _find_pad_template          (GstElement * element,
                                                      const gchar * name);
 
 GstSDPMessage *         _get_latest_sdp             (GstWebRTCBin * webrtc);
+GstSDPMessage *         _get_latest_offer           (GstWebRTCBin * webrtc);
+GstSDPMessage *         _get_latest_answer          (GstWebRTCBin * webrtc);
 
 GstWebRTCICEStream *    _find_ice_stream_for_session            (GstWebRTCBin * webrtc,
                                                                  guint session_id);
@@ -74,6 +76,8 @@ G_GNUC_INTERNAL
 gchar *                 _enum_value_to_string       (GType type, guint value);
 G_GNUC_INTERNAL
 const gchar *           _g_checksum_to_webrtc_string (GChecksumType type);
+G_GNUC_INTERNAL
+GstCaps *               _rtp_caps_from_media        (const GstSDPMedia * media);
 
 G_END_DECLS
 

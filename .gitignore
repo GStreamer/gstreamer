@@ -75,6 +75,7 @@ gst*orc.h
 /tests/examples/webrtc/webrtc
 /tests/examples/webrtc/webrtcbidirectional
 /tests/examples/webrtc/webrtcswap
+/tests/examples/webrtc/webrtcrenego
 /tests/examples/webrtc/webrtctransceiver
 
 Build

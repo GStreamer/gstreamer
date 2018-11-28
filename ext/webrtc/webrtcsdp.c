@@ -212,7 +212,7 @@ _media_has_mid (const GstSDPMedia * media, guint media_idx, GError ** error)
   return TRUE;
 }
 
-static const gchar *
+const gchar *
 _media_get_ice_ufrag (const GstSDPMessage * msg, guint media_idx)
 {
   const gchar *ice_ufrag;
@@ -227,7 +227,7 @@ _media_get_ice_ufrag (const GstSDPMessage * msg, guint media_idx)
   return ice_ufrag;
 }
 
-static const gchar *
+const gchar *
 _media_get_ice_pwd (const GstSDPMessage * msg, guint media_idx)
 {
   const gchar *ice_pwd;
@@ -437,11 +437,13 @@ _media_replace_direction (GstSDPMedia * media,
 
     if (g_strcmp0 (attr->key, "sendonly") == 0
         || g_strcmp0 (attr->key, "sendrecv") == 0
-        || g_strcmp0 (attr->key, "recvonly") == 0) {
+        || g_strcmp0 (attr->key, "recvonly") == 0
+        || g_strcmp0 (attr->key, "inactive") == 0) {
       GstSDPAttribute new_attr = { 0, };
       GST_TRACE ("replace %s with %s", attr->key, dir_str);
       gst_sdp_attribute_set (&new_attr, dir_str, "");
       gst_sdp_media_replace_attribute (media, i, &new_attr);
+      g_free (dir_str);
       return;
     }
   }
@@ -768,6 +770,21 @@ _message_media_is_datachannel (const GstSDPMessage * msg, guint media_id)
   return TRUE;
 }
 
+guint
+_message_get_datachannel_index (const GstSDPMessage * msg)
+{
+  guint i;
+
+  for (i = 0; i < gst_sdp_message_medias_len (msg); i++) {
+    if (_message_media_is_datachannel (msg, i)) {
+      g_assert (i < G_MAXUINT);
+      return i;
+    }
+  }
+
+  return G_MAXUINT;
+}
+
 void
 _get_ice_credentials_from_sdp_media (const GstSDPMessage * sdp, guint media_idx,
     gchar ** ufrag, gchar ** pwd)
@@ -833,6 +850,8 @@ _parse_bundle (GstSDPMessage * sdp, GStrv * bundled)
     if (!(*bundled)[0]) {
       GST_ERROR ("Invalid format for BUNDLE group, expected at least "
           "one mid (%s)", group);
+      g_strfreev (*bundled);
+      *bundled = NULL;
       goto done;
     }
   } else {

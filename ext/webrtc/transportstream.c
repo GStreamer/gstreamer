@@ -75,6 +75,36 @@ transport_stream_get_pt (TransportStream * stream, const gchar * encoding_name)
   return ret;
 }
 
+int *
+transport_stream_get_all_pt (TransportStream * stream,
+    const gchar * encoding_name, gsize * pt_len)
+{
+  guint i;
+  gsize ret_i = 0;
+  gsize ret_size = 8;
+  int *ret = NULL;
+
+  for (i = 0; i < stream->ptmap->len; i++) {
+    PtMapItem *item = &g_array_index (stream->ptmap, PtMapItem, i);
+    if (!gst_caps_is_empty (item->caps)) {
+      GstStructure *s = gst_caps_get_structure (item->caps, 0);
+      if (!g_strcmp0 (gst_structure_get_string (s, "encoding-name"),
+              encoding_name)) {
+        if (!ret)
+          ret = g_new0 (int, ret_size);
+        if (ret_i >= ret_size) {
+          ret_size *= 2;
+          ret = g_realloc_n (ret, ret_size, sizeof (int));
+        }
+        ret[ret_i++] = item->pt;
+      }
+    }
+  }
+
+  *pt_len = ret_i;
+  return ret;
+}
+
 static void
 transport_stream_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -151,6 +181,14 @@ transport_stream_dispose (GObject * object)
   if (stream->rtcp_transport)
     gst_object_unref (stream->rtcp_transport);
   stream->rtcp_transport = NULL;
+
+  if (stream->rtxsend)
+    gst_object_unref (stream->rtxsend);
+  stream->rtxsend = NULL;
+
+  if (stream->rtxreceive)
+    gst_object_unref (stream->rtxreceive);
+  stream->rtxreceive = NULL;
 
   GST_OBJECT_PARENT (object) = NULL;
 

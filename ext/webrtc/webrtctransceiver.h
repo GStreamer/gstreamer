@@ -44,6 +44,8 @@ struct _WebRTCTransceiver
   GstWebRTCFECType         fec_type;
   guint                    fec_percentage;
   gboolean                 do_nack;
+
+  GstCaps                  *last_configured_caps;
 };
 
 struct _WebRTCTransceiverClass
