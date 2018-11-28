@@ -27,7 +27,7 @@ main (int argc, char **argv)
 
     if (clip == NULL) {
       g_printerr ("%s can not be used, make sure it is a supported media file",
-              argv[1]);
+          argv[1]);
 
       return 1;
     }
