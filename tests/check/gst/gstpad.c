@@ -1858,7 +1858,7 @@ GST_START_TEST (test_pad_probe_block_add_remove)
   thread = g_thread_try_new ("gst-check", (GThreadFunc) push_buffer_async,
       pad, NULL);
 
-    /* wait for the block */
+  /* wait for the block */
   while (!gst_pad_is_blocking (pad))
     g_thread_yield ();
 

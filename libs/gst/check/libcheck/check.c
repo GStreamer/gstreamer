@@ -52,7 +52,7 @@ int check_major_version = CHECK_MAJOR_VERSION;
 int check_minor_version = CHECK_MINOR_VERSION;
 int check_micro_version = CHECK_MICRO_VERSION;
 
-const char* current_test_name = NULL;
+const char *current_test_name = NULL;
 
 static int non_pass (int val);
 static Fixture *fixture_create (SFun fun, int ischecked);
@@ -342,7 +342,7 @@ tcase_fn_start (const char *fname, const char *file, int line)
 {
   send_ctx_info (CK_CTX_TEST);
   send_loc_info (file, line);
- 
+
   current_test_name = fname;
 }
 

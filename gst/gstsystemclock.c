@@ -582,7 +582,8 @@ gst_system_clock_get_internal_time (GstClock * clock)
     /* we prefer the highly accurate performance counters on windows */
     QueryPerformanceCounter (&now);
 
-    return ((now.QuadPart - sysclock->priv->start.QuadPart) * sysclock->priv->ratio);
+    return ((now.QuadPart -
+            sysclock->priv->start.QuadPart) * sysclock->priv->ratio);
   } else
 #endif /* G_OS_WIN32 */
 #if !defined HAVE_POSIX_TIMERS || !defined HAVE_CLOCK_GETTIME

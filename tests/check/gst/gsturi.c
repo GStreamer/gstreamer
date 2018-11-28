@@ -983,10 +983,10 @@ GST_START_TEST (test_url_get_set)
   tmp_str = gst_uri_to_string (url);
 #if GLIB_CHECK_VERSION(2, 59, 0)
   fail_unless_equals_string (tmp_str,
-     "//example.com/path/to/file/there/segment?key=value&query#fragment");
+      "//example.com/path/to/file/there/segment?key=value&query#fragment");
 #else
   fail_unless_equals_string (tmp_str,
-     "//example.com/path/to/file/there/segment?query&key=value#fragment");
+      "//example.com/path/to/file/there/segment?query&key=value#fragment");
 #endif
   g_free (tmp_str);
 

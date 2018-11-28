@@ -69,7 +69,7 @@
 #define off_t guint64
 #endif
 
-#if defined(__BIONIC__) /* Android */
+#if defined(__BIONIC__)         /* Android */
 #if defined(__ANDROID_API__) && __ANDROID_API__ >= 21
 #undef fstat
 #define fstat fstat64

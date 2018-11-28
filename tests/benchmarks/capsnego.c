@@ -185,7 +185,7 @@ gint
 main (gint argc, gchar * argv[])
 {
   /* default parameters */
-  gchar *flavour_str = g_strdup("audio");
+  gchar *flavour_str = g_strdup ("audio");
   gint flavour = FLAVOUR_AUDIO;
   gint children = 3;
   gint depth = 4;
@@ -194,14 +194,18 @@ main (gint argc, gchar * argv[])
   GOptionContext *ctx;
   GOptionEntry options[] = {
     {"children", 'c', 0, G_OPTION_ARG_INT, &children,
-        "Number of children (branches on each level) (default: 3)", NULL},
+        "Number of children (branches on each level) (default: 3)", NULL}
+    ,
     {"depth", 'd', 0, G_OPTION_ARG_INT, &depth,
-        "Depth of pipeline hierarchy tree (default: 4)", NULL},
+        "Depth of pipeline hierarchy tree (default: 4)", NULL}
+    ,
     {"flavour", 'f', 0, G_OPTION_ARG_STRING, &flavour_str,
         "Flavour (video|audio) controlling the kind of elements used "
-          "(default: audio)", NULL},
+          "(default: audio)", NULL}
+    ,
     {"loops", 'l', 0, G_OPTION_ARG_INT, &loops,
-        "How many loops to run (default: 50)", NULL},
+        "How many loops to run (default: 50)", NULL}
+    ,
     {NULL}
   };
   GError *err = NULL;
