@@ -766,7 +766,7 @@ error_decode:
         GST_INFO ("requesting upstream a key unit");
         gst_pad_push_event (GST_VIDEO_DECODER_SINK_PAD (decode),
             gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
-              FALSE, 0));
+                FALSE, 0));
         ret = GST_FLOW_OK;
         break;
     }

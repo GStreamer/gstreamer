@@ -452,7 +452,7 @@ gst_vaapisink_x11_pre_start_event_thread (GstVaapiSink * sink)
       PointerMotionMask | ExposureMask | StructureNotifyMask);
 
   if (!sink->foreign_window)
-      x11_event_mask |= ButtonPressMask | ButtonReleaseMask;
+    x11_event_mask |= ButtonPressMask | ButtonReleaseMask;
 
   if (sink->window) {
     gst_vaapi_display_lock (GST_VAAPI_DISPLAY (display));
