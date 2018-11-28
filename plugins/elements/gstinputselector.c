@@ -666,7 +666,8 @@ gst_selector_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_CAPS:
     case GST_QUERY_POSITION:
     case GST_QUERY_DURATION:
-      /* always proxy caps/position/duration query, regardless of active pad or not
+    case GST_QUERY_CONTEXT:
+      /* always proxy caps/position/duration/context queries, regardless of active pad or not
        * See https://bugzilla.gnome.org/show_bug.cgi?id=775445 */
       res = gst_pad_peer_query (self->srcpad, query);
       break;
