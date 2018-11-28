@@ -120,7 +120,6 @@ _gst_dtls_init_openssl (void)
           OPENSSL_VERSION_TEXT);
       g_assert_not_reached ();
     }
-
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
     GST_INFO_OBJECT (NULL, "initializing openssl %lx", OPENSSL_VERSION_NUMBER);
     SSL_library_init ();

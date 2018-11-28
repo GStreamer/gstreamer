@@ -60,7 +60,7 @@ generate_buffer (GstAudioInfo * info, gsize nsamples,
 }
 
 static void
-verify_buffer_contents (GstBuffer * buf, GstAudioInfo *info,
+verify_buffer_contents (GstBuffer * buf, GstAudioInfo * info,
     gint expect_n_planes, gsize expect_plane_size,
     gpointer base, gsize real_plane_size, gsize expect_plane_start_offset)
 {
@@ -84,7 +84,7 @@ verify_buffer_contents (GstBuffer * buf, GstAudioInfo *info,
     /* verify all contents */
     byte = abuf.planes[i];
     while (byte < ((guint8 *) abuf.planes[i]) + expect_plane_size) {
-      GST_TRACE("%d | %p", i, byte);
+      GST_TRACE ("%d | %p", i, byte);
       fail_unless_equals_int_hex (*byte, i | 0xF0);
       ++byte;
     }

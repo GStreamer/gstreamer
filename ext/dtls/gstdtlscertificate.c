@@ -246,7 +246,7 @@ init_generated (GstDtlsCertificate * self)
   X509_set_version (priv->x509, 2);
   ASN1_INTEGER_set (X509_get_serialNumber (priv->x509), 0);
   X509_gmtime_adj (X509_getm_notBefore (priv->x509), 0);
-  X509_gmtime_adj (X509_getm_notAfter (priv->x509), 31536000L);  /* A year */
+  X509_gmtime_adj (X509_getm_notAfter (priv->x509), 31536000L); /* A year */
   X509_set_pubkey (priv->x509, priv->private_key);
 
   name = X509_get_subject_name (priv->x509);

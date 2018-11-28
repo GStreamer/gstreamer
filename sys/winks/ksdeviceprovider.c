@@ -344,8 +344,7 @@ msg_window_message_proc (HWND window_handle, UINT message,
             break;
 
           devices =
-              ks_enumerate_devices (&bcdi->dbcc_classguid,
-              &KSCATEGORY_CAPTURE);
+              ks_enumerate_devices (&bcdi->dbcc_classguid, &KSCATEGORY_CAPTURE);
           if (devices == NULL)
             break;
 
@@ -357,7 +356,7 @@ msg_window_message_proc (HWND window_handle, UINT message,
 
             if ((source == NULL) &&
                 (g_ascii_strcasecmp (entry->path, bcdi->dbcc_name) == 0))
-              source = new_video_source (entry); /* Or audio source, not implemented yet */
+              source = new_video_source (entry);        /* Or audio source, not implemented yet */
 
             ks_device_entry_free (entry);
           }
