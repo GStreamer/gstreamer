@@ -104,6 +104,7 @@ gst_msdk_get_mfx_status_from_va_status (VAStatus va_res)
       break;
     case VA_STATUS_ERROR_INVALID_PARAMETER:
       mfxRes = MFX_ERR_INVALID_VIDEO_PARAM;
+      break;
     default:
       mfxRes = MFX_ERR_UNKNOWN;
       break;
