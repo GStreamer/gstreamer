@@ -40,8 +40,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_v4l2_jpeg_enc_debug);
 #define GST_CAT_DEFAULT gst_v4l2_jpeg_enc_debug
 
-static GstStaticCaps src_template_caps =
-GST_STATIC_CAPS ("image/jpeg");
+static GstStaticCaps src_template_caps = GST_STATIC_CAPS ("image/jpeg");
 
 enum
 {

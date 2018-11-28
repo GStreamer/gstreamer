@@ -1299,8 +1299,8 @@ GST_START_TEST (test_change_sent_sdes)
   fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->rtcp_h));
 
   s = gst_structure_new ("application/x-rtp-source-sdes",
-          "other", G_TYPE_STRING, "first", NULL);
-  g_object_set (h->internal_session, "sdes", s , NULL);
+      "other", G_TYPE_STRING, "first", NULL);
+  g_object_set (h->internal_session, "sdes", s, NULL);
   gst_structure_free (s);
 
   /* then ask explicitly to send RTCP */
@@ -1318,7 +1318,7 @@ GST_START_TEST (test_change_sent_sdes)
 
   /* Change the SDES */
   s = gst_structure_new ("application/x-rtp-source-sdes",
-          "other", G_TYPE_STRING, "second", NULL);
+      "other", G_TYPE_STRING, "second", NULL);
   g_object_set (h->internal_session, "sdes", s, NULL);
   gst_structure_free (s);
 

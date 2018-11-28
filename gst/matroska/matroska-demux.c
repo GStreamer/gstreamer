@@ -2722,10 +2722,10 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
    * would be determined again when parsing, but anyway ... */
   seeksegment.duration = demux->common.segment.duration;
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
-  keyunit = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
-  after = !!(flags & GST_SEEK_FLAG_SNAP_AFTER);
-  before = !!(flags & GST_SEEK_FLAG_SNAP_BEFORE);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
+  after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
+  before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
 
   /* always do full update if flushing,
    * otherwise problems might arise downstream with missing keyframes etc */

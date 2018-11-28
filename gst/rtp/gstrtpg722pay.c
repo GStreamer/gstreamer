@@ -53,8 +53,7 @@ static GstStaticPadTemplate gst_rtp_g722_pay_src_template =
         "media = (string) \"audio\", "
         "encoding-name = (string) \"G722\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "encoding-params = (string) 1, "
-        "clock-rate = (int) 8000")
+        "encoding-params = (string) 1, " "clock-rate = (int) 8000")
     );
 
 static gboolean gst_rtp_g722_pay_setcaps (GstRTPBasePayload * basepayload,

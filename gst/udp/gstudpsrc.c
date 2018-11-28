@@ -1364,7 +1364,8 @@ gst_udpsrc_open (GstUDPSrc * src)
     bind_saddr = g_inet_socket_address_new (bind_addr, src->port);
     g_object_unref (bind_addr);
     if (!g_socket_bind (src->used_socket, bind_saddr, src->reuse, &err)) {
-      GST_ERROR_OBJECT (src, "%s: error binding to %s:%d", err->message, src->address, src->port);
+      GST_ERROR_OBJECT (src, "%s: error binding to %s:%d", err->message,
+          src->address, src->port);
       goto bind_error;
     }
 
