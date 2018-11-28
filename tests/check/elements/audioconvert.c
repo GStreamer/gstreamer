@@ -1785,8 +1785,7 @@ GST_START_TEST (test_layout_conv_fixate_caps)
   incaps = gst_caps_from_string ("audio/x-raw, "
       "format = (string) F32LE, "
       "layout = (string) interleaved, "
-      "rate = (int) 44100, "
-      "channels = (int) 1");
+      "rate = (int) 44100, " "channels = (int) 1");
   outcaps = gst_caps_from_string ("audio/x-raw, "
       "format = (string) S16LE, "
       "layout = (string) interleaved, "
@@ -1795,8 +1794,7 @@ GST_START_TEST (test_layout_conv_fixate_caps)
       "audio/x-raw, "
       "format = (string) { F32LE, F32BE, F64LE, F64BE }, "
       "layout = (string) non-interleaved, "
-      "rate = (int) [ 1, MAX ], "
-      "channels = (int) [1, 8]");
+      "rate = (int) [ 1, MAX ], " "channels = (int) [1, 8]");
 
   audioconvert = setup_audioconvert (outcaps);
 

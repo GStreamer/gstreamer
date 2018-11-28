@@ -64,8 +64,7 @@ static GstStaticPadTemplate gst_gl_download_element_src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (
-        EXTRA_CAPS_TEMPLATE
+    GST_STATIC_CAPS (EXTRA_CAPS_TEMPLATE
         "video/x-raw; video/x-raw(memory:GLMemory)"));
 
 static GstStaticPadTemplate gst_gl_download_element_sink_pad_template =
