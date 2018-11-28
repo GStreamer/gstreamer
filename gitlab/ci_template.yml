@@ -22,7 +22,7 @@ variables:
     -Dsharp=disabled
 
 manifest:
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/alpine-manifest-build:10ffa6f1af6fed20a8857d2c7426d81cf162e3d1'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/build-manifest:f085d34a32cb8cac95cbd420344efeaa647d08d5'
   stage: 'preparation'
   script:
     - cd /gst-ci
@@ -73,11 +73,11 @@ manifest:
 build fedora x86_64:
   extends: '.build'
   stage: 'build'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora-build:2414895a53408ed8a0410a52560f8090b3f74696'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:f085d34a32cb8cac95cbd420344efeaa647d08d5'
 
 build android arm64 api28:
   extends: '.build'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/ubuntu-build:a1726fee5841b776fcdaeda2e0ad628ce037a3c6'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/android_28:f085d34a32cb8cac95cbd420344efeaa647d08d5'
   variables:
     MESON_ARGS: >
       -Dbad=enabled
