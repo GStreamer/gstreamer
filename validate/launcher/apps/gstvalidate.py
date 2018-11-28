@@ -814,7 +814,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             for test in generator.generate_tests(uris, scenarios):
                 self.add_test(test)
 
-        if not self.tests and not uris:
+        if not self.tests and not uris and not self.options.wanted_tests:
             printc(
                 "No valid uris present in the path. Check if media files and info files exist", Colors.FAIL)
 
