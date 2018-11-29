@@ -1713,6 +1713,8 @@ gst_cea_cc_overlay_cc_chain (GstPad * pad, GstObject * parent,
       overlay->decoder->current_time = GST_BUFFER_PTS (buffer);
     }
     gst_buffer_unmap (buffer, &buf_map);
+  } else {
+    GST_CEA_CC_OVERLAY_UNLOCK (overlay);
   }
 
 beach:
