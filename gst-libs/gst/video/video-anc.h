@@ -109,7 +109,7 @@ typedef enum {
  * @GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW: CEA-608 as cc_data byte triplets.
  *      The first byte of each triplet shall specify the field as in CEA-708
  *      (i.e: 0xFC for the first field or 0xFD for the second field.). The 2nd
- *      and 3rd byte of each triplet at the cc1 and cc2 bytes. Use this if
+ *      and 3rd byte of each triplet are the cc1 and cc2 bytes. Use this if
  *      there is *only* CEA-608 caption. If there is also CEA-708 caption,
  *      use @GST_VIDEO_CAPTION_TYPE_CEA708_RAW.
  * @GST_VIDEO_CAPTION_TYPE_CEA708_RAW: CEA-708 as cc_data byte triplets. They
