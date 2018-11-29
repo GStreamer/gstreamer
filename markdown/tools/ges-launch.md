@@ -15,7 +15,7 @@ Updating an existing project can be done through thanks to the
 [GstValidate](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-validate/html/)
 [scenarios](http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-validate/html/scenarios.html)
 using the `--set-scenario` argument, if ges-launch-1.0 has been compiled with
-GstValidate.
+GstValidate support.
 
 You can inspect action types with:
 
