@@ -1692,7 +1692,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
   GstFlowReturn ret = GST_FLOW_ERROR;
   gdouble rate;
-  gboolean flush;
+  gboolean flush, instant_rate_change;
   GstFormat format;
   GstSeekFlags flags;
   GstSeekType start_type, stop_type;
@@ -1758,7 +1758,33 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
       " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
       GST_TIME_ARGS (stop));
 
-  flush = flags & GST_SEEK_FLAG_FLUSH;
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  instant_rate_change = ! !(flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE);
+
+  /* Directly send the instant-rate-change event here before taking the
+   * stream-lock so that it can be applied as soon as possible */
+  if (base->mode != BASE_MODE_PUSHING && instant_rate_change) {
+    GstEvent *ev;
+
+    /* instant rate change only supported if direction does not change. All
+     * other requirements are already checked before creating the seek event
+     * but let's double-check here to be sure */
+    if ((rate > 0 && base->out_segment.rate < 0) ||
+        (rate < 0 && base->out_segment.rate > 0) ||
+        start_type != GST_SEEK_TYPE_NONE ||
+        stop_type != GST_SEEK_TYPE_NONE || flush) {
+      GST_ERROR_OBJECT (base,
+          "Instant rate change seeks only supported in the "
+          "same direction, without flushing and position change");
+      return FALSE;
+    }
+
+    ev = gst_event_new_instant_rate_change (rate / base->out_segment.rate,
+        (GstSegmentFlags) (flags));
+    gst_event_set_seqnum (ev, GST_EVENT_SEQNUM (event));
+    GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, ev);
+    return TRUE;
+  }
 
   /* stop streaming, either by flushing or by pausing the task */
   base->mode = BASE_MODE_SEEKING;
