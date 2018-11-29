@@ -170,6 +170,18 @@ struct _GstRTSPStream {
 };
 
 /**
+ * GstRTSPSrcTimeoutCause:
+ * @GST_RTSP_SRC_TIMEOUT_CAUSE_RTCP: timeout triggered by RTCP
+ *
+ * Different causes to why the rtspsrc generated the GstRTSPSrcTimeout
+ * message.
+ */
+typedef enum
+{
+  GST_RTSP_SRC_TIMEOUT_CAUSE_RTCP
+} GstRTSPSrcTimeoutCause;
+
+/**
  * GstRTSPNatMethod:
  * @GST_RTSP_NAT_NONE: none
  * @GST_RTSP_NAT_DUMMY: send dummy packets
@@ -181,6 +193,7 @@ typedef enum
   GST_RTSP_NAT_NONE,
   GST_RTSP_NAT_DUMMY
 } GstRTSPNatMethod;
+
 
 struct _GstRTSPSrc {
   GstBin           parent;

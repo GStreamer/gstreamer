@@ -42,6 +42,7 @@
  */
 /**
  * SECTION:element-rtspsrc
+ * @title: rtspsrc
  *
  * Makes a connection to an RTSP server and read the data.
  * rtspsrc strictly follows RFC 2326 and therefore does not (yet) support
@@ -66,13 +67,24 @@
  * rtspsrc acts like a live source and will therefore only generate data in the
  * PLAYING state.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * If a RTP session times out then the rtspsrc will generate an element message
+ * named "GstRTSPSrcTimeout". Currently this is only supported for timeouts
+ * triggered by RTCP.
+ *
+ * The message's structure contains three fields:
+ *
+ *   #GstRTSPSrcTimeoutCause `cause`: the cause of the timeout.
+ *
+ *   #gint `stream-number`: an internal identifier of the stream that timed out.
+ *
+ *   #guint `ssrc`: the SSRC of the stream that timed out.
+ *
+ * ## Example launch line
  * |[
  * gst-launch-1.0 rtspsrc location=rtsp://some.server/url ! fakesink
  * ]| Establish a connection to an RTSP server and send the raw RTP packets to a
  * fakesink.
- * </refsect2>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -3410,7 +3422,7 @@ on_bye_ssrc (GObject * session, GObject * source, GstRTSPStream * stream)
 }
 
 static void
-on_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
+on_timeout_common (GObject * session, GObject * source, GstRTSPStream * stream)
 {
   GstRTSPSrc *src = stream->parent;
   guint ssrc;
@@ -3422,6 +3434,22 @@ on_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
 
   if (ssrc == stream->ssrc)
     gst_rtspsrc_do_stream_eos (src, stream);
+}
+
+static void
+on_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
+{
+  GstRTSPSrc *src = stream->parent;
+
+  /* timeout, post element message */
+  gst_element_post_message (GST_ELEMENT_CAST (src),
+      gst_message_new_element (GST_OBJECT_CAST (src),
+          gst_structure_new ("GstRTSPSrcTimeout",
+              "cause", G_TYPE_ENUM, GST_RTSP_SRC_TIMEOUT_CAUSE_RTCP,
+              "stream-number", G_TYPE_INT, stream->id, "ssrc", G_TYPE_UINT,
+              stream->ssrc, NULL)));
+
+  on_timeout_common (session, source, stream);
 }
 
 static void
@@ -3941,8 +3969,8 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
 
         g_signal_connect (rtpsession, "on-bye-ssrc", (GCallback) on_bye_ssrc,
             stream);
-        g_signal_connect (rtpsession, "on-bye-timeout", (GCallback) on_timeout,
-            stream);
+        g_signal_connect (rtpsession, "on-bye-timeout",
+            (GCallback) on_timeout_common, stream);
         g_signal_connect (rtpsession, "on-timeout", (GCallback) on_timeout,
             stream);
         g_signal_connect (rtpsession, "on-ssrc-active",
