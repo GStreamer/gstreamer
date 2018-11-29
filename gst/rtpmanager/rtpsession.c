@@ -3644,8 +3644,8 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
   /* check for outdated collisions */
   if (source->internal) {
     GST_DEBUG ("Timing out collisions for %x", source->ssrc);
-    rtp_source_timeout (source, data->current_time,
-        data->running_time - sess->rtcp_feedback_retention_window);
+    rtp_source_timeout (source, data->current_time, data->running_time,
+        sess->rtcp_feedback_retention_window);
   }
 
   /* nothing else to do when without RTCP */

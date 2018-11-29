@@ -288,6 +288,7 @@ void            rtp_conflicting_address_free   (RTPConflictingAddress * addr);
 
 void            rtp_source_timeout             (RTPSource * src,
                                                 GstClockTime current_time,
+                                                GstClockTime running_time,
                                                 GstClockTime feedback_retention_window);
 
 void            rtp_source_retain_rtcp_packet  (RTPSource * src,
