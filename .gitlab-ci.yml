@@ -92,14 +92,13 @@ fedora amd64 docker:
     DOCKERFILE: "docker/fedora/Dockerfile"
   extends: .base
 
-# Cross compile image
-android 28 amd64 docker:
+ubuntu amd64 docker:
   stage: "build docker"
   variables:
     ARCH: "amd64"
-    TAG: "android_28"
-    CONTEXT_DIR: "docker/android/"
-    DOCKERFILE: "docker/android/Dockerfile"
+    TAG: "ubuntu"
+    CONTEXT_DIR: "docker/ubuntu/"
+    DOCKERFILE: "docker/ubuntu/Dockerfile"
   extends: .base
 
 cerbero fedora amd64 docker:
