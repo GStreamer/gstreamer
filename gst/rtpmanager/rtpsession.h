@@ -384,6 +384,7 @@ GstFlowReturn   rtp_session_process_rtp            (RTPSession *sess, GstBuffer 
                                                     guint64 ntpnstime);
 GstFlowReturn   rtp_session_process_rtcp           (RTPSession *sess, GstBuffer *buffer,
                                                     GstClockTime current_time,
+                                                    GstClockTime running_time,
                                                     guint64 ntpnstime);
 
 /* processing packets for sending */

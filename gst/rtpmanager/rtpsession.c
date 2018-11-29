@@ -2188,7 +2188,8 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
           current_time, running_time, ntpnstime)) {
     GST_DEBUG ("invalid RTP packet received");
     RTP_SESSION_UNLOCK (sess);
-    return rtp_session_process_rtcp (sess, buffer, current_time, ntpnstime);
+    return rtp_session_process_rtcp (sess, buffer, current_time, running_time,
+        ntpnstime);
   }
 
   ssrc = pinfo.ssrc;
@@ -2877,7 +2878,7 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
  */
 GstFlowReturn
 rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
-    GstClockTime current_time, guint64 ntpnstime)
+    GstClockTime current_time, GstClockTime running_time, guint64 ntpnstime)
 {
   GstRTCPPacket packet;
   gboolean more, is_bye = FALSE, do_sync = FALSE;
@@ -2899,7 +2900,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   RTP_SESSION_LOCK (sess);
   /* update pinfo stats */
   update_packet_info (sess, &pinfo, FALSE, FALSE, FALSE, buffer, current_time,
-      -1, ntpnstime);
+      running_time, ntpnstime);
 
   /* start processing the compound packet */
   gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
