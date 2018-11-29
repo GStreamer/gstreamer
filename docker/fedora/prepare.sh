@@ -18,17 +18,30 @@ dnf upgrade -y
 dnf config-manager --set-enabled fedora-cisco-openh264
 
 # install rest of the extra deps
-dnf install -y ccache \
+dnf install -y \
+    aom \
+    aom-extra-tools \
+    libaom \
+    libaom-devel \
+    ccache \
     cmake \
     elfutils \
+    elfutils-libs \
+    elfutils-devel \
     gcc \
     gcc-c++ \
     gdb \
     gtk3 \
     gtk3-devel \
+    graphene \
+    graphene-devel \
+    gsl \
+    gsl-devel \
     ffmpeg \
     ffmpeg-libs \
     ffmpeg-devel \
+    flite \
+    flite-devel \
     procps-ng \
     patch \
     redhat-rpm-config \
@@ -38,12 +51,18 @@ dnf install -y ccache \
     libnice-devel \
     libunwind \
     libunwind-devel \
+    neon \
+    neon-devel \
     opencv \
     opencv-devel \
     openjpeg2 \
     openjpeg2-devel \
     openh264 \
     openh264-devel \
+    SDL2 \
+    SDL2-devel \
+    sbc \
+    sbc-devel \
     x264 \
     x264-libs \
     x264-devel \
@@ -52,6 +71,22 @@ dnf install -y ccache \
     python3-cairo-devel \
     vulkan \
     vulkan-devel \
+    mesa-omx-drivers \
+    mesa-libGL \
+    mesa-libGL-devel \
+    mesa-libGLU \
+    mesa-libGLU-devel \
+    mesa-libGLES \
+    mesa-libGLES-devel \
+    mesa-libOpenCL \
+    mesa-libOpenCL-devel \
+    mesa-libgbm \
+    mesa-libgbm-devel \
+    mesa-libd3d \
+    mesa-libd3d-devel \
+    mesa-libOSMesa \
+    mesa-libOSMesa-devel \
+    mesa-vulkan-drivers \
     xorg-x11-server-utils \
     xorg-x11-server-Xvfb
 
