@@ -1859,6 +1859,8 @@ rtp_source_retain_rtcp_packet (RTPSource * src, GstRTCPPacket * packet,
 {
   GstBuffer *buffer;
 
+  g_return_if_fail (running_time != GST_CLOCK_TIME_NONE);
+
   buffer = gst_buffer_copy_region (packet->rtcp->buffer, GST_BUFFER_COPY_MEMORY,
       packet->offset, (gst_rtcp_packet_get_length (packet) + 1) * 4);
 
