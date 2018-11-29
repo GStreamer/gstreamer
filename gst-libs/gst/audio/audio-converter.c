@@ -1253,20 +1253,20 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
         convert->convert = converter_endian;
         convert->in_place = TRUE;
 
-        switch (GST_AUDIO_INFO_BPS (in_info)) {
-          case 2:
+        switch (GST_AUDIO_INFO_WIDTH (in_info)) {
+          case 16:
             GST_DEBUG ("initializing 16-bit endian conversion");
             convert->swap_endian = converter_swap_endian_16;
             break;
-          case 3:
+          case 24:
             GST_DEBUG ("initializing 24-bit endian conversion");
             convert->swap_endian = converter_swap_endian_24;
             break;
-          case 4:
+          case 32:
             GST_DEBUG ("initializing 32-bit endian conversion");
             convert->swap_endian = converter_swap_endian_32;
             break;
-          case 8:
+          case 64:
             GST_DEBUG ("initializing 64-bit endian conversion");
             convert->swap_endian = converter_swap_endian_64;
             break;
