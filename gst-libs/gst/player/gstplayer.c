@@ -2894,8 +2894,14 @@ gst_player_main (gpointer data)
   if (self->use_playbin3) {
     GST_DEBUG_OBJECT (self, "playbin3 enabled");
     self->playbin = gst_element_factory_make ("playbin3", "playbin3");
-  } else
+  } else {
     self->playbin = gst_element_factory_make ("playbin", "playbin");
+  }
+
+  if (!self->playbin) {
+    g_error ("GstPlayer: 'playbin' element not found, please check your setup");
+    g_assert_not_reached ();
+  }
 
   if (self->video_renderer) {
     GstElement *video_sink =
