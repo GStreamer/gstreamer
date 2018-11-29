@@ -1850,7 +1850,16 @@ compare_buffers (gconstpointer a, gconstpointer b, gpointer user_data)
   const GstBuffer *bufa = a;
   const GstBuffer *bufb = b;
 
-  return GST_BUFFER_PTS (bufa) - GST_BUFFER_PTS (bufb);
+  g_return_val_if_fail (GST_BUFFER_PTS (bufa) != GST_CLOCK_TIME_NONE, -1);
+  g_return_val_if_fail (GST_BUFFER_PTS (bufb) != GST_CLOCK_TIME_NONE, 1);
+
+  if (GST_BUFFER_PTS (bufa) < GST_BUFFER_PTS (bufb)) {
+    return -1;
+  } else if (GST_BUFFER_PTS (bufa) > GST_BUFFER_PTS (bufb)) {
+    return 1;
+  }
+
+  return 0;
 }
 
 void
