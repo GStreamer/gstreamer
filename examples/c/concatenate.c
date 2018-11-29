@@ -27,7 +27,9 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop);
 
 static GstEncodingProfile *make_profile_from_info (GstDiscovererInfo * info);
 
+GESLayer *layer = NULL;
 GESPipeline *pipeline = NULL;
+GESTimeline *timeline = NULL;
 gchar *output_uri = NULL;
 guint assetsCount = 0;
 guint assetsLoaded = 0;
@@ -37,15 +39,22 @@ asset_loaded_cb (GObject * source_object, GAsyncResult * res,
     GMainLoop * mainloop)
 {
   GError *error = NULL;
+  guint64 duration = 0;
 
   GESUriClipAsset *mfs =
       GES_URI_CLIP_ASSET (ges_asset_request_finish (res, &error));
 
   if (error) {
-    GST_WARNING ("error creating asseti %s", error->message);
+    GST_WARNING ("error creating asset %s", error->message);
 
     return;
   }
+
+  duration = ges_uri_clip_asset_get_duration (mfs);
+  ges_layer_add_asset (layer,
+      GES_ASSET (source_object),
+      ges_timeline_get_duration (timeline),
+      0, duration, ges_clip_asset_get_supported_formats (GES_CLIP_ASSET (mfs)));
 
   assetsLoaded++;
   /*
@@ -71,7 +80,6 @@ main (int argc, char **argv)
 {
   GMainLoop *mainloop = NULL;
   GESTimeline *timeline;
-  GESLayer *layer = NULL;
   GstBus *bus = NULL;
   guint i;
 
