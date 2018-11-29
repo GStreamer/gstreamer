@@ -33,8 +33,9 @@ git config --global user.email "gst-build@gstreamer.net"
 git config --global user.name "Gstbuild Runner"
 
 # Setup Android toolchain
-./root/android-download-ndk.sh
-./root/android-create-toolchain.sh arm64 28
+/root/android-download-ndk.sh
+/root/android-create-toolchain.sh arm64 28
+rm -rf /opt/android-ndk
 
 # get gst-build and make all subprojects available
 git clone git://anongit.freedesktop.org/gstreamer/gst-build '/gst-build/'

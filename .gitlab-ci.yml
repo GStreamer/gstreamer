@@ -132,7 +132,7 @@ build android 28 local:
     MESON_ARGS: >
       -Dbad=enabled
       -Dbad:androidmedia=enabled
-      --cross-file /android_arm64_28.txt
+      --cross-file /opt/android_arm64_28.txt
   image: "${CI_REGISTRY_IMAGE}/amd64/android_28:latest"
   except:
     refs:

@@ -23,13 +23,13 @@ set -eu
 
 arch=$1
 api=$2
-toolchain_path=/android-toolchain-$arch-$api
+toolchain_path=/opt/android-toolchain-$arch-$api
 
 # Create standalone toolchains
-/android-ndk/build/tools/make_standalone_toolchain.py --arch $arch --api $api --install-dir $toolchain_path
+/opt/android-ndk/build/tools/make_standalone_toolchain.py --arch $arch --api $api --install-dir $toolchain_path
 
 # Create a cross file that can be passed to meson
-cat > android_${arch}_${api}.txt <<- EOM
+cat > /opt/android_${arch}_${api}.txt <<- EOM
 [host_machine]
 system = 'android'
 cpu_family = 'aarch64'

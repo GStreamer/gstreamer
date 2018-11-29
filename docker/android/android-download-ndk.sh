@@ -28,4 +28,4 @@ wget --quiet https://dl.google.com/android/repository/android-ndk-$ANDROID_NDK_V
 echo "$ANDROID_NDK_SHA512  android-ndk-$ANDROID_NDK_VERSION-linux-x86_64.zip" | sha512sum -c
 unzip android-ndk-$ANDROID_NDK_VERSION-linux-x86_64.zip
 rm android-ndk-$ANDROID_NDK_VERSION-linux-x86_64.zip
-mv android-ndk-$ANDROID_NDK_VERSION /android-ndk
+mv android-ndk-$ANDROID_NDK_VERSION /opt/android-ndk
