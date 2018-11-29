@@ -847,16 +847,14 @@ print_uri_handler_info (GstElement * element)
     uri_protocols = gst_uri_handler_get_protocols (GST_URI_HANDLER (element));
 
     n_print ("\n");
-    n_print ("%sURI handling capabilities:%s\n", PROP_NAME_COLOR, RESET_COLOR);
+    n_print ("%sURI handling capabilities:%s\n", HEADING_COLOR, RESET_COLOR);
 
     push_indent ();
 
-    n_print ("%sElement can act as %s.%s\n", PROP_VALUE_COLOR, uri_type,
-        RESET_COLOR);
+    n_print ("%sElement can act as %s.%s\n", DESC_COLOR, uri_type, RESET_COLOR);
 
     if (uri_protocols && *uri_protocols) {
-      n_print ("%sSupported URI protocols%s:\n", PROP_ATTR_NAME_COLOR,
-          RESET_COLOR);
+      n_print ("%sSupported URI protocols%s:\n", DESC_COLOR, RESET_COLOR);
       push_indent ();
       for (; *uri_protocols != NULL; uri_protocols++)
         n_print ("%s%s%s\n", PROP_ATTR_VALUE_COLOR, *uri_protocols,
