@@ -2007,6 +2007,8 @@ _create_stream (GstQTDemux * demux, guint32 track_id)
   gst_tag_list_set_scope (stream->stream_tags, GST_TAG_SCOPE_STREAM);
   g_queue_init (&stream->protection_scheme_event_queue);
   stream->ref_count = 1;
+  /* consistent default for push based mode */
+  gst_segment_init (&stream->segment, GST_FORMAT_TIME);
   return stream;
 }
 
@@ -8609,8 +8611,6 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     QtDemuxStream * stream, GstTagList * list)
 {
   gboolean ret = TRUE;
-  /* consistent default for push based mode */
-  gst_segment_init (&stream->segment, GST_FORMAT_TIME);
 
   if (stream->subtype == FOURCC_vide) {
     gchar *name = g_strdup_printf ("video_%u", qtdemux->n_video_streams);
