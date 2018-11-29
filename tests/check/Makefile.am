@@ -334,7 +334,10 @@ libparser_la_CFLAGS = \
 	-I$(top_srcdir)/tests/check \
 	$(GST_CFLAGS) $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS)
 
-elements_mpegvideoparse_LDADD = libparser.la $(LDADD)
+elements_mpegvideoparse_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+elements_mpegvideoparse_LDADD = libparser.la \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(LDADD)
 
 elements_mpeg4videoparse_LDADD = libparser.la $(LDADD)
 

@@ -4,8 +4,8 @@
  * unit test for mpegvideoparse
  *
  * Copyright (C) 2011 Nokia Corporation. All rights reserved.
- *
- * Contact: Stefan Kost <stefan.kost@nokia.com>
+ *   Contact: Stefan Kost <stefan.kost@nokia.com>
+ * Copyright (C) 2018 Tim-Philipp Müller <tim centricular com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,7 +23,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <gst/check/gstcheck.h>
+#include <gst/check/check.h>
+#include <gst/video/video.h>
 #include "parser.h"
 
 #define SRC_CAPS_TMPL   "video/mpeg, mpegversion=(int)2, systemstream=(boolean)false, parsed=(boolean)false"
@@ -233,6 +234,65 @@ GST_START_TEST (test_parse_gop_split)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_cea708_captions)
+{
+  GstClockTime last_ts = 0;
+  GstHarness *h;
+  GstBuffer *buf;
+  gchar *fn;
+  gint i, j;
+
+  h = gst_harness_new_parse ("filesrc name=filesrc ! mpegvideoparse");
+
+  /* Minimal stripped down MPEG-2 video elementary stream with truncated slices.
+   * Created via mpegvideoparse ! multifilesink and then truncating all files
+   * to 80-100 bytes or such and concatenating them back together. */
+  fn = g_build_filename (GST_TEST_FILES_PATH, "mpeg2-es-with-cea708-cc.dat",
+      NULL);
+  gst_harness_set (h, "filesrc", "location", fn, NULL);
+  g_free (fn);
+
+  gst_harness_play (h);
+
+  for (i = 0; i < 50; ++i) {
+    GstVideoCaptionMeta *caption_meta;
+
+    buf = gst_harness_pull (h);
+    GST_LOG ("pulled buffer %" GST_PTR_FORMAT, buf);
+    caption_meta = gst_buffer_get_video_caption_meta (buf);
+    fail_unless (caption_meta != NULL);
+    fail_unless_equals_int (caption_meta->caption_type,
+        GST_VIDEO_CAPTION_TYPE_CEA708_RAW);
+    fail_unless_equals_int (caption_meta->size, 60);
+
+    /* iterate over triplets */
+    for (j = 0; j < 20; ++j) {
+      guint8 cc_type = caption_meta->data[3 * j] & 0x03;
+
+      /* first triplet always CEA-608 line 21 field 2 in our sample */
+      if (j == 0)
+        fail_unless_equals_int (cc_type, 1);
+      /* second triplet always CEA-608 line 21 field 1 in our sample */
+      if (j == 1)
+        fail_unless_equals_int (cc_type, 0);
+      if (j > 2)
+        fail_unless (cc_type == 2 || cc_type == 3);
+      /* first packet starts with a CCP header */
+      if (i == 0 && j == 2)
+        fail_unless (cc_type == 3);
+    }
+    /* buffer sanity check */
+    if (i > 0)
+      fail_unless (GST_BUFFER_DTS (buf) > last_ts);
+
+    last_ts = GST_BUFFER_DTS (buf);
+    gst_buffer_unref (buf);
+  }
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
 
 static Suite *
 mpegvideoparse_suite (void)
@@ -257,6 +317,7 @@ mpegvideoparse_suite (void)
   tcase_add_test (tc_chain, test_parse_detect_stream_mpeg1);
   tcase_add_test (tc_chain, test_parse_detect_stream_mpeg2);
   tcase_add_test (tc_chain, test_parse_gop_split);
+  tcase_add_test (tc_chain, test_parse_cea708_captions);
 
   return s;
 }
