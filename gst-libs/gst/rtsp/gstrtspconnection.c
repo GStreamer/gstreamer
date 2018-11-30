@@ -1269,7 +1269,7 @@ writev_bytes (GOutputStream * stream, GOutputVector * vectors, gint n_vectors,
           g_pollable_output_stream_writev_nonblocking (G_POLLABLE_OUTPUT_STREAM
           (stream), vectors, n_vectors, &written, cancellable, &err);
     _bytes_written += written;
-    if (G_UNLIKELY (!res))
+    if (G_UNLIKELY (!res || written == 0))
       goto error;
 
     /* skip vectors that have been written in full */
@@ -1295,10 +1295,8 @@ error:
   {
     *bytes_written = _bytes_written;
 
-    if (G_UNLIKELY (written == 0))
-      return GST_RTSP_EEOF;
-
-    GST_DEBUG ("%s", err->message);
+    if (err)
+      GST_DEBUG ("%s", err->message);
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       g_clear_error (&err);
       return GST_RTSP_EINTR;
@@ -1308,7 +1306,11 @@ error:
     } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
       g_clear_error (&err);
       return GST_RTSP_ETIMEOUT;
+    } else if (G_UNLIKELY (written == 0)) {
+      g_clear_error (&err);
+      return GST_RTSP_EEOF;
     }
+
     g_clear_error (&err);
     return GST_RTSP_ESYS;
   }
