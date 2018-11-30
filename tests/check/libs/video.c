@@ -1125,6 +1125,70 @@ GST_START_TEST (test_convert_frame_async)
   }
   gst_buffer_unmap (from_buffer, &map);
 
+  loop = cf_data.loop = g_main_loop_new (NULL, FALSE);
+
+  gst_video_info_init (&vinfo);
+  fail_unless (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_xRGB, 640,
+          470));
+  vinfo.par_n = 1;
+  vinfo.par_d = 1;
+  vinfo.fps_n = 25;
+  vinfo.fps_d = 1;
+  from_caps = gst_video_info_to_caps (&vinfo);
+
+  from_sample = gst_sample_new (from_buffer, from_caps, NULL, NULL);
+  gst_buffer_unref (from_buffer);
+  gst_caps_unref (from_caps);
+
+  gst_video_info_init (&vinfo);
+  fail_unless (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_I420, 240,
+          320));
+  vinfo.par_n = 1;
+  vinfo.par_d = 2;
+  vinfo.fps_n = 25;
+  vinfo.fps_d = 1;
+  to_caps = gst_video_info_to_caps (&vinfo);
+  gst_video_convert_sample_async (from_sample, to_caps,
+      GST_CLOCK_TIME_NONE,
+      (GstVideoConvertSampleCallback) convert_sample_async_callback, &cf_data,
+      NULL);
+  g_main_loop_run (loop);
+  fail_unless (cf_data.sample != NULL);
+  fail_unless (cf_data.error == NULL);
+
+  gst_sample_unref (cf_data.sample);
+  gst_caps_unref (to_caps);
+  gst_sample_unref (from_sample);
+
+  g_main_loop_unref (loop);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_convert_frame_async_error)
+{
+  GstVideoInfo vinfo;
+  GstCaps *from_caps, *to_caps;
+  GstBuffer *from_buffer;
+  GstSample *from_sample;
+  gint i;
+  GstMapInfo map;
+  GMainLoop *loop;
+  ConvertFrameContext cf_data = { NULL, NULL, NULL };
+
+  gst_debug_set_threshold_for_name ("default", GST_LEVEL_NONE);
+
+  from_buffer = gst_buffer_new_and_alloc (640 * 480 * 4);
+
+  gst_buffer_map (from_buffer, &map, GST_MAP_WRITE);
+  for (i = 0; i < 640 * 480; i++) {
+    map.data[4 * i + 0] = 0;    /* x */
+    map.data[4 * i + 1] = 255;  /* R */
+    map.data[4 * i + 2] = 0;    /* G */
+    map.data[4 * i + 3] = 0;    /* B */
+  }
+  gst_buffer_unmap (from_buffer, &map);
+
   gst_video_info_init (&vinfo);
   fail_unless (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_xRGB, 640,
           470));
@@ -1156,24 +1220,6 @@ GST_START_TEST (test_convert_frame_async)
   g_error_free (cf_data.error);
   cf_data.error = NULL;
 
-  gst_caps_unref (to_caps);
-  gst_video_info_init (&vinfo);
-  fail_unless (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_I420, 240,
-          320));
-  vinfo.par_n = 1;
-  vinfo.par_d = 2;
-  vinfo.fps_n = 25;
-  vinfo.fps_d = 1;
-  to_caps = gst_video_info_to_caps (&vinfo);
-  gst_video_convert_sample_async (from_sample, to_caps,
-      GST_CLOCK_TIME_NONE,
-      (GstVideoConvertSampleCallback) convert_sample_async_callback, &cf_data,
-      NULL);
-  g_main_loop_run (loop);
-  fail_unless (cf_data.sample != NULL);
-  fail_unless (cf_data.error == NULL);
-
-  gst_sample_unref (cf_data.sample);
   gst_caps_unref (to_caps);
   gst_sample_unref (from_sample);
 
@@ -2920,6 +2966,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_events);
   tcase_add_test (tc_chain, test_convert_frame);
   tcase_add_test (tc_chain, test_convert_frame_async);
+  tcase_add_test (tc_chain, test_convert_frame_async_error);
   tcase_add_test (tc_chain, test_video_size_from_caps);
   tcase_add_test (tc_chain, test_interlace_mode);
   tcase_add_test (tc_chain, test_overlay_composition);
