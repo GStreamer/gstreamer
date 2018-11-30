@@ -37,6 +37,7 @@
 #include <libxml/xmlwriter.h>
 
 #include "ges-internal.h"
+#include <ges/ges-pitivi-formatter.h>
 #include <ges/ges.h>
 
 /* The Pitivi etree formatter is 0.1 we set GES one to 0.2 */

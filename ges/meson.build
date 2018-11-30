@@ -40,7 +40,6 @@ ges_sources = [
     'ges-effect.c',
     'ges-screenshot.c',
     'ges-formatter.c',
-    'ges-pitivi-formatter.c',
     'ges-asset.c',
     'ges-uri-asset.c',
     'ges-clip-asset.c',
@@ -109,7 +108,6 @@ ges_headers = [
     'ges-text-overlay.h',
     'ges-screenshot.h',
     'ges-formatter.h',
-    'ges-pitivi-formatter.h',
     'ges-asset.h',
     'ges-uri-asset.h',
     'ges-clip-asset.h',
@@ -126,6 +124,10 @@ ges_headers = [
     'ges-group.h'
 ]
 
+if libxml_dep.found()
+  ges_sources += ['ges-pitivi-formatter.c']
+  ges_headers += ['ges-pitivi-formatter.h']
+endif
 
 version_data = configuration_data()
 version_data.set('GES_VERSION_MAJOR', gst_version_major)

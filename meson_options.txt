@@ -6,3 +6,5 @@ option('tests', type : 'feature', value : 'auto', yield : true,
        description : 'Build and enable unit tests')
 option('pygi-overrides-dir', type : 'string', value : '',
         description: 'Path to pygobject overrides directory')
+option('xptv', type : 'feature', value : 'auto',
+       description : 'Build the deprecated xptv formater')

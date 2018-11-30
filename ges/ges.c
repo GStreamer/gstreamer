@@ -35,6 +35,10 @@
 #include "ges/gstframepositioner.h"
 #include "ges-internal.h"
 
+#ifndef DISABLE_XPTV
+#include <ges/ges-pitivi-formatter.h>
+#endif
+
 #define GES_GNONLIN_VERSION_NEEDED_MAJOR 1
 #define GES_GNONLIN_VERSION_NEEDED_MINOR 2
 #define GES_GNONLIN_VERSION_NEEDED_MICRO 0
@@ -100,7 +104,9 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (GES_TYPE_GROUP);
 
   /* register formatter types with the system */
+#ifndef DISABLE_XPTV
   g_type_class_ref (GES_TYPE_PITIVI_FORMATTER);
+#endif
   g_type_class_ref (GES_TYPE_COMMAND_LINE_FORMATTER);
   g_type_class_ref (GES_TYPE_XML_FORMATTER);
 
@@ -171,7 +177,10 @@ ges_deinit (void)
   g_type_class_unref (g_type_class_peek (GES_TYPE_GROUP));
 
   /* register formatter types with the system */
+#ifndef DISABLE_XPTV
   g_type_class_unref (g_type_class_peek (GES_TYPE_PITIVI_FORMATTER));
+#endif
+
   g_type_class_unref (g_type_class_peek (GES_TYPE_COMMAND_LINE_FORMATTER));
   g_type_class_unref (g_type_class_peek (GES_TYPE_XML_FORMATTER));
 
