@@ -44,7 +44,7 @@ from xml.etree import ElementTree
 
 GST_SECOND = int(1000000000)
 DEFAULT_TIMEOUT = 30
-DEFAULT_MAIN_DIR = os.path.join(os.path.expanduser("~"), "gst-validate")
+DEFAULT_MAIN_DIR = os.environ.get('GST_VALIDATE_LAUNCHER_MAIN_DIR', os.path.join(os.path.expanduser("~"), "gst-validate"))
 DEFAULT_GST_QA_ASSETS = os.path.join(
     DEFAULT_MAIN_DIR, "gst-integration-testsuites")
 DISCOVERER_COMMAND = "gst-discoverer-1.0"

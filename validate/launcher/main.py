@@ -140,7 +140,8 @@ http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
 QA_ASSETS = "gst-integration-testsuites"
 MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.freedesktop.org/gstreamer/gst-integration-testsuites.git"
-DEFAULT_TESTSUITES_DIRS = [os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")]
+DEFAULT_TESTSUITES_DIRS = [os.path.join(
+    DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")]
 
 
 def download_assets(options):
@@ -176,6 +177,7 @@ class PrintUsage(argparse.Action):
 
 
 class LauncherConfig(Loggable):
+
     def __init__(self):
         self.testsuites = []
         self.debug = False
@@ -229,6 +231,7 @@ class LauncherConfig(Loggable):
 
         # Get absolute path for main_dir and base everything on that
         self.main_dir = os.path.abspath(self.main_dir)
+        os.environ['GST_VALIDATE_LAUNCHER_MAIN_DIR'] = self.main_dir
 
         # default for output_dir is MAINDIR
         if not self.output_dir:
@@ -304,9 +307,9 @@ class LauncherConfig(Loggable):
                    % self.clone_dir, Colors.FAIL, True)
             return False
 
-        if (self.main_dir != DEFAULT_MAIN_DIR or
-                self.clone_dir != QA_ASSETS):
-            local_clone_dir = os.path.join(self.main_dir, self.clone_dir, "testsuites")
+        if (self.main_dir != DEFAULT_MAIN_DIR or self.clone_dir != QA_ASSETS):
+            local_clone_dir = os.path.join(
+                self.main_dir, self.clone_dir, "testsuites")
             if local_clone_dir not in self.testsuites_dirs:
                 self.testsuites_dirs.insert(0, local_clone_dir)
         if self.valgrind:
@@ -479,7 +482,9 @@ Note that all testsuite should be inside python modules, so the directory should
     dir_group = parser.add_argument_group(
         "Directories and files to be used by the launcher")
     dir_group.add_argument("-M", "--main-dir", dest="main_dir",
-                           help="Main directory where to put files. Default is %s" % DEFAULT_MAIN_DIR)
+                           help="Main directory where to put files."
+                           " Respects the GST_VALIDATE_LAUNCHER_MAIN_DIR environment variable."
+                           " Default is %s" % DEFAULT_MAIN_DIR)
     dir_group.add_argument("--testsuites-dir", dest="testsuites_dirs", action='append',
                            help="Directory where to look for testsuites. Default is %s"
                            % DEFAULT_TESTSUITES_DIRS)
@@ -566,14 +571,14 @@ Note that all testsuite should be inside python modules, so the directory should
     if options.list_tests:
         if tests_launcher.list_tests() == -1:
             printc("\nFailling as tests have been removed/added "
-                " (--fail-on-testlist-change)", Colors.FAIL)
+                   " (--fail-on-testlist-change)", Colors.FAIL)
             exit(1)
 
-        l = tests_launcher.tests
-        for test in l:
+        tests = tests_launcher.tests
+        for test in tests:
             printc(test)
 
-        printc("\nNumber of tests: %d" % len(l), Colors.OKGREEN)
+        printc("\nNumber of tests: %d" % len(tests), Colors.OKGREEN)
         return 0
 
     httpsrv = HTTPServer(options)
@@ -596,7 +601,8 @@ Note that all testsuite should be inside python modules, so the directory should
     # There seems to be some issue with forking, dconf and some gtype
     # initialization that deadlocks occasionally, setting the
     # GSettings backend make it go away.
-    # Also happened here: https://cgit.freedesktop.org/gstreamer/gst-plugins-good/commit/tests/check/Makefile.am?id=8e2c1d1de56bddbff22170f8b17473882e0e63f9
+    # Also happened here:
+    # https://cgit.freedesktop.org/gstreamer/gst-plugins-good/commit/tests/check/Makefile.am?id=8e2c1d1de56bddbff22170f8b17473882e0e63f9
     os.environ['GSETTINGS_BACKEND'] = "memory"
 
     exception = None
