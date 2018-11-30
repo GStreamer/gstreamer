@@ -73,6 +73,18 @@ alpine amd64 manifest builder docker:
       - 'docker/build_manifest/*'
       - 'gitlab/build_manifest.py'
 
+test manifest amd64 docker:
+  stage: "build docker"
+  variables:
+    ARCH: "amd64"
+    TAG: "build-manifest"
+    CONTEXT_DIR: "docker/test_manifest/"
+    DOCKERFILE: "docker/test_manifest/Dockerfile"
+  extends: .base
+  only:
+    changes:
+      - 'docker/test_manifest/*'
+
 gst-indent amd64 docker:
   stage: "build docker"
   variables:
