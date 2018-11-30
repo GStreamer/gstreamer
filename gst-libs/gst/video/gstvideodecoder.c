@@ -327,6 +327,10 @@ struct _GstVideoDecoderPrivate
   /* input_segment are output_segment identical */
   gboolean in_out_segment_sync;
 
+  /* TRUE if we have an active set of instant rate flags */
+  gboolean decode_flags_override;
+  GstSegmentFlags decode_flags;
+
   /* ... being tracked here;
    * only available during parsing */
   GstVideoCodecFrame *current_frame;
@@ -1328,13 +1332,43 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
 
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
+      /* Update the decode flags in the segment if we have an instant-rate
+       * override active */
+      GST_OBJECT_LOCK (decoder);
+      if (!priv->decode_flags_override)
+        priv->decode_flags = segment.flags;
+      else {
+        segment.flags &= ~GST_SEGMENT_INSTANT_FLAGS;
+        segment.flags |= priv->decode_flags & GST_SEGMENT_INSTANT_FLAGS;
+      }
+
       priv->base_timestamp = GST_CLOCK_TIME_NONE;
       priv->base_picture_number = 0;
 
       decoder->input_segment = segment;
       decoder->priv->in_out_segment_sync = FALSE;
 
+      GST_OBJECT_UNLOCK (decoder);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
+      break;
+    }
+    case GST_EVENT_INSTANT_RATE_CHANGE:
+    {
+      GstSegmentFlags flags;
+      GstSegment *seg;
+
+      gst_event_parse_instant_rate_change (event, NULL, &flags);
+
+      GST_OBJECT_LOCK (decoder);
+      priv->decode_flags_override = TRUE;
+      priv->decode_flags = flags;
+
+      /* Update the input segment flags */
+      seg = &decoder->input_segment;
+      seg->flags &= ~GST_SEGMENT_INSTANT_FLAGS;
+      seg->flags |= priv->decode_flags & GST_SEGMENT_INSTANT_FLAGS;
+      GST_OBJECT_UNLOCK (decoder);
       break;
     }
     case GST_EVENT_FLUSH_STOP:
@@ -2072,6 +2106,7 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
     GST_OBJECT_LOCK (decoder);
     priv->earliest_time = GST_CLOCK_TIME_NONE;
     priv->proportion = 0.5;
+    priv->decode_flags_override = FALSE;
     GST_OBJECT_UNLOCK (decoder);
   }
 
