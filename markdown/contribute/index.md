@@ -51,7 +51,7 @@ these operations:
   that seems the most likely to you, or file it against the gstreamer-project
   component. If in doubt just pop into our IRC channel `#gstreamer` on the
   [freenode IRC network](https://freenode.net), which you can connect to using
-  any IRC client application or the [freenode IRC webchat](https://webchat.freenode.net).
+  any IRC client application or the [freenode IRC webchat](https://webchat.freenode.net/?channels=%23gstreamer).
   In any case, if it's not the right component someone will move the issue
   once they have a better idea what the problem is and where it belongs.
 
