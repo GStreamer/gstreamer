@@ -489,11 +489,10 @@ convert_frame_dispatch_callback (GstVideoConvertSampleContext * ctx)
   return FALSE;
 }
 
-static gboolean
-convert_frame_stop_pipeline (GstElement * element)
+static void
+convert_frame_stop_pipeline (GstElement * element, gpointer user_data)
 {
   gst_element_set_state (element, GST_STATE_NULL);
-  return FALSE;
 }
 
 static void
@@ -525,14 +524,14 @@ convert_frame_finish (GstVideoConvertSampleContext * context,
    * state to NULL and get rid of its last reference, which in turn
    * will get rid of all remaining references to our context and free
    * it too. We can't do this directly here as we might be called from
-   * a streaming thread. */
+   * a streaming thread.
+   *
+   * We don't use the main loop here because the user might shut down it
+   * immediately after getting the result of the conversion above.
+   */
   if (context->pipeline) {
-    source = g_timeout_source_new (0);
-    g_source_set_callback (source,
-        (GSourceFunc) convert_frame_stop_pipeline,
-        context->pipeline, (GDestroyNotify) gst_object_unref);
-    g_source_attach (source, context->context);
-    g_source_unref (source);
+    gst_element_call_async (context->pipeline, convert_frame_stop_pipeline,
+        NULL, NULL);
     context->pipeline = NULL;
   }
 }
