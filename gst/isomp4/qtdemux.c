@@ -12665,6 +12665,8 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
     g_ptr_array_remove_range (qtdemux->old_streams,
         0, qtdemux->old_streams->len);
 
+    qtdemux->need_segment = TRUE;
+
     return GST_FLOW_OK;
   }
 
