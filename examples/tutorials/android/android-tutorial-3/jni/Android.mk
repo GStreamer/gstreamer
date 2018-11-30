@@ -3,7 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := tutorial-3
-LOCAL_SRC_FILES := tutorial-3.c
+LOCAL_SRC_FILES := tutorial-3.c dummy.cpp
 LOCAL_SHARED_LIBRARIES := gstreamer_android
 LOCAL_LDLIBS := -llog -landroid
 include $(BUILD_SHARED_LIBRARY)
@@ -29,5 +29,6 @@ endif
 GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_ROOT)/share/gst-android/ndk-build/
 include $(GSTREAMER_NDK_BUILD_PATH)/plugins.mk
 GSTREAMER_PLUGINS         := $(GSTREAMER_PLUGINS_CORE) $(GSTREAMER_PLUGINS_SYS) $(GSTREAMER_PLUGINS_EFFECTS)
-GSTREAMER_EXTRA_DEPS      := gstreamer-video-1.0
+GSTREAMER_EXTRA_DEPS      := gstreamer-video-1.0 gobject-2.0
+GSTREAMER_EXTRA_LIBS      := -liconv
 include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer-1.0.mk

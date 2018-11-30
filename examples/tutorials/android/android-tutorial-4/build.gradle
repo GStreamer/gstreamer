@@ -29,8 +29,7 @@ android {
                 targets "tutorial-4"
 
                 // All archs except MIPS and MIPS64 are supported
-                abiFilters  'armeabi-v7a', 'arm64-v8a', 'x86'
-                // x86_64 abis disabled because of https://bugzilla.gnome.org/show_bug.cgi?id=795454
+                abiFilters  'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
             }
         }
     }
