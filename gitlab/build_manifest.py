@@ -108,7 +108,7 @@ def request(path: str) -> List[Dict[str, str]]:
 
 def get_project_branch(project_id: int, name: str) -> Dict[str, str]:
     print(f"Searching for {name} branch in project {project_id}")
-    path = f"projects/{project_id}/repository/branches?search={name}"
+    path = f"projects/{project_id}/repository/branches?search={name}&per_page=100"
     results = request(path)
 
     if not results:
