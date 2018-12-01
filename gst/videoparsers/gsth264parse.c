@@ -2714,6 +2714,10 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     gst_buffer_unmap (codec_data, &map);
 
     gst_buffer_replace (&h264parse->codec_data_in, codec_data);
+
+    /* don't confuse codec_data with inband sps/pps */
+    h264parse->have_sps_in_frame = FALSE;
+    h264parse->have_pps_in_frame = FALSE;
   } else if (format == GST_H264_PARSE_FORMAT_BYTE) {
     GST_DEBUG_OBJECT (h264parse, "have bytestream h264");
     /* nothing to pre-process */

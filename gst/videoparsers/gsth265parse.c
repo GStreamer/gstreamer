@@ -2310,6 +2310,11 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       }
     }
     gst_buffer_unmap (codec_data, &map);
+
+    /* don't confuse codec_data with inband vps/sps/pps */
+    h265parse->have_vps_in_frame = FALSE;
+    h265parse->have_sps_in_frame = FALSE;
+    h265parse->have_pps_in_frame = FALSE;
   } else {
     GST_DEBUG_OBJECT (h265parse, "have bytestream h265");
     /* nothing to pre-process */
