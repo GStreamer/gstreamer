@@ -53,7 +53,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-1.0 videotestsrc ! decodebin ! videoconvert ! retinex ! videoconvert ! xvimagesink
+ * gst-launch-1.0 videotestsrc ! videoconvert ! retinex ! videoconvert ! xvimagesink
  * ]|
  * </refsect2>
  */
@@ -64,9 +64,6 @@
 
 #include "gstretinex.h"
 #include <opencv2/imgproc.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_retinex_debug);
 #define GST_CAT_DEFAULT gst_retinex_debug
@@ -128,14 +125,12 @@ static void gst_retinex_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_retinex_transform_ip (GstOpencvVideoFilter * filter,
-    GstBuffer * buff, IplImage * img);
+    GstBuffer * buff, Mat img);
 static gboolean gst_retinex_set_caps (GstOpencvVideoFilter * btrans,
-    gint in_width, gint in_height, gint in_depth, gint in_channels,
-    gint out_width, gint out_height, gint out_depth, gint out_channels);
+    gint in_width, gint in_height, int in_cv_type,
+    gint out_width, gint out_height, int out_cv_type);
 
-static void gst_retinex_release_all_images (GstRetinex * filter);
-
-static gboolean gst_retinex_stop (GstBaseTransform * basesrc);
+static void gst_retinex_finalize (GObject * object);
 
 /* initialize the retinex's class */
 static void
@@ -143,17 +138,15 @@ gst_retinex_class_init (GstRetinexClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstBaseTransformClass *btrans_class = (GstBaseTransformClass *) klass;
   GstOpencvVideoFilterClass *cvbasefilter_class =
       (GstOpencvVideoFilterClass *) klass;
 
+  gobject_class->finalize = gst_retinex_finalize;
   gobject_class->set_property = gst_retinex_set_property;
   gobject_class->get_property = gst_retinex_get_property;
 
   cvbasefilter_class->cv_trans_ip_func = gst_retinex_transform_ip;
   cvbasefilter_class->cv_set_caps = gst_retinex_set_caps;
-
-  btrans_class->stop = gst_retinex_stop;
 
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method",
@@ -192,6 +185,23 @@ gst_retinex_init (GstRetinex * filter)
       TRUE);
 }
 
+static void
+gst_retinex_finalize (GObject * object)
+{
+  GstRetinex *filter;
+  filter = GST_RETINEX (object);
+
+  filter->cvA.release ();
+  filter->cvB.release ();
+  filter->cvC.release ();
+  filter->cvD.release ();
+  g_free (filter->weights);
+  filter->weights = NULL;
+  g_free (filter->sigmas);
+  filter->sigmas = NULL;
+
+  G_OBJECT_CLASS (gst_retinex_parent_class)->finalize (object);
+}
 
 static void
 gst_retinex_set_property (GObject * object, guint prop_id,
@@ -233,60 +243,31 @@ gst_retinex_get_property (GObject * object, guint prop_id,
 
 static gboolean
 gst_retinex_set_caps (GstOpencvVideoFilter * filter, gint in_width,
-    gint in_height, gint in_depth, gint in_channels, gint out_width,
-    gint out_height, gint out_depth, gint out_channels)
+    gint in_height, int in_cv_type, gint out_width,
+    gint out_height, int out_cv_type)
 {
   GstRetinex *retinex = GST_RETINEX (filter);
-  CvSize size;
+  Size size;
 
-  size = cvSize (in_width, in_height);
+  size = Size (in_width, in_height);
 
-  if (retinex->cvA)
-    gst_retinex_release_all_images (retinex);
-
-  retinex->cvA = cvCreateImage (size, IPL_DEPTH_32F, in_channels);
-  retinex->cvB = cvCreateImage (size, IPL_DEPTH_32F, in_channels);
-  retinex->cvC = cvCreateImage (size, IPL_DEPTH_32F, in_channels);
-  retinex->cvD = cvCreateImage (size, IPL_DEPTH_32F, in_channels);
+  retinex->cvA.create (size, CV_32FC3);
+  retinex->cvB.create (size, CV_32FC3);
+  retinex->cvC.create (size, CV_32FC3);
+  retinex->cvD.create (size, CV_32FC3);
 
   return TRUE;
-}
-
-static gboolean
-gst_retinex_stop (GstBaseTransform * basesrc)
-{
-  GstRetinex *filter = GST_RETINEX (basesrc);
-
-  if (filter->cvA != NULL)
-    gst_retinex_release_all_images (filter);
-
-  g_free (filter->weights);
-  filter->weights = NULL;
-  g_free (filter->sigmas);
-  filter->sigmas = NULL;
-
-  return TRUE;
-}
-
-static void
-gst_retinex_release_all_images (GstRetinex * filter)
-{
-  cvReleaseImage (&filter->cvA);
-  cvReleaseImage (&filter->cvB);
-  cvReleaseImage (&filter->cvC);
-  cvReleaseImage (&filter->cvD);
 }
 
 static GstFlowReturn
 gst_retinex_transform_ip (GstOpencvVideoFilter * filter, GstBuffer * buf,
-    IplImage * img)
+    Mat img)
 {
   GstRetinex *retinex = GST_RETINEX (filter);
   double sigma = 14.0;
   int gain = 128;
   int offset = 128;
   int filter_size;
-  Mat icvD = cvarrToMat (retinex->cvD, false);
 
   /* Basic retinex restoration.  The image and a filtered image are converted
      to the log domain and subtracted.
@@ -294,22 +275,23 @@ gst_retinex_transform_ip (GstOpencvVideoFilter * filter, GstBuffer * buf,
      where O is the output, H is a gaussian 2d filter and I is the input image. */
   if (METHOD_BASIC == retinex->method) {
     /*  Compute log image */
-    cvConvert (img, retinex->cvA);
-    cvLog (retinex->cvA, retinex->cvB);
+    img.convertTo (retinex->cvA, retinex->cvA.type ());
+    log (retinex->cvA, retinex->cvB);
 
     /*  Compute log of blured image */
     filter_size = (int) floor (sigma * 6) / 2;
     filter_size = filter_size * 2 + 1;
 
-    cvConvert (img, retinex->cvD);
-    GaussianBlur (icvD, icvD, Size (filter_size, filter_size), 0.0, 0.0);
-    cvLog (retinex->cvD, retinex->cvC);
+    img.convertTo (retinex->cvD, retinex->cvD.type ());
+    GaussianBlur (retinex->cvD, retinex->cvD, Size (filter_size, filter_size),
+        0.0, 0.0);
+    log (retinex->cvD, retinex->cvC);
 
     /*  Compute difference */
-    cvSub (retinex->cvB, retinex->cvC, retinex->cvA, NULL);
+    subtract (retinex->cvB, retinex->cvC, retinex->cvA);
 
     /*  Restore */
-    cvConvertScale (retinex->cvA, img, (float) gain, (float) offset);
+    retinex->cvA.convertTo (img, img.type (), (float) gain, (float) offset);
   }
   /* Multiscale retinex restoration.  The image and a set of filtered images are
      converted to the log domain and subtracted from the original with some set
@@ -337,25 +319,26 @@ gst_retinex_transform_ip (GstOpencvVideoFilter * filter, GstBuffer * buf,
     }
 
     /*  Compute log image */
-    cvConvert (img, retinex->cvA);
-    cvLog (retinex->cvA, retinex->cvB);
+    img.convertTo (retinex->cvA, retinex->cvA.type ());
+    log (retinex->cvA, retinex->cvB);
 
     /*  Filter at each scale */
     for (i = 0; i < retinex->scales; i++) {
       filter_size = (int) floor (retinex->sigmas[i] * 6) / 2;
       filter_size = filter_size * 2 + 1;
 
-      cvConvert (img, retinex->cvD);
-      GaussianBlur (icvD, icvD, Size (filter_size, filter_size), 0.0, 0.0);
-      cvLog (retinex->cvD, retinex->cvC);
+      img.convertTo (retinex->cvD, retinex->cvD.type ());
+      GaussianBlur (retinex->cvD, retinex->cvD, Size (filter_size, filter_size),
+          0.0, 0.0);
+      log (retinex->cvD, retinex->cvC);
 
       /*  Compute weighted difference */
-      cvScale (retinex->cvC, retinex->cvC, retinex->weights[i], 0.0);
-      cvSub (retinex->cvB, retinex->cvC, retinex->cvB, NULL);
+      retinex->cvC.convertTo (retinex->cvC, -1, retinex->weights[i], 0.0);
+      subtract (retinex->cvB, retinex->cvC, retinex->cvB);
     }
 
     /*  Restore */
-    cvConvertScale (retinex->cvB, img, (float) gain, (float) offset);
+    retinex->cvB.convertTo (img, img.type (), (float) gain, (float) offset);
   }
 
   return GST_FLOW_OK;

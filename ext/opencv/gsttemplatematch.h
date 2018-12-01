@@ -72,7 +72,8 @@ struct _GstTemplateMatch
 
   gchar *templ;
 
-  IplImage *cvGray, *cvTemplateImage, *cvDistImage;
+  cv::Mat cvTemplateImage, cvDistImage;
+  gboolean reload_dist_image;
 };
 
 struct _GstTemplateMatchClass

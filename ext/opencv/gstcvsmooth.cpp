@@ -61,9 +61,6 @@
 #include "gst/opencv/gstopencvutils.h"
 #include "gstcvsmooth.h"
 #include <opencv2/imgproc.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
 
 
 GST_DEBUG_CATEGORY_STATIC (gst_cv_smooth_debug);
@@ -99,6 +96,15 @@ enum
  * Keep it deactivated for now.
  */
 
+enum GstCvSmoothMethod
+{
+  GST_SMOOTH_BLUR = 1,
+  GST_SMOOTH_GAUSSIAN = 2,
+  GST_SMOOTH_MEDIAN = 3,
+  GST_SMOOTH_BILATERAL = 4
+};
+
+
 #define GST_TYPE_CV_SMOOTH_TYPE (gst_cv_smooth_type_get_type ())
 static GType
 gst_cv_smooth_type_get_type (void)
@@ -106,10 +112,10 @@ gst_cv_smooth_type_get_type (void)
   static GType cv_smooth_type_type = 0;
 
   static const GEnumValue smooth_types[] = {
-    {CV_BLUR, "CV Blur", "blur"},
-    {CV_GAUSSIAN, "CV Gaussian", "gaussian"},
-    {CV_MEDIAN, "CV Median", "median"},
-    {CV_BILATERAL, "CV Bilateral", "bilateral"},
+    {GST_SMOOTH_BLUR, "CV Blur", "blur"},
+    {GST_SMOOTH_GAUSSIAN, "CV Gaussian", "gaussian"},
+    {GST_SMOOTH_MEDIAN, "CV Median", "median"},
+    {GST_SMOOTH_BILATERAL, "CV Bilateral", "bilateral"},
     {0, NULL, NULL},
   };
 
@@ -120,7 +126,7 @@ gst_cv_smooth_type_get_type (void)
   return cv_smooth_type_type;
 }
 
-#define DEFAULT_CV_SMOOTH_TYPE CV_GAUSSIAN
+#define DEFAULT_CV_SMOOTH_TYPE GST_SMOOTH_GAUSSIAN
 #define DEFAULT_KERNELWIDTH 3
 #define DEFAULT_KERNELHEIGHT 3
 #define DEFAULT_COLORSIGMA 0.0
@@ -138,7 +144,7 @@ static void gst_cv_smooth_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_cv_smooth_transform_ip (GstOpencvVideoFilter *
-    filter, GstBuffer * buf, IplImage * img);
+    filter, GstBuffer * buf, Mat img);
 
 /* initialize the cvsmooth's class */
 static void
@@ -261,8 +267,8 @@ gst_cv_smooth_change_type (GstCvSmooth * filter, gint value)
 
   filter->type = value;
   switch (value) {
-    case CV_GAUSSIAN:
-    case CV_BLUR:
+    case GST_SMOOTH_GAUSSIAN:
+    case GST_SMOOTH_BLUR:
       gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST
           (filter), TRUE);
       break;
@@ -371,14 +377,13 @@ gst_cv_smooth_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn
 gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
-    IplImage * img)
+    Mat img)
 {
   GstCvSmooth *filter = GST_CV_SMOOTH (base);
-  Mat mat = cvarrToMat (img);
 
   if (filter->positionx != 0 || filter->positiony != 0 ||
       filter->width != G_MAXINT || filter->height != G_MAXINT) {
-    Size mat_size = mat.size ();
+    Size mat_size = img.size ();
 
     /* if the effect would start outside the image, just skip it */
     if (filter->positionx >= mat_size.width
@@ -393,23 +398,23 @@ gst_cv_smooth_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
         MIN (filter->width, mat_size.width - filter->positionx),
         MIN (filter->height, mat_size.height - filter->positiony));
 
-    mat = mat (mat_rect);
+    img = img (mat_rect);
   }
 
   switch (filter->type) {
-    case CV_BLUR:
-      blur (mat, mat, Size (filter->kernelwidth, filter->kernelheight),
+    case GST_SMOOTH_BLUR:
+      blur (img, img, Size (filter->kernelwidth, filter->kernelheight),
           Point (-1, -1));
       break;
-    case CV_GAUSSIAN:
-      GaussianBlur (mat, mat, Size (filter->kernelwidth, filter->kernelheight),
+    case GST_SMOOTH_GAUSSIAN:
+      GaussianBlur (img, img, Size (filter->kernelwidth, filter->kernelheight),
           filter->colorsigma, filter->colorsigma);
       break;
-    case CV_MEDIAN:
-      medianBlur (mat, mat, filter->kernelwidth);
+    case GST_SMOOTH_MEDIAN:
+      medianBlur (img, img, filter->kernelwidth);
       break;
-    case CV_BILATERAL:
-      bilateralFilter (mat, mat, -1, filter->colorsigma, 0.0);
+    case GST_SMOOTH_BILATERAL:
+      bilateralFilter (img, img, -1, filter->colorsigma, 0.0);
       break;
     default:
       break;

@@ -81,7 +81,7 @@ struct _GstHanddetect
   /* opencv
    * cvGray - image to gray colour
    */
-  IplImage *cvGray;
+  cv::Mat cvGray;
   cv::CascadeClassifier *cvCascade_fist;
   cv::CascadeClassifier *cvCascade_palm;
   cv::Rect *prev_r;

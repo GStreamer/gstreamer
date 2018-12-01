@@ -59,10 +59,8 @@
 #endif
 
 #include "gstcvdilate.h"
+#include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_cv_dilate_debug);
 #define GST_CAT_DEFAULT gst_cv_dilate_debug
@@ -70,7 +68,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_cv_dilate_debug);
 G_DEFINE_TYPE (GstCvDilate, gst_cv_dilate, GST_TYPE_CV_DILATE_ERODE);
 
 static GstFlowReturn gst_cv_dilate_transform_ip (GstOpencvVideoFilter *
-    filter, GstBuffer * buf, IplImage * img);
+    filter, GstBuffer * buf, cv::Mat img);
 
 /* initialize the cvdilate's class */
 static void
@@ -101,11 +99,11 @@ gst_cv_dilate_init (GstCvDilate * filter)
 
 static GstFlowReturn
 gst_cv_dilate_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
-    IplImage * img)
+    cv::Mat img)
 {
   GstCvDilateErode *filter = GST_CV_DILATE_ERODE (base);
 
-  cvDilate (img, img, NULL, filter->iterations);
+  cv::dilate (img, img, cv::Mat (), cv::Point (-1, -1), filter->iterations);
 
   return GST_FLOW_OK;
 }

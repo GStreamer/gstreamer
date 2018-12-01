@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2011 Robert Jobbagy <jobbagy.robert@gmail.com>
- * Copyright (C) 2011 Nicola Murino <nicola.murino@gmail.com>
+ * Copyright (C) 2011 - 2018 Nicola Murino <nicola.murino@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -61,7 +61,7 @@ extern "C"
 #endif
 
   int motion_cells_init ();
-  int perform_detection_motion_cells (IplImage * p_image, double p_sensitivity,
+  int perform_detection_motion_cells (cv::Mat p_image, double p_sensitivity,
       double p_framerate, int p_gridx, int p_gridy,
       long int p_timestamp_millisec, bool p_isVisible, bool p_useAlpha,
       int motionmaskcoord_count, motionmaskcoordrect * motionmaskcoords,
@@ -69,7 +69,7 @@ extern "C"
       cellscolor motioncellscolor, int motioncells_count,
       motioncellidx * motioncellsidx, gint64 starttime, char *datafile,
       bool p_changed_datafile, int p_thickness, int p_id);
-  void setPrevFrame (IplImage * p_prevFrame, int p_id);
+  void setPrevFrame (cv::Mat p_prevFrame, int p_id);
   void motion_cells_free (int p_id);
   void motion_cells_free_resources (int p_id);
   char *getMotionCellsIdx (int p_id);

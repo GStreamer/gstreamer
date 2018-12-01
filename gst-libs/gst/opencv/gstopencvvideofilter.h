@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+ * Copyright (C) 2018 Nicola Murino <nicola.murino@gmail.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -47,11 +48,12 @@
 #include <gst/gst.h>
 #include <gst/video/gstvideofilter.h>
 #include <gst/opencv/opencv-prelude.h>
+#include <opencv2/core.hpp>
 
 G_BEGIN_DECLS
 
 /* forward declare opencv type to avoid exposing them in this API */
-typedef struct _IplImage IplImage;
+//typedef struct _IplImage IplImage;
 
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_OPENCV_VIDEO_FILTER \
@@ -72,15 +74,15 @@ typedef struct _GstOpencvVideoFilter GstOpencvVideoFilter;
 typedef struct _GstOpencvVideoFilterClass GstOpencvVideoFilterClass;
 
 typedef GstFlowReturn (*GstOpencvVideoFilterTransformIPFunc)
-    (GstOpencvVideoFilter * transform, GstBuffer * buffer, IplImage * img);
+    (GstOpencvVideoFilter * transform, GstBuffer * buffer, cv::Mat img);
 typedef GstFlowReturn (*GstOpencvVideoFilterTransformFunc)
-    (GstOpencvVideoFilter * transform, GstBuffer * buffer, IplImage * img,
-    GstBuffer * outbuf, IplImage * outimg);
+    (GstOpencvVideoFilter * transform, GstBuffer * buffer, cv::Mat img,
+    GstBuffer * outbuf, cv::Mat outimg);
 
 typedef gboolean (*GstOpencvVideoFilterSetCaps)
     (GstOpencvVideoFilter * transform, gint in_width, gint in_height,
-    gint in_depth, gint in_channels, gint out_width, gint out_height,
-    gint out_depth, gint out_channels);
+    int in_cv_type, gint out_width, gint out_height,
+    int out_cv_type);
 
 struct _GstOpencvVideoFilter
 {
@@ -88,8 +90,8 @@ struct _GstOpencvVideoFilter
 
   gboolean in_place;
 
-  IplImage *cvImage;
-  IplImage *out_cvImage;
+  cv::Mat cvImage;
+  cv::Mat out_cvImage;
 };
 
 struct _GstOpencvVideoFilterClass

@@ -52,7 +52,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-1.0 videotestsrc ! decodebin ! videoconvert ! templatematch template=/path/to/file.jpg ! videoconvert ! xvimagesink
+ * gst-launch-1.0 videotestsrc ! videoconvert ! templatematch template=/path/to/file.jpg ! videoconvert ! xvimagesink
  * ]|
  * </refsect2>
  */
@@ -64,13 +64,7 @@
 #include <gst/gst-i18n-plugin.h>
 #include "gsttemplatematch.h"
 #include <opencv2/imgproc.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/imgproc/imgproc_c.h>
 #include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgcodecs/legacy/constants_c.h>
-#else
-#include <opencv2/imgcodecs/imgcodecs_c.h>
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_template_match_debug);
 #define GST_CAT_DEFAULT gst_template_match_debug
@@ -116,7 +110,7 @@ static void gst_template_match_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_template_match_transform_ip (GstOpencvVideoFilter *
-    filter, GstBuffer * buf, IplImage * img);
+    filter, GstBuffer * buf, cv::Mat img);
 
 /* initialize the templatematch's class */
 static void
@@ -168,8 +162,7 @@ gst_template_match_init (GstTemplateMatch * filter)
 {
   filter->templ = NULL;
   filter->display = TRUE;
-  filter->cvTemplateImage = NULL;
-  filter->cvDistImage = NULL;
+  filter->reload_dist_image = TRUE;
   filter->method = DEFAULT_METHOD;
 
   gst_opencv_video_filter_set_in_place (GST_OPENCV_VIDEO_FILTER_CAST (filter),
@@ -180,22 +173,12 @@ gst_template_match_init (GstTemplateMatch * filter)
 static void
 gst_template_match_load_template (GstTemplateMatch * filter, gchar * templ)
 {
-  gchar *oldTemplateFilename = NULL;
-  IplImage *oldTemplateImage = NULL, *newTemplateImage = NULL, *oldDistImage =
-      NULL;
+  cv::Mat newTemplateImage;
 
   if (templ) {
-#if (CV_MAJOR_VERSION >= 4)
-    cv::Mat mat = cv::imread (templ);
-    newTemplateImage =
-        cvCreateImage (cvSize (mat.cols, mat.rows), cvIplDepth (mat.flags),
-        mat.channels ());
-    IplImage ipltemp = mat;
-    cvCopy (&ipltemp, newTemplateImage);
-#else
-    newTemplateImage = cvLoadImage (templ, CV_LOAD_IMAGE_COLOR);
-#endif
-    if (!newTemplateImage) {
+    newTemplateImage = cv::imread (templ);
+
+    if (newTemplateImage.empty ()) {
       /* Unfortunately OpenCV doesn't seem to provide any way of finding out
          why the image load failed, so we can't be more specific than FAILED: */
       GST_ELEMENT_WARNING (filter, RESOURCE, FAILED,
@@ -207,18 +190,12 @@ gst_template_match_load_template (GstTemplateMatch * filter, gchar * templ)
   }
 
   GST_OBJECT_LOCK (filter);
-  oldTemplateFilename = filter->templ;
+  g_free (filter->templ);
   filter->templ = templ;
-  oldTemplateImage = filter->cvTemplateImage;
-  filter->cvTemplateImage = newTemplateImage;
-  oldDistImage = filter->cvDistImage;
-  /* This will be recreated in the chain function as required: */
-  filter->cvDistImage = NULL;
+  filter->cvTemplateImage = cv::Mat (newTemplateImage);
+  filter->reload_dist_image = TRUE;
   GST_OBJECT_UNLOCK (filter);
 
-  cvReleaseImage (&oldDistImage);
-  cvReleaseImage (&oldTemplateImage);
-  g_free (oldTemplateFilename);
 }
 
 static void
@@ -232,22 +209,22 @@ gst_template_match_set_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (filter);
       switch (g_value_get_int (value)) {
         case 0:
-          filter->method = CV_TM_SQDIFF;
+          filter->method = cv::TM_SQDIFF;
           break;
         case 1:
-          filter->method = CV_TM_SQDIFF_NORMED;
+          filter->method = cv::TM_SQDIFF_NORMED;
           break;
         case 2:
-          filter->method = CV_TM_CCORR;
+          filter->method = cv::TM_CCORR;
           break;
         case 3:
-          filter->method = CV_TM_CCORR_NORMED;
+          filter->method = cv::TM_CCORR_NORMED;
           break;
         case 4:
-          filter->method = CV_TM_CCOEFF;
+          filter->method = cv::TM_CCOEFF;
           break;
         case 5:
-          filter->method = CV_TM_CCOEFF_NORMED;
+          filter->method = cv::TM_CCOEFF_NORMED;
           break;
       }
       GST_OBJECT_UNLOCK (filter);
@@ -298,28 +275,24 @@ gst_template_match_finalize (GObject * object)
 
   g_free (filter->templ);
 
-  if (filter->cvDistImage) {
-    cvReleaseImage (&filter->cvDistImage);
-  }
-  if (filter->cvTemplateImage) {
-    cvReleaseImage (&filter->cvTemplateImage);
-  }
+  filter->cvDistImage.release ();
+  filter->cvTemplateImage.release ();
 
   G_OBJECT_CLASS (gst_template_match_parent_class)->finalize (object);
 }
 
 static void
-gst_template_match_match (IplImage * input, IplImage * templ,
-    IplImage * dist_image, double *best_res, CvPoint * best_pos, int method)
+gst_template_match_match (cv::Mat input, cv::Mat templ,
+    cv::Mat dist_image, double *best_res, cv::Point * best_pos, int method)
 {
   double dist_min = 0, dist_max = 0;
-  CvPoint min_pos, max_pos;
-  cvMatchTemplate (input, templ, dist_image, method);
-  cvMinMaxLoc (dist_image, &dist_min, &dist_max, &min_pos, &max_pos, NULL);
-  if ((CV_TM_SQDIFF_NORMED == method) || (CV_TM_SQDIFF == method)) {
+  cv::Point min_pos, max_pos;
+  matchTemplate (input, templ, dist_image, method);
+  minMaxLoc (dist_image, &dist_min, &dist_max, &min_pos, &max_pos);
+  if ((cv::TM_SQDIFF_NORMED == method) || (cv::TM_SQDIFF == method)) {
     *best_res = dist_min;
     *best_pos = min_pos;
-    if (CV_TM_SQDIFF_NORMED == method) {
+    if (cv::TM_SQDIFF_NORMED == method) {
       *best_res = 1 - *best_res;
     }
   } else {
@@ -333,10 +306,10 @@ gst_template_match_match (IplImage * input, IplImage * templ,
  */
 static GstFlowReturn
 gst_template_match_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
-    IplImage * img)
+    cv::Mat img)
 {
   GstTemplateMatch *filter;
-  CvPoint best_pos;
+  cv::Point best_pos;
   double best_res;
   GstMessage *m = NULL;
 
@@ -345,27 +318,25 @@ gst_template_match_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
   GST_LOG_OBJECT (filter, "Buffer size %u", (guint) gst_buffer_get_size (buf));
 
   GST_OBJECT_LOCK (filter);
-  if (filter->cvTemplateImage && !filter->cvDistImage) {
-    if (filter->cvTemplateImage->width > img->width) {
+  if (!filter->cvTemplateImage.empty () && filter->reload_dist_image) {
+    if (filter->cvTemplateImage.size ().width > img.size ().width) {
       GST_WARNING ("Template Image is wider than input image");
-    } else if (filter->cvTemplateImage->height > img->height) {
+    } else if (filter->cvTemplateImage.size ().height > img.size ().height) {
       GST_WARNING ("Template Image is taller than input image");
     } else {
 
-      GST_DEBUG_OBJECT (filter, "cvCreateImage (Size(%d-%d+1,%d) %d, %d)",
-          img->width, filter->cvTemplateImage->width,
-          img->height - filter->cvTemplateImage->height + 1, IPL_DEPTH_32F, 1);
-      filter->cvDistImage =
-          cvCreateImage (cvSize (img->width -
-              filter->cvTemplateImage->width + 1,
-              img->height - filter->cvTemplateImage->height + 1),
-          IPL_DEPTH_32F, 1);
-      if (!filter->cvDistImage) {
-        GST_WARNING ("Couldn't create dist image.");
-      }
+      GST_DEBUG_OBJECT (filter, "cv create (Size(%d-%d+1,%d) %d)",
+          img.size ().width, filter->cvTemplateImage.size ().width,
+          img.size ().height - filter->cvTemplateImage.size ().height + 1,
+          CV_32FC1);
+      filter->cvDistImage.create (cv::Size (img.size ().width -
+              filter->cvTemplateImage.size ().width + 1,
+              img.size ().height - filter->cvTemplateImage.size ().height + 1),
+          CV_32FC1);
+      filter->reload_dist_image = FALSE;
     }
   }
-  if (filter->cvTemplateImage && filter->cvDistImage) {
+  if (!filter->cvTemplateImage.empty () && !filter->reload_dist_image) {
     GstStructure *s;
 
     gst_template_match_match (img, filter->cvTemplateImage,
@@ -374,18 +345,18 @@ gst_template_match_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
     s = gst_structure_new ("template_match",
         "x", G_TYPE_UINT, best_pos.x,
         "y", G_TYPE_UINT, best_pos.y,
-        "width", G_TYPE_UINT, filter->cvTemplateImage->width,
-        "height", G_TYPE_UINT, filter->cvTemplateImage->height,
+        "width", G_TYPE_UINT, filter->cvTemplateImage.size ().width,
+        "height", G_TYPE_UINT, filter->cvTemplateImage.size ().height,
         "result", G_TYPE_DOUBLE, best_res, NULL);
 
     m = gst_message_new_element (GST_OBJECT (filter), s);
 
     if (filter->display) {
-      CvPoint corner = best_pos;
-      CvScalar color;
-      if (filter->method == CV_TM_SQDIFF_NORMED
-          || filter->method == CV_TM_CCORR_NORMED
-          || filter->method == CV_TM_CCOEFF_NORMED) {
+      cv::Point corner = best_pos;
+      cv::Scalar color;
+      if (filter->method == cv::TM_SQDIFF_NORMED
+          || filter->method == cv::TM_CCORR_NORMED
+          || filter->method == cv::TM_CCOEFF_NORMED) {
         /* Yellow growing redder as match certainty approaches 1.0.  This can
            only be applied with method == *_NORMED as the other match methods
            aren't normalized to be in range 0.0 - 1.0 */
@@ -396,9 +367,9 @@ gst_template_match_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
 
       buf = gst_buffer_make_writable (buf);
 
-      corner.x += filter->cvTemplateImage->width;
-      corner.y += filter->cvTemplateImage->height;
-      cvRectangle (img, best_pos, corner, color, 3, 8, 0);
+      corner.x += filter->cvTemplateImage.size ().width;
+      corner.y += filter->cvTemplateImage.size ().height;
+      cv::rectangle (img, best_pos, corner, color, 3, 8, 0);
     }
 
   }

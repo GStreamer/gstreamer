@@ -49,9 +49,6 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/calib3d.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/core/types_c.h>
-#endif
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
@@ -87,18 +84,18 @@ struct _GstDisparity
   GCond cond;
   gboolean flushing;
 
-  CvSize imgSize;
-  IplImage *cvRGB_right;
-  IplImage *cvRGB_left;
-  IplImage *cvGray_right;
-  IplImage *cvGray_left;
-  IplImage *cvGray_depth_map1;  /*IPL_DEPTH_16S */
-  IplImage *cvGray_depth_map2;  /*IPL_DEPTH_8U */
-  IplImage *cvGray_depth_map1_2;        /*IPL_DEPTH_16S */
+  cv::Size imgSize;
+  cv::Mat cvRGB_right;
+  cv::Mat cvRGB_left;
+  cv::Mat cvGray_right;
+  cv::Mat cvGray_left;
+  cv::Mat cvGray_depth_map1;  /*IPL_DEPTH_16S */
+  cv::Mat cvGray_depth_map2;  /*IPL_DEPTH_8U */
+  cv::Mat cvGray_depth_map1_2;        /*IPL_DEPTH_16S */
 
-  void *img_right_as_cvMat_gray;        /* cv::Mat */
-  void *img_left_as_cvMat_gray; /* cv::Mat */
-  void *depth_map_as_cvMat;     /* cv::Mat */
+  cv::Mat img_right_as_cvMat_gray;        
+  cv::Mat img_left_as_cvMat_gray;
+  cv::Mat depth_map_as_cvMat;     
 
   cv::Ptr<cv::StereoBM> sbm;                    /* cv::StereoBM */
   cv::Ptr<cv::StereoSGBM> sgbm;                /* cv::StereoSGBM */

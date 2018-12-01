@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2016 Prassel S.r.l
+ * Copyright (C) 2016 - 2018 Prassel S.r.l
  *  Author: Nicola Murino <nicola.murino@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -47,11 +47,7 @@
 
 #include <gst/gst.h>
 #include <gst/opencv/gstopencvvideofilter.h>
-#include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
@@ -84,8 +80,8 @@ enum _GstDewarpInterpolationMode {
 struct _GstDewarp
 {
   GstOpencvVideoFilter element;
-  cv::Mat *map_x;
-  cv::Mat *map_y;
+  cv::Mat map_x;
+  cv::Mat map_y;
   gdouble x_center;
   gdouble y_center;
   gdouble inner_radius;

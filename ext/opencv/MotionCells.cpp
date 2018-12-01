@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2011 Robert Jobbagy <jobbagy.robert@gmail.com>
- * Copyright (C) 2011 Nicola Murino <nicola.murino@gmail.com>
+ * Copyright (C) 2011 - 2018 Nicola Murino <nicola.murino@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -49,9 +49,6 @@
 #include <errno.h>
 #include "MotionCells.h"
 #include <opencv2/imgproc.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
 
 MotionCells::MotionCells ()
 {
@@ -60,11 +57,6 @@ MotionCells::MotionCells ()
   m_motioncellsidxcstr = NULL;
   m_saveInDatafile = false;
   mc_savefile = NULL;
-  m_pcurFrame = NULL;
-  m_pprevFrame = NULL;
-  transparencyimg = NULL;
-  m_pdifferenceImage = NULL;
-  m_pbwImage = NULL;
   m_initdatafilefailed = new char[BUSMSGLEN];
   m_savedatafilefailed = new char[BUSMSGLEN];
   m_initerrorcode = 0;
@@ -101,20 +93,16 @@ MotionCells::~MotionCells ()
   delete[]m_savedatafilefailed;
   if (m_motioncellsidxcstr)
     delete[]m_motioncellsidxcstr;
-  if (m_pcurFrame)
-    cvReleaseImage (&m_pcurFrame);
-  if (m_pprevFrame)
-    cvReleaseImage (&m_pprevFrame);
-  if (transparencyimg)
-    cvReleaseImage (&transparencyimg);
-  if (m_pdifferenceImage)
-    cvReleaseImage (&m_pdifferenceImage);
-  if (m_pbwImage)
-    cvReleaseImage (&m_pbwImage);
+
+  m_pcurFrame.release ();
+  m_pprevFrame.release ();
+  transparencyimg.release ();
+  m_pdifferenceImage.release ();
+  m_pbwImage.release ();
 }
 
 int
-MotionCells::performDetectionMotionCells (IplImage * p_frame,
+MotionCells::performDetectionMotionCells (cv::Mat p_frame,
     double p_sensitivity, double p_framerate, int p_gridx, int p_gridy,
     gint64 timestamp_millisec, bool p_isVisible, bool p_useAlpha,
     int motionmaskcoord_count, motionmaskcoordrect * motionmaskcoords,
@@ -126,7 +114,7 @@ MotionCells::performDetectionMotionCells (IplImage * p_frame,
 
   int sumframecnt = 0;
   int ret = 0;
-  CvSize frameSize;
+  cv::Size frameSize;
 
   p_framerate >= 1 ? p_framerate <= 5 ? sumframecnt = 1
       : p_framerate <= 10 ? sumframecnt = 2
@@ -147,38 +135,36 @@ MotionCells::performDetectionMotionCells (IplImage * p_frame,
         return ret;
     }
 
-    frameSize = cvGetSize (p_frame);
+    frameSize = p_frame.size ();
     frameSize.width /= 2;
     frameSize.height /= 2;
     setMotionCells (frameSize.width, frameSize.height);
     m_sensitivity = 1 - p_sensitivity;
     m_isVisible = p_isVisible;
-    m_pcurFrame = cvCloneImage (p_frame);
-    IplImage *m_pcurgreyImage = cvCreateImage (frameSize, IPL_DEPTH_8U, 1);
-    IplImage *m_pprevgreyImage = cvCreateImage (frameSize, IPL_DEPTH_8U, 1);
-    IplImage *m_pgreyImage = cvCreateImage (frameSize, IPL_DEPTH_8U, 1);
-    IplImage *m_pcurDown =
-        cvCreateImage (frameSize, m_pcurFrame->depth, m_pcurFrame->nChannels);
-    IplImage *m_pprevDown = cvCreateImage (frameSize, m_pprevFrame->depth,
-        m_pprevFrame->nChannels);
-    m_pbwImage = cvCreateImage (frameSize, IPL_DEPTH_8U, 1);
-    cvPyrDown (m_pprevFrame, m_pprevDown);
-    cvCvtColor (m_pprevDown, m_pprevgreyImage, CV_RGB2GRAY);
-    cvPyrDown (m_pcurFrame, m_pcurDown);
-    cvCvtColor (m_pcurDown, m_pcurgreyImage, CV_RGB2GRAY);
-    m_pdifferenceImage = cvCloneImage (m_pcurgreyImage);
+    m_pcurFrame = p_frame.clone ();
+    cv::Mat m_pcurgreyImage = cv::Mat (frameSize, CV_8UC1);
+    cv::Mat m_pprevgreyImage = cv::Mat (frameSize, CV_8UC1);
+    cv::Mat m_pgreyImage = cv::Mat (frameSize, CV_8UC1);
+    cv::Mat m_pcurDown = cv::Mat (frameSize, m_pcurFrame.type ());
+    cv::Mat m_pprevDown = cv::Mat (frameSize, m_pprevFrame.type ());
+    m_pbwImage.create (frameSize, CV_8UC1);
+    pyrDown (m_pprevFrame, m_pprevDown);
+    cvtColor (m_pprevDown, m_pprevgreyImage, cv::COLOR_RGB2GRAY);
+    pyrDown (m_pcurFrame, m_pcurDown);
+    cvtColor (m_pcurDown, m_pcurgreyImage, cv::COLOR_RGB2GRAY);
+    m_pdifferenceImage = m_pcurgreyImage.clone ();
     //cvSmooth(m_pcurgreyImage, m_pcurgreyImage, CV_GAUSSIAN, 3, 0);//TODO camera noise reduce,something smoothing, and rethink runningavg weights
 
     //Minus the current gray frame from the 8U moving average.
-    cvAbsDiff (m_pprevgreyImage, m_pcurgreyImage, m_pdifferenceImage);
+    cv::absdiff (m_pprevgreyImage, m_pcurgreyImage, m_pdifferenceImage);
 
     //Convert the image to black and white.
-    cvAdaptiveThreshold (m_pdifferenceImage, m_pbwImage, 255,
-        CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY_INV, 7);
+    cv::adaptiveThreshold (m_pdifferenceImage, m_pbwImage, 255,
+        cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY_INV, 7, 5);
 
     // Dilate and erode to get object blobs
-    cvDilate (m_pbwImage, m_pbwImage, NULL, 2);
-    cvErode (m_pbwImage, m_pbwImage, NULL, 2);
+    cv::dilate (m_pbwImage, m_pbwImage, cv::Mat (), cv::Point (-1, -1), 2);
+    cv::erode (m_pbwImage, m_pbwImage, cv::Mat (), cv::Point (-1, -1), 2);
 
     //mask-out the overlay on difference image
     if (motionmaskcoord_count > 0)
@@ -188,15 +174,12 @@ MotionCells::performDetectionMotionCells (IplImage * p_frame,
     if (getIsNonZero (m_pbwImage)) {    //detect Motion
       if (m_MotionCells.size () > 0)    //it contains previous motioncells what we used when frames dropped
         m_MotionCells.clear ();
-      if (transparencyimg)
-        cvReleaseImage (&transparencyimg);
       (motioncells_count > 0) ?
           calculateMotionPercentInMotionCells (motioncellsidx,
           motioncells_count)
           : calculateMotionPercentInMotionCells (motionmaskcellsidx, 0);
 
-      transparencyimg = cvCreateImage (cvGetSize (p_frame), p_frame->depth, 3);
-      cvSetZero (transparencyimg);
+      transparencyimg = cv::Mat::zeros (p_frame.size (), p_frame.type ());
       if (m_motioncellsidxcstr)
         delete[]m_motioncellsidxcstr;
       m_motioncells_idx_count = m_MotionCells.size () * MSGLEN; //one motion cell idx: (lin idx : col idx,) it's up to 6 character except last motion cell idx
@@ -204,22 +187,20 @@ MotionCells::performDetectionMotionCells (IplImage * p_frame,
       char *tmpstr = new char[MSGLEN + 1];
       tmpstr[0] = 0;
       for (unsigned int i = 0; i < m_MotionCells.size (); i++) {
-        CvPoint pt1, pt2;
+        cv::Point pt1, pt2;
         pt1.x = m_MotionCells.at (i).cell_pt1.x * 2;
         pt1.y = m_MotionCells.at (i).cell_pt1.y * 2;
         pt2.x = m_MotionCells.at (i).cell_pt2.x * 2;
         pt2.y = m_MotionCells.at (i).cell_pt2.y * 2;
         if (m_useAlpha && m_isVisible) {
-          cvRectangle (transparencyimg,
-              pt1,
-              pt2,
+          cv::rectangle (transparencyimg,
+              pt1, pt2,
               CV_RGB (motioncellscolor.B_channel_value,
                   motioncellscolor.G_channel_value,
-                  motioncellscolor.R_channel_value), CV_FILLED);
+                  motioncellscolor.R_channel_value), cv::FILLED);
         } else if (m_isVisible) {
-          cvRectangle (p_frame,
-              pt1,
-              pt2,
+          cv::rectangle (p_frame,
+              pt1, pt2,
               CV_RGB (motioncellscolor.B_channel_value,
                   motioncellscolor.G_channel_value,
                   motioncellscolor.R_channel_value), p_thickness);
@@ -256,30 +237,10 @@ MotionCells::performDetectionMotionCells (IplImage * p_frame,
       m_motioncells_idx_count = 0;
       if (m_MotionCells.size () > 0)
         m_MotionCells.clear ();
-      if (transparencyimg)
-        cvReleaseImage (&transparencyimg);
     }
 
-    if (m_pprevFrame)
-      cvReleaseImage (&m_pprevFrame);
-    m_pprevFrame = cvCloneImage (m_pcurFrame);
+    m_pprevFrame = m_pcurFrame.clone ();
     m_framecnt = 0;
-    if (m_pcurFrame)
-      cvReleaseImage (&m_pcurFrame);
-    if (m_pdifferenceImage)
-      cvReleaseImage (&m_pdifferenceImage);
-    if (m_pcurgreyImage)
-      cvReleaseImage (&m_pcurgreyImage);
-    if (m_pprevgreyImage)
-      cvReleaseImage (&m_pprevgreyImage);
-    if (m_pgreyImage)
-      cvReleaseImage (&m_pgreyImage);
-    if (m_pbwImage)
-      cvReleaseImage (&m_pbwImage);
-    if (m_pprevDown)
-      cvReleaseImage (&m_pprevDown);
-    if (m_pcurDown)
-      cvReleaseImage (&m_pcurDown);
     if (m_pCells) {
       for (int i = 0; i < m_gridy; ++i) {
         delete[]m_pCells[i];
@@ -290,27 +251,25 @@ MotionCells::performDetectionMotionCells (IplImage * p_frame,
     if (p_framerate <= 5) {
       if (m_MotionCells.size () > 0)
         m_MotionCells.clear ();
-      if (transparencyimg)
-        cvReleaseImage (&transparencyimg);
     }
   } else {                      //we do frame drop
     m_motioncells_idx_count = 0;
     ret = -2;
     for (unsigned int i = 0; i < m_MotionCells.size (); i++) {
-      CvPoint pt1, pt2;
+      cv::Point pt1, pt2;
       pt1.x = m_MotionCells.at (i).cell_pt1.x * 2;
       pt1.y = m_MotionCells.at (i).cell_pt1.y * 2;
       pt2.x = m_MotionCells.at (i).cell_pt2.x * 2;
       pt2.y = m_MotionCells.at (i).cell_pt2.y * 2;
       if (m_useAlpha && m_isVisible) {
-        cvRectangle (transparencyimg,
+        cv::rectangle (transparencyimg,
             pt1,
             pt2,
             CV_RGB (motioncellscolor.B_channel_value,
                 motioncellscolor.G_channel_value,
-                motioncellscolor.R_channel_value), CV_FILLED);
+                motioncellscolor.R_channel_value), cv::FILLED);
       } else if (m_isVisible) {
-        cvRectangle (p_frame,
+        cv::rectangle (p_frame,
             pt1,
             pt2,
             CV_RGB (motioncellscolor.B_channel_value,
@@ -447,8 +406,7 @@ MotionCells::calculateMotionPercentInCell (int p_row, int p_col,
   for (int i = ybegin; i < yend; i++) {
     for (int j = xbegin; j < xend; j++) {
       cntpixelsnum++;
-      if ((((uchar *) (m_pbwImage->imageData + m_pbwImage->widthStep * i))[j]) >
-          0) {
+      if ((((uchar *) (m_pbwImage.data + m_pbwImage.step[0] * i))[j]) > 0) {
         cntmotionpixelnum++;
         if (cntmotionpixelnum >= thresholdmotionpixelnum) {     //we dont needs calculate anymore
           *p_motionarea = cntmotionpixelnum;
@@ -487,7 +445,7 @@ MotionCells::calculateMotionPercentInMotionCells (motioncellidx *
           mci.cell_pt2.y = floor ((double) (i + 1) * m_cellheight);
           int w = mci.cell_pt2.x - mci.cell_pt1.x;
           int h = mci.cell_pt2.y - mci.cell_pt1.y;
-          mci.motioncell = cvRect (mci.cell_pt1.x, mci.cell_pt1.y, w, h);
+          mci.motioncell = cv::Rect (mci.cell_pt1.x, mci.cell_pt1.y, w, h);
           m_MotionCells.push_back (mci);
         }
       }
@@ -512,7 +470,7 @@ MotionCells::calculateMotionPercentInMotionCells (motioncellidx *
         mci.cell_pt2.y = floor ((double) (i + 1) * m_cellheight);
         int w = mci.cell_pt2.x - mci.cell_pt1.x;
         int h = mci.cell_pt2.y - mci.cell_pt1.y;
-        mci.motioncell = cvRect (mci.cell_pt1.x, mci.cell_pt1.y, w, h);
+        mci.motioncell = cv::Rect (mci.cell_pt1.x, mci.cell_pt1.y, w, h);
         m_MotionCells.push_back (mci);
       }
     }
@@ -523,10 +481,10 @@ void
 MotionCells::performMotionMaskCoords (motionmaskcoordrect * p_motionmaskcoords,
     int p_motionmaskcoords_count)
 {
-  CvPoint upperleft;
+  cv::Point upperleft;
   upperleft.x = 0;
   upperleft.y = 0;
-  CvPoint lowerright;
+  cv::Point lowerright;
   lowerright.x = 0;
   lowerright.y = 0;
   for (int i = 0; i < p_motionmaskcoords_count; i++) {
@@ -534,8 +492,8 @@ MotionCells::performMotionMaskCoords (motionmaskcoordrect * p_motionmaskcoords,
     upperleft.y = p_motionmaskcoords[i].upper_left_y;
     lowerright.x = p_motionmaskcoords[i].lower_right_x;
     lowerright.y = p_motionmaskcoords[i].lower_right_y;
-    cvRectangle (m_pbwImage, upperleft, lowerright, CV_RGB (0, 0, 0),
-        CV_FILLED);
+    cv::rectangle (m_pbwImage, upperleft, lowerright, CV_RGB (0, 0, 0),
+        cv::FILLED);
   }
 }
 
@@ -552,7 +510,7 @@ MotionCells::performMotionMask (motioncellidx * p_motionmaskcellsidx,
         (double) p_motionmaskcellsidx[k].lineidx * m_cellheight + m_cellheight;
     for (int i = beginy; i < endy; i++)
       for (int j = beginx; j < endx; j++) {
-        ((uchar *) (m_pbwImage->imageData + m_pbwImage->widthStep * i))[j] = 0;
+        ((uchar *) (m_pbwImage.data + m_pbwImage.step[0] * i))[j] = 0;
       }
   }
 }
@@ -560,17 +518,17 @@ MotionCells::performMotionMask (motioncellidx * p_motionmaskcellsidx,
 ///BGR if we use only OpenCV
 //RGB if we use gst+OpenCV
 void
-MotionCells::blendImages (IplImage * p_actFrame, IplImage * p_cellsFrame,
+MotionCells::blendImages (cv::Mat p_actFrame, cv::Mat p_cellsFrame,
     float p_alpha, float p_beta)
 {
 
-  int height = p_actFrame->height;
-  int width = p_actFrame->width;
-  int step = p_actFrame->widthStep / sizeof (uchar);
-  int channels = p_actFrame->nChannels;
-  int cellstep = p_cellsFrame->widthStep / sizeof (uchar);
-  uchar *curImageData = (uchar *) p_actFrame->imageData;
-  uchar *cellImageData = (uchar *) p_cellsFrame->imageData;
+  int height = p_actFrame.size ().height;
+  int width = p_actFrame.size ().width;
+  int step = p_actFrame.step[0] / sizeof (uchar);
+  int channels = p_actFrame.channels ();
+  int cellstep = p_cellsFrame.step[0] / sizeof (uchar);
+  uchar *curImageData = (uchar *) p_actFrame.data;
+  uchar *cellImageData = (uchar *) p_cellsFrame.data;
 
   for (int i = 0; i < height; i++)
     for (int j = 0; j < width; j++)

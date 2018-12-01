@@ -71,10 +71,10 @@ struct _GstSkinDetect
   gint method;
   gint width, height;
 
-  IplImage *cvChA, *cvRGB, *cvSkin;
-  IplImage *cvHSV, *cvH, *cvH2, *cvS, *cvV, *cvSkinPixels1;
-  IplImage *cvR, *cvG, *cvB, *cvAll, *cvR2, *cvRp, *cvGp, *cvRp2, *cvGp2,
-      *cvdraft, *cvSkinPixels2;
+  cv::Mat cvChA, cvRGB;
+  cv::Mat cvHSV, cvH, cvH2, cvS, cvV, cvSkinPixels1;
+  cv::Mat cvR, cvG, cvB, cvAll, cvR2, cvRp, cvGp, cvRp2, cvGp2,
+      cvdraft, cvSkinPixels2;
 };
 
 struct _GstSkinDetectClass

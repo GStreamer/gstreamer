@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2011 Robert Jobbagy <jobbagy.robert@gmail.com>
- * Copyright (C) 2011 Nicola Murino <nicola.murino@gmail.com>
+ * Copyright (C) 2011 - 2018 Nicola Murino <nicola.murino@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -57,7 +57,7 @@ static int instanceCounter = 0;
 static bool element_id_was_max = false;
 
 vector < instanceOfMC > motioncellsvector;
-vector < int > motioncellsfreeids;
+vector < int >motioncellsfreeids;
 
 MotionCells *mc;
 char p_str[] = "idx failed";
@@ -82,7 +82,7 @@ motion_cells_init ()
 }
 
 int
-perform_detection_motion_cells (IplImage * p_image, double p_sensitivity,
+perform_detection_motion_cells (cv::Mat p_image, double p_sensitivity,
     double p_framerate, int p_gridx, int p_gridy, long int p_timestamp_millisec,
     bool p_isVisible, bool p_useAlpha, int motionmaskcoord_count,
     motionmaskcoordrect * motionmaskcoords, int motionmaskcells_count,
@@ -105,7 +105,7 @@ perform_detection_motion_cells (IplImage * p_image, double p_sensitivity,
 
 
 void
-setPrevFrame (IplImage * p_prevFrame, int p_id)
+setPrevFrame (cv::Mat p_prevFrame, int p_id)
 {
   int idx = 0;
   idx = searchIdx (p_id);

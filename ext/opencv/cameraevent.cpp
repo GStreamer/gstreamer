@@ -39,7 +39,7 @@ gst_camera_event_new_calibrated (gchar * settings)
   GstStructure *s;
 
   s = gst_structure_new (GST_CAMERA_EVENT_CALIBRATED_NAME,
-          "undistort-settings", G_TYPE_STRING, g_strdup(settings), NULL);
+      "undistort-settings", G_TYPE_STRING, g_strdup (settings), NULL);
 
   calibrated_event = gst_event_new_custom (GST_EVENT_CUSTOM_BOTH, s);
 
@@ -66,16 +66,16 @@ gst_camera_event_parse_calibrated (GstEvent * event, gchar ** settings)
   g_return_val_if_fail (event != NULL, FALSE);
 
   if (GST_EVENT_TYPE (event) != GST_EVENT_CUSTOM_BOTH)
-      return FALSE;               /* Not a calibrated event */
+    return FALSE;               /* Not a calibrated event */
 
   s = gst_event_get_structure (event);
   if (s == NULL
       || !gst_structure_has_name (s, GST_CAMERA_EVENT_CALIBRATED_NAME))
     return FALSE;               /* Not a calibrated event */
 
-  const gchar *str = gst_structure_get_string(s, "undistort-settings");
+  const gchar *str = gst_structure_get_string (s, "undistort-settings");
   if (!str)
-      return FALSE;               /* Not calibrated frame event */
+    return FALSE;               /* Not calibrated frame event */
 
   *settings = g_strdup (str);
 

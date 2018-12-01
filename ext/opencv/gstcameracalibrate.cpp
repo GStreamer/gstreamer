@@ -85,9 +85,6 @@
 #include "gstcameracalibrate.h"
 
 #include <opencv2/imgproc.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
 #include <opencv2/calib3d.hpp>
 
 #include <gst/opencv/gstopencvutils.h>
@@ -172,7 +169,7 @@ static void gst_camera_calibrate_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn
 gst_camera_calibrate_transform_frame_ip (GstOpencvVideoFilter * cvfilter,
-    GstBuffer * frame, IplImage * img);
+    GstBuffer * frame, cv::Mat img);
 
 /* clean up */
 static void
@@ -455,14 +452,14 @@ gst_camera_calibrate_get_property (GObject * object, guint prop_id,
   }
 }
 
-void camera_calibrate_run (GstCameraCalibrate * calib, IplImage * img);
+void camera_calibrate_run (GstCameraCalibrate * calib, cv::Mat img);
 
 /*
  * Performs the camera calibration
  */
 static GstFlowReturn
 gst_camera_calibrate_transform_frame_ip (GstOpencvVideoFilter * cvfilter,
-    G_GNUC_UNUSED GstBuffer * frame, IplImage * img)
+    G_GNUC_UNUSED GstBuffer * frame, cv::Mat img)
 {
   GstCameraCalibrate *calib = GST_CAMERA_CALIBRATE (cvfilter);
 
@@ -476,14 +473,13 @@ bool camera_calibrate_calibrate (GstCameraCalibrate * calib,
     std::vector < std::vector < cv::Point2f > >imagePoints);
 
 void
-camera_calibrate_run (GstCameraCalibrate * calib, IplImage * img)
+camera_calibrate_run (GstCameraCalibrate * calib, cv::Mat img)
 {
-  cv::Mat view = cv::cvarrToMat (img);
 
   // For camera only take new samples after delay time
   if (calib->mode == CAPTURING) {
     // get_input
-    cv::Size imageSize = view.size ();
+    cv::Size imageSize = img.size ();
 
     /* find_pattern
      * FIXME find ways to reduce CPU usage
@@ -506,15 +502,15 @@ camera_calibrate_run (GstCameraCalibrate * calib, IplImage * img)
     switch (calib->calibrationPattern) {
       case GST_CAMERA_CALIBRATION_PATTERN_CHESSBOARD:
         found =
-            cv::findChessboardCorners (view, calib->boardSize, pointBuf,
+            cv::findChessboardCorners (img, calib->boardSize, pointBuf,
             chessBoardFlags);
         break;
       case GST_CAMERA_CALIBRATION_PATTERN_CIRCLES_GRID:
-        found = cv::findCirclesGrid (view, calib->boardSize, pointBuf);
+        found = cv::findCirclesGrid (img, calib->boardSize, pointBuf);
         break;
       case GST_CAMERA_CALIBRATION_PATTERN_ASYMMETRIC_CIRCLES_GRID:
         found =
-            cv::findCirclesGrid (view, calib->boardSize, pointBuf,
+            cv::findCirclesGrid (img, calib->boardSize, pointBuf,
             cv::CALIB_CB_ASYMMETRIC_GRID);
         break;
       default:
@@ -531,7 +527,7 @@ camera_calibrate_run (GstCameraCalibrate * calib, IplImage * img)
          * the color convert should be done once (if needed) and shared
          * FIXME keep viewGray around to avoid reallocating it each time... */
         cv::Mat viewGray;
-        cv::cvtColor (view, viewGray, cv::COLOR_BGR2GRAY);
+        cv::cvtColor (img, viewGray, cv::COLOR_BGR2GRAY);
         cv::cornerSubPix (viewGray, pointBuf, cv::Size (11, 11), cv::Size (-1,
                 -1),
             cv::TermCriteria (cv::TermCriteria::EPS + cv::TermCriteria::COUNT,
@@ -549,7 +545,7 @@ camera_calibrate_run (GstCameraCalibrate * calib, IplImage * img)
 
       /* draw the corners */
       if (calib->showCorners) {
-        cv::drawChessboardCorners (view, calib->boardSize, cv::Mat (pointBuf),
+        cv::drawChessboardCorners (img, calib->boardSize, cv::Mat (pointBuf),
             found);
       }
     }
@@ -598,7 +594,7 @@ camera_calibrate_run (GstCameraCalibrate * calib, IplImage * img)
     }
 
     if (calib->mode == CAPTURING && blinkOutput) {
-      bitwise_not (view, view);
+      bitwise_not (img, img);
     }
 
   }
@@ -613,8 +609,8 @@ camera_calibrate_run (GstCameraCalibrate * calib, IplImage * img)
       (calib->mode == CALIBRATED) ? "Calibrated" : "Waiting...";
   int baseLine = 0;
   cv::Size textSize = cv::getTextSize (msg, 1, 1, 1, &baseLine);
-  cv::Point textOrigin (view.cols - 2 * textSize.width - 10,
-      view.rows - 2 * baseLine - 10);
+  cv::Point textOrigin (img.cols - 2 * textSize.width - 10,
+      img.rows - 2 * baseLine - 10);
 
   if (calib->mode == CAPTURING) {
     msg =
@@ -624,7 +620,7 @@ camera_calibrate_run (GstCameraCalibrate * calib, IplImage * img)
   const cv::Scalar RED (0, 0, 255);
   const cv::Scalar GREEN (0, 255, 0);
 
-  cv::putText (view, msg, textOrigin, 1, 1,
+  cv::putText (img, msg, textOrigin, 1, 1,
       calib->mode == CALIBRATED ? GREEN : RED);
 }
 

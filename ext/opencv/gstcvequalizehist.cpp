@@ -62,9 +62,6 @@
 
 #include "gstcvequalizehist.h"
 #include <opencv2/imgproc.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_cv_equalize_hist_debug);
 #define GST_CAT_DEFAULT gst_cv_equalize_hist_debug
@@ -83,8 +80,7 @@ G_DEFINE_TYPE (GstCvEqualizeHist, gst_cv_equalize_hist,
     GST_TYPE_OPENCV_VIDEO_FILTER);
 
 static GstFlowReturn gst_cv_equalize_hist_transform (GstOpencvVideoFilter *
-    filter, GstBuffer * buf, IplImage * img, GstBuffer * outbuf,
-    IplImage * outimg);
+    filter, GstBuffer * buf, cv::Mat img, GstBuffer * outbuf, cv::Mat outimg);
 
 
 static void
@@ -115,9 +111,9 @@ gst_cv_equalize_hist_init (GstCvEqualizeHist * filter)
 
 static GstFlowReturn
 gst_cv_equalize_hist_transform (GstOpencvVideoFilter * base,
-    GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg)
+    GstBuffer * buf, cv::Mat img, GstBuffer * outbuf, cv::Mat outimg)
 {
-  cvEqualizeHist (img, outimg);
+  cv::equalizeHist (img, outimg);
   return GST_FLOW_OK;
 }
 

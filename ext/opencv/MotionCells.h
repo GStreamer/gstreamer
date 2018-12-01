@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2011 Robert Jobbagy <jobbagy.robert@gmail.com>
- * Copyright (C) 2011 Nicola Murino <nicola.murino@gmail.com>
+ * Copyright (C) 2011 - 2018 Nicola Murino <nicola.murino@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -46,11 +46,6 @@
 #define MOTIONCELLS_H_
 
 #include <opencv2/core.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/core/types_c.h>
-#include <opencv2/core/core_c.h>
-#endif
-
 #include <fstream>
 #include <vector>
 #include <glib.h>
@@ -109,18 +104,18 @@ struct Cell
 
 struct MotionCellsIdx
 {
-  CvRect motioncell;
+  cv::Rect motioncell;
   //Points for the edges of the rectangle.
-  CvPoint cell_pt1;
-  CvPoint cell_pt2;
+  cv::Point cell_pt1;
+  cv::Point cell_pt2;
   int lineidx;
   int colidx;
 };
 
 struct OverlayRegions
 {
-  CvPoint upperleft;
-  CvPoint lowerright;
+  cv::Point upperleft;
+  cv::Point lowerright;
 };
 
 class MotionCells
@@ -130,7 +125,7 @@ public:
   MotionCells ();
   virtual ~ MotionCells ();
 
-  int performDetectionMotionCells (IplImage * p_frame, double p_sensitivity,
+  int performDetectionMotionCells (cv::Mat p_frame, double p_sensitivity,
       double p_framerate, int p_gridx, int p_gridy, gint64 timestamp_millisec,
       bool p_isVisble, bool p_useAlpha, int motionmaskcoord_count,
       motionmaskcoordrect * motionmaskcoords, int motionmaskcells_count,
@@ -138,9 +133,9 @@ public:
       int motioncells_count, motioncellidx * motioncellsidx, gint64 starttime,
       char *datafile, bool p_changed_datafile, int p_thickness);
 
-  void setPrevFrame (IplImage * p_prevframe)
+  void setPrevFrame (cv::Mat p_prevframe)
   {
-    m_pprevFrame = cvCloneImage (p_prevframe);
+    m_pprevFrame = p_prevframe.clone();
   }
   char *getMotionCellsIdx ()
   {
@@ -198,26 +193,26 @@ private:
       p_motionmaskcellsidx, int p_motionmaskcells_count = 0);
   int saveMotionCells (gint64 timestamp_millisec);
   int initDataFile (char *p_datafile, gint64 starttime);
-  void blendImages (IplImage * p_actFrame, IplImage * p_cellsFrame,
+  void blendImages (cv::Mat p_actFrame, cv::Mat p_cellsFrame,
       float p_alpha, float p_beta);
 
-  void setData (IplImage * img, int lin, int col, uchar valor)
+  void setData (cv::Mat img, int lin, int col, uchar valor)
   {
-    ((uchar *) (img->imageData + img->widthStep * lin))[col] = valor;
+    ((uchar *) (img.data + img.step[0] * lin))[col] = valor;
   }
 
-  uchar getData (IplImage * img, int lin, int col)
+  uchar getData (cv::Mat img, int lin, int col)
   {
-    return ((uchar *) (img->imageData + img->widthStep * lin))[col];
+    return ((uchar *) (img.data + img.step[0] * lin))[col];
   }
 
-  bool getIsNonZero (IplImage * img)
+  bool getIsNonZero (cv::Mat img)
   {
     int lin, col;
 
-    for (lin = 0; lin < img->height; lin++)
-      for (col = 0; col < img->width; col++) {
-        if ((((uchar *) (img->imageData + img->widthStep * lin))[col]) > 0)
+    for (lin = 0; lin < img.size().height; lin++)
+      for (col = 0; col < img.size().width; col++) {
+        if ((((uchar *) (img.data + img.step[0] * lin))[col]) > 0)
           return true;
       }
     return false;
@@ -243,8 +238,8 @@ private:
       }
   }
 
-  IplImage *m_pcurFrame, *m_pprevFrame, *m_pdifferenceImage,
-      *m_pbwImage,*transparencyimg;
+  cv::Mat m_pprevFrame, m_pdifferenceImage, m_pbwImage, m_pcurFrame,
+    transparencyimg;
   bool m_isVisible, m_changed_datafile, m_useAlpha, m_saveInDatafile;
   Cell **m_pCells;
   vector < MotionCellsIdx > m_MotionCells;

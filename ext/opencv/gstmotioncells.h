@@ -1,7 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2011 Robert Jobbagy <jobbagy.robert@gmail.com>
- * Copyright (C) 2011 Nicola Murino <nicola.murino@gmail.com>
+ * Copyright (C) 2011 - 2018 Nicola Murino <nicola.murino@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -46,7 +46,6 @@
 #define __GST_MOTIONCELLS_H__
 
 #include <gst/opencv/gstopencvvideofilter.h>
-#include <opencv2/core.hpp>
 #include "motioncells_wrapper.h"
 
 G_BEGIN_DECLS
@@ -87,7 +86,6 @@ struct _GstMotioncells
   gint64 diff_timestamp, starttime;
   guint64 consecutive_motion;
   gint width, height;
-  //time stuff
   GTimeVal tv;
   double framerate;
   //Video width and height are known in "gst_motion_cells_handle_sink_event",

@@ -60,9 +60,6 @@
 
 #include "gstskindetect.h"
 #include <opencv2/imgproc.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_skin_detect_debug);
 #define GST_CAT_DEFAULT gst_skin_detect_debug
@@ -121,14 +118,13 @@ static void gst_skin_detect_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_skin_detect_transform (GstOpencvVideoFilter * filter,
-    GstBuffer * buf, IplImage * img, GstBuffer * outbuf, IplImage * outimg);
+    GstBuffer * buf, cv::Mat img, GstBuffer * outbuf, cv::Mat outimg);
 
-static gboolean gst_skin_detect_stop (GstBaseTransform * basesrc);
+static void gst_skin_detect_finalize (GObject * object);
 static gboolean
 gst_skin_detect_set_caps (GstOpencvVideoFilter * transform,
-    gint in_width, gint in_height, gint in_depth, gint in_channels,
-    gint out_width, gint out_height, gint out_depth, gint out_channels);
-static void gst_skin_detect_release_all_images (GstSkinDetect * filter);
+    gint in_width, gint in_height, int in_cv_type,
+    gint out_width, gint out_height, int out_cv_type);
 
 /* initialize the skindetect's class */
 static void
@@ -136,12 +132,12 @@ gst_skin_detect_class_init (GstSkinDetectClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstBaseTransformClass *basesrc_class = GST_BASE_TRANSFORM_CLASS (klass);
   GstOpencvVideoFilterClass *gstopencvbasefilter_class;
 
   gobject_class = (GObjectClass *) klass;
   gstopencvbasefilter_class = (GstOpencvVideoFilterClass *) klass;
 
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_skin_detect_finalize);
   gobject_class->set_property = gst_skin_detect_set_property;
   gobject_class->get_property = gst_skin_detect_get_property;
 
@@ -168,7 +164,6 @@ gst_skin_detect_class_init (GstSkinDetectClass * klass)
   gst_element_class_add_static_pad_template (element_class, &src_factory);
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
 
-  basesrc_class->stop = gst_skin_detect_stop;
   gstopencvbasefilter_class->cv_set_caps = gst_skin_detect_set_caps;
 }
 
@@ -230,144 +225,140 @@ gst_skin_detect_get_property (GObject * object, guint prop_id,
 /* this function handles the link with other elements */
 static gboolean
 gst_skin_detect_set_caps (GstOpencvVideoFilter * transform,
-    gint in_width, gint in_height, gint in_depth, gint in_channels,
-    gint out_width, gint out_height, gint out_depth, gint out_channels)
+    gint in_width, gint in_height, int in_cv_type,
+    gint out_width, gint out_height, int out_cv_type)
 {
   GstSkinDetect *filter = GST_SKIN_DETECT (transform);
-  CvSize size = cvSize (in_width, in_height);
+  cv::Size size = cv::Size (in_width, in_height);
 
-  // If cvRGB is already allocated, it means there's a cap modification,
-  // so release first all the images.
-  if (NULL != filter->cvRGB)
-    gst_skin_detect_release_all_images (filter);
-
-
-  filter->cvRGB = cvCreateImageHeader (size, IPL_DEPTH_8U, 3);
-  filter->cvSkin = cvCreateImageHeader (size, IPL_DEPTH_8U, 3);
-  filter->cvChA = cvCreateImage (size, IPL_DEPTH_8U, 1);
+  filter->cvRGB.create (size, CV_8UC3);
+  filter->cvChA.create (size, CV_8UC1);
   filter->width = in_width;
   filter->height = in_height;
 
-  filter->cvHSV = cvCreateImage (size, IPL_DEPTH_8U, 3);
-  filter->cvH = cvCreateImage (size, 8, 1);     /*  Hue component. */
-  filter->cvH2 = cvCreateImage (size, 8, 1);    /*  Hue component, 2nd threshold */
-  filter->cvS = cvCreateImage (size, 8, 1);     /*  Saturation component. */
-  filter->cvV = cvCreateImage (size, 8, 1);     /*  Brightness component. */
-  filter->cvSkinPixels1 = cvCreateImage (size, 8, 1);   /*  Greyscale output image */
+  filter->cvHSV.create (size, CV_8UC3);
+  filter->cvH.create (size, CV_8UC1);   /*  Hue component. */
+  filter->cvH2.create (size, CV_8UC1);  /*  Hue component, 2nd threshold */
+  filter->cvS.create (size, CV_8UC1);   /*  Saturation component. */
+  filter->cvV.create (size, CV_8UC1);   /*  Brightness component. */
+  filter->cvSkinPixels1.create (size, CV_8UC1); /*  Greyscale output image */
 
-  filter->cvR = cvCreateImage (size, 8, 1);     /*  R component. */
-  filter->cvG = cvCreateImage (size, 8, 1);     /*  G component. */
-  filter->cvB = cvCreateImage (size, 8, 1);     /*  B component. */
-  filter->cvAll = cvCreateImage (size, IPL_DEPTH_32F, 1);       /*  (R+G+B) component. */
-  filter->cvR2 = cvCreateImage (size, IPL_DEPTH_32F, 1);        /*  R component, 32bits */
-  filter->cvRp = cvCreateImage (size, IPL_DEPTH_32F, 1);        /*  R' and >0.4 */
-  filter->cvGp = cvCreateImage (size, IPL_DEPTH_32F, 1);        /*  G' and > 0.28 */
-  filter->cvRp2 = cvCreateImage (size, IPL_DEPTH_32F, 1);       /*  R' <0.6 */
-  filter->cvGp2 = cvCreateImage (size, IPL_DEPTH_32F, 1);       /*  G' <0.4 */
-  filter->cvSkinPixels2 = cvCreateImage (size, IPL_DEPTH_32F, 1);       /*  Greyscale output image. */
-  filter->cvdraft = cvCreateImage (size, IPL_DEPTH_8U, 1);      /*  Greyscale output image. */
+  filter->cvR.create (size, CV_8UC1);   /*  R component. */
+  filter->cvG.create (size, CV_8UC1);   /*  G component. */
+  filter->cvB.create (size, CV_8UC1);   /*  B component. */
+  filter->cvAll.create (size, CV_32FC1);        /*  (R+G+B) component. */
+  filter->cvR2.create (size, CV_32FC1); /*  R component, 32bits */
+  filter->cvRp.create (size, CV_32FC1); /*  R' and >0.4 */
+  filter->cvGp.create (size, CV_32FC1); /*  G' and > 0.28 */
+  filter->cvRp2.create (size, CV_32FC1);        /*  R' <0.6 */
+  filter->cvGp2.create (size, CV_32FC1);        /*  G' <0.4 */
+  filter->cvSkinPixels2.create (size, CV_32FC1);        /*  Greyscale output image. */
+  filter->cvdraft.create (size, CV_8UC1);       /*  Greyscale output image. */
 
   return TRUE;
 }
 
 /* Clean up */
-static gboolean
-gst_skin_detect_stop (GstBaseTransform * basesrc)
-{
-  GstSkinDetect *filter = GST_SKIN_DETECT (basesrc);
-
-  if (filter->cvRGB != NULL)
-    gst_skin_detect_release_all_images (filter);
-  return TRUE;
-}
-
 static void
-gst_skin_detect_release_all_images (GstSkinDetect * filter)
+gst_skin_detect_finalize (GObject * object)
 {
-  cvReleaseImage (&filter->cvRGB);
-  cvReleaseImage (&filter->cvSkin);
-  cvReleaseImage (&filter->cvChA);
+  GstSkinDetect *filter = GST_SKIN_DETECT (object);
 
-  cvReleaseImage (&filter->cvHSV);
-  cvReleaseImage (&filter->cvH);
-  cvReleaseImage (&filter->cvH2);
-  cvReleaseImage (&filter->cvS);
-  cvReleaseImage (&filter->cvV);
-  cvReleaseImage (&filter->cvSkinPixels1);
+  filter->cvRGB.release ();
+  filter->cvChA.release ();
+  filter->cvHSV.release ();
+  filter->cvH.release ();
+  filter->cvH2.release ();
+  filter->cvS.release ();
+  filter->cvV.release ();
+  filter->cvSkinPixels1.release ();
+  filter->cvR.release ();
+  filter->cvG.release ();
+  filter->cvB.release ();
+  filter->cvAll.release ();
+  filter->cvR2.release ();
+  filter->cvRp.release ();
+  filter->cvGp.release ();
+  filter->cvRp2.release ();
+  filter->cvGp2.release ();
+  filter->cvdraft.release ();
+  filter->cvSkinPixels2.release ();
 
-  cvReleaseImage (&filter->cvR);
-  cvReleaseImage (&filter->cvG);
-  cvReleaseImage (&filter->cvB);
-  cvReleaseImage (&filter->cvAll);
-  cvReleaseImage (&filter->cvR2);
-  cvReleaseImage (&filter->cvRp);
-  cvReleaseImage (&filter->cvGp);
-  cvReleaseImage (&filter->cvRp2);
-  cvReleaseImage (&filter->cvGp2);
-  cvReleaseImage (&filter->cvSkinPixels2);
-  cvReleaseImage (&filter->cvdraft);
+  G_OBJECT_CLASS (gst_skin_detect_parent_class)->finalize (object);
 }
 
 static GstFlowReturn
 gst_skin_detect_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
-    IplImage * img, GstBuffer * outbuf, IplImage * outimg)
+    cv::Mat img, GstBuffer * outbuf, cv::Mat outimg)
 {
   GstSkinDetect *filter = GST_SKIN_DETECT (base);
 
-  filter->cvRGB->imageData = (char *) img->imageData;
-  filter->cvSkin->imageData = (char *) outimg->imageData;
+  std::vector < cv::Mat > channels (3);
+  filter->cvRGB = cv::Mat (img);
 
   /* SKIN COLOUR BLOB DETECTION */
   if (HSV == filter->method) {
-    cvCvtColor (filter->cvRGB, filter->cvHSV, CV_RGB2HSV);
-    cvSplit (filter->cvHSV, filter->cvH, filter->cvS, filter->cvV, 0);  /*  Extract the 3 color components. */
+    cv::cvtColor (filter->cvRGB, filter->cvHSV, cv::COLOR_RGB2HSV);
+    cv::split (filter->cvHSV, channels);
+    filter->cvH = channels.at (0);
+    filter->cvS = channels.at (1);
+    filter->cvV = channels.at (2);
 
     /*  Detect which pixels in each of the H, S and V channels are probably skin pixels.
        Assume that skin has a Hue between 0 to 18 (out of 180), and Saturation above 50, and Brightness above 80. */
-    cvThreshold (filter->cvH, filter->cvH2, 10, UCHAR_MAX, CV_THRESH_BINARY);   /* (hue > 10) */
-    cvThreshold (filter->cvH, filter->cvH, 20, UCHAR_MAX, CV_THRESH_BINARY_INV);        /* (hue < 20) */
-    cvThreshold (filter->cvS, filter->cvS, 48, UCHAR_MAX, CV_THRESH_BINARY);    /* (sat > 48) */
-    cvThreshold (filter->cvV, filter->cvV, 80, UCHAR_MAX, CV_THRESH_BINARY);    /* (val > 80) */
+    cv::threshold (filter->cvH, filter->cvH2, 10, UCHAR_MAX, cv::THRESH_BINARY);        /* (hue > 10) */
+    cv::threshold (filter->cvH, filter->cvH, 20, UCHAR_MAX, cv::THRESH_BINARY_INV);     /* (hue < 20) */
+    cv::threshold (filter->cvS, filter->cvS, 48, UCHAR_MAX, cv::THRESH_BINARY); /* (sat > 48) */
+    cv::threshold (filter->cvV, filter->cvV, 80, UCHAR_MAX, cv::THRESH_BINARY); /* (val > 80) */
 
     /*  erode the HUE to get rid of noise. */
-    cvErode (filter->cvH, filter->cvH, NULL, 1);
+    cv::erode (filter->cvH, filter->cvH, cv::Mat (), cv::Point (-1, -1), 1);
 
     /*  Combine all 3 thresholded color components, so that an output pixel will only
        be white (255) if the H, S and V pixels were also white.
        imageSkin = (hue > 10) ^ (hue < 20) ^ (sat > 48) ^ (val > 80), where   ^ mean pixels-wise AND */
-    cvAnd (filter->cvH, filter->cvS, filter->cvSkinPixels1, NULL);
-    cvAnd (filter->cvSkinPixels1, filter->cvH2, filter->cvSkinPixels1, NULL);
-    cvAnd (filter->cvSkinPixels1, filter->cvV, filter->cvSkinPixels1, NULL);
+    cv::bitwise_and (filter->cvH, filter->cvS, filter->cvSkinPixels1);
+    cv::bitwise_and (filter->cvSkinPixels1, filter->cvH2,
+        filter->cvSkinPixels1);
+    cv::bitwise_and (filter->cvSkinPixels1, filter->cvV, filter->cvSkinPixels1);
 
-    cvCvtColor (filter->cvSkinPixels1, filter->cvRGB, CV_GRAY2RGB);
+    cv::cvtColor (filter->cvSkinPixels1, filter->cvRGB, cv::COLOR_GRAY2RGB);
   } else if (RGB == filter->method) {
-    cvSplit (filter->cvRGB, filter->cvR, filter->cvG, filter->cvB, 0);  /*  Extract the 3 color components. */
-    cvAdd (filter->cvR, filter->cvG, filter->cvAll, NULL);
-    cvAdd (filter->cvB, filter->cvAll, filter->cvAll, NULL);    /*  All = R + G + B */
-    cvDiv (filter->cvR, filter->cvAll, filter->cvRp, 1.0);      /*  R' = R / ( R + G + B) */
-    cvDiv (filter->cvG, filter->cvAll, filter->cvGp, 1.0);      /*  G' = G / ( R + G + B) */
+    cv::split (filter->cvRGB, channels);
+    filter->cvR = channels.at (0);
+    filter->cvG = channels.at (1);
+    filter->cvB = channels.at (2);
+    cv::add (filter->cvR, filter->cvG, filter->cvAll);
+    cv::add (filter->cvB, filter->cvAll, filter->cvAll);        /*  All = R + G + B */
+    cv::divide (filter->cvR, filter->cvAll, filter->cvRp, 1.0, filter->cvRp.type ());   /*  R' = R / ( R + G + B) */
+    cv::divide (filter->cvG, filter->cvAll, filter->cvGp, 1.0, filter->cvGp.type ());   /*  G' = G / ( R + G + B) */
 
-    cvConvertScale (filter->cvR, filter->cvR2, 1.0, 0.0);
-    cvCopy (filter->cvGp, filter->cvGp2, NULL);
-    cvCopy (filter->cvRp, filter->cvRp2, NULL);
+    filter->cvR.convertTo (filter->cvR2, filter->cvR2.type (), 1.0, 0.0);
+    filter->cvGp.copyTo (filter->cvGp2);
+    filter->cvRp.copyTo (filter->cvRp2);
 
-    cvThreshold (filter->cvR2, filter->cvR2, 60, UCHAR_MAX, CV_THRESH_BINARY);  /* (R > 60) */
-    cvThreshold (filter->cvRp, filter->cvRp, 0.42, UCHAR_MAX, CV_THRESH_BINARY);        /* (R'> 0.4) */
-    cvThreshold (filter->cvRp2, filter->cvRp2, 0.6, UCHAR_MAX, CV_THRESH_BINARY_INV);   /* (R'< 0.6) */
-    cvThreshold (filter->cvGp, filter->cvGp, 0.28, UCHAR_MAX, CV_THRESH_BINARY);        /* (G'> 0.28) */
-    cvThreshold (filter->cvGp2, filter->cvGp2, 0.4, UCHAR_MAX, CV_THRESH_BINARY_INV);   /* (G'< 0.4) */
+    cv::threshold (filter->cvR2, filter->cvR2, 60, UCHAR_MAX, cv::THRESH_BINARY);       /* (R > 60) */
+    cv::threshold (filter->cvRp, filter->cvRp, 0.42, UCHAR_MAX, cv::THRESH_BINARY);     /* (R'> 0.4) */
+    cv::threshold (filter->cvRp2, filter->cvRp2, 0.6, UCHAR_MAX, cv::THRESH_BINARY_INV);        /* (R'< 0.6) */
+    cv::threshold (filter->cvGp, filter->cvGp, 0.28, UCHAR_MAX, cv::THRESH_BINARY);     /* (G'> 0.28) */
+    cv::threshold (filter->cvGp2, filter->cvGp2, 0.4, UCHAR_MAX, cv::THRESH_BINARY_INV);        /* (G'< 0.4) */
 
     /*  Combine all 3 thresholded color components, so that an output pixel will only
        be white (255) if the H, S and V pixels were also white. */
 
-    cvAnd (filter->cvR2, filter->cvRp, filter->cvSkinPixels2, NULL);
-    cvAnd (filter->cvRp, filter->cvSkinPixels2, filter->cvSkinPixels2, NULL);
-    cvAnd (filter->cvRp2, filter->cvSkinPixels2, filter->cvSkinPixels2, NULL);
-    cvAnd (filter->cvGp, filter->cvSkinPixels2, filter->cvSkinPixels2, NULL);
-    cvAnd (filter->cvGp2, filter->cvSkinPixels2, filter->cvSkinPixels2, NULL);
+    cv::bitwise_and (filter->cvR2, filter->cvRp, filter->cvSkinPixels2);
+    cv::bitwise_and (filter->cvRp, filter->cvSkinPixels2,
+        filter->cvSkinPixels2);
+    cv::bitwise_and (filter->cvRp2, filter->cvSkinPixels2,
+        filter->cvSkinPixels2);
+    cv::bitwise_and (filter->cvGp, filter->cvSkinPixels2,
+        filter->cvSkinPixels2);
+    cv::bitwise_and (filter->cvGp2, filter->cvSkinPixels2,
+        filter->cvSkinPixels2);
 
-    cvConvertScale (filter->cvSkinPixels2, filter->cvdraft, 1.0, 0.0);
-    cvCvtColor (filter->cvdraft, filter->cvRGB, CV_GRAY2RGB);
+    filter->cvSkinPixels2.convertTo (filter->cvdraft, filter->cvdraft.type (),
+        1.0, 0.0);
+    cv::cvtColor (filter->cvdraft, filter->cvRGB, cv::COLOR_GRAY2RGB);
   }
 
   /* After this we have a RGB Black and white image with the skin, in
@@ -376,19 +367,20 @@ gst_skin_detect_transform (GstOpencvVideoFilter * base, GstBuffer * buf,
      the goal of removing small (spurious) skin spots and creating large
      connected areas */
   if (filter->postprocess) {
-    cvSplit (filter->cvRGB, filter->cvChA, NULL, NULL, NULL);
+    cv::split (filter->cvRGB, channels);
+    filter->cvChA = channels.at (0);
 
-    cvErode (filter->cvChA, filter->cvChA,
-        cvCreateStructuringElementEx (3, 3, 1, 1, CV_SHAPE_RECT, NULL), 1);
-    cvDilate (filter->cvChA, filter->cvChA,
-        cvCreateStructuringElementEx (3, 3, 1, 1, CV_SHAPE_RECT, NULL), 2);
-    cvErode (filter->cvChA, filter->cvChA,
-        cvCreateStructuringElementEx (3, 3, 1, 1, CV_SHAPE_RECT, NULL), 1);
+    cv::Mat element =
+        cv::getStructuringElement (cv::MORPH_RECT, cv::Size (3, 3),
+        cv::Point (1, 1));
+    cv::erode (filter->cvChA, filter->cvChA, element, cv::Point (1, 1), 1);
+    cv::dilate (filter->cvChA, filter->cvChA, element, cv::Point (1, 1), 2);
+    cv::erode (filter->cvChA, filter->cvChA, element, cv::Point (1, 1), 1);
 
-    cvCvtColor (filter->cvChA, filter->cvRGB, CV_GRAY2RGB);
+    cv::cvtColor (filter->cvChA, filter->cvRGB, cv::COLOR_GRAY2RGB);
   }
 
-  cvCopy (filter->cvRGB, filter->cvSkin, NULL);
+  filter->cvRGB.copyTo (outimg);
 
   return GST_FLOW_OK;
 }

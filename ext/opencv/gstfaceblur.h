@@ -82,7 +82,7 @@ struct _GstFaceBlur
   gint min_size_width;
   gint min_size_height;
 
-  IplImage *cvGray;
+  cv::Mat cvGray;
   cv::CascadeClassifier *cvCascade;
 };
 

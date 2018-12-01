@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2010 Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+ * Copyright (C) 2018 Nicola Murino <nicola.murino@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -49,11 +50,7 @@
 
 #include "gstopencvvideofilter.h"
 #include "gstopencvutils.h"
-
 #include <opencv2/core.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/core/core_c.h>
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_opencv_video_filter_debug);
 #define GST_CAT_DEFAULT gst_opencv_video_filter_debug
@@ -94,10 +91,8 @@ gst_opencv_video_filter_finalize (GObject * obj)
 {
   GstOpencvVideoFilter *transform = GST_OPENCV_VIDEO_FILTER (obj);
 
-  if (transform->cvImage)
-    cvReleaseImage (&transform->cvImage);
-  if (transform->out_cvImage)
-    cvReleaseImage (&transform->out_cvImage);
+  transform->cvImage.release ();
+  transform->out_cvImage.release ();
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -142,17 +137,11 @@ gst_opencv_video_filter_transform_frame (GstVideoFilter * trans,
   fclass = GST_OPENCV_VIDEO_FILTER_GET_CLASS (transform);
 
   g_return_val_if_fail (fclass->cv_trans_func != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (transform->cvImage != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (transform->out_cvImage != NULL, GST_FLOW_ERROR);
 
-  transform->cvImage->imageData = (char *) inframe->data[0];
-  transform->cvImage->imageSize = inframe->info.size;
-  transform->cvImage->widthStep = inframe->info.stride[0];
-
-  transform->out_cvImage->imageData = (char *) outframe->data[0];
-  transform->out_cvImage->imageSize = outframe->info.size;
-  transform->out_cvImage->widthStep = outframe->info.stride[0];
-
+  transform->cvImage.data = (unsigned char *) inframe->data[0];
+  transform->cvImage.datastart = (unsigned char *) inframe->data[0];
+  transform->out_cvImage.data = (unsigned char *) outframe->data[0];
+  transform->out_cvImage.datastart = (unsigned char *) outframe->data[0];
   ret = fclass->cv_trans_func (transform, inframe->buffer, transform->cvImage,
       outframe->buffer, transform->out_cvImage);
 
@@ -171,11 +160,9 @@ gst_opencv_video_filter_transform_frame_ip (GstVideoFilter * trans,
   fclass = GST_OPENCV_VIDEO_FILTER_GET_CLASS (transform);
 
   g_return_val_if_fail (fclass->cv_trans_ip_func != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (transform->cvImage != NULL, GST_FLOW_ERROR);
 
-  transform->cvImage->imageData = (char *) frame->data[0];
-  transform->cvImage->imageSize = frame->info.size;
-  transform->cvImage->widthStep = frame->info.stride[0];
+  transform->cvImage.data = (unsigned char *) frame->data[0];
+  transform->cvImage.datastart = (unsigned char *) frame->data[0];
 
   ret = fclass->cv_trans_ip_func (transform, frame->buffer, transform->cvImage);
 
@@ -190,22 +177,22 @@ gst_opencv_video_filter_set_info (GstVideoFilter * trans, GstCaps * incaps,
   GstOpencvVideoFilterClass *klass =
       GST_OPENCV_VIDEO_FILTER_GET_CLASS (transform);
   gint in_width, in_height;
-  gint in_depth, in_channels;
+  int in_cv_type;
   gint out_width, out_height;
-  gint out_depth, out_channels;
+  int out_cv_type;
   GError *in_err = NULL;
   GError *out_err = NULL;
 
-  if (!gst_opencv_iplimage_params_from_video_info (in_info, &in_width,
-          &in_height, &in_depth, &in_channels, &in_err)) {
+  if (!gst_opencv_cv_mat_params_from_video_info (in_info, &in_width,
+          &in_height, &in_cv_type, &in_err)) {
     GST_WARNING_OBJECT (transform, "Failed to parse input caps: %s",
         in_err->message);
     g_error_free (in_err);
     return FALSE;
   }
 
-  if (!gst_opencv_iplimage_params_from_video_info (out_info, &out_width,
-          &out_height, &out_depth, &out_channels, &out_err)) {
+  if (!gst_opencv_cv_mat_params_from_video_info (out_info, &out_width,
+          &out_height, &out_cv_type, &out_err)) {
     GST_WARNING_OBJECT (transform, "Failed to parse output caps: %s",
         out_err->message);
     g_error_free (out_err);
@@ -213,23 +200,13 @@ gst_opencv_video_filter_set_info (GstVideoFilter * trans, GstCaps * incaps,
   }
 
   if (klass->cv_set_caps) {
-    if (!klass->cv_set_caps (transform, in_width, in_height, in_depth,
-            in_channels, out_width, out_height, out_depth, out_channels))
+    if (!klass->cv_set_caps (transform, in_width, in_height, in_cv_type,
+            out_width, out_height, out_cv_type))
       return FALSE;
   }
 
-  if (transform->cvImage) {
-    cvReleaseImage (&transform->cvImage);
-  }
-  if (transform->out_cvImage) {
-    cvReleaseImage (&transform->out_cvImage);
-  }
-
-  transform->cvImage =
-      cvCreateImageHeader (cvSize (in_width, in_height), in_depth, in_channels);
-  transform->out_cvImage =
-      cvCreateImageHeader (cvSize (out_width, out_height), out_depth,
-      out_channels);
+  transform->cvImage.create (cv::Size (in_width, in_height), in_cv_type);
+  transform->out_cvImage.create (cv::Size (out_width, out_height), out_cv_type);
 
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (transform),
       transform->in_place);

@@ -75,8 +75,8 @@ struct _GstEdgeDetect
   int threshold2;
   int aperture;
 
-  IplImage *cvEdge;
-  IplImage *cvGray;
+  cv::Mat cvEdge;
+  cv::Mat cvGray;
 };
 
 struct _GstEdgeDetectClass

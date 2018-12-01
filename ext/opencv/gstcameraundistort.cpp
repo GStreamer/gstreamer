@@ -61,7 +61,7 @@
  * gst-launch-1.0 -v v4l2src ! videoconvert ! cameraundistort settings="???" ! autovideosink
  * ]| will correct camera distortion based on provided settings.
  * |[
- * gst-launch-1.0 -v v4l2src ! videoconvert ! cameraundistort ! cameracalibrate | autovideosink
+ * gst-launch-1.0 -v v4l2src ! videoconvert ! cameraundistort ! cameracalibrate ! autovideosink
  * ]| will correct camera distortion once camera calibration is done.
  * </refsect2>
  */
@@ -78,9 +78,6 @@
 #include "gstcameraundistort.h"
 
 #include <opencv2/imgproc.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/imgproc/imgproc_c.h>
-#endif
 #include <opencv2/calib3d.hpp>
 
 #include <gst/opencv/gstopencvutils.h>
@@ -111,19 +108,19 @@ static void gst_camera_undistort_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static gboolean gst_camera_undistort_set_info (GstOpencvVideoFilter * cvfilter,
-    gint in_width, gint in_height, gint in_depth, gint in_channels,
-    gint out_width, gint out_height, gint out_depth, gint out_channels);
+    gint in_width, gint in_height, int in_cv_type,
+    gint out_width, gint out_height, int out_cv_type);
 static GstFlowReturn gst_camera_undistort_transform_frame (GstOpencvVideoFilter
-    * cvfilter, GstBuffer * frame, IplImage * img, GstBuffer * outframe,
-    IplImage * outimg);
+    * cvfilter, GstBuffer * frame, cv::Mat img, GstBuffer * outframe,
+    cv::Mat outimg);
 
 static gboolean gst_camera_undistort_sink_event (GstBaseTransform * trans,
     GstEvent * event);
 static gboolean gst_camera_undistort_src_event (GstBaseTransform * trans,
     GstEvent * event);
 
-static void camera_undistort_run (GstCameraUndistort * undist, IplImage * img,
-    IplImage * outimg);
+static void camera_undistort_run (GstCameraUndistort * undist, cv::Mat img,
+    cv::Mat outimg);
 static gboolean camera_undistort_init_undistort_rectify_map (GstCameraUndistort
     * undist);
 
@@ -279,13 +276,11 @@ gst_camera_undistort_get_property (GObject * object, guint prop_id,
 
 gboolean
 gst_camera_undistort_set_info (GstOpencvVideoFilter * cvfilter,
-    gint in_width, gint in_height,
-    __attribute__((unused)) gint in_depth,
-    __attribute__((unused)) gint in_channels,
+    gint in_width, gint in_height, __attribute__((unused))
+    int in_cv_type,
     __attribute__((unused)) gint out_width,
-    __attribute__((unused)) gint out_height,
-    __attribute__((unused)) gint out_depth,
-    __attribute__((unused)) gint out_channels)
+    __attribute__((unused)) gint out_height, __attribute__((unused))
+    int out_cv_type)
 {
   GstCameraUndistort *undist = GST_CAMERA_UNDISTORT (cvfilter);
 
@@ -299,8 +294,8 @@ gst_camera_undistort_set_info (GstOpencvVideoFilter * cvfilter,
  */
 static GstFlowReturn
 gst_camera_undistort_transform_frame (GstOpencvVideoFilter * cvfilter,
-    G_GNUC_UNUSED GstBuffer * frame, IplImage * img,
-    G_GNUC_UNUSED GstBuffer * outframe, IplImage * outimg)
+    G_GNUC_UNUSED GstBuffer * frame, cv::Mat img,
+    G_GNUC_UNUSED GstBuffer * outframe, cv::Mat outimg)
 {
   GstCameraUndistort *undist = GST_CAMERA_UNDISTORT (cvfilter);
 
@@ -310,12 +305,8 @@ gst_camera_undistort_transform_frame (GstOpencvVideoFilter * cvfilter,
 }
 
 static void
-camera_undistort_run (GstCameraUndistort * undist, IplImage * img,
-    IplImage * outimg)
+camera_undistort_run (GstCameraUndistort * undist, cv::Mat img, cv::Mat outimg)
 {
-  const cv::Mat view = cv::cvarrToMat (img);
-  cv::Mat outview = cv::cvarrToMat (outimg);
-
   /* TODO is settingsChanged handling thread safe ? */
   if (undist->settingsChanged) {
     /* settings have changed, need to recompute undistort */
@@ -332,16 +323,16 @@ camera_undistort_run (GstCameraUndistort * undist, IplImage * img,
 
   if (undist->showUndistorted && undist->doUndistort) {
     /* do the undistort */
-    cv::remap (view, outview, undist->map1, undist->map2, cv::INTER_LINEAR);
+    cv::remap (img, outimg, undist->map1, undist->map2, cv::INTER_LINEAR);
 
     if (undist->crop) {
       /* TODO do the cropping */
       const cv::Scalar CROP_COLOR (0, 255, 0);
-      cv::rectangle (outview, undist->validPixROI, CROP_COLOR);
+      cv::rectangle (outimg, undist->validPixROI, CROP_COLOR);
     }
   } else {
     /* FIXME should use pass through to avoid this copy when not undistorting */
-    view.copyTo (outview);
+    img.copyTo (outimg);
   }
 }
 

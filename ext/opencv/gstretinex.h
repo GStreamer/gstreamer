@@ -72,10 +72,10 @@ struct _GstRetinex
   double *weights;
   double *sigmas;
 
-  IplImage *cvA;
-  IplImage *cvB;
-  IplImage *cvC;
-  IplImage *cvD;
+  cv::Mat cvA;
+  cv::Mat cvB;
+  cv::Mat cvC;
+  cv::Mat cvD;
 };
 
 struct _GstRetinexClass

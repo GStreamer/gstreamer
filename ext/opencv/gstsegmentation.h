@@ -50,9 +50,6 @@
 #include <opencv2/video.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/bgsegm.hpp>
-#if (CV_MAJOR_VERSION >= 4)
-#include <opencv2/core/types_c.h>
-#endif
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
@@ -96,25 +93,21 @@ struct _GstSegmentation
   gboolean test_mode;
   gint width, height;
 
-  IplImage *cvRGB;
-  IplImage *cvYUV;
+  cv::Mat cvRGB;
+  cv::Mat cvYUV;
 
-  IplImage *cvFG;               /*  used for the alpha BW 1ch image composition */
-  IplImage *ch1, *ch2, *ch3;
+  cv::Mat cvFG;               /*  used for the alpha BW 1ch image composition */
+  cv::Mat ch1, ch2, ch3;
   int framecount;
 
   /* for codebook approach */
   codeBook *TcodeBook;
   int learning_interval;
-  CvMemStorage *mem_storage;
-  CvSeq *contours;
-
+  
   /* for MOG methods */
   cv::Ptr<cv::BackgroundSubtractor> mog;                   /* cv::BackgroundSubtractorMOG */
   cv::Ptr<cv::BackgroundSubtractorMOG2> mog2;                   /* cv::BackgroundSubtractorMOG2 */
 
-  void *img_input_as_cvMat;     /* cv::Mat */
-  void *img_fg_as_cvMat;        /* cv::Mat */
   double learning_rate;
 };
 
