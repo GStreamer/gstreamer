@@ -73,7 +73,7 @@ manifest:
 build fedora x86_64:
   extends: '.build'
   stage: 'build'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:f085d34a32cb8cac95cbd420344efeaa647d08d5'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
 
 build android arm64 api28:
   extends: '.build'
