@@ -337,10 +337,98 @@ count_buffer_meta (GstBuffer * buffer)
   return ret;
 }
 
-GST_START_TEST (test_meta_foreach_remove_one)
+GST_START_TEST (test_meta_foreach_remove_one_of_one)
+{
+  GstBuffer *buffer;
+  GstMetaTest *meta1;
+  gpointer state = NULL;
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_if (buffer == NULL);
+
+  /* add some metadata */
+  meta1 = GST_META_TEST_ADD (buffer);
+  fail_if (meta1 == NULL);
+
+  fail_unless_equals_int (count_buffer_meta (buffer), 1);
+
+  gst_buffer_foreach_meta (buffer, foreach_meta_remove_one, meta1);
+
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
+
+  /* clean up */
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_meta_foreach_remove_head_of_three)
 {
   GstBuffer *buffer;
   GstMetaTest *meta1, *meta2, *meta3;
+  gpointer state = NULL;
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_if (buffer == NULL);
+
+  /* add some metadata */
+  meta1 = GST_META_TEST_ADD (buffer);
+  fail_if (meta1 == NULL);
+  meta2 = GST_META_TEST_ADD (buffer);
+  fail_if (meta2 == NULL);
+  meta3 = GST_META_TEST_ADD (buffer);
+  fail_if (meta3 == NULL);
+
+  fail_unless_equals_int (count_buffer_meta (buffer), 3);
+
+  gst_buffer_foreach_meta (buffer, foreach_meta_remove_one, meta3);
+
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta2);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta1);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
+
+  /* clean up */
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_meta_foreach_remove_middle_of_three)
+{
+  GstBuffer *buffer;
+  GstMetaTest *meta1, *meta2, *meta3;
+  gpointer state = NULL;
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_if (buffer == NULL);
+
+  /* add some metadata */
+  meta1 = GST_META_TEST_ADD (buffer);
+  fail_if (meta1 == NULL);
+  meta2 = GST_META_TEST_ADD (buffer);
+  fail_if (meta2 == NULL);
+  meta3 = GST_META_TEST_ADD (buffer);
+  fail_if (meta3 == NULL);
+
+  fail_unless_equals_int (count_buffer_meta (buffer), 3);
+
+  gst_buffer_foreach_meta (buffer, foreach_meta_remove_one, meta2);
+
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta3);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta1);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
+
+  /* clean up */
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_meta_foreach_remove_tail_of_three)
+{
+  GstBuffer *buffer;
+  GstMetaTest *meta1, *meta2, *meta3;
+  gpointer state = NULL;
 
   buffer = gst_buffer_new_and_alloc (4);
   fail_if (buffer == NULL);
@@ -357,7 +445,89 @@ GST_START_TEST (test_meta_foreach_remove_one)
 
   gst_buffer_foreach_meta (buffer, foreach_meta_remove_one, meta1);
 
-  fail_unless_equals_int (count_buffer_meta (buffer), 2);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta3);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta2);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
+
+  /* clean up */
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+static gboolean
+foreach_meta_remove_unpooled (GstBuffer * buffer, GstMeta ** meta,
+    gpointer unused)
+{
+  if (!GST_META_FLAG_IS_SET (*meta, GST_META_FLAG_POOLED)) {
+    *meta = NULL;
+  }
+
+  return TRUE;
+}
+
+GST_START_TEST (test_meta_foreach_remove_head_and_tail_of_three)
+{
+  GstBuffer *buffer;
+  GstMetaTest *meta1, *meta2, *meta3;
+  gpointer state = NULL;
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_if (buffer == NULL);
+
+  /* add some metadata */
+  meta1 = GST_META_TEST_ADD (buffer);
+  fail_if (meta1 == NULL);
+  meta2 = GST_META_TEST_ADD (buffer);
+  fail_if (meta2 == NULL);
+  GST_META_FLAG_SET (meta2, GST_META_FLAG_POOLED);
+  meta3 = GST_META_TEST_ADD (buffer);
+  fail_if (meta3 == NULL);
+
+  fail_unless_equals_int (count_buffer_meta (buffer), 3);
+
+  gst_buffer_foreach_meta (buffer, foreach_meta_remove_unpooled, NULL);
+
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta2);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
+
+  /* clean up */
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_meta_foreach_remove_several)
+{
+  GstBuffer *buffer;
+  GstMetaTest *meta1, *meta2, *meta3, *meta4, *meta5;
+  gpointer state = NULL;
+
+  buffer = gst_buffer_new_and_alloc (4);
+  fail_if (buffer == NULL);
+
+  /* add some metadata */
+  meta1 = GST_META_TEST_ADD (buffer);
+  fail_if (meta1 == NULL);
+  meta2 = GST_META_TEST_ADD (buffer);
+  fail_if (meta2 == NULL);
+  GST_META_FLAG_SET (meta2, GST_META_FLAG_POOLED);
+  meta3 = GST_META_TEST_ADD (buffer);
+  fail_if (meta3 == NULL);
+  meta4 = GST_META_TEST_ADD (buffer);
+  fail_if (meta4 == NULL);
+  meta5 = GST_META_TEST_ADD (buffer);
+  fail_if (meta5 == NULL);
+  GST_META_FLAG_SET (meta5, GST_META_FLAG_POOLED);
+
+  fail_unless_equals_int (count_buffer_meta (buffer), 5);
+
+  gst_buffer_foreach_meta (buffer, foreach_meta_remove_unpooled, NULL);
+
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta5);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta2);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
 
   /* clean up */
   gst_buffer_unref (buffer);
@@ -472,7 +642,12 @@ gst_buffermeta_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_meta_test);
   tcase_add_test (tc_chain, test_meta_locked);
-  tcase_add_test (tc_chain, test_meta_foreach_remove_one);
+  tcase_add_test (tc_chain, test_meta_foreach_remove_one_of_one);
+  tcase_add_test (tc_chain, test_meta_foreach_remove_head_of_three);
+  tcase_add_test (tc_chain, test_meta_foreach_remove_middle_of_three);
+  tcase_add_test (tc_chain, test_meta_foreach_remove_tail_of_three);
+  tcase_add_test (tc_chain, test_meta_foreach_remove_head_and_tail_of_three);
+  tcase_add_test (tc_chain, test_meta_foreach_remove_several);
   tcase_add_test (tc_chain, test_meta_iterate);
 
   return s;
