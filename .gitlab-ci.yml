@@ -77,7 +77,7 @@ test manifest amd64 docker:
   stage: "build docker"
   variables:
     ARCH: "amd64"
-    TAG: "build-manifest"
+    TAG: "test-manifest"
     CONTEXT_DIR: "docker/test_manifest/"
     DOCKERFILE: "docker/test_manifest/Dockerfile"
   extends: .base
