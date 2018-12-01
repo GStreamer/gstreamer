@@ -2389,11 +2389,9 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
 
       /* remove from list */
       if (GST_BUFFER_META (buffer) == walk)
-        GST_BUFFER_META (buffer) = next;
+        prev = GST_BUFFER_META (buffer) = next;
       else
         prev->next = next;
-
-      prev = next;
 
       /* call free_func if any */
       if (info->free_func)
