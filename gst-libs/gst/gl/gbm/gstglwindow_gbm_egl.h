@@ -46,6 +46,8 @@ struct _GstGLWindowGBMEGL {
   struct gbm_bo *current_bo, *prev_bo;
   int waiting_for_flip;
 
+  drmModeCrtc *saved_crtc;
+
   GstGLDisplayGBM *display;
 
   gpointer _reserved[GST_PADDING];
