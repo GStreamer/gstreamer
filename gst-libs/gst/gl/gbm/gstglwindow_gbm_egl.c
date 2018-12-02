@@ -110,6 +110,22 @@ gst_gl_window_gbm_egl_close (GstGLWindow * window)
 {
   GstGLWindowGBMEGL *window_egl = GST_GL_WINDOW_GBM_EGL (window);
 
+  if (window_egl->saved_crtc) {
+    GstGLDisplayGBM *display = (GstGLDisplayGBM *) window->display;
+    drmModeCrtc *crtc = window_egl->saved_crtc;
+    gint err;
+
+    err = drmModeSetCrtc (display->drm_fd, crtc->crtc_id, crtc->buffer_id,
+        crtc->x, crtc->y, &(display->drm_mode_connector->connector_id), 1,
+        &crtc->mode);
+    if (err)
+      GST_ERROR_OBJECT (window, "Failed to restore previous CRTC mode: %s",
+          g_strerror (errno));
+
+    drmModeFreeCrtc (crtc);
+    window_egl->saved_crtc = NULL;
+  }
+
   if (window_egl->gbm_surf != NULL) {
     if (window_egl->current_bo != NULL) {
       gbm_surface_release_buffer (window_egl->gbm_surf, window_egl->current_bo);
@@ -204,6 +220,11 @@ draw_cb (gpointer data)
     window_egl->current_bo =
         gbm_surface_lock_front_buffer (window_egl->gbm_surf);
     framebuf = gst_gl_gbm_drm_fb_get_from_bo (window_egl->current_bo);
+
+    /* Save the CRTC state */
+    if (!window_egl->saved_crtc)
+      window_egl->saved_crtc =
+          drmModeGetCrtc (display->drm_fd, display->crtc_id);
 
     /* Configure CRTC to show this first BO. */
     ret = drmModeSetCrtc (display->drm_fd, display->crtc_id, framebuf->fb_id,
