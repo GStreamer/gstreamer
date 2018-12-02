@@ -657,6 +657,7 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   if (aom_codec_enc_init (&av1enc->encoder, av1enc_class->codec_algo,
           &av1enc->aom_cfg, 0)) {
     gst_av1_codec_error (&av1enc->encoder, "Failed to initialize encoder");
+    g_mutex_unlock (&av1enc->encoder_lock);
     return FALSE;
   }
   av1enc->encoder_inited = TRUE;
