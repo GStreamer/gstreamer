@@ -50,8 +50,6 @@ static void gst_gl_window_gbm_egl_close (GstGLWindow * window);
 static void gst_gl_window_gbm_egl_draw (GstGLWindow * window);
 
 static gboolean gst_gl_window_gbm_init_surface (GstGLWindowGBMEGL * window_egl);
-static void gst_gl_window_gbm_egl_cleanup (GstGLWindowGBMEGL * window_egl);
-
 
 
 static void
@@ -112,7 +110,15 @@ gst_gl_window_gbm_egl_close (GstGLWindow * window)
 {
   GstGLWindowGBMEGL *window_egl = GST_GL_WINDOW_GBM_EGL (window);
 
-  gst_gl_window_gbm_egl_cleanup (window_egl);
+  if (window_egl->gbm_surf != NULL) {
+    if (window_egl->current_bo != NULL) {
+      gbm_surface_release_buffer (window_egl->gbm_surf, window_egl->current_bo);
+      window_egl->current_bo = NULL;
+    }
+
+    gbm_surface_destroy (window_egl->gbm_surf);
+    window_egl->gbm_surf = NULL;
+  }
 
   GST_GL_WINDOW_CLASS (gst_gl_window_gbm_egl_parent_class)->close (window);
 }
@@ -341,21 +347,6 @@ cleanup:
 
   gst_object_unref (context);
   return ret;
-}
-
-
-static void
-gst_gl_window_gbm_egl_cleanup (GstGLWindowGBMEGL * window_egl)
-{
-  if (window_egl->gbm_surf != NULL) {
-    if (window_egl->current_bo != NULL) {
-      gbm_surface_release_buffer (window_egl->gbm_surf, window_egl->current_bo);
-      window_egl->current_bo = NULL;
-    }
-
-    gbm_surface_destroy (window_egl->gbm_surf);
-    window_egl->gbm_surf = NULL;
-  }
 }
 
 
