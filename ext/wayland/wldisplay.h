@@ -46,6 +46,7 @@ struct _GstWlDisplay
 
   /* public objects */
   struct wl_display *display;
+  struct wl_display *display_wrapper;
   struct wl_event_queue *queue;
 
   /* globals */

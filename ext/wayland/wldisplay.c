@@ -102,6 +102,9 @@ gst_wl_display_finalize (GObject * gobject)
   if (self->registry)
     wl_registry_destroy (self->registry);
 
+  if (self->display_wrapper)
+    wl_proxy_wrapper_destroy (self->display_wrapper);
+
   if (self->queue)
     wl_event_queue_destroy (self->queue);
 
@@ -111,37 +114,6 @@ gst_wl_display_finalize (GObject * gobject)
   }
 
   G_OBJECT_CLASS (gst_wl_display_parent_class)->finalize (gobject);
-}
-
-static void
-sync_callback (void *data, struct wl_callback *callback, uint32_t serial)
-{
-  gboolean *done = data;
-  *done = TRUE;
-}
-
-static const struct wl_callback_listener sync_listener = {
-  sync_callback
-};
-
-static gint
-gst_wl_display_roundtrip (GstWlDisplay * self)
-{
-  struct wl_callback *callback;
-  gint ret = 0;
-  gboolean done = FALSE;
-
-  g_return_val_if_fail (self != NULL, -1);
-
-  /* We don't own the display, process only our queue */
-  callback = wl_display_sync (self->display);
-  wl_callback_add_listener (callback, &sync_listener, &done);
-  wl_proxy_set_queue ((struct wl_proxy *) callback, self->queue);
-  while (ret != -1 && !done)
-    ret = wl_display_dispatch_queue (self->display, self->queue);
-  wl_callback_destroy (callback);
-
-  return ret;
 }
 
 static void
@@ -271,10 +243,10 @@ gst_wl_display_thread_run (gpointer data)
         break;
       else
         goto error;
-    } else {
-      wl_display_read_events (self->display);
-      wl_display_dispatch_queue_pending (self->display, self->queue);
     }
+    if (wl_display_read_events (self->display) == -1)
+      goto error;
+    wl_display_dispatch_queue_pending (self->display, self->queue);
   }
 
   return NULL;
@@ -313,16 +285,17 @@ gst_wl_display_new_existing (struct wl_display * display,
 
   self = g_object_new (GST_TYPE_WL_DISPLAY, NULL);
   self->display = display;
+  self->display_wrapper = wl_proxy_create_wrapper (display);
   self->own_display = take_ownership;
 
   self->queue = wl_display_create_queue (self->display);
-  self->registry = wl_display_get_registry (self->display);
-  wl_proxy_set_queue ((struct wl_proxy *) self->registry, self->queue);
+  wl_proxy_set_queue ((struct wl_proxy *) self->display_wrapper, self->queue);
+  self->registry = wl_display_get_registry (self->display_wrapper);
   wl_registry_add_listener (self->registry, &registry_listener, self);
 
   /* we need exactly 2 roundtrips to discover global objects and their state */
   for (i = 0; i < 2; i++) {
-    if (gst_wl_display_roundtrip (self) < 0) {
+    if (wl_display_roundtrip_queue (self->display, self->queue) < 0) {
       *error = g_error_new (g_quark_from_static_string ("GstWlDisplay"), 0,
           "Error communicating with the wayland display");
       g_object_unref (self);

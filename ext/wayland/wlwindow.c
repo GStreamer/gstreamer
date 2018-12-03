@@ -92,6 +92,7 @@ gst_wl_window_finalize (GObject * gobject)
   if (self->video_viewport)
     wp_viewport_destroy (self->video_viewport);
 
+  wl_proxy_wrapper_destroy (self->video_surface_wrapper);
   wl_subsurface_destroy (self->video_subsurface);
   wl_surface_destroy (self->video_surface);
 
@@ -101,6 +102,7 @@ gst_wl_window_finalize (GObject * gobject)
   if (self->area_viewport)
     wp_viewport_destroy (self->area_viewport);
 
+  wl_proxy_wrapper_destroy (self->area_surface_wrapper);
   wl_surface_destroy (self->area_surface);
 
   g_clear_object (&self->display);
@@ -121,8 +123,13 @@ gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
   window->area_surface = wl_compositor_create_surface (display->compositor);
   window->video_surface = wl_compositor_create_surface (display->compositor);
 
-  wl_proxy_set_queue ((struct wl_proxy *) window->area_surface, display->queue);
-  wl_proxy_set_queue ((struct wl_proxy *) window->video_surface,
+  window->area_surface_wrapper = wl_proxy_create_wrapper (window->area_surface);
+  window->video_surface_wrapper =
+      wl_proxy_create_wrapper (window->video_surface);
+
+  wl_proxy_set_queue ((struct wl_proxy *) window->area_surface_wrapper,
+      display->queue);
+  wl_proxy_set_queue ((struct wl_proxy *) window->video_surface_wrapper,
       display->queue);
 
   /* embed video_surface in area_surface */
@@ -233,7 +240,7 @@ gst_wl_window_get_wl_surface (GstWlWindow * window)
 {
   g_return_val_if_fail (window != NULL, NULL);
 
-  return window->video_surface;
+  return window->video_surface_wrapper;
 }
 
 gboolean
@@ -267,8 +274,8 @@ gst_wl_window_resize_video_surface (GstWlWindow * window, gboolean commit)
   wl_subsurface_set_position (window->video_subsurface, res.x, res.y);
 
   if (commit) {
-    wl_surface_damage (window->video_surface, 0, 0, res.w, res.h);
-    wl_surface_commit (window->video_surface);
+    wl_surface_damage (window->video_surface_wrapper, 0, 0, res.w, res.h);
+    wl_surface_commit (window->video_surface_wrapper);
   }
 
   if (gst_wl_window_is_toplevel (window)) {
@@ -322,20 +329,20 @@ gst_wl_window_render (GstWlWindow * window, GstWlBuffer * buffer,
   }
 
   if (G_LIKELY (buffer))
-    gst_wl_buffer_attach (buffer, window->video_surface);
+    gst_wl_buffer_attach (buffer, window->video_surface_wrapper);
   else
-    wl_surface_attach (window->video_surface, NULL, 0, 0);
+    wl_surface_attach (window->video_surface_wrapper, NULL, 0, 0);
 
-  wl_surface_damage (window->video_surface, 0, 0, window->video_rectangle.w,
-      window->video_rectangle.h);
-  wl_surface_commit (window->video_surface);
+  wl_surface_damage (window->video_surface_wrapper, 0, 0,
+      window->video_rectangle.w, window->video_rectangle.h);
+  wl_surface_commit (window->video_surface_wrapper);
 
   if (G_UNLIKELY (info)) {
     /* commit also the parent (area_surface) in order to change
      * the position of the video_subsurface */
-    wl_surface_damage (window->area_surface, 0, 0, window->render_rectangle.w,
-        window->render_rectangle.h);
-    wl_surface_commit (window->area_surface);
+    wl_surface_damage (window->area_surface_wrapper, 0, 0,
+        window->render_rectangle.w, window->render_rectangle.h);
+    wl_surface_commit (window->area_surface_wrapper);
     wl_subsurface_set_desync (window->video_subsurface);
   }
 
@@ -385,7 +392,7 @@ gst_wl_window_update_borders (GstWlWindow * window)
       gst_wl_shm_memory_construct_wl_buffer (gst_buffer_peek_memory (buf, 0),
       window->display, &info);
   gwlbuf = gst_buffer_add_wl_buffer (buf, wlbuf, window->display);
-  gst_wl_buffer_attach (gwlbuf, window->area_surface);
+  gst_wl_buffer_attach (gwlbuf, window->area_surface_wrapper);
 
   /* at this point, the GstWlBuffer keeps the buffer
    * alive and will free it on wl_buffer::release */
@@ -419,8 +426,8 @@ gst_wl_window_set_render_rectangle (GstWlWindow * window, gint x, gint y,
     gst_wl_window_resize_video_surface (window, TRUE);
   }
 
-  wl_surface_damage (window->area_surface, 0, 0, w, h);
-  wl_surface_commit (window->area_surface);
+  wl_surface_damage (window->area_surface_wrapper, 0, 0, w, h);
+  wl_surface_commit (window->area_surface_wrapper);
 
   if (window->video_width != 0)
     wl_subsurface_set_desync (window->video_subsurface);

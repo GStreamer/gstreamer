@@ -45,9 +45,11 @@ struct _GstWlWindow
 
   GstWlDisplay *display;
   struct wl_surface *area_surface;
+  struct wl_surface *area_surface_wrapper;
   struct wl_subsurface *area_subsurface;
   struct wp_viewport *area_viewport;
   struct wl_surface *video_surface;
+  struct wl_surface *video_surface_wrapper;
   struct wl_subsurface *video_subsurface;
   struct wp_viewport *video_viewport;
   struct wl_shell_surface *shell_surface;
