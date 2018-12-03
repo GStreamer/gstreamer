@@ -30,9 +30,6 @@
 #include "gstvaapisurface_priv.h"
 #include "gstvaapiutils_core.h"
 
-#define DEBUG 1
-#include "gstvaapidebug.h"
-
 #define GST_VAAPI_FILTER_CAST(obj) \
     ((GstVaapiFilter *)(obj))
 
@@ -80,7 +77,16 @@ struct _GstVaapiFilterClass
   GstObjectClass parent_class;
 };
 
-G_DEFINE_TYPE (GstVaapiFilter, gst_vaapi_filter, GST_TYPE_OBJECT);
+/* Debug category for VaapiFilter */
+GST_DEBUG_CATEGORY (gst_debug_vaapi_filter);
+#define GST_CAT_DEFAULT gst_debug_vaapi_filter
+
+#define _do_init                                                       \
+    GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi_filter, "vaapifilter", 0, \
+    "VA-API Filter");
+
+G_DEFINE_TYPE_WITH_CODE (GstVaapiFilter, gst_vaapi_filter, GST_TYPE_OBJECT,
+    _do_init);
 
 /* ------------------------------------------------------------------------- */
 /* --- VPP Types                                                         --- */
