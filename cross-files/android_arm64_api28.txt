@@ -1,0 +1,16 @@
+[host_machine]
+system = 'android'
+cpu_family = 'aarch64'
+cpu = 'arm64'
+endian = 'little'
+
+[properties]
+c_args = ['--sysroot', '/opt/android-arm64-api28/sysroot']
+cpp_args = ['--sysroot', '/opt/android-arm64-api28/sysroot']
+
+[binaries]
+c = '/opt/android-arm64-api28/bin/aarch64-linux-android-clang'
+cpp = '/opt/android-arm64-api28/bin/aarch64-linux-android-clang++'
+ar = '/opt/android-arm64-api28/bin/aarch64-linux-android-ar'
+strip = '/opt/android-arm64-api28/bin/aarch64-linux-android-strip'
+pkgconfig = 'false'
