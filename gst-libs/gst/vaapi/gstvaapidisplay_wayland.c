@@ -35,11 +35,8 @@
 #define DEBUG_VAAPI_DISPLAY 1
 #include "gstvaapidebug.h"
 
-#define _do_init \
-    G_ADD_PRIVATE (GstVaapiDisplayWayland);
-
-G_DEFINE_TYPE_WITH_CODE (GstVaapiDisplayWayland, gst_vaapi_display_wayland,
-    GST_TYPE_VAAPI_DISPLAY, _do_init);
+G_DEFINE_TYPE_WITH_PRIVATE (GstVaapiDisplayWayland, gst_vaapi_display_wayland,
+    GST_TYPE_VAAPI_DISPLAY);
 
 static inline const gchar *
 get_default_display_name (void)

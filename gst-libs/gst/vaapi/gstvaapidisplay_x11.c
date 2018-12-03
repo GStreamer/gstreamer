@@ -45,11 +45,8 @@
 #define DEBUG_VAAPI_DISPLAY 1
 #include "gstvaapidebug.h"
 
-#define _do_init \
-    G_ADD_PRIVATE (GstVaapiDisplayX11);
-
-G_DEFINE_TYPE_WITH_CODE (GstVaapiDisplayX11, gst_vaapi_display_x11,
-    GST_TYPE_VAAPI_DISPLAY, _do_init);
+G_DEFINE_TYPE_WITH_PRIVATE (GstVaapiDisplayX11, gst_vaapi_display_x11,
+    GST_TYPE_VAAPI_DISPLAY);
 
 static inline const gchar *
 get_default_display_name (void)

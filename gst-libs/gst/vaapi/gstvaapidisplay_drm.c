@@ -41,11 +41,8 @@
 #define DEBUG_VAAPI_DISPLAY 1
 #include "gstvaapidebug.h"
 
-#define _do_init \
-    G_ADD_PRIVATE (GstVaapiDisplayDRM);
-
-G_DEFINE_TYPE_WITH_CODE (GstVaapiDisplayDRM, gst_vaapi_display_drm,
-    GST_TYPE_VAAPI_DISPLAY, _do_init);
+G_DEFINE_TYPE_WITH_PRIVATE (GstVaapiDisplayDRM, gst_vaapi_display_drm,
+    GST_TYPE_VAAPI_DISPLAY);
 
 typedef enum
 {
