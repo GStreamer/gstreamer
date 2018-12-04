@@ -62,20 +62,25 @@ static const struct
   GstAudioChannelPosition positions[8];
 } channel_layouts[] = {
   {
+    /* MPEG 1: Mono */
     1, MODE_1, {
   GST_AUDIO_CHANNEL_POSITION_MONO}}, {
+    /* MPEG 2: Stereo */
     2, MODE_2, {
   GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
           GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}}, {
+    /* MPEG 3: Stereo + Center */
     3, MODE_1_2, {
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
           GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
           GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}}, {
+    /* MPEG 4: Stereo + Center + Rear center */
     4, MODE_1_2_1, {
   GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
           GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
           GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
           GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}}, {
+    /* MPEG 5: 5.0 Surround */
     5, MODE_1_2_2, {
       GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
           GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
@@ -83,6 +88,7 @@ static const struct
           /* FIXME: SURROUND instead of REAR is more to spec */
   GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
           GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}}, {
+    /* MPEG 6: 5.1 Surround */
     6, MODE_1_2_2_1, {
       GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
           GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
@@ -93,6 +99,7 @@ static const struct
           GST_AUDIO_CHANNEL_POSITION_LFE1}}
 #ifdef HAVE_FDK_AAC_0_1_4
   , {
+    /* Non-standard PCE clone of mode 12 */
     8, MODE_7_1_REAR_SURROUND, {
       GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
           GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
@@ -103,6 +110,7 @@ static const struct
           GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
           GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
           GST_AUDIO_CHANNEL_POSITION_LFE1}}, {
+    /* Non-standard PCE clone of mode 7 */
     8, MODE_7_1_FRONT_CENTER, {
       GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
           GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
