@@ -307,7 +307,7 @@ properly (help welcome!).
 |ladspa-sine-so-sine-fcaa|Sine Oscillator (Freq:control, Amp:audio)|ladspa|[gst-plugins-bad][bad]|
 |ladspasrc-noise-so-noise-white|White Noise Source|ladspa|[gst-plugins-bad][bad]|
 |ladspasrc-sine-so-sine-fcac|Sine Oscillator (Freq:control, Amp:control)|ladspa|[gst-plugins-bad][bad]|
-|[lamemp3enc][element-lamemp3enc]|High-quality free MP3 encoder|[lame][lame]|[gst-plugins-ugly][ugly]|
+|[lamemp3enc][element-lamemp3enc]|High-quality free MP3 encoder|[lame][lame]|[gst-plugins-good][good]|
 |[level][element-level]|RMS/Peak/Decaying Peak Level messager for audio/raw|[level][level]|[gst-plugins-good][good]|
 |libvisual_bumpscope|Bumpscope visual plugin|[libvisual][libvisual]|[gst-plugins-base][base]|
 |libvisual_corona|Libvisual corona plugin|[libvisual][libvisual]|[gst-plugins-base][base]|
@@ -341,7 +341,7 @@ properly (help welcome!).
 |[mpegpsmux][element-mpegpsmux]|Multiplexes media streams into an MPEG Program Stream|[mpegpsmux][mpegpsmux]|[gst-plugins-bad][bad]|
 |[mpegtsmux][element-mpegtsmux]|Multiplexes media streams into an MPEG Transport Stream|[mpegtsmux][mpegtsmux]|[gst-plugins-bad][bad]|
 |mpegvideoparse|Parses and frames MPEG-1 and MPEG-2 elementary video streams|videoparsersbad|[gst-plugins-bad][bad]|
-|[mpg123audiodec][element-mpg123audiodec]|Decodes mp3 streams using the mpg123 library|[mpg123][mpg123]|[gst-plugins-ugly][ugly]|
+|[mpg123audiodec][element-mpg123audiodec]|Decodes mp3 streams using the mpg123 library|[mpg123][mpg123]|[gst-plugins-good][good]|
 |[mplex][element-mplex]|High-quality MPEG/DVD/SVCD/VCD video/audio multiplexer|[mplex][mplex]|[gst-plugins-bad][bad]|
 |mssdemux|Parse and demultiplex a Smooth Streaming manifest into audio and video streams|smoothstreaming|[gst-plugins-bad][bad]|
 |[mulawdec][element-mulawdec]|Convert 8bit mu law to 16bit PCM|[mulaw][mulaw]|[gst-plugins-good][good]|
@@ -612,7 +612,7 @@ properly (help welcome!).
 |tsparse|Parses MPEG2 transport streams|mpegtsdemux|[gst-plugins-bad][bad]|
 |[tunnel][element-tunnel]|Light tunnel effect|[geometrictransform][geometrictransform]|[gst-plugins-bad][bad]|
 |[twirl][element-twirl]|Twists the image from the center out|[geometrictransform][geometrictransform]|[gst-plugins-bad][bad]|
-|twolamemp2enc|High-quality free MP2 encoder|[twolame][twolame]|[gst-plugins-ugly][ugly]|
+|twolamemp2enc|High-quality free MP2 encoder|[twolame][twolame]|[gst-plugins-good][good]|
 |[typefind][element-typefind]|Finds the media type of a stream|[coreelements][coreelements]|[gstreamer][core]|
 |[udpsink][element-udpsink]|Send data over the network via UDP|[udp][udp]|[gst-plugins-good][good]|
 |[udpsrc][element-udpsrc]|Receive data over the network via UDP|[udp][udp]|[gst-plugins-good][good]|
@@ -878,7 +878,7 @@ properly (help welcome!).
 [element-jpegenc]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-jpegenc.html
 [element-jpegparse]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-jpegparse.html
 [element-kaleidoscope]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-kaleidoscope.html
-[element-lamemp3enc]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-ugly-plugins/html/gst-plugins-ugly-plugins-lamemp3enc.html
+[element-lamemp3enc]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-lamemp3enc.html
 [element-level]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-level.html
 [element-liveadder]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-liveadder.html
 [element-mad]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-ugly-plugins/html/gst-plugins-ugly-plugins-mad.html
@@ -897,7 +897,7 @@ properly (help welcome!).
 [element-mpegaudioparse]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-mpegaudioparse.html
 [element-mpegpsmux]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-mpegpsmux.html
 [element-mpegtsmux]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-mpegtsmux.html
-[element-mpg123audiodec]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-ugly-plugins/html/gst-plugins-ugly-plugins-mpg123audiodec.html
+[element-mpg123audiodec]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-mpg123audiodec.html
 [element-mplex]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-mplex.html
 [element-mulawdec]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-mulawdec.html
 [element-mulawenc]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-mulawenc.html
@@ -1250,7 +1250,7 @@ properly (help welcome!).
 [jack]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-jack.html
 [jpeg]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-jpeg.html
 [jpegformat]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-plugin-jpegformat.html
-[lame]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-ugly-plugins/html/gst-plugins-ugly-plugins-plugin-lame.html
+[lame]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-lame.html
 [level]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-level.html
 [libvisual]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/gst-plugins-base-plugins-plugin-libvisual.html
 [mad]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-ugly-plugins/html/gst-plugins-ugly-plugins-plugin-mad.html
@@ -1263,7 +1263,7 @@ properly (help welcome!).
 [mpeg2enc]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-plugin-mpeg2enc.html
 [mpegpsmux]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-plugin-mpegpsmux.html
 [mpegtsmux]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-plugin-mpegtsmux.html
-[mpg123]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-ugly-plugins/html/gst-plugins-ugly-plugins-plugin-mpg123.html
+[mpg123]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-mpg123.html
 [mplex]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-plugin-mplex.html
 [mulaw]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-mulaw.html
 [multifile]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-multifile.html
@@ -1308,7 +1308,7 @@ properly (help welcome!).
 [taglib]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-taglib.html
 [tcp]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/gst-plugins-base-plugins-plugin-tcp.html
 [theora]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/gst-plugins-base-plugins-plugin-theora.html
-[twolame]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-ugly-plugins/html/gst-plugins-ugly-plugins-plugin-twolame.html
+[twolame]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-twolame.html
 [udp]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-udp.html
 [video4linux2]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-video4linux2.html
 [videobox]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-plugin-videobox.html
