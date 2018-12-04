@@ -1962,56 +1962,63 @@ GST_START_TEST (test_data_channel_pre_negotiated)
 
 GST_END_TEST;
 
-typedef struct
+static void
+_count_non_rejected_media (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * sd, gpointer user_data)
 {
-  guint num_media;
-  guint num_active_media;
-  const gchar **bundled;
-  const gchar **bundled_only;
-} BundleCheckData;
+  guint expected = GPOINTER_TO_UINT (user_data);
+  guint non_rejected_media;
+  guint i;
+
+  non_rejected_media = 0;
+
+  for (i = 0; i < gst_sdp_message_medias_len (sd->sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (sd->sdp, i);
+
+    if (gst_sdp_media_get_port (media) != 0)
+      non_rejected_media += 1;
+  }
+
+  fail_unless_equals_int (non_rejected_media, expected);
+}
 
 static void
-_check_bundled_sdp_media (struct test_webrtc *t, GstElement * element,
+_check_bundle_tag (struct test_webrtc *t, GstElement * element,
     GstWebRTCSessionDescription * sd, gpointer user_data)
 {
   gchar **bundled = NULL;
-  BundleCheckData *data = (BundleCheckData *) user_data;
+  GStrv expected = user_data;
   guint i;
-  guint active_media;
-
-  fail_unless_equals_int (gst_sdp_message_medias_len (sd->sdp),
-      data->num_media);
 
   fail_unless (_parse_bundle (sd->sdp, &bundled));
 
   if (!bundled) {
-    fail_unless_equals_int (g_strv_length ((GStrv) data->bundled), 0);
+    fail_unless_equals_int (g_strv_length (expected), 0);
   } else {
-    fail_unless_equals_int (g_strv_length (bundled),
-        g_strv_length ((GStrv) data->bundled));
+    fail_unless_equals_int (g_strv_length (bundled), g_strv_length (expected));
   }
 
-  for (i = 0; data->bundled[i]; i++) {
-    fail_unless (g_strv_contains ((const gchar **) bundled, data->bundled[i]));
+  for (i = 0; i < g_strv_length (expected); i++) {
+    fail_unless (g_strv_contains ((const gchar **) bundled, expected[i]));
   }
 
-  active_media = 0;
+  g_strfreev (bundled);
+}
+
+static void
+_check_bundle_only_media (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * sd, gpointer user_data)
+{
+  gchar **expected_bundle_only = user_data;
+  guint i;
 
   for (i = 0; i < gst_sdp_message_medias_len (sd->sdp); i++) {
     const GstSDPMedia *media = gst_sdp_message_get_media (sd->sdp, i);
     const gchar *mid = gst_sdp_media_get_attribute_val (media, "mid");
 
-    if (g_strv_contains ((const gchar **) data->bundled_only, mid))
+    if (g_strv_contains ((const gchar **) expected_bundle_only, mid))
       fail_unless (_media_has_attribute_key (media, "bundle-only"));
-
-    if (gst_sdp_media_get_port (media) != 0)
-      active_media += 1;
   }
-
-  fail_unless_equals_int (active_media, data->num_active_media);
-
-  if (bundled)
-    g_strfreev (bundled);
 }
 
 GST_START_TEST (test_bundle_audio_video_max_bundle_max_bundle)
@@ -2020,33 +2027,31 @@ GST_START_TEST (test_bundle_audio_video_max_bundle_max_bundle)
   const gchar *bundle[] = { "audio0", "video1", NULL };
   const gchar *offer_bundle_only[] = { "video1", NULL };
   const gchar *answer_bundle_only[] = { NULL };
+
+  struct validate_sdp count =
+      { _count_num_sdp_media, GUINT_TO_POINTER (2), NULL };
+  struct validate_sdp bundle_tag = { _check_bundle_tag, bundle, &count };
+  struct validate_sdp offer_non_reject =
+      { _count_non_rejected_media, GUINT_TO_POINTER (1), &bundle_tag };
+  struct validate_sdp answer_non_reject =
+      { _count_non_rejected_media, GUINT_TO_POINTER (2), &bundle_tag };
+  struct validate_sdp offer =
+      { _check_bundle_only_media, &offer_bundle_only, &offer_non_reject };
+  struct validate_sdp answer =
+      { _check_bundle_only_media, &answer_bundle_only, &answer_non_reject };
+
   /* We set a max-bundle policy on the offering webrtcbin,
    * this means that all the offered medias should be part
    * of the group:BUNDLE attribute, and they should be marked
    * as bundle-only
    */
-  BundleCheckData offer_data = {
-    2,
-    1,
-    bundle,
-    offer_bundle_only,
-  };
+  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
+      "max-bundle");
   /* We also set a max-bundle policy on the answering webrtcbin,
    * this means that all the offered medias should be part
    * of the group:BUNDLE attribute, but need not be marked
    * as bundle-only.
    */
-  BundleCheckData answer_data = {
-    2,
-    2,
-    bundle,
-    answer_bundle_only,
-  };
-  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data, NULL };
-  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data, NULL };
-
-  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
-      "max-bundle");
   gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
       "max-bundle");
 
@@ -2062,37 +2067,31 @@ GST_START_TEST (test_bundle_audio_video_max_compat_max_bundle)
   struct test_webrtc *t = create_audio_video_test ();
   const gchar *bundle[] = { "audio0", "video1", NULL };
   const gchar *bundle_only[] = { NULL };
+
+  struct validate_sdp count =
+      { _count_num_sdp_media, GUINT_TO_POINTER (2), NULL };
+  struct validate_sdp bundle_tag = { _check_bundle_tag, bundle, &count };
+  struct validate_sdp count_non_reject =
+      { _count_non_rejected_media, GUINT_TO_POINTER (2), &bundle_tag };
+  struct validate_sdp bundle_sdp =
+      { _check_bundle_only_media, &bundle_only, &count_non_reject };
+
   /* We set a max-compat policy on the offering webrtcbin,
    * this means that all the offered medias should be part
    * of the group:BUNDLE attribute, and they should *not* be marked
    * as bundle-only
    */
-  BundleCheckData offer_data = {
-    2,
-    2,
-    bundle,
-    bundle_only,
-  };
+  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
+      "max-compat");
   /* We set a max-bundle policy on the answering webrtcbin,
    * this means that all the offered medias should be part
    * of the group:BUNDLE attribute, but need not be marked
    * as bundle-only.
    */
-  BundleCheckData answer_data = {
-    2,
-    2,
-    bundle,
-    bundle_only,
-  };
-  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data, NULL };
-  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data, NULL };
-
-  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
-      "max-compat");
   gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
       "max-bundle");
 
-  test_validate_sdp (t, &offer, &answer);
+  test_validate_sdp (t, &bundle_sdp, &bundle_sdp);
 
   test_webrtc_free (t);
 }
@@ -2106,33 +2105,32 @@ GST_START_TEST (test_bundle_audio_video_max_bundle_none)
   const gchar *offer_bundle_only[] = { "video1", NULL };
   const gchar *answer_bundle[] = { NULL };
   const gchar *answer_bundle_only[] = { NULL };
+
+  struct validate_sdp count =
+      { _count_num_sdp_media, GUINT_TO_POINTER (2), NULL };
+  struct validate_sdp count_non_reject =
+      { _count_non_rejected_media, GUINT_TO_POINTER (1), &count };
+  struct validate_sdp offer_bundle_tag =
+      { _check_bundle_tag, offer_bundle, &count_non_reject };
+  struct validate_sdp answer_bundle_tag =
+      { _check_bundle_tag, answer_bundle, &count_non_reject };
+  struct validate_sdp offer =
+      { _check_bundle_only_media, &offer_bundle_only, &offer_bundle_tag };
+  struct validate_sdp answer =
+      { _check_bundle_only_media, &answer_bundle_only, &answer_bundle_tag };
+
   /* We set a max-bundle policy on the offering webrtcbin,
    * this means that all the offered medias should be part
    * of the group:BUNDLE attribute, and they should be marked
    * as bundle-only
    */
-  BundleCheckData offer_data = {
-    2,
-    1,
-    offer_bundle,
-    offer_bundle_only,
-  };
+  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
+      "max-bundle");
   /* We set a none policy on the answering webrtcbin,
    * this means that the answer should contain no bundled
    * medias, and as the bundle-policy of the offering webrtcbin
    * is set to max-bundle, only one media should be active.
    */
-  BundleCheckData answer_data = {
-    2,
-    1,
-    answer_bundle,
-    answer_bundle_only,
-  };
-  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data, NULL };
-  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data, NULL };
-
-  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
-      "max-bundle");
   gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy", "none");
 
   test_validate_sdp (t, &offer, &answer);
@@ -2149,33 +2147,31 @@ GST_START_TEST (test_bundle_audio_video_data)
   const gchar *offer_bundle_only[] = { "video1", "application2", NULL };
   const gchar *answer_bundle_only[] = { NULL };
   GObject *channel = NULL;
+
+  struct validate_sdp count =
+      { _count_num_sdp_media, GUINT_TO_POINTER (3), NULL };
+  struct validate_sdp bundle_tag = { _check_bundle_tag, bundle, &count };
+  struct validate_sdp offer_non_reject =
+      { _count_non_rejected_media, GUINT_TO_POINTER (1), &bundle_tag };
+  struct validate_sdp answer_non_reject =
+      { _count_non_rejected_media, GUINT_TO_POINTER (3), &bundle_tag };
+  struct validate_sdp offer =
+      { _check_bundle_only_media, &offer_bundle_only, &offer_non_reject };
+  struct validate_sdp answer =
+      { _check_bundle_only_media, &answer_bundle_only, &answer_non_reject };
+
   /* We set a max-bundle policy on the offering webrtcbin,
    * this means that all the offered medias should be part
    * of the group:BUNDLE attribute, and they should be marked
    * as bundle-only
    */
-  BundleCheckData offer_data = {
-    3,
-    1,
-    bundle,
-    offer_bundle_only,
-  };
+  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
+      "max-bundle");
   /* We also set a max-bundle policy on the answering webrtcbin,
    * this means that all the offered medias should be part
    * of the group:BUNDLE attribute, but need not be marked
    * as bundle-only.
    */
-  BundleCheckData answer_data = {
-    3,
-    3,
-    bundle,
-    answer_bundle_only,
-  };
-  struct validate_sdp offer = { _check_bundled_sdp_media, &offer_data, NULL };
-  struct validate_sdp answer = { _check_bundled_sdp_media, &answer_data, NULL };
-
-  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
-      "max-bundle");
   gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
       "max-bundle");
 
