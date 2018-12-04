@@ -178,6 +178,8 @@ static void gst_rtsp_client_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_client_finalize (GObject * obj);
 
+static void rtsp_ctrl_timeout_remove (GstRTSPClientPrivate * priv);
+
 static GstSDPMessage *create_sdp (GstRTSPClient * client, GstRTSPMedia * media);
 static gboolean handle_sdp (GstRTSPClient * client, GstRTSPContext * ctx,
     GstRTSPMedia * media, GstSDPMessage * sdp);
@@ -1229,6 +1231,7 @@ gst_rtsp_client_close (GstRTSPClient * client)
     g_source_destroy ((GSource *) priv->watch);
     priv->watch = NULL;
     gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
+    rtsp_ctrl_timeout_remove (priv);
     g_main_context_unref (priv->watch_context);
     priv->watch_context = NULL;
   }
