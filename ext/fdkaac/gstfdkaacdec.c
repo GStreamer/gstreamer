@@ -151,6 +151,13 @@ gst_fdkaacdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
     gst_buffer_unref (codec_data);
   }
 
+  if ((err =
+          aacDecoder_SetParam (self->dec, AAC_PCM_MAX_OUTPUT_CHANNELS,
+              0)) != AAC_DEC_OK) {
+    GST_ERROR_OBJECT (self, "Failed to disable downmixing: %d", err);
+    return FALSE;
+  }
+
   /* Choose WAV channel mapping to get interleaving even with libfdk-aac 2.0.0
    * The pChannelIndices retain the indices from the standard MPEG mapping so
    * we're agnostic to the actual order. */
@@ -228,14 +235,12 @@ gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
   if (stream_info->numChannels == 1) {
     pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
   } else {
-    gint n_front = 0, n_side = 0, n_back = 0, n_lfe = 0;
+    gint n_front = 0, n_back = 0, n_lfe = 0;
 
     /* FIXME: Can this be simplified somehow? */
     for (i = 0; i < stream_info->numChannels; i++) {
       if (stream_info->pChannelType[i] == ACT_FRONT) {
         n_front++;
-      } else if (stream_info->pChannelType[i] == ACT_SIDE) {
-        n_side++;
       } else if (stream_info->pChannelType[i] == ACT_BACK) {
         n_back++;
       } else if (stream_info->pChannelType[i] == ACT_LFE) {
@@ -299,35 +304,48 @@ gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
           ret = GST_FLOW_NOT_NEGOTIATED;
           goto out;
         }
-      } else if (stream_info->pChannelType[i] == ACT_SIDE) {
-        if (n_side & 1) {
-          GST_ERROR_OBJECT (self, "Odd number of side channels not supported");
-          ret = GST_FLOW_NOT_NEGOTIATED;
-          goto out;
-        } else if (stream_info->pChannelIndices[i] == 0) {
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
-        } else if (stream_info->pChannelIndices[i] == 1) {
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
-        } else {
-          GST_ERROR_OBJECT (self, "Side channel index %d not supported",
-              stream_info->pChannelIndices[i]);
-          ret = GST_FLOW_NOT_NEGOTIATED;
-          goto out;
-        }
       } else if (stream_info->pChannelType[i] == ACT_BACK) {
         if (stream_info->pChannelIndices[i] == 0) {
           if (n_back & 1)
             pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
+          else if (n_back > 2)
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
           else
             pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
         } else if (stream_info->pChannelIndices[i] == 1) {
-          if (n_back & 1)
+          if ((n_back & 1) && n_back > 3)
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
+          else if (n_back & 1)
             pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+          else if (n_back > 2)
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
           else
             pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
         } else if (stream_info->pChannelIndices[i] == 2) {
-          if (n_back & 1)
+          if ((n_back & 1) && n_back > 3)
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
+          else if (n_back & 1)
             pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+          else if (n_back > 2)
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+          else
+            g_assert_not_reached ();
+        } else if (stream_info->pChannelIndices[i] == 3) {
+          if ((n_back & 1) && n_back > 3)
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+          else if (n_back & 1)
+            g_assert_not_reached ();
+          else if (n_back > 2)
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+          else
+            g_assert_not_reached ();
+        } else if (stream_info->pChannelIndices[i] == 4) {
+          if ((n_back & 1) && n_back > 3)
+            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+          else if (n_back & 1)
+            g_assert_not_reached ();
+          else if (n_back > 2)
+            g_assert_not_reached ();
           else
             g_assert_not_reached ();
         } else {
