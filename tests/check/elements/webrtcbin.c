@@ -805,35 +805,39 @@ on_sdp_media_direction (struct test_webrtc *t, GstElement * element,
 
   for (i = 0; i < gst_sdp_message_medias_len (desc->sdp); i++) {
     const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
-    gboolean have_direction = FALSE;
-    int j;
 
-    for (j = 0; j < gst_sdp_media_attributes_len (media); j++) {
-      const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, j);
+    if (g_strcmp0 (gst_sdp_media_get_media (media), "audio") == 0
+        || g_strcmp0 (gst_sdp_media_get_media (media), "video") == 0) {
+      gboolean have_direction = FALSE;
+      int j;
 
-      if (g_strcmp0 (attr->key, "inactive") == 0) {
-        fail_unless (have_direction == FALSE,
-            "duplicate/multiple directions for media %u", j);
-        have_direction = TRUE;
-        fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
-      } else if (g_strcmp0 (attr->key, "sendonly") == 0) {
-        fail_unless (have_direction == FALSE,
-            "duplicate/multiple directions for media %u", j);
-        have_direction = TRUE;
-        fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
-      } else if (g_strcmp0 (attr->key, "recvonly") == 0) {
-        fail_unless (have_direction == FALSE,
-            "duplicate/multiple directions for media %u", j);
-        have_direction = TRUE;
-        fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
-      } else if (g_strcmp0 (attr->key, "sendrecv") == 0) {
-        fail_unless (have_direction == FALSE,
-            "duplicate/multiple directions for media %u", j);
-        have_direction = TRUE;
-        fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
+      for (j = 0; j < gst_sdp_media_attributes_len (media); j++) {
+        const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, j);
+
+        if (g_strcmp0 (attr->key, "inactive") == 0) {
+          fail_unless (have_direction == FALSE,
+              "duplicate/multiple directions for media %u", j);
+          have_direction = TRUE;
+          fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
+        } else if (g_strcmp0 (attr->key, "sendonly") == 0) {
+          fail_unless (have_direction == FALSE,
+              "duplicate/multiple directions for media %u", j);
+          have_direction = TRUE;
+          fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
+        } else if (g_strcmp0 (attr->key, "recvonly") == 0) {
+          fail_unless (have_direction == FALSE,
+              "duplicate/multiple directions for media %u", j);
+          have_direction = TRUE;
+          fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
+        } else if (g_strcmp0 (attr->key, "sendrecv") == 0) {
+          fail_unless (have_direction == FALSE,
+              "duplicate/multiple directions for media %u", j);
+          have_direction = TRUE;
+          fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
+        }
       }
+      fail_unless (have_direction, "no direction attribute in media %u", j);
     }
-    fail_unless (have_direction, "no direction attribute in media %u", j);
   }
 }
 
