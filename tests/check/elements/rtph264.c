@@ -295,6 +295,87 @@ GST_START_TEST (test_rtph264depay_with_downstream_allocator)
 
 GST_END_TEST;
 
+/* AUD */
+static guint8 h264_aud[] = {
+  0x00, 0x00, 0x00, 0x01, 0x09, 0xf0
+};
+
+/* These were generated using pipeline:
+ * gst-launch-1.0 videotestsrc num-buffers=1 pattern=green \
+ *     ! video/x-raw,width=128,height=128 \
+ *     ! openh264enc num-slices=2 \
+ *     ! fakesink dump=1
+ */
+
+/* SPS */
+static guint8 h264_sps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x67, 0x42, 0xc0, 0x29,
+  0x8c, 0x8d, 0x41, 0x02, 0x24, 0x03, 0xc2, 0x21,
+  0x1a, 0x80
+};
+
+/* PPS */
+static guint8 h264_pps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x68, 0xce, 0x3c, 0x80
+};
+
+static GstBuffer *
+wrap_static_buffer (guint8 * buf, gsize size)
+{
+  return gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      buf, size, 0, size, NULL, NULL);
+}
+
+/* The RFC makes special use of NAL type 24 to 27, this test makes sure that
+ * such a NAL from the outside gets ignored properly. */
+GST_START_TEST (test_rtph264pay_reserved_nals)
+{
+  GstHarness *h = gst_harness_new ("rtph264pay");
+  /* we simply hack an AUD with the reserved nal types */
+  guint8 nal_24[sizeof (h264_aud)];
+  guint8 nal_25[sizeof (h264_aud)];
+  guint8 nal_26[sizeof (h264_aud)];
+  guint8 nal_27[sizeof (h264_aud)];
+  GstFlowReturn ret;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h264,alignment=nal,stream-format=byte-stream");
+
+  ret = gst_harness_push (h, wrap_static_buffer (h264_sps, sizeof (h264_sps)));
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  ret = gst_harness_push (h, wrap_static_buffer (h264_pps, sizeof (h264_pps)));
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  memcpy (nal_24, h264_aud, sizeof (h264_aud));
+  nal_24[4] = 24;
+  ret = gst_harness_push (h, wrap_static_buffer (nal_24, sizeof (nal_24)));
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  memcpy (nal_25, h264_aud, sizeof (h264_aud));
+  nal_25[4] = 25;
+  ret = gst_harness_push (h, wrap_static_buffer (nal_25, sizeof (nal_25)));
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+
+  memcpy (nal_26, h264_aud, sizeof (h264_aud));
+  nal_26[4] = 26;
+  ret = gst_harness_push (h, wrap_static_buffer (nal_26, sizeof (nal_26)));
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+
+  memcpy (nal_27, h264_aud, sizeof (h264_aud));
+  nal_27[4] = 27;
+  ret = gst_harness_push (h, wrap_static_buffer (nal_27, sizeof (nal_27)));
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 rtph264_suite (void)
 {
@@ -304,6 +385,10 @@ rtph264_suite (void)
   tc_chain = tcase_create ("rtph264depay");
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_rtph264depay_with_downstream_allocator);
+
+  tc_chain = tcase_create ("rtph264pay");
+  suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_rtph264pay_reserved_nals);
 
   return s;
 }

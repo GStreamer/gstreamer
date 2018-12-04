@@ -48,6 +48,7 @@ good_tests = [
   [ 'elements/rgvolume' ],
   [ 'elements/rtph261' ],
   [ 'elements/rtph263' ],
+  [ 'elements/rtph264' ],
   [ 'elements/rtpvp9' ],
   [ 'elements/rtpbin' ],
   [ 'elements/rtpbin_buffer_list' ],
