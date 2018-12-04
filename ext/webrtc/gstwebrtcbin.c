@@ -4995,9 +4995,10 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_LOCAL_DESCRIPTION,
       g_param_spec_boxed ("local-description", "Local Description",
-          "The local SDP description to use for this connection",
+          "The local SDP description in use for this connection. "
+          "Favours a pending description over the current description",
           GST_TYPE_WEBRTC_SESSION_DESCRIPTION,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_CURRENT_LOCAL_DESCRIPTION,
@@ -5018,13 +5019,13 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
           GST_TYPE_WEBRTC_SESSION_DESCRIPTION,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-
   g_object_class_install_property (gobject_class,
       PROP_REMOTE_DESCRIPTION,
       g_param_spec_boxed ("remote-description", "Remote Description",
-          "The remote SDP description to use for this connection",
+          "The remote SDP description to use for this connection. "
+          "Favours a pending description over the current description",
           GST_TYPE_WEBRTC_SESSION_DESCRIPTION,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
       PROP_CURRENT_REMOTE_DESCRIPTION,
@@ -5046,7 +5047,6 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
           "addIceCandidate() since the offer or answer was created",
           GST_TYPE_WEBRTC_SESSION_DESCRIPTION,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-
 
   g_object_class_install_property (gobject_class,
       PROP_STUN_SERVER,
