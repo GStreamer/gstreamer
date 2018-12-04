@@ -8,6 +8,11 @@ if fdkaac_dep.found()
     fdkaac_defines += ['-DHAVE_FDK_AAC_0_1_4']
   endif
 
+  # API v2
+  if fdkaac_dep.version().version_compare('>=2.0.0')
+    fdkaac_defines += ['-DHAVE_FDK_AAC_2_0_0']
+  endif
+
   gstfdkaac = library('gstfdkaac',
     ['plugin.c', 'gstfdkaacenc.c', 'gstfdkaacdec.c'],
     c_args : gst_plugins_bad_args + fdkaac_defines,
