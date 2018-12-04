@@ -128,6 +128,9 @@ build fedora x86_64 local:
   extends: '.build'
   stage: 'build'
   image: "${CI_REGISTRY_IMAGE}/amd64/fedora:latest"
+  except:
+    refs:
+      - "master@gstreamer/gst-ci"
 
 build android 28 local:
   extends: '.build'
@@ -137,3 +140,6 @@ build android 28 local:
       -Dbad:androidmedia=enabled
       --cross-file /android_arm64_28.txt
   image: "${CI_REGISTRY_IMAGE}/amd64/android_28:latest"
+  except:
+    refs:
+      - "master@gstreamer/gst-ci"
