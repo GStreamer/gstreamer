@@ -1626,10 +1626,10 @@ gst_kms_sink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DRIVER_NAME:
-      g_value_take_string (value, sink->devname);
+      g_value_set_string (value, sink->devname);
       break;
     case PROP_BUS_ID:
-      g_value_take_string (value, sink->bus_id);
+      g_value_set_string (value, sink->bus_id);
       break;
     case PROP_CONNECTOR_ID:
       g_value_set_int (value, sink->conn_id);
