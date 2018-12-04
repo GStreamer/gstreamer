@@ -37,6 +37,10 @@
 #define OPUS_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=OPUS,media=audio,clock-rate=48000,ssrc=(uint)3384078950"
 #define VP8_RTP_CAPS(pt) "application/x-rtp,payload=" G_STRINGIFY(pt) ",encoding-name=VP8,media=video,clock-rate=90000,ssrc=(uint)3484078950"
 
+#define TEST_IS_OFFER_ELEMENT(t, e) ((t)->offerror == 1 && (e) == (t)->webrtc1 ? TRUE : FALSE)
+#define TEST_GET_OFFEROR(t) (TEST_IS_OFFER_ELEMENT(t, t->webrtc1) ? (t)->webrtc1 : t->webrtc2)
+#define TEST_GET_ANSWERER(t) (TEST_IS_OFFER_ELEMENT(t, t->webrtc1) ? (t)->webrtc2 : t->webrtc1)
+
 typedef enum
 {
   STATE_NEW,
@@ -117,8 +121,8 @@ static void
 _on_answer_received (GstPromise * promise, gpointer user_data)
 {
   struct test_webrtc *t = user_data;
-  GstElement *offeror = t->offerror == 1 ? t->webrtc1 : t->webrtc2;
-  GstElement *answerer = t->offerror == 2 ? t->webrtc1 : t->webrtc2;
+  GstElement *offeror = TEST_GET_OFFEROR (t);
+  GstElement *answerer = TEST_GET_ANSWERER (t);
   const GstStructure *reply;
   GstWebRTCSessionDescription *answer = NULL;
   gchar *desc;
@@ -151,8 +155,8 @@ static void
 _on_offer_received (GstPromise * promise, gpointer user_data)
 {
   struct test_webrtc *t = user_data;
-  GstElement *offeror = t->offerror == 1 ? t->webrtc1 : t->webrtc2;
-  GstElement *answerer = t->offerror == 2 ? t->webrtc1 : t->webrtc2;
+  GstElement *offeror = TEST_GET_OFFEROR (t);
+  GstElement *answerer = TEST_GET_ANSWERER (t);
   const GstStructure *reply;
   GstWebRTCSessionDescription *offer = NULL;
   gchar *desc;
