@@ -840,7 +840,7 @@ on_sdp_media_direction (struct test_webrtc *t, GstElement * element,
           fail_unless (g_strcmp0 (attr->key, expected_directions[i]) == 0);
         }
       }
-      fail_unless (have_direction, "no direction attribute in media %u", j);
+      fail_unless (have_direction, "no direction attribute in media %u", i);
     }
   }
 }
@@ -947,7 +947,7 @@ on_sdp_media_setup (struct test_webrtc *t, GstElement * element,
         fail_unless (g_strcmp0 (attr->value, expected_setup[i]) == 0);
       }
     }
-    fail_unless (have_setup, "no setup attribute in media %u", j);
+    fail_unless (have_setup, "no setup attribute in media %u", i);
   }
 }
 
@@ -2306,7 +2306,7 @@ webrtcbin_suite (void)
       tcase_add_test (tc, test_bundle_audio_video_data);
     } else {
       GST_WARNING ("Some required elements were not found. "
-          "All datachannel are disabled. sctpenc %p, sctpdec %p", sctpenc,
+          "All datachannel tests are disabled. sctpenc %p, sctpdec %p", sctpenc,
           sctpdec);
     }
   } else {
