@@ -28,11 +28,19 @@
 
 #include <string.h>
 
-static GstStaticCaps foo_bar_caps = GST_STATIC_CAPS ("foo/bar");
+#define VIDEO_CAPS_STR "video/x-raw, " \
+  "format = (string) UYVY, " \
+  "width = (int) 1920, " \
+  "height = (int) 1080, " \
+  "framerate = (fraction) 30/1"
+
+static GstStaticCaps video_caps = GST_STATIC_CAPS (VIDEO_CAPS_STR);
 static GstStaticCaps cea708_cc_data_caps =
-GST_STATIC_CAPS ("closedcaption/x-cea-708,format=(string) cc_data");
+    GST_STATIC_CAPS
+    ("closedcaption/x-cea-708,format=(string) cc_data, framerate = (fraction) 30/1");
 static GstStaticCaps cea708_cdp_caps =
-GST_STATIC_CAPS ("closedcaption/x-cea-708,format=(string) cdp");
+    GST_STATIC_CAPS
+    ("closedcaption/x-cea-708,format=(string) cdp, framerate = (fraction) 30/1");
 
 GST_START_TEST (no_captions)
 {
@@ -42,7 +50,7 @@ GST_START_TEST (no_captions)
 
   h = gst_harness_new ("ccextractor");
 
-  gst_harness_set_src_caps_str (h, "foo/bar");
+  gst_harness_set_src_caps_str (h, VIDEO_CAPS_STR);
 
   buf = gst_buffer_new_and_alloc (128);
   outbuf = gst_harness_push_and_pull (h, gst_buffer_ref (buf));
@@ -54,7 +62,7 @@ GST_START_TEST (no_captions)
   caps = gst_pad_get_current_caps (h->sinkpad);
   fail_unless (caps != NULL);
   fail_unless (gst_caps_can_intersect (caps,
-          gst_static_caps_get (&foo_bar_caps)));
+          gst_static_caps_get (&video_caps)));
   gst_caps_unref (caps);
 
   gst_buffer_unref (buf);
@@ -85,7 +93,7 @@ GST_START_TEST (captions)
   g_signal_connect (h->element, "pad-added", G_CALLBACK (on_caption_pad_added),
       h2);
 
-  gst_harness_set_src_caps_str (h, "foo/bar");
+  gst_harness_set_src_caps_str (h, VIDEO_CAPS_STR);
 
   buf = gst_buffer_new_and_alloc (128);
   gst_buffer_add_video_caption_meta (buf, GST_VIDEO_CAPTION_TYPE_CEA708_RAW,
@@ -108,7 +116,7 @@ GST_START_TEST (captions)
   caps = gst_pad_get_current_caps (h->sinkpad);
   fail_unless (caps != NULL);
   fail_unless (gst_caps_can_intersect (caps,
-          gst_static_caps_get (&foo_bar_caps)));
+          gst_static_caps_get (&video_caps)));
   gst_caps_unref (caps);
 
   caps = gst_pad_get_current_caps (h2->sinkpad);
@@ -138,7 +146,7 @@ GST_START_TEST (captions)
   caps = gst_pad_get_current_caps (h->sinkpad);
   fail_unless (caps != NULL);
   fail_unless (gst_caps_can_intersect (caps,
-          gst_static_caps_get (&foo_bar_caps)));
+          gst_static_caps_get (&video_caps)));
   gst_caps_unref (caps);
 
   caps = gst_pad_get_current_caps (h2->sinkpad);
@@ -166,7 +174,7 @@ GST_START_TEST (no_captions_at_beginning_and_end)
   g_signal_connect (h->element, "pad-added", G_CALLBACK (on_caption_pad_added),
       h2);
 
-  gst_harness_set_src_caps_str (h, "foo/bar");
+  gst_harness_set_src_caps_str (h, VIDEO_CAPS_STR);
 
   buf = gst_buffer_new_and_alloc (128);
 
@@ -191,7 +199,7 @@ GST_START_TEST (no_captions_at_beginning_and_end)
   caps = gst_pad_get_current_caps (h->sinkpad);
   fail_unless (caps != NULL);
   fail_unless (gst_caps_can_intersect (caps,
-          gst_static_caps_get (&foo_bar_caps)));
+          gst_static_caps_get (&video_caps)));
   gst_caps_unref (caps);
 
   fail_unless (h2->sinkpad != NULL);
@@ -204,7 +212,7 @@ GST_START_TEST (no_captions_at_beginning_and_end)
   caps = gst_pad_get_current_caps (h->sinkpad);
   fail_unless (caps != NULL);
   fail_unless (gst_caps_can_intersect (caps,
-          gst_static_caps_get (&foo_bar_caps)));
+          gst_static_caps_get (&video_caps)));
   gst_caps_unref (caps);
 
   caps = gst_pad_get_current_caps (h2->sinkpad);
@@ -227,7 +235,7 @@ GST_START_TEST (no_captions_at_beginning_and_end)
   caps = gst_pad_get_current_caps (h->sinkpad);
   fail_unless (caps != NULL);
   fail_unless (gst_caps_can_intersect (caps,
-          gst_static_caps_get (&foo_bar_caps)));
+          gst_static_caps_get (&video_caps)));
   gst_caps_unref (caps);
 
   caps = gst_pad_get_current_caps (h2->sinkpad);
@@ -255,7 +263,7 @@ GST_START_TEST (captions_format_change)
   g_signal_connect (h->element, "pad-added", G_CALLBACK (on_caption_pad_added),
       h2);
 
-  gst_harness_set_src_caps_str (h, "foo/bar");
+  gst_harness_set_src_caps_str (h, VIDEO_CAPS_STR);
 
   buf = gst_buffer_new_and_alloc (128);
   gst_buffer_add_video_caption_meta (buf, GST_VIDEO_CAPTION_TYPE_CEA708_RAW,
@@ -278,7 +286,7 @@ GST_START_TEST (captions_format_change)
   caps = gst_pad_get_current_caps (h->sinkpad);
   fail_unless (caps != NULL);
   fail_unless (gst_caps_can_intersect (caps,
-          gst_static_caps_get (&foo_bar_caps)));
+          gst_static_caps_get (&video_caps)));
   gst_caps_unref (caps);
 
   caps = gst_pad_get_current_caps (h2->sinkpad);
@@ -308,7 +316,7 @@ GST_START_TEST (captions_format_change)
   caps = gst_pad_get_current_caps (h->sinkpad);
   fail_unless (caps != NULL);
   fail_unless (gst_caps_can_intersect (caps,
-          gst_static_caps_get (&foo_bar_caps)));
+          gst_static_caps_get (&video_caps)));
   gst_caps_unref (caps);
 
   caps = gst_pad_get_current_caps (h2->sinkpad);

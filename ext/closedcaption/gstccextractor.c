@@ -70,6 +70,8 @@ static void gst_cc_extractor_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_cc_extractor_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
+static gboolean gst_cc_extractor_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static GstFlowReturn gst_cc_extractor_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 static GstStateChangeReturn gst_cc_extractor_change_state (GstElement *
@@ -145,6 +147,8 @@ gst_cc_extractor_reset (GstCCExtractor * filter)
     gst_element_remove_pad ((GstElement *) filter, filter->captionpad);
     filter->captionpad = NULL;
   }
+
+  memset (&filter->video_info, 0, sizeof (filter->video_info));
 }
 
 static void
@@ -153,6 +157,8 @@ gst_cc_extractor_init (GstCCExtractor * filter)
   filter->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   gst_pad_set_event_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_cc_extractor_sink_event));
+  gst_pad_set_query_function (filter->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_cc_extractor_sink_query));
   gst_pad_set_chain_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_cc_extractor_chain));
   gst_pad_set_iterate_internal_links_function (filter->sinkpad,
@@ -210,6 +216,17 @@ gst_cc_extractor_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_LOG_OBJECT (pad, "received %s event: %" GST_PTR_FORMAT,
       GST_EVENT_TYPE_NAME (event), event);
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      if (!gst_video_info_from_caps (&filter->video_info, caps)) {
+        /* We require any kind of video caps here */
+        gst_event_unref (event);
+        return FALSE;
+      }
+      break;
+    }
     case GST_EVENT_EOS:
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:
@@ -224,8 +241,41 @@ gst_cc_extractor_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return gst_pad_event_default (pad, parent, event);
 }
 
+static gboolean
+gst_cc_extractor_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GST_LOG_OBJECT (pad, "received %s query: %" GST_PTR_FORMAT,
+      GST_QUERY_TYPE_NAME (query), query);
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ACCEPT_CAPS:{
+      GstCaps *caps;
+      const GstStructure *s;
+
+      gst_query_parse_accept_caps (query, &caps);
+
+      /* FIXME: Ideally we would declare this in our caps but there's no way
+       * to declare caps of type "video/" and "image/" that would match all
+       * such caps
+       */
+      s = gst_caps_get_structure (caps, 0);
+      if (s && (g_str_has_prefix (gst_structure_get_name (s), "video/")
+              || g_str_has_prefix (gst_structure_get_name (s), "image/")))
+        gst_query_set_accept_caps_result (query, TRUE);
+      else
+        gst_query_set_accept_caps_result (query, FALSE);
+
+      return TRUE;
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_query_default (pad, parent, query);
+}
+
 static GstCaps *
-create_caps_from_caption_type (GstVideoCaptionType caption_type)
+create_caps_from_caption_type (GstVideoCaptionType caption_type,
+    const GstVideoInfo * video_info)
 {
   GstCaps *caption_caps = NULL;
 
@@ -249,6 +299,9 @@ create_caps_from_caption_type (GstVideoCaptionType caption_type)
       break;
   }
 
+  gst_caps_set_simple (caption_caps, "framerate", GST_TYPE_FRACTION,
+      video_info->fps_n, video_info->fps_d, NULL);
+
   return caption_caps;
 }
 
@@ -265,7 +318,8 @@ gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
 
   /* Check if the meta type matches the configured one */
   if (filter->captionpad == NULL) {
-    GstCaps *caption_caps = create_caps_from_caption_type (meta->caption_type);
+    GstCaps *caption_caps =
+        create_caps_from_caption_type (meta->caption_type, &filter->video_info);
     GstEvent *stream_event;
 
     GST_DEBUG_OBJECT (filter, "Creating new caption pad");
@@ -311,7 +365,8 @@ gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
 
     filter->caption_type = meta->caption_type;
   } else if (meta->caption_type != filter->caption_type) {
-    GstCaps *caption_caps = create_caps_from_caption_type (meta->caption_type);
+    GstCaps *caption_caps =
+        create_caps_from_caption_type (meta->caption_type, &filter->video_info);
 
     GST_DEBUG_OBJECT (filter, "Caption type changed from %d to %d",
         filter->caption_type, meta->caption_type);

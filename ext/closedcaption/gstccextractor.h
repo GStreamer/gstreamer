@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstflowcombiner.h>
-#include <gst/video/video-anc.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_CCEXTRACTOR \
@@ -46,6 +46,8 @@ struct _GstCCExtractor
 
   GstPad *sinkpad, *srcpad, *captionpad;
   GstVideoCaptionType caption_type;
+
+  GstVideoInfo video_info;
 
   GstFlowCombiner *combiner;
 };
