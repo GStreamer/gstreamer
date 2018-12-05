@@ -4603,9 +4603,83 @@ on_rtpbin_request_fec_encoder (GstElement * rtpbin, guint session_id,
 }
 
 static void
+on_rtpbin_bye_ssrc (GstElement * rtpbin, guint session_id, guint ssrc,
+    GstWebRTCBin * webrtc)
+{
+  GST_INFO_OBJECT (webrtc, "session %u ssrc %u received bye", session_id, ssrc);
+}
+
+static void
+on_rtpbin_bye_timeout (GstElement * rtpbin, guint session_id, guint ssrc,
+    GstWebRTCBin * webrtc)
+{
+  GST_INFO_OBJECT (webrtc, "session %u ssrc %u bye timeout", session_id, ssrc);
+}
+
+static void
+on_rtpbin_sender_timeout (GstElement * rtpbin, guint session_id, guint ssrc,
+    GstWebRTCBin * webrtc)
+{
+  GST_INFO_OBJECT (webrtc, "session %u ssrc %u sender timeout", session_id,
+      ssrc);
+}
+
+static void
+on_rtpbin_new_ssrc (GstElement * rtpbin, guint session_id, guint ssrc,
+    GstWebRTCBin * webrtc)
+{
+  GST_INFO_OBJECT (webrtc, "session %u ssrc %u new ssrc", session_id, ssrc);
+}
+
+static void
 on_rtpbin_ssrc_active (GstElement * rtpbin, guint session_id, guint ssrc,
     GstWebRTCBin * webrtc)
 {
+  GST_INFO_OBJECT (webrtc, "session %u ssrc %u active", session_id, ssrc);
+}
+
+static void
+on_rtpbin_ssrc_collision (GstElement * rtpbin, guint session_id, guint ssrc,
+    GstWebRTCBin * webrtc)
+{
+  GST_INFO_OBJECT (webrtc, "session %u ssrc %u collision", session_id, ssrc);
+}
+
+static void
+on_rtpbin_ssrc_sdes (GstElement * rtpbin, guint session_id, guint ssrc,
+    GstWebRTCBin * webrtc)
+{
+  GST_INFO_OBJECT (webrtc, "session %u ssrc %u sdes", session_id, ssrc);
+}
+
+static void
+on_rtpbin_ssrc_validated (GstElement * rtpbin, guint session_id, guint ssrc,
+    GstWebRTCBin * webrtc)
+{
+  GST_INFO_OBJECT (webrtc, "session %u ssrc %u validated", session_id, ssrc);
+}
+
+static void
+on_rtpbin_timeout (GstElement * rtpbin, guint session_id, guint ssrc,
+    GstWebRTCBin * webrtc)
+{
+  GST_INFO_OBJECT (webrtc, "session %u ssrc %u timeout", session_id, ssrc);
+}
+
+static void
+on_rtpbin_new_sender_ssrc (GstElement * rtpbin, guint session_id, guint ssrc,
+    GstWebRTCBin * webrtc)
+{
+  GST_INFO_OBJECT (webrtc, "session %u ssrc %u new sender ssrc", session_id,
+      ssrc);
+}
+
+static void
+on_rtpbin_sender_ssrc_active (GstElement * rtpbin, guint session_id, guint ssrc,
+    GstWebRTCBin * webrtc)
+{
+  GST_INFO_OBJECT (webrtc, "session %u ssrc %u sender ssrc active", session_id,
+      ssrc);
 }
 
 static void
@@ -4661,8 +4735,28 @@ _create_rtpbin (GstWebRTCBin * webrtc)
       G_CALLBACK (on_rtpbin_request_fec_decoder), webrtc);
   g_signal_connect (rtpbin, "request-fec-encoder",
       G_CALLBACK (on_rtpbin_request_fec_encoder), webrtc);
+  g_signal_connect (rtpbin, "on-bye-ssrc",
+      G_CALLBACK (on_rtpbin_bye_ssrc), webrtc);
+  g_signal_connect (rtpbin, "on-bye-timeout",
+      G_CALLBACK (on_rtpbin_bye_timeout), webrtc);
+  g_signal_connect (rtpbin, "on-new-ssrc",
+      G_CALLBACK (on_rtpbin_new_ssrc), webrtc);
+  g_signal_connect (rtpbin, "on-new-sender-ssrc",
+      G_CALLBACK (on_rtpbin_new_sender_ssrc), webrtc);
+  g_signal_connect (rtpbin, "on-sender-ssrc-active",
+      G_CALLBACK (on_rtpbin_sender_ssrc_active), webrtc);
+  g_signal_connect (rtpbin, "on-sender-timeout",
+      G_CALLBACK (on_rtpbin_sender_timeout), webrtc);
   g_signal_connect (rtpbin, "on-ssrc-active",
       G_CALLBACK (on_rtpbin_ssrc_active), webrtc);
+  g_signal_connect (rtpbin, "on-ssrc-collision",
+      G_CALLBACK (on_rtpbin_ssrc_collision), webrtc);
+  g_signal_connect (rtpbin, "on-ssrc-sdes",
+      G_CALLBACK (on_rtpbin_ssrc_sdes), webrtc);
+  g_signal_connect (rtpbin, "on-ssrc-validated",
+      G_CALLBACK (on_rtpbin_ssrc_validated), webrtc);
+  g_signal_connect (rtpbin, "on-timeout",
+      G_CALLBACK (on_rtpbin_timeout), webrtc);
   g_signal_connect (rtpbin, "new-jitterbuffer",
       G_CALLBACK (on_rtpbin_new_jitterbuffer), webrtc);
 
