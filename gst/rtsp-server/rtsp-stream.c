@@ -3401,6 +3401,9 @@ plug_src (GstRTSPStream * stream, GstBin * bin, GstElement * src,
 
   priv = stream->priv;
 
+  /* add src */
+  gst_bin_add (bin, src);
+
   pad = gst_element_get_static_pad (src, "src");
   if (priv->srcpad) {
     /* block pad so src can't push data while it's not yet linked */
@@ -3411,9 +3414,6 @@ plug_src (GstRTSPStream * stream, GstBin * bin, GstElement * src,
     gst_element_set_state (src, GST_STATE_PLAYING);
     gst_element_set_locked_state (src, TRUE);
   }
-
-  /* add src */
-  gst_bin_add (bin, src);
 
   /* and link to the funnel */
   selpad = gst_element_get_request_pad (funnel, "sink_%u");
