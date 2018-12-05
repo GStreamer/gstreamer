@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "gstfdkaac.h"
 #include "gstfdkaacdec.h"
 
 #include <gst/pbutils/pbutils.h>
@@ -77,6 +78,9 @@ gst_fdkaacdec_start (GstAudioDecoder * dec)
   GstFdkAacDec *self = GST_FDKAACDEC (dec);
 
   GST_DEBUG_OBJECT (self, "start");
+
+  gst_audio_info_init (&self->info);
+  self->sample_rate = 0;
 
   return TRUE;
 }
@@ -184,6 +188,71 @@ gst_fdkaacdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
   return TRUE;
 }
 
+static gboolean
+gst_fdkaacdec_map_channel_config (GstFdkAacDec * self, const CStreamInfo * in,
+    gboolean * updated)
+{
+  const GstFdkAacChannelLayout *layout;
+  CHANNEL_MODE config = in->channelConfig;
+  INT channels = in->numChannels;
+
+  if (self->config == config && self->channels == channels) {
+    GST_TRACE_OBJECT (self,
+        "Reusing cached positions for channelConfig %d (%d channels)",
+        config, channels);
+    return TRUE;
+  }
+
+  self->config = config;
+  self->channels = channels;
+  *updated = TRUE;
+
+  for (layout = channel_layouts; layout->channels; layout++) {
+    if (layout->mode == config && layout->channels == channels)
+      break;
+  }
+
+  if (!layout->channels) {
+    GST_ERROR_OBJECT (self, "Unknown channelConfig %d (%d channels)",
+        config, channels);
+    return FALSE;
+  }
+
+  GST_INFO_OBJECT (self, "Known channelConfig %d (%d channels)",
+      config, channels);
+  memcpy (self->positions, layout->positions,
+      channels * sizeof *self->positions);
+
+  return TRUE;
+}
+
+static gboolean
+gst_fdkaacdec_update_info (GstFdkAacDec * self)
+{
+  GstAudioChannelPosition positions[8];
+  GstAudioInfo *info = &self->info;
+  gint channels = self->channels;
+
+  memcpy (positions, self->positions, channels * sizeof *positions);
+
+  if (!gst_audio_channel_positions_to_valid_order (positions, channels)) {
+    GST_ERROR_OBJECT (self, "Failed to reorder channels");
+    return FALSE;
+  }
+
+  gst_audio_info_set_format (info, GST_AUDIO_FORMAT_S16, self->sample_rate,
+      channels, positions);
+
+  if (!gst_audio_decoder_set_output_format (GST_AUDIO_DECODER (self), info)) {
+    GST_ERROR_OBJECT (self, "Failed to set output format");
+    return FALSE;
+  }
+
+  self->need_reorder = memcmp (positions, self->positions,
+      channels * sizeof *positions) != 0;
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
 {
@@ -192,12 +261,10 @@ gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
   GstBuffer *outbuf;
   GstMapInfo imap;
   AAC_DECODER_ERROR err;
+  UINT flags = 0;
   guint size, valid;
   CStreamInfo *stream_info;
-  GstAudioInfo info;
-  guint flags = 0, i;
-  GstAudioChannelPosition pos[64], gst_pos[64];
-  gboolean need_reorder;
+  gboolean updated = FALSE;
 
   if (inbuf) {
     gst_buffer_ref (inbuf);
@@ -237,176 +304,33 @@ gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
     goto out;
   }
 
-  /* FIXME: Don't recalculate this on every buffer */
-  if (stream_info->numChannels == 1) {
-    pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
-  } else {
-    gint n_front = 0, n_back = 0, n_lfe = 0;
-
-    /* FIXME: Can this be simplified somehow? */
-    for (i = 0; i < stream_info->numChannels; i++) {
-      if (stream_info->pChannelType[i] == ACT_FRONT) {
-        n_front++;
-      } else if (stream_info->pChannelType[i] == ACT_BACK) {
-        n_back++;
-      } else if (stream_info->pChannelType[i] == ACT_LFE) {
-        n_lfe++;
-      } else {
-        GST_ERROR_OBJECT (self, "Channel type %d not supported",
-            stream_info->pChannelType[i]);
-        ret = GST_FLOW_NOT_NEGOTIATED;
-        goto out;
-      }
-    }
-
-    for (i = 0; i < stream_info->numChannels; i++) {
-      if (stream_info->pChannelType[i] == ACT_FRONT) {
-        if (stream_info->pChannelIndices[i] == 0) {
-          if (n_front & 1)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
-          else if (n_front > 2)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER;
-          else
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-        } else if (stream_info->pChannelIndices[i] == 1) {
-          if ((n_front & 1) && n_front > 3)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER;
-          else if (n_front & 1)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-          else if (n_front > 2)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER;
-          else
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-        } else if (stream_info->pChannelIndices[i] == 2) {
-          if ((n_front & 1) && n_front > 3)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER;
-          else if (n_front & 1)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-          else if (n_front > 2)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-          else
-            g_assert_not_reached ();
-        } else if (stream_info->pChannelIndices[i] == 3) {
-          if ((n_front & 1) && n_front > 3)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-          else if (n_front & 1)
-            g_assert_not_reached ();
-          else if (n_front > 2)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-          else
-            g_assert_not_reached ();
-        } else if (stream_info->pChannelIndices[i] == 4) {
-          if ((n_front & 1) && n_front > 2)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-          else if (n_front & 1)
-            g_assert_not_reached ();
-          else if (n_front > 2)
-            g_assert_not_reached ();
-          else
-            g_assert_not_reached ();
-        } else {
-          GST_ERROR_OBJECT (self, "Front channel index %d not supported",
-              stream_info->pChannelIndices[i]);
-          ret = GST_FLOW_NOT_NEGOTIATED;
-          goto out;
-        }
-      } else if (stream_info->pChannelType[i] == ACT_BACK) {
-        if (stream_info->pChannelIndices[i] == 0) {
-          if (n_back & 1)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_CENTER;
-          else if (n_back > 2)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
-          else
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-        } else if (stream_info->pChannelIndices[i] == 1) {
-          if ((n_back & 1) && n_back > 3)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
-          else if (n_back & 1)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-          else if (n_back > 2)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
-          else
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
-        } else if (stream_info->pChannelIndices[i] == 2) {
-          if ((n_back & 1) && n_back > 3)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
-          else if (n_back & 1)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
-          else if (n_back > 2)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-          else
-            g_assert_not_reached ();
-        } else if (stream_info->pChannelIndices[i] == 3) {
-          if ((n_back & 1) && n_back > 3)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
-          else if (n_back & 1)
-            g_assert_not_reached ();
-          else if (n_back > 2)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
-          else
-            g_assert_not_reached ();
-        } else if (stream_info->pChannelIndices[i] == 4) {
-          if ((n_back & 1) && n_back > 3)
-            pos[i] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
-          else if (n_back & 1)
-            g_assert_not_reached ();
-          else if (n_back > 2)
-            g_assert_not_reached ();
-          else
-            g_assert_not_reached ();
-        } else {
-          GST_ERROR_OBJECT (self, "Side channel index %d not supported",
-              stream_info->pChannelIndices[i]);
-          ret = GST_FLOW_NOT_NEGOTIATED;
-          goto out;
-        }
-      } else if (stream_info->pChannelType[i] == ACT_LFE) {
-        if (stream_info->pChannelIndices[i] == 0) {
-          pos[i] = GST_AUDIO_CHANNEL_POSITION_LFE1;
-        } else {
-          GST_ERROR_OBJECT (self, "LFE channel index %d not supported",
-              stream_info->pChannelIndices[i]);
-          ret = GST_FLOW_NOT_NEGOTIATED;
-          goto out;
-        }
-      } else {
-        GST_ERROR_OBJECT (self, "Channel type %d not supported",
-            stream_info->pChannelType[i]);
-        ret = GST_FLOW_NOT_NEGOTIATED;
-        goto out;
-      }
-    }
+  if (stream_info->sampleRate != self->sample_rate) {
+    self->sample_rate = stream_info->sampleRate;
+    updated = TRUE;
   }
 
-  memcpy (gst_pos, pos,
-      sizeof (GstAudioChannelPosition) * stream_info->numChannels);
-  if (!gst_audio_channel_positions_to_valid_order (gst_pos,
-          stream_info->numChannels)) {
+  if (!gst_fdkaacdec_map_channel_config (self, stream_info, &updated)) {
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto out;
   }
 
-  need_reorder =
-      memcmp (pos, gst_pos,
-      sizeof (GstAudioChannelPosition) * stream_info->numChannels) != 0;
-
-  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16,
-      stream_info->sampleRate, stream_info->numChannels, gst_pos);
-  if (!gst_audio_decoder_set_output_format (dec, &info)) {
-    GST_ERROR_OBJECT (self, "Failed to set output format");
+  if (updated && !gst_fdkaacdec_update_info (self)) {
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto out;
   }
 
   outbuf =
       gst_audio_decoder_allocate_output_buffer (dec,
-      stream_info->frameSize * GST_AUDIO_INFO_BPF (&info));
+      stream_info->frameSize * GST_AUDIO_INFO_BPF (&self->info));
+
   gst_buffer_fill (outbuf, 0, self->decode_buffer,
       gst_buffer_get_size (outbuf));
 
-  if (need_reorder) {
-    gst_audio_buffer_reorder_channels (outbuf, GST_AUDIO_INFO_FORMAT (&info),
-        GST_AUDIO_INFO_CHANNELS (&info), pos, gst_pos);
+  if (self->need_reorder) {
+    gst_audio_buffer_reorder_channels (outbuf,
+        GST_AUDIO_INFO_FORMAT (&self->info),
+        GST_AUDIO_INFO_CHANNELS (&self->info),
+        self->positions, self->info.position);
   }
 
 finish:
