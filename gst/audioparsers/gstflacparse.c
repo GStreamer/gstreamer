@@ -1883,11 +1883,26 @@ gst_flac_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
 static gboolean
 gst_flac_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
 {
+  GstCaps *current_caps;
+  GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
+
   /* If caps are changing, drain any pending frames we have so that afterwards
    * we can potentially accept a new stream that is starting with the FLAC
    * headers again. If headers appear in the middle of the stream we can't
    * detect them
    */
   gst_base_parse_drain (parse);
+
+  /* If the caps did really change we need to reset the parser */
+  current_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (parse));
+  if (current_caps) {
+    if (!gst_caps_is_strictly_equal (caps, current_caps)) {
+      GST_DEBUG_OBJECT (flacparse, "Reset parser on sink pad caps change");
+      gst_flac_parse_stop (parse);
+      gst_flac_parse_start (parse);
+    }
+    gst_caps_unref (current_caps);
+  }
+
   return TRUE;
 }
