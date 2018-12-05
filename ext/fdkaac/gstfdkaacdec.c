@@ -151,17 +151,13 @@ gst_fdkaacdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
     gst_buffer_unref (codec_data);
   }
 
+  /* Choose WAV channel mapping to get interleaving even with libfdk-aac 2.0.0
+   * The pChannelIndices retain the indices from the standard MPEG mapping so
+   * we're agnostic to the actual order. */
   if ((err =
           aacDecoder_SetParam (self->dec, AAC_PCM_OUTPUT_CHANNEL_MAPPING,
-              0)) != AAC_DEC_OK) {
-    GST_ERROR_OBJECT (self, "Failed to set output channel mapping: %d", err);
-    return FALSE;
-  }
-
-  if ((err =
-          aacDecoder_SetParam (self->dec, AAC_PCM_OUTPUT_INTERLEAVED,
               1)) != AAC_DEC_OK) {
-    GST_ERROR_OBJECT (self, "Failed to set interleaved output: %d", err);
+    GST_ERROR_OBJECT (self, "Failed to set output channel mapping: %d", err);
     return FALSE;
   }
 
