@@ -44,7 +44,7 @@ gst indent:
     - indent --version || true
     - curl -o gst-indent https://gitlab.freedesktop.org/gstreamer/gstreamer/raw/master/tools/gst-indent
     - chmod +x gst-indent
-    - ./gst-indent $(find . -name "*.c")
+    - find . -name '*.c' -exec ./gst-indent {} +
     - |
       if [[ $(git diff) ]]; then
           git diff --color=always
@@ -80,7 +80,7 @@ gst indent:
   after_script:
     - cd gst-build/
     # Clean the artifacts packages to avoid copying "useless" build products.
-    - rm $(find build -name "*.o") $(find -name "*.a")
+    - test -d build && find build -name '*.[ao]' -delete
     # Clean the .git repos since we won't need them anymore
     - rm -rf subprojects/*/.git/
     - rm -rf build/subprojects/*/.git/
