@@ -346,9 +346,8 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   if (allowed_caps)
     gst_caps_unref (allowed_caps);
 
-  if ((err =
-          aacEncOpen (&self->enc, 0,
-              GST_AUDIO_INFO_CHANNELS (info))) != AACENC_OK) {
+  err = aacEncOpen (&self->enc, 0, GST_AUDIO_INFO_CHANNELS (info));
+  if (err != AACENC_OK) {
     GST_ERROR_OBJECT (self, "Unable to open encoder: %d\n", err);
     return FALSE;
   }
@@ -583,11 +582,10 @@ gst_fdkaacenc_handle_frame (GstAudioEncoder * enc, GstBuffer * inbuf)
   out_desc.bufSizes = &out_sizes;
   out_desc.bufElSizes = &out_el_sizes;
 
-  if ((err = aacEncEncode (self->enc, &in_desc, &out_desc, &in_args,
-              &out_args)) != AACENC_OK) {
-    if (!inbuf && err == AACENC_ENCODE_EOF)
-      goto out;
-
+  err = aacEncEncode (self->enc, &in_desc, &out_desc, &in_args, &out_args);
+  if (err == AACENC_ENCODE_EOF && !inbuf)
+    goto out;
+  else if (err != AACENC_OK) {
     GST_ERROR_OBJECT (self, "Failed to encode data: %d", err);
     ret = GST_FLOW_ERROR;
     goto out;

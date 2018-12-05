@@ -151,9 +151,8 @@ gst_fdkaacdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
     gst_buffer_unref (codec_data);
   }
 
-  if ((err =
-          aacDecoder_SetParam (self->dec, AAC_PCM_MAX_OUTPUT_CHANNELS,
-              0)) != AAC_DEC_OK) {
+  err = aacDecoder_SetParam (self->dec, AAC_PCM_MAX_OUTPUT_CHANNELS, 0);
+  if (err != AAC_DEC_OK) {
     GST_ERROR_OBJECT (self, "Failed to disable downmixing: %d", err);
     return FALSE;
   }
@@ -161,9 +160,8 @@ gst_fdkaacdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
   /* Choose WAV channel mapping to get interleaving even with libfdk-aac 2.0.0
    * The pChannelIndices retain the indices from the standard MPEG mapping so
    * we're agnostic to the actual order. */
-  if ((err =
-          aacDecoder_SetParam (self->dec, AAC_PCM_OUTPUT_CHANNEL_MAPPING,
-              1)) != AAC_DEC_OK) {
+  err = aacDecoder_SetParam (self->dec, AAC_PCM_OUTPUT_CHANNEL_MAPPING, 1);
+  if (err != AAC_DEC_OK) {
     GST_ERROR_OBJECT (self, "Failed to set output channel mapping: %d", err);
     return FALSE;
   }
@@ -197,28 +195,27 @@ gst_fdkaacdec_handle_frame (GstAudioDecoder * dec, GstBuffer * inbuf)
     gst_buffer_map (inbuf, &imap, GST_MAP_READ);
     valid = size = imap.size;
 
-    if ((err =
-            aacDecoder_Fill (self->dec, (guint8 **) & imap.data, &size,
-                &valid)) != AAC_DEC_OK) {
+    err = aacDecoder_Fill (self->dec, (guint8 **) & imap.data, &size, &valid);
+    if (err != AAC_DEC_OK) {
       GST_AUDIO_DECODER_ERROR (self, 1, STREAM, DECODE, (NULL),
           ("filling error: %d", err), ret);
       goto out;
     }
 
-    if (GST_BUFFER_IS_DISCONT (inbuf))
+    if (GST_BUFFER_IS_DISCONT (inbuf)) {
       flags |= AACDEC_INTR;
+    }
   } else {
     flags |= AACDEC_FLUSH;
   }
 
-  if ((err =
-          aacDecoder_DecodeFrame (self->dec, self->decode_buffer,
-              self->decode_buffer_size, flags)) != AAC_DEC_OK) {
-    if (err == AAC_DEC_TRANSPORT_SYNC_ERROR) {
-      ret = GST_FLOW_OK;
-      outbuf = NULL;
-      goto finish;
-    }
+  err = aacDecoder_DecodeFrame (self->dec, self->decode_buffer,
+      self->decode_buffer_size, flags);
+  if (err == AAC_DEC_TRANSPORT_SYNC_ERROR) {
+    ret = GST_FLOW_OK;
+    outbuf = NULL;
+    goto finish;
+  } else if (err != AAC_DEC_OK) {
     GST_AUDIO_DECODER_ERROR (self, 1, STREAM, DECODE, (NULL),
         ("decoding error: %d", err), ret);
     goto out;
@@ -423,9 +420,9 @@ gst_fdkaacdec_flush (GstAudioDecoder * dec, gboolean hard)
 
   if (self->dec) {
     AAC_DECODER_ERROR err;
-    if ((err =
-            aacDecoder_DecodeFrame (self->dec, self->decode_buffer,
-                self->decode_buffer_size, AACDEC_FLUSH)) != AAC_DEC_OK) {
+    err = aacDecoder_DecodeFrame (self->dec, self->decode_buffer,
+        self->decode_buffer_size, AACDEC_FLUSH);
+    if (err != AAC_DEC_OK) {
       GST_ERROR_OBJECT (self, "flushing error: %d", err);
     }
   }
