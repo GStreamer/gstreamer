@@ -86,6 +86,8 @@ GST_START_TEST (captions)
   GstBuffer *buf, *outbuf;
   const guint8 caption_data[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
   GstCaps *caps;
+  GstVideoTimeCode *tc;
+  GstVideoTimeCodeMeta *tc_meta;
 
   h = gst_harness_new ("ccextractor");
   h2 = gst_harness_new_with_element (h->element, NULL, NULL);
@@ -99,10 +101,19 @@ GST_START_TEST (captions)
   gst_buffer_add_video_caption_meta (buf, GST_VIDEO_CAPTION_TYPE_CEA708_RAW,
       caption_data, sizeof (caption_data));
 
+  tc = gst_video_time_code_new (30, 1, NULL, GST_VIDEO_TIME_CODE_FLAGS_NONE, 0,
+      0, 0, 0, 0);
+  gst_buffer_add_video_time_code_meta (buf, tc);
+
   outbuf = gst_harness_push_and_pull (h, gst_buffer_ref (buf));
 
   fail_unless (outbuf != NULL);
   fail_unless (outbuf == buf);
+
+  tc_meta = gst_buffer_get_video_time_code_meta (outbuf);
+  fail_unless (tc_meta != NULL);
+  fail_unless_equals_int (gst_video_time_code_compare (&tc_meta->tc, tc), 0);
+
   gst_buffer_unref (outbuf);
   gst_buffer_unref (buf);
 
@@ -111,6 +122,12 @@ GST_START_TEST (captions)
   fail_unless (outbuf != NULL);
   fail_unless (gst_buffer_memcmp (outbuf, 0, caption_data,
           sizeof (caption_data)) == 0);
+
+  tc_meta = gst_buffer_get_video_time_code_meta (outbuf);
+  fail_unless (tc_meta != NULL);
+  fail_unless_equals_int (gst_video_time_code_compare (&tc_meta->tc, tc), 0);
+  gst_video_time_code_free (tc);
+
   gst_buffer_unref (outbuf);
 
   caps = gst_pad_get_current_caps (h->sinkpad);
@@ -129,10 +146,19 @@ GST_START_TEST (captions)
   gst_buffer_add_video_caption_meta (buf, GST_VIDEO_CAPTION_TYPE_CEA708_RAW,
       caption_data, sizeof (caption_data));
 
+  tc = gst_video_time_code_new (30, 1, NULL, GST_VIDEO_TIME_CODE_FLAGS_NONE, 0,
+      0, 0, 1, 0);
+  gst_buffer_add_video_time_code_meta (buf, tc);
+
   outbuf = gst_harness_push_and_pull (h, gst_buffer_ref (buf));
 
   fail_unless (outbuf != NULL);
   fail_unless (outbuf == buf);
+
+  tc_meta = gst_buffer_get_video_time_code_meta (outbuf);
+  fail_unless (tc_meta != NULL);
+  fail_unless_equals_int (gst_video_time_code_compare (&tc_meta->tc, tc), 0);
+
   gst_buffer_unref (outbuf);
   gst_buffer_unref (buf);
 
@@ -141,6 +167,12 @@ GST_START_TEST (captions)
   fail_unless (outbuf != NULL);
   fail_unless (gst_buffer_memcmp (outbuf, 0, caption_data,
           sizeof (caption_data)) == 0);
+
+  tc_meta = gst_buffer_get_video_time_code_meta (outbuf);
+  fail_unless (tc_meta != NULL);
+  fail_unless_equals_int (gst_video_time_code_compare (&tc_meta->tc, tc), 0);
+  gst_video_time_code_free (tc);
+
   gst_buffer_unref (outbuf);
 
   caps = gst_pad_get_current_caps (h->sinkpad);

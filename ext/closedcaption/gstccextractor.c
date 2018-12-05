@@ -307,7 +307,7 @@ create_caps_from_caption_type (GstVideoCaptionType caption_type,
 
 static GstFlowReturn
 gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
-    GstVideoCaptionMeta * meta)
+    GstVideoCaptionMeta * meta, GstVideoTimeCodeMeta * tc_meta)
 {
   GstBuffer *outbuf = NULL;
   GstEvent *event;
@@ -390,6 +390,9 @@ gst_cc_extractor_handle_meta (GstCCExtractor * filter, GstBuffer * buf,
   GST_BUFFER_DTS (outbuf) = GST_BUFFER_DTS (buf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
 
+  if (tc_meta)
+    gst_buffer_add_video_time_code_meta (outbuf, &tc_meta->tc);
+
   /* We don't really care about the flow return */
   flow = gst_pad_push (filter->captionpad, outbuf);
 
@@ -404,12 +407,15 @@ gst_cc_extractor_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstCCExtractor *filter = (GstCCExtractor *) parent;
   GstFlowReturn flow = GST_FLOW_OK;
   GstVideoCaptionMeta *cc_meta;
+  GstVideoTimeCodeMeta *tc_meta;
   gpointer iter = NULL;
+
+  tc_meta = gst_buffer_get_video_time_code_meta (buf);
 
   while ((cc_meta =
           (GstVideoCaptionMeta *) gst_buffer_iterate_meta_filtered (buf, &iter,
               GST_VIDEO_CAPTION_META_API_TYPE)) && flow == GST_FLOW_OK) {
-    flow = gst_cc_extractor_handle_meta (filter, buf, cc_meta);
+    flow = gst_cc_extractor_handle_meta (filter, buf, cc_meta, tc_meta);
   }
 
   /* If there's an issue handling the CC, return immediately */
