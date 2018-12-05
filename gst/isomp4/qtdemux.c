@@ -8330,66 +8330,74 @@ gst_qtdemux_configure_protected_caps (GstQTDemux * qtdemux,
 }
 
 static gboolean
+gst_qtdemux_guess_framerate (GstQTDemux * qtdemux, QtDemuxStream * stream)
+{
+  /* fps is calculated base on the duration of the average framerate since
+   * qt does not have a fixed framerate. */
+  gboolean fps_available = TRUE;
+  guint32 first_duration = 0;
+
+  if (stream->n_samples > 0)
+    first_duration = stream->samples[0].duration;
+
+  if ((stream->n_samples == 1 && first_duration == 0)
+      || (qtdemux->fragmented && stream->n_samples_moof == 1)) {
+    /* still frame */
+    CUR_STREAM (stream)->fps_n = 0;
+    CUR_STREAM (stream)->fps_d = 1;
+  } else {
+    if (stream->duration == 0 || stream->n_samples < 2) {
+      CUR_STREAM (stream)->fps_n = stream->timescale;
+      CUR_STREAM (stream)->fps_d = 1;
+      fps_available = FALSE;
+    } else {
+      GstClockTime avg_duration;
+      guint64 duration;
+      guint32 n_samples;
+
+      /* duration and n_samples can be updated for fragmented format
+       * so, framerate of fragmented format is calculated using data in a moof */
+      if (qtdemux->fragmented && stream->n_samples_moof > 0
+          && stream->duration_moof > 0) {
+        n_samples = stream->n_samples_moof;
+        duration = stream->duration_moof;
+      } else {
+        n_samples = stream->n_samples;
+        duration = stream->duration;
+      }
+
+      /* Calculate a framerate, ignoring the first sample which is sometimes truncated */
+      /* stream->duration is guint64, timescale, n_samples are guint32 */
+      avg_duration =
+          gst_util_uint64_scale_round (duration -
+          first_duration, GST_SECOND,
+          (guint64) (stream->timescale) * (n_samples - 1));
+
+      GST_LOG_OBJECT (qtdemux,
+          "Calculating avg sample duration based on stream (or moof) duration %"
+          G_GUINT64_FORMAT
+          " minus first sample %u, leaving %d samples gives %"
+          GST_TIME_FORMAT, duration, first_duration,
+          n_samples - 1, GST_TIME_ARGS (avg_duration));
+
+      gst_video_guess_framerate (avg_duration, &CUR_STREAM (stream)->fps_n,
+          &CUR_STREAM (stream)->fps_d);
+
+      GST_DEBUG_OBJECT (qtdemux,
+          "Calculating framerate, timescale %u gave fps_n %d fps_d %d",
+          stream->timescale, CUR_STREAM (stream)->fps_n,
+          CUR_STREAM (stream)->fps_d);
+    }
+  }
+
+  return fps_available;
+}
+
+static gboolean
 gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 {
   if (stream->subtype == FOURCC_vide) {
-    /* fps is calculated base on the duration of the average framerate since
-     * qt does not have a fixed framerate. */
-    gboolean fps_available = TRUE;
-    guint32 first_duration = 0;
-
-    if (stream->n_samples > 0)
-      first_duration = stream->samples[0].duration;
-
-    if ((stream->n_samples == 1 && first_duration == 0)
-        || (qtdemux->fragmented && stream->n_samples_moof == 1)) {
-      /* still frame */
-      CUR_STREAM (stream)->fps_n = 0;
-      CUR_STREAM (stream)->fps_d = 1;
-    } else {
-      if (stream->duration == 0 || stream->n_samples < 2) {
-        CUR_STREAM (stream)->fps_n = stream->timescale;
-        CUR_STREAM (stream)->fps_d = 1;
-        fps_available = FALSE;
-      } else {
-        GstClockTime avg_duration;
-        guint64 duration;
-        guint32 n_samples;
-
-        /* duration and n_samples can be updated for fragmented format
-         * so, framerate of fragmented format is calculated using data in a moof */
-        if (qtdemux->fragmented && stream->n_samples_moof > 0
-            && stream->duration_moof > 0) {
-          n_samples = stream->n_samples_moof;
-          duration = stream->duration_moof;
-        } else {
-          n_samples = stream->n_samples;
-          duration = stream->duration;
-        }
-
-        /* Calculate a framerate, ignoring the first sample which is sometimes truncated */
-        /* stream->duration is guint64, timescale, n_samples are guint32 */
-        avg_duration =
-            gst_util_uint64_scale_round (duration -
-            first_duration, GST_SECOND,
-            (guint64) (stream->timescale) * (n_samples - 1));
-
-        GST_LOG_OBJECT (qtdemux,
-            "Calculating avg sample duration based on stream (or moof) duration %"
-            G_GUINT64_FORMAT
-            " minus first sample %u, leaving %d samples gives %"
-            GST_TIME_FORMAT, duration, first_duration,
-            n_samples - 1, GST_TIME_ARGS (avg_duration));
-
-        gst_video_guess_framerate (avg_duration, &CUR_STREAM (stream)->fps_n,
-            &CUR_STREAM (stream)->fps_d);
-
-        GST_DEBUG_OBJECT (qtdemux,
-            "Calculating framerate, timescale %u gave fps_n %d fps_d %d",
-            stream->timescale, CUR_STREAM (stream)->fps_n,
-            CUR_STREAM (stream)->fps_d);
-      }
-    }
+    gboolean fps_available = gst_qtdemux_guess_framerate (qtdemux, stream);
 
     if (CUR_STREAM (stream)->caps) {
       CUR_STREAM (stream)->caps =
@@ -8505,6 +8513,22 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
          * we don't actually have any channel positions. */
         gst_caps_set_simple (CUR_STREAM (stream)->caps,
             "channel-mask", GST_TYPE_BITMASK, G_GUINT64_CONSTANT (0), NULL);
+      }
+    }
+  }
+
+  else if (stream->subtype == FOURCC_clcp) {
+    gboolean fps_available = gst_qtdemux_guess_framerate (qtdemux, stream);
+
+    if (CUR_STREAM (stream)->caps) {
+      CUR_STREAM (stream)->caps =
+          gst_caps_make_writable (CUR_STREAM (stream)->caps);
+
+      /* set framerate if calculated framerate is reliable */
+      if (fps_available) {
+        gst_caps_set_simple (CUR_STREAM (stream)->caps,
+            "framerate", GST_TYPE_FRACTION, CUR_STREAM (stream)->fps_n,
+            CUR_STREAM (stream)->fps_d, NULL);
       }
     }
   }
