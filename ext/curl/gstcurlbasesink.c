@@ -1129,8 +1129,7 @@ gst_curl_base_sink_transfer_start_unlocked (GstCurlBaseSink * sink)
   GST_LOG ("creating transfer thread");
   sink->transfer_thread_close = FALSE;
   sink->new_file = TRUE;
-  sink->transfer_thread =
-      g_thread_try_new ("Curl Transfer Thread", (GThreadFunc)
+  sink->transfer_thread = g_thread_try_new ("curl-transfer", (GThreadFunc)
       gst_curl_base_sink_transfer_thread_func, sink, &error);
 
   if (sink->transfer_thread == NULL || error != NULL) {
