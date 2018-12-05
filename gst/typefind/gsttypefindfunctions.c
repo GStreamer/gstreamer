@@ -4364,7 +4364,7 @@ ebml_parse_chunk (GstTypeFind * tf, DataScanCtx * ctx, guint32 chunk_id,
 {                               /* FIXME: make sure input size is clipped to 32 bit */
   static const gchar SPACES[] = "                ";
   DataScanCtx c = *ctx;
-  guint64 element_size;
+  guint64 element_size = 0;
   guint32 id, hdr_len;
 
   if (depth >= 8)               /* keep SPACES large enough for depth */
