@@ -51,7 +51,9 @@ struct _GstFdkAacDec {
   INT sample_rate;
   CHANNEL_MODE config;
   INT channels;
-  GstAudioChannelPosition positions[8];
+  AUDIO_CHANNEL_TYPE channel_types[64];
+  UCHAR channel_indices[64];
+  GstAudioChannelPosition positions[64];
 
   gboolean need_reorder;
   GstAudioInfo info;

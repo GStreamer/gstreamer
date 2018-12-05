@@ -179,13 +179,303 @@ gst_fdkaacdec_set_format (GstAudioDecoder * dec, GstCaps * caps)
     return FALSE;
   }
 
-  /* 8 channels * 2 bytes per sample * 2048 samples */
+  /* 64 channels * 2048 samples * 2 bytes per sample */
   if (!self->decode_buffer) {
-    self->decode_buffer_size = 8 * 2048;
+    self->decode_buffer_size = 64 * 2048;
     self->decode_buffer = g_new (gint16, self->decode_buffer_size);
   }
 
   return TRUE;
+}
+
+static gboolean
+gst_fdkaacdec_map_channels (GstFdkAacDec * self, const CStreamInfo * in,
+    gboolean * updated)
+{
+  GstAudioChannelPosition *positions = self->positions;
+  AUDIO_CHANNEL_TYPE *channel_types = in->pChannelType;
+  UCHAR *channel_indices = in->pChannelIndices;
+  INT i, channels = in->numChannels;
+  guint64 mask_mapped = 0;
+
+#define DEF_CHANSET(name, max) \
+  GstAudioChannelPosition *set_ ## name[max] = {NULL}; \
+  guint n_ ## name = 0, mapped_ ## name = 0
+
+#define PUSH_CHAN(name, index, pos_index) G_STMT_START { \
+    if ((index) >= G_N_ELEMENTS (set_ ## name)) { \
+      GST_WARNING_OBJECT (self, "Too many %s channels (%d)", \
+          #name, (gint) (index)); \
+      goto error; \
+    } else if (set_ ## name[index] != NULL) { \
+      GST_WARNING_OBJECT (self, "Channel %s[%d] already mapped", \
+          #name, (gint) (index)); \
+      goto error; \
+    } else { \
+      GST_DEBUG_OBJECT (self, "Mapping channel %s[%d] to %d", \
+          #name, (gint) (index), (gint) pos_index); \
+      set_ ## name[index] = &positions[pos_index]; \
+      n_ ## name = MAX (n_ ## name, (index) + 1); \
+    } \
+  } G_STMT_END
+
+#define SHIFT_CHAN(name, pos) G_STMT_START { \
+    if (mask_mapped & GST_AUDIO_CHANNEL_POSITION_MASK (pos)) { \
+      GST_WARNING_OBJECT (self, "Position %s already mapped", #pos); \
+      goto error; \
+    } else if (set_ ## name[mapped_ ## name] == NULL) { \
+      GST_WARNING_OBJECT (self, "Channel %s[%u] is a hole", \
+          #name, mapped_ ## name); \
+      goto error; \
+    } else { \
+      GST_DEBUG_OBJECT (self, "Mapping channel %s[%u] to %s", \
+          #name, mapped_ ## name, #pos); \
+      *set_ ## name[mapped_ ## name ++] = GST_AUDIO_CHANNEL_POSITION_ ## pos; \
+      mask_mapped |= GST_AUDIO_CHANNEL_POSITION_MASK (pos); \
+    } \
+  } G_STMT_END
+
+  DEF_CHANSET (front, 7);
+  DEF_CHANSET (side, 2);
+  DEF_CHANSET (rear, 3);
+  DEF_CHANSET (lfe, 2);
+  DEF_CHANSET (top_front, 3);
+  DEF_CHANSET (top_center, 3);
+  DEF_CHANSET (top_rear, 3);
+  DEF_CHANSET (bottom_front, 3);
+
+  if (self->channels == channels &&
+      memcmp (self->channel_types, channel_types,
+          channels * sizeof *channel_types) == 0 &&
+      memcmp (self->channel_indices, channel_indices,
+          channels * sizeof *channel_indices) == 0) {
+    GST_TRACE_OBJECT (self, "Reusing cached positions for %d channels",
+        channels);
+    return TRUE;
+  }
+
+  self->channels = channels;
+  memcpy (self->channel_types, channel_types, channels * sizeof *channel_types);
+  memcpy (self->channel_indices, channel_indices,
+      channels * sizeof *channel_indices);
+  *updated = TRUE;
+
+  for (i = 0; i < channels; i++) {
+    guint8 type = in->pChannelType[i];
+    guint8 index = in->pChannelIndices[i];
+
+    switch (type) {
+      case ACT_FRONT:
+        PUSH_CHAN (front, index, i);
+        break;
+      case ACT_SIDE:
+        PUSH_CHAN (side, index, i);
+        break;
+      case ACT_BACK:
+        PUSH_CHAN (rear, index, i);
+        break;
+      case ACT_LFE:
+        PUSH_CHAN (lfe, index, i);
+        break;
+      case ACT_FRONT_TOP:
+        PUSH_CHAN (top_front, index, i);
+        break;
+      case ACT_SIDE_TOP:
+        PUSH_CHAN (top_center, index, i);
+        break;
+      case ACT_BACK_TOP:
+        PUSH_CHAN (top_rear, index, i);
+        break;
+#ifdef HAVE_FDK_AAC_0_1_4
+      case ACT_FRONT_BOTTOM:
+        PUSH_CHAN (bottom_front, index, i);
+        break;
+#endif
+      case ACT_NONE:
+        GST_INFO_OBJECT (self, "Channel %d is unpositioned", i);
+        goto error;
+      default:
+        GST_ERROR_OBJECT (self, "Channel %d has unknown type %d", i, type);
+        goto error;
+    }
+  }
+
+  /* Outwards from the front center, following ISO/IEC 13818-7 8.5.2.2
+   * "Explicit channel mapping using a program_config_element()" */
+  switch (n_front) {
+    case 7:
+      SHIFT_CHAN (front, FRONT_CENTER);
+    case 6:
+      SHIFT_CHAN (front, FRONT_LEFT_OF_CENTER);
+      SHIFT_CHAN (front, FRONT_RIGHT_OF_CENTER);
+      SHIFT_CHAN (front, FRONT_LEFT);
+      SHIFT_CHAN (front, FRONT_RIGHT);
+      SHIFT_CHAN (front, WIDE_LEFT);
+      SHIFT_CHAN (front, WIDE_RIGHT);
+      break;
+
+    case 5:
+      SHIFT_CHAN (front, FRONT_CENTER);
+    case 4:
+      SHIFT_CHAN (front, FRONT_LEFT_OF_CENTER);
+      SHIFT_CHAN (front, FRONT_RIGHT_OF_CENTER);
+      SHIFT_CHAN (front, WIDE_LEFT);
+      SHIFT_CHAN (front, WIDE_RIGHT);
+      break;
+
+    case 3:
+      SHIFT_CHAN (front, FRONT_CENTER);
+    case 2:
+      SHIFT_CHAN (front, FRONT_LEFT);
+      SHIFT_CHAN (front, FRONT_RIGHT);
+      break;
+
+    case 1:
+      SHIFT_CHAN (front, FRONT_CENTER);
+      break;
+  }
+
+  /* Front to rear */
+  switch (n_side) {
+    case 2:
+      SHIFT_CHAN (side, SIDE_LEFT);
+      SHIFT_CHAN (side, SIDE_RIGHT);
+      break;
+
+    case 1:
+      GST_ERROR_OBJECT (self, "Single side channel not supported");
+      goto error;
+  }
+
+  /* Inwards to the rear center */
+  switch (n_rear) {
+    case 5:
+      SHIFT_CHAN (rear, SURROUND_LEFT);
+      SHIFT_CHAN (rear, SURROUND_RIGHT);
+      SHIFT_CHAN (rear, REAR_LEFT);
+      SHIFT_CHAN (rear, REAR_RIGHT);
+      SHIFT_CHAN (rear, REAR_CENTER);
+      break;
+
+    case 4:
+      SHIFT_CHAN (rear, SURROUND_LEFT);
+      SHIFT_CHAN (rear, SURROUND_RIGHT);
+      SHIFT_CHAN (rear, REAR_LEFT);
+      SHIFT_CHAN (rear, REAR_RIGHT);
+      break;
+
+    case 3:
+      SHIFT_CHAN (rear, SURROUND_LEFT);
+      SHIFT_CHAN (rear, SURROUND_RIGHT);
+      SHIFT_CHAN (rear, REAR_CENTER);
+      break;
+
+    case 2:
+      SHIFT_CHAN (rear, SURROUND_LEFT);
+      SHIFT_CHAN (rear, SURROUND_RIGHT);
+      break;
+
+    case 1:
+      SHIFT_CHAN (rear, REAR_CENTER);
+      break;
+  }
+
+  switch (n_lfe) {
+    case 2:
+      SHIFT_CHAN (lfe, LFE1);
+      SHIFT_CHAN (lfe, LFE2);
+      break;
+
+    case 1:
+      SHIFT_CHAN (lfe, LFE1);
+      break;
+  }
+
+  switch (n_top_front) {
+    case 3:
+      SHIFT_CHAN (top_front, TOP_FRONT_CENTER);
+    case 2:
+      SHIFT_CHAN (top_front, TOP_FRONT_LEFT);
+      SHIFT_CHAN (top_front, TOP_FRONT_RIGHT);
+      break;
+
+    case 1:
+      SHIFT_CHAN (top_front, TOP_FRONT_CENTER);
+      break;
+  }
+
+  switch (n_top_center) {
+    case 3:
+      SHIFT_CHAN (top_center, TOP_CENTER);
+    case 2:
+      SHIFT_CHAN (top_center, TOP_SIDE_LEFT);
+      SHIFT_CHAN (top_center, TOP_SIDE_RIGHT);
+      break;
+
+    case 1:
+      SHIFT_CHAN (top_center, TOP_CENTER);
+      break;
+  }
+
+  switch (n_top_rear) {
+    case 3:
+      SHIFT_CHAN (top_rear, TOP_REAR_LEFT);
+      SHIFT_CHAN (top_rear, TOP_REAR_RIGHT);
+      SHIFT_CHAN (top_rear, TOP_REAR_CENTER);
+      break;
+
+    case 2:
+      SHIFT_CHAN (top_rear, TOP_REAR_LEFT);
+      SHIFT_CHAN (top_rear, TOP_REAR_RIGHT);
+      break;
+
+    case 1:
+      SHIFT_CHAN (top_rear, TOP_REAR_CENTER);
+      break;
+  }
+
+  switch (n_bottom_front) {
+    case 3:
+      SHIFT_CHAN (bottom_front, BOTTOM_FRONT_CENTER);
+    case 2:
+      SHIFT_CHAN (bottom_front, BOTTOM_FRONT_LEFT);
+      SHIFT_CHAN (bottom_front, BOTTOM_FRONT_RIGHT);
+      break;
+
+    case 1:
+      SHIFT_CHAN (bottom_front, BOTTOM_FRONT_CENTER);
+      break;
+  }
+
+  if (mask_mapped != 0) {
+    GST_INFO_OBJECT (self, "Mapped %d front, %d side, %d rear, %d lfe,"
+        " %d top front, %d top center, %d top rear, %d bottom front channels",
+        mapped_front, mapped_side, mapped_rear, mapped_lfe, mapped_top_front,
+        mapped_top_center, mapped_top_rear, mapped_bottom_front);
+    return TRUE;
+  }
+
+  if (channels == 1) {
+    GST_INFO_OBJECT (self, "Mapped a mono channel");
+    positions[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+    return TRUE;
+  }
+
+error:
+  if (channels > 0) {
+    GST_WARNING_OBJECT (self, "Mapped %d channels, without positions",
+        channels);
+    for (i = 0; i < channels; i++)
+      positions[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+    return TRUE;
+  }
+
+  GST_ERROR_OBJECT (self, "No channels to map");
+  return FALSE;
+
+#undef DEF_CHANSET
+#undef PUSH_CHAN
+#undef SHIFT_CHAN
 }
 
 static gboolean
@@ -195,6 +485,10 @@ gst_fdkaacdec_map_channel_config (GstFdkAacDec * self, const CStreamInfo * in,
   const GstFdkAacChannelLayout *layout;
   CHANNEL_MODE config = in->channelConfig;
   INT channels = in->numChannels;
+
+  if (config == 0) {
+    return gst_fdkaacdec_map_channels (self, in, updated);
+  }
 
   if (self->config == config && self->channels == channels) {
     GST_TRACE_OBJECT (self,
@@ -213,9 +507,9 @@ gst_fdkaacdec_map_channel_config (GstFdkAacDec * self, const CStreamInfo * in,
   }
 
   if (!layout->channels) {
-    GST_ERROR_OBJECT (self, "Unknown channelConfig %d (%d channels)",
+    GST_WARNING_OBJECT (self, "Unknown channelConfig %d (%d channels)",
         config, channels);
-    return FALSE;
+    return gst_fdkaacdec_map_channels (self, in, updated);
   }
 
   GST_INFO_OBJECT (self, "Known channelConfig %d (%d channels)",
@@ -229,7 +523,7 @@ gst_fdkaacdec_map_channel_config (GstFdkAacDec * self, const CStreamInfo * in,
 static gboolean
 gst_fdkaacdec_update_info (GstFdkAacDec * self)
 {
-  GstAudioChannelPosition positions[8];
+  GstAudioChannelPosition positions[64];
   GstAudioInfo *info = &self->info;
   gint channels = self->channels;
 
