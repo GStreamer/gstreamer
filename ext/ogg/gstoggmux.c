@@ -844,6 +844,7 @@ gst_ogg_mux_decorate_buffer (GstOggMux * ogg_mux, GstOggPadData * pad,
   if (G_UNLIKELY (duration < 0)) {
     /* well, if some day we really could handle sparse input ... */
     if (pad->map.is_sparse) {
+      granule = 0;
       limit = 1;
       diff = 2;
       goto resync;
