@@ -62,8 +62,8 @@ static void gst_gl_deinterlace_get_property (GObject * object,
 
 static gboolean gst_gl_deinterlace_start (GstBaseTransform * trans);
 static gboolean gst_gl_deinterlace_reset (GstBaseTransform * trans);
-static GstCaps *gst_gl_deinterlace_transform_internal_caps (GstGLFilter * filter,
-    GstPadDirection direction, GstCaps * caps, GstCaps * caps_filter);
+static GstCaps *gst_gl_deinterlace_transform_internal_caps (GstGLFilter *
+    filter, GstPadDirection direction, GstCaps * caps, GstCaps * caps_filter);
 static gboolean gst_gl_deinterlace_init_fbo (GstGLFilter * filter);
 static gboolean gst_gl_deinterlace_filter (GstGLFilter * filter,
     GstBuffer * inbuf, GstBuffer * outbuf);
