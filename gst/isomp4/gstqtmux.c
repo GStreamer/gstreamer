@@ -3041,10 +3041,11 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
     qtmux->timescale = suggested_timescale;
   }
 
-  /* Set width/height of any closed caption tracks to that of the first
-   * video track */
+  /* Set width/height/timescale of any closed caption tracks to that of the
+   * first video track */
   {
     guint video_width = 0, video_height = 0;
+    guint32 video_timescale = 0;
     GSList *walk;
 
     for (walk = qtmux->sinkpads; walk; walk = g_slist_next (walk)) {
@@ -3058,7 +3059,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       if (qpad->trak->mdia.hdlr.handler_type != FOURCC_clcp)
         continue;
 
-      if (video_width == 0 || video_height == 0) {
+      if (video_width == 0 || video_height == 0 || video_timescale == 0) {
         GSList *walk2;
 
         for (walk2 = qtmux->sinkpads; walk2; walk2 = g_slist_next (walk2)) {
@@ -3074,11 +3075,13 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
 
           video_width = qpad2->trak->tkhd.width;
           video_height = qpad2->trak->tkhd.height;
+          video_timescale = qpad2->trak->mdia.mdhd.time_info.timescale;
         }
       }
 
       qpad->trak->tkhd.width = video_width << 16;
       qpad->trak->tkhd.height = video_height << 16;
+      qpad->trak->mdia.mdhd.time_info.timescale = video_timescale;
     }
   }
 
@@ -6113,7 +6116,8 @@ gst_qt_mux_caption_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
   } else
     goto refuse_caps;
 
-  /* FIXME: Get the timescale from the video track ? */
+  /* We set the real timescale later to the one from the video track when
+   * writing the headers */
   timescale = gst_qt_mux_pad_get_timescale (GST_QT_MUX_PAD_CAST (pad));
   if (!timescale && qtmux->trak_timescale)
     timescale = qtmux->trak_timescale;
