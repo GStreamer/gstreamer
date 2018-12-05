@@ -142,6 +142,7 @@ option('winks', type : 'feature', value : 'auto', description : 'Windows Kernel 
 option('winscreencap', type : 'feature', value : 'auto', description : 'Windows Screen Capture video source plugin')
 option('x265', type : 'feature', value : 'auto', description : 'HEVC/H.265 video encoder plugin')
 option('zbar', type : 'feature', value : 'auto', description : 'Barcode image scanner plugin')
+option('wpe', type : 'feature', value : 'auto', description : 'WPE Web browser plugin')
 
 # HLS plugin options
 option('hls', type : 'feature', value : 'auto', description : 'HTTP Live Streaming plugin')
