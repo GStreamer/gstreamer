@@ -16,7 +16,7 @@ configure_file(
     output: pkg + '-sharp.dll.config',
     configuration: configuration_data())
 
-if add_languages('c', required: false) and csc.get_id() == 'mono' and dependency('libxml2', required: false).found()
+if add_languages('c', required: false) and csc.get_id() == 'mono'
     c_abi_exe = executable(pkg + '_c_abi', c_abi,
             c_args: ['-Wno-deprecated', '-Wno-deprecated-declarations'],
             dependencies: [gst_deps, ges_dep])
