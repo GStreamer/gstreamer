@@ -1409,6 +1409,26 @@ set_key_frame (GstVaapiEncPicture * picture,
     set_i_frame (picture, encoder);
 }
 
+static void
+set_frame_num (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
+{
+  GstVaapiH264ViewReorderPool *reorder_pool = NULL;
+
+  reorder_pool = &encoder->reorder_pools[encoder->view_idx];
+
+  picture->frame_num = (reorder_pool->cur_frame_num % encoder->max_frame_num);
+
+  if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture)) {
+    picture->frame_num = 0;
+    reorder_pool->cur_frame_num = 0;
+  }
+
+  reorder_pool->prev_frame_is_ref = GST_VAAPI_ENC_PICTURE_IS_REFRENCE (picture);
+
+  if (reorder_pool->prev_frame_is_ref)
+    ++reorder_pool->cur_frame_num;
+}
+
 /* Fills in VA HRD parameters */
 static void
 fill_hrd_params (GstVaapiEncoderH264 * encoder, VAEncMiscParameterHRD * hrd)
@@ -2894,24 +2914,69 @@ gst_vaapi_encoder_h264_flush (GstVaapiEncoder * base_encoder)
   GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
   GstVaapiH264ViewReorderPool *reorder_pool;
   GstVaapiEncPicture *pic;
+  GstVaapiCodedBufferProxy *codedbuf_proxy;
   guint i;
+  gboolean p_frame = TRUE;
+  GstVaapiEncoderStatus status;
 
   for (i = 0; i < encoder->num_views; i++) {
     reorder_pool = &encoder->reorder_pools[i];
+
+    while (!g_queue_is_empty (&reorder_pool->reorder_frame_list)) {
+      pic = NULL;
+      if (p_frame) {
+        pic = (GstVaapiEncPicture *)
+            g_queue_pop_tail (&reorder_pool->reorder_frame_list);
+        set_p_frame (pic, encoder);
+        p_frame = FALSE;
+      } else {
+        pic = (GstVaapiEncPicture *)
+            g_queue_pop_head (&reorder_pool->reorder_frame_list);
+        set_b_frame (pic, encoder);
+      }
+      g_assert (pic);
+
+      set_frame_num (encoder, pic);
+
+      if (GST_CLOCK_TIME_IS_VALID (pic->frame->pts))
+        pic->frame->pts += encoder->cts_offset;
+
+      codedbuf_proxy = gst_vaapi_encoder_create_coded_buffer (base_encoder);
+      if (!codedbuf_proxy)
+        goto error_create_coded_buffer;
+
+      status =
+          gst_vaapi_encoder_h264_encode (base_encoder, pic, codedbuf_proxy);
+      if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+        goto error_encode;
+
+      gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy,
+          pic, (GDestroyNotify) gst_vaapi_mini_object_unref);
+      g_async_queue_push (base_encoder->codedbuf_queue, codedbuf_proxy);
+      base_encoder->num_codedbuf_queued++;
+    }
     reorder_pool->frame_index = 0;
     reorder_pool->cur_frame_num = 0;
     reorder_pool->cur_present_index = 0;
     reorder_pool->prev_frame_is_ref = FALSE;
-
-    while (!g_queue_is_empty (&reorder_pool->reorder_frame_list)) {
-      pic = (GstVaapiEncPicture *)
-          g_queue_pop_head (&reorder_pool->reorder_frame_list);
-      gst_vaapi_enc_picture_unref (pic);
-    }
-    g_queue_clear (&reorder_pool->reorder_frame_list);
   }
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+/* ERRORS */
+error_create_coded_buffer:
+  {
+    GST_ERROR ("failed to allocate coded buffer");
+    gst_vaapi_enc_picture_unref (pic);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+  }
+error_encode:
+  {
+    GST_ERROR ("failed to encode frame (status = %d)", status);
+    gst_vaapi_enc_picture_unref (pic);
+    gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
+    return status;
+  }
 }
 
 /* Generate "codec-data" buffer */
@@ -3045,26 +3110,6 @@ sort_hierarchical_b (gconstpointer a, gconstpointer b, gpointer user_data)
     return pic1->poc - pic2->poc;
   else
     return pic1->temporal_id - pic2->temporal_id;
-}
-
-static void
-set_frame_num (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
-{
-  GstVaapiH264ViewReorderPool *reorder_pool = NULL;
-
-  reorder_pool = &encoder->reorder_pools[encoder->view_idx];
-
-  picture->frame_num = (reorder_pool->cur_frame_num % encoder->max_frame_num);
-
-  if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture)) {
-    picture->frame_num = 0;
-    reorder_pool->cur_frame_num = 0;
-  }
-
-  reorder_pool->prev_frame_is_ref = GST_VAAPI_ENC_PICTURE_IS_REFRENCE (picture);
-
-  if (reorder_pool->prev_frame_is_ref)
-    ++reorder_pool->cur_frame_num;
 }
 
 static GstVaapiEncoderStatus

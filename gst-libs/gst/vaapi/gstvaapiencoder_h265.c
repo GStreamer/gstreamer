@@ -2140,19 +2140,61 @@ gst_vaapi_encoder_h265_flush (GstVaapiEncoder * base_encoder)
   GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
   GstVaapiH265ReorderPool *reorder_pool;
   GstVaapiEncPicture *pic;
+  GstVaapiCodedBufferProxy *codedbuf_proxy;
+  gboolean p_frame = TRUE;
+  GstVaapiEncoderStatus status;
 
   reorder_pool = &encoder->reorder_pool;
+
+  while (!g_queue_is_empty (&reorder_pool->reorder_frame_list)) {
+    pic = NULL;
+    if (p_frame) {
+      pic = (GstVaapiEncPicture *)
+          g_queue_pop_tail (&reorder_pool->reorder_frame_list);
+      set_p_frame (pic, encoder);
+      p_frame = FALSE;
+    } else {
+      pic = (GstVaapiEncPicture *)
+          g_queue_pop_head (&reorder_pool->reorder_frame_list);
+      set_b_frame (pic, encoder);
+    }
+    g_assert (pic);
+
+    if (GST_CLOCK_TIME_IS_VALID (pic->frame->pts))
+      pic->frame->pts += encoder->cts_offset;
+
+    codedbuf_proxy = gst_vaapi_encoder_create_coded_buffer (base_encoder);
+    if (!codedbuf_proxy)
+      goto error_create_coded_buffer;
+
+    status = gst_vaapi_encoder_h265_encode (base_encoder, pic, codedbuf_proxy);
+    if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+      goto error_encode;
+
+    gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy,
+        pic, (GDestroyNotify) gst_vaapi_mini_object_unref);
+    g_async_queue_push (base_encoder->codedbuf_queue, codedbuf_proxy);
+    base_encoder->num_codedbuf_queued++;
+  }
   reorder_pool->frame_index = 0;
   reorder_pool->cur_present_index = 0;
 
-  while (!g_queue_is_empty (&reorder_pool->reorder_frame_list)) {
-    pic = (GstVaapiEncPicture *)
-        g_queue_pop_head (&reorder_pool->reorder_frame_list);
-    gst_vaapi_enc_picture_unref (pic);
-  }
-  g_queue_clear (&reorder_pool->reorder_frame_list);
-
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
+error_create_coded_buffer:
+  {
+    GST_ERROR ("failed to allocate coded buffer");
+    gst_vaapi_enc_picture_unref (pic);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+  }
+error_encode:
+  {
+    GST_ERROR ("failed to encode frame (status = %d)", status);
+    gst_vaapi_enc_picture_unref (pic);
+    gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
+    return status;
+  }
 }
 
 /* Generate "codec-data" buffer */

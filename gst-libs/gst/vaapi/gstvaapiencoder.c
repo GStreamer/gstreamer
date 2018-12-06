@@ -419,7 +419,7 @@ _coded_buffer_proxy_released_notify (GstVaapiEncoder * encoder)
 }
 
 /* Creates a new VA coded buffer object proxy, backed from a pool */
-static GstVaapiCodedBufferProxy *
+GstVaapiCodedBufferProxy *
 gst_vaapi_encoder_create_coded_buffer (GstVaapiEncoder * encoder)
 {
   GstVaapiCodedBufferPool *const pool =
