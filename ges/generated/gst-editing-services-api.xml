@@ -1794,26 +1794,6 @@
       </field>
       <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
-    <object name="PitiviFormatter" cname="GESPitiviFormatter" opaque="false" hidden="false" parent="GESFormatter">
-      <implements>
-        <interface cname="GESExtractable" />
-      </implements>
-      <class_struct cname="GESPitiviFormatterClass">
-        <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GESFormatterClass">
-          <warning>missing glib:type-name</warning>
-        </field>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
-      </class_struct>
-      <method name="GetType" cname="ges_pitivi_formatter_get_type" shared="true">
-        <return-type type="GType" />
-      </method>
-      <constructor cname="ges_pitivi_formatter_new" disable_void_ctor="" />
-      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GESFormatter*" />
-      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GESPitiviFormatterPrivate*">
-        <warning>missing glib:type-name</warning>
-      </field>
-      <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4" padding="true" />
-    </object>
     <object name="Project" cname="GESProject" opaque="false" hidden="false" parent="GESAsset">
       <implements>
         <interface cname="GESMetaContainer" />

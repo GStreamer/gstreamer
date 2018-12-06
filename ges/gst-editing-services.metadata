@@ -20,6 +20,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 -->
 <metadata>
 	<remove-node path="/api/namespace/object[@cname='GESSmartAdder']"/>
+	<remove-node path="/api/namespace/object[@cname='GESPitiviFormatter']"/>
     <remove-node path="/api/namespace/object/method[@cname='ges_uri_clip_is_image']"/>
     <remove-node path="/api/namespace/object/method[@cname='ges_uri_clip_set_is_image']"/>
 	<!--FIXME- This fix should not be needed (ie. bindinator is messing with us).-->

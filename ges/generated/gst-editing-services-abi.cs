@@ -136,9 +136,6 @@ namespace AbiTester {
 			Console.WriteLine("\"sizeof(GESPipelineClass)\": \"" + GES.Pipeline.class_abi.Size + "\"");
 			Console.WriteLine("\"sizeof(GESPipeline)\": \"" + GES.Pipeline.abi_info.Size + "\"");
 			Console.WriteLine("\"GESPipeline.priv\": \"" + GES.Pipeline.abi_info.GetFieldOffset("priv") + "\"");
-			Console.WriteLine("\"sizeof(GESPitiviFormatterClass)\": \"" + GES.PitiviFormatter.class_abi.Size + "\"");
-			Console.WriteLine("\"sizeof(GESPitiviFormatter)\": \"" + GES.PitiviFormatter.abi_info.Size + "\"");
-			Console.WriteLine("\"GESPitiviFormatter.priv\": \"" + GES.PitiviFormatter.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GESProjectClass)\": \"" + GES.Project.class_abi.Size + "\"");
 			Console.WriteLine("\"GESProjectClass.asset_added\": \"" + GES.Project.class_abi.GetFieldOffset("asset_added") + "\"");
 			Console.WriteLine("\"GESProjectClass.asset_loading\": \"" + GES.Project.class_abi.GetFieldOffset("asset_loading") + "\"");

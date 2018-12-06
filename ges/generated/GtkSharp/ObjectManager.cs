@@ -39,7 +39,6 @@ namespace GtkSharp.GstEditingServices {
 			GLib.GType.Register (GES.OperationClip.GType, typeof (GES.OperationClip));
 			GLib.GType.Register (GES.OverlayClip.GType, typeof (GES.OverlayClip));
 			GLib.GType.Register (GES.Pipeline.GType, typeof (GES.Pipeline));
-			GLib.GType.Register (GES.PitiviFormatter.GType, typeof (GES.PitiviFormatter));
 			GLib.GType.Register (GES.Project.GType, typeof (GES.Project));
 			GLib.GType.Register (GES.Source.GType, typeof (GES.Source));
 			GLib.GType.Register (GES.SourceClip.GType, typeof (GES.SourceClip));

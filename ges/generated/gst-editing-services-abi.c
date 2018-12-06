@@ -121,9 +121,6 @@ int main (int argc, char *argv[]) {
 	g_print("\"sizeof(GESPipelineClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESPipelineClass));
 	g_print("\"sizeof(GESPipeline)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESPipeline));
 	g_print("\"GESPipeline.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESPipeline, priv));
-	g_print("\"sizeof(GESPitiviFormatterClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESPitiviFormatterClass));
-	g_print("\"sizeof(GESPitiviFormatter)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESPitiviFormatter));
-	g_print("\"GESPitiviFormatter.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESPitiviFormatter, priv));
 	g_print("\"sizeof(GESProjectClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESProjectClass));
 	g_print("\"GESProjectClass.asset_added\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESProjectClass, asset_added));
 	g_print("\"GESProjectClass.asset_loading\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESProjectClass, asset_loading));
