@@ -121,6 +121,21 @@ build android arm64 api28:
     MAIN_DIR: "${CI_PROJECT_DIR}/validate-output/"
     # Disable colored output to avoid weird rendering issues
     GST_DEBUG_COLOR: 'no'
+
+    # note the -b at the start of each line
+    # Can't comment inline sadly
+    # FIXME: get this into gst-validate-launcher KNOWN_ISSUES
+    # souphttpsrc.test_icy_stream: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/307
+    # h264parse: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/842
+    # rtspserver.test_shared_tcp: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/54
+    # dtls: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/811
+    # mpegtsmux.test_align: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/844
+    BLACKLIST: >
+      -b check.gst-plugins-good.elements_souphttpsrc.test_icy_stream
+      -b check.gst-plugins-bad.elements_h264parse.test_parse_packetized
+      -b check.gst-plugins-bad.elements_dtls.test_data_transfer
+      -b check.gst-plugins-bad.elements_dtls.test_create_and_unref
+      -b check.gst-rtsp-server.gst_rtspserver.test_shared_tcp
   script:
     - cd gst-build/
     - >
@@ -134,6 +149,7 @@ build android arm64 api28:
       --meson-no-rebuild
       -M "${CI_PROJECT_DIR}/validate-output/"
       --xunit-file "${CI_PROJECT_DIR}/validate-output/logs/xunit.xml"
+      ${BLACKLIST}
   artifacts:
     expire_in: 2 days
     when: always
