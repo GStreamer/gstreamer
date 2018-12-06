@@ -397,6 +397,8 @@ GstWebRTCRTPTransceiverDirection
 _intersect_answer_directions (GstWebRTCRTPTransceiverDirection offer,
     GstWebRTCRTPTransceiverDirection answer)
 {
+  if (offer == DIR (INACTIVE) || answer == DIR (INACTIVE))
+    return DIR (INACTIVE);
   if (offer == DIR (SENDONLY) && answer == DIR (SENDRECV))
     return DIR (RECVONLY);
   if (offer == DIR (SENDONLY) && answer == DIR (RECVONLY))
@@ -411,6 +413,10 @@ _intersect_answer_directions (GstWebRTCRTPTransceiverDirection offer,
     return DIR (SENDONLY);
   if (offer == DIR (SENDRECV) && answer == DIR (RECVONLY))
     return DIR (RECVONLY);
+  if (offer == DIR (RECVONLY) && answer == DIR (RECVONLY))
+    return DIR (INACTIVE);
+  if (offer == DIR (SENDONLY) && answer == DIR (SENDONLY))
+    return DIR (INACTIVE);
 
   return DIR (NONE);
 }
