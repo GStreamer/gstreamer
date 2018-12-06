@@ -27,7 +27,7 @@ def manifest_get_commits(manifest):
 
             remote = child.attrib.get('remote')
             if remote:
-                res[path] = [child.attrib["revision"], [os.path.join(remotes[remote], name), child.attrib['refname']]]
+                res[path] = [child.attrib["revision"], [os.path.join(remotes[remote], name), child.attrib.get('refname', child.attrib["revision"])]]
             else:
                 res[path] = [child.attrib["revision"], []]
 
