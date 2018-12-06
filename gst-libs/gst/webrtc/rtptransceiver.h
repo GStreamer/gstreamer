@@ -61,12 +61,20 @@ struct _GstWebRTCRTPTransceiverClass
 {
   GstObjectClass        parent_class;
 
-  gpointer              _padding[GST_PADDING];
+  void                  (*set_direction)        (GstWebRTCRTPTransceiver * trans,
+                                                 GstWebRTCRTPTransceiverDirection direction);
+
+  /* FIXME; reset */
+  gpointer              _padding[GST_PADDING-1];
 };
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCRTPTransceiver, gst_object_unref)
 #endif
+
+GST_WEBRTC_API
+void                        gst_webrtc_rtp_transceiver_set_direction (GstWebRTCRTPTransceiver * trans,
+                                                                      GstWebRTCRTPTransceiverDirection direction);
 
 G_END_DECLS
 

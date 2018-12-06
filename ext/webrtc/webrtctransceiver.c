@@ -98,6 +98,12 @@ webrtc_transceiver_get_rtcp_dtls_transport (GstWebRTCRTPTransceiver * trans)
 }
 
 static void
+webrtc_transceiver_set_direction (GstWebRTCRTPTransceiver * trans,
+    GstWebRTCRTPTransceiverDirection direction)
+{
+}
+
+static void
 webrtc_transceiver_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -172,11 +178,15 @@ webrtc_transceiver_finalize (GObject * object)
 static void
 webrtc_transceiver_class_init (WebRTCTransceiverClass * klass)
 {
+  GstWebRTCRTPTransceiverClass *trans_class =
+      (GstWebRTCRTPTransceiverClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   gobject_class->get_property = webrtc_transceiver_get_property;
   gobject_class->set_property = webrtc_transceiver_set_property;
   gobject_class->finalize = webrtc_transceiver_finalize;
+
+  trans_class->set_direction = webrtc_transceiver_set_direction;
 
   /* some acrobatics are required to set the parent before _constructed()
    * has been called */
