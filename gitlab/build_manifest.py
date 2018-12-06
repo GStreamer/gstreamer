@@ -181,8 +181,8 @@ if __name__ == "__main__":
         else:
             remote = "https://gitlab.freedesktop.org/gstreamer/gst-ci"
 
-        git('fetch', remote, sha)
-        git('checkout', '--detach', 'FETCH_HEAD')
+        git('fetch', remote, remote_refname)
+        git('checkout', '--detach', sha)
         sys.exit(0)
 
     projects: str = ''
