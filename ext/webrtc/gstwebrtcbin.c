@@ -96,6 +96,11 @@ static void _update_need_negotiation (GstWebRTCBin * webrtc);
 #define GST_CAT_DEFAULT gst_webrtc_bin_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+enum
+{
+  PROP_PAD_TRANSCEIVER = 1,
+};
+
 static gboolean
 _have_nice_elements (GstWebRTCBin * webrtc)
 {
@@ -191,7 +196,12 @@ static void
 gst_webrtc_bin_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
+  GstWebRTCBinPad *pad = GST_WEBRTC_BIN_PAD (object);
+
   switch (prop_id) {
+    case PROP_PAD_TRANSCEIVER:
+      g_value_set_object (value, pad->trans);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -222,6 +232,13 @@ gst_webrtc_bin_pad_class_init (GstWebRTCBinPadClass * klass)
   gobject_class->get_property = gst_webrtc_bin_pad_get_property;
   gobject_class->set_property = gst_webrtc_bin_pad_set_property;
   gobject_class->finalize = gst_webrtc_bin_pad_finalize;
+
+  g_object_class_install_property (gobject_class,
+      PROP_PAD_TRANSCEIVER,
+      g_param_spec_object ("transceiver", "Transceiver",
+          "Transceiver associated with this pad",
+          GST_TYPE_WEBRTC_RTP_TRANSCEIVER,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static gboolean
