@@ -209,8 +209,8 @@ class XunitReporter(Reporter):
                                self.encoding, 'replace')
         xml_file.write(self._forceUnicode(
             '<testcase classname=%(cls)s name=%(name)s time="%(taken).3f">'
-            '<error type=%(errtype)s message=%(message)s>%(stacktrace)s'
-            '</error>%(systemout)s</testcase>' %
+            '<failure type=%(errtype)s message=%(message)s>%(stacktrace)s'
+            '</failure>%(systemout)s</testcase>' %
             {'cls': self._quoteattr(test.get_classname()),
              'name': self._quoteattr(test.get_name()),
              'taken': test.time_taken,
