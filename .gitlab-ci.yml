@@ -23,6 +23,7 @@ test manifest:
   only:
     changes:
       - 'gitlab/build_manifest.py'
+      - 'docker/test_manifest/*'
 
 .base:
   image: "docker:stable"
