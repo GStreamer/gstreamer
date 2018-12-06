@@ -36,42 +36,49 @@ MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
 </manifest>"""
 
 
+# Disallow git prompting for a username/password
+os.environ['GIT_TERMINAL_PROMPT'] = '0'
 def git(*args, repository_path='.'):
-    return subprocess.check_output(["git"] + list(args), cwd=repository_path,
-                                   ).decode()
+    return subprocess.check_output(["git"] + list(args), cwd=repository_path).decode()
 
 
-def get_repository_sha_in_namespace(module: str, namespace: str, branches: List[str]) -> str:
-    print(branches)
-    res = git('ls-remote', f'https://gitlab.freedesktop.org/{namespace}/{module}.git', *branches)
+def get_branches_info(module: str, namespace: str, branches: List[str]) -> Tuple[str, str]:
+    try:
+        res = git('ls-remote', f'https://gitlab.freedesktop.org/{namespace}/{module}.git', *branches)
+    except subprocess.CalledProcessError:
+        return None, None
+
     if not res:
-        return None
+        return None, None
 
+    lines = res.split('\n')
     for branch in branches:
-        for line in res.split('\n'):
+        for line in lines:
             if line.endswith('/' + branch):
-                return res.split('\t')[0]
+                try:
+                    sha, refname = line.split('\t')
+                except ValueError:
+                    continue
+                return refname.strip(), sha
+
+    return None, None
 
 
-def find_repository_sha(module: str, branchname: str) -> Tuple[str, str]:
+def find_repository_sha(module: str, branchname: str) -> Tuple[str, str, str]:
     namespace: str = os.environ["CI_PROJECT_NAMESPACE"]
 
     if module == os.environ['CI_PROJECT_NAME']:
-        return 'user', os.environ['CI_COMMIT_SHA']
+        return 'user', branchname, os.environ['CI_COMMIT_SHA']
 
     if branchname != "master":
-        sha = get_repository_sha_in_namespace(module, namespace, [branchname])
+        remote_refname, sha = get_branches_info(module, namespace, [branchname])
         if sha is not None:
-            return 'user', sha
-
-        print(f"Did not find user branch named {branchname}")
+            return 'user', remote_refname, sha
 
     # Check upstream project for a branch
-    sha = get_repository_sha_in_namespace(module, 'gstreamer', [branchname, 'master'])
+    remote_refname, sha = get_branches_info(module, 'gstreamer', [branchname, 'master'])
     if sha is not None:
-        print("Found mathcing branch in upstream project")
-        print(f"gstreamer/{branchname}")
-        return 'origin', sha
+        return 'origin', remote_refname, sha
 
     # This should never occur given the upstream fallback above
     print(f"Could not find anything for {module}:{branchname}")
@@ -112,46 +119,48 @@ def preserve_ci_vars(func):
 
 @preserve_ci_vars
 def test_find_repository_sha():
+    os.environ["CI_PROJECT_NAME"] = "some-random-project"
     os.environ["CI_PROJECT_URL"] = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good"
     os.environ["CI_PROJECT_NAMESPACE"] = "alatiera"
     del os.environ["READ_PROJECTS_TOKEN"]
 
     # This should find the repository in the user namespace
-    remote, git_ref = find_repository_sha("gst-plugins-good", "1.2")
+    remote, refname, git_ref = find_repository_sha("gst-plugins-good", "1.2")
     assert remote == "user"
     assert git_ref == "08ab260b8a39791e7e62c95f4b64fd5b69959325"
+    assert refname == "refs/heads/1.2"
 
     # This should fallback to upstream master branch since no matching branch was found
-    remote, git_ref = find_repository_sha("gst-plugins-good", "totally-valid-branch-name")
+    remote, refname, git_ref = find_repository_sha("gst-plugins-good", "totally-valid-branch-name")
     assert remote == "origin"
-
-    # This should fallback to upstream master branch since no repository was found
-    remote, git_ref = find_repository_sha("totally-valid-project-name", "1.2")
-    assert remote == "origin"
-    # This is now the sha of the last commit
-    # assert git_ref == "master"
+    assert refname == "refs/heads/master"
 
     os.environ["CI_PROJECT_NAME"] = "the_project"
     os.environ["CI_COMMIT_SHA"] = "MySha"
 
-    remote, git_ref = find_repository_sha("the_project", "whatever")
+    remote, refname, git_ref = find_repository_sha("the_project", "whatever")
     assert remote == "user"
     assert git_ref == "MySha"
+    assert refname == "whatever"
 
 
 @preserve_ci_vars
 def test_get_project_branch():
+    os.environ["CI_PROJECT_NAME"] = "some-random-project"
+    os.environ["CI_COMMIT_SHA"] = "dwbuiw"
     os.environ["CI_PROJECT_URL"] = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good"
     os.environ["CI_PROJECT_NAMESPACE"] = "nowaythisnamespaceexists_"
     del os.environ["READ_PROJECTS_TOKEN"]
 
-    remote, twelve = find_repository_sha('gst-plugins-good', '1.12')
+    remote, refname, twelve = find_repository_sha('gst-plugins-good', '1.12')
     assert twelve is not None
     assert remote == 'origin'
+    assert refname == "refs/heads/1.12"
 
-    remote, fourteen = find_repository_sha('gst-plugins-good', '1.12')
+    remote, refname, fourteen = find_repository_sha('gst-plugins-good', '1.14')
     assert fourteen is not None
     assert remote == 'origin'
+    assert refname == "refs/heads/1.14"
 
 
 if __name__ == "__main__":
@@ -166,7 +175,7 @@ if __name__ == "__main__":
         user_remote_url += '/'
 
     if options.self_update:
-        remote, sha = find_repository_sha("gst-ci", current_branch)
+        remote, remote_refname, sha = find_repository_sha("gst-ci", current_branch)
         if remote == 'user':
             remote = user_remote_url + 'gst-ci'
         else:
@@ -177,11 +186,11 @@ if __name__ == "__main__":
         sys.exit(0)
 
     projects: str = ''
-    project_template: str = "  <project path=\"%(name)s\" name=\"%(name)s.git\" remote=\"%(remote)s\" revision=\"%(revision)s\" />\n"
     for module in GSTREAMER_MODULES:
         print(f"Checking {module}:", end=' ')
-        remote, revision = find_repository_sha(module, current_branch)
-        projects += project_template % {'name': module, 'remote': remote, 'revision': revision}
+        remote, refname, revision = find_repository_sha(module, current_branch)
+        print(f"remote '{remote}', refname: '{refname}', revision: '{revision}'")
+        projects += f"  <project path=\"{module}\" name=\"{module}.git\" remote=\"{remote}\" revision=\"{revision}\" refname=\"{refname}\" />\n"
 
     with open(options.output, mode='w') as manifest:
         print(MANIFEST_TEMPLATE.format(user_remote_url, projects), file=manifest)
