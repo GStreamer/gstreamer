@@ -11,7 +11,7 @@ stages:
 test manifest:
   variables:
     GIT_STRATEGY: fetch
-  image: "registry.freedesktop.org/thiblahute/gst-ci/amd64/test-manifest:latest"
+  image: "registry.freedesktop.org/gstreamer/gst-ci/amd64/test-manifest:5856b05f3010136cebcaa9a90058572e008ae3f6"
   stage: "preparation"
   script:
     - pytest-3 --junitxml=junit.xml --cov=build_manifest gitlab/build_manifest.py
