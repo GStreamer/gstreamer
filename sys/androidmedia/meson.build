@@ -13,6 +13,12 @@ androidmedia_sources = [
   'gstjniutils.c'
 ]
 
+androidmedia_java_sources = [
+  'org/freedesktop/gstreamer/androidmedia/GstAhcCallback.java',
+  'org/freedesktop/gstreamer/androidmedia/GstAhsCallback.java',
+  'org/freedesktop/gstreamer/androidmedia/GstAmcOnFrameAvailableListener.java',
+]
+
 if host_system != 'android' or get_option('androidmedia').disabled()
   subdir_done()
 endif
@@ -38,4 +44,8 @@ if have_jni_h
     install : true,
     install_dir : plugins_install_dir)
   pkgconfig.generate(gstandroidmedia, install_dir : plugins_pkgconfig_install_dir)
+
+  install_data(androidmedia_java_sources,
+    install_dir : join_paths(get_option('datadir'), 'gst-android/ndk-build/androidmedia')
+  )
 endif
