@@ -159,7 +159,7 @@ foreach t : base_tests
     env.set('CK_DEFAULT_TIMEOUT', '20')
     env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', join_paths(gst_tag_dir, 'license-translations.dict'))
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
-        'gst-plugins-base@' + meson.build_root(), separator: ':')
+        'gst-plugins-base@' + meson.build_root())
     env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
     test(test_name, exe, env: env, timeout: 3 * 60)
   endif
@@ -183,7 +183,7 @@ foreach group : [1, 2, 3, 4, 5, 6]
   env.set('CK_DEFAULT_TIMEOUT', '20')
   env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', join_paths(gst_tag_dir, 'license-translations.dict'))
   env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
-      'gst-plugins-base@' + meson.build_root(), separator: ':')
+      'gst-plugins-base@' + meson.build_root())
   env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
 
   test(vscale_test_name, exe, env: env, timeout: 3 * 60)
