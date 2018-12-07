@@ -20,11 +20,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include<math.h>
-#include<ctype.h>
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
+#include "config.h"
+
+#include <math.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <glib.h>
+
+#ifdef G_OS_UNIX
+#include <glib-unix.h>
+#include <sys/wait.h>
+#endif
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #include "gst-validate-utils.h"
 #include <gst/gst.h>
@@ -820,4 +832,77 @@ gst_validate_object_set_property (GstValidateReporter * reporter,
   g_value_reset (&cvalue);
   g_value_reset (&nvalue);
   return res;
+}
+
+#ifdef G_OS_UNIX
+static void
+fault_restore (void)
+{
+  struct sigaction action;
+
+  memset (&action, 0, sizeof (action));
+  action.sa_handler = SIG_DFL;
+
+  sigaction (SIGSEGV, &action, NULL);
+  sigaction (SIGQUIT, &action, NULL);
+}
+
+static void
+fault_spin (void)
+{
+  int spinning = TRUE;
+
+  g_on_error_stack_trace ("GstValidate");
+
+  wait (NULL);
+
+  g_printerr ("Please run 'gdb <process-name> %d' to "
+      "continue debugging, Ctrl-C to quit, or Ctrl-\\ to dump core.\n",
+      (gint) getpid ());
+
+  while (spinning)
+    g_usleep (1000000);
+}
+
+static void
+fault_handler_sighandler (int signum)
+{
+  fault_restore ();
+
+  /* printf is used instead of g_print(), since it's less likely to
+   * deadlock */
+  switch (signum) {
+    case SIGSEGV:
+      g_printerr ("<Caught SIGNAL: SIGSEGV>\n");
+      break;
+    case SIGQUIT:
+      g_print ("<Caught SIGNAL: SIGQUIT>\n");
+      break;
+    default:
+      g_printerr ("<Caught SIGNAL: %d>\n", signum);
+      break;
+  }
+
+  fault_spin ();
+}
+
+static void
+fault_setup (void)
+{
+  struct sigaction action;
+
+  memset (&action, 0, sizeof (action));
+  action.sa_handler = fault_handler_sighandler;
+
+  sigaction (SIGSEGV, &action, NULL);
+  sigaction (SIGQUIT, &action, NULL);
+}
+#endif /* G_OS_UNIX */
+
+void
+gst_validate_spin_on_fault_signals (void)
+{
+#ifdef G_OS_UNIX
+  fault_setup ();
+#endif
 }

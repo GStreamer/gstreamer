@@ -33,6 +33,7 @@
 #include <gst/validate/media-descriptor-writer.h>
 #include <gst/validate/media-descriptor-parser.h>
 #include <gst/validate/media-descriptor.h>
+#include <gst/validate/gst-validate-utils.h>
 #include <gst/pbutils/encoding-profile.h>
 #include <locale.h>             /* for LC_ALL */
 
@@ -101,6 +102,8 @@ main (int argc, gchar ** argv)
     goto out;
   }
   g_option_context_free (ctx);
+
+  gst_validate_spin_on_fault_signals ();
 
   runner = gst_validate_runner_new ();
 

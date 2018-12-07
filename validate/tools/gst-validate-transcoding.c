@@ -31,6 +31,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/validate/gst-validate-utils.h>
 #include <gst/validate/validate.h>
 #include <gst/pbutils/encoding-profile.h>
 
@@ -835,6 +836,8 @@ main (int argc, gchar ** argv)
   signal_watch_id =
       g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
 #endif
+
+  gst_validate_spin_on_fault_signals ();
 
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,

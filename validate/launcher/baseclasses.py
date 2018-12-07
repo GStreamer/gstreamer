@@ -232,6 +232,7 @@ class Test(Loggable):
         self.add_env_variable("DISPLAY")
 
     def add_stack_trace_to_logfile(self):
+        self.debug("Adding stack trace")
         trace_gatherer = BackTraceGenerator.get_default()
         stack_trace = trace_gatherer.get_trace(self)
 
@@ -241,11 +242,13 @@ class Test(Loggable):
         info = "\n\n== Stack trace: == \n%s" % stack_trace
         if self.options.redirect_logs:
             print(info)
-        elif self.options.xunit_file:
+            return
+
+        if self.options.xunit_file:
             self.stack_trace = stack_trace
-        else:
-            with open(self.logfile, 'a') as f:
-                f.write(info)
+
+        with open(self.logfile, 'a') as f:
+            f.write(info)
 
     def set_result(self, result, message="", error=""):
         self.debug("Setting result: %s (message: %s, error: %s)" % (result,
@@ -638,12 +641,8 @@ class GstValidateListener(socketserver.BaseRequestHandler):
 class GstValidateTest(Test):
 
     """ A class representing a particular test. """
-    findpos_regex = re.compile(
-        '.*position.*(\d+):(\d+):(\d+).(\d+).*duration.*(\d+):(\d+):(\d+).(\d+)')
-    findlastseek_regex = re.compile(
-        'seeking to.*(\d+):(\d+):(\d+).(\d+).*stop.*(\d+):(\d+):(\d+).(\d+).*rate.*(\d+)\.(\d+)')
-
     HARD_TIMEOUT_FACTOR = 5
+    fault_sig_regex = re.compile("<Caught SIGNAL: .*>")
 
     def __init__(self, application_name, classname,
                  options, reporter, duration=0,
@@ -908,11 +907,16 @@ class GstValidateTest(Test):
         msg = ""
         result = Result.PASSED
         if self.result == Result.TIMEOUT:
-            if expected_timeout:
-                not_found_expected_failures.remove(expected_timeout)
-                result, msg = self.check_expected_timeout(expected_timeout)
-            else:
-                return
+            with open(self.logfile) as f:
+                signal_fault_info = self.fault_sig_regex.findall(f.read())
+                if signal_fault_info:
+                    result = Result.FAILED
+                    msg = signal_fault_info[0]
+                elif expected_timeout:
+                    not_found_expected_failures.remove(expected_timeout)
+                    result, msg = self.check_expected_timeout(expected_timeout)
+                else:
+                    return
         elif self.process.returncode in COREDUMP_SIGNALS:
             result = Result.FAILED
             msg = "Application segfaulted "
