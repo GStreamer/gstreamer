@@ -44,9 +44,7 @@ class MesonTest(Test):
         child_env.update(test_infos['env'])
         self.child_env = child_env
 
-        timeout = int(child_env.pop(
-            'CK_DEFAULT_TIMEOUT', test_infos['timeout']))
-
+        timeout = int(test_infos['timeout'])
         Test.__init__(self, test_infos['cmd'][0], name, options,
                       reporter, timeout=timeout, hard_timeout=timeout,
                       is_parallel=test_infos.get('is_parallel', True),
