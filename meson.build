@@ -405,11 +405,9 @@ gsttag_dep = dependency('gstreamer-tag-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'tag_dep'])
 gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
-if host_machine.system() != 'windows'
-  gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
     required : get_option('tests'),
     fallback : ['gstreamer', 'gst_check_dep'])
-endif
 
 # GStreamer OpenGL
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
