@@ -841,12 +841,17 @@ static void
 gst_video_overlay_rectangle_premultiply_0 (GstVideoFrame * frame)
 {
   int i, j;
-  for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
+  int width = GST_VIDEO_FRAME_WIDTH (frame);
+  int height = GST_VIDEO_FRAME_HEIGHT (frame);
+  int stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  guint8 *data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+
+  for (j = 0; j < height; ++j) {
     guint8 *line;
 
-    line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-    line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
-    for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
+    line = data;
+    line += stride * j;
+    for (i = 0; i < width; ++i) {
       int a = line[0];
       line[1] = line[1] * a / 255;
       line[2] = line[2] * a / 255;
@@ -860,12 +865,17 @@ static void
 gst_video_overlay_rectangle_premultiply_3 (GstVideoFrame * frame)
 {
   int i, j;
-  for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
+  int width = GST_VIDEO_FRAME_WIDTH (frame);
+  int height = GST_VIDEO_FRAME_HEIGHT (frame);
+  int stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  guint8 *data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+
+  for (j = 0; j < height; ++j) {
     guint8 *line;
 
-    line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-    line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
-    for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
+    line = data;
+    line += stride * j;
+    for (i = 0; i < width; ++i) {
       int a = line[3];
       line[0] = line[0] * a / 255;
       line[1] = line[1] * a / 255;
@@ -899,12 +909,17 @@ static void
 gst_video_overlay_rectangle_unpremultiply_0 (GstVideoFrame * frame)
 {
   int i, j;
-  for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
+  int width = GST_VIDEO_FRAME_WIDTH (frame);
+  int height = GST_VIDEO_FRAME_HEIGHT (frame);
+  int stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  guint8 *data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+
+  for (j = 0; j < height; ++j) {
     guint8 *line;
 
-    line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-    line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
-    for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
+    line = data;
+    line += stride * j;
+    for (i = 0; i < width; ++i) {
       int a = line[0];
       if (a) {
         line[1] = MIN ((line[1] * 255 + a / 2) / a, 255);
@@ -920,12 +935,17 @@ static void
 gst_video_overlay_rectangle_unpremultiply_3 (GstVideoFrame * frame)
 {
   int i, j;
-  for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
+  int width = GST_VIDEO_FRAME_WIDTH (frame);
+  int height = GST_VIDEO_FRAME_HEIGHT (frame);
+  int stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  guint8 *data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+
+  for (j = 0; j < height; ++j) {
     guint8 *line;
 
-    line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
-    line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
-    for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
+    line = data;
+    line += stride * j;
+    for (i = 0; i < width; ++i) {
       int a = line[3];
       if (a) {
         line[0] = MIN ((line[0] * 255 + a / 2) / a, 255);
