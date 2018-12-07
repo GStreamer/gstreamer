@@ -58,10 +58,6 @@ class MesonTest(Test):
     def get_subproc_env(self):
         env = os.environ.copy()
         env.update(self.child_env)
-        # No reason to fork since we are launching
-        # each test individually
-        env['CK_FORK'] = 'no'
-        self.add_env_variable('CK_FORK', 'no')
         for var, val in self.child_env.items():
             if val != os.environ.get(var):
                 self.add_env_variable(var, val)
