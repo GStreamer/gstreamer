@@ -240,12 +240,9 @@ gstnet_dep = dependency('gstreamer-net-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_net_dep'])
 gstcontroller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_controller_dep'])
-if host_system != 'windows'
-  gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
-    required : get_option('tests'),
-    fallback : ['gstreamer', 'gst_check_dep'])
-endif
-
+gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+  required : get_option('tests'),
+  fallback : ['gstreamer', 'gst_check_dep'])
 gstpbutils_dep = dependency('gstreamer-pbutils-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'pbutils_dep'])
 gstallocators_dep = dependency('gstreamer-allocators-1.0', version : gst_req,
