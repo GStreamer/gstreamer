@@ -152,15 +152,15 @@ foreach t : base_tests
 
     env = environment()
     env.set('GST_PLUGIN_PATH_1_0',
-        meson.build_root(), '@0@/@1@'.format(get_option('prefix'), plugins_install_dir),
+        meson.build_root(), join_paths(get_option('prefix'), plugins_install_dir),
         pluginsdirs)
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('GST_STATE_IGNORE_ELEMENTS', 'cdio cdparanoiasrc libvisual_ alsasrc alsasink')
     env.set('CK_DEFAULT_TIMEOUT', '20')
-    env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', gst_tag_dir + '/license-translations.dict')
+    env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', join_paths(gst_tag_dir, 'license-translations.dict'))
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
         'gst-plugins-base@' + meson.build_root(), separator: ':')
-    env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
+    env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
     test(test_name, exe, env: env, timeout: 3 * 60)
   endif
 endforeach
@@ -168,7 +168,7 @@ endforeach
 # videoscale tests (split in groups)
 foreach group : [1, 2, 3, 4, 5, 6]
   vscale_test_name = 'elements-videoscale-@0@'.format(group)
-  exe = executable(vscale_test_name, 'elements/videoscale.c',
+  exe = executable(vscale_test_name, join_paths('elements', 'videoscale.c'),
       include_directories : [configinc],
       c_args : ['-DHAVE_CONFIG_H=1', '-DVSCALE_TEST_GROUP=@0@'.format(group) ] + test_defines,
       dependencies : [libm] + test_deps + extra_deps)
@@ -176,15 +176,15 @@ foreach group : [1, 2, 3, 4, 5, 6]
   # TODO Use env.copy when it is in meson
   env = environment()
   env.set('GST_PLUGIN_PATH_1_0',
-      meson.build_root(), '@0@/@1@'.format(get_option('prefix'), plugins_install_dir),
+      meson.build_root(), join_paths(get_option('prefix'), plugins_install_dir),
       pluginsdirs)
   env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
   env.set('GST_STATE_IGNORE_ELEMENTS', 'cdio cdparanoiasrc libvisual_ alsasrc alsasink')
   env.set('CK_DEFAULT_TIMEOUT', '20')
-  env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', gst_tag_dir + '/license-translations.dict')
+  env.set('GST_TAG_LICENSE_TRANSLATIONS_DICT', join_paths(gst_tag_dir, 'license-translations.dict'))
   env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer',
       'gst-plugins-base@' + meson.build_root(), separator: ':')
-  env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
+  env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
 
   test(vscale_test_name, exe, env: env, timeout: 3 * 60)
 endforeach

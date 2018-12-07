@@ -31,7 +31,7 @@ curversion = gst_version_minor * 100 + gst_version_micro
 libversion = '@0@.@1@.0'.format(soversion, curversion)
 osxversion = curversion + 1
 
-plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
+plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 
 cc = meson.get_compiler('c')
 host_system = host_machine.system()
