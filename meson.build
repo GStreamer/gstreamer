@@ -141,11 +141,9 @@ gstsdp_dep = dependency('gstreamer-sdp-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'sdp_dep'])
 gstrtsp_dep = dependency('gstreamer-rtsp-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'rtsp_dep'])
-if host_machine.system() != 'windows'
-  gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
     required : get_option('tests'),
     fallback : ['gstreamer', 'gst_check_dep'])
-endif
 gstcontroller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_controller_dep'])
 
