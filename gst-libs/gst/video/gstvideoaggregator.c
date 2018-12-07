@@ -1383,12 +1383,10 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
     GstClockTime output_start_running_time,
     GstClockTime output_end_running_time)
 {
-  GstAggregator *agg = GST_AGGREGATOR (vagg);
   GList *l;
   gboolean eos = TRUE;
   gboolean need_more_data = FALSE;
   gboolean need_reconfigure = FALSE;
-  GstSegment *agg_segment = &GST_AGGREGATOR_PAD (agg->srcpad)->segment;
 
   /* get a set of buffers into pad->priv->buffer that are within output_start_running_time
    * and output_end_running_time taking into account finished and unresponsive pads */
@@ -1495,12 +1493,6 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
       end_time =
           gst_segment_to_running_time (&segment, GST_FORMAT_TIME, end_time);
       g_assert (start_time != -1 && end_time != -1);
-
-      /* Convert to the output segment rate */
-      if (ABS (agg_segment->rate) != 1.0) {
-        start_time *= ABS (agg_segment->rate);
-        end_time *= ABS (agg_segment->rate);
-      }
 
       GST_TRACE_OBJECT (pad, "dealing with buffer %p start %" GST_TIME_FORMAT
           " end %" GST_TIME_FORMAT " out start %" GST_TIME_FORMAT
