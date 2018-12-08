@@ -1,4 +1,6 @@
-project('GStreamer manuals and tutorials', 'c', version: '1.11.1.1')
+project('GStreamer manuals and tutorials', 'c',
+  version: '1.11.1.1',
+  meson_version: '>=0.48.0')
 
 hotdoc = import('hotdoc')
 
@@ -9,7 +11,6 @@ html_theme = 'https://github.com/hotdoc/hotdoc_lumen_theme/releases/download/0.9
 gstreamer_doc = hotdoc.generate_doc('GStreamer',
     project_version: apiversion,
     sitemap: 'sitemap.txt',
-    project_version: '1.0',
     index: 'markdown/index.md',
     build_by_default: true,
     install: true,
