@@ -226,7 +226,6 @@ build android arm64 api28:
     CONFIG: "linux.config"
     ARCH: "linux_x86_64"
 
-# FIXME uncomment and set the SHA when docker is ready
 # This indirection allow overriding the image without passing again CONFIG and ARCH
-#build cerbero fedora x86_64:
-#  extends: '.build cerbero fedora x86_64'
+build cerbero fedora x86_64:
+  extends: '.build cerbero fedora x86_64'
