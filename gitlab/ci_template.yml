@@ -85,6 +85,7 @@ gst indent:
     - rm -rf subprojects/*/.git/
     - rm -rf build/subprojects/*/.git/
   cache:
+    key: "${CI_JOB_NAME}"
     paths:
       - "${CCACHE_DIR}"
   artifacts:
