@@ -129,6 +129,7 @@ build android arm64 api28:
   variables:
     CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
     CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
+    CCACHE_MAXSIZE: "1.7G"
     CERBERO_HOME: "${CI_PROJECT_DIR}/cerbero-build"
     CERBERO_SOURCES: "${CI_PROJECT_DIR}/cerbero-sources"
     CERBERO_DEPS: "cerbero-deps.tar.gz"
