@@ -157,6 +157,7 @@ EXPORTS
 	gst_validate_scenario_get_pipeline
 	gst_validate_scenario_get_target_state
 	gst_validate_scenario_get_type
+	gst_validate_spin_on_fault_signals
 	gst_validate_structs_parse_from_gfile
 	gst_validate_tag_node_compare
 	gst_validate_utils_enum_from_str
