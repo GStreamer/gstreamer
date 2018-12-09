@@ -119,6 +119,7 @@ build android arm64 api28:
 #
 # Parameters:
 # CONFIG: The name of the configuration file to use
+# ARCH: The cerbero <distro>_<cpu> (used in cache key)
 #
 # Produces runtime and devel tarball packages.
 .cerbero:
@@ -153,6 +154,7 @@ build android arm64 api28:
     - $CERBERO package --offline -t -o ${CI_PROJECT_DIR} gstreamer-1.0
     - ccache -s
   cache:
+    key: "cerbero_${ARCH}"
     paths:
       - "${CCACHE_DIR}"
       - "${CERBERO_SOURCES}"
@@ -213,6 +215,7 @@ build android arm64 api28:
   extends: '.cerbero'
   variables:
     CONFIG: "linux.config"
+    ARCH: "linux_x86_64"
 
 # FIXME uncomment and set the SHA when docker is ready
 # This indirection allow overriding the image without passing again CONFIG and ARCH
