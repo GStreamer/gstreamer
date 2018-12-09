@@ -214,6 +214,7 @@ build android arm64 api28:
 
 .build cerbero fedora x86_64:
   extends: '.cerbero'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:d19082b72667fb3382bdc3621520c4d26e258b2e'
   variables:
     CONFIG: "linux.config"
     ARCH: "linux_x86_64"
@@ -228,5 +229,4 @@ build android arm64 api28:
 # FIXME uncomment and set the SHA when docker is ready
 # This indirection allow overriding the image without passing again CONFIG and ARCH
 #build cerbero fedora x86_64:
-#  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:d19082b72667fb3382bdc3621520c4d26e258b2e'
 #  extends: '.build cerbero fedora x86_64'
