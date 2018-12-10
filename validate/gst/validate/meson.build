@@ -52,7 +52,7 @@ gst_validate_enums = gnome.mkenums('gstvalidateenumtypes',
   install_header : true,
   install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/validate'))
 
-gstvalidate = shared_library('gstvalidate-1.0',
+gstvalidate = library('gstvalidate-1.0',
     sources: gstvalidate_sources + gst_validate_enums,
     version : libversion,
     soversion : soversion,
@@ -64,12 +64,12 @@ gstvalidate = shared_library('gstvalidate-1.0',
     dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
                     gst_pbutils_dep, mathlib, json_dep])
 
-gstvalidatetracer = shared_library('gstvalidatetracer',
+gstvalidatetracer = library('gstvalidatetracer',
     sources: gstvalidate_sources + gst_validate_enums,
     include_directories : [inc_dirs],
     install: true,
     c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE'],
-    install_dir : '@0@/gstreamer-1.0'.format(get_option('libdir')),
+    install_dir : plugins_install_dir,
     dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
                     gst_pbutils_dep, mathlib, json_dep])
 
@@ -108,3 +108,5 @@ validate_dep = declare_dependency(link_with : gstvalidate,
                   gst_pbutils_dep, mathlib],
   sources : validate_gen_sources
 )
+
+pkgconfig.generate(gstvalidatetracer, install_dir : plugins_pkgconfig_install_dir)

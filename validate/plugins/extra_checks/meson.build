@@ -7,4 +7,3 @@ shared_library('gstextrachecks',
                 dependencies : [gst_dep, gst_pbutils_dep],
                 link_with : [gstvalidate]
                )
-
