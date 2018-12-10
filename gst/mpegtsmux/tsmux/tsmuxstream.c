@@ -304,7 +304,7 @@ tsmux_stream_consume (TsMuxStream * stream, guint len)
   stream->cur_buffer_consumed += len;
   stream->bytes_avail -= len;
 
-  if (stream->cur_buffer_consumed == 0)
+  if (stream->cur_buffer_consumed == 0 && stream->cur_buffer->size != 0)
     return;
 
   if (GST_CLOCK_STIME_IS_VALID (stream->cur_buffer->pts)) {
