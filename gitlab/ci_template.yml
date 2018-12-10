@@ -72,12 +72,14 @@ gst indent:
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
 
   script:
+    - ccache -z
     # Not sure why, but permission errors else
     # https://gitlab.freedesktop.org/alatiera/gstreamer/-/jobs/41441
     - cp -r /gst-build/ . && cd gst-build
     - ./git-update --no-interaction --manifest="${CI_PROJECT_DIR}/manifest.xml"
     - meson build/ $MESON_ARGS
     - ninja -C build/
+    - ccache -s
   after_script:
     - cd gst-build/
     # Clean the artifacts packages to avoid copying "useless" build products.
