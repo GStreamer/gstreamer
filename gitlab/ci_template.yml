@@ -218,7 +218,7 @@ check fedora:
   script:
     - $CERBERO show-config
     - $CERBERO fetch-bootstrap --build-tools-only
-    - $CERBERO fetch-package --deps --reset-rdeps --full-reset gstreamer-1.0
+    - $CERBERO fetch-package --deps gstreamer-1.0
     - $CERBERO fetch-cache
     - $CERBERO bootstrap --offline --build-tools-only
     - $CERBERO package --offline -t -o ${CI_PROJECT_DIR} gstreamer-1.0
