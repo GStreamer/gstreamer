@@ -104,16 +104,20 @@ typedef enum {
  *      this format is not recommended since is does not specify to
  *      which field the caption comes from and therefore assumes
  *      it comes from the first field (and that there is no information
- *      on the second field). Use @@GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW
- *      if you wish to store CEA-608 from two fields.
- * @GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW: CEA-608 as cc_data byte triplets.
- *      The first byte of each triplet shall specify the field as in CEA-708
- *      (i.e: 0xFC for the first field or 0xFD for the second field.). The 2nd
- *      and 3rd byte of each triplet are the cc1 and cc2 bytes. Use this if
- *      there is *only* CEA-608 caption. If there is also CEA-708 caption,
- *      use @GST_VIDEO_CAPTION_TYPE_CEA708_RAW.
+ *      on the second field). Use @GST_VIDEO_CAPTION_TYPE_CEA708_RAW
+ *      if you wish to store CEA-608 from two fields and prefix each byte pair
+ *      with 0xFC for the first field and 0xFD for the second field.
+ * @GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A: CEA-608 as byte triplets as defined
+ *      in SMPTE S334-1 Annex A. The second and third byte of the byte triplet
+ *      is the raw CEA608 data, the first byte is a bitfield: The top/7th bit is
+ *      0 for the second field, 1 for the first field, bit 6 and 5 are 0 and
+ *      bits 4 to 0 are a 5 bit unsigned integer that represents the line
+ *      offset relative to the base-line of the original image format (line 9
+ *      for 525-line field 1, line 272 for 525-line field 2, line 5 for
+ *      625-line field 1 and line 318 for 625-line field 2).
  * @GST_VIDEO_CAPTION_TYPE_CEA708_RAW: CEA-708 as cc_data byte triplets. They
- *      can also contain 608-in-708.
+ *      can also contain 608-in-708 and the first byte of each triplet has to
+ *      be inspected for detecting the type.
  * @GST_VIDEO_CAPTION_TYPE_CEA708_CDP: CEA-708 (and optionally CEA-608) in
  *      a CDP (Caption Distribution Packet) defined by SMPTE S-334-2.
  *      Contains the whole CDP (starting with 0x9669).
@@ -125,7 +129,7 @@ typedef enum {
 typedef enum {
   GST_VIDEO_CAPTION_TYPE_UNKNOWN                = 0,
   GST_VIDEO_CAPTION_TYPE_CEA608_RAW		= 1,
-  GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW   = 2,
+  GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A		= 2,
   GST_VIDEO_CAPTION_TYPE_CEA708_RAW		= 3,
   GST_VIDEO_CAPTION_TYPE_CEA708_CDP		= 4
 } GstVideoCaptionType;

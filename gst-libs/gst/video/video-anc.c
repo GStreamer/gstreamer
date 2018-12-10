@@ -946,7 +946,7 @@ gst_buffer_add_video_caption_meta (GstBuffer * buffer,
 
   switch (caption_type) {
     case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
-    case GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW:
+    case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
     case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
     case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
       break;
