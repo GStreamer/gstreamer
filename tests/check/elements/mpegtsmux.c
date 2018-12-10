@@ -182,7 +182,7 @@ check_tsmux_pad (GstStaticPadTemplate * srctemplate,
     if (input_buf_size >= 0)
       inbuffer = gst_buffer_new_and_alloc (input_buf_size);
     else
-      inbuffer = gst_buffer_new_and_alloc (g_random_int_range (0, 49141));
+      inbuffer = gst_buffer_new_and_alloc (g_random_int_range (1, 49141));
 
     GST_BUFFER_TIMESTAMP (inbuffer) = ts;
     ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
