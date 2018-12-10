@@ -408,13 +408,25 @@ gst_line_21_decoder_scan (GstLine21Decoder * self, GstVideoFrame * frame)
     GST_DEBUG_OBJECT (self, "No CC found");
     self->line21_offset = -1;
   } else {
-    guint8 ccdata[6] = { 0xfc, 0x80, 0x80, 0xfd, 0x80, 0x80 };  /* Initialize the ccdata */
+    guint base_line1 = 0, base_line2 = 0;
+    guint8 ccdata[6] = { 0x80, 0x80, 0x80, 0x00, 0x80, 0x80 };  /* Initialize the ccdata */
+
+    if (GST_VIDEO_FRAME_HEIGHT (frame) == 525) {
+      base_line1 = 9;
+      base_line2 = 272;
+    } else if (GST_VIDEO_FRAME_HEIGHT (frame) == 625) {
+      base_line1 = 5;
+      base_line2 = 318;
+    }
+
+    ccdata[0] |= (base_line1 < i ? i - base_line1 : 0) & 0x1f;
     ccdata[1] = sliced[0].data[0];
     ccdata[2] = sliced[0].data[1];
+    ccdata[3] |= (base_line2 < i ? i - base_line2 : 0) & 0x1f;
     ccdata[4] = sliced[1].data[0];
     ccdata[5] = sliced[1].data[1];
     gst_buffer_add_video_caption_meta (frame->buffer,
-        GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW, ccdata, 6);
+        GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A, ccdata, 6);
     GST_TRACE_OBJECT (self,
         "Got CC 0x%02x 0x%02x / 0x%02x 0x%02x '%c%c / %c%c'", ccdata[1],
         ccdata[2], ccdata[4], ccdata[5],

@@ -57,7 +57,7 @@ static GstStaticPadTemplate captiontemplate =
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS
-    ("closedcaption/x-cea-608,format={ (string) raw, (string) cc_data}; "
+    ("closedcaption/x-cea-608,format={ (string) raw, (string) s334-1a}; "
         "closedcaption/x-cea-708,format={ (string) cc_data, (string) cdp }"));
 
 G_DEFINE_TYPE (GstCCExtractor, gst_cc_extractor, GST_TYPE_ELEMENT);
@@ -284,9 +284,9 @@ create_caps_from_caption_type (GstVideoCaptionType caption_type,
       caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
           "format", G_TYPE_STRING, "raw", NULL);
       break;
-    case GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW:
+    case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
       caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
-          "format", G_TYPE_STRING, "cc_data", NULL);
+          "format", G_TYPE_STRING, "s334-1a", NULL);
       break;
     case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
       caption_caps = gst_caps_new_simple ("closedcaption/x-cea-708",

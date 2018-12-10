@@ -808,26 +808,11 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
 
           break;
         }
-        case GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW:{
-          guint8 data[3];
-
-          /* This is the offset from line 9 for 525-line fields and from line
-           * 5 for 625-line fields.
-           *
-           * The highest bit is set for field 1 but not for field 0
-           */
-          data[0] =
-              self->info.height ==
-              525 ? self->caption_line - 9 : self->caption_line - 5;
-          if (cc_meta->data[0] == 0xFD)
-            data[0] |= 0x80;
-          data[1] = cc_meta->data[1];
-          data[2] = cc_meta->data[2];
-
+        case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:{
           if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
                   FALSE,
                   GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 >> 8,
-                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff, data, 3))
+                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff, cc_meta->data, cc_meta->size))
             GST_WARNING_OBJECT (self, "Couldn't add meta to ancillary data");
 
           got_captions = TRUE;

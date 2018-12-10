@@ -850,13 +850,8 @@ extract_cc_from_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
             GST_DEBUG_OBJECT (self,
                 "Adding CEA-608 meta to buffer for line %d", fi);
             GST_MEMDUMP_OBJECT (self, "CEA608", gstanc.data, gstanc.data_count);
-            /* The first byte actually contains the field and line offset but
-             * for CEA608-in-CEA708 we can't store the line offset, and it's
-             * generally not needed
-             */
-            gstanc.data[0] = (gstanc.data[0] & 0x80) ? 0xFD : 0xFC;
             gst_buffer_add_video_caption_meta (*buffer,
-                GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW, gstanc.data,
+                GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A, gstanc.data,
                 gstanc.data_count);
             break;
           default:

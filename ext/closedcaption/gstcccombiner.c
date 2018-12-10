@@ -48,7 +48,7 @@ static GstStaticPadTemplate captiontemplate =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS
-    ("closedcaption/x-cea-608,format={ (string) raw, (string) cc_data}; "
+    ("closedcaption/x-cea-608,format={ (string) raw, (string) s334-1a}; "
         "closedcaption/x-cea-708,format={ (string) cc_data, (string) cdp }"));
 
 G_DEFINE_TYPE (GstCCCombiner, gst_cc_combiner, GST_TYPE_AGGREGATOR);
@@ -353,9 +353,8 @@ gst_cc_combiner_sink_event (GstAggregator * aggregator,
         if (gst_structure_has_name (s, "closedcaption/x-cea-608")) {
           if (strcmp (format, "raw") == 0) {
             self->current_caption_type = GST_VIDEO_CAPTION_TYPE_CEA608_RAW;
-          } else if (strcmp (format, "cc_data") == 0) {
-            self->current_caption_type =
-                GST_VIDEO_CAPTION_TYPE_CEA608_IN_CEA708_RAW;
+          } else if (strcmp (format, "s334-1a") == 0) {
+            self->current_caption_type = GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A;
           } else {
             g_assert_not_reached ();
           }
