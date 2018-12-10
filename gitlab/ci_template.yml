@@ -167,8 +167,6 @@ build android arm64 api28:
       - "manifest.xml"
       - "cerbero-build/logs"
       - "*.tar.bz2"
-  dependencies:
-    - "manifest"
 
 # Template for Cerbero GStreamer Deps
 #
