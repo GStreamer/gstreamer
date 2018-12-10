@@ -20,15 +20,12 @@ test manifest:
     reports:
       junit:
         - "junit.xml"
-  only:
-    changes:
-      - 'gitlab/build_manifest.py'
-      - 'docker/test_manifest/*'
 
 .base:
   image: "docker:stable"
   services:
     - docker:dind
+  when: 'manual'
   variables:
     # When using dind, it's wise to use the overlayfs driver for
     # improved performance.
@@ -67,10 +64,6 @@ alpine amd64 manifest builder docker:
     CONTEXT_DIR: "docker/build_manifest/"
     DOCKERFILE: "docker/build_manifest/Dockerfile"
   extends: .base
-  only:
-    changes:
-      - 'docker/build_manifest/*'
-      - 'gitlab/build_manifest.py'
 
 test manifest amd64 docker:
   stage: "build docker"
@@ -80,9 +73,6 @@ test manifest amd64 docker:
     CONTEXT_DIR: "docker/test_manifest/"
     DOCKERFILE: "docker/test_manifest/Dockerfile"
   extends: .base
-  only:
-    changes:
-      - 'docker/test_manifest/*'
 
 gst-indent amd64 docker:
   stage: "build docker"
@@ -92,9 +82,6 @@ gst-indent amd64 docker:
     CONTEXT_DIR: "docker/indent/"
     DOCKERFILE: "docker/indent/Dockerfile"
   extends: .base
-  only:
-    changes:
-      - 'docker/indent/*'
 
 fedora amd64 docker:
   stage: "build docker"
@@ -104,9 +91,6 @@ fedora amd64 docker:
     CONTEXT_DIR: "docker/fedora/"
     DOCKERFILE: "docker/fedora/Dockerfile"
   extends: .base
-  only:
-    changes:
-      - 'docker/fedora/*'
 
 # Cross compile image
 android 28 amd64 docker:
@@ -117,9 +101,6 @@ android 28 amd64 docker:
     CONTEXT_DIR: "docker/android/"
     DOCKERFILE: "docker/android/Dockerfile"
   extends: .base
-  only:
-    changes:
-      - 'docker/android/*'
 
 cerbero fedora amd64 docker:
   stage: "build docker"
@@ -129,15 +110,16 @@ cerbero fedora amd64 docker:
     CONTEXT_DIR: "docker/cerbero/"
     DOCKERFILE: "docker/cerbero/Dockerfile-fedora"
   extends: .base
-  only:
-    changes:
-      - 'docker/cerbero/Dockerfile-fedora'
 
 include: "gitlab/ci_template.yml"
 
+.build local:
+  extends: '.build'
+  when: 'manual'
+
 # Test the build job against the latest build image tag and the local manifest
 build fedora x86_64 local:
-  extends: '.build'
+  extends: '.build local'
   stage: 'build'
   image: "${CI_REGISTRY_IMAGE}/amd64/fedora:latest"
   except:
@@ -145,7 +127,7 @@ build fedora x86_64 local:
       - "master@gstreamer/gst-ci"
 
 build android 28 local:
-  extends: '.build'
+  extends: '.build local'
   variables:
     MESON_ARGS: >
       -Dbad=enabled
@@ -159,6 +141,7 @@ build android 28 local:
 build cerbero fedora x86_64 local:
   extends: '.build cerbero fedora x86_64'
   image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
+  when: 'manual'
   except:
     refs:
       - "master@gstreamer/gst-ci"
@@ -168,6 +151,7 @@ build cerbero fedora x86_64 local:
   extends: '.test'
   dependencies:
     - build fedora x86_64 local
+  when: 'manual'
   except:
     refs:
       - "master@gstreamer/gst-ci"
