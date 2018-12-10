@@ -385,7 +385,7 @@ gst_line_21_decoder_scan (GstLine21Decoder * self, GstVideoFrame * frame)
     i = 0;
   }
 
-  for (; i < self->max_line_probes; i++) {
+  for (; i < self->max_line_probes && i < GST_VIDEO_FRAME_HEIGHT (frame); i++) {
     gint n_lines;
     data = get_video_data (self, frame, i);
     /* Scan until we get n_lines == 2 */
