@@ -882,7 +882,7 @@ gst_qt_mux_prepare_jpc_buffer (GstQTPad * qtpad, GstBuffer * buf,
 }
 
 static gsize
-extract_608_field_from_cc_data (const guint8 * ccdata, gsize ccdata_size,
+extract_608_field_from_s334_1a (const guint8 * ccdata, gsize ccdata_size,
     guint field, guint8 ** res)
 {
   guint8 *storage;
@@ -894,8 +894,8 @@ extract_608_field_from_cc_data (const guint8 * ccdata, gsize ccdata_size,
   /* Iterate over the ccdata and put the corresponding tuples for the given field
    * in the storage */
   for (i = 0; i < ccdata_size; i += 3) {
-    if ((field == 1 && ccdata[i * 3] == 0xfc) ||
-        (field == 2 && ccdata[i * 3] == 0xfd)) {
+    if ((field == 1 && (ccdata[i * 3] & 0x80)) ||
+        (field == 2 && !(ccdata[i * 3] & 0x80))) {
       GST_DEBUG ("Storing matching cc for field %d : 0x%02x 0x%02x", field,
           ccdata[i * 3 + 1], ccdata[i * 3 + 2]);
       if (res_size >= storage_size) {
@@ -948,9 +948,9 @@ gst_qt_mux_prepare_caption_buffer (GstQTPad * qtpad, GstBuffer * buf,
       gsize write_offs = 0;
 
       cdat_size =
-          extract_608_field_from_cc_data (inmap.data, inmap.size, 1, &cdat);
+          extract_608_field_from_s334_1a (inmap.data, inmap.size, 1, &cdat);
       cdt2_size =
-          extract_608_field_from_cc_data (inmap.data, inmap.size, 2, &cdt2);
+          extract_608_field_from_s334_1a (inmap.data, inmap.size, 2, &cdt2);
 
       if (cdat_size)
         total_size += cdat_size + 8;
@@ -6108,7 +6108,7 @@ gst_qt_mux_caption_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  /* We know we only handle 608,format=cc_data and 708,format=cdp */
+  /* We know we only handle 608,format=s334-1a and 708,format=cdp */
   if (gst_structure_has_name (structure, "closedcaption/x-cea-608")) {
     fourcc_entry = FOURCC_c608;
   } else if (gst_structure_has_name (structure, "closedcaption/x-cea-708")) {

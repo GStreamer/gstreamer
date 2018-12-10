@@ -167,7 +167,7 @@
   "format=(string)utf8"
 
 #define CEA608_CAPS \
-  "closedcaption/x-cea-608, format=(string)cc_data"
+  "closedcaption/x-cea-608, format=(string)s334-1a"
 #define CEA708_CAPS \
   "closedcaption/x-cea-708, format=(string)cdp"
 

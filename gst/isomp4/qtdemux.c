@@ -5606,7 +5606,7 @@ gst_qtdemux_align_buffer (GstQTDemux * demux,
 }
 
 static guint8 *
-convert_to_ccdata (const guint8 * ccpair, guint8 ccpair_size, guint field,
+convert_to_s334_1a (const guint8 * ccpair, guint8 ccpair_size, guint field,
     gsize * res)
 {
   guint8 *storage;
@@ -5616,10 +5616,11 @@ convert_to_ccdata (const guint8 * ccpair, guint8 ccpair_size, guint field,
   *res = ccpair_size / 2 * 3;
   storage = g_malloc (*res);
   for (i = 0; i * 2 < ccpair_size; i += 1) {
+    /* FIXME: Use line offset 0 as we simply can't know here */
     if (field == 1)
-      storage[i * 3] = 0xfc;
+      storage[i * 3] = 0x80 | 0x00;
     else
-      storage[i * 3] = 0xfd;
+      storage[i * 3] = 0x00 | 0x00;
     storage[i * 3 + 1] = ccpair[i * 2];
     storage[i * 3 + 2] = ccpair[i * 2 + 1];
   }
@@ -5663,11 +5664,11 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
         goto invalid_cdat;
       }
 
-      /* Convert to cc_data triplet */
+      /* Convert to S334-1 Annex A byte triplet */
       if (fourcc == FOURCC_cdat)
-        cdat = convert_to_ccdata (data + 8, atom_length - 8, 1, &cdat_size);
+        cdat = convert_to_s334_1a (data + 8, atom_length - 8, 1, &cdat_size);
       else
-        cdt2 = convert_to_ccdata (data + 8, atom_length - 8, 2, &cdt2_size);
+        cdt2 = convert_to_s334_1a (data + 8, atom_length - 8, 2, &cdt2_size);
       GST_DEBUG_OBJECT (stream->pad, "size:%" G_GSIZE_FORMAT " atom_length:%u",
           size, atom_length);
 
@@ -5679,7 +5680,7 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
           if (fourcc == FOURCC_cdat) {
             if (cdat == NULL)
               cdat =
-                  convert_to_ccdata (data + atom_length + 8,
+                  convert_to_s334_1a (data + atom_length + 8,
                   new_atom_length - 8, 1, &cdat_size);
             else
               GST_WARNING_OBJECT (stream->pad,
@@ -5687,7 +5688,7 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
           } else {
             if (cdt2 == NULL)
               cdt2 =
-                  convert_to_ccdata (data + atom_length + 8,
+                  convert_to_s334_1a (data + atom_length + 8,
                   new_atom_length - 8, 2, &cdt2_size);
             else
               GST_WARNING_OBJECT (stream->pad,
@@ -15329,7 +15330,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("CEA 608 Closed Caption");
       caps =
           gst_caps_new_simple ("closedcaption/x-cea-608", "format",
-          G_TYPE_STRING, "cc_data", NULL);
+          G_TYPE_STRING, "s334-1a", NULL);
       stream->need_process = TRUE;
       break;
     case FOURCC_c708:
