@@ -396,6 +396,11 @@ gst_line_21_decoder_scan (GstLine21Decoder * self, GstVideoFrame * frame)
       self->line21_offset = i;
       found = TRUE;
       break;
+    } else if (i == self->line21_offset) {
+      /* Otherwise if this was the previously probed line offset,
+       * reset and start searching again from the beginning */
+      i = -1;
+      self->line21_offset = -1;
     }
   }
 
