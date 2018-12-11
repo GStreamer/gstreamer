@@ -3580,6 +3580,8 @@ GstVideoCaptionType
 GstVideoCaptionMeta
 gst_buffer_get_video_caption_meta
 gst_buffer_add_video_caption_meta
+gst_video_caption_type_from_caps
+gst_video_caption_type_to_caps
 <SUBSECTION Standard>
 GST_TYPE_VIDEO_ANCILLARY_DID
 GST_TYPE_VIDEO_ANCILLARY_DI_D16

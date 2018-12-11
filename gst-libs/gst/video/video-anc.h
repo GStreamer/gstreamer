@@ -134,6 +134,14 @@ typedef enum {
   GST_VIDEO_CAPTION_TYPE_CEA708_CDP		= 4
 } GstVideoCaptionType;
 
+GST_VIDEO_API
+GstVideoCaptionType
+gst_video_caption_type_from_caps (const GstCaps *caps);
+
+GST_VIDEO_API
+GstCaps *
+gst_video_caption_type_to_caps (GstVideoCaptionType type);
+
 /**
  * GstVideoCaptionMeta:
  * @meta: parent #GstMeta

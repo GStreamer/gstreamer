@@ -966,3 +966,85 @@ gst_buffer_add_video_caption_meta (GstBuffer * buffer,
 
   return meta;
 }
+
+/**
+ * gst_video_caption_type_from_caps:
+ * @caps: Fixed #GstCaps to parse
+ *
+ * Parses fixed Closed Caption #GstCaps and returns the corresponding caption
+ * type, or %GST_VIDEO_CAPTION_TYPE_UNKNOWN.
+ *
+ * Returns: #GstVideoCaptionType.
+ *
+ * Since: 1.16
+ */
+GstVideoCaptionType
+gst_video_caption_type_from_caps (const GstCaps * caps)
+{
+  const GstStructure *s;
+  const gchar *format;
+
+  g_return_val_if_fail (gst_caps_is_fixed (caps),
+      GST_VIDEO_CAPTION_TYPE_UNKNOWN);
+
+  s = gst_caps_get_structure (caps, 0);
+  g_return_val_if_fail (s != NULL, GST_VIDEO_CAPTION_TYPE_UNKNOWN);
+
+  format = gst_structure_get_string (s, "format");
+  if (gst_structure_has_name (s, "closedcaption/x-cea-608")) {
+    if (g_strcmp0 (format, "raw") == 0) {
+      return GST_VIDEO_CAPTION_TYPE_CEA608_RAW;
+    } else if (g_strcmp0 (format, "s334-1a") == 0) {
+      return GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A;
+    }
+  } else if (gst_structure_has_name (s, "closedcaption/x-cea-708")) {
+    if (g_strcmp0 (format, "cc_data") == 0) {
+      return GST_VIDEO_CAPTION_TYPE_CEA708_RAW;
+    } else if (g_strcmp0 (format, "cdp") == 0) {
+      return GST_VIDEO_CAPTION_TYPE_CEA708_CDP;
+    }
+  }
+  return GST_VIDEO_CAPTION_TYPE_UNKNOWN;
+}
+
+/**
+ * gst_video_caption_type_to_caps:
+ * @type: #GstVideoCaptionType
+ *
+ * Creates new caps corresponding to @type.
+ *
+ * Returns: (transfer full): new #GstCaps
+ *
+ * Since: 1.16
+ */
+GstCaps *
+gst_video_caption_type_to_caps (GstVideoCaptionType type)
+{
+  GstCaps *caption_caps;
+
+  g_return_val_if_fail (type != GST_VIDEO_CAPTION_TYPE_UNKNOWN, NULL);
+
+  switch (type) {
+    case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
+      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
+          "format", G_TYPE_STRING, "raw", NULL);
+      break;
+    case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
+      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
+          "format", G_TYPE_STRING, "s334-1a", NULL);
+      break;
+    case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
+      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-708",
+          "format", G_TYPE_STRING, "cc_data", NULL);
+      break;
+    case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
+      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-708",
+          "format", G_TYPE_STRING, "cdp", NULL);
+      break;
+    default:
+      g_return_val_if_reached (NULL);
+      break;
+  }
+
+  return caption_caps;
+}
