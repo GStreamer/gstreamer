@@ -277,27 +277,7 @@ static GstCaps *
 create_caps_from_caption_type (GstVideoCaptionType caption_type,
     const GstVideoInfo * video_info)
 {
-  GstCaps *caption_caps = NULL;
-
-  switch (caption_type) {
-    case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
-      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
-          "format", G_TYPE_STRING, "raw", NULL);
-      break;
-    case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
-      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-608",
-          "format", G_TYPE_STRING, "s334-1a", NULL);
-      break;
-    case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
-      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-708",
-          "format", G_TYPE_STRING, "cc_data", NULL);
-      break;
-    case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
-      caption_caps = gst_caps_new_simple ("closedcaption/x-cea-708",
-          "format", G_TYPE_STRING, "cdp", NULL);
-    default:
-      break;
-  }
+  GstCaps *caption_caps = gst_video_caption_type_to_caps (caption_type);
 
   gst_caps_set_simple (caption_caps, "framerate", GST_TYPE_FRACTION,
       video_info->fps_n, video_info->fps_d, NULL);

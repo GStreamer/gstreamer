@@ -347,28 +347,7 @@ gst_cc_combiner_sink_event (GstAggregator * aggregator,
       s = gst_caps_get_structure (caps, 0);
 
       if (strcmp (GST_OBJECT_NAME (agg_pad), "caption") == 0) {
-        const gchar *format;
-
-        format = gst_structure_get_string (s, "format");
-        if (gst_structure_has_name (s, "closedcaption/x-cea-608")) {
-          if (strcmp (format, "raw") == 0) {
-            self->current_caption_type = GST_VIDEO_CAPTION_TYPE_CEA608_RAW;
-          } else if (strcmp (format, "s334-1a") == 0) {
-            self->current_caption_type = GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A;
-          } else {
-            g_assert_not_reached ();
-          }
-        } else if (gst_structure_has_name (s, "closedcaption/x-cea-708")) {
-          if (strcmp (format, "cc_data") == 0) {
-            self->current_caption_type = GST_VIDEO_CAPTION_TYPE_CEA708_RAW;
-          } else if (strcmp (format, "cdp") == 0) {
-            self->current_caption_type = GST_VIDEO_CAPTION_TYPE_CEA708_CDP;
-          } else {
-            g_assert_not_reached ();
-          }
-        } else {
-          g_assert_not_reached ();
-        }
+        self->current_caption_type = gst_video_caption_type_from_caps (caps);
       } else {
         if (!gst_structure_get_fraction (s, "framerate", &self->video_fps_n,
                 &self->video_fps_d))
