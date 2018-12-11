@@ -127,7 +127,8 @@ build android arm64 api28:
     # note the -b at the start of each line
     # Can't comment inline sadly
     # FIXME: get this into gst-validate-launcher KNOWN_ISSUES
-    # check.gst-plugins-base.elements_multisocketsink.test_sending_buffers_with_9_gstmemories: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/525
+    # elements_multisocketsink.test_sending_buffers_with_9_gstmemories: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/525
+    # elements_multisocketsink.test_client_next_keyframe: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/516
     # souphttpsrc.test_icy_stream: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/307
     # h264parse: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/842
     # rtspserver.test_shared_tcp: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/54
@@ -135,6 +136,7 @@ build android arm64 api28:
     # mpegtsmux.test_align: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/844
     BLACKLIST: >
       -b check.gst-plugins-base.elements_multisocketsink.test_sending_buffers_with_9_gstmemories
+      -b check.gst-plugins-base.elements_multisocketsink.test_client_next_keyframe
       -b check.gst-plugins-good.elements_souphttpsrc.test_icy_stream
       -b check.gst-plugins-bad.elements_h264parse.test_parse_packetized
       -b check.gst-plugins-bad.elements_dtls.test_data_transfer
