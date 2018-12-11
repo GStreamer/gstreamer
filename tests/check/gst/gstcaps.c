@@ -1113,6 +1113,13 @@ GST_START_TEST (test_broken)
   ASSERT_CRITICAL (c1 =
       gst_caps_new_simple ("1#@abc", "field", G_TYPE_INT, 1, NULL));
   fail_if (c1);
+
+  c1 = gst_caps_new_empty_simple ("test/broken-fraction");
+  fail_unless (c1);
+  /* denominator must be non-zero value */
+  ASSERT_CRITICAL (gst_caps_set_simple (c1, "foo", GST_TYPE_FRACTION, 1, 0,
+          NULL));
+  gst_caps_unref (c1);
 }
 
 GST_END_TEST;
