@@ -4503,7 +4503,7 @@ GST_START_TEST (dash_mpdparser_inherited_segmentURL)
       "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
       "     availabilityStartTime=\"2015-03-24T0:0:0\""
       "     mediaPresentationDuration=\"P0Y0M0DT3H3M30S\">"
-      "  <Period start=\"P0Y0M0DT0H0M10S\">"
+      "  <Period>"
       "    <AdaptationSet mimeType=\"video/mp4\">"
       "      <SegmentList duration=\"100\">"
       "        <SegmentURL media=\"TestMediaAdaptation\""
@@ -4638,7 +4638,7 @@ GST_START_TEST (dash_mpdparser_segment_list)
    * We expect it to be limited to period duration.
    */
   expectedDuration = duration_to_ms (0, 0, 0, 3, 3, 20, 0);
-  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 0, 0);
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 10, 0);
 
   ret = gst_mpd_client_get_next_fragment (mpdclient, 0, &fragment);
   assert_equals_int (ret, TRUE);
@@ -4834,7 +4834,7 @@ GST_START_TEST (dash_mpdparser_segment_timeline)
 
   /* expected duration of the next fragment */
   expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 2, 0);
-  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 3, 0);
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 13, 0);
 
   ret = gst_mpd_client_get_next_fragment (mpdclient, 0, &fragment);
   assert_equals_int (ret, TRUE);
@@ -4902,7 +4902,7 @@ GST_START_TEST (dash_mpdparser_segment_timeline)
 
   /* third segment has a small gap after the second ends  (t=10) */
   expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 3, 0);
-  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 10, 0);
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 20, 0);
 
   /* check third segment */
   ret = gst_mpd_client_get_next_fragment (mpdclient, 0, &fragment);
@@ -4967,7 +4967,7 @@ GST_START_TEST (dash_mpdparser_multiple_inherited_segmentURL)
       " profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
       " availabilityStartTime=\"2015-03-24T0:0:0\""
       " mediaPresentationDuration=\"P0Y0M0DT0H0M30S\">"
-      "<Period start=\"P0Y0M0DT0H0M10S\">"
+      "<Period>"
       "  <AdaptationSet mimeType=\"video/mp4\">"
       "    <SegmentList duration=\"5\">"
       "      <SegmentURL"
@@ -5135,7 +5135,7 @@ GST_START_TEST (dash_mpdparser_multipleSegmentURL)
   fail_if (activeStream == NULL);
 
   expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 20, 0);
-  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 0, 0);
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 10, 0);
 
   /* the representation contains 2 segments. The first is partially
    * clipped, and the second entirely (and thus discarded).
