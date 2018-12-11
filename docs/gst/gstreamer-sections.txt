@@ -464,6 +464,7 @@ gst_caps_get_size
 gst_caps_get_structure
 gst_caps_get_features
 gst_caps_set_features
+gst_caps_set_features_simple
 gst_caps_set_value
 gst_caps_set_simple
 gst_caps_set_simple_valist

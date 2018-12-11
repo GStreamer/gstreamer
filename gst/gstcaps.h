@@ -470,6 +470,10 @@ void              gst_caps_set_features            (GstCaps *caps,
                                                     guint          index,
                                                     GstCapsFeatures * features);
 GST_API
+void              gst_caps_set_features_simple        (GstCaps *caps,
+                                                       GstCapsFeatures * features);
+
+GST_API
 GstCapsFeatures * gst_caps_get_features            (const GstCaps *caps,
                                                     guint          index);
 GST_API

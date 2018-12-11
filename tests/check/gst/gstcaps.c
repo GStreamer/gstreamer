@@ -1244,6 +1244,21 @@ GST_START_TEST (test_features)
   gst_caps_set_features (c1, 0, f2);
 
   gst_caps_unref (c1);
+
+  /* gst_caps_set_features_simple() */
+  c1 = gst_caps_from_string
+      ("video/x-raw, format=NV12; video/x-raw, format=NV16");
+  fail_unless_equals_int (gst_caps_get_size (c1), 2);
+
+  f1 = gst_caps_features_new ("memory:EGLImage", NULL);
+  gst_caps_set_features_simple (c1, f1);
+
+  f2 = gst_caps_get_features (c1, 0);
+  fail_unless (gst_caps_features_is_equal (f1, f2));
+  f2 = gst_caps_get_features (c1, 1);
+  fail_unless (gst_caps_features_is_equal (f1, f2));
+
+  gst_caps_unref (c1);
 }
 
 GST_END_TEST;
