@@ -164,6 +164,10 @@ build android arm64 api28:
     reports:
       junit:
         - "validate-output/logs/*.xml"
+  # We disable the .build above, which this job usually depends upon for cerbero
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
 
 .test fedora x86_64:
   image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
