@@ -79,6 +79,7 @@ struct _GstIdentity {
   gboolean       blocked;
   GstClockTimeDiff  ts_offset;
   gboolean       drop_allocation;
+  gint           eos_after;
 };
 
 struct _GstIdentityClass {

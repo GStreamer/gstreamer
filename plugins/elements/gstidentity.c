@@ -75,6 +75,7 @@ enum
 #define DEFAULT_SIGNAL_HANDOFFS           TRUE
 #define DEFAULT_TS_OFFSET               0
 #define DEFAULT_DROP_ALLOCATION         FALSE
+#define DEFAULT_EOS_AFTER               -1
 
 enum
 {
@@ -93,7 +94,8 @@ enum
   PROP_CHECK_IMPERFECT_TIMESTAMP,
   PROP_CHECK_IMPERFECT_OFFSET,
   PROP_SIGNAL_HANDOFFS,
-  PROP_DROP_ALLOCATION
+  PROP_DROP_ALLOCATION,
+  PROP_EOS_AFTER
 };
 
 
@@ -238,6 +240,18 @@ gst_identity_class_init (GstIdentityClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstIdentity:eos-after
+   *
+   * EOS after N buffers.
+   *
+   * Since: 1.16
+   **/
+  g_object_class_install_property (gobject_class, PROP_EOS_AFTER,
+      g_param_spec_int ("eos-after", "EOS After", "EOS after N buffers",
+          G_MININT, G_MAXINT, DEFAULT_ERROR_AFTER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstIdentity::handoff:
    * @identity: the identity instance
    * @buffer: the buffer that just has been received
@@ -291,6 +305,7 @@ gst_identity_init (GstIdentity * identity)
   identity->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
   identity->ts_offset = DEFAULT_TS_OFFSET;
   g_cond_init (&identity->blocked_cond);
+  identity->eos_after = DEFAULT_EOS_AFTER;
 
   gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM_CAST (identity), TRUE);
 }
@@ -630,6 +645,12 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
       goto error_after;
   }
 
+  if (identity->eos_after >= 0) {
+    identity->eos_after--;
+    if (identity->eos_after == 0)
+      goto eos_after;
+  }
+
   if (identity->drop_probability > 0.0) {
     if ((gfloat) (1.0 * rand () / (RAND_MAX)) < identity->drop_probability)
       goto dropped;
@@ -698,6 +719,11 @@ error_after:
     GST_ELEMENT_ERROR (identity, CORE, FAILED,
         (_("Failed after iterations as requested.")), (NULL));
     return GST_FLOW_ERROR;
+  }
+eos_after:
+  {
+    GST_DEBUG_OBJECT (identity, "EOS after iterations as requested.");
+    return GST_FLOW_EOS;
   }
 dropped:
   {
@@ -769,6 +795,9 @@ gst_identity_set_property (GObject * object, guint prop_id,
     case PROP_DROP_ALLOCATION:
       identity->drop_allocation = g_value_get_boolean (value);
       break;
+    case PROP_EOS_AFTER:
+      identity->eos_after = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -834,6 +863,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_DROP_ALLOCATION:
       g_value_set_boolean (value, identity->drop_allocation);
+      break;
+    case PROP_EOS_AFTER:
+      g_value_set_int (value, identity->eos_after);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
