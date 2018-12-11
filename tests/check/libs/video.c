@@ -1309,6 +1309,25 @@ GST_START_TEST (test_interlace_mode)
       GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST);
 
   gst_caps_unref (caps);
+
+  /* gst_video_info_from_caps() fails if an alternate stream doesn't contain
+   * the caps feature. */
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, format=NV12, width=320, height=240, interlace-mode=alternate");
+  fail_unless (caps);
+
+  fail_if (gst_video_info_from_caps (&vinfo, caps));
+  gst_caps_unref (caps);
+
+  /* ... but it's ok for encoded video */
+  caps =
+      gst_caps_from_string
+      ("video/x-h265, width=320, height=240, interlace-mode=alternate");
+  fail_unless (caps);
+
+  fail_unless (gst_video_info_from_caps (&vinfo, caps));
+  gst_caps_unref (caps);
 }
 
 GST_END_TEST;

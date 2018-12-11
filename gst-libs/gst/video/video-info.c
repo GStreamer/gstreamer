@@ -455,6 +455,17 @@ gst_video_info_from_caps (GstVideoInfo * info, const GstCaps * caps)
   else
     info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
+  /* Interlaced feature is mandatory for raw alternate streams */
+  if (info->interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE &&
+      format != GST_VIDEO_FORMAT_ENCODED) {
+    GstCapsFeatures *f;
+
+    f = gst_caps_get_features (caps, 0);
+    if (!f
+        || !gst_caps_features_contains (f, GST_CAPS_FEATURE_FORMAT_INTERLACED))
+      goto alternate_no_feature;
+  }
+
   if ((info->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED ||
           info->interlace_mode == GST_VIDEO_INTERLACE_MODE_ALTERNATE) &&
       (s = gst_structure_get_string (structure, "field-order"))) {
@@ -539,6 +550,12 @@ no_width:
 no_height:
   {
     GST_ERROR ("no height property given");
+    return FALSE;
+  }
+alternate_no_feature:
+  {
+    GST_ERROR
+        ("caps has 'interlace-mode=alternate' but doesn't have the Interlaced feature");
     return FALSE;
   }
 }
