@@ -169,14 +169,14 @@ msdk_open_session (mfxIMPL impl)
     goto failed;
   }
 
-  MFXQueryIMPL (session, &implementation);
+  status = MFXQueryIMPL (session, &implementation);
   if (status != MFX_ERR_NONE) {
     GST_ERROR ("Query implementation failed (%s)",
         msdk_status_to_string (status));
     goto failed;
   }
 
-  MFXQueryVersion (session, &version);
+  status = MFXQueryVersion (session, &version);
   if (status != MFX_ERR_NONE) {
     GST_ERROR ("Query version failed (%s)", msdk_status_to_string (status));
     goto failed;
