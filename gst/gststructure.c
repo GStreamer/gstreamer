@@ -631,6 +631,7 @@ gst_structure_set_valist_internal (GstStructure * structure,
     G_VALUE_COLLECT_INIT (&field.value, type, varargs, 0, &err);
     if (G_UNLIKELY (err)) {
       g_critical ("%s", err);
+      g_free (err);
       return;
     }
     gst_structure_set_field (structure, &field);
@@ -697,6 +698,7 @@ gst_structure_id_set_valist_internal (GstStructure * structure,
     G_VALUE_COLLECT_INIT (&field.value, type, varargs, 0, &err);
     if (G_UNLIKELY (err)) {
       g_critical ("%s", err);
+      g_free (err);
       return;
     }
     gst_structure_set_field (structure, &field);
