@@ -283,12 +283,14 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
   status = MFXCloneSession (parent_priv->session, &priv->session);
   if (status != MFX_ERR_NONE) {
     GST_ERROR ("Failed to clone mfx session");
+    g_object_unref (obj);
     return NULL;
   }
 
   status = MFXJoinSession (parent_priv->session, priv->session);
   if (status != MFX_ERR_NONE) {
     GST_ERROR ("Failed to join mfx session");
+    g_object_unref (obj);
     return NULL;
   }
 
