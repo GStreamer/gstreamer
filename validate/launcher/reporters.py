@@ -208,11 +208,10 @@ class XunitReporter(Reporter):
         xml_file = codecs.open(self.tmp_xml_file.name, 'a',
                                self.encoding, 'replace')
         xml_file.write(self._forceUnicode(
-            '<testcase classname=%(cls)s name=%(name)s time="%(taken).3f">'
+            '<testcase name=%(name)s time="%(taken).3f">'
             '<failure type=%(errtype)s message=%(message)s>%(stacktrace)s'
             '</failure>%(systemout)s</testcase>' %
-            {'cls': self._quoteattr(test.get_classname()),
-             'name': self._quoteattr(test.get_name()),
+            {'name': self._quoteattr(test.get_classname() + '.' + test.get_name()),
              'taken': test.time_taken,
              'stacktrace': stack_trace,
              'errtype': self._quoteattr(test.result),
@@ -229,10 +228,9 @@ class XunitReporter(Reporter):
         xml_file = codecs.open(self.tmp_xml_file.name, 'a',
                                self.encoding, 'replace')
         xml_file.write(self._forceUnicode(
-            '<testcase classname=%(cls)s name=%(name)s '
+            '<testcase name=%(name)s '
             'time="%(taken).3f">%(systemout)s</testcase>' %
-            {'cls': self._quoteattr(test.get_classname()),
-             'name': self._quoteattr(test.get_name()),
+            {'name': self._quoteattr(test.get_classname() + '.' + test.get_name()),
              'taken': test.time_taken,
              'systemout': self._get_captured(test),
              }))
