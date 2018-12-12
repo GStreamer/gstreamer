@@ -699,8 +699,12 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     if (status == MFX_ERR_MORE_DATA)
       goto error_more_data;
 
+    /* Wait for vpp operation to complete, the magic number 300000 below
+     * is used in MSDK samples
+     * #define MSDK_VPP_WAIT_INTERVAL 300000
+     */
     if (sync_point)
-      MFXVideoCORE_SyncOperation (session, sync_point, 10000);
+      MFXVideoCORE_SyncOperation (session, sync_point, 300000);
 
     /* More than one output buffers are generated */
     if (status == MFX_ERR_MORE_SURFACE) {
