@@ -1,7 +1,6 @@
-
 /* GStreamer
  *
- * Copyright (C) 2015 Alexandre Moreno <alexmorenocano@gmail.com>
+ * Copyright (C) 2018 Matthew Waters <matthew@cenricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,23 +18,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "player.h"
-#include "quickrenderer.h"
+#include <QQmlExtensionPlugin>
 
-Player::Player(QObject *parent)
-    : Player(parent, new QuickRenderer)
+class QGstPlayerPlayerExtension : public QQmlExtensionPlugin
 {
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
-}
-
-Player::Player(QObject *parent, QuickRenderer *renderer)
-    : QGstPlayer::Player(parent, renderer)
-    , renderer_(renderer)
-{
-    renderer_->setParent(this);
-}
-
-void Player::setVideoOutput(QQuickItem *output)
-{
-    renderer_->setVideoItem(output);
-}
+public:
+    void registerTypes(const char *uri) override;
+};

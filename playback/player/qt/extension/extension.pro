@@ -1,20 +1,25 @@
-TEMPLATE = app
-
-QT += qml quick widgets
-
+TEMPLATE = lib
+CONFIG += qt plugin
+QT += qml quick
 CONFIG += c++11
-
 DEFINES += GST_USE_UNSTABLE_API
-
-RESOURCES += qml.qrc
+TARGET = qmlplayerextension
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
-QML_IMPORT_PATH =
+# QML_IMPORT_PATH =
 
-# Default rules for deployment.
-include(deployment.pri)
+HEADERS += qplayerextension.h \
+    qgstplayer.h \
+    player.h \
+    quickrenderer.h \
+    imagesample.h
 
-# not tested (yet)
+SOURCES += qplayerextension.cpp \
+    qgstplayer.cpp \
+    player.cpp \
+    quickrenderer.cpp \
+    imagesample.cpp
+
 unix:!macx {
 QT_CONFIG -= no-pkg-config
 CONFIG += link_pkgconfig
@@ -32,9 +37,3 @@ macx {
         -framework AppKit \
         -F/Library/Frameworks -framework GStreamer
 }
-
-HEADERS +=
-
-SOURCES += main.cpp
-
-DISTFILES +=

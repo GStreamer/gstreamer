@@ -20,12 +20,12 @@
 
 #include <QApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlProperty>
+#include <QQuickItem>
 #include <QCommandLineParser>
 #include <QStringList>
 #include <QUrl>
-
-#include "player.h"
-#include "imagesample.h"
+#include <gst/gst.h>
 
 int main(int argc, char *argv[])
 {
@@ -48,9 +48,6 @@ int main(int argc, char *argv[])
         media_files << QUrl::fromUserInput(file);
     }
 
-    qmlRegisterType<Player>("Player", 1, 0, "Player");
-    qmlRegisterType<ImageSample>("ImageSample", 1, 0, "ImageSample");
-
     /* the plugin must be loaded before loading the qml file to register the
      * GstGLVideoItem qml item
      * FIXME Add a QQmlExtensionPlugin into qmlglsink to register GstGLVideoItem
@@ -65,13 +62,17 @@ int main(int argc, char *argv[])
 
     QObject *rootObject = engine.rootObjects().first();
 
-    Player *player = rootObject->findChild<Player*>("player");
+    QObject *player = rootObject->findChild<QObject*>("player");
+    QObject *videoItem = rootObject->findChild<QObject*>("videoItem");
+    QVariant v;
+    v.setValue<QObject*>(videoItem);
+    QQmlProperty(player, "videoOutput").write(v);
 
-    QQuickItem *videoItem = rootObject->findChild<QQuickItem*>("videoItem");
-    player->setVideoOutput(videoItem);
-
-    if (!media_files.isEmpty())
-        player->setPlaylist(media_files);
+    if (!media_files.isEmpty()) {
+        QVariant v;
+        v.setValue<QList<QUrl>>(media_files);
+        QQmlProperty(player, "playlist").write(QVariant (v));
+    }
 
     result = app.exec();
 

@@ -1,3 +1,4 @@
+
 /* GStreamer
  *
  * Copyright (C) 2015 Alexandre Moreno <alexmorenocano@gmail.com>
@@ -18,27 +19,25 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef PLAYER_H
-#define PLAYER_H
+#include "player.h"
+#include "quickrenderer.h"
 
-#include <QObject>
-#include <QQuickItem>
-#include "qgstplayer.h"
-
-class QuickRenderer;
-
-class Player : public QGstPlayer::Player
+Player::Player(QObject *parent)
+    : Player(parent, new QuickRenderer)
 {
-    Q_OBJECT
-public:
-    Player(QObject *parent = 0);
-    void setVideoOutput(QQuickItem *output);
 
-private:
-    Player(QObject *parent, QuickRenderer *renderer);
-    QuickRenderer *renderer_;
-};
+}
 
-Q_DECLARE_METATYPE(Player*)
+Player::Player(QObject *parent, QuickRenderer *renderer)
+    : QGstPlayer::Player(parent, renderer)
+    , renderer_(renderer)
+{
+    renderer_->setParent(this);
+}
 
-#endif // PLAYER_H
+void Player::setVideoOutput(QVariant output)
+{
+    QQuickItem *item = qvariant_cast<QQuickItem*>(output);
+
+    renderer_->setVideoItem(item);
+}

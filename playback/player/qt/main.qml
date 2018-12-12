@@ -23,9 +23,8 @@ import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.3
 import QtQuick.Dialogs 1.2
 import QtQuick.Window 2.1
-import Player 1.0
+import extension 1.0
 import org.freedesktop.gstreamer.GLVideoItem 1.0
-import ImageSample 1.0
 
 import "fontawesome.js" as FontAwesome
 
