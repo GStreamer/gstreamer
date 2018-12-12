@@ -26,6 +26,7 @@
 #include <gst/gst.h>
 
 #include "gstcccombiner.h"
+#include "gstccconverter.h"
 #include "gstccextractor.h"
 #include "gstline21dec.h"
 #include "gstceaccoverlay.h"
@@ -37,6 +38,9 @@ closedcaption_init (GstPlugin * plugin)
 
   ret = gst_element_register (plugin, "cccombiner", GST_RANK_NONE,
       GST_TYPE_CCCOMBINER);
+
+  ret &= gst_element_register (plugin, "ccconverter", GST_RANK_NONE,
+      GST_TYPE_CCCONVERTER);
 
   ret &= gst_element_register (plugin, "ccextractor", GST_RANK_NONE,
       GST_TYPE_CCEXTRACTOR);
