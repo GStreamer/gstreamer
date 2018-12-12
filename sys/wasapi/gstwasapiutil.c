@@ -695,7 +695,7 @@ static guint64
 gst_wasapi_util_waveformatex_to_channel_mask (WAVEFORMATEXTENSIBLE * format,
     GstAudioChannelPosition ** out_position)
 {
-  int ii;
+  int ii, ch;
   guint64 mask = 0;
   WORD nChannels = format->Format.nChannels;
   DWORD dwChannelMask = format->dwChannelMask;
@@ -719,13 +719,18 @@ gst_wasapi_util_waveformatex_to_channel_mask (WAVEFORMATEXTENSIBLE * format,
 
   /* Map WASAPI's channel mask to Gstreamer's channel mask and positions.
    * If the no. of bits in the mask > nChannels, we will ignore the extra. */
-  for (ii = 0; ii < nChannels; ii++) {
+  for (ii = 0, ch = 0; ii < G_N_ELEMENTS (wasapi_to_gst_pos) && ch < nChannels;
+      ii++) {
     if (!(dwChannelMask & wasapi_to_gst_pos[ii].wasapi_pos))
-      /* Non-positional or unknown position, warn? */
+      /* no match, try next */
       continue;
     mask |= G_GUINT64_CONSTANT (1) << wasapi_to_gst_pos[ii].gst_pos;
-    pos[ii] = wasapi_to_gst_pos[ii].gst_pos;
+    pos[ch++] = wasapi_to_gst_pos[ii].gst_pos;
   }
+
+  /* XXX: Warn if some channel masks couldn't be mapped? */
+
+  GST_DEBUG ("Converted WASAPI mask 0x%x -> 0x%x", dwChannelMask, mask);
 
 out:
   if (out_position)
@@ -773,8 +778,12 @@ gst_wasapi_util_parse_waveformatex (WAVEFORMATEXTENSIBLE * format,
     gst_structure_set (s,
         "format", G_TYPE_STRING, afmt,
         "channels", G_TYPE_INT, format->Format.nChannels,
-        "rate", G_TYPE_INT, format->Format.nSamplesPerSec,
-        "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
+        "rate", G_TYPE_INT, format->Format.nSamplesPerSec, NULL);
+
+    if (channel_mask) {
+      gst_structure_set (s,
+          "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
+    }
   }
 
   return TRUE;
