@@ -244,6 +244,9 @@ _gl_tex_create (GstGLMemory * gl_mem, GError ** error)
   internal_format = gl_mem->tex_format;
   gst_gl_format_type_from_sized_gl_format (internal_format, &tex_format,
       &tex_type);
+  internal_format =
+      gst_gl_sized_gl_format_from_gl_format_type (context, tex_format,
+      tex_type);
 
   if (!gl_mem->texture_wrapped) {
     gl_mem->tex_id =
@@ -769,6 +772,9 @@ _gl_tex_copy_thread (GstGLContext * context, gpointer data)
     internal_format = copy_params->src->tex_format;
     gst_gl_format_type_from_sized_gl_format (internal_format, &out_gl_format,
         &out_gl_type);
+    internal_format =
+        gst_gl_sized_gl_format_from_gl_format_type (context, out_gl_format,
+        out_gl_type);
 
     copy_params->tex_id =
         _new_texture (context, out_tex_target,
