@@ -197,13 +197,13 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
 
   switch (n_plane_components) {
     case 4:
-      return GST_GL_RGBA8;
+      return GST_GL_RGBA;
     case 3:
-      return GST_GL_RGB8;
+      return GST_GL_RGB;
     case 2:
-      return texture_rg ? GST_GL_RG8 : GST_GL_LUMINANCE_ALPHA;
+      return texture_rg ? GST_GL_RG : GST_GL_LUMINANCE_ALPHA;
     case 1:
-      return texture_rg ? GST_GL_R8 : GST_GL_LUMINANCE;
+      return texture_rg ? GST_GL_RED : GST_GL_LUMINANCE;
     default:
       break;
   }
