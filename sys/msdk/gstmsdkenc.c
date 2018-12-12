@@ -661,9 +661,12 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
     return GST_FLOW_ERROR;
   }
 
-  /* Wait for encoding operation to complete */
+  /* Wait for encoding operation to complete, the magic number 300000 below
+   * is used in MSDK samples
+   * #define MSDK_ENC_WAIT_INTERVAL 300000
+   */
   MFXVideoCORE_SyncOperation (gst_msdk_context_get_session (thiz->context),
-      task->sync_point, 10000);
+      task->sync_point, 300000);
   if (!discard && task->output_bitstream.DataLength) {
     GstBuffer *out_buf = NULL;
     guint8 *data =
