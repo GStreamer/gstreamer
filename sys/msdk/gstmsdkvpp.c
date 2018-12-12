@@ -754,7 +754,7 @@ gst_msdkvpp_close (GstMsdkVPP * thiz)
   GST_DEBUG_OBJECT (thiz, "Closing VPP 0x%p", thiz->context);
   status = MFXVideoVPP_Close (gst_msdk_context_get_session (thiz->context));
   if (status != MFX_ERR_NONE && status != MFX_ERR_NOT_INITIALIZED) {
-    GST_WARNING_OBJECT (thiz, "Encoder close failed (%s)",
+    GST_WARNING_OBJECT (thiz, "VPP close failed (%s)",
         msdk_status_to_string (status));
   }
 
