@@ -518,12 +518,12 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf)
   }
 
   /* NTP timestamp */
-  if (GST_BUFFER_DTS_IS_VALID (buf)) {
-    time = gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME,
-        GST_BUFFER_DTS (buf));
-  } else if (GST_BUFFER_PTS_IS_VALID (buf)) {
+  if (GST_BUFFER_PTS_IS_VALID (buf)) {
     time = gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME,
         GST_BUFFER_PTS (buf));
+  } else if (GST_BUFFER_DTS_IS_VALID (buf)) {
+    time = gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME,
+        GST_BUFFER_DTS (buf));
   } else {
     GST_INFO_OBJECT (self,
         "Buffer doesn't contain any valid DTS or PTS timestamp");
