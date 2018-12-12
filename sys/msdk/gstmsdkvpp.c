@@ -144,10 +144,17 @@ ensure_context (GstBaseTransform * trans)
         thiz->context);
 
     if (gst_msdk_context_get_job_type (thiz->context) & GST_MSDK_JOB_VPP) {
-      GstMsdkContext *parent_context;
+      GstMsdkContext *parent_context, *msdk_context;
 
       parent_context = thiz->context;
-      thiz->context = gst_msdk_context_new_with_parent (parent_context);
+      msdk_context = gst_msdk_context_new_with_parent (parent_context);
+
+      if (!msdk_context) {
+        GST_ERROR_OBJECT (thiz, "Context creation failed");
+        return FALSE;
+      }
+
+      thiz->context = msdk_context;
       gst_object_unref (parent_context);
 
       GST_INFO_OBJECT (thiz,
