@@ -443,11 +443,12 @@ gst_udp_client_new (GstMultiUDPSink * sink, const gchar * host, gint port)
 {
   GstUDPClient *client;
   GInetAddress *addr;
+  GSocketAddress *sockaddr;
   GResolver *resolver;
   GError *err = NULL;
 
-  addr = g_inet_address_new_from_string (host);
-  if (!addr) {
+  sockaddr = g_inet_socket_address_new_from_string (host, port);
+  if (!sockaddr) {
     GList *results;
 
     resolver = g_resolver_get_default ();
@@ -456,10 +457,13 @@ gst_udp_client_new (GstMultiUDPSink * sink, const gchar * host, gint port)
     if (!results)
       goto name_resolve;
     addr = G_INET_ADDRESS (g_object_ref (results->data));
+    sockaddr = g_inet_socket_address_new (addr, port);
 
     g_resolver_free_addresses (results);
     g_object_unref (resolver);
+    g_object_unref (addr);
   }
+  addr = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (sockaddr));
 #ifndef GST_DISABLE_GST_DEBUG
   {
     gchar *ip = g_inet_address_to_string (addr);
@@ -474,8 +478,7 @@ gst_udp_client_new (GstMultiUDPSink * sink, const gchar * host, gint port)
   client->add_count = 0;
   client->host = g_strdup (host);
   client->port = port;
-  client->addr = g_inet_socket_address_new (addr, port);
-  g_object_unref (addr);
+  client->addr = sockaddr;
 
   return client;
 
