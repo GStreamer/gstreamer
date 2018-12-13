@@ -23,27 +23,5 @@ set -eu
 
 arch=$1
 api=$2
-toolchain_path=/opt/android-toolchain-$arch-$api
-
-# Create standalone toolchains
+toolchain_path=/opt/android-$arch-api$api
 /opt/android-ndk/build/tools/make_standalone_toolchain.py --arch $arch --api $api --install-dir $toolchain_path
-
-# Create a cross file that can be passed to meson
-cat > /opt/android_${arch}_${api}.txt <<- EOM
-[host_machine]
-system = 'android'
-cpu_family = 'aarch64'
-cpu = '${arch}'
-endian = 'little'
-
-[properties]
-c_args = ['--sysroot', '${toolchain_path}/sysroot']
-cpp_args = ['--sysroot', '${toolchain_path}/sysroot']
-
-[binaries]
-c = '${toolchain_path}/bin/aarch64-linux-android-clang'
-cpp = '${toolchain_path}/bin/aarch64-linux-android-clang++'
-ar = '${toolchain_path}/bin/aarch64-linux-android-ar'
-strip = '${toolchain_path}/bin/aarch64-linux-android-strip'
-pkgconfig = 'false'
-EOM

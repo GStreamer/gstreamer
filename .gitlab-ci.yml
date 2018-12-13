@@ -131,8 +131,8 @@ build android 28 local:
     MESON_ARGS: >
       -Dbad=enabled
       -Dbad:androidmedia=enabled
-      --cross-file /opt/android_arm64_28.txt
-  image: "${CI_REGISTRY_IMAGE}/amd64/android_28:latest"
+      --cross-file cross-files/android_arm64_api28.txt
+  image: "${CI_REGISTRY_IMAGE}/amd64/ubuntu:latest"
   except:
     refs:
       - "master@gstreamer/gst-ci"
