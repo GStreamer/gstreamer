@@ -223,6 +223,12 @@ else
 check_msdk=
 endif
 
+if USE_NVENC
+check_nvenc=elements/nvenc
+else
+check_nvenc=
+endif
+
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
 	elements/mplex    \
@@ -306,6 +312,7 @@ check_PROGRAMS = \
 	$(check_player) \
 	$(check_webrtc) \
 	$(check_msdk) \
+	$(check_nvenc) \
 	$(EXPERIMENTAL_CHECKS)
 
 noinst_HEADERS = elements/mxfdemux.h libs/isoff.h
