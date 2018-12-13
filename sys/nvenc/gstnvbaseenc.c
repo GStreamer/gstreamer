@@ -224,7 +224,8 @@ static void gst_nv_base_enc_get_property (GObject * object, guint prop_id,
 static void gst_nv_base_enc_finalize (GObject * obj);
 static GstCaps *gst_nv_base_enc_getcaps (GstVideoEncoder * enc,
     GstCaps * filter);
-static gboolean gst_nv_base_enc_stop_bitstream_thread (GstNvBaseEnc * nvenc);
+static gboolean gst_nv_base_enc_stop_bitstream_thread (GstNvBaseEnc * nvenc,
+    gboolean force);
 
 static void
 gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
@@ -522,7 +523,7 @@ gst_nv_base_enc_stop (GstVideoEncoder * enc)
 {
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
 
-  gst_nv_base_enc_stop_bitstream_thread (nvenc);
+  gst_nv_base_enc_stop_bitstream_thread (nvenc, TRUE);
 
   gst_nv_base_enc_free_buffers (nvenc);
 
@@ -897,24 +898,27 @@ gst_nv_base_enc_start_bitstream_thread (GstNvBaseEnc * nvenc)
 }
 
 static gboolean
-gst_nv_base_enc_stop_bitstream_thread (GstNvBaseEnc * nvenc)
+gst_nv_base_enc_stop_bitstream_thread (GstNvBaseEnc * nvenc, gboolean force)
 {
   gpointer out_buf;
 
   if (nvenc->bitstream_thread == NULL)
     return TRUE;
 
-  /* FIXME */
-  GST_FIXME_OBJECT (nvenc, "stop bitstream reading thread properly");
-  g_async_queue_lock (nvenc->bitstream_queue);
-  g_async_queue_lock (nvenc->bitstream_pool);
-  while ((out_buf = g_async_queue_try_pop_unlocked (nvenc->bitstream_queue))) {
-    GST_INFO_OBJECT (nvenc, "stole bitstream buffer %p from queue", out_buf);
-    g_async_queue_push_unlocked (nvenc->bitstream_pool, out_buf);
+  if (force) {
+    g_async_queue_lock (nvenc->bitstream_queue);
+    g_async_queue_lock (nvenc->bitstream_pool);
+    while ((out_buf = g_async_queue_try_pop_unlocked (nvenc->bitstream_queue))) {
+      GST_INFO_OBJECT (nvenc, "stole bitstream buffer %p from queue", out_buf);
+      g_async_queue_push_unlocked (nvenc->bitstream_pool, out_buf);
+    }
+    g_async_queue_push_unlocked (nvenc->bitstream_queue, SHUTDOWN_COOKIE);
+    g_async_queue_unlock (nvenc->bitstream_pool);
+    g_async_queue_unlock (nvenc->bitstream_queue);
+  } else {
+    /* wait for encoder to drain the remaining buffers */
+    g_async_queue_push (nvenc->bitstream_queue, SHUTDOWN_COOKIE);
   }
-  g_async_queue_push_unlocked (nvenc->bitstream_queue, SHUTDOWN_COOKIE);
-  g_async_queue_unlock (nvenc->bitstream_pool);
-  g_async_queue_unlock (nvenc->bitstream_queue);
 
   /* temporary unlock, so other thread can find and push frame */
   GST_VIDEO_ENCODER_STREAM_UNLOCK (nvenc);
@@ -1905,12 +1909,10 @@ gst_nv_base_enc_finish (GstVideoEncoder * enc)
 {
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
 
-  GST_FIXME_OBJECT (enc, "implement finish");
+  if (!gst_nv_base_enc_drain_encoder (nvenc))
+    return GST_FLOW_ERROR;
 
-  gst_nv_base_enc_drain_encoder (nvenc);
-
-  /* wait for encoder to output the remaining buffers */
-  gst_nv_base_enc_stop_bitstream_thread (nvenc);
+  gst_nv_base_enc_stop_bitstream_thread (nvenc, FALSE);
 
   return GST_FLOW_OK;
 }
