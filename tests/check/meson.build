@@ -51,6 +51,7 @@ if host_machine.system() != 'windows'
     [['elements/asfmux.c'], not cdata.has('HAVE_UNISTD_H')],
     [['elements/assrender.c'], not ass_dep.found(), [ass_dep]],
     [['elements/camerabin.c'], not cdata.has('HAVE_UNISTD_H')],
+    [['elements/ccconverter.c']],
     [['elements/cccombiner.c']],
     [['elements/ccextractor.c']],
     [['elements/compositor.c'], not cdata.has('HAVE_UNISTD_H')],

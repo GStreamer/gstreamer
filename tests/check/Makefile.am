@@ -41,7 +41,7 @@ check_assrender =
 endif
 
 if USE_PANGO
-check_closedcaption = elements/cccombiner elements/ccextractor
+check_closedcaption = elements/ccconverter elements/cccombiner elements/ccextractor
 else
 check_closedcaption =
 endif
@@ -460,6 +460,9 @@ elements_camerabin_LDADD = \
         $(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_API_VERSION) \
         $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
 elements_camerabin_SOURCES = elements/camerabin.c
+
+elements_ccconverter_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_ccconverter_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) $(LDADD)
 
 elements_cccombiner_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_cccombiner_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) $(LDADD)
