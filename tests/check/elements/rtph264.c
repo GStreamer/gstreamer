@@ -21,6 +21,7 @@
 
 #include <gst/check/check.h>
 #include <gst/app/app.h>
+#include <gst/rtp/gstrtpbuffer.h>
 
 #define ALLOCATOR_CUSTOM_SYSMEM "CustomSysMem"
 
@@ -319,11 +320,44 @@ static guint8 h264_pps[] = {
   0x00, 0x00, 0x00, 0x01, 0x68, 0xce, 0x3c, 0x80
 };
 
+/* IDR Slice 1 */
+static guint8 h264_idr_slice_1[] = {
+  0x00, 0x00, 0x00, 0x01, 0x65, 0xb8, 0x00, 0x04,
+  0x00, 0x00, 0x11, 0xff, 0xff, 0xf8, 0x22, 0x8a,
+  0x1f, 0x1c, 0x00, 0x04, 0x0a, 0x63, 0x80, 0x00,
+  0x81, 0xec, 0x9a, 0x93, 0x93, 0x93, 0x93, 0x93,
+  0x93, 0xad, 0x57, 0x5d, 0x75, 0xd7, 0x5d, 0x75,
+  0xd7, 0x5d, 0x75, 0xd7, 0x5d, 0x75, 0xd7, 0x5d,
+  0x75, 0xd7, 0x5d, 0x78
+};
+
+/* IDR Slice 2 */
+static guint8 h264_idr_slice_2[] = {
+  0x00, 0x00, 0x00, 0x01, 0x65, 0x04, 0x2e, 0x00,
+  0x01, 0x00, 0x00, 0x04, 0x7f, 0xff, 0xfe, 0x08,
+  0xa2, 0x87, 0xc7, 0x00, 0x01, 0x02, 0x98, 0xe0,
+  0x00, 0x20, 0x7b, 0x26, 0xa4, 0xe4, 0xe4, 0xe4,
+  0xe4, 0xe4, 0xeb, 0x55, 0xd7, 0x5d, 0x75, 0xd7,
+  0x5d, 0x75, 0xd7, 0x5d, 0x75, 0xd7, 0x5d, 0x75,
+  0xd7, 0x5d, 0x75, 0xd7, 0x5e
+};
+
+static GstBuffer *
+wrap_static_buffer_with_pts (guint8 * buf, gsize size, GstClockTime pts)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      buf, size, 0, size, NULL, NULL);
+  GST_BUFFER_PTS (buffer) = pts;
+
+  return buffer;
+}
+
 static GstBuffer *
 wrap_static_buffer (guint8 * buf, gsize size)
 {
-  return gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-      buf, size, 0, size, NULL, NULL);
+  return wrap_static_buffer_with_pts (buf, size, GST_CLOCK_TIME_NONE);
 }
 
 /* The RFC makes special use of NAL type 24 to 27, this test makes sure that
@@ -376,6 +410,68 @@ GST_START_TEST (test_rtph264pay_reserved_nals)
 GST_END_TEST;
 
 
+GST_START_TEST (test_rtph264pay_two_slices_timestamp)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h264,alignment=nal,stream-format=byte-stream");
+
+  ret = gst_harness_push (h, wrap_static_buffer_with_pts (h264_idr_slice_1,
+          sizeof (h264_idr_slice_1), 0));
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  ret = gst_harness_push (h, wrap_static_buffer_with_pts (h264_idr_slice_2,
+          sizeof (h264_idr_slice_2), 0));
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  ret = gst_harness_push (h, wrap_static_buffer_with_pts (h264_idr_slice_1,
+          sizeof (h264_idr_slice_1), GST_SECOND));
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  ret = gst_harness_push (h, wrap_static_buffer_with_pts (h264_idr_slice_2,
+          sizeof (h264_idr_slice_2), GST_SECOND));
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 4);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), GST_SECOND);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123 + 90000);
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), GST_SECOND);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123 + 90000);
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtph264_suite (void)
 {
@@ -389,6 +485,7 @@ rtph264_suite (void)
   tc_chain = tcase_create ("rtph264pay");
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_rtph264pay_reserved_nals);
+  tcase_add_test (tc_chain, test_rtph264pay_two_slices_timestamp);
 
   return s;
 }
