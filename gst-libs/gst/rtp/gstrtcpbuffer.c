@@ -371,6 +371,31 @@ gst_rtcp_buffer_get_packet_count (GstRTCPBuffer * rtcp)
   return count;
 }
 
+static gint
+rtcp_packet_min_length (GstRTCPType type)
+{
+  switch (type) {
+    case GST_RTCP_TYPE_SR:
+      return 28;
+    case GST_RTCP_TYPE_RR:
+      return 8;
+    case GST_RTCP_TYPE_SDES:
+      return 4;
+    case GST_RTCP_TYPE_BYE:
+      return 4;
+    case GST_RTCP_TYPE_APP:
+      return 12;
+    case GST_RTCP_TYPE_RTPFB:
+      return 12;
+    case GST_RTCP_TYPE_PSFB:
+      return 12;
+    case GST_RTCP_TYPE_XR:
+      return 8;
+    default:
+      return -1;
+  }
+}
+
 /**
  * read_packet_header:
  * @packet: a packet
@@ -385,6 +410,8 @@ read_packet_header (GstRTCPPacket * packet)
   guint8 *data;
   gsize maxsize;
   guint offset;
+  gint minsize;
+  guint minlength;
 
   g_return_val_if_fail (packet != NULL, FALSE);
 
@@ -413,6 +440,15 @@ read_packet_header (GstRTCPPacket * packet)
   /* Ensure no overread from the claimed data size. The packet length
      is expressed in multiple of 32 bits, to make things obvious. */
   if (offset + 4 + packet->length * 4 > maxsize)
+    return FALSE;
+
+  minsize = rtcp_packet_min_length (packet->type);
+  if (minsize == -1)
+    minsize = 0;
+  minlength = (minsize - 4) >> 2;
+
+  /* Validate the size */
+  if (packet->length < minlength)
     return FALSE;
 
   return TRUE;
@@ -524,34 +560,10 @@ gst_rtcp_buffer_add_packet (GstRTCPBuffer * rtcp, GstRTCPType type,
   /* packet->offset is now pointing to the next free offset in the buffer to
    * start a compount packet. Next we figure out if we have enough free space in
    * the buffer to continue. */
-  switch (type) {
-    case GST_RTCP_TYPE_SR:
-      len = 28;
-      break;
-    case GST_RTCP_TYPE_RR:
-      len = 8;
-      break;
-    case GST_RTCP_TYPE_SDES:
-      len = 4;
-      break;
-    case GST_RTCP_TYPE_BYE:
-      len = 4;
-      break;
-    case GST_RTCP_TYPE_APP:
-      len = 12;
-      break;
-    case GST_RTCP_TYPE_RTPFB:
-      len = 12;
-      break;
-    case GST_RTCP_TYPE_PSFB:
-      len = 12;
-      break;
-    case GST_RTCP_TYPE_XR:
-      len = 4;
-      break;
-    default:
-      goto unknown_type;
-  }
+  len = rtcp_packet_min_length (type);
+  if (type == -1)
+    goto unknown_type;
+
   if (packet->offset + len >= maxsize)
     goto no_space;
 
