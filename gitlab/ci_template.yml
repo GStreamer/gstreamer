@@ -108,14 +108,12 @@ build fedora x86_64:
 
 build android arm64 api28:
   extends: '.build'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/android_28:f085d34a32cb8cac95cbd420344efeaa647d08d5'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/ubuntu:aa13631e38cb4e1e4ee1c869aa523952dcd8cca7'
   variables:
     MESON_ARGS: >
       -Dbad=enabled
       -Dbad:androidmedia=enabled
-      --cross-file /android_arm64_28.txt
-  before_script:
-    - cat /android_arm64_28.txt
+      --cross-file cross-files/android_arm64_api28.txt
 
 .test:
   stage: 'test'
