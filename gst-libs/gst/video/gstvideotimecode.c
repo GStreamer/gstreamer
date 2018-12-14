@@ -327,7 +327,7 @@ gst_video_time_code_nsec_since_daily_jam (const GstVideoTimeCode * tc)
 
   g_return_val_if_fail (gst_video_time_code_is_valid (tc), -1);
 
-  if (tc->config.fps_n == 0 && tc->config.fps_d == 1) {
+  if (tc->config.fps_n == 0) {
     gchar *tc_str = gst_video_time_code_to_string (tc);
     GST_WARNING
         ("Asked to calculate nsec since daily jam of time code %s, but its framerate is unknown",
@@ -382,9 +382,8 @@ gst_video_time_code_frames_since_daily_jam (const GstVideoTimeCode * tc)
     } else if (tc->config.fps_n == 60000) {
       dropframe_multiplier = 4;
     } else {
-      GST_ERROR ("Unsupported drop frame rate %u/%u", tc->config.fps_n,
-          tc->config.fps_d);
-      return -1;
+      /* already checked by gst_video_time_code_is_valid() */
+      g_assert_not_reached ();
     }
 
     return tc->frames + (ff_nom * tc->seconds) +
@@ -443,10 +442,8 @@ gst_video_time_code_add_frames (GstVideoTimeCode * tc, gint64 frames)
     ff_nom = tc->config.fps_n / 1000;
   } else {
     ff_nom = ff;
-    if (tc->config.fps_d != 1)
-      GST_WARNING ("Unsupported frame rate %u/%u, results may be wrong",
-          tc->config.fps_n, tc->config.fps_d);
   }
+
   if (tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) {
     /* these need to be truncated to integer: side effect, code looks cleaner
      * */
@@ -459,14 +456,13 @@ gst_video_time_code_add_frames (GstVideoTimeCode * tc, gint64 frames)
      * drop the first 4 : so we use this number */
     guint dropframe_multiplier;
 
-    if (tc->config.fps_n == 30000)
+    if (tc->config.fps_n == 30000) {
       dropframe_multiplier = 2;
-    else if (tc->config.fps_n == 60000)
+    } else if (tc->config.fps_n == 60000) {
       dropframe_multiplier = 4;
-    else {
-      GST_ERROR ("Unsupported drop frame rate %u/%u", tc->config.fps_n,
-          tc->config.fps_d);
-      return;
+    } else {
+      /* already checked by gst_video_time_code_is_valid() */
+      g_assert_not_reached ();
     }
 
     framecount =
@@ -514,11 +510,14 @@ gst_video_time_code_add_frames (GstVideoTimeCode * tc, gint64 frames)
     if (frames_new > ff_nom)
       frames_new = 0;
   }
+
   h_new = h_notmod24 % 24;
 
+  /* The calculations above should always give correct results */
   g_assert (min_new < 60);
   g_assert (sec_new < 60);
   g_assert (frames_new < ff_nom);
+
   tc->hours = h_new;
   tc->minutes = min_new;
   tc->seconds = sec_new;
