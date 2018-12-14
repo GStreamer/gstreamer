@@ -743,8 +743,8 @@ class GstValidateTestManager(GstValidateBaseTestManager):
 
     def init(self):
         for command, name in [
-                (GstValidateBaseTestManager.TRANSCODING_COMMAND, "gst-validate-1.0"),
-                (GstValidateBaseTestManager.COMMAND, "gst-validate-transcoding-1.0"),
+                (GstValidateBaseTestManager.TRANSCODING_COMMAND, "gst-validate-transcoding-1.0"),
+                (GstValidateBaseTestManager.COMMAND, "gst-validate-1.0"),
                 (GstValidateBaseTestManager.MEDIA_CHECK_COMMAND, "gst-validate-media-check-1.0")]:
             if not command:
                 self.error("%s not found" % command)
