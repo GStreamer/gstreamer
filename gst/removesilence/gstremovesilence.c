@@ -24,7 +24,14 @@
  * @title: removesilence
  *
  * Removes all silence periods from an audio stream, dropping silence buffers.
- *
+ * If the "silent" property is disabled, removesilence will generate
+ * bus messages named "removesilence". 
+ * The message's structure contains one of these fields:
+ * 
+ * - #guint64 "silence_detected": the PTS for the first silent buffer after a non silence period.
+ *    
+ * - #guint64 "silence_finished": the PTS for the first non silent buffer after a silence period.
+ *   
  * ## Example launch line
  * |[
  * gst-launch-1.0 -v -m filesrc location="audiofile" ! decodebin ! removesilence remove=true ! wavenc ! filesink location=without_audio.wav
@@ -147,13 +154,13 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent",
-          "Disable/enable bus message notifications for silent detected/finished",
+          "Disable/enable bus message notifications for silence detected/finished",
           TRUE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_MINIMUM_SILENCE_BUFFERS,
       g_param_spec_uint ("minimum-silence-buffers", "Minimum silence buffers",
           "Define the minimum number of consecutive silence buffers before "
-          "removing silence, 0 means disabled",
+          "removing silence, 0 means disabled. This will not introduce latency",
           MINIMUM_SILENCE_BUFFERS_MIN, MINIMUM_SILENCE_BUFFERS_MAX,
           MINIMUM_SILENCE_BUFFERS_DEF, G_PARAM_READWRITE));
 
@@ -161,7 +168,7 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
       g_param_spec_uint64 ("minimum_silence_time",
           "Minimum silence time",
           "Define the minimum silence time in nanoseconds before removing "
-          " silence, 0 means disabled",
+          " silence, 0 means disabled. This will not introduce latency",
           MINIMUM_SILENCE_TIME_MIN, MINIMUM_SILENCE_TIME_MAX,
           MINIMUM_SILENCE_TIME_DEF, G_PARAM_READWRITE));
 
