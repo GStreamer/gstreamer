@@ -133,7 +133,6 @@ build android arm64 api28:
     # rtspserver.test_shared_tcp: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/54
     # dtls: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/811
     # mpegtsmux.test_align: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/844
-    # gstpad.test_pad_probe_block_add_remove: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/339
     # shm.test_shm_live: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/847
     # splitmux.test_splitmuxsink_async: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/531
     BLACKLIST: >
@@ -145,7 +144,6 @@ build android arm64 api28:
       -b check.gst-plugins-bad.elements_dtls.test_data_transfer
       -b check.gst-plugins-bad.elements_dtls.test_create_and_unref
       -b check.gst-rtsp-server.gst_rtspserver.test_shared_tcp
-      -b check.gstreamer.gst_gstpad.test_pad_probe_block_add_remove
       -b check.gst-plugins-bad.elements_shm.test_shm_live
       -b check.gst-plugins-good.elements_splitmux.test_splitmuxsink_async
   script:
