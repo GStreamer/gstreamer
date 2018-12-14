@@ -747,7 +747,7 @@ class GstValidateTestManager(GstValidateBaseTestManager):
                 (GstValidateBaseTestManager.COMMAND, "gst-validate-1.0"),
                 (GstValidateBaseTestManager.MEDIA_CHECK_COMMAND, "gst-validate-media-check-1.0")]:
             if not command:
-                self.error("%s not found" % command)
+                self.error("command not found: %s" % name)
                 return False
 
         return True
