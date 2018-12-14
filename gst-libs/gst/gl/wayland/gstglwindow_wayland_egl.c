@@ -248,7 +248,28 @@ destroy_surfaces (GstGLWindowWaylandEGL * window_egl)
   if (window_egl->window.native) {
     wl_egl_window_destroy (window_egl->window.native);
     window_egl->window.native = NULL;
+}
+
+static struct wl_shell_surface *
+create_wl_shell_surface (GstGLWindowWaylandEGL * window_egl,
+    GstGLDisplayWayland *display)
+{
+  struct wl_shell_surface *wl_shell_surface;
+
+  wl_shell_surface = wl_shell_get_shell_surface (display->wl_shell,
+      window_egl->window.surface);
+
+  if (window_egl->window.queue) {
+    wl_proxy_set_queue ((struct wl_proxy *) wl_shell_surface,
+        window_egl->window.queue);
   }
+
+  wl_shell_surface_add_listener (wl_shell_surface, &wl_shell_surface_listener,
+    window_egl);
+  wl_shell_surface_set_title (wl_shell_surface, "OpenGL Renderer");
+  wl_shell_surface_set_toplevel (wl_shell_surface);
+
+  return wl_shell_surface;
 }
 
 static void
@@ -290,19 +311,7 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
   } else {
   shell_window:
     if (!window_egl->window.wl_shell_surface) {
-      window_egl->window.wl_shell_surface =
-          wl_shell_get_shell_surface (display->wl_shell,
-          window_egl->window.surface);
-      if (window_egl->window.queue)
-        wl_proxy_set_queue ((struct wl_proxy *) window_egl->
-            window.wl_shell_surface, window_egl->window.queue);
-
-      wl_shell_surface_add_listener (window_egl->window.wl_shell_surface,
-          &wl_shell_surface_listener, window_egl);
-
-      wl_shell_surface_set_title (window_egl->window.wl_shell_surface,
-          "OpenGL Renderer");
-      wl_shell_surface_set_toplevel (window_egl->window.wl_shell_surface);
+      window_egl->window.wl_shell_surface = create_wl_shell_surface (display);
     }
   }
 
