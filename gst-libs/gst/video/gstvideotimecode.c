@@ -69,7 +69,8 @@ gst_video_time_code_is_valid (const GstVideoTimeCode * tc)
 
   g_return_val_if_fail (tc != NULL, FALSE);
 
-  fr = (tc->config.fps_n + (tc->config.fps_d >> 1)) / tc->config.fps_d;
+  if (tc->config.fps_d == 0)
+    return FALSE;
 
   if (tc->hours >= 24)
     return FALSE;
@@ -77,10 +78,14 @@ gst_video_time_code_is_valid (const GstVideoTimeCode * tc)
     return FALSE;
   if (tc->seconds >= 60)
     return FALSE;
-  if (tc->config.fps_d == 0)
-    return FALSE;
+
+  /* We can't have more frames than rounded up frames per second */
+  fr = (tc->config.fps_n + (tc->config.fps_d >> 1)) / tc->config.fps_d;
   if (tc->frames >= fr && (tc->config.fps_n != 0 || tc->config.fps_d != 1))
     return FALSE;
+
+  /* We either need a specific X/1001 framerate or otherwise an integer
+   * framerate */
   if (tc->config.fps_d == 1001) {
     if (tc->config.fps_n != 30000 && tc->config.fps_n != 60000 &&
         tc->config.fps_n != 24000)
@@ -88,6 +93,10 @@ gst_video_time_code_is_valid (const GstVideoTimeCode * tc)
   } else if (tc->config.fps_n % tc->config.fps_d != 0) {
     return FALSE;
   }
+
+  /* Drop-frame framerates require skipping over the first two
+   * timecodes every minutes except for every tenth minute in case
+   * of 30000/1001 and the first four timecodes for 60000/1001 */
   if ((tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) &&
       tc->minutes % 10 && tc->seconds == 0 && tc->frames < fr / 15) {
     return FALSE;
