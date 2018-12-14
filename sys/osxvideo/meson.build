@@ -5,8 +5,8 @@ if host_system != 'darwin'
   subdir_done()
 endif
 
-osxvideo_opengl_dep = dependency('OpenGL', required : get_option('osxvideo'))
-osxvideo_cocoa_dep = dependency('Cocoa', required : get_option('osxvideo'))
+osxvideo_opengl_dep = dependency('appleframeworks', modules : ['OpenGL'], required : get_option('osxvideo'))
+osxvideo_cocoa_dep = dependency('appleframeworks', modules : ['Cocoa'], required : get_option('osxvideo'))
 have_objc = add_languages('objc', required : get_option('osxvideo'))
 
 if have_objc and osxvideo_opengl_dep.found() and osxvideo_cocoa_dep.found()
