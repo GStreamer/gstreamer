@@ -115,7 +115,7 @@ gst_video_time_code_is_valid (const GstVideoTimeCode * tc)
 
 /**
  * gst_video_time_code_to_string:
- * @tc: A valid #GstVideoTimeCode to convert
+ * @tc: A #GstVideoTimeCode to convert
  *
  * Returns: the SMPTE ST 2059-1:2015 string representation of @tc. That will
  * take the form hh:mm:ss:ff. The last separator (between seconds and frames)
@@ -136,8 +136,6 @@ gst_video_time_code_to_string (const GstVideoTimeCode * tc)
   gchar *ret;
   gboolean top_dot_present;
   gchar sep;
-
-  g_return_val_if_fail (gst_video_time_code_is_valid (tc), NULL);
 
   /* Top dot is present for non-interlaced content, and for field 2 in
    * interlaced content */
