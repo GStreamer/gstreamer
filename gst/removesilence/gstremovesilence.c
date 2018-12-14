@@ -110,6 +110,9 @@ static void gst_remove_silence_set_property (GObject * object, guint prop_id,
 static void gst_remove_silence_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_remove_silence_start (GstBaseTransform * trans);
+static gboolean gst_remove_silence_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
 static GstFlowReturn gst_remove_silence_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 static void gst_remove_silence_finalize (GObject * obj);
@@ -122,9 +125,11 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseTransformClass *base_transform_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  base_transform_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->finalize = gst_remove_silence_finalize;
   gobject_class->set_property = gst_remove_silence_set_property;
@@ -183,8 +188,20 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
 
-  GST_BASE_TRANSFORM_CLASS (klass)->transform_ip =
+  base_transform_class->start = GST_DEBUG_FUNCPTR (gst_remove_silence_start);
+  base_transform_class->sink_event =
+      GST_DEBUG_FUNCPTR (gst_remove_silence_sink_event);
+  base_transform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_remove_silence_transform_ip);
+}
+
+static void
+gst_remove_silence_reset (GstRemoveSilence * filter)
+{
+  filter->ts_offset = 0;
+  filter->silence_detected = FALSE;
+  filter->consecutive_silence_buffers = 0;
+  filter->consecutive_silence_time = 0;
 }
 
 /* initialize the new element
@@ -198,18 +215,42 @@ gst_remove_silence_init (GstRemoveSilence * filter)
   filter->vad = vad_new (DEFAULT_VAD_HYSTERESIS, DEFAULT_VAD_THRESHOLD);
   filter->remove = FALSE;
   filter->squash = FALSE;
-  filter->ts_offset = 0;
-  filter->silence_detected = FALSE;
   filter->silent = TRUE;
-  filter->consecutive_silence_buffers = 0;
   filter->minimum_silence_buffers = MINIMUM_SILENCE_BUFFERS_DEF;
   filter->minimum_silence_time = MINIMUM_SILENCE_TIME_DEF;
-  filter->consecutive_silence_time = 0;
+
+  gst_remove_silence_reset (filter);
 
   if (!filter->vad) {
     GST_DEBUG ("Error initializing VAD !!");
     return;
   }
+}
+
+static gboolean
+gst_remove_silence_start (GstBaseTransform * trans)
+{
+  GstRemoveSilence *filter = GST_REMOVE_SILENCE (trans);
+
+  GST_INFO ("reset filter on start");
+  gst_remove_silence_reset (filter);
+
+  return TRUE;
+}
+
+static gboolean
+gst_remove_silence_sink_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstRemoveSilence *filter = GST_REMOVE_SILENCE (trans);
+
+  if (event->type == GST_EVENT_SEGMENT) {
+    GST_INFO ("reset filter on segment event");
+    gst_remove_silence_reset (filter);
+  }
+
+  return
+      GST_BASE_TRANSFORM_CLASS (gst_remove_silence_parent_class)->sink_event
+      (trans, event);
 }
 
 static void
