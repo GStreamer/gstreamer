@@ -65,7 +65,7 @@ struct window {
 
   struct wl_event_queue     *queue;
   struct wl_surface         *surface;
-  struct wl_shell_surface   *shell_surface;
+  struct wl_shell_surface   *wl_shell_surface;
   struct wl_egl_window      *native;
   struct wl_surface         *foreign_surface;
   struct wl_subsurface      *subsurface;

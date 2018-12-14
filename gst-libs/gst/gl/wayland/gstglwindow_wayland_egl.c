@@ -140,11 +140,11 @@ pointer_handle_button (void *data, struct wl_pointer *pointer, uint32_t serial,
   window_egl->display.serial = serial;
 
   if (button == BTN_LEFT && state_w == WL_POINTER_BUTTON_STATE_PRESSED)
-    wl_shell_surface_move (window_egl->window.shell_surface,
+    wl_shell_surface_move (window_egl->window.wl_shell_surface,
         window_egl->display.seat, serial);
 
   if (button == BTN_RIGHT && state_w == WL_POINTER_BUTTON_STATE_PRESSED)
-    wl_shell_surface_resize (window_egl->window.shell_surface,
+    wl_shell_surface_resize (window_egl->window.wl_shell_surface,
         window_egl->display.seat, serial, edges);
 }
 
@@ -194,37 +194,37 @@ static const struct wl_seat_listener seat_listener = {
 };
 #endif
 static void
-handle_ping (void *data, struct wl_shell_surface *shell_surface,
+handle_ping (void *data, struct wl_shell_surface *wl_shell_surface,
     uint32_t serial)
 {
   GstGLWindowWaylandEGL *window_egl = data;
 
   GST_TRACE_OBJECT (window_egl, "ping received serial %u", serial);
 
-  wl_shell_surface_pong (shell_surface, serial);
+  wl_shell_surface_pong (wl_shell_surface, serial);
 }
 
 static void window_resize (GstGLWindowWaylandEGL * window_egl, guint width,
     guint height);
 
 static void
-handle_configure (void *data, struct wl_shell_surface *shell_surface,
+handle_configure (void *data, struct wl_shell_surface *wl_shell_surface,
     uint32_t edges, int32_t width, int32_t height)
 {
   GstGLWindowWaylandEGL *window_egl = data;
 
-  GST_DEBUG ("configure event on surface %p, %ix%i", shell_surface, width,
+  GST_DEBUG ("configure event on surface %p, %ix%i", wl_shell_surface, width,
       height);
 
   window_resize (window_egl, width, height);
 }
 
 static void
-handle_popup_done (void *data, struct wl_shell_surface *shell_surface)
+handle_popup_done (void *data, struct wl_shell_surface *wl_shell_surface)
 {
 }
 
-static const struct wl_shell_surface_listener shell_surface_listener = {
+static const struct wl_shell_surface_listener wl_shell_surface_listener = {
   handle_ping,
   handle_configure,
   handle_popup_done
@@ -237,9 +237,9 @@ destroy_surfaces (GstGLWindowWaylandEGL * window_egl)
     wl_subsurface_destroy (window_egl->window.subsurface);
     window_egl->window.subsurface = NULL;
   }
-  if (window_egl->window.shell_surface) {
-    wl_shell_surface_destroy (window_egl->window.shell_surface);
-    window_egl->window.shell_surface = NULL;
+  if (window_egl->window.wl_shell_surface) {
+    wl_shell_surface_destroy (window_egl->window.wl_shell_surface);
+    window_egl->window.wl_shell_surface = NULL;
   }
   if (window_egl->window.surface) {
     wl_surface_destroy (window_egl->window.surface);
@@ -289,20 +289,20 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
     }
   } else {
   shell_window:
-    if (!window_egl->window.shell_surface) {
-      window_egl->window.shell_surface =
-          wl_shell_get_shell_surface (display->shell,
+    if (!window_egl->window.wl_shell_surface) {
+      window_egl->window.wl_shell_surface =
+          wl_shell_get_shell_surface (display->wl_shell,
           window_egl->window.surface);
       if (window_egl->window.queue)
         wl_proxy_set_queue ((struct wl_proxy *) window_egl->
-            window.shell_surface, window_egl->window.queue);
+            window.wl_shell_surface, window_egl->window.queue);
 
-      wl_shell_surface_add_listener (window_egl->window.shell_surface,
-          &shell_surface_listener, window_egl);
+      wl_shell_surface_add_listener (window_egl->window.wl_shell_surface,
+          &wl_shell_surface_listener, window_egl);
 
-      wl_shell_surface_set_title (window_egl->window.shell_surface,
+      wl_shell_surface_set_title (window_egl->window.wl_shell_surface,
           "OpenGL Renderer");
-      wl_shell_surface_set_toplevel (window_egl->window.shell_surface);
+      wl_shell_surface_set_toplevel (window_egl->window.wl_shell_surface);
     }
   }
 

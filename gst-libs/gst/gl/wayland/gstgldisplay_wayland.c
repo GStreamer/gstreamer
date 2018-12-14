@@ -51,7 +51,8 @@ registry_handle_global (void *data, struct wl_registry *registry,
     display->subcompositor =
         wl_registry_bind (registry, name, &wl_subcompositor_interface, 1);
   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
-    display->shell = wl_registry_bind (registry, name, &wl_shell_interface, 1);
+    display->wl_shell =
+        wl_registry_bind (registry, name, &wl_shell_interface, 1);
   }
 }
 
@@ -91,7 +92,7 @@ gst_gl_display_wayland_finalize (GObject * object)
 {
   GstGLDisplayWayland *display_wayland = GST_GL_DISPLAY_WAYLAND (object);
 
-  g_clear_pointer (&display_wayland->shell, wl_shell_destroy);
+  g_clear_pointer (&display_wayland->wl_shell, wl_shell_destroy);
 
   /* Cause eglTerminate() to occur before wl_display_disconnect()
    * https://bugzilla.gnome.org/show_bug.cgi?id=787293 */
