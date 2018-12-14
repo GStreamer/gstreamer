@@ -670,8 +670,9 @@ gst_video_time_code_deserialize (GValue * dest, const gchar * tc_str)
 {
   GstVideoTimeCode *tc = gst_video_time_code_new_from_string (tc_str);
 
-  if (tc == NULL || !gst_video_time_code_is_valid (tc))
+  if (tc == NULL) {
     return FALSE;
+  }
 
   g_value_take_boxed (dest, tc);
   return TRUE;
