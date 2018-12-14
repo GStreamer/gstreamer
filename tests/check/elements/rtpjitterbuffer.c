@@ -300,6 +300,77 @@ GST_START_TEST (test_push_unordered)
 
 GST_END_TEST;
 
+gboolean is_eos;
+
+static gboolean
+eos_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    g_mutex_lock (&check_mutex);
+    is_eos = TRUE;
+    g_cond_signal (&check_cond);
+    g_mutex_unlock (&check_mutex);
+  }
+
+  return TRUE;
+}
+
+GST_START_TEST (test_push_eos)
+{
+  GstElement *jitterbuffer;
+  const guint num_buffers = 5;
+  GstBuffer *buffer;
+  GList *node;
+  GstStructure *stats;
+  guint64 pushed, lost, late, duplicates;
+  int n = 0;
+
+  is_eos = FALSE;
+
+  jitterbuffer = setup_jitterbuffer (num_buffers);
+  gst_pad_set_event_function (mysinkpad, eos_event_function);
+
+  g_object_set (jitterbuffer, "latency", 1, NULL);
+
+  fail_unless (start_jitterbuffer (jitterbuffer)
+      == GST_STATE_CHANGE_SUCCESS, "could not set to playing");
+
+  /* push buffers: 0,1,2, */
+  for (node = inbuffers; node; node = g_list_next (node)) {
+    n++;
+    /* Skip 1 */
+    if (n == 2) {
+      continue;
+    }
+    buffer = (GstBuffer *) node->data;
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  gst_pad_push_event (mysrcpad, gst_event_new_eos ());
+
+  g_mutex_lock (&check_mutex);
+  while (!is_eos)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
+
+  /* Verify statistics */
+  g_object_get (jitterbuffer, "stats", &stats, NULL);
+  gst_structure_get (stats, "num-pushed", G_TYPE_UINT64, &pushed,
+      "num-lost", G_TYPE_UINT64, &lost,
+      "num-late", G_TYPE_UINT64, &late,
+      "num-duplicates", G_TYPE_UINT64, &duplicates, NULL);
+  fail_unless_equals_int (pushed, g_list_length (inbuffers) - 1);
+  fail_unless_equals_int (lost, 1);
+  fail_unless_equals_int (late, 0);
+  fail_unless_equals_int (duplicates, 0);
+  gst_structure_free (stats);
+
+  /* cleanup */
+  cleanup_jitterbuffer (jitterbuffer);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_basetime)
 {
   GstElement *jitterbuffer;
@@ -2140,6 +2211,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_push_forward_seq);
   tcase_add_test (tc_chain, test_push_backward_seq);
   tcase_add_test (tc_chain, test_push_unordered);
+  tcase_add_test (tc_chain, test_push_eos);
   tcase_add_test (tc_chain, test_basetime);
   tcase_add_test (tc_chain, test_clear_pt_map);
 
