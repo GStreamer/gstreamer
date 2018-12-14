@@ -296,6 +296,68 @@ GST_START_TEST (test_rtph264depay_with_downstream_allocator)
 
 GST_END_TEST;
 
+
+static GstBuffer *
+wrap_static_buffer_with_pts (guint8 * buf, gsize size, GstClockTime pts)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      buf, size, 0, size, NULL, NULL);
+  GST_BUFFER_PTS (buffer) = pts;
+
+  return buffer;
+}
+
+static GstBuffer *
+wrap_static_buffer (guint8 * buf, gsize size)
+{
+  return wrap_static_buffer_with_pts (buf, size, GST_CLOCK_TIME_NONE);
+}
+
+/* This was generated using pipeline:
+ * gst-launch-1.0 videotestsrc num-buffers=1 pattern=green \
+ *     ! video/x-raw,width=16,height=16 \
+ *     ! openh264enc ! rtph264pay ! fakesink dump=1
+ */
+/* RTP h264_idr + marker */
+static guint8 rtp_h264_idr[] = {
+  0x80, 0xe0, 0x3e, 0xf0, 0xd9, 0xbe, 0x80, 0x28,
+  0xf4, 0x2d, 0xe1, 0x70, 0x65, 0xb8, 0x00, 0x04,
+  0x00, 0x00, 0x09, 0xff, 0xff, 0xf8, 0x22, 0x8a,
+  0x00, 0x1f, 0x1c, 0x00, 0x04, 0x1c, 0xe3, 0x80,
+  0x00, 0x84, 0xde
+};
+
+GST_START_TEST (test_rtph264depay_eos)
+{
+  GstHarness *h = gst_harness_new ("rtph264depay");
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  GstFlowReturn ret;
+
+  gst_harness_set_caps_str (h,
+      "application/x-rtp,media=video,clock-rate=90000,encoding-name=H264",
+      "video/x-h264,alignment=au,stream-format=byte-stream");
+
+  buffer = wrap_static_buffer (rtp_h264_idr, sizeof (rtp_h264_idr));
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_WRITE, &rtp));
+  gst_rtp_buffer_set_marker (&rtp, FALSE);
+  gst_rtp_buffer_unmap (&rtp);
+
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+
+  fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
 /* AUD */
 static guint8 h264_aud[] = {
   0x00, 0x00, 0x00, 0x01, 0x09, 0xf0
@@ -341,24 +403,6 @@ static guint8 h264_idr_slice_2[] = {
   0x5d, 0x75, 0xd7, 0x5d, 0x75, 0xd7, 0x5d, 0x75,
   0xd7, 0x5d, 0x75, 0xd7, 0x5e
 };
-
-static GstBuffer *
-wrap_static_buffer_with_pts (guint8 * buf, gsize size, GstClockTime pts)
-{
-  GstBuffer *buffer;
-
-  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-      buf, size, 0, size, NULL, NULL);
-  GST_BUFFER_PTS (buffer) = pts;
-
-  return buffer;
-}
-
-static GstBuffer *
-wrap_static_buffer (guint8 * buf, gsize size)
-{
-  return wrap_static_buffer_with_pts (buf, size, GST_CLOCK_TIME_NONE);
-}
 
 /* The RFC makes special use of NAL type 24 to 27, this test makes sure that
  * such a NAL from the outside gets ignored properly. */
@@ -557,6 +601,7 @@ rtph264_suite (void)
   tc_chain = tcase_create ("rtph264depay");
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_rtph264depay_with_downstream_allocator);
+  tcase_add_test (tc_chain, test_rtph264depay_eos);
 
   tc_chain = tcase_create ("rtph264pay");
   suite_add_tcase (s, tc_chain);
