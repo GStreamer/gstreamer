@@ -168,6 +168,7 @@ cleanup_jitterbuffer (GstElement * jitterbuffer)
 
   gst_pad_set_active (mysrcpad, FALSE);
   gst_pad_set_active (mysinkpad, FALSE);
+  gst_element_set_state (jitterbuffer, GST_STATE_NULL);
   gst_check_teardown_src_pad (jitterbuffer);
   gst_check_teardown_sink_pad (jitterbuffer);
   gst_check_teardown_element (jitterbuffer);
