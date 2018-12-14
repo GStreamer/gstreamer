@@ -1326,7 +1326,9 @@ block_async_cb_return_ok (GstPad * pad, GstPadProbeInfo * info,
 static gpointer
 push_buffer_async (GstPad * pad)
 {
-  return GINT_TO_POINTER (gst_pad_push (pad, gst_buffer_new ()));
+  gpointer ret = GINT_TO_POINTER (gst_pad_push (pad, gst_buffer_new ()));
+  gst_object_unref (pad);
+  return ret;
 }
 
 static void
@@ -1349,7 +1351,7 @@ test_pad_blocking_with_type (GstPadProbeType type)
   id = gst_pad_add_probe (pad, type, block_async_cb_return_ok, NULL, NULL);
 
   thread = g_thread_try_new ("gst-check", (GThreadFunc) push_buffer_async,
-      pad, NULL);
+      gst_object_ref (pad), NULL);
 
   /* wait for the block */
   while (!gst_pad_is_blocking (pad)) {
@@ -1413,6 +1415,7 @@ static gpointer
 add_idle_probe_async (GstPad * pad)
 {
   gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_IDLE, idle_probe_wait, NULL, NULL);
+  gst_object_unref (pad);
 
   return NULL;
 }
@@ -1441,8 +1444,8 @@ GST_START_TEST (test_pad_blocking_with_probe_type_idle)
 
   idle_probe_running = FALSE;
   idle_thread =
-      g_thread_try_new ("gst-check", (GThreadFunc) add_idle_probe_async, srcpad,
-      NULL);
+      g_thread_try_new ("gst-check", (GThreadFunc) add_idle_probe_async,
+      gst_object_ref (srcpad), NULL);
 
   /* wait for the idle function to signal it is being called */
   while (!idle_probe_running) {
@@ -1450,7 +1453,7 @@ GST_START_TEST (test_pad_blocking_with_probe_type_idle)
   }
 
   thread = g_thread_try_new ("gst-check", (GThreadFunc) push_buffer_async,
-      srcpad, NULL);
+      gst_object_ref (srcpad), NULL);
 
   while (!gst_pad_is_blocking (srcpad)) {
     g_usleep (10000);
@@ -1507,6 +1510,8 @@ pull_range_async (GstPad * pad)
   GstFlowReturn res = gst_pad_pull_range (pad, 0, 100, &buf);
   if (buf)
     gst_buffer_unref (buf);
+  gst_object_unref (pad);
+
   return GINT_TO_POINTER (res);
 }
 
@@ -1533,7 +1538,7 @@ GST_START_TEST (test_pad_probe_pull)
       block_async_cb_return_ok, NULL, NULL);
 
   thread = g_thread_try_new ("gst-check", (GThreadFunc) pull_range_async,
-      sinkpad, NULL);
+      gst_object_ref (sinkpad), NULL);
 
   /* wait for the block */
   while (!gst_pad_is_blocking (sinkpad)) {
@@ -1603,7 +1608,7 @@ GST_START_TEST (test_pad_probe_pull_idle)
   idle_probe_called = FALSE;
   get_range_wait = TRUE;
   thread = g_thread_try_new ("gst-check", (GThreadFunc) pull_range_async,
-      sinkpad, NULL);
+      gst_object_ref (sinkpad), NULL);
 
   /* wait for the block */
   while (!getrange_waiting) {
@@ -1662,7 +1667,7 @@ GST_START_TEST (test_pad_probe_pull_buffer)
   pull_probe_called_with_bad_data = FALSE;
 
   thread = g_thread_try_new ("gst-check", (GThreadFunc) pull_range_async,
-      sinkpad, NULL);
+      gst_object_ref (sinkpad), NULL);
 
   /* wait for the block */
   while (!pull_probe_called && !pull_probe_called_with_bad_data
@@ -1856,7 +1861,7 @@ GST_START_TEST (test_pad_probe_block_add_remove)
   fail_unless (pad->num_blocked == 1);
 
   thread = g_thread_try_new ("gst-check", (GThreadFunc) push_buffer_async,
-      pad, NULL);
+      gst_object_ref (pad), NULL);
 
   /* wait for the block */
   while (!gst_pad_is_blocking (pad))
