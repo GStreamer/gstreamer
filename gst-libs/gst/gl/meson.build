@@ -295,7 +295,7 @@ gl_dep = unneeded_dep
 glx_dep = unneeded_dep
 if need_api_opengl != 'no' or need_platform_glx != 'no'
   if host_system == 'darwin'
-    gl_dep = dependency('OpenGL', required : false)
+    gl_dep = dependency('appleframeworks', modules : ['OpenGL'], required : false)
   else
     # override meson's braindead gl detection on osx/windows/etc by forcing pkg-config
     gl_dep = dependency('gl', method: 'pkg-config', required : false)
