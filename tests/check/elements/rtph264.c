@@ -358,6 +358,56 @@ GST_START_TEST (test_rtph264depay_eos)
 GST_END_TEST;
 
 
+GST_START_TEST (test_rtph264depay_marker_to_flag)
+{
+  GstHarness *h = gst_harness_new ("rtph264depay");
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  GstFlowReturn ret;
+  guint16 seq;
+
+  gst_harness_set_caps_str (h,
+      "application/x-rtp,media=video,clock-rate=90000,encoding-name=H264",
+      "video/x-h264,alignment=au,stream-format=byte-stream");
+
+  buffer = wrap_static_buffer (rtp_h264_idr, sizeof (rtp_h264_idr));
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless (gst_rtp_buffer_get_marker (&rtp));
+  seq = gst_rtp_buffer_get_seq (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
+
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  buffer = wrap_static_buffer (rtp_h264_idr, sizeof (rtp_h264_idr));
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_WRITE, &rtp));
+  gst_rtp_buffer_set_marker (&rtp, FALSE);
+  gst_rtp_buffer_set_seq (&rtp, ++seq);
+  gst_rtp_buffer_unmap (&rtp);
+
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  /* the second NAL is blocked as there is no marker to let the payloader
+   * know it's a complete AU, we'll use an EOS to unblock it */
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+  fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER));
+  gst_buffer_unref (buffer);
+
+  buffer = gst_harness_pull (h);
+  fail_if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER));
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 /* AUD */
 static guint8 h264_aud[] = {
   0x00, 0x00, 0x00, 0x01, 0x09, 0xf0
@@ -602,6 +652,7 @@ rtph264_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_rtph264depay_with_downstream_allocator);
   tcase_add_test (tc_chain, test_rtph264depay_eos);
+  tcase_add_test (tc_chain, test_rtph264depay_marker_to_flag);
 
   tc_chain = tcase_create ("rtph264pay");
   suite_add_tcase (s, tc_chain);
