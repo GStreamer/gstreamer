@@ -137,6 +137,8 @@ gst_video_time_code_to_string (const GstVideoTimeCode * tc)
   gboolean top_dot_present;
   gchar sep;
 
+  g_return_val_if_fail (gst_video_time_code_is_valid (tc), NULL);
+
   /* Top dot is present for non-interlaced content, and for field 2 in
    * interlaced content */
   top_dot_present =
@@ -540,6 +542,8 @@ gst_video_time_code_compare (const GstVideoTimeCode * tc1,
 {
   g_return_val_if_fail (gst_video_time_code_is_valid (tc1), -1);
   g_return_val_if_fail (gst_video_time_code_is_valid (tc2), -1);
+  g_return_val_if_fail (tc1->config.fps_n != 0, -1);
+  g_return_val_if_fail (tc2->config.fps_n != 0, -1);
 
   if (tc1->config.latest_daily_jam == NULL
       || tc2->config.latest_daily_jam == NULL) {
