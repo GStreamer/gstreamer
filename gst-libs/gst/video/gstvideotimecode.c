@@ -177,17 +177,13 @@ gst_video_time_code_to_date_time (const GstVideoTimeCode * tc)
   gdouble add_us;
 
   g_return_val_if_fail (gst_video_time_code_is_valid (tc), NULL);
-  g_return_val_if_fail (tc->config.latest_daily_jam != NULL, NULL);
 
-  ret = g_date_time_ref (tc->config.latest_daily_jam);
-
-  if (ret == NULL) {
+  if (tc->config.latest_daily_jam == NULL) {
     gchar *tc_str = gst_video_time_code_to_string (tc);
     GST_WARNING
         ("Asked to convert time code %s to GDateTime, but its latest daily jam is NULL",
         tc_str);
     g_free (tc_str);
-    g_date_time_unref (ret);
     return NULL;
   }
 
@@ -197,9 +193,10 @@ gst_video_time_code_to_date_time (const GstVideoTimeCode * tc)
         ("Asked to convert time code %s to GDateTime, but its framerate is unknown",
         tc_str);
     g_free (tc_str);
-    g_date_time_unref (ret);
     return NULL;
   }
+
+  ret = g_date_time_ref (tc->config.latest_daily_jam);
 
   gst_util_fraction_to_double (tc->frames * tc->config.fps_d, tc->config.fps_n,
       &add_us);
