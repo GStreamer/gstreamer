@@ -22,22 +22,42 @@
 #include "config.h"
 #endif
 
-#include <gst/gl/wayland/gstgldisplay_wayland.h>
+#include "gstgldisplay_wayland.h"
+#include "gstgldisplay_wayland_private.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 #define GST_CAT_DEFAULT gst_gl_display_debug
 
-G_DEFINE_TYPE (GstGLDisplayWayland, gst_gl_display_wayland,
+/* We can't define these in the public struct, or we'd break ABI */
+typedef struct _GstGLDisplayWaylandPrivate
+{
+  struct xdg_wm_base *xdg_wm_base;
+} GstGLDisplayWaylandPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (GstGLDisplayWayland, gst_gl_display_wayland,
     GST_TYPE_GL_DISPLAY);
 
 static void gst_gl_display_wayland_finalize (GObject * object);
 static guintptr gst_gl_display_wayland_get_handle (GstGLDisplay * display);
 
 static void
+handle_xdg_wm_base_ping (void *user_data, struct xdg_wm_base *xdg_wm_base,
+    uint32_t serial)
+{
+  xdg_wm_base_pong (xdg_wm_base, serial);
+}
+
+static const struct xdg_wm_base_listener xdg_wm_base_listener = {
+  handle_xdg_wm_base_ping
+};
+
+static void
 registry_handle_global (void *data, struct wl_registry *registry,
     uint32_t name, const char *interface, uint32_t version)
 {
   GstGLDisplayWayland *display = data;
+  GstGLDisplayWaylandPrivate *priv =
+      gst_gl_display_wayland_get_instance_private (display);
 
   GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
 
@@ -50,6 +70,11 @@ registry_handle_global (void *data, struct wl_registry *registry,
   } else if (g_strcmp0 (interface, "wl_subcompositor") == 0) {
     display->subcompositor =
         wl_registry_bind (registry, name, &wl_subcompositor_interface, 1);
+  } else if (g_strcmp0 (interface, "xdg_wm_base") == 0) {
+    priv->xdg_wm_base =
+        wl_registry_bind (registry, name, &xdg_wm_base_interface, 1);
+    xdg_wm_base_add_listener (priv->xdg_wm_base, &xdg_wm_base_listener,
+        display);
   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
     display->wl_shell =
         wl_registry_bind (registry, name, &wl_shell_interface, 1);
@@ -91,8 +116,11 @@ static void
 gst_gl_display_wayland_finalize (GObject * object)
 {
   GstGLDisplayWayland *display_wayland = GST_GL_DISPLAY_WAYLAND (object);
+  GstGLDisplayWaylandPrivate *priv =
+      gst_gl_display_wayland_get_instance_private (display_wayland);
 
   g_clear_pointer (&display_wayland->wl_shell, wl_shell_destroy);
+  g_clear_pointer (&priv->xdg_wm_base, xdg_wm_base_destroy);
 
   /* Cause eglTerminate() to occur before wl_display_disconnect()
    * https://bugzilla.gnome.org/show_bug.cgi?id=787293 */
@@ -174,4 +202,13 @@ static guintptr
 gst_gl_display_wayland_get_handle (GstGLDisplay * display)
 {
   return (guintptr) GST_GL_DISPLAY_WAYLAND (display)->display;
+}
+
+struct xdg_wm_base *
+gst_gl_display_wayland_get_xdg_wm_base (GstGLDisplayWayland * display)
+{
+  GstGLDisplayWaylandPrivate *priv =
+      gst_gl_display_wayland_get_instance_private (display);
+
+  return priv->xdg_wm_base;
 }

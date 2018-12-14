@@ -529,12 +529,30 @@ if need_win_wayland != 'no'
     wayland_client_dep = dependency('wayland-client', version : '>= 1.0', required : false)
     wayland_cursor_dep = dependency('wayland-cursor', version : '>= 1.0', required : false)
     wayland_egl_dep = dependency('wayland-egl', version : '>= 1.0', required : false)
+    wayland_protocols_dep = dependency('wayland-protocols', version : '>= 1.15', required : false)
+    wayland_scanner = find_program('wayland-scanner', required: false)
 
-    if wayland_client_dep.found() and wayland_cursor_dep.found() and wayland_egl_dep.found()
+    if wayland_client_dep.found() and wayland_cursor_dep.found() and wayland_egl_dep.found() and wayland_protocols_dep.found() and wayland_scanner.found()
+      # Generate the XDG shell interface
+      wayland_protocols_basedir = wayland_protocols_dep.get_pkgconfig_variable('pkgdatadir')
+      xdg_shell_xml_spec = join_paths(wayland_protocols_basedir, 'stable', 'xdg-shell', 'xdg-shell.xml')
+      xdg_shell_header = custom_target('xdg-shell-client-header',
+        command: [ wayland_scanner, 'client-header', '@INPUT@', '@OUTPUT@' ],
+        input: xdg_shell_xml_spec,
+        output: 'xdg-shell-client-protocol.h',
+      )
+      xdg_shell_code = custom_target('xdg-shell-client-code',
+        command: [ wayland_scanner, 'private-code', '@INPUT@', '@OUTPUT@' ],
+        input: xdg_shell_xml_spec,
+        output: 'xdg-shell-client-protocol.c',
+      )
+
       gl_sources += [
         'wayland/gstgldisplay_wayland.c',
         'wayland/gstglwindow_wayland_egl.c',
         'wayland/wayland_event_source.c',
+        xdg_shell_header,
+        xdg_shell_code,
       ]
       gl_wayland_headers += [
         'wayland/gstgldisplay_wayland.h'
@@ -549,6 +567,7 @@ if need_win_wayland != 'no'
       wayland_client_dep = unneeded_dep
       wayland_cursor_dep = unneeded_dep
       wayland_egl_dep = unneeded_dep
+      wayland_protocols_dep = unneeded_dep
     endif
   endif
 endif

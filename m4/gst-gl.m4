@@ -288,7 +288,16 @@ case $host in
     LIBS=$old_LIBS
     CFLAGS=$old_CFLAGS
 
-    PKG_CHECK_MODULES(WAYLAND_EGL, wayland-client >= 1.0 wayland-cursor >= 1.0 wayland-egl >= 9.0, HAVE_WAYLAND_EGL=yes, HAVE_WAYLAND_EGL=no)
+    PKG_CHECK_MODULES(WAYLAND_EGL, wayland-client >= 1.0 wayland-cursor >= 1.0 wayland-egl >= 9.0 wayland-protocols >= 1.15, HAVE_WAYLAND_EGL=yes, HAVE_WAYLAND_EGL=no)
+    AC_CHECK_PROGS(WAYLAND_SCANNER, wayland-scanner)
+    if test x"$HAVE_WAYLAND_EGL" == xyes ; then
+      if test x"$WAYLAND_SCANNER" == x ; then
+        AC_MSG_ERROR([Found Wayland libraries, but couldn't find wayland-scanner binary.])
+      fi
+
+      WAYLAND_PROTOCOLS_DATADIR="`$PKG_CONFIG --variable=pkgdatadir wayland-protocols`"
+      AC_SUBST(WAYLAND_PROTOCOLS_DATADIR, $WAYLAND_PROTOCOLS_DATADIR)
+    fi
 
     # OS X and iOS always have GL available
     case $host in

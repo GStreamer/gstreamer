@@ -33,6 +33,7 @@
 #include <gst/gl/gstglcontext.h>
 
 #include "gstgldisplay_wayland.h"
+#include "gstgldisplay_wayland_private.h"
 #include "gstglwindow_wayland_egl.h"
 
 #include "../gstglwindow_private.h"
@@ -231,30 +232,115 @@ static const struct wl_shell_surface_listener wl_shell_surface_listener = {
 };
 
 static void
-destroy_surfaces (GstGLWindowWaylandEGL * window_egl)
+handle_xdg_toplevel_close (void *data, struct xdg_toplevel *xdg_toplevel)
 {
-  if (window_egl->window.subsurface) {
-    wl_subsurface_destroy (window_egl->window.subsurface);
-    window_egl->window.subsurface = NULL;
-  }
-  if (window_egl->window.wl_shell_surface) {
-    wl_shell_surface_destroy (window_egl->window.wl_shell_surface);
-    window_egl->window.wl_shell_surface = NULL;
-  }
-  if (window_egl->window.surface) {
-    wl_surface_destroy (window_egl->window.surface);
-    window_egl->window.surface = NULL;
-  }
-  if (window_egl->window.native) {
-    wl_egl_window_destroy (window_egl->window.native);
-    window_egl->window.native = NULL;
+  GstGLWindowWaylandEGL *window_egl = data;
+
+  GST_DEBUG ("XDG toplevel got a \"close\" event.");
+
+  gst_gl_window_wayland_egl_close (GST_GL_WINDOW (window_egl));
 }
 
-static struct wl_shell_surface *
-create_wl_shell_surface (GstGLWindowWaylandEGL * window_egl,
-    GstGLDisplayWayland *display)
+static void
+handle_xdg_toplevel_configure (void *data, struct xdg_toplevel *xdg_toplevel,
+    int32_t width, int32_t height, struct wl_array *states)
 {
+  GstGLWindowWaylandEGL *window_egl = data;
+  const uint32_t *state;
+
+  GST_DEBUG ("configure event on XDG toplevel %p, %ix%i", xdg_toplevel,
+      width, height);
+
+  wl_array_for_each (state, states) {
+    switch (*state) {
+      case XDG_TOPLEVEL_STATE_FULLSCREEN:
+        window_egl->window.fullscreen = TRUE;
+        break;
+      case XDG_TOPLEVEL_STATE_MAXIMIZED:
+      case XDG_TOPLEVEL_STATE_RESIZING:
+      case XDG_TOPLEVEL_STATE_ACTIVATED:
+        break;
+    }
+  }
+
+  if (width > 0 && height > 0)
+    window_resize (window_egl, width, height);
+}
+
+static const struct xdg_toplevel_listener xdg_toplevel_listener = {
+  handle_xdg_toplevel_configure,
+  handle_xdg_toplevel_close,
+};
+
+static void
+handle_xdg_surface_configure (void *data, struct xdg_surface *xdg_surface,
+    uint32_t serial)
+{
+  xdg_surface_ack_configure (xdg_surface, serial);
+}
+
+static const struct xdg_surface_listener xdg_surface_listener = {
+  handle_xdg_surface_configure,
+};
+
+static void
+destroy_surfaces (GstGLWindowWaylandEGL * window_egl)
+{
+  g_clear_pointer (&window_egl->window.subsurface, wl_subsurface_destroy);
+  g_clear_pointer (&window_egl->window.xdg_toplevel, xdg_toplevel_destroy);
+  g_clear_pointer (&window_egl->window.xdg_surface, xdg_surface_destroy);
+  g_clear_pointer (&window_egl->window.wl_shell_surface,
+      wl_shell_surface_destroy);
+  g_clear_pointer (&window_egl->window.surface, wl_surface_destroy);
+  g_clear_pointer (&window_egl->window.native, wl_egl_window_destroy);
+}
+
+static void
+create_xdg_surface_and_toplevel (GstGLWindowWaylandEGL * window_egl)
+{
+  GstGLDisplayWayland *display =
+      GST_GL_DISPLAY_WAYLAND (GST_GL_WINDOW (window_egl)->display);
+  struct xdg_wm_base *xdg_wm_base;
+  struct xdg_surface *xdg_surface;
+  struct xdg_toplevel *xdg_toplevel;
+
+  GST_DEBUG ("Creating surfaces XDG-shell");
+
+  /* First create the XDG surface */
+  xdg_wm_base = gst_gl_display_wayland_get_xdg_wm_base (display);
+  xdg_surface = xdg_wm_base_get_xdg_surface (xdg_wm_base,
+      window_egl->window.surface);
+  if (window_egl->window.queue) {
+    wl_proxy_set_queue ((struct wl_proxy *) xdg_surface,
+        window_egl->window.queue);
+  }
+  xdg_surface_add_listener (xdg_surface, &xdg_surface_listener, window_egl);
+
+  /* Then the XDG top-level */
+  xdg_toplevel = xdg_surface_get_toplevel (xdg_surface);
+  xdg_toplevel_set_title (xdg_toplevel, "OpenGL Renderer");
+  if (window_egl->window.queue) {
+    wl_proxy_set_queue ((struct wl_proxy *) xdg_toplevel,
+        window_egl->window.queue);
+  }
+  xdg_toplevel_add_listener (xdg_toplevel, &xdg_toplevel_listener, window_egl);
+
+  /* Commit the xdg_surface state */
+  wl_surface_commit (window_egl->window.surface);
+
+  /* And save them into the fields */
+  window_egl->window.xdg_surface = xdg_surface;
+  window_egl->window.xdg_toplevel = xdg_toplevel;
+}
+
+static void
+create_wl_shell_surface (GstGLWindowWaylandEGL * window_egl)
+{
+  GstGLDisplayWayland *display =
+      GST_GL_DISPLAY_WAYLAND (GST_GL_WINDOW (window_egl)->display);
   struct wl_shell_surface *wl_shell_surface;
+
+  GST_DEBUG ("Creating surfaces for wl-shell");
 
   wl_shell_surface = wl_shell_get_shell_surface (display->wl_shell,
       window_egl->window.surface);
@@ -265,11 +351,11 @@ create_wl_shell_surface (GstGLWindowWaylandEGL * window_egl,
   }
 
   wl_shell_surface_add_listener (wl_shell_surface, &wl_shell_surface_listener,
-    window_egl);
+      window_egl);
   wl_shell_surface_set_title (wl_shell_surface, "OpenGL Renderer");
   wl_shell_surface_set_toplevel (wl_shell_surface);
 
-  return wl_shell_surface;
+  window_egl->window.wl_shell_surface = wl_shell_surface;
 }
 
 static void
@@ -310,8 +396,11 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
     }
   } else {
   shell_window:
-    if (!window_egl->window.wl_shell_surface) {
-      window_egl->window.wl_shell_surface = create_wl_shell_surface (display);
+    if (gst_gl_display_wayland_get_xdg_wm_base (display)) {
+      if (!window_egl->window.xdg_surface)
+        create_xdg_surface_and_toplevel (window_egl);
+    } else if (!window_egl->window.wl_shell_surface) {
+      create_wl_shell_surface (window_egl);
     }
   }
 

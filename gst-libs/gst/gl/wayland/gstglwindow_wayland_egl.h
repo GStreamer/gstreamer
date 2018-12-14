@@ -22,6 +22,7 @@
 #define __GST_GL_WINDOW_WAYLAND_EGL_H__
 
 #include <wayland-client.h>
+#include "xdg-shell-client-protocol.h"
 #include <wayland-egl.h>
 #include <wayland-cursor.h>
 
@@ -64,8 +65,14 @@ struct window {
   struct display *display;
 
   struct wl_event_queue     *queue;
+
+  /* wl_shell */
   struct wl_surface         *surface;
   struct wl_shell_surface   *wl_shell_surface;
+  /* XDG-shell */
+  struct xdg_surface        *xdg_surface;
+  struct xdg_toplevel       *xdg_toplevel;
+
   struct wl_egl_window      *native;
   struct wl_surface         *foreign_surface;
   struct wl_subsurface      *subsurface;
