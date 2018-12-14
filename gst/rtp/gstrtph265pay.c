@@ -109,8 +109,6 @@ enum
   PROP_CONFIG_INTERVAL
 };
 
-#define IS_ACCESS_UNIT(x) (((x) >= 0x00) && ((x) < 0x20))
-
 static void gst_rtp_h265_pay_finalize (GObject * object);
 
 static void gst_rtp_h265_pay_set_property (GObject * object, guint prop_id,
