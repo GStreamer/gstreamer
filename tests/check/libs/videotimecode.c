@@ -614,7 +614,7 @@ GST_START_TEST (videotimecode_from_date_time_1s)
   GDateTime *dt;
 
   dt = g_date_time_new_local (2017, 2, 16, 0, 0, 1);
-  tc = gst_video_time_code_new_from_date_time (30000, 1001, dt,
+  tc = gst_video_time_code_new_from_date_time_full (30000, 1001, dt,
       GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, 0);
 
   fail_unless_equals_int (tc->hours, 0);
@@ -636,7 +636,7 @@ GST_START_TEST (videotimecode_from_date_time_halfsecond)
   dt = g_date_time_new_local (2017, 2, 17, 14, 13, 0);
   dt2 = g_date_time_add (dt, 500000);
   g_date_time_unref (dt);
-  tc = gst_video_time_code_new_from_date_time (30000, 1001, dt2,
+  tc = gst_video_time_code_new_from_date_time_full (30000, 1001, dt2,
       GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, 0);
 
   fail_unless_equals_int (tc->hours, 14);
@@ -656,7 +656,7 @@ GST_START_TEST (videotimecode_from_date_time)
   GDateTime *dt;
 
   dt = g_date_time_new_local (2017, 2, 17, 14, 13, 30);
-  tc = gst_video_time_code_new_from_date_time (30000, 1001, dt,
+  tc = gst_video_time_code_new_from_date_time_full (30000, 1001, dt,
       GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, 0);
 
   fail_unless_equals_int (tc->hours, 14);

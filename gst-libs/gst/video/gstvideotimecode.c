@@ -230,17 +230,51 @@ gst_video_time_code_to_date_time (const GstVideoTimeCode * tc)
  * The resulting config->latest_daily_jam is set to
  * midnight, and timecode is set to the given time.
  *
+ * Will assert on invalid parameters, use gst_video_time_code_init_from_date_time_full()
+ * for being able to handle invalid parameters.
+ *
  * Since: 1.12
  */
-
 void
 gst_video_time_code_init_from_date_time (GstVideoTimeCode * tc,
+    guint fps_n, guint fps_d,
+    GDateTime * dt, GstVideoTimeCodeFlags flags, guint field_count)
+{
+  if (!gst_video_time_code_init_from_date_time_full (tc, fps_n, fps_d, dt,
+          flags, field_count))
+    g_return_if_fail (gst_video_time_code_is_valid (tc));
+}
+
+/**
+ * gst_video_time_code_init_from_date_time_full:
+ * @tc: a #GstVideoTimeCode
+ * @fps_n: Numerator of the frame rate
+ * @fps_d: Denominator of the frame rate
+ * @dt: #GDateTime to convert
+ * @flags: #GstVideoTimeCodeFlags
+ * @field_count: Interlaced video field count
+ *
+ * The resulting config->latest_daily_jam is set to
+ * midnight, and timecode is set to the given time.
+ *
+ * Returns: %TRUE if @tc could be correctly initialized to a valid timecode
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_video_time_code_init_from_date_time_full (GstVideoTimeCode * tc,
     guint fps_n, guint fps_d,
     GDateTime * dt, GstVideoTimeCodeFlags flags, guint field_count)
 {
   GDateTime *jam;
   guint64 frames;
   gboolean add_a_frame = FALSE;
+
+  g_return_val_if_fail (tc != NULL, FALSE);
+  g_return_val_if_fail (dt != NULL, FALSE);
+  g_return_val_if_fail (fps_d != 0, FALSE);
+
+  gst_video_time_code_clear (tc);
 
   jam = g_date_time_new_local (g_date_time_get_year (dt),
       g_date_time_get_month (dt), g_date_time_get_day_of_month (dt), 0, 0, 0.0);
@@ -273,7 +307,7 @@ gst_video_time_code_init_from_date_time (GstVideoTimeCode * tc,
 
   g_date_time_unref (jam);
 
-  g_return_if_fail (gst_video_time_code_is_valid (tc));
+  return gst_video_time_code_is_valid (tc);
 }
 
 /**
@@ -710,6 +744,10 @@ gst_video_time_code_new_from_string (const gchar * tc_str)
  * The resulting config->latest_daily_jam is set to
  * midnight, and timecode is set to the given time.
  *
+ * This might return a completely invalid timecode, use
+ * gst_video_time_code_new_from_date_time_full() to ensure
+ * that you would get %NULL instead in that case.
+ *
  * Returns: the #GstVideoTimeCode representation of @dt.
  *
  * Since: 1.12
@@ -720,8 +758,38 @@ gst_video_time_code_new_from_date_time (guint fps_n, guint fps_d,
 {
   GstVideoTimeCode *tc;
   tc = gst_video_time_code_new_empty ();
-  gst_video_time_code_init_from_date_time (tc, fps_n, fps_d, dt, flags,
+  gst_video_time_code_init_from_date_time_full (tc, fps_n, fps_d, dt, flags,
       field_count);
+  return tc;
+}
+
+/**
+ * gst_video_time_code_new_from_date_time_full:
+ * @fps_n: Numerator of the frame rate
+ * @fps_d: Denominator of the frame rate
+ * @dt: #GDateTime to convert
+ * @flags: #GstVideoTimeCodeFlags
+ * @field_count: Interlaced video field count
+ *
+ * The resulting config->latest_daily_jam is set to
+ * midnight, and timecode is set to the given time.
+ *
+ * Returns: the #GstVideoTimeCode representation of @dt, or %NULL if
+ *   no valid timecode could be created.
+ *
+ * Since: 1.16
+ */
+GstVideoTimeCode *
+gst_video_time_code_new_from_date_time_full (guint fps_n, guint fps_d,
+    GDateTime * dt, GstVideoTimeCodeFlags flags, guint field_count)
+{
+  GstVideoTimeCode *tc;
+  tc = gst_video_time_code_new_empty ();
+  if (!gst_video_time_code_init_from_date_time_full (tc, fps_n, fps_d, dt,
+          flags, field_count)) {
+    gst_video_time_code_free (tc);
+    return NULL;
+  }
   return tc;
 }
 
