@@ -21,10 +21,7 @@
 # include <windows.h>
 #endif
 
-#include <GL/gl.h>
-#if defined(__WIN32__) || defined(_WIN32)
-# include <GL/glext.h>
-#endif
+#include <gst/gl/gstglfuncs.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
