@@ -819,6 +819,35 @@ gst_rtp_h264_complete_au (GstRtpH264Depay * rtph264depay,
   return outbuf;
 }
 
+static void
+gst_rtp_h264_depay_push (GstRtpH264Depay * rtph264depay, GstBuffer * outbuf,
+    gboolean keyframe, GstClockTime timestamp, gboolean marker)
+{
+  /* prepend codec_data */
+  if (rtph264depay->codec_data) {
+    GST_DEBUG_OBJECT (rtph264depay, "prepending codec_data");
+    gst_rtp_copy_video_meta (rtph264depay, rtph264depay->codec_data, outbuf);
+    outbuf = gst_buffer_append (rtph264depay->codec_data, outbuf);
+    rtph264depay->codec_data = NULL;
+    keyframe = TRUE;
+  }
+  outbuf = gst_buffer_make_writable (outbuf);
+
+  gst_rtp_drop_non_video_meta (rtph264depay, outbuf);
+
+  GST_BUFFER_PTS (outbuf) = timestamp;
+
+  if (keyframe)
+    GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+  else
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  if (marker)
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
+
+  gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtph264depay), outbuf);
+}
+
 /* SPS/PPS/IDR considered key, all others DELTA;
  * so downstream waiting for keyframe can pick up at SPS/PPS/IDR */
 #define NAL_TYPE_IS_KEY(nt) (((nt) == 5) || ((nt) == 7) || ((nt) == 8))
@@ -925,29 +954,8 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
   }
 
   if (outbuf) {
-    /* prepend codec_data */
-    if (rtph264depay->codec_data) {
-      GST_DEBUG_OBJECT (depayload, "prepending codec_data");
-      gst_rtp_copy_video_meta (rtph264depay, rtph264depay->codec_data, outbuf);
-      outbuf = gst_buffer_append (rtph264depay->codec_data, outbuf);
-      rtph264depay->codec_data = NULL;
-      out_keyframe = TRUE;
-    }
-    outbuf = gst_buffer_make_writable (outbuf);
-
-    gst_rtp_drop_non_video_meta (rtph264depay, outbuf);
-
-    GST_BUFFER_PTS (outbuf) = out_timestamp;
-
-    if (out_keyframe)
-      GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-    else
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-
-    if (marker)
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_MARKER);
-
-    gst_rtp_base_depayload_push (depayload, outbuf);
+    gst_rtp_h264_depay_push (rtph264depay, outbuf, out_keyframe, out_timestamp,
+        marker);
   }
 
   return;
