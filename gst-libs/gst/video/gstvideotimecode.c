@@ -69,7 +69,7 @@ gst_video_time_code_is_valid (const GstVideoTimeCode * tc)
 
   g_return_val_if_fail (tc != NULL, FALSE);
 
-  if (tc->config.fps_d == 0)
+  if (tc->config.fps_n == 0 || tc->config.fps_d == 0)
     return FALSE;
 
   if (tc->hours >= 24)
@@ -161,8 +161,7 @@ gst_video_time_code_to_string (const GstVideoTimeCode * tc)
  * gst_video_time_code_to_date_time:
  * @tc: A valid #GstVideoTimeCode to convert
  *
- * The @tc.config->latest_daily_jam is required to be non-NULL and non-0/1
- * framerate is required.
+ * The @tc.config->latest_daily_jam is required to be non-NULL.
  *
  * Returns: (nullable): the #GDateTime representation of @tc or %NULL if @tc
  *   has no daily jam.
@@ -182,15 +181,6 @@ gst_video_time_code_to_date_time (const GstVideoTimeCode * tc)
     gchar *tc_str = gst_video_time_code_to_string (tc);
     GST_WARNING
         ("Asked to convert time code %s to GDateTime, but its latest daily jam is NULL",
-        tc_str);
-    g_free (tc_str);
-    return NULL;
-  }
-
-  if (tc->config.fps_n == 0 && tc->config.fps_d == 1) {
-    gchar *tc_str = gst_video_time_code_to_string (tc);
-    GST_WARNING
-        ("Asked to convert time code %s to GDateTime, but its framerate is unknown",
         tc_str);
     g_free (tc_str);
     return NULL;
@@ -273,7 +263,7 @@ gst_video_time_code_init_from_date_time_full (GstVideoTimeCode * tc,
 
   g_return_val_if_fail (tc != NULL, FALSE);
   g_return_val_if_fail (dt != NULL, FALSE);
-  g_return_val_if_fail (fps_d != 0, FALSE);
+  g_return_val_if_fail (fps_n != 0 && fps_d != 0, FALSE);
 
   gst_video_time_code_clear (tc);
 
@@ -315,8 +305,7 @@ gst_video_time_code_init_from_date_time_full (GstVideoTimeCode * tc,
  * gst_video_time_code_nsec_since_daily_jam:
  * @tc: a valid #GstVideoTimeCode
  *
- * Returns: how many nsec have passed since the daily jam of @tc or -1 if no
- * framerate is known for the timecode.
+ * Returns: how many nsec have passed since the daily jam of @tc.
  *
  * Since: 1.10
  */
@@ -326,15 +315,6 @@ gst_video_time_code_nsec_since_daily_jam (const GstVideoTimeCode * tc)
   guint64 frames, nsec;
 
   g_return_val_if_fail (gst_video_time_code_is_valid (tc), -1);
-
-  if (tc->config.fps_n == 0) {
-    gchar *tc_str = gst_video_time_code_to_string (tc);
-    GST_WARNING
-        ("Asked to calculate nsec since daily jam of time code %s, but its framerate is unknown",
-        tc_str);
-    g_free (tc_str);
-    return -1;
-  }
 
   frames = gst_video_time_code_frames_since_daily_jam (tc);
   nsec =
@@ -348,9 +328,7 @@ gst_video_time_code_nsec_since_daily_jam (const GstVideoTimeCode * tc)
  * gst_video_time_code_frames_since_daily_jam:
  * @tc: a valid #GstVideoTimeCode
  *
- * Returns: how many frames have passed since the daily jam of @tc, or -1 if no
- * framerate is known for the timecode or an invalid drop-frame framerate is
- * used.
+ * Returns: how many frames have passed since the daily jam of @tc.
  *
  * Since: 1.10
  */
@@ -527,12 +505,11 @@ gst_video_time_code_add_frames (GstVideoTimeCode * tc, gint64 frames)
 /**
  * gst_video_time_code_compare:
  * @tc1: a valid #GstVideoTimeCode
- * @tc2: another valid #GstVideoTimeCode with non-0/1 framerate
+ * @tc2: another valid #GstVideoTimeCode
  *
  * Compares @tc1 and @tc2. If both have latest daily jam information, it is
  * taken into account. Otherwise, it is assumed that the daily jam of both
- * @tc1 and @tc2 was at the same time. Both time codes must be valid and have
- * a non-0/1 framerate.
+ * @tc1 and @tc2 was at the same time. Both time codes must be valid.
  *
  * Returns: 1 if @tc1 is after @tc2, -1 if @tc1 is before @tc2, 0 otherwise.
  *
@@ -544,8 +521,6 @@ gst_video_time_code_compare (const GstVideoTimeCode * tc1,
 {
   g_return_val_if_fail (gst_video_time_code_is_valid (tc1), -1);
   g_return_val_if_fail (gst_video_time_code_is_valid (tc2), -1);
-  g_return_val_if_fail (tc1->config.fps_n != 0, -1);
-  g_return_val_if_fail (tc2->config.fps_n != 0, -1);
 
   if (tc1->config.latest_daily_jam == NULL
       || tc2->config.latest_daily_jam == NULL) {
