@@ -353,6 +353,8 @@ GST_START_TEST (test_push_eos)
     g_cond_wait (&check_cond, &check_mutex);
   g_mutex_unlock (&check_mutex);
 
+  fail_unless_equals_int (g_list_length (buffers), num_buffers - 1);
+
   /* Verify statistics */
   g_object_get (jitterbuffer, "stats", &stats, NULL);
   gst_structure_get (stats, "num-pushed", G_TYPE_UINT64, &pushed,
