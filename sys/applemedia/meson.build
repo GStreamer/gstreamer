@@ -65,7 +65,7 @@ else
     applemedia_objc_args += ['-mmacosx-version-min=10.8']
     cocoa_dep = dependency('Cocoa', required : applemedia_option)
     iosurface_dep = dependency('IOSurface', required : applemedia_option)
-    applemedia_opengl_dep = dependency('OpenGL', required : applemedia_option)
+    applemedia_opengl_dep = dependency('appleframeworks', modules : ['OpenGL'], required : applemedia_option)
     applemedia_frameworks += [cocoa_dep, applemedia_opengl_dep, iosurface_dep]
 endif
 
