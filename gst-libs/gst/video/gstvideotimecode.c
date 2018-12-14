@@ -115,10 +115,10 @@ gst_video_time_code_is_valid (const GstVideoTimeCode * tc)
 
 /**
  * gst_video_time_code_to_string:
- * @tc: #GstVideoTimeCode to convert
+ * @tc: A valid #GstVideoTimeCode to convert
  *
  * Returns: the SMPTE ST 2059-1:2015 string representation of @tc. That will
- * take the form hh:mm:ss:ff . The last separator (between seconds and frames)
+ * take the form hh:mm:ss:ff. The last separator (between seconds and frames)
  * may vary:
  *
  * ';' for drop-frame, non-interlaced content and for drop-frame interlaced
@@ -161,9 +161,11 @@ gst_video_time_code_to_string (const GstVideoTimeCode * tc)
  * gst_video_time_code_to_date_time:
  * @tc: A valid #GstVideoTimeCode to convert
  *
- * The @tc.config->latest_daily_jam is required to be non-NULL.
+ * The @tc.config->latest_daily_jam is required to be non-NULL and non-0/1
+ * framerate is required.
  *
- * Returns: the #GDateTime representation of @tc.
+ * Returns: (nullable): the #GDateTime representation of @tc or %NULL if @tc
+ *   has no daily jam.
  *
  * Since: 1.10
  */
@@ -222,15 +224,15 @@ gst_video_time_code_to_date_time (const GstVideoTimeCode * tc)
 
 /**
  * gst_video_time_code_init_from_date_time:
- * @tc: a #GstVideoTimeCode
+ * @tc: an uninitialized #GstVideoTimeCode
  * @fps_n: Numerator of the frame rate
  * @fps_d: Denominator of the frame rate
  * @dt: #GDateTime to convert
  * @flags: #GstVideoTimeCodeFlags
  * @field_count: Interlaced video field count
  *
- * The resulting config->latest_daily_jam is set to
- * midnight, and timecode is set to the given time.
+ * The resulting config->latest_daily_jam is set to midnight, and timecode is
+ * set to the given time.
  *
  * Will assert on invalid parameters, use gst_video_time_code_init_from_date_time_full()
  * for being able to handle invalid parameters.
@@ -316,7 +318,8 @@ gst_video_time_code_init_from_date_time_full (GstVideoTimeCode * tc,
  * gst_video_time_code_nsec_since_daily_jam:
  * @tc: a valid #GstVideoTimeCode
  *
- * Returns: how many nsec have passed since the daily jam of @tc .
+ * Returns: how many nsec have passed since the daily jam of @tc or -1 if no
+ * framerate is known for the timecode.
  *
  * Since: 1.10
  */
@@ -348,7 +351,9 @@ gst_video_time_code_nsec_since_daily_jam (const GstVideoTimeCode * tc)
  * gst_video_time_code_frames_since_daily_jam:
  * @tc: a valid #GstVideoTimeCode
  *
- * Returns: how many frames have passed since the daily jam of @tc .
+ * Returns: how many frames have passed since the daily jam of @tc, or -1 if no
+ * framerate is known for the timecode or an invalid drop-frame framerate is
+ * used.
  *
  * Since: 1.10
  */
@@ -400,7 +405,7 @@ gst_video_time_code_frames_since_daily_jam (const GstVideoTimeCode * tc)
  * gst_video_time_code_increment_frame:
  * @tc: a valid #GstVideoTimeCode
  *
- * Adds one frame to @tc .
+ * Adds one frame to @tc.
  *
  * Since: 1.10
  */
@@ -416,7 +421,7 @@ gst_video_time_code_increment_frame (GstVideoTimeCode * tc)
  * @frames: How many frames to add or subtract
  *
  * Adds or subtracts @frames amount of frames to @tc. tc needs to
- * contain valid data, as verified by #gst_video_time_code_is_valid.
+ * contain valid data, as verified by gst_video_time_code_is_valid().
  *
  * Since: 1.10
  */
@@ -525,12 +530,13 @@ gst_video_time_code_add_frames (GstVideoTimeCode * tc, gint64 frames)
 
 /**
  * gst_video_time_code_compare:
- * @tc1: a #GstVideoTimeCode
- * @tc2: another #GstVideoTimeCode
+ * @tc1: a valid #GstVideoTimeCode
+ * @tc2: another valid #GstVideoTimeCode with non-0/1 framerate
  *
- * Compares @tc1 and @tc2 . If both have latest daily jam information, it is
+ * Compares @tc1 and @tc2. If both have latest daily jam information, it is
  * taken into account. Otherwise, it is assumed that the daily jam of both
- * @tc1 and @tc2 was at the same time. Both time codes must be valid.
+ * @tc1 and @tc2 was at the same time. Both time codes must be valid and have
+ * a non-0/1 framerate.
  *
  * Returns: 1 if @tc1 is after @tc2, -1 if @tc1 is before @tc2, 0 otherwise.
  *
@@ -627,7 +633,7 @@ gst_video_time_code_compare (const GstVideoTimeCode * tc1,
  *
  * Returns: a new #GstVideoTimeCode with the given values.
  * The values are not checked for being in a valid range. To see if your
- * timecode actually has valid content, use #gst_video_time_code_is_valid.
+ * timecode actually has valid content, use gst_video_time_code_is_valid().
  *
  * Since: 1.10
  */
@@ -647,7 +653,7 @@ gst_video_time_code_new (guint fps_n, guint fps_d, GDateTime * latest_daily_jam,
 /**
  * gst_video_time_code_new_empty:
  *
- * Returns: a new empty #GstVideoTimeCode
+ * Returns: a new empty, invalid #GstVideoTimeCode
  *
  * Since: 1.10
  */
@@ -704,7 +710,8 @@ gst_video_time_code_deserialize (GValue * dest, const gchar * tc_str)
  * gst_video_time_code_new_from_string:
  * @tc_str: The string that represents the #GstVideoTimeCode
  *
- * Returns: a new #GstVideoTimeCode from the given string
+ * Returns: (nullable): a new #GstVideoTimeCode from the given string or %NULL
+ *   if the string could not be passed.
  *
  * Since: 1.12
  */
@@ -815,7 +822,7 @@ gst_video_time_code_new_from_date_time_full (guint fps_n, guint fps_d,
  *
  * Initializes @tc with the given values.
  * The values are not checked for being in a valid range. To see if your
- * timecode actually has valid content, use #gst_video_time_code_is_valid.
+ * timecode actually has valid content, use gst_video_time_code_is_valid().
  *
  * Since: 1.10
  */
@@ -842,7 +849,8 @@ gst_video_time_code_init (GstVideoTimeCode * tc, guint fps_n, guint fps_d,
  * gst_video_time_code_clear:
  * @tc: a #GstVideoTimeCode
  *
- * Initializes @tc with empty/zero/NULL values.
+ * Initializes @tc with empty/zero/NULL values and frees any memory
+ * it might currently use.
  *
  * Since: 1.10
  */
@@ -866,7 +874,7 @@ gst_video_time_code_clear (GstVideoTimeCode * tc)
  * gst_video_time_code_copy:
  * @tc: a #GstVideoTimeCode
  *
- * Returns: a new #GstVideoTimeCode with the same values as @tc .
+ * Returns: a new #GstVideoTimeCode with the same values as @tc.
  *
  * Since: 1.10
  */
@@ -882,7 +890,7 @@ gst_video_time_code_copy (const GstVideoTimeCode * tc)
  * gst_video_time_code_free:
  * @tc: a #GstVideoTimeCode
  *
- * Frees @tc .
+ * Frees @tc.
  *
  * Since: 1.10
  */
@@ -912,7 +920,8 @@ gst_video_time_code_free (GstVideoTimeCode * tc)
  * adding ("00:09:00;02", "00:01:00:00") will return "00:10:00;00"
  * because this time we can have an exact minute.
  *
- * Returns: A new #GstVideoTimeCode with @tc_inter added.
+ * Returns: (nullable): A new #GstVideoTimeCode with @tc_inter added or %NULL
+ *   if the interval can't be added.
  *
  * Since: 1.12
  */
@@ -1002,7 +1011,8 @@ gst_video_time_code_interval_new (guint hours, guint minutes, guint seconds,
  *
  * @tc_inter_str must only have ":" as separators.
  *
- * Returns: a new #GstVideoTimeCodeInterval from the given string
+ * Returns: (nullable): a new #GstVideoTimeCodeInterval from the given string
+ *   or %NULL if the string could not be passed.
  *
  * Since: 1.12
  */
@@ -1078,7 +1088,7 @@ gst_video_time_code_interval_clear (GstVideoTimeCodeInterval * tc)
  * gst_video_time_code_interval_copy:
  * @tc: a #GstVideoTimeCodeInterval
  *
- * Returns: a new #GstVideoTimeCodeInterval with the same values as @tc .
+ * Returns: a new #GstVideoTimeCodeInterval with the same values as @tc.
  *
  * Since: 1.12
  */
@@ -1093,7 +1103,7 @@ gst_video_time_code_interval_copy (const GstVideoTimeCodeInterval * tc)
  * gst_video_time_code_interval_free:
  * @tc: a #GstVideoTimeCodeInterval
  *
- * Frees @tc .
+ * Frees @tc.
  *
  * Since: 1.12
  */
