@@ -904,6 +904,13 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
   GST_OBJECT_LOCK (thiz);
   session = gst_msdk_context_get_session (thiz->context);
 
+  /* Close the current session if the session has been initialized,
+   * otherwise the subsequent function call of MFXVideoVPP_Init() will
+   * fail
+   */
+  if (thiz->initialized)
+    MFXVideoVPP_Close (session);
+
   if (thiz->use_video_memory) {
     gst_msdk_set_frame_allocator (thiz->context);
     thiz->param.IOPattern =
