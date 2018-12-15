@@ -1179,6 +1179,7 @@ gst_harness_set_src_caps (GstHarness * h, GstCaps * caps)
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
   handled = gst_pad_push_event (h->srcpad, gst_event_new_segment (&segment));
+  g_assert (handled);
 }
 
 /**
