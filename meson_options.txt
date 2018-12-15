@@ -130,6 +130,7 @@ option('soundtouch', type : 'feature', value : 'auto', description : 'Audio pitc
 option('spandsp', type : 'feature', value : 'auto', description : 'Packet loss concealment audio plugin')
 option('srt', type : 'feature', value : 'auto', description : 'Secure, Reliable, Transport client/server network source/sink plugin')
 option('srtp', type : 'feature', value : 'auto', description : 'Secure RTP codec plugin')
+option('tinyalsa', type : 'feature', value : 'auto', description : 'TinyALSA plugin')
 option('ttml', type : 'feature', value : 'auto', description : 'TTML subtitle parser and renderer plugin')
 option('uvch264', type : 'feature', value : 'auto', description : 'UVC compliant H.264 camera source plugin')
 option('vcd', type : 'feature', value : 'auto', description : 'VCD source plugin')
