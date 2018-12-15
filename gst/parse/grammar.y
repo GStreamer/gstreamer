@@ -1146,7 +1146,6 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
   graph_t g;
   gchar *dstr;
   GSList *walk;
-  GstBin *bin = NULL;
   GstElement *ret;
   yyscan_t scanner;
 
@@ -1209,6 +1208,7 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
 
   /* put all elements in our bin if necessary */
   if(g.chain->elements->next){
+    GstBin *bin;
     if (flags & GST_PARSE_FLAG_PLACE_IN_BIN)
       bin = GST_BIN (gst_element_factory_make ("bin", NULL));
     else
@@ -1226,8 +1226,6 @@ priv_gst_parse_launch (const gchar *str, GError **error, GstParseContext *ctx,
   ret = (GstElement *) g.chain->elements->data;
   g_slist_free (g.chain->elements);
   g.chain->elements=NULL;
-  if (GST_IS_BIN (ret))
-    bin = GST_BIN (ret);
   gst_parse_free_chain (g.chain);
   g.chain = NULL;
 
