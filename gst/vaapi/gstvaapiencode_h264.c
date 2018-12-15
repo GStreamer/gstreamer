@@ -38,11 +38,11 @@
  * If #GstVaapiEncodeH264:dct8x8 is enabled, then High profile is
  * used.  Otherwise, if #GstVaapiEncodeH264:cabac entropy coding is
  * enabled or #GstVaapiEncodeH264:max-bframes are allowed, then Main
- * Profile is in effect, and otherwise Baseline profile applies.  The
- * high profile is imposed by default, which is fine for most software
- * players and settings, but in some cases (e.g. hardware platforms) a
- * more restricted profile/level may be necessary. The recommended way
- * to set a profile is to set it in the downstream caps.
+ * Profile is in effect. The element will alway go with the maximal
+ * profile available in the caps negotation and otherwise Baseline
+ * profile applies. But in some cases (e.g. hardware platforms) a more
+ * restrictedprofile/level may be necessary. The recommended way to
+ * set a profile is to set it in the downstream caps.
  *
  * You can also set parameters to adjust the latency of encoding:
  * #GstVaapiEncodeH264:quality-level is a number between 1-7, in the
@@ -327,17 +327,8 @@ gst_vaapiencode_h264_set_config (GstVaapiEncode * base_encode)
 
     } else {
       GstCaps *profile_caps;
-      const gchar *profile_str;
-
       profile_caps = gst_caps_intersect (allowed_caps, available_caps);
-
-      /* let's fixate to adjust to minimal profile */
-      profile_caps = gst_caps_fixate (profile_caps);
-
-      structure = gst_caps_get_structure (profile_caps, 0);
-      profile_str = gst_structure_get_string (structure, "profile");
-      if (profile_str)
-        profile = gst_vaapi_utils_h264_get_profile_from_string (profile_str);
+      profile = find_best_profile (profile_caps);
 
       gst_caps_unref (profile_caps);
     }
