@@ -365,8 +365,6 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
             || owner_type == GST_TYPE_OBJECT || owner_type == GST_TYPE_PAD))
       continue;
 
-    readable = FALSE;
-
     g_value_init (&value, param->value_type);
 
     n_print ("%s%-20s%s: %s%s%s\n", PROP_NAME_COLOR,
