@@ -147,7 +147,7 @@ main (gint argc, gchar * argv[])
   GstPad *demux_sinkpad;
   GstPad *oggmux_srcpad[NUM_STREAM];
 
-  guint stream_cnt = 0;
+  guint stream_cnt;
   GstCaps *caps;
 
   gst_init (&argc, &argv);
@@ -171,8 +171,6 @@ main (gint argc, gchar * argv[])
 
   caps = gst_caps_from_string ("audio/x-raw,channels=1;");
 
-  stream_cnt = 0;
-
   for (stream_cnt = 0; stream_cnt < NUM_STREAM; stream_cnt++) {
     app->queue[stream_cnt] = gst_element_factory_make ("queue", NULL);
     app->filesink[stream_cnt] = gst_element_factory_make ("filesink", NULL);
@@ -183,8 +181,6 @@ main (gint argc, gchar * argv[])
     g_object_set (app->filesink[stream_cnt], "location",
         g_strdup_printf ("filesink_%d.ogg", stream_cnt), NULL);
   }
-
-  stream_cnt = 0;
 
   g_signal_connect (app->demux, "pad-added", G_CALLBACK (src_pad_added_cb),
       app);
@@ -206,15 +202,11 @@ main (gint argc, gchar * argv[])
     }
   }
 
-  stream_cnt = 0;
-
   for (stream_cnt = 0; stream_cnt < NUM_STREAM; stream_cnt++) {
     gst_element_link_many (app->audiotestsrc[stream_cnt],
         app->audioconvert[stream_cnt], app->capsfilter[stream_cnt],
         app->vorbisenc[stream_cnt], app->oggmux[stream_cnt], NULL);
   }
-
-  stream_cnt = 0;
 
   for (stream_cnt = 0; stream_cnt < NUM_STREAM; stream_cnt++) {
     funnel_sinkpad[stream_cnt] =
