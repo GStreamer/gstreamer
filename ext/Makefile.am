@@ -322,12 +322,6 @@ else
 SPANDSP_DIR =
 endif
 
-if USE_SPC
-SPC_DIR=spc
-else
-SPC_DIR=
-endif
-
 if USE_SRT
 SRT_DIR=srt
 else
@@ -468,7 +462,6 @@ SUBDIRS=\
 	$(SOUNDTOUCH_DIR) \
 	$(SPANDSP_DIR) \
 	$(GME_DIR) \
-	$(SPC_DIR) \
 	$(SRT_DIR) \
 	$(SRTP_DIR) \
 	$(TELETEXTDEC_DIR) \
@@ -535,7 +528,6 @@ DIST_SUBDIRS = \
 	sndfile \
 	soundtouch \
 	spandsp \
-	spc \
 	srt \
 	srtp \
 	gme \

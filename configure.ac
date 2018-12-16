@@ -2113,22 +2113,6 @@ AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
   fi
 ])
 
-dnl *** spc ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_SPC, true)
-AG_GST_CHECK_FEATURE(SPC, [spc decoder], spc, [
-  AC_CHECK_HEADER(openspc.h, [
-    AC_CHECK_LIB(openspc, OSPC_Init, [
-      SPC_LIBS="-lopenspc"
-      AC_SUBST(SPC_LIBS)
-      HAVE_SPC=yes
-    ], [
-      HAVE_SPC=no
-    ])
-  ], [
-    HAVE_SPC=no
-  ])
-])
-
 dnl *** gme ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GME, true)
 AG_GST_CHECK_FEATURE(GME, [gme decoder], gme, [
@@ -2434,7 +2418,6 @@ AM_CONDITIONAL(USE_SMOOTHSTREAMING, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
 AM_CONDITIONAL(USE_SPANDSP, false)
-AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_SRTP, false)
 AM_CONDITIONAL(USE_SRT, false)
 AM_CONDITIONAL(USE_GME, false)
@@ -2746,7 +2729,6 @@ ext/srt/Makefile
 ext/srtp/Makefile
 ext/teletextdec/Makefile
 ext/gme/Makefile
-ext/spc/Makefile
 ext/wildmidi/Makefile
 ext/vulkan/Makefile
 ext/vulkan/xcb/Makefile
