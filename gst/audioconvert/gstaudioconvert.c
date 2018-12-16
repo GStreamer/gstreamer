@@ -248,7 +248,6 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
   basetransform_class->prepare_output_buffer =
       GST_DEBUG_FUNCPTR (gst_audio_convert_prepare_output_buffer);
 
-  basetransform_class->passthrough_on_same_caps = TRUE;
   basetransform_class->transform_ip_on_passthrough = FALSE;
 }
 
