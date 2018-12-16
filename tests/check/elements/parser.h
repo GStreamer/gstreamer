@@ -52,19 +52,19 @@ typedef GstElement* (*ElementSetup) (const gchar * desc);
 
 /* context state variables; to be set by test using this helper */
 /* mandatory */
-GST_EXPORT const gchar *ctx_factory;
-GST_EXPORT GstStaticPadTemplate *ctx_sink_template;
-GST_EXPORT GstStaticPadTemplate *ctx_src_template;
+extern const gchar *ctx_factory;
+extern GstStaticPadTemplate *ctx_sink_template;
+extern GstStaticPadTemplate *ctx_src_template;
 /* optional */
-GST_EXPORT GstCaps *ctx_input_caps;
-GST_EXPORT GstCaps *ctx_output_caps;
-GST_EXPORT guint ctx_discard;
-GST_EXPORT datablob ctx_headers[MAX_HEADERS];
-GST_EXPORT gboolean ctx_no_metadata;
+extern GstCaps *ctx_input_caps;
+extern GstCaps *ctx_output_caps;
+extern guint ctx_discard;
+extern datablob ctx_headers[MAX_HEADERS];
+extern gboolean ctx_no_metadata;
 
-GST_EXPORT VerifyBuffer ctx_verify_buffer;
-GST_EXPORT ElementSetup ctx_setup;
-GST_EXPORT gboolean ctx_frame_generated;
+extern VerifyBuffer ctx_verify_buffer;
+extern ElementSetup ctx_setup;
+extern gboolean ctx_frame_generated;
 
 /* no refs taken/kept, all up to caller */
 typedef struct
@@ -97,31 +97,31 @@ typedef struct
   gboolean              no_metadata;
 } GstParserTest;
 
-GST_EXPORT
+extern
 void gst_parser_test_init (GstParserTest * ptest, guint8 * data, guint size, guint num);
 
-GST_EXPORT
+extern
 void gst_parser_test_run (GstParserTest * test, GstCaps ** out_caps);
 
-GST_EXPORT
+extern
 void gst_parser_test_normal (guint8 *data, guint size);
 
-GST_EXPORT
+extern
 void gst_parser_test_drain_single (guint8 *data, guint size);
 
-GST_EXPORT
+extern
 void gst_parser_test_drain_garbage (guint8 *data, guint size, guint8 *garbage, guint gsize);
 
-GST_EXPORT
+extern
 void gst_parser_test_split (guint8 *data, guint size);
 
-GST_EXPORT
+extern
 void gst_parser_test_skip_garbage (guint8 *data, guint size, guint8 *garbage, guint gsize);
 
-GST_EXPORT
+extern
 void gst_parser_test_output_caps (guint8 *data, guint size, const gchar * input_caps,
                                   const gchar * output_caps);
 
-GST_EXPORT
+extern
 GstCaps *gst_parser_test_get_output_caps (guint8 *data, guint size, const gchar * input_caps);
 
