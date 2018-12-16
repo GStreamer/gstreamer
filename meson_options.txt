@@ -86,6 +86,7 @@ option('curl', type : 'feature', value : 'auto', description : 'cURL network sou
 option('curl-ssh2', type : 'feature', value : 'auto', description : 'cURL network source and sink plugin libssh2 support')
 option('d3dvideosink', type : 'feature', value : 'auto', description : 'Direct3D video sink plugin')
 option('dash', type : 'feature', value : 'auto', description : 'DASH demuxer plugin')
+option('dc1394', type : 'feature', value : 'auto', description : 'libdc1394 IIDC camera source plugin')
 option('decklink', type : 'feature', value : 'auto', description : 'DeckLink audio/video source/sink plugin')
 option('directfb', type : 'feature', value : 'auto', description : 'DirectFB video sink plugin')
 option('directsound', type : 'feature', value : 'auto', description : 'Directsound audio source plugin')
