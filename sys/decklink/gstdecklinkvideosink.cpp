@@ -643,6 +643,105 @@ gst_decklink_video_sink_convert_to_internal_clock (GstDecklinkVideoSink * self,
       GST_TIME_ARGS (*timestamp), GST_TIME_ARGS (self->output->clock_epoch));
 }
 
+/* Copied from ext/closedcaption/gstccconverter.c */
+/* Converts raw CEA708 cc_data and an optional timecode into CDP */
+static guint
+convert_cea708_cc_data_cea708_cdp_internal (GstDecklinkVideoSink * self,
+    const guint8 * cc_data, guint cc_data_len, guint8 * cdp, guint cdp_len,
+    const GstVideoTimeCodeMeta * tc_meta)
+{
+  GstByteWriter bw;
+  guint8 flags, checksum;
+  guint i, len;
+  const GstDecklinkMode *mode = gst_decklink_get_mode (self->mode);
+
+  gst_byte_writer_init_with_data (&bw, cdp, cdp_len, FALSE);
+  gst_byte_writer_put_uint16_be_unchecked (&bw, 0x9669);
+  /* Write a length of 0 for now */
+  gst_byte_writer_put_uint8_unchecked (&bw, 0);
+  if (mode->fps_n == 24000 && mode->fps_d == 1001) {
+    gst_byte_writer_put_uint8_unchecked (&bw, 0x1f);
+  } else if (mode->fps_n == 24 && mode->fps_d == 1) {
+    gst_byte_writer_put_uint8_unchecked (&bw, 0x2f);
+  } else if (mode->fps_n == 25 && mode->fps_d == 1) {
+    gst_byte_writer_put_uint8_unchecked (&bw, 0x3f);
+  } else if (mode->fps_n == 30 && mode->fps_d == 1001) {
+    gst_byte_writer_put_uint8_unchecked (&bw, 0x4f);
+  } else if (mode->fps_n == 30 && mode->fps_d == 1) {
+    gst_byte_writer_put_uint8_unchecked (&bw, 0x5f);
+  } else if (mode->fps_n == 50 && mode->fps_d == 1) {
+    gst_byte_writer_put_uint8_unchecked (&bw, 0x6f);
+  } else if (mode->fps_n == 60000 && mode->fps_d == 1001) {
+    gst_byte_writer_put_uint8_unchecked (&bw, 0x7f);
+  } else if (mode->fps_n == 60 && mode->fps_d == 1) {
+    gst_byte_writer_put_uint8_unchecked (&bw, 0x8f);
+  } else {
+    g_assert_not_reached ();
+  }
+
+  /* ccdata_present | caption_service_active */
+  flags = 0x42;
+
+  /* time_code_present */
+  if (tc_meta)
+    flags |= 0x80;
+
+  /* reserved */
+  flags |= 0x01;
+
+  gst_byte_writer_put_uint8_unchecked (&bw, flags);
+
+  gst_byte_writer_put_uint16_be_unchecked (&bw, self->cdp_hdr_sequence_cntr);
+
+  if (tc_meta) {
+    const GstVideoTimeCode *tc = &tc_meta->tc;
+
+    gst_byte_writer_put_uint8_unchecked (&bw, 0x71);
+    gst_byte_writer_put_uint8_unchecked (&bw, 0xc0 |
+        (((tc->hours % 10) & 0x3) << 4) |
+        ((tc->hours - (tc->hours % 10)) & 0xf));
+
+    gst_byte_writer_put_uint8_unchecked (&bw, 0x80 |
+        (((tc->minutes % 10) & 0x7) << 4) |
+        ((tc->minutes - (tc->minutes % 10)) & 0xf));
+
+    gst_byte_writer_put_uint8_unchecked (&bw,
+        (tc->field_count <
+            2 ? 0x00 : 0x80) | (((tc->seconds %
+                    10) & 0x7) << 4) | ((tc->seconds -
+                (tc->seconds % 10)) & 0xf));
+
+    gst_byte_writer_put_uint8_unchecked (&bw,
+        ((tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) ? 0x80 :
+            0x00) | (((tc->frames % 10) & 0x3) << 4) | ((tc->frames -
+                (tc->frames % 10)) & 0xf));
+  }
+
+  gst_byte_writer_put_uint8_unchecked (&bw, 0x72);
+  gst_byte_writer_put_uint8_unchecked (&bw, 0xe0 | cc_data_len / 3);
+  gst_byte_writer_put_data_unchecked (&bw, cc_data, cc_data_len);
+
+  gst_byte_writer_put_uint8_unchecked (&bw, 0x74);
+  gst_byte_writer_put_uint16_be_unchecked (&bw, self->cdp_hdr_sequence_cntr);
+  self->cdp_hdr_sequence_cntr++;
+  /* We calculate the checksum afterwards */
+  gst_byte_writer_put_uint8_unchecked (&bw, 0);
+
+  len = gst_byte_writer_get_pos (&bw);
+  gst_byte_writer_set_pos (&bw, 2);
+  gst_byte_writer_put_uint8_unchecked (&bw, len);
+
+  checksum = 0;
+  for (i = 0; i < len; i++) {
+    checksum += cdp[i];
+  }
+  checksum &= 0xff;
+  checksum = 256 - checksum;
+  cdp[len - 1] = checksum;
+
+  return len;
+}
+
 static GstFlowReturn
 gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
 {
@@ -784,7 +883,14 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
 
       switch (cc_meta->caption_type) {
         case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:{
-          guint8 data[3];
+          guint8 data[138];
+          guint i, n;
+
+          n = cc_meta->size / 2;
+          if (cc_meta->size > 46) {
+            GST_WARNING_OBJECT (self, "Too big raw CEA608 buffer");
+            break;
+          }
 
           /* This is the offset from line 9 for 525-line fields and from line
            * 5 for 625-line fields.
@@ -792,11 +898,13 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
            * The highest bit is set for field 1 but not for field 0, but we
            * have no way of knowning the field here
            */
-          data[0] =
-              self->info.height ==
-              525 ? self->caption_line - 9 : self->caption_line - 5;
-          data[1] = cc_meta->data[0];
-          data[2] = cc_meta->data[1];
+          for (i = 0; i < n; i++) {
+            data[3 * i] =
+                self->info.height ==
+                525 ? self->caption_line - 9 : self->caption_line - 5;
+            data[3 * i + 1] = cc_meta->data[2 * i];
+            data[3 * i + 2] = cc_meta->data[2 * i + 1];
+          }
 
           if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
                   FALSE,
@@ -812,7 +920,29 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
           if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
                   FALSE,
                   GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 >> 8,
-                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff, cc_meta->data, cc_meta->size))
+                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff, cc_meta->data,
+                  cc_meta->size))
+            GST_WARNING_OBJECT (self, "Couldn't add meta to ancillary data");
+
+          got_captions = TRUE;
+
+          break;
+        }
+        case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:{
+          guint8 data[256];
+          guint n;
+
+          n = cc_meta->size / 3;
+          if (cc_meta->size > 46) {
+            GST_WARNING_OBJECT (self, "Too big raw CEA708 buffer");
+            break;
+          }
+
+          n = convert_cea708_cc_data_cea708_cdp_internal (self, cc_meta->data,
+              cc_meta->size, data, sizeof (data), tc_meta);
+          if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder, FALSE,
+                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 >> 8,
+                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff, data, n))
             GST_WARNING_OBJECT (self, "Couldn't add meta to ancillary data");
 
           got_captions = TRUE;
@@ -1137,6 +1267,7 @@ gst_decklink_video_sink_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       self->vbiencoder = NULL;
       self->anc_vformat = GST_VIDEO_FORMAT_UNKNOWN;
+      self->cdp_hdr_sequence_cntr = 0;
 
       g_mutex_lock (&self->output->lock);
       self->output->clock_epoch += self->output->clock_last_time;
