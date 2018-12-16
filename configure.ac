@@ -1357,20 +1357,6 @@ AG_GST_CHECK_FEATURE(WEBP, [WebP], webp , [
   AC_SUBST(WEBP_LIBS)
 ])
 
-dnl *** Daala ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_DAALA, true)
-AG_GST_CHECK_FEATURE(DAALA, [daala], daala, [
-  if test "x$BUILD_EXPERIMENTAL" = "xyes"; then
-    PKG_CHECK_MODULES(DAALA, daalaenc daaladec, [
-            HAVE_DAALA="yes"
-    ], [
-            HAVE_DAALA="no"
-    ])
-    AC_SUBST(DAALA_CFLAGS)
-    AC_SUBST(DAALA_LIBS)
-  fi
-])
-
 dnl *** DTS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DTS, true)
 AG_GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
@@ -2376,7 +2362,6 @@ AM_CONDITIONAL(DECKLINK_OSX, false)
 AM_CONDITIONAL(DECKLINK_WIN, false)
 AM_CONDITIONAL(USE_DIRECTFB, false)
 AM_CONDITIONAL(USE_WAYLAND, false)
-AM_CONDITIONAL(USE_DAALA, false)
 AM_CONDITIONAL(USE_DTS, false)
 AM_CONDITIONAL(USE_EXIF, false)
 AM_CONDITIONAL(USE_RESINDVD, false)
@@ -2685,7 +2670,6 @@ ext/dash/Makefile
 ext/dc1394/Makefile
 ext/directfb/Makefile
 ext/wayland/Makefile
-ext/daala/Makefile
 ext/dts/Makefile
 ext/faac/Makefile
 ext/faad/Makefile

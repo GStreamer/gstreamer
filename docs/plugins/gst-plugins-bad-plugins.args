@@ -59803,26 +59803,6 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
-<NAME>GstDaalaEnc::keyframe-rate</NAME>
-<TYPE>gint</TYPE>
-<RANGE>>= 1</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Keyframe Rate</NICK>
-<BLURB>Keyframe Rate.</BLURB>
-<DEFAULT>1</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstDaalaEnc::quant</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[0,511]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Quant</NICK>
-<BLURB>Quant.</BLURB>
-<DEFAULT>10</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>ladspasrc-sin-cos-1881-so-sincos::base-frequency</NAME>
 <TYPE>gfloat</TYPE>
 <RANGE>[0.0441,22050]</RANGE>
