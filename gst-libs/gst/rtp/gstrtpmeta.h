@@ -57,10 +57,10 @@ GST_RTP_API
 GType               gst_rtp_source_meta_api_get_type     (void);
 
 GST_RTP_API
-GstRTPSourceMeta *  gst_buffer_add_rtp_source_meta       (GstBuffer * buf, const guint32 * ssrc,
+GstRTPSourceMeta *  gst_buffer_add_rtp_source_meta       (GstBuffer * buffer, const guint32 * ssrc,
                                                           const guint32 * csrc, guint csrc_count);
 GST_RTP_API
-GstRTPSourceMeta *  gst_buffer_get_rtp_source_meta       (GstBuffer * buf);
+GstRTPSourceMeta *  gst_buffer_get_rtp_source_meta       (GstBuffer * buffer);
 
 GST_RTP_API
 guint               gst_rtp_source_meta_get_source_count (const GstRTPSourceMeta * meta);
