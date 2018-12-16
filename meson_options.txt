@@ -110,6 +110,7 @@ option('ladspa', type : 'feature', value : 'auto', description : 'LADSPA plugin 
 option('libde265', type : 'feature', value : 'auto', description : 'HEVC/H.265 video decoder plugin')
 option('libmms', type : 'feature', value : 'auto', description : 'Microsoft multimedia server network source plugin')
 option('lv2', type : 'feature', value : 'auto', description : 'LV2 audio plugin bridge')
+option('modplug', type : 'feature', value : 'auto', description : 'ModPlug audio decoder plugin')
 option('mpeg2enc', type : 'feature', value : 'auto', description : 'mpeg2enc video encoder plugin')
 option('mplex', type : 'feature', value : 'auto', description : 'mplex audio/video multiplexer plugin')
 option('msdk', type : 'feature', value : 'auto', description : 'Intel Media SDK video encoder/decoder plugin')
