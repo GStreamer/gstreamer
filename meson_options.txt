@@ -130,6 +130,7 @@ option('sbc', type : 'feature', value : 'auto', description : 'SBC bluetooth aud
 option('sctp', type : 'feature', value : 'auto', description : 'SCTP plugin')
 option('shm', type : 'feature', value : 'auto', description : 'Shared memory source/sink plugin')
 option('smoothstreaming', type : 'feature', value : 'auto', description : 'Microsoft Smooth Streaming demuxer plugin')
+option('sndfile', type : 'feature', value : 'auto', description : 'libsndfile plugin')
 option('soundtouch', type : 'feature', value : 'auto', description : 'Audio pitch controller & BPM detection plugin')
 option('spandsp', type : 'feature', value : 'auto', description : 'Packet loss concealment audio plugin')
 option('srt', type : 'feature', value : 'auto', description : 'Secure, Reliable, Transport client/server network source/sink plugin')
