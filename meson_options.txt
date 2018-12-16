@@ -99,6 +99,7 @@ option('fdkaac', type : 'feature', value : 'auto', description : 'Fraunhofer AAC
 option('flite', type : 'feature', value : 'auto', description : 'Flite speech synthesizer source plugin')
 option('fluidsynth', type : 'feature', value : 'auto', description : 'Fluidsynth MIDI decoder plugin')
 option('gl', type : 'feature', value : 'auto', description : 'GStreamer OpenGL mixer plugin')
+option('gme', type : 'feature', value : 'auto', description : 'libgme gaming console music file decoder plugin')
 option('gsm', type : 'feature', value : 'auto', description : 'GSM encoder/decoder plugin')
 option('ipcpipeline', type : 'feature', value : 'auto', description : 'Inter-process communication plugin')
 option('iqa', type : 'feature', value : 'auto', description : 'Image quality assessment plugin')
