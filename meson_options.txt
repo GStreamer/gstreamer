@@ -116,6 +116,7 @@ option('musepack', type : 'feature', value : 'auto', description : 'libmpcdec Mu
 option('neon', type : 'feature', value : 'auto', description : 'NEON HTTP source plugin')
 option('nvdec', type : 'feature', value : 'auto', description : 'NVIDIA GPU decoder plugin')
 option('nvenc', type : 'feature', value : 'auto', description : 'NVIDIA GPU encoder plugin')
+option('ofa', type : 'feature', value : 'auto', description : 'Open Fingerprint Architecture library plugin')
 option('openh264', type : 'feature', value : 'auto', description : 'H.264 video codec plugin')
 option('openjpeg', type : 'feature', value : 'auto', description : 'JPEG2000 image codec plugin')
 option('opensles', type : 'feature', value : 'auto', description : 'OpenSL ES audio source/sink plugin')
