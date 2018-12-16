@@ -1567,6 +1567,7 @@ gst_codec_utils_opus_create_header (guint32 rate,
 
   if (!hdl) {
     GST_WARNING ("Error creating header");
+    gst_byte_writer_reset (&bw);
     return NULL;
   }
 
