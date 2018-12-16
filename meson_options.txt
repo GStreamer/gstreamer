@@ -141,6 +141,7 @@ option('uvch264', type : 'feature', value : 'auto', description : 'UVC compliant
 option('vcd', type : 'feature', value : 'auto', description : 'VCD source plugin')
 option('vdpau', type : 'feature', value : 'auto', description : 'Nvidia VDPAU plugin')
 option('voaacenc', type : 'feature', value : 'auto', description : 'AAC audio encoder plugin')
+option('voamrwbenc', type : 'feature', value : 'auto', description : 'AMR-WB audio encoder plugin')
 option('vulkan', type : 'feature', value : 'auto', description : 'Vulkan video sink plugin')
 option('wasapi', type : 'feature', value : 'auto', description : 'Windows Audio Session API source/sink plugin')
 option('webp', type : 'feature', value : 'auto', description : 'WebP image codec plugin')
