@@ -775,6 +775,9 @@ gst_audio_convert_set_caps (GstBaseTransform * base, GstCaps * incaps,
   in_place = gst_audio_converter_supports_inplace (this->convert);
   gst_base_transform_set_in_place (base, in_place);
 
+  gst_base_transform_set_passthrough (base,
+      gst_audio_converter_is_passthrough (this->convert));
+
   this->in_info = in_info;
   this->out_info = out_info;
 

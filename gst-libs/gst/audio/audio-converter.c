@@ -111,6 +111,8 @@ struct _GstAudioConverter
 
   gboolean in_place;            /* the conversion can be done in place; returned by gst_audio_converter_supports_inplace() */
 
+  gboolean passthrough;
+
   /* unpack */
   gboolean in_default;
   gboolean unpack_ip;
@@ -1373,6 +1375,7 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
 
   convert->convert = converter_generic;
   convert->in_place = FALSE;
+  convert->passthrough = FALSE;
 
   /* optimize */
   if (convert->mix_passthrough) {
@@ -1383,6 +1386,7 @@ gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,
               "passthrough mixing -> passthrough");
           convert->convert = converter_passthrough;
           convert->in_place = TRUE;
+          convert->passthrough = TRUE;
         }
       } else {
         if (is_intermediate_format (in_info->finfo->format)) {
@@ -1644,4 +1648,20 @@ gboolean
 gst_audio_converter_supports_inplace (GstAudioConverter * convert)
 {
   return convert->in_place;
+}
+
+/**
+ * gst_audio_converter_is_passthrough:
+ *
+ * Returns whether the audio converter will operate in passthrough mode.
+ * The return value would be typically input to gst_base_transform_set_passthrough()
+ *
+ * Returns: %TRUE when no conversion will actually occur.
+ *
+ * Since: 1.16
+ */
+gboolean
+gst_audio_converter_is_passthrough (GstAudioConverter * convert)
+{
+  return convert->passthrough;
 }

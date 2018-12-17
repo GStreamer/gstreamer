@@ -708,6 +708,7 @@ gst_audio_converter_update_config
 gst_audio_converter_get_config
 gst_audio_converter_reset
 gst_audio_converter_supports_inplace
+gst_audio_converter_is_passthrough
 <SUBSECTION Standard>
 gst_audio_converter_flags_get_type
 GST_TYPE_AUDIO_CONVERTER_FLAGS
