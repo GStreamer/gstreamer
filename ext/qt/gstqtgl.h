@@ -30,6 +30,21 @@
 #include <QtGui/qtgui-config.h>
 #endif
 
+/* The glext.h guard was renamed in 2018, but some software which
+ * includes their own copy of the GL headers (such as qt) might have
+ * older version which use the old guard. This would result in the
+ * header being included again (and symbols redefined).
+ *
+ * To avoid this, we define the "old" guard if the "new" guard is
+ * defined.*/
+#if GST_GL_HAVE_OPENGL
+#ifdef __gl_glext_h_
+#ifndef __glext_h_
+#define __glext_h_ 1
+#endif
+#endif
+#endif
+
 #if defined(QT_OPENGL_ES_2)
 #define GLsync gst_qt_GLsync
 #include <QOpenGLContext>
