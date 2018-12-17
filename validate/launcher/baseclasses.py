@@ -737,7 +737,7 @@ class GstValidateTest(Test):
             if self._sent_eos_time is not None:
                 t = time.time()
                 if ((t - self._sent_eos_time)) > 30:
-                    if self.media_descriptor.get_protocol() == Protocols.HLS:
+                    if self.media_descriptor is not None and self.media_descriptor.get_protocol() == Protocols.HLS:
                         self.set_result(Result.PASSED,
                                         """Got no EOS 30 seconds after sending EOS,
                                         in HLS known and tolerated issue:
