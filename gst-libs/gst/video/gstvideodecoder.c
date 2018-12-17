@@ -1067,7 +1067,6 @@ gst_video_decoder_negotiate_default_caps (GstVideoDecoder * decoder)
           1, 1, NULL);
   }
   caps = gst_caps_fixate (caps);
-  structure = gst_caps_get_structure (caps, 0);
 
   if (!caps || !gst_video_info_from_caps (&info, caps))
     goto caps_error;
