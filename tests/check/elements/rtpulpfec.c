@@ -515,7 +515,12 @@ GST_START_TEST (rtpulpfecdec_recovered_push_failed)
   GstHarness *h = harness_rtpulpfecdec (3536077562, 100, 123);
   RecoveredPacketInfo info = {.pt = 100,.ssrc = 3536077562,.seq = 36921 };
   GList *expected = expect_recovered_packets (h, &info, 1);
+
+  // the harness is already PLAYING because there are no src pads, which
+  // means the error-after counter isn't set, so reset and start again.
+  gst_element_set_state (h->element, GST_STATE_NULL);
   gst_harness_set (h, "identity", "error-after", 2, NULL);
+  gst_harness_play (h);
 
   push_data (h, SAMPLE_ULPFEC0_FEC, sizeof (SAMPLE_ULPFEC0_FEC) - 1);
   push_lost_event (h, 36921, 1111, 2222, FALSE);
