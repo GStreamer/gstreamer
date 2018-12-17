@@ -463,6 +463,7 @@ gst_curl_http_sink_set_mime_type (GstCurlBaseSink * bcsink, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   mime_type = gst_structure_get_name (structure);
 
+  g_free (sink->content_type);
   if (!g_strcmp0 (mime_type, "multipart/form-data") &&
       gst_structure_has_field_typed (structure, "boundary", G_TYPE_STRING)) {
     const gchar *boundary;
