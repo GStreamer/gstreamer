@@ -141,6 +141,7 @@ enum
 #define REDUCE_BLOCKSIZE_LIMIT 0.20
 #define REDUCE_BLOCKSIZE_COUNT 2
 #define REDUCE_BLOCKSIZE_FACTOR 0.5
+#define GROW_TIME_LIMIT (1 * GST_SECOND)
 
 static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -452,6 +453,7 @@ gst_soup_http_src_reset (GstSoupHTTPSrc * src)
 
   src->reduce_blocksize_count = 0;
   src->increase_blocksize_count = 0;
+  src->last_socket_read_time = 0;
 
   g_cancellable_reset (src->cancellable);
   g_mutex_lock (&src->mutex);
@@ -1634,10 +1636,15 @@ gst_soup_http_src_check_update_blocksize (GstSoupHTTPSrc * src,
 {
   guint blocksize = gst_base_src_get_blocksize (GST_BASE_SRC_CAST (src));
 
-  GST_LOG_OBJECT (src, "Checking to update blocksize. Read:%" G_GINT64_FORMAT
-      " blocksize:%u", bytes_read, blocksize);
+  gint64 time_since_last_read =
+      g_get_monotonic_time () * GST_USECOND - src->last_socket_read_time;
 
-  if (bytes_read >= blocksize * GROW_BLOCKSIZE_LIMIT) {
+  GST_LOG_OBJECT (src, "Checking to update blocksize. Read: %" G_GINT64_FORMAT
+      " bytes, blocksize: %u bytes, time since last read: %" GST_TIME_FORMAT,
+      bytes_read, blocksize, GST_TIME_ARGS (time_since_last_read));
+
+  if (bytes_read >= blocksize * GROW_BLOCKSIZE_LIMIT
+      && time_since_last_read <= GROW_TIME_LIMIT) {
     src->reduce_blocksize_count = 0;
     src->increase_blocksize_count++;
 
@@ -1647,7 +1654,8 @@ gst_soup_http_src_check_update_blocksize (GstSoupHTTPSrc * src,
       gst_base_src_set_blocksize (GST_BASE_SRC_CAST (src), blocksize);
       src->increase_blocksize_count = 0;
     }
-  } else if (bytes_read < blocksize * REDUCE_BLOCKSIZE_LIMIT) {
+  } else if (bytes_read < blocksize * REDUCE_BLOCKSIZE_LIMIT
+      || time_since_last_read > GROW_TIME_LIMIT) {
     src->reduce_blocksize_count++;
     src->increase_blocksize_count = 0;
 
@@ -1735,6 +1743,8 @@ gst_soup_http_src_read_buffer (GstSoupHTTPSrc * src, GstBuffer ** outbuf)
     src->retry_count = 0;
 
     gst_soup_http_src_check_update_blocksize (src, read_bytes);
+
+    src->last_socket_read_time = g_get_monotonic_time () * GST_USECOND;
 
     /* If we're at the end of a range request, read again to let libsoup
      * finalize the request. This allows to reuse the connection again later,

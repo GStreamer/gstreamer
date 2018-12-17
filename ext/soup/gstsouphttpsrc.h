@@ -115,6 +115,8 @@ struct _GstSoupHTTPSrc {
   GCond have_headers_cond;
 
   GstEvent *http_headers_event;
+
+  gint64 last_socket_read_time;
 };
 
 struct _GstSoupHTTPSrcClass {
