@@ -5914,7 +5914,7 @@ static gboolean
 setup_scale (GstVideoConverter * convert)
 {
   int i, n_planes;
-  gint method, cr_method, stride, in_width, in_height, out_width, out_height;
+  gint method, cr_method, in_width, in_height, out_width, out_height;
   guint taps;
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *in_finfo, *out_finfo;
@@ -5963,8 +5963,6 @@ setup_scale (GstVideoConverter * convert)
   in_height = convert->in_height;
   out_width = convert->out_width;
   out_height = convert->out_height;
-
-  stride = 0;
 
   if (n_planes == 1 && !GST_VIDEO_FORMAT_INFO_IS_GRAY (out_finfo)) {
     gint pstride;
@@ -6020,9 +6018,6 @@ setup_scale (GstVideoConverter * convert)
       convert->fout_x[0] = convert->out_x * pstride;
     }
 
-    stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (in_info, 0));
-    stride = MAX (stride, GST_VIDEO_INFO_PLANE_STRIDE (out_info, 0));
-
     if (in_height != out_height && in_height != 0 && out_height != 0) {
       convert->fv_scaler[0].scaler = g_new (GstVideoScaler *, n_threads);
 
@@ -6060,9 +6055,6 @@ setup_scale (GstVideoConverter * convert)
           break;
         }
       }
-
-      stride = MAX (stride, GST_VIDEO_INFO_COMP_STRIDE (in_info, i));
-      stride = MAX (stride, GST_VIDEO_INFO_COMP_STRIDE (out_info, i));
 
       iw = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (in_finfo, i, in_width);
       ih = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (in_finfo, i, in_height);
