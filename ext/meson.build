@@ -1,4 +1,3 @@
-# FIXME implement these
 subdir('assrender')
 subdir('aom')
 subdir('bs2b')
@@ -39,7 +38,7 @@ subdir('openexr')
 subdir('openh264')
 subdir('openjpeg')
 subdir('openmpt')
-#subdir('openni2')
+subdir('openni2')
 subdir('opus')
 subdir('resindvd')
 subdir('rsvg')
