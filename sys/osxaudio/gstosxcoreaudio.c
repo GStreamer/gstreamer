@@ -504,7 +504,7 @@ gst_core_audio_asbd_to_caps (AudioStreamBasicDescription * asbd,
   bps = asbd->mBitsPerChannel;
   endianness = asbd->mFormatFlags & kAudioFormatFlagIsBigEndian ?
       G_BIG_ENDIAN : G_LITTLE_ENDIAN;
-  sign = asbd->mFormatID & kAudioFormatFlagIsSignedInteger ? TRUE : FALSE;
+  sign = asbd->mFormatFlags & kAudioFormatFlagIsSignedInteger ? TRUE : FALSE;
   interleaved = asbd->mFormatFlags & kAudioFormatFlagIsNonInterleaved ?
       TRUE : FALSE;
 
