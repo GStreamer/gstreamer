@@ -2158,7 +2158,7 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
       }
       default:
         res = GST_RTSP_ERROR;
-        break;
+        goto done;
     }
   }
 done:
