@@ -4,7 +4,7 @@ if openal_dep.found()
   gstopenal = library('gstopenal',
     'gstopenal.c', 'gstopenalsink.c', 'gstopenalsrc.c',
     c_args: gst_plugins_bad_args,
-    include_directories: [configinc],
+    include_directories: [configinc, libsinc],
     dependencies: [gstaudio_dep, openal_dep],
     install: true,
     install_dir: plugins_install_dir,
