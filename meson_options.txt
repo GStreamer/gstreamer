@@ -123,6 +123,7 @@ option('openal', type : 'feature', value : 'auto', description : 'OpenAL plugin'
 option('openexr', type : 'feature', value : 'auto', description : 'OpenEXR plugin')
 option('openh264', type : 'feature', value : 'auto', description : 'H.264 video codec plugin')
 option('openjpeg', type : 'feature', value : 'auto', description : 'JPEG2000 image codec plugin')
+option('openmpt', type : 'feature', value : 'auto', description : 'OpenMPT module music library plugin')
 option('opensles', type : 'feature', value : 'auto', description : 'OpenSL ES audio source/sink plugin')
 option('opus', type : 'feature', value : 'auto', description : 'OPUS audio parser plugin')
 option('resindvd', type : 'feature', value : 'auto', description : 'Resin DVD playback plugin')
