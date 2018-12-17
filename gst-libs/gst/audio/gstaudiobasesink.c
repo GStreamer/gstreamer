@@ -1863,7 +1863,6 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     goto wrong_size;
 
   samples = size / bpf;
-  out_samples = samples;
 
   time = GST_BUFFER_TIMESTAMP (buf);
 
