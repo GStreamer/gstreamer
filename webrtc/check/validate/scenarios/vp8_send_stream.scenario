@@ -1,0 +1,5 @@
+description, summary="Send a VP8 stream", handles-state=true
+add-stream, pipeline="videotestsrc is-live=1 ! vp8enc ! rtpvp8pay ! queue"
+set-state, state="playing";
+create-offer;
+wait-for-negotiation-state, state="answer-set"

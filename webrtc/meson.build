@@ -37,3 +37,5 @@ endif
 subdir('multiparty-sendrecv')
 subdir('signalling')
 subdir('sendrecv')
+
+subdir('check')
