@@ -267,7 +267,6 @@ gst_curl_base_sink_finalize (GObject * gobject)
     g_thread_join (this->transfer_thread);
   }
 
-  gst_curl_base_sink_transfer_cleanup (this);
   g_cond_clear (&this->transfer_cond->cond);
   g_free (this->transfer_cond);
   g_free (this->transfer_buf);
@@ -1220,6 +1219,8 @@ gst_curl_base_sink_transfer_thread_func (gpointer data)
   }
 
 done:
+  gst_curl_base_sink_transfer_cleanup (sink);
+
   /* extract the error code so the lock does not have to be
    * taken when calling the functions below that take the lock
    * on their own */
