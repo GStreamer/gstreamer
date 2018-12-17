@@ -670,6 +670,50 @@ GST_START_TEST (videotimecode_from_date_time)
 
 GST_END_TEST;
 
+static void
+test_timecode_from_string (const gchar * str, gboolean success, guint hours,
+    guint minutes, guint seconds, guint frames, gboolean drop_frame)
+{
+  GstVideoTimeCode *tc;
+  gchar *s;
+
+  tc = gst_video_time_code_new_from_string (str);
+
+  if (success) {
+    fail_unless (tc);
+  } else {
+    fail_if (tc);
+    return;
+  }
+
+  fail_unless_equals_int (tc->hours, hours);
+  fail_unless_equals_int (tc->minutes, minutes);
+  fail_unless_equals_int (tc->seconds, seconds);
+  fail_unless_equals_int (tc->frames, frames);
+
+  if (drop_frame)
+    fail_unless (tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
+  else
+    fail_if (tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME);
+
+  s = gst_video_time_code_to_string (tc);
+  fail_unless_equals_string (s, str);
+
+  gst_video_time_code_free (tc);
+  g_free (s);
+}
+
+GST_START_TEST (videotimecode_from_to_string)
+{
+  test_timecode_from_string ("11:12:13:14", TRUE, 11, 12, 13, 14, FALSE);
+  test_timecode_from_string ("11:12:13;14", TRUE, 11, 12, 13, 14, TRUE);
+  test_timecode_from_string ("11:12:13:", FALSE, 0, 0, 0, 0, FALSE);
+  test_timecode_from_string ("11:12:13:ab", FALSE, 0, 0, 0, 0, FALSE);
+  test_timecode_from_string ("a 11:12:13:14", FALSE, 0, 0, 0, 0, FALSE);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videotimecode_suite (void)
 {
@@ -708,6 +752,9 @@ gst_videotimecode_suite (void)
   tcase_add_test (tc, videotimecode_from_date_time_1s);
   tcase_add_test (tc, videotimecode_from_date_time_halfsecond);
   tcase_add_test (tc, videotimecode_from_date_time);
+
+  tcase_add_test (tc, videotimecode_from_to_string);
+
   return s;
 }
 

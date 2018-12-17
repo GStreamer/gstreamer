@@ -694,17 +694,21 @@ gst_video_time_code_new_from_string (const gchar * tc_str)
   if (sscanf (tc_str, "%02u:%02u:%02u:%02u", &hours, &minutes, &seconds,
           &frames)
       == 4
-      || sscanf (tc_str, "%02u:%02u:%02u;%02u", &hours, &minutes, &seconds,
-          &frames)
-      == 4
       || sscanf (tc_str, "%02u:%02u:%02u.%02u", &hours, &minutes, &seconds,
-          &frames)
-      == 4
-      || sscanf (tc_str, "%02u:%02u:%02u,%02u", &hours, &minutes, &seconds,
           &frames)
       == 4) {
     tc = gst_video_time_code_new (0, 1, NULL, GST_VIDEO_TIME_CODE_FLAGS_NONE,
         hours, minutes, seconds, frames, 0);
+
+    return tc;
+  } else if (sscanf (tc_str, "%02u:%02u:%02u;%02u", &hours, &minutes, &seconds,
+          &frames)
+      == 4 || sscanf (tc_str, "%02u:%02u:%02u,%02u", &hours, &minutes, &seconds,
+          &frames)
+      == 4) {
+    tc = gst_video_time_code_new (0, 1, NULL,
+        GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME, hours, minutes, seconds, frames,
+        0);
 
     return tc;
   } else {
