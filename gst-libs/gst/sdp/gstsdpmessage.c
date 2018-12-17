@@ -748,7 +748,7 @@ gst_sdp_message_as_uri (const gchar * scheme, const GstSDPMessage * msg)
   g_return_val_if_fail (scheme != NULL, NULL);
   g_return_val_if_fail (msg != NULL, NULL);
 
-  p = serialized = gst_sdp_message_as_text (msg);
+  serialized = gst_sdp_message_as_text (msg);
 
   lines = g_string_new ("");
   g_string_append_printf (lines, "%s:///#", scheme);
