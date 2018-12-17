@@ -93,6 +93,11 @@ static gboolean gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * filter,
     GstCaps * caps);
 static gboolean gst_rtp_h264_depay_handle_event (GstRTPBaseDepayload * depay,
     GstEvent * event);
+static GstBuffer *gst_rtp_h264_complete_au (GstRtpH264Depay * rtph264depay,
+    GstClockTime * out_timestamp, gboolean * out_keyframe);
+static void gst_rtp_h264_depay_push (GstRtpH264Depay * rtph264depay,
+    GstBuffer * outbuf, gboolean keyframe, GstClockTime timestamp,
+    gboolean marker);
 
 static void
 gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
@@ -157,6 +162,21 @@ gst_rtp_h264_depay_reset (GstRtpH264Depay * rtph264depay, gboolean hard)
     }
     gst_allocation_params_init (&rtph264depay->params);
   }
+}
+
+static void
+gst_rtp_h264_depay_drain (GstRtpH264Depay * rtph264depay)
+{
+  GstClockTime timestamp;
+  gboolean keyframe;
+  GstBuffer *outbuf;
+
+  if (!rtph264depay->picture_start)
+    return;
+
+  outbuf = gst_rtp_h264_complete_au (rtph264depay, &timestamp, &keyframe);
+  if (outbuf)
+    gst_rtp_h264_depay_push (rtph264depay, outbuf, keyframe, timestamp, FALSE);
 }
 
 static void
@@ -1285,6 +1305,9 @@ gst_rtp_h264_depay_handle_event (GstRTPBaseDepayload * depay, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       gst_rtp_h264_depay_reset (rtph264depay, FALSE);
+      break;
+    case GST_EVENT_EOS:
+      gst_rtp_h264_depay_drain (rtph264depay);
       break;
     default:
       break;
