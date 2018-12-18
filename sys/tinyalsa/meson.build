@@ -3,7 +3,7 @@ if get_option('tinyalsa').disabled()
 endif
 
 have_tinyalsa = cc.has_header ('tinyalsa/asoundlib.h')
-if not have_tinyalsa
+if have_tinyalsa
   tinyalsa_dep = cc.find_library('tinyalsa', required: false)
   have_tinyalsa = tinyalsa_dep.found()
 endif
