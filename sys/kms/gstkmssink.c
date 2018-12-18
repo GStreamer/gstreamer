@@ -461,6 +461,7 @@ configure_mode_setting (GstKMSSink * self, GstVideoInfo * vinfo)
   if (err)
     goto modesetting_failed;
 
+  g_clear_pointer (&self->tmp_kmsmem, gst_memory_unref);
   self->tmp_kmsmem = (GstMemory *) kmsmem;
 
   ret = TRUE;
@@ -1838,6 +1839,7 @@ gst_kms_sink_finalize (GObject * object)
   gst_poll_free (sink->poll);
   g_clear_pointer (&sink->connector_props, gst_structure_free);
   g_clear_pointer (&sink->plane_props, gst_structure_free);
+  g_clear_pointer (&sink->tmp_kmsmem, gst_memory_unref);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
