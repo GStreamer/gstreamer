@@ -1068,7 +1068,7 @@ gst_vaapipostproc_update_src_caps (GstVaapiPostproc * postproc, GstCaps * caps,
 
   if (GST_VIDEO_INFO_WIDTH (&postproc->srcpad_info) !=
       GST_VIDEO_INFO_WIDTH (&postproc->sinkpad_info)
-      && GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) !=
+      || GST_VIDEO_INFO_HEIGHT (&postproc->srcpad_info) !=
       GST_VIDEO_INFO_HEIGHT (&postproc->sinkpad_info))
     postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SIZE;
 
