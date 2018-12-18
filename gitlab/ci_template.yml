@@ -289,14 +289,14 @@ check fedora:
 
 .build cerbero fedora x86_64:
   extends: '.cerbero'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:d19082b72667fb3382bdc3621520c4d26e258b2e'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:24811579312cd55ab818836bcaff3ba2c777e4dd'
   variables:
     CONFIG: "linux.config"
     ARCH: "linux_x86_64"
 
 .cerbero deps fedora x86_64:
   extends: '.cerbero deps'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:d19082b72667fb3382bdc3621520c4d26e258b2e'
+  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:24811579312cd55ab818836bcaff3ba2c777e4dd'
   variables:
     CONFIG: "linux.config"
     ARCH: "linux_x86_64"
