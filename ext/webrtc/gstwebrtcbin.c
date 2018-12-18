@@ -4980,8 +4980,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   /**
    * GstWebRTCBin::set-local-description:
    * @object: the #GstWebRtcBin
-   * @type: the type of description being set
-   * @sdp: a #GstSDPMessage description
+   * @desc: a #GstWebRTCSessionDescription description
    * @promise (allow-none): a #GstPromise to be notified when it's set
    */
   gst_webrtc_bin_signals[SET_LOCAL_DESCRIPTION_SIGNAL] =
@@ -4994,8 +4993,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   /**
    * GstWebRTCBin::set-remote-description:
    * @object: the #GstWebRtcBin
-   * @type: the type of description being set
-   * @sdp: a #GstSDPMessage description
+   * @desc: a #GstWebRTCSessionDescription description
    * @promise (allow-none): a #GstPromise to be notified when it's set
    */
   gst_webrtc_bin_signals[SET_REMOTE_DESCRIPTION_SIGNAL] =
