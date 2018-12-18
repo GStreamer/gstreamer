@@ -136,6 +136,7 @@ build android arm64 api28:
     # shm.test_shm_live: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/847
     # splitmux.test_splitmuxsink_async: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/531
     # netsim.netsim_stress: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/849
+    # validate_padmonitor.buffer: https://gitlab.freedesktop.org/gstreamer/gst-devtools/issues/34
     BLACKLIST: >
       -b check.gst-plugins-base.elements_multisocketsink.test_sending_buffers_with_9_gstmemories
       -b check.gst-plugins-base.elements_multisocketsink.test_client_next_keyframe
@@ -148,6 +149,7 @@ build android arm64 api28:
       -b check.gst-plugins-bad.elements_shm.test_shm_live
       -b check.gst-plugins-good.elements_splitmux.test_splitmuxsink_async
       -b check.gst-plugins-bad.elements_netsim.netsim_stress
+      -b check.gst-devtools.validate_padmonitor.buffer
   script:
     - cd gst-build/
     - >
