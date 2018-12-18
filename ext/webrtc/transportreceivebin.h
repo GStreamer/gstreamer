@@ -45,8 +45,8 @@ struct _TransportReceiveBin
   TransportStream           *stream;        /* parent transport stream */
   gboolean                   rtcp_mux;
 
-  GstPad                    *rtp_src;
   struct pad_block          *rtp_block;
+  struct pad_block          *rtcp_block;
   GMutex                     pad_block_lock;
   GCond                      pad_block_cond;
   ReceiveState               receive_state;

@@ -25,24 +25,24 @@
 #include "utils.h"
 
 /*
- * ,----------------------------transport_receive_%u----------------------------,
- * ;     (rtp/data)                                                             ;
- * ;  ,---nicesrc----,  ,-capsfilter-,  ,---dtlssrtpdec---,       ,--funnel--,  ;
- * ;  ;          src o--o sink   src o--o sink    rtp_src o-------o sink_0   ;  ;
- * ;  '--------------'  '------------'  ;                 ;       ;      src o--o rtp_src
- * ;                                    ;        rtcp_src o---, ,-o sink_1   ;  ;
- * ;                                    ;                 ;   ; ; '----------'  ;
- * ;                                    ;        data_src o-, ; ; ,--funnel--,  ;
- * ;                                    '-----------------' ; '-+-o sink_0   ;  ;
- * ;                                    ,---dtlssrtpdec---, ; ,-' ;      src o--o rtcp_src
- * ;       (rtcp)                       ;         rtp_src o-+-' ,-o sink_1   ;  ;
- * ;  ,---nicesrc----,  ,-capsfilter-,  ;                 ; ;   ; '----------'  ;
- * ;  ;          src o--o sink   src o--o sink   rtcp_src o-+---' ,--funnel--,  ;
- * ;  '--------------'  '------------'  ;                 ; '-----o sink_0   ;  ;
- * ;                                    ;        data_src o-,     ;      src o--o data_src
- * ;                                    '-----------------' '-----o sink_1   ;  ;
- * ;                                                              '----------'  ;
- * '----------------------------------------------------------------------------'
+ * ,----------------------------transport_receive_%u---------------------------,
+ * ;     (rtp/data)                                                            ;
+ * ;  ,-nicesrc-, ,-capsfilter-, ,--queue--, ,-dtlssrtpdec-,       ,-funnel-,  ;
+ * ;  ;     src o-o sink   src o-osink  srco-osink  rtp_srco-------o sink_0 ;  ;
+ * ;  '---------' '------------' '---------' ;             ;       ;    src o--o rtp_src
+ * ;                                         ;     rtcp_srco---, ,-o sink_1 ;  ;
+ * ;                                         ;             ;   ; ; '--------'  ;
+ * ;                                         ;     data_srco-, ; ; ,-funnel-,  ;
+ * ;     (rtcp)                              '-------------' ; '-+-o sink_0 ;  ;
+ * ;  ,-nicesrc-, ,-capsfilter-, ,--queue--, ,-dtlssrtpdec-, ; ,-' ;    src o--o rtcp_src
+ * ;  ;     src o-o sink   src o-osink  srco-osink  rtp_srco-+-' ,-o sink_1 ;  ;
+ * ;  '---------' '------------' '---------' ;             ; ;   ; '--------'  ;
+ * ;                                         ;     rtcp_srco-+---' ,-funnel-,  ;
+ * ;                                         ;             ; '-----o sink_0 ;  ;
+ * ;                                         ;     data_srco-,     ;    src o--o data_src
+ * ;                                         '-------------' '-----o sink_1 ;  ;
+ * ;                                                               '--------'  ;
+ * '---------------------------------------------------------------------------'
  *
  * Do we really wnat to be *that* permissive in what we accept?
  *
@@ -56,8 +56,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 G_DEFINE_TYPE_WITH_CODE (TransportReceiveBin, transport_receive_bin,
     GST_TYPE_BIN,
     GST_DEBUG_CATEGORY_INIT (gst_webrtc_transport_receive_bin_debug,
-        "webrtctransportreceivebin", 0, "webrtctransportreceivebin");
-    );
+        "webrtctransportreceivebin", 0, "webrtctransportreceivebin"););
 
 static GstStaticPadTemplate rtp_sink_template =
 GST_STATIC_PAD_TEMPLATE ("rtp_src",
@@ -195,14 +194,29 @@ transport_receive_bin_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:{
-      GstElement *elem;
+      GstWebRTCDTLSTransport *transport;
+      GstElement *elem, *dtlssrtpdec;
+      GstPad *pad;
 
+      transport = receive->stream->transport;
+      dtlssrtpdec = transport->dtlssrtpdec;
+      pad = gst_element_get_static_pad (dtlssrtpdec, "sink");
       receive->rtp_block =
-          _create_pad_block (GST_ELEMENT (receive), receive->rtp_src, 0, NULL,
-          NULL);
+          _create_pad_block (GST_ELEMENT (receive), pad, 0, NULL, NULL);
       receive->rtp_block->block_id =
-          gst_pad_add_probe (receive->rtp_src, GST_PAD_PROBE_TYPE_ALL_BOTH,
+          gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_ALL_BOTH,
           (GstPadProbeCallback) pad_block, receive, NULL);
+      gst_object_unref (pad);
+
+      transport = receive->stream->rtcp_transport;
+      dtlssrtpdec = transport->dtlssrtpdec;
+      pad = gst_element_get_static_pad (dtlssrtpdec, "sink");
+      receive->rtcp_block =
+          _create_pad_block (GST_ELEMENT (receive), pad, 0, NULL, NULL);
+      receive->rtcp_block->block_id =
+          gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_ALL_BOTH,
+          (GstPadProbeCallback) pad_block, receive, NULL);
+      gst_object_unref (pad);
 
       /* XXX: because nice needs the nicesrc internal main loop running in order
        * correctly STUN... */
@@ -237,6 +251,9 @@ transport_receive_bin_change_state (GstElement * element,
       if (receive->rtp_block)
         _free_pad_block (receive->rtp_block);
       receive->rtp_block = NULL;
+      if (receive->rtcp_block)
+        _free_pad_block (receive->rtcp_block);
+      receive->rtcp_block = NULL;
       break;
     }
     default:
@@ -272,13 +289,21 @@ transport_receive_bin_constructed (GObject * object)
   g_object_set (capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
 
+  queue = gst_element_factory_make ("queue", NULL);
+  /* FIXME: make this configurable? */
+  g_object_set (queue, "leaky", 2, "max-size-time", (guint64) 0,
+      "max-size-buffers", 0, "max-size-bytes", 5 * 1024 * 1024, NULL);
+  g_signal_connect (queue, "overrun", G_CALLBACK (rtp_queue_overrun), receive);
+
+  gst_bin_add (GST_BIN (receive), GST_ELEMENT (queue));
   gst_bin_add (GST_BIN (receive), GST_ELEMENT (capsfilter));
-  if (!gst_element_link_pads (capsfilter, "src", transport->dtlssrtpdec,
-          "sink"))
+  if (!gst_element_link_pads (capsfilter, "src", queue, "sink"))
+    g_warn_if_reached ();
+
+  if (!gst_element_link_pads (queue, "src", transport->dtlssrtpdec, "sink"))
     g_warn_if_reached ();
 
   gst_bin_add (GST_BIN (receive), GST_ELEMENT (transport->transport->src));
-
   if (!gst_element_link_pads (GST_ELEMENT (transport->transport->src), "src",
           GST_ELEMENT (capsfilter), "sink"))
     g_warn_if_reached ();
@@ -292,13 +317,21 @@ transport_receive_bin_constructed (GObject * object)
   g_object_set (capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
 
+  queue = gst_element_factory_make ("queue", NULL);
+  /* FIXME: make this configurable? */
+  g_object_set (queue, "leaky", 2, "max-size-time", (guint64) 0,
+      "max-size-buffers", 0, "max-size-bytes", 5 * 1024 * 1024, NULL);
+  g_signal_connect (queue, "overrun", G_CALLBACK (rtp_queue_overrun), receive);
+
+  gst_bin_add (GST_BIN (receive), queue);
   gst_bin_add (GST_BIN (receive), GST_ELEMENT (capsfilter));
-  if (!gst_element_link_pads (capsfilter, "src", transport->dtlssrtpdec,
-          "sink"))
+  if (!gst_element_link_pads (capsfilter, "src", queue, "sink"))
+    g_warn_if_reached ();
+
+  if (!gst_element_link_pads (queue, "src", transport->dtlssrtpdec, "sink"))
     g_warn_if_reached ();
 
   gst_bin_add (GST_BIN (receive), GST_ELEMENT (transport->transport->src));
-
   if (!gst_element_link_pads (GST_ELEMENT (transport->transport->src), "src",
           GST_ELEMENT (capsfilter), "sink"))
     g_warn_if_reached ();
@@ -313,19 +346,10 @@ transport_receive_bin_constructed (GObject * object)
           "rtp_src", funnel, "sink_1"))
     g_warn_if_reached ();
 
-  queue = gst_element_factory_make ("queue", NULL);
-  /* FIXME: make this configurable? */
-  g_object_set (queue, "leaky", 2, "max-size-time", (guint64) 0,
-      "max-size-buffers", 0, "max-size-bytes", 5 * 1024 * 1024, NULL);
-  g_signal_connect (queue, "overrun", G_CALLBACK (rtp_queue_overrun), receive);
-  gst_bin_add (GST_BIN (receive), queue);
-  if (!gst_element_link_pads (funnel, "src", queue, "sink"))
-    g_warn_if_reached ();
+  pad = gst_element_get_static_pad (funnel, "src");
+  ghost = gst_ghost_pad_new ("rtp_src", pad);
 
-  pad = gst_element_get_static_pad (queue, "src");
-  receive->rtp_src = gst_ghost_pad_new ("rtp_src", pad);
-
-  gst_element_add_pad (GST_ELEMENT (receive), receive->rtp_src);
+  gst_element_add_pad (GST_ELEMENT (receive), ghost);
   gst_object_unref (pad);
 
   /* create funnel for rtcp_src */
