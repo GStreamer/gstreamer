@@ -37,6 +37,7 @@ base_tests = [
   [['libs/h264parser.c'], false, [gstcodecparsers_dep]],
   [['libs/h265parser.c'], false, [gstcodecparsers_dep]],
   [['libs/insertbin.c'], false, [gstinsertbin_dep]],
+  [['libs/isoff.c'], false, [gstisoff_dep]],
   [['libs/mpegvideoparser.c'], false, [gstcodecparsers_dep]],
   [['libs/planaraudioadapter.c'], false, [gstbadaudio_dep]],
   [['libs/player.c'], not enable_gst_player_tests, [gstplayer_dep]],
@@ -81,7 +82,6 @@ if host_machine.system() != 'windows'
     [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
     [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
     [['elements/msdkh264enc.c'], not have_msdk, [msdk_dep]],
-    [['libs/isoff.c'], not xml2_dep.found(), [gstisoff_dep, xml2_dep]],
     [['libs/mpegts.c'], false, [gstmpegts_dep]],
   ]
 endif
