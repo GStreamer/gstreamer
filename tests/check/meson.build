@@ -138,7 +138,7 @@ foreach t : base_tests
     env.set('CK_DEFAULT_TIMEOUT', '20')
     env.set('GST_STATE_IGNORE_ELEMENTS', '')
     env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
-    env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
+    env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
     env.set('GST_PLUGIN_LOADING_WHITELIST', 'gstreamer', 'gst-plugins-base',
       'gst-plugins-good', 'gst-plugins-ugly','gst-libav',
       'gst-plugins-bad@' + meson.build_root())
