@@ -145,6 +145,22 @@ build cerbero fedora x86_64 local:
     refs:
       - "master@gstreamer/gst-ci"
 
+build cerbero cross win32 local:
+  extends: '.build cerbero cross win32'
+  image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
+  when: 'manual'
+  except:
+    refs:
+      - "master@gstreamer/gst-ci"
+
+build cerbero cross win64 local:
+  extends: '.build cerbero cross win64'
+  image: "${CI_REGISTRY_IMAGE}/amd64/cerbero-fedora:latest"
+  when: 'manual'
+  except:
+    refs:
+      - "master@gstreamer/gst-ci"
+
 .test fedora x86_64 local:
   image: '${CI_REGISTRY_IMAGE}/amd64/fedora:latest'
   extends: '.test'
