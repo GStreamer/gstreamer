@@ -183,7 +183,7 @@ foreach t : good_tests
     env.set('GST_PLUGIN_PATH_1_0', [meson.build_root()] + pluginsdirs)
     env.set('GSETTINGS_BACKEND', 'memory')
 
-    env.set('GST_REGISTRY', '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))
+    env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
     exe = executable(test_name, fname,
       include_directories : [configinc],
       c_args : ['-DHAVE_CONFIG_H=1' ] + test_defines,
