@@ -3107,6 +3107,8 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
   }
 
   if (new_dir != prev_dir) {
+    ReceiveState receive_state = 0;
+
     GST_TRACE_OBJECT (webrtc, "transceiver direction change");
 
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY ||
@@ -3163,16 +3165,21 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
         _add_pad_to_list (webrtc, pad);
       }
 
-      transport_receive_bin_set_receive_state (stream->receive_bin,
-          RECEIVE_STATE_PASS);
+      receive_state = RECEIVE_STATE_PASS;
     } else if (!bundled) {
-      transport_receive_bin_set_receive_state (stream->receive_bin,
-          RECEIVE_STATE_DROP);
+      receive_state = RECEIVE_STATE_DROP;
     }
 
     if (!bundled || bundle_idx == media_idx)
       g_object_set (stream, "dtls-client",
           new_setup == GST_WEBRTC_DTLS_SETUP_ACTIVE, NULL);
+
+    /* Must be after setting the "dtls-client" so that data is not pushed into
+     * the dtlssrtp elements before the ssl direction has been set which will
+     * throw SSL errors */
+    if (receive_state > 0)
+      transport_receive_bin_set_receive_state (stream->receive_bin,
+          receive_state);
 
     rtp_trans->mline = media_idx;
     rtp_trans->current_direction = new_dir;
