@@ -1241,7 +1241,9 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
        */
       next = next_start_code (data, size);
 
-      if (next == size && buffer != NULL) {
+      /* nal or au aligned input needs no delaying until next time */
+      if (next == size && buffer != NULL &&
+          rtph265pay->alignment == GST_H265_ALIGNMENT_UNKNOWN) {
         /* Didn't find the start of next NAL and it's not EOS,
          * handle it next time */
         break;
