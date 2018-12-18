@@ -2141,19 +2141,6 @@ AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
   ], [HAVE_DVB="no"])
 ])
 
-dnl *** acm ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_ACM, true)
-AG_GST_CHECK_FEATURE(ACM, [Windows ACM library], acm, [
-  AC_MSG_CHECKING([Checking for ACM support])
-  AC_CHECK_HEADERS([windows.h msacm.h],
-      [HAVE_ACM="yes"
-       AC_SUBST(ACMENC_CFLAGS)
-       AC_SUBST(ACMMP3DEC_CFLAGS)
-      ], [HAVE_ACM="no"],
-      [AC_INCLUDES_DEFAULT
-#include <windows.h>])
-])
-
 dnl *** vdpau ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VDPAU, true)
 AG_GST_CHECK_FEATURE(VDPAU, [VDPAU], vdpau, [
@@ -2409,7 +2396,6 @@ AM_CONDITIONAL(USE_SRTP, false)
 AM_CONDITIONAL(USE_SRT, false)
 AM_CONDITIONAL(USE_GME, false)
 AM_CONDITIONAL(USE_DVB, false)
-AM_CONDITIONAL(USE_ACM, false)
 AM_CONDITIONAL(USE_VDPAU, false)
 AM_CONDITIONAL(USE_SBC, false)
 AM_CONDITIONAL(USE_ZBAR, false)
@@ -2614,8 +2600,6 @@ gst-libs/gst/audio/Makefile
 gst-libs/gst/opencv/Makefile
 sys/Makefile
 sys/dshowdecwrapper/Makefile
-sys/acmenc/Makefile
-sys/acmmp3dec/Makefile
 sys/androidmedia/Makefile
 sys/applemedia/Makefile
 sys/bluez/Makefile

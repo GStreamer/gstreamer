@@ -1,6 +1,3 @@
-#FIXME
-#subdir('acmenc')
-#subdir('acmmp3dec')
 subdir('androidmedia')
 subdir('applemedia')
 subdir('bluez')

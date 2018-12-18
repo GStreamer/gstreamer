@@ -113,7 +113,6 @@ check_headers = [
   ['HAVE_FCNTL_H', 'fcntl.h'],
   ['HAVE_INTTYPES_H', 'inttypes.h'],
   ['HAVE_MEMORY_H', 'memory.h'],
-  ['HAVE_MSACM_H', 'msacm.h'],
   ['HAVE_NETINET_IN_H', 'netinet/in.h'],
   ['HAVE_NETINET_IP_H', 'netinet/ip.h'],
   ['HAVE_NETINET_TCP_H', 'netinet/tcp.h'],
@@ -141,7 +140,6 @@ foreach h : check_headers
 endforeach
 
 check_functions = [
-# check token HAVE_ACM
 # check token HAVE_ANDROID_MEDIA
 # check token HAVE_APEXSINK
 # check token HAVE_APPLE_MEDIA
