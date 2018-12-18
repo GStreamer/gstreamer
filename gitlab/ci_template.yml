@@ -385,6 +385,34 @@ build cerbero fedora x86_64:
 
 
 #
+# Cerbero Android Universal build
+#
+cerbero deps android universal:
+  extends: '.cerbero deps'
+  variables:
+    CONFIG: "cross-android-universal.cbc"
+    ARCH: "android_universal"
+
+.cerbero android universal:
+  extends: '.cerbero'
+  variables:
+    CONFIG: "cross-android-universal.cbc"
+
+cerbero android universal:
+  extends: '.cerbero android universal'
+  dependencies:
+    - "cerbero deps android universal"
+  only:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+
+build cerbero android universal:
+  extends: '.cerbero android universal'
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+
+#
 # Cerbero Cross Windows builds
 #
 cerbero deps windows x86:
