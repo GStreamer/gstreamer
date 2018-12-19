@@ -2031,6 +2031,8 @@ main (int argc, char *argv[])
 #ifdef G_OS_UNIX
   if (isatty (STDOUT_FILENO)) {
     redirect_stdout ();
+  } else {
+    colored_output = FALSE;
   }
 #endif
 
