@@ -54,7 +54,6 @@ rgvolume
 rtp-payloading
 rtpbin
 rtpbin_buffer_list
-rtpbundle
 rtpcollision
 rtph261
 rtph263

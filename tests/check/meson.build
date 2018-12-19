@@ -53,7 +53,6 @@ good_tests = [
   [ 'elements/rtpvp9' ],
   [ 'elements/rtpbin' ],
   [ 'elements/rtpbin_buffer_list' ],
-  [ 'elements/rtpbundle' ],
   [ 'elements/rtpcollision' ],
   [ 'elements/rtpfunnel' ],
   [ 'elements/rtpjitterbuffer' ],

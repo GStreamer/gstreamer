@@ -3,8 +3,6 @@ rtp_progs = [
   'client-PCMA',
   'client-rtpaux',
   'server-rtpaux',
-  'client-rtpbundle',
-  'server-rtpbundle',
 ]
 
 foreach prog : rtp_progs

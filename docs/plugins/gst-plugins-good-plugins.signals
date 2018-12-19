@@ -375,14 +375,6 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRtpBin::on-bundled-ssrc</NAME>
-<RETURNS>guint</RETURNS>
-<FLAGS>l</FLAGS>
-GstRtpBin *gstrtpbin
-guint  arg1
-</SIGNAL>
-
-<SIGNAL>
 <NAME>GstRtpBin::get-internal-storage</NAME>
 <RETURNS>GObject*</RETURNS>
 <FLAGS>la</FLAGS>
