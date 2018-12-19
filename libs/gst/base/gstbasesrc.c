@@ -4027,7 +4027,8 @@ gst_base_src_submit_buffer_list (GstBaseSrc * src, GstBufferList * buffer_list)
   g_return_if_fail (GST_IS_BUFFER_LIST (buffer_list));
   g_return_if_fail (BASE_SRC_HAS_PENDING_BUFFER_LIST (src) == FALSE);
 
-  src->priv->pending_bufferlist = buffer_list;
+  /* we need it to be writable later in get_range() where we use get_writable */
+  src->priv->pending_bufferlist = gst_buffer_list_make_writable (buffer_list);
 
   GST_LOG_OBJECT (src, "%u buffers submitted in buffer list",
       gst_buffer_list_length (buffer_list));
