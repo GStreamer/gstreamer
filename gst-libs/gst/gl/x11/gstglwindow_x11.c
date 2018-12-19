@@ -409,6 +409,8 @@ _show_window (GstGLWindow * window)
     if (!window_x11->parent_win) {
       XResizeWindow (window_x11->device, window_x11->internal_win_id,
           width, height);
+
+      gst_gl_window_resize (window, width, height);
     }
 
     XMapWindow (window_x11->device, window_x11->internal_win_id);
