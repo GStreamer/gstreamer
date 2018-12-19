@@ -35,10 +35,13 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_WARNING:
     case GST_MESSAGE_ERROR:{
       GError *gerror;
-
       gchar *debug;
 
-      gst_message_parse_error (message, &gerror, &debug);
+      if (message->type == GST_MESSAGE_WARNING) {
+        gst_message_parse_warning (message, &gerror, &debug);
+      } else {
+        gst_message_parse_error (message, &gerror, &debug);
+      }
       gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
       g_error_free (gerror);
       g_free (debug);
