@@ -1031,6 +1031,9 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
   if (!gst_video_info_is_equal (&out_info, &thiz->srcpad_info))
     srcpad_info_changed = TRUE;
 
+  if (!sinkpad_info_changed && !srcpad_info_changed && thiz->initialized)
+    return TRUE;
+
   thiz->sinkpad_info = in_info;
   thiz->srcpad_info = out_info;
 #ifndef _WIN32
@@ -1038,9 +1041,6 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
 #else
   thiz->use_video_memory = FALSE;
 #endif
-
-  if (!sinkpad_info_changed && !srcpad_info_changed && thiz->initialized)
-    return TRUE;
 
   /* check for deinterlace requirement */
   deinterlace = gst_msdkvpp_is_deinterlace_enabled (thiz, &in_info);
