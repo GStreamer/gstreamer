@@ -41,7 +41,8 @@
 #   include <sys/wait.h>
 #endif
 
-#define DEFAULT_PAGER "less -F -X -R"
+#define DEFAULT_PAGER "less"
+#define DEFAULT_LESS_OPTS "FXR"
 
 gboolean colored_output = TRUE;
 
@@ -1890,6 +1891,9 @@ redirect_stdout (void)
     if (pager == NULL)
       pager = DEFAULT_PAGER;
     argv = g_strsplit (pager, " ", 0);
+
+    /* Make sure less will show colors, cat and more always show colors */
+    g_setenv ("LESS", DEFAULT_LESS_OPTS, FALSE);
 
     /* child process */
     close (pipefd[1]);
