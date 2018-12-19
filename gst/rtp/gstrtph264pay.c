@@ -1025,6 +1025,8 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
   gsize skip;
   gboolean delayed_not_delta_unit = FALSE;
   gboolean delayed_discont = FALSE;
+  gboolean marker = FALSE;
+  gboolean draining = (buffer == NULL);
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
 
@@ -1033,8 +1035,8 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
   avc = rtph264pay->stream_format == GST_H264_STREAM_FORMAT_AVC;
 
   if (avc) {
-    /* In AVC mode, there is no adapter, so nothign to flush */
-    if (buffer == NULL)
+    /* In AVC mode, there is no adapter, so nothign to drain */
+    if (draining)
       return GST_FLOW_OK;
     gst_buffer_map (buffer, &map, GST_MAP_READ);
     data = map.data;
@@ -1044,6 +1046,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
     rtph264pay->delta_unit = GST_BUFFER_FLAG_IS_SET (buffer,
         GST_BUFFER_FLAG_DELTA_UNIT);
     rtph264pay->discont = GST_BUFFER_IS_DISCONT (buffer);
+    marker = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER);
     GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
   } else {
     if (buffer) {
@@ -1067,7 +1070,9 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
           delayed_discont = TRUE;
       }
 
+      marker = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER);
       gst_adapter_push (rtph264pay->adapter, buffer);
+      buffer = NULL;
     }
 
     /* We want to use the first TS used to construct the following NAL */
@@ -1079,9 +1084,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
     if (size == 0)
       return GST_FLOW_OK;
     data = gst_adapter_map (rtph264pay->adapter, size);
-    GST_DEBUG_OBJECT (basepayload,
-        "got %" G_GSIZE_FORMAT " bytes (%" G_GSIZE_FORMAT ")", size,
-        buffer ? gst_buffer_get_size (buffer) : 0);
+    GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
   }
 
   ret = GST_FLOW_OK;
@@ -1122,8 +1125,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
        * access unit
        */
       if (size - nal_len <= nal_length_size) {
-        if (rtph264pay->alignment == GST_H264_ALIGNMENT_AU ||
-            GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER))
+        if (rtph264pay->alignment == GST_H264_ALIGNMENT_AU || marker)
           end_of_au = TRUE;
       }
 
@@ -1184,7 +1186,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
       next = next_start_code (data, size);
 
       /* nal or au aligned input needs no delaying until next time */
-      if (next == size && buffer != NULL &&
+      if (next == size && !draining &&
           rtph264pay->alignment == GST_H264_ALIGNMENT_UNKNOWN) {
         /* Didn't find the start of next NAL and it's not EOS,
          * handle it next time */
@@ -1252,7 +1254,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
        * trailing 0x0 that can be discarded */
       size = nal_len;
       data = gst_adapter_map (rtph264pay->adapter, size);
-      if (i + 1 != nal_queue->len || buffer != NULL)
+      if (i + 1 != nal_queue->len || !draining)
         for (; size > 1 && data[size - 1] == 0x0; size--)
           /* skip */ ;
 
@@ -1266,8 +1268,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
        */
       if (i == nal_queue->len - 1) {
         if (rtph264pay->alignment == GST_H264_ALIGNMENT_AU ||
-            buffer == NULL ||
-            GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER))
+            marker || draining)
           end_of_au = TRUE;
       }
       paybuf = gst_adapter_take_buffer (rtph264pay->adapter, size);

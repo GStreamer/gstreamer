@@ -1113,6 +1113,8 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
   gboolean hevc;
   GstBuffer *paybuf = NULL;
   gsize skip;
+  gboolean marker = FALSE;
+  gboolean draining = (buffer == NULL);
 
   rtph265pay = GST_RTP_H265_PAY (basepayload);
 
@@ -1122,18 +1124,22 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
       || (rtph265pay->stream_format == GST_H265_STREAM_FORMAT_HVC1);
 
   if (hevc) {
-    /* In hevc mode, there is no adapter, so nothing to flush */
-    if (buffer == NULL)
+    /* In hevc mode, there is no adapter, so nothing to drain */
+    if (draining)
       return GST_FLOW_OK;
     gst_buffer_map (buffer, &map, GST_MAP_READ);
     data = map.data;
     size = map.size;
     pts = GST_BUFFER_PTS (buffer);
     dts = GST_BUFFER_DTS (buffer);
+    marker = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER);
     GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
   } else {
-    if (buffer)
+    if (buffer) {
+      marker = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER);
       gst_adapter_push (rtph265pay->adapter, buffer);
+      buffer = NULL;
+    }
 
     /* We want to use the first TS used to construct the following NAL */
     dts = gst_adapter_prev_dts (rtph265pay->adapter, NULL);
@@ -1144,9 +1150,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
     if (size == 0)
       return GST_FLOW_OK;
     data = gst_adapter_map (rtph265pay->adapter, size);
-    GST_DEBUG_OBJECT (basepayload,
-        "got %" G_GSIZE_FORMAT " bytes (%" G_GSIZE_FORMAT ")", size,
-        buffer ? gst_buffer_get_size (buffer) : 0);
+    GST_DEBUG_OBJECT (basepayload, "got %" G_GSIZE_FORMAT " bytes", size);
   }
 
   ret = GST_FLOW_OK;
@@ -1193,8 +1197,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
        */
       GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_MARKER);
       if (size - nal_len <= nal_length_size) {
-        if (rtph265pay->alignment == GST_H265_ALIGNMENT_AU ||
-            GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER))
+        if (rtph265pay->alignment == GST_H265_ALIGNMENT_AU || marker)
           GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_MARKER);
       }
 
@@ -1242,7 +1245,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
       next = next_start_code (data, size);
 
       /* nal or au aligned input needs no delaying until next time */
-      if (next == size && buffer != NULL &&
+      if (next == size && !draining &&
           rtph265pay->alignment == GST_H265_ALIGNMENT_UNKNOWN) {
         /* Didn't find the start of next NAL and it's not EOS,
          * handle it next time */
@@ -1291,7 +1294,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
        * trailing 0x0 that can be discarded */
       size = nal_len;
       data = gst_adapter_map (rtph265pay->adapter, size);
-      if (i + 1 != nal_queue->len || buffer != NULL)
+      if (i + 1 != nal_queue->len || !draining)
         for (; size > 1 && data[size - 1] == 0x0; size--)
           /* skip */ ;
 
@@ -1304,8 +1307,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
       GST_BUFFER_FLAG_UNSET (paybuf, GST_BUFFER_FLAG_MARKER);
       if (i == nal_queue->len - 1) {
         if (rtph265pay->alignment == GST_H265_ALIGNMENT_AU ||
-            buffer == NULL ||
-            GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_MARKER))
+            marker || draining)
           GST_BUFFER_FLAG_SET (paybuf, GST_BUFFER_FLAG_MARKER);
       }
 
