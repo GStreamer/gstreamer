@@ -215,6 +215,7 @@ static gboolean gst_nvdec_src_query (GstVideoDecoder * decoder,
     GstQuery * query);
 static gboolean gst_nvdec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_nvdec_drain (GstVideoDecoder * decoder);
+static GstFlowReturn gst_nvdec_finish (GstVideoDecoder * decoder);
 
 static GstStaticPadTemplate gst_nvdec_sink_template =
     GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
@@ -261,6 +262,7 @@ gst_nvdec_class_init (GstNvDecClass * klass)
   video_decoder_class->src_query = GST_DEBUG_FUNCPTR (gst_nvdec_src_query);
   video_decoder_class->drain = GST_DEBUG_FUNCPTR (gst_nvdec_drain);
   video_decoder_class->flush = GST_DEBUG_FUNCPTR (gst_nvdec_flush);
+  video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_nvdec_finish);
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nvdec_set_context);
 }
@@ -1008,6 +1010,14 @@ gst_nvdec_drain (GstVideoDecoder * decoder)
     GST_WARNING_OBJECT (nvdec, "parser failed");
 
   return handle_pending_frames (nvdec);
+}
+
+static GstFlowReturn
+gst_nvdec_finish (GstVideoDecoder * decoder)
+{
+  GST_DEBUG_OBJECT (decoder, "finish");
+
+  return gst_nvdec_drain (decoder);
 }
 
 static gboolean
