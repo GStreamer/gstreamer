@@ -349,6 +349,8 @@ struct _QtDemuxStream
 
   /* buffer needs some custom processing, e.g. subtitles */
   gboolean need_process;
+  /* buffer needs potentially be split, e.g. CEA608 subtitles */
+  gboolean need_split;
 
   /* current position */
   guint32 segment_index;
@@ -5893,6 +5895,128 @@ exit:
   return ret;
 }
 
+static GstFlowReturn
+gst_qtdemux_split_and_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstBuffer * buf)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  if (stream->subtype == FOURCC_clcp
+      && CUR_STREAM (stream)->fourcc == FOURCC_c608 && stream->need_split) {
+    GstMapInfo map;
+    guint n_output_buffers, n_field1 = 0, n_field2 = 0;
+    guint n_triplets, i;
+    guint field1_off = 0, field2_off = 0;
+
+    /* We have to split CEA608 buffers so that each outgoing buffer contains
+     * one byte pair per field according to the framerate of the video track.
+     *
+     * If there is only a single byte pair per field we don't have to do
+     * anything
+     */
+
+    gst_buffer_map (buf, &map, GST_MAP_READ);
+
+    n_triplets = map.size / 3;
+    for (i = 0; i < n_triplets; i++) {
+      if (map.data[3 * i] & 0x80)
+        n_field1++;
+      else
+        n_field2++;
+    }
+
+    g_assert (n_field1 || n_field2);
+
+    /* If there's more than 1 frame we have to split, otherwise we can just
+     * pass through */
+    if (n_field1 > 1 || n_field2 > 1) {
+      n_output_buffers =
+          gst_util_uint64_scale (GST_BUFFER_DURATION (buf),
+          CUR_STREAM (stream)->fps_n, GST_SECOND * CUR_STREAM (stream)->fps_d);
+
+      for (i = 0; i < n_output_buffers; i++) {
+        GstBuffer *outbuf =
+            gst_buffer_new_and_alloc ((n_field1 ? 3 : 0) + (n_field2 ? 3 : 0));
+        GstMapInfo outmap;
+        guint8 *outptr;
+
+        gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
+        outptr = outmap.data;
+
+        if (n_field1) {
+          gboolean found = FALSE;
+
+          while (map.data + field1_off < map.data + map.size) {
+            if (map.data[field1_off] & 0x80) {
+              memcpy (outptr, &map.data[field1_off], 3);
+              field1_off += 3;
+              found = TRUE;
+              break;
+            }
+            field1_off += 3;
+          }
+
+          if (!found) {
+            const guint8 empty[] = { 0x80, 0x80, 0x80 };
+
+            memcpy (outptr, empty, 3);
+          }
+
+          outptr += 3;
+        }
+
+        if (n_field2) {
+          gboolean found = FALSE;
+
+          while (map.data + field2_off < map.data + map.size) {
+            if ((map.data[field2_off] & 0x80) == 0) {
+              memcpy (outptr, &map.data[field2_off], 3);
+              field2_off += 3;
+              found = TRUE;
+              break;
+            }
+            field2_off += 3;
+          }
+
+          if (!found) {
+            const guint8 empty[] = { 0x00, 0x80, 0x80 };
+
+            memcpy (outptr, empty, 3);
+          }
+
+          outptr += 3;
+        }
+
+        gst_buffer_unmap (outbuf, &outmap);
+
+        GST_BUFFER_PTS (outbuf) =
+            GST_BUFFER_PTS (buf) + gst_util_uint64_scale (i,
+            GST_SECOND * CUR_STREAM (stream)->fps_d,
+            CUR_STREAM (stream)->fps_n);
+        GST_BUFFER_DURATION (outbuf) =
+            gst_util_uint64_scale (GST_SECOND, CUR_STREAM (stream)->fps_d,
+            CUR_STREAM (stream)->fps_n);
+        GST_BUFFER_OFFSET (outbuf) = -1;
+        GST_BUFFER_OFFSET_END (outbuf) = -1;
+
+        ret = gst_qtdemux_push_buffer (qtdemux, stream, outbuf);
+
+        if (ret != GST_FLOW_OK && ret != GST_FLOW_NOT_LINKED)
+          break;
+      }
+      gst_buffer_unmap (buf, &map);
+      gst_buffer_unref (buf);
+    } else {
+      gst_buffer_unmap (buf, &map);
+      ret = gst_qtdemux_push_buffer (qtdemux, stream, buf);
+    }
+  } else {
+    ret = gst_qtdemux_push_buffer (qtdemux, stream, buf);
+  }
+
+  return ret;
+}
+
 /* Sets a buffer's attributes properly and pushes it downstream.
  * Also checks for additional actions and custom processing that may
  * need to be done first.
@@ -6009,7 +6133,7 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   }
 #endif
 
-  ret = gst_qtdemux_push_buffer (qtdemux, stream, buf);
+  ret = gst_qtdemux_split_and_push_buffer (qtdemux, stream, buf);
 
 exit:
   return ret;
@@ -15383,6 +15507,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           gst_caps_new_simple ("closedcaption/x-cea-608", "format",
           G_TYPE_STRING, "s334-1a", NULL);
       stream->need_process = TRUE;
+      stream->need_split = TRUE;
       break;
     case FOURCC_c708:
       _codec ("CEA 708 Closed Caption");
