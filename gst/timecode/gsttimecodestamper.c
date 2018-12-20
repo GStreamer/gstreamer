@@ -352,11 +352,18 @@ gst_timecodestamper_sink_event (GstBaseTransform * trans, GstEvent * event)
 
         gst_timecodestamper_set_drop_frame (timecodestamper);
 
-        tc = gst_video_time_code_new_from_date_time (timecodestamper->
-            vinfo.fps_n, timecodestamper->vinfo.fps_d, dt,
+        tc = gst_video_time_code_new_from_date_time_full
+            (timecodestamper->vinfo.fps_n, timecodestamper->vinfo.fps_d, dt,
             timecodestamper->current_tc->config.flags, 0);
 
         g_date_time_unref (dt);
+
+        if (!tc) {
+          GST_ERROR_OBJECT (timecodestamper,
+              "Can't convert current time to a timecode");
+          GST_OBJECT_UNLOCK (timecodestamper);
+          return FALSE;
+        }
 
         timecodestamper->first_tc = tc;
         notify = TRUE;
