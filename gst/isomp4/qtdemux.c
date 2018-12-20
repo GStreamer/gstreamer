@@ -8518,19 +8518,53 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
     }
   }
 
-  else if (stream->subtype == FOURCC_clcp) {
-    gboolean fps_available = gst_qtdemux_guess_framerate (qtdemux, stream);
+  else if (stream->subtype == FOURCC_clcp && CUR_STREAM (stream)->caps) {
+    const GstStructure *s;
+    QtDemuxStream *fps_stream = NULL;
+    gboolean fps_available = FALSE;
 
-    if (CUR_STREAM (stream)->caps) {
-      CUR_STREAM (stream)->caps =
-          gst_caps_make_writable (CUR_STREAM (stream)->caps);
+    /* CEA608 closed caption tracks are a bit special in that each sample
+     * can contain CCs for multiple frames, and CCs can be omitted and have to
+     * be inferred from the duration of the sample then.
+     *
+     * As such we take the framerate from the (first) video track here for
+     * CEA608 as there must be one CC byte pair for every video frame
+     * according to the spec.
+     *
+     * For CEA708 all is fine and there is one sample per frame.
+     */
 
-      /* set framerate if calculated framerate is reliable */
-      if (fps_available) {
-        gst_caps_set_simple (CUR_STREAM (stream)->caps,
-            "framerate", GST_TYPE_FRACTION, CUR_STREAM (stream)->fps_n,
-            CUR_STREAM (stream)->fps_d, NULL);
+    s = gst_caps_get_structure (CUR_STREAM (stream)->caps, 0);
+    if (gst_structure_has_name (s, "closedcaption/x-cea-608")) {
+      gint i;
+
+      for (i = 0; i < QTDEMUX_N_STREAMS (qtdemux); i++) {
+        QtDemuxStream *tmp = QTDEMUX_NTH_STREAM (qtdemux, i);
+
+        if (tmp->subtype == FOURCC_vide) {
+          fps_stream = tmp;
+          break;
+        }
       }
+
+      if (fps_stream) {
+        fps_available = gst_qtdemux_guess_framerate (qtdemux, fps_stream);
+        CUR_STREAM (stream)->fps_n = CUR_STREAM (fps_stream)->fps_n;
+        CUR_STREAM (stream)->fps_d = CUR_STREAM (fps_stream)->fps_d;
+      }
+    } else {
+      fps_available = gst_qtdemux_guess_framerate (qtdemux, stream);
+      fps_stream = stream;
+    }
+
+    CUR_STREAM (stream)->caps =
+        gst_caps_make_writable (CUR_STREAM (stream)->caps);
+
+    /* set framerate if calculated framerate is reliable */
+    if (fps_available) {
+      gst_caps_set_simple (CUR_STREAM (stream)->caps,
+          "framerate", GST_TYPE_FRACTION, CUR_STREAM (stream)->fps_n,
+          CUR_STREAM (stream)->fps_d, NULL);
     }
   }
 
