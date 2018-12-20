@@ -5811,6 +5811,88 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   return buf;
 }
 
+static GstFlowReturn
+gst_qtdemux_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstBuffer * buf)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime pts, duration;
+
+  if (stream->need_clip)
+    buf = gst_qtdemux_clip_buffer (qtdemux, stream, buf);
+
+  if (G_UNLIKELY (buf == NULL))
+    goto exit;
+
+  if (G_UNLIKELY (stream->discont)) {
+    GST_LOG_OBJECT (qtdemux, "marking discont buffer");
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    stream->discont = FALSE;
+  } else {
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
+  }
+
+  GST_LOG_OBJECT (qtdemux,
+      "Pushing buffer with dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT
+      ", duration %" GST_TIME_FORMAT " on pad %s",
+      GST_TIME_ARGS (GST_BUFFER_DTS (buf)),
+      GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_PAD_NAME (stream->pad));
+
+  if (stream->protected && stream->protection_scheme_type == FOURCC_cenc) {
+    GstStructure *crypto_info;
+    QtDemuxCencSampleSetInfo *info =
+        (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
+    gint index;
+    GstEvent *event;
+
+    while ((event = g_queue_pop_head (&stream->protection_scheme_event_queue))) {
+      GST_TRACE_OBJECT (stream->pad, "pushing protection event: %"
+          GST_PTR_FORMAT, event);
+      gst_pad_push_event (stream->pad, event);
+    }
+
+    if (info->crypto_info == NULL) {
+      GST_DEBUG_OBJECT (qtdemux,
+          "cenc metadata hasn't been parsed yet, pushing buffer as if it wasn't encrypted");
+    } else {
+      /* The end of the crypto_info array matches our n_samples position,
+       * so count backward from there */
+      index = stream->sample_index - stream->n_samples + info->crypto_info->len;
+      if (G_LIKELY (index >= 0 && index < info->crypto_info->len)) {
+        /* steal structure from array */
+        crypto_info = g_ptr_array_index (info->crypto_info, index);
+        g_ptr_array_index (info->crypto_info, index) = NULL;
+        GST_LOG_OBJECT (qtdemux, "attaching cenc metadata [%u/%u]", index,
+            info->crypto_info->len);
+        if (!crypto_info || !gst_buffer_add_protection_meta (buf, crypto_info))
+          GST_ERROR_OBJECT (qtdemux,
+              "failed to attach cenc metadata to buffer");
+      } else {
+        GST_INFO_OBJECT (qtdemux, "No crypto info with index %d and sample %d",
+            index, stream->sample_index);
+      }
+    }
+  }
+
+  if (stream->alignment > 1)
+    buf = gst_qtdemux_align_buffer (qtdemux, buf, stream->alignment);
+
+  pts = GST_BUFFER_PTS (buf);
+  duration = GST_BUFFER_DURATION (buf);
+
+  ret = gst_pad_push (stream->pad, buf);
+
+  if (GST_CLOCK_TIME_IS_VALID (pts) && GST_CLOCK_TIME_IS_VALID (duration)) {
+    /* mark position in stream, we'll need this to know when to send GAP event */
+    stream->segment.position = pts + duration;
+  }
+
+exit:
+
+  return ret;
+}
+
 /* Sets a buffer's attributes properly and pushes it downstream.
  * Also checks for additional actions and custom processing that may
  * need to be done first.
@@ -5893,6 +5975,13 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   GST_BUFFER_OFFSET (buf) = -1;
   GST_BUFFER_OFFSET_END (buf) = -1;
 
+  if (!keyframe) {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    stream->on_keyframe = FALSE;
+  } else {
+    stream->on_keyframe = TRUE;
+  }
+
   if (G_UNLIKELY (CUR_STREAM (stream)->rgb8_palette))
     gst_buffer_append_memory (buf,
         gst_memory_ref (CUR_STREAM (stream)->rgb8_palette));
@@ -5920,79 +6009,7 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   }
 #endif
 
-  if (stream->need_clip)
-    buf = gst_qtdemux_clip_buffer (qtdemux, stream, buf);
-
-  if (G_UNLIKELY (buf == NULL))
-    goto exit;
-
-  if (G_UNLIKELY (stream->discont)) {
-    GST_LOG_OBJECT (qtdemux, "marking discont buffer");
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
-    stream->discont = FALSE;
-  } else {
-    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
-  }
-
-  if (!keyframe) {
-    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-    stream->on_keyframe = FALSE;
-  } else {
-    stream->on_keyframe = TRUE;
-  }
-
-
-  GST_LOG_OBJECT (qtdemux,
-      "Pushing buffer with dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT
-      ", duration %" GST_TIME_FORMAT " on pad %s", GST_TIME_ARGS (dts),
-      GST_TIME_ARGS (pts), GST_TIME_ARGS (duration),
-      GST_PAD_NAME (stream->pad));
-
-  if (stream->protected && stream->protection_scheme_type == FOURCC_cenc) {
-    GstStructure *crypto_info;
-    QtDemuxCencSampleSetInfo *info =
-        (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
-    gint index;
-    GstEvent *event;
-
-    while ((event = g_queue_pop_head (&stream->protection_scheme_event_queue))) {
-      GST_TRACE_OBJECT (stream->pad, "pushing protection event: %"
-          GST_PTR_FORMAT, event);
-      gst_pad_push_event (stream->pad, event);
-    }
-
-    if (info->crypto_info == NULL) {
-      GST_DEBUG_OBJECT (qtdemux,
-          "cenc metadata hasn't been parsed yet, pushing buffer as if it wasn't encrypted");
-    } else {
-      /* The end of the crypto_info array matches our n_samples position,
-       * so count backward from there */
-      index = stream->sample_index - stream->n_samples + info->crypto_info->len;
-      if (G_LIKELY (index >= 0 && index < info->crypto_info->len)) {
-        /* steal structure from array */
-        crypto_info = g_ptr_array_index (info->crypto_info, index);
-        g_ptr_array_index (info->crypto_info, index) = NULL;
-        GST_LOG_OBJECT (qtdemux, "attaching cenc metadata [%u/%u]", index,
-            info->crypto_info->len);
-        if (!crypto_info || !gst_buffer_add_protection_meta (buf, crypto_info))
-          GST_ERROR_OBJECT (qtdemux,
-              "failed to attach cenc metadata to buffer");
-      } else {
-        GST_INFO_OBJECT (qtdemux, "No crypto info with index %d and sample %d",
-            index, stream->sample_index);
-      }
-    }
-  }
-
-  if (stream->alignment > 1)
-    buf = gst_qtdemux_align_buffer (qtdemux, buf, stream->alignment);
-
-  ret = gst_pad_push (stream->pad, buf);
-
-  if (GST_CLOCK_TIME_IS_VALID (pts) && GST_CLOCK_TIME_IS_VALID (duration)) {
-    /* mark position in stream, we'll need this to know when to send GAP event */
-    stream->segment.position = pts + duration;
-  }
+  ret = gst_qtdemux_push_buffer (qtdemux, stream, buf);
 
 exit:
   return ret;
