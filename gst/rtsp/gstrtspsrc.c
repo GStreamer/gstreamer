@@ -1574,7 +1574,7 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       const gchar *str;
 
       str = g_value_get_string (value);
-      if (sscanf (str, "%u-%u", &rtspsrc->client_port_range.min,
+      if (str == NULL || sscanf (str, "%u-%u", &rtspsrc->client_port_range.min,
               &rtspsrc->client_port_range.max) != 2) {
         rtspsrc->client_port_range.min = 0;
         rtspsrc->client_port_range.max = 0;
