@@ -9717,11 +9717,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   version = QT_UINT32 ((guint8 *) mdhd->data + 8);
   GST_LOG_OBJECT (qtdemux, "track version/flags: %08x", version);
   if (version == 0x01000000) {
-    if (len < 38)
+    if (len < 42)
       goto corrupt_file;
     stream->timescale = QT_UINT32 ((guint8 *) mdhd->data + 28);
     stream->duration = QT_UINT64 ((guint8 *) mdhd->data + 32);
-    lang_code = QT_UINT16 ((guint8 *) mdhd->data + 36);
+    lang_code = QT_UINT16 ((guint8 *) mdhd->data + 40);
   } else {
     if (len < 30)
       goto corrupt_file;
