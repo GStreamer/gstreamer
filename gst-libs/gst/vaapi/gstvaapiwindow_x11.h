@@ -26,13 +26,17 @@
 #define GST_VAAPI_WINDOW_X11_H
 
 #include <X11/Xlib.h>
+#include <gst/gst.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiwindow.h>
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_WINDOW_X11 (gst_vaapi_window_x11_get_type ())
 #define GST_VAAPI_WINDOW_X11(obj) \
-    ((GstVaapiWindowX11 *)(obj))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_WINDOW_X11, GstVaapiWindowX11))
+#define GST_VAAPI_IS_WINDOW_X11(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_WINDOW_X11))
 
 /**
  * GST_VAAPI_WINDOW_XWINDOW:
@@ -41,9 +45,12 @@ G_BEGIN_DECLS
  * Macro that evaluates to the underlying X11 #Window of @window
  */
 #define GST_VAAPI_WINDOW_XWINDOW(window) \
-    gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(window))
+    gst_vaapi_window_x11_get_xid (GST_VAAPI_WINDOW_X11 (window))
 
 typedef struct _GstVaapiWindowX11 GstVaapiWindowX11;
+
+GType
+gst_vaapi_window_x11_get_type (void) G_GNUC_CONST;
 
 GstVaapiWindow *
 gst_vaapi_window_x11_new (GstVaapiDisplay * display, guint width, guint height);

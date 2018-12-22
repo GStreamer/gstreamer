@@ -25,20 +25,25 @@
 #ifndef GST_VAAPI_WINDOW_H
 #define GST_VAAPI_WINDOW_H
 
-#include <gst/video/gstvideosink.h>
+#include <gst/gst.h>
 #include <gst/vaapi/gstvaapitypes.h>
-#include <gst/vaapi/gstvaapiobject.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapipixmap.h>
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_WINDOW                    (gst_vaapi_window_get_type ())
 #define GST_VAAPI_WINDOW(obj) \
-    ((GstVaapiWindow *)(obj))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_WINDOW, GstVaapiWindow))
+#define GST_VAAPI_IS_WINDOW(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_WINDOW))
 
 typedef struct _GstVaapiWindow GstVaapiWindow;
 typedef struct _GstVaapiWindowClass GstVaapiWindowClass;
+
+GType
+gst_vaapi_window_get_type (void) G_GNUC_CONST;
 
 GstVaapiWindow *
 gst_vaapi_window_new (GstVaapiDisplay * display, guint width, guint height);
@@ -104,6 +109,10 @@ gst_vaapi_window_unblock (GstVaapiWindow * window);
 
 gboolean
 gst_vaapi_window_unblock_cancel (GstVaapiWindow * window);
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiWindow, gst_object_unref)
+#endif
 
 G_END_DECLS
 

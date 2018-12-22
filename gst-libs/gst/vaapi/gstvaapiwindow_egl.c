@@ -32,16 +32,16 @@
 #include "gstvaapitexture_priv.h"
 #include "gstvaapidisplay_egl_priv.h"
 
-#define GST_VAAPI_WINDOW_EGL(obj) \
-  ((GstVaapiWindowEGL *)(obj))
 
-#define GST_VAAPI_WINDOW_EGL_CLASS(klass) \
-  ((GstVaapiWindowEGLClass *)(klass))
+#define GST_VAAPI_WINDOW_EGL_CAST(obj) \
+    ((GstVaapiWindowEGL *)(obj))
+
+#define GST_VAAPI_WINDOW_EGL_GET_PROXY(obj) \
+    (GST_VAAPI_WINDOW_EGL_CAST(obj)->window)
 
 #define GST_VAAPI_WINDOW_EGL_GET_CLASS(obj) \
-  GST_VAAPI_WINDOW_EGL_CLASS (GST_VAAPI_WINDOW_GET_CLASS (obj))
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPI_WINDOW_EGL, GstVaapiWindowEGLClass))
 
-typedef struct _GstVaapiWindowEGL GstVaapiWindowEGL;
 typedef struct _GstVaapiWindowEGLClass GstVaapiWindowEGLClass;
 
 enum
@@ -123,6 +123,8 @@ static const gchar *frag_shader_text_rgba =
     "}                                                 \n";
 /* *IDENT-ON* */
 
+G_DEFINE_TYPE (GstVaapiWindowEGL, gst_vaapi_window_egl, GST_TYPE_VAAPI_WINDOW);
+
 static gboolean
 ensure_texture (GstVaapiWindowEGL * window, guint width, guint height)
 {
@@ -133,7 +135,7 @@ ensure_texture (GstVaapiWindowEGL * window, guint width, guint height)
       GST_VAAPI_TEXTURE_HEIGHT (window->texture) == height)
     return TRUE;
 
-  texture = gst_vaapi_texture_egl_new (GST_VAAPI_OBJECT_DISPLAY (window),
+  texture = gst_vaapi_texture_egl_new (GST_VAAPI_WINDOW_DISPLAY (window),
       GL_TEXTURE_2D, GL_RGBA, width, height);
   gst_vaapi_texture_replace (&window->texture, texture);
   gst_vaapi_texture_replace (&texture, NULL);
@@ -187,7 +189,8 @@ do_create_objects_unlocked (GstVaapiWindowEGL * window, guint width,
   EglVTable *egl_vtable;
 
   egl_window = egl_window_new (egl_context,
-      GSIZE_TO_POINTER (GST_VAAPI_OBJECT_ID (window->window)));
+      GSIZE_TO_POINTER (GST_VAAPI_WINDOW_ID (GST_VAAPI_WINDOW_EGL_GET_PROXY
+              (window))));
   if (!egl_window)
     return FALSE;
   window->egl_window = egl_window;
@@ -207,36 +210,37 @@ do_create_objects (CreateObjectsArgs * args)
 
   args->success = FALSE;
 
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
+  GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
   if (egl_context_set_current (args->egl_context, TRUE, &old_cs)) {
     args->success = do_create_objects_unlocked (window, args->width,
         args->height, args->egl_context);
     egl_context_set_current (args->egl_context, FALSE, &old_cs);
   }
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (window);
+  GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
 }
 
 static gboolean
-gst_vaapi_window_egl_create (GstVaapiWindowEGL * window,
-    guint * width, guint * height)
+gst_vaapi_window_egl_create (GstVaapiWindow * window, guint * width,
+    guint * height)
 {
   GstVaapiDisplayEGL *const display =
-      GST_VAAPI_DISPLAY_EGL (GST_VAAPI_OBJECT_DISPLAY (window));
+      GST_VAAPI_DISPLAY_EGL (GST_VAAPI_WINDOW_DISPLAY (window));
   const GstVaapiDisplayClass *const native_dpy_class =
       GST_VAAPI_DISPLAY_GET_CLASS (display->display);
   CreateObjectsArgs args;
 
   g_return_val_if_fail (native_dpy_class != NULL, FALSE);
 
-  window->window =
+  GST_VAAPI_WINDOW_EGL_GET_PROXY (window) =
       native_dpy_class->create_window (GST_VAAPI_DISPLAY (display->display),
       GST_VAAPI_ID_INVALID, *width, *height);
-  if (!window->window)
+  if (!GST_VAAPI_WINDOW_EGL_GET_PROXY (window))
     return FALSE;
 
-  gst_vaapi_window_get_size (window->window, width, height);
+  gst_vaapi_window_get_size (GST_VAAPI_WINDOW_EGL_GET_PROXY (window), width,
+      height);
 
-  args.window = window;
+  args.window = GST_VAAPI_WINDOW_EGL_CAST (window);
   args.width = *width;
   args.height = *height;
   args.egl_context = GST_VAAPI_DISPLAY_EGL_CONTEXT (display);
@@ -256,70 +260,76 @@ static void
 do_destroy_objects (GstVaapiWindowEGL * window)
 {
   EglContext *const egl_context =
-      GST_VAAPI_DISPLAY_EGL_CONTEXT (GST_VAAPI_OBJECT_DISPLAY (window));
+      GST_VAAPI_DISPLAY_EGL_CONTEXT (GST_VAAPI_WINDOW_DISPLAY (window));
   EglContextState old_cs;
 
   if (!window->egl_window)
     return;
 
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
+  GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
   if (egl_context_set_current (egl_context, TRUE, &old_cs)) {
     do_destroy_objects_unlocked (window);
     egl_context_set_current (egl_context, FALSE, &old_cs);
   }
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (window);
+  GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
 }
 
 static void
-gst_vaapi_window_egl_destroy (GstVaapiWindowEGL * window)
+gst_vaapi_window_egl_finalize (GObject * object)
 {
+  GstVaapiWindowEGL *const window = GST_VAAPI_WINDOW_EGL (object);
+
   egl_context_run (window->egl_window->context,
       (EglContextRunFunc) do_destroy_objects, window);
   gst_vaapi_window_replace (&window->window, NULL);
   gst_vaapi_texture_replace (&window->texture, NULL);
+
+  G_OBJECT_CLASS (gst_vaapi_window_egl_parent_class)->finalize (object);
 }
 
 static gboolean
-gst_vaapi_window_egl_show (GstVaapiWindowEGL * window)
+gst_vaapi_window_egl_show (GstVaapiWindow * window)
 {
   const GstVaapiWindowClass *const klass =
-      GST_VAAPI_WINDOW_GET_CLASS (window->window);
+      GST_VAAPI_WINDOW_GET_CLASS (GST_VAAPI_WINDOW_EGL_GET_PROXY (window));
 
   g_return_val_if_fail (klass->show, FALSE);
 
-  return klass->show (window->window);
+  return klass->show (GST_VAAPI_WINDOW_EGL_GET_PROXY (window));
 }
 
 static gboolean
-gst_vaapi_window_egl_hide (GstVaapiWindowEGL * window)
+gst_vaapi_window_egl_hide (GstVaapiWindow * window)
 {
   const GstVaapiWindowClass *const klass =
-      GST_VAAPI_WINDOW_GET_CLASS (window->window);
+      GST_VAAPI_WINDOW_GET_CLASS (GST_VAAPI_WINDOW_EGL_GET_PROXY (window));
 
   g_return_val_if_fail (klass->hide, FALSE);
 
-  return klass->hide (window->window);
+  return klass->hide (GST_VAAPI_WINDOW_EGL_GET_PROXY (window));
 }
 
 static gboolean
-gst_vaapi_window_egl_get_geometry (GstVaapiWindowEGL * window,
-    gint * x_ptr, gint * y_ptr, guint * width_ptr, guint * height_ptr)
+gst_vaapi_window_egl_get_geometry (GstVaapiWindow * window, gint * x_ptr,
+    gint * y_ptr, guint * width_ptr, guint * height_ptr)
 {
   const GstVaapiWindowClass *const klass =
-      GST_VAAPI_WINDOW_GET_CLASS (window->window);
+      GST_VAAPI_WINDOW_GET_CLASS (GST_VAAPI_WINDOW_EGL_GET_PROXY (window));
 
-  return klass->get_geometry ? klass->get_geometry (window->window,
-      x_ptr, y_ptr, width_ptr, height_ptr) : FALSE;
+  return klass->get_geometry ?
+      klass->get_geometry (GST_VAAPI_WINDOW_EGL_GET_PROXY (window), x_ptr,
+      y_ptr, width_ptr, height_ptr) : FALSE;
 }
 
 static gboolean
-gst_vaapi_window_egl_set_fullscreen (GstVaapiWindowEGL * window,
+gst_vaapi_window_egl_set_fullscreen (GstVaapiWindow * window,
     gboolean fullscreen)
 {
   const GstVaapiWindowClass *const klass =
-      GST_VAAPI_WINDOW_GET_CLASS (window->window);
+      GST_VAAPI_WINDOW_GET_CLASS (GST_VAAPI_WINDOW_EGL_GET_PROXY (window));
 
-  return klass->set_fullscreen ? klass->set_fullscreen (window->window,
+  return klass->set_fullscreen ?
+      klass->set_fullscreen (GST_VAAPI_WINDOW_EGL_GET_PROXY (window),
       fullscreen) : FALSE;
 }
 
@@ -341,29 +351,29 @@ do_resize_window (ResizeWindowArgs * args)
   GstVaapiWindowEGL *const window = args->window;
   EglContextState old_cs;
 
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
+  GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
   if (egl_context_set_current (window->egl_window->context, TRUE, &old_cs)) {
     args->success = do_resize_window_unlocked (window, args->width,
         args->height);
     egl_context_set_current (window->egl_window->context, FALSE, &old_cs);
   }
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (window);
+  GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
 }
 
 static gboolean
-gst_vaapi_window_egl_resize (GstVaapiWindowEGL * window, guint width,
-    guint height)
+gst_vaapi_window_egl_resize (GstVaapiWindow * window, guint width, guint height)
 {
+  GstVaapiWindowEGL *const win = GST_VAAPI_WINDOW_EGL_CAST (window);
   const GstVaapiWindowClass *const klass =
-      GST_VAAPI_WINDOW_GET_CLASS (window->window);
-  ResizeWindowArgs args = { window, width, height };
+      GST_VAAPI_WINDOW_GET_CLASS (GST_VAAPI_WINDOW_EGL_GET_PROXY (window));
+  ResizeWindowArgs args = { win, width, height };
 
   g_return_val_if_fail (klass->resize, FALSE);
 
-  if (!klass->resize (window->window, width, height))
+  if (!klass->resize (GST_VAAPI_WINDOW_EGL_GET_PROXY (window), width, height))
     return FALSE;
 
-  return egl_context_run (window->egl_window->context,
+  return egl_context_run (win->egl_window->context,
       (EglContextRunFunc) do_resize_window, &args) && args.success;
 }
 
@@ -472,71 +482,63 @@ do_upload_surface (UploadSurfaceArgs * args)
 
   args->success = FALSE;
 
-  GST_VAAPI_OBJECT_LOCK_DISPLAY (window);
+  GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
   if (egl_context_set_current (window->egl_window->context, TRUE, &old_cs)) {
     args->success = do_upload_surface_unlocked (window, args->surface,
         args->src_rect, args->dst_rect, args->flags);
     egl_context_set_current (window->egl_window->context, FALSE, &old_cs);
   }
-  GST_VAAPI_OBJECT_UNLOCK_DISPLAY (window);
+  GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
 }
 
 static gboolean
-gst_vaapi_window_egl_render (GstVaapiWindowEGL * window,
-    GstVaapiSurface * surface, const GstVaapiRectangle * src_rect,
-    const GstVaapiRectangle * dst_rect, guint flags)
+gst_vaapi_window_egl_render (GstVaapiWindow * window, GstVaapiSurface * surface,
+    const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect,
+    guint flags)
 {
-  UploadSurfaceArgs args = { window, surface, src_rect, dst_rect, flags };
+  GstVaapiWindowEGL *const win = GST_VAAPI_WINDOW_EGL_CAST (window);
+  UploadSurfaceArgs args = { win, surface, src_rect, dst_rect, flags };
 
-  return egl_context_run (window->egl_window->context,
+  return egl_context_run (win->egl_window->context,
       (EglContextRunFunc) do_upload_surface, &args) && args.success;
 }
 
 static gboolean
-gst_vaapi_window_egl_render_pixmap (GstVaapiWindowEGL * window,
-    GstVaapiPixmap * pixmap,
-    const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect)
+gst_vaapi_window_egl_render_pixmap (GstVaapiWindow * window,
+    GstVaapiPixmap * pixmap, const GstVaapiRectangle * src_rect,
+    const GstVaapiRectangle * dst_rect)
 {
   const GstVaapiWindowClass *const klass =
-      GST_VAAPI_WINDOW_GET_CLASS (window->window);
+      GST_VAAPI_WINDOW_GET_CLASS (GST_VAAPI_WINDOW_EGL_GET_PROXY (window));
 
   if (!klass->render_pixmap)
     return FALSE;
-  return klass->render_pixmap (window->window, pixmap, src_rect, dst_rect);
+  return klass->render_pixmap (GST_VAAPI_WINDOW_EGL_GET_PROXY (window), pixmap,
+      src_rect, dst_rect);
 }
 
-void
+static void
 gst_vaapi_window_egl_class_init (GstVaapiWindowEGLClass * klass)
 {
-  GstVaapiObjectClass *const object_class = GST_VAAPI_OBJECT_CLASS (klass);
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstVaapiWindowClass *const window_class = GST_VAAPI_WINDOW_CLASS (klass);
 
-  object_class->finalize = (GstVaapiObjectFinalizeFunc)
-      gst_vaapi_window_egl_destroy;
+  object_class->finalize = gst_vaapi_window_egl_finalize;
 
-  window_class->create = (GstVaapiWindowCreateFunc)
-      gst_vaapi_window_egl_create;
-  window_class->show = (GstVaapiWindowShowFunc)
-      gst_vaapi_window_egl_show;
-  window_class->hide = (GstVaapiWindowHideFunc)
-      gst_vaapi_window_egl_hide;
-  window_class->get_geometry = (GstVaapiWindowGetGeometryFunc)
-      gst_vaapi_window_egl_get_geometry;
-  window_class->set_fullscreen = (GstVaapiWindowSetFullscreenFunc)
-      gst_vaapi_window_egl_set_fullscreen;
-  window_class->resize = (GstVaapiWindowResizeFunc)
-      gst_vaapi_window_egl_resize;
-  window_class->render = (GstVaapiWindowRenderFunc)
-      gst_vaapi_window_egl_render;
-  window_class->render_pixmap = (GstVaapiWindowRenderPixmapFunc)
-      gst_vaapi_window_egl_render_pixmap;
+  window_class->create = gst_vaapi_window_egl_create;
+  window_class->show = gst_vaapi_window_egl_show;
+  window_class->hide = gst_vaapi_window_egl_hide;
+  window_class->get_geometry = gst_vaapi_window_egl_get_geometry;
+  window_class->set_fullscreen = gst_vaapi_window_egl_set_fullscreen;
+  window_class->resize = gst_vaapi_window_egl_resize;
+  window_class->render = gst_vaapi_window_egl_render;
+  window_class->render_pixmap = gst_vaapi_window_egl_render_pixmap;
 }
 
-#define gst_vaapi_window_egl_finalize \
-    gst_vaapi_window_egl_destroy
-
-GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiWindowEGL,
-    gst_vaapi_window_egl, gst_vaapi_window_egl_class_init (&g_class));
+static void
+gst_vaapi_window_egl_init (GstVaapiWindowEGL * window)
+{
+}
 
 /**
  * gst_vaapi_window_egl_new:
@@ -553,12 +555,8 @@ GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE (GstVaapiWindowEGL,
 GstVaapiWindow *
 gst_vaapi_window_egl_new (GstVaapiDisplay * display, guint width, guint height)
 {
-  GST_DEBUG ("new window, size %ux%u", width, height);
-
   g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_EGL (display), NULL);
 
-  return
-      gst_vaapi_window_new_internal (GST_VAAPI_WINDOW_CLASS
-      (gst_vaapi_window_egl_class ()), display, GST_VAAPI_ID_INVALID, width,
-      height);
+  return gst_vaapi_window_new_internal (GST_TYPE_VAAPI_WINDOW_EGL, display,
+      GST_VAAPI_ID_INVALID, width, height);
 }

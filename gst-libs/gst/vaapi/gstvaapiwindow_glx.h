@@ -26,16 +26,24 @@
 #define GST_VAAPI_WINDOW_GLX_H
 
 #include <GL/glx.h>
+#include <gst/gst.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiwindow_x11.h>
 #include <gst/vaapi/gstvaapitexture.h>
+#include <gst/vaapi/gstvaapitypes.h>
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_WINDOW_GLX (gst_vaapi_window_glx_get_type ())
 #define GST_VAAPI_WINDOW_GLX(obj) \
-    ((GstVaapiWindowGLX *)(obj))
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_WINDOW_GLX, GstVaapiWindowGLX))
+#define GST_VAAPI_IS_WINDOW_GLX(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_WINDOW_GLX))
 
 typedef struct _GstVaapiWindowGLX GstVaapiWindowGLX;
+
+GType
+gst_vaapi_window_glx_get_type (void) G_GNUC_CONST;
 
 GstVaapiWindow *
 gst_vaapi_window_glx_new (GstVaapiDisplay * display, guint width, guint height);
@@ -59,6 +67,10 @@ gboolean
 gst_vaapi_window_glx_put_texture (GstVaapiWindowGLX * window,
     GstVaapiTexture * texture, const GstVaapiRectangle * src_rect,
     const GstVaapiRectangle * dst_rect);
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiWindowGLX, gst_object_unref)
+#endif
 
 G_END_DECLS
 

@@ -24,16 +24,30 @@
 #ifndef GST_VAAPI_WINDOW_WAYLAND_H
 #define GST_VAAPI_WINDOW_WAYLAND_H
 
+#include <gst/gst.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiwindow.h>
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_WINDOW_WAYLAND (gst_vaapi_window_wayland_get_type ())
+#define GST_VAAPI_WINDOW_WAYLAND(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_WINDOW_WAYLAND, GstVaapiWindowWayland))
+#define GST_VAAPI_IS_WINDOW_WAYLAND(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_WINDOW_WAYLAND))
+
 typedef struct _GstVaapiWindowWayland GstVaapiWindowWayland;
+
+GType
+gst_vaapi_window_wayland_get_type (void) G_GNUC_CONST;
 
 GstVaapiWindow *
 gst_vaapi_window_wayland_new (GstVaapiDisplay * display, guint width,
     guint height);
+
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaapiWindowWayland, gst_object_unref)
+#endif
 
 G_END_DECLS
 

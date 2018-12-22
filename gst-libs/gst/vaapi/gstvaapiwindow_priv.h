@@ -25,39 +25,41 @@
 #ifndef GST_VAAPI_WINDOW_PRIV_H
 #define GST_VAAPI_WINDOW_PRIV_H
 
-#include "gstvaapiobject_priv.h"
+#include "gstvaapidisplay.h"
 #include "gstvaapifilter.h"
 #include "gstvaapisurfacepool.h"
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_WINDOW_CAST(window) \
+    ((GstVaapiWindow *)(window))
+
 #define GST_VAAPI_WINDOW_CLASS(klass) \
-    ((GstVaapiWindowClass *)(klass))
+    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VAAPI_WINDOW, GstVaapiWindowClass))
+
+#define GST_VAAPI_IS_WINDOW_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VAAPI_WINDOW))
 
 #define GST_VAAPI_WINDOW_GET_CLASS(obj) \
-    GST_VAAPI_WINDOW_CLASS(GST_VAAPI_OBJECT_GET_CLASS(obj))
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPI_WINDOW, GstVaapiWindowClass))
 
-/* GstVaapiWindowClass hooks */
-typedef gboolean (*GstVaapiWindowCreateFunc) (GstVaapiWindow * window,
-    guint * width, guint * height);
-typedef gboolean (*GstVaapiWindowShowFunc) (GstVaapiWindow * window);
-typedef gboolean (*GstVaapiWindowHideFunc) (GstVaapiWindow * window);
-typedef gboolean (*GstVaapiWindowGetGeometryFunc) (GstVaapiWindow * window,
-    gint * px, gint * py, guint * pwidth, guint * pheight);
-typedef gboolean (*GstVaapiWindowSetFullscreenFunc) (GstVaapiWindow * window,
-    gboolean fullscreen);
-typedef gboolean (*GstVaapiWindowResizeFunc) (GstVaapiWindow * window,
-    guint width, guint height);
-typedef gboolean (*GstVaapiWindowRenderFunc) (GstVaapiWindow * window,
-    GstVaapiSurface * surface, const GstVaapiRectangle * src_rect,
-    const GstVaapiRectangle * dst_rect, guint flags);
-typedef gboolean (*GstVaapiWindowRenderPixmapFunc) (GstVaapiWindow * window,
-    GstVaapiPixmap * pixmap, const GstVaapiRectangle * src_rect,
-    const GstVaapiRectangle * dst_rect);
-typedef guintptr (*GstVaapiWindowGetVisualIdFunc) (GstVaapiWindow * window);
-typedef guintptr (*GstVaapiWindowGetColormapFunc) (GstVaapiWindow * window);
-typedef gboolean (*GstVaapiWindowSetUnblockFunc) (GstVaapiWindow * window);
-typedef gboolean (*GstVaapiWindowSetUnblockCancelFunc) (GstVaapiWindow * window);
+#define GST_VAAPI_WINDOW_DISPLAY(window) \
+   (GST_VAAPI_WINDOW_CAST (window)->display)
+
+#define GST_VAAPI_WINDOW_LOCK_DISPLAY(window) \
+   GST_VAAPI_DISPLAY_LOCK (GST_VAAPI_WINDOW_DISPLAY (window))
+
+#define GST_VAAPI_WINDOW_UNLOCK_DISPLAY(window) \
+   GST_VAAPI_DISPLAY_UNLOCK (GST_VAAPI_WINDOW_DISPLAY (window))
+
+#define GST_VAAPI_WINDOW_NATIVE_DISPLAY(window) \
+    GST_VAAPI_DISPLAY_NATIVE (GST_VAAPI_WINDOW_DISPLAY (window))
+
+#define GST_VAAPI_WINDOW_ID(window) \
+    (GST_VAAPI_WINDOW_CAST (window)->native_id)
+
+#define GST_VAAPI_WINDOW_VADISPLAY(window) \
+    GST_VAAPI_DISPLAY_VADISPLAY (GST_VAAPI_WINDOW_DISPLAY (window))
 
 /**
  * GstVaapiWindow:
@@ -67,7 +69,9 @@ typedef gboolean (*GstVaapiWindowSetUnblockCancelFunc) (GstVaapiWindow * window)
 struct _GstVaapiWindow
 {
   /*< private >*/
-  GstVaapiObject parent_instance;
+  GstObject parent_instance;
+  GstVaapiDisplay *display;
+  GstVaapiID native_id;
 
   /*< protected >*/
   guint width;
@@ -106,34 +110,35 @@ struct _GstVaapiWindow
 struct _GstVaapiWindowClass
 {
   /*< private >*/
-  GstVaapiObjectClass parent_class;
+  GstObjectClass parent_class;
 
   /*< protected >*/
-  GstVaapiWindowCreateFunc create;
-  GstVaapiWindowShowFunc show;
-  GstVaapiWindowHideFunc hide;
-  GstVaapiWindowGetGeometryFunc get_geometry;
-  GstVaapiWindowSetFullscreenFunc set_fullscreen;
-  GstVaapiWindowResizeFunc resize;
-  GstVaapiWindowRenderFunc render;
-  GstVaapiWindowRenderPixmapFunc render_pixmap;
-  GstVaapiWindowGetVisualIdFunc get_visual_id;
-  GstVaapiWindowGetColormapFunc get_colormap;
-  GstVaapiWindowSetUnblockFunc unblock;
-  GstVaapiWindowSetUnblockCancelFunc unblock_cancel;
+  gboolean (*create) (GstVaapiWindow * window, guint * width, guint * height);
+  gboolean (*show) (GstVaapiWindow * window);
+  gboolean (*hide) (GstVaapiWindow * window);
+  gboolean (*get_geometry) (GstVaapiWindow * window, gint * px, gint * py,
+      guint * pwidth, guint * pheight);
+  gboolean (*set_fullscreen) (GstVaapiWindow * window, gboolean fullscreen);
+  gboolean (*resize) (GstVaapiWindow * window, guint width, guint height);
+  gboolean (*render) (GstVaapiWindow * window, GstVaapiSurface * surface,
+      const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect,
+      guint flags);
+  gboolean (*render_pixmap) (GstVaapiWindow * window, GstVaapiPixmap * pixmap,
+      const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect);
+  guintptr (*get_visual_id) (GstVaapiWindow * window);
+  guintptr (*get_colormap) (GstVaapiWindow * window);
+  gboolean (*unblock) (GstVaapiWindow * window);
+  gboolean (*unblock_cancel) (GstVaapiWindow * window);
 };
 
 GstVaapiWindow *
-gst_vaapi_window_new_internal (const GstVaapiWindowClass * window_class,
-    GstVaapiDisplay * display, GstVaapiID handle, guint width, guint height);
+gst_vaapi_window_new_internal (GType type, GstVaapiDisplay * display,
+    GstVaapiID handle, guint width, guint height);
 
 GstVaapiSurface *
 gst_vaapi_window_vpp_convert_internal (GstVaapiWindow * window,
     GstVaapiSurface * surface, const GstVaapiRectangle * src_rect,
     const GstVaapiRectangle * dst_rect, guint flags);
-
-void
-gst_vaapi_window_class_init (GstVaapiWindowClass * klass);
 
 G_END_DECLS
 

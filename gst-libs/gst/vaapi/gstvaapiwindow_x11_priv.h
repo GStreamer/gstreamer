@@ -33,14 +33,12 @@
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_WINDOW_X11_CAST(obj) ((GstVaapiWindowX11 *)(obj))
 #define GST_VAAPI_WINDOW_X11_GET_PRIVATE(obj) \
-    (&GST_VAAPI_WINDOW_X11(obj)->priv)
-
-#define GST_VAAPI_WINDOW_X11_CLASS(klass) \
-    ((GstVaapiWindowX11Class *)(klass))
+    gst_vaapi_window_x11_get_instance_private (GST_VAAPI_WINDOW_X11_CAST (obj))
 
 #define GST_VAAPI_WINDOW_X11_GET_CLASS(obj) \
-    GST_VAAPI_WINDOW_X11_CLASS(GST_VAAPI_WINDOW_GET_CLASS(obj))
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPI_WINDOW_X11, GstVaapiWindowX11Class))
 
 typedef struct _GstVaapiWindowX11Private GstVaapiWindowX11Private;
 typedef struct _GstVaapiWindowX11Class GstVaapiWindowX11Class;
@@ -67,8 +65,6 @@ struct _GstVaapiWindowX11
 {
   /*< private >*/
   GstVaapiWindow parent_instance;
-
-  GstVaapiWindowX11Private priv;
 };
 
 /**
@@ -80,11 +76,7 @@ struct _GstVaapiWindowX11Class
 {
   /*< private >*/
   GstVaapiWindowClass parent_class;
-  GstVaapiObjectFinalizeFunc parent_finalize;
 };
-
-void
-gst_vaapi_window_x11_class_init (GstVaapiWindowX11Class * klass);
 
 G_END_DECLS
 
