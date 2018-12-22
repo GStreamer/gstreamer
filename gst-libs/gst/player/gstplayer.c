@@ -2265,7 +2265,7 @@ gst_player_audio_info_update (GstPlayer * self,
 
   GST_DEBUG_OBJECT (self, "language=%s rate=%d channels=%d bitrate=%d "
       "max_bitrate=%d", info->language, info->sample_rate, info->channels,
-      info->bitrate, info->bitrate);
+      info->bitrate, info->max_bitrate);
 }
 
 static GstPlayerStreamInfo *
