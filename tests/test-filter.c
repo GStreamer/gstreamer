@@ -443,7 +443,7 @@ main (int argc, char *argv[])
   gst_object_unref (filter);
   gst_vaapi_object_unref (dst_surface);
   gst_vaapi_object_unref (src_surface);
-  gst_vaapi_window_unref (window);
+  gst_object_unref (window);
   gst_object_unref (display);
   video_output_exit ();
   g_free (g_src_format_str);

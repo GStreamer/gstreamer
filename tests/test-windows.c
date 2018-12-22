@@ -131,7 +131,7 @@ main (int argc, char *argv[])
       g_error ("could not render surface");
 
     pause ();
-    gst_vaapi_window_unref (window);
+    gst_object_unref (window);
   }
 
   gst_vaapi_object_unref (surface);
@@ -161,7 +161,7 @@ main (int argc, char *argv[])
       g_error ("could not render surface");
 
     pause ();
-    gst_vaapi_window_unref (window);
+    gst_object_unref (window);
   }
 
   g_print ("#\n");
@@ -194,7 +194,7 @@ main (int argc, char *argv[])
       g_error ("could not render surface");
 
     pause ();
-    gst_vaapi_window_unref (window);
+    gst_object_unref (window);
     XUnmapWindow (dpy, win);
     XDestroyWindow (dpy, win);
   }
@@ -226,7 +226,7 @@ main (int argc, char *argv[])
       g_error ("could not render surface");
 
     pause ();
-    gst_vaapi_window_unref (window);
+    gst_object_unref (window);
   }
 
   gst_vaapi_object_unref (surface);

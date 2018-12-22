@@ -353,7 +353,7 @@ gst_vaapi_window_glx_new (GstVaapiDisplay * display, guint width, guint height)
   /* ERRORS */
 error:
   {
-    gst_vaapi_window_unref (window);
+    gst_object_unref (window);
     return NULL;
   }
 }
@@ -390,7 +390,7 @@ gst_vaapi_window_glx_new_with_xid (GstVaapiDisplay * display, Window xid)
   /* ERRORS */
 error:
   {
-    gst_vaapi_window_unref (window);
+    gst_object_unref (window);
     return NULL;
   }
 }

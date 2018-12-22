@@ -258,7 +258,7 @@ gst_vaapi_window_new_internal (GType type, GstVaapiDisplay * display,
   /* ERRORS */
 error:
   {
-    gst_vaapi_window_unref (window);
+    gst_object_unref (window);
     return NULL;
   }
 }
@@ -329,33 +329,6 @@ gst_vaapi_window_new (GstVaapiDisplay * display, guint width, guint height)
     return NULL;
   return dpy_class->create_window (display, GST_VAAPI_ID_INVALID, width,
       height);
-}
-
-/**
- * gst_vaapi_window_ref:
- * @window: a #GstVaapiWindow
- *
- * Atomically increases the reference count of the given @window by one.
- *
- * Returns: The same @window argument
- */
-GstVaapiWindow *
-gst_vaapi_window_ref (GstVaapiWindow * window)
-{
-  return (GstVaapiWindow *) gst_object_ref (window);
-}
-
-/**
- * gst_vaapi_window_unref:
- * @window: a #GstVaapiWindow
- *
- * Atomically decreases the reference count of the @window by one. If
- * the reference count reaches zero, the window will be free'd.
- */
-void
-gst_vaapi_window_unref (GstVaapiWindow * window)
-{
-  gst_object_unref (window);
 }
 
 /**

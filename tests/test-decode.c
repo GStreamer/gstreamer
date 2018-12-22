@@ -134,7 +134,7 @@ main (int argc, char *argv[])
     gst_vaapi_pixmap_unref (pixmap);
   gst_vaapi_surface_proxy_unref (proxy);
   gst_object_unref (decoder);
-  gst_vaapi_window_unref (window);
+  gst_object_unref (window);
   gst_object_unref (display);
   gst_object_unref (display2);
   g_free (g_codec_str);

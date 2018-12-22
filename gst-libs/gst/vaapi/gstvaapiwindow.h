@@ -48,12 +48,6 @@ gst_vaapi_window_get_type (void) G_GNUC_CONST;
 GstVaapiWindow *
 gst_vaapi_window_new (GstVaapiDisplay * display, guint width, guint height);
 
-GstVaapiWindow *
-gst_vaapi_window_ref (GstVaapiWindow * window);
-
-void
-gst_vaapi_window_unref (GstVaapiWindow * window);
-
 void
 gst_vaapi_window_replace (GstVaapiWindow ** old_window_ptr,
     GstVaapiWindow * new_window);
