@@ -40,8 +40,8 @@
 #include "gstvaapiutils.h"
 #include "gstvaapiutils_x11.h"
 
-#define DEBUG 1
-#include "gstvaapidebug.h"
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_vaapi_window);
+#define GST_CAT_DEFAULT gst_debug_vaapi_window
 
 #define GST_VAAPI_WINDOW_X11_GET_CLASS(obj) \
    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPI_WINDOW_X11, GstVaapiWindowX11Class))

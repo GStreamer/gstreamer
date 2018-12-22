@@ -37,8 +37,8 @@
 #include "gstvaapifilter.h"
 #include "gstvaapisurfacepool.h"
 
-#define DEBUG 1
-#include "gstvaapidebug.h"
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_vaapi_window);
+#define GST_CAT_DEFAULT gst_debug_vaapi_window
 
 #define GST_VAAPI_WINDOW_WAYLAND_CAST(obj) \
     ((GstVaapiWindowWayland *)(obj))

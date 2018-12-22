@@ -32,6 +32,8 @@
 #include "gstvaapitexture_priv.h"
 #include "gstvaapidisplay_egl_priv.h"
 
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_vaapi_window);
+#define GST_CAT_DEFAULT gst_debug_vaapi_window
 
 #define GST_VAAPI_WINDOW_EGL_CAST(obj) \
     ((GstVaapiWindowEGL *)(obj))

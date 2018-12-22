@@ -30,8 +30,8 @@
 #include "gstvaapiwindow_priv.h"
 #include "gstvaapidisplay_drm_priv.h"
 
-#define DEBUG 1
-#include "gstvaapidebug.h"
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_vaapi_window);
+#define GST_CAT_DEFAULT gst_debug_vaapi_window
 
 typedef struct _GstVaapiWindowDRMClass GstVaapiWindowDRMClass;
 

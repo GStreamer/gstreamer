@@ -33,11 +33,15 @@
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapisurface_priv.h"
 
-#define DEBUG 1
-#include "gstvaapidebug.h"
+GST_DEBUG_CATEGORY (gst_debug_vaapi_window);
+#define GST_CAT_DEFAULT gst_debug_vaapi_window
 
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (gst_debug_vaapi_window, "vaapiwindow", 0, \
+        "VA-API Window");
 
-G_DEFINE_ABSTRACT_TYPE (GstVaapiWindow, gst_vaapi_window, GST_TYPE_OBJECT);
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaapiWindow, gst_vaapi_window,
+    GST_TYPE_OBJECT, _do_init);
 
 enum
 {

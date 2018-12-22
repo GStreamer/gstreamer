@@ -36,8 +36,8 @@
 #include "gstvaapiutils_x11.h"
 #include "gstvaapiutils_glx.h"
 
-#define DEBUG 1
-#include "gstvaapidebug.h"
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_vaapi_window);
+#define GST_CAT_DEFAULT gst_debug_vaapi_window
 
 #define GST_VAAPI_WINDOW_GLX_CAST(obj) ((GstVaapiWindowGLX *)(obj))
 #define GST_VAAPI_WINDOW_GLX_GET_PRIVATE(window) \
