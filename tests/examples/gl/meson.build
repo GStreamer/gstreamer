@@ -1,4 +1,4 @@
-# FIXME: subdir('cocoa')
+subdir('cocoa')
 subdir('generic')
 # FIXME: gtk is temporarily disabled. 
 #        See. https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/518
