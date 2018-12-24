@@ -251,7 +251,12 @@ gst_vaapi_plugin_base_create_gl_context (GstVaapiPluginBase * plugin);
 
 G_GNUC_INTERNAL
 GstCaps *
-gst_vaapi_plugin_base_get_allowed_raw_caps (GstVaapiPluginBase * plugin);
+gst_vaapi_plugin_base_get_allowed_sinkpad_raw_caps (GstVaapiPluginBase * plugin);
+
+G_GNUC_INTERNAL
+GstCaps *
+gst_vaapi_plugin_base_get_allowed_srcpad_raw_caps (
+    GstVaapiPluginBase * plugin, GstVideoFormat format);
 
 G_GNUC_INTERNAL
 void

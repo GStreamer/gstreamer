@@ -1215,7 +1215,7 @@ gst_vaapisink_start (GstBaseSink * base_sink)
 
   /* Ensures possible raw caps earlier to avoid race conditions at
    * get_caps() */
-  if (!gst_vaapi_plugin_base_get_allowed_raw_caps (plugin))
+  if (!gst_vaapi_plugin_base_get_allowed_sinkpad_raw_caps (plugin))
     return FALSE;
 
   return TRUE;
@@ -1251,7 +1251,8 @@ gst_vaapisink_get_caps_impl (GstBaseSink * base_sink)
 
   out_caps = gst_caps_from_string (surface_caps_str);
   raw_caps =
-      gst_vaapi_plugin_base_get_allowed_raw_caps (GST_VAAPI_PLUGIN_BASE (sink));
+      gst_vaapi_plugin_base_get_allowed_sinkpad_raw_caps (GST_VAAPI_PLUGIN_BASE
+      (sink));
   if (!raw_caps)
     return out_caps;
 

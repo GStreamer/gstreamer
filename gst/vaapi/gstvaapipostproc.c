@@ -1094,7 +1094,7 @@ ensure_allowed_sinkpad_caps (GstVaapiPostproc * postproc)
     return FALSE;
   }
 
-  raw_caps = gst_vaapi_plugin_base_get_allowed_raw_caps
+  raw_caps = gst_vaapi_plugin_base_get_allowed_sinkpad_raw_caps
       (GST_VAAPI_PLUGIN_BASE (postproc));
   if (!raw_caps) {
     gst_caps_unref (out_caps);

@@ -1254,42 +1254,69 @@ no_valid_gl_display:
 }
 
 static GArray *
-extract_allowed_surface_formats (GstVaapiDisplay * display, GArray * formats)
+extract_allowed_surface_formats (GstVaapiDisplay * display,
+    GArray * img_formats, GstVideoFormat specified_format,
+    GstPadDirection direction)
 {
   guint i;
   GArray *out_formats;
+  GstVaapiSurface *surface = NULL;
+
+  g_assert (direction == GST_PAD_SRC || direction == GST_PAD_SINK);
 
   out_formats =
-      g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat), formats->len);
+      g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat),
+      img_formats->len);
   if (!out_formats)
     return NULL;
 
-  for (i = 0; i < formats->len; i++) {
-    const GstVideoFormat format = g_array_index (formats, GstVideoFormat, i);
-    GstVaapiSurface *surface;
+  for (i = 0; i < img_formats->len; i++) {
+    const GstVideoFormat img_format =
+        g_array_index (img_formats, GstVideoFormat, i);
     GstVaapiImage *image;
     GstVideoInfo vi;
+    GstVideoFormat surface_format;
+    gboolean res;
 
-    if (format == GST_VIDEO_FORMAT_UNKNOWN)
+    if (img_format == GST_VIDEO_FORMAT_UNKNOWN)
       continue;
 
-    gst_video_info_set_format (&vi, format, 64, 64);
-    surface = gst_vaapi_surface_new_full (display, &vi, 0);
-    if (!surface)
-      continue;
+    surface_format =
+        (specified_format == GST_VIDEO_FORMAT_UNKNOWN) ?
+        img_format : specified_format;
+    if (!surface) {
+      gst_video_info_set_format (&vi, surface_format, 64, 64);
+      surface = gst_vaapi_surface_new_full (display, &vi, 0);
+      if (!surface)
+        continue;
+    }
 
-    image = gst_vaapi_image_new (display, format, 64, 64);
+    image = gst_vaapi_image_new (display, img_format, 64, 64);
     if (!image) {
-      gst_vaapi_object_unref (surface);
+      /* Just reuse the surface if the format is specified */
+      if (specified_format == GST_VIDEO_FORMAT_UNKNOWN)
+        gst_vaapi_object_replace (&surface, NULL);
+
       continue;
     }
 
-    if (gst_vaapi_surface_put_image (surface, image))
-      g_array_append_val (out_formats, format);
+    res = FALSE;
+    if (direction == GST_PAD_SRC) {
+      res = gst_vaapi_surface_get_image (surface, image);
+    } else {
+      res = gst_vaapi_surface_put_image (surface, image);
+    }
+    if (res)
+      g_array_append_val (out_formats, img_format);
 
     gst_vaapi_object_unref (image);
-    gst_vaapi_object_unref (surface);
+    /* Just reuse the surface if the format is specified */
+    if (specified_format == GST_VIDEO_FORMAT_UNKNOWN)
+      gst_vaapi_object_replace (&surface, NULL);
   }
+
+  if (surface)
+    gst_vaapi_object_unref (surface);
 
   if (out_formats->len == 0) {
     g_array_unref (out_formats);
@@ -1299,7 +1326,8 @@ extract_allowed_surface_formats (GstVaapiDisplay * display, GArray * formats)
 }
 
 static gboolean
-ensure_allowed_raw_caps (GstVaapiPluginBase * plugin)
+ensure_allowed_raw_caps (GstVaapiPluginBase * plugin, GstVideoFormat format,
+    GstPadDirection direction)
 {
   GArray *formats, *out_formats;
   GstVaapiDisplay *display;
@@ -1314,7 +1342,8 @@ ensure_allowed_raw_caps (GstVaapiPluginBase * plugin)
   formats = gst_vaapi_display_get_image_formats (display);
   if (!formats)
     goto bail;
-  out_formats = extract_allowed_surface_formats (display, formats);
+  out_formats =
+      extract_allowed_surface_formats (display, formats, format, direction);
   if (!out_formats)
     goto bail;
   out_caps = gst_vaapi_video_format_new_template_caps_from_list (out_formats);
@@ -1336,7 +1365,7 @@ bail:
 }
 
 /**
- * gst_vaapi_plugin_base_get_allowed_raw_caps:
+ * gst_vaapi_plugin_base_get_allowed_sinkpad_raw_caps:
  * @plugin: a #GstVaapiPluginBase
  *
  * Returns the raw #GstCaps allowed by the element.
@@ -1344,9 +1373,27 @@ bail:
  * Returns: the allowed raw #GstCaps or %NULL
  **/
 GstCaps *
-gst_vaapi_plugin_base_get_allowed_raw_caps (GstVaapiPluginBase * plugin)
+gst_vaapi_plugin_base_get_allowed_sinkpad_raw_caps (GstVaapiPluginBase * plugin)
 {
-  if (!ensure_allowed_raw_caps (plugin))
+  if (!ensure_allowed_raw_caps (plugin, GST_VIDEO_FORMAT_UNKNOWN, GST_PAD_SINK))
+    return NULL;
+  return plugin->allowed_raw_caps;
+}
+
+/**
+ * gst_vaapi_plugin_base_get_allowed_srcpad_raw_caps:
+ * @plugin: a #GstVaapiPluginBase
+ * @format: a #GstVideoFormat, the format we need to check
+ *
+ * Returns the raw #GstCaps allowed by the element.
+ *
+ * Returns: the allowed raw #GstCaps or %NULL
+ **/
+GstCaps *
+gst_vaapi_plugin_base_get_allowed_srcpad_raw_caps (GstVaapiPluginBase *
+    plugin, GstVideoFormat format)
+{
+  if (!ensure_allowed_raw_caps (plugin, format, GST_PAD_SRC))
     return NULL;
   return plugin->allowed_raw_caps;
 }
