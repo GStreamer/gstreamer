@@ -70,16 +70,10 @@ static const char gst_vaapidecode_sink_caps_str[] =
     GST_CAPS_CODEC("video/x-xvid")
     GST_CAPS_CODEC("video/x-h263")
     GST_CAPS_CODEC("video/x-h264")
-#if USE_H265_DECODER
     GST_CAPS_CODEC("video/x-h265")
-#endif
     GST_CAPS_CODEC("video/x-wmv")
-#if USE_VP8_DECODER
     GST_CAPS_CODEC("video/x-vp8")
-#endif
-#if USE_VP9_DECODER
     GST_CAPS_CODEC("video/x-vp9")
-#endif
     ;
 
 static const char gst_vaapidecode_src_caps_str[] =
@@ -110,9 +104,7 @@ struct _GstVaapiDecoderMap
 };
 
 static const GstVaapiDecoderMap vaapi_decode_map[] = {
-#if USE_JPEG_DECODER
   {GST_VAAPI_CODEC_JPEG, GST_RANK_MARGINAL, "jpeg", "image/jpeg", NULL},
-#endif
   {GST_VAAPI_CODEC_MPEG2, GST_RANK_PRIMARY, "mpeg2",
       "video/mpeg, mpegversion=2, systemstream=(boolean)false", NULL},
   {GST_VAAPI_CODEC_MPEG4, GST_RANK_PRIMARY, "mpeg4",
@@ -122,15 +114,9 @@ static const GstVaapiDecoderMap vaapi_decode_map[] = {
       gst_vaapi_decode_h264_install_properties},
   {GST_VAAPI_CODEC_VC1, GST_RANK_PRIMARY, "vc1",
       "video/x-wmv, wmvversion=3, format={WMV3,WVC1}", NULL},
-#if USE_VP8_DECODER
   {GST_VAAPI_CODEC_VP8, GST_RANK_PRIMARY, "vp8", "video/x-vp8", NULL},
-#endif
-#if USE_VP9_DECODER
   {GST_VAAPI_CODEC_VP9, GST_RANK_PRIMARY, "vp9", "video/x-vp9", NULL},
-#endif
-#if USE_H265_DECODER
   {GST_VAAPI_CODEC_H265, GST_RANK_PRIMARY, "h265", "video/x-h265", NULL},
-#endif
   {0 /* the rest */ , GST_RANK_PRIMARY + 1, NULL,
       gst_vaapidecode_sink_caps_str, NULL},
 };
@@ -923,7 +909,6 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
         }
       }
       break;
-#if USE_H265_DECODER
     case GST_VAAPI_CODEC_H265:
       decode->decoder = gst_vaapi_decoder_h265_new (dpy, caps);
 
@@ -945,26 +930,19 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
         }
       }
       break;
-#endif
     case GST_VAAPI_CODEC_WMV3:
     case GST_VAAPI_CODEC_VC1:
       decode->decoder = gst_vaapi_decoder_vc1_new (dpy, caps);
       break;
-#if USE_JPEG_DECODER
     case GST_VAAPI_CODEC_JPEG:
       decode->decoder = gst_vaapi_decoder_jpeg_new (dpy, caps);
       break;
-#endif
-#if USE_VP8_DECODER
     case GST_VAAPI_CODEC_VP8:
       decode->decoder = gst_vaapi_decoder_vp8_new (dpy, caps);
       break;
-#endif
-#if USE_VP9_DECODER
     case GST_VAAPI_CODEC_VP9:
       decode->decoder = gst_vaapi_decoder_vp9_new (dpy, caps);
       break;
-#endif
     default:
       decode->decoder = NULL;
       break;

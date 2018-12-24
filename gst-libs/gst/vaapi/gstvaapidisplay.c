@@ -532,7 +532,6 @@ ensure_profiles (GstVaapiDisplay * display)
   g_array_sort (priv->encoders, compare_profiles);
 
   /* Video processing API */
-#if USE_VA_VPP
   status = vaQueryConfigEntrypoints (priv->display, VAProfileNone,
       entrypoints, &num_entrypoints);
   if (vaapi_check_status (status, "vaQueryEntrypoints() [VAProfileNone]")) {
@@ -541,7 +540,6 @@ ensure_profiles (GstVaapiDisplay * display)
         priv->has_vpp = TRUE;
     }
   }
-#endif
   success = TRUE;
 
 cleanup:

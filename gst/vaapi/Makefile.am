@@ -81,39 +81,24 @@ libgstvaapi_source_h = \
 libgstvaapi_enc_source_c =	\
 	gstvaapiencode.c	\
 	gstvaapiencode_h264.c	\
+	gstvaapiencode_h265.c	\
+	gstvaapiencode_jpeg.c	\
 	gstvaapiencode_mpeg2.c	\
+	gstvaapiencode_vp8.c	\
 	$(NULL)
 
 libgstvaapi_enc_source_h =	\
 	gstvaapiencode.h	\
 	gstvaapiencode_h264.h	\
+	gstvaapiencode_h265.h	\
+	gstvaapiencode_jpeg.h	\
 	gstvaapiencode_mpeg2.h	\
+	gstvaapiencode_vp8.h	\
 	$(NULL)
 
 if USE_ENCODERS
 libgstvaapi_source_c += $(libgstvaapi_enc_source_c)
 libgstvaapi_source_h += $(libgstvaapi_enc_source_h)
-endif
-
-libgstvaapi_jpegenc_source_c = gstvaapiencode_jpeg.c
-libgstvaapi_jpegenc_source_h = gstvaapiencode_jpeg.h
-if USE_JPEG_ENCODER
-libgstvaapi_source_c += $(libgstvaapi_jpegenc_source_c)
-libgstvaapi_source_h += $(libgstvaapi_jpegenc_source_h)
-endif
-
-libgstvaapi_vp8enc_source_c = gstvaapiencode_vp8.c
-libgstvaapi_vp8enc_source_h = gstvaapiencode_vp8.h
-if USE_VP8_ENCODER
-libgstvaapi_source_c += $(libgstvaapi_vp8enc_source_c)
-libgstvaapi_source_h += $(libgstvaapi_vp8enc_source_h)
-endif
-
-libgstvaapi_h265enc_source_c = gstvaapiencode_h265.c
-libgstvaapi_h265enc_source_h = gstvaapiencode_h265.h
-if USE_H265_ENCODER
-libgstvaapi_source_c += $(libgstvaapi_h265enc_source_c)
-libgstvaapi_source_h += $(libgstvaapi_h265enc_source_h)
 endif
 
 libgstvaapi_vp9enc_source_c = gstvaapiencode_vp9.c
@@ -168,12 +153,6 @@ libgstvaapi_la_LIBTOOLFLAGS = --tag=disable-static
 EXTRA_DIST = \
 	$(libgstvaapi_enc_source_c)	 \
 	$(libgstvaapi_enc_source_h)	 \
-	$(libgstvaapi_jpegenc_source_c)	 \
-	$(libgstvaapi_jpegenc_source_h)  \
-	$(libgstvaapi_vp8enc_source_c)   \
-	$(libgstvaapi_vp8enc_source_h)   \
-	$(libgstvaapi_h265enc_source_c)  \
-	$(libgstvaapi_h265enc_source_h)  \
 	$(libgstvaapi_vp9enc_source_c)   \
 	$(libgstvaapi_vp9enc_source_h)   \
 	$(libgstvaapi_h264feienc_source_c) \

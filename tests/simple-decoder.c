@@ -373,11 +373,9 @@ start_decoder (App * app)
     case GST_VAAPI_CODEC_H264:
       app->decoder = gst_vaapi_decoder_h264_new (app->display, caps);
       break;
-#if USE_JPEG_DECODER
     case GST_VAAPI_CODEC_JPEG:
       app->decoder = gst_vaapi_decoder_jpeg_new (app->display, caps);
       break;
-#endif
     case GST_VAAPI_CODEC_MPEG2:
       app->decoder = gst_vaapi_decoder_mpeg2_new (app->display, caps);
       break;

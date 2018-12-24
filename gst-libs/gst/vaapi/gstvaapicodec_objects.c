@@ -177,7 +177,6 @@ gst_vaapi_bitplane_new (GstVaapiDecoder * decoder, guint8 * data,
 /* --- JPEG Huffman Tables                                               --- */
 /* ------------------------------------------------------------------------- */
 
-#if USE_JPEG_DECODER
 GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiHuffmanTable, gst_vaapi_huffman_table);
 
 void
@@ -209,8 +208,7 @@ gst_vaapi_huffman_table_new (GstVaapiDecoder * decoder,
     return NULL;
   return GST_VAAPI_HUFFMAN_TABLE_CAST (object);
 }
-#endif
-#if USE_VP8_DECODER
+
 GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiProbabilityTable,
     gst_vaapi_probability_table);
 
@@ -244,5 +242,3 @@ gst_vaapi_probability_table_new (GstVaapiDecoder * decoder,
     return NULL;
   return GST_VAAPI_PROBABILITY_TABLE_CAST (object);
 }
-
-#endif

@@ -32,11 +32,7 @@ m4_define([gst_plugins_bad_version],    [1.15.0.1])
 m4_define([wayland_api_version], [1.0.2])
 
 # VA-API minimum version number
-m4_define([va_api_version],     [0.30.4])
-m4_define([va_api_enc_version], [0.34.0])
-m4_define([va_api_drm_version], [0.33.0])
-m4_define([va_api_x11_version], [0.31.0])
-m4_define([va_api_wld_version], [0.33.0])
+m4_define([va_api_version],     [0.39.0])
 
 # gtk-doc version number
 # XXX: introspection annotations require gtk-doc >= 1.12
@@ -93,10 +89,6 @@ GTKDOC_REQ=gtkdoc_version
 
 dnl *** required versions of VA-API stuff ***
 VAAPI_REQ=va_api_version
-VAAPI_ENC_REQ=va_api_enc_version
-VAAPI_DRM_REQ=va_api_drm_version
-VAAPI_X11_REQ=va_api_x11_version
-VAAPI_WLD_REQ=va_api_wld_version
 
 dnl *** autotools stuff ****
 
@@ -513,7 +505,7 @@ AC_DEFINE_UNQUOTED([VA_DRIVERS_PATH], ["$VA_DRIVERS_PATH"],
 
 dnl VA/DRM API
 if test $USE_DRM -eq 1; then
-  PKG_CHECK_MODULES([LIBVA_DRM], [libva-drm >= $VAAPI_DRM_REQ],
+  PKG_CHECK_MODULES([LIBVA_DRM], [libva-drm >= $VAAPI_REQ],
     [
       saved_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$CPPFLAGS $LIBVA_DRM_CFLAGS"
@@ -524,240 +516,16 @@ fi
 
 dnl VA/X11 API
 if test $USE_X11 -eq 1; then
-  PKG_CHECK_MODULES(LIBVA_X11, [libva-x11 >= $VAAPI_X11_REQ],
+  PKG_CHECK_MODULES(LIBVA_X11, [libva-x11 >= $VAAPI_REQ],
     [], [USE_X11=0])
 fi
-
-dnl Check for va_dec_jpeg.h header
-saved_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-AC_CHECK_HEADERS([va/va_dec_jpeg.h], [], [],
-  [
-#include <va/va.h>
-  ])
-CPPFLAGS="$saved_CPPFLAGS"
-
-dnl Check for JPEG decoding API (0.32.1+)
-USE_JPEG_DECODER=0
-AC_CACHE_CHECK([for JPEG decoding API],
-  [ac_cv_have_jpeg_decoding_api],
-  [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $LIBVA_LIBS"
-    AC_COMPILE_IFELSE(
-      [
-        AC_LANG_PROGRAM(
-          [[
-#include <va/va.h>
-#ifdef HAVE_VA_VA_DEC_JPEG_H
-# include <va/va_dec_jpeg.h>
-#endif
-          ]],
-          [[
-VAPictureParameterBufferJPEGBaseline pic_param;
-VASliceParameterBufferJPEGBaseline slice_param;
-VAHuffmanTableBufferJPEGBaseline huffman_table;
-VAIQMatrixBufferJPEGBaseline iq_matrix;
-          ]])
-      ],
-      [ac_cv_have_jpeg_decoding_api="yes"],
-      [ac_cv_have_jpeg_decoding_api="no"])
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-  ])
-AS_IF([test "x$ac_cv_have_jpeg_decoding_api" = "xyes"], [USE_JPEG_DECODER=1])
-
-dnl Check for va_dec_vp8.h header
-saved_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-AC_CHECK_HEADERS([va/va_dec_vp8.h], [], [],
-  [
-#include <va/va.h>
-  ])
-CPPFLAGS="$saved_CPPFLAGS"
-
-dnl Check for VP8 decoding API (0.34+)
-USE_VP8_DECODER=0
-AC_CACHE_CHECK([for VP8 decoding API],
-  [ac_cv_have_vp8_decoding_api],
-  [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $LIBVA_LIBS"
-    AC_COMPILE_IFELSE(
-      [
-        AC_LANG_PROGRAM(
-          [[
-#include <va/va.h>
-#ifdef HAVE_VA_VA_DEC_VP8_H
-# include <va/va_dec_vp8.h>
-#endif
-          ]],
-          [[
-VAPictureParameterBufferVP8 pic_param;
-VASliceParameterBufferVP8 slice_param;
-VAProbabilityDataBufferVP8 prob_data;
-VAIQMatrixBufferVP8 iq_matrix;
-slice_param.slice_data_offset = 0;
-slice_param.slice_data_flag = 0;
-          ]])
-      ],
-      [ac_cv_have_vp8_decoding_api="yes"],
-      [ac_cv_have_vp8_decoding_api="no"])
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-  ])
-AS_IF([test "x$ac_cv_have_vp8_decoding_api" = "xyes"], [USE_VP8_DECODER=1])
-
-dnl Check for va_dec_vp9.h header
-saved_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-AC_CHECK_HEADERS([va/va_dec_vp9.h], [], [],
-  [
-#include <va/va.h>
-  ])
-CPPFLAGS="$saved_CPPFLAGS"
-
-dnl Check for VP9 decoding API (0.37+)
-USE_VP9_DECODER=0
-AC_CACHE_CHECK([for VP9 decoding API],
-  [ac_cv_have_vp9_decoding_api],
-  [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $LIBVA_LIBS"
-    AC_COMPILE_IFELSE(
-      [
-        AC_LANG_PROGRAM(
-          [[
-#include <va/va.h>
-#ifdef HAVE_VA_VA_DEC_VP9_H
-# include <va/va_dec_vp9.h>
-#endif
-          ]],
-          [[
-VADecPictureParameterBufferVP9 pic_param;
-VASliceParameterBufferVP9 slice_param;
-VASegmentParameterVP9 seg_param;
-slice_param.slice_data_offset = 0;
-slice_param.slice_data_flag = 0;
-          ]])
-      ],
-      [ac_cv_have_vp9_decoding_api="yes"],
-      [ac_cv_have_vp9_decoding_api="no"])
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-  ])
-AS_IF([test "x$ac_cv_have_vp9_decoding_api" = "xyes"], [USE_VP9_DECODER=1])
-
-dnl Check for va_dec_hevc.h header
-saved_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-AC_CHECK_HEADERS([va/va_dec_hevc.h], [], [],
-  [
-#include <va/va.h>
-  ])
-CPPFLAGS="$saved_CPPFLAGS"
-
-dnl Check for HEVC decoding API (0.38+)
-USE_H265_DECODER=0
-AC_CACHE_CHECK([for HEVC decoding API],
-  [ac_cv_have_h265_decoding_api],
-  [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $LIBVA_LIBS"
-    AC_COMPILE_IFELSE(
-      [
-        AC_LANG_PROGRAM(
-          [[
-#include <va/va.h>
-#ifdef HAVE_VA_VA_DEC_HEVC_H
-# include <va/va_dec_hevc.h>
-#endif
-          ]],
-          [[
-VAPictureParameterBufferHEVC pic_param;
-VASliceParameterBufferHEVC slice_param;
-VAIQMatrixBufferHEVC iq_matrix;
-slice_param.slice_data_offset = 0;
-slice_param.slice_data_flag = 0;
-          ]])
-      ],
-      [ac_cv_have_h265_decoding_api="yes"],
-      [ac_cv_have_h265_decoding_api="no"])
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-  ])
-AS_IF([test "x$ac_cv_have_h265_decoding_api" = "xyes"], [USE_H265_DECODER=1])
-
-dnl Check for va_vpp.h header
-saved_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-AC_CHECK_HEADERS([va/va_vpp.h], [], [],
-  [
-#include <va/va.h>
-  ])
-CPPFLAGS="$saved_CPPFLAGS"
-
-dnl Check for vpp (video post-processing) support
-USE_VA_VPP=0
-AC_CACHE_CHECK([for video post-postprocessing API],
-  [ac_cv_have_va_vpp_api],
-  [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $LIBVA_LIBS"
-    AC_COMPILE_IFELSE(
-      [
-        AC_LANG_PROGRAM(
-          [[
-#include <va/va.h>
-#ifdef HAVE_VA_VA_VPP_H
-# include <va/va_vpp.h>
-#endif
-          ]],
-          [[
-VADisplay va_dpy;
-VAContextID vpp_ctx;
-VAProcFilterType filters[VAProcFilterCount];
-unsigned int num_filters = VAProcFilterCount;
-vaQueryVideoProcFilters(va_dpy, vpp_ctx, filters, &num_filters);
-          ]])
-      ],
-      [ac_cv_have_va_vpp_api="yes"],
-      [ac_cv_have_va_vpp_api="no"])
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-  ])
-AS_IF([test "x$ac_cv_have_va_vpp_api" = "xyes"], [USE_VA_VPP=1])
 
 dnl Check for encoding support
 USE_ENCODERS=0
 if test "x$enable_encoders" = "xyes"; then
-  PKG_CHECK_MODULES([LIBVA], [libva >= $VAAPI_ENC_REQ],
-    [
-      USE_ENCODERS=1
-      saved_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
-      AC_CHECK_HEADERS([va/va_enc_mpeg2.h va/va_enc_h264.h], [],
-        [USE_ENCODERS=0],
-        [
-#include <va/va.h>
-        ])
-      CPPFLAGS="$saved_CPPFLAGS"
-    ], [:])
+  USE_ENCODERS=1
 fi
 
-USE_JPEG_ENCODER=0
-USE_VP8_ENCODER=0
-USE_H265_ENCODER=0
 USE_VP9_ENCODER=0
 USE_H264_FEI_ENCODER=0
 
@@ -765,101 +533,7 @@ if test $USE_ENCODERS -eq 1; then
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
 
-  dnl Check for JPEG Encoding API (0.37.0+)
-  AC_CHECK_HEADERS([va/va_enc_jpeg.h], [], [],
-    [
-#include <va/va.h>
-    ])
-  AC_CACHE_CHECK([for JPEG encoding API],
-    [ac_cv_have_jpeg_encoding_api],
-    [
-      saved_LIBS="$LIBS"
-      LIBS="$LIBS $LIBVA_LIBS"
-      AC_COMPILE_IFELSE(
-        [
-          AC_LANG_PROGRAM(
-            [[
-#include <va/va.h>
-#ifdef HAVE_VA_VA_ENC_JPEG_H
-# include <va/va_enc_jpeg.h>
-#endif
-            ]],
-            [[
-VAEncPictureParameterBufferJPEG pic_param;
-VAEncSliceParameterBufferJPEG slice_param;
-VAQMatrixBufferJPEG q_matrix;
-            ]])
-        ],
-        [ac_cv_have_jpeg_encoding_api="yes"],
-        [ac_cv_have_jpeg_encoding_api="no"])
-      LIBS="$saved_LIBS"
-    ])
-  AS_IF([test "x$ac_cv_have_jpeg_encoding_api" = "xyes"], [USE_JPEG_ENCODER=1])
-
-  dnl Check for VP8 Encoding API
-  AC_CHECK_HEADERS([va/va_enc_vp8.h], [], [],
-    [
-#include <va/va.h>
-    ])
-  AC_CACHE_CHECK([for VP8 encoding API],
-    [ac_cv_have_vp8_encoding_api],
-    [
-      saved_LIBS="$LIBS"
-      LIBS="$LIBS $LIBVA_LIBS"
-      AC_COMPILE_IFELSE(
-        [
-          AC_LANG_PROGRAM(
-            [[
-#include <va/va.h>
-#ifdef HAVE_VA_VA_ENC_VP8_H
-# include <va/va_enc_vp8.h>
-#endif
-            ]],
-            [[
-VAEncSequenceParameterBufferVP8 seq_param;
-VAEncPictureParameterBufferVP8 pic_param;
-VAQMatrixBufferVP8 q_matrix;
-            ]])
-        ],
-        [ac_cv_have_vp8_encoding_api="yes"],
-        [ac_cv_have_vp8_encoding_api="no"])
-      LIBS="$saved_LIBS"
-    ])
-  AS_IF([test "x$ac_cv_have_vp8_encoding_api" = "xyes"], [USE_VP8_ENCODER=1])
-
-  dnl Check for H265/HEVC Encoding API
-  AC_CHECK_HEADERS([va/va_enc_hevc.h], [], [],
-    [
-#include <va/va.h>
-    ])
-  AC_CACHE_CHECK([for HEVC encoding API],
-    [ac_cv_have_hevc_encoding_api],
-    [
-      saved_LIBS="$LIBS"
-      LIBS="$LIBS $LIBVA_LIBS"
-      AC_COMPILE_IFELSE(
-        [
-          AC_LANG_PROGRAM(
-            [[
-#include <va/va.h>
-#ifdef HAVE_VA_VA_ENC_HEVC_H
-# include <va/va_enc_hevc.h>
-#endif
-            ]],
-            [[
-VAEncSequenceParameterBufferHEVC seq_param;
-VAEncPictureParameterBufferHEVC pic_param;
-VAEncSliceParameterBufferHEVC buf_param;
-VAQMatrixBufferHEVC q_matrix;
-            ]])
-        ],
-        [ac_cv_have_hevc_encoding_api="yes"],
-        [ac_cv_have_hevc_encoding_api="no"])
-      LIBS="$saved_LIBS"
-    ])
-  AS_IF([test "x$ac_cv_have_hevc_encoding_api" = "xyes"], [USE_H265_ENCODER=1])
-
-  dnl Check for VP9 Encoding API
+  dnl Check for VP9 Encoding API (0.39.1+)
   AC_CHECK_HEADERS([va/va_enc_vp9.h], [], [],
     [
 #include <va/va.h>
@@ -931,7 +605,7 @@ fi
 
 dnl VA/Wayland API
 if test $USE_WAYLAND -eq 1; then
-  PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= $VAAPI_WLD_REQ],
+  PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= $VAAPI_REQ],
     [], [USE_WAYLAND=0])
 fi
 
@@ -1019,18 +693,6 @@ AC_DEFINE_UNQUOTED([USE_ENCODERS], [$USE_ENCODERS],
   [Defined to 1 if video encoders are used])
 AM_CONDITIONAL([USE_ENCODERS], [test $USE_ENCODERS -eq 1])
 
-AC_DEFINE_UNQUOTED([USE_JPEG_ENCODER], [$USE_JPEG_ENCODER],
-  [Defined to 1 if JPEG encoder is used])
-AM_CONDITIONAL([USE_JPEG_ENCODER], [test $USE_JPEG_ENCODER -eq 1])
-
-AC_DEFINE_UNQUOTED([USE_VP8_ENCODER], [$USE_VP8_ENCODER],
-  [Defined to 1 if VP8 encoder is used])
-AM_CONDITIONAL([USE_VP8_ENCODER], [test $USE_VP8_ENCODER -eq 1])
-
-AC_DEFINE_UNQUOTED([USE_H265_ENCODER], [$USE_H265_ENCODER],
-  [Defined to 1 if H265 encoder is used])
-AM_CONDITIONAL([USE_H265_ENCODER], [test $USE_H265_ENCODER -eq 1])
-
 AC_DEFINE_UNQUOTED([USE_VP9_ENCODER], [$USE_VP9_ENCODER],
   [Defined to 1 if VP9 encoder is used])
 AM_CONDITIONAL([USE_VP9_ENCODER], [test $USE_VP9_ENCODER -eq 1])
@@ -1038,26 +700,6 @@ AM_CONDITIONAL([USE_VP9_ENCODER], [test $USE_VP9_ENCODER -eq 1])
 AC_DEFINE_UNQUOTED([USE_H264_FEI_ENCODER], [$USE_H264_FEI_ENCODER],
   [Defined to 1 if H264_FEI encoder is used])
 AM_CONDITIONAL([USE_H264_FEI_ENCODER], [test $USE_H264_FEI_ENCODER -eq 1])
-
-AC_DEFINE_UNQUOTED([USE_VA_VPP], [$USE_VA_VPP],
-  [Defined to 1 if video post-processing is used])
-AM_CONDITIONAL([USE_VA_VPP], [test $USE_VA_VPP -eq 1])
-
-AC_DEFINE_UNQUOTED([USE_JPEG_DECODER], [$USE_JPEG_DECODER],
-  [Defined to 1 if JPEG decoder is used])
-AM_CONDITIONAL([USE_JPEG_DECODER], [test $USE_JPEG_DECODER -eq 1])
-
-AC_DEFINE_UNQUOTED([USE_VP8_DECODER], [$USE_VP8_DECODER],
-  [Defined to 1 if VP8 decoder is used])
-AM_CONDITIONAL([USE_VP8_DECODER], [test $USE_VP8_DECODER -eq 1])
-
-AC_DEFINE_UNQUOTED([USE_VP9_DECODER], [$USE_VP9_DECODER],
-  [Defined to 1 if VP9 decoder is used])
-AM_CONDITIONAL([USE_VP9_DECODER], [test $USE_VP9_DECODER -eq 1])
-
-AC_DEFINE_UNQUOTED([USE_H265_DECODER], [$USE_H265_DECODER],
-  [Defined to 1 if HEVC decoder is used])
-AM_CONDITIONAL([USE_H265_DECODER], [test $USE_H265_DECODER -eq 1])
 
 AC_DEFINE_UNQUOTED([USE_DRM], [$USE_DRM],
   [Defined to 1 if DRM is enabled])

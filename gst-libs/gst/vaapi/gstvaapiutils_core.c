@@ -92,7 +92,6 @@ gst_vaapi_get_config_attribute (GstVaapiDisplay * display, VAProfile profile,
 GArray *
 gst_vaapi_get_surface_formats (GstVaapiDisplay * display, VAConfigID config)
 {
-#if VA_CHECK_VERSION(0,34,0)
   VASurfaceAttrib *surface_attribs = NULL;
   guint i, num_surface_attribs = 0;
   VAStatus va_status;
@@ -152,6 +151,5 @@ error:
   {
     g_free (surface_attribs);
   }
-#endif
   return NULL;
 }

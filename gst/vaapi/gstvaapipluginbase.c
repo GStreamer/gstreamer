@@ -1412,7 +1412,7 @@ void
 gst_vaapi_plugin_base_set_srcpad_can_dmabuf (GstVaapiPluginBase * plugin,
     GstObject * object)
 {
-#if VA_CHECK_VERSION (0,36,0) && USE_EGL && USE_GST_GL_HELPERS
+#if USE_EGL && USE_GST_GL_HELPERS
   GstGLContext *const gl_context = GST_GL_CONTEXT (object);
 
   plugin->srcpad_can_dmabuf =

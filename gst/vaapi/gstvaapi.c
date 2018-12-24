@@ -31,18 +31,9 @@
 #if USE_ENCODERS
 #include "gstvaapiencode_h264.h"
 #include "gstvaapiencode_mpeg2.h"
-
-#if USE_JPEG_ENCODER
 #include "gstvaapiencode_jpeg.h"
-#endif
-
-#if USE_VP8_ENCODER
 #include "gstvaapiencode_vp8.h"
-#endif
-
-#if USE_H265_ENCODER
 #include "gstvaapiencode_h265.h"
-#endif
 
 #if USE_VP9_ENCODER
 #include "gstvaapiencode_vp9.h"
@@ -155,18 +146,12 @@ struct _GstVaapiEncoderMap
 static const GstVaapiEncoderMap vaapi_encode_map[] = {
   DEF_ENC (H264, h264),
   DEF_ENC (MPEG2, mpeg2),
-#if USE_JPEG_ENCODER
   DEF_ENC (JPEG, jpeg),
-#endif
-#if USE_VP8_ENCODER
   DEF_ENC (VP8, vp8),
-#endif
 #if USE_VP9_ENCODER
   DEF_ENC (VP9, vp9),
 #endif
-#if USE_H265_ENCODER
   DEF_ENC (H265, h265),
-#endif
 };
 
 #undef DEF_ENC

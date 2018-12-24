@@ -289,7 +289,6 @@ gst_vaapi_enc_q_matrix_new (GstVaapiEncoder * encoder,
 /* --- JPEG Huffman Tables                                               --- */
 /* ------------------------------------------------------------------------- */
 
-#if USE_JPEG_ENCODER
 GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiEncHuffmanTable,
     gst_vaapi_enc_huffman_table);
 
@@ -322,7 +321,6 @@ gst_vaapi_enc_huffman_table_new (GstVaapiEncoder * encoder,
     return NULL;
   return GST_VAAPI_ENC_HUFFMAN_TABLE_CAST (object);
 }
-#endif
 
 /* ------------------------------------------------------------------------- */
 /* --- Encoder Picture                                                   --- */

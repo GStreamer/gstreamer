@@ -27,16 +27,6 @@
 
 #include <va/va.h>
 
-/* Compatibility glue with VA-API < 0.31 */
-#if !VA_CHECK_VERSION(0,31,0)
-#undef  vaSyncSurface
-#define vaSyncSurface(dpy, s)   (vaSyncSurface)((dpy), VA_INVALID_ID, (s))
-#undef  vaPutImage
-#define vaPutImage              vaPutImage2
-#undef  vaAssociateSubpicture
-#define vaAssociateSubpicture   vaAssociateSubpicture2
-#endif
-
 #if VA_CHECK_VERSION(1,0,0)
 #define VA_ROI_RC_QP_DELTA_SUPPORT(x) x->bits.roi_rc_qp_delta_support
 #define VA_ENC_PACKED_HEADER_H264_SEI VAEncPackedHeaderRawData
@@ -45,50 +35,7 @@
 #define VA_ENC_PACKED_HEADER_H264_SEI VAEncPackedHeaderH264_SEI
 #endif
 
-/* Compatibility glue with VA-API 0.34 */
-#if VA_CHECK_VERSION(0,34,0)
-# include <va/va_compat.h>
-#endif
-
-#if VA_CHECK_VERSION(0,36,0)
+#include <va/va_compat.h>
 #include <va/va_drmcommon.h>
-#endif
-
-/* VA-API < 0.37 doesn't include sub core APIs in va.h */
-#if !VA_CHECK_VERSION(0,37,0)
-#ifdef HAVE_VA_VA_DEC_HEVC_H
-# include <va/va_dec_hevc.h>
-#endif
-#ifdef HAVE_VA_VA_DEC_JPEG_H
-# include <va/va_dec_jpeg.h>
-#endif
-#ifdef HAVE_VA_VA_DEC_VP8_H
-# include <va/va_dec_vp8.h>
-#endif
-#ifdef HAVE_VA_VA_DEC_VP9_H
-# include <va/va_dec_vp9.h>
-#endif
-#ifdef HAVE_VA_VA_ENC_HEVC_H
-# include <va/va_enc_hevc.h>
-#endif
-#ifdef HAVE_VA_VA_ENC_H264_H
-# include <va/va_enc_h264.h>
-#endif
-#ifdef HAVE_VA_VA_ENC_JPEG_H
-# include <va/va_enc_jpeg.h>
-#endif
-#ifdef HAVE_VA_VA_ENC_MPEG2_H
-# include <va/va_enc_mpeg2.h>
-#endif
-#ifdef HAVE_VA_VA_ENC_VP8_H
-# include <va/va_enc_vp8.h>
-#endif
-#ifdef HAVE_VA_VA_ENC_VP9_H
-# include <va/va_enc_vp9.h>
-#endif
-#ifdef HAVE_VA_VA_VPP_H
-# include <va/va_vpp.h>
-#endif
-#endif
 
 #endif /* GST_VAAPI_COMPAT_H */

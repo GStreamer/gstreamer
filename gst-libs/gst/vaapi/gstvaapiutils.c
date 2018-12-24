@@ -214,42 +214,30 @@ string_of_VAProfile (VAProfile profile)
       MAP (MPEG4Simple);
       MAP (MPEG4AdvancedSimple);
       MAP (MPEG4Main);
-#if VA_CHECK_VERSION(0,32,0)
       MAP (JPEGBaseline);
       MAP (H263Baseline);
       MAP (H264ConstrainedBaseline);
-#endif
 #if !VA_CHECK_VERSION(1,0,0)
       MAP (H264Baseline);
 #endif
       MAP (H264Main);
       MAP (H264High);
-#if VA_CHECK_VERSION(0,35,2)
       MAP (H264MultiviewHigh);
       MAP (H264StereoHigh);
-#endif
 #if VA_CHECK_VERSION(1,2,0)
       MAP (HEVCMain422_10);
       MAP (HEVCMain444);
 #endif
-#if VA_CHECK_VERSION(0,37,1)
       MAP (HEVCMain);
       MAP (HEVCMain10);
-#endif
       MAP (VC1Simple);
       MAP (VC1Main);
       MAP (VC1Advanced);
-#if VA_CHECK_VERSION(0,35,0)
       MAP (VP8Version0_3);
-#endif
-#if VA_CHECK_VERSION(0,37,0)
       MAP (VP9Profile0);
-#endif
-#if VA_CHECK_VERSION(0,39,0)
       MAP (VP9Profile1);
       MAP (VP9Profile2);
       MAP (VP9Profile3);
-#endif
 #undef MAP
     default:
       break;
@@ -288,17 +276,8 @@ string_of_VADisplayAttributeType (VADisplayAttribType attribute_type)
       MAP (Hue);
       MAP (Saturation);
       MAP (BackgroundColor);
-#if !VA_CHECK_VERSION(0,34,0)
-      MAP (DirectSurface);
-#endif
       MAP (Rotation);
       MAP (OutofLoopDeblock);
-#if VA_CHECK_VERSION(0,31,1) && !VA_CHECK_VERSION(0,34,0)
-      MAP (BLEBlackMode);
-      MAP (BLEWhiteMode);
-      MAP (BlueStretch);
-      MAP (SkinColorCorrection);
-#endif
       MAP (CSCMatrix);
       MAP (BlendColor);
       MAP (OverlayAutoPaintColorKey);
@@ -323,15 +302,11 @@ string_of_va_chroma_format (guint chroma_format)
       MAP (YUV420);
       MAP (YUV422);
       MAP (YUV444);
-#if VA_CHECK_VERSION(0,34,0)
       MAP (YUV400);
       MAP (RGB16);
       MAP (RGB32);
       MAP (RGBP);
-#endif
-#if VA_CHECK_VERSION(0,38,1)
       MAP (YUV420_10BPP);
-#endif
 #if VA_CHECK_VERSION(1,2,0)
       MAP (YUV422_10);
       MAP (YUV444_10);
@@ -397,7 +372,6 @@ to_GstVaapiChromaType (guint va_rt_format)
     case VA_RT_FORMAT_YUV444:
       chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444;
       break;
-#if VA_CHECK_VERSION(0,34,0)
     case VA_RT_FORMAT_YUV411:
       chroma_type = GST_VAAPI_CHROMA_TYPE_YUV411;
       break;
@@ -413,12 +387,9 @@ to_GstVaapiChromaType (guint va_rt_format)
     case VA_RT_FORMAT_RGBP:
       chroma_type = GST_VAAPI_CHROMA_TYPE_RGBP;
       break;
-#endif
-#if VA_CHECK_VERSION(0,38,1)
     case VA_RT_FORMAT_YUV420_10BPP:
       chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
       break;
-#endif
 #if VA_CHECK_VERSION(1,2,0)
     case VA_RT_FORMAT_YUV422_10:
       chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_10BPP;
@@ -468,7 +439,6 @@ from_GstVaapiChromaType (guint chroma_type)
     case GST_VAAPI_CHROMA_TYPE_YUV444:
       format = VA_RT_FORMAT_YUV444;
       break;
-#if VA_CHECK_VERSION(0,34,0)
     case GST_VAAPI_CHROMA_TYPE_YUV411:
       format = VA_RT_FORMAT_YUV411;
       break;
@@ -484,12 +454,9 @@ from_GstVaapiChromaType (guint chroma_type)
     case GST_VAAPI_CHROMA_TYPE_RGBP:
       format = VA_RT_FORMAT_RGBP;
       break;
-#endif
-#if VA_CHECK_VERSION(0,38,1)
     case GST_VAAPI_CHROMA_TYPE_YUV420_10BPP:
       format = VA_RT_FORMAT_YUV420_10BPP;
       break;
-#endif
 #if VA_CHECK_VERSION(1,2,0)
     case GST_VAAPI_CHROMA_TYPE_YUV422_10BPP:
       format = VA_RT_FORMAT_YUV422_10;
@@ -683,10 +650,8 @@ to_GstVaapiSurfaceStatus (guint va_flags)
   }
 
   /* Check for encoder status */
-#if VA_CHECK_VERSION(0,30,0)
   if (va_flags & VASurfaceSkipped)
     flags |= GST_VAAPI_SURFACE_STATUS_SKIPPED;
-#endif
   return flags;
 }
 

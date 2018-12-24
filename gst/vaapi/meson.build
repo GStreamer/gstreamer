@@ -21,20 +21,11 @@ if USE_ENCODERS
   vaapi_sources += [
       'gstvaapiencode.c',
       'gstvaapiencode_h264.c',
+      'gstvaapiencode_h265.c',
+      'gstvaapiencode_jpeg.c',
       'gstvaapiencode_mpeg2.c',
+      'gstvaapiencode_vp8.c',
     ]
-endif
-
-if USE_JPEG_ENCODER
-  vaapi_sources += 'gstvaapiencode_jpeg.c'
-endif
-
-if USE_VP8_ENCODER
-  vaapi_sources += 'gstvaapiencode_vp8.c'
-endif
-
-if USE_H265_ENCODER
-  vaapi_sources += 'gstvaapiencode_h265.c'
 endif
 
 if USE_VP9_ENCODER

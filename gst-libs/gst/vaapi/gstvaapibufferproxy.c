@@ -36,14 +36,12 @@ from_GstVaapiBufferMemoryType (guint type)
   guint va_type;
 
   switch (type) {
-#if VA_CHECK_VERSION(0,36,0)
     case GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF:
       va_type = VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME;
       break;
     case GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF:
       va_type = VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM;
       break;
-#endif
     default:
       va_type = 0;
       break;
@@ -57,14 +55,12 @@ to_GstVaapiBufferMemoryType (guint va_type)
   guint type;
 
   switch (va_type) {
-#if VA_CHECK_VERSION(0,36,0)
     case VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME:
       type = GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF;
       break;
     case VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM:
       type = GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF;
       break;
-#endif
     default:
       type = 0;
       break;
@@ -72,7 +68,6 @@ to_GstVaapiBufferMemoryType (guint va_type)
   return type;
 }
 
-#if VA_CHECK_VERSION (0,36,0)
 static gboolean
 gst_vaapi_buffer_proxy_acquire_handle (GstVaapiBufferProxy * proxy)
 {
@@ -96,7 +91,6 @@ gst_vaapi_buffer_proxy_acquire_handle (GstVaapiBufferProxy * proxy)
   return TRUE;
 }
 
-/* VA_CHECK_VERSION (0,36,0) */
 static gboolean
 gst_vaapi_buffer_proxy_release_handle (GstVaapiBufferProxy * proxy)
 {
@@ -117,7 +111,6 @@ gst_vaapi_buffer_proxy_release_handle (GstVaapiBufferProxy * proxy)
   return TRUE;
 }
 
-/* VA_CHECK_VERSION (0,36,0) */
 static void
 gst_vaapi_buffer_proxy_finalize (GstVaapiBufferProxy * proxy)
 {
@@ -135,7 +128,6 @@ gst_vaapi_buffer_proxy_finalize (GstVaapiBufferProxy * proxy)
   gst_vaapi_object_replace (&proxy->parent, NULL);
 }
 
-/* VA_CHECK_VERSION (0,36,0) */
 static inline const GstVaapiMiniObjectClass *
 gst_vaapi_buffer_proxy_class (void)
 {
@@ -145,13 +137,11 @@ gst_vaapi_buffer_proxy_class (void)
   };
   return &GstVaapiBufferProxyClass;
 }
-#endif
 
 GstVaapiBufferProxy *
 gst_vaapi_buffer_proxy_new (guintptr handle, guint type, gsize size,
     GDestroyNotify destroy_func, gpointer user_data)
 {
-#if VA_CHECK_VERSION (0,36,0)
   GstVaapiBufferProxy *proxy;
 
   g_return_val_if_fail (handle != 0, NULL);
@@ -183,16 +173,12 @@ error_unsupported_mem_type:
     gst_vaapi_buffer_proxy_unref (proxy);
     return NULL;
   }
-#else
-  return NULL;
-#endif
 }
 
 GstVaapiBufferProxy *
 gst_vaapi_buffer_proxy_new_from_object (GstVaapiObject * object,
     VABufferID buf_id, guint type, GDestroyNotify destroy_func, gpointer data)
 {
-#if VA_CHECK_VERSION (0,36,0)
   GstVaapiBufferProxy *proxy;
 
   g_return_val_if_fail (object != NULL, NULL);
@@ -229,9 +215,6 @@ error_acquire_handle:
     gst_vaapi_buffer_proxy_unref (proxy);
     return NULL;
   }
-#else
-  return NULL;
-#endif
 }
 
 /**
@@ -314,11 +297,7 @@ gst_vaapi_buffer_proxy_get_handle (GstVaapiBufferProxy * proxy)
 {
   g_return_val_if_fail (proxy != NULL, 0);
 
-#if VA_CHECK_VERSION (0,36,0)
   return GST_VAAPI_BUFFER_PROXY_HANDLE (proxy);
-#else
-  return 0;
-#endif
 }
 
 /**
@@ -334,11 +313,7 @@ gst_vaapi_buffer_proxy_get_size (GstVaapiBufferProxy * proxy)
 {
   g_return_val_if_fail (proxy != NULL, 0);
 
-#if VA_CHECK_VERSION (0,36,0)
   return GST_VAAPI_BUFFER_PROXY_SIZE (proxy);
-#else
-  return 0;
-#endif
 }
 
 /**

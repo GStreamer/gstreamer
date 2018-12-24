@@ -302,7 +302,6 @@ config_create (GstVaapiContext * context)
         attrib = &attribs[++attrib_index];
         g_assert (attrib_index < G_N_ELEMENTS (attribs));
       }
-#if VA_CHECK_VERSION(0,37,0)
       if (cip->profile == GST_VAAPI_PROFILE_JPEG_BASELINE) {
         attrib->type = VAConfigAttribEncJPEG;
         if (!context_get_attribute (context, attrib->type, &value))
@@ -311,7 +310,6 @@ config_create (GstVaapiContext * context)
         attrib = &attribs[++attrib_index];
         g_assert (attrib_index < G_N_ELEMENTS (attribs));
       }
-#endif
 #if VA_CHECK_VERSION(0,39,1)
       if (config->roi_capability) {
         VAConfigAttribValEncROI *roi_config;

@@ -6,11 +6,15 @@ gstlibvaapi_sources = [
   'gstvaapidecoder.c',
   'gstvaapidecoder_dpb.c',
   'gstvaapidecoder_h264.c',
+  'gstvaapidecoder_h265.c',
+  'gstvaapidecoder_jpeg.c',
   'gstvaapidecoder_mpeg2.c',
   'gstvaapidecoder_mpeg4.c',
   'gstvaapidecoder_objects.c',
   'gstvaapidecoder_unit.c',
   'gstvaapidecoder_vc1.c',
+  'gstvaapidecoder_vp8.c',
+  'gstvaapidecoder_vp9.c',
   'gstvaapidisplay.c',
   'gstvaapifilter.c',
   'gstvaapiimage.c',
@@ -44,9 +48,12 @@ gstlibvaapi_headers = [
   'gstvaapidecoder.h',
   'gstvaapidecoder_h264.h',
   'gstvaapidecoder_h265.h',
+  'gstvaapidecoder_jpeg.h',
   'gstvaapidecoder_mpeg2.h',
   'gstvaapidecoder_mpeg4.h',
   'gstvaapidecoder_vc1.h',
+  'gstvaapidecoder_vp8.h',
+  'gstvaapidecoder_vp9.h',
   'gstvaapidisplay.h',
   'gstvaapifilter.h',
   'gstvaapiimage.h',
@@ -71,26 +78,6 @@ gstlibvaapi_headers = [
   'video-format.h',
 ]
 
-if USE_JPEG_DECODER
-  gstlibvaapi_sources += 'gstvaapidecoder_jpeg.c'
-  gstlibvaapi_headers += 'gstvaapidecoder_jpeg.h'
-endif
-
-if USE_VP8_DECODER
-  gstlibvaapi_sources += 'gstvaapidecoder_vp8.c'
-  gstlibvaapi_headers += 'gstvaapidecoder_vp8.h'
-endif
-
-if USE_H265_DECODER
-  gstlibvaapi_sources += 'gstvaapidecoder_h265.c'
-  gstlibvaapi_headers += 'gstvaapidecoder_h265.h'
-endif
-
-if USE_VP9_DECODER
-  gstlibvaapi_sources += 'gstvaapidecoder_vp9.c'
-  gstlibvaapi_headers += 'gstvaapidecoder_vp9.h'
-endif
-
 if USE_ENCODERS
   gstlibvaapi_sources += [
       'gstvaapicodedbuffer.c',
@@ -98,8 +85,11 @@ if USE_ENCODERS
       'gstvaapicodedbufferproxy.c',
       'gstvaapiencoder.c',
       'gstvaapiencoder_h264.c',
+      'gstvaapiencoder_h265.c',
+      'gstvaapiencoder_jpeg.c',
       'gstvaapiencoder_mpeg2.c',
       'gstvaapiencoder_objects.c',
+      'gstvaapiencoder_vp8.c',
     ]
   gstlibvaapi_headers += [
       'gstvaapicodedbuffer.h',
@@ -107,23 +97,11 @@ if USE_ENCODERS
       'gstvaapicodedbufferproxy.h',
       'gstvaapiencoder.h',
       'gstvaapiencoder_h264.h',
+      'gstvaapiencoder_h265.h',
+      'gstvaapiencoder_jpeg.h',
       'gstvaapiencoder_mpeg2.h',
+      'gstvaapiencoder_vp8.h',
     ]
-endif
-
-if USE_JPEG_ENCODER
-  gstlibvaapi_sources += 'gstvaapiencoder_jpeg.c'
-  gstlibvaapi_headers += 'gstvaapiencoder_jpeg.h'
-endif
-
-if USE_VP8_ENCODER
-  gstlibvaapi_sources += 'gstvaapiencoder_vp8.c'
-  gstlibvaapi_headers += 'gstvaapiencoder_vp8.h'
-endif
-
-if USE_H265_ENCODER
-  gstlibvaapi_sources += 'gstvaapiencoder_h265.c'
-  gstlibvaapi_headers += 'gstvaapiencoder_h265.h'
 endif
 
 if USE_VP9_ENCODER

@@ -86,16 +86,10 @@ static const char gst_vaapi_decode_bin_sink_caps_str[] =
     GST_CAPS_CODEC("video/x-xvid")
     GST_CAPS_CODEC("video/x-h263")
     GST_CAPS_CODEC("video/x-h264")
-#if USE_H265_DECODER
     GST_CAPS_CODEC("video/x-h265")
-#endif
     GST_CAPS_CODEC("video/x-wmv")
-#if USE_VP8_DECODER
     GST_CAPS_CODEC("video/x-vp8")
-#endif
-#if USE_VP9_DECODER
     GST_CAPS_CODEC("video/x-vp9")
-#endif
     ;
 /* *INDENT-ON* */
 

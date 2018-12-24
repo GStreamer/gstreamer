@@ -132,7 +132,6 @@ static gboolean
 gst_vaapi_surface_create_full (GstVaapiSurface * surface,
     const GstVideoInfo * vip, guint flags)
 {
-#if VA_CHECK_VERSION(0,34,0)
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (surface);
   const GstVideoFormat format = GST_VIDEO_INFO_FORMAT (vip);
   VASurfaceID surface_id;
@@ -219,16 +218,12 @@ error_unsupported_format:
   GST_ERROR ("unsupported format %s",
       gst_vaapi_video_format_to_string (format));
   return FALSE;
-#else
-  return FALSE;
-#endif
 }
 
 static gboolean
 gst_vaapi_surface_create_from_buffer_proxy (GstVaapiSurface * surface,
     GstVaapiBufferProxy * proxy, const GstVideoInfo * vip)
 {
-#if VA_CHECK_VERSION (0,36,0)
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (surface);
   GstVideoFormat format;
   VASurfaceID surface_id;
@@ -308,9 +303,6 @@ error_unsupported_format:
   GST_ERROR ("unsupported format %s",
       gst_vaapi_video_format_to_string (format));
   return FALSE;
-#else
-  return FALSE;
-#endif
 }
 
 #define gst_vaapi_surface_finalize gst_vaapi_surface_destroy
@@ -387,7 +379,6 @@ gst_vaapi_surface_new (GstVaapiDisplay * display,
 
   /* first try a recent version of vaCreateSurface, and later use as
    * fallback its old version */
-#if VA_CHECK_VERSION(0,34,0)
   {
     GstVideoInfo vi;
     GstVideoFormat surface_format;
@@ -398,7 +389,6 @@ gst_vaapi_surface_new (GstVaapiDisplay * display,
     if (gst_vaapi_surface_create_full (surface, &vi, 0))
       return surface;
   }
-#endif
   if (!gst_vaapi_surface_create (surface, chroma_type, width, height))
     goto error;
   return surface;
