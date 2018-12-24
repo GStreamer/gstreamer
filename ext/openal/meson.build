@@ -1,4 +1,4 @@
-openal_dep = dependency('openal', version: '>= 1.14', required: get_option('openal'))
+openal_dep = dependency('openal', method: 'pkg-config', version: '>= 1.14', required: get_option('openal'))
 
 if openal_dep.found()
   gstopenal = library('gstopenal',
