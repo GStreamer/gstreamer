@@ -118,6 +118,7 @@ GObject
               GstIirEqualizer3Bands
               GstIirEqualizerNBands
             GstSpectrum
+            GstStereo
           GstAudioPanorama
           GstBreakMyData
           GstCapsSetter

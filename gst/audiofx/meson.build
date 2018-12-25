@@ -14,7 +14,8 @@ audiofx_sources = [
   'audiowsinclimit.c',
   'audiofirfilter.c',
   'audioecho.c',
-  'gstscaletempo.c'
+  'gstscaletempo.c',
+  'gststereo.c'
 ]
 
 orcsrc = 'audiopanoramaorc'

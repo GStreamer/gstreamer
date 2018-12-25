@@ -282,5 +282,26 @@
         </caps>
       </pads>
     </element>
+    <element>
+      <name>stereo</name>
+      <longname>Stereo effect</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Muck with the stereo signal to enhance its &apos;stereo-ness&apos;</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)2</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)2</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>

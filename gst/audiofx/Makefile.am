@@ -24,7 +24,8 @@ libgstaudiofx_la_SOURCES = audiofx.c\
 	audiowsinclimit.c \
 	audiofirfilter.c \
 	audioecho.c \
-	gstscaletempo.c
+	gstscaletempo.c \
+	gststereo.c
 nodist_libgstaudiofx_la_SOURCES = $(ORC_NODIST_SOURCES)
 
 # flags used to compile this plugin
@@ -57,4 +58,5 @@ noinst_HEADERS = audiopanorama.h \
 	audiofirfilter.h \
 	audioecho.h \
 	gstscaletempo.h \
+	gststereo.h \
 	math_compat.h

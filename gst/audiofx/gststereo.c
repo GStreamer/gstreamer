@@ -199,16 +199,3 @@ gst_stereo_get_property (GObject * object, guint prop_id, GValue * value,
       break;
   }
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  return gst_element_register (plugin, "stereo", GST_RANK_NONE,
-      GST_TYPE_STEREO);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    stereo,
-    "Muck with the stereo signal, enhance its 'stereo-ness'",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
