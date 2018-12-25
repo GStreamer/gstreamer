@@ -329,7 +329,7 @@ gst_msdk_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buf)
   gst_msdk_video_memory_release_surface (gst_buffer_peek_memory (buf, 0));
 
 done:
-  return GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool, buf);
+  GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool, buf);
 }
 
 static void
