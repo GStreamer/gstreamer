@@ -75,7 +75,7 @@ noinst_HEADERS = \
 		gstmotioncells.h \
 		motioncells_wrapper.h \
 		MotionCells.h \
-		gstdewarp.h
+		gstdewarp.h \
 		camerautils.hpp \
 		cameraevent.hpp \
 		gstcameracalibrate.h \
