@@ -4,6 +4,7 @@ EXTRA_DIST = \
 	audiotestsrc.wav \
 	gradient.j2k \
 	h264.rtp \
+	h265.rtp \
 	id3-407349-1.tag \
 	id3-407349-2.tag \
 	id3-447000-wcop.tag \
