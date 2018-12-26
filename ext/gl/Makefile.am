@@ -42,7 +42,6 @@ libgstopenglmixers_la_CFLAGS = \
 	-Dgst_gl_set_affine_transformation_meta_from_ndc_ext=Dgst_gl_bad_set_affine_transformation_meta_from_ndc_ext
 
 libgstopenglmixers_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/video/libgstbadvideo-@GST_API_VERSION@.la \
 	$(GST_GL_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \

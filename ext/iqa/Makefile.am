@@ -12,8 +12,7 @@ libgstiqa_la_CFLAGS =  \
 libgstiqa_la_CFLAGS += $(DSSIM_CFLAGS)
 
 libgstiqa_la_LIBADD =  \
-	$(top_builddir)/gst-libs/gst/video/libgstbadvideo-$(GST_API_VERSION).la \
-	$(GST_PLUGINS_BASE_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 
 libgstiqa_la_LIBADD += $(DSSIM_LIBS)

@@ -7,12 +7,12 @@ OPENCV_DIR=opencv
 endif
 
 SUBDIRS = uridownloader adaptivedemux interfaces basecamerabinsrc codecparsers \
-	 insertbin mpegts video audio sctp player isoff webrtc $(WAYLAND_DIR) \
+	 insertbin mpegts audio sctp player isoff webrtc $(WAYLAND_DIR) \
 	 $(OPENCV_DIR)
 
 noinst_HEADERS = gst-i18n-plugin.h gettext.h glib-compat-private.h
 DIST_SUBDIRS = uridownloader adaptivedemux interfaces basecamerabinsrc \
-	codecparsers insertbin mpegts wayland opencv video audio player isoff sctp webrtc
+	codecparsers insertbin mpegts wayland opencv audio player isoff sctp webrtc
 
 adaptivedemux: uridownloader
 

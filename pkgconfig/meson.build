@@ -11,7 +11,6 @@ pkgconf.set('VERSION', gst_version)
 pkgconf.set('abs_top_builddir', join_paths(meson.current_build_dir(), '..'))
 pkgconf.set('abs_top_srcdir', join_paths(meson.current_source_dir(), '..'))
 pkgconf.set('audiolibdir', join_paths(meson.build_root(), gstbadaudio.outdir()))
-pkgconf.set('videolibdir', join_paths(meson.build_root(), gstbadvideo.outdir()))
 pkgconf.set('codecparserslibdir', join_paths(meson.build_root(), gstcodecparsers.outdir()))
 pkgconf.set('insertbinlibdir', join_paths(meson.build_root(), gstinsertbin.outdir()))
 pkgconf.set('mpegtslibdir', join_paths(meson.build_root(), gstmpegts.outdir()))
@@ -24,7 +23,6 @@ pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
 
 pkg_libs = [
   'bad-audio',
-  'bad-video',
   'codecparsers',
   'insertbin',
   'mpegts',

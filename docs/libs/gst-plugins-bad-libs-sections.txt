@@ -762,37 +762,6 @@ GstInsertBinPrivate
 </SECTION>
 
 <SECTION>
-<FILE>gstvideoaggregator</FILE>
-<TITLE>GstVideoAggregator</TITLE>
-GstVideoAggregator
-GstVideoAggregatorClass
-<SUBSECTION Standard>
-GST_IS_VIDEO_AGGREGATOR
-GST_IS_VIDEO_AGGREGATOR_CLASS
-GST_TYPE_VIDEO_AGGREGATOR
-GST_VIDEO_AGGREGATOR
-GST_VIDEO_AGGREGATOR_CLASS
-GST_VIDEO_AGGREGATOR_GET_CLASS
-gst_video_aggregator_get_type
-GstVideoAggregatorPrivate
-</SECTION>
-
-<SECTION>
-<FILE>gstvideoaggregatorpad</FILE>
-<TITLE>GstVideoAggregatorPad</TITLE>
-GstVideoAggregatorPad
-GstVideoAggregatorPadClass
-<SUBSECTION Standard>
-GST_IS_VIDEO_AGGREGATOR_PAD
-GST_IS_VIDEO_AGGREGATOR_PADCLASS
-GST_TYPE_VIDEO_AGGREGATOR_PAD
-GST_VIDEO_AGGREGATOR_PAD
-GST_VIDEO_AGGREGATOR_PAD_CLASS
-GST_VIDEO_AGGREGATOR_PAD_GET_CLASS
-gst_video_aggregator_pad_get_type
-</SECTION>
-
-<SECTION>
 <FILE>gstplayer</FILE>
 GstPlayer
 

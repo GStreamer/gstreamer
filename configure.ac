@@ -2593,7 +2593,6 @@ gst-libs/gst/uridownloader/Makefile
 gst-libs/gst/wayland/Makefile
 gst-libs/gst/webrtc/Makefile
 gst-libs/gst/player/Makefile
-gst-libs/gst/video/Makefile
 gst-libs/gst/audio/Makefile
 gst-libs/gst/opencv/Makefile
 sys/Makefile
@@ -2730,8 +2729,6 @@ pkgconfig/gstreamer-wayland.pc
 pkgconfig/gstreamer-wayland-uninstalled.pc
 pkgconfig/gstreamer-webrtc.pc
 pkgconfig/gstreamer-webrtc-uninstalled.pc
-pkgconfig/gstreamer-bad-video.pc
-pkgconfig/gstreamer-bad-video-uninstalled.pc
 pkgconfig/gstreamer-bad-audio.pc
 pkgconfig/gstreamer-bad-audio-uninstalled.pc
 tools/Makefile

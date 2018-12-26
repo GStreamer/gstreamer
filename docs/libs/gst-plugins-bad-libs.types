@@ -1,15 +1,11 @@
 #include <gst/gst.h>
 
-#include <gst/video/gstvideoaggregator.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/codecparsers/gstmpegvideoparser.h>
 #include <gst/insertbin/gstinsertbin.h>
 #include <gst/mpegts/mpegts.h>
 #include <gst/player/player.h>
 #include <gst/webrtc/webrtc.h>
-
-gst_video_aggregator_get_type
-gst_video_aggregator_pad_get_type
 
 gst_mpegts_section_get_type
 gst_mpegts_section_type_get_type
