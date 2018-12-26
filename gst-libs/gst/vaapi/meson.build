@@ -109,6 +109,23 @@ if USE_VP9_ENCODER
   gstlibvaapi_headers += 'gstvaapiencoder_vp9.h'
 endif
 
+if USE_H264_FEI_ENCODER
+  gstlibvaapi_sources += [
+      'gstvaapifeiutils_h264.c',
+      'gstvaapifei_objects.c',
+      'gstvaapifeienc_h264.c',
+      'gstvaapifeipak_h264.c',
+      'gstvaapiencoder_h264_fei.c',
+    ]
+  gstlibvaapi_headers += [
+      'gstvaapifeiutils_h264.h',
+      'gstvaapifei_objects.h',
+      'gstvaapifeienc_h264.h',
+      'gstvaapifeipak_h264.h',
+      'gstvaapiencoder_h264_fei.h',
+    ]
+endif
+
 if USE_DRM
   gstlibvaapi_sources += [
       'gstvaapidisplay_drm.c',

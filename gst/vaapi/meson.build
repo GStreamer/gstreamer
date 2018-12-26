@@ -32,6 +32,13 @@ if USE_VP9_ENCODER
   vaapi_sources += 'gstvaapiencode_vp9.c'
 endif
 
+if USE_H264_FEI_ENCODER
+  vaapi_sources += [
+      'gstvaapifeivideometa.c',
+      'gstvaapiencode_h264_fei.c',
+    ]
+endif
+
 gstvaapi = library('gstvaapi',
   vaapi_sources,
   c_args : gstreamer_vaapi_args + ['-DGST_USE_UNSTABLE_API'],
