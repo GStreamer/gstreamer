@@ -205,6 +205,8 @@
       <xi:include href="xml/gstvideo.xml" />
       <xi:include href="xml/gstvideometa.xml" />
       <xi:include href="xml/gstvideoaffinetransformationmeta.xml" />
+      <xi:include href="xml/gstvideoaggregator.xml" />
+      <xi:include href="xml/gstvideoaggregatorpad.xml" />
       <xi:include href="xml/gstvideooverlaycomposition.xml" />
       <xi:include href="xml/gstvideofilter.xml" />
       <xi:include href="xml/gstvideodither.xml" />

@@ -21,15 +21,8 @@
 #ifndef __GST_VIDEO_AGGREGATOR_H__
 #define __GST_VIDEO_AGGREGATOR_H__
 
-#ifndef GST_USE_UNSTABLE_API
-#warning "The Video library from gst-plugins-bad is unstable API and may change in future."
-#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
-#endif
-
-#include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/base/gstaggregator.h>
-#include <gst/video/video-bad-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -78,7 +71,6 @@ struct _GstVideoAggregatorPad
 
 /**
  * GstVideoAggregatorPadClass:
- *
  * @update_conversion_info: Called when either the input or output formats
  *                          have changed.
  * @prepare_frame: Prepare the frame from the pad buffer and sets it to prepared_frame
@@ -101,19 +93,19 @@ struct _GstVideoAggregatorPadClass
   gpointer          _gst_reserved[GST_PADDING_LARGE];
 };
 
-GST_VIDEO_BAD_API
+GST_VIDEO_API
 GType gst_video_aggregator_pad_get_type   (void);
 
-GST_VIDEO_BAD_API
+GST_VIDEO_API
 gboolean gst_video_aggregator_pad_has_current_buffer (GstVideoAggregatorPad *pad);
 
-GST_VIDEO_BAD_API
+GST_VIDEO_API
 GstBuffer * gst_video_aggregator_pad_get_current_buffer (GstVideoAggregatorPad *pad);
 
-GST_VIDEO_BAD_API
+GST_VIDEO_API
 GstVideoFrame * gst_video_aggregator_pad_get_prepared_frame (GstVideoAggregatorPad *pad);
 
-GST_VIDEO_BAD_API
+GST_VIDEO_API
 void gst_video_aggregator_pad_set_needs_alpha (GstVideoAggregatorPad *pad, gboolean needs_alpha);
 
 /********************************
@@ -162,10 +154,10 @@ struct _GstVideoAggregatorConvertPadClass
   gpointer      _gst_reserved[GST_PADDING];
 };
 
-GST_VIDEO_BAD_API
+GST_VIDEO_API
 GType gst_video_aggregator_convert_pad_get_type           (void);
 
-GST_VIDEO_BAD_API
+GST_VIDEO_API
 void gst_video_aggregator_convert_pad_update_conversion_info (GstVideoAggregatorConvertPad * pad);
 
 /**********************
@@ -241,7 +233,7 @@ struct _GstVideoAggregatorClass
   gpointer            _gst_reserved[GST_PADDING_LARGE];
 };
 
-GST_VIDEO_BAD_API
+GST_VIDEO_API
 GType gst_video_aggregator_get_type       (void);
 
 G_END_DECLS
