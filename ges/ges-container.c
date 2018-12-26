@@ -390,7 +390,7 @@ _finalize (GObject * object)
   g_list_free_full (self->priv->copied_children,
       (GDestroyNotify) _free_mapping);
 
-  G_OBJECT_CLASS (ges_container_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_container_parent_class)->finalize (object);
 }
 
 static void
