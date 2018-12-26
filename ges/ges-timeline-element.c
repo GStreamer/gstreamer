@@ -274,6 +274,8 @@ ges_timeline_element_dispose (GObject * object)
   }
 
   g_clear_object (&self->priv->copied_from);
+
+  G_OBJECT_CLASS (ges_timeline_element_parent_class)->dispose (object);
 }
 
 static void
