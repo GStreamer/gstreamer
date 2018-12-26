@@ -4861,6 +4861,8 @@ gst_matroska_demux_parse_id (GstMatroskaDemux * demux, guint32 id,
                 GST_DEBUG_OBJECT (demux,
                     "estimated duration as %" GST_TIME_FORMAT,
                     GST_TIME_ARGS (demux->common.segment.duration));
+
+                g_free (last);
               }
             }
 
