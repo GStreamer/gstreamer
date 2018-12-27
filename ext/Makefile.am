@@ -76,12 +76,6 @@ else
 DTS_DIR=
 endif
 
-if USE_GL
-GL_DIR=gl
-else
-GL_DIR=
-endif
-
 if USE_RESINDVD
  RESINDVD_DIR = resindvd
 else
@@ -418,7 +412,6 @@ SUBDIRS=\
 	$(WAYLAND_DIR) \
 	$(DTS_DIR) \
 	$(RESINDVD_DIR) \
-	$(GL_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(FDK_AAC_DIR) \
@@ -497,7 +490,6 @@ DIST_SUBDIRS = \
 	libmms \
 	lv2 \
 	dts \
-	gl \
 	modplug \
 	mpeg2enc \
 	mplex \

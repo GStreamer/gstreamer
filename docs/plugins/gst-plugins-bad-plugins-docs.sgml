@@ -113,11 +113,6 @@
     <xi:include href="xml/element-gaussianblur.xml" />
     <xi:include href="xml/element-gdpdepay.xml" />
     <xi:include href="xml/element-gdppay.xml" />
-    <xi:include href="xml/element-glmixerbin.xml" />
-    <xi:include href="xml/element-glmosaic.xml" />
-    <xi:include href="xml/element-glstereomix.xml" />
-    <xi:include href="xml/element-glvideomixerelement.xml" />
-    <xi:include href="xml/element-glvideomixer.xml" />
     <xi:include href="xml/element-gmedec.xml" />
     <xi:include href="xml/element-grabcut.xml" />
     <xi:include href="xml/element-gsmdec.xml" />
@@ -369,7 +364,6 @@
     <xi:include href="xml/plugin-openal.xml" />
     <xi:include href="xml/plugin-opencv.xml" />
     <xi:include href="xml/plugin-openexr.xml" />
-    <xi:include href="xml/plugin-openglmixers.xml" />
     <xi:include href="xml/plugin-openh264.xml" />
     <xi:include href="xml/plugin-openjpeg.xml" />
     <xi:include href="xml/plugin-opusparse.xml" />

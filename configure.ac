@@ -2656,7 +2656,6 @@ ext/faad/Makefile
 ext/fdkaac/Makefile
 ext/flite/Makefile
 ext/fluidsynth/Makefile
-ext/gl/Makefile
 ext/gsm/Makefile
 ext/hls/Makefile
 ext/iqa/Makefile

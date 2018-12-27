@@ -97,7 +97,7 @@ option('fbdev', type : 'feature', value : 'auto', description : 'Framebuffer vid
 option('fdkaac', type : 'feature', value : 'auto', description : 'Fraunhofer AAC audio codec plugin')
 option('flite', type : 'feature', value : 'auto', description : 'Flite speech synthesizer source plugin')
 option('fluidsynth', type : 'feature', value : 'auto', description : 'Fluidsynth MIDI decoder plugin')
-option('gl', type : 'feature', value : 'auto', description : 'GStreamer OpenGL mixer plugin')
+option('gl', type : 'feature', value : 'auto', description : 'GStreamer OpenGL integration support (used by various plugins)')
 option('gme', type : 'feature', value : 'auto', description : 'libgme gaming console music file decoder plugin')
 option('gsm', type : 'feature', value : 'auto', description : 'GSM encoder/decoder plugin')
 option('ipcpipeline', type : 'feature', value : 'auto', description : 'Inter-process communication plugin')
