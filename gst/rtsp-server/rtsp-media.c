@@ -113,6 +113,7 @@ struct _GstRTSPMediaPrivate
   gint prepare_count;
   gint n_active;
   gboolean complete;
+  gboolean finishing_unprepare;
 
   /* the pipeline for the media */
   GstElement *pipeline;
@@ -3306,6 +3307,10 @@ finish_unprepare (GstRTSPMedia * media)
   gint i;
   GList *walk;
 
+  if (priv->finishing_unprepare)
+    return;
+  priv->finishing_unprepare = TRUE;
+
   GST_DEBUG ("shutting down");
 
   /* release the lock on shutdown, otherwise pad_added_cb might try to
@@ -3315,9 +3320,6 @@ finish_unprepare (GstRTSPMedia * media)
   g_rec_mutex_lock (&priv->state_lock);
 
   media_streams_set_blocked (media, FALSE);
-
-  if (priv->status != GST_RTSP_MEDIA_STATUS_UNPREPARING)
-    return;
 
   for (i = 0; i < priv->streams->len; i++) {
     GstRTSPStream *stream;
@@ -3371,6 +3373,8 @@ finish_unprepare (GstRTSPMedia * media)
     GST_DEBUG ("stop thread");
     gst_rtsp_thread_stop (priv->thread);
   }
+
+  priv->finishing_unprepare = FALSE;
 }
 
 /* called with state-lock */
