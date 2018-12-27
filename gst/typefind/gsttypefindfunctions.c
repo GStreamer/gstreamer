@@ -5645,6 +5645,32 @@ ssa_type_find (GstTypeFind * tf, gpointer private)
   g_free (str);
 }
 
+/*** application/x-mcc ***/
+static GstStaticCaps mcc_caps = GST_STATIC_CAPS ("application/x-mcc");
+
+#define MCC_CAPS gst_static_caps_get(&mcc_caps)
+
+static void
+mcc_type_find (GstTypeFind * tf, gpointer private)
+{
+  const guint8 *data;
+
+  data = gst_type_find_peek (tf, 0, 31);
+
+  if (data == NULL)
+    return;
+
+  /* MCC files always start with this followed by the version */
+  if (memcmp (data, "File Format=MacCaption_MCC V", 28) != 0 ||
+      !g_ascii_isdigit (data[28]) || data[29] != '.' ||
+      !g_ascii_isdigit (data[30])) {
+    return;
+  }
+
+  gst_type_find_suggest_simple (tf, GST_TYPE_FIND_MAXIMUM,
+      "application/x-mcc", "version", G_TYPE_INT, data[28] - '0', NULL);
+}
+
 /*** video/x-pva ***/
 
 static GstStaticCaps pva_caps = GST_STATIC_CAPS ("video/x-pva");
@@ -5811,8 +5837,9 @@ plugin_init (GstPlugin * plugin)
       "imy,ime,imelody", "BEGIN:IMELODY", 13, GST_TYPE_FIND_MAXIMUM);
   TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-scc", GST_RANK_PRIMARY,
       "scc", "Scenarist_SCC V1.0", 18, GST_TYPE_FIND_MAXIMUM);
-  TYPE_FIND_REGISTER_START_WITH (plugin, "application/x-mcc", GST_RANK_PRIMARY,
-      "mcc", "File Format=MacCaption_MCC V1.0", 31, GST_TYPE_FIND_MAXIMUM);
+  TYPE_FIND_REGISTER (plugin, "application/x-mcc", GST_RANK_PRIMARY,
+      mcc_type_find, "mcc", MCC_CAPS, NULL, NULL);
+
 #if 0
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-smoke", GST_RANK_PRIMARY,
       NULL, "\x80smoke\x00\x01\x00", 6, GST_TYPE_FIND_MAXIMUM);
