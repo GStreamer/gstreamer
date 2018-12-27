@@ -68,7 +68,7 @@ static GstStaticPadTemplate gst_msdkvpp_src_factory =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_DMABUF,
             "{ BGRA, YUY2, NV12}") ";"
-        GST_VIDEO_CAPS_MAKE ("{ NV12, YUY2, BGRA, BGRx }") ", "
+        GST_VIDEO_CAPS_MAKE ("{ BGRA, NV12, YUY2, BGRx }") ", "
         "interlace-mode = (string){ progressive, interleaved, mixed }" ";"));
 
 enum
