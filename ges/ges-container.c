@@ -390,6 +390,9 @@ _finalize (GObject * object)
   g_list_free_full (self->priv->copied_children,
       (GDestroyNotify) _free_mapping);
 
+  if (self->priv->mappings)
+    g_hash_table_destroy (self->priv->mappings);
+
   G_OBJECT_CLASS (ges_container_parent_class)->finalize (object);
 }
 
