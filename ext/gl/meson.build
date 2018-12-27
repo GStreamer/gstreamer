@@ -1,9 +1,3 @@
-# These have to stay in -bad until we can move GstVideoAggregator to -base
-#  'gstglbasemixer.c',
-#  'gstglmixerbin.c',
-#  'gstglmixer.c',
-#  'gstglvideomixer.c',
-#  'gstglstereomix.c',
 opengl_sources = [
   'gstopengl.c',
   'gstglalpha.c',
@@ -35,13 +29,18 @@ opengl_sources = [
   'effects/gstgleffectblur.c',
   'effects/gstgleffectsobel.c',
   'effects/gstgleffectlaplacian.c',
+  'gstglbasemixer.c',
   'gstglcolorscale.c',
   'gstglcolorbalance.c',
+  'gstgldeinterlace.c',
   'gstglfiltershader.c',
   'gstglfilterapp.c',
-  'gstglviewconvert.c',
+  'gstglmixerbin.c',
+  'gstglmixer.c',
+  'gstglvideomixer.c',
+  'gstglstereomix.c',
   'gstglstereosplit.c',
-  'gstgldeinterlace.c',
+  'gstglviewconvert.c',
   'gltestsrc.c',
   'gstgltestsrc.c',
   'gstgloverlaycompositorelement.c',
@@ -55,10 +54,9 @@ endif
 optional_deps = []
 
 if gl_dep.found() # have desktop GL
-  # These have to stay in -bad until we can move GstVideoAggregator to -base
-  # 'gstglmosaic.c',
   opengl_sources += [
     'gstglfilterglass.c',
+    'gstglmosaic.c',
   ]
 endif
 
