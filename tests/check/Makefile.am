@@ -100,6 +100,12 @@ else
 check_audiomixer =
 endif
 
+if USE_PLUGIN_COMPOSITOR
+check_compositor = elements/compositor
+else
+check_compositor =
+endif
+
 if USE_PLUGIN_PLAYBACK
 check_playback = elements/decodebin elements/playbin \
     elements/playbin-complex elements/streamsynchronizer \
@@ -182,7 +188,7 @@ check_adder =
 endif
 
 if HAVE_ORC
-check_orc = orc/video orc/audio orc/audiomixer orc/adder orc/volume orc/videotestsrc
+check_orc = orc/video orc/audio orc/audiomixer orc/adder orc/compositor orc/volume orc/videotestsrc
 else
 check_orc =
 endif
@@ -274,6 +280,7 @@ check_PROGRAMS = \
 	$(check_audiorate) \
 	$(check_audioresample) \
 	$(check_audiotestsrc) \
+	$(check_compositor) \
 	$(check_encodebin) \
 	$(check_gio) \
 	$(check_gl) \
@@ -704,6 +711,13 @@ elements_audiotestsrc_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 
+elements_compositor_LDADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) $(LDADD)
+elements_compositor_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+
 elements_libvisual_LDADD =  $(LDADD)
 elements_libvisual_CFLAGS = $(CFLAGS) $(AM_CFLAGS)
 
@@ -939,6 +953,9 @@ nodist_orc_adder_SOURCES = orc/adder.c
 orc_audiomixer_CFLAGS = $(ORC_CFLAGS)
 orc_audiomixer_LDADD = $(ORC_LIBS) -lorc-test-0.4
 nodist_orc_audiomixer_SOURCES = orc/audiomixer.c
+orc_compositor_CFLAGS = $(ORC_CFLAGS)
+orc_compositor_LDADD = $(ORC_LIBS) -lorc-test-0.4
+nodist_orc_compositor_SOURCES = orc/compositor.c
 orc_volume_CFLAGS = $(ORC_CFLAGS)
 orc_volume_LDADD = $(ORC_LIBS) -lorc-test-0.4
 nodist_orc_volume_SOURCES = orc/volume.c
@@ -959,6 +976,10 @@ orc/audiomixer.c: $(top_srcdir)/gst/audiomixer/gstaudiomixerorc.orc
 	$(ORCC) --test -o $@ $<
 
 orc/adder.c: $(top_srcdir)/gst/adder/gstadderorc.orc
+	$(MKDIR_P) orc/
+	$(ORCC) --test -o $@ $<
+
+orc/compositor.c: $(top_srcdir)/gst/compositor/compositororc.orc
 	$(MKDIR_P) orc/
 	$(ORCC) --test -o $@ $<
 

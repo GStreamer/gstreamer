@@ -52,6 +52,7 @@ Makefile
 /gst-libs/gst/audio/audio-marshal.[ch]
 /gst-libs/gst/video/video-marshal.[ch]
 /gst-libs/gst/*/*-enumtypes.[ch]
+/tests/examples/compositor/crossfade
 /tests/examples/playback/playback-test
 
 tmp-orc.c

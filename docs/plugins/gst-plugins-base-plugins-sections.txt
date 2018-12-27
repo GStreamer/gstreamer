@@ -227,6 +227,23 @@ gst_clock_overlay_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-compositor</FILE>
+<TITLE>compositor</TITLE>
+GstCompositor
+GstCompositorBackground
+<SUBSECTION Standard>
+GstCompositorClass
+GST_COMPOSITOR
+GST_COMPOSITOR_CAST
+GST_IS_COMPOSITOR
+GST_COMPOSITOR_CLASS
+GST_IS_COMPOSITOR_CLASS
+GST_TYPE_COMPOSITOR
+<SUBSECTION Private>
+gst_compositor_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-decodebin</FILE>
 <TITLE>decodebin</TITLE>
 GstDecodeBin

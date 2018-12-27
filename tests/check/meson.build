@@ -62,6 +62,7 @@ if host_machine.system() != 'windows'
     [ 'libs/rtp.c' ],
     [ 'libs/rtspconnection.c' ],
     [ 'libs/video.c' ],
+    [ 'elements/compositor.c', not core_conf.has('HAVE_UNISTD_H') ],
     [ 'elements/libvisual.c', not is_variable('libvisual_dep') or not libvisual_dep.found() ],
     [ 'elements/encodebin.c', not theoraenc_dep.found() or not vorbisenc_dep.found() ],
     [ 'elements/multifdsink.c', not core_conf.has('HAVE_SYS_SOCKET_H') or not core_conf.has('HAVE_UNISTD_H') ],

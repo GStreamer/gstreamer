@@ -498,6 +498,7 @@ AG_GST_CHECK_PLUGIN(audioconvert)
 AG_GST_CHECK_PLUGIN(audiomixer)
 AG_GST_CHECK_PLUGIN(audiorate)
 AG_GST_CHECK_PLUGIN(audiotestsrc)
+AG_GST_CHECK_PLUGIN(compositor)
 AG_GST_CHECK_PLUGIN(encoding)
 AG_GST_CHECK_PLUGIN(videoconvert)
 AG_GST_CHECK_PLUGIN(gio)
@@ -922,6 +923,7 @@ gst/audiomixer/Makefile
 gst/audiorate/Makefile
 gst/audioresample/Makefile
 gst/audiotestsrc/Makefile
+gst/compositor/Makefile
 gst/encoding/Makefile
 gst/videoconvert/Makefile
 gst/gio/Makefile
@@ -1008,6 +1010,7 @@ tests/check/Makefile
 tests/examples/Makefile
 tests/examples/app/Makefile
 tests/examples/audio/Makefile
+tests/examples/compositor/Makefile
 tests/examples/decodebin_next/Makefile
 tests/examples/dynamic/Makefile
 tests/examples/encoding/Makefile

@@ -1,5 +1,6 @@
 subdir('app')
 subdir('audio')
+subdir('compositor')
 subdir('dynamic')
 subdir('decodebin_next')
 subdir('encoding')

@@ -8,8 +8,8 @@ else
 GL_DIR=
 endif
 
-SUBDIRS = app audio decodebin_next dynamic fft gio $(GL_DIR) $(GTK_SUBDIRS) overlay overlaycomposition playrec encoding
-DIST_SUBDIRS = app audio dynamic decodebin_next fft gio gl playback overlay overlaycomposition seek snapshot playrec encoding
+SUBDIRS = app audio compositor decodebin_next dynamic fft gio $(GL_DIR) $(GTK_SUBDIRS) overlay overlaycomposition playrec encoding
+DIST_SUBDIRS = app audio compositor decodebin_next dynamic fft gio gl playback overlay overlaycomposition seek snapshot playrec encoding
 
 include $(top_srcdir)/common/parallel-subdirs.mak
 

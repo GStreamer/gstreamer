@@ -11,6 +11,7 @@ GstAudioInterleave GstChildProxy
 GstAudioMixer GstChildProxy
 GstBin GstChildProxy
 GstCdParanoiaSrc GstURIHandler
+GstCompositor GstChildProxy
 GstDecodeBin GstChildProxy
 GstDecodebin3 GstChildProxy
 GstEncodeBin GstChildProxy

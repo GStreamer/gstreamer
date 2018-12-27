@@ -9,6 +9,7 @@ audiomixer
 audiorate
 audioresample
 audiotestsrc
+compositor
 decodebin
 encodebin
 glbin

@@ -19,6 +19,8 @@ GObject
             GstAudioInterleave
             GstAudioMixer
               GstLiveAdder
+          GstVideoAggregator
+            GstCompositor
         GstAudioDecoder
           GstOpusDec
           GstVorbisDec

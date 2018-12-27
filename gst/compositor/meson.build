@@ -24,9 +24,9 @@ endif
 
 gstcompositor = library('gstcompositor',
   compositor_sources, orc_c, orc_h,
-  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+  c_args : gst_plugins_base_args,
   include_directories : [configinc],
-  dependencies : [gstbadvideo_dep, gstvideo_dep, gstbase_dep, orc_dep, libm],
+  dependencies : [video_dep, gst_base_dep, orc_dep, libm],
   install : true,
   install_dir : plugins_install_dir,
 )
