@@ -441,7 +441,6 @@ AG_GST_CHECK_PLUGIN(audiobuffersplit)
 AG_GST_CHECK_PLUGIN(audiofxbad)
 AG_GST_CHECK_PLUGIN(audiolatency)
 AG_GST_CHECK_PLUGIN(audiomixmatrix)
-AG_GST_CHECK_PLUGIN(compositor)
 AG_GST_CHECK_PLUGIN(audiovisualizers)
 AG_GST_CHECK_PLUGIN(autoconvert)
 AG_GST_CHECK_PLUGIN(bayer)
@@ -2578,7 +2577,6 @@ gst/videosignal/Makefile
 gst/vmnc/Makefile
 gst/y4m/Makefile
 gst/yadif/Makefile
-gst/compositor/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/adaptivedemux/Makefile
@@ -2628,7 +2626,6 @@ tests/examples/Makefile
 tests/examples/avsamplesink/Makefile
 tests/examples/camerabin2/Makefile
 tests/examples/codecparsers/Makefile
-tests/examples/compositor/Makefile
 tests/examples/directfb/Makefile
 tests/examples/audiomixmatrix/Makefile
 tests/examples/ipcpipeline/Makefile

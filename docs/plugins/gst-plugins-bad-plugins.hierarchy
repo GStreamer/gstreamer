@@ -19,7 +19,6 @@ GObject
         GstAggregator
           GstMXFMux
           GstVideoAggregator
-            GstCompositor
             GstGLBaseMixer
               GstGLMixer
                 GstGLMosaic

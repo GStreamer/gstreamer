@@ -67071,16 +67071,6 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
-<NAME>GstCompositor::background</NAME>
-<TYPE>GstCompositorBackground</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Background</NICK>
-<BLURB>Background type.</BLURB>
-<DEFAULT>Checker pattern</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>GstGLVideoMixer::background</NAME>
 <TYPE>GstGLVideoMixerBackground</TYPE>
 <RANGE></RANGE>

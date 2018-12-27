@@ -61,7 +61,6 @@ gst*orc.h
 /tests/examples/ipcpipeline/ipcpipeline1
 /tests/examples/codecparsers/parse-jpeg
 /tests/examples/codecparsers/parse-vp8
-/tests/examples/compositor/crossfade
 /tests/examples/shapewipe/shapewipe-example
 /tests/examples/jack/jack_client
 /tests/examples/opencv/gstmotioncells_dynamic_test

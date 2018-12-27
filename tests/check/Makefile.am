@@ -127,7 +127,7 @@ check_kate=
 endif
 
 if HAVE_ORC
-check_orc = orc/bayer orc/compositor
+check_orc = orc/bayer
 else
 check_orc =
 endif
@@ -269,7 +269,6 @@ check_PROGRAMS = \
 	elements/camerabin \
 	elements/gdppay \
 	elements/gdpdepay \
-	elements/compositor \
 	$(check_jifmux) \
 	elements/jpegparse \
 	elements/h263parse \
@@ -572,12 +571,6 @@ orc/bayer.c: $(top_srcdir)/gst/bayer/gstbayerorc.orc
 	$(MKDIR_P) orc
 	$(ORCC) --test -o $@ $<
 
-elements_compositor_LDADD = \
-	$(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) $(LDADD)
-elements_compositor_CFLAGS = \
-	$(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
-
 elements_hlsdemux_m3u8_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS) -I$(top_srcdir)/ext/hls
 elements_hlsdemux_m3u8_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_hlsdemux_m3u8_SOURCES = elements/hlsdemux_m3u8.c
@@ -588,15 +581,6 @@ elements_hls_demux_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) -lgstapp-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(LDADD)
 elements_hls_demux_SOURCES = elements/test_http_src.c elements/test_http_src.h elements/adaptive_demux_engine.c elements/adaptive_demux_engine.h elements/adaptive_demux_common.c elements/adaptive_demux_common.h elements/hls_demux.c
-
-orc_compositor_CFLAGS = $(ORC_CFLAGS)
-orc_compositor_LDADD = $(ORC_LIBS) -lorc-test-0.4
-nodist_orc_compositor_SOURCES = orc/compositor.c
-orc_videobox_CFLAGS = $(ORC_CFLAGS)
-
-orc/compositor.c: $(top_srcdir)/gst/compositor/compositororc.orc
-	$(MKDIR_P) orc/
-	$(ORCC) --test -o $@ $<
 
 elements_webrtcbin_LDADD = \
 	$(top_builddir)/gst-libs/gst/webrtc/libgstwebrtc-@GST_API_VERSION@.la \

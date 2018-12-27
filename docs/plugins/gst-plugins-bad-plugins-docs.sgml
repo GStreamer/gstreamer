@@ -54,7 +54,6 @@
     <xi:include href="xml/element-coloreffects.xml" />
     <xi:include href="xml/element-combdetect.xml" />
     <xi:include href="xml/element-compare.xml" />
-    <xi:include href="xml/element-compositor.xml" />
     <xi:include href="xml/element-curlfilesink.xml" />
     <xi:include href="xml/element-curlftpsink.xml" />
     <xi:include href="xml/element-curlhttpsink.xml" />
@@ -310,7 +309,6 @@
     <xi:include href="xml/plugin-chromaprint.xml" />
     <xi:include href="xml/plugin-coloreffects.xml" />
     <xi:include href="xml/plugin-colormanagement.xml" />
-    <xi:include href="xml/plugin-compositor.xml" />
     <xi:include href="xml/plugin-curl.xml" />
     <xi:include href="xml/plugin-dashdemux.xml" />
     <xi:include href="xml/plugin-dc1394.xml" />
