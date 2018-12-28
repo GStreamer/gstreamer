@@ -68,6 +68,7 @@ struct input_chain
   GstGhostPad *ghost_pad;
   GstElement *upload;
   GstElement *in_convert;
+  GstElement *in_overlay;
   GstPad *mixer_pad;
 };
 
@@ -89,6 +90,12 @@ _free_input_chain (struct input_chain *chain)
     gst_element_set_state (chain->in_convert, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (chain->self), chain->in_convert);
     chain->in_convert = NULL;
+  }
+
+  if (chain->in_overlay) {
+    gst_element_set_state (chain->in_overlay, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (chain->self), chain->in_overlay);
+    chain->in_overlay = NULL;
   }
 
   if (chain->mixer_pad) {
@@ -126,9 +133,8 @@ enum
 static void gst_gl_mixer_bin_child_proxy_init (gpointer g_iface,
     gpointer iface_data);
 
-#define GST_GL_MIXER_BIN_GET_PRIVATE(o)					\
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_MIXER_BIN, GstGLMixerBinPrivate))
 G_DEFINE_TYPE_WITH_CODE (GstGLMixerBin, gst_gl_mixer_bin, GST_TYPE_BIN,
+    G_ADD_PRIVATE (GstGLMixerBin)
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
         gst_gl_mixer_bin_child_proxy_init));
 
@@ -145,7 +151,6 @@ static void gst_gl_mixer_bin_set_property (GObject * object, guint prop_id,
 static void gst_gl_mixer_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_mixer_bin_dispose (GObject * object);
-static void gst_gl_mixer_bin_finalize (GObject * object);
 
 static GstPad *gst_gl_mixer_bin_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps);
@@ -160,8 +165,6 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstCaps *upload_caps;
 
-  g_type_class_add_private (klass, sizeof (GstGLMixerBinPrivate));
-
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "glmixerbin", 0,
       "opengl mixer bin");
 
@@ -172,7 +175,6 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
   gobject_class->get_property = gst_gl_mixer_bin_get_property;
   gobject_class->set_property = gst_gl_mixer_bin_set_property;
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_gl_mixer_bin_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_gl_mixer_bin_finalize);
 
   g_object_class_install_property (gobject_class, PROP_MIXER,
       g_param_spec_object ("mixer",
@@ -183,11 +185,10 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
           G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_LATENCY,
-      g_param_spec_int64 ("latency", "Buffer latency",
+      g_param_spec_uint64 ("latency", "Buffer latency",
           "Additional latency in live mode to allow upstream "
           "to take longer to produce buffers for the current "
-          "position", 0,
-          (G_MAXLONG == G_MAXINT64) ? G_MAXINT64 : (G_MAXLONG * GST_SECOND - 1),
+          "position (in nanoseconds)", 0, G_MAXUINT64,
           DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_START_TIME_SELECTION,
@@ -235,7 +236,7 @@ gst_gl_mixer_bin_init (GstGLMixerBin * self)
   gboolean res = TRUE;
   GstPad *pad;
 
-  self->priv = GST_GL_MIXER_BIN_GET_PRIVATE (self);
+  self->priv = gst_gl_mixer_bin_get_instance_private (self);
 
   self->out_convert = gst_element_factory_make ("glcolorconvert", NULL);
   self->download = gst_element_factory_make ("gldownload", NULL);
@@ -257,17 +258,6 @@ gst_gl_mixer_bin_init (GstGLMixerBin * self)
 
   if (!res)
     GST_ERROR_OBJECT (self, "failed to create output chain");
-}
-
-static void
-gst_gl_mixer_bin_finalize (GObject * object)
-{
-  GstGLMixerBin *self = GST_GL_MIXER_BIN (object);
-
-  if (self->mixer)
-    gst_object_unref (self->mixer);
-
-  G_OBJECT_CLASS (gst_gl_mixer_bin_parent_class)->finalize (object);
 }
 
 static void
@@ -308,16 +298,21 @@ _create_input_chain (GstGLMixerBin * self, struct input_chain *chain,
 
   chain->upload = gst_element_factory_make ("glupload", NULL);
   chain->in_convert = gst_element_factory_make ("glcolorconvert", NULL);
+  chain->in_overlay = gst_element_factory_make ("gloverlaycompositor", NULL);
 
   res &= gst_bin_add (GST_BIN (self), chain->in_convert);
+  res &= gst_bin_add (GST_BIN (self), chain->in_overlay);
   res &= gst_bin_add (GST_BIN (self), chain->upload);
 
-  pad = gst_element_get_static_pad (chain->in_convert, "src");
+  pad = gst_element_get_static_pad (chain->in_overlay, "src");
   if (gst_pad_link (pad, mixer_pad) != GST_PAD_LINK_OK) {
     gst_object_unref (pad);
     return FALSE;
   }
   gst_object_unref (pad);
+  res &=
+      gst_element_link_pads (chain->in_convert, "src", chain->in_overlay,
+      "sink");
   res &=
       gst_element_link_pads (chain->upload, "src", chain->in_convert, "sink");
 
@@ -349,6 +344,7 @@ _create_input_chain (GstGLMixerBin * self, struct input_chain *chain,
 
   gst_element_sync_state_with_parent (chain->upload);
   gst_element_sync_state_with_parent (chain->in_convert);
+  gst_element_sync_state_with_parent (chain->in_overlay);
 
   return TRUE;
 }
@@ -398,39 +394,18 @@ _connect_mixer_element (GstGLMixerBin * self)
   return res;
 }
 
-/*
- * @mixer: (transfer floating):
- */
-static gboolean
-gst_gl_mixer_bin_set_mixer (GstGLMixerBin * self, GstElement * mixer)
-{
-  g_return_val_if_fail (GST_IS_ELEMENT (mixer), FALSE);
-
-  if (self->mixer) {
-    gst_element_set_locked_state (self->mixer, TRUE);
-    gst_bin_remove (GST_BIN (self), self->mixer);
-    gst_element_set_state (self->mixer, GST_STATE_NULL);
-    gst_object_unref (self->mixer);
-    self->mixer = NULL;
-  }
-  self->mixer = mixer;
-
-  gst_object_ref_sink (mixer);
-
-  if (mixer && !_connect_mixer_element (self)) {
-    gst_object_unref (self->mixer);
-    self->mixer = NULL;
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
 void
 gst_gl_mixer_bin_finish_init_with_element (GstGLMixerBin * self,
     GstElement * element)
 {
-  gst_gl_mixer_bin_set_mixer (self, element);
+  g_return_if_fail (GST_IS_ELEMENT (element));
+
+  self->mixer = element;
+
+  if (!_connect_mixer_element (self)) {
+    gst_object_unref (self->mixer);
+    self->mixer = NULL;
+  }
 }
 
 void
@@ -475,7 +450,11 @@ gst_gl_mixer_bin_set_property (GObject * object,
       GstElement *mixer = g_value_get_object (value);
       /* FIXME: deal with replacing a mixer */
       g_return_if_fail (!self->mixer || (self->mixer == mixer));
-      gst_gl_mixer_bin_set_mixer (self, mixer);
+      self->mixer = mixer;
+      if (mixer) {
+        gst_object_ref_sink (mixer);
+        _connect_mixer_element (self);
+      }
       break;
     }
     default:
@@ -560,12 +539,9 @@ gst_gl_mixer_bin_change_state (GstElement * element, GstStateChange transition)
         if (klass->create_element)
           self->mixer = klass->create_element ();
 
-        if (!self->mixer) {
+        if (!self->mixer)
           g_signal_emit (element,
               gst_gl_mixer_bin_signals[SIGNAL_CREATE_ELEMENT], 0, &self->mixer);
-          if (self->mixer && g_object_is_floating (self->mixer))
-            gst_object_ref_sink (self->mixer);
-        }
 
         if (!self->mixer) {
           GST_ERROR_OBJECT (element, "Failed to retrieve element");

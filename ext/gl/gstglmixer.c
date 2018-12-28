@@ -26,10 +26,9 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include "gstglmixer.h"
+#include <string.h>
 
-#define gst_gl_mixer_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstGLMixer, gst_gl_mixer, GST_TYPE_GL_BASE_MIXER);
+#include "gstglmixer.h"
 
 #define GST_CAT_DEFAULT gst_gl_mixer_debug
 GST_DEBUG_CATEGORY (gst_gl_mixer_debug);
@@ -38,14 +37,16 @@ static void gst_gl_mixer_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_gl_mixer_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+static gboolean gst_gl_mixer_pad_prepare_frame (GstVideoAggregatorPad * vpad,
+    GstVideoAggregator * vagg, GstBuffer * buffer,
+    GstVideoFrame * prepared_frame);
+static void gst_gl_mixer_pad_clean_frame (GstVideoAggregatorPad * vpad,
+    GstVideoAggregator * vagg, GstVideoFrame * prepared_frame);
 
 enum
 {
   PROP_PAD_0
 };
-
-#define GST_GL_MIXER_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_GL_MIXER, GstGLMixerPrivate))
 
 struct _GstGLMixerPrivate
 {
@@ -55,6 +56,10 @@ struct _GstGLMixerPrivate
   GMutex gl_resource_lock;
   GCond gl_resource_cond;
 };
+
+#define gst_gl_mixer_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstGLMixer, gst_gl_mixer,
+    GST_TYPE_GL_BASE_MIXER);
 
 G_DEFINE_TYPE (GstGLMixerPad, gst_gl_mixer_pad, GST_TYPE_GL_BASE_MIXER_PAD);
 
@@ -68,9 +73,8 @@ gst_gl_mixer_pad_class_init (GstGLMixerPadClass * klass)
   gobject_class->set_property = gst_gl_mixer_pad_set_property;
   gobject_class->get_property = gst_gl_mixer_pad_get_property;
 
-  vaggpad_class->set_info = NULL;
-  vaggpad_class->prepare_frame = NULL;
-  vaggpad_class->clean_frame = NULL;
+  vaggpad_class->prepare_frame = gst_gl_mixer_pad_prepare_frame;
+  vaggpad_class->clean_frame = gst_gl_mixer_pad_clean_frame;
 }
 
 static void
@@ -92,6 +96,50 @@ gst_gl_mixer_pad_set_property (GObject * object, guint prop_id,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
+  }
+}
+
+static gboolean
+gst_gl_mixer_pad_prepare_frame (GstVideoAggregatorPad * vpad,
+    GstVideoAggregator * vagg, GstBuffer * buffer,
+    GstVideoFrame * prepared_frame)
+{
+  GstGLMixerPad *pad = GST_GL_MIXER_PAD (vpad);
+  GstGLMixer *mix = GST_GL_MIXER (vagg);
+  GstVideoInfo gl_info;
+  GstGLSyncMeta *sync_meta;
+
+  pad->current_texture = 0;
+
+  gst_video_info_set_format (&gl_info,
+      GST_VIDEO_FORMAT_RGBA,
+      GST_VIDEO_INFO_WIDTH (&vpad->info), GST_VIDEO_INFO_HEIGHT (&vpad->info));
+
+  sync_meta = gst_buffer_get_gl_sync_meta (buffer);
+  if (sync_meta)
+    gst_gl_sync_meta_wait (sync_meta, GST_GL_BASE_MIXER (mix)->context);
+
+  if (!gst_video_frame_map (prepared_frame, &gl_info, buffer,
+          GST_MAP_READ | GST_MAP_GL)) {
+    GST_ERROR_OBJECT (pad, "Failed to map input frame");
+    return FALSE;
+  }
+
+  pad->current_texture = *(guint *) prepared_frame->data[0];
+
+  return TRUE;
+}
+
+static void
+gst_gl_mixer_pad_clean_frame (GstVideoAggregatorPad * vpad,
+    GstVideoAggregator * vagg, GstVideoFrame * prepared_frame)
+{
+  GstGLMixerPad *pad = GST_GL_MIXER_PAD (vpad);
+
+  pad->current_texture = 0;
+  if (prepared_frame->buffer) {
+    gst_video_frame_unmap (prepared_frame);
+    memset (prepared_frame, 0, sizeof (GstVideoFrame));
   }
 }
 
@@ -357,8 +405,6 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "glmixer", 0, "OpenGL mixer");
 
-  g_type_class_add_private (klass, sizeof (GstGLMixerPrivate));
-
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_gl_mixer_finalize);
 
   gobject_class->get_property = gst_gl_mixer_get_property;
@@ -396,7 +442,7 @@ gst_gl_mixer_reset (GstGLMixer * mix)
 static void
 gst_gl_mixer_init (GstGLMixer * mix)
 {
-  mix->priv = GST_GL_MIXER_GET_PRIVATE (mix);
+  mix->priv = gst_gl_mixer_get_instance_private (mix);
 
   mix->priv->gl_resource_ready = FALSE;
   g_mutex_init (&mix->priv->gl_resource_lock);
@@ -561,42 +607,6 @@ context_error:
   }
 }
 
-static gboolean
-gst_gl_mixer_upload_frames (GstElement * element, GstPad * sink_pad,
-    gpointer user_data)
-{
-  GstVideoAggregatorPad *vaggpad = GST_VIDEO_AGGREGATOR_PAD (sink_pad);
-  GstGLMixerPad *pad = GST_GL_MIXER_PAD (sink_pad);
-  GstGLMixer *mix = GST_GL_MIXER (element);
-
-  pad->current_texture = 0;
-  if (vaggpad->buffer != NULL) {
-    GstVideoInfo gl_info;
-    GstVideoFrame gl_frame;
-    GstGLSyncMeta *sync_meta;
-
-    gst_video_info_set_format (&gl_info,
-        GST_VIDEO_FORMAT_RGBA,
-        GST_VIDEO_INFO_WIDTH (&vaggpad->info),
-        GST_VIDEO_INFO_HEIGHT (&vaggpad->info));
-
-    sync_meta = gst_buffer_get_gl_sync_meta (vaggpad->buffer);
-    if (sync_meta)
-      gst_gl_sync_meta_wait (sync_meta, GST_GL_BASE_MIXER (mix)->context);
-
-    if (!gst_video_frame_map (&gl_frame, &gl_info, vaggpad->buffer,
-            GST_MAP_READ | GST_MAP_GL)) {
-      GST_ERROR_OBJECT (pad, "Failed to map input frame");
-      return FALSE;
-    }
-
-    pad->current_texture = *(guint *) gl_frame.data[0];
-    gst_video_frame_unmap (&gl_frame);
-  }
-
-  return TRUE;
-}
-
 gboolean
 gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 {
@@ -615,12 +625,6 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
   }
 
   out_tex = (GstGLMemory *) out_frame.map[0].memory;
-
-  if (!gst_element_foreach_sink_pad (GST_ELEMENT_CAST (mix),
-          gst_gl_mixer_upload_frames, NULL)) {
-    res = FALSE;
-    goto out;
-  }
 
   g_mutex_lock (&priv->gl_resource_lock);
   if (!priv->gl_resource_ready)

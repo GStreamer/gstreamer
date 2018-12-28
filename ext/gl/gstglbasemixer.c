@@ -28,10 +28,6 @@
 
 #include "gstglbasemixer.h"
 
-#define gst_gl_base_mixer_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstGLBaseMixer, gst_gl_base_mixer,
-    GST_TYPE_VIDEO_AGGREGATOR);
-
 #define GST_CAT_DEFAULT gst_gl_base_mixer_debug
 GST_DEBUG_CATEGORY (gst_gl_base_mixer_debug);
 
@@ -45,20 +41,16 @@ static void gst_gl_base_mixer_set_context (GstElement * element,
 static GstStateChangeReturn gst_gl_base_mixer_change_state (GstElement *
     element, GstStateChange transition);
 
-enum
-{
-  PROP_PAD_0
-};
-
-#define GST_GL_BASE_MIXER_GET_PRIVATE(obj)  \
-    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_GL_BASE_MIXER, GstGLBaseMixerPrivate))
-
 struct _GstGLBaseMixerPrivate
 {
   gboolean negotiated;
 
   GstGLContext *other_context;
 };
+
+#define gst_gl_base_mixer_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstGLBaseMixer, gst_gl_base_mixer,
+    GST_TYPE_VIDEO_AGGREGATOR);
 
 G_DEFINE_TYPE (GstGLBaseMixerPad, gst_gl_base_mixer_pad,
     GST_TYPE_VIDEO_AGGREGATOR_PAD);
@@ -73,7 +65,6 @@ gst_gl_base_mixer_pad_class_init (GstGLBaseMixerPadClass * klass)
   gobject_class->set_property = gst_gl_base_mixer_pad_set_property;
   gobject_class->get_property = gst_gl_base_mixer_pad_get_property;
 
-  vaggpad_class->set_info = NULL;
   vaggpad_class->prepare_frame = NULL;
   vaggpad_class->clean_frame = NULL;
 }
@@ -261,8 +252,6 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GstGLBaseMixerPrivate));
-
   gobject_class->get_property = gst_gl_base_mixer_get_property;
   gobject_class->set_property = gst_gl_base_mixer_set_property;
 
@@ -293,7 +282,7 @@ gst_gl_base_mixer_class_init (GstGLBaseMixerClass * klass)
 static void
 gst_gl_base_mixer_init (GstGLBaseMixer * mix)
 {
-  mix->priv = GST_GL_BASE_MIXER_GET_PRIVATE (mix);
+  mix->priv = gst_gl_base_mixer_get_instance_private (mix);
 }
 
 static void

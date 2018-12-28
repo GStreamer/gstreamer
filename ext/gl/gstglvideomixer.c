@@ -43,6 +43,7 @@
 #include "config.h"
 #endif
 
+#include <string.h>
 #include <gst/controller/gstproxycontrolbinding.h>
 #include <gst/gl/gstglfuncs.h>
 #include <gst/video/gstvideoaffinetransformationmeta.h>
@@ -136,7 +137,7 @@ gst_gl_video_mixer_blend_function_get_type (void)
         "One Minus Constant Color", "one-minus-contant-color"},
     {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_CONSTANT_ALPHA, "Constant Alpha",
         "constant-alpha"},
-    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_COLOR,
+    {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_CONSTANT_ALPHA,
         "One Minus Constant Alpha", "one-minus-contant-alpha"},
     {GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA_SATURATE,
         "Source Alpha Saturate", "src-alpha-saturate"},
@@ -157,11 +158,11 @@ gst_gl_video_mixer_blend_function_get_type (void)
 #define DEFAULT_PAD_HEIGHT 0
 #define DEFAULT_PAD_ALPHA  1.0
 #define DEFAULT_PAD_ZORDER 0
-#define DEFAULT_PAD_IGNORE_EOS FALSE
+#define DEFAULT_PAD_REPEAT_AFTER_EOS FALSE
 #define DEFAULT_PAD_BLEND_EQUATION_RGB GST_GL_VIDEO_MIXER_BLEND_EQUATION_ADD
 #define DEFAULT_PAD_BLEND_EQUATION_ALPHA GST_GL_VIDEO_MIXER_BLEND_EQUATION_ADD
 #define DEFAULT_PAD_BLEND_FUNCTION_SRC_RGB GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA
-#define DEFAULT_PAD_BLEND_FUNCTION_SRC_ALPHA GST_GL_VIDEO_MIXER_BLEND_FUNCTION_SRC_ALPHA
+#define DEFAULT_PAD_BLEND_FUNCTION_SRC_ALPHA GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE
 #define DEFAULT_PAD_BLEND_FUNCTION_DST_RGB GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA
 #define DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA
 
@@ -184,7 +185,7 @@ enum
   PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_BLUE,
   PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA,
   PROP_INPUT_ZORDER,
-  PROP_INPUT_IGNORE_EOS,
+  PROP_INPUT_REPEAT_AFTER_EOS,
 };
 
 static void gst_gl_video_mixer_input_get_property (GObject * object,
@@ -225,10 +226,11 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
       g_param_spec_uint ("zorder", "Z-Order", "Z Order of the picture",
           0, 10000, DEFAULT_PAD_ZORDER,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_INPUT_IGNORE_EOS,
-      g_param_spec_boolean ("ignore-eos", "Ignore EOS", "Aggregate the last "
+  g_object_class_install_property (gobject_class, PROP_INPUT_REPEAT_AFTER_EOS,
+      g_param_spec_boolean ("repeat-after-eos", "Repeat After EOS",
+          "Aggregate the last "
           "frame on pads that are EOS till they are released",
-          DEFAULT_PAD_IGNORE_EOS,
+          DEFAULT_PAD_REPEAT_AFTER_EOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INPUT_XPOS,
       g_param_spec_int ("xpos", "X Position", "X Position of the picture",
@@ -239,12 +241,12 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
           G_MININT, G_MAXINT, DEFAULT_PAD_YPOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INPUT_WIDTH,
-      g_param_spec_int ("width", "Width", "Width of the picture",
-          G_MININT, G_MAXINT, DEFAULT_PAD_WIDTH,
+      g_param_spec_int ("width", "Width", "Width of the picture", G_MININT,
+          G_MAXINT, DEFAULT_PAD_WIDTH,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INPUT_HEIGHT,
-      g_param_spec_int ("height", "Height", "Height of the picture",
-          G_MININT, G_MAXINT, DEFAULT_PAD_HEIGHT,
+      g_param_spec_int ("height", "Height", "Height of the picture", G_MININT,
+          G_MAXINT, DEFAULT_PAD_HEIGHT,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INPUT_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
@@ -252,8 +254,7 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_INPUT_BLEND_EQUATION_RGB,
       g_param_spec_enum ("blend-equation-rgb", "Blend Equation RGB",
-          "Blend Equation for RGB",
-          GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION,
+          "Blend Equation for RGB", GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION,
           DEFAULT_PAD_BLEND_EQUATION_RGB,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class,
@@ -288,7 +289,7 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
       PROP_INPUT_BLEND_FUNCTION_DST_ALPHA,
       g_param_spec_enum ("blend-function-dst-alpha",
           "Blend Function Destination Alpha",
-          "Blend Function for Destiniation Alpha",
+          "Blend Function for Destination Alpha",
           GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
           DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
@@ -451,12 +452,16 @@ enum
   PROP_BACKGROUND,
 };
 
+static void gst_gl_video_mixer_child_proxy_init (gpointer g_iface,
+    gpointer iface_data);
+
 #define DEBUG_INIT \
     GST_DEBUG_CATEGORY_INIT (gst_gl_video_mixer_debug, "glvideomixer", 0, "glvideomixer element");
 
 #define gst_gl_video_mixer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLVideoMixer, gst_gl_video_mixer, GST_TYPE_GL_MIXER,
-    DEBUG_INIT);
+    G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
+        gst_gl_video_mixer_child_proxy_init); DEBUG_INIT);
 
 static void gst_gl_video_mixer_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -565,6 +570,7 @@ struct _GstGLVideoMixerPad
 
   gboolean geometry_change;
   GLuint vertex_buffer;
+  gfloat m_matrix[16];
 };
 
 struct _GstGLVideoMixerPadClass
@@ -611,6 +617,11 @@ gst_gl_video_mixer_pad_init (GstGLVideoMixerPad * pad)
   pad->blend_function_src_alpha = DEFAULT_PAD_BLEND_FUNCTION_SRC_ALPHA;
   pad->blend_function_dst_rgb = DEFAULT_PAD_BLEND_FUNCTION_DST_RGB;
   pad->blend_function_dst_alpha = DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA;
+  memset (pad->m_matrix, 0, sizeof (gfloat) * 4 * 4);
+  pad->m_matrix[0] = 1.0;
+  pad->m_matrix[5] = 1.0;
+  pad->m_matrix[10] = 1.0;
+  pad->m_matrix[15] = 1.0;
 }
 
 static void
@@ -679,7 +690,7 @@ gst_gl_video_mixer_pad_class_init (GstGLVideoMixerPadClass * klass)
       PROP_INPUT_BLEND_FUNCTION_DST_ALPHA,
       g_param_spec_enum ("blend-function-dst-alpha",
           "Blend Function Destination Alpha",
-          "Blend Function for Destiniation Alpha",
+          "Blend Function for Destination Alpha",
           GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION,
           DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
@@ -837,18 +848,52 @@ _del_buffer (GstGLContext * context, GLuint * pBuffer)
   context->gl_vtable->DeleteBuffers (1, pBuffer);
 }
 
+static GstPad *
+gst_gl_video_mixer_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * req_name, const GstCaps * caps)
+{
+  GstPad *newpad;
+
+  newpad = (GstPad *)
+      GST_ELEMENT_CLASS (parent_class)->request_new_pad (element,
+      templ, req_name, caps);
+
+  if (newpad == NULL)
+    goto could_not_create;
+
+  gst_child_proxy_child_added (GST_CHILD_PROXY (element), G_OBJECT (newpad),
+      GST_OBJECT_NAME (newpad));
+
+  return newpad;
+
+could_not_create:
+  {
+    GST_DEBUG_OBJECT (element, "could not create/add  pad");
+    return NULL;
+  }
+}
+
 static void
 gst_gl_video_mixer_release_pad (GstElement * element, GstPad * p)
 {
   GstGLVideoMixerPad *pad = GST_GL_VIDEO_MIXER_PAD (p);
+
+  gst_child_proxy_child_removed (GST_CHILD_PROXY (element), G_OBJECT (pad),
+      GST_OBJECT_NAME (pad));
+
+  /* we call the base class first as this will remove the pad from
+   * the aggregator, thus stopping misc callbacks from being called,
+   * one of which (process_textures) will recreate the vertex_buffer
+   * if it is destroyed */
+  GST_ELEMENT_CLASS (g_type_class_peek_parent (G_OBJECT_GET_CLASS (element)))
+      ->release_pad (element, p);
+
   if (pad->vertex_buffer) {
     GstGLBaseMixer *mix = GST_GL_BASE_MIXER (element);
     gst_gl_context_thread_add (mix->context, (GstGLContextThreadFunc)
         _del_buffer, &pad->vertex_buffer);
     pad->vertex_buffer = 0;
   }
-  GST_ELEMENT_CLASS (g_type_class_peek_parent (G_OBJECT_GET_CLASS (element)))
-      ->release_pad (element, p);
 }
 
 static void
@@ -861,6 +906,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
 
   gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
+  element_class->request_new_pad = gst_gl_video_mixer_request_new_pad;
   element_class->release_pad = gst_gl_video_mixer_release_pad;
 
   gobject_class->set_property = gst_gl_video_mixer_set_property;
@@ -1225,10 +1271,10 @@ _draw_checker_background (GstGLVideoMixer * video_mixer)
 
   /* *INDENT-OFF* */
   gfloat v_vertices[] = {
-    -1.0,-1.0,-1.0f,
-     1.0,-1.0,-1.0f,
-     1.0, 1.0,-1.0f,
-    -1.0, 1.0,-1.0f,
+    -1.0,-1.0, 0.0f,
+     1.0,-1.0, 0.0f,
+     1.0, 1.0, 0.0f,
+    -1.0, 1.0, 0.0f,
   };
   /* *INDENT-ON* */
 
@@ -1466,10 +1512,10 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
     /* *INDENT-OFF* */
     gfloat v_vertices[] = {
-      -1.0,-1.0,-1.0f, 0.0f, 0.0f,
-       1.0,-1.0,-1.0f, 1.0f, 0.0f,
-       1.0, 1.0,-1.0f, 1.0f, 1.0f,
-      -1.0, 1.0,-1.0f, 0.0f, 1.0f,
+      -1.0,-1.0, 0.0f, 0.0f, 0.0f,
+       1.0,-1.0, 0.0f, 1.0f, 0.0f,
+       1.0, 1.0, 0.0f, 1.0f, 1.0f,
+      -1.0, 1.0, 0.0f, 0.0f, 1.0f,
     };
     /* *INDENT-ON* */
 
@@ -1507,25 +1553,21 @@ gst_gl_video_mixer_callback (gpointer stuff)
       w = ((gfloat) pad_width / (gfloat) out_width);
       h = ((gfloat) pad_height / (gfloat) out_height);
 
-      /* top-left */
-      v_vertices[0] = v_vertices[15] =
-          2.0f * (gfloat) pad->xpos / (gfloat) out_width - 1.0f;
-      /* bottom-left */
-      v_vertices[1] = v_vertices[6] =
-          2.0f * (gfloat) pad->ypos / (gfloat) out_height - 1.0f;
-      /* top-right */
-      v_vertices[5] = v_vertices[10] = v_vertices[0] + 2.0f * w;
-      /* bottom-right */
-      v_vertices[11] = v_vertices[16] = v_vertices[1] + 2.0f * h;
+      pad->m_matrix[0] = w;
+      pad->m_matrix[5] = h;
+      pad->m_matrix[12] =
+          2. * (gfloat) pad->xpos / (gfloat) out_width - (1. - w);
+      pad->m_matrix[13] =
+          2. * (gfloat) pad->ypos / (gfloat) out_height - (1. - h);
+
       GST_TRACE ("processing texture:%u dimensions:%ux%u, at %f,%f %fx%f with "
-          "alpha:%f", in_tex, in_width, in_height, v_vertices[0], v_vertices[1],
-          v_vertices[5], v_vertices[11], pad->alpha);
+          "alpha:%f", in_tex, in_width, in_height, pad->m_matrix[12],
+          pad->m_matrix[13], pad->m_matrix[0], pad->m_matrix[5], pad->alpha);
 
       if (!pad->vertex_buffer)
         gl->GenBuffers (1, &pad->vertex_buffer);
 
       gl->BindBuffer (GL_ARRAY_BUFFER, pad->vertex_buffer);
-
       gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), v_vertices,
           GL_STATIC_DRAW);
 
@@ -1543,10 +1585,13 @@ gst_gl_video_mixer_callback (gpointer stuff)
     {
       GstVideoAffineTransformationMeta *af_meta;
       gfloat matrix[16];
+      gfloat af_matrix[16];
+      GstBuffer *buffer =
+          gst_video_aggregator_pad_get_current_buffer (vagg_pad);
 
-      af_meta =
-          gst_buffer_get_video_affine_transformation_meta (vagg_pad->buffer);
-      gst_gl_get_affine_transformation_meta_as_ndc_ext (af_meta, matrix);
+      af_meta = gst_buffer_get_video_affine_transformation_meta (buffer);
+      gst_gl_get_affine_transformation_meta_as_ndc_ext (af_meta, af_matrix);
+      gst_gl_multiply_matrix4 (af_matrix, pad->m_matrix, matrix);
       gst_gl_shader_set_uniform_matrix_4fv (video_mixer->shader,
           "u_transformation", 1, FALSE, matrix);
     }
@@ -1583,4 +1628,44 @@ gst_gl_video_mixer_callback (gpointer stuff)
   gst_gl_context_clear_shader (GST_GL_BASE_MIXER (mixer)->context);
 
   return TRUE;
+}
+
+/* GstChildProxy implementation */
+static GObject *
+gst_gl_video_mixer_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
+    guint index)
+{
+  GstGLVideoMixer *gl_video_mixer = GST_GL_VIDEO_MIXER (child_proxy);
+  GObject *obj = NULL;
+
+  GST_OBJECT_LOCK (gl_video_mixer);
+  obj = g_list_nth_data (GST_ELEMENT_CAST (gl_video_mixer)->sinkpads, index);
+  if (obj)
+    gst_object_ref (obj);
+  GST_OBJECT_UNLOCK (gl_video_mixer);
+
+  return obj;
+}
+
+static guint
+gst_gl_video_mixer_child_proxy_get_children_count (GstChildProxy * child_proxy)
+{
+  guint count = 0;
+  GstGLVideoMixer *gl_video_mixer = GST_GL_VIDEO_MIXER (child_proxy);
+
+  GST_OBJECT_LOCK (gl_video_mixer);
+  count = GST_ELEMENT_CAST (gl_video_mixer)->numsinkpads;
+  GST_OBJECT_UNLOCK (gl_video_mixer);
+  GST_INFO_OBJECT (gl_video_mixer, "Children Count: %d", count);
+
+  return count;
+}
+
+static void
+gst_gl_video_mixer_child_proxy_init (gpointer g_iface, gpointer iface_data)
+{
+  GstChildProxyInterface *iface = g_iface;
+
+  iface->get_child_by_index = gst_gl_video_mixer_child_proxy_get_child_by_index;
+  iface->get_children_count = gst_gl_video_mixer_child_proxy_get_children_count;
 }
