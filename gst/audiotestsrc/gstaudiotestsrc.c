@@ -21,7 +21,51 @@
  * @title: audiotestsrc
  *
  * AudioTestSrc can be used to generate basic audio signals. It support several
- * different waveforms and allows to set the base frequency and volume.
+ * different waveforms and allows to set the base frequency and volume. Some
+ * waveforms might use additional properties.
+ *
+ * Waveform specific notes:
+ *
+ * <orderedlist>
+ *   <listitem>
+ *     <itemizedlist><title>Gaussian white noise</title>
+ *     
+ *     This waveform produces white (zero mean) Gaussian noise.
+ *     Volume sets the standard deviation of the noise in units of the range
+ *     of values of the sample type, e.g. volume=0.1 produces noise with a
+ *     standard deviation of 0.1*32767=3277 with 16-bit integer samples,
+ *     or 0.1*1.0=0.1 with floating-point samples.
+ *     
+ *     </itemizedlist>
+ *   </listitem>
+ *   <listitem>
+ *     <itemizedlist><title>Ticks</title>
+ *     
+ *     This waveform is special in that it does not produce one continuous
+ *     signal. Instead, it produces finite-length sine wave pulses (the "ticks").
+ *     It is useful for detecting time shifts between audio signal, for example
+ *     between RTSP audio clients that shall play synchronized. It is also useful
+ *     for generating a signal that feeds the trigger of an oscilloscope.
+ *
+ *     To further help with oscilloscope triggering and time offset detection,
+ *     the waveform can apply a different volume to every Nth tick (this is then
+ *     called the "marker tick"). For instance, one could generate a tick every
+ *     100ms, and make every 20th tick a marker tick (meaning that every 2 seconds
+ *     there is a marker tick). This is useful for detecting large time offsets
+ *     while still frequently triggering an oscilloscope.
+ *
+ *     Also, a "ramp" can be applied to the begin & end of ticks. The sudden
+ *     start of the sine tick is a discontinuity, even if the sine wave starts
+ *     at 0. The* resulting artifacts can often make it more difficult to use the
+ *     ticks for an oscilloscope's trigger. To that end, an initial "ramp" can
+ *     be applied. The first few samples are modulated by a cubic function to
+ *     reduce the impact of the discontinuity, resulting in smaller artifacts.
+ *     The number of samples equals floor(samplerate / sine-wave-frequency).
+ *     Example: with a sample rate of 48 kHz and a sine wave frequency of 10 kHz,
+ *     the first 4 samples are modulated by the cubic function.
+ *     </itemizedlist>
+ *   </listitem>
+ * </orderedlist>
  *
  * ## Example launch line
  * |[
@@ -30,12 +74,20 @@
  *  This pipeline produces a sine with default frequency, 440 Hz, and the
  * default volume, 0.8 (relative to a maximum 1.0).
  * |[
- * gst-launch-1.0 audiotestsrc wave=2 freq=200 ! tee name=t ! queue ! audioconvert ! autoaudiosink t. ! queue ! audioconvert ! libvisual_lv_scope ! videoconvert ! autovideosink
+ * gst-launch-1.0 audiotestsrc wave=2 freq=200 ! tee name=t ! queue ! audioconvert ! \
+ *     autoaudiosink t. ! queue ! audioconvert ! libvisual_lv_scope ! videoconvert ! autovideosink
  * ]|
  *  In this example a saw wave is generated. The wave is shown using a
  * scope visualizer from libvisual, allowing you to visually verify that
  * the saw wave is correct.
  *
+ * |[
+ * gst-launch-1.0 audiotestsrc wave=ticks apply-tick-ramp=true tick-interval=100000000 \
+ *     freq=10000 volume=0.4 marker-tick-period=10 sine-periods-per-tick=20 ! autoaudiosink
+ * ]| This pipeline produces a series of 10 kHz sine wave ticks. Each tick is
+ * 20 sine wave periods long, ticks occur every 100 ms and have a volume of
+ * 0.4. Every 10th tick is a marker tick and has the default marker tick volume
+ * of 1.0. The beginning and end of the ticks are modulated with the ramp.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -54,14 +106,19 @@
 GST_DEBUG_CATEGORY_STATIC (audio_test_src_debug);
 #define GST_CAT_DEFAULT audio_test_src_debug
 
-#define DEFAULT_SAMPLES_PER_BUFFER   1024
-#define DEFAULT_WAVE                 GST_AUDIO_TEST_SRC_WAVE_SINE
-#define DEFAULT_FREQ                 440.0
-#define DEFAULT_VOLUME               0.8
-#define DEFAULT_IS_LIVE              FALSE
-#define DEFAULT_TIMESTAMP_OFFSET     G_GINT64_CONSTANT (0)
-#define DEFAULT_CAN_ACTIVATE_PUSH    TRUE
-#define DEFAULT_CAN_ACTIVATE_PULL    FALSE
+#define DEFAULT_SAMPLES_PER_BUFFER      1024
+#define DEFAULT_WAVE                    GST_AUDIO_TEST_SRC_WAVE_SINE
+#define DEFAULT_FREQ                    440.0
+#define DEFAULT_VOLUME                  0.8
+#define DEFAULT_IS_LIVE                 FALSE
+#define DEFAULT_TIMESTAMP_OFFSET        G_GINT64_CONSTANT (0)
+#define DEFAULT_SINE_PERIODS_PER_TICK   10
+#define DEFAULT_TIME_BETWEEN_TICKS      GST_SECOND
+#define DEFAULT_MARKER_TICK_PERIOD    0
+#define DEFAULT_MARKER_TICK_VOLUME      1.0
+#define DEFAULT_APPLY_TICK_RAMP         FALSE
+#define DEFAULT_CAN_ACTIVATE_PUSH       TRUE
+#define DEFAULT_CAN_ACTIVATE_PULL       FALSE
 
 enum
 {
@@ -72,6 +129,11 @@ enum
   PROP_VOLUME,
   PROP_IS_LIVE,
   PROP_TIMESTAMP_OFFSET,
+  PROP_SINE_PERIODS_PER_TICK,
+  PROP_TICK_INTERVAL,
+  PROP_MARKER_TICK_PERIOD,
+  PROP_MARKER_TICK_VOLUME,
+  PROP_APPLY_TICK_RAMP,
   PROP_CAN_ACTIVATE_PUSH,
   PROP_CAN_ACTIVATE_PULL
 };
@@ -200,6 +262,32 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
           "An offset added to timestamps set on buffers (in ns)", G_MININT64,
           G_MAXINT64, DEFAULT_TIMESTAMP_OFFSET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SINE_PERIODS_PER_TICK,
+      g_param_spec_uint ("sine-periods-per-tick", "Sine periods per tick",
+          "Number of sine wave periods in one tick. Only used if wave = ticks.",
+          1, G_MAXUINT, DEFAULT_SINE_PERIODS_PER_TICK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_TICK_INTERVAL,
+      g_param_spec_uint64 ("tick-interval", "Time between ticks",
+          "Distance between start of current and start of next tick, in nanoseconds.",
+          1, G_MAXUINT64, DEFAULT_TIME_BETWEEN_TICKS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MARKER_TICK_PERIOD,
+      g_param_spec_uint ("marker-tick-period", "Marker tick period",
+          "Make every Nth tick a marker tick (= a tick with different volume). "
+          "Only used if wave = ticks. 0 = no marker ticks.",
+          0, G_MAXUINT, DEFAULT_MARKER_TICK_PERIOD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MARKER_TICK_VOLUME,
+      g_param_spec_double ("marker-tick-volume", "Marker tick volume",
+          "Volume of marker ticks. Only used if wave = ticks and"
+          "marker-tick-period is set to a nonzero value.",
+          0.0, 1.0, DEFAULT_MARKER_TICK_VOLUME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_APPLY_TICK_RAMP,
+      g_param_spec_boolean ("apply-tick-ramp", "Apply tick ramp",
+          "Apply ramp to tick samples", DEFAULT_APPLY_TICK_RAMP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAN_ACTIVATE_PUSH,
       g_param_spec_boolean ("can-activate-push", "Can activate push",
           "Can activate in push mode", DEFAULT_CAN_ACTIVATE_PUSH,
@@ -243,6 +331,12 @@ gst_audio_test_src_init (GstAudioTestSrc * src)
   src->generate_samples_per_buffer = src->samples_per_buffer;
   src->timestamp_offset = DEFAULT_TIMESTAMP_OFFSET;
   src->can_activate_pull = DEFAULT_CAN_ACTIVATE_PULL;
+
+  src->sine_periods_per_tick = DEFAULT_SINE_PERIODS_PER_TICK;
+  src->tick_interval = DEFAULT_TIME_BETWEEN_TICKS;
+  src->marker_tick_period = DEFAULT_MARKER_TICK_PERIOD;
+  src->marker_tick_volume = DEFAULT_MARKER_TICK_VOLUME;
+  src->apply_tick_ramp = DEFAULT_APPLY_TICK_RAMP;
 
   src->gen = NULL;
 
@@ -756,12 +850,12 @@ static const ProcessFunc pink_noise_funcs[] = {
 };
 
 static void
-gst_audio_test_src_init_sine_table (GstAudioTestSrc * src)
+gst_audio_test_src_init_sine_table (GstAudioTestSrc * src, gboolean use_volume)
 {
   gint i;
   gdouble ang = 0.0;
   gdouble step = M_PI_M2 / 1024.0;
-  gdouble amp = src->volume;
+  gdouble amp = use_volume ? src->volume : 1.0;
 
   for (i = 0; i < 1024; i++) {
     src->wave_table[i] = sin (ang) * amp;
@@ -814,14 +908,28 @@ static const ProcessFunc sine_table_funcs[] = {
   (ProcessFunc) gst_audio_test_src_create_sine_table_double
 };
 
+static inline gdouble
+calc_scaled_tick_volume (GstAudioTestSrc * src, gdouble scale)
+{
+  gdouble vol;
+  vol = ((src->marker_tick_period > 0)
+      && ((src->tick_counter % src->marker_tick_period) == 0))
+      ? src->marker_tick_volume : src->volume;
+  return vol * scale;
+}
+
+
 #define DEFINE_TICKS(type,scale) \
 static void \
 gst_audio_test_src_create_tick_##type (GstAudioTestSrc * src, g##type * samples) \
 { \
   gint i, c, channels, samplerate, samplemod, channel_step, sample_step; \
+  gint num_nonzero_samples, num_ramp_samples, end_ramp_offset; \
   gdouble step, scl; \
+  gdouble volscale; \
   g##type *ptr; \
   \
+  volscale = calc_scaled_tick_volume (src, scale); \
   channels = GST_AUDIO_INFO_CHANNELS (&src->info); \
   if (GST_AUDIO_INFO_LAYOUT (&src->info) == GST_AUDIO_LAYOUT_INTERLEAVED) { \
     channel_step = 1; \
@@ -832,18 +940,35 @@ gst_audio_test_src_create_tick_##type (GstAudioTestSrc * src, g##type * samples)
   } \
   samplerate = GST_AUDIO_INFO_RATE (&src->info); \
   step = M_PI_M2 * src->freq / samplerate; \
+  num_nonzero_samples = samplerate * src->sine_periods_per_tick / src->freq; \
   scl = 1024.0 / M_PI_M2; \
+  num_ramp_samples = src->apply_tick_ramp ? (samplerate / src->freq) : 0; \
+  end_ramp_offset = num_nonzero_samples - num_ramp_samples; \
   \
   for (i = 0; i < src->generate_samples_per_buffer; i++) { \
-    samplemod = (src->next_sample + i) % samplerate; \
+    samplemod = (src->next_sample + i)%src->samples_between_ticks; \
     \
     ptr = samples; \
     if (samplemod == 0) { \
       src->accumulator = 0; \
-    } else if (samplemod < 1600) { \
+      src->tick_counter++; \
+      volscale = calc_scaled_tick_volume (src, scale); \
+    } else if (samplemod < num_nonzero_samples)  { \
+      gdouble ramp; \
+      if (num_ramp_samples > 0) { \
+        ramp = \
+            (samplemod < num_ramp_samples) ? (((gdouble)samplemod) / num_ramp_samples) : \
+            (samplemod >= end_ramp_offset) ? (((gdouble)(num_nonzero_samples - samplemod)) / num_ramp_samples) \
+            : 1.0; \
+        if (ramp > 1.0) \
+          ramp = 1.0; \
+        ramp *= ramp * ramp; \
+      } else \
+        ramp = 1.0; \
+      \
       for (c = 0; c < channels; ++c) { \
         *ptr = \
-            (g##type) scale * src->wave_table[(gint) (src->accumulator * scl)]; \
+            (g##type) volscale * ramp * src->wave_table[(gint) (src->accumulator * scl)]; \
         ptr += channel_step; \
       } \
     } else { \
@@ -1143,12 +1268,15 @@ gst_audio_test_src_change_wave (GstAudioTestSrc * src)
       src->process = pink_noise_funcs[idx];
       break;
     case GST_AUDIO_TEST_SRC_WAVE_SINE_TAB:
-      gst_audio_test_src_init_sine_table (src);
+      gst_audio_test_src_init_sine_table (src, TRUE);
       src->process = sine_table_funcs[idx];
       break;
     case GST_AUDIO_TEST_SRC_WAVE_TICKS:
-      gst_audio_test_src_init_sine_table (src);
+      gst_audio_test_src_init_sine_table (src, FALSE);
       src->process = tick_funcs[idx];
+      src->samples_between_ticks =
+          gst_util_uint64_scale_int (src->tick_interval,
+          GST_AUDIO_INFO_RATE (&(src->info)), GST_SECOND);
       break;
     case GST_AUDIO_TEST_SRC_WAVE_GAUSSIAN_WHITE_NOISE:
       if (!(src->gen))
@@ -1188,7 +1316,7 @@ gst_audio_test_src_change_volume (GstAudioTestSrc * src)
 {
   switch (src->wave) {
     case GST_AUDIO_TEST_SRC_WAVE_SINE_TAB:
-      gst_audio_test_src_init_sine_table (src);
+      gst_audio_test_src_init_sine_table (src, TRUE);
       break;
     default:
       break;
@@ -1230,6 +1358,7 @@ gst_audio_test_src_start (GstBaseSrc * basesrc)
   src->eos_reached = FALSE;
   src->tags_pushed = FALSE;
   src->accumulator = 0;
+  src->tick_counter = 0;
 
   return TRUE;
 }
@@ -1474,6 +1603,21 @@ gst_audio_test_src_set_property (GObject * object, guint prop_id,
     case PROP_TIMESTAMP_OFFSET:
       src->timestamp_offset = g_value_get_int64 (value);
       break;
+    case PROP_SINE_PERIODS_PER_TICK:
+      src->sine_periods_per_tick = g_value_get_uint (value);
+      break;
+    case PROP_TICK_INTERVAL:
+      src->tick_interval = g_value_get_uint64 (value);
+      break;
+    case PROP_MARKER_TICK_PERIOD:
+      src->marker_tick_period = g_value_get_uint (value);
+      break;
+    case PROP_MARKER_TICK_VOLUME:
+      src->marker_tick_volume = g_value_get_double (value);
+      break;
+    case PROP_APPLY_TICK_RAMP:
+      src->apply_tick_ramp = g_value_get_boolean (value);
+      break;
     case PROP_CAN_ACTIVATE_PUSH:
       GST_BASE_SRC (src)->can_activate_push = g_value_get_boolean (value);
       break;
@@ -1510,6 +1654,21 @@ gst_audio_test_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_TIMESTAMP_OFFSET:
       g_value_set_int64 (value, src->timestamp_offset);
+      break;
+    case PROP_SINE_PERIODS_PER_TICK:
+      g_value_set_uint (value, src->sine_periods_per_tick);
+      break;
+    case PROP_TICK_INTERVAL:
+      g_value_set_uint64 (value, src->tick_interval);
+      break;
+    case PROP_MARKER_TICK_PERIOD:
+      g_value_set_uint (value, src->marker_tick_period);
+      break;
+    case PROP_MARKER_TICK_VOLUME:
+      g_value_set_double (value, src->marker_tick_volume);
+      break;
+    case PROP_APPLY_TICK_RAMP:
+      g_value_set_boolean (value, src->apply_tick_ramp);
       break;
     case PROP_CAN_ACTIVATE_PUSH:
       g_value_set_boolean (value, GST_BASE_SRC (src)->can_activate_push);

@@ -51,7 +51,7 @@ G_BEGIN_DECLS
  * @GST_AUDIO_TEST_SRC_WAVE_PINK_NOISE: pink noise
  * @GST_AUDIO_TEST_SRC_WAVE_SINE_TAB: sine wave using a table
  * @GST_AUDIO_TEST_SRC_WAVE_TICKS: periodic ticks
- * @GST_AUDIO_TEST_SRC_WAVE_GAUSSIAN_WHITE_NOISE: white (zero mean) Gaussian noise;  volume sets the standard deviation of the noise in units of the range of values of the sample type, e.g. volume=0.1 produces noise with a standard deviation of 0.1*32767=3277 with 16-bit integer samples, or 0.1*1.0=0.1 with floating-point samples.
+ * @GST_AUDIO_TEST_SRC_WAVE_GAUSSIAN_WHITE_NOISE: white (zero mean) Gaussian noise
  * @GST_AUDIO_TEST_SRC_WAVE_RED_NOISE: red (brownian) noise
  * @GST_AUDIO_TEST_SRC_WAVE_BLUE_NOISE: spectraly inverted pink noise
  * @GST_AUDIO_TEST_SRC_WAVE_VIOLET_NOISE: spectraly inverted red (brownian) noise
@@ -137,6 +137,13 @@ struct _GstAudioTestSrc {
   GstPinkNoise pink;
   GstRedNoise red;
   gdouble wave_table[1024];
+  guint sine_periods_per_tick;
+  guint64 tick_interval;
+  guint marker_tick_period;
+  gdouble marker_tick_volume;
+  gboolean apply_tick_ramp;
+  guint samples_between_ticks;
+  guint tick_counter;
 };
 
 struct _GstAudioTestSrcClass {
