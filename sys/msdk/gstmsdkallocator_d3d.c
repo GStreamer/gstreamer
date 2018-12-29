@@ -75,6 +75,5 @@ gst_msdk_set_frame_allocator (GstMsdkContext * context)
     .Free = gst_msdk_frame_free,
   };
 
-  MFXVideoCORE_SetFrameAllocator (gst_msdk_context_get_session (context),
-      &gst_msdk_frame_allocator);
+  gst_msdk_context_set_frame_allocator (context, &gst_msdk_frame_allocator);
 }

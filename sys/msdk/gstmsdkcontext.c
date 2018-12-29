@@ -47,6 +47,7 @@ struct _GstMsdkContextPrivate
   GList *cached_alloc_responses;
   gboolean hardware;
   gboolean is_joined;
+  gboolean has_frame_allocator;
   GstMsdkContextJobType job_type;
   gint shared_async_depth;
   GMutex mutex;
@@ -596,4 +597,26 @@ gst_msdk_context_add_shared_async_depth (GstMsdkContext * context,
     gint async_depth)
 {
   context->priv->shared_async_depth += async_depth;
+}
+
+void
+gst_msdk_context_set_frame_allocator (GstMsdkContext * context,
+    mfxFrameAllocator * allocator)
+{
+  GstMsdkContextPrivate *priv = context->priv;
+
+  g_mutex_lock (&priv->mutex);
+
+  if (!priv->has_frame_allocator) {
+    mfxStatus status;
+
+    status = MFXVideoCORE_SetFrameAllocator (priv->session, allocator);
+
+    if (status != MFX_ERR_NONE)
+      GST_ERROR ("Failed to set frame allocator");
+    else
+      priv->has_frame_allocator = 1;
+  }
+
+  g_mutex_unlock (&priv->mutex);
 }
