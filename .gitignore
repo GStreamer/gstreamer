@@ -1,4 +1,7 @@
 *build*/
+cscope.in.out
+cscope.out
+cscope.po.out
 gst-devtools
 gst-editing-services
 gst-libav
