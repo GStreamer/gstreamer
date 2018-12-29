@@ -42,3 +42,4 @@ subprojects/pygobject/
 subprojects/pycairo/
 subprojects/json-glib/
 prefix/
+pygobject
