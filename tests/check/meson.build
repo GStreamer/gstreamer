@@ -17,15 +17,20 @@ enable_gst_player_tests = get_option('gst_player_tests')
 # name, condition when to skip the test and extra dependencies
 base_tests = [
   [['elements/aiffparse.c']],
+  [['elements/asfmux.c']],
   [['elements/autoconvert.c']],
   [['elements/autovideoconvert.c']],
   [['elements/avwait.c']],
+  [['elements/camerabin.c']],
+  [['elements/gdpdepay.c']],
+  [['elements/gdppay.c']],
   [['elements/h263parse.c'], false, [libparser_dep, gstcodecparsers_dep]],
   [['elements/h264parse.c'], false, [libparser_dep, gstcodecparsers_dep]],
   [['elements/id3mux.c']],
   [['elements/mpegtsmux.c'], false, [gstmpegts_dep]],
   [['elements/mpeg4videoparse.c'], false, [libparser_dep, gstcodecparsers_dep]],
   [['elements/mpegvideoparse.c'], false, [libparser_dep, gstcodecparsers_dep]],
+  [['elements/msdkh264enc.c'], not have_msdk, [msdk_dep]],
   [['elements/mxfdemux.c']],
   [['elements/mxfmux.c']],
   [['elements/pcapparse.c'], false, [libparser_dep]],
@@ -38,6 +43,7 @@ base_tests = [
   [['libs/h265parser.c'], false, [gstcodecparsers_dep]],
   [['libs/insertbin.c'], false, [gstinsertbin_dep]],
   [['libs/isoff.c'], false, [gstisoff_dep]],
+  [['libs/mpegts.c'], false, [gstmpegts_dep]],
   [['libs/mpegvideoparser.c'], false, [gstcodecparsers_dep]],
   [['libs/planaraudioadapter.c'], false, [gstbadaudio_dep]],
   [['libs/player.c'], not enable_gst_player_tests, [gstplayer_dep]],
@@ -48,9 +54,7 @@ base_tests = [
 # FIXME: unistd dependency, unstable or not tested yet on windows
 if host_machine.system() != 'windows'
   base_tests += [
-    [['elements/asfmux.c'], not cdata.has('HAVE_UNISTD_H')],
     [['elements/assrender.c'], not ass_dep.found(), [ass_dep]],
-    [['elements/camerabin.c'], not cdata.has('HAVE_UNISTD_H')],
     [['elements/ccconverter.c']],
     [['elements/cccombiner.c']],
     [['elements/ccextractor.c']],
@@ -67,8 +71,6 @@ if host_machine.system() != 'windows'
     [['elements/faad.c'],
         not faad_dep.found() or not have_faad_2_7 or not cdata.has('HAVE_UNISTD_H'),
         [faad_dep]],
-    [['elements/gdpdepay.c'], not cdata.has('HAVE_UNISTD_H')],
-    [['elements/gdppay.c'], not cdata.has('HAVE_UNISTD_H')],
     [['elements/jifmux.c'],
         not exif_dep.found() or not cdata.has('HAVE_UNISTD_H'), [exif_dep]],
     [['elements/jpegparse.c'], not cdata.has('HAVE_UNISTD_H')],
@@ -81,8 +83,6 @@ if host_machine.system() != 'windows'
     [['elements/webrtcbin.c'], not libnice_dep.found(), [gstwebrtc_dep]],
     [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
     [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
-    [['elements/msdkh264enc.c'], not have_msdk, [msdk_dep]],
-    [['libs/mpegts.c'], false, [gstmpegts_dep]],
   ]
 endif
 
