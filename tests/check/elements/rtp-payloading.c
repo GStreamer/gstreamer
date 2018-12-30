@@ -22,7 +22,6 @@
 #include <gst/audio/audio.h>
 #include <gst/base/base.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 #define RELEASE_ELEMENT(x) if(x) {gst_object_unref(x); x = NULL;}
 

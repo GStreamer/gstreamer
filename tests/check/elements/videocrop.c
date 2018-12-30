@@ -25,8 +25,6 @@
 # include <valgrind/valgrind.h>
 #endif
 
-#include <unistd.h>
-
 #include <gst/check/gstcheck.h>
 #include <gst/video/video.h>
 #include <gst/base/gstbasetransform.h>

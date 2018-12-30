@@ -19,7 +19,6 @@
 #include <gst/check/gstcheck.h>
 #include <gio/gio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

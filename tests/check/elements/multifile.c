@@ -23,12 +23,10 @@
 #endif
 
 #include <glib/gstdio.h>
-#include <unistd.h>
 
 #include <gst/check/gstcheck.h>
 #include <gst/video/video.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 static GList *mfs_messages = NULL;
 

@@ -20,8 +20,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <unistd.h>
-
 /* suppress warnings for deprecated API such as GValueArray
  * with newer GLib versions (>= 2.31.0) */
 #define GLIB_DISABLE_DEPRECATION_WARNINGS

@@ -23,8 +23,6 @@
 # include "config.h"
 #endif
 
-#include <unistd.h>
-
 #include <gst/check/gstcheck.h>
 
 typedef struct _GstVideoBoxTestContext

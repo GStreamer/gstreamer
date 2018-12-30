@@ -24,12 +24,10 @@
 #endif
 
 #include <glib/gstdio.h>
-#include <unistd.h>
 
 #include <gst/check/gstcheck.h>
 #include <gst/app/app.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 gchar *tmpdir = NULL;
 GstClockTime first_ts;

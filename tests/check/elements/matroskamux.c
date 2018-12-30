@@ -20,8 +20,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <unistd.h>
-
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstadapter.h>
 #include <gst/check/gstharness.h>

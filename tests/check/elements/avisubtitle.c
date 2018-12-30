@@ -21,8 +21,6 @@
  */
 /* Element-Checklist-Version: 5 */
 
-#include <unistd.h>
-
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 
