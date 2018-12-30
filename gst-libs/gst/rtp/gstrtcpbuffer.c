@@ -2893,9 +2893,6 @@ gst_rtcp_packet_xr_get_prt_info (GstRTCPPacket * packet,
   if (end_seq)
     *end_seq = ((data[0] << 8) | data[1]);
 
-  if (block_len < (end_seq - begin_seq) + 2)
-    return FALSE;
-
   return TRUE;
 }
 
