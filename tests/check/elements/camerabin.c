@@ -25,7 +25,6 @@
 #  include "config.h"
 #endif
 
-#include <unistd.h>
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gst/gst.h>

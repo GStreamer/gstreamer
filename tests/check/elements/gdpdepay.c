@@ -20,7 +20,6 @@
 
 #include "config.h"
 #include <string.h>
-#include <unistd.h>
 
 #include <gst/check/gstcheck.h>
 #include <gst/audio/audio.h>
