@@ -123,7 +123,8 @@ static inline void
 _calculate_unpack_length (GstGLMemory * gl_mem, GstGLContext * context)
 {
   guint n_gl_bytes;
-  guint tex_format, tex_type;
+  GstGLFormat tex_format;
+  guint tex_type;
 
   gl_mem->tex_scaling[0] = 1.0f;
   gl_mem->tex_scaling[1] = 1.0f;
@@ -237,8 +238,8 @@ static gboolean
 _gl_tex_create (GstGLMemory * gl_mem, GError ** error)
 {
   GstGLContext *context = gl_mem->mem.context;
-  GLenum internal_format;
-  GLenum tex_format;
+  GstGLFormat internal_format;
+  GstGLFormat tex_format;
   GLenum tex_type;
 
   internal_format = gl_mem->tex_format;
@@ -354,7 +355,8 @@ gst_gl_memory_read_pixels (GstGLMemory * gl_mem, gpointer read_pointer)
 {
   GstGLContext *context = gl_mem->mem.context;
   const GstGLFuncs *gl = context->gl_vtable;
-  guint format, type;
+  GstGLFormat format;
+  guint type;
   guint fbo;
 
   gst_gl_format_type_from_sized_gl_format (gl_mem->tex_format, &format, &type);
@@ -426,7 +428,8 @@ _gl_tex_download_get_tex_image (GstGLMemory * gl_mem, GstMapInfo * info,
   if (info->flags & GST_MAP_READ
       && GST_MEMORY_FLAG_IS_SET (gl_mem,
           GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD)) {
-    guint format, type;
+    GstGLFormat format;
+    guint type;
     guint target;
 
     GST_CAT_TRACE (GST_CAT_GL_MEMORY, "attempting download of texture %u "
@@ -504,7 +507,8 @@ gst_gl_memory_texsubimage (GstGLMemory * gl_mem, gpointer read_pointer)
 {
   GstGLContext *context = gl_mem->mem.context;
   const GstGLFuncs *gl;
-  GLenum gl_format, gl_type, gl_target;
+  GstGLFormat gl_format;
+  GLenum gl_type, gl_target;
   gpointer data;
   gsize plane_start;
 
@@ -766,7 +770,8 @@ _gl_tex_copy_thread (GstGLContext * context, gpointer data)
   copy_params = (GstGLMemoryCopyParams *) data;
 
   if (!copy_params->tex_id) {
-    guint internal_format, out_gl_format, out_gl_type, out_tex_target;
+    GstGLFormat internal_format, out_gl_format;
+    guint out_gl_type, out_tex_target;
 
     out_tex_target = gst_gl_texture_target_to_gl (copy_params->tex_target);
     internal_format = copy_params->src->tex_format;

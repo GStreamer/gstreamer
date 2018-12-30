@@ -407,8 +407,8 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   guint out_tex_target;
   GLuint fboId;
   gsize out_width, out_height, out_stride;
-  GLuint out_gl_format, out_gl_type;
-  GLuint in_gl_format, in_gl_type;
+  GstGLFormat out_gl_format, in_gl_format;
+  GLuint out_gl_type, in_gl_type;
   gsize in_size, out_size;
 
   copy_params = (GstGLMemoryPBOCopyParams *) data;
