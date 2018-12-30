@@ -25,8 +25,16 @@
 #include "ges-internal.h"
 #include "ges-smart-video-mixer.h"
 
-G_DECLARE_FINAL_TYPE (GESSmartMixerPad, ges_smart_mixer_pad, GES,
-    SMART_MIXER_PAD, GstGhostPad);
+#define GES_TYPE_SMART_MIXER_PAD             (ges_smart_mixer_pad_get_type ())
+#define GES_SMART_MIXER_PAD(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_SMART_MIXER_PAD, GESSmartMixerPad))
+#define GES_SMART_MIXER_PAD_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_SMART_MIXER_PAD, GESSmartMixerPadClass))
+#define GES_IS_SMART_MIXER_PAD(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_SMART_MIXER_PAD))
+#define GES_IS_SMART_MIXER_PAD_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_SMART_MIXER_PAD))
+#define GES_SMART_MIXER_PAD_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_SMART_MIXER_PAD, GESSmartMixerPadClass))
+
+typedef struct _GESSmartMixerPad GESSmartMixerPad;
+typedef struct _GESSmartMixerPadClass GESSmartMixerPadClass;
+
 struct _GESSmartMixerPad
 {
   GstGhostPad parent;
@@ -35,11 +43,20 @@ struct _GESSmartMixerPad
   GstSegment segment;
 };
 
+struct _GESSmartMixerPadClass
+{
+  GstGhostPadClass parent_class;
+};
+
 enum
 {
   PROP_PAD_0,
   PROP_PAD_ALPHA,
 };
+
+static GType ges_smart_mixer_pad_get_type (void);
+
+G_DEFINE_TYPE (GESSmartMixerPad, ges_smart_mixer_pad, GST_TYPE_GHOST_PAD);
 
 static void
 ges_smart_mixer_pad_get_property (GObject * object, guint prop_id,
@@ -72,8 +89,6 @@ ges_smart_mixer_pad_set_property (GObject * object, guint prop_id,
       break;
   }
 }
-
-G_DEFINE_TYPE (GESSmartMixerPad, ges_smart_mixer_pad, GST_TYPE_GHOST_PAD);
 
 static void
 ges_smart_mixer_pad_init (GESSmartMixerPad * self)
