@@ -2749,7 +2749,7 @@ gst_rtcp_packet_xr_get_block_length (GstRTCPPacket * packet)
  * gst_rtcp_packet_xr_get_rle_info:
  * @packet: a valid XR #GstRTCPPacket which is Loss RLE or Duplicate RLE report.
  * @ssrc: the SSRC of the RTP data packet source being reported upon by this report block.
- * @thining: the amount of thinning performed on the sequence number space.
+ * @thinning: the amount of thinning performed on the sequence number space.
  * @begin_seq: the first sequence number that this block reports on.
  * @end_seq: the last sequence number that this block reports on plus one.
  * @chunk_count: the number of chunks calculated by block length.
@@ -2762,7 +2762,7 @@ gst_rtcp_packet_xr_get_block_length (GstRTCPPacket * packet)
  */
 gboolean
 gst_rtcp_packet_xr_get_rle_info (GstRTCPPacket * packet, guint32 * ssrc,
-    guint8 * thining, guint16 * begin_seq, guint16 * end_seq,
+    guint8 * thinning, guint16 * begin_seq, guint16 * end_seq,
     guint32 * chunk_count)
 {
   guint8 *data;
@@ -2784,8 +2784,8 @@ gst_rtcp_packet_xr_get_rle_info (GstRTCPPacket * packet, guint32 * ssrc,
   /* skip header + current item offset */
   data += packet->offset + packet->item_offset;
 
-  if (thining)
-    *thining = data[1] & 0x0f;
+  if (thinning)
+    *thinning = data[1] & 0x0f;
 
   /* go to ssrc */
   data += 4;
@@ -2848,7 +2848,7 @@ gst_rtcp_packet_xr_get_rle_nth_chunk (GstRTCPPacket * packet,
  * gst_rtcp_packet_xr_get_prt_info:
  * @packet: a valid XR #GstRTCPPacket which has a Packet Receipt Times Report Block
  * @ssrc: the SSRC of the RTP data packet source being reported upon by this report block.
- * @thining: the amount of thinning performed on the sequence number space.
+ * @thinning: the amount of thinning performed on the sequence number space.
  * @begin_seq: the first sequence number that this block reports on.
  * @end_seq: the last sequence number that this block reports on plus one.
  *
@@ -2860,7 +2860,7 @@ gst_rtcp_packet_xr_get_rle_nth_chunk (GstRTCPPacket * packet,
  */
 gboolean
 gst_rtcp_packet_xr_get_prt_info (GstRTCPPacket * packet,
-    guint32 * ssrc, guint8 * thining, guint16 * begin_seq, guint16 * end_seq)
+    guint32 * ssrc, guint8 * thinning, guint16 * begin_seq, guint16 * end_seq)
 {
   guint8 *data;
   guint16 block_len;
@@ -2876,8 +2876,8 @@ gst_rtcp_packet_xr_get_prt_info (GstRTCPPacket * packet,
   /* skip header + current item offset */
   data += packet->offset + packet->item_offset;
 
-  if (thining)
-    *thining = data[1] & 0x0f;
+  if (thinning)
+    *thinning = data[1] & 0x0f;
 
   /* go to ssrc */
   data += 4;

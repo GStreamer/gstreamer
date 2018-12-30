@@ -526,7 +526,7 @@ guint16         gst_rtcp_packet_xr_get_block_length   (GstRTCPPacket * packet);
 
 GST_RTP_API
 gboolean        gst_rtcp_packet_xr_get_rle_info       (GstRTCPPacket * packet,
-                                                       guint32 * ssrc, guint8 * thining,
+                                                       guint32 * ssrc, guint8 * thinning,
                                                        guint16 * begin_seq, guint16 * end_seq,
                                                        guint32 * chunk_count);
 
@@ -536,7 +536,7 @@ gboolean        gst_rtcp_packet_xr_get_rle_nth_chunk  (GstRTCPPacket * packet, g
 
 GST_RTP_API
 gboolean        gst_rtcp_packet_xr_get_prt_info       (GstRTCPPacket * packet,
-                                                       guint32 * ssrc, guint8 * thining,
+                                                       guint32 * ssrc, guint8 * thinning,
                                                        guint16 * begin_seq, guint16 * end_seq);
 
 GST_RTP_API
