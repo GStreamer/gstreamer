@@ -2822,8 +2822,9 @@ gst_rtcp_packet_xr_get_rle_nth_chunk (GstRTCPPacket * packet,
   guint32 chunk_count;
   guint8 *data;
 
-  g_return_val_if_fail (gst_rtcp_packet_xr_get_rle_info (packet, NULL, NULL,
-          NULL, NULL, &chunk_count), FALSE);
+  if (!gst_rtcp_packet_xr_get_rle_info (packet, NULL, NULL, NULL, NULL,
+          &chunk_count))
+    g_return_val_if_reached (FALSE);
 
   if (nth >= chunk_count)
     return FALSE;
@@ -2917,8 +2918,9 @@ gst_rtcp_packet_xr_get_prt_by_seq (GstRTCPPacket * packet,
   guint16 begin_seq, end_seq;
   guint8 *data;
 
-  g_return_val_if_fail (gst_rtcp_packet_xr_get_prt_info (packet, NULL, NULL,
-          &begin_seq, &end_seq), FALSE);
+  if (!gst_rtcp_packet_xr_get_prt_info (packet, NULL, NULL, &begin_seq,
+          &end_seq))
+    g_return_val_if_reached (FALSE);
 
   if (seq >= end_seq || seq < begin_seq)
     return FALSE;
