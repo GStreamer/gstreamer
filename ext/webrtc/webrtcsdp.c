@@ -26,6 +26,7 @@
 #include "utils.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 #define IS_EMPTY_SDP_ATTRIBUTE(val) (val == NULL || g_strcmp0(val, "") == 0)
 
