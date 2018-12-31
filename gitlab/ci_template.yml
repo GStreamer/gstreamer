@@ -182,7 +182,6 @@ build android arm64 api28:
       ./gst-uninstalled.py
       gst-validate-launcher ${TEST_SUITE}
       -fs
-      -j=1
       --mute
       --shuffle
       --no-display
