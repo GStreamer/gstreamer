@@ -223,6 +223,12 @@ GST_START_TEST (test_bus)
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
   fail_unless (current == GST_STATE_NULL, "state is not NULL but %d", current);
 
+  /* We have to ensure that all background threads from thread pools are shut
+   * down, or otherwise they might not have had a chance yet to drop
+   * their last reference to the pipeline and then the assertion below fails
+   */
+  gst_task_cleanup_all ();
+
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline at start of cleanup", 1);
   ASSERT_OBJECT_REFCOUNT (bus, "bus at start of cleanup", 3);
 
