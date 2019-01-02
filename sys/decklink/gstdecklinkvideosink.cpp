@@ -641,6 +641,9 @@ gst_decklink_video_sink_convert_to_internal_clock (GstDecklinkVideoSink * self,
   GST_LOG_OBJECT (self, "Output timestamp %" GST_TIME_FORMAT
       " using clock epoch %" GST_TIME_FORMAT,
       GST_TIME_ARGS (*timestamp), GST_TIME_ARGS (self->output->clock_epoch));
+
+  if (clock)
+    gst_object_unref (clock);
 }
 
 /* Copied from ext/closedcaption/gstccconverter.c */
@@ -1123,7 +1126,6 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
   GstClockTime start_time;
   HRESULT res;
   bool active;
-  GstClock *clock = NULL;
 
   // Check if we're already started
   if (self->output->started) {
@@ -1159,13 +1161,11 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
   // Need to unlock to get the clock time
   g_mutex_unlock (&self->output->lock);
 
-  clock = gst_element_get_clock (element);
   start_time = gst_clock_get_internal_time (self->output->clock);
 
   g_mutex_lock (&self->output->lock);
   // Check if someone else started in the meantime
   if (self->output->started) {
-    gst_object_unref (clock);
     return;
   }
 
@@ -1181,7 +1181,6 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
       GST_ELEMENT_ERROR (self, STREAM, FAILED,
           (NULL), ("Failed to stop scheduled playback: 0x%08lx",
               (unsigned long) res));
-      gst_object_unref (clock);
       return;
     }
     // Wait until scheduled playback actually stopped
@@ -1199,19 +1198,10 @@ gst_decklink_video_sink_start_scheduled_playback (GstElement * element)
     GST_ELEMENT_ERROR (self, STREAM, FAILED,
         (NULL), ("Failed to start scheduled playback: 0x%08lx",
             (unsigned long) res));
-    gst_object_unref (clock);
     return;
   }
 
   self->output->started = TRUE;
-
-  // Need to unlock to get the clock time
-  g_mutex_unlock (&self->output->lock);
-
-  if (clock) {
-    gst_object_unref (clock);
-  }
-  g_mutex_lock (&self->output->lock);
 }
 
 static GstStateChangeReturn
