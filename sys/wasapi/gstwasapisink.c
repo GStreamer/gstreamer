@@ -577,8 +577,6 @@ gst_wasapi_sink_unprepare (GstAudioSink * asink)
 {
   GstWasapiSink *self = GST_WASAPI_SINK (asink);
 
-  CoUninitialize ();
-
   if (self->client != NULL) {
     IAudioClient_Stop (self->client);
   }
