@@ -94,26 +94,27 @@ gst_discount_buffer_new (void)
 
 GST_START_TEST (buffer_before_segment)
 {
-  GstPad *srcpad;
-  GstElement *src, *sink;
+  GstPad *srcpad, *sinkpad;
+  GstElement *sink;
   GstValidateRunner *runner;
   GstValidateReport *report;
   GstValidateMonitor *monitor;
   GList *reports;
 
   /* getting an existing element class is cheating, but easier */
-  src = gst_element_factory_make ("fakesrc", "fakesrc");
   sink = gst_element_factory_make ("fakesink", "fakesink");
 
-  fail_unless (gst_element_link (src, sink));
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  sinkpad = gst_element_get_static_pad (sink, "sink");
+  fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK);
+  gst_clear_object (&sinkpad);
 
   fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor =
-      gst_validate_monitor_factory_create (GST_OBJECT (src), runner, NULL);
-  fail_unless (GST_IS_VALIDATE_ELEMENT_MONITOR (monitor));
+      gst_validate_monitor_factory_create (GST_OBJECT (srcpad), runner, NULL);
+  fail_unless (GST_IS_VALIDATE_PAD_MONITOR (monitor));
 
-  srcpad = gst_element_get_static_pad (src, "src");
 
   /* We want to handle the src behaviour ourself */
   fail_unless (gst_pad_activate_mode (srcpad, GST_PAD_MODE_PUSH, TRUE));
@@ -137,7 +138,7 @@ GST_START_TEST (buffer_before_segment)
   /* Setup all needed event and push a new buffer (WORKS) */
   {
     _gst_check_expecting_log = FALSE;
-    gst_check_setup_events (srcpad, src, NULL, GST_FORMAT_TIME);
+    gst_check_setup_events (srcpad, sink, NULL, GST_FORMAT_TIME);
     fail_unless_equals_int (gst_pad_push (srcpad, gst_discount_buffer_new ()),
         GST_FLOW_OK);
     reports = gst_validate_runner_get_reports (runner);
@@ -152,10 +153,8 @@ GST_START_TEST (buffer_before_segment)
 
   _check_reports_refcount (srcpad, 2);
   gst_object_unref (srcpad);
-  gst_check_objects_destroyed_on_unref (src, srcpad, NULL);
   gst_check_object_destroyed_on_unref (sink);
   ASSERT_OBJECT_REFCOUNT (runner, "runner", 2);
-  gst_object_unref (monitor);
   gst_object_unref (runner);
 }
 

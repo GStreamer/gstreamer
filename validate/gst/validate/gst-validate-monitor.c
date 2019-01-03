@@ -241,17 +241,13 @@ gst_validate_monitor_do_setup (GstValidateMonitor * monitor)
 static GstValidateReportingDetails
 _get_report_level_for_pad (GstValidateRunner * runner, GstObject * pad)
 {
-  GstObject *parent;
   gchar *name;
   GstValidateReportingDetails level = GST_VALIDATE_SHOW_UNKNOWN;
-
-  parent = gst_object_get_parent (pad);
 
   name = g_strdup_printf ("%s__%s", GST_DEBUG_PAD_NAME (pad));
   level = gst_validate_runner_get_reporting_level_for_name (runner, name);
 
   g_free (name);
-  gst_object_unref (parent);
   return level;
 }
 
