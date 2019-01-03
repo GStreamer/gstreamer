@@ -274,7 +274,7 @@ gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
         GST_TIME_ARGS (frame->pts), (guint64) frame->system_frame_number);
 
     ret =
-        openh264dec->decoder->DecodeFrame2 (map_info.data, map_info.size,
+        openh264dec->decoder->DecodeFrameNoDelay (map_info.data, map_info.size,
         yuvdata, &dst_buf_info);
     gst_buffer_unmap (frame->input_buffer, &map_info);
 
