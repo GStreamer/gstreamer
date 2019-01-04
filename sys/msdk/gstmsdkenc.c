@@ -830,6 +830,7 @@ gst_msdkenc_flush_frames (GstMsdkEnc * thiz, gboolean discard)
     if (status != MFX_ERR_NONE && status != MFX_ERR_MORE_DATA) {
       GST_ELEMENT_ERROR (thiz, STREAM, ENCODE, ("Encode frame failed."),
           ("MSDK encode error (%s)", msdk_status_to_string (status)));
+      break;
     }
 
     if (task->sync_point) {
