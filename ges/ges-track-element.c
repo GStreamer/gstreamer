@@ -708,8 +708,8 @@ ges_track_element_add_child_props (GESTrackElement * self,
       gobject_klass = G_OBJECT_GET_CLASS (child);
       parray = g_object_class_list_properties (gobject_klass, &nb_specs);
       for (i = 0; i < nb_specs; i++) {
-        if ((parray[i]->flags & G_PARAM_WRITABLE) &&
-            (!whitelist || strv_find_str (whitelist, parray[i]->name))) {
+        if ((!whitelist && (parray[i]->flags & G_PARAM_WRITABLE))
+            || (strv_find_str (whitelist, parray[i]->name))) {
           ges_timeline_element_add_child_property (GES_TIMELINE_ELEMENT
               (self), parray[i], G_OBJECT (child));
         }
