@@ -33,6 +33,7 @@
 GST_DEBUG_CATEGORY (gst_omx_video_debug_category);
 #define GST_CAT_DEFAULT gst_omx_video_debug_category
 
+/* Keep synced with GST_OMX_VIDEO_SUPPORTED_FORMATS */
 GstVideoFormat
 gst_omx_video_get_format_from_omx (OMX_COLOR_FORMATTYPE omx_colorformat)
 {
