@@ -45,7 +45,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || (defined (__MINGW64_VERSION_MAJOR) && __MINGW64_VERSION_MAJOR >= 6)
 #define HAVE_BOOLEAN
 #endif
 #include <jpeglib.h>
