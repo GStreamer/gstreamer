@@ -557,6 +557,7 @@ gst_wasapi_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
 
   hr = IAudioClient_Start (self->client);
   HR_FAILED_GOTO (hr, IAudioClient::Start, beach);
+  self->client_needs_restart = FALSE;
 
   gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SINK
       (self)->ringbuffer, self->positions);
