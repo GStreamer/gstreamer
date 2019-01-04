@@ -698,7 +698,7 @@ ges_meta_container_check_meta_registered (GESMetaContainer * container,
 
   static_item = g_hash_table_lookup (data->static_items, meta_item);
   if (static_item == NULL) {
-    GST_WARNING_OBJECT (container, "Static meta %s already registered",
+    GST_WARNING_OBJECT (container, "Static meta %s has not been registered yet",
         meta_item);
 
     return FALSE;
