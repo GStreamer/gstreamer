@@ -37,7 +37,8 @@ static GQuark ges_meta_key;
 
 G_DEFINE_INTERFACE_WITH_CODE (GESMetaContainer, ges_meta_container,
     G_TYPE_OBJECT, ges_meta_key =
-    g_quark_from_static_string ("ges-meta-container-data"););
+    g_quark_from_static_string ("ges-meta-container-data");
+    );
 
 enum
 {
@@ -289,9 +290,9 @@ ges_meta_container_set_ ## name (GESMetaContainer *container,      \
  *
  * Sets the value of a given meta item
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwize
+ * Return: %TRUE if the meta could be added, %FALSE otherwise
  */
-CREATE_SETTER (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
+CREATE_SETTER (boolean, gboolean, G_TYPE_BOOLEAN, boolean);
 
 /**
  * ges_meta_container_set_int:
@@ -301,9 +302,9 @@ CREATE_SETTER (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  *
  * Sets the value of a given meta item
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwize
+ * Return: %TRUE if the meta could be added, %FALSE otherwise
  */
-    CREATE_SETTER (int, gint, G_TYPE_INT, int)
+CREATE_SETTER (int, gint, G_TYPE_INT, int);
 
 /**
  * ges_meta_container_set_uint:
@@ -313,9 +314,9 @@ CREATE_SETTER (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  *
  * Sets the value of a given meta item
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwize
+ * Return: %TRUE if the meta could be added, %FALSE otherwise
  */
-    CREATE_SETTER (uint, guint, G_TYPE_UINT, uint)
+CREATE_SETTER (uint, guint, G_TYPE_UINT, uint);
 
 /**
  * ges_meta_container_set_int64:
@@ -325,9 +326,9 @@ CREATE_SETTER (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  *
  * Sets the value of a given meta item
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwize
+ * Return: %TRUE if the meta could be added, %FALSE otherwise
  */
-    CREATE_SETTER (int64, gint64, G_TYPE_INT64, int64)
+CREATE_SETTER (int64, gint64, G_TYPE_INT64, int64);
 
 /**
  * ges_meta_container_set_uint64:
@@ -337,9 +338,9 @@ CREATE_SETTER (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  *
  * Sets the value of a given meta item
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwize
+ * Return: %TRUE if the meta could be added, %FALSE otherwise
  */
-    CREATE_SETTER (uint64, guint64, G_TYPE_UINT64, uint64)
+CREATE_SETTER (uint64, guint64, G_TYPE_UINT64, uint64);
 
 /**
  * ges_meta_container_set_float:
@@ -349,9 +350,9 @@ CREATE_SETTER (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  *
  * Sets the value of a given meta item
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwize
+ * Return: %TRUE if the meta could be added, %FALSE otherwise
  */
-    CREATE_SETTER (float, float, G_TYPE_FLOAT, float)
+CREATE_SETTER (float, float, G_TYPE_FLOAT, float);
 
 /**
  * ges_meta_container_set_double:
@@ -361,9 +362,9 @@ CREATE_SETTER (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  *
  * Sets the value of a given meta item
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwize
+ * Return: %TRUE if the meta could be added, %FALSE otherwise
  */
-CREATE_SETTER (double, double, G_TYPE_DOUBLE, double)
+CREATE_SETTER (double, double, G_TYPE_DOUBLE, double);
 
 /**
  * ges_meta_container_set_date:
@@ -373,9 +374,9 @@ CREATE_SETTER (double, double, G_TYPE_DOUBLE, double)
  *
  * Sets the value of a given meta item
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwize
+ * Return: %TRUE if the meta could be added, %FALSE otherwise
  */
-CREATE_SETTER (date, const GDate *, G_TYPE_DATE, boxed)
+CREATE_SETTER (date, const GDate *, G_TYPE_DATE, boxed);
 
 /**
  * ges_meta_container_set_date_time:
@@ -385,9 +386,9 @@ CREATE_SETTER (date, const GDate *, G_TYPE_DATE, boxed)
  *
  * Sets the value of a given meta item
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwize
+ * Return: %TRUE if the meta could be added, %FALSE otherwise
  */
-CREATE_SETTER (date_time, const GstDateTime *, GST_TYPE_DATE_TIME, boxed)
+CREATE_SETTER (date_time, const GstDateTime *, GST_TYPE_DATE_TIME, boxed);
 
 /**
 * ges_meta_container_set_string:
@@ -397,20 +398,21 @@ CREATE_SETTER (date_time, const GstDateTime *, GST_TYPE_DATE_TIME, boxed)
 *
 * Sets the value of a given meta item
 *
-* Return: %TRUE if the meta could be added, %FALSE otherwize
+* Return: %TRUE if the meta could be added, %FALSE otherwise
 */
-CREATE_SETTER (string, const gchar *, G_TYPE_STRING, string)
+CREATE_SETTER (string, const gchar *, G_TYPE_STRING, string);
 
 /**
  * ges_meta_container_set_meta:
  * @container: Target container
  * @meta_item: Name of the meta item to set
  * @value: (allow-none): Value to set
+ *
  * Sets the value of a given meta item
  *
- * Return: %TRUE if the meta could be added, %FALSE otherwize
+ * Return: %TRUE if the meta could be added, %FALSE otherwise
  */
-  gboolean
+gboolean
 ges_meta_container_set_meta (GESMetaContainer * container,
     const gchar * meta_item, const GValue * value)
 {
@@ -507,7 +509,7 @@ ges_meta_container_register_meta_ ## name (GESMetaContainer *container,\
 }
 
 /**
- * register_meta_:
+ * ges_meta_container_register_meta_boolean:
  * @container: Target container
  * @flags: The #GESMetaFlag to be used
  * @meta_item: Name of the meta item to set
@@ -517,9 +519,9 @@ ges_meta_container_register_meta_ ## name (GESMetaContainer *container,\
  * metadatas, which means that the type of the registered will be the only
  * type accepted for this meta on that particular @container.
  *
- * Return: %TRUE if the meta could be register, %FALSE otherwize
+ * Return: %TRUE if the meta could be registered, %FALSE otherwise
  */
-CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
+CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean);
 
 /**
  * ges_meta_container_register_meta_int:
@@ -532,9 +534,9 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * metadatas, which means that the type of the registered will be the only
  * type accepted for this meta on that particular @container.
  *
- * Return: %TRUE if the meta could be register, %FALSE otherwize
+ * Return: %TRUE if the meta could be registered, %FALSE otherwise
  */
-    CREATE_REGISTER_STATIC (int, gint, G_TYPE_INT, int)
+CREATE_REGISTER_STATIC (int, gint, G_TYPE_INT, int);
 
 /**
  * ges_meta_container_register_meta_uint:
@@ -547,9 +549,9 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * metadatas, which means that the type of the registered will be the only
  * type accepted for this meta on that particular @container.
  *
- * Return: %TRUE if the meta could be register, %FALSE otherwize
+ * Return: %TRUE if the meta could be registered, %FALSE otherwise
  */
-    CREATE_REGISTER_STATIC (uint, guint, G_TYPE_UINT, uint)
+CREATE_REGISTER_STATIC (uint, guint, G_TYPE_UINT, uint);
 
 /**
  * ges_meta_container_register_meta_int64:
@@ -562,9 +564,9 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * metadatas, which means that the type of the registered will be the only
  * type accepted for this meta on that particular @container.
  *
- * Return: %TRUE if the meta could be register, %FALSE otherwize
+ * Return: %TRUE if the meta could be registered, %FALSE otherwise
  */
-    CREATE_REGISTER_STATIC (int64, gint64, G_TYPE_INT64, int64)
+CREATE_REGISTER_STATIC (int64, gint64, G_TYPE_INT64, int64);
 
 /**
  * ges_meta_container_register_meta_uint64:
@@ -577,9 +579,9 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * metadatas, which means that the type of the registered will be the only
  * type accepted for this meta on that particular @container.
  *
- * Return: %TRUE if the meta could be register, %FALSE otherwize
+ * Return: %TRUE if the meta could be registered, %FALSE otherwise
  */
-    CREATE_REGISTER_STATIC (uint64, guint64, G_TYPE_UINT64, uint64)
+CREATE_REGISTER_STATIC (uint64, guint64, G_TYPE_UINT64, uint64);
 
 /**
  * ges_meta_container_register_meta_float:
@@ -592,9 +594,9 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * metadatas, which means that the type of the registered will be the only
  * type accepted for this meta on that particular @container.
  *
- * Return: %TRUE if the meta could be register, %FALSE otherwize
+ * Return: %TRUE if the meta could be registered, %FALSE otherwise
 */
-    CREATE_REGISTER_STATIC (float, float, G_TYPE_FLOAT, float)
+CREATE_REGISTER_STATIC (float, float, G_TYPE_FLOAT, float);
 
 /**
  * ges_meta_container_register_meta_double:
@@ -607,9 +609,9 @@ CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
  * metadatas, which means that the type of the registered will be the only
  * type accepted for this meta on that particular @container.
  *
- * Return: %TRUE if the meta could be register, %FALSE otherwize
+ * Return: %TRUE if the meta could be registered, %FALSE otherwise
  */
-CREATE_REGISTER_STATIC (double, double, G_TYPE_DOUBLE, double)
+CREATE_REGISTER_STATIC (double, double, G_TYPE_DOUBLE, double);
 
 /**
  * ges_meta_container_register_meta_date:
@@ -622,9 +624,9 @@ CREATE_REGISTER_STATIC (double, double, G_TYPE_DOUBLE, double)
  * metadatas, which means that the type of the registered will be the only
  * type accepted for this meta on that particular @container.
  *
- * Return: %TRUE if the meta could be register, %FALSE otherwize
+ * Return: %TRUE if the meta could be registered, %FALSE otherwise
  */
-CREATE_REGISTER_STATIC (date, const GDate *, G_TYPE_DATE, boxed)
+CREATE_REGISTER_STATIC (date, const GDate *, G_TYPE_DATE, boxed);
 
 /**
  * ges_meta_container_register_meta_date_time:
@@ -637,10 +639,10 @@ CREATE_REGISTER_STATIC (date, const GDate *, G_TYPE_DATE, boxed)
  * metadatas, which means that the type of the registered will be the only
  * type accepted for this meta on that particular @container.
  *
- * Return: %TRUE if the meta could be register, %FALSE otherwize
+ * Return: %TRUE if the meta could be registered, %FALSE otherwise
  */
 CREATE_REGISTER_STATIC (date_time, const GstDateTime *, GST_TYPE_DATE_TIME,
-    boxed)
+    boxed);
 
 /**
  * ges_meta_container_register_meta_string:
@@ -653,9 +655,9 @@ CREATE_REGISTER_STATIC (date_time, const GstDateTime *, GST_TYPE_DATE_TIME,
  * metadatas, which means that the type of the registered will be the only
  * type accepted for this meta on that particular @container.
  *
- * Return: %TRUE if the meta could be register, %FALSE otherwize
+ * Return: %TRUE if the meta could be registered, %FALSE otherwise
  */
-CREATE_REGISTER_STATIC (string, const gchar *, G_TYPE_STRING, string)
+CREATE_REGISTER_STATIC (string, const gchar *, G_TYPE_STRING, string);
 
 /**
  * ges_meta_container_register_meta:
@@ -668,9 +670,9 @@ CREATE_REGISTER_STATIC (string, const gchar *, G_TYPE_STRING, string)
  * metadatas, which means that the type of the registered will be the only
  * type accepted for this meta on that particular @container.
  *
- * Return: %TRUE if the static meta could be added, %FALSE otherwize
+ * Return: %TRUE if the static meta could be added, %FALSE otherwise
  */
-  gboolean
+gboolean
 ges_meta_container_register_meta (GESMetaContainer * container,
     GESMetaFlag flags, const gchar * meta_item, const GValue * value)
 {
@@ -735,33 +737,40 @@ ges_meta_container_get_ ## name (GESMetaContainer *container,    \
  * @container: Target container
  * @meta_item: Name of the meta item to get
  * @dest: (out): Destination to which value of meta item will be copied
+ *
  * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
 CREATE_GETTER (boolean, gboolean *);
+
 /**
  * ges_meta_container_get_int:
  * @container: Target container
  * @meta_item: Name of the meta item to get
  * @dest: (out): Destination to which value of meta item will be copied
+ *
  * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
 CREATE_GETTER (int, gint *);
+
 /**
  * ges_meta_container_get_uint:
  * @container: Target container
  * @meta_item: Name of the meta item to get
  * @dest: (out): Destination to which value of meta item will be copied
+ *
  * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
 CREATE_GETTER (uint, guint *);
+
 /**
  * ges_meta_container_get_double:
  * @container: Target container
  * @meta_item: Name of the meta item to get
  * @dest: (out): Destination to which value of meta item will be copied
+ *
  * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
@@ -772,6 +781,7 @@ CREATE_GETTER (double, gdouble *);
  * @container: Target container
  * @meta_item: Name of the meta item to get
  * @dest: (out): Destination to which value of meta item will be copied
+ *
  * Gets the value of a given meta item, returns %FALSE if @meta_item
  * can not be found.
  */
@@ -802,7 +812,8 @@ ges_meta_container_get_int64 (GESMetaContainer * container,
  * @container: Target container
  * @meta_item: Name of the meta item to get
  * @dest: (out): Destination to which value of meta item will be copied
- * Gets the value of a given meta item, returns NULL if @meta_item
+ *
+ * Gets the value of a given meta item, returns %FALSE if @meta_item
  * can not be found.
  */
 gboolean
@@ -832,7 +843,8 @@ ges_meta_container_get_uint64 (GESMetaContainer * container,
  * @container: Target container
  * @meta_item: Name of the meta item to get
  * @dest: (out): Destination to which value of meta item will be copied
- * Gets the value of a given meta item, returns FALSE if @meta_item
+ *
+ * Gets the value of a given meta item, returns %FALSE if @meta_item
  * can not be found.
  */
 gboolean
@@ -861,6 +873,7 @@ ges_meta_container_get_float (GESMetaContainer * container,
  * ges_meta_container_get_string:
  * @container: Target container
  * @meta_item: Name of the meta item to get
+ *
  * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
@@ -906,6 +919,7 @@ ges_meta_container_get_meta (GESMetaContainer * container, const gchar * key)
  * @container: Target container
  * @meta_item: Name of the meta item to get
  * @dest: (out): Destination to which value of meta item will be copied
+ *
  * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
@@ -916,6 +930,7 @@ CREATE_GETTER (date, GDate **);
  * @container: Target container
  * @meta_item: Name of the meta item to get
  * @dest: (out): Destination to which value of meta item will be copied
+ *
  * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
