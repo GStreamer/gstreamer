@@ -149,6 +149,9 @@ def get_subprocess_env(options, gst_version):
                 if os.path.exists(uninstalled):
                     pkg_dirs.add(os.path.dirname(path))
 
+            if path.endswith('gstomx.conf'):
+                prepend_env_var(env, 'GST_OMX_CONFIG_DIR', os.path.dirname(path))
+
         for p in presets:
             prepend_env_var(env, 'GST_PRESET_PATH', p)
 
