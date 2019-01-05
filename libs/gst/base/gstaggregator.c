@@ -3203,7 +3203,7 @@ gst_aggregator_get_allocator (GstAggregator * self,
  *
  * This is a simple #GstAggregator::get_next_time implementation that
  * just looks at the #GstSegment on the srcpad of the aggregator and bases
- * the next time on the running there there.
+ * the next time on the running time there.
  *
  * This is the desired behaviour in most cases where you have a live source
  * and you have a dead line based aggregator subclass.
