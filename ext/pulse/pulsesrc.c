@@ -622,7 +622,7 @@ gst_pulsesrc_set_stream_volume (GstPulseSrc * pulsesrc, gdouble volume)
   if (!pulsesrc->mainloop)
     goto no_mainloop;
 
-  if (!pulsesrc->source_output_idx)
+  if (pulsesrc->source_output_idx == PA_INVALID_INDEX)
     goto no_index;
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
@@ -677,7 +677,7 @@ gst_pulsesrc_set_stream_mute (GstPulseSrc * pulsesrc, gboolean mute)
   if (!pulsesrc->mainloop)
     goto no_mainloop;
 
-  if (!pulsesrc->source_output_idx)
+  if (pulsesrc->source_output_idx == PA_INVALID_INDEX)
     goto no_index;
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
@@ -730,7 +730,7 @@ gst_pulsesrc_set_stream_device (GstPulseSrc * pulsesrc, const gchar * device)
   if (!pulsesrc->mainloop)
     goto no_mainloop;
 
-  if (!pulsesrc->source_output_idx)
+  if (pulsesrc->source_output_idx == PA_INVALID_INDEX)
     goto no_index;
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
