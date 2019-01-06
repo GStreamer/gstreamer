@@ -162,41 +162,50 @@ GST_END_TEST;
 
 GST_START_TEST (buffer_outside_segment)
 {
-  GstPad *srcpad;
+  GstPad *srcpad, *pad;
   GstBuffer *buffer;
   GstSegment segment;
-  GstElement *src, *sink;
-  gchar *fakesrc_klass;
+  GstElement *sink, *identity;
+  gchar *identity_klass;
   GstValidateReport *report;
   GstValidateRunner *runner;
   GstValidateMonitor *monitor;
   GList *reports;
 
-  /* getting an existing element class is cheating, but easier */
-  src = gst_element_factory_make ("fakesrc", "fakesrc");
+  srcpad = gst_pad_new ("src", GST_PAD_SRC);
+  identity = gst_element_factory_make ("identity", NULL);
   sink = gst_element_factory_make ("fakesink", "fakesink");
 
-  fakesrc_klass =
-      g_strdup (gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (src),
-          "klass"));
+  identity_klass =
+      g_strdup (gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS
+          (identity), "klass"));
 
   /* Testing if a buffer is outside a segment is only done for buffer outputed
    * from decoders for the moment, fake a Decoder so that the test is properly
    * executed */
-  gst_element_class_add_metadata (GST_ELEMENT_GET_CLASS (src), "klass",
+  gst_element_class_add_metadata (GST_ELEMENT_GET_CLASS (identity), "klass",
       "Decoder");
+
+  pad = gst_element_get_static_pad (identity, "sink");
+  fail_unless (gst_pad_link (srcpad, pad) == GST_PAD_LINK_OK);
+  gst_clear_object (&pad);
+
+  fail_unless (gst_element_link (identity, sink));
 
   fail_unless (g_setenv ("GST_VALIDATE_REPORTING_DETAILS", "all", TRUE));
   runner = gst_validate_runner_new ();
   monitor =
-      gst_validate_monitor_factory_create (GST_OBJECT (src), runner, NULL);
+      gst_validate_monitor_factory_create (GST_OBJECT (identity), runner, NULL);
   gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
 
-  srcpad = gst_element_get_static_pad (src, "src");
+  pad = gst_element_get_static_pad (identity, "src");
   fail_unless (GST_IS_VALIDATE_PAD_MONITOR (g_object_get_data ((GObject *)
-              srcpad, "validate-monitor")));
+              pad, "validate-monitor")));
+  gst_clear_object (&pad);
 
   fail_unless (gst_pad_activate_mode (srcpad, GST_PAD_MODE_PUSH, TRUE));
+  fail_unless_equals_int (gst_element_set_state (identity, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
   fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_PLAYING),
       GST_STATE_CHANGE_ASYNC);
 
@@ -212,7 +221,12 @@ GST_START_TEST (buffer_outside_segment)
     buffer = gst_discont_buffer_new ();
     GST_BUFFER_PTS (buffer) = 10 * GST_SECOND;
     GST_BUFFER_DURATION (buffer) = GST_SECOND;
-    fail_unless (gst_pad_push (srcpad, buffer));
+    fail_if (GST_PAD_IS_FLUSHING (gst_element_get_static_pad (identity,
+                "sink")));
+    fail_if (GST_PAD_IS_FLUSHING (gst_element_get_static_pad (identity,
+                "src")));
+    fail_if (GST_PAD_IS_FLUSHING (gst_element_get_static_pad (sink, "sink")));
+    fail_unless_equals_int (gst_pad_push (srcpad, buffer), GST_FLOW_OK);
 
     reports = gst_validate_runner_get_reports (runner);
     assert_equals_int (g_list_length (reports), 1);
@@ -224,7 +238,8 @@ GST_START_TEST (buffer_outside_segment)
 
   /* Pushing a buffer inside the segment */
   {
-    fail_unless (gst_pad_push (srcpad, gst_discont_buffer_new ()));
+    fail_unless_equals_int (gst_pad_push (srcpad, gst_discont_buffer_new ()),
+        GST_FLOW_OK);
     reports = gst_validate_runner_get_reports (runner);
     assert_equals_int (g_list_length (reports), 1);
     g_list_free_full (reports, (GDestroyNotify) gst_validate_report_unref);
@@ -235,14 +250,17 @@ GST_START_TEST (buffer_outside_segment)
   fail_unless (gst_pad_activate_mode (srcpad, GST_PAD_MODE_PUSH, FALSE));
   gst_object_unref (srcpad);
 
-  gst_element_class_add_metadata (GST_ELEMENT_GET_CLASS (src), "klass",
-      fakesrc_klass);
-  g_free (fakesrc_klass);
-  gst_object_unref (src);
+  gst_element_class_add_metadata (GST_ELEMENT_GET_CLASS (identity), "klass",
+      identity_klass);
+  g_free (identity_klass);
   gst_object_unref (runner);
 
+  fail_unless_equals_int (gst_element_set_state (identity, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_element_unlink (identity, sink);
   fail_unless_equals_int (gst_element_set_state (sink, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (identity);
   gst_object_unref (sink);
   gst_object_unref (monitor);
 }
