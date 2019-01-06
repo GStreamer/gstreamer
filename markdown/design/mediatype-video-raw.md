@@ -18,7 +18,8 @@
    view. use the frame id to get access to the different views.
 
  - **interlace-mode**, `G_TYPE_STRING`: Default progressive. The interlace
-   mode. The following values are possible:
+   mode (also see the [interlaced video design docs](design/interlaced-video.md)).
+   The following values are possible:
 
    - *"progressive"*: all frames are progressive
 
@@ -36,6 +37,13 @@
      height property, pads specifying the "fields" property
      must be prepared for this. This mode requires multiple
      GstVideoMeta metadata to describe the fields.
+
+   - *"alternate"*: one field per buffer, with buffer flags indicating
+     whether the field is the top field (`GST_VIDEO_BUFFER_FLAG_TOP_FIELD`) or
+     bottom field (`GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD`). Top and bottom fields
+     are expected to alternate in this mode. Caps for this interlace mode must
+     also carry a `format:Interlaced` caps feature (`GST_CAPS_FEATURE_FORMAT_INTERLACED`)
+     to ensure backwards compatibility for the new mode (Since: 1.16)
 
  - **chroma-site**, `G_TYPE_STRING`: Default `GST_VIDEO_CHROMA_SITE_UNKNOWN`.
    The chroma siting of the video frames.

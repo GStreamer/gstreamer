@@ -100,3 +100,24 @@ For example in the following sequence, the third buffer would be mixed
 (yes, it is a strange pattern, but it can happen):
 
     AtAb AtBb BtCb CtDb DtDb
+
+### Alternate fields
+
+Since: 1.16
+
+If the video info interlace mode is **"alternate"**, then each buffer
+carries a single field of interlaced video.
+
+`GST_VIDEO_BUFFER_FLAG_TOP_FIELD` and `GST_VIDEO_BUFFER_FLAG_BOTTOM_FIELD`
+indicate whether the buffer carries a top or bottom field. The order of
+buffers/fields in the stream and the timestamps on the buffers indicate the
+temporal order of the fields.
+
+Top and bottom fields are expected to alternate in this mode.
+
+Caps for this interlace mode must also carry a `format:Interlaced` caps feature
+(`GST_CAPS_FEATURE_FORMAT_INTERLACED`) to ensure backwards compatibility for
+the new mode.
+
+The frame rate in the caps still signals the frame rate, so the notional field
+rate will be twice the frame rate from the caps (see `GST_VIDEO_INFO_FIELD_RATE_N`).
