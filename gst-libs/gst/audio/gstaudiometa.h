@@ -146,7 +146,7 @@ typedef struct _GstAudioMeta GstAudioMeta;
  *
  * It is a requirement for non-interleaved buffers to have this metadata
  * attached and to be mapped with gst_audio_buffer_map() in order to ensure
- * correct handling of cliping and channel reordering.
+ * correct handling of clipping and channel reordering.
  *
  * The different channels in @offsets are always in the GStreamer channel order.
  * Zero-copy channel reordering can be implemented by swapping the values in
