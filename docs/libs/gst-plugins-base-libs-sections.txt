@@ -2796,6 +2796,7 @@ GST_VIDEO_FPS_RANGE
 GST_VIDEO_FORMATS_ALL
 GST_VIDEO_CAPS_MAKE
 GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+GST_CAPS_FEATURE_FORMAT_INTERLACED
 <SUBSECTION Standard>
 gst_video_format_get_type
 GST_TYPE_VIDEO_FORMAT
@@ -2855,7 +2856,9 @@ GST_VIDEO_INFO_IS_GRAY
 GST_VIDEO_INFO_HAS_ALPHA
 GST_VIDEO_INFO_INTERLACE_MODE
 GST_VIDEO_INFO_IS_INTERLACED
+GST_VIDEO_INFO_FIELD_HEIGHT
 GST_VIDEO_INFO_FIELD_ORDER
+GST_VIDEO_INFO_FIELD_RATE_N
 GST_VIDEO_INFO_FLAGS
 GST_VIDEO_INFO_WIDTH
 GST_VIDEO_INFO_HEIGHT
@@ -2890,6 +2893,7 @@ gst_video_info_new
 gst_video_info_copy
 gst_video_info_free
 gst_video_info_set_format
+gst_video_info_set_interlaced_format
 gst_video_info_from_caps
 gst_video_info_to_caps
 gst_video_info_convert
@@ -3407,6 +3411,7 @@ gst_video_decoder_get_estimate_rate
 gst_video_decoder_get_output_state
 gst_video_decoder_set_estimate_rate
 gst_video_decoder_set_output_state
+gst_video_decoder_set_interlaced_output_state
 gst_video_decoder_set_max_errors
 gst_video_decoder_set_packetized
 gst_video_decoder_get_needs_format
