@@ -490,7 +490,7 @@ gst_validate_report_init (void)
   uuid = g_getenv ("GST_VALIDATE_UUID");
 
   if (server_env && !uuid) {
-    GST_ERROR ("No GST_VALIDATE_UUID specified !");
+    GST_INFO ("No GST_VALIDATE_UUID specified !");
   } else if (server_env) {
     GstUri *server_uri = gst_uri_from_string (server_env);
 
