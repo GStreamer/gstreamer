@@ -2554,6 +2554,17 @@ gst_omx_port_wait_buffers_released (GstOMXPort * port, GstClockTime timeout)
   return err;
 }
 
+void
+gst_omx_port_requeue_buffer (GstOMXPort * port, GstOMXBuffer * buf)
+{
+  g_mutex_lock (&port->comp->lock);
+  g_queue_push_tail (&port->pending_buffers, buf);
+  g_mutex_unlock (&port->comp->lock);
+
+  /* awake gst_omx_port_acquire_buffer() */
+  gst_omx_component_send_message (port->comp, NULL);
+}
+
 /* NOTE: Uses comp->lock and comp->messages_lock */
 OMX_ERRORTYPE
 gst_omx_port_set_enabled (GstOMXPort * port, gboolean enabled)

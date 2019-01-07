@@ -669,7 +669,7 @@ gst_omx_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
                 gst_omx_error_to_string (err), err));
       }
     } else if (pool->port->port_def.eDir == OMX_DirInput) {
-      g_queue_push_tail (&pool->port->pending_buffers, omx_buf);
+      gst_omx_port_requeue_buffer (pool->port, omx_buf);
     }
   }
 }

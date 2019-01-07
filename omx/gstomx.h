@@ -461,6 +461,7 @@ OMX_ERRORTYPE     gst_omx_port_use_eglimages (GstOMXPort *port, const GList *ima
 OMX_ERRORTYPE     gst_omx_port_deallocate_buffers (GstOMXPort *port);
 OMX_ERRORTYPE     gst_omx_port_populate (GstOMXPort *port);
 OMX_ERRORTYPE     gst_omx_port_wait_buffers_released (GstOMXPort * port, GstClockTime timeout);
+void              gst_omx_port_requeue_buffer (GstOMXPort * port, GstOMXBuffer * buf);
 
 OMX_ERRORTYPE     gst_omx_port_mark_reconfigured (GstOMXPort * port);
 
