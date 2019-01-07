@@ -140,7 +140,6 @@ build android arm64 api28:
     # pipelines_tcp.test_that_tcpserversink_and_tcpclientsrc_are_symmetrical: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/221
     # elements_capsfilter.test_unfixed_downstream_caps: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/335
     # gst_rtspclientsink.test_record: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/55
-    # elements_splitmux.test_splitmuxsrc_sparse_streams: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/542
     BLACKLIST: >
       -b check.gst-plugins-base.elements_multisocketsink.test_sending_buffers_with_9_gstmemories
       -b check.gst-plugins-base.elements_multisocketsink.test_client_next_keyframe
@@ -157,7 +156,6 @@ build android arm64 api28:
       -b check.gst-plugins-base.pipelines_tcp.test_that_tcpserversink_and_tcpclientsrc_are_symmetrical
       -b check.gstreamer.elements_capsfilter.test_unfixed_downstream_caps
       -b check.gst-rtsp-server.gst_rtspclientsink.test_record
-      -b check.gst-plugins-good.elements_splitmux.test_splitmuxsrc_sparse_streams
   script:
     - cd gst-build/
     - >
