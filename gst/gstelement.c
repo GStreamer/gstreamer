@@ -2241,6 +2241,10 @@ gst_element_is_locked_state (GstElement * element)
  * Locks the state of an element, so state changes of the parent don't affect
  * this element anymore.
  *
+ * Note that this is racy if the state lock of the parent bin is not taken.
+ * The parent bin might've just checked the flag in another thread and as the
+ * next step proceed to change the child element's state.
+ *
  * MT safe.
  *
  * Returns: %TRUE if the state was changed, %FALSE if bad parameters were given
