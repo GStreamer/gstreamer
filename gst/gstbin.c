@@ -1864,12 +1864,27 @@ gst_bin_remove (GstBin * bin, GstElement * element)
   if (G_UNLIKELY (bclass->remove_element == NULL))
     goto no_function;
 
+  /* We need to take the state lock here to ensure that we're
+   * not currently just before setting the state of this child
+   * element. Otherwise it can happen that we removed the element
+   * here and e.g. set it to NULL state, and shortly afterwards
+   * have another thread set it to a higher state again as part of
+   * a state change for the whole bin.
+   *
+   * When adding an element to the bin this is not needed as we
+   * require callers to always ensure after adding to the bin that
+   * the new element is set to the correct state.
+   */
+  GST_STATE_LOCK (bin);
+
   GST_CAT_DEBUG (GST_CAT_PARENTAGE, "removing element %s from bin %s",
       GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
 
   GST_TRACER_BIN_REMOVE_PRE (bin, element);
   result = bclass->remove_element (bin, element);
   GST_TRACER_BIN_REMOVE_POST (bin, result);
+
+  GST_STATE_UNLOCK (bin);
 
   return result;
 
