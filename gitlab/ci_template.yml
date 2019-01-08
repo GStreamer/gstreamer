@@ -142,6 +142,7 @@ build android arm64 api28:
     # mpegtsmux.test_align: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/844
     # shm.test_shm_live: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/847
     # splitmux.test_splitmuxsink_async: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/531
+    # splitmux.test_splitmuxsrc_sparse_streams: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/544
     # netsim.netsim_stress: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/849
     # nle_complex.test_one_expandable_another: https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/55
     # pipelines_tcp.test_that_tcpserversink_and_tcpclientsrc_are_symmetrical: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/221
@@ -154,6 +155,7 @@ build android arm64 api28:
       -b check.gst-plugins-good.elements_rtpbin.test_sender_eos
       -b check.gst-plugins-good.elements_flvmux.test_incrementing_timestamps
       -b check.gst-plugins-good.elements_flvmux.test_video_caps_late
+      -b check.gst-plugins-good.elements_splitmux.test_splitmuxsrc_sparse_streams
       -b check.gst-plugins-bad.elements_dtls.test_data_transfer
       -b check.gst-plugins-bad.elements_dtls.test_create_and_unref
       -b check.gst-rtsp-server.gst_rtspserver.test_shared_tcp
