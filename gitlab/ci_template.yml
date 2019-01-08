@@ -8,6 +8,12 @@ stages:
   - 'full tests'
 
 variables:
+  CERBERO_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:24811579312cd55ab818836bcaff3ba2c777e4dd'
+  FEDORA_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
+  ANDROID_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/ubuntu:aa13631e38cb4e1e4ee1c869aa523952dcd8cca7'
+  INDENT_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/gst-indent:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
+  MANIFEST_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/build-manifest:f085d34a32cb8cac95cbd420344efeaa647d08d5'
+
   GIT_STRATEGY: none
   DEFAULT_MESON_ARGS: >
     --werror
@@ -22,7 +28,7 @@ variables:
     -Dsharp=disabled
 
 manifest:
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/build-manifest:f085d34a32cb8cac95cbd420344efeaa647d08d5'
+  image: $MANIFEST_IMAGE
   stage: 'preparation'
   script:
     - cd /gst-ci
@@ -35,7 +41,7 @@ manifest:
       - "manifest.xml"
 
 gst indent:
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/gst-indent:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
+  image: $INDENT_IMAGE
   stage: 'preparation'
   variables:
     GIT_STRATEGY: 'fetch'
@@ -104,11 +110,11 @@ gst indent:
 build fedora x86_64:
   extends: '.build'
   stage: 'build'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
+  image: $FEDORA_IMAGE
 
 build android arm64 api28:
   extends: '.build'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/ubuntu:aa13631e38cb4e1e4ee1c869aa523952dcd8cca7'
+  image: $ANDROID_IMAGE
   variables:
     MESON_ARGS: >
       -Dbad=enabled
@@ -186,7 +192,7 @@ build android arm64 api28:
       - $CI_PROJECT_NAME == "cerbero"
 
 .test fedora x86_64:
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
+  image: $FEDORA_IMAGE
   extends: '.test'
   dependencies:
     - build fedora x86_64
@@ -293,14 +299,14 @@ check fedora:
 
 .build cerbero fedora x86_64:
   extends: '.cerbero'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:24811579312cd55ab818836bcaff3ba2c777e4dd'
+  image: $CERBERO_IMAGE
   variables:
     CONFIG: "linux.config"
     ARCH: "linux_x86_64"
 
 .cerbero deps fedora x86_64:
   extends: '.cerbero deps'
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:24811579312cd55ab818836bcaff3ba2c777e4dd'
+  image: $CERBERO_IMAGE
   variables:
     CONFIG: "linux.config"
     ARCH: "linux_x86_64"
