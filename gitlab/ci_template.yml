@@ -263,6 +263,7 @@ check fedora:
 #
 # Parameters:
 # CONFIG: The name of the configuration file to use
+# ARCH: The cerbero <os>_<cpu> (used in cache key)
 #
 # Produce an artifact with the dist/ and .cache along
 # with the associated build-tools.
@@ -280,7 +281,8 @@ check fedora:
           gst-libav-1.0 gst-validate gst-editing-services-1.0 libnice
     - $CERBERO fetch-cache --skip-fetch --job-id=${CI_JOB_ID}
     - tar -C ${CERBERO_HOME} -czf $CERBERO_DEPS
-              build-tools/ dist/ *.cache
+              build-tools build-tools.cache
+              dist/${ARCH} ${ARCH}.cache
     - ccache -s
   only:
     variables:
@@ -307,6 +309,7 @@ check fedora:
   extends: '.cerbero deps'
   variables:
     CONFIG: "linux.config"
+    ARCH: "linux_x86_64"
 
 # This indirection allow overriding the image without passing again CONFIG
 build cerbero fedora x86_64:
@@ -324,6 +327,7 @@ build cerbero fedora x86_64:
   extends: '.cerbero deps'
   variables:
     CONFIG: "cross-win32.cbc"
+    ARCH: "windows_x86"
 
 build cerbero cross win32:
   extends: '.build cerbero cross win32'
@@ -337,6 +341,7 @@ build cerbero cross win32:
   extends: '.cerbero deps'
   variables:
     CONFIG: "cross-win64.cbc"
+    ARCH: "windows_x86_64"
 
 build cerbero cross win64:
   extends: '.build cerbero cross win64'
