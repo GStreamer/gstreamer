@@ -64,6 +64,11 @@ if cxx.has_header('mfx/mfxdefs.h', args: '-I' + mfx_incdir)
   mfx_incdir = join_paths([mfx_incdir, 'mfx'])
 endif
 
+if cxx.has_header('mfxvp9.h', args: '-I' + mfx_incdir)
+  msdk_sources += [ 'gstmsdkvp9dec.c' ]
+  cdata.set10('USE_MSDK_VP9_DEC', 1)
+endif
+
 if host_machine.system() == 'windows'
   legacy_stdio_dep = cc.find_library('legacy_stdio_definitions', required: true)
   d3d11_dep = cc.find_library('d3d11', required: true)
