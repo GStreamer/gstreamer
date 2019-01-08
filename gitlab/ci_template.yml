@@ -153,17 +153,29 @@ build android arm64 api28:
     # elements_capsfilter.test_unfixed_downstream_caps: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/335
     # gst_rtspclientsink.test_record: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/55
     # camerabin.test_image_video_cycle: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/864
+    #
+    # TO FURTHER INVESTIGATE:
+    # check.gst-plugins-base.libs_gstglcolorconvert.test_reorder_buffer
+    # check.gstreamer.gst_gstelement.test_foreach_pad
+    # check.gstreamer.libs_baseparse.parser_pull_short_read
+    # check.gstreamer.pipelines_seek.test_loopback_2
+    # check.gst-plugins-base.elements_appsrc.test_appsrc_blocked_on_caps
     BLACKLIST: >
       -b check.gstreamer.pipelines_parse_launch.delayed_link
       -b check.gstreamer.gst_gstsystemclock.test_async_sync_interaction
       -b check.gstreamer.gst_gstsystemclock.test_periodic_multi
+      -b check.gstreamer.pipelines_seek.test_loopback_2
+      -b check.gstreamer.gst_gstelement.test_foreach_pad
+      -b check.gstreamer.libs_baseparse.parser_pull_short_read
       -b check.gst-plugins-base.elements_multisocketsink.test_sending_buffers_with_9_gstmemories
       -b check.gst-plugins-base.elements_multisocketsink.test_client_next_keyframe
+      -b check.gst-plugins-base.libs_gstglcolorconvert.test_reorder_buffer
       -b check.gst-plugins-good.elements_souphttpsrc.test_icy_stream
       -b check.gst-plugins-good.elements_rtpbin.test_sender_eos
       -b check.gst-plugins-good.elements_rtpbin.test_cleanup_recv
       -b check.gst-plugins-good.elements_flvmux.test_incrementing_timestamps
       -b check.gst-plugins-good.elements_flvmux.test_video_caps_late
+      -b check.gst-plugins-base.elements_appsrc.test_appsrc_blocked_on_caps
       -b check.gst-plugins-good.elements_splitmux.test_splitmuxsrc_sparse_streams
       -b check.gst-plugins-bad.elements_dtls.test_data_transfer
       -b check.gst-plugins-bad.elements_dtls.test_create_and_unref
