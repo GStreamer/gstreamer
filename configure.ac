@@ -1071,7 +1071,7 @@ AG_GST_CHECK_FEATURE(MSDK, [Intel MediaSDK], msdk, [
                    [MSDK_PREFIX="$MFX_HOME"],
                    [MSDK_PREFIX="/opt/intel/media"])])
     MSDK_CFLAGS="-I$MSDK_PREFIX/include"
-    MSDK_LIBS="-L$MSDK_PREFIX/lib/lin_x64 -lmfx -ldl"
+    MSDK_LIBS="-L$MSDK_PREFIX/lib/lin_x64 -L$MSDK_PREFIX/lib/x64 -L$MSDK_PREFIX/lib64 -L$MSDK_PREFIX/lib -lmfx -ldl"
     AC_SUBST(MSDK_CFLAGS)
     AC_SUBST(MSDK_LIBS)
 
