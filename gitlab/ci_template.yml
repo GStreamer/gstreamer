@@ -134,6 +134,7 @@ build android arm64 api28:
     # elements_multisocketsink.test_sending_buffers_with_9_gstmemories: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/525
     # elements_multisocketsink.test_client_next_keyframe: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/516
     # flvmux.test_incrementing_timestamps: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/530
+    # flvmux.test_video_caps_late: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/543
     # rtpbin.test_sender_eos: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/527
     # souphttpsrc.test_icy_stream: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/307
     # rtspserver.test_shared_tcp: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/54
@@ -152,6 +153,7 @@ build android arm64 api28:
       -b check.gst-plugins-good.elements_souphttpsrc.test_icy_stream
       -b check.gst-plugins-good.elements_rtpbin.test_sender_eos
       -b check.gst-plugins-good.elements_flvmux.test_incrementing_timestamps
+      -b check.gst-plugins-good.elements_flvmux.test_video_caps_late
       -b check.gst-plugins-bad.elements_dtls.test_data_transfer
       -b check.gst-plugins-bad.elements_dtls.test_create_and_unref
       -b check.gst-rtsp-server.gst_rtspserver.test_shared_tcp
