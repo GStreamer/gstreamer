@@ -33,13 +33,8 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_MFX_MFXDEFS_H
-#  include <mfx/mfxplugin.h>
-#  include <mfx/mfxvp8.h>
-#else
-#  include "mfxplugin.h"
-#  include "mfxvp8.h"
-#endif
+#include <mfxplugin.h>
+#include <mfxvp8.h>
 
 #include "gstmsdkvp8enc.h"
 

@@ -61,7 +61,7 @@ endif
 
 # Old versions of MediaSDK don't have the 'mfx' directory prefix
 if cxx.has_header('mfx/mfxdefs.h', args: '-I' + mfx_incdir)
-  cdata.set('HAVE_MFX_MFXDEFS_H', 1)
+  mfx_incdir = join_paths([mfx_incdir, 'mfx'])
 endif
 
 if host_machine.system() == 'windows'

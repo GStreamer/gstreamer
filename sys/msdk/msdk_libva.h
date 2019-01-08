@@ -40,11 +40,7 @@
 #include <gst/gst.h>
 #include <va/va.h>
 
-#ifdef HAVE_MFX_MFXDEFS_H
-#  include <mfx/mfxvideo.h>
-#else
-#  include "mfxvideo.h"
-#endif
+#include <mfxvideo.h>
 
 G_BEGIN_DECLS
 

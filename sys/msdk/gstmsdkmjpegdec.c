@@ -33,13 +33,8 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_MFX_MFXDEFS_H
-#  include <mfx/mfxstructures.h>
-#  include <mfx/mfxjpeg.h>
-#else
-#  include "mfxstructures.h"
-#  include "mfxjpeg.h"
-#endif
+#include <mfxstructures.h>
+#include <mfxjpeg.h>
 
 #include "gstmsdkmjpegdec.h"
 

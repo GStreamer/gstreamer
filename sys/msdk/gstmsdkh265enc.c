@@ -33,11 +33,7 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_MFX_MFXDEFS_H
-#  include <mfx/mfxplugin.h>
-#else
-#  include "mfxplugin.h"
-#endif
+#include <mfxplugin.h>
 
 #include <gst/allocators/gstdmabuf.h>
 

@@ -1058,7 +1058,9 @@ AG_GST_CHECK_FEATURE(MSDK, [Intel MediaSDK], msdk, [
     CPPFLAGS="$LIBMFX_CFLAGS $save_CPPFLAGS"
     AC_CHECK_HEADER(mfx/mfxdefs.h, [HAVE_MFX_MFXDEFS_H=1], [HAVE_MFX_MFXDEFS_H=0])
     if test $HAVE_MFX_MFXDEFS_H -eq 1; then
-      AC_DEFINE(HAVE_MFX_MFXDEFS_H, 1, [Define if mfx/mfxdefs.h available])
+      MFX_INCDIR="`$PKG_CONFIG --variable=includedir libmfx`"
+      MSDK_CFLAGS="-I$MFX_INCDIR/mfx"
+      AC_SUBST(MSDK_CFLAGS)
     fi
     CPPFLAGS="$save_CPPFLAGS"
   ], [
@@ -1070,7 +1072,7 @@ AG_GST_CHECK_FEATURE(MSDK, [Intel MediaSDK], msdk, [
             [AS_IF([test "x$MFX_HOME" != "x"],
                    [MSDK_PREFIX="$MFX_HOME"],
                    [MSDK_PREFIX="/opt/intel/media"])])
-    MSDK_CFLAGS="-I$MSDK_PREFIX/include"
+    MSDK_CFLAGS="-I$MSDK_PREFIX/include -I$MSDK_PREFIX/include/mfx"
     MSDK_LIBS="-L$MSDK_PREFIX/lib/lin_x64 -L$MSDK_PREFIX/lib/x64 -L$MSDK_PREFIX/lib64 -L$MSDK_PREFIX/lib -lmfx -ldl"
     AC_SUBST(MSDK_CFLAGS)
     AC_SUBST(MSDK_LIBS)
@@ -1113,21 +1115,12 @@ AG_GST_CHECK_FEATURE(MSDK, [Intel MediaSDK], msdk, [
   [
     #include <mfxplugin.h>
   ])
-  dnl check the availability of vp9 apis in PREFIX/include/mfx
-  AC_CHECK_HEADER(mfx/mfxvp9.h, [HAVE_MFX_MFXVP9_H=1], [HAVE_MFX_MFXVP9_H=0],
-  [
-    #include <mfx/mfxplugin.h>
-  ])
-  if test $HAVE_MFX_MFXVP9_H -eq 1; then
-    AC_DEFINE(HAVE_MFX_MFXVP9_H, 1, [Define if mfx/mfxdefs.h available])
-  fi
 
-  if test $HAVE_MFXVP9_H -eq 1 \
-    -o $HAVE_MFX_MFXVP9_H -eq 1; then
+  if test $HAVE_MFXVP9_H -eq 1; then
       USE_MSDK_VP9_DEC=1
       AC_DEFINE(USE_MSDK_VP9_DEC, 1, [Define if MediaSDK VP9 decoder api is available])
   fi
-  ], [USE_MSDK_VP9_DEC=0])
+], [USE_MSDK_VP9_DEC=0])
 AM_CONDITIONAL(USE_MSDK_LIBVA,
     test "x$HAVE_MSDK" = "xyes" -a "x$HAVE_LIBVA_DRM" = "xyes")
 AM_CONDITIONAL([USE_MSDK_VP9_DEC],

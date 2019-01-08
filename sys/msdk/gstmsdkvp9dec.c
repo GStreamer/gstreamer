@@ -35,13 +35,8 @@
 #  include <config.h>
 #endif
 
-#ifdef HAVE_MFX_MFXVP9_H
-#  include <mfx/mfxplugin.h>
-#  include <mfx/mfxvp9.h>
-#else
-#  include "mfxplugin.h"
-#  include "mfxvp9.h"
-#endif
+#include <mfxplugin.h>
+#include <mfxvp9.h>
 
 #include "gstmsdkvp9dec.h"
 
