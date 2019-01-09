@@ -50,15 +50,20 @@ struct _GstSplitMuxSrc
 
   GstSplitMuxPartReader **parts;
   guint        num_parts;
+  guint        num_prepared_parts;
+  guint        num_created_parts;
   guint        cur_part;
 
+  gboolean async_pending;
   gboolean pads_complete;
+
   GMutex pads_lock;
   GList  *pads; /* pads_lock */
   guint n_pads;
   guint n_notlinked;
 
   GstClockTime total_duration;
+  GstClockTime end_offset;
   GstSegment play_segment;
   guint32 segment_seqnum;
 };

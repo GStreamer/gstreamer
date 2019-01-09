@@ -64,6 +64,7 @@ struct _GstSplitMuxPartReader
   GstElement *typefind;
   GstElement *demux;
 
+  gboolean async_pending;
   gboolean active;
   gboolean running;
   gboolean prepared;
