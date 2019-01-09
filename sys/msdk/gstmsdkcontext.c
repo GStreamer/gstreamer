@@ -290,12 +290,6 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
     return NULL;
   }
 
-  status = MFXJoinSession (parent_priv->session, priv->session);
-  if (status != MFX_ERR_NONE) {
-    GST_ERROR ("Failed to join mfx session");
-    return NULL;
-  }
-
   priv->is_joined = TRUE;
   priv->hardware = parent_priv->hardware;
   priv->job_type = parent_priv->job_type;
