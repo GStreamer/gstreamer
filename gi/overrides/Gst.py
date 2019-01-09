@@ -156,6 +156,22 @@ class Pad(Gst.Pad):
     def query_caps(self, filter=None):
         return Gst.Pad.query_caps(self, filter)
 
+    def set_caps(self, caps):
+        if not isinstance(caps, Gst.Caps):
+            raise TypeError("%s is not a Gst.Caps." % (type(caps)))
+
+        if not caps.is_fixed():
+            return False
+
+        event = Gst.Event.new_caps(caps)
+
+        if self.direction == Gst.PadDirection.SRC:
+            res = self.push_event(event)
+        else:
+            res = self.send_event(event)
+
+        return res
+
     def link(self, pad):
         ret = Gst.Pad.link(self, pad)
         if ret != Gst.PadLinkReturn.OK:
