@@ -781,7 +781,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
           goto done;
         }
 
-        w = (guint) gst_util_uint64_scale_int (h, num, den);
+        w = (guint) gst_util_uint64_scale_int_round (h, num, den);
         gst_structure_fixate_field_nearest_int (outs, "width", w);
 
         goto done;
@@ -833,7 +833,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
         goto done;
       }
 
-      w = (guint) gst_util_uint64_scale_int (h, num, den);
+      w = (guint) gst_util_uint64_scale_int_round (h, num, den);
       gst_structure_fixate_field_nearest_int (outs, "width", w);
       if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
           set_par_n != set_par_d)
@@ -863,7 +863,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
           goto done;
         }
 
-        h = (guint) gst_util_uint64_scale_int (w, den, num);
+        h = (guint) gst_util_uint64_scale_int_round (w, den, num);
         gst_structure_fixate_field_nearest_int (outs, "height", h);
 
         goto done;
@@ -914,7 +914,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
         goto done;
       }
 
-      h = (guint) gst_util_uint64_scale_int (w, den, num);
+      h = (guint) gst_util_uint64_scale_int_round (w, den, num);
       gst_structure_fixate_field_nearest_int (outs, "height", h);
       if (gst_structure_has_field (outs, "pixel-aspect-ratio") ||
           set_par_n != set_par_d)
@@ -944,7 +944,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
       /* This might have failed but try to scale the width
        * to keep the DAR nonetheless */
-      w = (guint) gst_util_uint64_scale_int (set_h, num, den);
+      w = (guint) gst_util_uint64_scale_int_round (set_h, num, den);
       gst_structure_fixate_field_nearest_int (tmp, "width", w);
       gst_structure_get_int (tmp, "width", &set_w);
       gst_structure_free (tmp);
@@ -966,7 +966,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
 
       /* This might have failed but try to scale the width
        * to keep the DAR nonetheless */
-      h = (guint) gst_util_uint64_scale_int (set_w, den, num);
+      h = (guint) gst_util_uint64_scale_int_round (set_w, den, num);
       gst_structure_fixate_field_nearest_int (tmp, "height", h);
       gst_structure_get_int (tmp, "height", &set_h);
       gst_structure_free (tmp);
@@ -1039,7 +1039,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
         goto done;
       }
 
-      w = (guint) gst_util_uint64_scale_int (set_h, num, den);
+      w = (guint) gst_util_uint64_scale_int_round (set_h, num, den);
       tmp = gst_structure_copy (outs);
       gst_structure_fixate_field_nearest_int (tmp, "width", w);
       gst_structure_get_int (tmp, "width", &tmp2);
@@ -1056,7 +1056,7 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
       }
 
       /* ... or try the same with the height */
-      h = (guint) gst_util_uint64_scale_int (set_w, den, num);
+      h = (guint) gst_util_uint64_scale_int_round (set_w, den, num);
       tmp = gst_structure_copy (outs);
       gst_structure_fixate_field_nearest_int (tmp, "height", h);
       gst_structure_get_int (tmp, "height", &tmp2);
