@@ -633,6 +633,11 @@ GST_START_TEST (test_negotiation)
       ("video/x-raw,format=(string)AYUV,width=320,height=240,pixel-aspect-ratio=1/1",
       "video/x-raw,format=(string)AYUV,width=200,height=200,pixel-aspect-ratio=1/2",
       200, 200, 1, 2);
+
+  _test_negotiation
+      ("video/x-raw,format=(string)AYUV,width=854,height=480",
+      "video/x-raw,format=(string)AYUV,width=[2, 512, 2],height=[2, 512, 2],pixel-aspect-ratio=1/1",
+      512, 288, 1, 1);
 }
 
 GST_END_TEST;
