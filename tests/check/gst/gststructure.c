@@ -438,17 +438,66 @@ GST_END_TEST;
 GST_START_TEST (test_fixate)
 {
   GstStructure *s;
+  gint i;
 
   s = gst_structure_new ("name",
       "int", G_TYPE_INT, 5,
-      "intrange", GST_TYPE_INT_RANGE, 5, 10,
-      "intrange2", GST_TYPE_INT_RANGE, 5, 10, NULL);
+      "intrange", GST_TYPE_INT_RANGE, 10, 20,
+      "intrange2", GST_TYPE_INT_RANGE, 10, 20,
+      "intrange3", GST_TYPE_INT_RANGE, 10, 20, NULL);
 
+  /* basic test */
   fail_if (gst_structure_fixate_field_nearest_int (s, "int", 5));
-  fail_unless (gst_structure_fixate_field_nearest_int (s, "intrange", 5));
-  fail_if (gst_structure_fixate_field_nearest_int (s, "intrange", 5));
-  fail_unless (gst_structure_fixate_field_nearest_int (s, "intrange2", 15));
-  fail_if (gst_structure_fixate_field_nearest_int (s, "intrange2", 15));
+  fail_unless (gst_structure_fixate_field_nearest_int (s, "intrange", 15));
+  fail_if (gst_structure_fixate_field_nearest_int (s, "intrange", 15));
+  fail_unless (gst_structure_get_int (s, "intrange", &i));
+  fail_unless_equals_int (i, 15);
+
+  /* test range min */
+  fail_unless (gst_structure_fixate_field_nearest_int (s, "intrange2", 5));
+  fail_unless (gst_structure_get_int (s, "intrange2", &i));
+  fail_unless_equals_int (i, 10);
+
+  /* test range max */
+  fail_unless (gst_structure_fixate_field_nearest_int (s, "intrange3", 25));
+  fail_unless (gst_structure_get_int (s, "intrange3", &i));
+  fail_unless_equals_int (i, 20);
+
+  gst_structure_free (s);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_fixate_stepped)
+{
+  GstStructure *s;
+  GValue v = G_VALUE_INIT;
+  gint i;
+
+  s = gst_structure_new_empty ("name");
+
+  g_value_init (&v, GST_TYPE_INT_RANGE);
+  gst_value_set_int_range_step (&v, 10, 20, 5);
+  gst_structure_set_value (s, "intrange1", &v);
+  gst_structure_set_value (s, "intrange2", &v);
+  gst_structure_set_value (s, "intrange3", &v);
+  g_value_unset (&v);
+
+  /* exact */
+  fail_unless (gst_structure_fixate_field_nearest_int (s, "intrange1", 15));
+  fail_unless (gst_structure_get_int (s, "intrange1", &i));
+  fail_unless_equals_int (i, 15);
+
+  /* round down */
+  fail_unless (gst_structure_fixate_field_nearest_int (s, "intrange2", 12));
+  fail_unless (gst_structure_get_int (s, "intrange2", &i));
+  fail_unless_equals_int (i, 10);
+
+  /* round up */
+  fail_unless (gst_structure_fixate_field_nearest_int (s, "intrange3", 13));
+  fail_unless (gst_structure_get_int (s, "intrange3", &i));
+  fail_unless_equals_int (i, 15);
+
   gst_structure_free (s);
 }
 
@@ -905,6 +954,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_complete_structure);
   tcase_add_test (tc_chain, test_structure_new);
   tcase_add_test (tc_chain, test_fixate);
+  tcase_add_test (tc_chain, test_fixate_stepped);
   tcase_add_test (tc_chain, test_fixate_frac_list);
   tcase_add_test (tc_chain, test_is_subset_equal_array_list);
   tcase_add_test (tc_chain, test_is_subset_different_name);
