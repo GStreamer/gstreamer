@@ -978,10 +978,14 @@ gst_video_scale_fixate_caps (GstBaseTransform * base, GstPadDirection direction,
         goto done;
       }
 
-      /* If all this failed, keep the height that was nearest to the orignal
-       * height and the nearest possible width. This changes the DAR but
-       * there's not much else to do here.
+      /* If all this failed, keep the dimensions with the DAR that was closest
+       * to the correct DAR. This changes the DAR but there's not much else to
+       * do here.
        */
+      if (set_w * ABS (set_h - h) < ABS (f_w - w) * f_h) {
+        f_h = set_h;
+        f_w = set_w;
+      }
       gst_structure_set (outs, "width", G_TYPE_INT, f_w, "height", G_TYPE_INT,
           f_h, NULL);
       goto done;
