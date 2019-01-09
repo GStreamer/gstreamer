@@ -351,9 +351,14 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 
     status = MFXVideoVPP_GetVideoParam (session, &thiz->vpp_param);
     if (status < MFX_ERR_NONE) {
+      mfxStatus status1;
       GST_ERROR_OBJECT (thiz, "Get VPP Parameters failed (%s)",
           msdk_status_to_string (status));
-      MFXVideoVPP_Close (session);
+      status1 = MFXVideoVPP_Close (session);
+      if (status1 != MFX_ERR_NONE && status1 != MFX_ERR_NOT_INITIALIZED)
+        GST_WARNING_OBJECT (thiz, "VPP close failed (%s)",
+            msdk_status_to_string (status1));
+
       goto no_vpp;
     } else if (status > MFX_ERR_NONE) {
       GST_WARNING_OBJECT (thiz, "Get VPP Parameters returned: %s",
@@ -689,8 +694,10 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
    * is used in MSDK samples
    * #define MSDK_ENC_WAIT_INTERVAL 300000
    */
-  MFXVideoCORE_SyncOperation (gst_msdk_context_get_session (thiz->context),
-      task->sync_point, 300000);
+  if (MFXVideoCORE_SyncOperation (gst_msdk_context_get_session (thiz->context),
+          task->sync_point, 300000) != MFX_ERR_NONE)
+    GST_WARNING_OBJECT (thiz, "failed to do sync operation");
+
   if (!discard && task->output_bitstream.DataLength) {
     GstBuffer *out_buf = NULL;
     guint8 *data =

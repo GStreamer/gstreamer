@@ -307,6 +307,14 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
   if (priv->hardware) {
     status = MFXVideoCORE_SetHandle (priv->session, MFX_HANDLE_VA_DISPLAY,
         (mfxHDL) parent_priv->dpy);
+
+    if (status != MFX_ERR_NONE) {
+      GST_ERROR ("Setting VA handle failed (%s)",
+          msdk_status_to_string (status));
+      g_object_unref (obj);
+      return NULL;
+    }
+
   }
 #endif
 

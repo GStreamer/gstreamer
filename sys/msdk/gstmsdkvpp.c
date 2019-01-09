@@ -701,8 +701,10 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
      * is used in MSDK samples
      * #define MSDK_VPP_WAIT_INTERVAL 300000
      */
-    if (sync_point)
-      MFXVideoCORE_SyncOperation (session, sync_point, 300000);
+    if (sync_point &&
+        MFXVideoCORE_SyncOperation (session, sync_point,
+            300000) != MFX_ERR_NONE)
+      GST_WARNING_OBJECT (thiz, "failed to do sync operation");
 
     /* More than one output buffers are generated */
     if (status == MFX_ERR_MORE_SURFACE) {
