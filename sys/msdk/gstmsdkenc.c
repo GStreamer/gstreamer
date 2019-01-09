@@ -874,7 +874,7 @@ gst_msdkenc_create_buffer_pool (GstMsdkEnc * thiz, GstCaps * caps,
 
   if (!gst_video_info_from_caps (&info, caps)) {
     GST_INFO_OBJECT (thiz, "failed to get video info");
-    return FALSE;
+    return NULL;
   }
 
   gst_msdk_set_video_alignment (&info, &align);
@@ -913,20 +913,20 @@ gst_msdkenc_create_buffer_pool (GstMsdkEnc * thiz, GstCaps * caps,
 error_no_pool:
   {
     GST_INFO_OBJECT (thiz, "failed to create bufferpool");
-    return FALSE;
+    return NULL;
   }
 error_no_allocator:
   {
     GST_INFO_OBJECT (thiz, "failed to create allocator");
     gst_object_unref (pool);
-    return FALSE;
+    return NULL;
   }
 error_pool_config:
   {
     GST_INFO_OBJECT (thiz, "failed to set config");
     gst_object_unref (pool);
     gst_object_unref (allocator);
-    return FALSE;
+    return NULL;
   }
 }
 
