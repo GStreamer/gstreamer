@@ -2208,12 +2208,19 @@ gst_structure_fixate_field_nearest_int (GstStructure * structure,
     /* already fixed */
     return FALSE;
   } else if (G_VALUE_TYPE (value) == GST_TYPE_INT_RANGE) {
-    int min, max;
+    int min, max, step;
 
     min = gst_value_get_int_range_min (value);
     max = gst_value_get_int_range_max (value);
+    step = gst_value_get_int_range_step (value);
 
     target = CLAMP (target, min, max);
+    if (G_UNLIKELY (step != 1)) {
+      gint rem = target % step;
+      target -= rem;
+      if (rem > step / 2)
+        target += step;
+    }
 
     gst_structure_set (structure, field_name, G_TYPE_INT, target, NULL);
     return TRUE;
