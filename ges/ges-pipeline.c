@@ -278,6 +278,7 @@ ges_pipeline_dispose (GObject * object)
         _timeline_track_added_cb, self);
     g_signal_handlers_disconnect_by_func (self->priv->timeline,
         _timeline_track_removed_cb, self);
+    gst_element_set_state (GST_ELEMENT (self->priv->timeline), GST_STATE_NULL);
   }
 
   G_OBJECT_CLASS (ges_pipeline_parent_class)->dispose (object);
