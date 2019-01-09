@@ -304,22 +304,20 @@ error_no_pool:
 error_no_video_info:
   {
     GST_INFO_OBJECT (thiz, "Failed to get Video info from caps");
+    gst_object_unref (pool);
     return NULL;
   }
 error_no_allocator:
   {
     GST_INFO_OBJECT (thiz, "Failed to create allocator");
-    if (pool)
-      gst_object_unref (pool);
+    gst_object_unref (pool);
     return NULL;
   }
 error_pool_config:
   {
     GST_INFO_OBJECT (thiz, "Failed to set config");
-    if (pool)
-      gst_object_unref (pool);
-    if (allocator)
-      gst_object_unref (allocator);
+    gst_object_unref (pool);
+    gst_object_unref (allocator);
     return NULL;
   }
 }
