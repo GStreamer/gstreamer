@@ -757,11 +757,14 @@ error_no_pool:
 error_no_allocator:
   {
     GST_INFO_OBJECT (thiz, "failed to create allocator");
+    gst_object_unref (pool);
     return NULL;
   }
 error_pool_config:
   {
     GST_INFO_OBJECT (thiz, "failed to set config");
+    gst_object_unref (pool);
+    gst_object_unref (allocator);
     return NULL;
   }
 }
