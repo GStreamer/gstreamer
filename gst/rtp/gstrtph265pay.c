@@ -1068,7 +1068,7 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
 
         /* If it's the last fragment and the end of this au, mark the end of
          * slice */
-        gst_rtp_buffer_set_marker (&rtp, marker);
+        gst_rtp_buffer_set_marker (&rtp, end && marker);
 
         /* FU Header */
         payload[2] = (start << 7) | (end << 6) | (nalType & 0x3f);
