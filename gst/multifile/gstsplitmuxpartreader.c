@@ -37,14 +37,6 @@ GST_DEBUG_CATEGORY_STATIC (splitmux_part_debug);
 #define SPLITMUX_PART_TYPE_LOCK(p) g_mutex_lock(&(p)->type_lock)
 #define SPLITMUX_PART_TYPE_UNLOCK(p) g_mutex_unlock(&(p)->type_lock)
 
-enum
-{
-  SIGNAL_PREPARED,
-  LAST_SIGNAL
-};
-
-static guint part_reader_signals[LAST_SIGNAL] = { 0 };
-
 typedef struct _GstSplitMuxPartPad
 {
   GstPad parent;
@@ -622,10 +614,6 @@ gst_splitmux_part_reader_class_init (GstSplitMuxPartReaderClass * klass)
   gobject_klass->dispose = splitmux_part_reader_dispose;
   gobject_klass->finalize = splitmux_part_reader_finalize;
 
-  part_reader_signals[SIGNAL_PREPARED] =
-      g_signal_new ("prepared", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstSplitMuxPartReaderClass,
-          prepared), NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
   gstelement_class->change_state = gst_splitmux_part_reader_change_state;
   gstelement_class->send_event = gst_splitmux_part_reader_send_event;
 
@@ -909,11 +897,9 @@ gst_splitmux_part_reader_finish_measuring_streams (GstSplitMuxPartReader *
   if (reader->prep_state == PART_STATE_PREPARING_RESET_FOR_READY) {
     /* Fire the prepared signal and go to READY state */
     GST_DEBUG_OBJECT (reader,
-        "Stream measuring complete. File %s is now ready. Firing prepared signal",
-        reader->path);
+        "Stream measuring complete. File %s is now ready", reader->path);
     reader->prep_state = PART_STATE_READY;
     SPLITMUX_PART_UNLOCK (reader);
-    g_signal_emit (reader, part_reader_signals[SIGNAL_PREPARED], 0, NULL);
     do_async_done (reader);
   } else {
     SPLITMUX_PART_UNLOCK (reader);

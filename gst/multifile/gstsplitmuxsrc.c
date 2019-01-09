@@ -108,8 +108,6 @@ static void splitmux_src_uri_handler_init (gpointer g_iface,
 
 static GstPad *gst_splitmux_find_output_pad (GstSplitMuxPartReader * part,
     GstPad * pad, GstSplitMuxSrc * splitmux);
-static void gst_splitmux_part_prepared (GstSplitMuxPartReader * reader,
-    GstSplitMuxSrc * splitmux);
 static gboolean gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux,
     SplitMuxSrcPad * pad);
 static gboolean gst_splitmux_check_new_caps (SplitMuxSrcPad * splitpad,
@@ -397,10 +395,6 @@ gst_splitmux_src_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-static gboolean gst_splitmux_src_prepare_next_part (GstSplitMuxSrc * splitmux);
-static gboolean gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux,
-    guint part, GstSeekFlags extra_flags);
-
 static void
 gst_splitmux_src_activate_first_part (GstSplitMuxSrc * splitmux)
 {
@@ -419,6 +413,7 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ASYNC_DONE:{
       guint idx = splitmux->num_prepared_parts;
+      gboolean need_no_more_pads;
 
       if (idx >= splitmux->num_parts) {
         /* Shouldn't really happen! */
@@ -429,6 +424,17 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
 
       GST_DEBUG_OBJECT (splitmux, "Prepared file part %s (%u)",
           splitmux->parts[idx]->path, idx);
+
+      /* signal no-more-pads as we have all pads at this point now */
+      SPLITMUX_SRC_LOCK (splitmux);
+      need_no_more_pads = !splitmux->pads_complete;
+      splitmux->pads_complete = TRUE;
+      SPLITMUX_SRC_UNLOCK (splitmux);
+
+      if (need_no_more_pads) {
+        GST_DEBUG_OBJECT (splitmux, "Signalling no-more-pads");
+        gst_element_no_more_pads (GST_ELEMENT_CAST (splitmux));
+      }
 
       /* Extend our total duration to cover this part */
       GST_OBJECT_LOCK (splitmux);
@@ -443,8 +449,9 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
       GST_DEBUG_OBJECT (splitmux,
           "Duration %" GST_TIME_FORMAT ", total duration now: %" GST_TIME_FORMAT
           " and end offset %" GST_TIME_FORMAT,
-          gst_splitmux_part_reader_get_duration (splitmux->parts[idx]),
-          splitmux->total_duration, splitmux->end_offset);
+          GST_TIME_ARGS (gst_splitmux_part_reader_get_duration (splitmux->parts
+                  [idx])), GST_TIME_ARGS (splitmux->total_duration),
+          GST_TIME_ARGS (splitmux->end_offset));
 
       splitmux->num_prepared_parts++;
 
@@ -526,9 +533,6 @@ gst_splitmux_part_create (GstSplitMuxSrc * splitmux, char *filename)
   GstBus *bus;
 
   r = g_object_new (GST_TYPE_SPLITMUX_PART_READER, NULL);
-
-  g_signal_connect (r, "prepared", (GCallback) gst_splitmux_part_prepared,
-      splitmux);
 
   gst_splitmux_part_reader_set_callbacks (r, splitmux,
       (GstSplitMuxPartReaderPadCb) gst_splitmux_find_output_pad);
@@ -1079,24 +1083,6 @@ pad_not_found:
       ("Stream part %s contains extra unknown pad %" GST_PTR_FORMAT,
           part->path, pad));
   return NULL;
-}
-
-static void
-gst_splitmux_part_prepared (GstSplitMuxPartReader * reader,
-    GstSplitMuxSrc * splitmux)
-{
-  gboolean need_no_more_pads;
-
-  GST_LOG_OBJECT (splitmux, "Part %" GST_PTR_FORMAT " prepared", reader);
-  SPLITMUX_SRC_LOCK (splitmux);
-  need_no_more_pads = !splitmux->pads_complete;
-  splitmux->pads_complete = TRUE;
-  SPLITMUX_SRC_UNLOCK (splitmux);
-
-  if (need_no_more_pads) {
-    GST_DEBUG_OBJECT (splitmux, "Signalling no-more-pads");
-    gst_element_no_more_pads (GST_ELEMENT_CAST (splitmux));
-  }
 }
 
 static void
