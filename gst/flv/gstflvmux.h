@@ -93,6 +93,7 @@ struct _GstFlvMux {
   GstFlvMuxPad *video_pad;
   gboolean streamable;
   gchar *metadatacreator;
+  gchar *encoder;
 
   GstTagList *tags;
   gboolean new_tags;

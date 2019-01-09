@@ -53,7 +53,8 @@ enum
 {
   PROP_0,
   PROP_STREAMABLE,
-  PROP_METADATACREATOR
+  PROP_METADATACREATOR,
+  PROP_ENCODER
 };
 
 #define DEFAULT_STREAMABLE FALSE
@@ -230,6 +231,11 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
           "The value of metadatacreator in the meta packet.",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_ENCODER,
+      g_param_spec_string ("encoder", "encoder",
+          "The value of encoder in the meta packet.",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstaggregator_class->create_new_pad =
       GST_DEBUG_FUNCPTR (gst_flv_mux_create_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_flv_mux_release_pad);
@@ -265,6 +271,7 @@ gst_flv_mux_init (GstFlvMux * mux)
   /* property */
   mux->streamable = DEFAULT_STREAMABLE;
   mux->metadatacreator = g_strdup (DEFAULT_METADATACREATOR);
+  mux->encoder = g_strdup (DEFAULT_METADATACREATOR);
 
   mux->new_tags = FALSE;
 
@@ -278,6 +285,7 @@ gst_flv_mux_finalize (GObject * object)
 
   gst_flv_mux_reset (GST_ELEMENT (object));
   g_free (mux->metadatacreator);
+  g_free (mux->encoder);
 
   G_OBJECT_CLASS (gst_flv_mux_parent_class)->finalize (object);
 }
@@ -1059,7 +1067,18 @@ tags:
   data[19] = (strlen (mux->metadatacreator)) & 0xff;
   memcpy (&data[20], mux->metadatacreator, strlen (mux->metadatacreator));
   script_tag = gst_buffer_append (script_tag, tmp);
+  tags_written++;
 
+  _gst_buffer_new_and_alloc (2 + 7 + 1 + 2 + strlen (mux->encoder),
+      &tmp, &data);
+  data[0] = 0;                  /* 7 bytes name */
+  data[1] = 7;
+  memcpy (&data[2], "encoder", 7);
+  data[9] = 2;                  /* string */
+  data[10] = (strlen (mux->encoder) >> 8) & 0xff;
+  data[11] = (strlen (mux->encoder)) & 0xff;
+  memcpy (&data[12], mux->encoder, strlen (mux->encoder));
+  script_tag = gst_buffer_append (script_tag, tmp);
   tags_written++;
 
   {
@@ -1908,6 +1927,9 @@ gst_flv_mux_get_property (GObject * object,
     case PROP_METADATACREATOR:
       g_value_set_string (value, mux->metadatacreator);
       break;
+    case PROP_ENCODER:
+      g_value_set_string (value, mux->encoder);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1937,6 +1959,15 @@ gst_flv_mux_set_property (GObject * object,
         mux->metadatacreator = g_strdup (DEFAULT_METADATACREATOR);
       } else {
         mux->metadatacreator = g_value_dup_string (value);
+      }
+      break;
+    case PROP_ENCODER:
+      g_free (mux->encoder);
+      if (!g_value_get_string (value)) {
+        GST_WARNING_OBJECT (mux, "encoder property can not be NULL");
+        mux->encoder = g_strdup (DEFAULT_METADATACREATOR);
+      } else {
+        mux->encoder = g_value_dup_string (value);
       }
       break;
     default:
