@@ -2455,6 +2455,20 @@ nle_composition_change_state (GstElement * element, GstStateChange transition)
 
   res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
+  if (res == GST_STATE_CHANGE_FAILURE) {
+    GST_ERROR_OBJECT (comp, "state change failure %s => %s",
+        gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+        gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+
+    comp->priv->tearing_down_stack = TRUE;
+    _stop_task (comp);
+    nle_composition_reset (comp);
+    gst_element_set_state (comp->priv->current_bin, GST_STATE_NULL);
+    comp->priv->tearing_down_stack = FALSE;
+
+    return res;
+  }
+
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       comp->priv->tearing_down_stack = FALSE;
@@ -2877,9 +2891,17 @@ _activate_new_stack (NleComposition * comp)
   GST_DEBUG_OBJECT (comp, "New stack activated!");
 
 resync_state:
-  gst_element_set_locked_state (priv->current_bin, FALSE);
+  if (!gst_element_set_locked_state (priv->current_bin, FALSE)) {
+    GST_ERROR_OBJECT (comp, "set locked state failure");
+    return FALSE;
+  }
+
   GST_DEBUG ("going back to parent state");
-  gst_element_sync_state_with_parent (priv->current_bin);
+  if (!gst_element_sync_state_with_parent (priv->current_bin)) {
+    GST_ERROR_OBJECT (comp, "Cannot sync current stack's state");
+    return FALSE;
+  }
+
   GST_DEBUG ("gone back to parent state");
 
   return TRUE;
