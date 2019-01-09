@@ -422,7 +422,8 @@ gst_flv_demux_parse_metadata_item (GstFlvDemux * demux, GstByteReader * reader,
       } else if (!strcmp (tag_name, "title")) {
         gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
             GST_TAG_TITLE, s, NULL);
-      } else if (!strcmp (tag_name, "metadatacreator")) {
+      } else if (!strcmp (tag_name, "metadatacreator")
+          || !strcmp (tag_name, "encoder")) {
         gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
             GST_TAG_ENCODER, s, NULL);
       } else {
