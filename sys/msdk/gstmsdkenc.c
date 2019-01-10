@@ -1824,10 +1824,11 @@ gst_msdkenc_install_common_properties (GstMsdkEncClass * klass)
       0, G_MAXUINT16, PROP_MAX_FRAME_SIZE_DEFAULT,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  /* Set the same upper bound with bitrate */
   obj_properties[GST_MSDKENC_PROP_MAX_VBV_BITRATE] =
       g_param_spec_uint ("max-vbv-bitrate", "Max VBV Bitrate",
       "Maximum bitrate(kbit/sec) at which data enters Video Buffering Verifier (0: auto-calculate)",
-      0, G_MAXUINT16, PROP_MAX_VBV_BITRATE_DEFAULT,
+      0, 2000 * 1024, PROP_MAX_VBV_BITRATE_DEFAULT,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_properties[GST_MSDKENC_PROP_AVBR_ACCURACY] =
