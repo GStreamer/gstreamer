@@ -131,11 +131,15 @@ build android arm64 api28:
     # note the -b at the start of each line
     # Can't comment inline sadly
     # FIXME: get this into gst-validate-launcher KNOWN_ISSUES
+    # gstreamer.pipelines_parse_launch.delayed_link: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/345
+    # gstreamer.gst_gstsystemclock.test_async_sync_interaction: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/346
+    # gstreamer.gst_gstsystemclock.test_periodic_multi: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/347
     # elements_multisocketsink.test_sending_buffers_with_9_gstmemories: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/525
     # elements_multisocketsink.test_client_next_keyframe: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/516
     # flvmux.test_incrementing_timestamps: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/530
     # flvmux.test_video_caps_late: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/543
     # rtpbin.test_sender_eos: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/527
+    # rtpbin.test_cleanup_recv: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/546
     # souphttpsrc.test_icy_stream: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/307
     # rtspserver.test_shared_tcp: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/54
     # dtls: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/811
@@ -149,10 +153,14 @@ build android arm64 api28:
     # elements_capsfilter.test_unfixed_downstream_caps: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/335
     # gst_rtspclientsink.test_record: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/55
     BLACKLIST: >
+      -b check.gstreamer.pipelines_parse_launch.delayed_link
+      -b check.gstreamer.gst_gstsystemclock.test_async_sync_interaction
+      -b check.gstreamer.gst_gstsystemclock.test_periodic_multi
       -b check.gst-plugins-base.elements_multisocketsink.test_sending_buffers_with_9_gstmemories
       -b check.gst-plugins-base.elements_multisocketsink.test_client_next_keyframe
       -b check.gst-plugins-good.elements_souphttpsrc.test_icy_stream
       -b check.gst-plugins-good.elements_rtpbin.test_sender_eos
+      -b check.gst-plugins-good.elements_rtpbin.test_cleanup_recv
       -b check.gst-plugins-good.elements_flvmux.test_incrementing_timestamps
       -b check.gst-plugins-good.elements_flvmux.test_video_caps_late
       -b check.gst-plugins-good.elements_splitmux.test_splitmuxsrc_sparse_streams
