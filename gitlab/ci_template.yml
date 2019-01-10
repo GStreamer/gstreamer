@@ -241,7 +241,6 @@ check fedora:
     - mkdir -p /builds/gstreamer
     - ln -sf ${CI_PROJECT_DIR} /builds/gstreamer/cerbero
     - rsync -aH /cerbero/ .
-    - mkdir -p ${CERBERO_HOME}
     - test -f ${CERBERO_DEPS} && tar -C ${CERBERO_HOME} -xf ${CERBERO_DEPS}
     - echo "home_dir = \"${CERBERO_HOME}\"" >> localconf.cbc
     - echo "local_sources = \"${CERBERO_SOURCES}\"" >> localconf.cbc
