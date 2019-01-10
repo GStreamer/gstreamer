@@ -134,6 +134,7 @@ build android arm64 api28:
     # gstreamer.pipelines_parse_launch.delayed_link: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/345
     # gstreamer.gst_gstsystemclock.test_async_sync_interaction: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/346
     # gstreamer.gst_gstsystemclock.test_periodic_multi: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/347
+    # gstreamer.gst_gstsystemclock.test_periodic_shot: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/348
     # elements_multisocketsink.test_sending_buffers_with_9_gstmemories: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/525
     # elements_multisocketsink.test_client_next_keyframe: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/516
     # flvmux.test_incrementing_timestamps: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/530
@@ -146,13 +147,18 @@ build android arm64 api28:
     # mpegtsmux.test_align: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/844
     # shm.test_shm_live: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/847
     # splitmux.test_splitmuxsink_async: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/531
+    # splitmux.test_splitmuxsrc_caps_change: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/547
     # splitmux.test_splitmuxsrc_sparse_streams: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/544
     # netsim.netsim_stress: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/849
     # nle_complex.test_one_expandable_another: https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/55
+    # nle_simple.test_simplest: https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/57
+    # ges_basic.test_ges_pipeline_change_stat: https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/58
     # pipelines_tcp.test_that_tcpserversink_and_tcpclientsrc_are_symmetrical: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/221
     # elements_capsfilter.test_unfixed_downstream_caps: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/335
     # gst_rtspclientsink.test_record: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/55
     # camerabin.test_image_video_cycle: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/864
+    # camerabin.test_single_video_recording: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/864#note_101558
+    # camerabin.test_multiple_video_recordings: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/864#note_101646
     #
     # TO FURTHER INVESTIGATE:
     # check.gst-plugins-base.libs_gstglcolorconvert.test_reorder_buffer
@@ -164,6 +170,7 @@ build android arm64 api28:
       -b check.gstreamer.pipelines_parse_launch.delayed_link
       -b check.gstreamer.gst_gstsystemclock.test_async_sync_interaction
       -b check.gstreamer.gst_gstsystemclock.test_periodic_multi
+      -b check.gstreamer.gst_gstsystemclock.test_periodic_shot
       -b check.gstreamer.pipelines_seek.test_loopback_2
       -b check.gstreamer.gst_gstelement.test_foreach_pad
       -b check.gstreamer.libs_baseparse.parser_pull_short_read
@@ -177,14 +184,19 @@ build android arm64 api28:
       -b check.gst-plugins-good.elements_flvmux.test_video_caps_late
       -b check.gst-plugins-base.elements_appsrc.test_appsrc_blocked_on_caps
       -b check.gst-plugins-good.elements_splitmux.test_splitmuxsrc_sparse_streams
+      -b check.gst-plugins-good.elements_splitmux.test_splitmuxsrc_caps_change
       -b check.gst-plugins-bad.elements_dtls.test_data_transfer
       -b check.gst-plugins-bad.elements_dtls.test_create_and_unref
       -b check.gst-plugins-bad.elements_camerabin.test_image_video_cycle
+      -b check.gst-plugins-bad.elements_camerabin.test_single_video_recording
+      -b check.gst-plugins-bad.elements_camerabin.test_multiple_video_recordings
       -b check.gst-rtsp-server.gst_rtspserver.test_shared_tcp
       -b check.gst-plugins-bad.elements_shm.test_shm_live
       -b check.gst-plugins-good.elements_splitmux.test_splitmuxsink_async
       -b check.gst-plugins-bad.elements_netsim.netsim_stress
       -b check.gst-editing-services.nle_complex.test_one_expandable_another
+      -b check.gst-editing-services.nle_simple.test_simplest
+      -b check.gst-editing-services.ges_basic.test_ges_pipeline_change_state
       -b check.gst-plugins-base.pipelines_tcp.test_that_tcpserversink_and_tcpclientsrc_are_symmetrical
       -b check.gstreamer.elements_capsfilter.test_unfixed_downstream_caps
       -b check.gst-rtsp-server.gst_rtspclientsink.test_record
