@@ -152,6 +152,7 @@ build android arm64 api28:
     # pipelines_tcp.test_that_tcpserversink_and_tcpclientsrc_are_symmetrical: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/221
     # elements_capsfilter.test_unfixed_downstream_caps: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/335
     # gst_rtspclientsink.test_record: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/55
+    # camerabin.test_image_video_cycle: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/864
     BLACKLIST: >
       -b check.gstreamer.pipelines_parse_launch.delayed_link
       -b check.gstreamer.gst_gstsystemclock.test_async_sync_interaction
@@ -166,6 +167,7 @@ build android arm64 api28:
       -b check.gst-plugins-good.elements_splitmux.test_splitmuxsrc_sparse_streams
       -b check.gst-plugins-bad.elements_dtls.test_data_transfer
       -b check.gst-plugins-bad.elements_dtls.test_create_and_unref
+      -b check.gst-plugins-bad.elements_camerabin.test_image_video_cycle
       -b check.gst-rtsp-server.gst_rtspserver.test_shared_tcp
       -b check.gst-plugins-bad.elements_shm.test_shm_live
       -b check.gst-plugins-good.elements_splitmux.test_splitmuxsink_async
@@ -235,7 +237,7 @@ check fedora:
     CERBERO: ./cerbero-uninstalled -c config/${CONFIG} -c localconf.cbc -m manifest.xml
   before_script:
     # FIXME Wrong namespace
-    # Workaround build-tools having hardcoded internal path 
+    # Workaround build-tools having hardcoded internal path
     - mkdir -p /builds/gstreamer
     - ln -sf ${CI_PROJECT_DIR} /builds/gstreamer/cerbero
     - rsync -aH /cerbero/ .
