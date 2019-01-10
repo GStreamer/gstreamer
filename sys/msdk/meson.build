@@ -49,7 +49,7 @@ else
   if mfx_root != ''
     mfx_libdir = [mfx_root + '/lib/lin_x64', mfx_root + '/lib/x64', mfx_root + '/lib64', mfx_root + '/lib']
     mfx_incdir = join_paths([mfx_root, 'include'])
-    mfx_lib = cxx.find_library('mfx', dirs: mfx_libdir, required: mfx_option)
+    mfx_lib = cxx.find_library('mfx', dirs: mfx_libdir, required: msdk_option)
     mfx_inc = include_directories(mfx_incdir)
     mfx_dep = declare_dependency(include_directories: mfx_inc, dependencies: mfx_lib)
   elif msdk_option.enabled()
