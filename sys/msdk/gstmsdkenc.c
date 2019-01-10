@@ -151,8 +151,23 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
 
   mfx->RateControlMethod = thiz->rate_control;
   /* No effect in CQP varient algorithms */
-  mfx->TargetKbps = thiz->bitrate;
-  mfx->MaxKbps = thiz->max_vbv_bitrate;
+  if ((mfx->RateControlMethod != MFX_RATECONTROL_CQP) &&
+      (thiz->bitrate > G_MAXUINT16 || thiz->max_vbv_bitrate > G_MAXUINT16)) {
+    mfxU32 max_val = MAX (thiz->max_vbv_bitrate, thiz->bitrate);
+
+    mfx->BRCParamMultiplier = (mfxU16) ((max_val + 0x10000) / 0x10000);
+    mfx->TargetKbps = (mfxU16) (thiz->bitrate / mfx->BRCParamMultiplier);
+    mfx->MaxKbps = (mfxU16) (thiz->max_vbv_bitrate / mfx->BRCParamMultiplier);
+    mfx->BufferSizeInKB =
+        (mfxU16) (mfx->BufferSizeInKB / mfx->BRCParamMultiplier);
+    /* Currently InitialDelayInKB is not used in this plugin */
+    mfx->InitialDelayInKB =
+        (mfxU16) (mfx->InitialDelayInKB / mfx->BRCParamMultiplier);
+  } else {
+    mfx->TargetKbps = thiz->bitrate;
+    mfx->MaxKbps = thiz->max_vbv_bitrate;
+    mfx->BRCParamMultiplier = 1;
+  }
 
   switch (mfx->RateControlMethod) {
     case MFX_RATECONTROL_CQP:
@@ -488,13 +503,15 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   thiz->tasks = g_new0 (MsdkEncTask, thiz->num_tasks);
   for (i = 0; i < thiz->num_tasks; i++) {
     thiz->tasks[i].output_bitstream.Data = _aligned_alloc (32,
-        thiz->param.mfx.BufferSizeInKB * 1024);
+        thiz->param.mfx.BufferSizeInKB * thiz->param.mfx.BRCParamMultiplier *
+        1024);
     if (!thiz->tasks[i].output_bitstream.Data) {
       GST_ERROR_OBJECT (thiz, "Memory allocation failed");
       goto failed;
     }
     thiz->tasks[i].output_bitstream.MaxLength =
-        thiz->param.mfx.BufferSizeInKB * 1024;
+        thiz->param.mfx.BufferSizeInKB * thiz->param.mfx.BRCParamMultiplier *
+        1024;
   }
   thiz->next_task = 0;
 
