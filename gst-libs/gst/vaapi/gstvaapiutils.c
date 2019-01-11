@@ -756,7 +756,6 @@ from_GstVaapiDeinterlaceMethod (guint value)
   switch (value) {
     case GST_VAAPI_DEINTERLACE_METHOD_NONE:
       return 0;
-#if USE_VA_VPP
     case GST_VAAPI_DEINTERLACE_METHOD_BOB:
       return VAProcDeinterlacingBob;
     case GST_VAAPI_DEINTERLACE_METHOD_WEAVE:
@@ -765,7 +764,6 @@ from_GstVaapiDeinterlaceMethod (guint value)
       return VAProcDeinterlacingMotionAdaptive;
     case GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED:
       return VAProcDeinterlacingMotionCompensated;
-#endif
   }
   GST_ERROR ("unsupported GstVaapiDeinterlaceMethod value %d", value);
   return 0;
@@ -777,7 +775,6 @@ from_GstVaapiDeinterlaceFlags (guint flags)
 {
   guint va_flags = 0;
 
-#if USE_VA_VPP
   if (!(flags & GST_VAAPI_DEINTERLACE_FLAG_TFF))
     va_flags |= VA_DEINTERLACING_BOTTOM_FIELD_FIRST;
 
@@ -786,7 +783,6 @@ from_GstVaapiDeinterlaceFlags (guint flags)
 
   if (!(flags & GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD))
     va_flags |= VA_DEINTERLACING_BOTTOM_FIELD;
-#endif
   return va_flags;
 }
 
