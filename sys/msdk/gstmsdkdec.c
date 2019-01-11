@@ -841,7 +841,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   GstMsdkDec *thiz = GST_MSDKDEC (decoder);
   GstMsdkDecClass *klass = GST_MSDKDEC_GET_CLASS (thiz);
   GstFlowReturn flow;
-  GstBuffer *buffer;
+  GstBuffer *buffer, *input_buffer = NULL;
   GstVideoInfo alloc_info;
   MsdkDecTask *task = NULL;
   mfxBitstream bitstream;
@@ -878,8 +878,11 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     }
   }
 
-  if (!gst_buffer_map (frame->input_buffer, &map_info, GST_MAP_READ))
+  input_buffer = gst_buffer_ref (frame->input_buffer);
+  if (!gst_buffer_map (input_buffer, &map_info, GST_MAP_READ)) {
+    gst_buffer_unref (input_buffer);
     return GST_FLOW_ERROR;
+  }
 
   memset (&bitstream, 0, sizeof (bitstream));
 
@@ -892,7 +895,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     bitstream.DataFlag = MFX_BITSTREAM_COMPLETE_FRAME;
   } else {
     /* Non packetized streams: eg: vc1 advanced profile with per buffer bdu */
-    gst_adapter_push (thiz->adapter, gst_buffer_ref (frame->input_buffer));
+    gst_adapter_push (thiz->adapter, gst_buffer_ref (input_buffer));
     data_size = gst_adapter_available (thiz->adapter);
 
     bitstream.Data = (mfxU8 *) gst_adapter_map (thiz->adapter, data_size);
@@ -1040,11 +1043,15 @@ done:
   if (surface)
     free_surface (thiz, surface);
 
-  gst_buffer_unmap (frame->input_buffer, &map_info);
+  gst_buffer_unmap (input_buffer, &map_info);
+  gst_buffer_unref (input_buffer);
   return flow;
 
 error:
-  gst_buffer_unmap (frame->input_buffer, &map_info);
+  if (input_buffer) {
+    gst_buffer_unmap (input_buffer, &map_info);
+    gst_buffer_unref (input_buffer);
+  }
   gst_video_decoder_drop_frame (decoder, frame);
 
   return flow;
