@@ -884,7 +884,13 @@ parse_subrip_time (const gchar * ts_string, GstClockTime * t)
 
   /* make sure we have exactly three digits after he comma */
   p = strchr (s, ',');
-  g_assert (p != NULL);
+  if (p == NULL) {
+    /* If there isn't a ',' the timestamp is broken */
+    /* https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/532#note_100179 */
+    GST_WARNING ("failed to parse subrip timestamp string '%s'", s);
+    return FALSE;
+  }
+
   ++p;
   len = strlen (p);
   if (len > 3) {

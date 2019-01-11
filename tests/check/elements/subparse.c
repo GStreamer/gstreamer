@@ -182,6 +182,19 @@ static SubParseInputChunk srt_input4[] = {
   ,
 };
 
+/* Test broken timestamp */
+static SubParseInputChunk srt_input5[] = {
+  {
+        "1\n00:00:01,000 --> 00:00:02,000\n<v>some text\n\n",
+      1 * GST_SECOND, 2 * GST_SECOND, "some text"}
+  ,
+  {
+        "2\n00:02:00,000 --> 00:03:0\n<v>some other text\n\n3\n00:00:03,000 --> 00:00:04,000\n<v>some more text\n\n",
+      3 * GST_SECOND, 4 * GST_SECOND, "some more text"}
+  ,
+};
+
+
 static void
 setup_subparse (void)
 {
@@ -374,6 +387,9 @@ GST_START_TEST (test_srt)
 
   /* try with some WebVTT chunks */
   test_srt_do_test (srt_input4, 0, G_N_ELEMENTS (srt_input4));
+
+  /* try with some broken/cut-off timestamp */
+  test_srt_do_test (srt_input5, 0, G_N_ELEMENTS (srt_input5));
 }
 
 GST_END_TEST;
