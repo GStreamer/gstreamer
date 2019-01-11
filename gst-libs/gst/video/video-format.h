@@ -118,6 +118,9 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_Y410: packed 4:4:4 YUV, 10 bits per channel(A-V-Y-U...) (Since: 1.16)
  *
  * Enum value describing the most common video formats.
+ *
+ * See the [GStreamer raw video format design document](https://gstreamer.freedesktop.org/documentation/design/mediatype-video-raw.html#formats)
+ * for details about the layout and packing of these formats in memory.
  */
 typedef enum {
   GST_VIDEO_FORMAT_UNKNOWN,
