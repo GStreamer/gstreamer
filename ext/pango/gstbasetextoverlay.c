@@ -927,7 +927,7 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
   overlay->window_height = height;
   gst_base_text_overlay_update_render_size (overlay);
 
-  /* For backward compatbility, we will prefer bliting if downstream
+  /* For backward compatibility, we will prefer blitting if downstream
    * allocation does not support the meta. In other case we will prefer
    * attaching, and will fail the negotiation in the unlikely case we are
    * force to blit, but format isn't supported. */
@@ -1349,8 +1349,7 @@ gst_base_text_overlay_src_event (GstPad * pad, GstObject * parent,
   return ret;
 }
 
-/**
- * gst_base_text_overlay_add_feature_and_intersect:
+/* gst_base_text_overlay_add_feature_and_intersect:
  *
  * Creates a new #GstCaps containing the (given caps +
  * given caps feature) + (given caps intersected by the
@@ -1382,8 +1381,7 @@ gst_base_text_overlay_add_feature_and_intersect (GstCaps * caps,
   return new_caps;
 }
 
-/**
- * gst_base_text_overlay_intersect_by_feature:
+/* gst_base_text_overlay_intersect_by_feature:
  *
  * Creates a new #GstCaps based on the following filtering rule.
  *

@@ -20,7 +20,8 @@
 /**
  * SECTION:element-overlaycomposition
  *
- * overlaycomposition renders an overlay using a application provided draw function.
+ * The overlaycomposition element renders an overlay using an application
+ * provided draw function.
  *
  * A more interesting example can be found at
  * https://cgit.freedesktop.org/gstreamer/gst-plugins-base/tree/tests/examples/overlaycomposition/overlaycomposition.c
@@ -410,7 +411,7 @@ gst_overlay_composition_negotiate (GstOverlayComposition * self, GstCaps * caps)
   self->window_width = width;
   self->window_height = height;
 
-  /* For backward compatbility, we will prefer bliting if downstream
+  /* For backward compatibility, we will prefer blitting if downstream
    * allocation does not support the meta. In other case we will prefer
    * attaching, and will fail the negotiation in the unlikely case we are
    * force to blit, but format isn't supported. */
@@ -543,8 +544,7 @@ add_feature_and_intersect (GstCaps * caps,
 }
 
 /* Based on gstbasetextoverlay.c */
-/**
- * intersect_by_feature:
+/* intersect_by_feature:
  *
  * Creates a new #GstCaps based on the following filtering rule.
  *
