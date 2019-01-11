@@ -1227,6 +1227,49 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
   return result;
 }
 
+
+/**
+ * rtp_jitter_buffer_get_seqnum_diff:
+ * @jbuf: an #RTPJitterBuffer
+ *
+ * Get the difference between the seqnum of first and last packet in the
+ * jitterbuffer.
+ *
+ * Returns: The difference expressed in seqnum.
+ */
+guint16
+rtp_jitter_buffer_get_seqnum_diff (RTPJitterBuffer * jbuf)
+{
+  guint32 high_seqnum, low_seqnum;
+  RTPJitterBufferItem *high_buf, *low_buf;
+  guint16 result;
+
+  g_return_val_if_fail (jbuf != NULL, 0);
+
+  high_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (jbuf->packets);
+  low_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (jbuf->packets);
+
+  while (high_buf && high_buf->seqnum == -1)
+    high_buf = (RTPJitterBufferItem *) high_buf->prev;
+
+  while (low_buf && low_buf->seqnum == -1)
+    low_buf = (RTPJitterBufferItem *) low_buf->next;
+
+  if (!high_buf || !low_buf || high_buf == low_buf)
+    return 0;
+
+  high_seqnum = high_buf->seqnum;
+  low_seqnum = low_buf->seqnum;
+
+  /* it needs to work if ts wraps */
+  if (high_seqnum >= low_seqnum) {
+    result = (guint32) (high_seqnum - low_seqnum);
+  } else {
+    result = (guint32) (high_seqnum + G_MAXUINT16 + 1 - low_seqnum);
+  }
+  return result;
+}
+
 /**
  * rtp_jitter_buffer_get_sync:
  * @jbuf: an #RTPJitterBuffer
