@@ -44,12 +44,12 @@ GST_START_TEST (test_GstDateTime_now)
 
   memset (&tm, 0, sizeof (tm));
   t = time (NULL);
+  dt = gst_date_time_new_now_local_time ();
 #ifdef HAVE_LOCALTIME_R
   localtime_r (&t, &tm);
 #else
   memcpy (&tm, localtime (&t), sizeof (struct tm));
 #endif
-  dt = gst_date_time_new_now_local_time ();
   assert_equals_int (gst_date_time_get_year (dt), 1900 + tm.tm_year);
   assert_equals_int (gst_date_time_get_month (dt), 1 + tm.tm_mon);
   assert_equals_int (gst_date_time_get_day (dt), tm.tm_mday);
@@ -248,12 +248,12 @@ GST_START_TEST (test_GstDateTime_utc_now)
   struct tm tm;
 
   t = time (NULL);
+  dt = gst_date_time_new_now_utc ();
 #ifdef HAVE_GMTIME_R
   gmtime_r (&t, &tm);
 #else
   memcpy (&tm, gmtime (&t), sizeof (struct tm));
 #endif
-  dt = gst_date_time_new_now_utc ();
   assert_equals_int (tm.tm_year + 1900, gst_date_time_get_year (dt));
   assert_equals_int (tm.tm_mon + 1, gst_date_time_get_month (dt));
   assert_equals_int (tm.tm_mday, gst_date_time_get_day (dt));
