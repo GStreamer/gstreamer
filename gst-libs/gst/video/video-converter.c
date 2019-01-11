@@ -2070,20 +2070,18 @@ chain_pack (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 static void
 setup_allocators (GstVideoConverter * convert)
 {
-  GstLineCache *cache;
+  GstLineCache *cache, *prev;
   GstLineCacheAllocLineFunc alloc_line;
   gboolean alloc_writable;
   gpointer user_data;
   GDestroyNotify notify;
-  gint width, n_lines;
+  gint width;
   gint i;
 
   width = MAX (convert->in_maxwidth, convert->out_maxwidth);
   width += convert->out_x;
 
   for (i = 0; i < convert->conversion_runner->n_threads; i++) {
-    n_lines = 1;
-
     /* start with using dest lines if we can directly write into it */
     if (convert->identity_pack) {
       alloc_line = get_dest_line;
@@ -2101,12 +2099,24 @@ setup_allocators (GstVideoConverter * convert)
       alloc_writable = convert->borderline != NULL;
     }
 
+    /* First step, try to calculate how many temp lines we need. Go backwards,
+     * keep track of the maximum number of lines we need for each intermediate
+     * step.  */
+    for (prev = cache = convert->pack_lines[i]; cache; cache = cache->prev) {
+      GST_DEBUG ("looking at cache %p, %d lines, %d backlog", cache,
+          cache->n_lines, cache->backlog);
+      prev->n_lines = MAX (prev->n_lines, cache->n_lines);
+      if (!cache->pass_alloc) {
+        GST_DEBUG ("cache %p, needs %d lines", prev, prev->n_lines);
+        prev = cache;
+      }
+    }
+
     /* now walk backwards, we try to write into the dest lines directly
      * and keep track if the source needs to be writable */
     for (cache = convert->pack_lines[i]; cache; cache = cache->prev) {
       gst_line_cache_set_alloc_line_func (cache, alloc_line, user_data, notify);
       cache->alloc_writable = alloc_writable;
-      n_lines = MAX (n_lines, cache->n_lines);
 
       /* make sure only one cache frees the allocator */
       notify = NULL;
@@ -2115,11 +2125,10 @@ setup_allocators (GstVideoConverter * convert)
         /* can't pass allocator, make new temp line allocator */
         user_data =
             converter_alloc_new (sizeof (guint16) * width * 4,
-            n_lines + cache->backlog, convert, NULL);
+            cache->n_lines + cache->backlog, convert, NULL);
         notify = (GDestroyNotify) converter_alloc_free;
         alloc_line = get_temp_line;
         alloc_writable = FALSE;
-        n_lines = cache->n_lines;
       }
       /* if someone writes to the input, we need a writable line from the
        * previous cache */
