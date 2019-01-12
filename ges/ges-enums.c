@@ -394,6 +394,8 @@ _init_standard_transition_assets (void)
     ges_meta_container_register_meta_string (GES_META_CONTAINER (asset),
         GES_META_READABLE, GES_META_DESCRIPTION,
         transition_types[i].value_name);
+
+    gst_object_unref (asset);
   }
 
 }
