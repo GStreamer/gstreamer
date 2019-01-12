@@ -45,14 +45,20 @@
 
 GST_DEBUG_CATEGORY (_ges_debug);
 
+G_LOCK_DEFINE_STATIC (init_lock);
+
 static gboolean ges_initialized = FALSE;
-
-
+static gboolean ges_deinitialized = FALSE;
 
 static gboolean
 ges_init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     GError ** error)
 {
+  if (ges_initialized) {
+    GST_DEBUG ("already initialized");
+    return TRUE;
+  }
+
   /* initialize debugging category */
   GST_DEBUG_CATEGORY_INIT (_ges_debug, "ges", GST_DEBUG_FG_YELLOW,
       "GStreamer Editing Services");
@@ -146,9 +152,15 @@ failed:
 gboolean
 ges_init (void)
 {
+  gboolean ret;
+
+  G_LOCK (init_lock);
   ges_init_pre (NULL, NULL, NULL, NULL);
 
-  return ges_init_post (NULL, NULL, NULL, NULL);
+  ret = ges_init_post (NULL, NULL, NULL, NULL);
+  G_UNLOCK (init_lock);
+
+  return ret;
 }
 
 /**
@@ -165,6 +177,21 @@ ges_init (void)
 void
 ges_deinit (void)
 {
+  G_LOCK (init_lock);
+
+  if (!ges_initialized) {
+    G_UNLOCK (init_lock);
+    return;
+  }
+
+  GST_INFO ("deinitializing GES");
+
+  if (ges_deinitialized) {
+    G_UNLOCK (init_lock);
+    GST_DEBUG ("already deinitialized");
+    return;
+  }
+
   _ges_uri_asset_cleanup ();
 
   g_type_class_unref (g_type_class_peek (GES_TYPE_TEST_CLIP));
@@ -186,6 +213,13 @@ ges_deinit (void)
 
   /* Register track elements */
   g_type_class_unref (g_type_class_peek (GES_TYPE_EFFECT));
+
+  ges_deinitialized = TRUE;
+  G_UNLOCK (init_lock);
+
+  GST_INFO ("deinitialized GES");
+
+  return;
 }
 
 #ifndef GST_DISABLE_OPTION_PARSING
@@ -303,8 +337,11 @@ ges_init_check (int *argc, char **argv[], GError ** err)
 #endif
   gboolean res;
 
+  G_LOCK (init_lock);
+
   if (ges_initialized) {
     GST_DEBUG ("already initialized ges");
+    G_UNLOCK (init_lock);
     return TRUE;
   }
 #ifndef GST_DISABLE_OPTION_PARSING
@@ -316,10 +353,18 @@ ges_init_check (int *argc, char **argv[], GError ** err)
   res = g_option_context_parse (ctx, argc, argv, err);
   g_option_context_free (ctx);
 #endif
-  if (!res)
-    return res;
 
-  return ges_init ();
+  if (!res) {
+    G_UNLOCK (init_lock);
+    return res;
+  }
+
+  ges_init_pre (NULL, NULL, NULL, NULL);
+  res = ges_init_post (NULL, NULL, NULL, NULL);
+
+  G_UNLOCK (init_lock);
+
+  return res;
 }
 
 /**
