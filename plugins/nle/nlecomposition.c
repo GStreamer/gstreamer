@@ -1144,10 +1144,10 @@ nle_composition_finalize (GObject * object)
 
   g_rec_mutex_clear (&comp->task_rec_lock);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-
   g_mutex_clear (&priv->actions_lock);
   g_cond_clear (&priv->actions_cond);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 /* signal_duration_change
