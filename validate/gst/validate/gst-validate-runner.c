@@ -553,7 +553,7 @@ _dot_pipeline (GstValidateReport * report, GstStructure * config)
         GST_TIME_ARGS (GST_CLOCK_DIFF (_priv_start_time,
                 gst_util_get_timestamp ())),
         gst_validate_report_level_get_name (report->level),
-        gst_validate_reporter_get_name (report->reporter),
+        g_path_get_basename (gst_validate_reporter_get_name (report->reporter)),
         g_quark_to_string (report->issue->issue_id));
 
     if (config)
