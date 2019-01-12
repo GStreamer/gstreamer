@@ -145,7 +145,7 @@ typedef struct
 } GESAssetCacheEntry;
 
 /* Also protect all the entries in the cache */
-static GMutex asset_cache_lock;
+G_LOCK_DEFINE_STATIC (asset_cache_lock);
 /* We are mapping entries by types and ID, such as:
  *
  * {
@@ -169,8 +169,8 @@ static GMutex asset_cache_lock;
  * different extractable types.
  **/
 static GHashTable *type_entries_table = NULL;
-#define LOCK_CACHE   (g_mutex_lock (&asset_cache_lock))
-#define UNLOCK_CACHE (g_mutex_unlock (&asset_cache_lock))
+#define LOCK_CACHE   (G_LOCK (asset_cache_lock))
+#define UNLOCK_CACHE (G_UNLOCK (asset_cache_lock))
 
 static gchar *
 _check_and_update_parameters (GType * extractable_type, const gchar * id,
@@ -631,7 +631,6 @@ ges_asset_cache_put (GESAsset * asset, GTask * task)
 void
 ges_asset_cache_init (void)
 {
-  g_mutex_init (&asset_cache_lock);
   type_entries_table = g_hash_table_new_full (g_str_hash, g_str_equal,
       NULL, (GDestroyNotify) g_hash_table_unref);
 
