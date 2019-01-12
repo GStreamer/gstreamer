@@ -39,6 +39,8 @@ _finalize (GObject * self)
 
   g_list_free_full (parser->structures, (GDestroyNotify) gst_structure_free);
   g_list_free_full (parser->wrong_strings, (GDestroyNotify) g_free);
+
+  G_OBJECT_CLASS (ges_structure_parser_parent_class)->finalize (self);
 }
 
 static void
