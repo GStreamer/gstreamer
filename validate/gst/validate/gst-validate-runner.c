@@ -548,13 +548,16 @@ _dot_pipeline (GstValidateReport * report, GstStructure * config)
 
   if (pipeline) {
     gint details = GST_DEBUG_GRAPH_SHOW_ALL;
+    gchar *reporter_basename =
+        g_path_get_basename (gst_validate_reporter_get_name (report->reporter));
     report->dotfile_name =
         g_strdup_printf ("%" GST_TIME_FORMAT "-validate-report-%s-on-%s-%s",
         GST_TIME_ARGS (GST_CLOCK_DIFF (_priv_start_time,
                 gst_util_get_timestamp ())),
-        gst_validate_report_level_get_name (report->level),
-        g_path_get_basename (gst_validate_reporter_get_name (report->reporter)),
+        gst_validate_report_level_get_name (report->level), reporter_basename,
         g_quark_to_string (report->issue->issue_id));
+
+    g_free (reporter_basename);
 
     if (config)
       gst_structure_get_int (config, "details", &details);
