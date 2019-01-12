@@ -252,10 +252,12 @@ install_opts (GObjectClass * gobject_class, const AVClass ** obj, guint prop_id,
     if (g_object_class_find_property (gobject_class, name))
       continue;
 
-    if (av_opt_query_ranges (&r, obj, opt->name, AV_OPT_SEARCH_FAKE_OBJ) >= 0
-        && r->nb_ranges == 1) {
-      min = r->range[0]->value_min;
-      max = r->range[0]->value_max;
+    if (av_opt_query_ranges (&r, obj, opt->name, AV_OPT_SEARCH_FAKE_OBJ) >= 0) {
+      if (r->nb_ranges == 1) {
+        min = r->range[0]->value_min;
+        max = r->range[0]->value_max;
+      }
+      av_opt_freep_ranges (&r);
     }
 
     help = g_strdup_printf ("%s%s", opt->help, extra_help);
