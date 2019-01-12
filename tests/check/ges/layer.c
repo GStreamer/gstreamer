@@ -240,6 +240,7 @@ GST_START_TEST (test_timeline_auto_transition)
 
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   fail_unless (GES_IS_ASSET (asset));
+  gst_object_unref (asset);
 
   GST_DEBUG ("Create timeline");
   timeline = ges_timeline_new_audio_video ();

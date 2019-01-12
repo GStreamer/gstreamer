@@ -36,6 +36,7 @@ source_asset_created (GObject * source, GAsyncResult * res, gpointer udata)
   fail_unless (a == NULL);
   assert_equals_int (error->domain, GST_RESOURCE_ERROR);
 
+  g_clear_error (&error);
   g_main_loop_quit (mainloop);
 }
 
@@ -90,6 +91,8 @@ GST_START_TEST (test_transition_change_asset)
   /* Now try to set the a and see if the vtype is properly updated */
   a = ges_asset_request (GES_TYPE_TRANSITION_CLIP, "box-wipe-lc", NULL);
   ges_extractable_set_asset (extractable, a);
+  gst_object_unref (a);
+
   fail_unless_equals_int (GES_TRANSITION_CLIP (extractable)->vtype, 26);
 
   gst_object_unref (extractable);
