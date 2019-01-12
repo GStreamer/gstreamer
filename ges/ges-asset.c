@@ -403,6 +403,9 @@ ges_asset_finalize (GObject * object)
   if (priv->error)
     g_error_free (priv->error);
 
+  if (priv->proxies)
+    g_list_free (priv->proxies);
+
   G_OBJECT_CLASS (ges_asset_parent_class)->finalize (object);
 }
 
@@ -483,6 +486,9 @@ _lookup_entry (GType extractable_type, const gchar * id)
 static void
 _free_entries (gpointer entry)
 {
+  GESAssetCacheEntry *data = (GESAssetCacheEntry *) entry;
+  if (data->asset)
+    gst_object_unref (data->asset);
   g_slice_free (GESAssetCacheEntry, entry);
 }
 
@@ -632,7 +638,7 @@ void
 ges_asset_cache_init (void)
 {
   type_entries_table = g_hash_table_new_full (g_str_hash, g_str_equal,
-      NULL, (GDestroyNotify) g_hash_table_unref);
+      g_free, (GDestroyNotify) g_hash_table_unref);
 
   _init_formatter_assets ();
   _init_standard_transition_assets ();
