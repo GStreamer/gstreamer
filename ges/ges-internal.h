@@ -140,6 +140,9 @@ G_GNUC_INTERNAL void
 ges_asset_cache_init (void);
 
 G_GNUC_INTERNAL void
+ges_asset_cache_deinit (void);
+
+G_GNUC_INTERNAL void
 ges_asset_set_id (GESAsset *asset, const gchar *id);
 
 G_GNUC_INTERNAL void

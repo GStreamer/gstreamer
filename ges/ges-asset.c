@@ -638,6 +638,13 @@ ges_asset_cache_init (void)
   _init_standard_transition_assets ();
 }
 
+void
+ges_asset_cache_deinit (void)
+{
+  g_hash_table_destroy (type_entries_table);
+  type_entries_table = NULL;
+}
+
 gboolean
 ges_asset_request_id_update (GESAsset * asset, gchar ** proposed_id,
     GError * error)
