@@ -26,7 +26,7 @@ In particular, you will learn:
 
 We are going to build a media player using the
 [GTK+](http://www.gtk.org/) toolkit, but the concepts apply to other
-toolkits like [QT](http://qt-project.org/), for example. A minimum
+toolkits like [Qt](http://qt-project.org/), for example. A minimum
 knowledge of [GTK+](http://www.gtk.org/) will help understand this
 tutorial.
 
