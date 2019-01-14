@@ -210,6 +210,7 @@ static void
 _trk_element_weak_notify_cb (GstFramePositioner * pos, GObject * old)
 {
   pos->track_source = NULL;
+  gst_object_unref (pos);
 }
 
 void
@@ -221,7 +222,7 @@ ges_frame_positioner_set_source_and_filter (GstFramePositioner * pos,
   pos->current_track = ges_track_element_get_track (trksrc);
 
   g_object_weak_ref (G_OBJECT (trksrc),
-      (GWeakNotify) _trk_element_weak_notify_cb, pos);
+      (GWeakNotify) _trk_element_weak_notify_cb, gst_object_ref (pos));
   g_signal_connect (trksrc, "notify::track", (GCallback) _track_changed_cb,
       pos);
   set_track (pos);
