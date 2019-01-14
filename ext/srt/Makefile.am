@@ -1,6 +1,7 @@
 plugin_LTLIBRARIES = libgstsrt.la
 
 libgstsrt_la_SOURCES = \
+	gstsrt.c \
 	gstsrtobject.c \
 	gstsrtsink.c \
 	gstsrtsrc.c \
@@ -22,6 +23,14 @@ libgstsrt_la_LIBADD = \
     $(NULL)
 
 libgstsrt_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+glib_enum_headers=gstsrt-enums.h
+glib_enum_define=GST_SRT
+glib_gen_prefix=gst_srt
+glib_gen_basename=gstsrt
+
+BUILT_SOURCES = gstsrt-enumtypes.c gstsrt-enumtypes.h
+nodist_libgstsrt_la_SOURCES = $(BUILT_SOURCES)
 
 CLEANFILES = $(BUILT_SOURCES)
 
