@@ -65,7 +65,7 @@ foreach t : ges_tests
         include_directories : [configinc],
         dependencies : libges_deps + [gstcheck_dep, ges_dep],
     )
-    test(test_name, exe, env: env)
+    test(test_name, exe, env: env, timeout : 3 * 60)
   endif
 endforeach
 
