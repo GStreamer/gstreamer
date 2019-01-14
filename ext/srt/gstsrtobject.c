@@ -1032,10 +1032,8 @@ gst_srt_object_close (GstSRTObject * srtobject)
       srtobject);
   g_list_free_full (srtobject->callers, (GDestroyNotify) srt_caller_free);
 
-  g_clear_pointer (&srtobject->caller_added_closure,
-      (GDestroyNotify) g_closure_unref);
-  g_clear_pointer (&srtobject->caller_removed_closure,
-      (GDestroyNotify) g_closure_unref);
+  g_clear_pointer (&srtobject->caller_added_closure, g_closure_unref);
+  g_clear_pointer (&srtobject->caller_removed_closure, g_closure_unref);
 
   srtobject->opened = FALSE;
 }
