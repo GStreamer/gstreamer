@@ -3097,6 +3097,10 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
   GST_INFO_OBJECT (comp, "Setting current stack [%" GST_TIME_FORMAT " - %"
       GST_TIME_FORMAT "]", GST_TIME_ARGS (priv->current_stack_start),
       GST_TIME_ARGS (priv->current_stack_stop));
+
+  if (priv->current)
+    g_node_destroy (priv->current);
+
   priv->current = stack;
 
   if (priv->current) {
