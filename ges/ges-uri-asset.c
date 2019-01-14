@@ -630,6 +630,8 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
     return NULL;
   }
 
+  gst_discoverer_info_unref (info);
+
   return asset;
 }
 
