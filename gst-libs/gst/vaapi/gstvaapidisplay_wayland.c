@@ -105,7 +105,7 @@ registry_handle_global (void *data,
     priv->compositor =
         wl_registry_bind (registry, id, &wl_compositor_interface, 1);
   else if (strcmp (interface, "wl_shell") == 0)
-    priv->shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
+    priv->wl_shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
   else if (strcmp (interface, "wl_output") == 0) {
     priv->output = wl_registry_bind (registry, id, &wl_output_interface, 1);
     wl_output_add_listener (priv->output, &output_listener, priv);
@@ -142,8 +142,8 @@ gst_vaapi_display_wayland_setup (GstVaapiDisplay * display)
     return FALSE;
   }
 
-  if (!priv->shell) {
-    GST_ERROR ("failed to bind shell interface");
+  if (!priv->wl_shell) {
+    GST_ERROR ("failed to bind wl_shell interface");
     return FALSE;
   }
   return TRUE;
@@ -191,7 +191,7 @@ gst_vaapi_display_wayland_close_display (GstVaapiDisplay * display)
       GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
 
   g_clear_pointer (&priv->output, wl_output_destroy);
-  g_clear_pointer (&priv->shell, wl_shell_destroy);
+  g_clear_pointer (&priv->wl_shell, wl_shell_destroy);
   g_clear_pointer (&priv->compositor, wl_compositor_destroy);
   g_clear_pointer (&priv->registry, wl_registry_destroy);
 

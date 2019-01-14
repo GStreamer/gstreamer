@@ -270,7 +270,7 @@ gst_vaapi_window_wayland_create (GstVaapiWindow * window,
   GST_DEBUG ("create window, size %ux%u", *width, *height);
 
   g_return_val_if_fail (priv_display->compositor != NULL, FALSE);
-  g_return_val_if_fail (priv_display->shell != NULL, FALSE);
+  g_return_val_if_fail (priv_display->wl_shell != NULL, FALSE);
 
   GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
   priv->event_queue = wl_display_create_queue (priv_display->wl_display);
@@ -287,7 +287,7 @@ gst_vaapi_window_wayland_create (GstVaapiWindow * window,
 
   GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
   priv->shell_surface =
-      wl_shell_get_shell_surface (priv_display->shell, priv->surface);
+      wl_shell_get_shell_surface (priv_display->wl_shell, priv->surface);
   GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
   if (!priv->shell_surface)
     return FALSE;

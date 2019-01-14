@@ -60,7 +60,7 @@ struct _GstVaapiDisplayWaylandPrivate
   gchar *display_name;
   struct wl_display *wl_display;
   struct wl_compositor *compositor;
-  struct wl_shell *shell;
+  struct wl_shell *wl_shell;
   struct wl_output *output;
   struct wl_registry *registry;
   guint width;
