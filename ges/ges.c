@@ -321,3 +321,17 @@ ges_init_check (int *argc, char **argv[], GError ** err)
 
   return ges_init ();
 }
+
+/**
+ * ges_is_initialized:
+ *
+ * Use this function to check if GES has been initialized with ges_init()
+ * or ges_init_check().
+ *
+ * Returns: %TRUE if initialization has been done, %FALSE otherwise.
+ */
+gboolean
+ges_is_initialized (void)
+{
+  return ges_initialized;
+}

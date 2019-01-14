@@ -4,6 +4,7 @@
 <FILE>ges-common</FILE>
 <TITLE>Initialization</TITLE>
 ges_init
+ges_is_initialized
 ges_init_check
 ges_deinit
 ges_version
