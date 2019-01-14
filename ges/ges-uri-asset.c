@@ -189,6 +189,21 @@ _asset_proxied (GESAsset * self, const gchar * new_uri)
 }
 
 static void
+ges_uri_clip_asset_dispose (GObject * object)
+{
+  GESUriClipAsset *self = GES_URI_CLIP_ASSET (object);
+  GESUriClipAssetPrivate *prif = self->priv;
+
+  if (prif->asset_trackfilesources) {
+    g_list_free_full (prif->asset_trackfilesources,
+        (GDestroyNotify) gst_object_unref);
+    prif->asset_trackfilesources = NULL;
+  }
+
+  G_OBJECT_CLASS (ges_uri_clip_asset_parent_class)->dispose (object);
+}
+
+static void
 ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
 {
   GError *err;
@@ -198,6 +213,7 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
 
   object_class->get_property = ges_uri_clip_asset_get_property;
   object_class->set_property = ges_uri_clip_asset_set_property;
+  object_class->dispose = ges_uri_clip_asset_dispose;
 
   GES_ASSET_CLASS (klass)->start_loading = _start_loading;
   GES_ASSET_CLASS (klass)->request_id_update = _request_id_update;
@@ -314,7 +330,7 @@ _create_uri_source_asset (GESUriClipAsset * asset,
       (tck_filesource_asset), type);
 
   priv->asset_trackfilesources = g_list_append (priv->asset_trackfilesources,
-      gst_object_ref (tck_filesource_asset));
+      tck_filesource_asset);
 }
 
 static void
