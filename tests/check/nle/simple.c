@@ -79,6 +79,11 @@ test_simplest_full (void)
 
   GST_ERROR ("Resetted pipeline to READY");
 
+  if (collect->seen_segments)
+    g_list_free (collect->seen_segments);
+
+  collect->seen_segments = NULL;
+
   /* Expected segments */
   collect->expected_segments = g_list_append (collect->expected_segments,
       segment_new (1.0, GST_FORMAT_TIME, 5 * GST_SECOND, 6 * GST_SECOND, 0));
@@ -105,7 +110,7 @@ test_simplest_full (void)
   gst_check_objects_destroyed_on_unref (pipeline, comp, source1, NULL);
   ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "main bus", 1, 2);
 
-  g_free (collect);
+  collect_free (collect);
 }
 
 static void
@@ -317,6 +322,11 @@ test_one_after_other_full (void)
 
   GST_DEBUG ("Resetted pipeline to READY");
 
+  if (collect->seen_segments)
+    g_list_free (collect->seen_segments);
+
+  collect->seen_segments = NULL;
+
   /* Expected segments */
   collect->expected_segments = g_list_append (collect->expected_segments,
       segment_new (1.0, GST_FORMAT_TIME, 5 * GST_SECOND, 6 * GST_SECOND, 0));
@@ -373,7 +383,7 @@ test_one_after_other_full (void)
   ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "main bus", 1, 2);
   gst_object_unref (bus);
 
-  g_free (collect);
+  collect_free (collect);
 }
 
 static void
@@ -516,7 +526,7 @@ test_one_under_another_full (void)
   ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "main bus", 1, 2);
   gst_object_unref (bus);
 
-  g_free (collect);
+  collect_free (collect);
 }
 
 static void
@@ -669,6 +679,11 @@ test_one_bin_after_other_full (void)
 
   GST_DEBUG ("Resetted pipeline to READY");
 
+  if (collect->seen_segments)
+    g_list_free (collect->seen_segments);
+
+  collect->seen_segments = NULL;
+
   /* Expected segments */
   collect->expected_segments = g_list_append (collect->expected_segments,
       segment_new (1.0, GST_FORMAT_TIME, 0, 1 * GST_SECOND, 0));
@@ -719,7 +734,7 @@ test_one_bin_after_other_full (void)
   ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "main bus", 1, 2);
   gst_object_unref (bus);
 
-  g_free (collect);
+  collect_free (collect);
 }
 
 GST_START_TEST (test_simplest)

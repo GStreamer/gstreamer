@@ -152,7 +152,7 @@ GST_START_TEST (test_tempochange)
   ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "main bus", 1, 2);
   gst_object_unref (bus);
 
-  g_free (collect);
+  collect_free (collect);
 }
 
 GST_END_TEST;

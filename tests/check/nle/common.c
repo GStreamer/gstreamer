@@ -404,3 +404,14 @@ nle_composition_add (GstBin * comp, GstElement * object)
 {
   return gst_bin_add (comp, object);
 }
+
+void
+collect_free (CollectStructure * collect)
+{
+  if (collect->seen_segments)
+    g_list_free (collect->seen_segments);
+  if (collect->expected_segments)
+    g_list_free_full (collect->expected_segments, (GDestroyNotify) g_free);
+
+  g_free (collect);
+}

@@ -72,6 +72,10 @@ fill_pipeline_and_check (GstElement * comp, GList * segments)
 
   GST_DEBUG ("Resetted pipeline to READY");
 
+  if (collect->seen_segments)
+    g_list_free (collect->seen_segments);
+
+  collect->seen_segments = NULL;
   collect->expected_base = 0;
   collect->expected_segments = listcopy;
   collect->gotsegment = FALSE;
@@ -121,7 +125,7 @@ fill_pipeline_and_check (GstElement * comp, GList * segments)
   ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "main bus", 1, 2);
   gst_object_unref (bus);
 
-  g_free (collect);
+  collect_free (collect);
 }
 
 GST_START_TEST (test_simple_operation)
