@@ -92,6 +92,7 @@ GST_START_TEST (test_tempochange)
   sinkpad = gst_element_get_static_pad (sink, "sink");
   gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       (GstPadProbeCallback) sinkpad_probe, collect, NULL);
+  gst_object_unref (sinkpad);
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
 

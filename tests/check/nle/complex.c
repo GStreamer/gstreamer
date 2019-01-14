@@ -57,17 +57,19 @@ fill_pipeline_and_check (GstElement * comp, GList * segments,
           break;
         case GST_MESSAGE_ERROR:
         {
-          GError *error;
+          GError *error = NULL;
 
           gst_message_parse_error (message, &error, NULL);
           if (comp == GST_ELEMENT (GST_MESSAGE_SRC (message)) &&
               expected_error_domain == error->domain) {
             GST_DEBUG ("Expected Error Message from %s : %s",
                 GST_OBJECT_NAME (GST_MESSAGE_SRC (message)), error->message);
-
             carry_on = FALSE;
-          } else
-            fail_error_message (message);
+          } else {
+            fail_unless (FALSE, "Error Message from %s : %s",
+                GST_OBJECT_NAME (GST_MESSAGE_SRC (message)), error->message);
+          }
+          g_clear_error (&error);
         }
           break;
         default:

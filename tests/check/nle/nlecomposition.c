@@ -67,6 +67,7 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
   srcpad = gst_element_get_static_pad (source1, "src");
   gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
       (GstPadProbeCallback) on_source1_pad_event_cb, NULL, NULL);
+  gst_object_unref (srcpad);
 
   /*
      def (default source)
@@ -293,6 +294,7 @@ GST_START_TEST (test_remove_last_object)
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
+  gst_object_unref (bus);
 }
 
 GST_END_TEST;
@@ -389,10 +391,10 @@ GST_START_TEST (test_simple_audiomixer)
 
   message = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
       GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
-  gst_mini_object_unref (GST_MINI_OBJECT (message));
 
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR)
     fail_error_message (message);
+  gst_mini_object_unref (GST_MINI_OBJECT (message));
 
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
       GST_DEBUG_GRAPH_SHOW_ALL, "nle-simple-audiomixer-test-play");
