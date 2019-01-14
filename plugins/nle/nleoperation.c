@@ -664,6 +664,7 @@ static gboolean
 remove_sink_pad (NleOperation * operation, GstPad * sinkpad)
 {
   gboolean ret = TRUE;
+  gboolean need_unref = FALSE;
 
   GST_DEBUG ("sinkpad %s:%s", GST_DEBUG_PAD_NAME (sinkpad));
 
@@ -679,6 +680,7 @@ remove_sink_pad (NleOperation * operation, GstPad * sinkpad)
       ret = FALSE;
       goto beach;
     }
+    need_unref = TRUE;
   }
 
   if (sinkpad) {
@@ -693,6 +695,8 @@ remove_sink_pad (NleOperation * operation, GstPad * sinkpad)
     }
     operation->sinks = g_list_remove (operation->sinks, sinkpad);
     nle_object_remove_ghost_pad ((NleObject *) operation, sinkpad);
+    if (need_unref)
+      gst_object_unref (sinkpad);
     operation->realsinks--;
   }
 
