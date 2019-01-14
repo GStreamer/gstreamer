@@ -545,7 +545,8 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
   GST_OBJECT_LOCK (self);
   if (self->client_needs_restart) {
     hr = IAudioClient_Start (self->client);
-    HR_FAILED_AND (hr, IAudioClient::Start, length = 0; goto beach);
+    HR_FAILED_ELEMENT_ERROR_AND (hr, IAudioClient::Start, self,
+        GST_OBJECT_UNLOCK (self); goto err);
     self->client_needs_restart = FALSE;
   }
   GST_OBJECT_UNLOCK (self);
@@ -559,23 +560,22 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
     if (dwWaitResult != WAIT_OBJECT_0) {
       GST_ERROR_OBJECT (self, "Error waiting for event handle: %x",
           (guint) dwWaitResult);
-      length = 0;
-      goto beach;
+      goto err;
     }
 
     hr = IAudioCaptureClient_GetBuffer (self->capture_client,
         (BYTE **) & from, &have_frames, &flags, NULL, NULL);
     if (hr != S_OK) {
-      gchar *msg = gst_wasapi_util_hresult_to_string (hr);
-      if (hr == AUDCLNT_S_BUFFER_EMPTY)
+      if (hr == AUDCLNT_S_BUFFER_EMPTY) {
+        gchar *msg = gst_wasapi_util_hresult_to_string (hr);
         GST_WARNING_OBJECT (self, "IAudioCaptureClient::GetBuffer failed: %s"
             ", retrying", msg);
-      else
-        GST_ERROR_OBJECT (self, "IAudioCaptureClient::GetBuffer failed: %s",
-            msg);
-      g_free (msg);
-      length = 0;
-      goto beach;
+        g_free (msg);
+        length = 0;
+        goto out;
+      }
+      HR_FAILED_ELEMENT_ERROR_AND (hr, IAudioCaptureClient::GetBuffer, self,
+          goto err);
     }
 
     if (flags != 0)
@@ -612,13 +612,17 @@ gst_wasapi_src_read (GstAudioSrc * asrc, gpointer data, guint length,
 
     /* Always release all captured buffers if we've captured any at all */
     hr = IAudioCaptureClient_ReleaseBuffer (self->capture_client, have_frames);
-    HR_FAILED_AND (hr, IAudioClock::ReleaseBuffer, goto beach);
+    HR_FAILED_ELEMENT_ERROR_AND (hr, IAudioCaptureClient::ReleaseBuffer, self,
+        goto err);
   }
 
 
-beach:
-
+out:
   return length;
+
+err:
+  length = -1;
+  goto out;
 }
 
 static guint

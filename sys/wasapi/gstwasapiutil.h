@@ -42,18 +42,38 @@
 
 /* Standard error path */
 #define HR_FAILED_AND(hr,func,and) \
-  do { \
+  G_STMT_START { \
     if (FAILED (hr)) { \
       gchar *msg = gst_wasapi_util_hresult_to_string (hr); \
       GST_ERROR_OBJECT (self, #func " failed (%x): %s", (guint) hr, msg); \
       g_free (msg); \
       and; \
     } \
-  } while (0)
+  } G_STMT_END
 
 #define HR_FAILED_RET(hr,func,ret) HR_FAILED_AND(hr,func,return ret)
 
 #define HR_FAILED_GOTO(hr,func,where) HR_FAILED_AND(hr,func,res = FALSE; goto where)
+
+#define HR_FAILED_ELEMENT_ERROR_AND(hr,func,el,and) \
+  G_STMT_START { \
+    if (FAILED (hr)) { \
+      gchar *msg = gst_wasapi_util_hresult_to_string (hr); \
+      GST_ERROR_OBJECT (el, #func " failed (%x): %s", (guint) hr, msg); \
+      if (GST_IS_AUDIO_SRC (el)) \
+        GST_ELEMENT_ERROR(el, RESOURCE, READ, \
+            (#func " failed (%x): %s", (guint) hr, msg), (NULL)); \
+      else \
+        GST_ELEMENT_ERROR(el, RESOURCE, WRITE, \
+            (#func " failed (%x): %s", (guint) hr, msg), (NULL)); \
+      g_free (msg); \
+      and; \
+    } \
+  } G_STMT_END
+
+#define HR_FAILED_ELEMENT_ERROR_RET(hr,func,el,ret) \
+  HR_FAILED_ELEMENT_ERROR_AND(hr,func,el,return ret)
+
 
 /* Device role enum property */
 typedef enum
