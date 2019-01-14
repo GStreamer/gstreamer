@@ -466,13 +466,18 @@ fi
 dnl Check for Wayland
 USE_WAYLAND=0
 if test "x$enable_wayland" = "xyes"; then
-  PKG_CHECK_MODULES([WAYLAND], [wayland-client >= $WAYLAND_REQ],
+  PKG_CHECK_MODULES([WAYLAND], [wayland-client >= $WAYLAND_REQ, wayland-protocols >= 1.15],
     [
       USE_WAYLAND=1
       saved_CPPFLAGS="$CPPFLAGS"
       CPPFLAGS="$CPPFLAGS $WAYLAND_CFLAGS"
       AC_CHECK_HEADERS([wayland-client.h], [], [USE_WAYLAND=0])
       CPPFLAGS="$saved_CPPFLAGS"
+
+      AC_CHECK_PROGS(WAYLAND_SCANNER, wayland-scanner, [USE_WAYLAND=0])
+
+      WAYLAND_PROTOCOLS_DATADIR="`$PKG_CONFIG --variable=pkgdatadir wayland-protocols`"
+      AC_SUBST(WAYLAND_PROTOCOLS_DATADIR, $WAYLAND_PROTOCOLS_DATADIR)
     ], [:])
 fi
 

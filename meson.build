@@ -65,6 +65,8 @@ gl_dep = dependency('gl', required: false)
 glesv2_dep = dependency('glesv2', required: false)
 libdl_dep = cc.find_library('dl', required: false)
 wayland_client_dep = dependency('wayland-client', version: libwayland_req, required: false)
+wayland_protocols_dep = dependency('wayland-protocols', version: '>= 1.15', required: false)
+wayland_scanner_bin = find_program('wayland-scanner', required: false)
 x11_dep = dependency('x11', required: false)
 xrandr_dep = dependency('xrandr', required: false)
 xrender_dep = dependency('xrender', required: false)
@@ -92,7 +94,7 @@ USE_H264_FEI_ENCODER = USE_ENCODERS and cc.has_header('va/va_fei_h264.h', depend
 USE_DRM = libva_drm_dep.found() and libdrm_dep.found() and libudev_dep.found() and get_option('with_drm') != 'no'
 USE_EGL = gmodule_dep.found() and egl_dep.found() and GLES_VERSION_MASK != 0 and get_option('with_egl') != 'no'
 USE_GLX = libva_x11_dep.found() and x11_dep.found() and gl_dep.found() and libdl_dep.found() and get_option('with_glx') != 'no'
-USE_WAYLAND = libva_wayland_dep.found() and wayland_client_dep.found() and get_option('with_wayland') != 'no'
+USE_WAYLAND = libva_wayland_dep.found() and wayland_client_dep.found() and wayland_protocols_dep.found() and wayland_scanner_bin.found() and get_option('with_wayland') != 'no'
 USE_X11 = libva_x11_dep.found() and x11_dep.found() and get_option('with_x11') != 'no'
 
 driverdir = libva_dep.get_pkgconfig_variable('driverdir')

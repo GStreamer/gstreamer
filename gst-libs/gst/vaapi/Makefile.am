@@ -314,9 +314,28 @@ libgstvaapi_egl_source_priv_h =			\
 	ogl_compat.h				\
 	$(NULL)
 
+BUILT_SOURCES=
+CLEANFILES=
+
+# Generate the necessary files for XDG-shell
+if USE_WAYLAND
+xdg_shell_protocol_spec = $(WAYLAND_PROTOCOLS_DATADIR)/stable/xdg-shell/xdg-shell.xml
+xdg_shell_header = xdg-shell-client-protocol.h
+xdg_shell_source = xdg-shell-client-protocol.c
+
+$(xdg_shell_header): $(xdg_shell_protocol_spec)
+	$(AM_V_GEN) $(WAYLAND_SCANNER) client-header < $< > $@
+$(xdg_shell_source): $(xdg_shell_protocol_spec)
+	$(AM_V_GEN) $(WAYLAND_SCANNER) private-code < $< > $@
+
+BUILT_SOURCES += $(xdg_shell_header) $(xdg_shell_source)
+CLEANFILES += $(BUILT_SOURCES)
+endif
+
 libgstvaapi_wayland_source_c =			\
 	gstvaapidisplay_wayland.c		\
 	gstvaapiwindow_wayland.c		\
+	$(xdg_shell_source)			\
 	$(NULL)
 
 libgstvaapi_wayland_source_h =			\
@@ -327,6 +346,7 @@ libgstvaapi_wayland_source_h =			\
 libgstvaapi_wayland_source_priv_h =		\
 	gstvaapicompat.h			\
 	gstvaapidisplay_wayland_priv.h		\
+	$(xdg_shell_header)			\
 	$(NULL)
 
 libgstvaapi_la_SOURCES =			\

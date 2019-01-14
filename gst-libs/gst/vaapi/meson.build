@@ -183,10 +183,24 @@ if USE_EGL
 endif
 
 if USE_WAYLAND
+  # The XDG shell interface needs to be generated first
+  wayland_protocols_basedir = wayland_protocols_dep.get_pkgconfig_variable('pkgdatadir')
+  xdg_shell_xml_spec = join_paths(wayland_protocols_basedir, 'stable', 'xdg-shell', 'xdg-shell.xml')
+  xdg_shell_header = custom_target('vaapi-xdg-shell-client-header',
+      command: [ wayland_scanner_bin, 'client-header', '@INPUT@', '@OUTPUT@' ],
+      input: xdg_shell_xml_spec,
+      output: 'xdg-shell-client-protocol.h')
+  xdg_shell_code = custom_target('vaapi-xdg-shell-client-code',
+      command: [ wayland_scanner_bin, 'private-code', '@INPUT@', '@OUTPUT@' ],
+      input: xdg_shell_xml_spec,
+      output: 'xdg-shell-client-protocol.c')
+
   gstlibvaapi_sources += [
       'gstvaapidisplay_wayland.c',
       'gstvaapiwindow_wayland.c',
-    ]
+      xdg_shell_header,
+      xdg_shell_code,
+  ]
   gstlibvaapi_headers += [
       'gstvaapidisplay_wayland.h',
       'gstvaapiwindow_wayland.h',
@@ -209,7 +223,7 @@ if USE_GLX
   gstlibvaapi_deps  += [libva_x11_dep, x11_dep, gl_dep, libdl_dep]
 endif
 if USE_WAYLAND
-  gstlibvaapi_deps  += [libva_wayland_dep, wayland_client_dep]
+  gstlibvaapi_deps  += [libva_wayland_dep, wayland_client_dep, wayland_protocols_dep]
 endif
 if USE_X11
   gstlibvaapi_deps  += [libva_x11_dep, x11_dep, xrandr_dep, xrender_dep]

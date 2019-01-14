@@ -533,6 +533,17 @@ gst_vaapisink_backend_x11 (void)
 #include <gst/vaapi/gstvaapidisplay_wayland.h>
 #include <gst/vaapi/gstvaapiwindow_wayland.h>
 
+static void
+on_window_wayland_size_changed (GstVaapiWindowWayland * window, gint width,
+    gint height, gpointer user_data)
+{
+  GstVaapiSink *sink = GST_VAAPISINK (user_data);
+
+  GST_DEBUG ("Wayland window size changed to: %dx%d", width, height);
+  gst_vaapisink_reconfigure_window (sink);
+  gst_vaapisink_show_frame (GST_VIDEO_SINK_CAST (sink), NULL);
+}
+
 static gboolean
 gst_vaapisink_wayland_create_window (GstVaapiSink * sink, guint width,
     guint height)
@@ -544,6 +555,10 @@ gst_vaapisink_wayland_create_window (GstVaapiSink * sink, guint width,
   sink->window = gst_vaapi_window_wayland_new (display, width, height);
   if (!sink->window)
     return FALSE;
+
+  g_signal_connect_object (sink->window, "size-changed",
+      G_CALLBACK (on_window_wayland_size_changed), sink, 0);
+
   return TRUE;
 }
 
