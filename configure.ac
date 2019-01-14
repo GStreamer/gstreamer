@@ -1092,6 +1092,12 @@ AG_GST_CHECK_FEATURE(AOM, [AV1 encoder/decoder], aom, [
   AG_GST_PKG_CHECK_MODULES(AOM, aom)
 ])
 
+dnl *** avtp ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_AVTP, true)
+AG_GST_CHECK_FEATURE(AVTP, [Audio/Video Transport Protocol], avtp, [
+  AG_GST_PKG_CHECK_MODULES(AVTP, avtp)
+])
+
 dnl *** vo-amrwbenc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VOAMRWBENC, true)
 AG_GST_CHECK_FEATURE(VOAMRWBENC, [vo-amrwbenc library], vo-amrwbenc, [
@@ -2214,6 +2220,7 @@ dnl but we still need to set the conditionals
 
 AM_CONDITIONAL(USE_ASSRENDER, false)
 AM_CONDITIONAL(USE_AOM, false)
+AM_CONDITIONAL(USE_AVTP, false)
 AM_CONDITIONAL(USE_VOAMRWBENC, false)
 AM_CONDITIONAL(USE_VOAACENC, false)
 AM_CONDITIONAL(USE_BS2B, false)
@@ -2517,6 +2524,7 @@ ext/voamrwbenc/Makefile
 ext/voaacenc/Makefile
 ext/assrender/Makefile
 ext/aom/Makefile
+ext/avtp/Makefile
 ext/bs2b/Makefile
 ext/bz2/Makefile
 ext/chromaprint/Makefile

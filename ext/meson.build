@@ -1,5 +1,6 @@
 subdir('assrender')
 subdir('aom')
+subdir('avtp')
 subdir('bs2b')
 subdir('bz2')
 subdir('chromaprint')
