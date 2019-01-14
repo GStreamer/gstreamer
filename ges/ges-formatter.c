@@ -449,6 +449,10 @@ ges_formatter_class_register_metas (GESFormatterClass * class,
   class->mimetype = mimetype;
   class->version = version;
   class->rank = rank;
+
+  if (ges_is_initialized () && g_type_class_peek (G_OBJECT_CLASS_TYPE (class)))
+    gst_object_unref (ges_asset_request (G_OBJECT_CLASS_TYPE (class), NULL,
+            NULL));
 }
 
 /* Main Formatter methods */
