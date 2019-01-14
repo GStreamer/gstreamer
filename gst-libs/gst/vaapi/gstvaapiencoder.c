@@ -479,6 +479,46 @@ gst_vaapi_encoder_create_surface (GstVaapiEncoder * encoder)
   return proxy;
 }
 
+/* Create a coded buffer proxy where the picture is going to be
+ * decoded, the subclass encode vmethod is called and, if it doesn't
+ * fail, the coded buffer is pushed into the async queue */
+static GstVaapiEncoderStatus
+gst_vaapi_encoder_encode_and_queue (GstVaapiEncoder * encoder,
+    GstVaapiEncPicture * picture)
+{
+  GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
+  GstVaapiCodedBufferProxy *codedbuf_proxy;
+  GstVaapiEncoderStatus status;
+
+  codedbuf_proxy = gst_vaapi_encoder_create_coded_buffer (encoder);
+  if (!codedbuf_proxy)
+    goto error_create_coded_buffer;
+
+  status = klass->encode (encoder, picture, codedbuf_proxy);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    goto error_encode;
+
+  gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy,
+      picture, (GDestroyNotify) gst_vaapi_mini_object_unref);
+  g_async_queue_push (encoder->codedbuf_queue, codedbuf_proxy);
+  encoder->num_codedbuf_queued++;
+
+  return status;
+
+  /* ERRORS */
+error_create_coded_buffer:
+  {
+    GST_ERROR ("failed to allocate coded buffer");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+  }
+error_encode:
+  {
+    GST_ERROR ("failed to encode frame (status = %d)", status);
+    gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
+    return status;
+  }
+}
+
 /**
  * gst_vaapi_encoder_put_frame:
  * @encoder: a #GstVaapiEncoder
@@ -496,7 +536,6 @@ gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
   GstVaapiEncoderStatus status;
   GstVaapiEncPicture *picture;
-  GstVaapiCodedBufferProxy *codedbuf_proxy;
 
   for (;;) {
     picture = NULL;
@@ -506,18 +545,9 @@ gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
     if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
       goto error_reorder_frame;
 
-    codedbuf_proxy = gst_vaapi_encoder_create_coded_buffer (encoder);
-    if (!codedbuf_proxy)
-      goto error_create_coded_buffer;
-
-    status = klass->encode (encoder, picture, codedbuf_proxy);
+    status = gst_vaapi_encoder_encode_and_queue (encoder, picture);
     if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
       goto error_encode;
-
-    gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy,
-        picture, (GDestroyNotify) gst_vaapi_mini_object_unref);
-    g_async_queue_push (encoder->codedbuf_queue, codedbuf_proxy);
-    encoder->num_codedbuf_queued++;
 
     /* Try again with any pending reordered frame now available for encoding */
     frame = NULL;
@@ -530,17 +560,9 @@ error_reorder_frame:
     GST_ERROR ("failed to process reordered frames");
     return status;
   }
-error_create_coded_buffer:
-  {
-    GST_ERROR ("failed to allocate coded buffer");
-    gst_vaapi_enc_picture_unref (picture);
-    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
-  }
 error_encode:
   {
-    GST_ERROR ("failed to encode frame (status = %d)", status);
     gst_vaapi_enc_picture_unref (picture);
-    gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
     return status;
   }
 }
@@ -620,7 +642,6 @@ GstVaapiEncoderStatus
 gst_vaapi_encoder_flush (GstVaapiEncoder * encoder)
 {
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
-  GstVaapiCodedBufferProxy *codedbuf_proxy;
   GstVaapiEncPicture *picture;
   GstVaapiEncoderStatus status;
   gpointer iter = NULL;
@@ -629,36 +650,18 @@ gst_vaapi_encoder_flush (GstVaapiEncoder * encoder)
   while (_get_pending_reordered (encoder, &picture, &iter)) {
     if (!picture)
       continue;
-
-    codedbuf_proxy = gst_vaapi_encoder_create_coded_buffer (encoder);
-    if (!codedbuf_proxy)
-      goto error_create_coded_buffer;
-
-    status = klass->encode (encoder, picture, codedbuf_proxy);
+    status = gst_vaapi_encoder_encode_and_queue (encoder, picture);
     if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
       goto error_encode;
-
-    gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy,
-        picture, (GDestroyNotify) gst_vaapi_mini_object_unref);
-    g_async_queue_push (encoder->codedbuf_queue, codedbuf_proxy);
-    encoder->num_codedbuf_queued++;
   }
   g_free (iter);
 
   return klass->flush (encoder);
 
   /* ERRORS */
-error_create_coded_buffer:
-  {
-    GST_ERROR ("failed to allocate coded buffer");
-    gst_vaapi_enc_picture_unref (picture);
-    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
-  }
 error_encode:
   {
-    GST_ERROR ("failed to encode frame (status = %d)", status);
     gst_vaapi_enc_picture_unref (picture);
-    gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
     return status;
   }
 }
