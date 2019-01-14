@@ -454,6 +454,7 @@ gst_device_provider_start (GstDeviceProvider * provider)
   g_mutex_lock (&provider->priv->start_lock);
 
   if (provider->priv->started_count > 0) {
+    provider->priv->started_count++;
     ret = TRUE;
     goto started;
   }
