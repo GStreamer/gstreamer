@@ -2723,7 +2723,8 @@ _relink_single_node (NleComposition * comp, GNode * node,
   gst_bin_add (GST_BIN (comp->priv->current_bin), GST_ELEMENT (newobj));
   gst_element_sync_state_with_parent (GST_ELEMENT_CAST (newobj));
 
-  translated_seek = nle_object_translate_incoming_seek (newobj, toplevel_seek);
+  translated_seek = nle_object_translate_incoming_seek (newobj,
+      gst_event_ref (toplevel_seek));
 
   gst_element_send_event (GST_ELEMENT (newobj), translated_seek);
 

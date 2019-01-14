@@ -39,6 +39,13 @@ struct _NlePadPrivate
   GstEvent *pending_seek;
 };
 
+/**
+ * nle_object_translate_incoming_seek:
+ * @object: A #NleObject.
+ * @event: (transfer full) A #GstEvent to translate
+ *
+ * Returns: (transfer full) new translated seek event
+ */
 GstEvent *
 nle_object_translate_incoming_seek (NleObject * object, GstEvent * event)
 {
@@ -119,6 +126,7 @@ nle_object_translate_incoming_seek (NleObject * object, GstEvent * event)
   event2 = gst_event_new_seek (rate, GST_FORMAT_TIME, flags,
       ncurtype, (gint64) ncur, GST_SEEK_TYPE_SET, (gint64) nstop);
   GST_EVENT_SEQNUM (event2) = seqnum;
+  gst_event_unref (event);
 
   return event2;
 
@@ -486,6 +494,7 @@ ghostpad_event_function (GstPad * ghostpad, GstObject * parent,
           if (!(target = gst_ghost_pad_get_target (GST_GHOST_PAD (ghostpad)))) {
             g_assert ("Seeked a pad with not target SHOULD NOT HAPPEND");
             ret = FALSE;
+            gst_event_unref (event);
             event = NULL;
           } else {
             gst_object_unref (target);
