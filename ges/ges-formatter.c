@@ -241,7 +241,8 @@ ges_formatter_can_load_uri (const gchar * uri, GError ** error)
 
     class = g_type_class_ref (ges_asset_get_extractable_type (asset));
     dummy_instance =
-        g_object_new (ges_asset_get_extractable_type (asset), NULL);
+        g_object_ref_sink (g_object_new (ges_asset_get_extractable_type (asset),
+            NULL));
     if (class->can_load_uri (dummy_instance, uri, error)) {
       g_type_class_unref (class);
       gst_object_unref (dummy_instance);
@@ -531,7 +532,8 @@ _find_formatter_asset_for_id (const gchar * id)
     asset = GES_ASSET (tmp->data);
     class = g_type_class_ref (ges_asset_get_extractable_type (asset));
     dummy_instance =
-        g_object_new (ges_asset_get_extractable_type (asset), NULL);
+        g_object_ref_sink (g_object_new (ges_asset_get_extractable_type (asset),
+            NULL));
     if (class->can_load_uri (dummy_instance, id, NULL)) {
       g_type_class_unref (class);
       asset = gst_object_ref (asset);
