@@ -2967,6 +2967,9 @@ _dump_stack (NleComposition * comp, GNode * stack)
 #ifndef GST_DISABLE_GST_DEBUG
   GString *res;
 
+  if (!stack)
+    return;
+
   if (gst_debug_category_get_threshold (nlecomposition_debug) < GST_LEVEL_INFO)
     return;
 
