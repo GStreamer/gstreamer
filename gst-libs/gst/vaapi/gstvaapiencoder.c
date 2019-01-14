@@ -419,7 +419,7 @@ _coded_buffer_proxy_released_notify (GstVaapiEncoder * encoder)
 }
 
 /* Creates a new VA coded buffer object proxy, backed from a pool */
-GstVaapiCodedBufferProxy *
+static GstVaapiCodedBufferProxy *
 gst_vaapi_encoder_create_coded_buffer (GstVaapiEncoder * encoder)
 {
   GstVaapiCodedBufferPool *const pool =
@@ -597,6 +597,17 @@ error_invalid_buffer:
   }
 }
 
+static inline gboolean
+_get_pending_reordered (GstVaapiEncoder * encoder,
+    GstVaapiEncPicture ** picture, gpointer * state)
+{
+  GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
+
+  if (!klass->get_pending_reordered)
+    return FALSE;
+  return klass->get_pending_reordered (encoder, picture, state);
+}
+
 /**
  * gst_vaapi_encoder_flush:
  * @encoder: a #GstVaapiEncoder
@@ -609,8 +620,47 @@ GstVaapiEncoderStatus
 gst_vaapi_encoder_flush (GstVaapiEncoder * encoder)
 {
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
+  GstVaapiCodedBufferProxy *codedbuf_proxy;
+  GstVaapiEncPicture *picture;
+  GstVaapiEncoderStatus status;
+  gpointer iter = NULL;
+
+  picture = NULL;
+  while (_get_pending_reordered (encoder, &picture, &iter)) {
+    if (!picture)
+      continue;
+
+    codedbuf_proxy = gst_vaapi_encoder_create_coded_buffer (encoder);
+    if (!codedbuf_proxy)
+      goto error_create_coded_buffer;
+
+    status = klass->encode (encoder, picture, codedbuf_proxy);
+    if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+      goto error_encode;
+
+    gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy,
+        picture, (GDestroyNotify) gst_vaapi_mini_object_unref);
+    g_async_queue_push (encoder->codedbuf_queue, codedbuf_proxy);
+    encoder->num_codedbuf_queued++;
+  }
+  g_free (iter);
 
   return klass->flush (encoder);
+
+  /* ERRORS */
+error_create_coded_buffer:
+  {
+    GST_ERROR ("failed to allocate coded buffer");
+    gst_vaapi_enc_picture_unref (picture);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+  }
+error_encode:
+  {
+    GST_ERROR ("failed to encode frame (status = %d)", status);
+    gst_vaapi_enc_picture_unref (picture);
+    gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
+    return status;
+  }
 }
 
 /**

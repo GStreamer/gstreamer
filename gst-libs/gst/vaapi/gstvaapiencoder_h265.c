@@ -2134,67 +2134,73 @@ error:
   }
 }
 
+struct _PendingIterState
+{
+  GstVaapiPictureType pic_type;
+};
+
+static gboolean
+gst_vaapi_encoder_h265_get_pending_reordered (GstVaapiEncoder * base_encoder,
+    GstVaapiEncPicture ** picture, gpointer * state)
+{
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
+  GstVaapiH265ReorderPool *reorder_pool;
+  GstVaapiEncPicture *pic;
+  struct _PendingIterState *iter;
+
+  g_return_val_if_fail (state, FALSE);
+
+  if (!*state) {
+    iter = g_new0 (struct _PendingIterState, 1);
+    iter->pic_type = GST_VAAPI_PICTURE_TYPE_P;
+    *state = iter;
+  } else {
+    iter = *state;
+  }
+
+  *picture = NULL;
+
+  reorder_pool = &encoder->reorder_pool;
+  if (g_queue_is_empty (&reorder_pool->reorder_frame_list))
+    return FALSE;
+
+  pic = g_queue_pop_tail (&reorder_pool->reorder_frame_list);
+  g_assert (pic);
+  if (iter->pic_type == GST_VAAPI_PICTURE_TYPE_P) {
+    set_p_frame (pic, encoder);
+    iter->pic_type = GST_VAAPI_PICTURE_TYPE_B;
+  } else if (iter->pic_type == GST_VAAPI_PICTURE_TYPE_B) {
+    set_b_frame (pic, encoder);
+  } else {
+    GST_WARNING ("Unhandled pending picture type");
+  }
+
+  if (GST_CLOCK_TIME_IS_VALID (pic->frame->pts))
+    pic->frame->pts += encoder->cts_offset;
+
+  *picture = pic;
+  return TRUE;
+}
+
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_h265_flush (GstVaapiEncoder * base_encoder)
 {
   GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
   GstVaapiH265ReorderPool *reorder_pool;
   GstVaapiEncPicture *pic;
-  GstVaapiCodedBufferProxy *codedbuf_proxy;
-  gboolean p_frame = TRUE;
-  GstVaapiEncoderStatus status;
 
   reorder_pool = &encoder->reorder_pool;
-
-  while (!g_queue_is_empty (&reorder_pool->reorder_frame_list)) {
-    pic = NULL;
-    if (p_frame) {
-      pic = (GstVaapiEncPicture *)
-          g_queue_pop_tail (&reorder_pool->reorder_frame_list);
-      set_p_frame (pic, encoder);
-      p_frame = FALSE;
-    } else {
-      pic = (GstVaapiEncPicture *)
-          g_queue_pop_head (&reorder_pool->reorder_frame_list);
-      set_b_frame (pic, encoder);
-    }
-    g_assert (pic);
-
-    if (GST_CLOCK_TIME_IS_VALID (pic->frame->pts))
-      pic->frame->pts += encoder->cts_offset;
-
-    codedbuf_proxy = gst_vaapi_encoder_create_coded_buffer (base_encoder);
-    if (!codedbuf_proxy)
-      goto error_create_coded_buffer;
-
-    status = gst_vaapi_encoder_h265_encode (base_encoder, pic, codedbuf_proxy);
-    if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-      goto error_encode;
-
-    gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy,
-        pic, (GDestroyNotify) gst_vaapi_mini_object_unref);
-    g_async_queue_push (base_encoder->codedbuf_queue, codedbuf_proxy);
-    base_encoder->num_codedbuf_queued++;
-  }
   reorder_pool->frame_index = 0;
   reorder_pool->cur_present_index = 0;
 
-  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+  while (!g_queue_is_empty (&reorder_pool->reorder_frame_list)) {
+    pic = (GstVaapiEncPicture *)
+        g_queue_pop_head (&reorder_pool->reorder_frame_list);
+    gst_vaapi_enc_picture_unref (pic);
+  }
+  g_queue_clear (&reorder_pool->reorder_frame_list);
 
-  /* ERRORS */
-error_create_coded_buffer:
-  {
-    GST_ERROR ("failed to allocate coded buffer");
-    gst_vaapi_enc_picture_unref (pic);
-    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
-  }
-error_encode:
-  {
-    GST_ERROR ("failed to encode frame (status = %d)", status);
-    gst_vaapi_enc_picture_unref (pic);
-    gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
-    return status;
-  }
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
 /* Generate "codec-data" buffer */
@@ -2654,7 +2660,8 @@ gst_vaapi_encoder_h265_class (void)
   static const GstVaapiEncoderClass GstVaapiEncoderH265Class = {
     GST_VAAPI_ENCODER_CLASS_INIT (H265, h265),
     .set_property = gst_vaapi_encoder_h265_set_property,
-    .get_codec_data = gst_vaapi_encoder_h265_get_codec_data
+    .get_codec_data = gst_vaapi_encoder_h265_get_codec_data,
+    .get_pending_reordered = gst_vaapi_encoder_h265_get_pending_reordered,
   };
   return &GstVaapiEncoderH265Class;
 }

@@ -362,6 +362,12 @@ struct _GstVaapiEncoderClass
 
   /* To create a secondary context for a single base encoder */
   gboolean              (*ensure_secondary_context) (GstVaapiEncoder * encoder);
+
+  /* Iterator that retrieves the pending pictures in the reordered
+   * list */
+  gboolean              (*get_pending_reordered) (GstVaapiEncoder * encoder,
+                                                  GstVaapiEncPicture ** picture,
+                                                  gpointer * state);
 };
 
 #define GST_VAAPI_ENCODER_CLASS_HOOK(codec, func) \
