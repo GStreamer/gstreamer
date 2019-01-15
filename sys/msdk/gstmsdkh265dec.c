@@ -60,7 +60,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) [ 16, MAX ], height = (int) [ 16, MAX ],"
         "interlace-mode = (string) progressive;"
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
-            "{ NV12 }") ";")
+            "{ NV12, P010_10LE }") ";")
     );
 
 #define gst_msdkh265dec_parent_class parent_class
