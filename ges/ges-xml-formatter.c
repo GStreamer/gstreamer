@@ -1218,15 +1218,16 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
           "supported-formats", "rate", "in-point", "start", "duration",
           "max-duration", "priority", "vtype", "uri", NULL);
       extractable_id = ges_extractable_get_id (GES_EXTRACTABLE (clip));
+      metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (clip));
       append_escaped (str,
           g_markup_printf_escaped ("        <clip id='%i' asset-id='%s'"
               " type-name='%s' layer-priority='%i' track-types='%i' start='%"
               G_GUINT64_FORMAT "' duration='%" G_GUINT64_FORMAT "' inpoint='%"
-              G_GUINT64_FORMAT "' rate='%d' properties='%s' ",
+              G_GUINT64_FORMAT "' rate='%d' properties='%s' metadatas='%s'",
               priv->nbelements, extractable_id,
               g_type_name (G_OBJECT_TYPE (clip)), priority,
               ges_clip_get_supported_formats (clip), _START (clip),
-              _DURATION (clip), _INPOINT (clip), 0, properties));
+              _DURATION (clip), _INPOINT (clip), 0, properties, metas));
 
       if (GES_IS_TRANSITION_CLIP (clip)) {
         _save_children_properties (str, GES_TIMELINE_ELEMENT (clip));
