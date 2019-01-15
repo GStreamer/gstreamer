@@ -291,7 +291,8 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_source          (GESBaseXmlForma
 
 G_GNUC_INTERNAL void ges_base_xml_formatter_add_group           (GESBaseXmlFormatter *self,
                                                                  const gchar *name,
-                                                                 const gchar *properties);
+                                                                 const gchar *properties,
+                                                                 const gchar *metadatas);
 
 G_GNUC_INTERNAL void ges_base_xml_formatter_last_group_add_child(GESBaseXmlFormatter *self,
                                                                  const gchar * id,

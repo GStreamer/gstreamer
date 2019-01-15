@@ -1389,7 +1389,7 @@ done:
 
 void
 ges_base_xml_formatter_add_group (GESBaseXmlFormatter * self,
-    const gchar * id, const gchar * properties)
+    const gchar * id, const gchar * properties, const gchar * metadatas)
 {
   PendingGroup *pgroup;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
@@ -1399,6 +1399,10 @@ ges_base_xml_formatter_add_group (GESBaseXmlFormatter * self,
 
   pgroup = g_slice_new0 (PendingGroup);
   pgroup->group = ges_group_new ();
+
+  if (metadatas)
+    ges_meta_container_add_metas_from_string (GES_META_CONTAINER
+        (pgroup->group), metadatas);
 
   g_hash_table_insert (priv->containers, g_strdup (id),
       gst_object_ref (pgroup->group));

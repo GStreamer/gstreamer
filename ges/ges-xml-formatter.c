@@ -34,8 +34,8 @@
 
 #define parent_class ges_xml_formatter_parent_class
 #define API_VERSION 0
-#define MINOR_VERSION 4
-#define VERSION 0.4
+#define MINOR_VERSION 5
+#define VERSION 0.5
 
 #define COLLECT_STR_OPT (G_MARKUP_COLLECT_STRING | G_MARKUP_COLLECT_OPTIONAL)
 
@@ -736,18 +736,18 @@ _parse_group (GMarkupParseContext * context, const gchar * element_name,
     const gchar ** attribute_names, const gchar ** attribute_values,
     GESXmlFormatter * self, GError ** error)
 {
-  const gchar *id, *properties;
+  const gchar *id, *properties, *metadatas = NULL;
 
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error,
           G_MARKUP_COLLECT_STRING, "id", &id,
           G_MARKUP_COLLECT_STRING, "properties", &properties,
-          G_MARKUP_COLLECT_INVALID)) {
+          COLLECT_STR_OPT, "metadatas", &metadatas, G_MARKUP_COLLECT_INVALID)) {
     return;
   }
 
   ges_base_xml_formatter_add_group (GES_BASE_XML_FORMATTER (self), id,
-      properties);
+      properties, metadatas);
 }
 
 static inline void
@@ -1295,7 +1295,7 @@ _save_group (GESXmlFormatter * self, GString * str, GList ** seen_groups,
 {
   GList *tmp;
   gboolean serialize;
-  gchar *properties;
+  gchar *properties, *metadatas;
 
   g_object_get (group, "serialize", &serialize, NULL);
   if (!serialize) {
@@ -1320,9 +1320,15 @@ _save_group (GESXmlFormatter * self, GString * str, GList ** seen_groups,
   }
 
   properties = _serialize_properties (G_OBJECT (group), NULL);
-  g_string_append_printf (str, "        <group id='%d' properties='%s'>\n",
-      self->priv->nbelements, properties);
+
+  metadatas = ges_meta_container_metas_to_string (GES_META_CONTAINER (group));
+  self->priv->min_version = MAX (self->priv->min_version, 5);
+
+  g_string_append_printf (str,
+      "        <group id='%d' properties='%s' metadatas='%s'>\n",
+      self->priv->nbelements, properties, metadatas);
   g_free (properties);
+  g_free (metadatas);
   g_hash_table_insert (self->priv->element_id, group,
       GINT_TO_POINTER (self->priv->nbelements));
   self->priv->nbelements++;
