@@ -2203,6 +2203,70 @@ GST_START_TEST (test_performance)
 
 GST_END_TEST;
 
+static gpointer
+generate_harness_buffer (gpointer data)
+{
+  GstHarness *h = data;
+  guint i;
+
+  for (i = 32766; i < 41000; i++)
+    gst_harness_push (h, generate_test_buffer (1000 + i));
+
+  return NULL;
+}
+
+
+GST_START_TEST (test_fill_queue)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  const gint num_consecutive = 40000;
+  gint i;
+  GstSegment segment;
+  GThread *t;
+  GstBuffer *buf;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  gst_harness_set_src_caps (h, generate_caps ());
+
+  gst_harness_play (h);
+
+  gst_harness_push (h, generate_test_buffer (1000));
+  gst_harness_push (h, generate_test_buffer (1002));
+
+  for (i = 3; i < 32766; i++)
+    gst_harness_push (h, generate_test_buffer (1000 + i));
+
+  t = g_thread_new ("fill-queue-test-push", generate_harness_buffer, h);
+
+  /* Just give a chance to the thread to start and to try to push one packet */
+  g_usleep (100 * 1000);
+
+  fail_unless (gst_harness_crank_single_clock_wait (h));
+
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (1000, get_rtp_seq_num (buf));
+  gst_buffer_unref (buf);
+
+  /* Gap at 1001 here */
+  fail_unless (gst_harness_crank_single_clock_wait (h));
+
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (1002, get_rtp_seq_num (buf));
+  gst_buffer_unref (buf);
+
+  for (i = 3; i < num_consecutive; i++) {
+    GstBuffer *buf = gst_harness_pull (h);
+    fail_unless_equals_int (1000 + i, get_rtp_seq_num (buf));
+    gst_buffer_unref (buf);
+  }
+
+  g_thread_join (t);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpjitterbuffer_suite (void)
 {
@@ -2247,6 +2311,7 @@ rtpjitterbuffer_suite (void)
 
   tcase_add_test (tc_chain, test_deadline_ts_offset);
   tcase_add_test (tc_chain, test_push_big_gap);
+  tcase_add_test (tc_chain, test_fill_queue);
 
   tcase_add_loop_test (tc_chain,
       test_considered_lost_packet_in_large_gap_arrives, 0,
