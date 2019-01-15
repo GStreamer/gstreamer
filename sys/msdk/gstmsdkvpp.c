@@ -56,10 +56,10 @@ static GstStaticPadTemplate gst_msdkvpp_sink_factory =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
-        ("{ NV12, YV12, I420, YUY2, UYVY, BGRA, BGRx }")
+        ("{ NV12, YV12, I420, YUY2, UYVY, BGRA, BGRx, P010_10LE }")
         ", " "interlace-mode = (string){ progressive, interleaved, mixed }" ";"
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
-            "{ NV12, BGRA, YUY2}")));
+            "{ NV12, BGRA, YUY2, P010_10LE}")));
 
 static GstStaticPadTemplate gst_msdkvpp_src_factory =
     GST_STATIC_PAD_TEMPLATE ("src",
@@ -67,8 +67,8 @@ static GstStaticPadTemplate gst_msdkvpp_src_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_DMABUF,
-            "{ BGRA, YUY2, NV12}") ";"
-        GST_VIDEO_CAPS_MAKE ("{ BGRA, NV12, YUY2, BGRx }") ", "
+            "{ BGRA, YUY2, NV12, P010_10LE}") ";"
+        GST_VIDEO_CAPS_MAKE ("{ BGRA, NV12, YUY2, BGRx, P010_10LE }") ", "
         "interlace-mode = (string){ progressive, interleaved, mixed }" ";"));
 
 enum
