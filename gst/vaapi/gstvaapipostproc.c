@@ -723,13 +723,15 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
     if (!outbuf_meta)
       goto error_create_meta;
 
-    proxy =
-        gst_vaapi_surface_proxy_new_from_pool (GST_VAAPI_SURFACE_POOL
-        (postproc->filter_pool));
-    if (!proxy)
-      goto error_create_proxy;
-    gst_vaapi_video_meta_set_surface_proxy (outbuf_meta, proxy);
-    gst_vaapi_surface_proxy_unref (proxy);
+    if (!gst_vaapi_video_meta_get_surface_proxy (outbuf_meta)) {
+      proxy =
+          gst_vaapi_surface_proxy_new_from_pool (GST_VAAPI_SURFACE_POOL
+          (postproc->filter_pool));
+      if (!proxy)
+        goto error_create_proxy;
+      gst_vaapi_video_meta_set_surface_proxy (outbuf_meta, proxy);
+      gst_vaapi_surface_proxy_unref (proxy);
+    }
 
     if (deint) {
       deint_flags = (tff ? GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD : 0);
