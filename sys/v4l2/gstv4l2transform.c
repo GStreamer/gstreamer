@@ -1159,6 +1159,8 @@ gst_v4l2_transform_subclass_init (gpointer g_class, gpointer data)
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
           cdata->src_caps));
 
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
   g_free (cdata);
 }
 
