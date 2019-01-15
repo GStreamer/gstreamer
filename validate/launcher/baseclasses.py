@@ -919,7 +919,7 @@ class GstValidateTest(Test):
                     return
         elif self.process.returncode in COREDUMP_SIGNALS:
             result = Result.FAILED
-            msg = "Application segfaulted "
+            msg = "Application crashed, return code: %d" % (self.process.returncode)
             self.add_stack_trace_to_logfile()
         elif self.process.returncode == VALGRIND_ERROR_CODE:
             msg = "Valgrind reported errors "
