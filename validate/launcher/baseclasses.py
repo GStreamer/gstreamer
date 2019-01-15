@@ -61,9 +61,10 @@ TIMEOUT_FACTOR = float(os.environ.get("TIMEOUT_FACTOR", 1))
 VALGRIND_ERROR_CODE = 20
 
 VALIDATE_OVERRIDE_EXTENSION = ".override"
-COREDUMP_SIGNALS = [-getattr(signal, s) for s in [
+EXITING_SIGNALS = dict([(-getattr(signal, s), s) for s in [
     'SIGQUIT', 'SIGILL', 'SIGABRT', 'SIGFPE', 'SIGSEGV', 'SIGBUS', 'SIGSYS',
-    'SIGTRAP', 'SIGXCPU', 'SIGXFSZ', 'SIGIOT'] if hasattr(signal, s)] + [139]
+    'SIGTRAP', 'SIGXCPU', 'SIGXFSZ', 'SIGIOT'] if hasattr(signal, s)])
+EXITING_SIGNALS.update({139: "SIGSEGV"})
 
 
 class Test(Loggable):
@@ -280,11 +281,11 @@ class Test(Loggable):
         self.debug("%s returncode: %s", self, self.process.returncode)
         if self.process.returncode == 0:
             self.set_result(Result.PASSED)
-        elif self.process.returncode in COREDUMP_SIGNALS:
+        elif self.process.returncode in EXITING_SIGNALS:
             self.add_stack_trace_to_logfile()
             self.set_result(Result.FAILED,
-                            "Application crashed, return code: %d" % (
-                                self.process.returncode))
+                            "Application exited with signal %s" % (
+                                EXITING_SIGNALS[self.process.returncode]))
         elif self.process.returncode == VALGRIND_ERROR_CODE:
             self.set_result(Result.FAILED, "Valgrind reported errors")
         else:
@@ -917,9 +918,11 @@ class GstValidateTest(Test):
                     result, msg = self.check_expected_timeout(expected_timeout)
                 else:
                     return
-        elif self.process.returncode in COREDUMP_SIGNALS:
+        elif self.process.returncode in EXITING_SIGNALS:
             result = Result.FAILED
-            msg = "Application crashed, return code: %d" % (self.process.returncode)
+            msg = "Application exited with signal %s" % (
+                EXITING_SIGNALS[self.process.returncode]
+            )
             self.add_stack_trace_to_logfile()
         elif self.process.returncode == VALGRIND_ERROR_CODE:
             msg = "Valgrind reported errors "
