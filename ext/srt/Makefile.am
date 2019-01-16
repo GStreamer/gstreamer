@@ -35,6 +35,7 @@ nodist_libgstsrt_la_SOURCES = $(BUILT_SOURCES)
 CLEANFILES = $(BUILT_SOURCES)
 
 noinst_HEADERS = \
+	gstsrt-enums.h \
 	gstsrtobject.h \
 	gstsrtsink.h \
 	gstsrtsrc.h \
