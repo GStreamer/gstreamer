@@ -109,15 +109,6 @@ if have_cxx
   ]
 endif
 
-# FIXME: enable orc testing
-#orc_tests = [
-#  'orc/video',
-#  'orc/audio',
-#  'orc/adder',
-#  'orc/volume',
-#  'orc/videotestsrc'
-#]
-
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
@@ -196,3 +187,34 @@ foreach group : [1, 2, 3, 4, 5, 6]
 
   test(vscale_test_name, exe, env: env, timeout: 3 * 60)
 endforeach
+
+# orc tests
+orc_tests = [
+  ['orc_audio', files('../../gst-libs/gst/audio/gstaudiopack.orc')],
+  ['orc_video', files('../../gst-libs/gst/video/video-orc.orc')],
+  ['orc_adder', files('../../gst/adder/gstadderorc.orc')],
+  ['orc_audiomixer', files('../../gst/audiomixer/gstaudiomixerorc.orc')],
+  ['orc_compositor', files('../../gst/compositor/compositororc.orc')],
+  ['orc_volume', files('../../gst/volume/gstvolumeorc.orc')],
+  ['orc_videotestsrc', files('../../gst/videotestsrc/gstvideotestsrcorc.orc')],
+]
+
+if have_orcc
+  # FIXME: there should really just be a separate orc-test-0.4.pc file for this
+  if orc_dep.type_name() == 'pkgconfig'
+    orc_test_dep = cc.find_library('orc-test-0.4', dependencies: orc_dep)
+  else
+    orc_test_dep = dependency('', fallback: ['orc', 'orc_test_dep'])
+  endif
+  foreach t : orc_tests
+    tname = t[0]
+    torcfile = t[1]
+    tcfilename = '@0@.c'.format(tname)
+    test_c = custom_target(tcfilename,
+      output: tcfilename,
+      input: torcfile,
+      command: [orcc, '--include', 'stdint.h', '--test', '-o', '@OUTPUT@', '@INPUT@'])
+    test_exe = executable(tname, test_c, dependencies: [orc_dep, orc_test_dep])
+    test(tname, test_exe)
+  endforeach
+endif
