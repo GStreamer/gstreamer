@@ -53,6 +53,8 @@ typedef struct _GstMsdkH265EncClass GstMsdkH265EncClass;
 struct _GstMsdkH265Enc
 {
   GstMsdkEnc base;
+
+  gboolean lowpower;
 };
 
 struct _GstMsdkH265EncClass

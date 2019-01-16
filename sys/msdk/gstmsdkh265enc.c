@@ -42,6 +42,13 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkh265enc_debug);
 #define GST_CAT_DEFAULT gst_msdkh265enc_debug
 
+enum
+{
+  PROP_LOW_POWER = GST_MSDKENC_PROP_MAX,
+};
+
+#define PROP_LOWPOWER_DEFAULT           FALSE
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -113,6 +120,9 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
 
   /* Enable Extended coding options */
   gst_msdkenc_ensure_extended_coding_options (encoder);
+
+  encoder->param.mfx.LowPower =
+      (h265enc->lowpower ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF);
 
   return TRUE;
 }
@@ -187,8 +197,20 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
 {
   GstMsdkH265Enc *thiz = GST_MSDKH265ENC (object);
 
-  if (!gst_msdkenc_set_common_property (object, prop_id, value, pspec))
-    GST_WARNING_OBJECT (thiz, "Failed to set common encode property");
+  if (gst_msdkenc_set_common_property (object, prop_id, value, pspec))
+    return;
+
+  GST_OBJECT_LOCK (thiz);
+
+  switch (prop_id) {
+    case PROP_LOW_POWER:
+      thiz->lowpower = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (thiz);
 }
 
 static void
@@ -197,8 +219,19 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstMsdkH265Enc *thiz = GST_MSDKH265ENC (object);
 
-  if (!gst_msdkenc_get_common_property (object, prop_id, value, pspec))
-    GST_WARNING_OBJECT (thiz, "Failed to get common encode property");
+  if (gst_msdkenc_get_common_property (object, prop_id, value, pspec))
+    return;
+
+  GST_OBJECT_LOCK (thiz);
+  switch (prop_id) {
+    case PROP_LOW_POWER:
+      g_value_set_boolean (value, thiz->lowpower);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (thiz);
 }
 
 static void
@@ -221,6 +254,10 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
 
   gst_msdkenc_install_common_properties (encoder_class);
 
+  g_object_class_install_property (gobject_class, PROP_LOW_POWER,
+      g_param_spec_boolean ("low-power", "Low power", "Enable low power mode",
+          PROP_LOWPOWER_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H265 encoder",
       "Codec/Encoder/Video",
@@ -234,4 +271,5 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
 static void
 gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
 {
+  thiz->lowpower = PROP_LOWPOWER_DEFAULT;
 }
