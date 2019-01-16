@@ -146,6 +146,31 @@ foreach t : base_tests
   endif
 endforeach
 
+# orc tests
+orc_tests = [
+  ['orc_bayer', files('../../gst/bayer/gstbayerorc.orc')],
+]
+
+if have_orcc
+  # FIXME: there should really just be a separate orc-test-0.4.pc file for this
+  if orc_dep.type_name() == 'pkgconfig'
+    orc_test_dep = cc.find_library('orc-test-0.4', dependencies: orc_dep)
+  else
+    orc_test_dep = dependency('', fallback: ['orc', 'orc_test_dep'])
+  endif
+  foreach t : orc_tests
+    tname = t[0]
+    torcfile = t[1]
+    tcfilename = '@0@.c'.format(tname)
+    test_c = custom_target(tcfilename,
+      output: tcfilename,
+      input: torcfile,
+      command: [orcc, '--include', 'stdint.h', '--test', '-o', '@OUTPUT@', '@INPUT@'])
+    test_exe = executable(tname, test_c, dependencies: [orc_dep, orc_test_dep])
+    test(tname, test_exe)
+  endforeach
+endif
+
 if enable_gst_player_tests
   subdir ('media')
 endif
