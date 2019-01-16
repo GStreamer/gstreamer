@@ -200,7 +200,8 @@ _redraw_texture (GtkGstGLWidget * gst_widget, guint tex)
 
   if (gl->BindVertexArray)
     gl->BindVertexArray (0);
-  gtk_gst_gl_widget_unbind_buffer (gst_widget);
+  else
+    gtk_gst_gl_widget_unbind_buffer (gst_widget);
 
   gl->BindTexture (GL_TEXTURE_2D, 0);
 }
