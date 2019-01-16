@@ -200,27 +200,29 @@ foreach t : good_tests
   endif
 endforeach
 
-# FIXME: orc tests
-fixme_orc_tests='''
-orc_deinterlace_CFLAGS = $(ORC_CFLAGS)
-orc_deinterlace_LDADD = $(ORC_LIBS) -lorc-test-0.4
-nodist_orc_deinterlace_SOURCES = orc/deinterlace.c
-orc_videomixer_CFLAGS = $(ORC_CFLAGS)
-orc_videomixer_LDADD = $(ORC_LIBS) -lorc-test-0.4
-nodist_orc_videomixer_SOURCES = orc/videomixer.c
-orc_videobox_CFLAGS = $(ORC_CFLAGS)
-orc_videobox_LDADD = $(ORC_LIBS) -lorc-test-0.4
-nodist_orc_videobox_SOURCES = orc/videobox.c
+# orc tests
+orc_tests = [
+  ['orc_deinterlace', files('../../gst/deinterlace/tvtime.orc')],
+  ['orc_videomixer', files('../../gst/videomixer/videomixerorc.orc')],
+  ['orc_videobox', files('../../gst/videobox/gstvideoboxorc.orc')],
+]
 
-orc/deinterlace.c: $(top_srcdir)/gst/deinterlace/tvtime.orc
-	$(MKDIR_P) orc/
-	$(ORCC) --test -o $@ $<
-
-orc/videomixer.c: $(top_srcdir)/gst/videomixer/videomixerorc.orc
-	$(MKDIR_P) orc/
-	$(ORCC) --test -o $@ $<
-
-orc/videobox.c: $(top_srcdir)/gst/videobox/gstvideoboxorc.orc
-	$(MKDIR_P) orc/
-	$(ORCC) --test -o $@ $<
-'''
+if have_orcc
+  # FIXME: there should really just be a separate orc-test-0.4.pc file for this
+  if orc_dep.type_name() == 'pkgconfig'
+    orc_test_dep = cc.find_library('orc-test-0.4', dependencies: orc_dep)
+  else
+    orc_test_dep = dependency('', fallback: ['orc', 'orc_test_dep'])
+  endif
+  foreach t : orc_tests
+    tname = t[0]
+    torcfile = t[1]
+    tcfilename = '@0@.c'.format(tname)
+    test_c = custom_target(tcfilename,
+      output: tcfilename,
+      input: torcfile,
+      command: [orcc, '--include', 'stdint.h', '--test', '-o', '@OUTPUT@', '@INPUT@'])
+    test_exe = executable(tname, test_c, dependencies: [orc_dep, orc_test_dep])
+    test(tname, test_exe)
+  endforeach
+endif
