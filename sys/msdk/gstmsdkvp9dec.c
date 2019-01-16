@@ -39,6 +39,7 @@
 #include <mfxvp9.h>
 
 #include "gstmsdkvp9dec.h"
+#include "gstmsdkvideomemory.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp9dec_debug);
 #define GST_CAT_DEFAULT gst_msdkvp9dec_debug
@@ -47,6 +48,18 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-vp9")
+    );
+
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) { NV12 }, "
+        "framerate = (fraction) [0, MAX], "
+        "width = (int) [ 16, MAX ], height = (int) [ 16, MAX ],"
+        "interlace-mode = (string) progressive;"
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
+            "{ NV12 }") ";")
     );
 
 #define gst_msdkvp9dec_parent_class parent_class
@@ -160,6 +173,7 @@ gst_msdkvp9dec_class_init (GstMsdkVP9DecClass * klass)
   gst_msdkdec_prop_install_output_oder_property (gobject_class);
 
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
 }
 
 static void
