@@ -222,7 +222,8 @@ _src_shader_fill_bound_fbo (gpointer impl)
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  _unbind_buffer (src);
+  else
+    _unbind_buffer (src);
 
   gst_gl_context_clear_shader (src->base.context);
 

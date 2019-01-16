@@ -484,7 +484,8 @@ _callback (gpointer stuff)
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  _unbind_buffer (cube_filter);
+  else
+    _unbind_buffer (cube_filter);
 
   gl->Disable (GL_DEPTH_TEST);
 

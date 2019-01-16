@@ -545,7 +545,8 @@ gst_gl_overlay_callback (GstGLFilter * filter, GstGLMemory * in_tex,
 out:
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  _unbind_buffer (overlay);
+  else
+    _unbind_buffer (overlay);
 
   gst_gl_context_clear_shader (GST_GL_BASE_FILTER (filter)->context);
 

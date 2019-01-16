@@ -1613,15 +1613,16 @@ gst_gl_video_mixer_callback (gpointer stuff)
   video_mixer->output_geo_change = FALSE;
   GST_OBJECT_UNLOCK (video_mixer);
 
-  gl->DisableVertexAttribArray (attr_position_loc);
-  gl->DisableVertexAttribArray (attr_texture_loc);
-
-  if (gl->GenVertexArrays)
+  if (gl->GenVertexArrays) {
     gl->BindVertexArray (0);
+  } else {
+    gl->DisableVertexAttribArray (attr_position_loc);
+    gl->DisableVertexAttribArray (attr_texture_loc);
 
-  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
-  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
-  gl->BindTexture (GL_TEXTURE_2D, 0);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+    gl->BindTexture (GL_TEXTURE_2D, 0);
+  }
 
   gl->Disable (GL_BLEND);
 

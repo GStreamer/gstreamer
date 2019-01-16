@@ -1928,7 +1928,8 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
 
   if (gl->BindVertexArray)
     gl->BindVertexArray (0);
-  _unbind_buffer (viewconvert);
+  else
+    _unbind_buffer (viewconvert);
   if (gl->DrawBuffer)
     gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
   /* we are done with the shader */

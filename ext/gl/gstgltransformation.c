@@ -961,7 +961,8 @@ gst_gl_transformation_callback (gpointer stuff)
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  _unbind_buffer (transformation);
+  else
+    _unbind_buffer (transformation);
 
   gst_gl_context_clear_shader (GST_GL_BASE_FILTER (filter)->context);
   transformation->caps_change = FALSE;

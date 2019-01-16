@@ -1251,6 +1251,7 @@ gst_gl_filter_draw_fullscreen_quad (GstGLFilter * filter)
 
     if (gl->GenVertexArrays)
       gl->BindVertexArray (0);
-    _unbind_buffer (filter);
+    else
+      _unbind_buffer (filter);
   }
 }

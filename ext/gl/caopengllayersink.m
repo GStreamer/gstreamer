@@ -1005,7 +1005,8 @@ gst_ca_opengl_layer_sink_on_draw (GstCAOpenGLLayerSink * ca_sink)
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  _unbind_buffer (ca_sink);
+  else
+    _unbind_buffer (ca_sink);
 
   /* end default opengl scene */
   GST_CA_OPENGL_LAYER_SINK_UNLOCK (ca_sink);

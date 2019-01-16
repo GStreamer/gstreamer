@@ -2299,7 +2299,8 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
     if (gl->GenVertexArrays)
       gl->BindVertexArray (0);
-    _unbind_buffer (gl_sink);
+    else
+      _unbind_buffer (gl_sink);
 
     if (gl_sink->ignore_alpha)
       gl->Disable (GL_BLEND);

@@ -246,7 +246,8 @@ blit_tex (gpointer data)
 
   if (gl->GenVertexArrays)
     gl->BindVertexArray (0);
-  _unbind_buffer (context);
+  else
+    _unbind_buffer (context);
 
   return TRUE;
 }
