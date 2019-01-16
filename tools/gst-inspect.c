@@ -2034,6 +2034,14 @@ main (int argc, char *argv[])
   } else {
     colored_output = FALSE;
   }
+#elif defined(G_OS_WIN32)
+  {
+    gint fd = _fileno (stdout);
+    /* On Windows 10, g_log_writer_supports_color will also setup the console
+     * so that it correctly interprets ANSI VT sequences if it's supported */
+    if (!_isatty (fd) || !g_log_writer_supports_color (fd))
+      colored_output = FALSE;
+  }
 #endif
 
   gst_tools_print_version ();
