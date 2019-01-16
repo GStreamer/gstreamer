@@ -48,8 +48,8 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_BGRA: reverse rgb with alpha channel last
  * @GST_VIDEO_FORMAT_ARGB: rgb with alpha channel first
  * @GST_VIDEO_FORMAT_ABGR: reverse rgb with alpha channel first
- * @GST_VIDEO_FORMAT_RGB: rgb
- * @GST_VIDEO_FORMAT_BGR: reverse rgb
+ * @GST_VIDEO_FORMAT_RGB: RGB packed into 24 bits without padding (`R-G-B-R-G-B`)
+ * @GST_VIDEO_FORMAT_BGR: reverse RGB packed into 24 bits without padding (`B-G-R-B-G-R`)
  * @GST_VIDEO_FORMAT_Y41B: planar 4:1:1 YUV
  * @GST_VIDEO_FORMAT_Y42B: planar 4:2:2 YUV
  * @GST_VIDEO_FORMAT_YVYU: packed 4:2:2 YUV (Y0-V0-Y1-U0 Y2-V2-Y3-U2 Y4 ...)
