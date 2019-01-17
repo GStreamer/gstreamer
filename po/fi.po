@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
+"POT-Creation-Date: 2019-01-17 01:38+0000\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -934,6 +934,9 @@ msgstr "ei säiliötä ”%s”, ohitetaan"
 msgid "empty pipeline not allowed"
 msgstr "tyhjää liukuhihnaa ei sallita"
 
+msgid "Pipeline construction is invalid, please add queues."
+msgstr ""
+
 msgid "A lot of buffers are being dropped."
 msgstr "Useita puskureita putoilee."
 
@@ -1017,6 +1020,9 @@ msgstr "Tiedosto ”%s” on pistoke."
 msgid "Failed after iterations as requested."
 msgstr "Epäonnistui, kuten pyydettiin, yritysten jälkeen."
 
+msgid "eos-after and error-after can't both be defined."
+msgstr ""
+
 msgid "caps"
 msgstr "kyvyt"
 
@@ -1039,7 +1045,8 @@ msgstr "Virta on tyhjä."
 msgid "Stream contains no data."
 msgstr "Virta on tyhjä."
 
-msgid "Implemented Interfaces:\n"
+#, fuzzy, c-format
+msgid "%sImplemented Interfaces%s:\n"
 msgstr "Toteutetut rajapinnat:\n"
 
 msgid "readable"
@@ -1066,7 +1073,8 @@ msgstr "vaihdettavissa vain TYHJÄ- tai VALMIS--tiloissa"
 msgid "Blacklisted files:"
 msgstr "Mustalistatut tiedostot:"
 
-msgid "Total count: "
+#, fuzzy, c-format
+msgid "%sTotal count%s: %s"
 msgstr "Yhteismäärä: "
 
 #, c-format
@@ -1092,6 +1100,22 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d ominaisuus"
 msgstr[1] "%d ominaisuutta"
+
+#, fuzzy, c-format
+msgid "Error creating pipe: %s\n"
+msgstr "Virhe ladattaessa %s\n"
+
+#, fuzzy, c-format
+msgid "Error forking: %s\n"
+msgstr "Virhe ladattaessa %s\n"
+
+#, fuzzy, c-format
+msgid "Error reading from console: %s\n"
+msgstr "Virhe uudelleenskannatessa rekisteriä %s: %s"
+
+#, fuzzy, c-format
+msgid "Error writing to console: %s\n"
+msgstr "Virhe kirjoitettaessa tiedostoon ”%s”."
 
 msgid "Print all elements"
 msgstr "Tulosta kaikki elementit"
@@ -1128,6 +1152,11 @@ msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Tulosta tuetut URI-skeemat sekä ne toteuttavat elementit"
+
+msgid ""
+"Disable colors in output. You can also achieve the same by "
+"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1392,9 +1421,6 @@ msgstr "Vapautetaan liukuhihna...\n"
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Älä asenna SIGUSR1- ja SIGUSR2-signaalinkäsittelijöitä"
 
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Virhe uudelleenskannatessa rekisteriä %s: %s"
-
 #~ msgid "Error re-scanning registry %s"
 #~ msgstr "Virhe uudelleenskannatessa rekisteriä %s"
 
@@ -1459,9 +1485,6 @@ msgstr "Vapautetaan liukuhihna...\n"
 
 #~ msgid "Trying to load %s ...\n"
 #~ msgstr "Yritetään ladata %s ...\n"
-
-#~ msgid "Error loading %s\n"
-#~ msgstr "Virhe ladattaessa %s\n"
 
 #~ msgid "Loaded %d plugins with %d feature.\n"
 #~ msgid_plural "Loaded %d plugins with %d features.\n"

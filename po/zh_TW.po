@@ -27,7 +27,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.3.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
+"POT-Creation-Date: 2019-01-17 01:38+0000\n"
 "PO-Revision-Date: 2014-06-08 00:22+0800\n"
 "Last-Translator: Wen Liao <wen.cf83@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -920,6 +920,9 @@ msgstr "bin \"%s\"不存在，解開elements"
 msgid "empty pipeline not allowed"
 msgstr "不允許空的pipeline"
 
+msgid "Pipeline construction is invalid, please add queues."
+msgstr ""
+
 msgid "A lot of buffers are being dropped."
 msgstr "正在拋棄大量的緩衝區"
 
@@ -1002,6 +1005,9 @@ msgstr "“%s” 是一個 socket。"
 msgid "Failed after iterations as requested."
 msgstr "重複送出請求後發生失敗"
 
+msgid "eos-after and error-after can't both be defined."
+msgstr ""
+
 msgid "caps"
 msgstr ""
 
@@ -1024,7 +1030,8 @@ msgstr "資料串流中沒有資料"
 msgid "Stream contains no data."
 msgstr "資料串流中沒有資料"
 
-msgid "Implemented Interfaces:\n"
+#, fuzzy, c-format
+msgid "%sImplemented Interfaces%s:\n"
 msgstr "實作介面：\n"
 
 msgid "readable"
@@ -1051,7 +1058,8 @@ msgstr "只能切換到NULL 或 READY狀態"
 msgid "Blacklisted files:"
 msgstr "黑名單檔案"
 
-msgid "Total count: "
+#, fuzzy, c-format
+msgid "%sTotal count%s: %s"
 msgstr "總數量:"
 
 #, c-format
@@ -1073,6 +1081,22 @@ msgstr[0] "%d筆黑名單紀錄"
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d 個功能"
+
+#, fuzzy, c-format
+msgid "Error creating pipe: %s\n"
+msgstr "關閉檔案 “%s” 時發生錯誤。"
+
+#, fuzzy, c-format
+msgid "Error forking: %s\n"
+msgstr "關閉檔案 “%s” 時發生錯誤。"
+
+#, c-format
+msgid "Error reading from console: %s\n"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Error writing to console: %s\n"
+msgstr "當寫入內容至檔案 “%s” 時發生錯誤。"
 
 msgid "Print all elements"
 msgstr "顯示所有elements"
@@ -1108,6 +1132,11 @@ msgstr "檢查指定的element或是外掛程式是否存在時順便檢查是�
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "印出支援的URI schemes以及有實作它的elements"
+
+msgid ""
+"Disable colors in output. You can also achieve the same by "
+"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
 
 #, c-format
 msgid "Could not load plugin file: %s\n"

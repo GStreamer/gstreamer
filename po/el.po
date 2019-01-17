@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
+"POT-Creation-Date: 2019-01-17 01:38+0000\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -948,6 +948,9 @@ msgstr "δεν υπάρχει περιέκτης «%s», παράβλεψη"
 msgid "empty pipeline not allowed"
 msgstr "δεν επιτρέπεται κενή διασωλήνωση"
 
+msgid "Pipeline construction is invalid, please add queues."
+msgstr ""
+
 msgid "A lot of buffers are being dropped."
 msgstr "Πολλές ενδιάμεσες αποθηκεύσεις απορρίπτονται."
 
@@ -1031,6 +1034,9 @@ msgstr "Το αρχείο «%s» είναι μια υποδοχή."
 msgid "Failed after iterations as requested."
 msgstr "Αποτυχία κατόπιν επαναλήψεων ως ζητήθηκε."
 
+msgid "eos-after and error-after can't both be defined."
+msgstr ""
+
 msgid "caps"
 msgstr "δυνατότητες"
 
@@ -1053,7 +1059,8 @@ msgstr "Η ροή δεν περιέχει δεδομένα."
 msgid "Stream contains no data."
 msgstr "Η ροή δεν περιέχει δεδομένα."
 
-msgid "Implemented Interfaces:\n"
+#, fuzzy, c-format
+msgid "%sImplemented Interfaces%s:\n"
 msgstr "Υλοποιημένες διεπαφές:\n"
 
 msgid "readable"
@@ -1080,7 +1087,8 @@ msgstr "μπορεί να αλλάξει μόνο σε κατάσταση NULL �
 msgid "Blacklisted files:"
 msgstr "Αρχεία στη μαύρη λίστα:"
 
-msgid "Total count: "
+#, fuzzy, c-format
+msgid "%sTotal count%s: %s"
 msgstr "Συνολική καταμέτρηση:"
 
 #, c-format
@@ -1106,6 +1114,22 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d χαρακτηριστικό"
 msgstr[1] "%d χαρακτηριστικά"
+
+#, fuzzy, c-format
+msgid "Error creating pipe: %s\n"
+msgstr "Σφάλμα κλεισίματος αρχείου «%s»."
+
+#, fuzzy, c-format
+msgid "Error forking: %s\n"
+msgstr "Σφάλμα κλεισίματος αρχείου «%s»."
+
+#, c-format
+msgid "Error reading from console: %s\n"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Error writing to console: %s\n"
+msgstr "Σφάλμα κατά την εγγραφή στο αρχείο «%s»."
 
 msgid "Print all elements"
 msgstr "Εμφάνιση όλων των στοιχείων"
@@ -1142,6 +1166,11 @@ msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Εμφάνιση υποστηριζόμενων μορφών URI, με τα στοιχεία που τις υλοποιούν"
+
+msgid ""
+"Disable colors in output. You can also achieve the same by "
+"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
 
 #, c-format
 msgid "Could not load plugin file: %s\n"

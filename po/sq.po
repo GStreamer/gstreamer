@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
+"POT-Creation-Date: 2019-01-17 01:38+0000\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -945,6 +945,9 @@ msgstr "asnjë bin \"%s\", u kapërcye"
 msgid "empty pipeline not allowed"
 msgstr "nuk lejohet konduktori bosh"
 
+msgid "Pipeline construction is invalid, please add queues."
+msgstr ""
+
 msgid "A lot of buffers are being dropped."
 msgstr ""
 
@@ -1026,6 +1029,9 @@ msgstr "File \"%s\" është një socket."
 msgid "Failed after iterations as requested."
 msgstr "Dështoi mbas përsëritjeve sikurse të kërkuara."
 
+msgid "eos-after and error-after can't both be defined."
+msgstr ""
+
 msgid "caps"
 msgstr "mbrojtëse"
 
@@ -1049,7 +1055,8 @@ msgstr "albumi që përmban këtë të dhënë"
 msgid "Stream contains no data."
 msgstr "albumi që përmban këtë të dhënë"
 
-msgid "Implemented Interfaces:\n"
+#, c-format
+msgid "%sImplemented Interfaces%s:\n"
 msgstr ""
 
 msgid "readable"
@@ -1077,8 +1084,8 @@ msgstr ""
 msgid "Blacklisted files:"
 msgstr ""
 
-#, fuzzy
-msgid "Total count: "
+#, fuzzy, c-format
+msgid "%sTotal count%s: %s"
 msgstr "numërimi i pjesës"
 
 #, c-format
@@ -1104,6 +1111,22 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "karakteristika"
 msgstr[1] "karakteristikat"
+
+#, fuzzy, c-format
+msgid "Error creating pipe: %s\n"
+msgstr "Gabim gjatë ngarkimit të %s\n"
+
+#, fuzzy, c-format
+msgid "Error forking: %s\n"
+msgstr "Gabim gjatë ngarkimit të %s\n"
+
+#, fuzzy, c-format
+msgid "Error reading from console: %s\n"
+msgstr "Gabim gjatë ngarkimit të %s\n"
+
+#, fuzzy, c-format
+msgid "Error writing to console: %s\n"
+msgstr "Gabim gjatë shkrimit tek file \"%s\"."
 
 msgid "Print all elements"
 msgstr "Printo të gjithë elementët"
@@ -1135,6 +1158,11 @@ msgid ""
 msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
+msgstr ""
+
+msgid ""
+"Disable colors in output. You can also achieve the same by "
+"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
 
 #, fuzzy, c-format
@@ -1458,9 +1486,6 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 
 #~ msgid "Trying to load %s ...\n"
 #~ msgstr "Duke u përpjekur të ngarkoj %s ...\n"
-
-#~ msgid "Error loading %s\n"
-#~ msgstr "Gabim gjatë ngarkimit të %s\n"
 
 #~ msgid "Loaded %d plugins with %d %s.\n"
 #~ msgstr "U ngarkuan %d plugins me %d %s.\n"

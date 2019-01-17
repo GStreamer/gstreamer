@@ -9,1001 +9,845 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
+"POT-Creation-Date: 2019-01-17 01:38+0000\n"
 "PO-Revision-Date: 2017-05-05 06:45+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Language-Team-Website: <http://translationproject.org/team/vi.html>\n"
 "X-Generator: Gtranslator 2.91.7\n"
 
-#: gst/gst.c:242
 msgid "Print the GStreamer version"
 msgstr "Hiển thị phiên bản của GStreamer"
 
-#: gst/gst.c:244
 msgid "Make all warnings fatal"
 msgstr "Đặt mọi cảnh báo là nghiêm trọng"
 
-#: gst/gst.c:248
 msgid "Print available debug categories and exit"
 msgstr "Hiển thị tất cả các loại gỡ lỗi sẵn có rồi thoát"
 
-#: gst/gst.c:252
-msgid "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
-msgstr "Mức gỡ lỗi mặc định từ 1 (chỉ lỗi) đến 9 (mọi thứ) hay 0 (không xuất gì)"
+msgid ""
+"Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
+msgstr ""
+"Mức gỡ lỗi mặc định từ 1 (chỉ lỗi) đến 9 (mọi thứ) hay 0 (không xuất gì)"
 
-#: gst/gst.c:254
 msgid "LEVEL"
 msgstr "MỨC"
 
-#: gst/gst.c:256
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Danh sách định giới bằng dấu phẩy của đôi “tên_loại:cấp” để đặt cấp rõ ràng cho mỗi loại. Thí dụ: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Danh sách định giới bằng dấu phẩy của đôi “tên_loại:cấp” để đặt cấp rõ ràng "
+"cho mỗi loại. Thí dụ: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:259
 msgid "LIST"
 msgstr "DANH_SÁCH"
 
-#: gst/gst.c:261
 msgid "Disable colored debugging output"
 msgstr "Tắt xuất dữ liệu gỡ lỗi với màu"
 
-#: gst/gst.c:265
-msgid "Changes coloring mode of the debug log. Possible modes: off, on, disable, auto, unix"
-msgstr "Đổi chế độ màu của nhật ký gỡ lỗi. Các chế độ có thể là: off, on, disable, auto, unix"
+msgid ""
+"Changes coloring mode of the debug log. Possible modes: off, on, disable, "
+"auto, unix"
+msgstr ""
+"Đổi chế độ màu của nhật ký gỡ lỗi. Các chế độ có thể là: off, on, disable, "
+"auto, unix"
 
-#: gst/gst.c:269
 msgid "Disable debugging"
 msgstr "Tắt gỡ lỗi"
 
-#: gst/gst.c:273
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Bật chẩn đoán chi tiết việc nạp phần bổ sung"
 
-#: gst/gst.c:277
 msgid "Colon-separated paths containing plugins"
 msgstr "Các đường dẫn định giới bằng dấu hai chấm mà chứa phần bổ sung"
 
-#: gst/gst.c:277
 msgid "PATHS"
 msgstr "ĐƯỜNG_DẪN"
 
-#: gst/gst.c:280
-msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
-msgstr "Danh sách định giới bằng dấu phẩy chứa các phần bổ sung cần nạp trước, thêm vào danh sách được cất giữ trong biến môi trường GST_PLUGIN_PATH"
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Danh sách định giới bằng dấu phẩy chứa các phần bổ sung cần nạp trước, thêm "
+"vào danh sách được cất giữ trong biến môi trường GST_PLUGIN_PATH"
 
-#: gst/gst.c:282
 msgid "PLUGINS"
 msgstr "PHẦN_BỔ_SUNG"
 
-#: gst/gst.c:285
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Tắt chức năng bắt lỗi phân đoạn trong khi nạp phần bổ sung"
 
-#: gst/gst.c:290
 msgid "Disable updating the registry"
 msgstr "Tắt khả năng cập nhật bộ đăng ký"
 
-#: gst/gst.c:295
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Tắt khả năng tạo và thực hiện tiến trình bổ trợ trong khi quét bộ đăng ký"
+msgstr ""
+"Tắt khả năng tạo và thực hiện tiến trình bổ trợ trong khi quét bộ đăng ký"
 
-#: gst/gst.c:300
 msgid "GStreamer Options"
 msgstr "Tùy chọn GStreamer"
 
-#: gst/gst.c:301
 msgid "Show GStreamer Options"
 msgstr "Hiện Tùy chọn GStreamer"
 
-#: gst/gst.c:930
 msgid "Unknown option"
 msgstr "Tùy chọn lạ"
 
-#: gst/gsterror.c:130
 msgid "GStreamer encountered a general core library error."
 msgstr "Trình GStreamer mới gặp một lỗi thư viện lõi chung."
 
-#: gst/gsterror.c:132 gst/gsterror.c:174 gst/gsterror.c:198 gst/gsterror.c:240
-msgid "GStreamer developers were too lazy to assign an error code to this error."
-msgstr "Những nhà phát triển GStreamer đã quá lười mà chưa gán mã lỗi cho lỗi này."
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr ""
+"Những nhà phát triển GStreamer đã quá lười mà chưa gán mã lỗi cho lỗi này."
 
-#: gst/gsterror.c:135
 msgid "Internal GStreamer error: code not implemented."
 msgstr "Lỗi nội bộ GStreamer: chưa viết mã cho chức năng này."
 
-#: gst/gsterror.c:137
-msgid "GStreamer error: state change failed and some element failed to post a proper error message with the reason for the failure."
-msgstr "Lỗi GStreamer: không thay đổi được tình trạng, và một phần tử nào đó không gửi được thông điệp lỗi đúng chứa lý do của lỗi này."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
+"Lỗi GStreamer: không thay đổi được tình trạng, và một phần tử nào đó không "
+"gửi được thông điệp lỗi đúng chứa lý do của lỗi này."
 
-#: gst/gsterror.c:140
 msgid "Internal GStreamer error: pad problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề đệm."
 
-#: gst/gsterror.c:142
 msgid "Internal GStreamer error: thread problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề về tuyến trình."
 
-#: gst/gsterror.c:144
 msgid "GStreamer error: negotiation problem."
 msgstr "Lỗi GStreamer: vấn đề thỏa thuận."
 
-#: gst/gsterror.c:146
 msgid "Internal GStreamer error: event problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề sự kiện."
 
-#: gst/gsterror.c:148
 msgid "Internal GStreamer error: seek problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề di chuyển vị trí đọc."
 
-#: gst/gsterror.c:150
 msgid "Internal GStreamer error: caps problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề caps."
 
-#: gst/gsterror.c:152
 msgid "Internal GStreamer error: tag problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề thẻ."
 
-#: gst/gsterror.c:154
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Bản cài đặt GStreamer của bạn còn thiếu một bổ sung."
 
-#: gst/gsterror.c:156
 msgid "GStreamer error: clock problem."
 msgstr "Lỗi GStreamer: vấn đề đồng hồ."
 
-#: gst/gsterror.c:158
-msgid "This application is trying to use GStreamer functionality that has been disabled."
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
 msgstr "Ứng dụng này đang thử sử dụng chức năng GStreamer bị tắt."
 
-#: gst/gsterror.c:172
 msgid "GStreamer encountered a general supporting library error."
 msgstr "Trình GStreamer mới gặp một lỗi thư viện hỗ trợ chung."
 
-#: gst/gsterror.c:177
 msgid "Could not initialize supporting library."
 msgstr "Không thể khởi động thư viện hỗ trợ."
 
-#: gst/gsterror.c:179
 msgid "Could not close supporting library."
 msgstr "Không thể đóng thư viện hỗ trợ."
 
-#: gst/gsterror.c:181
 msgid "Could not configure supporting library."
 msgstr "Không thể cấu hình thư viện hỗ trợ."
 
-#: gst/gsterror.c:183
 msgid "Encoding error."
 msgstr "Lỗi giải mã."
 
-#: gst/gsterror.c:196
 msgid "GStreamer encountered a general resource error."
 msgstr "Trình GStreamer mới gặp một lỗi tài nguyên chung."
 
-#: gst/gsterror.c:201
 msgid "Resource not found."
 msgstr "Không tìm thấy tài nguyên."
 
-#: gst/gsterror.c:203
 msgid "Resource busy or not available."
 msgstr "Tài nguyên đang bận hay chưa sẵn sàng."
 
-#: gst/gsterror.c:205
 msgid "Could not open resource for reading."
 msgstr "Không thể mở tài nguyên để đọc."
 
-#: gst/gsterror.c:207
 msgid "Could not open resource for writing."
 msgstr "Không thể mở tài nguyên để ghi."
 
-#: gst/gsterror.c:209
 msgid "Could not open resource for reading and writing."
 msgstr "Không thể mở tài nguyên để đọc và ghi."
 
-#: gst/gsterror.c:211
 msgid "Could not close resource."
 msgstr "Không thể đóng tài nguyên."
 
-#: gst/gsterror.c:213
 msgid "Could not read from resource."
 msgstr "Không thể đọc từ tài nguyên."
 
-#: gst/gsterror.c:215
 msgid "Could not write to resource."
 msgstr "Không thể ghi vào tài nguyên."
 
-#: gst/gsterror.c:217
 msgid "Could not perform seek on resource."
 msgstr "Không thể thi hành việc di chuyển vị trí đọc trên tài nguyên."
 
-#: gst/gsterror.c:219
 msgid "Could not synchronize on resource."
 msgstr "Không thể đồng bộ trên tài nguyên."
 
-#: gst/gsterror.c:221
 msgid "Could not get/set settings from/on resource."
 msgstr "Không thể lấy/đặt cài đặt từ/trên tài nguyên."
 
-#: gst/gsterror.c:223
 msgid "No space left on the resource."
 msgstr "Không còn không gian trống trên tài nguyên đó."
 
-#: gst/gsterror.c:225
 msgid "Not authorized to access resource."
 msgstr "Không đủ thẩm quyền truy cập trên tài nguyên."
 
-#: gst/gsterror.c:238
 msgid "GStreamer encountered a general stream error."
 msgstr "Trình GStreamer mới gặp một lỗi luồng chung."
 
-#: gst/gsterror.c:243
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr "phần tử không thi hành khả năng quản lý luồng này. Hãy thông báo lỗi."
 
-#: gst/gsterror.c:246
 msgid "Could not determine type of stream."
 msgstr "Không thể quyết định kiểu luồng dữ liệu."
 
-#: gst/gsterror.c:248
 msgid "The stream is of a different type than handled by this element."
 msgstr "Luồng dữ liệu đó khác kiểu với luồng mà phần tử này xử lý được."
 
-#: gst/gsterror.c:251
 msgid "There is no codec present that can handle the stream's type."
-msgstr "Hiện thời không có phần mã hóa/giải mã (codec) xử lý được luồng kiểu đó."
+msgstr ""
+"Hiện thời không có phần mã hóa/giải mã (codec) xử lý được luồng kiểu đó."
 
-#: gst/gsterror.c:253
 msgid "Could not decode stream."
 msgstr "Không thể giải mã luồng dữ liệu."
 
-#: gst/gsterror.c:255
 msgid "Could not encode stream."
 msgstr "Không thể mã hóa luồng dữ liệu."
 
-#: gst/gsterror.c:257
 msgid "Could not demultiplex stream."
 msgstr "Không thể tách kênh luồng dữ liệu."
 
-#: gst/gsterror.c:259
 msgid "Could not multiplex stream."
 msgstr "Không thể phối hợp luồng để truyền thông qua một kênh riêng lẻ."
 
-#: gst/gsterror.c:261
 msgid "The stream is in the wrong format."
 msgstr "Luồng dữ liệu có định dạng sai."
 
-#: gst/gsterror.c:263
 msgid "The stream is encrypted and decryption is not supported."
 msgstr "Luồng dữ liệu bị mã hóa và không hỗ trợ chức năng giải mã."
 
-#: gst/gsterror.c:265
-msgid "The stream is encrypted and can't be decrypted because no suitable key has been supplied."
-msgstr "Luồng dữ liệu bị mã hóa và không thể giải mã vì chưa cung cấp khóa thích hợp."
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+"Luồng dữ liệu bị mã hóa và không thể giải mã vì chưa cung cấp khóa thích hợp."
 
-#: gst/gsterror.c:305
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Không có thông điệp lỗi cho miền %s."
 
-#: gst/gsterror.c:313
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Không có thông điệp chuẩn cho miền %s và mã %d."
 
-#: gst/gstpipeline.c:550
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Đồng hồ đã chọn không thể dùng trong đường ống."
 
-#: gst/gstregistry.c:1692
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Lỗi ghi đăng ký bộ nhớ tạm vào %s: %s"
 
-#: gst/gsttaglist.c:108
 msgid "title"
 msgstr "tựa đề"
 
-#: gst/gsttaglist.c:108
 msgid "commonly used title"
 msgstr "tựa đề thường dùng"
 
-#: gst/gsttaglist.c:111
 msgid "title sortname"
 msgstr "tên sắp"
 
-#: gst/gsttaglist.c:111
 msgid "commonly used title for sorting purposes"
 msgstr "thường dùng cho mục đích sắp xếp"
 
-#: gst/gsttaglist.c:114
 msgid "artist"
 msgstr "nghệ sĩ"
 
-#: gst/gsttaglist.c:115
 msgid "person(s) responsible for the recording"
 msgstr "người thu nhạc này"
 
-#: gst/gsttaglist.c:119
 msgid "artist sortname"
 msgstr "tên nghệ sĩ dạng viết tắt"
 
-#: gst/gsttaglist.c:120
 msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "(các) người chịu trách nhiệm về bản thu, cho mục đích sắp xếp"
 
-#: gst/gsttaglist.c:123
 msgid "album"
 msgstr "tập nhạc"
 
-#: gst/gsttaglist.c:124
 msgid "album containing this data"
 msgstr "tập nhạc chứa dữ liệu này"
 
-#: gst/gsttaglist.c:127
 msgid "album sortname"
 msgstr "tên sắp xếp tập nhạc"
 
-#: gst/gsttaglist.c:128
 msgid "album containing this data for sorting purposes"
 msgstr "tập nhạc chứa dữ liệu này, cho mục đích sắp xếp"
 
-#: gst/gsttaglist.c:131
 msgid "album artist"
 msgstr "nghệ sĩ tập"
 
-#: gst/gsttaglist.c:132
 msgid "The artist of the entire album, as it should be displayed"
 msgstr "Nghệ sĩ của toàn bộ tập nhạc, như hiển thị đúng"
 
-#: gst/gsttaglist.c:136
 msgid "album artist sortname"
 msgstr "tên sắp nghệ sĩ tập nhạc"
 
-#: gst/gsttaglist.c:137
 msgid "The artist of the entire album, as it should be sorted"
 msgstr "Nghệ sĩ của toàn bộ tập nhạc, theo thứ tự đúng"
 
-#: gst/gsttaglist.c:139
 msgid "date"
 msgstr "ngày"
 
-#: gst/gsttaglist.c:139
 msgid "date the data was created (as a GDate structure)"
 msgstr "ngày tạo dữ liệu này (dạng cấu trúc GDate)"
 
-#: gst/gsttaglist.c:141
 msgid "datetime"
 msgstr "ngày-giờ"
 
-#: gst/gsttaglist.c:142
 msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "ngày và giờ mà dữ liệu được tạo (dạng cấu trúc GstDateTime)"
 
-#: gst/gsttaglist.c:146
 msgid "genre"
 msgstr "thể loại"
 
-#: gst/gsttaglist.c:147
 msgid "genre this data belongs to"
 msgstr "thể loại của dữ liệu này"
 
-#: gst/gsttaglist.c:150
 msgid "comment"
 msgstr "ghi chú"
 
-#: gst/gsttaglist.c:151
 msgid "free text commenting the data"
 msgstr "ý kiến của bạn về nhạc này"
 
-#: gst/gsttaglist.c:154
 msgid "extended comment"
 msgstr "ghi chú kéo dài"
 
-#: gst/gsttaglist.c:155
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr "văn bản tự do đặt ghi chú về dữ liệu dưới dạng key=value (khóa=giá trị) hay key[en]=comment (khóa[en]=ghi chú)"
+msgstr ""
+"văn bản tự do đặt ghi chú về dữ liệu dưới dạng key=value (khóa=giá trị) hay "
+"key[en]=comment (khóa[en]=ghi chú)"
 
-#: gst/gsttaglist.c:159
 msgid "track number"
 msgstr "số rãnh"
 
-#: gst/gsttaglist.c:160
 msgid "track number inside a collection"
 msgstr "số thứ tự rãnh ở trong bộ sưu tập"
 
-#: gst/gsttaglist.c:163
 msgid "track count"
 msgstr "số lượng rãnh"
 
-#: gst/gsttaglist.c:164
 msgid "count of tracks inside collection this track belongs to"
 msgstr "số đếm rãnh ở trong bộ sưu tập"
 
-#: gst/gsttaglist.c:168
 msgid "disc number"
 msgstr "số đĩa"
 
-#: gst/gsttaglist.c:169
 msgid "disc number inside a collection"
 msgstr "số thứ tự đĩa ở trong bộ sưu tập"
 
-#: gst/gsttaglist.c:172
 msgid "disc count"
 msgstr "số đĩa"
 
-#: gst/gsttaglist.c:173
 msgid "count of discs inside collection this disc belongs to"
 msgstr "số lượng đĩa ở trong bộ sưu tập"
 
-#: gst/gsttaglist.c:177
 msgid "location"
 msgstr "địa điểm"
 
-#: gst/gsttaglist.c:177
-msgid "Origin of media as a URI (location, where the original of the file or stream is hosted)"
-msgstr "Nguồn của nhạc/phim dưới dạng một địa chỉ URI (địa chỉ gốc của tập tin hay luồng)"
+msgid ""
+"Origin of media as a URI (location, where the original of the file or stream "
+"is hosted)"
+msgstr ""
+"Nguồn của nhạc/phim dưới dạng một địa chỉ URI (địa chỉ gốc của tập tin hay "
+"luồng)"
 
-#: gst/gsttaglist.c:182
 msgid "homepage"
 msgstr "trang chủ"
 
-#: gst/gsttaglist.c:183
 msgid "Homepage for this media (i.e. artist or movie homepage)"
 msgstr "Trang chủ của nghệ sĩ hay phim"
 
-#: gst/gsttaglist.c:186
 msgid "description"
 msgstr "mô tả"
 
-#: gst/gsttaglist.c:187
 msgid "short text describing the content of the data"
 msgstr "bài tóm tắt diễn tả nội dung của dữ liệu này"
 
-#: gst/gsttaglist.c:190
 msgid "version"
 msgstr "phiên bản"
 
-#: gst/gsttaglist.c:190
 msgid "version of this data"
 msgstr "phiên bản của dữ liệu này"
 
-#: gst/gsttaglist.c:192
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttaglist.c:194
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "Luật thu âm Tiêu chuẩn Quốc tế (International Standard Recording Code) — xem <http://www.ifpi.org/isrc/>"
+msgstr ""
+"Luật thu âm Tiêu chuẩn Quốc tế (International Standard Recording Code) — xem "
+"<http://www.ifpi.org/isrc/>"
 
-#: gst/gsttaglist.c:198
 msgid "organization"
 msgstr "tổ chức"
 
-#: gst/gsttaglist.c:201
 msgid "copyright"
 msgstr "tác quyền"
 
-#: gst/gsttaglist.c:201
 msgid "copyright notice of the data"
 msgstr "thông báo tác quyền của dữ liệu này"
 
-#: gst/gsttaglist.c:203
 msgid "copyright uri"
 msgstr "URI tác quyền"
 
-#: gst/gsttaglist.c:204
 msgid "URI to the copyright notice of the data"
 msgstr "địa chỉ URI đến thông báo tác quyền của dữ liệu này"
 
-#: gst/gsttaglist.c:206
 msgid "encoded by"
 msgstr "má hóa bởi"
 
-#: gst/gsttaglist.c:206
 msgid "name of the encoding person or organization"
 msgstr "tên của người hay tổ chức đã mã hóa tập tin"
 
-#: gst/gsttaglist.c:210
 msgid "contact"
 msgstr "liên lạc"
 
-#: gst/gsttaglist.c:210
 msgid "contact information"
 msgstr "thông tin liên lạc"
 
-#: gst/gsttaglist.c:212
 msgid "license"
 msgstr "giấy phép"
 
-#: gst/gsttaglist.c:212
 msgid "license of data"
 msgstr "giấy phép của dữ liệu"
 
-#: gst/gsttaglist.c:214
 msgid "license uri"
 msgstr "URI giấy phép"
 
-#: gst/gsttaglist.c:215
 msgid "URI to the license of the data"
 msgstr "địa chỉ URI đến giấy phép của dữ liệu này"
 
-#: gst/gsttaglist.c:218
 msgid "performer"
 msgstr "người biểu diễn"
 
-#: gst/gsttaglist.c:219
 msgid "person(s) performing"
 msgstr "người biểu diễn nhạc/ảnh này"
 
-#: gst/gsttaglist.c:222
 msgid "composer"
 msgstr "người soạn"
 
-#: gst/gsttaglist.c:223
 msgid "person(s) who composed the recording"
 msgstr "(những) người đã soạn bản thu này"
 
-#: gst/gsttaglist.c:227
 msgid "conductor"
 msgstr "người chỉ huy"
 
-#: gst/gsttaglist.c:228
 msgid "conductor/performer refinement"
 msgstr "thanh lọc người chỉ huy / biểu diễn"
 
-#: gst/gsttaglist.c:231
 msgid "duration"
 msgstr "thời lượng"
 
-#: gst/gsttaglist.c:231
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "thời gian bằng đơn vị thời gian kiểu GStreamer (phần tỷ giây: ns)"
 
-#: gst/gsttaglist.c:234
 msgid "codec"
 msgstr "mã hóa"
 
-#: gst/gsttaglist.c:235
 msgid "codec the data is stored in"
 msgstr "cách mã hóa/giải mà dữ liệu này"
 
-#: gst/gsttaglist.c:238
 msgid "video codec"
 msgstr "codec của phim"
 
-#: gst/gsttaglist.c:238
 msgid "codec the video data is stored in"
 msgstr "cách mã hóa/giải mã dữ liệu ảnh động này"
 
-#: gst/gsttaglist.c:241
 msgid "audio codec"
 msgstr "codec âm thanh"
 
-#: gst/gsttaglist.c:241
 msgid "codec the audio data is stored in"
 msgstr "cách mã hóa/giải mã dữ liệu âm thanh này"
 
-#: gst/gsttaglist.c:244
 msgid "subtitle codec"
 msgstr "codec phụ đề"
 
-#: gst/gsttaglist.c:244
 msgid "codec the subtitle data is stored in"
 msgstr "codec theo đó dữ liệu phụ đề được mã hóa"
 
-#: gst/gsttaglist.c:246
 msgid "container format"
 msgstr "định dạng chứa"
 
-#: gst/gsttaglist.c:247
 msgid "container format the data is stored in"
 msgstr "định dạng chứa dữ liệu được cất giữ"
 
-#: gst/gsttaglist.c:249
 msgid "bitrate"
 msgstr "tốc độ bít"
 
-#: gst/gsttaglist.c:249
 msgid "exact or average bitrate in bits/s"
-msgstr "số bít dữ liệu trong mỗi giây phát, chính xác hay trung bình, theo bít/giây"
+msgstr ""
+"số bít dữ liệu trong mỗi giây phát, chính xác hay trung bình, theo bít/giây"
 
-#: gst/gsttaglist.c:251
 msgid "nominal bitrate"
 msgstr "tốc độ bít không đáng kể"
 
-#: gst/gsttaglist.c:251
 msgid "nominal bitrate in bits/s"
 msgstr "số bít dữ liệu trong mỗi giây phát, không đáng kể, theo bít/giây"
 
-#: gst/gsttaglist.c:253
 msgid "minimum bitrate"
 msgstr "tốc độ bít tối thiểu"
 
-#: gst/gsttaglist.c:253
 msgid "minimum bitrate in bits/s"
 msgstr "số bít dữ liệu trong mỗi giây phát, tối thiểu, theo bít/giây"
 
-#: gst/gsttaglist.c:255
 msgid "maximum bitrate"
 msgstr "tốc độ bít tối đa"
 
-#: gst/gsttaglist.c:255
 msgid "maximum bitrate in bits/s"
 msgstr "số bít dữ liệu trong mỗi giây được phát, tối đa, theo bít/giây"
 
-#: gst/gsttaglist.c:258
 msgid "encoder"
 msgstr "mã hóa"
 
-#: gst/gsttaglist.c:258
 msgid "encoder used to encode this stream"
 msgstr "bộ mã hóa được dùng để mã hóa luồng này"
 
-#: gst/gsttaglist.c:261
 msgid "encoder version"
 msgstr "phiên bản bộ giải mã"
 
-#: gst/gsttaglist.c:262
 msgid "version of the encoder used to encode this stream"
 msgstr "phiên bản của bộ mã hóa được dùng để mã hóa luồng này"
 
-#: gst/gsttaglist.c:264
 msgid "serial"
 msgstr "số sê-ri"
 
-#: gst/gsttaglist.c:264
 msgid "serial number of track"
 msgstr "số sê-ri của rãnh"
 
-#: gst/gsttaglist.c:266
 msgid "replaygain track gain"
 msgstr "nhớ âm lượng rãnh"
 
-#: gst/gsttaglist.c:266
 msgid "track gain in db"
 msgstr "tăng hay giảm âm lượng của rãnh tính theo đề-xi-ben"
 
-#: gst/gsttaglist.c:268
 msgid "replaygain track peak"
 msgstr "nhớ âm lượng tối đa rãnh"
 
-#: gst/gsttaglist.c:268
 msgid "peak of the track"
 msgstr "âm lượng tối đa bạn muốn cho rãnh này"
 
-#: gst/gsttaglist.c:270
 msgid "replaygain album gain"
 msgstr "nhớ âm lượng tập nhạc/ảnh"
 
-#: gst/gsttaglist.c:270
 msgid "album gain in db"
 msgstr "tăng hay giảm âm lượng của tập nhạc/ảnh tính theo đề-xi-ben"
 
-#: gst/gsttaglist.c:272
 msgid "replaygain album peak"
 msgstr "nhớ âm lượng tối đa tập nhạc/ảnh"
 
-#: gst/gsttaglist.c:272
 msgid "peak of the album"
 msgstr "âm lượng tối đa bạn muốn cho tập nhạc/ảnh này"
 
-#: gst/gsttaglist.c:274
 msgid "replaygain reference level"
 msgstr "lớp chỉ dẫn khuếch đại phát lại"
 
-#: gst/gsttaglist.c:275
 msgid "reference level of track and album gain values"
 msgstr "lớp chỉ dẫn các giá trị khuếch đại của rãnh và tập nhạc"
 
-#: gst/gsttaglist.c:277
 msgid "language code"
 msgstr "mã ngôn ngữ"
 
-#: gst/gsttaglist.c:278
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "mã ngôn ngữ cho luồng dữ liệu này, tùy theo tiêu chuẩn ISO-639-1 hoặc ISO-639-2"
+msgstr ""
+"mã ngôn ngữ cho luồng dữ liệu này, tùy theo tiêu chuẩn ISO-639-1 hoặc "
+"ISO-639-2"
 
-#: gst/gsttaglist.c:281
 msgid "language name"
 msgstr "Tên ngôn ngữ"
 
-#: gst/gsttaglist.c:282
 msgid "freeform name of the language this stream is in"
 msgstr "tên dạng tự do của ngôn ngữ luồng dữ liệu này là trong"
 
-#: gst/gsttaglist.c:284
 msgid "image"
 msgstr "ảnh"
 
-#: gst/gsttaglist.c:284
 msgid "image related to this stream"
 msgstr "ảnh liên quan đến luồng này"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
-#: gst/gsttaglist.c:288
 msgid "preview image"
 msgstr "ảnh xem thử"
 
-#: gst/gsttaglist.c:288
 msgid "preview image related to this stream"
 msgstr "ảnh xem thử liên quan đến luồng dữ liệu này"
 
-#: gst/gsttaglist.c:290
 msgid "attachment"
 msgstr "đính kèm"
 
-#: gst/gsttaglist.c:290
 msgid "file attached to this stream"
 msgstr "tập tin đính kèm luồng này"
 
-#: gst/gsttaglist.c:293
 msgid "beats per minute"
 msgstr "tiếng nhịp đập mỗi phút"
 
-#: gst/gsttaglist.c:294
 msgid "number of beats per minute in audio"
 msgstr "số tiếng nhịp trong mỗi phút âm thanh"
 
-#: gst/gsttaglist.c:296
 msgid "keywords"
 msgstr "từ khóa"
 
-#: gst/gsttaglist.c:296
 msgid "comma separated keywords describing the content"
 msgstr "các từ khóa định giới bằng dấu phẩy, diễn tả nội dung"
 
-#: gst/gsttaglist.c:299
 msgid "geo location name"
 msgstr "tên định vị địa lý"
 
-#: gst/gsttaglist.c:300
-msgid "human readable descriptive location of where the media has been recorded or produced"
-msgstr "vị trí miêu tả cho người đọc được của nơi ở đó nhạc/phím đã được thu hay tạo"
+msgid ""
+"human readable descriptive location of where the media has been recorded or "
+"produced"
+msgstr ""
+"vị trí miêu tả cho người đọc được của nơi ở đó nhạc/phím đã được thu hay tạo"
 
-#: gst/gsttaglist.c:303
 msgid "geo location latitude"
 msgstr "vĩ độ định vị địa lý"
 
-#: gst/gsttaglist.c:304
-msgid "geo latitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the equator, negative values for southern latitudes)"
-msgstr "vĩ độ định vị địa lý ở đó nhạc/phím đã được thu hay tạo, theo độ tùy theo WGS84 (xích đạo là số không, độ vĩ Nam có số âm)"
+msgid ""
+"geo latitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the equator, negative values for "
+"southern latitudes)"
+msgstr ""
+"vĩ độ định vị địa lý ở đó nhạc/phím đã được thu hay tạo, theo độ tùy theo "
+"WGS84 (xích đạo là số không, độ vĩ Nam có số âm)"
 
-#: gst/gsttaglist.c:308
 msgid "geo location longitude"
 msgstr "độ kinh định vị địa lý"
 
-#: gst/gsttaglist.c:309
-msgid "geo longitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  negative values for western longitudes)"
-msgstr "kinh độ định vị địa lý ở đó nhạc/phím đã được thu hay tạo, theo độ tùy theo WGS84 (kinh tuyến gốc ở Quốc Anh là số không, độ kinh Tây có số âm)"
+msgid ""
+"geo longitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
+"negative values for western longitudes)"
+msgstr ""
+"kinh độ định vị địa lý ở đó nhạc/phím đã được thu hay tạo, theo độ tùy theo "
+"WGS84 (kinh tuyến gốc ở Quốc Anh là số không, độ kinh Tây có số âm)"
 
-#: gst/gsttaglist.c:313
 msgid "geo location elevation"
 msgstr "độ cao định vị địa lý"
 
-#: gst/gsttaglist.c:314
-msgid "geo elevation of where the media has been recorded or produced in meters according to WGS84 (zero is average sea level)"
-msgstr "độ cao định vị địa lý ở đó nhạc/phím đã được thu hay tạo, theo mét tùy theo WSG84 (mặt biển trung bình là số không)"
+msgid ""
+"geo elevation of where the media has been recorded or produced in meters "
+"according to WGS84 (zero is average sea level)"
+msgstr ""
+"độ cao định vị địa lý ở đó nhạc/phím đã được thu hay tạo, theo mét tùy theo "
+"WSG84 (mặt biển trung bình là số không)"
 
-#: gst/gsttaglist.c:317
 msgid "geo location country"
 msgstr "vị trí địa lý của quốc gia"
 
-#: gst/gsttaglist.c:318
 msgid "country (english name) where the media has been recorded or produced"
-msgstr "quốc gia (tên tiếng Anh, v.d. “Vietnam”) ở đó nhạc/phim đã được quay/thu"
+msgstr ""
+"quốc gia (tên tiếng Anh, v.d. “Vietnam”) ở đó nhạc/phim đã được quay/thu"
 
-#: gst/gsttaglist.c:321
 msgid "geo location city"
 msgstr "vị trí địa lý của thành phố"
 
-#: gst/gsttaglist.c:322
 msgid "city (english name) where the media has been recorded or produced"
-msgstr "thành phố (tên tiếng Anh, v.d. “Hanoi”) ở đó nhạc/phím đã được quay/thu"
+msgstr ""
+"thành phố (tên tiếng Anh, v.d. “Hanoi”) ở đó nhạc/phím đã được quay/thu"
 
-#: gst/gsttaglist.c:325
 msgid "geo location sublocation"
 msgstr "vị trí phụ địa lý"
 
-#: gst/gsttaglist.c:326
-msgid "a location within a city where the media has been produced or created (e.g. the neighborhood)"
-msgstr "một vùng bên trong thành phố ở đó dữ liệu đa phương tiện đã được tạo hay sản xuất (v.d. hàng xóm)"
+msgid ""
+"a location within a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr ""
+"một vùng bên trong thành phố ở đó dữ liệu đa phương tiện đã được tạo hay sản "
+"xuất (v.d. hàng xóm)"
 
-#: gst/gsttaglist.c:329
 msgid "geo location horizontal error"
 msgstr "lỗi vị trí đường chân trời theo Trái Đất"
 
-#: gst/gsttaglist.c:330
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr "chờ đợi một lỗi của đo lường vị trí đường nằm ngang (tính bằng mét)"
 
-#: gst/gsttaglist.c:333
 msgid "geo location movement speed"
 msgstr "tốc độ di chuyển theo vị trí đại lý"
 
-#: gst/gsttaglist.c:334
-msgid "movement speed of the capturing device while performing the capture in m/s"
-msgstr "tốc độ di chuyển của thiết bị bắt trong khi thực hiện việc bắt theo miligiây"
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr ""
+"tốc độ di chuyển của thiết bị bắt trong khi thực hiện việc bắt theo miligiây"
 
-#: gst/gsttaglist.c:337
 msgid "geo location movement direction"
 msgstr "hướng di chuyển theo vị trí đại lý"
 
-#: gst/gsttaglist.c:338
-msgid "indicates the movement direction of the device performing the capture of a media. It is represented as degrees in floating point representation, 0 means the geographic north, and increases clockwise"
-msgstr "ngụ ý hướng di chuyển của thiết bị đang bắt phương tiện. Giá trị này được đại diện bằng độ theo dấu phẩy động: 0 là Bắc đại lý, và giá trị tăng theo chiều kim đồng hồ."
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+"ngụ ý hướng di chuyển của thiết bị đang bắt phương tiện. Giá trị này được "
+"đại diện bằng độ theo dấu phẩy động: 0 là Bắc đại lý, và giá trị tăng theo "
+"chiều kim đồng hồ."
 
-#: gst/gsttaglist.c:343
 msgid "geo location capture direction"
 msgstr "hướng bắt theo vị trí đại lý"
 
-#: gst/gsttaglist.c:344
-msgid "indicates the direction the device is pointing to when capturing  a media. It is represented as degrees in floating point  representation, 0 means the geographic north, and increases clockwise"
-msgstr "cho biết rằng hướng thiết bị đang chỉ khi bắt phương tiện. Giá trị này được đại diện bằng độ theo dấu phẩy động: 0 là cực Bắc, và giá trị tăng theo chiều kim đồng hồ."
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+"cho biết rằng hướng thiết bị đang chỉ khi bắt phương tiện. Giá trị này được "
+"đại diện bằng độ theo dấu phẩy động: 0 là cực Bắc, và giá trị tăng theo "
+"chiều kim đồng hồ."
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
-#: gst/gsttaglist.c:350
 msgid "show name"
 msgstr "hiện tên"
 
-#: gst/gsttaglist.c:351
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr "Tên của buổi biểu diễn TV/podcast/bộ là gốc của phương tiện này"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
-#: gst/gsttaglist.c:356
 msgid "show sortname"
 msgstr "hiện tên ngắn"
 
-#: gst/gsttaglist.c:357
-msgid "Name of the tv/podcast/series show the media is from, for sorting purposes"
-msgstr "Tên của cuộc biểu diễn TV/podcast/bộ là gốc của phương tiện này, cho mục đích sắp xếp"
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+"Tên của cuộc biểu diễn TV/podcast/bộ là gốc của phương tiện này, cho mục "
+"đích sắp xếp"
 
-#: gst/gsttaglist.c:360
 msgid "episode number"
 msgstr "số tình tiết"
 
-#: gst/gsttaglist.c:361
 msgid "The episode number in the season the media is part of"
 msgstr "Số thứ tự tình tiết trong mùa cung cấp phương tiện này"
 
-#: gst/gsttaglist.c:364
 msgid "season number"
 msgstr "số mùa"
 
-#: gst/gsttaglist.c:365
 msgid "The season number of the show the media is part of"
 msgstr "Số thứ tự mùa trong cuộc biểu diễn cung cấp phương tiện này"
 
-#: gst/gsttaglist.c:368
 msgid "lyrics"
 msgstr "lời nhạc"
 
-#: gst/gsttaglist.c:368
 msgid "The lyrics of the media, commonly used for songs"
 msgstr "Lời nhạc của phương tiện, thường dùng cho bài hát"
 
-#: gst/gsttaglist.c:371
 msgid "composer sortname"
 msgstr "tên sắp nhạc sĩ"
 
-#: gst/gsttaglist.c:372
 msgid "person(s) who composed the recording, for sorting purposes"
 msgstr "(những) người đã soạn bản thu, dành cho mục đích sắp xếp"
 
-#: gst/gsttaglist.c:374
 msgid "grouping"
 msgstr "nhóm lại"
 
-#: gst/gsttaglist.c:375
-msgid "Groups related media that spans multiple tracks, like the different pieces of a concerto. It is a higher level than a track, but lower than an album"
-msgstr "Nhóm lại các phương tiện liên quan mà chiếm giữ nhiều rãnh khác nhau (v.d. các phần khác nhau của một côngxectô). Cấp này cao hơn rãnh còn thấp hơn tập nhạc."
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
+"Nhóm lại các phương tiện liên quan mà chiếm giữ nhiều rãnh khác nhau (v.d. "
+"các phần khác nhau của một côngxectô). Cấp này cao hơn rãnh còn thấp hơn tập "
+"nhạc."
 
-#: gst/gsttaglist.c:379
 msgid "user rating"
 msgstr "đánh giá do người dùng"
 
-#: gst/gsttaglist.c:380
-msgid "Rating attributed by a user. The higher the rank, the more the user likes this media"
-msgstr "Đánh giá bởi người dùng. Càng cao điểm càng nhiều người dùng thích nhạc/phim này"
+msgid ""
+"Rating attributed by a user. The higher the rank, the more the user likes "
+"this media"
+msgstr ""
+"Đánh giá bởi người dùng. Càng cao điểm càng nhiều người dùng thích nhạc/phim "
+"này"
 
-#: gst/gsttaglist.c:383
 msgid "device manufacturer"
 msgstr "nhà chế tạo thiết bị"
 
-#: gst/gsttaglist.c:384
 msgid "Manufacturer of the device used to create this media"
 msgstr "Nhà chế tạo của thiết bị được dùng để tạo phương tiện này"
 
-#: gst/gsttaglist.c:386
 msgid "device model"
 msgstr "mẫu thiết bị"
 
-#: gst/gsttaglist.c:387
 msgid "Model of the device used to create this media"
 msgstr "Mô hình của thiết bị được dùng để tạo phương tiện này"
 
-#: gst/gsttaglist.c:389
 msgid "application name"
 msgstr "tên ứng dụng"
 
-#: gst/gsttaglist.c:390
 msgid "Application used to create the media"
 msgstr "Ứng dụng sử dụng để tạo đa phương tiện"
 
-#: gst/gsttaglist.c:392
 msgid "application data"
 msgstr "dữ liệu ứng dụng"
 
-#: gst/gsttaglist.c:393
 msgid "Arbitrary application data to be serialized into the media"
-msgstr "Dữ liệu ứng dụng tùy ý để được xếp thứ tự vào trong đa phương tiện (media)"
+msgstr ""
+"Dữ liệu ứng dụng tùy ý để được xếp thứ tự vào trong đa phương tiện (media)"
 
-#: gst/gsttaglist.c:395
 msgid "image orientation"
 msgstr "hướng ảnh"
 
-#: gst/gsttaglist.c:396
 msgid "How the image should be rotated or flipped before display"
 msgstr "Hướng mà ảnh nên được quay hoặc lật trước khi hiển thị"
 
-#: gst/gsttaglist.c:399
 msgid "publisher"
 msgstr "nhà xuất bản"
 
-#: gst/gsttaglist.c:400
 msgid "Name of the label or publisher"
 msgstr "Tên của nhãn hay nhà xuất bản"
 
-#: gst/gsttaglist.c:403
 msgid "interpreted-by"
 msgstr "phiên-dịch-bởi"
 
-#: gst/gsttaglist.c:404
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Thông tin về người đứng sau phối và biên tập lại"
 
-#: gst/gsttaglist.c:408
 msgid "midi-base-note"
 msgstr "midi-base-note"
 
-#: gst/gsttaglist.c:408
 msgid "Midi note number of the audio track."
 msgstr "Số ghi chú midi của rãnh âm thanh."
 
-#: gst/gsttaglist.c:411
 msgid "private-data"
 msgstr "dữ-liệu-riêng"
 
-#: gst/gsttaglist.c:411
 msgid "Private data"
 msgstr "Dữ liệu riêng"
 
-#: gst/gsttaglist.c:451
 msgid ", "
 msgstr ", "
 
-#: gst/gsturi.c:656
 #, c-format
 msgid "No URI handler for the %s protocol found"
 msgstr "Không tìm thấy bộ tiếp hợp với URI dành cho giao thức %s"
 
-#: gst/gsturi.c:831
 #, c-format
 msgid "URI scheme '%s' not supported"
 msgstr "Không hỗ trợ lược đồ URI “%s”"
 
-#: gst/gstutils.c:2562 tools/gst-launch.c:325
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "LỖI: từ phần tử %s: %s\n"
 
-#: gst/gstutils.c:2564 tools/gst-launch.c:327 tools/gst-launch.c:671
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -1012,404 +856,363 @@ msgstr ""
 "Thông tin gỡ lỗi thêm:\n"
 "%s\n"
 
-#: gst/parse/grammar.y:216
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "liên kết không có nguồn [sink=%s@%p]"
 
-#: gst/parse/grammar.y:221
 #, c-format
 msgid "link has no sink [source=%s@%p]"
 msgstr "liên kết không có sink [nguồn=%s@%p]"
 
-#: gst/parse/grammar.y:413
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "không có thuộc tính “%s” trong phần tử “%s”"
 
-#: gst/parse/grammar.y:454
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "không thể đặt thuộc tính “%s” trong phần tử “%s” thành “%s”"
 
-#: gst/parse/grammar.y:507
 msgid "Delayed linking failed."
 msgstr "Gặp lỗi khi liên kết trễ."
 
-#: gst/parse/grammar.y:719 gst/parse/grammar.y:724
 #, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
 msgstr "không thể liên kết %s đến %s, %s không thể xử lý caps %s"
 
-#: gst/parse/grammar.y:729
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr "không thể liên kết %s đến %s, mà cũng không có phần tử nào xó thể xử lý caps %s"
+msgstr ""
+"không thể liên kết %s đến %s, mà cũng không có phần tử nào xó thể xử lý caps "
+"%s"
 
-#: gst/parse/grammar.y:733
 #, c-format
 msgid "could not link %s to %s with caps %s"
 msgstr "không thể liên kết %s đến %s với caps %s"
 
-#: gst/parse/grammar.y:739
 #, c-format
 msgid "could not link %s to %s"
 msgstr "không thể liên kết %s đến %s"
 
-#: gst/parse/grammar.y:816
 #, c-format
 msgid "no element \"%s\""
 msgstr "không có phần tử “%s”"
 
-#: gst/parse/grammar.y:877
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
 msgstr "gặp tham chiếu không cần \"%s\" nên bỏ qua"
 
-#: gst/parse/grammar.y:883
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
 msgstr "gặp tham chiếu đệm không cần \"%s\" nên bỏ qua"
 
-#: gst/parse/grammar.y:915 gst/parse/grammar.y:924
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "không thể phân tách caps “%s”"
 
-#: gst/parse/grammar.y:952
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "không có phần tử quản lý việc phân phối dữ liệu vào đệm khác nhau, cho địa điểm “%s”"
+msgstr ""
+"không có phần tử quản lý việc phân phối dữ liệu vào đệm khác nhau, cho địa "
+"điểm “%s”"
 
-#: gst/parse/grammar.y:971
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "không có phần tử nguồn cho URI “%s”"
 
-#: gst/parse/grammar.y:1061
 msgid "syntax error"
 msgstr "lỗi cú pháp"
 
-#: gst/parse/grammar.y:1084
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "không cho phép nhị phân trống được ghi rõ “%s”"
 
-#: gst/parse/grammar.y:1094
 #, c-format
 msgid "no bin \"%s\", unpacking elements"
 msgstr "không có nhị phân “%s”, đang giải nén các phần tử"
 
-#: gst/parse/grammar.y:1125
 msgid "empty pipeline not allowed"
 msgstr "không cho phép đường ống trống"
 
-#: libs/gst/base/gstbasesink.c:2900
+msgid "Pipeline construction is invalid, please add queues."
+msgstr ""
+
 msgid "A lot of buffers are being dropped."
 msgstr "Nhiều bộ đệm bị bỏ."
 
-#: libs/gst/base/gstbasesink.c:3399
 msgid "Internal data flow problem."
 msgstr "Vấn đề luồng dữ liệu nội bộ."
 
-#: libs/gst/base/gstbasesink.c:4122 libs/gst/base/gstbasesrc.c:2947
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
-#: libs/gst/base/gstbasesrc.c:2539
 msgid "Internal clock error."
 msgstr "Lỗi đồng hồ nội bộ."
 
-#: libs/gst/base/gstbasesrc.c:2567 plugins/elements/gstdownloadbuffer.c:842
-#: plugins/elements/gstdownloadbuffer.c:1266
 msgid "Failed to map buffer."
 msgstr "Gặp lỗi khi ánh xạ bộ nhớ đệm."
 
-#: plugins/elements/gstcapsfilter.c:128
 msgid "Filter caps"
 msgstr "Lọc tối đa"
 
-#: plugins/elements/gstcapsfilter.c:129
-msgid "Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object."
-msgstr "Hạn chế các khả năng có thể cho phép (NULL [vô giá trị] cho phép tất cả). Đặt thuộc tính này thì chấp nhận tham chiếu đến đối tượng GstCaps đã cung cấp."
+msgid ""
+"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
+"property takes a reference to the supplied GstCaps object."
+msgstr ""
+"Hạn chế các khả năng có thể cho phép (NULL [vô giá trị] cho phép tất cả). "
+"Đặt thuộc tính này thì chấp nhận tham chiếu đến đối tượng GstCaps đã cung "
+"cấp."
 
-#: plugins/elements/gstcapsfilter.c:136
 msgid "Caps Change Mode"
 msgstr "Thay đổi chế độ Caps"
 
-#: plugins/elements/gstcapsfilter.c:137
 msgid "Filter caps change behaviour"
 msgstr "Bộ lọc caps thay đổi cách ứng xử"
 
-#: plugins/elements/gstdownloadbuffer.c:927 plugins/elements/gstqueue2.c:1711
 msgid "No Temp directory specified."
 msgstr "Chưa xác định thư mục tạm thời."
 
-#: plugins/elements/gstdownloadbuffer.c:933 plugins/elements/gstqueue2.c:1717
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Không thể tạo tập tin tạm thời “%s”."
 
-#: plugins/elements/gstdownloadbuffer.c:941 plugins/elements/gstfilesrc.c:539
-#: plugins/elements/gstqueue2.c:1725
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không thể mở tập tin “%s” để đọc."
 
-#: plugins/elements/gstdownloadbuffer.c:1275 plugins/elements/gstqueue2.c:2145
 msgid "Error while writing to download file."
 msgstr "Gặp lỗi khi ghi vào tập tin tải về."
 
-#: plugins/elements/gstfilesink.c:431
 msgid "No file name specified for writing."
 msgstr "Chưa ghi rõ tên tập tin để ghi vào."
 
-#: plugins/elements/gstfilesink.c:437
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Không thể mở tập tin “%s” để ghi."
 
-#: plugins/elements/gstfilesink.c:449
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "Gặp lỗi khi đóng tập tin “%s”."
 
-#: plugins/elements/gstfilesink.c:618
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "Gặp lỗi khi di chuyển vị trí đọc trong tập tin “%s”."
 
-#: plugins/elements/gstfilesink.c:626 plugins/elements/gstfilesink.c:703
-#: plugins/elements/gstfilesink.c:738
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Gặp lỗi khi ghi vào tập tin “%s”."
 
-#: plugins/elements/gstfilesrc.c:527
 msgid "No file name specified for reading."
 msgstr "Chưa ghi rõ tên tập tin để đọc."
 
-#: plugins/elements/gstfilesrc.c:548
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "Không thể lấy thông tin về “%s”."
 
-#: plugins/elements/gstfilesrc.c:554
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "“%s” là thư mục."
 
-#: plugins/elements/gstfilesrc.c:560
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Tập tin “%s” là ổ cắm mạng."
 
-#: plugins/elements/gstidentity.c:678
 msgid "Failed after iterations as requested."
 msgstr "Lỗi sau số lần lặp lại được chọn."
 
-#: plugins/elements/gsttypefindelement.c:253
+msgid "eos-after and error-after can't both be defined."
+msgstr ""
+
 msgid "caps"
 msgstr "khả năng"
 
-#: plugins/elements/gsttypefindelement.c:254
 msgid "detected capabilities in stream"
 msgstr "đã phát hiện khả năng trong luồng"
 
-#: plugins/elements/gsttypefindelement.c:257
 msgid "minimum"
 msgstr "tối thiểu"
 
-#: plugins/elements/gsttypefindelement.c:262
 msgid "force caps"
 msgstr "buộc khả năng"
 
-#: plugins/elements/gsttypefindelement.c:263
 msgid "force caps without doing a typefind"
 msgstr "buộc các khả năng mà không tìm kiểu"
 
-#: plugins/elements/gsttypefindelement.c:990
-#: plugins/elements/gsttypefindelement.c:1012
 msgid "Stream doesn't contain enough data."
 msgstr "Luồng không chứa đủ dữ liệu."
 
-#: plugins/elements/gsttypefindelement.c:1132
 msgid "Stream contains no data."
 msgstr "Luồng không chứa dữ liệu."
 
-#: tools/gst-inspect.c:195
-msgid "Implemented Interfaces:\n"
+#, fuzzy, c-format
+msgid "%sImplemented Interfaces%s:\n"
 msgstr "Giao diện đã thực hiện:\n"
 
-#: tools/gst-inspect.c:281
 msgid "readable"
 msgstr "được đọc"
 
-#: tools/gst-inspect.c:290
 msgid "writable"
 msgstr "được ghi"
 
-#: tools/gst-inspect.c:294
 msgid "deprecated"
 msgstr "đã lạc hậu"
 
-#: tools/gst-inspect.c:298
 msgid "controllable"
 msgstr "điều khiển được"
 
-#: tools/gst-inspect.c:302
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "có thể thay đổi được trong trạng thái NULL, READY, PAUSED hay PLAYING"
 
-#: tools/gst-inspect.c:304
 msgid "changeable only in NULL, READY or PAUSED state"
 msgstr "chỉ có thể thay đổi trong trạng thái NULL, READY hay PAUSED"
 
-#: tools/gst-inspect.c:306
 msgid "changeable only in NULL or READY state"
 msgstr "chỉ có thể thay đổi trong trạng thái NULL hay READY"
 
-#: tools/gst-inspect.c:909
 msgid "Blacklisted files:"
 msgstr "Tập tin bị cấm:"
 
-#: tools/gst-inspect.c:921 tools/gst-inspect.c:1044
-msgid "Total count: "
+#, fuzzy, c-format
+msgid "%sTotal count%s: %s"
 msgstr "Số lượng tổng cộng: "
 
-#: tools/gst-inspect.c:922
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
 msgstr[0] "%d tập tin bị cấm"
 
-#: tools/gst-inspect.c:1045
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d phần bổ sung"
 
-#: tools/gst-inspect.c:1048
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
 msgstr[0] "%d mục tin bị cấm"
 
-#: tools/gst-inspect.c:1053
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d tính năng"
 
-#: tools/gst-inspect.c:1503
+#, fuzzy, c-format
+msgid "Error creating pipe: %s\n"
+msgstr "Gặp lỗi khi đóng tập tin “%s”."
+
+#, fuzzy, c-format
+msgid "Error forking: %s\n"
+msgstr "Gặp lỗi khi đóng tập tin “%s”."
+
+#, c-format
+msgid "Error reading from console: %s\n"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Error writing to console: %s\n"
+msgstr "Gặp lỗi khi ghi vào tập tin “%s”."
+
 msgid "Print all elements"
 msgstr "In ra mọi phần tử"
 
-#: tools/gst-inspect.c:1505
 msgid "Print list of blacklisted files"
 msgstr "In danh sách các tập tin bị cấm"
 
-#: tools/gst-inspect.c:1507
 msgid ""
-"Print a machine-parsable list of features the specified plugin or all plugins provide.\n"
-"                                       Useful in connection with external automatic plugin installation mechanisms"
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
 msgstr ""
-"In ra danh sách cho máy phân tích được chứa các tính năng của phần bổ sung đã ghi rõ hoặc mọi phần bổ sung.\n"
-"                                       Có ích khi dùng cơ chế tự động bên ngoài mà cài đặt phần bổ sung."
+"In ra danh sách cho máy phân tích được chứa các tính năng của phần bổ sung "
+"đã ghi rõ hoặc mọi phần bổ sung.\n"
+"                                       Có ích khi dùng cơ chế tự động bên "
+"ngoài mà cài đặt phần bổ sung."
 
-#: tools/gst-inspect.c:1512
 msgid "List the plugin contents"
 msgstr "Liệt kê nội dung phần bổ sung"
 
-#: tools/gst-inspect.c:1514
-msgid "A slashes ('/') separated list of types of elements (also known as klass) to list. (unordered)"
-msgstr "Một danh sách các kiểu của phần tử được ngăn cách bằng dấu xổ chéo (“/”) (thường được gọi là klass) để liệt kê. (không được đăng ký)"
+msgid ""
+"A slashes ('/') separated list of types of elements (also known as klass) to "
+"list. (unordered)"
+msgstr ""
+"Một danh sách các kiểu của phần tử được ngăn cách bằng dấu xổ chéo (“/”) "
+"(thường được gọi là klass) để liệt kê. (không được đăng ký)"
 
-#: tools/gst-inspect.c:1517
 msgid "Check if the specified element or plugin exists"
 msgstr "Kiểm tra xem một phần tử hay phần bổ xung đã cho có tồn tại hay không"
 
-#: tools/gst-inspect.c:1520
-msgid "When checking if an element or plugin exists, also check that its version is at least the version specified"
-msgstr "Kiểm tra xem một phần tử hay phần bổ xung đã cho có tồn tại hay không, đồng thời cũng kiểm tra cả phiên bản tối thiểu có thể hoạt động được"
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
+"Kiểm tra xem một phần tử hay phần bổ xung đã cho có tồn tại hay không, đồng "
+"thời cũng kiểm tra cả phiên bản tối thiểu có thể hoạt động được"
 
-#: tools/gst-inspect.c:1524
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "In ra các lược đồ URI được hỗ trợ, với những phần tử thực hiện chúng."
 
-#: tools/gst-inspect.c:1672
+msgid ""
+"Disable colors in output. You can also achieve the same by "
+"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Không thể nạp tập tin phần bổ sung: %s\n"
 
-#: tools/gst-inspect.c:1677
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Không có phần tử hay phần bổ sung như vậy “%s”\n"
 
-#: tools/gst-launch.c:252
 msgid "Index statistics"
 msgstr "Thống kê chỉ mục"
 
-#: tools/gst-launch.c:552
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "Nhận được thông điệp số %u từ phần tử “%s” (%s): "
 
-#: tools/gst-launch.c:556
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
 msgstr "Nhận được thông điệp số %u từ đệm “%s:%s” (%s): "
 
-#: tools/gst-launch.c:560
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
 msgstr "Nhận được thông điệp số %u từ đối tượng “%s” (%s): "
 
-#: tools/gst-launch.c:564
 #, c-format
 msgid "Got message #%u (%s): "
 msgstr "Nhận được thông điệp số %u (%s): "
 
-#: tools/gst-launch.c:596
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Mới nhận kết thúc luồng (EOS) từ phần tử “%s”.\n"
 
-#: tools/gst-launch.c:605
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "THẺ ĐÃ TÌM     : được tìm bởi phần tử “%s”.\n"
 
-#: tools/gst-launch.c:608
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
 msgstr "THẺ ĐÃ TÌM     : được tìm bởi đệm “%s:%s”.\n"
 
-#: tools/gst-launch.c:611
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
 msgstr "THẺ ĐÃ TÌM     : được tìm bởi đối tượng “%s”.\n"
 
-#: tools/gst-launch.c:614
 msgid "FOUND TAG\n"
 msgstr "THẺ ĐÃ TÌM\n"
 
-#: tools/gst-launch.c:629
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
 msgstr "TOC ĐÃ TÌM     : được tìm bởi phần tử \"%s\".\n"
 
-#: tools/gst-launch.c:632
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
 msgstr "TOC ĐÃ TÌM     : được tìm bởi đối tượng \"%s\".\n"
 
-#: tools/gst-launch.c:635
 msgid "FOUND TOC\n"
 msgstr "TOC TÌM THẤY\n"
 
-#: tools/gst-launch.c:652
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1418,186 +1221,148 @@ msgstr ""
 "THÔNG TIN:\n"
 "%s\n"
 
-#: tools/gst-launch.c:669
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "CẢNH BÁO: từ phần tử %s: %s\n"
 
-#: tools/gst-launch.c:704
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Cuộn sẵn, đợi chuyển hoán đệm xong…\n"
 
-#: tools/gst-launch.c:708
 msgid "Prerolled, waiting for progress to finish...\n"
 msgstr "Cuộn sẵn, đợi tiến trình hoàn tất…\n"
 
-#: tools/gst-launch.c:720
 msgid "buffering..."
 msgstr "đang chuyển hoán đệm…"
 
-#: tools/gst-launch.c:731
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Hoàn tất chuyển hoán đệm nên đặt đường ống thành ĐANG PHÁT …\n"
 
-#: tools/gst-launch.c:739
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Đang chuyển hoán đệm nên đặt đường ống thành BỊ TẠM DỪNG …\n"
 
-#: tools/gst-launch.c:748
 msgid "Redistribute latency...\n"
 msgstr "Phân phối lại độ trễ…\n"
 
-#: tools/gst-launch.c:759
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Đang đặt tình trạng thành %s như yêu cầu bởi %s….\n"
 
-#: tools/gst-launch.c:775
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Ngắt: đang ngừng chạy đường ống …\n"
 
-#: tools/gst-launch.c:804
 #, c-format
 msgid "Progress: (%s) %s\n"
 msgstr "Tiến trình: (%s) %s\n"
 
-#: tools/gst-launch.c:817
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "Thiếu phần tử: %s\n"
 
-#: tools/gst-launch.c:831
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Đã nhận nội dung từ phần tử “%s”: %s=%s\n"
 
-#: tools/gst-launch.c:963
 msgid "Output tags (also known as metadata)"
 msgstr "Xuất các thẻ (cũng được biết là siêu dữ liệu)"
 
-#: tools/gst-launch.c:965
 msgid "Output TOC (chapters and editions)"
 msgstr "Xuất TOC (các chương và phiên bản)"
 
-#: tools/gst-launch.c:967
 msgid "Output status information and property notifications"
 msgstr "Xuất thông tin trạng thái và thông báo tài sản"
 
-#: tools/gst-launch.c:969
 msgid "Do not print any progress information"
 msgstr "Không in ra thông tin nào về tiến hành"
 
-#: tools/gst-launch.c:971
 msgid "Output messages"
 msgstr "Thông điệp xuất"
 
-#: tools/gst-launch.c:973
-msgid "Do not output status information for the specified property if verbose output is enabled (can be used multiple times)"
-msgstr "Đừng xuất thông tinh trạng thái cho thuộc tính đã cho nếu bật kết xuất chi tiết (có thể sử dụng nhiều lần)"
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
+"Đừng xuất thông tinh trạng thái cho thuộc tính đã cho nếu bật kết xuất chi "
+"tiết (có thể sử dụng nhiều lần)"
 
-#: tools/gst-launch.c:975
 msgid "PROPERTY-NAME"
 msgstr "TÊN-THUỘC-TÍNH"
 
-#: tools/gst-launch.c:977
 msgid "Do not install a fault handler"
 msgstr "Không cài đặt bộ quản lý lỗi"
 
-#: tools/gst-launch.c:979
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Ép buộc kết thúc luồng trên các nguồn trước khi đóng đường ống"
 
-#: tools/gst-launch.c:982
 msgid "Gather and print index statistics"
 msgstr "Tập hợp lại và in ra thống kê chỉ mục"
 
-#: tools/gst-launch.c:1049
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "LỖI: không thể xây dựng đường ống: %s.\n"
 
-#: tools/gst-launch.c:1053
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "LỖI: không thể xây dựng đường ống.\n"
 
-#: tools/gst-launch.c:1057
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "CẢNH BÁO: đường ống có lỗi: %s\n"
 
-#: tools/gst-launch.c:1073
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "LỖI: không tìm thấy phần tử “đường ống” (pipeline).\n"
 
-#: tools/gst-launch.c:1104 tools/gst-launch.c:1205
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Đang đặt đường ống thành BỊ TẠM DỪNG …\n"
 
-#: tools/gst-launch.c:1109
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "LỖI: đường ống không tạm dừng được.\n"
 
-#: tools/gst-launch.c:1114
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Đường ống đang sống và không cần TIỀN CUỘN …\n"
 
-#: tools/gst-launch.c:1118
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Đường ống ĐANG TIỀN CUỘN …\n"
 
-#: tools/gst-launch.c:1121 tools/gst-launch.c:1135
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "LỖI: đường ống không tiền cuộn được.\n"
 
-#: tools/gst-launch.c:1128
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Đường ống ĐÃ TIỀN CUỘN …\n"
 
-#: tools/gst-launch.c:1141
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Đang đặt đường ống thành ĐANG PHÁT …\n"
 
-#: tools/gst-launch.c:1148
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "LỖI: đường ống không phát được.\n"
 
-#: tools/gst-launch.c:1167
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "Kết thúc luồng khi tắt phần mềm vẫn còn hoạt động thì đang ép buộc kết thúc luồng trên đường ống\n"
+msgstr ""
+"Kết thúc luồng khi tắt phần mềm vẫn còn hoạt động thì đang ép buộc kết thúc "
+"luồng trên đường ống\n"
 
-#: tools/gst-launch.c:1171
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
 msgstr "EOS khi tắt máy được bật -- chờ sau Lỗi EOS\n"
 
-#: tools/gst-launch.c:1174
 msgid "Waiting for EOS...\n"
 msgstr "Đang đợi kết thúc luồng…\n"
 
-#: tools/gst-launch.c:1181
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Nhận được tín hiệu kết thúc luồng: đang ngừng chạy đường ống …\n"
 
-#: tools/gst-launch.c:1185
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
 msgstr "Ngắt trong khi chờ EOS - đang dừng đường ống lại…\n"
 
-#: tools/gst-launch.c:1190
 msgid "An error happened while waiting for EOS\n"
 msgstr "Gặp lỗi trong khi đợi kết thúc luồng\n"
 
-#: tools/gst-launch.c:1201
 msgid "Execution ended after %"
 msgstr "Thực hiện xong sau %"
 
-#: tools/gst-launch.c:1217
 msgid "Setting pipeline to READY ...\n"
 msgstr "Đang đặt đường ống thành SẴN_SÀNG …\n"
 
-#: tools/gst-launch.c:1229
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Đang đặt đường ống thành VÔ_GIÁ_TRỊ …\n"
 
-#: tools/gst-launch.c:1233
 msgid "Freeing pipeline ...\n"
 msgstr "Đang giải phóng đường ống …\n"
 
@@ -1617,7 +1382,8 @@ msgstr "Đang giải phóng đường ống …\n"
 #~ msgstr "liên kết không có phần tử nguồn"
 
 #~ msgid "link without sink element"
-#~ msgstr "liên kết không có phần tử quản lý việc phân phối dữ liệu vào đệm khác nhau"
+#~ msgstr ""
+#~ "liên kết không có phần tử quản lý việc phân phối dữ liệu vào đệm khác nhau"
 
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "không có phần tử đến đó cần liên kết URI “%s”"
@@ -1626,7 +1392,8 @@ msgstr "Đang giải phóng đường ống …\n"
 #~ msgstr "tối đa"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr "Cách sử dụng: gst-xmllaunch <tập_tin.xml> [ yếu_tố.tài_sản=giá_trị …]\n"
+#~ msgstr ""
+#~ "Cách sử dụng: gst-xmllaunch <tập_tin.xml> [ yếu_tố.tài_sản=giá_trị …]\n"
 
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "LỖI: lỗi phân tách tập tin xml “%s”.\n"

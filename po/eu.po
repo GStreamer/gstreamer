@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
+"POT-Creation-Date: 2019-01-17 01:38+0000\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -938,6 +938,9 @@ msgstr "ez dago \"%s\" ontzirik, saltatzen"
 msgid "empty pipeline not allowed"
 msgstr "ez dira onartzen kanalizazio hutsak"
 
+msgid "Pipeline construction is invalid, please add queues."
+msgstr ""
+
 msgid "A lot of buffers are being dropped."
 msgstr "Buffer asko jaregiten ari dira."
 
@@ -1021,6 +1024,9 @@ msgstr "\"%s\" fitxategia socket-a da."
 msgid "Failed after iterations as requested."
 msgstr "Huts egin du eskatutako iterazioak egin ondoren."
 
+msgid "eos-after and error-after can't both be defined."
+msgstr ""
+
 msgid "caps"
 msgstr "ahalmenak"
 
@@ -1043,7 +1049,8 @@ msgstr "Korronteak ez du daturik."
 msgid "Stream contains no data."
 msgstr "Korronteak ez du daturik."
 
-msgid "Implemented Interfaces:\n"
+#, fuzzy, c-format
+msgid "%sImplemented Interfaces%s:\n"
 msgstr "Inplementatutako interfazeak:\n"
 
 msgid "readable"
@@ -1070,7 +1077,8 @@ msgstr ""
 msgid "Blacklisted files:"
 msgstr "Zerrenda beltzeko fitxategiak:"
 
-msgid "Total count: "
+#, fuzzy, c-format
+msgid "%sTotal count%s: %s"
 msgstr "Kopuru osoa: "
 
 #, c-format
@@ -1096,6 +1104,22 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d eginbide"
 msgstr[1] "%d eginbide"
+
+#, fuzzy, c-format
+msgid "Error creating pipe: %s\n"
+msgstr "Errorea gertatu da \"%s\" fitxategia ixtean."
+
+#, fuzzy, c-format
+msgid "Error forking: %s\n"
+msgstr "Errorea gertatu da \"%s\" fitxategia ixtean."
+
+#, c-format
+msgid "Error reading from console: %s\n"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Error writing to console: %s\n"
+msgstr "Errorea gertatu da \"%s\" fitxategian idaztean."
 
 msgid "Print all elements"
 msgstr "Inprimatu elementu guztiak"
@@ -1133,6 +1157,11 @@ msgstr ""
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 "Erakutsi onartutako URI eskemak, haiek inplementatzen dituzten elementuekin"
+
+msgid ""
+"Disable colors in output. You can also achieve the same by "
+"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
 
 #, c-format
 msgid "Could not load plugin file: %s\n"

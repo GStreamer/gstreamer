@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
+"POT-Creation-Date: 2019-01-17 01:38+0000\n"
 "PO-Revision-Date: 2011-10-02 15:45+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -939,6 +939,9 @@ msgstr "no existe el binario «%s», omitiendo"
 msgid "empty pipeline not allowed"
 msgstr "no se permite un conducto vacío"
 
+msgid "Pipeline construction is invalid, please add queues."
+msgstr ""
+
 msgid "A lot of buffers are being dropped."
 msgstr "Se están desechando muchos búferes."
 
@@ -1022,6 +1025,9 @@ msgstr "El archivo «%s» es un socket."
 msgid "Failed after iterations as requested."
 msgstr "Falló después de las iteraciones, como se pidió."
 
+msgid "eos-after and error-after can't both be defined."
+msgstr ""
+
 msgid "caps"
 msgstr "capacidades"
 
@@ -1044,7 +1050,8 @@ msgstr "El flujo no contiene datos."
 msgid "Stream contains no data."
 msgstr "El flujo no contiene datos."
 
-msgid "Implemented Interfaces:\n"
+#, fuzzy, c-format
+msgid "%sImplemented Interfaces%s:\n"
 msgstr "Interfaces implementados:\n"
 
 msgid "readable"
@@ -1071,7 +1078,8 @@ msgstr "intercambiable sólo entre los estados NULL o READY"
 msgid "Blacklisted files:"
 msgstr "Archivos en la lista negra:"
 
-msgid "Total count: "
+#, fuzzy, c-format
+msgid "%sTotal count%s: %s"
 msgstr "Conteo total:"
 
 #, c-format
@@ -1097,6 +1105,22 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d característica"
 msgstr[1] "%d características"
+
+#, fuzzy, c-format
+msgid "Error creating pipe: %s\n"
+msgstr "Error al cerrar el archivo «%s»."
+
+#, fuzzy, c-format
+msgid "Error forking: %s\n"
+msgstr "Error al cerrar el archivo «%s»."
+
+#, fuzzy, c-format
+msgid "Error reading from console: %s\n"
+msgstr "Error al volver a escanear el registro %s: %s"
+
+#, fuzzy, c-format
+msgid "Error writing to console: %s\n"
+msgstr "Error al escribir al archivo «%s»."
 
 msgid "Print all elements"
 msgstr "Imprimir todos los elementos"
@@ -1134,6 +1158,11 @@ msgstr ""
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
 "Imprimir los esquemas URI soportados, con los elementos que los implementan"
+
+msgid ""
+"Disable colors in output. You can also achieve the same by "
+"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1400,9 +1429,6 @@ msgstr "Liberando la tubería…\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "No instalar los manejadores de señales para SIGUSR1 y SIGUSR2"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Error al volver a escanear el registro %s: %s"
 
 #~ msgid "Error re-scanning registry %s"
 #~ msgstr "Error al volver a escanear el registro %s"

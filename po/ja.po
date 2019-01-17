@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
+"POT-Creation-Date: 2019-01-17 01:38+0000\n"
 "PO-Revision-Date: 2013-08-20 14:56+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -892,6 +892,9 @@ msgstr "プロパティ \"%s\" がエレメント \"%s\" にありません"
 msgid "empty pipeline not allowed"
 msgstr "空のパイプラインは許可されません"
 
+msgid "Pipeline construction is invalid, please add queues."
+msgstr ""
+
 msgid "A lot of buffers are being dropped."
 msgstr ""
 
@@ -972,6 +975,9 @@ msgstr "ファイル \"%s\" はソケットです"
 msgid "Failed after iterations as requested."
 msgstr ""
 
+msgid "eos-after and error-after can't both be defined."
+msgstr ""
+
 msgid "caps"
 msgstr ""
 
@@ -994,7 +1000,8 @@ msgstr "ストリームでデータが含まれていません"
 msgid "Stream contains no data."
 msgstr "ストリームでデータが含まれていません"
 
-msgid "Implemented Interfaces:\n"
+#, fuzzy, c-format
+msgid "%sImplemented Interfaces%s:\n"
 msgstr "実装されているインターフェイス:\n"
 
 msgid "readable"
@@ -1021,7 +1028,8 @@ msgstr ""
 msgid "Blacklisted files:"
 msgstr ""
 
-msgid "Total count: "
+#, fuzzy, c-format
+msgid "%sTotal count%s: %s"
 msgstr "合計数: "
 
 #, c-format
@@ -1047,6 +1055,22 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] ""
 msgstr[1] ""
+
+#, fuzzy, c-format
+msgid "Error creating pipe: %s\n"
+msgstr "ファイル \"%s\" のクローズ時にエラーが発生しました"
+
+#, fuzzy, c-format
+msgid "Error forking: %s\n"
+msgstr "ファイル \"%s\" のクローズ時にエラーが発生しました"
+
+#, fuzzy, c-format
+msgid "Error reading from console: %s\n"
+msgstr "レジストリ %s の再スキャン中にエラーが発生しました: %s"
+
+#, fuzzy, c-format
+msgid "Error writing to console: %s\n"
+msgstr "ファイル \"%s\" の書き込み中にエラーが発生しました"
 
 msgid "Print all elements"
 msgstr "すべてのエレメントを表示する"
@@ -1078,6 +1102,11 @@ msgid ""
 msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
+msgstr ""
+
+msgid ""
+"Disable colors in output. You can also achieve the same by "
+"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
 
 #, c-format
@@ -1300,9 +1329,6 @@ msgstr "パイプラインを解放 (FREEING) しています...\n"
 
 #~ msgid "TYPE1,TYPE2,..."
 #~ msgstr "TYPE1,TYPE2,..."
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "レジストリ %s の再スキャン中にエラーが発生しました: %s"
 
 #~ msgid "Error re-scanning registry %s"
 #~ msgstr "レジストリ %s の再スキャン中にエラーが発生しました"

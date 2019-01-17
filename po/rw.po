@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
+"POT-Creation-Date: 2019-01-17 01:38+0000\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -1091,6 +1091,9 @@ msgstr "Oya Gusimbuka: %s%s"
 msgid "empty pipeline not allowed"
 msgstr "ubusa OYA"
 
+msgid "Pipeline construction is invalid, please add queues."
+msgstr ""
+
 msgid "A lot of buffers are being dropped."
 msgstr ""
 
@@ -1175,6 +1178,9 @@ msgstr "Idosiye ni a"
 msgid "Failed after iterations as requested."
 msgstr "Nyuma Amasubiramo Nka"
 
+msgid "eos-after and error-after can't both be defined."
+msgstr ""
+
 # #-#-#-#-#  officecfg.pot (PACKAGE VERSION)  #-#-#-#-#
 # officecfg/registry\schema\org\openoffice\Office\Writer.xcs:....Revision.TextDisplay.Insert.Attribute..5.text
 # #-#-#-#-#  officecfg.pot (PACKAGE VERSION)  #-#-#-#-#
@@ -1208,7 +1214,8 @@ msgstr "iyi Ibyatanzwe"
 msgid "Stream contains no data."
 msgstr "iyi Ibyatanzwe"
 
-msgid "Implemented Interfaces:\n"
+#, c-format
+msgid "%sImplemented Interfaces%s:\n"
 msgstr ""
 
 msgid "readable"
@@ -1236,8 +1243,8 @@ msgstr ""
 msgid "Blacklisted files:"
 msgstr ""
 
-#, fuzzy
-msgid "Total count: "
+#, fuzzy, c-format
+msgid "%sTotal count%s: %s"
 msgstr "IBARA"
 
 #, c-format
@@ -1263,6 +1270,22 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] ""
 msgstr[1] ""
+
+#, fuzzy, c-format
+msgid "Error creating pipe: %s\n"
+msgstr "Itangira..."
+
+#, fuzzy, c-format
+msgid "Error forking: %s\n"
+msgstr "Itangira..."
+
+#, fuzzy, c-format
+msgid "Error reading from console: %s\n"
+msgstr "Itangira..."
+
+#, fuzzy, c-format
+msgid "Error writing to console: %s\n"
+msgstr "Kuri IDOSIYE"
 
 #, fuzzy
 msgid "Print all elements"
@@ -1295,6 +1318,11 @@ msgid ""
 msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
+msgstr ""
+
+msgid ""
+"Disable colors in output. You can also achieve the same by "
+"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
 
 #, fuzzy, c-format
@@ -1630,10 +1658,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Trying to load %s ...\n"
 #~ msgstr "Kuri Ibirimo"
-
-#, fuzzy
-#~ msgid "Error loading %s\n"
-#~ msgstr "Itangira..."
 
 #, fuzzy
 #~ msgid "Loaded %d plugins with %d %s.\n"

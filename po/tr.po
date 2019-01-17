@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 14:58+0300\n"
+"POT-Creation-Date: 2019-01-17 01:38+0000\n"
 "PO-Revision-Date: 2017-05-05 11:51+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -20,988 +20,821 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Project-Style: gnome\n"
 
-#: gst/gst.c:242
 msgid "Print the GStreamer version"
 msgstr "GStreamer sürünümü yazdır"
 
-#: gst/gst.c:244
 msgid "Make all warnings fatal"
 msgstr "Tüm uyarıları ölümcül yap"
 
-#: gst/gst.c:248
 msgid "Print available debug categories and exit"
 msgstr "Geçerli hata ayıklama sınıflarını yazdır ve çık"
 
-#: gst/gst.c:252
-msgid "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
-msgstr "Öntanımlı hata ayıklama seviyesi 1'den (sadece hatalar) 9'a (her şey) ya da çıktı olmaması için 0"
+msgid ""
+"Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
+msgstr ""
+"Öntanımlı hata ayıklama seviyesi 1'den (sadece hatalar) 9'a (her şey) ya da "
+"çıktı olmaması için 0"
 
-#: gst/gst.c:254
 msgid "LEVEL"
 msgstr "SEVİYE"
 
-#: gst/gst.c:256
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Ayrı sınıfların belirli seviyeleri için sınıf_ismi:seviye çiftlerinin virgül ile ayrılmış listesi. Örnek: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Ayrı sınıfların belirli seviyeleri için sınıf_ismi:seviye çiftlerinin virgül "
+"ile ayrılmış listesi. Örnek: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:259
 msgid "LIST"
 msgstr "LİSTE"
 
-#: gst/gst.c:261
 msgid "Disable colored debugging output"
 msgstr "Renkli hata ayıklama çıktısını kapat"
 
-#: gst/gst.c:265
-msgid "Changes coloring mode of the debug log. Possible modes: off, on, disable, auto, unix"
-msgstr "Hata ayıklama günlüklerini renklendirme kipini değiştirir. Olası kipler: kapalı, açık, devredışı, otomatik, unix"
+msgid ""
+"Changes coloring mode of the debug log. Possible modes: off, on, disable, "
+"auto, unix"
+msgstr ""
+"Hata ayıklama günlüklerini renklendirme kipini değiştirir. Olası kipler: "
+"kapalı, açık, devredışı, otomatik, unix"
 
-#: gst/gst.c:269
 msgid "Disable debugging"
 msgstr "Hata ayıklamayı kapat"
 
-#: gst/gst.c:273
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Ayrıntılı eklenti yükleme detaylarını etkinleştir"
 
-#: gst/gst.c:277
 msgid "Colon-separated paths containing plugins"
 msgstr "Eklentileri içeren iki nokta üst üste ile ayrılmış yollar"
 
-#: gst/gst.c:277
 msgid "PATHS"
 msgstr "YOLLAR"
 
-#: gst/gst.c:280
-msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
-msgstr "Çevre değişkeni GST_PLUGIN_PATH içinde saklanan listeye ek olarak önceden yüklenecek virgün ile ayrılmış eklenti listesi"
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Çevre değişkeni GST_PLUGIN_PATH içinde saklanan listeye ek olarak önceden "
+"yüklenecek virgün ile ayrılmış eklenti listesi"
 
-#: gst/gst.c:282
 msgid "PLUGINS"
 msgstr "EKLENTİLER"
 
-#: gst/gst.c:285
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Eklenti yüklenirken kesimleme hatalarını yakalamayı kapat"
 
-#: gst/gst.c:290
 msgid "Disable updating the registry"
 msgstr "Kayıt defteri güncellemeyi devre dışı bırak"
 
-#: gst/gst.c:295
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Kayıt defteri taranırken yardımcı bir işlem oluşturmayı devre dışı bırak"
+msgstr ""
+"Kayıt defteri taranırken yardımcı bir işlem oluşturmayı devre dışı bırak"
 
-#: gst/gst.c:300
 msgid "GStreamer Options"
 msgstr "GStreamer Seçenekleri"
 
-#: gst/gst.c:301
 msgid "Show GStreamer Options"
 msgstr "GStreamer Seçeneklerini Göster"
 
-#: gst/gst.c:930
 msgid "Unknown option"
 msgstr "Bilinmeyen seçenek"
 
-#: gst/gsterror.c:130
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer genel temel kütüphane hatası ile karşılaştı."
 
-#: gst/gsterror.c:132 gst/gsterror.c:174 gst/gsterror.c:198 gst/gsterror.c:240
-msgid "GStreamer developers were too lazy to assign an error code to this error."
-msgstr "GStreamer geliştiricileri bu hata için bir hata kodu atamaya üşenmişler."
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr ""
+"GStreamer geliştiricileri bu hata için bir hata kodu atamaya üşenmişler."
 
-#: gst/gsterror.c:135
 msgid "Internal GStreamer error: code not implemented."
 msgstr "İç GStreamer hatası: kod tamamlanmamış."
 
-#: gst/gsterror.c:137
-msgid "GStreamer error: state change failed and some element failed to post a proper error message with the reason for the failure."
-msgstr "GStreamer hatası: durum değişikliği başarısız oldu ve bazı öge başarısızlık nedeni ile ilgili uygun bir hata iletisi göndermede başarısız oldu."
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
+"GStreamer hatası: durum değişikliği başarısız oldu ve bazı öge başarısızlık "
+"nedeni ile ilgili uygun bir hata iletisi göndermede başarısız oldu."
 
-#: gst/gsterror.c:140
 msgid "Internal GStreamer error: pad problem."
 msgstr "Dahili GStreamer hatası: dolgu problemi."
 
-#: gst/gsterror.c:142
 msgid "Internal GStreamer error: thread problem."
 msgstr "İç GStreamer hatası: iş parçacığı sorunu."
 
-#: gst/gsterror.c:144
 msgid "GStreamer error: negotiation problem."
 msgstr "İç GStreamer hatası: uzlaşma sorunu."
 
-#: gst/gsterror.c:146
 msgid "Internal GStreamer error: event problem."
 msgstr "İç GStreamer hatası: olay sorunu."
 
-#: gst/gsterror.c:148
 msgid "Internal GStreamer error: seek problem."
 msgstr "İç GStreamer hatası: arama sorunu."
 
-#: gst/gsterror.c:150
 msgid "Internal GStreamer error: caps problem."
 msgstr "İç GStreamer hatası: kapasite sorunu."
 
-#: gst/gsterror.c:152
 msgid "Internal GStreamer error: tag problem."
 msgstr "İç GStreamer hatası: etiket sorunu."
 
-#: gst/gsterror.c:154
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "GStreamer kurulumunuzda bir eklenti eksik."
 
-#: gst/gsterror.c:156
 msgid "GStreamer error: clock problem."
 msgstr "GStreamer hatası: saat sorunu."
 
-#: gst/gsterror.c:158
-msgid "This application is trying to use GStreamer functionality that has been disabled."
-msgstr "Bu uygulama devre dışı bırakılmış GStreamer işlevini kullanmayı deniyor."
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
+msgstr ""
+"Bu uygulama devre dışı bırakılmış GStreamer işlevini kullanmayı deniyor."
 
-#: gst/gsterror.c:172
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer genel kütüphane destekleme hatası ile karşılaştı."
 
-#: gst/gsterror.c:177
 msgid "Could not initialize supporting library."
 msgstr "Destekleyici kütüphane başlatılamadı."
 
-#: gst/gsterror.c:179
 msgid "Could not close supporting library."
 msgstr "Destekleyici kütüphane kapatılamadı."
 
-#: gst/gsterror.c:181
 msgid "Could not configure supporting library."
 msgstr "Desteklenen kütüphane yapılandırılamadı."
 
-#: gst/gsterror.c:183
 msgid "Encoding error."
 msgstr "Kodlama hatası."
 
-#: gst/gsterror.c:196
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer genel bir kaynak hatası ile karşılaştı."
 
-#: gst/gsterror.c:201
 msgid "Resource not found."
 msgstr "Kaynak bulunamadı."
 
-#: gst/gsterror.c:203
 msgid "Resource busy or not available."
 msgstr "Kaynak meşgul veya ulaşılabilir değil."
 
-#: gst/gsterror.c:205
 msgid "Could not open resource for reading."
 msgstr "Okuma için kaynak açılamadı."
 
-#: gst/gsterror.c:207
 msgid "Could not open resource for writing."
 msgstr "Yazma için kaynak açılamadı."
 
-#: gst/gsterror.c:209
 msgid "Could not open resource for reading and writing."
 msgstr "Okuma ve yazma için kaynak açılamadı."
 
-#: gst/gsterror.c:211
 msgid "Could not close resource."
 msgstr "Kaynak kapatılamadı."
 
-#: gst/gsterror.c:213
 msgid "Could not read from resource."
 msgstr "Kaynaktan okunamadı."
 
-#: gst/gsterror.c:215
 msgid "Could not write to resource."
 msgstr "Kaynağa yazılamadı."
 
-#: gst/gsterror.c:217
 msgid "Could not perform seek on resource."
 msgstr "Kaynak üzerinde atlama yapılamadı."
 
-#: gst/gsterror.c:219
 msgid "Could not synchronize on resource."
 msgstr "Kaynak eşzamanlandırılamadı."
 
-#: gst/gsterror.c:221
 msgid "Could not get/set settings from/on resource."
 msgstr "Kaynağa değerler atanamadı ya da alınamadı."
 
-#: gst/gsterror.c:223
 msgid "No space left on the resource."
 msgstr "Kaynakta boş alan kalmadı."
 
-#: gst/gsterror.c:225
 msgid "Not authorized to access resource."
 msgstr "Kaynağa erişmek için yetkili değil."
 
-#: gst/gsterror.c:238
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer genel bir akış hatası ile karşılaştı."
 
-#: gst/gsterror.c:243
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr "Öğe bu akımın işlemesini gerçekleştiremiyor. Lütfen hata bildiriminde bulunun."
+msgstr ""
+"Öğe bu akımın işlemesini gerçekleştiremiyor. Lütfen hata bildiriminde "
+"bulunun."
 
-#: gst/gsterror.c:246
 msgid "Could not determine type of stream."
 msgstr "Akım türü belirlenemedi."
 
-#: gst/gsterror.c:248
 msgid "The stream is of a different type than handled by this element."
 msgstr "Akım bu öğe tarafından işlenen türden farklı bir türde."
 
-#: gst/gsterror.c:251
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Akım türünü işleyebilecek kodek bulunmuyor."
 
-#: gst/gsterror.c:253
 msgid "Could not decode stream."
 msgstr "Akım çözümlenemedi."
 
-#: gst/gsterror.c:255
 msgid "Could not encode stream."
 msgstr "Akım kodlanamadı."
 
-#: gst/gsterror.c:257
 msgid "Could not demultiplex stream."
 msgstr "Akım çoklaması geriye alınamadı."
 
-#: gst/gsterror.c:259
 msgid "Could not multiplex stream."
 msgstr "Akım çoklandırılamadı."
 
-#: gst/gsterror.c:261
 msgid "The stream is in the wrong format."
 msgstr "Akış yanlış biçimdedir."
 
-#: gst/gsterror.c:263
 msgid "The stream is encrypted and decryption is not supported."
 msgstr "Akış şifrelidir ve şifre açma desteklenmiyor."
 
-#: gst/gsterror.c:265
-msgid "The stream is encrypted and can't be decrypted because no suitable key has been supplied."
-msgstr "Akış şifrelidir ve şifresi açılamaz çünkü uygun anahtar temin edilmemiştir."
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+"Akış şifrelidir ve şifresi açılamaz çünkü uygun anahtar temin edilmemiştir."
 
-#: gst/gsterror.c:305
 #, c-format
 msgid "No error message for domain %s."
 msgstr "%s etki alanı için hiç hata iletisi yok."
 
-#: gst/gsterror.c:313
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "%s etki alanı ve %d kodu için standart hata iletisi yok."
 
-#: gst/gstpipeline.c:550
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Seçilen saat ardışık düzende kulanılamıyor."
 
-#: gst/gstregistry.c:1692
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "%s konumuna kayıt defteri önbelleğini yazmada hata: %s"
 
-#: gst/gsttaglist.c:108
 msgid "title"
 msgstr "başlık"
 
-#: gst/gsttaglist.c:108
 msgid "commonly used title"
 msgstr "yaygın olarak kullanılan başlık"
 
-#: gst/gsttaglist.c:111
 msgid "title sortname"
 msgstr "sıralamaadı başlığı"
 
-#: gst/gsttaglist.c:111
 msgid "commonly used title for sorting purposes"
 msgstr "amaçları sıralamak için yaygın olarak kullanılan başlık"
 
-#: gst/gsttaglist.c:114
 msgid "artist"
 msgstr "sanatçı"
 
-#: gst/gsttaglist.c:115
 msgid "person(s) responsible for the recording"
 msgstr "kayıttan sorumlu olan kişi ya da kişiler"
 
-#: gst/gsttaglist.c:119
 msgid "artist sortname"
 msgstr "sanatçı sıralamadı"
 
-#: gst/gsttaglist.c:120
 msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "sıralama amaçlı kayıttan sorumlu kişi(ler)"
 
-#: gst/gsttaglist.c:123
 msgid "album"
 msgstr "albüm"
 
-#: gst/gsttaglist.c:124
 msgid "album containing this data"
 msgstr "bu bilgiyi içeren albüm"
 
-#: gst/gsttaglist.c:127
 msgid "album sortname"
 msgstr "albüm sıralama adı"
 
-#: gst/gsttaglist.c:128
 msgid "album containing this data for sorting purposes"
 msgstr "sıralama amaçlı bu verileri içeren albüm"
 
-#: gst/gsttaglist.c:131
 msgid "album artist"
 msgstr "albüm sanatçısı"
 
-#: gst/gsttaglist.c:132
 msgid "The artist of the entire album, as it should be displayed"
 msgstr "Gerektiği gibi gösterilen tüm albümlerin sanatçıları"
 
-#: gst/gsttaglist.c:136
 msgid "album artist sortname"
 msgstr "albüm sanatçıları sıralamaadı"
 
-#: gst/gsttaglist.c:137
 msgid "The artist of the entire album, as it should be sorted"
 msgstr "Gerektiği gibi sıralanan tüm albümlerin sanatçıları"
 
-#: gst/gsttaglist.c:139
 msgid "date"
 msgstr "tarih"
 
-#: gst/gsttaglist.c:139
 msgid "date the data was created (as a GDate structure)"
 msgstr "tarih verisi oluşturuldu (bir GDate yapısı olarak)"
 
-#: gst/gsttaglist.c:141
 msgid "datetime"
 msgstr "tarihsaat"
 
-#: gst/gsttaglist.c:142
 msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "tarih ve saat verisi oluşturuldu (bir GstDateTime yapısı olarak)"
 
-#: gst/gsttaglist.c:146
 msgid "genre"
 msgstr "tür"
 
-#: gst/gsttaglist.c:147
 msgid "genre this data belongs to"
 msgstr "bu verinin ait olduğu tür"
 
-#: gst/gsttaglist.c:150
 msgid "comment"
 msgstr "yorum"
 
-#: gst/gsttaglist.c:151
 msgid "free text commenting the data"
 msgstr "veriyi yorumlayan serbest metin"
 
-#: gst/gsttaglist.c:154
 msgid "extended comment"
 msgstr "genişletilmiş yorum"
 
-#: gst/gsttaglist.c:155
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr "anahtar=deger ya da anahtar[en]=yorum biçimindeki metin yorumlama"
 
-#: gst/gsttaglist.c:159
 msgid "track number"
 msgstr "parça numarası"
 
-#: gst/gsttaglist.c:160
 msgid "track number inside a collection"
 msgstr "kolleksiyon içindeki parça numarası"
 
-#: gst/gsttaglist.c:163
 msgid "track count"
 msgstr "parça sayısı"
 
-#: gst/gsttaglist.c:164
 msgid "count of tracks inside collection this track belongs to"
 msgstr "bu parçanın ait olduğu kolleksiyonun parça sayısı"
 
-#: gst/gsttaglist.c:168
 msgid "disc number"
 msgstr "disk numarası"
 
-#: gst/gsttaglist.c:169
 msgid "disc number inside a collection"
 msgstr "kolleksiyon içindeki disk numarası"
 
-#: gst/gsttaglist.c:172
 msgid "disc count"
 msgstr "disk sayısı"
 
-#: gst/gsttaglist.c:173
 msgid "count of discs inside collection this disc belongs to"
 msgstr "bu diskin ait olduğu kolleksiyondaki disklerin sayısı"
 
-#: gst/gsttaglist.c:177
 msgid "location"
 msgstr "konum"
 
-#: gst/gsttaglist.c:177
-msgid "Origin of media as a URI (location, where the original of the file or stream is hosted)"
-msgstr "URI olarak ortam kaynağı (dosyanın özgün konumu ya da akışın barındırıldığı konum)"
+msgid ""
+"Origin of media as a URI (location, where the original of the file or stream "
+"is hosted)"
+msgstr ""
+"URI olarak ortam kaynağı (dosyanın özgün konumu ya da akışın barındırıldığı "
+"konum)"
 
-#: gst/gsttaglist.c:182
 msgid "homepage"
 msgstr "anasayfa"
 
-#: gst/gsttaglist.c:183
 msgid "Homepage for this media (i.e. artist or movie homepage)"
 msgstr "Bu ortamın anasayfası (yani sanatçı ya da film anasayfası)"
 
-#: gst/gsttaglist.c:186
 msgid "description"
 msgstr "tanım"
 
-#: gst/gsttaglist.c:187
 msgid "short text describing the content of the data"
 msgstr "verinin içeriğini tanımlayan kısa metin"
 
-#: gst/gsttaglist.c:190
 msgid "version"
 msgstr "sürüm"
 
-#: gst/gsttaglist.c:190
 msgid "version of this data"
 msgstr "bu verinin sürümü"
 
-#: gst/gsttaglist.c:192
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttaglist.c:194
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "Uluslararası Standart Kayıt Kodu - http://www.ifpi.org/isrc/ adresine bakın"
+msgstr ""
+"Uluslararası Standart Kayıt Kodu - http://www.ifpi.org/isrc/ adresine bakın"
 
-#: gst/gsttaglist.c:198
 msgid "organization"
 msgstr "kurum"
 
-#: gst/gsttaglist.c:201
 msgid "copyright"
 msgstr "telif hakkı"
 
-#: gst/gsttaglist.c:201
 msgid "copyright notice of the data"
 msgstr "verinin telif hakkı notu"
 
-#: gst/gsttaglist.c:203
 msgid "copyright uri"
 msgstr "telif hakkı uri"
 
-#: gst/gsttaglist.c:204
 msgid "URI to the copyright notice of the data"
 msgstr "Verinin telif hakkı bildirimi için URI"
 
-#: gst/gsttaglist.c:206
 msgid "encoded by"
 msgstr "kodlayan"
 
-#: gst/gsttaglist.c:206
 msgid "name of the encoding person or organization"
 msgstr "kodlayan kişi ya da organizasyonun adı"
 
-#: gst/gsttaglist.c:210
 msgid "contact"
 msgstr "iletişim"
 
-#: gst/gsttaglist.c:210
 msgid "contact information"
 msgstr "iletişim bilgisi"
 
-#: gst/gsttaglist.c:212
 msgid "license"
 msgstr "lisans"
 
-#: gst/gsttaglist.c:212
 msgid "license of data"
 msgstr "verinin lisansı"
 
-#: gst/gsttaglist.c:214
 msgid "license uri"
 msgstr "lisans uri"
 
-#: gst/gsttaglist.c:215
 msgid "URI to the license of the data"
 msgstr "Verinin lisansı için URI"
 
-#: gst/gsttaglist.c:218
 msgid "performer"
 msgstr "icra eden"
 
-#: gst/gsttaglist.c:219
 msgid "person(s) performing"
 msgstr "icra eden kişi"
 
-#: gst/gsttaglist.c:222
 msgid "composer"
 msgstr "düzenleyici"
 
-#: gst/gsttaglist.c:223
 msgid "person(s) who composed the recording"
 msgstr "kayıt oluşturan kişi(ler)"
 
-#: gst/gsttaglist.c:227
 msgid "conductor"
 msgstr "kondüktör"
 
-#: gst/gsttaglist.c:228
 msgid "conductor/performer refinement"
 msgstr "kondüktör/performans iyileştirmesi"
 
-#: gst/gsttaglist.c:231
 msgid "duration"
 msgstr "süre"
 
-#: gst/gsttaglist.c:231
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "GStreamer zaman birimi (nano saniye) olarak uzunluk"
 
-#: gst/gsttaglist.c:234
 msgid "codec"
 msgstr "kodek"
 
-#: gst/gsttaglist.c:235
 msgid "codec the data is stored in"
 msgstr "verinin saklandığı kodek"
 
-#: gst/gsttaglist.c:238
 msgid "video codec"
 msgstr "video kodeki"
 
-#: gst/gsttaglist.c:238
 msgid "codec the video data is stored in"
 msgstr "videonun saklandığı kodek"
 
-#: gst/gsttaglist.c:241
 msgid "audio codec"
 msgstr "ses kodeki"
 
-#: gst/gsttaglist.c:241
 msgid "codec the audio data is stored in"
 msgstr "ses verisinin saklandığı kodek"
 
-#: gst/gsttaglist.c:244
 msgid "subtitle codec"
 msgstr "altyazı kodlayıcı-kod çözücüsü"
 
-#: gst/gsttaglist.c:244
 msgid "codec the subtitle data is stored in"
 msgstr "altyazı verisinin saklandığı kodlayıcı-kod çözücü"
 
-#: gst/gsttaglist.c:246
 msgid "container format"
 msgstr "kap biçimi"
 
-#: gst/gsttaglist.c:247
 msgid "container format the data is stored in"
 msgstr "verilerin saklandığı kap biçemi"
 
-#: gst/gsttaglist.c:249
 msgid "bitrate"
 msgstr "örnekleme hızı"
 
-#: gst/gsttaglist.c:249
 msgid "exact or average bitrate in bits/s"
 msgstr "bit/s olarak ortalama veya kesin örnekleme hızı"
 
-#: gst/gsttaglist.c:251
 msgid "nominal bitrate"
 msgstr "nominal örnekleme hızı"
 
-#: gst/gsttaglist.c:251
 msgid "nominal bitrate in bits/s"
 msgstr "bit/s olarak nominal örnekleme hızı"
 
-#: gst/gsttaglist.c:253
 msgid "minimum bitrate"
 msgstr "asgari örnekleme hızı"
 
-#: gst/gsttaglist.c:253
 msgid "minimum bitrate in bits/s"
 msgstr "bit/s olarak asgari örnekleme hızı"
 
-#: gst/gsttaglist.c:255
 msgid "maximum bitrate"
 msgstr "azami örnekleme hızı"
 
-#: gst/gsttaglist.c:255
 msgid "maximum bitrate in bits/s"
 msgstr "bit/s olarak azami örnekleme hızı"
 
-#: gst/gsttaglist.c:258
 msgid "encoder"
 msgstr "kodlayıcı"
 
-#: gst/gsttaglist.c:258
 msgid "encoder used to encode this stream"
 msgstr "bu akımı kodlarken kullanılacak kodlayıcı"
 
-#: gst/gsttaglist.c:261
 msgid "encoder version"
 msgstr "kodlayıcı sürümü"
 
-#: gst/gsttaglist.c:262
 msgid "version of the encoder used to encode this stream"
 msgstr "bu akımı kodlarken kullanılan kodlayıcının sürümü"
 
-#: gst/gsttaglist.c:264
 msgid "serial"
 msgstr "seri numarası"
 
-#: gst/gsttaglist.c:264
 msgid "serial number of track"
 msgstr "parçanın seri numarası"
 
-#: gst/gsttaglist.c:266
 msgid "replaygain track gain"
 msgstr "tekrarkazanç parça kazancı"
 
-#: gst/gsttaglist.c:266
 msgid "track gain in db"
 msgstr "db olarak parça kazancı"
 
-#: gst/gsttaglist.c:268
 msgid "replaygain track peak"
 msgstr "tekrarkazanç parça üst sınırı"
 
-#: gst/gsttaglist.c:268
 msgid "peak of the track"
 msgstr "parçanın üst sınırı"
 
-#: gst/gsttaglist.c:270
 msgid "replaygain album gain"
 msgstr "tekrarkazanç albüm kazancı"
 
-#: gst/gsttaglist.c:270
 msgid "album gain in db"
 msgstr "db olarak albüm kazancı"
 
-#: gst/gsttaglist.c:272
 msgid "replaygain album peak"
 msgstr "tekrarkazanç albüm üst sınırı"
 
-#: gst/gsttaglist.c:272
 msgid "peak of the album"
 msgstr "albüm üst sınırı"
 
-#: gst/gsttaglist.c:274
 msgid "replaygain reference level"
 msgstr "yeniden kazanç kaynak seviyesi"
 
-#: gst/gsttaglist.c:275
 msgid "reference level of track and album gain values"
 msgstr "şarkı ve albüm kazanç değerlerinin kaynak seviyesi"
 
-#: gst/gsttaglist.c:277
 msgid "language code"
 msgstr "dil kodu"
 
-#: gst/gsttaglist.c:278
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
 msgstr "bu akış için ISO-639-1 ya da ISO-639-2 standartlarına uygun dil kodu"
 
-#: gst/gsttaglist.c:281
 msgid "language name"
 msgstr "dil adı"
 
-#: gst/gsttaglist.c:282
 msgid "freeform name of the language this stream is in"
 msgstr "bu akıştaki dilin serbest biçem adı"
 
-#: gst/gsttaglist.c:284
 msgid "image"
 msgstr "görüntü"
 
-#: gst/gsttaglist.c:284
 msgid "image related to this stream"
 msgstr "bu akış ile ilişkili görüntü"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
-#: gst/gsttaglist.c:288
 msgid "preview image"
 msgstr "görüntüyü önizle"
 
-#: gst/gsttaglist.c:288
 msgid "preview image related to this stream"
 msgstr "bu akış ile ilişkili görüntüyü önizle"
 
-#: gst/gsttaglist.c:290
 msgid "attachment"
 msgstr "ek"
 
-#: gst/gsttaglist.c:290
 msgid "file attached to this stream"
 msgstr "bu akışa dosya eklendi"
 
-#: gst/gsttaglist.c:293
 msgid "beats per minute"
 msgstr "dakikadaki vuruş"
 
-#: gst/gsttaglist.c:294
 msgid "number of beats per minute in audio"
 msgstr "seste dakikadaki vuruş sayısı"
 
-#: gst/gsttaglist.c:296
 msgid "keywords"
 msgstr "anahtar sözcükler"
 
-#: gst/gsttaglist.c:296
 msgid "comma separated keywords describing the content"
 msgstr "içeriği tanımlayan virgülle ayrılmış anahtar sözcükler"
 
-#: gst/gsttaglist.c:299
 msgid "geo location name"
 msgstr "coğrafi konum adı"
 
-#: gst/gsttaglist.c:300
-msgid "human readable descriptive location of where the media has been recorded or produced"
+msgid ""
+"human readable descriptive location of where the media has been recorded or "
+"produced"
 msgstr "ortamın kaydedildiği ya da üretildiği okunabilir açıklayıcı konum"
 
-#: gst/gsttaglist.c:303
 msgid "geo location latitude"
 msgstr "coğrafi konum enlemi"
 
-#: gst/gsttaglist.c:304
-msgid "geo latitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the equator, negative values for southern latitudes)"
-msgstr "WGS84 yerlem derecesinde (ekvatorda sıfır, güney enlemler için negatif değerler) üretilen ya da kaydedilen ortamın coğrafik enlem konumu"
+msgid ""
+"geo latitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the equator, negative values for "
+"southern latitudes)"
+msgstr ""
+"WGS84 yerlem derecesinde (ekvatorda sıfır, güney enlemler için negatif "
+"değerler) üretilen ya da kaydedilen ortamın coğrafik enlem konumu"
 
-#: gst/gsttaglist.c:308
 msgid "geo location longitude"
 msgstr "coğrafi konum boylamı"
 
-#: gst/gsttaglist.c:309
-msgid "geo longitude location of where the media has been recorded or produced in degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  negative values for western longitudes)"
-msgstr "WGS84 yerlem derecesinde (Greenwich/UK baş meridyeninde sıfır,  batı boylamları için negatif değerler) üretilen ya da kaydedilen ortamın coğrafik boylam konumu"
+msgid ""
+"geo longitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
+"negative values for western longitudes)"
+msgstr ""
+"WGS84 yerlem derecesinde (Greenwich/UK baş meridyeninde sıfır,  batı "
+"boylamları için negatif değerler) üretilen ya da kaydedilen ortamın coğrafik "
+"boylam konumu"
 
-#: gst/gsttaglist.c:313
 msgid "geo location elevation"
 msgstr "coğrafi konum yüksekliği"
 
-#: gst/gsttaglist.c:314
-msgid "geo elevation of where the media has been recorded or produced in meters according to WGS84 (zero is average sea level)"
-msgstr "WGS84 yerlem ölçüsünde (ortalama deniz seviyesi sıfırdır) üretilen ya da kaydedilen ortamın coğrafik yüksekliği"
+msgid ""
+"geo elevation of where the media has been recorded or produced in meters "
+"according to WGS84 (zero is average sea level)"
+msgstr ""
+"WGS84 yerlem ölçüsünde (ortalama deniz seviyesi sıfırdır) üretilen ya da "
+"kaydedilen ortamın coğrafik yüksekliği"
 
-#: gst/gsttaglist.c:317
 msgid "geo location country"
 msgstr "ülke coğrafi konumu"
 
-#: gst/gsttaglist.c:318
 msgid "country (english name) where the media has been recorded or produced"
 msgstr "ortamın üretildiği ya da kaydedildiği ülke (ingilizce adı)"
 
-#: gst/gsttaglist.c:321
 msgid "geo location city"
 msgstr "şehir coğrafi konumu"
 
-#: gst/gsttaglist.c:322
 msgid "city (english name) where the media has been recorded or produced"
 msgstr "ortamın kaydedildiği ya da üretildiği şehir (ingilizce adı)"
 
-#: gst/gsttaglist.c:325
 msgid "geo location sublocation"
 msgstr "bölge coğrafi konumu"
 
-#: gst/gsttaglist.c:326
-msgid "a location within a city where the media has been produced or created (e.g. the neighborhood)"
-msgstr "ortamın üretildiği ya da oluşturulduğu şehirdeki bir konum (örneğin semt)"
+msgid ""
+"a location within a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr ""
+"ortamın üretildiği ya da oluşturulduğu şehirdeki bir konum (örneğin semt)"
 
-#: gst/gsttaglist.c:329
 msgid "geo location horizontal error"
 msgstr "coğrafi yatay konum hatası"
 
-#: gst/gsttaglist.c:330
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr "yatay konumlandırma ölçümlerinde beklenen hata (metre cinsinden)"
 
-#: gst/gsttaglist.c:333
 msgid "geo location movement speed"
 msgstr "coğrafi konum hareket hızı"
 
-#: gst/gsttaglist.c:334
-msgid "movement speed of the capturing device while performing the capture in m/s"
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
 msgstr "yakalama aygıtının m/s cinsinden yakalama yaparken ki hareket hızı"
 
-#: gst/gsttaglist.c:337
 msgid "geo location movement direction"
 msgstr "coğrafi konum hareket doğrultusu"
 
-#: gst/gsttaglist.c:338
-msgid "indicates the movement direction of the device performing the capture of a media. It is represented as degrees in floating point representation, 0 means the geographic north, and increases clockwise"
-msgstr "Bir medyada yakalama yapan aygıtın haraket yönünü belirtir. Kayan noktalı sayı olarak, derece biçiminde gösterilir, 0 çoğrafik kuzeydir ve saat yönünde belirtilir"
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+"Bir medyada yakalama yapan aygıtın haraket yönünü belirtir. Kayan noktalı "
+"sayı olarak, derece biçiminde gösterilir, 0 çoğrafik kuzeydir ve saat "
+"yönünde belirtilir"
 
-#: gst/gsttaglist.c:343
 msgid "geo location capture direction"
 msgstr "coğrafi konum yakalama açıklaması"
 
-#: gst/gsttaglist.c:344
-msgid "indicates the direction the device is pointing to when capturing  a media. It is represented as degrees in floating point  representation, 0 means the geographic north, and increases clockwise"
-msgstr "Bir medya yakalanırken işaret edilen aygıtın yönünü belirtir. Kayan noktalı sayı olarak, derece biçiminde gösterilir, 0 çoğrafik kuzeydir ve saat yönünde belirtilir"
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+"Bir medya yakalanırken işaret edilen aygıtın yönünü belirtir. Kayan noktalı "
+"sayı olarak, derece biçiminde gösterilir, 0 çoğrafik kuzeydir ve saat "
+"yönünde belirtilir"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
-#: gst/gsttaglist.c:350
 msgid "show name"
 msgstr "adı göster"
 
-#: gst/gsttaglist.c:351
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr "Ortamın tv/podcast/serie den birisinin adı"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
-#: gst/gsttaglist.c:356
 msgid "show sortname"
 msgstr "sıralamaadını göster"
 
-#: gst/gsttaglist.c:357
-msgid "Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr "Ortamın tv/podcast/serie den birisinin adı, sıralama için"
 
-#: gst/gsttaglist.c:360
 msgid "episode number"
 msgstr "bölüm numarası"
 
-#: gst/gsttaglist.c:361
 msgid "The episode number in the season the media is part of"
 msgstr "Ortamın parçası olduğu sezonun bölüm numarası"
 
-#: gst/gsttaglist.c:364
 msgid "season number"
 msgstr "oturum numarası"
 
-#: gst/gsttaglist.c:365
 msgid "The season number of the show the media is part of"
 msgstr "Ortamın parçası olduğu sezon numarası"
 
-#: gst/gsttaglist.c:368
 msgid "lyrics"
 msgstr "şarkı sözleri"
 
-#: gst/gsttaglist.c:368
 msgid "The lyrics of the media, commonly used for songs"
 msgstr "Ortamın şarkı sözleri, genellikle şarkılar için kullanılır"
 
-#: gst/gsttaglist.c:371
 msgid "composer sortname"
 msgstr "besteci sıralama adı"
 
-#: gst/gsttaglist.c:372
 msgid "person(s) who composed the recording, for sorting purposes"
 msgstr "sıralama amaçlı kayıt oluşturan kişi(ler)"
 
-#: gst/gsttaglist.c:374
 msgid "grouping"
 msgstr "gruplandırma"
 
-#: gst/gsttaglist.c:375
-msgid "Groups related media that spans multiple tracks, like the different pieces of a concerto. It is a higher level than a track, but lower than an album"
-msgstr "Grup ilgili ortam çoklu şarkılar içerir, bir konçertonun farklı parçaları gibi. Bu şarkıdan daha üst seviyedir ancak albümden alt seviyedir"
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
+"Grup ilgili ortam çoklu şarkılar içerir, bir konçertonun farklı parçaları "
+"gibi. Bu şarkıdan daha üst seviyedir ancak albümden alt seviyedir"
 
-#: gst/gsttaglist.c:379
 msgid "user rating"
 msgstr "kullanıcı değerlendirmesi"
 
-#: gst/gsttaglist.c:380
-msgid "Rating attributed by a user. The higher the rank, the more the user likes this media"
-msgstr "Kullanıcı tarafından verilmiş puanlama. En yüksek puanlama, bir çok kullanıcı bu ortamı beğenmiş"
+msgid ""
+"Rating attributed by a user. The higher the rank, the more the user likes "
+"this media"
+msgstr ""
+"Kullanıcı tarafından verilmiş puanlama. En yüksek puanlama, bir çok "
+"kullanıcı bu ortamı beğenmiş"
 
-#: gst/gsttaglist.c:383
 msgid "device manufacturer"
 msgstr "aygıt üreticisi"
 
-#: gst/gsttaglist.c:384
 msgid "Manufacturer of the device used to create this media"
 msgstr "Bu ortamı oluşturmak için kullanılan aygıt üreticisi"
 
-#: gst/gsttaglist.c:386
 msgid "device model"
 msgstr "aygıt modeli"
 
-#: gst/gsttaglist.c:387
 msgid "Model of the device used to create this media"
 msgstr "Bu ortamı oluşturmak için kullanılan aygıtın modeli"
 
-#: gst/gsttaglist.c:389
 msgid "application name"
 msgstr "uygulama adı"
 
-#: gst/gsttaglist.c:390
 msgid "Application used to create the media"
 msgstr "Bu ortamı oluşturmak için kullanılan uygulama"
 
-#: gst/gsttaglist.c:392
 msgid "application data"
 msgstr "uygulama verileri"
 
-#: gst/gsttaglist.c:393
 msgid "Arbitrary application data to be serialized into the media"
 msgstr "Ortamda serileştirilecek gelişigüzel uygulama verileri"
 
-#: gst/gsttaglist.c:395
 msgid "image orientation"
 msgstr "görüntü yönü"
 
-#: gst/gsttaglist.c:396
 msgid "How the image should be rotated or flipped before display"
 msgstr "Görüntü gösterilmeden önce nasıl döndürülmelidir ya da çevirilmelidir"
 
-#: gst/gsttaglist.c:399
 msgid "publisher"
 msgstr "yayımcı"
 
-#: gst/gsttaglist.c:400
 msgid "Name of the label or publisher"
 msgstr "Marka ya da yayımcının adı"
 
-#: gst/gsttaglist.c:403
 msgid "interpreted-by"
 msgstr "tarafından-yorumlanmış"
 
-#: gst/gsttaglist.c:404
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr "Yeniden düzenleme ve benzer yorumların arkasındaki kişi hakkında bilgi"
 
-#: gst/gsttaglist.c:408
 msgid "midi-base-note"
 msgstr "midi-base-note"
 
-#: gst/gsttaglist.c:408
 msgid "Midi note number of the audio track."
 msgstr "Ses kaydının midi notu numarası."
 
-#: gst/gsttaglist.c:411
 msgid "private-data"
 msgstr "özel-veri"
 
-#: gst/gsttaglist.c:411
 msgid "Private data"
 msgstr "Özel veri"
 
-#: gst/gsttaglist.c:451
 msgid ", "
 msgstr ", "
 
-#: gst/gsturi.c:656
 #, c-format
 msgid "No URI handler for the %s protocol found"
 msgstr "%s protokolü için URI işleyicisi bulunamadı"
 
-#: gst/gsturi.c:831
 #, c-format
 msgid "URI scheme '%s' not supported"
 msgstr "URI şema '%s' desteklenmez"
 
-#: gst/gstutils.c:2562 tools/gst-launch.c:325
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "HATA: %s öğesinden: %s\n"
 
-#: gst/gstutils.c:2564 tools/gst-launch.c:327 tools/gst-launch.c:671
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -1010,408 +843,362 @@ msgstr ""
 "Ek hata ayıklama bilgisi:\n"
 "%s\n"
 
-#: gst/parse/grammar.y:216
 #, c-format
 msgid "link has no source [sink=%s@%p]"
 msgstr "bağlantı kaynağı yok [alıcı=%s@%p]"
 
-#: gst/parse/grammar.y:221
 #, c-format
 msgid "link has no sink [source=%s@%p]"
 msgstr "bağlantı alış noktası yok [kaynak=%s@%p]"
 
-#: gst/parse/grammar.y:413
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "\"%s\" öğesinde \"%s\" özelliği yok"
 
-#: gst/parse/grammar.y:454
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "\"%s\" öğesindeki \"%s\" özelliğine \"%s\" değeri atanamadı"
 
-#: gst/parse/grammar.y:507
 msgid "Delayed linking failed."
 msgstr "Gecikmeli bağlama başarısız oldu."
 
-#: gst/parse/grammar.y:719 gst/parse/grammar.y:724
 #, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
 msgstr "%s i %s e bağlanamadı, %s başlıklar işlenemiyor %s"
 
-#: gst/parse/grammar.y:729
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
 msgstr "%s i %s e bağlanamadı, hiçbir başlık başlık öğesi işlenemiyor %s"
 
-#: gst/parse/grammar.y:733
 #, c-format
 msgid "could not link %s to %s with caps %s"
 msgstr "%s, %s e %s başlıklar ile bağlanamadı"
 
-#: gst/parse/grammar.y:739
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s, %s'a bağlanamadı"
 
-#: gst/parse/grammar.y:816
 #, c-format
 msgid "no element \"%s\""
 msgstr "\"%s\" öğesi yok"
 
-#: gst/parse/grammar.y:877
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
 msgstr "beklenmeyen kaynak \"%s\" - yoksayılıyor"
 
-#: gst/parse/grammar.y:883
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
 msgstr "beklenmedik dolgu-kaynağı \"%s\" - yoksayılıyor"
 
-#: gst/parse/grammar.y:915 gst/parse/grammar.y:924
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "\"%s\" kabiliyetleri ayrıştırılamadı"
 
-#: gst/parse/grammar.y:952
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "\"%s\" URI'si için 'sink' öğesi yok"
 
-#: gst/parse/grammar.y:971
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "\"%s\" URI'si için kaynak öğesi yok"
 
-#: gst/parse/grammar.y:1061
 msgid "syntax error"
 msgstr "söz dizim hatası"
 
-#: gst/parse/grammar.y:1084
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "belirtilen boş ikili \"%s\", izin verilmedi"
 
-#: gst/parse/grammar.y:1094
 #, c-format
 msgid "no bin \"%s\", unpacking elements"
 msgstr "\"%s\" ikilisi yok, öge açılamıyor"
 
-#: gst/parse/grammar.y:1125
 msgid "empty pipeline not allowed"
 msgstr "boş boruhattına izin verilmiyor"
 
-#: libs/gst/base/gstbasesink.c:2900
+msgid "Pipeline construction is invalid, please add queues."
+msgstr ""
+
 msgid "A lot of buffers are being dropped."
 msgstr "Tampon belleklerin bir çoğu bırakılıyor."
 
-#: libs/gst/base/gstbasesink.c:3399
 msgid "Internal data flow problem."
 msgstr "İç veri akış sorunu."
 
-#: libs/gst/base/gstbasesink.c:4122 libs/gst/base/gstbasesrc.c:2947
 msgid "Internal data flow error."
 msgstr "İç veri akış hatası."
 
-#: libs/gst/base/gstbasesrc.c:2539
 msgid "Internal clock error."
 msgstr "İç saat hatası."
 
-#: libs/gst/base/gstbasesrc.c:2567 plugins/elements/gstdownloadbuffer.c:842
-#: plugins/elements/gstdownloadbuffer.c:1266
 msgid "Failed to map buffer."
 msgstr "Tampon eşleştirme başarısız."
 
-#: plugins/elements/gstcapsfilter.c:128
 msgid "Filter caps"
 msgstr "Büyük harfleri süz"
 
-#: plugins/elements/gstcapsfilter.c:129
-msgid "Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object."
-msgstr "İzin verilen yetenekleri kısıtla (NULL HİÇ anlamına gelir). Bu özelliklerin ayarlanması verilen GstCaps nesnesini kaynak olarak alır."
+msgid ""
+"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
+"property takes a reference to the supplied GstCaps object."
+msgstr ""
+"İzin verilen yetenekleri kısıtla (NULL HİÇ anlamına gelir). Bu özelliklerin "
+"ayarlanması verilen GstCaps nesnesini kaynak olarak alır."
 
-#: plugins/elements/gstcapsfilter.c:136
 msgid "Caps Change Mode"
 msgstr "Başlıklar Modunu Değiştir"
 
-#: plugins/elements/gstcapsfilter.c:137
 msgid "Filter caps change behaviour"
 msgstr "Büyük harf değişiklik davranışını filtrele"
 
-#: plugins/elements/gstdownloadbuffer.c:927 plugins/elements/gstqueue2.c:1711
 msgid "No Temp directory specified."
 msgstr "Geçici dizin belirtilmedi."
 
-#: plugins/elements/gstdownloadbuffer.c:933 plugins/elements/gstqueue2.c:1717
 #, c-format
 msgid "Could not create temp file \"%s\"."
 msgstr "Geçici dosya \"%s\" oluşturulamadı."
 
-#: plugins/elements/gstdownloadbuffer.c:941 plugins/elements/gstfilesrc.c:539
-#: plugins/elements/gstqueue2.c:1725
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "\"%s\" dosyası okuma için açılamadı."
 
-#: plugins/elements/gstdownloadbuffer.c:1275 plugins/elements/gstqueue2.c:2145
 msgid "Error while writing to download file."
 msgstr "Dosya indirmek için yazarken hata."
 
-#: plugins/elements/gstfilesink.c:431
 msgid "No file name specified for writing."
 msgstr "Yazım için hiç bir dosya adı belirtilmedi."
 
-#: plugins/elements/gstfilesink.c:437
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "\"%s\" dosyası yazım için açılamadı."
 
-#: plugins/elements/gstfilesink.c:449
 #, c-format
 msgid "Error closing file \"%s\"."
 msgstr "\"%s\" kapatılırken hata."
 
-#: plugins/elements/gstfilesink.c:618
 #, c-format
 msgid "Error while seeking in file \"%s\"."
 msgstr "\"%s\" dosyasında arama yaparken hata."
 
-#: plugins/elements/gstfilesink.c:626 plugins/elements/gstfilesink.c:703
-#: plugins/elements/gstfilesink.c:738
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "\"%s\" dosyası yazılırken hata."
 
-#: plugins/elements/gstfilesrc.c:527
 msgid "No file name specified for reading."
 msgstr "Okuma için hiç bir dosya adı belirtilmedi."
 
-#: plugins/elements/gstfilesrc.c:548
 #, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "\"%s\" ögesinden bilgi alınamadı."
 
-#: plugins/elements/gstfilesrc.c:554
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "\"%s\" bir dizindir."
 
-#: plugins/elements/gstfilesrc.c:560
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Dosya \"%s\" bir sokettir."
 
-#: plugins/elements/gstidentity.c:678
 msgid "Failed after iterations as requested."
 msgstr "İstenildiği gibi tekrarlama başarısız oldu."
 
-#: plugins/elements/gsttypefindelement.c:253
+msgid "eos-after and error-after can't both be defined."
+msgstr ""
+
 msgid "caps"
 msgstr "kabiliyetler"
 
-#: plugins/elements/gsttypefindelement.c:254
 msgid "detected capabilities in stream"
 msgstr "akımda tesbit edilen kabiliyetler"
 
-#: plugins/elements/gsttypefindelement.c:257
 msgid "minimum"
 msgstr "asgari"
 
-#: plugins/elements/gsttypefindelement.c:262
 msgid "force caps"
 msgstr "kapasiteyi zorla"
 
-#: plugins/elements/gsttypefindelement.c:263
 msgid "force caps without doing a typefind"
 msgstr "bir tür tanımlaması yapmadan kapasiteyi zorla"
 
-#: plugins/elements/gsttypefindelement.c:990
-#: plugins/elements/gsttypefindelement.c:1012
 msgid "Stream doesn't contain enough data."
 msgstr "Akışı yeterli veri içermiyor."
 
-#: plugins/elements/gsttypefindelement.c:1132
 msgid "Stream contains no data."
 msgstr "Akış hiçbir veri içermiyor."
 
-#: tools/gst-inspect.c:195
-msgid "Implemented Interfaces:\n"
+#, fuzzy, c-format
+msgid "%sImplemented Interfaces%s:\n"
 msgstr "Gerçeklenmiş Arayüzler:\n"
 
-#: tools/gst-inspect.c:281
 msgid "readable"
 msgstr "okunabilir"
 
-#: tools/gst-inspect.c:290
 msgid "writable"
 msgstr "yazılabilir"
 
-#: tools/gst-inspect.c:294
 msgid "deprecated"
 msgstr "kullanım dışı"
 
-#: tools/gst-inspect.c:298
 msgid "controllable"
 msgstr "yöneltilebilir"
 
-#: tools/gst-inspect.c:302
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "BOŞ, HAZIR, DURDURULMUŞ ya da YÜRÜTÜLÜYOR durumlarına değiştirilebilir"
 
-#: tools/gst-inspect.c:304
 msgid "changeable only in NULL, READY or PAUSED state"
 msgstr "sadece NULL, READY ya da PAUSED olarak değiştirilebilir"
 
-#: tools/gst-inspect.c:306
 msgid "changeable only in NULL or READY state"
 msgstr "sadece NULL ya da READY olarak değiştirilebilir"
 
-#: tools/gst-inspect.c:909
 msgid "Blacklisted files:"
 msgstr "Kara listeye alınan dosyalar:"
 
-#: tools/gst-inspect.c:921 tools/gst-inspect.c:1044
-msgid "Total count: "
+#, fuzzy, c-format
+msgid "%sTotal count%s: %s"
 msgstr "Toplam sayı: "
 
-#: tools/gst-inspect.c:922
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
 msgstr[0] "%d kara listeye alınan dosya"
 msgstr[1] "%d kara listeye alınan dosya"
 
-#: tools/gst-inspect.c:1045
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d eklentisi"
 msgstr[1] "%d eklentisi"
 
-#: tools/gst-inspect.c:1048
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
 msgstr[0] "%d kara liste girdisi"
 msgstr[1] "%d kara liste girdisi"
 
-#: tools/gst-inspect.c:1053
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d özelliği"
 msgstr[1] "%d özelliği"
 
-#: tools/gst-inspect.c:1503
+#, fuzzy, c-format
+msgid "Error creating pipe: %s\n"
+msgstr "\"%s\" kapatılırken hata."
+
+#, fuzzy, c-format
+msgid "Error forking: %s\n"
+msgstr "\"%s\" kapatılırken hata."
+
+#, c-format
+msgid "Error reading from console: %s\n"
+msgstr ""
+
+#, fuzzy, c-format
+msgid "Error writing to console: %s\n"
+msgstr "\"%s\" dosyası yazılırken hata."
+
 msgid "Print all elements"
 msgstr "Bütün ögeleri yazdır"
 
-#: tools/gst-inspect.c:1505
 msgid "Print list of blacklisted files"
 msgstr "Kara listeye alınmış dosyaların listesini yazdır"
 
-#: tools/gst-inspect.c:1507
 msgid ""
-"Print a machine-parsable list of features the specified plugin or all plugins provide.\n"
-"                                       Useful in connection with external automatic plugin installation mechanisms"
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
 msgstr ""
-"Belirtilen eklenti ya da sağlanan bütün eklentilerin özelliklerinin makine-çözümlenebilir bir listesini yazdır.\n"
-"                                       Harici otomatik eklenti kurulum tekniği ile bağlantıda faydalı"
+"Belirtilen eklenti ya da sağlanan bütün eklentilerin özelliklerinin makine-"
+"çözümlenebilir bir listesini yazdır.\n"
+"                                       Harici otomatik eklenti kurulum "
+"tekniği ile bağlantıda faydalı"
 
-#: tools/gst-inspect.c:1512
 msgid "List the plugin contents"
 msgstr "Eklenti içeriklerini listele"
 
-#: tools/gst-inspect.c:1514
-msgid "A slashes ('/') separated list of types of elements (also known as klass) to list. (unordered)"
-msgstr "Bir eğik çizgi ('/') öğelernin türlerini listelemek için (klass olarak da bilinen) listelerine ayrılmış. (sıralı değil)"
+msgid ""
+"A slashes ('/') separated list of types of elements (also known as klass) to "
+"list. (unordered)"
+msgstr ""
+"Bir eğik çizgi ('/') öğelernin türlerini listelemek için (klass olarak da "
+"bilinen) listelerine ayrılmış. (sıralı değil)"
 
-#: tools/gst-inspect.c:1517
 msgid "Check if the specified element or plugin exists"
 msgstr "Belirtilen öge ya da eklentinin var olup olmadığını kontrol et"
 
-#: tools/gst-inspect.c:1520
-msgid "When checking if an element or plugin exists, also check that its version is at least the version specified"
-msgstr "Bir öge ya da eklentinin var olup olmadığını kontrol ettiğinizde ayrıca onların belirtilen en son versiyonda olup olmadıklarını da kontrol edin"
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
+"Bir öge ya da eklentinin var olup olmadığını kontrol ettiğinizde ayrıca "
+"onların belirtilen en son versiyonda olup olmadıklarını da kontrol edin"
 
-#: tools/gst-inspect.c:1524
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Desteklenen URI şemalarını onlara uygulanan ögelerle yazdır"
 
-#: tools/gst-inspect.c:1672
+msgid ""
+"Disable colors in output. You can also achieve the same by "
+"setting'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Eklenti dosyası yüklenemedi: %s\n"
 
-#: tools/gst-inspect.c:1677
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Böyle bir öge ya da '%s' eklentisi yok\n"
 
-#: tools/gst-launch.c:252
 msgid "Index statistics"
 msgstr "Dizin istatistikleri"
 
-#: tools/gst-launch.c:552
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
 msgstr "#%u iletisi \"%s\" ögesinden alındı (%s): "
 
-#: tools/gst-launch.c:556
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
 msgstr "#%u iletisi dolgu \"%s:%s\" (%s) üzerinden alındı: "
 
-#: tools/gst-launch.c:560
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
 msgstr "#%u iletisi \"%s\" nesnesinden alındı (%s): "
 
-#: tools/gst-launch.c:564
 #, c-format
 msgid "Got message #%u (%s): "
 msgstr "İleti #%u alındı (%s): "
 
-#: tools/gst-launch.c:596
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "\"%s\" ögesinden gelen EOS.\n"
 
-#: tools/gst-launch.c:605
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ETİKET BULUNDU      : \"%s\" öğesi tarafından bulundu.\n"
 
-#: tools/gst-launch.c:608
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
 msgstr "ETİKET BULUNDU      : \"%s:%s\" dolgusu tarafından bulundu.\n"
 
-#: tools/gst-launch.c:611
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
 msgstr "ETİKET BULUNDU      : \"%s\" nesnesi tarafından bulundu.\n"
 
-#: tools/gst-launch.c:614
 msgid "FOUND TAG\n"
 msgstr "ETİKET BULUNDU\n"
 
-#: tools/gst-launch.c:629
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
 msgstr "İÇİNDEKİLER BULUNDU      : \"%s\" ögesi tarafından bulundu.\n"
 
-#: tools/gst-launch.c:632
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
 msgstr "İÇİNDEKİLER BULUNDU      : \"%s\" nesnesi tarafından bulundu.\n"
 
-#: tools/gst-launch.c:635
 msgid "FOUND TOC\n"
 msgstr "İÇİNDEKİLER BULUNDU\n"
 
-#: tools/gst-launch.c:652
 #, c-format
 msgid ""
 "INFO:\n"
@@ -1420,186 +1207,148 @@ msgstr ""
 "BİLGİ:\n"
 "%s\n"
 
-#: tools/gst-launch.c:669
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "UYARI: %s ögesinden: %s\n"
 
-#: tools/gst-launch.c:704
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Kullanım öncesi, önbelleğe alma işleminin bitmesi bekleniyor...\n"
 
-#: tools/gst-launch.c:708
 msgid "Prerolled, waiting for progress to finish...\n"
 msgstr "Kullanım öncesi, ilerlemenin bitmesi için bekleniyor...\n"
 
-#: tools/gst-launch.c:720
 msgid "buffering..."
 msgstr "tamponlanıyor..."
 
-#: tools/gst-launch.c:731
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "Önbelleğe alma işlemi, YÜRÜTÜLÜYOR durumu için ardışık düzen ayarlamaları yapıldı ...\n"
+msgstr ""
+"Önbelleğe alma işlemi, YÜRÜTÜLÜYOR durumu için ardışık düzen ayarlamaları "
+"yapıldı ...\n"
 
-#: tools/gst-launch.c:739
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Tamponlama, DURAKLAT olarak ayarlanıyor ...\n"
 
-#: tools/gst-launch.c:748
 msgid "Redistribute latency...\n"
 msgstr "Yeniden dağıtım gecikmesi...\n"
 
-#: tools/gst-launch.c:759
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
 msgstr "Durum %s olarak ayarlanıyor, %s tarafından istenmiş...\n"
 
-#: tools/gst-launch.c:775
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Kesme: Boru hattı durduruluyor ...\n"
 
-#: tools/gst-launch.c:804
 #, c-format
 msgid "Progress: (%s) %s\n"
 msgstr "İlerleme: (%s) %s\n"
 
-#: tools/gst-launch.c:817
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "Eksik öge: %s\n"
 
-#: tools/gst-launch.c:831
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
 msgstr "Ögeden '%s' içerik alındı: %s=%s\n"
 
-#: tools/gst-launch.c:963
 msgid "Output tags (also known as metadata)"
 msgstr "Çıktı etiketleri (metadata olarak da bilinir)"
 
-#: tools/gst-launch.c:965
 msgid "Output TOC (chapters and editions)"
 msgstr "İçindekiler Çıktısı (bölümler ve sürümleri)"
 
-#: tools/gst-launch.c:967
 msgid "Output status information and property notifications"
 msgstr "Çıktı durum bilgisi ve özellik uyarıları"
 
-#: tools/gst-launch.c:969
 msgid "Do not print any progress information"
 msgstr "Herhangi bir ilerleme bilgisi yazdırmayın"
 
-#: tools/gst-launch.c:971
 msgid "Output messages"
 msgstr "Çıktı iletileri"
 
-#: tools/gst-launch.c:973
-msgid "Do not output status information for the specified property if verbose output is enabled (can be used multiple times)"
-msgstr "Ayrıntılı çıktı etkinse, durum bilgilerini belirtilen özellik için çıkış değil (birden çok kez kullanılabilir)"
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
+"Ayrıntılı çıktı etkinse, durum bilgilerini belirtilen özellik için çıkış "
+"değil (birden çok kez kullanılabilir)"
 
-#: tools/gst-launch.c:975
 msgid "PROPERTY-NAME"
 msgstr "ÖZELLİK-ADI"
 
-#: tools/gst-launch.c:977
 msgid "Do not install a fault handler"
 msgstr "Hatalı işleticiyi kurma"
 
-#: tools/gst-launch.c:979
 msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Boru hattı kapatılmadan önce kaynaklarda EOS zorla"
 
-#: tools/gst-launch.c:982
 msgid "Gather and print index statistics"
 msgstr "Dizin istatistiklerini topla ve yazdır"
 
-#: tools/gst-launch.c:1049
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "HATA: boruhattı oluşturulamadı: %s.\n"
 
-#: tools/gst-launch.c:1053
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "HATA: boruhattı oluşturulamadı.\n"
 
-#: tools/gst-launch.c:1057
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "UYARI: hatalı boruhattı: %s\n"
 
-#: tools/gst-launch.c:1073
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "HATA: 'pipeline' öğesi bulunamadı.\n"
 
-#: tools/gst-launch.c:1104 tools/gst-launch.c:1205
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "DURDURULDU durumu için ardışık düzen ayarlamaları ...\n"
 
-#: tools/gst-launch.c:1109
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "HATA: Ardışık düzen durdurmayı istemez.\n"
 
-#: tools/gst-launch.c:1114
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Boru hattı çalışıyor ve PREROLL ihtiyacı yok ...\n"
 
-#: tools/gst-launch.c:1118
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Boru hattı PREROLLING yapıyor ...\n"
 
-#: tools/gst-launch.c:1121 tools/gst-launch.c:1135
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "HATA: boru hattı kullanım öncesi yapmak istemiyor.\n"
 
-#: tools/gst-launch.c:1128
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Boru hattı PREROLLED ...\n"
 
-#: tools/gst-launch.c:1141
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Boru hattı PLAYING olarak ayarlanıyor ...\n"
 
-#: tools/gst-launch.c:1148
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "HATA: boruhattı çalmak istemiyor.\n"
 
-#: tools/gst-launch.c:1167
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "Kapanmada EOS etkin - Boru hattında EOS zorlanıyor\n"
 
-#: tools/gst-launch.c:1171
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
 msgstr "Kapanmada EOS etkin -- Hatadan sonra EOS için bekleniyor\n"
 
-#: tools/gst-launch.c:1174
 msgid "Waiting for EOS...\n"
 msgstr "EOS için bekleniyor...\n"
 
-#: tools/gst-launch.c:1181
 msgid "EOS received - stopping pipeline...\n"
 msgstr "EOS alındı - boru hattı durduruluyor...\n"
 
-#: tools/gst-launch.c:1185
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
 msgstr "EOS için beklenirken kesme - boru hattı durduruluyor...\n"
 
-#: tools/gst-launch.c:1190
 msgid "An error happened while waiting for EOS\n"
 msgstr "Akış sonu için beklerken bir hata oldu\n"
 
-#: tools/gst-launch.c:1201
 msgid "Execution ended after %"
 msgstr "Çalıştırma % sonrası bitti"
 
-#: tools/gst-launch.c:1217
 msgid "Setting pipeline to READY ...\n"
 msgstr "Boru hattı READY olarak ayarlanıyor ...\n"
 
-#: tools/gst-launch.c:1229
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Boru hattı NULL olarak ayarlanıyor ...\n"
 
-#: tools/gst-launch.c:1233
 msgid "Freeing pipeline ...\n"
 msgstr "Boru hattı boşaltılıyor ...\n"
 
@@ -1640,10 +1389,14 @@ msgstr "Boru hattı boşaltılıyor ...\n"
 #~ msgstr "KAYIT"
 
 #~ msgid "Internal GStreamer error: state change failed.  File a bug."
-#~ msgstr "Dahili GStreamer hatası: durum değiştirilemedi.  Hata bildiriminde bulunun."
+#~ msgstr ""
+#~ "Dahili GStreamer hatası: durum değiştirilemedi.  Hata bildiriminde "
+#~ "bulunun."
 
 #~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
-#~ msgstr "Dahili GStreamer hatası: zamanlandırıcı sorunu.  Hata bildiriminde bulunun."
+#~ msgstr ""
+#~ "Dahili GStreamer hatası: zamanlandırıcı sorunu.  Hata bildiriminde "
+#~ "bulunun."
 
 #~ msgid "original location of file as a URI"
 #~ msgstr "dosyanın URI olarak özgün konumu"
@@ -1654,8 +1407,11 @@ msgstr "Boru hattı boşaltılıyor ...\n"
 #~ msgid "maximum"
 #~ msgstr "azami"
 
-#~ msgid "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
-#~ msgstr "\"%1$s\", \"%3$s\" öğesindeki \"%2$s\" özelliğinine uyacak şekilde dönüştürülemedi"
+#~ msgid ""
+#~ "could not convert \"%s\" so that it fits property \"%s\" in element \"%s\""
+#~ msgstr ""
+#~ "\"%1$s\", \"%3$s\" öğesindeki \"%2$s\" özelliğinine uyacak şekilde "
+#~ "dönüştürülemedi"
 
 #~ msgid "link without source element"
 #~ msgstr "kaynak öğesi olmayan bağ"
