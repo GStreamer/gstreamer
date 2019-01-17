@@ -349,7 +349,7 @@ static gboolean
 bs_write_sps_data (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
     GstVaapiEncPicture * picture,
     const VAEncSequenceParameterBufferHEVC * seq_param, GstVaapiProfile profile,
-    const VAEncMiscParameterHRD * hrd_params)
+    GstVaapiRateControl rate_control, const VAEncMiscParameterHRD * hrd_params)
 {
   guint32 video_parameter_set_id = 0;
   guint32 max_sub_layers_minus1 = 0;
@@ -362,6 +362,7 @@ bs_write_sps_data (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
   guint32 sps_extension_flag = 0;
   guint32 nal_hrd_parameters_present_flag = 0;
   guint maxNumSubLayers = 1, i;
+  guint32 cbr_flag = rate_control == GST_VAAPI_RATECONTROL_CBR ? 1 : 0;
 
   /* video_parameter_set_id */
   WRITE_UINT32 (bs, video_parameter_set_id, 4);
@@ -523,7 +524,7 @@ bs_write_sps_data (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
             /* cpb_size_value_minus1 */
             WRITE_UE (bs, (hrd_params->buffer_size >> SX_CPB_SIZE) - 1);
             /* cbr_flag */
-            WRITE_UINT32 (bs, 1, 1);
+            WRITE_UINT32 (bs, cbr_flag, 1);
           }
         }
       }
@@ -548,9 +549,10 @@ static gboolean
 bs_write_sps (GstBitWriter * bs, GstVaapiEncoderH265 * encoder,
     GstVaapiEncPicture * picture,
     const VAEncSequenceParameterBufferHEVC * seq_param, GstVaapiProfile profile,
-    const VAEncMiscParameterHRD * hrd_params)
+    GstVaapiRateControl rate_control, const VAEncMiscParameterHRD * hrd_params)
 {
-  if (!bs_write_sps_data (bs, encoder, picture, seq_param, profile, hrd_params))
+  if (!bs_write_sps_data (bs, encoder, picture, seq_param, profile,
+          rate_control, hrd_params))
     return FALSE;
 
   /* rbsp_trailing_bits */
@@ -1209,6 +1211,7 @@ static gboolean
 add_packed_sequence_header (GstVaapiEncoderH265 * encoder,
     GstVaapiEncPicture * picture, GstVaapiEncSequence * sequence)
 {
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   GstVaapiEncPackedHeader *packed_seq;
   GstBitWriter bs;
   VAEncPackedHeaderParameterBuffer packed_seq_param = { 0 };
@@ -1225,7 +1228,8 @@ add_packed_sequence_header (GstVaapiEncoderH265 * encoder,
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H265_NAL_SPS);
 
-  bs_write_sps (&bs, encoder, picture, seq_param, profile, &hrd_params);
+  bs_write_sps (&bs, encoder, picture, seq_param, profile,
+      base_encoder->rate_control, &hrd_params);
 
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);

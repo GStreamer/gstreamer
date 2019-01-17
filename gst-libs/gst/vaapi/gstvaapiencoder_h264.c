@@ -330,7 +330,7 @@ bs_error:
 static gboolean
 bs_write_sps_data (GstBitWriter * bs,
     const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile,
-    const VAEncMiscParameterHRD * hrd_params)
+    GstVaapiRateControl rate_control, const VAEncMiscParameterHRD * hrd_params)
 {
   guint8 profile_idc;
   guint32 constraint_set0_flag, constraint_set1_flag;
@@ -340,6 +340,7 @@ bs_write_sps_data (GstBitWriter * bs,
 
   guint32 b_qpprime_y_zero_transform_bypass = 0;
   guint32 residual_color_transform_flag = 0;
+  guint32 cbr_flag = rate_control == GST_VAAPI_RATECONTROL_CBR ? 1 : 0;
   guint32 pic_height_in_map_units =
       (seq_param->seq_fields.bits.frame_mbs_only_flag ?
       seq_param->picture_height_in_mbs : seq_param->picture_height_in_mbs / 2);
@@ -509,7 +510,7 @@ bs_write_sps_data (GstBitWriter * bs,
         /* cpb_size_value_minus1[0] */
         WRITE_UE (bs, (hrd_params->buffer_size >> SX_CPB_SIZE) - 1);
         /* cbr_flag[0] */
-        WRITE_UINT32 (bs, 1, 1);
+        WRITE_UINT32 (bs, cbr_flag, 1);
       }
       /* initial_cpb_removal_delay_length_minus1 */
       WRITE_UINT32 (bs, 23, 5);
@@ -547,9 +548,9 @@ bs_error:
 static gboolean
 bs_write_sps (GstBitWriter * bs,
     const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile,
-    const VAEncMiscParameterHRD * hrd_params)
+    GstVaapiRateControl rate_control, const VAEncMiscParameterHRD * hrd_params)
 {
-  if (!bs_write_sps_data (bs, seq_param, profile, hrd_params))
+  if (!bs_write_sps_data (bs, seq_param, profile, rate_control, hrd_params))
     return FALSE;
 
   /* rbsp_trailing_bits */
@@ -561,12 +562,12 @@ bs_write_sps (GstBitWriter * bs,
 static gboolean
 bs_write_subset_sps (GstBitWriter * bs,
     const VAEncSequenceParameterBufferH264 * seq_param, GstVaapiProfile profile,
-    guint num_views, guint16 * view_ids,
+    GstVaapiRateControl rate_control, guint num_views, guint16 * view_ids,
     const VAEncMiscParameterHRD * hrd_params)
 {
   guint32 i, j, k;
 
-  if (!bs_write_sps_data (bs, seq_param, profile, hrd_params))
+  if (!bs_write_sps_data (bs, seq_param, profile, rate_control, hrd_params))
     return FALSE;
 
   if (profile == GST_VAAPI_PROFILE_H264_STEREO_HIGH ||
@@ -1494,6 +1495,7 @@ static gboolean
 add_packed_sequence_header (GstVaapiEncoderH264 * encoder,
     GstVaapiEncPicture * picture, GstVaapiEncSequence * sequence)
 {
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   GstVaapiEncPackedHeader *packed_seq;
   GstBitWriter bs;
   VAEncPackedHeaderParameterBuffer packed_seq_param = { 0 };
@@ -1517,7 +1519,8 @@ add_packed_sequence_header (GstVaapiEncoderH264 * encoder,
       profile == GST_VAAPI_PROFILE_H264_STEREO_HIGH)
     profile = GST_VAAPI_PROFILE_H264_HIGH;
 
-  bs_write_sps (&bs, seq_param, profile, &hrd_params);
+  bs_write_sps (&bs, seq_param, profile, base_encoder->rate_control,
+      &hrd_params);
 
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
@@ -1553,6 +1556,7 @@ static gboolean
 add_packed_sequence_header_mvc (GstVaapiEncoderH264 * encoder,
     GstVaapiEncPicture * picture, GstVaapiEncSequence * sequence)
 {
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   GstVaapiEncPackedHeader *packed_seq;
   GstBitWriter bs;
   VAEncPackedHeaderParameterBuffer packed_header_param_buffer = { 0 };
@@ -1568,8 +1572,9 @@ add_packed_sequence_header_mvc (GstVaapiEncoderH264 * encoder,
   WRITE_UINT32 (&bs, 0x00000001, 32);   /* start code */
   bs_write_nal_header (&bs, GST_H264_NAL_REF_IDC_HIGH, GST_H264_NAL_SUBSET_SPS);
 
-  bs_write_subset_sps (&bs, seq_param, encoder->profile, encoder->num_views,
-      encoder->view_ids, &hrd_params);
+  bs_write_subset_sps (&bs, seq_param, encoder->profile,
+      base_encoder->rate_control, encoder->num_views, encoder->view_ids,
+      &hrd_params);
 
   g_assert (GST_BIT_WRITER_BIT_SIZE (&bs) % 8 == 0);
   data_bit_size = GST_BIT_WRITER_BIT_SIZE (&bs);
