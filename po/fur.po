@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2017-02-17 10:54+0100\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
@@ -23,6 +23,16 @@ msgstr "Servidôr Jack no cjatât"
 
 msgid "Failed to decode JPEG image"
 msgstr "No si è rivâts a decodificâ la imagjin JPEG"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -56,6 +66,9 @@ msgstr "Il servidôr al à inviât dâts sbaliâts."
 msgid "Server does not support seeking."
 msgstr "Il servidôr nol supuarte la ricercje."
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nissun o invalit audio in jentrade, il flus AVI al sarà ruvinât."
 
@@ -80,10 +93,6 @@ msgstr "Chest file nol è complet e nol pues jessi riprodot."
 
 msgid "The video in this file might not play correctly."
 msgstr "il video in chest file al podarès no funzionâ ben."
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Chest file al conten masse flus. Si riprodusarà nome i prins %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -153,60 +162,6 @@ msgstr "Dispositîf CoreAudio no cjatât"
 msgid "CoreAudio device could not be opened"
 msgstr "Nol è stât pussibil vierzi il dispositîf CoreAudio"
 
-msgid "Record Source"
-msgstr "Sorzint regjistrazion"
-
-msgid "Microphone"
-msgstr "Microfon"
-
-msgid "Line In"
-msgstr "Linie di jentrade"
-
-msgid "Internal CD"
-msgstr "CD interni"
-
-msgid "SPDIF In"
-msgstr "SPDIF jentrade"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 jentrade"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 jentrade"
-
-msgid "Codec Loopback"
-msgstr "Loopback Codec"
-
-msgid "SunVTS Loopback"
-msgstr "Loopback SunVTS"
-
-msgid "Volume"
-msgstr "Volum"
-
-msgid "Gain"
-msgstr "Vuadagn"
-
-msgid "Monitor"
-msgstr "Monitor"
-
-msgid "Built-in Speaker"
-msgstr "Casse incorporade"
-
-msgid "Headphone"
-msgstr "Cufis"
-
-msgid "Line Out"
-msgstr "Linie di jessude"
-
-msgid "SPDIF Out"
-msgstr "SPDIF jessude"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 jessude"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 jessude"
-
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Erôr tal lei %d byte dal dispositîf '%s'."
@@ -229,6 +184,14 @@ msgstr "Il driver dal dispositîf '%s' nol supuarte il metodi IO %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Il driver dal dispositîf '%s' nol supuarte nissun metodi IO cognossût."
 
+#, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr "Il codificadôr sul dispositîf %s nol à formâts di jentrade supuartâts"
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
 #, c-format
 msgid "Device '%s' is busy"
 msgstr "Il dispositîf '%s' al è ocupât"
@@ -244,6 +207,14 @@ msgstr "Il dispositîf '%s' nol pues caturâ tal formât specificât"
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Il servidôr nol supuarte la ricercje."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
+msgstr "Il driver dal dispositîf '%s' nol supuarte il metodi IO %d"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -316,12 +287,12 @@ msgstr "Il convertidôr sul dispositîf %s nol à formâts di jentrade supuartâ
 msgid "Converter on device %s has no supported output format"
 msgstr "Il convertidôr sul dispositîf %s nol à formâts di jessude supuartâts"
 
-#, c-format
-msgid "Encoder on device %s has no supported input format"
+#, fuzzy, c-format
+msgid "Decoder on device %s has no supported input format"
 msgstr "Il codificadôr sul dispositîf %s nol à formâts di jentrade supuartâts"
 
-#, c-format
-msgid "Encoder on device %s has no supported output format"
+#, fuzzy, c-format
+msgid "Decoder on device %s has no supported output format"
 msgstr "Il codificadôr sul dispositîf %s nol à formâts di jessude supuartâts"
 
 msgid "Failed to start decoding thread."
@@ -329,6 +300,17 @@ msgstr ""
 
 msgid "Failed to process frame."
 msgstr "Impussibil processâ fotogram."
+
+#, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Il codificadôr sul dispositîf %s nol à formâts di jessude supuartâts"
+
+#, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Il codificadôr sul dispositîf %s nol à formâts di jentrade supuartâts"
+
+msgid "Failed to start encoding thread."
+msgstr ""
 
 #, c-format
 msgid ""
@@ -434,3 +416,60 @@ msgstr "Il cambiâ la risoluzion dilunc la vore nol è ancjemò supuartât."
 
 msgid "Cannot operate without a clock"
 msgstr "Impussibil operâ cence un orloi"
+
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Chest file al conten masse flus. Si riprodusarà nome i prins %d"
+
+#~ msgid "Record Source"
+#~ msgstr "Sorzint regjistrazion"
+
+#~ msgid "Microphone"
+#~ msgstr "Microfon"
+
+#~ msgid "Line In"
+#~ msgstr "Linie di jentrade"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD interni"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF jentrade"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 jentrade"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 jentrade"
+
+#~ msgid "Codec Loopback"
+#~ msgstr "Loopback Codec"
+
+#~ msgid "SunVTS Loopback"
+#~ msgstr "Loopback SunVTS"
+
+#~ msgid "Volume"
+#~ msgstr "Volum"
+
+#~ msgid "Gain"
+#~ msgstr "Vuadagn"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Casse incorporade"
+
+#~ msgid "Headphone"
+#~ msgstr "Cufis"
+
+#~ msgid "Line Out"
+#~ msgstr "Linie di jessude"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF jessude"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1 jessude"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2 jessude"

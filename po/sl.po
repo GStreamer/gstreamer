@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2014-04-09 22:52+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -26,6 +26,16 @@ msgstr "Strežnika JACK ni mogoče najti"
 
 msgid "Failed to decode JPEG image"
 msgstr "Napaka med dekodiranjem JPEG slike"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -59,6 +69,9 @@ msgstr "Strežnik je poslal slabe podatke."
 msgid "Server does not support seeking."
 msgstr "Strežnik ne podpira iskanja."
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Napaka vhodnega zvoka, AVI pretok bo pokvarjen."
 
@@ -82,10 +95,6 @@ msgstr "Datoteka ni popolna, zato je ni mogoče predvajati."
 
 msgid "The video in this file might not play correctly."
 msgstr "Video zapis v tej datoteki morda ne bo predvajan pravilno."
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Datoteka vsebuje več pretokov. Predvajano bo le začetnih %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -154,60 +163,6 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
-msgid "Record Source"
-msgstr "Vir snemanja"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "Line In"
-msgstr "Analogni vhod"
-
-msgid "Internal CD"
-msgstr "Notranji CD"
-
-msgid "SPDIF In"
-msgstr "Vhod SPDIF"
-
-msgid "AUX 1 In"
-msgstr "Vhod AUX 1"
-
-msgid "AUX 2 In"
-msgstr "Vhod AUX 2"
-
-msgid "Codec Loopback"
-msgstr "Povratna zanka kodeka"
-
-msgid "SunVTS Loopback"
-msgstr "Povratna zanka SunVTS"
-
-msgid "Volume"
-msgstr "Glasnost"
-
-msgid "Gain"
-msgstr "Ojačitev"
-
-msgid "Monitor"
-msgstr "Zaslon"
-
-msgid "Built-in Speaker"
-msgstr "Vgrajeni zvočnik"
-
-msgid "Headphone"
-msgstr "Slušalke"
-
-msgid "Line Out"
-msgstr "Analogni izhod"
-
-msgid "SPDIF Out"
-msgstr "Izhod SPDIF"
-
-msgid "AUX 1 Out"
-msgstr "Izhod AUX 1"
-
-msgid "AUX 2 Out"
-msgstr "Izhod AUX 2"
-
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Napaka med branjem %d bajtov iz naprave '%s'."
@@ -230,6 +185,14 @@ msgstr "Gonilnik naprave \"%s\" ne podpira nobenega načina I/O %d."
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Gonilnik naprave \"%s\" ne podpira nobenega znanega načina I/O."
 
+#, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
 #, c-format
 msgid "Device '%s' is busy"
 msgstr "Naprava \"%s\" je zaposlena."
@@ -244,6 +207,14 @@ msgstr "Naprava \"%s\" ne podpira zajemanja v izbrani obliki."
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
+msgstr "Naprava \"%s\" ne podpira zajemanja videa."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Naprava \"%s\" ne podpira zajemanja videa."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
 msgstr "Naprava \"%s\" ne podpira zajemanja videa."
 
 #, c-format
@@ -321,11 +292,11 @@ msgid "Converter on device %s has no supported output format"
 msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported input format"
+msgid "Decoder on device %s has no supported input format"
 msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported output format"
+msgid "Decoder on device %s has no supported output format"
 msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
 
 #, fuzzy
@@ -334,6 +305,18 @@ msgstr "Napaka med dekodiranjem JPEG slike"
 
 msgid "Failed to process frame."
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
+
+#, fuzzy
+msgid "Failed to start encoding thread."
+msgstr "Napaka med dekodiranjem JPEG slike"
 
 #, c-format
 msgid ""
@@ -435,11 +418,65 @@ msgstr "Spreminjanje ločljivosti med delovanjem še ni podprto."
 msgid "Cannot operate without a clock"
 msgstr "Izvajanje opravil brez ure ni mogoče"
 
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Datoteka vsebuje več pretokov. Predvajano bo le začetnih %d"
+
+#~ msgid "Record Source"
+#~ msgstr "Vir snemanja"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "Line In"
+#~ msgstr "Analogni vhod"
+
+#~ msgid "Internal CD"
+#~ msgstr "Notranji CD"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Vhod SPDIF"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Vhod AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Vhod AUX 2"
+
+#~ msgid "Codec Loopback"
+#~ msgstr "Povratna zanka kodeka"
+
+#~ msgid "SunVTS Loopback"
+#~ msgstr "Povratna zanka SunVTS"
+
+#~ msgid "Volume"
+#~ msgstr "Glasnost"
+
+#~ msgid "Gain"
+#~ msgstr "Ojačitev"
+
+#~ msgid "Monitor"
+#~ msgstr "Zaslon"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Vgrajeni zvočnik"
+
+#~ msgid "Headphone"
+#~ msgstr "Slušalke"
+
+#~ msgid "Line Out"
+#~ msgstr "Analogni izhod"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "Izhod SPDIF"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "Izhod AUX 1"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "Izhod AUX 2"
+
 #~ msgid "Internal data stream error."
 #~ msgstr "Notranja napaka pretoka podatkov."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Notranja napaka pretoka podatkov."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Naprava \"%s\" ne podpira zajemanja videa."

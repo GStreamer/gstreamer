@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2016-05-20 12:31+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -22,6 +22,16 @@ msgstr "Jack server sa nenašiel"
 
 msgid "Failed to decode JPEG image"
 msgstr "Nepodarilo sa dekódovať obrázok JPEG"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -53,6 +63,9 @@ msgstr "Server odoslal chybné údaje."
 msgid "Server does not support seeking."
 msgstr "Server nepodporuje zmenu pozície"
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Žiadny alebo chybný vstup zvuku, prúd údajov AVI bude poškodený."
 
@@ -77,10 +90,6 @@ msgstr "Tento súbor je neúplný a nedá sa prehrať."
 
 msgid "The video in this file might not play correctly."
 msgstr "Video v tomto súbore možno nebude hrať korektne."
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Tento súbor obsahuje príliš mnoho prúdov údajov. Prehrávam iba prvý %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -150,60 +159,6 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
-msgid "Record Source"
-msgstr "Zdroj záznamu"
-
-msgid "Microphone"
-msgstr "Mikrofón"
-
-msgid "Line In"
-msgstr "Linkový vstup"
-
-msgid "Internal CD"
-msgstr "Vnútorne CD"
-
-msgid "SPDIF In"
-msgstr "SPDIF vstup"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 vstup"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 vstup"
-
-msgid "Codec Loopback"
-msgstr "Spätná slučka kodeku"
-
-msgid "SunVTS Loopback"
-msgstr "Spätná slučka SunVTS"
-
-msgid "Volume"
-msgstr "Hlasitosť"
-
-msgid "Gain"
-msgstr "Zisk"
-
-msgid "Monitor"
-msgstr "Monitor"
-
-msgid "Built-in Speaker"
-msgstr "PC reproduktor"
-
-msgid "Headphone"
-msgstr "Slúchadlá"
-
-msgid "Line Out"
-msgstr "Linkový výstup"
-
-msgid "SPDIF Out"
-msgstr "SPDIF výstup"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 výstup"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 výstup"
-
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Chyba pri čítaní %d bajtov zo zariadenia '%s'."
@@ -226,6 +181,14 @@ msgstr "Tento ovládač zariadenia '%s' nepodporuje IO metódu %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Tento ovládač zariadenia '%s' nepodporuje žiadnu známu IO metódu."
 
+#, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr "Enkodér na zariadení %s nepodporuje žiadny vstupný formát"
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
 #, c-format
 msgid "Device '%s' is busy"
 msgstr "Zariadenie '%s' je zaneprázdnené"
@@ -240,6 +203,14 @@ msgstr "Zariadenie '%s' nedokáže nahrávať v uvedenom formáte"
 
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
+msgstr "Zariadenie '%s' podporuje nespojité roviny"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Server nepodporuje zmenu pozície"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
 msgstr "Zariadenie '%s' podporuje nespojité roviny"
 
 #, c-format
@@ -310,12 +281,12 @@ msgstr "Konvertor na zariadení %s nepodporuje žiadny vstupný formát"
 msgid "Converter on device %s has no supported output format"
 msgstr "Konvertor na zariadení %s nepodporuje žiadny výstupný formát"
 
-#, c-format
-msgid "Encoder on device %s has no supported input format"
+#, fuzzy, c-format
+msgid "Decoder on device %s has no supported input format"
 msgstr "Enkodér na zariadení %s nepodporuje žiadny vstupný formát"
 
-#, c-format
-msgid "Encoder on device %s has no supported output format"
+#, fuzzy, c-format
+msgid "Decoder on device %s has no supported output format"
 msgstr "Enkodér na zariadení %s nepodporuje žiadny výstupný formát"
 
 msgid "Failed to start decoding thread."
@@ -323,6 +294,18 @@ msgstr "Nepodarilo sa spustiť dekódovacie vlákno."
 
 msgid "Failed to process frame."
 msgstr "Nepodarilo sa spracovať snímok."
+
+#, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Enkodér na zariadení %s nepodporuje žiadny výstupný formát"
+
+#, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Enkodér na zariadení %s nepodporuje žiadny vstupný formát"
+
+#, fuzzy
+msgid "Failed to start encoding thread."
+msgstr "Nepodarilo sa spustiť dekódovacie vlákno."
 
 #, c-format
 msgid ""
@@ -424,6 +407,64 @@ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
+
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr ""
+#~ "Tento súbor obsahuje príliš mnoho prúdov údajov. Prehrávam iba prvý %d"
+
+#~ msgid "Record Source"
+#~ msgstr "Zdroj záznamu"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofón"
+
+#~ msgid "Line In"
+#~ msgstr "Linkový vstup"
+
+#~ msgid "Internal CD"
+#~ msgstr "Vnútorne CD"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF vstup"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 vstup"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 vstup"
+
+#~ msgid "Codec Loopback"
+#~ msgstr "Spätná slučka kodeku"
+
+#~ msgid "SunVTS Loopback"
+#~ msgstr "Spätná slučka SunVTS"
+
+#~ msgid "Volume"
+#~ msgstr "Hlasitosť"
+
+#~ msgid "Gain"
+#~ msgstr "Zisk"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "PC reproduktor"
+
+#~ msgid "Headphone"
+#~ msgstr "Slúchadlá"
+
+#~ msgid "Line Out"
+#~ msgstr "Linkový výstup"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF výstup"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1 výstup"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2 výstup"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Vnútorná chyba prúdu údajov."

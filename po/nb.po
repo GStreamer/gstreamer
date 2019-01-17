@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2017-05-23 23:04+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -19,497 +19,451 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Poedit 1.8.7.1\n"
 
-#: ext/jack/gstjackaudiosink.c:356 ext/jack/gstjackaudiosrc.c:364
 msgid "Jack server not found"
 msgstr "Jack-server ikke funnet"
 
-#: ext/jpeg/gstjpegdec.c:915 ext/jpeg/gstjpegdec.c:1181
-#: ext/jpeg/gstjpegdec.c:1193 ext/jpeg/gstjpegdec.c:1222
-#: ext/jpeg/gstjpegdec.c:1231 ext/jpeg/gstjpegdec.c:1240
-#: ext/jpeg/gstjpegdec.c:1248
 msgid "Failed to decode JPEG image"
 msgstr "Klarte ikke å dekode JPEG-bilde"
 
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+
 #. TRANSLATORS: 'song title' by 'artist name'
-#: ext/pulse/pulsesink.c:3126
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "«%s» av «%s»"
 
-#: ext/shout2/gstshout2.c:566
 msgid "Could not connect to server"
 msgstr "Kunne ikke koble til tjener."
 
-#: ext/soup/gstsouphttpsrc.c:895
 msgid "No URL set."
 msgstr "Ingen URL satt."
 
-#: ext/soup/gstsouphttpsrc.c:1270
 msgid "Could not resolve server name."
 msgstr "Kunne ikke slå opp navn på tjener."
 
-#: ext/soup/gstsouphttpsrc.c:1275
 msgid "Could not establish connection to server."
 msgstr "Kunne ikke etablere tilkobling til tjener."
 
-#: ext/soup/gstsouphttpsrc.c:1279
 msgid "Secure connection setup failed."
 msgstr "Oppsett av sikker tilkobling feilet."
 
-#: ext/soup/gstsouphttpsrc.c:1285
-msgid "A network error occurred, or the server closed the connection unexpectedly."
+msgid ""
+"A network error occurred, or the server closed the connection unexpectedly."
 msgstr "En nettverksfeil oppstod, eller tjeneren lukket uventet tilkoblingen."
 
-#: ext/soup/gstsouphttpsrc.c:1290
 msgid "Server sent bad data."
 msgstr "Tjener sendte ugyldige data."
 
-#: ext/soup/gstsouphttpsrc.c:1479
 msgid "Server does not support seeking."
 msgstr "Tjener støtter ikke søking."
 
-#: gst/avi/gstavimux.c:1832
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Ingen eller ugyldig inndatalyd, AVI-strømmen vil bli skadet."
 
-#: gst/isomp4/qtdemux.c:698 gst/isomp4/qtdemux.c:702
 msgid "This file contains no playable streams."
 msgstr "Filen inneholder ingen spillbare strømmer."
 
-#: gst/isomp4/qtdemux.c:748 gst/isomp4/qtdemux.c:6427
-#: gst/isomp4/qtdemux.c:6495 gst/isomp4/qtdemux.c:6808
-#: gst/isomp4/qtdemux.c:7999
 msgid "This file is invalid and cannot be played."
 msgstr "Filen er ugyldig og kan ikke spilles."
 
-#: gst/isomp4/qtdemux.c:2859
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr "Kan ikke spille av strømmen fordi den er kryptert med PlayReady DRM."
 
-#: gst/isomp4/qtdemux.c:4036 gst/isomp4/qtdemux.c:7551
-#: gst/isomp4/qtdemux.c:7558 gst/isomp4/qtdemux.c:8471
-#: gst/isomp4/qtdemux.c:8908 gst/isomp4/qtdemux.c:8915
-#: gst/isomp4/qtdemux.c:11625
 msgid "This file is corrupt and cannot be played."
 msgstr "Filen er skadet og kan ikke spilles."
 
-#: gst/isomp4/qtdemux.c:4278
 msgid "Invalid atom size."
 msgstr "Ugyldig atomstørrelse."
 
-#: gst/isomp4/qtdemux.c:4356
 msgid "This file is incomplete and cannot be played."
 msgstr "Filen er ufullstendig og kan ikke spilles."
 
-#: gst/isomp4/qtdemux.c:9925
 msgid "The video in this file might not play correctly."
 msgstr "Videoen i denne filen spilles kanskje ikke av korrekt."
 
-#: gst/isomp4/qtdemux.c:11666
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Filen inneholder for mange strømmer. Spiller bare første %d"
+msgid ""
+"No supported stream was found. You might need to install a GStreamer RTSP "
+"extension plugin for Real media streams."
+msgstr ""
+"Ingen støttet strøm ble funnet. Du må kanskje installere en GStreamer RTSP "
+"utvidelsesprogramtillegg for Real mediestrømmer."
 
-#: gst/rtsp/gstrtspsrc.c:6355
-msgid "No supported stream was found. You might need to install a GStreamer RTSP extension plugin for Real media streams."
-msgstr "Ingen støttet strøm ble funnet. Du må kanskje installere en GStreamer RTSP utvidelsesprogramtillegg for Real mediestrømmer."
+msgid ""
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
+msgstr ""
+"Ingen støttet strøm ble funnet. Du må kanskje tillate flere "
+"transportprotokoller eller den kan mangle den rette GStreamer RTSP-"
+"utvidelsestillegget."
 
-#: gst/rtsp/gstrtspsrc.c:6360
-msgid "No supported stream was found. You might need to allow more transport protocols or may otherwise be missing the right GStreamer RTSP extension plugin."
-msgstr "Ingen støttet strøm ble funnet. Du må kanskje tillate flere transportprotokoller eller den kan mangle den rette GStreamer RTSP-utvidelsestillegget."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Kunne ikke åpne lydenheten for avspilling. Enheten brukes av et annet "
+"program."
 
-#: sys/oss4/oss4-sink.c:493 sys/oss4/oss4-source.c:358
-#: sys/oss/gstosssink.c:384
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Kunne ikke åpne lydenheten for avspilling. Enheten brukes av et annet program."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Kunne ikke åpne lydenheten for avspilling. Du har ikke tillatelse til å åpne "
+"enheten."
 
-#: sys/oss4/oss4-sink.c:503 sys/oss4/oss4-source.c:368
-#: sys/oss/gstosssink.c:391
-msgid "Could not open audio device for playback. You don't have permission to open the device."
-msgstr "Kunne ikke åpne lydenheten for avspilling. Du har ikke tillatelse til å åpne enheten."
-
-#: sys/oss4/oss4-sink.c:514 sys/oss4/oss4-source.c:379
-#: sys/oss/gstosssink.c:399
 msgid "Could not open audio device for playback."
 msgstr "Kunne ikke åpne lydenhet for avspilling."
 
-#: sys/oss4/oss4-sink.c:523 sys/oss4/oss4-source.c:389
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Kunne ikke åpne lydenheten for avspilling. Denne versjonen av «Open Sound System» støttes ikke av dette elementet."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Kunne ikke åpne lydenheten for avspilling. Denne versjonen av «Open Sound "
+"System» støttes ikke av dette elementet."
 
-#: sys/oss4/oss4-sink.c:646
 msgid "Playback is not supported by this audio device."
 msgstr "Avspilling støttes ikke av denne lydenheten."
 
-#: sys/oss4/oss4-sink.c:653
 msgid "Audio playback error."
 msgstr "Lydavspillingsfeil"
 
-#: sys/oss4/oss4-source.c:503
 msgid "Recording is not supported by this audio device."
 msgstr "Opptak støttes ikke av denne lydenheten."
 
-#: sys/oss4/oss4-source.c:510
 msgid "Error recording from audio device."
 msgstr "Feil ved opptak fra lydenheten."
 
-#: sys/oss/gstosssrc.c:376
-msgid "Could not open audio device for recording. You don't have permission to open the device."
-msgstr "Kunne ikke åpne lydenheten for opptak. Du har ikke tillatelse til å åpne enheten."
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Kunne ikke åpne lydenheten for opptak. Du har ikke tillatelse til å åpne "
+"enheten."
 
-#: sys/oss/gstosssrc.c:384
 msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åpne lydenhet for opptak."
 
-#: sys/osxaudio/gstosxaudioringbuffer.c:149
 msgid "CoreAudio device not found"
 msgstr "CoreAudio-enhet ikke funnet"
 
-#: sys/osxaudio/gstosxaudioringbuffer.c:155
 msgid "CoreAudio device could not be opened"
 msgstr "CoreAudio-enhet kune ikke åpnes"
 
-#: sys/sunaudio/gstsunaudiomixeroptions.c:109
-msgid "Record Source"
-msgstr "Opptakskilde"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:120
-msgid "Microphone"
-msgstr "Mikrofon"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:121
-msgid "Line In"
-msgstr "Linje inn"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:122
-msgid "Internal CD"
-msgstr "Intern CD"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:123
-msgid "SPDIF In"
-msgstr "SPDIF Inn"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:124
-msgid "AUX 1 In"
-msgstr "AUX 1 inn"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:125
-msgid "AUX 2 In"
-msgstr "AUX 2 inn"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:126
-msgid "Codec Loopback"
-msgstr "Kodek-Loopback"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:127
-msgid "SunVTS Loopback"
-msgstr "SunVTS-Loopback"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:69
-msgid "Volume"
-msgstr "Volum"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:70
-msgid "Gain"
-msgstr "Styrke"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:71
-msgid "Monitor"
-msgstr "Monitor"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:72
-msgid "Built-in Speaker"
-msgstr "Innebygget høyttaler"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:73
-msgid "Headphone"
-msgstr "Hodetelefon"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:74
-msgid "Line Out"
-msgstr "Linje ut"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:75
-msgid "SPDIF Out"
-msgstr "SPDIF ut"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:76
-msgid "AUX 1 Out"
-msgstr "AUX 1 ut"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:77
-msgid "AUX 2 Out"
-msgstr "AUX 2 ut"
-
-#: sys/v4l2/gstv4l2bufferpool.c:1684
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Feil ved lesing av% d bytes fra enheten '% s»."
 
-#: sys/v4l2/gstv4l2object.c:1168
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr "Kunne ikke spesifisere mulige videoformater enhet «%s» kan arbeide med"
 
-#: sys/v4l2/gstv4l2object.c:2889
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Kunne ikke tilordne buffere fra enheten «%s»."
 
-#: sys/v4l2/gstv4l2object.c:2897
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
 msgstr "Driveren av enheten «%s» støtter ikke IO metoden %d"
 
-#: sys/v4l2/gstv4l2object.c:2904
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Driveren av enheten «%s» støtter ikke noen kjente IO-metoder."
 
-#: sys/v4l2/gstv4l2object.c:3578 sys/v4l2/gstv4l2object.c:3589
+#, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr "Enkoder på enhet «%s» har ingen støttede inndataformat"
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
 #, c-format
 msgid "Device '%s' is busy"
 msgstr "Enheten «%s» er opptatt"
 
-#: sys/v4l2/gstv4l2object.c:3595 sys/v4l2/gstv4l2object.c:3607
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Enhet «%s» kan ikke fange ved %dx%d"
 
-#: sys/v4l2/gstv4l2object.c:3618
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Enhet «%s» kan ikke fange i det angitte formatet"
 
-#: sys/v4l2/gstv4l2object.c:3631
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "Enhet «%s» støtter ikke ikke-sammenhengende plan"
 
-#: sys/v4l2/gstv4l2object.c:3642
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Enhet «%s» støtter ikke videoopptak"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
+msgstr "Enhet «%s» støtter ikke videoopptak"
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Kunne ikke få parametere på enheten «%s»."
 
-#: sys/v4l2/gstv4l2object.c:3650
 msgid "Video device did not accept new frame rate setting."
 msgstr "Videoenheten aksepterte ikke ny bildefrekvensinnstilling."
 
-#: sys/v4l2/gstv4l2object.c:3772
 msgid "Video device did not provide output format."
 msgstr "Videoenhet tilbød ikke utdataformat."
 
-#: sys/v4l2/gstv4l2object.c:3778
 msgid "Video device returned invalid dimensions."
 msgstr "Videoenhet returnerte ugyldige dimensjoner."
 
-#: sys/v4l2/gstv4l2object.c:3786
 msgid "Video device uses an unsupported interlacing method."
 msgstr "Videoenhet bruker en ustøttet linjeflettingsmetode."
 
-#: sys/v4l2/gstv4l2object.c:3793
 msgid "Video device uses an unsupported pixel format."
 msgstr "Videoenhet bruker et ustøttet pikselformat."
 
-#: sys/v4l2/gstv4l2object.c:4219
 msgid "Failed to configure internal buffer pool."
 msgstr "Klarte ikke å konfigurere internt bufferområde"
 
-#: sys/v4l2/gstv4l2object.c:4225
 msgid "Video device did not suggest any buffer size."
 msgstr "Videoenhet foreslo ikke noen bufferstørrelse."
 
-#: sys/v4l2/gstv4l2object.c:4240
 msgid "No downstream pool to import from."
 msgstr "Ingen nedstrømsområde å importere fra."
 
-#: sys/v4l2/gstv4l2radio.c:143
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Kunne ikke hente innstillingene fra mottakeren %d på enheten «%s»."
 
-#: sys/v4l2/gstv4l2radio.c:150
 #, c-format
 msgid "Error getting capabilities for device '%s'."
 msgstr "Feil ved henting av funksjoner for enheten «%s»."
 
-#: sys/v4l2/gstv4l2radio.c:157
 #, c-format
 msgid "Device '%s' is not a tuner."
 msgstr "Enheten «%s» er ikke en tuner."
 
-#: sys/v4l2/gstv4l2radio.c:184
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
 msgstr "Mislyktes i å få radio-inndata på enheten «%s»."
 
-#: sys/v4l2/gstv4l2radio.c:207 sys/v4l2/v4l2_calls.c:1073
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Klarte ikke å sette inngang %d på enhet %s."
 
-#: sys/v4l2/gstv4l2radio.c:241
 #, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Klarte ikke å endre dempe-modus for enheten «%s»."
 
-#: sys/v4l2/gstv4l2sink.c:628
 msgid "Failed to allocated required memory."
 msgstr "Kunne ikke tildele nødvendige minne."
 
-#: sys/v4l2/gstv4l2src.c:525 sys/v4l2/gstv4l2videodec.c:695
 msgid "Failed to allocate required memory."
 msgstr "Kunne ikke tildele nødvendige minne."
 
-#: sys/v4l2/gstv4l2transform.c:143
 #, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "Konverter på enhet «%s» har ingen støttede inndataformat"
 
-#: sys/v4l2/gstv4l2transform.c:150
 #, c-format
 msgid "Converter on device %s has no supported output format"
 msgstr "Konverter på enhet «%s» har ingen støttede utdataformat"
 
-#: sys/v4l2/gstv4l2videodec.c:141
-#, c-format
-msgid "Encoder on device %s has no supported input format"
+#, fuzzy, c-format
+msgid "Decoder on device %s has no supported input format"
 msgstr "Enkoder på enhet «%s» har ingen støttede inndataformat"
 
-#: sys/v4l2/gstv4l2videodec.c:148
+#, fuzzy, c-format
+msgid "Decoder on device %s has no supported output format"
+msgstr "Enkoder på enhet «%s» har ingen støttede utdataformat"
+
+msgid "Failed to start decoding thread."
+msgstr "Klarte ikke å starte dekoding av tråden."
+
+msgid "Failed to process frame."
+msgstr "Kunne ikke behandle ramme."
+
 #, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "Enkoder på enhet «%s» har ingen støttede utdataformat"
 
-#: sys/v4l2/gstv4l2videodec.c:709
-msgid "Failed to start decoding thread."
+#, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Enkoder på enhet «%s» har ingen støttede inndataformat"
+
+#, fuzzy
+msgid "Failed to start encoding thread."
 msgstr "Klarte ikke å starte dekoding av tråden."
 
-#: sys/v4l2/gstv4l2videodec.c:716
-msgid "Failed to process frame."
-msgstr "Kunne ikke behandle ramme."
-
-#: sys/v4l2/v4l2_calls.c:94
 #, c-format
-msgid "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if it is a v4l1 driver."
-msgstr "Feil ved henting av evner for enheten «%s»: Det er ikke en v4l2 driver. Sjekk om det er en v4l1 driver."
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+"Feil ved henting av evner for enheten «%s»: Det er ikke en v4l2 driver. "
+"Sjekk om det er en v4l1 driver."
 
-#: sys/v4l2/v4l2_calls.c:158
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr "Feil ved attributtspørring av inndata %d på enhet %s"
 
-#: sys/v4l2/v4l2_calls.c:189
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "Kunne ikke hente innstillingen av mottakeren %d på enheten «%s»."
 
-#: sys/v4l2/v4l2_calls.c:237
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr "Feil ved norm-spørring på enhet %s."
 
-#: sys/v4l2/v4l2_calls.c:416
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Kunne ikke å få inn kontrollattributter på enhet «%s»."
 
-#: sys/v4l2/v4l2_calls.c:610
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Kan ikke identifisere enhet «%s»."
 
-#: sys/v4l2/v4l2_calls.c:617
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Dette er ikke en enhet «%s»."
 
-#: sys/v4l2/v4l2_calls.c:624
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
 
-#: sys/v4l2/v4l2_calls.c:631
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Enhet «%s» kan ikke fange data."
 
-#: sys/v4l2/v4l2_calls.c:639
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Enhet «%s» er ikke en utgangsenhet."
 
-#: sys/v4l2/v4l2_calls.c:647
 #, c-format
 msgid "Device '%s' is not a M2M device."
 msgstr "Enheten «%s» er ikke en M2M-enhet."
 
-#: sys/v4l2/v4l2_calls.c:699
 #, c-format
 msgid "Could not dup device '%s' for reading and writing."
 msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
 
-#: sys/v4l2/v4l2_calls.c:783
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Kunne ikke sette normen for enhet «%s»."
 
-#: sys/v4l2/v4l2_calls.c:821
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
 msgstr "Klarte ikke å få gjeldende mottakerfrekvens for enheten «%s»."
 
-#: sys/v4l2/v4l2_calls.c:863
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
-msgstr "Klarte ikke å sette gjeldende mottakerfrekvens for enheten «%s» til %lu Hz."
+msgstr ""
+"Klarte ikke å sette gjeldende mottakerfrekvens for enheten «%s» til %lu Hz."
 
-#: sys/v4l2/v4l2_calls.c:897
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Klarte ikke å innhente signalstyrken for enheten «%s»."
 
-#: sys/v4l2/v4l2_calls.c:933
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Kunne ikke hente verdi for kontroll %d på enheten «%s»."
 
-#: sys/v4l2/v4l2_calls.c:968
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Klarte ikke å sette verdi %d for kontroll %d på enheten «%s»."
 
-#: sys/v4l2/v4l2_calls.c:1048
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
-msgstr "Kunne ikke hente gjeldende inndata på enheten «%s». Kanskje det er en radioenhet"
+msgstr ""
+"Kunne ikke hente gjeldende inndata på enheten «%s». Kanskje det er en "
+"radioenhet"
 
-#: sys/v4l2/v4l2_calls.c:1105
 #, c-format
-msgid "Failed to get current output on device '%s'. May be it is a radio device"
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
 msgstr "Kunne ikke hente utdata fra enheten «%s». Kanskje det er en radioenhet"
 
-#: sys/v4l2/v4l2_calls.c:1130
 #, c-format
 msgid "Failed to set output %d on device %s."
 msgstr "Klarte ikke å sette utgang %d på enhet %s."
 
-#: sys/ximage/gstximagesrc.c:838
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Endring av oppløsning under kjøring støttes ikke enda."
 
-#: sys/ximage/gstximagesrc.c:852
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke operere uten en klokke"
+
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Filen inneholder for mange strømmer. Spiller bare første %d"
+
+#~ msgid "Record Source"
+#~ msgstr "Opptakskilde"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "Line In"
+#~ msgstr "Linje inn"
+
+#~ msgid "Internal CD"
+#~ msgstr "Intern CD"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF Inn"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 inn"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 inn"
+
+#~ msgid "Codec Loopback"
+#~ msgstr "Kodek-Loopback"
+
+#~ msgid "SunVTS Loopback"
+#~ msgstr "SunVTS-Loopback"
+
+#~ msgid "Volume"
+#~ msgstr "Volum"
+
+#~ msgid "Gain"
+#~ msgstr "Styrke"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Innebygget høyttaler"
+
+#~ msgid "Headphone"
+#~ msgstr "Hodetelefon"
+
+#~ msgid "Line Out"
+#~ msgstr "Linje ut"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF ut"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1 ut"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2 ut"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Intern feil i datastrøm."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Intern dataflytfeil."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Enhet «%s» støtter ikke videoopptak"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Kunne ikke etablere tilkobling til lydtjener"
@@ -586,8 +540,12 @@ msgstr "Kan ikke operere uten en klokke"
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "Kunne ikke åpne lydenheten for mikserkontrollhåndtering."
 
-#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Kunne ikke åpne lydenheten for mikserkontrollhåndtering. Denne versjonen av «Open Sound System» støttes ikke av dette elementet."
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Kunne ikke åpne lydenheten for mikserkontrollhåndtering. Denne versjonen "
+#~ "av «Open Sound System» støttes ikke av dette elementet."
 
 #~ msgid "Master"
 #~ msgstr "Hovedvolum"

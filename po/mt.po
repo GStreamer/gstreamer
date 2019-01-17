@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -21,6 +21,16 @@ msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr "Problem fid-decoding tal-istampa JPEG"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -55,6 +65,9 @@ msgstr ""
 msgid "Server does not support seeking."
 msgstr "Appart '%s' ma jagħmilx video capture"
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Input audio ma nstabx jew mhux validu. AVI stream jista jkun korrott."
 
@@ -78,10 +91,6 @@ msgstr "Il-fajl mhux komplut u ma jistax jindaqq,"
 
 msgid "The video in this file might not play correctly."
 msgstr "Jista jkun illi l-vidjo ġo dan il-fajl ma jidhirx sewwa."
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Il-fajl fiħ aktar streams milli suppost. Ser indoqq l-ewwel %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -143,63 +152,6 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
-#, fuzzy
-msgid "Record Source"
-msgstr "Record"
-
-msgid "Microphone"
-msgstr "Mikrofonu"
-
-#, fuzzy
-msgid "Line In"
-msgstr "Line-in"
-
-msgid "Internal CD"
-msgstr ""
-
-msgid "SPDIF In"
-msgstr ""
-
-msgid "AUX 1 In"
-msgstr ""
-
-msgid "AUX 2 In"
-msgstr ""
-
-msgid "Codec Loopback"
-msgstr ""
-
-msgid "SunVTS Loopback"
-msgstr ""
-
-msgid "Volume"
-msgstr "Volum"
-
-msgid "Gain"
-msgstr "Gain"
-
-msgid "Monitor"
-msgstr "Monitor"
-
-#, fuzzy
-msgid "Built-in Speaker"
-msgstr "Speaker"
-
-msgid "Headphone"
-msgstr ""
-
-msgid "Line Out"
-msgstr ""
-
-msgid "SPDIF Out"
-msgstr ""
-
-msgid "AUX 1 Out"
-msgstr ""
-
-msgid "AUX 2 Out"
-msgstr ""
-
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Problema fil-qar()i %d bytes fid-device '%s'."
@@ -223,6 +175,15 @@ msgstr ""
 "Id-driver tal-apparat '%s' ma jissapportja l-ebda capture method mifhum."
 
 #, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr ""
+"Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
+#, fuzzy, c-format
 msgid "Device '%s' is busy"
 msgstr "Device '%s' mhux capture device."
 
@@ -236,6 +197,14 @@ msgstr "Appart '%s' ma jistax jagħmel capture f'dan il-format"
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
+msgstr "Device '%s' mhux capture device."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Device '%s' mhux capture device."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
 msgstr "Device '%s' mhux capture device."
 
 #, c-format
@@ -317,12 +286,12 @@ msgstr ""
 "Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported input format"
+msgid "Decoder on device %s has no supported input format"
 msgstr ""
 "Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported output format"
+msgid "Decoder on device %s has no supported output format"
 msgstr ""
 "Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
 
@@ -332,6 +301,20 @@ msgstr "Problem fid-decoding tal-istampa JPEG"
 
 msgid "Failed to process frame."
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+"Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+"Apparat li jaqra video input ma aċċettax is-settings ġodda tal-frame rate."
+
+#, fuzzy
+msgid "Failed to start encoding thread."
+msgstr "Problem fid-decoding tal-istampa JPEG"
 
 #, c-format
 msgid ""
@@ -434,15 +417,38 @@ msgstr "Ma tistax tibdel ir-resolution waqt runtime."
 msgid "Cannot operate without a clock"
 msgstr "Ma nistax nħaddem mingħajr arloġġ"
 
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Il-fajl fiħ aktar streams milli suppost. Ser indoqq l-ewwel %d"
+
+#, fuzzy
+#~ msgid "Record Source"
+#~ msgstr "Record"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofonu"
+
+#, fuzzy
+#~ msgid "Line In"
+#~ msgstr "Line-in"
+
+#~ msgid "Volume"
+#~ msgstr "Volum"
+
+#~ msgid "Gain"
+#~ msgstr "Gain"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#, fuzzy
+#~ msgid "Built-in Speaker"
+#~ msgstr "Speaker"
+
 #~ msgid "Internal data stream error."
 #~ msgstr "Problema interna fid-data stream"
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Problema interna ta' data flow"
-
-#, fuzzy
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Device '%s' mhux capture device."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "Irċivejt frame size ta' %u minflok kif kien mistenni ta' %u."

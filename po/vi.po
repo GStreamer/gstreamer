@@ -9,510 +9,476 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2017-05-05 06:52+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Language-Team-Website: <http://translationproject.org/team/vi.html>\n"
 "X-Generator: Gtranslator 2.91.7\n"
 
-#: ext/jack/gstjackaudiosink.c:356 ext/jack/gstjackaudiosrc.c:364
 msgid "Jack server not found"
 msgstr "Không tìm thấy máy phục vụ Jack"
 
-#: ext/jpeg/gstjpegdec.c:915 ext/jpeg/gstjpegdec.c:1181
-#: ext/jpeg/gstjpegdec.c:1193 ext/jpeg/gstjpegdec.c:1222
-#: ext/jpeg/gstjpegdec.c:1231 ext/jpeg/gstjpegdec.c:1240
-#: ext/jpeg/gstjpegdec.c:1248
 msgid "Failed to decode JPEG image"
 msgstr "Gặp lỗi khi giải mã ảnh JPEG"
 
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+
 #. TRANSLATORS: 'song title' by 'artist name'
-#: ext/pulse/pulsesink.c:3126
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "“%s” bởi “%s”"
 
-#: ext/shout2/gstshout2.c:566
 msgid "Could not connect to server"
 msgstr "Không thể kết nối tới máy phục vụ"
 
-#: ext/soup/gstsouphttpsrc.c:895
 msgid "No URL set."
 msgstr "Không có URL nào được đặt."
 
-#: ext/soup/gstsouphttpsrc.c:1270
 msgid "Could not resolve server name."
 msgstr "Không thể phân giải tên máy phục vụ."
 
-#: ext/soup/gstsouphttpsrc.c:1275
 msgid "Could not establish connection to server."
 msgstr "Không thể thiết lập kết nối tới máy chủ."
 
-#: ext/soup/gstsouphttpsrc.c:1279
 msgid "Secure connection setup failed."
 msgstr "Gặp lỗi khi cài đặt kết nối an toàn."
 
-#: ext/soup/gstsouphttpsrc.c:1285
-msgid "A network error occurred, or the server closed the connection unexpectedly."
+msgid ""
+"A network error occurred, or the server closed the connection unexpectedly."
 msgstr "Có lỗi mạng đã xảy ra, hoặc máy chủ đóng kết nối bất ngờ."
 
-#: ext/soup/gstsouphttpsrc.c:1290
 msgid "Server sent bad data."
 msgstr "Máy chủ gửi dữ liệu sai."
 
-#: ext/soup/gstsouphttpsrc.c:1479
 msgid "Server does not support seeking."
 msgstr "Máy phục vụ không hỗ trợ di chuyển vị trí đọc."
 
-#: gst/avi/gstavimux.c:1832
-msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. Vì thế luồng AVI sẽ hỏng."
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
 
-#: gst/isomp4/qtdemux.c:698 gst/isomp4/qtdemux.c:702
+msgid "No or invalid input audio, AVI stream will be corrupt."
+msgstr ""
+"Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. Vì "
+"thế luồng AVI sẽ hỏng."
+
 msgid "This file contains no playable streams."
 msgstr "Tập tin này không chứa luồng có thể phát."
 
-#: gst/isomp4/qtdemux.c:748 gst/isomp4/qtdemux.c:6427
-#: gst/isomp4/qtdemux.c:6495 gst/isomp4/qtdemux.c:6808
-#: gst/isomp4/qtdemux.c:7999
 msgid "This file is invalid and cannot be played."
 msgstr "Tập tin này không hợp lệ nên không thể phát được."
 
-#: gst/isomp4/qtdemux.c:2859
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr "Không thể phát luồng dữ liệu bởi vì nó được mã hóa bằng PlayReady DRM."
 
-#: gst/isomp4/qtdemux.c:4036 gst/isomp4/qtdemux.c:7551
-#: gst/isomp4/qtdemux.c:7558 gst/isomp4/qtdemux.c:8471
-#: gst/isomp4/qtdemux.c:8908 gst/isomp4/qtdemux.c:8915
-#: gst/isomp4/qtdemux.c:11625
 msgid "This file is corrupt and cannot be played."
 msgstr "Tập tin này bị hỏng nên không thể phát."
 
-#: gst/isomp4/qtdemux.c:4278
 msgid "Invalid atom size."
 msgstr "Kích thước nguyên tử (atom) không hợp lệ."
 
-#: gst/isomp4/qtdemux.c:4356
 msgid "This file is incomplete and cannot be played."
 msgstr "Tập tin này chưa hoàn thành nên không thể được phát."
 
-#: gst/isomp4/qtdemux.c:9925
 msgid "The video in this file might not play correctly."
 msgstr "Ảnh động trong tập tin này có thể không phát đúng."
 
-#: gst/isomp4/qtdemux.c:11666
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Tập tin này chứa quá nhiều luồng nên chỉ phát %d đầu tiên"
+msgid ""
+"No supported stream was found. You might need to install a GStreamer RTSP "
+"extension plugin for Real media streams."
+msgstr ""
+"Không tìm thấy luồng được hỗ trợ. Người dùng có thể cần phải cài đặt một "
+"phần bổ sung RTSP Gstreamer để xử lý luồng nhạc/phim loại Real."
 
-#: gst/rtsp/gstrtspsrc.c:6355
-msgid "No supported stream was found. You might need to install a GStreamer RTSP extension plugin for Real media streams."
-msgstr "Không tìm thấy luồng được hỗ trợ. Người dùng có thể cần phải cài đặt một phần bổ sung RTSP Gstreamer để xử lý luồng nhạc/phim loại Real."
+msgid ""
+"No supported stream was found. You might need to allow more transport "
+"protocols or may otherwise be missing the right GStreamer RTSP extension "
+"plugin."
+msgstr ""
+"Không tìm thấy luồng dữ liệu được hỗ trợ. Người dùng có thể cần cho phép "
+"thêm giao thức truyền, hoặc chưa cài đặt phần bổ sung RTSP Gstreamer đúng."
 
-#: gst/rtsp/gstrtspsrc.c:6360
-msgid "No supported stream was found. You might need to allow more transport protocols or may otherwise be missing the right GStreamer RTSP extension plugin."
-msgstr "Không tìm thấy luồng dữ liệu được hỗ trợ. Người dùng có thể cần cho phép thêm giao thức truyền, hoặc chưa cài đặt phần bổ sung RTSP Gstreamer đúng."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Không thể mở thiết bị âm thanh để phát lại. Thiết bị này đang được một ứng "
+"dụng khác sử dụng."
 
-#: sys/oss4/oss4-sink.c:493 sys/oss4/oss4-source.c:358
-#: sys/oss/gstosssink.c:384
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Không thể mở thiết bị âm thanh để phát lại. Thiết bị này đang được một ứng dụng khác sử dụng."
+msgid ""
+"Could not open audio device for playback. You don't have permission to open "
+"the device."
+msgstr ""
+"Không thể mở thiết bị âm thanh để phát lại. Bạn không có đủ thẩm quyền để mở "
+"thiết bị này."
 
-#: sys/oss4/oss4-sink.c:503 sys/oss4/oss4-source.c:368
-#: sys/oss/gstosssink.c:391
-msgid "Could not open audio device for playback. You don't have permission to open the device."
-msgstr "Không thể mở thiết bị âm thanh để phát lại. Bạn không có đủ thẩm quyền để mở thiết bị này."
-
-#: sys/oss4/oss4-sink.c:514 sys/oss4/oss4-source.c:379
-#: sys/oss/gstosssink.c:399
 msgid "Could not open audio device for playback."
 msgstr "Không thể mở thiết bị âm thanh để phát lại."
 
-#: sys/oss4/oss4-sink.c:523 sys/oss4/oss4-source.c:389
-msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-msgstr "Không thể mở thiết bị âm thanh để phát lại. Phiên bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
+msgid ""
+"Could not open audio device for playback. This version of the Open Sound "
+"System is not supported by this element."
+msgstr ""
+"Không thể mở thiết bị âm thanh để phát lại. Phiên bản Hệ thống Âm thanh Mở "
+"này không được yếu tố này hỗ trợ."
 
-#: sys/oss4/oss4-sink.c:646
 msgid "Playback is not supported by this audio device."
 msgstr "Chức năng phát lại không phải được thiết bị âm thanh này hỗ trợ."
 
-#: sys/oss4/oss4-sink.c:653
 msgid "Audio playback error."
 msgstr "Lỗi phát lại âm thanh."
 
-#: sys/oss4/oss4-source.c:503
 msgid "Recording is not supported by this audio device."
 msgstr "Chức năng thu không phải được thiết bị âm thanh này hỗ trợ."
 
-#: sys/oss4/oss4-source.c:510
 msgid "Error recording from audio device."
 msgstr "Gặp lỗi khi thu từ thiết bị âm thanh."
 
-#: sys/oss/gstosssrc.c:376
-msgid "Could not open audio device for recording. You don't have permission to open the device."
-msgstr "Không thể mở thiết bị âm thanh để thu. Bạn không có quyền mở thiết bị này."
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Không thể mở thiết bị âm thanh để thu. Bạn không có quyền mở thiết bị này."
 
-#: sys/oss/gstosssrc.c:384
 msgid "Could not open audio device for recording."
 msgstr "Không thể mở thiết bị âm thanh để thu."
 
-#: sys/osxaudio/gstosxaudioringbuffer.c:149
 msgid "CoreAudio device not found"
 msgstr "Không tìm thấy thiết bị CoreAudio"
 
-#: sys/osxaudio/gstosxaudioringbuffer.c:155
 msgid "CoreAudio device could not be opened"
 msgstr "Không thể mở thiết bị CoreAudio"
 
-#: sys/sunaudio/gstsunaudiomixeroptions.c:109
-msgid "Record Source"
-msgstr "Ghi lưu nguồn"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:120
-msgid "Microphone"
-msgstr "Micrô"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:121
-msgid "Line In"
-msgstr "Đầu vào"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:122
-msgid "Internal CD"
-msgstr "CD ở trong"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:123
-msgid "SPDIF In"
-msgstr "SPDIF Vào"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:124
-msgid "AUX 1 In"
-msgstr "AUX 1 Vào"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:125
-msgid "AUX 2 In"
-msgstr "AUX 2 Vào"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:126
-msgid "Codec Loopback"
-msgstr "Vòng ngược Codec"
-
-#: sys/sunaudio/gstsunaudiomixeroptions.c:127
-msgid "SunVTS Loopback"
-msgstr "Vòng ngược SunVTS"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:69
-msgid "Volume"
-msgstr "Âm lượng"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:70
-msgid "Gain"
-msgstr "Khuếch đại"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:71
-msgid "Monitor"
-msgstr "Màn hình"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:72
-msgid "Built-in Speaker"
-msgstr "Loa tích hợp"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:73
-msgid "Headphone"
-msgstr "Tai nghe"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:74
-msgid "Line Out"
-msgstr "Đầu ra"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:75
-msgid "SPDIF Out"
-msgstr "SPDIF Ra"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:76
-msgid "AUX 1 Out"
-msgstr "AUX 1 Ra"
-
-#: sys/sunaudio/gstsunaudiomixertrack.c:77
-msgid "AUX 2 Out"
-msgstr "AUX 2 Ra"
-
-#: sys/v4l2/gstv4l2bufferpool.c:1684
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Gặp lỗi khi đọc %d byte từ thiết bị “%s”."
 
-#: sys/v4l2/gstv4l2object.c:1168
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr "Gặp lỗi khi đánh số các định dạng video có thể, mà thiết bị “%s” có thể làm việc cùng"
+msgstr ""
+"Gặp lỗi khi đánh số các định dạng video có thể, mà thiết bị “%s” có thể làm "
+"việc cùng"
 
-#: sys/v4l2/gstv4l2object.c:2889
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Không thể ánh xạ các bộ đệm từ thiết bị “%s”."
 
-#: sys/v4l2/gstv4l2object.c:2897
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
 msgstr "Trình điều khiển của thiết bị “%s” không hỗ trợ phương pháp VR %d"
 
-#: sys/v4l2/gstv4l2object.c:2904
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr "Trình điều khiển của thiết bị “%s” không hỗ trợ phương pháp VR đã biết nào."
+msgstr ""
+"Trình điều khiển của thiết bị “%s” không hỗ trợ phương pháp VR đã biết nào."
 
-#: sys/v4l2/gstv4l2object.c:3578 sys/v4l2/gstv4l2object.c:3589
+#, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr "Bộ mã hóa trên thiết bị “%s” không hỗ trợ định dạng đầu vào"
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
 #, c-format
 msgid "Device '%s' is busy"
 msgstr "Thiết bị “%s” đang bận"
 
-#: sys/v4l2/gstv4l2object.c:3595 sys/v4l2/gstv4l2object.c:3607
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
 msgstr "Thiết bị “%s” không thể chụp tại %dx%d"
 
-#: sys/v4l2/gstv4l2object.c:3618
 #, c-format
 msgid "Device '%s' cannot capture in the specified format"
 msgstr "Thiết bị “%s” không thể chụp ở định dạng đã cho"
 
-#: sys/v4l2/gstv4l2object.c:3631
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "Thiết bị “%s” không hỗ trợ chức năng “non-contiguous planes”"
 
-#: sys/v4l2/gstv4l2object.c:3642
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Thiết bị “%s” không hỗ trợ chức năng quay video"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
+msgstr "Thiết bị “%s” không hỗ trợ chức năng quay video"
+
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Không thể lấy các tham số về thiết bị “%s”."
 
-#: sys/v4l2/gstv4l2object.c:3650
 msgid "Video device did not accept new frame rate setting."
 msgstr "Thiết bị video không chấp nhận cài đặt về tốc độ khung hình mới."
 
-#: sys/v4l2/gstv4l2object.c:3772
 msgid "Video device did not provide output format."
 msgstr "Thiết bị video không cung cấp định dạng xuất."
 
-#: sys/v4l2/gstv4l2object.c:3778
 msgid "Video device returned invalid dimensions."
 msgstr "Thiết bị video trả và kích thước không hợp lệ."
 
-#: sys/v4l2/gstv4l2object.c:3786
 msgid "Video device uses an unsupported interlacing method."
 msgstr "Thiết bị video dùng phương pháp xen kẽ không được hỗ trợ."
 
-#: sys/v4l2/gstv4l2object.c:3793
 msgid "Video device uses an unsupported pixel format."
 msgstr "Thiết bị video dùng một định dạng điểm ảnh không được hỗ trợ."
 
-#: sys/v4l2/gstv4l2object.c:4219
 msgid "Failed to configure internal buffer pool."
 msgstr "Gặp lỗi khi cấu hình kho đệm nội tại."
 
-#: sys/v4l2/gstv4l2object.c:4225
 msgid "Video device did not suggest any buffer size."
 msgstr "Thiết bị video không đưa ra gợi ý nào về bộ đệm."
 
-#: sys/v4l2/gstv4l2object.c:4240
 msgid "No downstream pool to import from."
 msgstr "Không có bể dòng dữ liệu tải về để mà nhập vào."
 
-#: sys/v4l2/gstv4l2radio.c:143
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr "Gặp lỗi khi lấy các cài đặt từ thiết bị điều chỉnh cộng hưởng %d trên thiết bị “%s”."
+msgstr ""
+"Gặp lỗi khi lấy các cài đặt từ thiết bị điều chỉnh cộng hưởng %d trên thiết "
+"bị “%s”."
 
-#: sys/v4l2/gstv4l2radio.c:150
 #, c-format
 msgid "Error getting capabilities for device '%s'."
 msgstr "Gặp lỗi khi đọc dung lượng từ thiết bị “%s”."
 
-#: sys/v4l2/gstv4l2radio.c:157
 #, c-format
 msgid "Device '%s' is not a tuner."
 msgstr "Thiết bị %s không phải thiết bị điều chỉnh cộng hưởng."
 
-#: sys/v4l2/gstv4l2radio.c:184
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
 msgstr "Gặp lỗi khi lấy đầu vào radio trên thiết bị “%s”."
 
-#: sys/v4l2/gstv4l2radio.c:207 sys/v4l2/v4l2_calls.c:1073
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Gặp lỗi khi đặt dữ liệu nhập %d vào thiết bị “%s”."
 
-#: sys/v4l2/gstv4l2radio.c:241
 #, c-format
 msgid "Failed to change mute state for device '%s'."
 msgstr "Gặp lỗi khi thay đổi trạng thái ngắt tiếng cho thiết bị “%s”."
 
-#: sys/v4l2/gstv4l2sink.c:628
 msgid "Failed to allocated required memory."
 msgstr "Gặp lỗi khi cấp phát bộ nhớ theo yêu cầu."
 
-#: sys/v4l2/gstv4l2src.c:525 sys/v4l2/gstv4l2videodec.c:695
 msgid "Failed to allocate required memory."
 msgstr "Gặp lỗi khi cấp phát bộ nhớ theo yêu cầu."
 
-#: sys/v4l2/gstv4l2transform.c:143
 #, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr "Bộ chuyển đổi trên thiết bị %s không có định dạng đầu vào được hỗ trợ"
 
-#: sys/v4l2/gstv4l2transform.c:150
 #, c-format
 msgid "Converter on device %s has no supported output format"
 msgstr "Bộ chuyển đổi trên thiết bị %s không có định dạng xuất được hỗ trợ"
 
-#: sys/v4l2/gstv4l2videodec.c:141
-#, c-format
-msgid "Encoder on device %s has no supported input format"
+#, fuzzy, c-format
+msgid "Decoder on device %s has no supported input format"
 msgstr "Bộ mã hóa trên thiết bị “%s” không hỗ trợ định dạng đầu vào"
 
-#: sys/v4l2/gstv4l2videodec.c:148
+#, fuzzy, c-format
+msgid "Decoder on device %s has no supported output format"
+msgstr "Bộ giải mã trên thiết bị “%s” không hỗ trợ định dạng đầu ra"
+
+msgid "Failed to start decoding thread."
+msgstr "Gặp lỗi khi bắt đầu tiến trình giải mã."
+
+msgid "Failed to process frame."
+msgstr "Gặp lỗi khi xử lý khung."
+
 #, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr "Bộ giải mã trên thiết bị “%s” không hỗ trợ định dạng đầu ra"
 
-#: sys/v4l2/gstv4l2videodec.c:709
-msgid "Failed to start decoding thread."
+#, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Bộ mã hóa trên thiết bị “%s” không hỗ trợ định dạng đầu vào"
+
+#, fuzzy
+msgid "Failed to start encoding thread."
 msgstr "Gặp lỗi khi bắt đầu tiến trình giải mã."
 
-#: sys/v4l2/gstv4l2videodec.c:716
-msgid "Failed to process frame."
-msgstr "Gặp lỗi khi xử lý khung."
-
-#: sys/v4l2/v4l2_calls.c:94
 #, c-format
-msgid "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if it is a v4l1 driver."
-msgstr "Gặp lỗi khi lấy khả năng của thiết bị “%s”. Nó không phải là trình điều khiển phiên bản 4l2. Kiểm tra xem nó có phải là trình điều khiển phiên bản 4l1 không."
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+"Gặp lỗi khi lấy khả năng của thiết bị “%s”. Nó không phải là trình điều "
+"khiển phiên bản 4l2. Kiểm tra xem nó có phải là trình điều khiển phiên bản "
+"4l1 không."
 
-#: sys/v4l2/v4l2_calls.c:158
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
 msgstr "Gặp lỗi khi truy vấn các thuộc tính của đầu vào %d trong thiết bị %s"
 
-#: sys/v4l2/v4l2_calls.c:189
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Gặp lỗi khi lấy các cài đặt của bộ chỉnh cộng hưởng %d trên thiết bị “%s”."
+msgstr ""
+"Gặp lỗi khi lấy các cài đặt của bộ chỉnh cộng hưởng %d trên thiết bị “%s”."
 
-#: sys/v4l2/v4l2_calls.c:237
 #, c-format
 msgid "Failed to query norm on device '%s'."
 msgstr "Gặp lỗi khi truy vấn chỉ tiêu trên thiết bị “%s”."
 
-#: sys/v4l2/v4l2_calls.c:416
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Gặp lỗi khi lấy các thuộc tính của bộ điều khiển trên thiết bị “%s”."
 
-#: sys/v4l2/v4l2_calls.c:610
 #, c-format
 msgid "Cannot identify device '%s'."
 msgstr "Không thể nhận diện thiết bị “%s”."
 
-#: sys/v4l2/v4l2_calls.c:617
 #, c-format
 msgid "This isn't a device '%s'."
 msgstr "Không phải là thiết bị “%s”."
 
-#: sys/v4l2/v4l2_calls.c:624
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
 msgstr "Không thể mở thiết bị “%s” để đọc và ghi."
 
-#: sys/v4l2/v4l2_calls.c:631
 #, c-format
 msgid "Device '%s' is not a capture device."
 msgstr "Thiết bị “%s” không phải là thiết bị ghi hình/tiếng."
 
-#: sys/v4l2/v4l2_calls.c:639
 #, c-format
 msgid "Device '%s' is not a output device."
 msgstr "Thiết bị “%s” không phải là thiết bị xuất ra."
 
-#: sys/v4l2/v4l2_calls.c:647
 #, c-format
 msgid "Device '%s' is not a M2M device."
 msgstr "Thiết bị “%s” không phải là thiết bị M2M."
 
-#: sys/v4l2/v4l2_calls.c:699
 #, c-format
 msgid "Could not dup device '%s' for reading and writing."
 msgstr "Không thể nhân bản thiết bị “%s” để đọc và ghi."
 
-#: sys/v4l2/v4l2_calls.c:783
 #, c-format
 msgid "Failed to set norm for device '%s'."
 msgstr "Gặp lỗi khi đặt chỉ tiêu cho thiết bị “%s”."
 
-#: sys/v4l2/v4l2_calls.c:821
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Gặp lỗi khi lấy tần số hiện thời của thiết bị điều chỉnh cộng hưởng cho thiết bị “%s”."
+msgstr ""
+"Gặp lỗi khi lấy tần số hiện thời của thiết bị điều chỉnh cộng hưởng cho "
+"thiết bị “%s”."
 
-#: sys/v4l2/v4l2_calls.c:863
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
-msgstr "Gặp lỗi khi đặt tần số hiện thời của thiết bị điều chỉnh cộng hưởng cho thiết bị “%s” là %lu Hz."
+msgstr ""
+"Gặp lỗi khi đặt tần số hiện thời của thiết bị điều chỉnh cộng hưởng cho "
+"thiết bị “%s” là %lu Hz."
 
-#: sys/v4l2/v4l2_calls.c:897
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
 msgstr "Gặp lỗi khi lấy biên độ tín hiệu cho thiết bị “%s”."
 
-#: sys/v4l2/v4l2_calls.c:933
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
 msgstr "Gặp lỗi khi lấy giá trị của bộ điều khiển %d trên thiết bị “%s”."
 
-#: sys/v4l2/v4l2_calls.c:968
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Gặp lỗi khi đặt giá trị %d của bộ điều khiển %d trên thiết bị “%s”."
 
-#: sys/v4l2/v4l2_calls.c:1048
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
-msgstr "Gặp lỗi khi lấy đầu vào hiện thời vào thiết bị “%s”. Có thể là thiết bị thu thanh."
+msgstr ""
+"Gặp lỗi khi lấy đầu vào hiện thời vào thiết bị “%s”. Có thể là thiết bị thu "
+"thanh."
 
-#: sys/v4l2/v4l2_calls.c:1105
 #, c-format
-msgid "Failed to get current output on device '%s'. May be it is a radio device"
-msgstr "Gặp lỗi khi lấy đầu vào hiện hành trên thiết bị “%s”. Có thể nó là thiết bị vô tuyến."
+msgid ""
+"Failed to get current output on device '%s'. May be it is a radio device"
+msgstr ""
+"Gặp lỗi khi lấy đầu vào hiện hành trên thiết bị “%s”. Có thể nó là thiết bị "
+"vô tuyến."
 
-#: sys/v4l2/v4l2_calls.c:1130
 #, c-format
 msgid "Failed to set output %d on device %s."
 msgstr "Gặp lỗi khi đặt dữ liệu nhập %d trên thiết bị %s."
 
-#: sys/ximage/gstximagesrc.c:838
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi chạy."
 
-#: sys/ximage/gstximagesrc.c:852
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ"
+
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Tập tin này chứa quá nhiều luồng nên chỉ phát %d đầu tiên"
+
+#~ msgid "Record Source"
+#~ msgstr "Ghi lưu nguồn"
+
+#~ msgid "Microphone"
+#~ msgstr "Micrô"
+
+#~ msgid "Line In"
+#~ msgstr "Đầu vào"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD ở trong"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF Vào"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 Vào"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 Vào"
+
+#~ msgid "Codec Loopback"
+#~ msgstr "Vòng ngược Codec"
+
+#~ msgid "SunVTS Loopback"
+#~ msgstr "Vòng ngược SunVTS"
+
+#~ msgid "Volume"
+#~ msgstr "Âm lượng"
+
+#~ msgid "Gain"
+#~ msgstr "Khuếch đại"
+
+#~ msgid "Monitor"
+#~ msgstr "Màn hình"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Loa tích hợp"
+
+#~ msgid "Headphone"
+#~ msgstr "Tai nghe"
+
+#~ msgid "Line Out"
+#~ msgstr "Đầu ra"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF Ra"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1 Ra"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2 Ra"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Lỗi luồng dữ liệu nội bộ."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Lỗi luồng dữ liệu nội bộ."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Thiết bị “%s” không hỗ trợ chức năng quay video"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Không thể thiết lập sự kết nối tới máy phục vụ âm thanh"
@@ -589,8 +555,12 @@ msgstr "Không thể thao tác khi không có đồng hồ"
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hòa tiếng."
 
-#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hòa tiếng. Phiên bản Hệ thống Âm thanh Mở không phải được yếu tố này hỗ trợ."
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hòa tiếng. Phiên "
+#~ "bản Hệ thống Âm thanh Mở không phải được yếu tố này hỗ trợ."
 
 #~ msgid "Master"
 #~ msgstr "Chủ"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -19,6 +19,16 @@ msgid "Jack server not found"
 msgstr ""
 
 msgid "Failed to decode JPEG image"
+msgstr ""
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
 msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
@@ -55,6 +65,9 @@ msgstr ""
 msgid "Server does not support seeking."
 msgstr "Dispozitivi juaj OSS mund të mos provohet korrektësisht"
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Input audio i gabuar ose mungon, stream AVI mund të jetë i dëmtuar."
 
@@ -77,10 +90,6 @@ msgid "This file is incomplete and cannot be played."
 msgstr ""
 
 msgid "The video in this file might not play correctly."
-msgstr ""
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
 msgstr ""
 
 msgid ""
@@ -141,63 +150,6 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr "Dispozitivi juaj OSS mund të mos provohet korrektësisht"
 
-#, fuzzy
-msgid "Record Source"
-msgstr "Regjistrimi"
-
-msgid "Microphone"
-msgstr "Mikrofoni"
-
-#, fuzzy
-msgid "Line In"
-msgstr "Linja-hyrje"
-
-msgid "Internal CD"
-msgstr ""
-
-msgid "SPDIF In"
-msgstr ""
-
-msgid "AUX 1 In"
-msgstr ""
-
-msgid "AUX 2 In"
-msgstr ""
-
-msgid "Codec Loopback"
-msgstr ""
-
-msgid "SunVTS Loopback"
-msgstr ""
-
-msgid "Volume"
-msgstr "Volumi"
-
-msgid "Gain"
-msgstr ""
-
-msgid "Monitor"
-msgstr "Ekrani"
-
-#, fuzzy
-msgid "Built-in Speaker"
-msgstr "Zë folës"
-
-msgid "Headphone"
-msgstr ""
-
-msgid "Line Out"
-msgstr ""
-
-msgid "SPDIF Out"
-msgstr ""
-
-msgid "AUX 1 Out"
-msgstr ""
-
-msgid "AUX 2 Out"
-msgstr ""
-
 #, fuzzy, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "E pamundur marrja e buffers nga dispozitivi \"%s\"."
@@ -219,6 +171,14 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 
 #, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
+#, fuzzy, c-format
 msgid "Device '%s' is busy"
 msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
 
@@ -232,6 +192,14 @@ msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
+msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
 msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
 
 #, fuzzy, c-format
@@ -301,17 +269,28 @@ msgid "Converter on device %s has no supported output format"
 msgstr ""
 
 #, c-format
-msgid "Encoder on device %s has no supported input format"
+msgid "Decoder on device %s has no supported input format"
 msgstr ""
 
 #, c-format
-msgid "Encoder on device %s has no supported output format"
+msgid "Decoder on device %s has no supported output format"
 msgstr ""
 
 msgid "Failed to start decoding thread."
 msgstr ""
 
 msgid "Failed to process frame."
+msgstr ""
+
+#, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+
+#, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+
+msgid "Failed to start encoding thread."
 msgstr ""
 
 #, c-format
@@ -408,8 +387,25 @@ msgid "Cannot operate without a clock"
 msgstr ""
 
 #, fuzzy
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Dispozitivi \"%s\" nuk është një dispozitiv marrje."
+#~ msgid "Record Source"
+#~ msgstr "Regjistrimi"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofoni"
+
+#, fuzzy
+#~ msgid "Line In"
+#~ msgstr "Linja-hyrje"
+
+#~ msgid "Volume"
+#~ msgstr "Volumi"
+
+#~ msgid "Monitor"
+#~ msgstr "Ekrani"
+
+#, fuzzy
+#~ msgid "Built-in Speaker"
+#~ msgstr "Zë folës"
 
 #, fuzzy
 #~ msgid "Failed trying to get video frames from device '%s'."

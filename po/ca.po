@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -24,6 +24,16 @@ msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr "Ha fallat en descodificar la imatge JPEG"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -58,6 +68,9 @@ msgstr "El servidor ha enviat dades errònies."
 msgid "Server does not support seeking."
 msgstr "El servidor no ademet les cerques."
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Manca o no és vàlida l'entrada d'àudio, el flux AVI estarà malmès."
 
@@ -81,11 +94,6 @@ msgstr "Aquest fitxer no està complet i no es pot reproduir."
 
 msgid "The video in this file might not play correctly."
 msgstr "El vídeo en aquest fitxer podria no reproduir-se correctament."
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr ""
-"Aquest fitxer conté massa fluxos. Només s'estan reproduint els primers %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -155,62 +163,6 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
-msgid "Record Source"
-msgstr "Font d'enregistrament"
-
-msgid "Microphone"
-msgstr "Micròfon"
-
-msgid "Line In"
-msgstr "Línia d'entrada"
-
-msgid "Internal CD"
-msgstr "CD intern"
-
-msgid "SPDIF In"
-msgstr "Entrada SPDIF"
-
-msgid "AUX 1 In"
-msgstr "Entrada AUX 1"
-
-msgid "AUX 2 In"
-msgstr "Entrada AUX 2"
-
-#, fuzzy
-msgid "Codec Loopback"
-msgstr "Bucle local"
-
-#, fuzzy
-msgid "SunVTS Loopback"
-msgstr "Bucle local"
-
-msgid "Volume"
-msgstr "Volum"
-
-msgid "Gain"
-msgstr "Guany"
-
-msgid "Monitor"
-msgstr "Monitor"
-
-msgid "Built-in Speaker"
-msgstr "Altaveu incorporat"
-
-msgid "Headphone"
-msgstr "Auriculars"
-
-msgid "Line Out"
-msgstr "Línia de sortida"
-
-msgid "SPDIF Out"
-msgstr "Sortida SPDIF"
-
-msgid "AUX 1 Out"
-msgstr "Sortida AUX 1"
-
-msgid "AUX 2 Out"
-msgstr "Sortida AUX 2"
-
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "S'ha produït un error al llegir %d bytes des del dispositiu «%s»."
@@ -235,6 +187,16 @@ msgstr ""
 "El controlador del dispositiu «%s» no és compatible amb cap mètode de "
 "captura conegut."
 
+#, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr ""
+"El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
+"fotogrames per segon."
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
 #, c-format
 msgid "Device '%s' is busy"
 msgstr ""
@@ -249,6 +211,14 @@ msgstr "El dispositiu «%s» no és un dispositiu de captura."
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
+msgstr "El dispositiu «%s» no és un dispositiu de sortida."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "El dispositiu «%s» no és un dispositiu de sortida."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
 msgstr "El dispositiu «%s» no és un dispositiu de sortida."
 
 #, c-format
@@ -339,13 +309,13 @@ msgstr ""
 "fotogrames per segon."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported input format"
+msgid "Decoder on device %s has no supported input format"
 msgstr ""
 "El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
 "fotogrames per segon."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported output format"
+msgid "Decoder on device %s has no supported output format"
 msgstr ""
 "El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
 "fotogrames per segon."
@@ -356,6 +326,22 @@ msgstr "Ha fallat en descodificar la imatge JPEG"
 
 msgid "Failed to process frame."
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+"El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
+"fotogrames per segon."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+"El dispositiu d'entrada de vídeo no ha acceptat el paràmetre nou de "
+"fotogrames per segon."
+
+#, fuzzy
+msgid "Failed to start encoding thread."
+msgstr "Ha fallat en descodificar la imatge JPEG"
 
 #, c-format
 msgid ""
@@ -467,15 +453,71 @@ msgstr "Encara no es permet el canvi de la resolució en temps d'execució."
 msgid "Cannot operate without a clock"
 msgstr "No es pot operar sense un rellotge"
 
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr ""
+#~ "Aquest fitxer conté massa fluxos. Només s'estan reproduint els primers %d"
+
+#~ msgid "Record Source"
+#~ msgstr "Font d'enregistrament"
+
+#~ msgid "Microphone"
+#~ msgstr "Micròfon"
+
+#~ msgid "Line In"
+#~ msgstr "Línia d'entrada"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD intern"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Entrada SPDIF"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Entrada AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Entrada AUX 2"
+
+#, fuzzy
+#~ msgid "Codec Loopback"
+#~ msgstr "Bucle local"
+
+#, fuzzy
+#~ msgid "SunVTS Loopback"
+#~ msgstr "Bucle local"
+
+#~ msgid "Volume"
+#~ msgstr "Volum"
+
+#~ msgid "Gain"
+#~ msgstr "Guany"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Altaveu incorporat"
+
+#~ msgid "Headphone"
+#~ msgstr "Auriculars"
+
+#~ msgid "Line Out"
+#~ msgstr "Línia de sortida"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "Sortida SPDIF"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "Sortida AUX 1"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "Sortida AUX 2"
+
 #~ msgid "Internal data stream error."
 #~ msgstr "S'ha produït un error intern de flux de dades."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "S'ha produït un error intern de flux de dades."
-
-#, fuzzy
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "El dispositiu «%s» no és un dispositiu de sortida."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "S'ha obtingut una mida de fotograma inesperada de %u en lloc de %u."

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2014-04-20 16:38+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -26,6 +26,16 @@ msgstr "Nav atrasts Jack serveris"
 
 msgid "Failed to decode JPEG image"
 msgstr "Neizdevās atkodēt JPEG attēlu"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -58,6 +68,9 @@ msgstr "Serveris nosūtīja sliktus datus."
 msgid "Server does not support seeking."
 msgstr "Serveris neatbalsta meklēšanu."
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nav vai nederīgs ievades audio, AVI straume tiks bojāta."
 
@@ -81,10 +94,6 @@ msgstr "Šī datne ir nepabeigta un to nevar atskaņot."
 
 msgid "The video in this file might not play correctly."
 msgstr "Video šajā datnē varētu tikt atskaņots nepareizi."
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Šī datne satur pārāk daudz straumju. Tiek atskaņota tikai pirmā %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -153,60 +162,6 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
-msgid "Record Source"
-msgstr "Ierakstīšanas avots"
-
-msgid "Microphone"
-msgstr "Mikrofons"
-
-msgid "Line In"
-msgstr "Skaņas ieeja"
-
-msgid "Internal CD"
-msgstr "Iekšējais CD"
-
-msgid "SPDIF In"
-msgstr "SPDIF ieeja"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 ieeja"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 ieeja"
-
-msgid "Codec Loopback"
-msgstr "Kodeka atgriezeniskais cikls"
-
-msgid "SunVTS Loopback"
-msgstr "SunVTS atgriezeniskais cikls"
-
-msgid "Volume"
-msgstr "Skaļums"
-
-msgid "Gain"
-msgstr "Pieaugums"
-
-msgid "Monitor"
-msgstr "Monitors"
-
-msgid "Built-in Speaker"
-msgstr "Iebūvētais skaļrunis"
-
-msgid "Headphone"
-msgstr "Austiņas"
-
-msgid "Line Out"
-msgstr "Skaņas izeja"
-
-msgid "SPDIF Out"
-msgstr "SPDIF izeja"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 izeja"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 izeja"
-
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Radās kļūda, nolasot %d baitus no ierīces “%s”."
@@ -227,6 +182,14 @@ msgstr "Ierīces \"%s\" draiveris neatbalsta IO metodi %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Ierīces “%s” draiveris neatbalsta nevienu zināmo ierakstīšanas metodi."
 
+#, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
 #, c-format
 msgid "Device '%s' is busy"
 msgstr "Ierīce “%s” ir aizņemta"
@@ -241,6 +204,14 @@ msgstr "Ierīce “%s” nevar tvert norādītajā formātā"
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
+msgstr "Ierīce “%s” neatbalsta video tveršanu"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Ierīce “%s” neatbalsta video tveršanu"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
 msgstr "Ierīce “%s” neatbalsta video tveršanu"
 
 #, c-format
@@ -315,11 +286,11 @@ msgid "Converter on device %s has no supported output format"
 msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported input format"
+msgid "Decoder on device %s has no supported input format"
 msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported output format"
+msgid "Decoder on device %s has no supported output format"
 msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
 
 #, fuzzy
@@ -328,6 +299,18 @@ msgstr "Neizdevās atkodēt JPEG attēlu"
 
 msgid "Failed to process frame."
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Video ierīce nepieņēma jaunos kadru ātruma iestatījumus."
+
+#, fuzzy
+msgid "Failed to start encoding thread."
+msgstr "Neizdevās atkodēt JPEG attēlu"
 
 #, c-format
 msgid ""
@@ -429,14 +412,68 @@ msgstr "Izšķirtspējas mainīšana izpildlaikā pašlaik netiek atbalstīta."
 msgid "Cannot operate without a clock"
 msgstr "Nevar veikt darbības bez pulksteņa"
 
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Šī datne satur pārāk daudz straumju. Tiek atskaņota tikai pirmā %d"
+
+#~ msgid "Record Source"
+#~ msgstr "Ierakstīšanas avots"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofons"
+
+#~ msgid "Line In"
+#~ msgstr "Skaņas ieeja"
+
+#~ msgid "Internal CD"
+#~ msgstr "Iekšējais CD"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF ieeja"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 ieeja"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 ieeja"
+
+#~ msgid "Codec Loopback"
+#~ msgstr "Kodeka atgriezeniskais cikls"
+
+#~ msgid "SunVTS Loopback"
+#~ msgstr "SunVTS atgriezeniskais cikls"
+
+#~ msgid "Volume"
+#~ msgstr "Skaļums"
+
+#~ msgid "Gain"
+#~ msgstr "Pieaugums"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitors"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Iebūvētais skaļrunis"
+
+#~ msgid "Headphone"
+#~ msgstr "Austiņas"
+
+#~ msgid "Line Out"
+#~ msgstr "Skaņas izeja"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF izeja"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1 izeja"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2 izeja"
+
 #~ msgid "Internal data stream error."
 #~ msgstr "Iekšēja datu plūsmas kļūda."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Iekšēja datu plūsmas kļūda."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Ierīce “%s” neatbalsta video tveršanu"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nevar izveidot savienojumu ar skaņas serveri"

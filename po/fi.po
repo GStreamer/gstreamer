@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -26,6 +26,16 @@ msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr "JPEG-kuvan purku epäonnistui"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -58,6 +68,9 @@ msgstr "Palvelin lähetti virheellistä dataa."
 msgid "Server does not support seeking."
 msgstr "Pavelin ei tue kelausta."
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Ääntä ei ole tai äänilähde on viallinen, AVI-virta tulee olemaan "
@@ -83,10 +96,6 @@ msgstr "Tiedosto on vajaa eikä sitä voida esittää."
 
 msgid "The video in this file might not play correctly."
 msgstr "Tiedostossa olevaa videota ei ehkä voida näyttää oikein."
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Tiedosto sisältää useita virtoja. Soitetaan vain ensimmäiset %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -156,62 +165,6 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
-msgid "Record Source"
-msgstr "Nauhoituslähde"
-
-msgid "Microphone"
-msgstr "Mikrofoni"
-
-msgid "Line In"
-msgstr "Linjatulo"
-
-msgid "Internal CD"
-msgstr "Sisäinen CD"
-
-msgid "SPDIF In"
-msgstr "SPDIF sisään"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 sisään"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 sisään"
-
-#, fuzzy
-msgid "Codec Loopback"
-msgstr "Takaisinkytkentä"
-
-#, fuzzy
-msgid "SunVTS Loopback"
-msgstr "Takaisinkytkentä"
-
-msgid "Volume"
-msgstr "Äänenvoimakkuus"
-
-msgid "Gain"
-msgstr "Herkkyys"
-
-msgid "Monitor"
-msgstr "Tarkkailu"
-
-msgid "Built-in Speaker"
-msgstr "Sisäänrakennettu kaiutin"
-
-msgid "Headphone"
-msgstr "Kuulokkeet"
-
-msgid "Line Out"
-msgstr "Linja ulos"
-
-msgid "SPDIF Out"
-msgstr "SPDIF ulos"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 ulos"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 ulos"
-
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Virhe luettaessa %d tavua laitteelta ”%s”."
@@ -233,6 +186,14 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Laitteen ”%s” ajuri ei tue mitään tunnettua kaappaustapaa."
 
 #, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
+#, fuzzy, c-format
 msgid "Device '%s' is busy"
 msgstr "Laite ”%s” ei ole ulostulolaite."
 
@@ -246,6 +207,14 @@ msgstr "Laitteelta ”%s” ei voi kaapata."
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
+msgstr "Laite ”%s” ei ole ulostulolaite."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Laite ”%s” ei ole ulostulolaite."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
 msgstr "Laite ”%s” ei ole ulostulolaite."
 
 #, c-format
@@ -320,11 +289,11 @@ msgid "Converter on device %s has no supported output format"
 msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported input format"
+msgid "Decoder on device %s has no supported input format"
 msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported output format"
+msgid "Decoder on device %s has no supported output format"
 msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
 
 #, fuzzy
@@ -333,6 +302,18 @@ msgstr "JPEG-kuvan purku epäonnistui"
 
 msgid "Failed to process frame."
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
+
+#, fuzzy
+msgid "Failed to start encoding thread."
+msgstr "JPEG-kuvan purku epäonnistui"
 
 #, c-format
 msgid ""
@@ -433,15 +414,70 @@ msgstr "Resoluution vaihto käytön aikana ei ole vielä mahdollista."
 msgid "Cannot operate without a clock"
 msgstr "Ei voitu toimia ilman kelloa"
 
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Tiedosto sisältää useita virtoja. Soitetaan vain ensimmäiset %d"
+
+#~ msgid "Record Source"
+#~ msgstr "Nauhoituslähde"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofoni"
+
+#~ msgid "Line In"
+#~ msgstr "Linjatulo"
+
+#~ msgid "Internal CD"
+#~ msgstr "Sisäinen CD"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF sisään"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 sisään"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 sisään"
+
+#, fuzzy
+#~ msgid "Codec Loopback"
+#~ msgstr "Takaisinkytkentä"
+
+#, fuzzy
+#~ msgid "SunVTS Loopback"
+#~ msgstr "Takaisinkytkentä"
+
+#~ msgid "Volume"
+#~ msgstr "Äänenvoimakkuus"
+
+#~ msgid "Gain"
+#~ msgstr "Herkkyys"
+
+#~ msgid "Monitor"
+#~ msgstr "Tarkkailu"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Sisäänrakennettu kaiutin"
+
+#~ msgid "Headphone"
+#~ msgstr "Kuulokkeet"
+
+#~ msgid "Line Out"
+#~ msgstr "Linja ulos"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF ulos"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1 ulos"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2 ulos"
+
 #~ msgid "Internal data stream error."
 #~ msgstr "Sisäisen tietovirran virhe."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Sisäisen tietovirran virhe."
-
-#, fuzzy
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Laite ”%s” ei ole ulostulolaite."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "Saatiin odottamaton kehys kooltaan %u odotetun %u sijaan."

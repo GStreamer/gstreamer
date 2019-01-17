@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2010-07-16 19:34+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -24,6 +24,16 @@ msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -57,6 +67,9 @@ msgstr ""
 msgid "Server does not support seeking."
 msgstr ""
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nėra įvesties garso arba jis netinkamas, AVI srautas bus sugadintas."
 
@@ -80,10 +93,6 @@ msgstr "Failas nebaigtas ir negali būti atkurtas."
 
 msgid "The video in this file might not play correctly."
 msgstr "Šiame faile esantis vaizdo įrašas gali būti atkurtas nekorektiškai."
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Šiame faile per daug srautų. Grojami tik pirmieji %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -151,62 +160,6 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
-msgid "Record Source"
-msgstr "Įrašymo šaltinis"
-
-msgid "Microphone"
-msgstr "Mikrofonas"
-
-msgid "Line In"
-msgstr "Įeinanti linija"
-
-msgid "Internal CD"
-msgstr "Vidinis CD"
-
-msgid "SPDIF In"
-msgstr "SPDIF įvestis"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 įvestis"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 įvestis"
-
-#, fuzzy
-msgid "Codec Loopback"
-msgstr "Perduoti ratu"
-
-#, fuzzy
-msgid "SunVTS Loopback"
-msgstr "Perduoti ratu"
-
-msgid "Volume"
-msgstr "Garsumas"
-
-msgid "Gain"
-msgstr "Garsinimas"
-
-msgid "Monitor"
-msgstr "Monitorius"
-
-msgid "Built-in Speaker"
-msgstr "Integruotas garsiakalbis"
-
-msgid "Headphone"
-msgstr "Ausinės"
-
-msgid "Line Out"
-msgstr "Išeinanti linija"
-
-msgid "SPDIF Out"
-msgstr "SPDIF išvestis"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 išvestis"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 išvestis"
-
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Klaida skaitant %d baitus (-ų) iš įrenginio „%s“."
@@ -228,6 +181,14 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Įrenginio „%s“ tvarkyklė nepalaiko jokių žinomų įrašymo būdų."
 
 #, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
+#, fuzzy, c-format
 msgid "Device '%s' is busy"
 msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
 
@@ -241,6 +202,14 @@ msgstr "Įrenginys „%s“ nėra įrašymo įrenginys."
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
+msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
 msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
 
 #, c-format
@@ -315,11 +284,11 @@ msgid "Converter on device %s has no supported output format"
 msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported input format"
+msgid "Decoder on device %s has no supported input format"
 msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported output format"
+msgid "Decoder on device %s has no supported output format"
 msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
 
 #, fuzzy
@@ -328,6 +297,18 @@ msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
 
 msgid "Failed to process frame."
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Vaizdo įvesties įrenginys nepriėmė naujų kadrų dažnio nustatymų."
+
+#, fuzzy
+msgid "Failed to start encoding thread."
+msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
 
 #, c-format
 msgid ""
@@ -428,15 +409,70 @@ msgstr "Galimybės keisti skiriamąją gebą operacijos vykdymo metu dar nėra."
 msgid "Cannot operate without a clock"
 msgstr "Negali veikti be laikrodžio"
 
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Šiame faile per daug srautų. Grojami tik pirmieji %d"
+
+#~ msgid "Record Source"
+#~ msgstr "Įrašymo šaltinis"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofonas"
+
+#~ msgid "Line In"
+#~ msgstr "Įeinanti linija"
+
+#~ msgid "Internal CD"
+#~ msgstr "Vidinis CD"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF įvestis"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 įvestis"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 įvestis"
+
+#, fuzzy
+#~ msgid "Codec Loopback"
+#~ msgstr "Perduoti ratu"
+
+#, fuzzy
+#~ msgid "SunVTS Loopback"
+#~ msgstr "Perduoti ratu"
+
+#~ msgid "Volume"
+#~ msgstr "Garsumas"
+
+#~ msgid "Gain"
+#~ msgstr "Garsinimas"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitorius"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Integruotas garsiakalbis"
+
+#~ msgid "Headphone"
+#~ msgstr "Ausinės"
+
+#~ msgid "Line Out"
+#~ msgstr "Išeinanti linija"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF išvestis"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1 išvestis"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2 išvestis"
+
 #~ msgid "Internal data stream error."
 #~ msgstr "Vidinė duomenų srauto klaida."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Vidinė duomenų srauto klaida."
-
-#, fuzzy
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Įrenginys „%s“ nėra išvesties įrenginys."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "Gautas netikėtas kadro dydis %u vietoje %u."

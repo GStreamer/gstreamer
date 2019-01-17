@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2016-11-10 22:06+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -24,6 +24,16 @@ msgstr "Server Jack tak ditemukan"
 
 msgid "Failed to decode JPEG image"
 msgstr "Gagal untuk mengawasandi citra JPEG"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -56,6 +66,9 @@ msgstr "Server mengirim data rusak."
 msgid "Server does not support seeking."
 msgstr "Server tidak mendukung pencarian."
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Masukan audio tidak ada atau tidak sah, arus AVI akan rusak."
 
@@ -79,10 +92,6 @@ msgstr "Berkas ini tidak lengkap dan tak dapat diputar."
 
 msgid "The video in this file might not play correctly."
 msgstr "Video di berkas ini mungkin tak dapat diputar dengan benar."
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Berkas ini berisi terlalu banyak arus. Hanya memutar %d pertama"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -152,60 +161,6 @@ msgstr "Divais CoreAudio tidak ditemukan"
 msgid "CoreAudio device could not be opened"
 msgstr "Divais CoreAudio tidak dapat buka"
 
-msgid "Record Source"
-msgstr "Sumber Rekaman"
-
-msgid "Microphone"
-msgstr "Mikrofon"
-
-msgid "Line In"
-msgstr "Jalur Masuk"
-
-msgid "Internal CD"
-msgstr "CD Internal"
-
-msgid "SPDIF In"
-msgstr "SPDIF Masuk"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 Masuk"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 Masuk"
-
-msgid "Codec Loopback"
-msgstr "Loopback Kodek"
-
-msgid "SunVTS Loopback"
-msgstr "Loopback SunVTS"
-
-msgid "Volume"
-msgstr "Volume"
-
-msgid "Gain"
-msgstr "Gain"
-
-msgid "Monitor"
-msgstr "Monitor"
-
-msgid "Built-in Speaker"
-msgstr "Pengeras Suara Terbina"
-
-msgid "Headphone"
-msgstr "Headphone"
-
-msgid "Line Out"
-msgstr "Jalur Keluar"
-
-msgid "SPDIF Out"
-msgstr "SPDIF Keluar"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 Keluar"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 Keluar"
-
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Galat membaca %d bita dari divais '%s'."
@@ -228,6 +183,14 @@ msgstr "Driver dari divais '%s' tak mendukung metode IO %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Driver dari divais '%s' tak mendukung metode IO apapun yang dikenal."
 
+#, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr "Penyandi di divais %s tidak mempunyai format masukan yang didukung"
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
 #, c-format
 msgid "Device '%s' is busy"
 msgstr "Divais '%s' sibuk"
@@ -243,6 +206,14 @@ msgstr "Divais '%s' tak dapat menangkap dalam format yang ditentukan"
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "Divais '%s' tak mendukung pesawat tak bersinggungan"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Divais '%s' tak mendukung penangkapan video"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
+msgstr "Divais '%s' tak mendukung penangkapan video"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -312,12 +283,12 @@ msgstr "Konverter di divais %s tidak mempunyai format masukan yang didukung"
 msgid "Converter on device %s has no supported output format"
 msgstr "Konverter di divais %s tidak mempunyai format keluaran yang didukung"
 
-#, c-format
-msgid "Encoder on device %s has no supported input format"
+#, fuzzy, c-format
+msgid "Decoder on device %s has no supported input format"
 msgstr "Penyandi di divais %s tidak mempunyai format masukan yang didukung"
 
-#, c-format
-msgid "Encoder on device %s has no supported output format"
+#, fuzzy, c-format
+msgid "Decoder on device %s has no supported output format"
 msgstr "Penyandi di divais %s tidak mempunyai format keluaran yang didukung"
 
 msgid "Failed to start decoding thread."
@@ -325,6 +296,18 @@ msgstr "Gagal untuk menjalankan tali awasandi."
 
 msgid "Failed to process frame."
 msgstr "Gagal memproses bingkai."
+
+#, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "Penyandi di divais %s tidak mempunyai format keluaran yang didukung"
+
+#, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "Penyandi di divais %s tidak mempunyai format masukan yang didukung"
+
+#, fuzzy
+msgid "Failed to start encoding thread."
+msgstr "Gagal untuk menjalankan tali awasandi."
 
 #, c-format
 msgid ""
@@ -423,11 +406,65 @@ msgstr "Mengubah resolusi saat waktu berjalan belum didukung."
 msgid "Cannot operate without a clock"
 msgstr "Tak dapat beroperasi tanpa jam"
 
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Berkas ini berisi terlalu banyak arus. Hanya memutar %d pertama"
+
+#~ msgid "Record Source"
+#~ msgstr "Sumber Rekaman"
+
+#~ msgid "Microphone"
+#~ msgstr "Mikrofon"
+
+#~ msgid "Line In"
+#~ msgstr "Jalur Masuk"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD Internal"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF Masuk"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 Masuk"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 Masuk"
+
+#~ msgid "Codec Loopback"
+#~ msgstr "Loopback Kodek"
+
+#~ msgid "SunVTS Loopback"
+#~ msgstr "Loopback SunVTS"
+
+#~ msgid "Volume"
+#~ msgstr "Volume"
+
+#~ msgid "Gain"
+#~ msgstr "Gain"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Pengeras Suara Terbina"
+
+#~ msgid "Headphone"
+#~ msgstr "Headphone"
+
+#~ msgid "Line Out"
+#~ msgstr "Jalur Keluar"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF Keluar"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1 Keluar"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2 Keluar"
+
 #~ msgid "Internal data stream error."
 #~ msgstr "Galat arus data internal."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Galat aliran data internal."
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Divais '%s' tak mendukung penangkapan video"

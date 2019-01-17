@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -23,6 +23,16 @@ msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr "Nu s-a putut decoda imaginea JPEG"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -56,6 +66,9 @@ msgstr ""
 msgid "Server does not support seeking."
 msgstr ""
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Intrarea audio nu există sau este nevalidă, fluxul de date AVI va fi corupt."
@@ -80,10 +93,6 @@ msgstr "Acest fișier nu este complet și nu poate fi redat."
 
 msgid "The video in this file might not play correctly."
 msgstr "Este posibil ca fișierul video să nu fie redat corect."
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Fișierul conține prea multe fluxuri. Se redau doar primele %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -153,62 +162,6 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
-msgid "Record Source"
-msgstr "Sursă înregistrare"
-
-msgid "Microphone"
-msgstr "Microfon"
-
-msgid "Line In"
-msgstr "Linie intrare"
-
-msgid "Internal CD"
-msgstr "CD intern"
-
-msgid "SPDIF In"
-msgstr "Intrare SPDIF"
-
-msgid "AUX 1 In"
-msgstr "Intrare AUX 1"
-
-msgid "AUX 2 In"
-msgstr "Intrare AUX 2"
-
-#, fuzzy
-msgid "Codec Loopback"
-msgstr "Buclă"
-
-#, fuzzy
-msgid "SunVTS Loopback"
-msgstr "Buclă"
-
-msgid "Volume"
-msgstr "Volum"
-
-msgid "Gain"
-msgstr "Amplificare"
-
-msgid "Monitor"
-msgstr "Monitor"
-
-msgid "Built-in Speaker"
-msgstr "Boxe integrate"
-
-msgid "Headphone"
-msgstr "Căști"
-
-msgid "Line Out"
-msgstr "Linie ieșire"
-
-msgid "SPDIF Out"
-msgstr "Ieșire SPDIF"
-
-msgid "AUX 1 Out"
-msgstr "Ieșire AUX 1"
-
-msgid "AUX 2 Out"
-msgstr "Ieșire AUX 2"
-
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Eroare citire %d octeți de la dispozitivul „%s”."
@@ -234,6 +187,15 @@ msgstr ""
 "cunoscută."
 
 #, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr ""
+"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
+#, fuzzy, c-format
 msgid "Device '%s' is busy"
 msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
 
@@ -247,6 +209,14 @@ msgstr "Dispozitivul „%s” nu este un dispozitiv de captură."
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
+msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
 msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
 
 #, c-format
@@ -332,12 +302,12 @@ msgstr ""
 "Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported input format"
+msgid "Decoder on device %s has no supported input format"
 msgstr ""
 "Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported output format"
+msgid "Decoder on device %s has no supported output format"
 msgstr ""
 "Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
 
@@ -347,6 +317,20 @@ msgstr "Nu s-a putut decoda imaginea JPEG"
 
 msgid "Failed to process frame."
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+"Dispozitivul de intrare video nu a acceptat noua configurare de rate cadre."
+
+#, fuzzy
+msgid "Failed to start encoding thread."
+msgstr "Nu s-a putut decoda imaginea JPEG"
 
 #, c-format
 msgid ""
@@ -451,15 +435,70 @@ msgstr "Schimbarea rezoluției pe durata rulării nu este incă suportată."
 msgid "Cannot operate without a clock"
 msgstr "Nu se poate opera fără un ceas"
 
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Fișierul conține prea multe fluxuri. Se redau doar primele %d"
+
+#~ msgid "Record Source"
+#~ msgstr "Sursă înregistrare"
+
+#~ msgid "Microphone"
+#~ msgstr "Microfon"
+
+#~ msgid "Line In"
+#~ msgstr "Linie intrare"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD intern"
+
+#~ msgid "SPDIF In"
+#~ msgstr "Intrare SPDIF"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "Intrare AUX 1"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "Intrare AUX 2"
+
+#, fuzzy
+#~ msgid "Codec Loopback"
+#~ msgstr "Buclă"
+
+#, fuzzy
+#~ msgid "SunVTS Loopback"
+#~ msgstr "Buclă"
+
+#~ msgid "Volume"
+#~ msgstr "Volum"
+
+#~ msgid "Gain"
+#~ msgstr "Amplificare"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Boxe integrate"
+
+#~ msgid "Headphone"
+#~ msgstr "Căști"
+
+#~ msgid "Line Out"
+#~ msgstr "Linie ieșire"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "Ieșire SPDIF"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "Ieșire AUX 1"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "Ieșire AUX 2"
+
 #~ msgid "Internal data stream error."
 #~ msgstr "Eroare internă a fluxului de date."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Eroare internă a fluxului de date."
-
-#, fuzzy
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Dispozitivul „%s” nu este un dispozitiv de ieșire."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "S-a obținut o dimensiune neașteptată pentru cadru, %u în loc de %u."

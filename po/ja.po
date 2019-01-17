@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2012-12-22 20:13+0900\n"
 "Last-Translator: Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -24,6 +24,16 @@ msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr "JPEG画像のデコードに失敗しました"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -56,6 +66,9 @@ msgstr "サーバが不正なデータを送信しました。"
 msgid "Server does not support seeking."
 msgstr "サーバーはシークをサポートしていません。"
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 # SUN REVIEWED
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "入力オーディオが存在しないか無効であるため、AVI ストリームは壊れます。"
@@ -80,12 +93,6 @@ msgstr "このファイルは正常ではないため、再生することがで
 
 msgid "The video in this file might not play correctly."
 msgstr "このファイルの中の動画は正しく再生できないかもしれません"
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr ""
-"このファイルには多くのストリームが格納されているため、最初の %d 個のみ再生し"
-"ます"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -157,66 +164,6 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
-msgid "Record Source"
-msgstr "録音ソース"
-
-# SUN REVIEWED
-msgid "Microphone"
-msgstr "マイクロフォン"
-
-msgid "Line In"
-msgstr "ライン入力"
-
-msgid "Internal CD"
-msgstr "内蔵CD"
-
-msgid "SPDIF In"
-msgstr "SPDIF入力"
-
-msgid "AUX 1 In"
-msgstr "AUX 1入力"
-
-msgid "AUX 2 In"
-msgstr "AUX 2入力"
-
-#, fuzzy
-msgid "Codec Loopback"
-msgstr "ループバック"
-
-#, fuzzy
-msgid "SunVTS Loopback"
-msgstr "ループバック"
-
-# SUN REVIEWED
-msgid "Volume"
-msgstr "音量"
-
-# SUN REVIEWED
-msgid "Gain"
-msgstr "ゲイン"
-
-# SUN REVIEWED
-msgid "Monitor"
-msgstr "モニター"
-
-msgid "Built-in Speaker"
-msgstr "ビルトインスピーカ"
-
-msgid "Headphone"
-msgstr "ヘッドフォン"
-
-msgid "Line Out"
-msgstr "ライン出力"
-
-msgid "SPDIF Out"
-msgstr "SPDIF出力"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1出力"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2出力"
-
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "デバイス %2$s から　%1$d バイト読み込み時にエラーが発生しました。"
@@ -239,6 +186,14 @@ msgstr ""
 "デバイス '%s' のドライバは知られているいかなるIOメソッドもサポートしていませ"
 "ん。"
 
+#, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr "ビデオデバイスが新しいフレームレート設定を受け付けません。"
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
 #, c-format
 msgid "Device '%s' is busy"
 msgstr "デバイス`%s'はビジー状態です"
@@ -253,6 +208,14 @@ msgstr "デバイス '%s' は指定されたフォーマットでキャプチャ
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
+msgstr "デバイス '%s' はビデオキャプチャをサポートしていません"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "デバイス '%s' はビデオキャプチャをサポートしていません"
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
 msgstr "デバイス '%s' はビデオキャプチャをサポートしていません"
 
 # SUN REVIEWED
@@ -328,11 +291,11 @@ msgid "Converter on device %s has no supported output format"
 msgstr "ビデオデバイスが新しいフレームレート設定を受け付けません。"
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported input format"
+msgid "Decoder on device %s has no supported input format"
 msgstr "ビデオデバイスが新しいフレームレート設定を受け付けません。"
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported output format"
+msgid "Decoder on device %s has no supported output format"
 msgstr "ビデオデバイスが新しいフレームレート設定を受け付けません。"
 
 #, fuzzy
@@ -341,6 +304,18 @@ msgstr "JPEG画像のデコードに失敗しました"
 
 msgid "Failed to process frame."
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr "ビデオデバイスが新しいフレームレート設定を受け付けません。"
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr "ビデオデバイスが新しいフレームレート設定を受け付けません。"
+
+#, fuzzy
+msgid "Failed to start encoding thread."
+msgstr "JPEG画像のデコードに失敗しました"
 
 #, c-format
 msgid ""
@@ -445,14 +420,76 @@ msgstr "実行時の解像度変更はサポートされていません。"
 msgid "Cannot operate without a clock"
 msgstr "クロックなしでは動作できません。"
 
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr ""
+#~ "このファイルには多くのストリームが格納されているため、最初の %d 個のみ再生"
+#~ "します"
+
+#~ msgid "Record Source"
+#~ msgstr "録音ソース"
+
+# SUN REVIEWED
+#~ msgid "Microphone"
+#~ msgstr "マイクロフォン"
+
+#~ msgid "Line In"
+#~ msgstr "ライン入力"
+
+#~ msgid "Internal CD"
+#~ msgstr "内蔵CD"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF入力"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1入力"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2入力"
+
+#, fuzzy
+#~ msgid "Codec Loopback"
+#~ msgstr "ループバック"
+
+#, fuzzy
+#~ msgid "SunVTS Loopback"
+#~ msgstr "ループバック"
+
+# SUN REVIEWED
+#~ msgid "Volume"
+#~ msgstr "音量"
+
+# SUN REVIEWED
+#~ msgid "Gain"
+#~ msgstr "ゲイン"
+
+# SUN REVIEWED
+#~ msgid "Monitor"
+#~ msgstr "モニター"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "ビルトインスピーカ"
+
+#~ msgid "Headphone"
+#~ msgstr "ヘッドフォン"
+
+#~ msgid "Line Out"
+#~ msgstr "ライン出力"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF出力"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1出力"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2出力"
+
 #~ msgid "Internal data stream error."
 #~ msgstr "内部データストリームエラー"
 
 #~ msgid "Internal data flow error."
 #~ msgstr "内部データフローエラー。"
-
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "デバイス '%s' はビデオキャプチャをサポートしていません"
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "サウンドサーバーへの接続に失敗しました"

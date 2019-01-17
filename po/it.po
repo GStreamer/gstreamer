@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:05+0300\n"
+"POT-Creation-Date: 2019-01-17 01:59+0000\n"
 "PO-Revision-Date: 2010-10-25 10:11+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -21,6 +21,16 @@ msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr "Decodifica dell'immagine JPEG non riuscita"
+
+msgid ""
+"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr ""
+
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -55,6 +65,9 @@ msgstr "In server ha inviato dati errati."
 msgid "Server does not support seeking."
 msgstr "Il server non supporta il posizionamento."
 
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr ""
+
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Ingresso audio assente o non valido. Lo stream AVI risulterà danneggiato."
@@ -79,10 +92,6 @@ msgstr "Questo file è incompleto e non può essere riprodotto."
 
 msgid "The video in this file might not play correctly."
 msgstr "Il video in questo file potrebbe non essere riprodotto correttamente."
-
-#, c-format
-msgid "This file contains too many streams. Only playing first %d"
-msgstr "Questo file contiene troppi stream. Riprodotti solo i primi %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
@@ -153,62 +162,6 @@ msgstr ""
 msgid "CoreAudio device could not be opened"
 msgstr ""
 
-msgid "Record Source"
-msgstr "Sorgente registrazione"
-
-msgid "Microphone"
-msgstr "Microfono"
-
-msgid "Line In"
-msgstr "Linea in"
-
-msgid "Internal CD"
-msgstr "CD interno"
-
-msgid "SPDIF In"
-msgstr "SPDIF in"
-
-msgid "AUX 1 In"
-msgstr "AUX 1 in"
-
-msgid "AUX 2 In"
-msgstr "AUX 2 in"
-
-#, fuzzy
-msgid "Codec Loopback"
-msgstr "Loopback"
-
-#, fuzzy
-msgid "SunVTS Loopback"
-msgstr "Loopback"
-
-msgid "Volume"
-msgstr "Volume"
-
-msgid "Gain"
-msgstr "Guadagno"
-
-msgid "Monitor"
-msgstr "Monitor"
-
-msgid "Built-in Speaker"
-msgstr "Altop. incorporato"
-
-msgid "Headphone"
-msgstr "Cuffia"
-
-msgid "Line Out"
-msgstr "Linea out"
-
-msgid "SPDIF Out"
-msgstr "SPDIF out"
-
-msgid "AUX 1 Out"
-msgstr "AUX 1 out"
-
-msgid "AUX 2 Out"
-msgstr "AUX 2 out"
-
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
 msgstr "Errore nel leggere %d byte dal device «%s»."
@@ -230,6 +183,15 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Il driver del device «%s» non supporta alcun metodo di cattura noto."
 
 #, fuzzy, c-format
+msgid "Device '%s' has no supported format"
+msgstr ""
+"Il device di ingresso video non accetta la nuova impostazione sul frame rate."
+
+#, c-format
+msgid "Device '%s' failed during initialization"
+msgstr ""
+
+#, fuzzy, c-format
 msgid "Device '%s' is busy"
 msgstr "Il device «%s» non è un dispositivo di uscita."
 
@@ -243,6 +205,14 @@ msgstr "Il device «%s» non è un dispositivo di cattura."
 
 #, fuzzy, c-format
 msgid "Device '%s' does support non-contiguous planes"
+msgstr "Il device «%s» non è un dispositivo di uscita."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s interlacing"
+msgstr "Il device «%s» non è un dispositivo di uscita."
+
+#, fuzzy, c-format
+msgid "Device '%s' does not support %s colorimetry"
 msgstr "Il device «%s» non è un dispositivo di uscita."
 
 #, c-format
@@ -323,12 +293,12 @@ msgstr ""
 "Il device di ingresso video non accetta la nuova impostazione sul frame rate."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported input format"
+msgid "Decoder on device %s has no supported input format"
 msgstr ""
 "Il device di ingresso video non accetta la nuova impostazione sul frame rate."
 
 #, fuzzy, c-format
-msgid "Encoder on device %s has no supported output format"
+msgid "Decoder on device %s has no supported output format"
 msgstr ""
 "Il device di ingresso video non accetta la nuova impostazione sul frame rate."
 
@@ -338,6 +308,20 @@ msgstr "Decodifica dell'immagine JPEG non riuscita"
 
 msgid "Failed to process frame."
 msgstr ""
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported output format"
+msgstr ""
+"Il device di ingresso video non accetta la nuova impostazione sul frame rate."
+
+#, fuzzy, c-format
+msgid "Encoder on device %s has no supported input format"
+msgstr ""
+"Il device di ingresso video non accetta la nuova impostazione sul frame rate."
+
+#, fuzzy
+msgid "Failed to start encoding thread."
+msgstr "Decodifica dell'immagine JPEG non riuscita"
 
 #, c-format
 msgid ""
@@ -453,15 +437,70 @@ msgstr ""
 msgid "Cannot operate without a clock"
 msgstr "Impossibile operare senza un clock"
 
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Questo file contiene troppi stream. Riprodotti solo i primi %d"
+
+#~ msgid "Record Source"
+#~ msgstr "Sorgente registrazione"
+
+#~ msgid "Microphone"
+#~ msgstr "Microfono"
+
+#~ msgid "Line In"
+#~ msgstr "Linea in"
+
+#~ msgid "Internal CD"
+#~ msgstr "CD interno"
+
+#~ msgid "SPDIF In"
+#~ msgstr "SPDIF in"
+
+#~ msgid "AUX 1 In"
+#~ msgstr "AUX 1 in"
+
+#~ msgid "AUX 2 In"
+#~ msgstr "AUX 2 in"
+
+#, fuzzy
+#~ msgid "Codec Loopback"
+#~ msgstr "Loopback"
+
+#, fuzzy
+#~ msgid "SunVTS Loopback"
+#~ msgstr "Loopback"
+
+#~ msgid "Volume"
+#~ msgstr "Volume"
+
+#~ msgid "Gain"
+#~ msgstr "Guadagno"
+
+#~ msgid "Monitor"
+#~ msgstr "Monitor"
+
+#~ msgid "Built-in Speaker"
+#~ msgstr "Altop. incorporato"
+
+#~ msgid "Headphone"
+#~ msgstr "Cuffia"
+
+#~ msgid "Line Out"
+#~ msgstr "Linea out"
+
+#~ msgid "SPDIF Out"
+#~ msgstr "SPDIF out"
+
+#~ msgid "AUX 1 Out"
+#~ msgstr "AUX 1 out"
+
+#~ msgid "AUX 2 Out"
+#~ msgstr "AUX 2 out"
+
 #~ msgid "Internal data stream error."
 #~ msgstr "Errore interno nello stream dei dati."
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Errore interno nel flusso di dati."
-
-#, fuzzy
-#~ msgid "Device '%s' does not support video capture"
-#~ msgstr "Il device «%s» non è un dispositivo di uscita."
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
 #~ msgstr "Ottenuta dimensione inattesa del fotogramma: %u invece di %u."
