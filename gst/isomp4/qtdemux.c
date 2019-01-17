@@ -4805,7 +4805,7 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
   seg_media_start_mov = seg->trak_media_start;
 
   GST_LOG_OBJECT (qtdemux, "keyframe index %u ts %" G_GUINT64_FORMAT
-      " seg start %" G_GUINT64_FORMAT " %" GST_TIME_FORMAT "\n",
+      " seg start %" G_GUINT64_FORMAT " %" GST_TIME_FORMAT,
       k_index, target_ts, seg_media_start_mov,
       GST_TIME_ARGS (seg->media_start));
 
