@@ -431,11 +431,23 @@ gst_gdk_pixbuf_dec_sink_event (GstPad * pad, GstObject * parent,
     case GST_EVENT_SEGMENT:
     {
       const GstSegment *segment;
+      GstSegment output_segment;
+      guint32 seqnum;
+
       gst_event_parse_segment (event, &segment);
       if (segment->format == GST_FORMAT_BYTES)
         pixbuf->packetized = FALSE;
       else
         pixbuf->packetized = TRUE;
+
+      if (segment->format != GST_FORMAT_TIME) {
+        seqnum = gst_event_get_seqnum (event);
+        gst_event_unref (event);
+        gst_segment_init (&output_segment, GST_FORMAT_TIME);
+        event = gst_event_new_segment (&output_segment);
+        gst_event_set_seqnum (event, seqnum);
+      }
+
       if (pixbuf->pixbuf_loader != NULL) {
         gdk_pixbuf_loader_close (pixbuf->pixbuf_loader, NULL);
         g_object_unref (G_OBJECT (pixbuf->pixbuf_loader));
