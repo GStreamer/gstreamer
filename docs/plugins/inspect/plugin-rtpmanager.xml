@@ -3,10 +3,10 @@
   <description>RTP session management plugin library</description>
   <filename>../../gst/rtpmanager/.libs/libgstrtpmanager.so</filename>
   <basename>libgstrtpmanager.so</basename>
-  <version>1.15.0.1</version>
+  <version>1.15.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -67,6 +67,27 @@
           <presence>request</presence>
           <details>application/x-rtp</details>
         </caps>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpfunnel</name>
+      <longname>RTP funnel</longname>
+      <class>RTP Funneling</class>
+      <description>Funnel RTP buffers together for multiplexing</description>
+      <author>Havard Graff &lt;havard@gstip.com&gt;</author>
+      <pads>
         <caps>
           <name>sink_%u</name>
           <direction>sink</direction>

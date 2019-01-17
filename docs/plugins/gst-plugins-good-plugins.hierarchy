@@ -121,6 +121,7 @@ GObject
             GstStereo
           GstAudioPanorama
           GstBreakMyData
+          GstCairoOverlay
           GstCapsSetter
           GstCpuReport
           GstLevel
@@ -134,7 +135,6 @@ GObject
             GstAgingTV
             GstAlpha
             GstAlphaColor
-            GstCairoOverlay
             GstDiceTV
             GstEdgeTV
             GstGamma
@@ -288,6 +288,7 @@ GObject
           GstRTPDTMFMux
         GstRTPRtxQueue
         GstRndBufferSize
+        GstRtpFunnel
         GstRtpJitterBuffer
         GstRtpPtDemux
         GstRtpRedDec

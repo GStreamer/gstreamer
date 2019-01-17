@@ -790,6 +790,14 @@ GstSplitMuxSink *gstsplitmuxsink
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstSplitMuxSink::split-at-running-time</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSplitMuxSink *gstsplitmuxsink
+guint64  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstSplitMuxSrc::format-location</NAME>
 <RETURNS>GStrv</RETURNS>
 <FLAGS>l</FLAGS>

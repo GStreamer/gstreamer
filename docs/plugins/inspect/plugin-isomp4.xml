@@ -3,10 +3,10 @@
   <description>ISO base media file format support (mp4, 3gpp, qt, mj2)</description>
   <filename>../../gst/isomp4/.libs/libgstisomp4.so</filename>
   <basename>libgstisomp4.so</basename>
-  <version>1.15.0.1</version>
+  <version>1.15.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -188,7 +188,7 @@
           <name>caption_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>closedcaption/x-cea-608, format=(string)cc_data; closedcaption/x-cea-708, format=(string)cdp</details>
+          <details>closedcaption/x-cea-608, format=(string)s334-1a; closedcaption/x-cea-708, format=(string)cdp</details>
         </caps>
         <caps>
           <name>subtitle_%u</name>

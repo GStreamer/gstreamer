@@ -1025,7 +1025,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.15.0.1"</DEFAULT>
+<DEFAULT>"GStreamer/1.15.1"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3555,7 +3555,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>Value of the User-Agent HTTP request header field.</BLURB>
-<DEFAULT>"GStreamer souphttpsrc 1.15.0.1 "</DEFAULT>
+<DEFAULT>"GStreamer souphttpsrc 1.15.1 "</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21469,6 +21469,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstFlvMux::encoder</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>encoder</NICK>
+<BLURB>The value of encoder in the meta packet.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstCapsSetter::caps</NAME>
 <TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
@@ -21899,6 +21909,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstQTMux::start-gap-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Gap Threshold</NICK>
+<BLURB>Threshold for creating an edit list for gaps at the start in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQTMoovRecover::broken-input</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -22109,6 +22129,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMP4Mux::start-gap-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Gap Threshold</NICK>
+<BLURB>Threshold for creating an edit list for gaps at the start in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstMJ2Mux::dts-method</NAME>
 <TYPE>GstQTMuxDtsMethods</TYPE>
 <RANGE></RANGE>
@@ -22276,6 +22306,16 @@
 <NICK>Reserved Prefill Samples Table</NICK>
 <BLURB>Prefill samples table of reserved duration.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMJ2Mux::start-gap-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Gap Threshold</NICK>
+<BLURB>Threshold for creating an edit list for gaps at the start in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22449,6 +22489,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstISMLMux::start-gap-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Gap Threshold</NICK>
+<BLURB>Threshold for creating an edit list for gaps at the start in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>Gst3GPPMux::dts-method</NAME>
 <TYPE>GstQTMuxDtsMethods</TYPE>
 <RANGE></RANGE>
@@ -22616,6 +22666,16 @@
 <NICK>Reserved Prefill Samples Table</NICK>
 <BLURB>Prefill samples table of reserved duration.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>Gst3GPPMux::start-gap-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Gap Threshold</NICK>
+<BLURB>Threshold for creating an edit list for gaps at the start in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -24957,3 +25017,24 @@
 <BLURB>stereo.</BLURB>
 <DEFAULT>0.1</DEFAULT>
 </ARG>
+
+<ARG>
+<NAME>GstRtpFunnel::common-ts-offset</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Common Timestamp Offset</NICK>
+<BLURB>Use the same RTP timestamp offset for all sinkpads (-1 = disable).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCairoOverlay::draw-on-transparent-surface</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Draw on transparent surface</NICK>
+<BLURB>Let the draw signal work on a transparent surface and blend the results with the video at a later time.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+

@@ -3,10 +3,10 @@
   <description>PulseAudio plugin library</description>
   <filename>../../ext/pulse/.libs/libgstpulseaudio.so</filename>
   <basename>libgstpulseaudio.so</basename>
-  <version>1.15.0.1</version>
+  <version>1.15.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string){ S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 32 ]; audio/x-alaw, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 32 ]; audio/x-mulaw, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 32 ]; audio/x-ac3, framed=(boolean)true; audio/x-eac3, framed=(boolean)true; audio/x-dts, framed=(boolean)true, block-size=(int){ 512, 1024, 2048 }; audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)[ 1, 3 ], parsed=(boolean)true; audio/mpeg, mpegversion=(int){ 2, 4 }, framed=(boolean)true, stream-format=(string)adts</details>
+          <details>audio/x-raw, format=(string){ S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }, layout=(string)interleaved, rate=(int)[ 1, 384000 ], channels=(int)[ 1, 32 ]; audio/x-alaw, rate=(int)[ 1, 384000 ], channels=(int)[ 1, 32 ]; audio/x-mulaw, rate=(int)[ 1, 384000 ], channels=(int)[ 1, 32 ]; audio/x-ac3, framed=(boolean)true; audio/x-eac3, framed=(boolean)true; audio/x-dts, framed=(boolean)true, block-size=(int){ 512, 1024, 2048 }; audio/mpeg, mpegversion=(int)1, mpegaudioversion=(int)[ 1, 3 ], parsed=(boolean)true; audio/mpeg, mpegversion=(int){ 2, 4 }, framed=(boolean)true, stream-format=(string)adts</details>
         </caps>
       </pads>
     </element>
@@ -35,7 +35,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, format=(string){ S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 32 ]; audio/x-alaw, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 32 ]; audio/x-mulaw, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 32 ]</details>
+          <details>audio/x-raw, format=(string){ S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }, layout=(string)interleaved, rate=(int)[ 1, 384000 ], channels=(int)[ 1, 32 ]; audio/x-alaw, rate=(int)[ 1, 384000 ], channels=(int)[ 1, 32 ]; audio/x-mulaw, rate=(int)[ 1, 384000 ], channels=(int)[ 1, 32 ]</details>
         </caps>
       </pads>
     </element>
