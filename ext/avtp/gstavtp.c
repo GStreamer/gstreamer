@@ -36,6 +36,13 @@
  *
  * If libavtp isn't detected by configure, the plugin isn't built.
  *
+ * ### The application/x-avtp mime type
+ *
+ * For valid AVTPDUs encapsulated in GstBuffers, we use the caps with mime type
+ * application/x-avtp.
+ *
+ * AVTP mime type is pretty simple and has no fields.
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -43,9 +50,14 @@
 
 #include <gst/gst.h>
 
+#include "gstavtpaafpay.h"
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_avtp_aaf_pay_plugin_init (plugin))
+    return FALSE;
+
   return TRUE;
 }
 
