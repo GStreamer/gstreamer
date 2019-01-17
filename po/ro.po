@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.14.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:12+0300\n"
+"POT-Creation-Date: 2019-01-17 02:02+0000\n"
 "PO-Revision-Date: 2010-08-16 03:32+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -54,26 +54,26 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Nu s-a putut deschide DVD"
 
-#, fuzzy
-msgid ""
-"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr ""
-"Nu s-a putut configura codorul TwoLAME. Verificați parametrii de codare."
-
-#, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Rata de biți solicitată de %d kbiți/s pentru proprietatea „%s” nu este "
-"permisă. Rata de biți a fost modificată la %d kbiți/s."
-
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr ""
-"Nu s-a putut configura codorul TwoLAME. Verificați parametrii de codare."
-
 msgid "This stream contains no data."
 msgstr "Fluxul acesta nu conține date."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Nu s-a putut configura codorul TwoLAME. Verificați parametrii de codare."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Rata de biți solicitată de %d kbiți/s pentru proprietatea „%s” nu este "
+#~ "permisă. Rata de biți a fost modificată la %d kbiți/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Nu s-a putut configura codorul TwoLAME. Verificați parametrii de codare."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Eroare internă a fluxului de date."

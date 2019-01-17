@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:12+0300\n"
+"POT-Creation-Date: 2019-01-17 02:02+0000\n"
 "PO-Revision-Date: 2008-05-14 02:52+0300\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -56,29 +56,29 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Nepavyko atverti DVD"
 
-#, fuzzy
-msgid ""
-"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr ""
-"Nepavyko sukonfigūruoti LAME kodavimo programos. Patikrinkite kodavimo "
-"parametrus."
-
-#, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Pageidautas bitų dažnis %d kbit/s savybei „%s“ neleidžiamas. Bitų dažnis "
-"pakeistas į %d kbit/s."
-
-#, fuzzy
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr ""
-"Nepavyko sukonfigūruoti LAME kodavimo programos. Patikrinkite kodavimo "
-"parametrus."
-
 msgid "This stream contains no data."
 msgstr "Šiame sraute nėra duomenų."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Nepavyko sukonfigūruoti LAME kodavimo programos. Patikrinkite kodavimo "
+#~ "parametrus."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Pageidautas bitų dažnis %d kbit/s savybei „%s“ neleidžiamas. Bitų dažnis "
+#~ "pakeistas į %d kbit/s."
+
+#, fuzzy
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Nepavyko sukonfigūruoti LAME kodavimo programos. Patikrinkite kodavimo "
+#~ "parametrus."
 
 #, fuzzy
 #~ msgid ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:53+0200\n"
+"POT-Creation-Date: 2019-01-17 02:02+0000\n"
 "PO-Revision-Date: 2017-10-24 23:30+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -19,62 +19,65 @@ msgstr ""
 "X-Generator: Lokalize 2.0\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: ext/cdio/gstcdiocddasrc.c:199
 msgid "Could not read from CD."
 msgstr "Kan niet van de cd lezen."
 
-#: ext/cdio/gstcdiocddasrc.c:406
 msgid "Could not open CD device for reading."
 msgstr "Kan het CD-apparaat niet openen voor lezen."
 
-#: ext/cdio/gstcdiocddasrc.c:413
 msgid "Disc is not an Audio CD."
 msgstr "De schrijf is geen audio-CD"
 
-#: ext/dvdread/dvdreadsrc.c:231 ext/dvdread/dvdreadsrc.c:238
 msgid "Could not open DVD"
 msgstr "Kan DVD niet openen"
 
-#: ext/dvdread/dvdreadsrc.c:245 ext/dvdread/dvdreadsrc.c:621
-#: ext/dvdread/dvdreadsrc.c:628
 #, c-format
 msgid "Could not open DVD title %d"
 msgstr "Kan DVD-titel %d niet openen"
 
-#: ext/dvdread/dvdreadsrc.c:251
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
 msgstr "Kan niet naar hoofdstuk %d van DVD-titel %d gaan"
 
-#: ext/dvdread/dvdreadsrc.c:635
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Kan de DVD-titel %d niet openen. Interactieve titels worden door dit element niet ondersteund"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Kan de DVD-titel %d niet openen. Interactieve titels worden door dit element "
+"niet ondersteund"
 
-#: ext/dvdread/dvdreadsrc.c:990
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Kon dvd niet lezen. Dit kan veroorzaakt zijn omdat de dvd versleuteld is en een bibliotheek voor ontcijferen van een dvd niet is geïnstalleerd."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Kon dvd niet lezen. Dit kan veroorzaakt zijn omdat de dvd versleuteld is en "
+"een bibliotheek voor ontcijferen van een dvd niet is geïnstalleerd."
 
-#: ext/dvdread/dvdreadsrc.c:993
 msgid "Could not read DVD."
 msgstr "Kon dvd niet lezen"
 
-#: ext/lame/gstlamemp3enc.c:395
-msgid "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr "Instellen van de LAME mp3-encoder is mislukt. Controleer uw parameters voor codering."
-
-#: ext/lame/gstlamemp3enc.c:427 ext/twolame/gsttwolamemp2enc.c:488
-#, c-format
-msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
-msgstr "De gevraagde bitsnelheid %d kbits/s voor eigenschap '%s' is niet toegestaan. De bitsnelheid is gewijzigd in %d kbits/s."
-
-#: ext/twolame/gsttwolamemp2enc.c:411
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "Kan de TwoLAME-encoder niet configureren. Controleer uw encodingparameters."
-
-#: gst/asfdemux/gstasfdemux.c:446
 msgid "This stream contains no data."
 msgstr "Deze stroom bevat geen gegevens."
+
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Instellen van de LAME mp3-encoder is mislukt. Controleer uw parameters "
+#~ "voor codering."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "De gevraagde bitsnelheid %d kbits/s voor eigenschap '%s' is niet "
+#~ "toegestaan. De bitsnelheid is gewijzigd in %d kbits/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Kan de TwoLAME-encoder niet configureren. Controleer uw "
+#~ "encodingparameters."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Fout met interne gegevensstroom."

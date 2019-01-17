@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 1.5.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:12+0300\n"
+"POT-Creation-Date: 2019-01-17 02:02+0000\n"
 "PO-Revision-Date: 2015-08-28 15:36+0800\n"
 "Last-Translator: Mingye Wang <arthur200126@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -54,21 +54,21 @@ msgstr "无法读取 DVD。可能 DVD 光盘已加密，但 DVD 解密库没有�
 msgid "Could not read DVD."
 msgstr "无法读取 DVD。"
 
-msgid ""
-"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr "配置 LAME mp3 编码器失败. 请检查你的编码参数."
-
-#, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr "不允许的比特率 %d kbit/s 于 '%s'. 比特率已改变成 %d kbit/s."
-
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "设置 TwoLAME 编码器失败. 请检查你的编码参数."
-
 msgid "This stream contains no data."
 msgstr "这个串流中没有包含数据."
+
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr "配置 LAME mp3 编码器失败. 请检查你的编码参数."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr "不允许的比特率 %d kbit/s 于 '%s'. 比特率已改变成 %d kbit/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr "设置 TwoLAME 编码器失败. 请检查你的编码参数."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "内部数据流错误。"

@@ -1,0 +1,76 @@
+# Asturian translation for gst-plugins-ugly
+# This file is put in the public domain.
+#
+# enolp <enolp@softastur.org>, 2018.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 1.10.0\n"
+"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
+"POT-Creation-Date: 2016-11-01 17:53+0200\n"
+"PO-Revision-Date: 2018-07-14 12:03+0100\n"
+"Last-Translator: enolp <enolp@softastur.org>\n"
+"Language-Team: Asturian <ubuntu-l10n-ast@lists.ubuntu.com>\n"
+"Language: ast\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Lokalize 2.0\n"
+
+#: ext/cdio/gstcdiocddasrc.c:199
+msgid "Could not read from CD."
+msgstr "Nun pudo lleese dende'l CD."
+
+#: ext/cdio/gstcdiocddasrc.c:406
+msgid "Could not open CD device for reading."
+msgstr "Nun pudo abrise'l preséu de CDs pa la llectura."
+
+#: ext/cdio/gstcdiocddasrc.c:413
+msgid "Disc is not an Audio CD."
+msgstr "El discu nun ye un CD d'audiu."
+
+#: ext/dvdread/dvdreadsrc.c:231 ext/dvdread/dvdreadsrc.c:238
+msgid "Could not open DVD"
+msgstr "Nun pudo abrise'l DVD"
+
+#: ext/dvdread/dvdreadsrc.c:245 ext/dvdread/dvdreadsrc.c:621
+#: ext/dvdread/dvdreadsrc.c:628
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "Nun pudo abrise'l titulu del DVD %d"
+
+#: ext/dvdread/dvdreadsrc.c:251
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "Fallu al dir al capítulu %d del títulu del DVD %d"
+
+#: ext/dvdread/dvdreadsrc.c:635
+#, c-format
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "Nun pudo abrise'l títulu del DVD %d. Esti elementu nun sofita los elementos interactivos."
+
+#: ext/dvdread/dvdreadsrc.c:990
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "Nun pudo lleese'l DVD. Esto podría ser porque'l DVD ta cifráu y nun s'instaló una biblioteca de descifráu de DVDs."
+
+#: ext/dvdread/dvdreadsrc.c:993
+msgid "Could not read DVD."
+msgstr "Nun pudo lleese'l DVD."
+
+#: ext/lame/gstlamemp3enc.c:395
+msgid "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
+msgstr "Fallu al configurar el codificador d'audiu MP3 de LAME. Comprueba los parámetros de codificación."
+
+#: ext/lame/gstlamemp3enc.c:427 ext/twolame/gsttwolamemp2enc.c:488
+#, c-format
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "La tasa de bits %d kbit/s solicitada pa la propieda «%s» nun ta permitida. Camudóse la tasa de bits a %d kbit/s."
+
+#: ext/twolame/gsttwolamemp2enc.c:411
+msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+msgstr "Fallu al configurar el codificador TwoLAME. Comprueba los parámetros de codificación."
+
+#: gst/asfdemux/gstasfdemux.c:446
+msgid "This stream contains no data."
+msgstr "Esti fluxu nun contién datos."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:12+0300\n"
+"POT-Creation-Date: 2019-01-17 02:02+0000\n"
 "PO-Revision-Date: 2012-03-18 01:04+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -55,28 +55,28 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Δεν είναι δυνατή η ανάγνωση του DVD."
 
-#, fuzzy
-msgid ""
-"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr ""
-"Αδυναμία ρύθμισης του κωδικοποιητή LAME. Ελέγξτε τις παραμέτρους "
-"κωδικοποίησης."
-
-#, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"Ο αιτούμενος ρυθμός μετάδοσης %d kbit/s για την ιδιοκτησία '%s' δεν είναι "
-"επιτρεπτός.Ορυθμός μετάδοσης άλλαξε σε %d kbit/s."
-
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr ""
-"Αδυναμία ρύθμισης του κωδικοποιητή TwoLAME. Ελέγξτε τις παραμέτρους "
-"κωδικοποίησης."
-
 msgid "This stream contains no data."
 msgstr "Η ροή αυτή δεν περιέχει καθόλου δεδομένα."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "Αδυναμία ρύθμισης του κωδικοποιητή LAME. Ελέγξτε τις παραμέτρους "
+#~ "κωδικοποίησης."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "Ο αιτούμενος ρυθμός μετάδοσης %d kbit/s για την ιδιοκτησία '%s' δεν είναι "
+#~ "επιτρεπτός.Ορυθμός μετάδοσης άλλαξε σε %d kbit/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "Αδυναμία ρύθμισης του κωδικοποιητή TwoLAME. Ελέγξτε τις παραμέτρους "
+#~ "κωδικοποίησης."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Εσωτερικό σφάλμα ροής δεδομένων."

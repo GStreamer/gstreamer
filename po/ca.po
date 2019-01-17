@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:12+0300\n"
+"POT-Creation-Date: 2019-01-17 02:02+0000\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -57,28 +57,28 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "No s'ha pogut llegir el DVD."
 
-#, fuzzy
-msgid ""
-"Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr ""
-"No s'ha pogut configurar el codificador LAME. Comproveu els paràmetres de "
-"codificació."
-
-#, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
-"La taxa de bits %d kbit/s per a la propietat «%s» no és permesa. S'ha "
-"canviat la taxa de bits a %d kbit/s."
-
-msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr ""
-"No s'ha pogut configurar el codificador TwoLAME. Comproveu els paràmetres de "
-"codificació."
-
 msgid "This stream contains no data."
 msgstr "Aquest flux no conté dades."
+
+#, fuzzy
+#~ msgid ""
+#~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
+#~ "parameters."
+#~ msgstr ""
+#~ "No s'ha pogut configurar el codificador LAME. Comproveu els paràmetres de "
+#~ "codificació."
+
+#~ msgid ""
+#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+#~ "bitrate was changed to %d kbit/s."
+#~ msgstr ""
+#~ "La taxa de bits %d kbit/s per a la propietat «%s» no és permesa. S'ha "
+#~ "canviat la taxa de bits a %d kbit/s."
+
+#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
+#~ msgstr ""
+#~ "No s'ha pogut configurar el codificador TwoLAME. Comproveu els paràmetres "
+#~ "de codificació."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "S'ha produït un error intern de flux de dades."
