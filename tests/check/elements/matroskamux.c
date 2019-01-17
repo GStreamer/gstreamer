@@ -753,7 +753,8 @@ check_tags (GstToc * ref_toc, GstToc * internal_toc,
 {
   gboolean found_tags = FALSE, must_check_tag = FALSE;
   guint64 len, value, uid;
-  gsize last_offset, next_tag;
+  gsize last_offset = 0;
+  gsize next_tag;
   gchar *tag_name_str, *tag_string_str;
   guint8 tags[] = { 0x12, 0x54, 0xc3, 0x67 };
   guint8 tag[] = { 0x73, 0x73 };
@@ -843,7 +844,9 @@ check_segment (GstToc * ref_toc, GstToc * internal_toc,
   guint8 matroska_seek_pos[] = { 0x53, 0xac };
   guint8 matroska_chapters[] = { 0x10, 0x43, 0xA7, 0x70 };
 
-  guint64 len, value, segment_offset, chapters_offset, tags_offset;
+  guint64 len, value, segment_offset;
+  guint64 tags_offset = 0;
+  guint64 chapters_offset = 0;
   gboolean found_chapters_declaration = FALSE, found_tags_declaration = FALSE;
 
   /* Segment */
