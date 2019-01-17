@@ -1,3 +1,1040 @@
+=== release 1.15.1 ===
+
+2019-01-17 02:26:48 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.15.1
+
+2018-12-05 15:07:25 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  Add source elements to the pipeline before activation
+	  In plug_src we changed the element state before adding it to
+	  the owner container. This prevented the pipeline from intercepting
+	  a GST_STREAM_STATUS_TYPE_CREATE message from the pad in order
+	  to assign a custom task pool.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/53
+
+2018-12-05 17:24:59 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ed78bee to 59cb678
+
+2018-11-20 19:12:09 +0100  Ingo Randolf <ingo.randolf@servus.at>
+
+	* examples/test-appsrc.c:
+	  examples: test-appsrc: fix coding style error
+
+2018-11-20 11:07:48 +0100  Ingo Randolf <ingo.randolf@servus.at>
+
+	* examples/test-appsrc.c:
+	  examples: test-appsrc: fix buffer leak
+
+2018-11-17 19:19:54 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Update priv->blocked when linked streams are unblocked.
+	  Media is considered to be blocked when all streams that belong to
+	  that media are blocked.
+	  This patch solves the problem of inconsistent updates of
+	  priv->blocked that are not synchronized with the media state.
+
+2018-11-17 18:18:27 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Don't block streams before seeking
+	  Before the seek operation is performed on media, it's required that
+	  its pipeline is prepared <=> the pipeline is in the PAUSED state.
+	  At this stage, all transport parts (transport sinks) have been successfully
+	  added to the pipeline and there is no need for blocking the streams.
+
+2018-11-17 16:11:53 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* tests/check/gst/rtspserver.c:
+	  tests: rtspserver: Add shared media test case for TCP
+
+2018-11-06 18:21:54 +0100  Linus Svensson <linussn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Use seqnum-offset for rtpinfo
+	  The sequence number in the rtpinfo is supposed to be the first RTP
+	  sequence number. The "seqnum" property on a payloader is supposed to be
+	  the number from the last processed RTP packet. The sequence number for
+	  payloaders that inherit gstrtpbasepayload will not be correct in case of
+	  buffer lists. In order to fix the seqnum property on the payloaders
+	  gst-rtsp-server must get the sequence number for rtpinfo elsewhere and
+	  "seqnum-offset" from the "stats" property contains the value of the
+	  very first RTP packet in a stream. The server will, however, try to look
+	  at the last simple in the sink element and only use properties on the
+	  payloader in case there no sink elements yet, and by looking at the last
+	  sample of the sink gives the server full control of which RTP packet it
+	  looks at. If the payloader does not have the "stats" property, "seqnum"
+	  is still used since "seqnum-offset" is only present in as part of
+	  "stats" and this is still an issue not solved with this patch.
+	  Needed for gst-plugins-base!17
+
+2018-11-06 18:10:56 +0100  Linus Svensson <linussn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Plug memory leak
+	  Attaching a GSource to a context will increase the refcount. The idle
+	  source will never be free'd since the initial reference is never
+	  dropped.
+
+2018-11-12 16:06:39 +0200  Jordan Petridis <jordan@centricular.com>
+
+	* .gitlab-ci.yml:
+	  Add Gitlab CI configuration
+	  This commit adds a .gitlab-ci.yml file, which uses a feature
+	  to fetch the config from a centralized repository. The intent is
+	  to have all the gstreamer modules use the same configuration.
+	  The configuration is currently hosted at the gst-ci repository
+	  under the gitlab/ci_template.yml path.
+	  Part of https://gitlab.freedesktop.org/gstreamer/gstreamer-project/issues/29
+
+2018-11-05 05:56:35 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	* gst-rtsp-server.doap:
+	  Update git locations to gitlab
+
+2018-11-01 14:20:16 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/meson.build:
+	  meson: add new onvif types
+
+2018-11-01 12:49:51 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/meson.build:
+	  Add ONVIF subclass headers to the installed headers in meson.build too
+
+2018-11-01 11:29:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-server-object.h:
+	* gst/rtsp-server/rtsp-server.h:
+	  rtsp-server: Declare GstRTSPServer struct before anything else
+	  It's needed by all kinds of other headers, including the ones that are
+	  required for defining the GstRTSPServer struct itself and its API.
+
+2018-11-01 10:23:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-onvif-client.h:
+	* gst/rtsp-server/rtsp-onvif-media-factory.h:
+	* gst/rtsp-server/rtsp-onvif-media.h:
+	* gst/rtsp-server/rtsp-onvif-server.h:
+	  Mark all ONVIF-specific subclasses as Since 1.14
+
+2018-11-01 10:18:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/meson.build:
+	* gst/rtsp-server/rtsp-context.h:
+	* gst/rtsp-server/rtsp-onvif-server.c:
+	* gst/rtsp-server/rtsp-onvif-server.h:
+	* gst/rtsp-server/rtsp-server-object.h:
+	* gst/rtsp-server/rtsp-server-prelude.h:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session.h:
+	  Include ONVIF types from single-include rtsp-server.h
+	  ... by actually making it a single-include header and moving everything
+	  related to the GstRTSPServer type to rtsp-server-object.h instead.
+	  Otherwise there are too many circular includes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797361
+
+2018-10-18 07:25:05 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-latency-bin.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-stream: use idle source in on_message_sent
+	  When the underlying layers are running on_message_sent, this sometimes
+	  causes the underlying layer to send more data, which will cause the
+	  underlying layer to run callback on_message_sent again. This can go on
+	  and on.
+	  To break this chain, we introduce an idle source that takes care of
+	  sending data if there are more to send when running callback
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797289
+
+2018-10-20 16:14:53 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Remove timeout GSource on cleanup
+	  Avoids ending up with races where a timeout would still be around
+	  *after* a client was gone. This could happen rather easily in
+	  RTSP-over-HTTP mode on a local connection, where each RTSP message
+	  would be sent as a different HTTP connection with the same tunnelid.
+	  If not properly removed, that timeout would then try to free again
+	  a client (and its contents).
+
+2018-10-04 14:31:59 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/Makefile.am:
+	  autotools: fix distcheck
+
+2018-09-12 11:55:15 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/meson.build:
+	* gst/rtsp-server/rtsp-latency-bin.c:
+	* gst/rtsp-server/rtsp-latency-bin.h:
+	* gst/rtsp-server/rtsp-onvif-media.c:
+	  onvif: encapsulate onvif part into a bin
+	  ...and thus do not let onvif affect pipelines latency
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797174
+
+2018-09-27 19:57:13 +0200  Patricia Muscalu <patricia@dovakhiin.com>
+
+	* tests/check/gst/client.c:
+	  tests: client: Avoid bind() failures in tests
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797059
+
+2018-09-06 16:17:33 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/client.c:
+	* tests/check/gst/mediafactory.c:
+	  New property for socket binding to mcast addresses
+	  By default the multicast sockets are bound to INADDR_ANY,
+	  as it's not allowed to bind sockets to multicast addresses
+	  in Windows. This default behaviour can be changed by setting
+	  bind-mcast-address property on the media-factory object.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797059
+
+2018-09-24 09:36:21 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/meson.build:
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-context.c:
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-params.c:
+	* gst/rtsp-server/rtsp-permissions.c:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-server-prelude.h:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	* gst/rtsp-server/rtsp-token.c:
+	* meson.build:
+	  libs: fix API export/import and 'inconsistent linkage' on MSVC
+	  Export rtsp-server library API in headers when we're building the
+	  library itself, otherwise import the API from the headers.
+	  This fixes linker warnings on Windows when building with MSVC.
+	  Fix up some missing config.h includes when building the lib which
+	  is needed to get the export api define from config.h
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797185
+
+2018-09-19 14:31:56 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  rtsp-media-factory: Add missing break statements
+	  This resulted in warnings/assertions whenever one accessed the
+	  max-mcast-ttl property.
+	  CID #1439515
+	  CID #1439523
+
+2018-09-19 12:21:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: add gobject-cast-checks, glib-asserts, glib-checks options
+
+2018-09-19 12:17:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/meson.build:
+	* meson_options.txt:
+	* tests/check/meson.build:
+	  meson: add option to disable build of rtspclientsink plugin
+
+2018-09-19 12:10:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson_options.txt:
+	  meson: re-arrange options
+
+2018-09-01 11:21:15 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	* tests/check/meson.build:
+	* tests/meson.build:
+	  meson: Use feature option for tests option
+	  This was somehow missed the last time around.
+
+2018-08-31 14:42:15 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/rtsp-server/meson.build:
+	* meson.build:
+	  meson: Maintain macOS ABI through dylib versioning
+	  Requires Meson 0.48, but the feature will be ignored on older versions
+	  so it's safe to add it without bumping the requirement.
+	  Documentation:
+	  https://github.com/mesonbuild/meson/blob/master/docs/markdown/Reference-manual.md#shared_library
+
+2018-08-31 17:20:47 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/rtsp-sink/meson.build:
+	* meson.build:
+	  meson: add pkg-config file for the rtspclientsink plugin
+
+2018-08-17 09:54:27 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* tests/check/gst/client.c:
+	  rtsp-client: Avoid reuse of channel numbers for interleaved
+	  If a (strange) client would reuse interleaved channel numbers in
+	  multiple SETUP requests, we should not accept them. The channel
+	  numbers are used for looking up stream transports in the
+	  priv->transports hash table, and transports disappear from the table
+	  if channel numbers are reused.
+	  RFC 7826 (RTSP 2.0), Section 18.54, clarifies that it is OK for the
+	  server to change the channel numbers suggested by the client.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796988
+
+2018-08-17 09:54:27 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* tests/check/gst/client.c:
+	  rtsp-client: Add unit test of SETUP for RTSP/RTP/TCP
+	  Allow regex for matching transport header against expected pattern.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796988
+
+2018-08-15 18:57:27 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* tests/check/meson.build:
+	  meson: There is no gstreamer-plugins-good-1.0.pc
+	  There is no installed version of that, only an uninstalled version.
+
+2018-08-14 14:31:55 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* tests/check/gst/stream.c:
+	  Fix indentation again
+
+2018-07-26 12:01:16 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/client.c:
+	* tests/check/gst/stream.c:
+	  stream: Added a list of multicast client addresses
+	  When media is shared, the same media stream can be sent
+	  to multiple multicast groups. Currently, there is no API
+	  to retrieve multicast addresses from the stream.
+	  When calling gst_rtsp_stream_get_multicast_address() function,
+	  only the first multicast address is returned.
+	  With this patch, each multicast destination requested in SETUP
+	  will be stored in an internal list (call to
+	  gst_rtsp_stream_add_multicast_client_address()).
+	  The list of multicast groups requested by the clients can be
+	  retrieved by calling gst_rtsp_stream_get_multicast_client_addresses().
+	  There still exist some problems with the current implementation
+	  in the multicast case:
+	  1) The receiving part is currently only configured with
+	  regard to the first multicast client (see
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796917).
+	  2) Secondly, of security reasons, some constraints should be
+	  put on the requested multicast destinations (see
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796916).
+	  Change-Id: I6b060746e472a0734cc2fd828ffe4ea2956733ea
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-07-25 15:33:18 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/client.c:
+	  stream: Choose the maximum ttl value provided by multicast clients
+	  The maximum ttl value provided so far by the multicast clients
+	  will be chosen and reported in the response to the current
+	  client request.
+	  Change-Id: I5408646e3b5a0a224d907ae215bdea60c4f1905f
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-02-23 14:34:32 +0100  Patricia Muscalu <patricia@dovakhiin.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/client.c:
+	  rtsp-stream: Don't require address pool in the transport specific case
+	  If "transport.client-settings" parameter is set to true, the client is
+	  allowed to specify destination, ports and ttl.
+	  There is no need for pre-configured address pool.
+	  Change-Id: I6ae578fb5164d78e8ec1e2ee82dc4eaacd0912d1
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-07-24 14:02:40 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* tests/check/gst/client.c:
+	  client: Don't reserve multicast address in the client setting case
+	  When two multicast clients request specific transport
+	  configurations, and "transport.client-settings" parameter is
+	  set to true, it's wrong to actually require that these two
+	  clients request the same multicast group.
+	  Removed test_client_multicast_invalid_transport_specific test
+	  cases as they wrongly require that the requested destination
+	  address is supposed to be present in the address pool, also in
+	  the case when "transport.client-settings" parameter is set to true.
+	  Change-Id: I4580182ef35996caf644686d6139f72ec599c9fa
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-07-24 09:35:46 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/mediafactory.c:
+	  Add new API for setting/getting maximum multicast ttl value
+	  Change-Id: I5ef4758188c14785e17fb8fbf42a3dc0cb054233
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-07-31 21:17:41 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: avoid duplicating the first multicast client
+	  In dcb4533fedae3ac62bc25a916eb95927b7d69aec , we made it so
+	  clients were dynamically added and removed to the multicast
+	  udp sinks, as such we should no longer add a first client in
+	  set_multicast_socket_for_udpsink
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-08-14 14:25:53 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  Revert "rtsp-stream: avoid duplicating the first multicast client"
+	  This reverts commit 33570944401747f44d8ebfec535350651413fb92.
+	  Commits where accidentially squashed together
+
+2018-08-14 14:25:42 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/client.c:
+	* tests/check/gst/mediafactory.c:
+	  Revert "Add new API for setting/getting maximum multicast ttl value"
+	  This reverts commit 7f0ae77e400fb8a0462a76a5dd2e63e12c4a2e52.
+	  Commits where accidentially squashed together
+
+2018-08-14 14:25:37 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/client.c:
+	  Revert "rtsp-stream: Don't require address pool in the transport specific case"
+	  This reverts commit a9db3e7f092cfeb5475e9aa24b1e91906c141d52.
+	  Commits where accidentially squashed together
+
+2018-08-14 14:25:14 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/client.c:
+	* tests/check/gst/stream.c:
+	  Revert "stream: Choose the maximum ttl value provided by multicast clients"
+	  This reverts commit 499e437e501215849d24cdaa157e0edf4de097d0.
+	  Commits where accidentially squashed together
+
+2018-08-14 14:10:56 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* examples/test-auth-digest.c:
+	  examples: Fix indentation
+
+2018-07-25 15:33:18 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/client.c:
+	* tests/check/gst/stream.c:
+	  stream: Choose the maximum ttl value provided by multicast clients
+	  The maximum ttl value provided so far by the multicast clients
+	  will be chosen and reported in the response to the current
+	  client request.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-02-23 14:34:32 +0100  Patricia Muscalu <patricia@dovakhiin.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/client.c:
+	  rtsp-stream: Don't require address pool in the transport specific case
+	  If "transport.client-settings" parameter is set to true, the client is
+	  allowed to specify destination, ports and ttl.
+	  There is no need for pre-configured address pool.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-07-24 09:35:46 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* tests/check/gst/client.c:
+	* tests/check/gst/mediafactory.c:
+	  Add new API for setting/getting maximum multicast ttl value
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-07-31 21:17:41 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: avoid duplicating the first multicast client
+	  In dcb4533fedae3ac62bc25a916eb95927b7d69aec , we made it so
+	  clients were dynamically added and removed to the multicast
+	  udp sinks, as such we should no longer add a first client in
+	  set_multicast_socket_for_udpsink
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-08-06 15:33:04 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* gst/rtsp-server/Makefile.am:
+	  rtsp-server: Add gstreamer-base gir dir in autotools
+
+2018-07-25 19:54:55 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-client: always allocate both IPV4 and IPV6 sockets
+	  multiudpsink does not support setting the socket* properties
+	  after it has started, which meant that rtsp-server could no
+	  longer serve on both IPV4 and IPV6 sockets since the patches
+	  from https://bugzilla.gnome.org/show_bug.cgi?id=757488 were
+	  merged.
+	  When first connecting an IPV6 client then an IPV4 client,
+	  multiudpsink fell back to using the IPV6 socket.
+	  When first connecting an IPV4 client, then an IPV6 client,
+	  multiudpsink errored out, released the IPV4 socket, then
+	  crashed when trying to send a message on NULL nevertheless,
+	  that is however a separate issue.
+	  This could probably be fixed by handling the setting of
+	  sockets in multiudpsink after it has started, that will
+	  however be a much more significant effort.
+	  For now, this commit simply partially reverts the behaviour
+	  of rtsp-stream: it will continue to only create the udpsinks
+	  when needed, as was the case since the patches were merged,
+	  it will however when creating them, always allocate both
+	  sockets and set them on the sink before it starts, as was
+	  the case prior to the patches.
+	  Transport configuration will only error out if the allocation
+	  of UDP sockets fails for the actual client's family, this
+	  also downgrades the GST_ERRORs in alloc_ports_one_family
+	  to GST_WARNINGs, as failing to allocate is no longer
+	  necessarily fatal.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796875
+
+2018-07-25 17:22:20 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Convert common options to feature options
+	  These are necessary for gst-build to set options correctly. The
+	  remaining automagic option is cgroup support in examples.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795107
+
+2018-07-23 18:03:51 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Slightly simplify locking
+
+2018-06-28 11:22:21 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	  Limit queued TCP data messages to one per stream
+	  Before, the watch backlog size in GstRTSPClient was changed
+	  dynamically between unlimited and a fixed size, trying to avoid both
+	  unlimited memory usage and deadlocks while waiting for place in the
+	  queue. (Some of the deadlocks were described in a long comment in
+	  handle_request().)
+	  In the previous commit, we changed to a fixed backlog size of 100.
+	  This is possible, because we now handle RTP/RTCP data messages differently
+	  from RTSP request/response messages.
+	  The data messages are messages tunneled over TCP. We allow at most one
+	  queued data message per stream in GstRTSPClient at a time, and
+	  successfully sent data messages are acked by sending a "message-sent"
+	  callback from the GstStreamTransport. Until that ack comes, the
+	  GstRTSPStream does not call pull_sample() on its appsink, and
+	  therefore the streaming thread in the pipeline will not be blocked
+	  inside GstRTSPClient, waiting for a place in the queue.
+	  pull_sample() is called when we have both an ack and a "new-sample"
+	  signal from the appsink. Then, we know there is a buffer to write.
+	  RTSP request/response messages are not acked in the same way as data
+	  messages. The rest of the 100 places in the queue are used for
+	  them. If the queue becomes full of request/response messages, we
+	  return an error and close the connection to the client.
+	  Change-Id: I275310bc90a219ceb2473c098261acc78be84c97
+
+2018-06-28 11:22:13 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Use fixed backlog size
+	  Change to using a fixed backlog size WATCH_BACKLOG_SIZE.
+	  Preparation for the next commit, which changes to a different way of
+	  avoiding both deadlocks and unlimited memory usage with the watch
+	  backlog.
+
+2018-07-16 21:57:08 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: unref clock (if set) when finalizing
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796814
+
+2018-07-16 21:56:44 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	  rtsp-media: add gst_rtsp_media_*_set_clock to docs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796814
+
+2018-07-12 19:01:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  media-factory: unref old clock when setting new clock
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796724
+
+2018-06-29 15:20:57 -0700  Brendan Shanks <brendan.shanks@teradek.com>
+
+	* gst/rtsp-server/rtsp-media-factory.c:
+	  media-factory: unref clock in finalize
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796724
+
+2018-07-12 18:57:21 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-onvif-media.c:
+	  rtsp-onvif-media: fix g-ir-scanner warnings
+
+2018-07-10 23:56:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* .gitignore:
+	  .gitignore: add another example binary
+
+2018-07-10 23:55:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/meson.build:
+	  meson: add new test-appsrc2 example to meson build
+
+2018-07-10 23:53:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/Makefile.am:
+	  examples: fix build of new test-appsrc2 example
+	  Need to link against libgstapp-1.0.
+
+2018-07-11 01:25:51 +1000  Jan Schmidt <jan@centricular.com>
+
+	* examples/.gitignore:
+	* examples/Makefile.am:
+	* examples/test-appsrc2.c:
+	  examples: Add test-appsrc2
+	  Add an example of feeding both audio and video into an RTSP
+	  pipeline via appsrc.
+
+2016-01-08 18:12:14 -0500  Louis-Francis Ratté-Boulianne <lfrb@collabora.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: Strip transport parts as whitespaces could be around commas
+	  https://bugzilla.gnome.org/show_bug.cgi?id=758428
+
+2018-06-27 08:30:42 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: avoid pushing data on unlinked udpsrc pad during setup
+	  Fix race when setting up source elements.
+	  Since we set the source element(s) to PLAYING state before hooking
+	  them up to the downstream funnel, it's possible for the source element
+	  to receive packets before we actually get to linking it to the funnel,
+	  in which case buffers would be pushed out on an unlinked pad, causing
+	  it to error out and stop receiving more data.
+	  We fix this by blocking the source's srcpad until we have linked it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796160
+
+2018-03-21 10:56:51 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Fix mismatch between allowed and configured protocols
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796679
+
+2017-02-01 09:44:50 +0100  Ulf Olsson <ulfo@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Emit a signal when the SRTP decoder is created
+	  https://bugzilla.gnome.org/show_bug.cgi?id=778080
+
+2018-03-13 11:10:35 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Don't require presence of sinks in _get_*_socket()
+	  Transport specific sink elements are added to the pipeline
+	  in PLAY request and sockets are already created in SETUP so
+	  it's actually wrong to require the presence of sinks in
+	  _get_*_socket() functions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-02-14 10:41:02 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Update transport for multicast clients as well
+	  If a multicast client requests different transport settings
+	  than the existing one make sure that this new transport
+	  configuruation is propagated to the multicast udp sink.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-02-13 11:04:36 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Set the multicast TTL parameter on multicast udp sinks
+	  And not on unicast udp sinks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793441
+
+2018-06-24 12:44:26 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-address-pool.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-mount-points.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-session-pool.c:
+	* gst/rtsp-server/rtsp-session.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-thread-pool.c:
+	  Update for g_type_class_add_private() deprecation in recent GLib
+
+2018-06-24 12:45:49 +0200  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  Fix indentation
+
+2018-06-22 23:17:08 +1000  Jan Schmidt <jan@centricular.com>
+
+	* examples/Makefile.am:
+	* examples/test-video-disconnect.c:
+	  examples: Add test-video-disconnect example
+	  Simple example which cuts off all clients 10 seconds
+	  after the first one connects.
+
+2018-06-20 04:37:11 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* examples/test-auth-digest.c:
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-auth.h:
+	  rtsp-auth: Add support for parsing .htdigest files
+	  Passwords are usually not stored in clear text, but instead
+	  stored already hashed in a .htdigest file.
+	  Add support for parsing such files, add API to allow setting
+	  a custom realm in RTSPAuth, and update the digest example.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796637
+
+2018-06-19 14:53:02 +1000  Matthew Waters <matthew@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	* gst/rtsp-sink/gstrtspclientsink.h:
+	  rtspclientsink: fix waiting for multiple streams
+	  We were previously only ever waiting for a single stream to notify it's
+	  blocked status through GstRTSPStreamBlocking.  Actually count streams to
+	  wait for.
+	  Fixes rtspclientsink sending SDP's without out some of the input
+	  streams.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796624
+
+2018-06-20 04:30:04 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	  docs: add missing auth methods
+
+2018-06-20 00:10:18 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: only create funnel if it didn't exist already.
+	  This precented using multiple protocols for the same stream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796634
+
+2018-06-20 01:35:47 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/meson.build:
+	  meson: build auth-digest example
+
+2018-06-05 08:44:44 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	  Get payloader stats only for the sending streams
+	  Get/set payloader properties only for streams that actually
+	  contain a payloader element.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796523
+
+2018-05-18 14:53:49 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/Makefile.am:
+	  Makefile: Don't hardcode libtool for g-i build
+	  Similar to the other commits in core/base/bad
+
+2018-05-08 14:13:31 +0200  Johan Bjäreholt <johanbj@axis.com>
+
+	* gst/rtsp-server/rtsp-onvif-media-factory.h:
+	  rtsp-onvif-media-factory: export gst_rtsp_onvif_media_factory_requires_backchannel
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796229
+
+2018-05-09 04:09:02 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Don't deadlock in preroll on early close
+	  If the connection is closed very early, the flushing
+	  marker might not get set and rtspclientsink can get
+	  deadlocked waiting for preroll forever.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=786961
+
+2018-05-05 19:51:52 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Update option names to omit disable_ and with- prefixes
+	  Also yield common options to the outer project (gst-build in our case)
+	  so that they don't have to be set manually.
+
+2018-04-25 11:00:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use -Wl,-Bsymbolic-functions where supported
+	  Just like the autotools build.
+
+2018-04-22 20:09:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* tests/check/Makefile.am:
+	  configure: check for -good and -bad plugins only in uninstalled setup
+	  Avoids confusing configure messages looking or a -good .pc file
+	  that doesn't exist.
+	  Also use plugindir variables that common macros set while at it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795466
+
+2018-04-17 11:03:11 +0200  Joakim Johansson <joakimj@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Fix session timeout
+	  When streaming data over TCP then is not the keep-alive
+	  functionality working.
+	  The reason is that the function do_send_data have changed
+	  to boolean but the code is still checking the received result
+	  from send_func with GST_RTSP_OK.
+	  The result is that a successful send_func will always lead to
+	  that do_send_data is returning false and the keep-alive will
+	  not be updated.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795321
+
+2018-04-02 22:49:35 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	* gst/rtsp-sink/gstrtspclientsink.h:
+	  Implement support for ULP Forward Error Correction
+	  In this initial commit, interface is only exposed for RECORD,
+	  further work will be needed in rtspsrc to support this for
+	  PLAY.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794911
+
+2018-04-17 17:47:30 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-onvif-media.c:
+	  Revert "rtsp-server: Switch around sendonly/recvonly attributes"
+	  This reverts commit 3d275b1345b76151418e3f56ed014d9089ac1a57.
+	  While RFC 3264 (SDP) says that sendonly/recvonly are from the point of view of
+	  the requester, the actual RTSP RFCs (RFC 2326 / 7826) disagree and say
+	  the opposite, just like the ONVIF standard.
+	  Let's follow those RFCs as we're doing RTSP here, and add a property at
+	  a later time if needed to switch to the SDP RFC behaviour.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793964
+
+2018-04-16 10:53:52 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3fa2c9e to ed78bee
+
+2018-04-04 10:06:06 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* tests/check/gst/rtspclientsink.c:
+	  gst: Run everything through gst-indent again
+
+2018-04-03 08:57:47 +0200  Branko Subasic <branko@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/media.c:
+	  rtsp-media: query the position on active streams if media is complete
+	  If the media is complete, i.e. one or more streams have been configured
+	  with sinks, then we want to query the position on those streams only.
+	  A query on an incomplete stream may return a position that originates from
+	  an earlier preroll.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794964
+
+2018-04-02 12:35:04 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: make sure not to use freed string
+	  Set transport string to NULL after freeing it, so that
+	  at worst we get a NULL pointer if constructing a new
+	  transport string fails (which shouldn't really fail here).
+	  Also check return value of that, just in case.
+	  CID 1433768.
+
+2018-03-30 23:34:01 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: do not free string passed to take_header
+
+2018-03-30 23:10:10 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: do not take lock in request_aux_receiver
+	  Added it right before pushing the previous commit, it is
+	  incorrect and deadlocks because this function gets called
+	  from the join_bin thread, which already holds the lock,
+	  that's the reason why request_aux_sender didn't take the
+	  lock either.
+
+2018-03-29 22:49:26 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media-factory.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-media.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-server: add API to enable retransmission requests
+	  "do-retransmission" was previously set when rtx-time != 0,
+	  which made no sense as do-retransmission is used to enable
+	  the sending of retransmission requests, where as rtx-time
+	  is used by the peer to enable storing of buffers in order
+	  to respond to retransmission requests.
+	  rtsp-media now also provides a callback for the
+	  request-aux-receiver signal.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794822
+
+2018-03-29 16:18:42 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: add rtx ssrc to mikey's crypto sessions
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794813
+
+2018-03-29 16:15:45 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Handle the KeyMgmt header in ANNOUNCE response
+	  This in order to be able to decrypt the RTCP backchannel
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794813
+
+2018-03-29 16:12:26 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Send KeyMgmt header in ANNOUNCE response
+	  When sending back an encrypted RTCP back channel, it is useful
+	  for the client to know the encryption key.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794813
+
+2018-03-29 16:06:31 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-stream: extract handle_keymgmt from rtsp-client
+	  rtspclientsink will also need to parse KeyMgmt headers
+	  sent by the server to decrypt the RTCP backchannel stream
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794813
+
+2018-03-29 02:51:02 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	* tests/check/gst/rtspclientsink.c:
+	  rtspclientsink: Fix client ports for the RTCP backchannel
+	  This was broken since the work for delayed transport creation
+	  was merged: the creation of the transports string depends on
+	  calling stream_get_server_port, which only starts returning
+	  something meaningful after a call to stream_allocate_udp_sockets
+	  has been made, this function expects a transport that we parse
+	  from the transport string ...
+	  Significant refactoring is in order, but does not look entirely
+	  trivial, for now we put a band aid on and create a second transport
+	  string after the stream has been completed, to pass it in
+	  the request headers instead of the previous, incomplete one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794789
+
+2018-02-15 13:26:16 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client:Error handling when equal http session cookie
+	  There are some clients that are sending same session cookie on random
+	  basis.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=753616
+
+2018-03-20 16:21:37 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media-factory-uri.c:
+	  rtsp-media-factory-uri: Fix compilation with latest GLib
+	  rtsp-media-factory-uri.c: In function ‘rtsp_media_factory_uri_create_element’:
+	  rtsp-media-factory-uri.c:621:17: error: assignment from incompatible pointer type [-Werror=incompatible-pointer-types]
+	  data->factory = g_object_ref (factory);
+	  ^
+
+2018-03-20 10:21:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
 === release 1.14.0 ===
 
 2018-03-19 20:27:04 +0000  Tim-Philipp Müller <tim@centricular.com>

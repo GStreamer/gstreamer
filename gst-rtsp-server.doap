@@ -32,6 +32,16 @@ RTSP server library based on GStreamer
 
  <release>
   <Version>
+   <revision>1.15.1</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2019-01-17</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-rtsp-server/gst-rtsp-server-1.15.1.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.14.0</revision>
    <branch>master</branch>
    <name></name>
