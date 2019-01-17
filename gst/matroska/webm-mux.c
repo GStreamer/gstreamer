@@ -45,8 +45,8 @@
 #include "webm-mux.h"
 
 #define COMMON_VIDEO_CAPS \
-  "width = (int) [ 16, 4096 ], " \
-  "height = (int) [ 16, 4096 ], " \
+  "width = (int) [ 16, MAX ], " \
+  "height = (int) [ 16, MAX ], " \
   "framerate = (fraction) [ 0, MAX ]"
 
 #define COMMON_AUDIO_CAPS \
