@@ -1,6 +1,6 @@
-This is GStreamer gst-libav 1.15.0.1.
+This is GStreamer gst-libav 1.15.1.
 
-GStreamer 1.15 is the development version leading up to the next major
+GStreamer 1.15 is the development branch leading up to the next major
 stable version which will be 1.16.
 
 The 1.15 development series adds new features on top of the 1.14 series and is
@@ -11,8 +11,8 @@ Full release notes will one day be found at:
 
   https://gstreamer.freedesktop.org/releases/1.16/
 
-Binaries for Android, iOS, Mac OS X and Windows will be provided shortly
-after the release.
+Binaries for Android, iOS, Mac OS X and Windows will usually be provided
+shortly after the release.
 
 This module will not be very useful by itself and should be used in conjunction
 with other GStreamer modules for a complete multimedia experience.
@@ -57,7 +57,7 @@ You can find source releases of gstreamer in the download
 directory: https://gstreamer.freedesktop.org/src/gstreamer/
 
 The git repository and details how to clone it can be found at
-http://cgit.freedesktop.org/gstreamer/gstreamer/
+https://cgit.freedesktop.org/gstreamer/gstreamer/
 
 ==== Homepage ====
 
@@ -65,10 +65,16 @@ The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
-We use GNOME's bugzilla for bug reports and feature requests:
-http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+We have recently moved from GNOME Bugzilla to GitLab on freedesktop.org
+for bug reports and feature requests:
 
-Please submit patches via bugzilla as well.
+  https://gitlab.freedesktop.org/gstreamer
+
+Please submit patches via GitLab as well, in form of Merge Requests. See
+
+  https://gstreamer.freedesktop.org/documentation/contribute/
+
+for more details.
 
 For help and support, please subscribe to and send questions to the
 gstreamer-devel mailing list (see below for details).
@@ -77,8 +83,14 @@ There is also a #gstreamer IRC channel on the Freenode IRC network.
 
 ==== Developers ====
 
-GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned
-from there (see link above).
+GStreamer source code repositories can be found on GitLab on freedesktop.org:
+
+  https://gitlab.freedesktop.org/gstreamer
+
+and can also be cloned from there and this is also where you can submit
+Merge Requests or file issues for bugs or feature requests.
 
 Interested developers of the core library, plugins, and applications should
-subscribe to the gstreamer-devel list.
+subscribe to the gstreamer-devel list:
+
+  https://lists.freedesktop.org/mailman/listinfo/gstreamer-devel

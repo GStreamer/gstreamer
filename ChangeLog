@@ -1,3 +1,573 @@
+=== release 1.15.1 ===
+
+2019-01-17 02:21:41 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.15.1
+
+2019-01-17 02:21:35 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/gst-libav-plugins.args:
+	* docs/plugins/gst-libav-plugins.hierarchy:
+	* docs/plugins/gst-libav-plugins.interfaces:
+	* docs/plugins/inspect/plugin-libav.xml:
+	  Update docs
+
+2019-01-13 00:46:50 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: Fix AVOptionRanges leak
+	  It must be freed with av_opt_freep_ranges as documented.
+
+2018-12-05 17:24:43 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ed78bee to 59cb678
+
+2018-11-15 11:29:54 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n4.1
+
+2018-11-12 13:04:51 +0200  Jordan Petridis <jordan@centricular.com>
+
+	* .gitlab-ci.yml:
+	  Add Gitlab CI configuration
+	  This commit adds a .gitlab-ci.yml file, which uses a feature
+	  to fetch the config from a centralized repository. The intent is
+	  to have all the gstreamer modules use the same configuration.
+	  The configuration is currently hosted at the gst-ci repository
+	  under the gitlab/ci_template.yml path.
+	  Part of https://gitlab.freedesktop.org/gstreamer/gstreamer-project/issues/29
+
+2018-11-08 16:33:57 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  codecmap: Add mapping for Voxware metasound
+	  Allows actually decoding such streams :)
+
+2018-11-05 10:22:19 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n4.0.3
+
+2018-11-05 05:40:03 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	  Update common submodule location
+	  Remove the git directory
+
+2018-11-05 13:17:08 +0800  Haihao Xiang <haihao.xiang@intel.com>
+
+	* .gitmodules:
+	* gst-libav.doap:
+	  Clone the code from gitlab
+	  This fixes https://gitlab.freedesktop.org/gstreamer/gst-libav/issues/43
+
+2018-10-29 14:31:52 +0000  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Remove leftover debug logging
+
+2018-10-16 04:08:57 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: Ensure that ternary operator always evaluates to int64
+	  When building with MSVC, if the 3rd operator is a double, the entire
+	  expression always promoted double, and is then cast to int64.
+	  When TRUE, this evaluates to (gint64) (gdouble) (INT64_MAX)
+	  which overflows to INT64_MIN on MSVC, but not on C99 compilers.
+	  This causes us to fail the g_return_if_fail inside g_param_spec_int64
+	  when built with MSVC.
+
+2018-10-12 19:20:51 +0530  Arun Raghavan <arun@arunraghavan.net>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Expose IFF container support
+	  This exposes support for the "iff" demuxer. This is a general purpose
+	  format, and the reason to expose this now is to allow reading DSD data
+	  (which is supported via a variant called DSDIFF).
+	  More information at:
+	  https://wiki.multimedia.cx/index.php?title=IFF
+	  https://www.loc.gov/preservation/digital/formats/fdd/fdd000245.shtml
+
+2018-10-09 18:07:09 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/libav/meson.build:
+	* meson.build:
+	  meson: Generate a pkgconfig file for gstlibav
+	  This matches all other plugins in the other gstreamer repos. This is
+	  also necessary for generating the correct libtool archive (.la) files
+	  in Cerbero which are needed for static linking on Android and iOS.
+
+2018-10-08 20:55:08 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use new 'python' module instead of deprecated 'python3' one
+	  https://github.com/mesonbuild/meson/pull/4169
+
+2018-10-01 16:13:29 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Don't export symbols from linked static libraries
+	  We don't want to export any symbols from the ffmpeg static libraries
+	  we link to when building inside Cerbero. In the Autotools build, we
+	  pass -export-symbols-regex to libtool which ensures this for us.
+
+2018-09-21 16:01:53 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Remove unneeded check
+	  frame is always valid in this function (but wasn't before the
+	  refactoring from a few months ago).
+	  CID #1439540
+
+2018-09-21 11:30:58 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: Simplify code
+	  The existence of 'opt' is checked, the remainder of the code can therefore
+	  rely on it being valid.
+	  CID #1439537
+
+2018-08-15 19:33:29 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: update internal snapshot to ffmpeg n4.0.2
+
+2018-07-31 18:35:22 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavviddec.c:
+	  decoders: fix draining
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796900
+
+2018-07-03 13:15:54 +0200  Georg Ottinger <g.ottinger@gmx.at>
+
+	* ext/libav/gstavcodecmap.c:
+	  avmux: Place pva case after generic case
+	  In the function gst_ffmpeg_formatid_get_codecids() in the if / else if
+	  construct the special case !strcmp (format_name, "pva") should be
+	  handled before the generic case (plugin->audio_codec !=
+	  AV_CODEC_ID_NONE) || (plugin->video_codec != AV_CODEC_ID_NONE)
+	  This patch fixes the ordering.
+	  I stumbled accorss this issue while adding a new format to
+	  gst_ffmpeg_formatid_get_codecids()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796738
+
+2018-07-23 16:16:10 +0300  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	  avauddec: add support for decoding in non-interleaved layout
+	  This removes the internal interleave loop and always negotiates
+	  the native output layout of the libav decoder. Users can use
+	  audioconvert to interleave if necessary.
+	  Special care has been taken to leave the encoder unaffected by
+	  the changes in avcodecmap, since GstAudioEncoder doesn't support
+	  the non-interleaved layout yet.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705977
+
+2018-07-18 19:41:50 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ext/libav/gstav.c:
+	* ext/libav/gstav.h:
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavviddec.c:
+	  libav: Fix symbol redefine build error
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796827
+
+2018-07-18 15:43:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstav.c:
+	* ext/libav/gstav.h:
+	  Remove obsolete #if 0-ed code
+
+2018-07-16 23:47:45 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/libswscale/Makefile.am:
+	* ext/libswscale/gstffmpegscale.c:
+	  Remove swscale plugin code
+	  This has been disabled for 5.5 years, time to remove it.
+
+2018-07-16 19:45:35 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg release/4.0 HEAD
+
+2018-07-16 08:44:45 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: Properly initalize GValue
+	  .. to the expected property value type.
+
+2018-07-13 18:03:27 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: actually remove call to g_object_getv
+	  (Sorry about that)
+
+2018-07-13 17:24:07 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavviddec.c:
+	  av*dec: Ignore decoding errors
+	  We were ignoring these before the port to 4.0, interpreting them
+	  as GST_FLOW_ERROR / GST_ELEMENT_ERROR causes check failures.
+	  We should start using GST_*_DECODER_ERROR in latter commits,
+	  for now simply restore the previous behaviour.
+
+2018-07-13 17:21:25 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: use g_object_get_property, not g_object_getv
+	  I simply confused those two, we didn't need g_object_getv
+	  here anyway.
+
+2018-07-12 22:05:27 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: ignore some generic properties
+	  We expose profile, level and colorimetry / colorspaces through
+	  caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-12 21:57:57 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: add skip support to overrides system
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-04 00:21:45 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* meson.build:
+	  meson: add FFmpeg meson as a fallback
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-04 00:18:44 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  auddec: fix luck-based sinkpad access
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-02 17:55:00 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* configure.ac:
+	* meson.build:
+	  Update ffmpeg version requirements
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-02 17:39:30 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavaudioresample.c:
+	* ext/libav/gstavscale.c:
+	  Remove obsolete scale and resample sources
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-02 17:38:13 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* configure.ac:
+	  configure: update libav configure args
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-02 17:31:08 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to n4.0.1 release
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-02 04:14:09 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* meson.build:
+	  meson: stop ignoring deprecation warnings!
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-02 04:12:36 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: port to send_frame / receive_packet
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-02 04:05:19 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: fix invalid alignment calculations.
+	  avcodec_align_dimensions2 uses context->pix_fmt to make its
+	  calculations, we thus need to make sure it is adequately set
+	  when calling it.
+	  Fixes:
+	  gst-launch-1.0 videotestsrc ! video/x-raw, width=1920, height=1080 \
+	  ! avenc_mpeg4 ! avdec_mpeg4 ! xvimagesink
+	  This showed invalid writes under valgrind, then segfault.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-01 17:09:05 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: port to send_frame / receive_packet
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-01 02:34:41 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: fix remaining warnings
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-01 02:23:06 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavauddec.h:
+	  avauddec: fix remaining warnings
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-01 02:21:46 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: port to new decoding API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-30 23:28:31 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: further cleanup
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-30 23:27:06 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstav.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavaudenc.h:
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavcfg.h:
+	* ext/libav/gstavvidenc.c:
+	  avaudenc: install options generically
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-30 02:18:43 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: fix signed/unsigned comparisons
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-30 02:14:33 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avvidec: port to new decoding API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-29 21:54:11 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstav.c:
+	  gstav: stop calling deprecated registration methods
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-29 21:46:00 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  auddec: stop using deprecated getters
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-29 21:38:50 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavmux.c:
+	  av_oformat_next (deprecated) -> av_muxer_iterate
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-29 21:37:06 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavdemux.c:
+	  av_iformat_next (deprecated) -> av_demuxer_iterate
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-29 21:21:30 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: remove obsolete version check
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-29 21:20:36 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  av_codec_next (deprecated) -> av_codec_iterate
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-29 20:59:46 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: port to AVCodecParameters
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-29 20:37:14 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: port to AVCodecParameters
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-29 04:52:02 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavdeinterlace.c:
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavutils.c:
+	* ext/libav/gstavutils.h:
+	  Remove all uses of AVPicture
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-07-02 17:10:03 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: remove obsolete setting of rc_strategy
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-06-27 20:41:37 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavcfg.h:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavvidenc.c:
+	* ext/libav/gstavvidenc.h:
+	  Refactor avcfg / avvidenc
+	  We were previously installing hardcoded properties for all
+	  video encoders, refactor to instead use FFmpeg's AVOption API.
+	  avvidenc still exposes a few properties related to the pass
+	  mechanism: while the AVOption API allows specifying both passes
+	  as flags at the same time, this is not practical in GStreamer's
+	  context, where passes need to be run separately using a stats file.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-04-30 16:02:21 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Stop using deperated EDGE API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-04-30 15:54:44 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	* ext/libav/gstavscale.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  Use AV_ namespace for all CODEC_ macro
+	  The remaining use of CODEC_ are codec flags that has been moved into the
+	  new codec private properties or have been deperated. Will be fixed in
+	  later patches.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-04-30 15:41:40 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavviddec.c:
+	  Use AV_ namespace for INPUT_BUFFER_PADDING_SIZE
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-04-30 15:37:50 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstav.c:
+	  Don't include deprecated avfiltergraph.h header
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792900
+
+2018-05-31 17:28:44 +0800  Roland Jon <rlandjon@gmail.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: fix memory leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796452
+
+2018-05-11 14:24:03 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavauddec.h:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	* ext/libav/gstavvidenc.c:
+	* ext/libav/gstavvidenc.h:
+	  libav: Switch to common include
+
+2018-05-11 14:19:42 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Remove unneeded constant variable
+	  Since the removal of the gif hacks, the variable was always set to
+	  its default value of FALSE. Just remove it.
+	  CID #1433656
+
+2018-02-22 15:57:24 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avvidec: Expose Closed Caption as GstVideoCaptionMeta
+
+2018-05-05 18:00:06 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavdemux.c:
+	  Expose support for DSD
+	  DSD is usually wrapped in DSF, for which we now also expose the
+	  demuxer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=721186
+
+2014-07-12 15:26:36 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/libav/gstavdemux.c:
+	  gstavdemux: adjust seeking offset according to start_time
+	  https://bugzilla.gnome.org/show_bug.cgi?id=733094
+
+2018-05-05 20:03:49 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Update option names to omit disable_ and with- prefixes
+	  Also yield common options to the outer project (gst-build in our case)
+	  so that they don't have to be set manually.
+
+2018-05-01 14:57:43 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst-libs/ext/gas-preprocessor:
+	  Update gas-preprocessor submodule
+
+2018-05-01 05:19:28 +1000  Jan Schmidt <jan@centricular.com>
+
+	* configure.ac:
+	  configure: Always use full path for gas-preprocessor PATH entry
+	  Don't pass a relative path to gas-preprocessor, always use an
+	  absolute path to make sure it's found
+
+2018-04-28 00:14:45 +1000  Jan Schmidt <jan@centricular.com>
+
+	* configure.ac:
+	  configure: fix handling of the input AS var passed to ffmpeg
+	  Store the original AS environment variable passed to configure
+	  correctly, and export it so it's actually available to the sub-process
+	  when configuring the embedded ffmpeg
+
+2018-04-16 10:53:36 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3fa2c9e to ed78bee
+
+2018-03-20 09:41:11 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* meson.build:
+	  Back to development
+
 === release 1.14.0 ===
 
 2018-03-19 20:25:38 +0000  Tim-Philipp Müller <tim@centricular.com>
