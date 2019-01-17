@@ -1,3 +1,798 @@
+=== release 1.15.1 ===
+
+2019-01-17 02:30:06 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.15.1
+
+2019-01-14 18:32:23 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-formatter.c:
+	  ges: Register formatters during meta registration
+	  So that formatters implemented outside GES itself are registered
+
+2019-01-14 18:30:38 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges.c:
+	* ges/ges.h:
+	  ges: Add a ges_is_initialized function
+
+2019-01-14 18:28:52 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-formatter.c:
+	  formatter: sink ref of the temporary GESFormatter
+	  To accomodate formatters implemented with bindings/in python
+
+2019-01-09 17:11:37 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Ensure timeline state to be NULL on dispose
+	  The GESTimeline's state might not be synced with parent
+
+2019-01-09 16:23:54 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Handle state change failure
+	  Whatever the reason for failure, try cleanup child elements
+	  and internal thread.
+
+2019-01-05 00:23:20 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-meta-container.c:
+	  ges-meta-container: Fix warning message
+
+2019-01-04 05:31:39 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-meta-container.c:
+	  ges-meta-container: Minor documentation fixes
+
+2019-01-04 12:36:20 +0100  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track-element.c:
+	  track-element: Ignore writability for whitlisted children props
+	  If the property was explicitely whitelisted, we should expose it
+	  in any case.
+	  This was a regression from 835d69374978208bc73a8f823b899f624dda9479
+
+2018-12-30 19:49:44 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ges/ges-smart-video-mixer.c:
+	  ges: avoid use of G_DECLARE_FINAL_TYPE which requires GLib 2.44
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/48
+
+2018-12-27 10:54:28 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-container.c:
+	  container: Fix GHashTable leak
+
+2018-12-27 00:15:30 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-container.c:
+	  container: Fix wrong finalize() usage
+	  finalize must chain up to parent's finalize(), not dispose()
+
+2018-12-27 00:14:03 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-timeline-element.c:
+	  timeline-element: Chain up to parent impl. on dispose()
+	  ... as documented in glib
+
+2018-09-24 15:41:24 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* ges/Makefile.am:
+	* ges/ges-asset.c:
+	* ges/ges-audio-source.c:
+	* ges/ges-audio-test-source.c:
+	* ges/ges-audio-track.c:
+	* ges/ges-audio-transition.c:
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-auto-transition.c:
+	* ges/ges-base-effect-clip.c:
+	* ges/ges-base-effect.c:
+	* ges/ges-base-transition-clip.c:
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-clip-asset.c:
+	* ges/ges-clip.c:
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-container.c:
+	* ges/ges-effect-asset.c:
+	* ges/ges-effect-clip.c:
+	* ges/ges-effect.c:
+	* ges/ges-enums.c:
+	* ges/ges-extractable.c:
+	* ges/ges-formatter.c:
+	* ges/ges-group.c:
+	* ges/ges-image-source.c:
+	* ges/ges-layer.c:
+	* ges/ges-meta-container.c:
+	* ges/ges-multi-file-source.c:
+	* ges/ges-operation-clip.c:
+	* ges/ges-operation.c:
+	* ges/ges-overlay-clip.c:
+	* ges/ges-pipeline.c:
+	* ges/ges-pitivi-formatter.c:
+	* ges/ges-prelude.h:
+	* ges/ges-project.c:
+	* ges/ges-screenshot.c:
+	* ges/ges-smart-adder.c:
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-source-clip.c:
+	* ges/ges-source.c:
+	* ges/ges-structure-parser.c:
+	* ges/ges-structured-interface.c:
+	* ges/ges-test-clip.c:
+	* ges/ges-text-overlay-clip.c:
+	* ges/ges-text-overlay.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-title-clip.c:
+	* ges/ges-title-source.c:
+	* ges/ges-track-element-asset.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track.c:
+	* ges/ges-transition-clip.c:
+	* ges/ges-transition.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-clip.c:
+	* ges/ges-utils.c:
+	* ges/ges-video-source.c:
+	* ges/ges-video-test-source.c:
+	* ges/ges-video-track.c:
+	* ges/ges-video-transition.c:
+	* ges/ges-video-uri-source.c:
+	* ges/ges-xml-formatter.c:
+	* ges/meson.build:
+	* meson.build:
+	  WIP: ges: fix API export/import and 'inconsistent linkage' on MSVC
+	  Export GES library API in headers when we're building the
+	  library itself, otherwise import the API from the headers.
+	  This fixes linker warnings on Windows when building with MSVC.
+	  Fix up some missing config.h includes when building the lib which
+	  is needed to get the export api define from config.h
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/42
+
+2018-12-10 13:28:16 +1100  Matthew Waters <matthew@centricular.com>
+
+	* ges/meson.build:
+	  build: also allow building static libraries for e.g. Android/iOS
+
+2018-12-05 17:25:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ed78bee to 59cb678
+
+2018-11-30 12:41:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pitivi-formatter.c:
+	* ges/ges.c:
+	* ges/ges.h:
+	* ges/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	  Add a way to disable xptv support
+	  This formatter is in very bad shape and is generally not useful.
+	  It has been deprecated since 1.0... and I bet noone uses it.
+
+2018-11-28 05:48:37 +0200  Jordan Petridis <jordan@centricular.com>
+
+	* examples/c/play_timeline_with_one_clip.c:
+	  Run gst-indent through the files
+	  This is required before we enabled an indent test in the CI.
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer-project/issues/33
+
+2018-11-27 12:09:20 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track-element.c:
+	  track: Fix documentation about "binding_type"
+
+2018-11-26 17:18:25 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	  Revert "meson: Fix the reference to libxml2 path"
+	  It seemed to be what the wrap file expected but in the end it is
+	  just a bug in meson which is now fixed.
+	  This reverts commit cc5d74d0be30dab92d1540ed749eaf4dcedd9171.
+
+2018-11-26 15:57:30 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	  meson: Fix the reference to libxml2 path
+
+2018-11-26 14:50:29 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	  meson: Add a fallback for libxml2
+
+2018-11-26 14:50:03 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-validate.c:
+	  validate: cleanup the playback-time from validate structures
+	  Otherwise we might fail on them in the ges-structure-interface
+
+2018-11-23 11:22:03 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-effect.c:
+	  effect: Create ghost pads ourself
+	  As we can have effects with several pads and the default ghosting
+	  doesn't allow that.
+	  This way we also filter the pads to ghost to match our track type.
+
+2018-11-23 11:20:00 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-effect-asset.c:
+	  effect: Consider the "Filter" classification to determine effect media type
+
+2018-11-12 12:47:02 +0200  Jordan Petridis <jordan@centricular.com>
+
+	* .gitlab-ci.yml:
+	  Add Gitlab CI configuration
+	  This commit adds a .gitlab-ci.yml file, which uses a feature
+	  to fetch the config from a centralized repository. The intent is
+	  to have all the gstreamer modules use the same configuration.
+	  The configuration is currently hosted at the gst-ci repository
+	  under the gitlab/ci_template.yml path.
+	  Part of https://gitlab.freedesktop.org/gstreamer/gstreamer-project/issues/29
+
+2018-10-09 00:45:29 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_clip.py:
+	* tests/check/python/test_group.py:
+	  clip: Emit additional signals after child-removed
+	  When removing an effect from a clip, first the notify::priority signals
+	  were being emitted for the remaining effects which changed priority, and only
+	  at the end the child-removed signal. Now the child-removed signal is emitted
+	  first.
+
+2018-11-05 13:57:25 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	  timeline-element: Fix compilation errors
+	  There were some code errors introduced in commit 6b738b7a
+
+2018-11-04 20:47:01 +1100  Matthew Waters <matthew@centricular.com>
+
+	* meson.build:
+	* plugins/nle/meson.build:
+	  nle: install pkg-config file for plugin
+
+2018-11-05 11:00:58 +0100  Corentin Noël <corentin.noel@collabora.com>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	  timeline-element: Align virtual methods and invokers prototypes
+
+2018-11-05 05:51:47 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	* gst-editing-services.doap:
+	  Update git location to gitlab
+
+2018-11-02 14:32:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track.c:
+	  ges: Check the thread from which our API is used
+	  And add some missing API guards
+
+2018-11-02 09:30:28 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	  ges: Mark GValue in child property setters as const
+	  We can't change the vmethod at this point so just cast. This makes
+	  the API more explicit so it is better in all cases.
+
+2018-10-31 10:38:59 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/Makefile.am:
+	* ges/ges.h:
+	* ges/meson.build:
+	  Keep GESSmartVideoMixer out of the Gir and add geseffectasset.h to ges.h
+	  Fixing gstreamer-sys rust bindings.
+
+2018-10-31 10:06:08 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/Makefile.am:
+	* ges/meson.build:
+	  Fix the `package` name in the gir to match the `.pc` filename
+
+2018-10-28 15:55:23 +0000  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-video-transition.c:
+	* ges/gstframepositioner.c:
+	  video-transition: Port to the new 'operator' API in compositor
+	  Now subclassing a ghostpad with an alpha property so that
+	  we can multiply the alpha of the frame positioning meta
+	  and the alpha of that pad, setting it on the compositor pad.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797169
+
+2018-10-28 15:33:31 +0000  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-video-transition.c:
+	  Revert "video-transition: Make use of the new `compositor::crossfade-ratio` property"
+	  This reverts commit 57be9b67998bf5fef81a61c645b167c3857ed35b.
+
+2018-10-28 13:29:43 +0000  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/__init__.py:
+	  python: Remove __init__.py
+	  It is not needed with latest python
+
+2018-09-30 17:44:08 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-source.c:
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Add a function that prints stacks as debug info
+
+2018-10-28 11:05:38 +0000  Philippe Normand <philn@igalia.com>
+
+	* bindings/python/gi/overrides/__init__.py:
+	  python: Remove debug print
+
+2018-10-22 08:13:07 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-xml-formatter.c:
+	  ges: Fix compilation with latest GLib
+	  g_clear_pointer() is now preserving the type of its arguments for the
+	  free function.
+	  ges-xml-formatter.c: In function ‘_dispose’:
+	  ges-xml-formatter.c:1635:7: error: function called through a non-compatible type [-Werror]
+	  (GDestroyNotify) g_hash_table_unref);
+	  /usr/include/glib-2.0/glib/gmem.h:121:8: note: in definition of macro ‘g_clear_pointer’
+	  (destroy) (_ptr);                                                        \
+	  ^~~~~~~
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797310
+
+2018-10-08 23:25:21 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use 'python' module to find python instead of deprecated 'python3' one
+	  https://github.com/mesonbuild/meson/pull/4169
+
+2018-09-05 22:55:02 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-audio-source.c:
+	* ges/ges-audio-test-source.c:
+	* ges/ges-audio-track.c:
+	* ges/ges-audio-transition.c:
+	* ges/ges-audio-uri-source.c:
+	* ges/ges-base-effect-clip.c:
+	* ges/ges-base-effect.c:
+	* ges/ges-base-transition-clip.c:
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-clip-asset.c:
+	* ges/ges-clip.c:
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-container.c:
+	* ges/ges-effect-asset.c:
+	* ges/ges-effect-clip.c:
+	* ges/ges-effect.c:
+	* ges/ges-formatter.c:
+	* ges/ges-group.c:
+	* ges/ges-image-source.c:
+	* ges/ges-layer.c:
+	* ges/ges-multi-file-source.c:
+	* ges/ges-operation-clip.c:
+	* ges/ges-operation.c:
+	* ges/ges-overlay-clip.c:
+	* ges/ges-pipeline.c:
+	* ges/ges-pitivi-formatter.c:
+	* ges/ges-project.c:
+	* ges/ges-source-clip.c:
+	* ges/ges-source.c:
+	* ges/ges-test-clip.c:
+	* ges/ges-text-overlay-clip.c:
+	* ges/ges-text-overlay.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-title-clip.c:
+	* ges/ges-title-source.c:
+	* ges/ges-track-element-asset.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track.c:
+	* ges/ges-transition-clip.c:
+	* ges/ges-transition.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-clip.c:
+	* ges/ges-video-source.c:
+	* ges/ges-video-test-source.c:
+	* ges/ges-video-track.c:
+	* ges/ges-video-transition.c:
+	* ges/ges-video-uri-source.c:
+	* ges/ges-xml-formatter.c:
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nlesource.c:
+	* tools/ges-launcher.c:
+	  Update for g_type_class_add_private() deprecation in recent GLib
+
+2018-09-05 21:49:09 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* tests/check/python/test_clip.py:
+	  clip: Resync priorities when removing an effect
+	  When removing a top effect in the list of top effects, other
+	  effects priorities need to take that into account to avoid
+	  holes in the indices.
+
+2018-08-03 14:02:58 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges.c:
+	  ges: Check that nle is avalaible when initializing
+
+2018-09-01 12:17:08 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	* tests/meson.build:
+	  meson: Add a feature option for tests
+	  This autodetection is needed on iOS inside Cerbero where
+	  gstreamer-check-1.0 is not available.
+
+2018-08-31 14:44:58 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ges/meson.build:
+	* meson.build:
+	  meson: Maintain macOS ABI through dylib versioning
+	  Requires Meson 0.48, but the feature will be ignored on older versions
+	  so it's safe to add it without bumping the requirement.
+	  Documentation:
+	  https://github.com/mesonbuild/meson/blob/master/docs/markdown/Reference-manual.md#shared_library
+
+2018-08-15 19:14:30 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* tests/check/meson.build:
+	  meson: There is no gstreamer-plugins-good-1.0.pc
+	  There is no installed version of that, only an uninstalled version.
+
+2018-07-29 16:20:50 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-xml-formatter.c:
+	  formatter: Fix mixup in variable check
+
+2018-07-28 14:29:11 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Bump format version
+	  Previous commit makes the format not forward compat.
+
+2018-07-28 12:16:36 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-container.c:
+	* ges/ges-internal.h:
+	* ges/ges-transition-clip.c:
+	* ges/ges-xml-formatter.c:
+	* tests/check/python/test_clip.py:
+	  formatter: Serialize Transition border and invert properties
+	  Marking them as children properties and properly allow serializing
+	  clips children properties.
+	  This doesn't handle several TrackElement of a same type with
+	  different property values but this require more worked already
+	  marked as fixme to allow specifying full path of elements in the
+	  children properties API.
+	  See https://gitlab.gnome.org/GNOME/pitivi/issues/1687
+
+2018-07-27 22:11:33 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	  project: Compute relocation URIs in missing-uri signal
+	  Until know we were doing it outside of the signal and subclasses didn't
+	  have a chance to know that some assets was relocated.
+	  This is required so that Pitivi can handle proxy delation and relocated
+	  assets.
+	  Required for https://gitlab.gnome.org/GNOME/pitivi/issues/2203
+
+2018-07-25 17:20:02 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* docs/libs/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	  meson: Convert common options to feature options
+	  The remaining automagic options are in tests and examples.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795107
+
+2018-07-23 00:07:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Let testsuites define scenarios path
+	  The code was not taking into account the fact that testsuite could be
+	  located in a different folder that the default one.
+	  Now the testsuite is responsible for providing a path if it wants
+	  to set extra scenarios or the user can set one by hand.
+
+2018-07-14 09:00:51 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pitivi-formatter.c:
+	  pitivi-formatter: Do not g_file_test on a NULL pointer
+
+2018-07-18 12:38:04 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Rename outside_segment to seek_segment
+	  This segment is representing the last seek received
+	  inside the composition. Or a simply initialized segment
+	  if need seek occurred.
+
+2018-07-18 12:52:59 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/nle/tempochange.c:
+	  tests: Minor assertion enahncements
+
+2018-07-19 10:55:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	  project: Do not emit 'error-loading-asset' when we are trying to update the ID
+
+2018-07-19 22:06:54 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Handle scenario only based tests
+	  Meaning tests that do not need project at all
+
+2018-07-12 13:53:44 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track.c:
+	  track: Set restriction caps when update_restriction before caps being set
+	  And stop leaking intermediary restriction caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796802
+
+2018-07-08 16:09:46 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	  python:overrides: Remove spurious print
+
+2018-07-08 10:36:36 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	* bindings/python/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	* tests/check/python/overrides_hack.py:
+	* tests/check/python/test_clip.py:
+	* tests/check/python/test_group.py:
+	* tests/check/python/test_timeline.py:
+	  python: Fix GES.Timelineset_child_property
+	  Implementing it in the overrides as PyGObject won't be able to properly
+	  convert python values to GValues in some cases. Using
+	  g_object_set_property works as some logic is implemented inside
+	  PyGObject for that particular case. This is a "regression" due
+	  to https://bugzilla.gnome.org/review?bug=769789&attachment=348766 were
+	  we end up with an OverflowError while setting G_TYPE_UINT children
+	  properties.
+
+2018-04-01 16:22:16 +0200  Bastian Köcher <git@kchr.de>
+
+	* ges/meson.build:
+	  meson: fix install dir for configure files
+	  Nixos configures a custom includedir.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794856
+
+2018-07-01 16:22:24 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/Makefile.am:
+	* meson.build:
+	  Set GLib log domain to GES
+
+2018-07-01 12:21:54 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-group.c:
+	  group: Handle clips that get readded to a layer and inside a group
+
+2018-06-26 16:21:22 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ges/ges-asset.c:
+	  asset: documentation fix
+
+2018-06-15 16:49:55 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* configure.ac:
+	* tests/check/Makefile.am:
+	* tests/check/meson.build:
+	  tests: Use gst-validate-launcher to run python tests
+
+2018-06-14 17:07:10 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Rename the gtkdoc option to gtk_doc
+	  This is what other modules use
+
+2018-05-20 23:48:39 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/c/Makefile.am:
+	  examples: override -Werror
+	  Don't want to error out on deprecated API warnings and such.
+	  Just drop -Werror for the examples until someone updates them
+	  to recent gtk3 API. Maybe showing the warnings will motivate
+	  someone.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796243
+
+2018-05-20 23:47:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	  examples: always build against gtk3
+	  Drop gtk2 option.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796243
+
+2018-05-20 23:46:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/c/ges-ui.c:
+	  examples: ges-ui: fix some gtk2-ism
+	  Still lots of deprecated API to update.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796243
+
+2018-05-13 21:12:35 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* tests/check/python/test_timeline.py:
+	  clip: Make sure to never snap when splitting clips
+	  It makes no sense to snap in that context.
+	  https://gitlab.gnome.org/GNOME/pitivi/issues/2193
+
+2018-05-13 16:37:08 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Run IQA tests when possible
+	  Meaning that a reference file has to be present on disk with a
+	  `.expected_result` extension.
+
+2018-04-20 17:56:15 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/validate/geslaunch.py:
+	  validate: Stop forcing I420 in profiles restriction caps
+	  This was a workaround for encoders bad behavior in the reconfigure case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795420
+
+2018-05-05 19:34:14 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Update option names to omit disable_ and with- prefixes
+	  Also yield common options to the outer project (gst-build in our case)
+	  so that they don't have to be set manually.
+
+2018-04-25 11:01:01 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use -Wl,-Bsymbolic-functions where supported
+	  Just like the autotools build.
+
+2018-04-20 18:45:19 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Properly error out when linking fails
+	  In the rendering case we were getting random issues and often the
+	  pipeline was not be able to preroll as some pad were not linked inside
+	  encodebin.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795422
+
+2018-04-20 17:54:12 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track-element.c:
+	  track-element: Fix the way we look for properties on simple elements
+	  Refactor so that the same code is used to add children properties from
+	  bin children and when inspecting a single element.
+
+2018-04-20 17:36:55 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Update caps only when rendering as comment suggests
+	  We used to update caps for any more because of missing brackets.
+
+2018-04-20 17:35:06 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-effect.c:
+	  effect: Allow setting properties on any element specified by the user
+	  Those are the elements he cares about and we should expose their APIs
+	  as is, event if they are not classified as effects. For example if
+	  the user want to use a capsfilter as effect, he should be able to set
+	  its caps.
+
+2018-04-20 17:34:17 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  xml-formatter: Print error if an effect can't be set when deserializing
+
+2018-04-16 10:53:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3fa2c9e to ed78bee
+
+2018-03-31 13:39:54 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-internal.h:
+	* ges/ges-layer.c:
+	* ges/ges-timeline.c:
+	* tests/check/ges/layer.c:
+	  Deprecate ges_layer_set_priority
+	  Keep old behaviour but deprecate the method and property as
+	  ges_timeline_move_layer should be used instead.
+
+2015-12-12 11:29:50 +0000  Thibault Saunier <tsaunier@gnome.org>
+
+	* docs/libs/ges-sections.txt:
+	* ges/ges-timeline.c:
+	* ges/ges-timeline.h:
+	  timeline: Add a method to move layers around
+	  summary_:
+	  This way the timeline can handle all priorities for the user
+	  making the API simpler to use.
+	  API:
+	  + ges_timeline_move_layer
+	  reviewers_: Mathieu_Du
+	  Differential Revision: https://phabricator.freedesktop.org/D232
+
+2018-03-31 11:24:23 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-element.h:
+	  timeline-element: Fix ABI breakage
+	  New fields in structure should be added in place of the padding
+
+2018-03-31 10:38:19 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/libs/ges-sections.txt:
+	  docs: Move timeline related doc to the timeline section
+	  It wrongly was in the layers
+
+2018-03-30 18:17:13 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	* ges/ges-structure-parser.c:
+	* ges/ges-structured-interface.c:
+	* ges/parse.l:
+	  ges-launcher: Add support for titles
+
+2018-03-30 17:41:49 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-command-line-formatter.c:
+	  command-line-formatter: Refactor to generate the documentation automatically
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794837
+
+2018-03-26 12:13:25 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-effect.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	  ges: Update the media-duration-factor each time a child property is set
+	  Otherwise the changes won't be reflected in the NLE backend.
+	  This makes speed changes working inside ges-launch-1.0
+	  ges-launch-1.0 +clip /path/to/file i=10 d=5 +effect videorate set-rate 5.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794699
+
+2018-03-26 18:56:03 +0530  Suhas Nayak <suhas2go@gmail.com>
+
+	* ges/ges-effect.c:
+	  ges: Register videorate::rate as a rate changing property
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794699
+
+2018-03-20 10:24:35 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
 === release 1.14.0 ===
 
 2018-03-19 20:28:10 +0000  Tim-Philipp Müller <tim@centricular.com>
