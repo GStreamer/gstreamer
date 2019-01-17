@@ -66,7 +66,6 @@ enum
 {
   COMMIT_SIGNAL,
   COMMITED_SIGNAL,
-  QUERY_POSITION_SIGNAL,
   LAST_SIGNAL
 };
 
@@ -1006,22 +1005,6 @@ nle_composition_class_init (NleCompositionClass * klass)
       0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
       G_TYPE_BOOLEAN);
 
-  /**
-   * NleComposition::query-position
-   * @comp: a #NleComposition
-   *
-   * A signal that *has* to be connected and which should return the current
-   * position of the pipeline.
-   *
-   * This signal is used in order to know the current position of the whole
-   * pipeline so it is user's responsability to give that answer as there
-   * is no other way to precisely know the position in the whole pipeline.
-   */
-  _signals[QUERY_POSITION_SIGNAL] =
-      g_signal_new ("query-position", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE,
-      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_UINT64, 0, NULL);
-
   GST_DEBUG_REGISTER_FUNCPTR (_seek_pipeline_func);
   GST_DEBUG_REGISTER_FUNCPTR (_remove_object_func);
   GST_DEBUG_REGISTER_FUNCPTR (_add_object_func);
@@ -1472,16 +1455,40 @@ get_current_position (NleComposition * comp)
   NleCompositionPrivate *priv = comp->priv;
   gboolean res;
   gint64 value = GST_CLOCK_TIME_NONE;
+  GstObject *parent, *tmp;
 
   GstPad *peer;
 
-  g_signal_emit (comp, _signals[QUERY_POSITION_SIGNAL], 0, &value);
+  parent = gst_object_get_parent (GST_OBJECT (comp));
+  while ((tmp = parent)) {
+    if (NLE_IS_COMPOSITION (parent)) {
+      GstClockTime parent_position =
+          get_current_position (NLE_COMPOSITION (parent));
 
-  if (value >= 0) {
-    GST_DEBUG_OBJECT (comp, "Got position %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (value));
+      if (parent_position > NLE_OBJECT_STOP (comp)
+          || parent_position < NLE_OBJECT_START (comp)) {
+        GST_INFO_OBJECT (comp,
+            "Global position outside of subcomposition, returning TIME_NONE");
 
-    return value;
+        return GST_CLOCK_TIME_NONE;
+      }
+
+      value =
+          parent_position - NLE_OBJECT_START (comp) + NLE_OBJECT_INPOINT (comp);
+    }
+
+    if (GST_IS_PIPELINE (parent)) {
+      if (gst_element_query_position (GST_ELEMENT (parent), GST_FORMAT_TIME,
+              &value)) {
+
+        gst_object_unref (parent);
+        return value;
+      }
+    }
+
+
+    parent = gst_object_get_parent (GST_OBJECT (parent));
+    gst_object_unref (tmp);
   }
 
   /* Try querying position downstream */

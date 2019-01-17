@@ -58,8 +58,6 @@ typedef struct
   GstPad *srcpad;               /* Timeline source pad */
   GstPad *playsinkpad;
   GstPad *encodebinpad;
-
-  guint query_position_id;
 } OutputChain;
 
 
@@ -753,18 +751,6 @@ no_track:
   }
 }
 
-static GstClockTime
-_query_position_cb (GstElement * composition, GESPipeline * self)
-{
-  gint64 position;
-
-  if (gst_element_query_position (GST_ELEMENT (self), GST_FORMAT_TIME,
-          &position))
-    return position;
-
-  return GST_CLOCK_TIME_NONE;
-}
-
 static void
 _link_track (GESPipeline * self, GESTrack * track)
 {
@@ -814,10 +800,6 @@ _link_track (GESPipeline * self, GESTrack * track)
 
     return;
   }
-
-  chain->query_position_id =
-      g_signal_connect (ges_track_get_composition (track), "query-position",
-      G_CALLBACK (_query_position_cb), self);
 
   chain->srcpad = pad;
   gst_object_unref (pad);
@@ -989,11 +971,6 @@ _unlink_track (GESPipeline * self, GESTrack * track)
 
   gst_element_set_state (chain->tee, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (self), chain->tee);
-  if (chain->query_position_id) {
-    g_signal_handler_disconnect (ges_track_get_composition (track),
-        chain->query_position_id);
-    chain->query_position_id = 0;
-  }
 
   self->priv->chains = g_list_remove (self->priv->chains, chain);
   g_free (chain);

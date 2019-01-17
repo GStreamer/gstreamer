@@ -196,18 +196,6 @@ GST_START_TEST (test_remove_invalid_object)
 
 GST_END_TEST;
 
-static GstClockTime
-_query_position_cb (GstElement * composition, GstPipeline * pipeline)
-{
-  gint64 position;
-
-  if (gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
-          &position))
-    return position;
-
-  return GST_CLOCK_TIME_NONE;
-}
-
 GST_START_TEST (test_remove_last_object)
 {
   GstBin *composition;
@@ -226,9 +214,6 @@ GST_START_TEST (test_remove_last_object)
 
   composition = GST_BIN (gst_element_factory_make ("nlecomposition",
           "composition"));
-
-  g_signal_connect (composition, "query-position",
-      G_CALLBACK (_query_position_cb), pipeline);
 
   gst_element_set_state (GST_ELEMENT (composition), GST_STATE_READY);
 
