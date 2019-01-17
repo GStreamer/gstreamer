@@ -1,3 +1,4 @@
+GSocketConnectable GObject
 GstChildProxy GObject
 GstTagSetter GstElement
 GstTagXmpWriter GstElement

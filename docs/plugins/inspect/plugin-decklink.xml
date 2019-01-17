@@ -3,7 +3,7 @@
   <description>Blackmagic Decklink plugin</description>
   <filename>../../sys/decklink/.libs/libgstdecklink.so</filename>
   <basename>libgstdecklink.so</basename>
-  <version>1.15.0.1</version>
+  <version>1.15.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>

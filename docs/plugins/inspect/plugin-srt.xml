@@ -1,0 +1,103 @@
+<plugin>
+  <name>srt</name>
+  <description>transfer data via SRT</description>
+  <filename>../../ext/srt/.libs/libgstsrt.so</filename>
+  <basename>libgstsrt.so</basename>
+  <version>1.15.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>srtclientsink</name>
+      <longname>SRT sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data over the network via SRT</description>
+      <author>Justin Kim &lt;justin.joy.9to5@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>srtclientsrc</name>
+      <longname>SRT source</longname>
+      <class>Source/Network</class>
+      <description>Receive data over the network via SRT</description>
+      <author>Justin Kim &lt;justin.joy.9to5@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>srtserversink</name>
+      <longname>SRT sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data over the network via SRT</description>
+      <author>Justin Kim &lt;justin.joy.9to5@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>srtserversrc</name>
+      <longname>SRT source</longname>
+      <class>Source/Network</class>
+      <description>Receive data over the network via SRT</description>
+      <author>Justin Kim &lt;justin.joy.9to5@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>srtsink</name>
+      <longname>SRT sink</longname>
+      <class>Sink/Network</class>
+      <description>Send data over the network via SRT</description>
+      <author>Justin Kim &lt;justin.joy.9to5@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>srtsrc</name>
+      <longname>SRT source</longname>
+      <class>Source/Network</class>
+      <description>Receive data over the network via SRT</description>
+      <author>Justin Kim &lt;justin.joy.9to5@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

@@ -3,10 +3,10 @@
   <description>Video sink using the Linux kernel mode setting API</description>
   <filename>../../sys/kms/.libs/libgstkms.so</filename>
   <basename>libgstkms.so</basename>
-  <version>1.15.0.1</version>
+  <version>1.15.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

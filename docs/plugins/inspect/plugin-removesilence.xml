@@ -3,10 +3,10 @@
   <description>Removes silence from an audio stream</description>
   <filename>../../gst/removesilence/.libs/libgstremovesilence.so</filename>
   <basename>libgstremovesilence.so</basename>
-  <version>1.15.0.1</version>
+  <version>1.15.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,7 +15,8 @@
       <class>Filter/Effect/Audio</class>
       <description>Removes all the silence periods from the audio stream.</description>
       <author>Tiago Katcipis &lt;tiagokatcipis@gmail.com&gt;
-        Paulo Pizarro  &lt;paulo.pizarro@gmail.com&gt;</author>
+        Paulo Pizarro  &lt;paulo.pizarro@gmail.com&gt;
+        Nicola Murino  &lt;nicola.murino@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>

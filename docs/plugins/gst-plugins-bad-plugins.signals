@@ -866,3 +866,39 @@ GstWebRTCBin *gstwebrtcbin
 GstWebRTCRTPTransceiver *arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstSRTSrc::caller-added</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSRTSrc *gstsrtsrc
+gint  arg1
+GSocketAddress *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSRTSrc::caller-removed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSRTSrc *gstsrtsrc
+gint  arg1
+GSocketAddress *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSRTSink::caller-added</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSRTSink *gstsrtsink
+gint  arg1
+GSocketAddress *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSRTSink::caller-removed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSRTSink *gstsrtsink
+gint  arg1
+GSocketAddress *arg2
+</SIGNAL>
+

@@ -17,13 +17,8 @@ GObject
       GstControlSource
       GstElement
         GstAggregator
+          GstCCCombiner
           GstMXFMux
-          GstVideoAggregator
-            GstGLBaseMixer
-              GstGLMixer
-                GstGLMosaic
-                GstGLStereoMix
-                GstGLVideoMixer
         GstAiffMux
         GstAiffParse
         GstAsfMux
@@ -86,6 +81,7 @@ GObject
           GstInterAudioSink
           GstInterSubSink
           GstRTMPSink
+          GstSRTSink
           GstShmSink
           GstVideoSink
             GstDfbVideoSink
@@ -114,8 +110,10 @@ GObject
             GstDvbSrc
             GstMMS
             GstNeonhttpSrc
+            GstOpenni2Src
             GstRTMPSrc
             GstRfbSrc
+            GstSRTSrc
             GstShmSrc
             GstToneGenerateSrc
             GstVCDSrc
@@ -138,6 +136,7 @@ GObject
             GstOFA
           GstAudioMixMatrix
           GstBayer2RGB
+          GstCCConverter
           GstDebugSpy
           GstDtmfDetect
           GstFreeverb
@@ -230,8 +229,6 @@ GObject
           GstFPSDisplaySink
           GstFaceOverlay
           GstFakeVideoSink
-          GstGLMixerBin
-            GstGLVideoMixerBin
           GstHlsSink
           GstHlsSink2
           GstPipeline
@@ -280,6 +277,7 @@ GObject
         GstMusepackDec
         GstNetSim
         GstNonstreamAudioDecoder
+          GstOpenMptDec
           GstWildmidiDec
         GstPcapParse
         GstPitch
@@ -328,17 +326,9 @@ GObject
           GstTSDemux
           MpegTSParse2
         MpegTsMux
-      GstGLContext
       GstPad
         GstAggregatorPad
           GstMXFMuxPad
-          GstVideoAggregatorPad
-            GstGLBaseMixerPad
-              GstGLMixerPad
-                GstGLStereoMixPad
-                GstGLVideoMixerPad
-            GstVideoAggregatorConvertPad
-              GstCompositorPad
         GstProxyPad
           GstGhostPad
             GstWebRTCBinPad
@@ -355,6 +345,7 @@ GObject
       GstTaskPool
       GstWebRTCDataChannel
       GstWebRTCRTPTransceiver
+  GSocketAddress
   GstColorBalanceChannel
   GstEncodingProfile
   GstVdpDevice
@@ -397,6 +388,7 @@ GObject
     PangoFcFontMap
       PangoCairoFcFontMap
 GInterface
+  GSocketConnectable
   GTypePlugin
   GstChildProxy
   GstColorBalance

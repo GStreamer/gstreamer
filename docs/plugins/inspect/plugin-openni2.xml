@@ -1,0 +1,28 @@
+<plugin>
+  <name>openni2</name>
+  <description>GStreamer Openni2 Plugins</description>
+  <filename>../../ext/openni2/.libs/libgstopenni2.so</filename>
+  <basename>libgstopenni2.so</basename>
+  <version>1.15.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>openni2src</name>
+      <longname>Openni2 client source</longname>
+      <class>Source/Video</class>
+      <description>Extract readings from an OpenNI supported device (Kinect etc). </description>
+      <author>Miguel Casas-Sanchez &lt;miguelecasassanchez@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ RGBA, RGB, GRAY16_LE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

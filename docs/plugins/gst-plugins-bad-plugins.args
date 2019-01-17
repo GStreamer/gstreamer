@@ -57529,6 +57529,56 @@
 </ARG>
 
 <ARG>
+<NAME>GstRemoveSilence::minimum-silence-buffers</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 10000</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum silence buffers</NICK>
+<BLURB>Define the minimum number of consecutive silence buffers before removing silence, 0 means disabled. This will not introduce latency.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRemoveSilence::minimum-silence-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= 10000000000</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum silence time</NICK>
+<BLURB>Define the minimum silence time in nanoseconds before removing  silence, 0 means disabled. This will not introduce latency.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRemoveSilence::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Silent</NICK>
+<BLURB>Disable/enable bus message notifications for silence detected/finished.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRemoveSilence::squash</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Squash</NICK>
+<BLURB>Set to true to retimestamp buffers when silence is removed and so avoid timestamp gap.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRemoveSilence::threshold</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-70,70]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB>Set the silence threshold used on the internal VAD in dB.</BLURB>
+<DEFAULT>-60</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSmooth::active</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -67361,6 +67411,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstDecklinkVideoSink::cc-line</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,22]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>CC Line</NICK>
+<BLURB>Line number to use for inserting closed captions (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecklinkAudioSrc::alignment-threshold</NAME>
 <TYPE>guint64</TYPE>
 <RANGE><= 18446744073709551614</RANGE>
@@ -72877,7 +72937,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>URI of resource requested.</BLURB>
-<DEFAULT>"GStreamer curlhttpsrc libcurl/7.61.0"</DEFAULT>
+<DEFAULT>"GStreamer curlhttpsrc libcurl/7.62.0"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -73400,5 +73460,275 @@ this will override closed caption stream specified font style/pen size.</BLURB>
 <NICK>window-h-pos</NICK>
 <BLURB>Window's Horizontal position.</BLURB>
 <DEFAULT>center</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenMptDec::filter-length</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Filter length</NICK>
+<BLURB>Length of interpolation filter to use for the samples (0 = internal default).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenMptDec::master-gain</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -2147483647</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Master gain</NICK>
+<BLURB>Gain to apply to the playback, in millibel.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenMptDec::output-buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,268435455]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output buffer size</NICK>
+<BLURB>Size of each output buffer, in samples (actual size can be smaller than this during flush or EOS).</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenMptDec::stereo-separation</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,400]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stereo separation</NICK>
+<BLURB>Degree of separation for stereo channels, in percent.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenMptDec::volume-ramping</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Volume ramping</NICK>
+<BLURB>Volume ramping strength; higher value -> slower ramping (-1 = internal default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenni2Src::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>Source uri, can be a file or a device.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenni2Src::sourcetype</NAME>
+<TYPE>GstOpenni2SrcSourcetype</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device source type</NICK>
+<BLURB>Type of readings to get from the source.</BLURB>
+<DEFAULT>Get depth readings</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSrc::latency</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>latency</NICK>
+<BLURB>Minimum latency (milliseconds).</BLURB>
+<DEFAULT>125</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSrc::localaddress</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Local address</NICK>
+<BLURB>Local address to bind.</BLURB>
+<DEFAULT>"0.0.0.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSrc::localport</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 65535</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Local port</NICK>
+<BLURB>Local port to bind.</BLURB>
+<DEFAULT>7001</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSrc::mode</NAME>
+<TYPE>GstSRTConnectionMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection mode</NICK>
+<BLURB>SRT connection mode.</BLURB>
+<DEFAULT>GST_SRT_CONNECTION_MODE_CALLER</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSrc::msg-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>message size</NICK>
+<BLURB>Message size to use with SRT.</BLURB>
+<DEFAULT>1316</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSrc::passphrase</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Passphrase</NICK>
+<BLURB>Password for the encrypted transmission.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSrc::pbkeylen</NAME>
+<TYPE>GstSRTKeyLengthBits</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Crypto key length</NICK>
+<BLURB>Crypto key length in bits.</BLURB>
+<DEFAULT>GST_SRT_KEY_LENGTH_BITS_128</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSrc::poll-timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Poll timeout</NICK>
+<BLURB>Return poll wait after timeout miliseconds (-1 = infinite).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSrc::stats</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Statistics</NICK>
+<BLURB>SRT Statistics.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSrc::uri</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>URI</NICK>
+<BLURB>URI in the form of srt://address:port.</BLURB>
+<DEFAULT>"srt://127.0.0.1:7001"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSink::latency</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>latency</NICK>
+<BLURB>Minimum latency (milliseconds).</BLURB>
+<DEFAULT>125</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSink::localaddress</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Local address</NICK>
+<BLURB>Local address to bind.</BLURB>
+<DEFAULT>"0.0.0.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSink::localport</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 65535</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Local port</NICK>
+<BLURB>Local port to bind.</BLURB>
+<DEFAULT>7001</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSink::mode</NAME>
+<TYPE>GstSRTConnectionMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection mode</NICK>
+<BLURB>SRT connection mode.</BLURB>
+<DEFAULT>GST_SRT_CONNECTION_MODE_CALLER</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSink::msg-size</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>message size</NICK>
+<BLURB>Message size to use with SRT.</BLURB>
+<DEFAULT>1316</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSink::passphrase</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>w</FLAGS>
+<NICK>Passphrase</NICK>
+<BLURB>Password for the encrypted transmission.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSink::pbkeylen</NAME>
+<TYPE>GstSRTKeyLengthBits</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Crypto key length</NICK>
+<BLURB>Crypto key length in bits.</BLURB>
+<DEFAULT>GST_SRT_KEY_LENGTH_BITS_128</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSink::poll-timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Poll timeout</NICK>
+<BLURB>Return poll wait after timeout miliseconds (-1 = infinite).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSink::stats</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Statistics</NICK>
+<BLURB>SRT Statistics.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTSink::uri</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>URI</NICK>
+<BLURB>URI in the form of srt://address:port.</BLURB>
+<DEFAULT>"srt://127.0.0.1:7001"</DEFAULT>
 </ARG>
 

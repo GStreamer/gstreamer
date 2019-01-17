@@ -1,5 +1,6 @@
 ADPCMEnc GstPreset
 DvbBaseBin GstChildProxy GstURIHandler
+GSocketAddress GSocketConnectable
 GstA2dpSink GstChildProxy
 GstAdaptiveDemux GstChildProxy
 GstAmrWbEnc GstPreset
@@ -82,6 +83,8 @@ GstRTMPSink GstURIHandler
 GstRTMPSrc GstURIHandler
 GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
 GstSDPDemux GstChildProxy
+GstSRTSink GstURIHandler
+GstSRTSrc GstURIHandler
 GstSbcEnc GstPreset
 GstSdpSrc GstChildProxy GstURIHandler
 GstSirenEnc GstPreset

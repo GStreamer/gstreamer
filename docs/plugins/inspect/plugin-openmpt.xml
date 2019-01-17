@@ -1,0 +1,34 @@
+<plugin>
+  <name>openmpt</name>
+  <description>OpenMPT module player</description>
+  <filename>../../ext/openmpt/.libs/libgstopenmpt.so</filename>
+  <basename>libgstopenmpt.so</basename>
+  <version>1.15.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>openmptdec</name>
+      <longname>OpenMPT-based module music decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Decoders module files (MOD/S3M/XM/IT/MTM/...) using OpenMPT</description>
+      <author>Carlos Rafael Giani &lt;dv@pseudoterminal.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-mod, type=(string){ 669, asylum-amf, dsmi-amf, extreme-ams, velvet-ams, dbm, digi, dmf, dsm, far, gdm, imf, it, j2b, mdl, med, mod, mt2, mtm, okt, psm, ptm, s3m, stm, ult, xm }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S16LE, F32LE }, layout=(string)interleaved, rate=(int)[ 1, 192000 ], channels=(int){ 1, 2, 4 }</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
