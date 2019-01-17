@@ -81,6 +81,7 @@ struct _GstWebRTCBin
   GstWebRTCSessionDescription      *pending_remote_description;
 
   GstWebRTCBundlePolicy             bundle_policy;
+  GstWebRTCICETransportPolicy       ice_transport_policy;
 
   GstWebRTCBinPrivate              *priv;
 };

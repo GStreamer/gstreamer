@@ -339,4 +339,18 @@ typedef enum /*<underscore_name=gst_webrtc_bundle_policy>*/
   GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE,
 } GstWebRTCBundlePolicy;
 
+/**
+ * GstWebRTCICETransportPolicy:
+ * GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL: all
+ * GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY: relay
+ *
+ * See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
+ * for more information.
+ */
+typedef enum /*<underscore_name=gst_webrtc_ice_transport_policy>*/
+{
+  GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL,
+  GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY,
+} GstWebRTCICETransportPolicy;
+
 #endif /* __GST_WEBRTC_FWD_H__ */
