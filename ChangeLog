@@ -1,3 +1,199 @@
+=== release 1.15.1 ===
+
+2019-01-17 02:33:52 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.15.1
+
+2019-01-09 11:39:19 +0100  Antonio Ospite <ao2@ao2.it>
+
+	* gi/overrides/Gst.py:
+	  overrides: add a set_caps() method to the Pad override
+	  The C API provides the gst_pad_set_caps() helper which makes it easier
+	  to set caps on pads (see gst/gstcompat.h in gstreamer core).
+	  Add such handy helper to the python bindings too.
+	  The implementation follows as close as possible the one in gstcompat.h
+	  with two changes:
+	  1. the type check on the pad has been removed because self is
+	  guaranteed to be a Gst.Pad in python.
+	  2. the null check on the caps has been extended to be a type check.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-python/issues/19
+
+2018-12-30 23:53:03 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* autogen.sh:
+	  autogen.sh: update to match updated common submodule
+	  Unbreaks the autotools build and fixes #15.
+
+2018-12-15 13:55:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* testsuite/old/test-object.c:
+	* testsuite/old/testhelpermodule.c:
+	  Fix indentation of .c files
+	  Required to make gst-indent linter on CI happy.
+
+2018-12-05 18:43:06 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* common:
+	  Update common submodule
+
+2018-11-12 13:26:58 +0200  Jordan Petridis <jordan@centricular.com>
+
+	* .gitlab-ci.yml:
+	  Add Gitlab CI configuration
+	  This commit adds a .gitlab-ci.yml file, which uses a feature
+	  to fetch the config from a centralized repository. The intent is
+	  to have all the gstreamer modules use the same configuration.
+	  The configuration is currently hosted at the gst-ci repository
+	  under the gitlab/ci_template.yml path.
+	  Part of https://gitlab.freedesktop.org/gstreamer/gstreamer-project/issues/29
+
+2018-11-05 05:51:05 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	* gst-python.doap:
+	  Update git locations to gitlab
+
+2018-10-31 17:02:24 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* testsuite/overrides_hack.py:
+	  Tests: the sys.meta_path trick does not work for python2
+	  Instead, for python2 revert to manipulating gi.overrides.__path__
+
+2018-10-31 00:41:31 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/meson.build:
+	* testsuite/Makefile.am:
+	* testsuite/meson.build:
+	* testsuite/overrides_hack.py:
+	  Tests: refactor testing approach
+	  Instead of fiddling with sys.path, we instead use a custom
+	  sys.meta_path importer
+
+2018-10-28 17:52:33 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* Makefile.am:
+	* meson.build:
+	  meson: address python module port comments
+
+2018-05-14 10:05:15 +0200  Havard Graff <havard.graff@gmail.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	* plugin/meson.build:
+	* scripts/pythondetector:
+	* testsuite/meson.build:
+	  meson: use new python module
+	  This patch makes the tests pass running uninstalled and installed, with
+	  python2 and python3 on linux, windows and osx.
+	  The main gist is to use the new python-module to do the lifting done
+	  by pythondetector, and with that add support for python2 and windows.
+
+2018-10-28 17:51:44 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gi/Makefile.am:
+	* gi/overrides/Makefile.am:
+	  automake: remove __init__.py's
+
+2018-10-28 14:14:09 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gi/__init__.py:
+	* gi/overrides/__init__.py:
+	  Remove __init__.py files
+	  They were not installed, and were simply used for our
+	  uninstalled setup, which we now implement differently.
+
+2018-10-27 18:04:11 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* meson.build:
+	  meson: add pygobject fallback
+
+2018-07-29 20:06:09 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/plugins/python/py_audiotestsrc.py:
+	* examples/requirements.txt:
+	  Examples: add audiotestsrc plugin example
+
+2018-07-29 20:00:43 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/plugins/python/audioplot.py:
+	* examples/requirements.txt:
+	  Examples: add audioplot plugin example
+
+2018-07-29 19:51:34 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/README.md:
+	* examples/plugins/python/mixer.py:
+	* examples/requirements.txt:
+	  Examples: add mixer plugin example
+
+2018-07-20 17:00:22 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/dynamic_src.py:
+	  examples: add a dynamic pipeline example
+
+2018-07-20 15:58:35 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/helloworld.py:
+	  helloworld: fix typo
+
+2018-03-20 08:54:24 +0100  Havard Graff <havard.graff@gmail.com>
+
+	* gi/overrides/gstmodule.c:
+	  gstmodule: fix warning when building against python2
+	  PyMapping_GetItemString’ discards ‘const’ qualifier from pointer target type
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796093
+
+2018-05-01 15:01:11 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  Fix distcheck
+
+2018-05-01 12:08:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* config.h.meson:
+	* meson.build:
+	  meson: drop config.h.meson template
+
+2018-04-25 15:11:31 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* configure.ac:
+	* meson.build:
+	  Bump pygobject dependency to 3.8
+
+2018-04-25 19:47:19 +0200  Emilio Pozuelo Monfort <pochu27@gmail.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/GstPbutils.py:
+	  overrides: use get_introspection_module
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795555
+
+2018-04-07 21:46:07 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: Fix mixup between query function and chain one
+
+2018-04-03 13:28:16 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* Makefile.am:
+	  Dist autogen.sh and configure.ac
+
+2018-03-20 10:27:38 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
 === release 1.14.0 ===
 
 2018-03-19 20:29:28 +0000  Tim-Philipp Müller <tim@centricular.com>
