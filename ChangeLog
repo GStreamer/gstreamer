@@ -1,3 +1,329 @@
+=== release 1.15.1 ===
+
+2019-01-17 02:02:30 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.15.1
+
+2019-01-17 02:02:30 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  Update docs
+
+2019-01-17 02:02:22 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* po/af.po:
+	* po/ast.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/fur.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update translations
+
+2018-12-30 22:48:42 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* tests/check/generic/states.c:
+	* tests/check/meson.build:
+	  tests: Enable test generic_states on Windows
+	  ... and drop needless unistd.h dependency
+
+2018-12-18 22:48:42 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* meson.build:
+	* tests/check/meson.build:
+	  meson: Use join_paths() instead '/'
+
+2018-12-07 23:39:01 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* meson.build:
+	* tests/check/meson.build:
+	* tests/meson.build:
+	  tests: Enable unit test on Windows
+	  Remove hard-coded ':' whitelist separator since it varies with OS
+
+2018-12-05 17:24:25 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ed78bee to 59cb678
+
+2018-11-24 19:28:19 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* meson.build:
+	  meson: Specify encoding to UTF-8 when building with MSVC
+	  Use build arguments consistent with core and -base. This can also
+	  remove noisy "C4819" warning of non-us locale MSVC.
+
+2018-11-12 13:30:59 +0200  Jordan Petridis <jordan@centricular.com>
+
+	* .gitlab-ci.yml:
+	  Add Gitlab CI configuration
+	  This commit adds a .gitlab-ci.yml file, which uses a feature
+	  to fetch the config from a centralized repository. The intent is
+	  to have all the gstreamer modules use the same configuration.
+	  The configuration is currently hosted at the gst-ci repository
+	  under the gitlab/ci_template.yml path.
+	  Part of https://gitlab.freedesktop.org/gstreamer/gstreamer-project/issues/29
+
+2018-11-05 05:38:33 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	  Update common submodule location
+	  Remove the git directory
+
+2018-11-05 12:52:46 +0800  Haihao Xiang <haihao.xiang@intel.com>
+
+	* .gitmodules:
+	* gst-plugins-ugly.doap:
+	  Clone the code from gitlab
+	  This fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-ugly/issues/22
+
+2018-10-08 20:45:52 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use new 'python' module instead of deprecated
+	  https://github.com/mesonbuild/meson/pull/4169
+
+2018-09-22 17:33:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/x264enc.c:
+	  tests: x264enc: fix leak in unit test
+	  The static pad templates weren't static so their
+	  contents were leaked. valgrind was not happy.
+	  Also rename confusing define.
+
+2018-09-18 21:43:14 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Avoid format decision per frame
+	  Avoid switch/case per frame for format decision and detect the format
+	  only if where it could be changed. Note that, whenever encoder->input_state
+	  is changed, gst_x264_enc_init_encoder() is called.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797164
+
+2018-09-19 12:00:32 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: add glib-checks option to disable API guards and such
+	  We want this enabled by default, also in releases, but people
+	  may want to disable this for performance-critical workloads or
+	  on embedded devices.
+
+2018-09-19 11:58:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson_options.txt:
+	  meson: fix missing closing bracket in option descriptions
+
+2018-08-18 21:22:42 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	* tests/meson.build:
+	  meson: add option to disable tests
+
+2018-08-18 21:20:20 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: clean up some cruft
+
+2018-08-18 21:15:23 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: add options to disable gobject cast checks and glib asserts
+	  ... and define G_DISABLE_DEPRECATED for development versions,
+	  like we do in autotools.
+
+2018-08-16 13:17:58 +0200  Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Set bit depth for x264 ≥ 153
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796975
+
+2018-08-16 14:55:04 +0200  Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Remove superfluous x264_param_default
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796973
+
+2018-07-27 19:29:01 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/a52dec/meson.build:
+	* ext/amrnb/meson.build:
+	* ext/amrwbdec/meson.build:
+	* ext/cdio/meson.build:
+	* ext/dvdread/meson.build:
+	* ext/mpeg2dec/meson.build:
+	* ext/sidplay/meson.build:
+	* ext/x264/meson.build:
+	* gst/meson.build:
+	* meson.build:
+	* meson_options.txt:
+	  Add feature options for all plugins
+	  The only automagic dependency left is C++ availability detection.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795107
+
+2018-07-25 17:17:21 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Convert common options to feature options
+	  The rest will be converted later, these are necessary for gst-build to
+	  set options correctly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795107
+
+2018-06-11 14:43:20 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Remove 0.10 code
+	  This was used to "close" a segment. It's no longer needed anymore
+	  in 1.x (it was essentially sending the same thing again)
+
+2018-05-11 09:21:09 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Only send flush event on seeking flushes
+	  And not on all the time
+
+2018-05-21 11:54:50 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: add 'nls' option to disable translations
+	  And enable by default. Was implicitly disabled because
+	  ENABLE_NLS was not defined. Also use .set_quoted().
+
+2018-05-05 19:32:00 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Update option names to omit disable_ and with- prefixes
+	  Also yield common options to the outer project (gst-build in our case)
+	  so that they don't have to be set manually.
+
+2018-05-04 22:54:01 +1000  Jan Schmidt <jan@centricular.com>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvdsubdec: Take the highlight event from the structure.
+	  Don't use GST_EVENT_TIMESTAMP to transfer any PTS
+	  associated with a highlight event, instead store
+	  it in the event structure directly, as
+	  GstEvent::timestamp will disappear in GStreamer 2.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=761477
+
+2018-04-24 14:06:20 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* ext/a52dec/meson.build:
+	* ext/amrnb/meson.build:
+	* ext/amrwbdec/meson.build:
+	* ext/cdio/meson.build:
+	* ext/dvdread/meson.build:
+	* ext/mpeg2dec/meson.build:
+	* ext/x264/meson.build:
+	* gst/asfdemux/meson.build:
+	* gst/dvdlpcmdec/meson.build:
+	* gst/dvdsub/meson.build:
+	* gst/realmedia/meson.build:
+	* gst/xingmux/meson.build:
+	* meson.build:
+	  Meson: Generate pc file for all plugins in ugly
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794568
+
+2018-04-25 10:59:11 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use -Wl,-Bsymbolic-functions where supported
+	  Just like the autotools build.
+
+2018-04-16 20:13:05 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Set the stream-format field of H264 streams
+	  If we have codec_data it will be AVC, otherwise assume byte-stream.
+
+2018-04-16 10:53:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 3fa2c9e to ed78bee
+
+2018-03-20 09:26:15 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* meson.build:
+	  Back to development
+
 === release 1.14.0 ===
 
 2018-03-19 20:19:43 +0000  Tim-Philipp Müller <tim@centricular.com>
