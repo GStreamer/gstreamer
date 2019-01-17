@@ -678,7 +678,7 @@ properly (help welcome!).
 |wildmidi|Midi Synthesizer Element|wildmidi|[gst-plugins-bad][bad]|
 |wrappercamerabinsrc|Wrapper camera src element for camerabin2|[camerabin][camerabin]|[gst-plugins-bad][bad]|
 |[x264enc][element-x264enc]|H264 Encoder|[x264][x264]|[gst-plugins-ugly][ugly]|
-|x265enc|H265 Encoder|x265|[gst-plugins-bad][bad]|
+|[x265enc][element-x265enc]|H265 Encoder|x265|[gst-plugins-bad][bad]|
 |[ximagesink][element-ximagesink]|A standard X based videosink|[ximagesink][ximagesink]|[gst-plugins-base][base]|
 |[ximagesrc][element-ximagesrc]|Creates a screenshot video stream|[ximagesrc][ximagesrc]|[gst-plugins-good][good]|
 |[xingmux][element-xingmux]|Adds a Xing header to the beginning of a VBR MP3 file|xingmux|[gst-plugins-ugly][ugly]|
@@ -1166,6 +1166,7 @@ properly (help welcome!).
 [element-webrtcdsp]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-webrtcdsp.html
 [element-webrtcechoprobe]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-webrtcechoprobe.html
 [element-x264enc]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-ugly-plugins/html/gst-plugins-ugly-plugins-x264enc.html
+[element-x265enc]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-bad-plugins/html/gst-plugins-bad-plugins-x265enc.html
 [element-ximagesink]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/gst-plugins-base-plugins-ximagesink.html
 [element-ximagesrc]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-good-plugins/html/gst-plugins-good-plugins-ximagesrc.html
 [element-xingmux]: https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-ugly-plugins/html/gst-plugins-ugly-plugins-xingmux.html
