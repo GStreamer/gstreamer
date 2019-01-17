@@ -186,6 +186,10 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
 
     basename = g_path_get_basename (it->device_path);
 
+    /* Caps won't be freed if the subclass is not instantiated */
+    GST_MINI_OBJECT_FLAG_SET (sink_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+    GST_MINI_OBJECT_FLAG_SET (src_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
     if (gst_v4l2_is_video_dec (sink_caps, src_caps)) {
       gst_v4l2_video_dec_register (plugin, basename, it->device_path,
           sink_caps, src_caps);
