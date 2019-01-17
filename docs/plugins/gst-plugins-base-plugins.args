@@ -229,6 +229,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstSubtitleOverlay::subtitle-ts-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Subtitle Timestamp Offset</NICK>
+<BLURB>The synchronisation offset between text and video in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstPlaySink::audio-sink</NAME>
 <TYPE>GstElement*</TYPE>
 <RANGE></RANGE>
@@ -376,6 +386,16 @@
 <NICK>Video filter</NICK>
 <BLURB>the video filter(s) to apply, if possible.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlaySink::text-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Text Offset</NICK>
+<BLURB>The synchronisation offset between text and video in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -716,6 +736,16 @@
 <NICK>Multiview Mode Override</NICK>
 <BLURB>Re-interpret a video stream as one of several frame-packed stereoscopic modes.</BLURB>
 <DEFAULT>GST_VIDEO_MULTIVIEW_FRAME_PACKING_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::text-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Text Offset</NICK>
+<BLURB>The synchronisation offset between text and video in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1216,6 +1246,56 @@
 <NICK>Waveform</NICK>
 <BLURB>Oscillator waveform.</BLURB>
 <DEFAULT>Sine</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::apply-tick-ramp</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Apply tick ramp</NICK>
+<BLURB>Apply ramp to tick samples.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::marker-tick-period</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Marker tick period</NICK>
+<BLURB>Make every Nth tick a marker tick (= a tick with different volume). Only used if wave = ticks. 0 = no marker ticks.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::marker-tick-volume</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Marker tick volume</NICK>
+<BLURB>Volume of marker ticks. Only used if wave = ticks andmarker-tick-period is set to a nonzero value.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::sine-periods-per-tick</NAME>
+<TYPE>guint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sine periods per tick</NICK>
+<BLURB>Number of sine wave periods in one tick. Only used if wave = ticks.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioTestSrc::tick-interval</NAME>
+<TYPE>guint64</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Time between ticks</NICK>
+<BLURB>Distance between start of current and start of next tick, in nanoseconds.</BLURB>
+<DEFAULT>1000000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -2879,6 +2959,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstOpusDec::phase-inversion</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Control Phase Inversion</NICK>
+<BLURB>Set to true to enable phase inversion, this will slightly improve stereo quality, but will have side effects when downmixed to mono.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstURISourceBin::buffer-duration</NAME>
 <TYPE>gint64</TYPE>
 <RANGE>>= G_MAXULONG</RANGE>
@@ -2956,6 +3046,36 @@
 <NICK>Use Buffering</NICK>
 <BLURB>Perform buffering on demuxed/parsed media.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURISourceBin::high-watermark</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>High watermark</NICK>
+<BLURB>High threshold for buffering to finish. Only used if use-buffering is True.</BLURB>
+<DEFAULT>0.99</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURISourceBin::low-watermark</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Low watermark</NICK>
+<BLURB>Low threshold for buffering to start. Only used if use-buffering is True.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURISourceBin::statistics</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Queue Statistics</NICK>
+<BLURB>A set of statistics over all the queue-like elements contained in this element.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -3309,6 +3429,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPlayBin3::text-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Text Offset</NICK>
+<BLURB>The synchronisation offset between text and video in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstParseBin::connection-speed</NAME>
 <TYPE>guint64</TYPE>
 <RANGE><= 18446744073709551</RANGE>
@@ -3464,7 +3594,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Plane offsets</NICK>
-<BLURB>Offsets of the planes in bytes (e.g. plane-offset="<0,76800>").</BLURB>
+<BLURB>Offsets of the planes in bytes (e.g. plane-offsets="<0,76800>").</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -3575,7 +3705,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mode for mono downmixed output</NICK>
 <BLURB>Output anaglyph type to generate when downmixing to mono.</BLURB>
-<DEFAULT>Dubois optimised Green-Magenta anaglyph</DEFAULT>
+<DEFAULT>GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4005,7 +4135,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mode for mono downmixed output</NICK>
 <BLURB>Output anaglyph type to generate when downmixing to mono.</BLURB>
-<DEFAULT>Dubois optimised Green-Magenta anaglyph</DEFAULT>
+<DEFAULT>GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4105,7 +4235,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Mode for mono downmixed output</NICK>
 <BLURB>Output anaglyph type to generate when downmixing to mono.</BLURB>
-<DEFAULT>Dubois optimised Green-Magenta anaglyph</DEFAULT>
+<DEFAULT>GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS</DEFAULT>
 </ARG>
 
 <ARG>
@@ -4706,5 +4836,175 @@
 <NICK>Use Buffering</NICK>
 <BLURB>Perform buffering on demuxed/parsed media.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstCompositor::background</NAME>
+<TYPE>GstCompositorBackground</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Background</NICK>
+<BLURB>Background type.</BLURB>
+<DEFAULT>Checker pattern</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLVideoMixer::background</NAME>
+<TYPE>GstGLVideoMixerBackground</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Background</NICK>
+<BLURB>Background type.</BLURB>
+<DEFAULT>Checker pattern</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLVideoMixerBin::background</NAME>
+<TYPE>GstGLVideoMixerBackground</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Background</NICK>
+<BLURB>Background type.</BLURB>
+<DEFAULT>Checker pattern</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLStereoMix::downmix-mode</NAME>
+<TYPE>GstGLStereoDownmix</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode for mono downmixed output</NICK>
+<BLURB>Output anaglyph type to generate when downmixing to mono.</BLURB>
+<DEFAULT>GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLMixerBin::latency</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer latency</NICK>
+<BLURB>Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLMixerBin::mixer</NAME>
+<TYPE>GstElement*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>GL mixer element</NICK>
+<BLURB>The GL mixer chain to use.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLMixerBin::start-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Time</NICK>
+<BLURB>Start time to use if start-time-selection=set.</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLMixerBin::start-time-selection</NAME>
+<TYPE>GstGLMixerBinStartTimeSelection</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Time Selection</NICK>
+<BLURB>Decides which start time is output.</BLURB>
+<DEFAULT>Start at 0 running time (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLAlpha::alpha</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha</NICK>
+<BLURB>The value for the alpha channel.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLAlpha::angle</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,90]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Angle</NICK>
+<BLURB>Size of the colorcube to change.</BLURB>
+<DEFAULT>20</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLAlpha::black-sensitivity</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 128</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Black Sensitivity</NICK>
+<BLURB>Sensitivity to dark colors.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLAlpha::method</NAME>
+<TYPE>GstGLAlphaMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Method</NICK>
+<BLURB>How the alpha channels should be created.</BLURB>
+<DEFAULT>Set/adjust alpha channel</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLAlpha::noise-level</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,64]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise Level</NICK>
+<BLURB>Size of noise radius.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLAlpha::target-b</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 255</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target Blue</NICK>
+<BLURB>The blue color value for custom RGB chroma keying.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLAlpha::target-g</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 255</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target Green</NICK>
+<BLURB>The green color value for custom RGB chroma keying.</BLURB>
+<DEFAULT>255</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLAlpha::target-r</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 255</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target Red</NICK>
+<BLURB>The red color value for custom RGB chroma keying.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGLAlpha::white-sensitivity</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 128</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>White Sensitivity</NICK>
+<BLURB>Sensitivity to bright colors.</BLURB>
+<DEFAULT>100</DEFAULT>
 </ARG>
 

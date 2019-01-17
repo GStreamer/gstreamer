@@ -21,6 +21,11 @@ GObject
               GstLiveAdder
           GstVideoAggregator
             GstCompositor
+            GstGLBaseMixer
+              GstGLMixer
+                GstGLMosaic
+                GstGLStereoMix
+                GstGLVideoMixer
         GstAudioDecoder
           GstOpusDec
           GstVorbisDec
@@ -90,6 +95,7 @@ GObject
             GstGLColorConvertElement
             GstGLDownloadElement
             GstGLFilter
+              GstGLAlpha
               GstGLColorBalance
               GstGLColorscale
               GstGLDeinterlace
@@ -120,6 +126,7 @@ GObject
               GstGLFilterGlass
               GstGLFilterShader
               GstGLOverlay
+              GstGLOverlayCompositorElement
               GstGLViewConvertElement
             GstGLUploadElement
           GstVideoFilter
@@ -131,6 +138,8 @@ GObject
           GstDecodebin3
           GstEncodeBin
           GstGLFilterBin
+          GstGLMixerBin
+            GstGLVideoMixerBin
           GstGLSinkBin
             GstGLImageSinkBin
           GstGLSrcBin
@@ -154,6 +163,7 @@ GObject
           GstOgmAudioParse
           GstOgmTextParse
           GstOgmVideoParse
+        GstOverlayComposition
         GstSsaParse
         GstStreamSynchronizer
         GstSubParse
@@ -173,6 +183,13 @@ GObject
             GstAudioAggregatorConvertPad
               GstAudioMixerPad
             GstAudioInterleavePad
+          GstVideoAggregatorPad
+            GstGLBaseMixerPad
+              GstGLMixerPad
+                GstGLStereoMixPad
+                GstGLVideoMixerPad
+            GstVideoAggregatorConvertPad
+              GstCompositorPad
         GstProxyPad
           GstGhostPad
             GstDecodePad
@@ -196,10 +213,6 @@ GObject
   GSocketAddress
   GstColorBalanceChannel
   GstEncodingProfile
-  PangoContext
-  PangoFontMap
-    PangoFcFontMap
-      PangoCairoFcFontMap
 GInterface
   GDatagramBased
   GFile
@@ -214,4 +227,3 @@ GInterface
   GstTagSetter
   GstURIHandler
   GstVideoOverlay
-  PangoCairoFontMap

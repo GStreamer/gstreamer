@@ -940,3 +940,28 @@ GstURIDecodeBin3 *gsturidecodebin3
 GstElement *arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstOverlayComposition::caps-changed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS></FLAGS>
+GstOverlayComposition *gstoverlaycomposition
+GstCaps *arg1
+guint  arg2
+guint  arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstOverlayComposition::draw</NAME>
+<RETURNS>GstVideoOverlayComposition*</RETURNS>
+<FLAGS></FLAGS>
+GstOverlayComposition *gstoverlaycomposition
+GstSample *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstGLMixerBin::create-element</NAME>
+<RETURNS>GstElement*</RETURNS>
+<FLAGS>l</FLAGS>
+GstGLMixerBin *gstglmixerbin
+</SIGNAL>
+
