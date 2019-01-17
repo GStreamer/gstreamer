@@ -157,7 +157,7 @@ fourcc_get_size (struct fourcc_list_struct *fourcc, int w, int h)
 
   fourcc->paint_setup (p, NULL);
 
-  return (unsigned long) p->endptr;
+  return GPOINTER_TO_INT (p->endptr);
 }
 
 static void
@@ -555,19 +555,19 @@ GST_START_TEST (test_video_formats)
         off1 = GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 1);
         off2 = GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 2);
 
-        GST_INFO ("size %d <> %d", size, (int) ((guintptr) paintinfo.endptr));
-        GST_INFO ("off0 %d <> %d", off0, (int) ((guintptr) paintinfo.yp));
-        GST_INFO ("off1 %d <> %d", off1, (int) ((guintptr) paintinfo.up));
-        GST_INFO ("off2 %d <> %d", off2, (int) ((guintptr) paintinfo.vp));
+        GST_INFO ("size %d <> %d", size, GPOINTER_TO_INT (paintinfo.endptr));
+        GST_INFO ("off0 %d <> %d", off0, GPOINTER_TO_INT (paintinfo.yp));
+        GST_INFO ("off1 %d <> %d", off1, GPOINTER_TO_INT (paintinfo.up));
+        GST_INFO ("off2 %d <> %d", off2, GPOINTER_TO_INT (paintinfo.vp));
 
-        fail_unless_equals_int (size, (unsigned long) paintinfo.endptr);
-        fail_unless_equals_int (off0, (unsigned long) paintinfo.yp);
-        fail_unless_equals_int (off1, (unsigned long) paintinfo.up);
-        fail_unless_equals_int (off2, (unsigned long) paintinfo.vp);
+        fail_unless_equals_int (size, GPOINTER_TO_INT (paintinfo.endptr));
+        fail_unless_equals_int (off0, GPOINTER_TO_INT (paintinfo.yp));
+        fail_unless_equals_int (off1, GPOINTER_TO_INT (paintinfo.up));
+        fail_unless_equals_int (off2, GPOINTER_TO_INT (paintinfo.vp));
 
         /* should be 0 if there's no alpha component */
         off3 = GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 3);
-        fail_unless_equals_int (off3, (unsigned long) paintinfo.ap);
+        fail_unless_equals_int (off3, GPOINTER_TO_INT (paintinfo.ap));
 
         cs0 = GST_VIDEO_INFO_COMP_WIDTH (&vinfo, 0) *
             GST_VIDEO_INFO_COMP_HEIGHT (&vinfo, 0);
