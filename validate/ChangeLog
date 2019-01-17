@@ -1,3 +1,866 @@
+=== release 1.15.1 ===
+
+2019-01-17 10:01:50 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/RELEASE:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.15.1
+
+2019-01-17 09:58:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/meson.build:
+	  Fix distcheck
+	  Work around broken disthook check in release.mak so we don't
+	  have to update the common submodules for that (applies only
+	  to this module because the version number is in the top-level
+	  meson.build but the package/dist directory is a subdir). This
+	  only became a problem now because the common submodule hadn't
+	  been updated for the last few years.
+
+2019-01-17 09:38:13 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* validate/win32/common/libgstvalidate.def:
+	  win32: update .def file for new API
+	  Fixes distcheck
+
+2019-01-15 16:52:24 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Display unix nickname of signals leading to test failure
+
+2019-01-15 16:05:41 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Fix error message about 'crashed' test
+
+2019-01-14 22:55:35 +0100  Alicia Boya García <ntrrgc@gmail.com>
+
+	* hooks/pre-commit-python.hook:
+	  pre-commit-python: Allow line breaks between binary operators
+	  pre-commit-python overrides the list of ignored Python style errors.
+	  Unfortunately, before this patch the list did not exclude W503 and
+	  W504 (which are otherwise ignored by default).
+	  The consequence of having those two warnings enabled at the same time is
+	  that it's not possible to break lines on binary operators, which is an
+	  unreasonable unintentional restriction:
+	  'validateflow': "validateflow, expectations-dir=\"" +
+	  expectations_dir + "\", actual-results-dir=\"" +
+	  actual_results_dir + "\"",
+	  W504 line break after binary operator
+	  'validateflow': "validateflow, expectations-dir=\""
+	  + expectations_dir + "\", actual-results-dir=\""
+	  + actual_results_dir + "\"",
+	  W503 line break before binary operator
+	  This patch excludes W503 so that there is a valid style for breaking
+	  lines on binary operators.
+
+2019-01-12 15:25:53 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Plug newly introduced leak
+
+2019-01-12 09:59:12 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Use filename instead of full path in dotfiles names
+
+2019-01-07 00:06:30 +0100  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tests/check/validate/padmonitor.c:
+	  validate:tests: Fix race in `validate_padmonitor.buffer_outside_segment`
+	  We were using a fakesrc which data flow was potentially breaking the
+	  test.
+
+2019-01-07 00:05:50 +0100  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: Lower a ERROR message to INFO
+	  This behaviour is totally valid when running unit tests
+
+2019-01-03 14:15:16 +0100  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tests/check/validate/padmonitor.c:
+	  validate:tests: s/discount_buffer/discont_buffer/
+
+2019-01-03 12:09:09 +0100  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/tests/check/validate/padmonitor.c:
+	  validate:tests: Fix race in `validate_padmonitor.buffer_before_segment`
+	  We were using a fakesrc which data flow was potentially breaking the
+	  test. Stop using it and remove dead code.
+	  Fixes #34
+
+2018-12-17 10:34:43 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: fix crash if timeout when media_descriptor is None
+	  Some tests may not have any media_descriptor. If those were failing to
+	  shutdown after EOS we were calling get_protocol() on None.
+
+2018-12-14 12:00:18 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Fix error message
+
+2018-12-14 11:17:41 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Fix discovery of commands
+
+2018-12-10 13:25:58 +1100  Matthew Waters <matthew@centricular.com>
+
+	* meson.build:
+	* validate/gst/validate/meson.build:
+	* validate/plugins/extra_checks/meson.build:
+	  gst: allow building static libraries for e.g. Android/iOS
+
+2018-12-09 17:55:37 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* validate/win32/common/libgstvalidate.def:
+	  meson: Fix build on {cross-,}win{32,64}
+	  We use visual studio module definitions for the list of symbols to
+	  export when targetting Windows. Fixes CI failure:
+	  ../validate/tools/gst-validate.c:460: undefined reference to `gst_validate_spin_on_fault_signals'
+
+2018-12-07 09:05:09 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate:launcher: Do not CK_FORK on our test
+	  Otherwise the process can't cleanly quit on assertion because of the way libcheck runner is implemented
+
+2018-12-07 09:03:24 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/gst/validate/gst-validate-utils.h:
+	* validate/launcher/baseclasses.py:
+	* validate/tools/gst-validate-media-check.c:
+	* validate/tools/gst-validate-transcoding.c:
+	* validate/tools/gst-validate.c:
+	  validate: launcher: Add a way to retrieve trace without coredumpctl
+	  Simply spnning on segfaults (like gst-launch) and catch that in
+	  the launcher to transform the timeout into a segfault and grab a gdb
+	  backtrace
+
+2018-12-06 23:17:29 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate:launcher: Do not take CK_DEFAULT_TIMEOUT into account to set the timeout
+	  The timeout is what is set in the meson build definition otherwise we will not behave as 'meson test' which we should avoid
+
+2018-12-06 15:35:18 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/reporters.py:
+	  validate:launcher: Make failure as <failure> in our xunit reporter
+	  I think it was a mistake to call them <error> as the two notions are
+	  different (we marked failed test as "failures" in the <testuite> node).
+	  Should make gitlab happy with our file!
+
+2018-12-06 11:53:10 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/common:
+	  Automatic update of common submodule
+	  From eb6a86e to 59cb678
+
+2018-11-30 10:59:51 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/main.py:
+	* validate/launcher/utils.py:
+	  validate:launcher: Add a GST_VALIDATE_LAUNCHER_MAIN_DIR env variable
+	  This is generally usefull so we do not have to pass -M every time we launch the launcher
+	  And it adds support for nesting launcher calls always respecting the provided main directory
+	  + Fix some new pep8 errors
+
+2018-11-28 10:14:35 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Don't about unexisting tests when filtering tests
+	  It was wrong
+
+2018-11-28 10:11:00 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate:launcher: Fix setting meson tests as "parallel"
+
+2018-11-26 10:13:22 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Avoid using not yet set variables
+	  And make the file pep8 compliant with latest pep8 checker.
+
+2018-11-25 11:36:06 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: launcher: Add a way to load pipeline tests from a scenario
+
+2018-11-22 21:06:36 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/main.py:
+	  validate: Update default testsuite git repository
+
+2018-11-17 09:48:41 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	  validate: Enhance printing actions with fields
+	  If you have maby field, printed actions where unreadable, clean that
+	  up by adding new lines.
+
+2018-11-17 09:09:34 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Add an action to 'include' another scenario
+	  This is particularly useful for scenario that define constants
+	  that are used to check video frame checksum for example, we can
+	  now have one single 'scenario' file that defines consts for the
+	  checksum of the frames, and those can be reused everywhere.
+
+2018-10-28 15:21:38 +0000  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-override-registry.c:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-override.h:
+	  validate:override: Notify override object when they get attached
+
+2018-10-29 15:37:11 +0000  Alicia Boya García <ntrrgc@gmail.com>
+
+	* validate/gst/validate/gst-validate-monitor.c:
+	  validate: fix bug monitor subscriptions on pads by name
+	  gst_validate_override_register_by_name() was not working when using a
+	  pad name because by the time gst_validate_pad_monitor_do_setup()
+	  was called to set the name of the monitor it was too late for overrides
+	  to have any effect.
+	  Patch written by Thibault.
+
+2018-11-12 13:14:42 +0200  Jordan Petridis <jordan@centricular.com>
+
+	* .gitlab-ci.yml:
+	  Add Gitlab CI configuration
+	  This commit adds a .gitlab-ci.yml file, which uses a feature
+	  to fetch the config from a centralized repository. The intent is
+	  to have all the gstreamer modules use the same configuration.
+	  The configuration is currently hosted at the gst-ci repository
+	  under the gitlab/ci_template.yml path.
+	  Part of https://gitlab.freedesktop.org/gstreamer/gstreamer-project/issues/29
+
+2018-11-05 05:54:43 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	* validate/gst-validate.doap:
+	  Update git locations to gitlab
+
+2018-10-28 14:54:47 +0000  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-override-registry.c:
+	  validate: Allow connecting reporters by name for overrides
+	  Using the element that owns the pad on which we are connecting
+	  was not making sense.
+
+2018-10-28 11:03:54 +0000  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/gst-debug-viewer:
+	  debug-viewer: Python3 port follow-up
+	  One print statement wasn't ported to Python3.
+
+2018-10-27 09:01:53 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* debug-viewer/meson.build:
+	* meson_options.txt:
+	  meson: add option to disable translation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797342
+
+2018-09-19 11:50:09 +0900  Wonchul Lee <chul0812@gmail.com>
+
+	* validate/gst-libs/gst/video/gssim.c:
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	* validate/gst-libs/gst/video/gstvalidatessim.h:
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-override.h:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate: Update for g_type_class_add_private() deprecation in recent GLib
+	  https://gitlab.gnome.org/GNOME/glib/merge_requests/7
+
+2018-09-08 19:24:41 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst-libs/gst/video/gssim.c:
+	* validate/gst-libs/gst/video/gssim.h:
+	  Update for g_type_class_add_private() deprecation in recent GLib
+
+2018-09-08 11:12:32 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  launcher:scenario: Fix the way we compute scenario path/name when paths supplied
+	  We were just iterating over the list without any check and could end
+	  up with a patch that was not corresponding to the actual scenario.
+
+2018-09-07 15:59:49 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/vfb_server.py:
+	  validate:launcher: Just wait for a while before considering Xvfb is ready if xset is not present
+	  This is what xvfb-run so let's consider it good enough
+
+2018-08-01 21:05:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Use fakevideosink everywhere it makes sense.
+
+2018-09-06 17:29:24 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* validate/gst/overrides/gst-validate-default-overrides.c:
+	  validate: Export the plugin symbol correctly
+	  Otherwise it doesn't get correctly exported when building with MSVC
+
+2018-09-01 12:09:32 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	* validate/meson.build:
+	* validate/tests/check/meson.build:
+	* validate/tests/meson.build:
+	  meson: Add a feature option for tests
+	  This autodetection is needed on iOS inside Cerbero where
+	  gstreamer-check-1.0 is not available.
+
+2018-08-31 15:21:05 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: gst_version_* are ints, convert them early
+	  Fixes error reported by ceyusa:
+	  gst-devtools/meson.build:23:0: ERROR:  Multiplication works only with integers.
+
+2018-08-31 14:52:04 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* validate/gst/overrides/meson.build:
+	* validate/gst/validate/meson.build:
+	  meson: Maintain macOS ABI through dylib versioning
+	  Requires Meson 0.48, but the feature will be ignored on older versions
+	  so it's safe to add it without bumping the requirement.
+	  Documentation:
+	  https://github.com/mesonbuild/meson/blob/master/docs/markdown/Reference-manual.md#shared_library
+
+2018-07-31 23:29:57 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* validate/gst/meson.build:
+	* validate/gst/overrides/meson.build:
+	  meson: Build gstvalidate-default-overrides-1.0
+	  Needed by Cerbero.
+
+2018-07-30 21:36:48 +0200  Alicia Boya García <ntrrgc@gmail.com>
+
+	* validate/launcher/baseclasses.py:
+	  gst-validate-launcher: Print copypaste-friendlier commands
+	  This patch removes the quotes surrounding the command shown by
+	  gst-validate to reproduce the issues -- which were troublesome when
+	  copying and pasting.
+	  It also introduces escaping for the arguments, so that the command line
+	  can be copied and pasted in the terminal without further changes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796897
+
+2018-07-25 17:27:03 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	* validate/docs/validate/meson.build:
+	* validate/meson.build:
+	  meson: Convert common options to feature options
+	  The rest will be converted later, these are necessary for gst-build to
+	  set options correctly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795107
+
+2018-07-14 15:55:34 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Add an action type to validate last sample checksum
+
+2018-07-19 22:00:17 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: launcher: Print some ERROR log when inspecting scenario fails
+
+2018-07-19 18:27:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Add a way to define constants to be used in actions
+	  Allowing writing simpler to read scenarios.
+
+2018-07-14 08:27:05 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Add a way to set rank on all features of a plugin
+	  You often want to make sure that elements from a particular plugins
+	  are always/never plugged, `set-rank,name=plugin-name,rank=XXX` allows
+	  you to simply do that.
+
+2018-07-12 19:13:09 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Minor output string message
+
+2018-07-10 13:16:36 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/reporters.py:
+	  validate: Use 'skipped' keyword in xunit xml
+	  It was always meant to be 'skipped' to be 100% compatible with xunit
+	  xsl.
+	  Makes jenkins happy again
+
+2018-07-08 17:02:59 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate:launcher: Stop spamming envvars in unit tests command printing.
+	  We used to print the whole environment, making it ugly and hard to
+	  read.
+
+2018-07-01 11:32:10 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  validate:launcher: Allow retrieving coredumps from within flatpak
+
+2018-06-19 07:12:20 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	  pad-monitor: Reset stream-related variables when deactivating
+	  Any local variable related to the stream should be resetted
+	  when the pad is deactivated
+	  Avoids weird issues when elements are re-used (and pads are deactivated
+	  and reactivated).
+
+2018-06-17 08:34:09 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Fix the --forever switch
+	  It was not stopping on error.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796608
+
+2018-06-15 17:52:47 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/win32/common/libgstvalidate.def:
+	  validate: Update .def
+
+2018-06-15 16:42:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/Makefile.am:
+	* validate/launcher/apps/meson.build:
+	* validate/launcher/apps/pyunittest.py:
+	* validate/launcher/testsuites/Makefile.am:
+	* validate/launcher/testsuites/meson.build:
+	* validate/launcher/testsuites/pyunittest.py:
+	  validate:launcher: Add a TestManager to run python tests
+	  Add a stupid simple testsuite made to be configured from the outside
+
+2018-06-15 15:01:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  validate: Fix mixup in variable check
+
+2018-06-15 10:25:33 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson_options.txt:
+	* validate/meson.build:
+	  meson: Rename the gtkdoc option to gtk_doc
+	  This is what other modules use
+
+2018-05-24 14:41:27 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tools/gst-validate-media-check.c:
+	  validate: media-check: Avoid spamming the MediaInfo file on stdout
+
+2018-05-23 17:57:23 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/docs/validate/gst-validate-launcher.xml:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  validate: launcher: Add support for running tests with a pushfile source
+	  Introducing the `.media_info.push` media info extension, which is meant
+	  to let the launcher know that those file should run with the "pushfile://"
+	  protocol.
+	  And allow symlinking "normal" `.media_info` to their `.pushfile` variant
+	  so that both can share the exact same content.
+
+2018-05-25 15:35:10 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-enum-types.h.template:
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor-writer.h:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/gst/validate/media-descriptor.h:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/tools/gst-validate-media-check.c:
+	  validate: media-check: Add a way to skip pluggin parsers
+	  This is useful when you want to check only the demuxer output.
+	  - Keep the information in the media file so that we can launch media-check
+	  with the proper arguments in the launcher. Update it accordingly.
+	  - Refactor compare_streams to simplify it, which in the end leads to
+	  reporting all the issues instead of exiting on the first one.
+
+2018-05-23 01:11:32 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/gst/validate/media-descriptor.h:
+	  validate: media-descriptor: Add a way to specify when a field value is unknown
+	  And this way is to set the attribute to... `unknown`
+
+2018-05-22 19:43:01 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/gst/validate/media-descriptor.h:
+	  validate: media-check: Also check that segments are correct
+
+2018-06-14 18:01:54 +0100  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	  debug-viewer: Fix reload file action.
+	  Copy the log file only we're loading a file different from the previous file.
+	  The previous version of this code was broken because the existing tmpfile was
+	  removed from disk before being copied to a new temporary file.
+
+2018-06-05 16:38:10 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/media-descriptor.c:
+	  validate/media-descriptor: Fix indentation
+
+2018-06-05 16:36:24 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	  validate: Add a new issue to detect invalid event seqnum
+	  Events should always have a valid seqnum. Add a new issue which
+	  allows detecting such events. And use that check in the
+	  pad monitor
+
+2018-06-05 16:25:46 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/.gitignore:
+	* validate/docs/.gitignore:
+	* validate/tools/.gitignore:
+	  validate: Update all gitignore
+
+2018-05-25 12:03:46 +0200  Alicia Boya García <ntrrgc@gmail.com>
+
+	* validate/launcher/baseclasses.py:
+	  gst-validate-launcher: let gdb handle SIGINT itself
+	  Otherwise both gdb and gst-validate-launcher will react to ^C at the
+	  same time, gdb will be killed by SIGHUP (because gst-validate-launcher
+	  quitted in consequence of the ^C) and the terminal state will be left
+	  garbled because readline inside gdb had disabled echo.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796396
+
+2018-05-25 12:06:22 +0200  Alicia Boya García <ntrrgc@gmail.com>
+
+	* validate/launcher/baseclasses.py:
+	  gst-validate-launcher: disable timeouts when debugging in gdb interactively
+	  An interactive debugging session can be going for a long time, we don't
+	  want any timeouts in that case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796397
+
+2018-05-24 18:25:59 +0200  Alicia Boya García <ntrrgc@gmail.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  gst-validate-launcher: Stop in --gdb by default, add --gdb-non-stop
+	  This patch modifies the default behavior of --gdb to not run and quit
+	  automatically the test, but rather wait for user input. This is
+	  usually much more convenient to debug all kinds of bugs.
+	  The automatic run behavior has been moved to a new command switch:
+	  --gdb-non-stop
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796389
+
+2018-05-18 11:50:18 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/tools/gst-validate.c:
+	  validate: Error out if gst_parse_launch sets an error.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796240
+
+2018-05-15 14:40:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Error out loudly if the testlist changes
+	  When --fail-on-testlist-change is set.
+
+2018-05-15 14:35:30 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/reporters.py:
+	  validate:launcher: Do not print time spent if the testsuite never started
+
+2018-04-28 10:15:17 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: launcher: Make sure testsuites are used/configured once only
+
+2018-05-13 16:30:25 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Add a way to check if a gst feature is present
+	  And make sure iqa is present to run IQA tests.
+
+2018-05-03 11:27:31 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Cleanup the way we find where -validate tools are
+
+2018-04-20 23:57:32 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  validate: launcher: Add a way to simply run SSIM checks on rendered files
+	  We will run a simple pipeline with the IQA element to run ssim (dssim)
+	  tests on the rendered files, comparing it with a reference file.
+	  For now we use the very empiric 1.0 value as a ssim error threshold and
+	  the goal is basically to detect completely broken renderings.
+
+2018-04-19 22:13:29 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Add support for the new testbin protocol
+
+2018-04-19 22:13:03 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Data.py:
+	* debug-viewer/GstDebugViewer/GUI/columns.py:
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	  debug-viewer: Ignore broken utf8 errors
+	  Not much we can do if the input file is not perfectly valid UTF8
+	  but we should just do as good as we can.
+
+2018-05-13 13:02:11 +0100  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Data.py:
+	* debug-viewer/GstDebugViewer/GUI/colors.py:
+	* debug-viewer/GstDebugViewer/GUI/columns.py:
+	* debug-viewer/GstDebugViewer/Plugins/Timeline.py:
+	  debug-viewer: MEMDUMP debug level support
+
+2018-05-07 17:30:13 +0200  Edward Hervey <edward@centricular.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: Remove hls.*seek_with_stop blacklisting
+	  The issue is closed upstream (because of concentrating on decodebin3
+	  instead), and initial forever testing seems to show the issue doesn't
+	  happen anymore
+
+2018-05-05 19:55:14 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	* validate/meson.build:
+	  meson: Update option names to omit disable_ prefixes
+	  Also yield common options to the outer project (gst-build in our case)
+	  so that they don't have to be set manually.
+
+2018-04-27 17:32:38 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate: pipeline: Handle the case where a pad has no monitor
+	  We do not monitor ghost pads, only real pads, so this is a totally
+	  legitimate case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=792536
+
+2018-04-25 10:57:14 +0800  Kai Kang <kai.kang@windriver.com>
+
+	* validate/gst/validate/Makefile.am:
+	  validate: fix out of source tree build error
+	  It fails to generate gst-validate-enum-types.h and gst-validate-enum-types.c
+	  when build out of source tree. Add the path for template files.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795531
+	  Signed-off-by: Kai Kang <kai.kang@windriver.com>
+
+2018-04-19 14:26:23 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Common/Main.py:
+	  debug-viewer: Fix raising unhandled exception
+	  Old code was uselessly complex
+
+2018-04-19 08:44:50 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Plugins/FindBar.py:
+	  debug-viewer: Fix stacktrace after port to py3
+
+2018-04-18 09:34:57 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	  debug-viewer: Copy log files in temporaries before using them
+	  They are mmap'ed and it gets wrong if the file is changed.
+	  There is high probablility the user will generate new logs while
+	  inspecting some logs in the same file
+
+2018-04-18 09:03:01 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Plugins/Timeline.py:
+	  debug-viewer: Add a shortcut to show/hide timeline
+
+2018-04-15 16:31:36 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Common/Main.py:
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	* debug-viewer/GstDebugViewer/__init__.py:
+	* debug-viewer/data/meson.build:
+	* debug-viewer/gst-debug-viewer:
+	* debug-viewer/meson.build:
+	* debug-viewer/org.freedesktop.GstDebugViewer.desktop.in:
+	* debug-viewer/po/LINGUAS:
+	* debug-viewer/setup.cfg:
+	* debug-viewer/setup.py:
+	* meson.build:
+	* meson_options.txt:
+	  debug-viewer: Port to meson
+	  This allows us to run unit test as part of ninja test and have versionning
+	  in sync. Also the goal is to have everything inside meson.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795282
+
+2018-04-15 20:47:36 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Add support for specifying a workdir in tests
+
+2018-04-15 19:45:43 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/utils.py:
+	  validate:launcher: printc is accepting object as arguments
+	  Make sure in all code paths those are converted to strings
+
+2018-04-15 11:28:33 +0100  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Common/Data.py:
+	  debug-viewer: Dispatcher source ID clean-up
+	  This patch fixes this runtime warning:
+	  GstDebugViewer/Common/Data.py:67: Warning: Source ID 17 was not found when attempting to remove it
+	  GObject.source_remove(self.source_id)
+
+2018-04-14 16:04:22 +0100  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Common/Main.py:
+	* debug-viewer/GstDebugViewer/Common/utils.py:
+	* debug-viewer/GstDebugViewer/Data.py:
+	* debug-viewer/GstDebugViewer/GUI/__init__.py:
+	* debug-viewer/GstDebugViewer/GUI/columns.py:
+	* debug-viewer/GstDebugViewer/GUI/filters.py:
+	* debug-viewer/GstDebugViewer/GUI/models.py:
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	* debug-viewer/GstDebugViewer/Main.py:
+	* debug-viewer/GstDebugViewer/Plugins/FindBar.py:
+	* debug-viewer/GstDebugViewer/tests/__init__.py:
+	* debug-viewer/GstDebugViewer/tests/create-test-log.py:
+	* debug-viewer/GstDebugViewer/tests/performance.py:
+	* debug-viewer/GstDebugViewer/tests/test_models.py:
+	* debug-viewer/setup.py:
+	* debug-viewer/tests/test_models.py:
+	* hooks/pre-commit-python.hook:
+	  debug-viewer: PEP8 all the things
+
+2018-04-14 14:22:11 +0100  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Common/Data.py:
+	* debug-viewer/GstDebugViewer/Common/GUI.py:
+	* debug-viewer/GstDebugViewer/Common/Main.py:
+	* debug-viewer/GstDebugViewer/Common/__init__.py:
+	* debug-viewer/GstDebugViewer/Common/utils.py:
+	* debug-viewer/GstDebugViewer/Data.py:
+	* debug-viewer/GstDebugViewer/GUI/__init__.py:
+	* debug-viewer/GstDebugViewer/GUI/app.py:
+	* debug-viewer/GstDebugViewer/GUI/columns.py:
+	* debug-viewer/GstDebugViewer/GUI/models.py:
+	* debug-viewer/GstDebugViewer/GUI/window.py:
+	* debug-viewer/GstDebugViewer/Main.py:
+	* debug-viewer/GstDebugViewer/Plugins/FindBar.py:
+	* debug-viewer/GstDebugViewer/Plugins/Timeline.py:
+	* debug-viewer/gst-debug-viewer:
+	* debug-viewer/setup.py:
+	* debug-viewer/tests/create-test-log.py:
+	* debug-viewer/tests/performance.py:
+	* debug-viewer/tests/test_models.py:
+	  debug-viewer: Port to Python3
+	  And fix unit-tests.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795260
+
+2018-04-14 11:27:48 +0100  Philippe Normand <philn@igalia.com>
+
+	* debug-viewer/GstDebugViewer/Plugins/ColorizeRows.py:
+	* debug-viewer/GstDebugViewer/Plugins/FileProperties.py:
+	  debug-viewer: remove broken/unimplemented plugins
+
+2018-04-12 23:24:16 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* hooks/pre-commit-python.hook:
+	  Update python hook with the new pycodestyle
+
+2018-04-12 23:11:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Add a method to find tests in a TestManager
+
+2018-04-12 23:05:01 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Extract method to set a validate configuration on tests
+
+2018-04-12 23:03:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/validate.c:
+	  validate: Handle having a list of structure based/file path configs
+
+2018-03-23 20:58:38 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/utils.py:
+	  launcher: Print test number in the order they finish
+	  Instead of the test index in the list of tests as it is
+	  meaningless to the user and feels weird.
+	  Also minor fix in the test name display when running with --forever.
+
+2018-03-23 18:02:43 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  launcher: Minor indentation issue fixes
+
+2018-03-23 17:44:06 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/reporters.py:
+	* validate/launcher/utils.py:
+	  launcher: Clean up outpout
+	  Make our stdout output simpler to follow by:
+	  - Not printing the tests we launch (it is not really useful in the end)
+	  - Using `\r` when printing the passed tests
+	  - Not reprinting all the test in a now useless summary
+
+2018-03-18 10:38:42 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  check: Use meson introspect to list meson tests
+
+2018-03-20 10:56:57 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/NEWS:
+	* validate/RELEASE:
+	* validate/configure.ac:
+	  Back to development
+
 === release 1.14.0 ===
 
 2018-03-19 20:29:07 +0000  Tim-Philipp Müller <tim@centricular.com>
