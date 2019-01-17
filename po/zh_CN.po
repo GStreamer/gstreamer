@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2016-11-02 13:41+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -20,14 +20,8 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Poedit 1.8.9\n"
 
-msgid "failed to draw pattern"
-msgstr "无法绘制图案"
-
-msgid "A GL error occured"
-msgstr "发生了  GL 错误"
-
-msgid "format wasn't negotiated before get function"
-msgstr "在调用get函数之前未确定合适的格式"
+msgid "No URL set."
+msgstr ""
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV加载模版图片失败"
@@ -126,6 +120,15 @@ msgstr "无法找到通道配置文件：“%s”"
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "通道配置文件中不包含任何通道"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "无法绘制图案"
+
+#~ msgid "A GL error occured"
+#~ msgstr "发生了  GL 错误"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "在调用get函数之前未确定合适的格式"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "无法建立到snido的连接。"

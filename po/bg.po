@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2017-05-08 11:49+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -20,141 +20,117 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: ext/gl/gstgltestsrc.c:489
-msgid "failed to draw pattern"
-msgstr "шарката не може да се изобрази"
+msgid "No URL set."
+msgstr ""
 
-#: ext/gl/gstgltestsrc.c:490
-msgid "A GL error occured"
-msgstr "Грешка от GL"
-
-#: ext/gl/gstgltestsrc.c:496
-msgid "format wasn't negotiated before get function"
-msgstr "форматът не е бил уточнен преди извикване на функцията за получаване"
-
-#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV не успя да зареди изображението-шаблон"
 
-#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Информацията за заглавните части на DVD-то не може да бъде прочетена."
 
-#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Не може да се чете от устройството за DVD-та „%s“."
 
-#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Не може да се търси по веригата на програмите (PGC)"
 
-#: ext/resindvd/resindvdsrc.c:1164
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "DVD-то не може да бъде прочетено. Причината може да е, че DVD-то е шифрирано и не е инсталирана библиотека за дешифриране."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"DVD-то не може да бъде прочетено. Причината може да е, че DVD-то е шифрирано "
+"и не е инсталирана библиотека за дешифриране."
 
-#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "DVD-то не може да бъде прочетено."
 
-#: ext/smoothstreaming/gstmssdemux.c:421
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:722
 msgid "This file contains no playable streams."
 msgstr "Файлът не съдържа потоци за изпълнение."
 
-#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Потокът sndfile не може да се отвори за четене."
 
-#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr "Генерираният файл е с по-дълго време за буфериране отколкото е самата му продължителност"
+msgstr ""
+"Генерираният файл е с по-дълго време за буфериране отколкото е самата му "
+"продължителност"
 
-#: gst/camerabin2/camerabingeneral.c:167 gst/camerabin2/gstcamerabin2.c:1859
-#: gst/camerabin2/gstdigitalzoom.c:283 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Елементът „%s“ липсва, проверете инсталацията на GStreamer."
 
-#: gst/camerabin2/gstcamerabin2.c:347
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr "Местоположението на файла е NULL. Задайте име на файл"
 
-#: gst/camerabin2/gstwrappercamerabinsrc.c:585
 msgid "Digitalzoom element couldn't be created"
 msgstr "Елементът за цифрово увеличение не може да бъде създаден"
 
-#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "Форматът на подкартината не е бил уточнен преди началото на потока"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3352
 msgid "Failed to get fragment URL."
 msgstr "Неуспешно получаване на адреса на фрагмента."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3724
 msgid "Couldn't download fragments"
 msgstr "Фрагментите не могат да бъдат свалени"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3813
-#: gst/mpegtsdemux/mpegtsbase.c:1610
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка в потока на данни."
 
-#: sys/dvb/gstdvbsrc.c:1579 sys/dvb/gstdvbsrc.c:1793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Устройството „%s“ не съществува."
 
-#: sys/dvb/gstdvbsrc.c:1583
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Устройството „%s“ не може да бъде отворено."
 
-#: sys/dvb/gstdvbsrc.c:1602
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Настройките на устройството „%s“ не могат да бъдат получени."
 
-#: sys/dvb/gstdvbsrc.c:1619
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr "Системите за доставка от устройството „%s“ не могат да бъдат изброени."
 
-#: sys/dvb/gstdvbsrc.c:1797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Файлът „%s“ не може да се отвори за четене."
 
-#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
 msgstr "Файлът с настройките на каналите не може да бъде открит"
 
-#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Файлът с настройките на каналите не може да бъде прочетен: „%s“"
 
-#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
 #, c-format
 msgid "Couldn't find details for channel '%s'"
 msgstr "Липсват данни за канала „%s“"
 
-#: sys/dvb/parsechannels.c:430
 #, c-format
 msgid "No properties for channel '%s'"
 msgstr "Липсват данни за канала „%s“"
 
-#: sys/dvb/parsechannels.c:439
 #, c-format
 msgid "Failed to set properties for channel '%s'"
 msgstr "Свойствата на канала „%s“ не могат да бъдат зададени"
 
-#: sys/dvb/parsechannels.c:560
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Файлът с настройките на каналите не може да бъде открит: „%s“"
 
-#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Файлът с настройките на каналите не съдържа никакви канали"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "шарката не може да се изобрази"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Грешка от GL"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr ""
+#~ "форматът не е бил уточнен преди извикване на функцията за получаване"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2016-12-23 20:45+0100\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -19,14 +19,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 
-msgid "failed to draw pattern"
-msgstr "échec du rendu de motif"
-
-msgid "A GL error occured"
-msgstr "Une erreur de rendu GL s’est produite"
-
-msgid "format wasn't negotiated before get function"
-msgstr "Format non négocié avant l'appel de la fonction get"
+msgid "No URL set."
+msgstr ""
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV n’a pas pu charger l’image modèle"
@@ -131,6 +125,15 @@ msgstr "Impossible de trouver le fichier de configuration du canal « %s »"
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Le fichier de configuration ne contient aucun canal"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "échec du rendu de motif"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Une erreur de rendu GL s’est produite"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "Format non négocié avant l'appel de la fonction get"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Impossible de se connecter à sndio"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2016-11-02 21:21+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -21,14 +21,8 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-msgid "failed to draw pattern"
-msgstr "ошибка при рисовании шаблона"
-
-msgid "A GL error occured"
-msgstr "Произошла ошибка GL"
-
-msgid "format wasn't negotiated before get function"
-msgstr "перед функцией получения не был согласован формат"
+msgid "No URL set."
+msgstr ""
 
 msgid "OpenCV failed to load template image"
 msgstr "Ошибка OpenCV при загрузке шаблона изображения"
@@ -131,6 +125,15 @@ msgstr "Не удалось найти файл настройки канало�
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Файл настройки каналов не содержит каналов"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "ошибка при рисовании шаблона"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Произошла ошибка GL"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "перед функцией получения не был согласован формат"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Не удалось установить соединение с sndio"

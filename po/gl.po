@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2011-09-05 12:50+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -19,13 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
 "X-Poedit-Language: galego\n"
 
-msgid "failed to draw pattern"
-msgstr ""
-
-msgid "A GL error occured"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
+msgid "No URL set."
 msgstr ""
 
 msgid "OpenCV failed to load template image"

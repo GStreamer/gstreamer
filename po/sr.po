@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2016-12-04 14:22+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -20,14 +20,8 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Project-Style: gnome\n"
 
-msgid "failed to draw pattern"
-msgstr "нисам успео да исцртам образац"
-
-msgid "A GL error occured"
-msgstr "Дошло је до ГЛ грешке"
-
-msgid "format wasn't negotiated before get function"
-msgstr "запис није договорен пре функције добављања (get)"
+msgid "No URL set."
+msgstr ""
 
 msgid "OpenCV failed to load template image"
 msgstr "ОтворениЦВ није успео да учита слику шаблона"
@@ -129,6 +123,15 @@ msgstr "Не могу да нађем датотеку подешавања ка
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Датотека подешавања канала не садржи ниједан канал"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "нисам успео да исцртам образац"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Дошло је до ГЛ грешке"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "запис није договорен пре функције добављања (get)"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Не могу да успоставим везу са улазом/излазом звука"

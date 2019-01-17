@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2017-09-15 09:49+0200\n"
 "Last-Translator: Sebastiano Pistore <sebastianopistore.info@protonmail.ch>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -19,144 +19,115 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Poedit 2.0.3\n"
 
-#: ext/gl/gstgltestsrc.c:489
-msgid "failed to draw pattern"
+msgid "No URL set."
 msgstr ""
 
-#: ext/gl/gstgltestsrc.c:490
-msgid "A GL error occured"
-msgstr "Si è verificato un errore OpenGL"
-
-#: ext/gl/gstgltestsrc.c:496
-msgid "format wasn't negotiated before get function"
-msgstr ""
-
-#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV non è riuscito a caricare l'immagine del template"
 
-#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Impossibile leggere le informazioni del titolo per il DVD."
 
-#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Apertura del dispositivo DVD «%s» non riuscita."
 
-#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Impostazione del posizionamento basato su PGC non riuscita."
 
-#: ext/resindvd/resindvdsrc.c:1164
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Impossibile leggere il DVD. Questo potrebbe essere dovuto al fatto che il DVD è crittografato ed all'assenza nel sistema di una libreria di decodifica DVD."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Impossibile leggere il DVD. Questo potrebbe essere dovuto al fatto che il "
+"DVD è crittografato ed all'assenza nel sistema di una libreria di decodifica "
+"DVD."
 
-#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "Impossibile leggere il DVD."
 
-#: ext/smoothstreaming/gstmssdemux.c:421
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:722
 msgid "This file contains no playable streams."
 msgstr "Questo file non contiene flussi visualizzabili a schermo."
 
-#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "È impossibile aprire il flusso sndfile in lettura."
 
-#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr "Il file generato ha un tempo di preroll superiore alla durata dei suoi flussi"
+msgstr ""
+"Il file generato ha un tempo di preroll superiore alla durata dei suoi flussi"
 
-#: gst/camerabin2/camerabingeneral.c:167 gst/camerabin2/gstcamerabin2.c:1859
-#: gst/camerabin2/gstdigitalzoom.c:283 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Manca l'elemento «%s» - verificare l'installazione di GStreamer."
 
-#: gst/camerabin2/gstcamerabin2.c:347
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr "Posizione del file impostata su NULL, è necessario un nome di file valido"
+msgstr ""
+"Posizione del file impostata su NULL, è necessario un nome di file valido"
 
-#: gst/camerabin2/gstwrappercamerabinsrc.c:585
 msgid "Digitalzoom element couldn't be created"
 msgstr ""
 
-#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr ""
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3352
 msgid "Failed to get fragment URL."
 msgstr "Impossibile ottenere l'URL del frammento."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3724
 msgid "Couldn't download fragments"
 msgstr "Impossibile scaricare frammenti"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3813
-#: gst/mpegtsdemux/mpegtsbase.c:1610
 msgid "Internal data stream error."
 msgstr "Errore interno nel flusso dei dati."
 
-#: sys/dvb/gstdvbsrc.c:1579 sys/dvb/gstdvbsrc.c:1793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Il dispositivo «%s» non esiste."
 
-#: sys/dvb/gstdvbsrc.c:1583
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Impossibile accedere al frontend del dispositivo «%s»."
 
-#: sys/dvb/gstdvbsrc.c:1602
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Impossibile ottenere le impostazioni dal frontend del dispositivo «%s»."
+msgstr ""
+"Impossibile ottenere le impostazioni dal frontend del dispositivo «%s»."
 
-#: sys/dvb/gstdvbsrc.c:1619
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr ""
 
-#: sys/dvb/gstdvbsrc.c:1797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossibile aprire il file «%s» in lettura."
 
-#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
 msgstr "Impossibile trovare file di configurazione canale"
 
-#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Impossibile caricare file di configurazione canale: «%s»"
 
-#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
 #, c-format
 msgid "Couldn't find details for channel '%s'"
 msgstr "Impossibile trovare dettagli del canale «%s»"
 
-#: sys/dvb/parsechannels.c:430
 #, c-format
 msgid "No properties for channel '%s'"
 msgstr "Nessuna proprietà per il canale «%s»"
 
-#: sys/dvb/parsechannels.c:439
 #, c-format
 msgid "Failed to set properties for channel '%s'"
 msgstr "Impossibile impostare le proprietà del canale «%s»"
 
-#: sys/dvb/parsechannels.c:560
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Impossibile trovare file di configurazione canale: «%s»"
 
-#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Il file di configurazione del canale non contiene alcun canale"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Si è verificato un errore OpenGL"
 
 #~ msgid "Internal clock error."
 #~ msgstr "Errore interno del clock."
@@ -174,10 +145,17 @@ msgstr "Il file di configurazione del canale non contiene alcun canale"
 #~ msgstr "Impossibile scrivere sul file «%s»."
 
 #~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Impossibile aprire il device audio per la gestione della regolazione del mixer."
+#~ msgstr ""
+#~ "Impossibile aprire il device audio per la gestione della regolazione del "
+#~ "mixer."
 
-#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Impossibile aprire il device audio per la gestione della regolazione del mixer. Questa versione di Open Sound System non è supportata da questo elemento."
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Impossibile aprire il device audio per la gestione della regolazione del "
+#~ "mixer. Questa versione di Open Sound System non è supportata da questo "
+#~ "elemento."
 
 #~ msgid "Volume"
 #~ msgstr "Volume"
@@ -488,17 +466,29 @@ msgstr "Il file di configurazione del canale non contiene alcun canale"
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 
-#~ msgid "Could not open audio device for playback. Device is being used by another application."
-#~ msgstr "Impossibile aprire il device audio per la riproduzione. Il dispositivo è attualmente usato da un'altra applicazione."
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
+#~ msgstr ""
+#~ "Impossibile aprire il device audio per la riproduzione. Il dispositivo è "
+#~ "attualmente usato da un'altra applicazione."
 
-#~ msgid "Could not open audio device for playback. You don't have permission to open the device."
-#~ msgstr "Impossibile aprire il device audio per la riproduzione. Permessi non sufficienti per aprire il dispositivo."
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
+#~ msgstr ""
+#~ "Impossibile aprire il device audio per la riproduzione. Permessi non "
+#~ "sufficienti per aprire il dispositivo."
 
 #~ msgid "Could not open audio device for playback."
 #~ msgstr "Impossibile aprire il device audio per la riproduzione."
 
-#~ msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Impossibile aprire il device audio per la riproduzione. Questa versione di Open Sound System non è supportata da questo elemento."
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
+#~ msgstr ""
+#~ "Impossibile aprire il device audio per la riproduzione. Questa versione "
+#~ "di Open Sound System non è supportata da questo elemento."
 
 #~ msgid "Playback is not supported by this audio device."
 #~ msgstr "Questo device audio non supporta la riproduzione."

@@ -2,13 +2,13 @@
 # This file is put in the public domain.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018.
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
-"PO-Revision-Date: 2017-05-04 16:35-0700\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
+"PO-Revision-Date: 2018-04-17 13:47-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -16,148 +16,124 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 1.8.7.1\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Lokalize 2.0\n"
 
-#: ext/gl/gstgltestsrc.c:489
-msgid "failed to draw pattern"
-msgstr "crtanje uzorka nije uspjelo"
+msgid "No URL set."
+msgstr ""
 
-#: ext/gl/gstgltestsrc.c:490
-msgid "A GL error occured"
-msgstr "Dogodila se GL greška"
-
-#: ext/gl/gstgltestsrc.c:496
-msgid "format wasn't negotiated before get function"
-msgstr "format nije bio dogovoren prije ‘get’ funkcije"
-
-#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
-msgstr "OpenCV nije uspio učitati predložak slike"
+msgstr "OpenCV nije uspio učitati sliku predložaka"
 
-#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
-msgstr "Iz naslova se ne mogu pročitati informacije o DVD-u"
+msgstr "Nije bilo moguće pročitati naslovne informacije za DVD"
 
-#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Nije uspjelo otvoriti DVD uređaj ‘%s’."
+msgstr "Nije uspjelo otvoriti DVD uređaj „%s“."
 
-#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
-msgstr "Pretraga temeljena na PGC-u nije uspjela."
+msgstr "Nije uspjelo omogućiti traženje na PGC bazi."
 
-#: ext/resindvd/resindvdsrc.c:1164
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "DVD nije moguće pročitati. DVD je možda kriptiran, a biblioteka za dekriptiranje DVD-a nije instalirana."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"DVD nije moguće čitati. Može biti da je šifrirani a biblioteka za "
+"dešifriranje nije instalirana."
 
-#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
-msgstr "DVD nije moguće pročitati."
+msgstr "DVD nije moguće čitati."
 
-#: ext/smoothstreaming/gstmssdemux.c:421
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:722
 msgid "This file contains no playable streams."
-msgstr "Ova datoteka ne sadrži nijedan upotrebljivi stream (tok podataka koji bi se mogao reproducirati)."
+msgstr "Ova datoteka ne sadrži strujanje koje bi se moglo reproducirati."
 
-#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
-msgstr "‘sndfile’ stream (tok podataka) nije moguće otvoriti za čitanje."
+msgstr "Nije moguće otvoriti strujanje audio datoteke za čitanje."
 
-#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr "U generiranoj datoteci priprema (preroll vrijeme) je duža od ukupnog trajanja streama (toka podataka)"
+msgstr ""
+"Generirana datoteka ima dulji prazni hod od duljine (korisnoga) strujanja"
 
-#: gst/camerabin2/camerabingeneral.c:167 gst/camerabin2/gstcamerabin2.c:1859
-#: gst/camerabin2/gstdigitalzoom.c:283 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Nedostaje element ‘%s’ - provjerite vašu GStreamer instalaciju."
+msgstr "Nema element „%s“ - provjerite vašu GStreamer instalaciju."
 
-#: gst/camerabin2/gstcamerabin2.c:347
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr "Lokacija datoteke je prazna (NULL); navedite valjani naziv datoteke"
+msgstr ""
+"Lokacija datoteke je prazna (NULL); postavite ju na valjano ime datoteke"
 
-#: gst/camerabin2/gstwrappercamerabinsrc.c:585
 msgid "Digitalzoom element couldn't be created"
-msgstr "Nije moguće napraviti (kreirati) element za Digitalzoom"
+msgstr "Nije moguće napraviti Digitalzoom element"
 
-#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
-msgstr "Format podslike (subpicture) nije bio konfiguriran prije protoka podataka"
+msgstr "Format podslike nije konfigurirani prije protoka podataka"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3352
 msgid "Failed to get fragment URL."
-msgstr "Nije uspjelo dobiti fragmente adrese URL-a."
+msgstr "Nije uspjelo dobiti adresu URL fragmenta."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3724
 msgid "Couldn't download fragments"
 msgstr "Nije moguće preuzeti fragmente"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3813
-#: gst/mpegtsdemux/mpegtsbase.c:1610
 msgid "Internal data stream error."
-msgstr "Interna greška toka (stream) podataka."
+msgstr "Interna greška protoka podataka."
 
-#: sys/dvb/gstdvbsrc.c:1579 sys/dvb/gstdvbsrc.c:1793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Uređaj „%s“ ne postoji."
 
 # http://whatis.techtarget.com/definition/front-end
-#: sys/dvb/gstdvbsrc.c:1583
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Sučelje (frontend) uređaja „%s“ nije moguće otvoriti."
+msgstr "Nije moguće otvoriti frontend uređaja „%s“."
 
-#: sys/dvb/gstdvbsrc.c:1602
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Od sučelja (frontend) uređaja „%s“ nije moguće dobiti postavke."
+msgstr "Nije moguće dobiti postavke od frontend uređaja „%s“."
 
-#: sys/dvb/gstdvbsrc.c:1619
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Dostavne sustave nije moguće nabrojati iz sučelja (frontend) uređaja „%s“."
+msgstr "Za frontend uređaj „%s“ nije moguće enumerírati sustave isporuke."
 
-#: sys/dvb/gstdvbsrc.c:1797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Datoteku „%s“ nije moguće otvoriti za čitanje."
 
-#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
-msgstr "Konfiguracijska datoteka kanala nije pronađena"
+msgstr "Nije moguće naći datoteku s postavkama kanala"
 
-#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "Neuspjeh pri učitavanju konfiguracijske datoteke kanala: ‘%s’"
+msgstr "Nije moguće učitati datoteku s postavkama kanala: „%s“"
 
-#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
 #, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr "Pojedinosti za kanal ‘%s’ nisu nađene"
+msgstr "Nije moguće naći detalje za kanal „%s“"
 
-#: sys/dvb/parsechannels.c:430
 #, c-format
 msgid "No properties for channel '%s'"
-msgstr "Svojstva za kanal ‘%s’ nisu nađena"
+msgstr "Nema svojstva za kanal „%s“"
 
-#: sys/dvb/parsechannels.c:439
 #, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Nije uspjelo postaviti svojstva za kanal ‘%s’"
+msgstr "Nije uspjelo postaviti svojstva za kanal „%s“"
 
-#: sys/dvb/parsechannels.c:560
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Nije nađena konfiguracijska datoteka kanala: ‘%s’"
+msgstr "Nije moguće naći datoteku s postavkama kanala: „%s“"
 
-#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
-msgstr "Konfiguracijska datoteka za kanala ne sadrži niti jedan kanal"
+msgstr "Datoteka s postavkama za kanal ne sadrži nijedan kanal"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "crtanje uzorka nije uspjelo"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Dogodila se GL greška"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "format nije dogovoreni prije dobivanja funkcije"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Spajanje na ‘sndio’ nije moguće uspostaviti"
@@ -174,8 +150,11 @@ msgstr "Konfiguracijska datoteka za kanala ne sadrži niti jedan kanal"
 #~ msgid "No file name specified for writing."
 #~ msgstr "Nedostaje naziv (nema ga) datoteke za pisanje."
 
-#~ msgid "Given file name \"%s\" can't be converted to local file name encoding."
-#~ msgstr "Naziv datoteke „%s“ ne može se pretvoriti u lokalno kodirane naziva datoteka."
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "Naziv datoteke „%s“ ne može se pretvoriti u lokalno kodirane naziva "
+#~ "datoteka."
 
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "Datoteku „%s“ nije moguće otvoriti za pisanje."

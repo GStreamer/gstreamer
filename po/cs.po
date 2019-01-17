@@ -11,153 +11,131 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2017-09-13 14:36+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Gtranslator 2.91.7\n"
 
-#: ext/gl/gstgltestsrc.c:489
-msgid "failed to draw pattern"
-msgstr "selhalo vykreslení vzoru"
+msgid "No URL set."
+msgstr ""
 
-#: ext/gl/gstgltestsrc.c:490
-msgid "A GL error occured"
-msgstr "Vyskytla se chyba GL"
-
-#: ext/gl/gstgltestsrc.c:496
-msgid "format wasn't negotiated before get function"
-msgstr "formát nebyl vyjednán před získáním funkce"
-
-#: ext/opencv/gsttemplatematch.cpp:186
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV selhalo při načítání obrazu šablony"
 
-#: ext/resindvd/resindvdsrc.c:361
 msgid "Could not read title information for DVD."
 msgstr "Nezdařilo se přečtení informací o titulu DVD."
 
-#: ext/resindvd/resindvdsrc.c:367
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nezdařilo se otevření zařízení DVD „%s“."
 
-#: ext/resindvd/resindvdsrc.c:373
 msgid "Failed to set PGC based seeking."
 msgstr "Nezdařilo se nastavení hledání založeného na PGC."
 
-#: ext/resindvd/resindvdsrc.c:1164
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Nezdařilo se čtení DVD. Může to být tím, že je DVD šifrováno a knihovna pro dešifrování DVD není nainstalována."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Nezdařilo se čtení DVD. Může to být tím, že je DVD šifrováno a knihovna pro "
+"dešifrování DVD není nainstalována."
 
-#: ext/resindvd/resindvdsrc.c:1169 ext/resindvd/resindvdsrc.c:1178
 msgid "Could not read DVD."
 msgstr "Nezdařilo se čtení DVD."
 
-#: ext/smoothstreaming/gstmssdemux.c:421
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:722
 msgid "This file contains no playable streams."
 msgstr "Tento soubor neobsahuje žádný proud, který by šel přehrát."
 
-#: ext/sndfile/gstsfdec.c:769
 msgid "Could not open sndfile stream for reading."
 msgstr "Nezdařilo se otevření proudu zvukového souboru ke čtení."
 
-#: gst/asfmux/gstasfmux.c:1832
 msgid "Generated file has a larger preroll time than its streams duration"
-msgstr "Vygenerovaný soubor má delší čas videa vloženého před začátek (preroll) než je délka celého jeho proudu"
+msgstr ""
+"Vygenerovaný soubor má delší čas videa vloženého před začátek (preroll) než "
+"je délka celého jeho proudu"
 
-#: gst/camerabin2/camerabingeneral.c:167 gst/camerabin2/gstcamerabin2.c:1859
-#: gst/camerabin2/gstdigitalzoom.c:283 gst/camerabin2/gstviewfinderbin.c:270
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Schází prvek „%s“ – zkontrolujte svoji instalaci systému GStreamer."
 
-#: gst/camerabin2/gstcamerabin2.c:347
 msgid "File location is set to NULL, please set it to a valid filename"
-msgstr "Umístění souboru je nastavené prázdné, nastavte jej prosím na platný název souboru"
+msgstr ""
+"Umístění souboru je nastavené prázdné, nastavte jej prosím na platný název "
+"souboru"
 
-#: gst/camerabin2/gstwrappercamerabinsrc.c:585
 msgid "Digitalzoom element couldn't be created"
 msgstr "Nelze vytvořit prvek digitalzoom"
 
-#: gst/dvdspu/gstdvdspu.c:1041
 msgid "Subpicture format was not configured before data flow"
 msgstr "Formát podřízeného obrázku nebyl nastaven před datovým tokem"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3352
 msgid "Failed to get fragment URL."
 msgstr "Selhalo získání adresy URL fragmentu."
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3724
 msgid "Couldn't download fragments"
 msgstr "Nelze stáhnout fragmenty"
 
-#: gst-libs/gst/adaptivedemux/gstadaptivedemux.c:3813
-#: gst/mpegtsdemux/mpegtsbase.c:1610
 msgid "Internal data stream error."
 msgstr "Chyba proudu vnitřních dat."
 
-#: sys/dvb/gstdvbsrc.c:1579 sys/dvb/gstdvbsrc.c:1793
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Zařízení „%s“ neexistuje."
 
-#: sys/dvb/gstdvbsrc.c:1583
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nezdařilo se otevření zařízení rozhraní „%s“."
 
-#: sys/dvb/gstdvbsrc.c:1602
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Ze zařízení rozhraní „%s“ se nezdařilo získat nastavení."
 
-#: sys/dvb/gstdvbsrc.c:1619
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Ze zařízení rozhraní „%s“ se nezdařilo vytvořit seznam doručovacích systémů."
+msgstr ""
+"Ze zařízení rozhraní „%s“ se nezdařilo vytvořit seznam doručovacích systémů."
 
-#: sys/dvb/gstdvbsrc.c:1797
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nezdařilo se otevření souboru „%s“ ke čtení."
 
-#: sys/dvb/parsechannels.c:410
 msgid "Couldn't find channel configuration file"
 msgstr "Nezdařilo se najít soubor s nastavením kanálů"
 
-#: sys/dvb/parsechannels.c:413 sys/dvb/parsechannels.c:563
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
 msgstr "Nezdařilo se načíst soubor s nastavením kanálu: „%s“"
 
-#: sys/dvb/parsechannels.c:421 sys/dvb/parsechannels.c:846
 #, c-format
 msgid "Couldn't find details for channel '%s'"
 msgstr "Nezdařilo se najít podrobnosti ke kanálu „%s“"
 
-#: sys/dvb/parsechannels.c:430
 #, c-format
 msgid "No properties for channel '%s'"
 msgstr "Pro kanál „%s“ nejsou žádné vlastnosti"
 
-#: sys/dvb/parsechannels.c:439
 #, c-format
 msgid "Failed to set properties for channel '%s'"
 msgstr "Nezdařilo se nastavit vlastnosti pro kanál „%s“."
 
-#: sys/dvb/parsechannels.c:560
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "Nezdařilo se najít soubor s nastavením kanálu: „%s“"
 
-#: sys/dvb/parsechannels.c:570
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Soubor s nastavením kanálů neobsahuje žádné kanály"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "selhalo vykreslení vzoru"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Vyskytla se chyba GL"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "formát nebyl vyjednán před získáním funkce"

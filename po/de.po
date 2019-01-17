@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2016-11-02 19:18+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -20,14 +20,8 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 1.8.9\n"
 
-msgid "failed to draw pattern"
-msgstr "Zeichnen des Musters ist fehlgeschlagen"
-
-msgid "A GL error occured"
-msgstr "Ein GL-Fehler ist aufgetreten"
-
-msgid "format wasn't negotiated before get function"
-msgstr "das Format wurde vor der get-Funktion nicht ausgehandelt"
+msgid "No URL set."
+msgstr ""
 
 # OpenCV ist eine freie Programmbibliothek mit Algorithmen für die Bildverarbeitung und maschinelles Sehen.
 msgid "OpenCV failed to load template image"
@@ -137,6 +131,15 @@ msgstr "Kanal-Konfigurationsdatei konnte nicht gefunden werden: »%s«"
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Kanal-Konfigurationsdatei enthält keine Kanäle"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "Zeichnen des Musters ist fehlgeschlagen"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Ein GL-Fehler ist aufgetreten"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "das Format wurde vor der get-Funktion nicht ausgehandelt"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Es konnte keine Verbindung zu sndio hergestellt werden"

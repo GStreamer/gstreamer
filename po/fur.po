@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2016-12-30 13:28+0100\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
@@ -18,14 +18,8 @@ msgstr ""
 "X-Generator: Poedit 1.8.11\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "failed to draw pattern"
-msgstr "no si è rivâts a disegnâ il motîf"
-
-msgid "A GL error occured"
-msgstr "Al è capitât un erôr GL"
-
-msgid "format wasn't negotiated before get function"
-msgstr "il formât nol jere concuardât prime de funzion get"
+msgid "No URL set."
+msgstr ""
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV nol è rivât a cjariâ la imagjin model"
@@ -130,6 +124,15 @@ msgstr "Impussibil cjatâ il file di configurazion canâl: '%s'"
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Il file di configurazion canâl nol à nissun canâl"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "no si è rivâts a disegnâ il motîf"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Al è capitât un erôr GL"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "il formât nol jere concuardât prime de funzion get"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Impussibil stabilî la conession a sndio"

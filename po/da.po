@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2016-11-03 11:28+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -18,14 +18,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 
-msgid "failed to draw pattern"
-msgstr "kunne ikke tegne mønster"
-
-msgid "A GL error occured"
-msgstr "Der opstod en GL-fejl"
-
-msgid "format wasn't negotiated before get function"
-msgstr "format blev ikke forhandlet før hent funktion"
+msgid "No URL set."
+msgstr ""
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV mislykkedes i at indlæse skabelonaftryk"
@@ -129,6 +123,15 @@ msgstr "Kunne ikke finde kanalkonfigurationsfilen: »%s«"
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Kanalkonfigurationsfilen indeholder ikke nogen kanaler"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "kunne ikke tegne mønster"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Der opstod en GL-fejl"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "format blev ikke forhandlet før hent funktion"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Kunne ikke etablere forbindelse til sndio"

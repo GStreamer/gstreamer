@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2016-11-01 20:55+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -21,14 +21,8 @@ msgstr ""
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Lokalize 1.5\n"
 
-msgid "failed to draw pattern"
-msgstr "не вдалося намалювати візерунок"
-
-msgid "A GL error occured"
-msgstr "Сталася помилка GL"
-
-msgid "format wasn't negotiated before get function"
-msgstr "формат не було узгоджено до виклику функції get"
+msgid "No URL set."
+msgstr ""
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV не вдалося завантажити зображення шаблону"
@@ -136,6 +130,15 @@ msgstr "Не вдалося знайти файл налаштувань кан�
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "У файлі налаштувань каналів не міститься даних щодо жодного каналу"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "не вдалося намалювати візерунок"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Сталася помилка GL"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "формат не було узгоджено до виклику функції get"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Не вдалося встановити з’єднання з sndio"

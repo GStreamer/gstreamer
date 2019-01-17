@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
 "PO-Revision-Date: 2017-03-19 00:53+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -20,14 +20,8 @@ msgstr ""
 "X-Generator: Lokalize 1.2\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
-msgid "failed to draw pattern"
-msgstr "a minta rajzolása meghiúsult"
-
-msgid "A GL error occured"
-msgstr "GL hiba történt"
-
-msgid "format wasn't negotiated before get function"
-msgstr "a formátum nem lett egyeztetve a függvény lekérése előtt"
+msgid "No URL set."
+msgstr ""
 
 msgid "OpenCV failed to load template image"
 msgstr "Az OpenCV-nek nem sikerült betöltenie a sablonképet"
@@ -133,6 +127,15 @@ msgstr "Nem található csatorna beállítófájl: „%s”"
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "A csatorna beállítófájl nem tartalmaz egyetlen csatornát sem"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "a minta rajzolása meghiúsult"
+
+#~ msgid "A GL error occured"
+#~ msgstr "GL hiba történt"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "a formátum nem lett egyeztetve a függvény lekérése előtt"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Nem hozható létre kapcsolat az sndio programmal"

@@ -2,14 +2,14 @@
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Copyright (C) 2007-2016 Free Software Foundation, Inc.
 # Raphael Higino <In memorian>, 2007.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2016.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2018.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.7.2\n"
+"Project-Id-Version: gst-plugins-bad-1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:09+0300\n"
-"PO-Revision-Date: 2016-05-06 16:02-0300\n"
+"POT-Creation-Date: 2019-01-17 02:16+0000\n"
+"PO-Revision-Date: 2018-10-20 15:25-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -17,16 +17,11 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-msgid "failed to draw pattern"
+msgid "No URL set."
 msgstr ""
-
-msgid "A GL error occured"
-msgstr ""
-
-msgid "format wasn't negotiated before get function"
-msgstr "O formato não foi negociado antes da chamada da função"
 
 msgid "OpenCV failed to load template image"
 msgstr "O OpenCV falhou ao carregar a imagem modelo"
@@ -108,33 +103,40 @@ msgstr ""
 msgid "Could not open file \"%s\" for reading."
 msgstr "Não foi possível abrir o arquivo \"%s\" para leitura."
 
-#, fuzzy
 msgid "Couldn't find channel configuration file"
-msgstr "Não foi possível encontrar o arquivo de configuração de canal DVB"
+msgstr "Não foi possível encontrar o arquivo de configuração de canal"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "Não foi possível carregar o arquivo de configuração de canal DVB: %s"
+msgstr "Não foi possível carregar o arquivo de configuração de canal: \"%s\""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr "Não foi possível encontrar detalhes para o canal DVB %s"
+msgstr "Não foi possível encontrar detalhes para o canal DVB \"%s\""
 
-#, fuzzy, c-format
+#, c-format
 msgid "No properties for channel '%s'"
-msgstr "Não foi possível encontrar detalhes para o canal DVB %s"
+msgstr "Não há propriedades para o canal \"%s\""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Não foi possível encontrar detalhes para o canal DVB %s"
+msgstr "Falha ao definir propriedades para o canal \"%s\""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Não foi possível encontrar o arquivo de configuração de canal DVB"
+msgstr "Não foi possível encontrar o arquivo de configuração de canal: \"%s\""
 
-#, fuzzy
 msgid "Channel configuration file doesn't contain any channels"
-msgstr "O arquivo de configuração de canal DVB não contém nenhum canal"
+msgstr "Nenhum canal foi encontrado no arquivo de configuração de canal"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "falha ao desenhar modelo"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Um erro ocorreu no GL"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "O formato não foi negociado antes da chamada da função"
 
 #~ msgid "Could not establish connection to sndio"
 #~ msgstr "Não foi possível estabelecer a conexão para sndio"
