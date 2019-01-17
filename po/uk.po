@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2016-11-01 20:49+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -79,6 +79,15 @@ msgstr "Не вдалося встановити позицію на CD."
 msgid "Could not read CD."
 msgstr "Не вдалося прочитати CD."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
@@ -93,11 +102,9 @@ msgstr "Файл схожий на текстовий файл"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Не вдалося створити елемент \"uridecodebin\"."
 
-msgid "Could not create \"decodebin3\" element."
-msgstr "Не вдалося створити елемент \"decodebin3\"."
-
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Не вдалося створити елемент \"urisourcebin\"."
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Не вдалося створити елемент \"uridecodebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -229,6 +236,12 @@ msgstr "Формат субтитрів Sami"
 
 msgid "TMPlayer subtitle format"
 msgstr "Формат субтитрів TMPlayer"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Формат субтитрів Kate"
@@ -676,6 +689,12 @@ msgstr "Файл списку відтворення, що містить мул
 msgid "Do not print any output (apart from errors)"
 msgstr "Не виводити повідомлень (окрім повідомлень щодо помилок)"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Користування: %s ФАЙЛ1|АДРЕСА1 [ФАЙЛ2|АДРЕСА2] [ФАЙЛ3|АДРЕСА3] ..."
@@ -686,6 +705,12 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Натисніть «k», щоб переглянути список клавіатурних скорочень.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Не вдалося створити елемент \"decodebin3\"."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Не вдалося створити елемент \"urisourcebin\"."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Помилка внутрішнього потоку даних."

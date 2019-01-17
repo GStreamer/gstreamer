@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2016-11-01 17:42+0200\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2017-09-13 15:20+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -22,848 +22,679 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Gtranslator 2.91.6\n"
 
-#: ext/alsa/gstalsasink.c:577
 msgid "Could not open device for playback in mono mode."
 msgstr "Nezdařilo se otevřít zařízení pro přehrávání v režimu mono."
 
-#: ext/alsa/gstalsasink.c:579
 msgid "Could not open device for playback in stereo mode."
 msgstr "Nezdařilo se otevřít zařízení pro přehrávání v režimu stereo."
 
-#: ext/alsa/gstalsasink.c:583
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Nezdařilo se otevřít zařízení pro přehrávání v %dkanálovém režimu."
 
-#: ext/alsa/gstalsasink.c:856
-msgid "Could not open audio device for playback. Device is being used by another application."
-msgstr "Nezdařilo se otevřít zvukového zařízení pro přehrávání. Zařízení je používáno jinou aplikací."
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+"Nezdařilo se otevřít zvukového zařízení pro přehrávání. Zařízení je "
+"používáno jinou aplikací."
 
-#: ext/alsa/gstalsasink.c:861
 msgid "Could not open audio device for playback."
 msgstr "Nezdařilo se otevřít zvukového zařízení pro přehrávání."
 
-#: ext/alsa/gstalsasink.c:1074
 msgid "Error outputting to audio device. The device has been disconnected."
 msgstr "Chyba výstupu do zvukového zařízení. Zařízení bylo odpojeno."
 
-#: ext/alsa/gstalsasrc.c:440
 msgid "Could not open device for recording in mono mode."
 msgstr "Nezdařilo se otevřít zařízení pro nahrávání v režimu mono."
 
-#: ext/alsa/gstalsasrc.c:442
 msgid "Could not open device for recording in stereo mode."
 msgstr "Nezdařilo se otevřít zařízení pro nahrávání v režimu stereo."
 
-#: ext/alsa/gstalsasrc.c:446
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "Nezdařilo se otevřít zařízení pro nahrávání v %dkanálovém režimu."
 
-#: ext/alsa/gstalsasrc.c:737
-msgid "Could not open audio device for recording. Device is being used by another application."
-msgstr "Nezdařilo se otevřít zvukového zařízení pro nahrávání. Zařízení je používáno jinou aplikací."
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr ""
+"Nezdařilo se otevřít zvukového zařízení pro nahrávání. Zařízení je používáno "
+"jinou aplikací."
 
-#: ext/alsa/gstalsasrc.c:742
 msgid "Could not open audio device for recording."
 msgstr "Nezdařilo se otevřít zvukového zařízení pro nahrávání."
 
-#: ext/alsa/gstalsasrc.c:988
 msgid "Error recording from audio device. The device has been disconnected."
 msgstr "Chyba nahrávání ze zvukového zařízení. Zařízení bylo odpojeno."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:277 ext/cdparanoia/gstcdparanoiasrc.c:283
 msgid "Could not open CD device for reading."
 msgstr "Nezdařilo se otevřít zařízení CD pro čtení."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:409
 msgid "Could not seek CD."
 msgstr "Nezdařilo přeskočit na CD."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:417
 msgid "Could not read CD."
 msgstr "Nezdařilo čtení z CD."
 
-#: gst/encoding/gstencodebin.c:1590 gst/playback/gstplaybin2.c:3401
-#: gst/playback/gstplaysink.c:1480 gst/playback/gstplaysink.c:1493
-#: gst/playback/gstplaysink.c:1830 gst/playback/gstplaysink.c:1862
-#: gst/playback/gstplaysink.c:2442 gst/playback/gstplaysink.c:2491
-#: gst/playback/gstplaysink.c:2506 gst/playback/gstplaysink.c:2531
-#: gst/playback/gstplaysink.c:2563 gst/playback/gstplaysink.c:2711
-#: gst/playback/gstplaysink.c:2742 gst/playback/gstplaysink.c:3120
-#: gst/playback/gstplaysink.c:3129 gst/playback/gstplaysink.c:3138
-#: gst/playback/gstplaysink.c:3147 gst/playback/gstplaysink.c:3550
-#: gst/playback/gstplaysink.c:4424 gst/playback/gstplaysinkconvertbin.c:97
-#: gst/playback/gstplaysinkconvertbin.c:117
-#: gst/playback/gsturidecodebin.c:1489 gst/playback/gsturisourcebin.c:1620
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Schází prvek „%s“ – zkontrolujte prosím instalaci systému GStreamer."
 
-#: gst/playback/gstdecodebin2.c:1865 gst/playback/gstparsebin.c:1545
 msgid "Could not determine type of stream"
 msgstr "Nezdařilo se určit typ proudu"
 
-#: gst/playback/gstdecodebin2.c:2841 gst/playback/gstparsebin.c:2378
 msgid "This appears to be a text file"
 msgstr "Zdá se, že se jedná o textový soubor"
 
-#: gst/playback/gstplaybin2.c:5446
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nelze vytvořit prvek „uridecodebin“."
 
-#: gst/playback/gstplaybin3.c:4618
-msgid "Could not create \"decodebin3\" element."
-msgstr "Nelze vytvořit prvek „decodebin3“."
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Nelze vytvořit prvek „uridecodebin“."
 
-#: gst/playback/gstplaybin3.c:4864
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Nelze vytvořit prvek „urisourcebin“."
-
-#: gst/playback/gstplaysink.c:1961
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Schází jak prvek autovideosink, tak %s."
 
-#: gst/playback/gstplaysink.c:1965
 msgid "The autovideosink element is missing."
 msgstr "Schází prvek autovideosink."
 
-#: gst/playback/gstplaysink.c:1970
 #, c-format
 msgid "Configured videosink %s is not working."
 msgstr "Nefunguje nastavený spotřebič videa %s."
 
-#: gst/playback/gstplaysink.c:1974
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
 msgstr "Nefunguje ani prvek autovideosink, ani %s."
 
-#: gst/playback/gstplaysink.c:1978
 msgid "The autovideosink element is not working."
 msgstr "Nefunguje prvek autovideosink."
 
-#: gst/playback/gstplaysink.c:2479
 msgid "Custom text sink element is not usable."
 msgstr "Vlastní prvek spotřebiče textu není použitelný."
 
-#: gst/playback/gstplaysink.c:2857
 msgid "No volume control found"
 msgstr "Nebylo nalezeno žádné ovládání hlasitosti"
 
-#: gst/playback/gstplaysink.c:2887
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
 msgstr "Schází jak prvek autoaudiosink, tak %s."
 
-#: gst/playback/gstplaysink.c:2891
 msgid "The autoaudiosink element is missing."
 msgstr "Schází prvek autoaudiosink."
 
-#: gst/playback/gstplaysink.c:2896
 #, c-format
 msgid "Configured audiosink %s is not working."
 msgstr "Nefunguje prvek audiosink %s."
 
-#: gst/playback/gstplaysink.c:2900
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
 msgstr "Nefunguje ani prvek autoaudiosink, ani %s."
 
-#: gst/playback/gstplaysink.c:2904
 msgid "The autoaudiosink element is not working."
 msgstr "Nefunguje prvek autoaudiosink."
 
-#: gst/playback/gstplaysink.c:3223 gst/playback/gstplaysink.c:3228
 msgid "Can't play a text file without video or visualizations."
 msgstr "Textový soubor nelze přehrát bez videa nebo vizualizací."
 
-#: gst/playback/gsturidecodebin.c:938
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "K typu „%s“ není dostupný dekodér."
 
-#: gst/playback/gsturidecodebin.c:1395 gst/playback/gsturisourcebin.c:1514
 msgid "No URI specified to play from."
 msgstr "Nezadána žádná adresa URI, ze které se má přehrávat."
 
-#: gst/playback/gsturidecodebin.c:1401 gst/playback/gsturisourcebin.c:1520
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Neplatná adresa URI „%s“."
 
-#: gst/playback/gsturidecodebin.c:1408 gst/playback/gsturisourcebin.c:1527
 msgid "This stream type cannot be played yet."
 msgstr "Tento typ proudu zatím nemůže být přehrán."
 
-#: gst/playback/gsturidecodebin.c:1426 gst/playback/gsturisourcebin.c:1545
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "U „%s“ není prováděna obsluha URI."
 
-#: gst/playback/gsturidecodebin.c:2292 gst/playback/gsturisourcebin.c:2200
 msgid "Source element is invalid."
 msgstr "Zdrojový prvek je neplatný."
 
-#: gst/tcp/gsttcpclientsink.c:214
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Chyba při odesílání dat na „%s:%d“."
 
-#: gst-libs/gst/audio/gstaudiobasesrc.c:866
 msgid "Can't record audio fast enough"
 msgstr "Zvuk nelze nahrávat dostatečnou rychlostí"
 
-#: gst-libs/gst/audio/gstaudiocdsrc.c:1655
 msgid "This CD has no audio tracks"
 msgstr "Toto CD nemá žádné zvukové stopy"
 
-#: gst-libs/gst/pbutils/descriptions.c:92
 msgid "ID3 tag"
 msgstr "Štítek ID3"
 
-#: gst-libs/gst/pbutils/descriptions.c:93
-#: gst-libs/gst/pbutils/descriptions.c:94
 msgid "APE tag"
 msgstr "Štítek APE"
 
-#: gst-libs/gst/pbutils/descriptions.c:95
 msgid "ICY internet radio"
 msgstr "Internetové rádio ICY"
 
-#: gst-libs/gst/pbutils/descriptions.c:130
 msgid "Apple Lossless Audio (ALAC)"
 msgstr "Apple Lossless Audio (ALAC)"
 
-#: gst-libs/gst/pbutils/descriptions.c:146
 msgid "Free Lossless Audio Codec (FLAC)"
 msgstr "Free Lossless Audio Codec (FLAC)"
 
-#: gst-libs/gst/pbutils/descriptions.c:176
-#: gst-libs/gst/pbutils/descriptions.c:177
 msgid "Lossless True Audio (TTA)"
 msgstr "Lossless True Audio (TTA)"
 
-#: gst-libs/gst/pbutils/descriptions.c:185
 msgid "Windows Media Speech"
 msgstr "Windows Media Speech"
 
-#: gst-libs/gst/pbutils/descriptions.c:201
 msgid "CYUV Lossless"
 msgstr "Bezeztrátový CYUV"
 
-#: gst-libs/gst/pbutils/descriptions.c:205
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
-#: gst-libs/gst/pbutils/descriptions.c:219
 msgid "Lossless MSZH"
 msgstr "Bezeztrátové MSZH"
 
-#: gst-libs/gst/pbutils/descriptions.c:230
 msgid "Run-length encoding"
 msgstr "RLE (Run-Length Encoding)"
 
-#: gst-libs/gst/pbutils/descriptions.c:276
 msgid "Timed Text"
 msgstr "Timed Text"
 
-#: gst-libs/gst/pbutils/descriptions.c:280
 msgid "Subtitle"
 msgstr "Titulek"
 
-#: gst-libs/gst/pbutils/descriptions.c:281
 msgid "MPL2 subtitle format"
 msgstr "Formát titulků MPL2"
 
-#: gst-libs/gst/pbutils/descriptions.c:282
 msgid "DKS subtitle format"
 msgstr "Formát titulků DKS"
 
-#: gst-libs/gst/pbutils/descriptions.c:283
 msgid "QTtext subtitle format"
 msgstr "Formát titulků QTtext"
 
-#: gst-libs/gst/pbutils/descriptions.c:284
 msgid "Sami subtitle format"
 msgstr "Formát titulků Sami"
 
-#: gst-libs/gst/pbutils/descriptions.c:285
 msgid "TMPlayer subtitle format"
 msgstr "Formát titulků TMPlayer"
 
-#: gst-libs/gst/pbutils/descriptions.c:289
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
+
 msgid "Kate subtitle format"
 msgstr "Formát titulků Kate"
 
-#: gst-libs/gst/pbutils/descriptions.c:290
 msgid "WebVTT subtitle format"
 msgstr "Formát titulků WebVTT"
 
-#: gst-libs/gst/pbutils/descriptions.c:453
-#: gst-libs/gst/pbutils/descriptions.c:456
-#: gst-libs/gst/pbutils/descriptions.c:506
 msgid "Uncompressed video"
 msgstr "Nekomprimované video"
 
-#: gst-libs/gst/pbutils/descriptions.c:461
 msgid "Uncompressed gray"
 msgstr "Nekomprimované stupně šedi"
 
-#: gst-libs/gst/pbutils/descriptions.c:484
 #, c-format
 msgid "Uncompressed packed YUV %s"
 msgstr "Nekomprimovaný zabalený YUV %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:486
 #, c-format
 msgid "Uncompressed semi-planar YUV %s"
 msgstr "Nekomprimovaný poloplanární YUV %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:488
 #, c-format
 msgid "Uncompressed planar YUV %s"
 msgstr "Nekomprimovaný planární YUV %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:499
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
 msgstr "Nekomprimovaný %dbitový %s s paletou"
 
-#: gst-libs/gst/pbutils/descriptions.c:502
 #, c-format
 msgid "Uncompressed %d-bit %s"
 msgstr "Nekomprimovaný %dbitový %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:584
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4, verze %d"
 
-#: gst-libs/gst/pbutils/descriptions.c:831
 msgid "Uncompressed audio"
 msgstr "Nekomprimovaný zvuk"
 
-#: gst-libs/gst/pbutils/descriptions.c:837
 #, c-format
 msgid "Raw %d-bit %s audio"
 msgstr "Surový %dbitový zvuk %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:937
 msgid "Audio CD source"
 msgstr "Zdroj zvukové CD"
 
-#: gst-libs/gst/pbutils/descriptions.c:940
 msgid "DVD source"
 msgstr "Zdroj DVD"
 
-#: gst-libs/gst/pbutils/descriptions.c:943
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Zdroj Real Time Streaming Protocol (RTSP)"
 
-#: gst-libs/gst/pbutils/descriptions.c:947
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Zdroj protokolu Microsoft Media Server (MMS)"
 
-#: gst-libs/gst/pbutils/descriptions.c:955
 #, c-format
 msgid "%s protocol source"
 msgstr "Zdroj protokolu %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:1027
 #, c-format
 msgid "%s video RTP depayloader"
 msgstr "Depayloader RTP %s, video"
 
-#: gst-libs/gst/pbutils/descriptions.c:1029
 #, c-format
 msgid "%s audio RTP depayloader"
 msgstr "Depayloader RTP %s, audio"
 
-#: gst-libs/gst/pbutils/descriptions.c:1031
 #, c-format
 msgid "%s RTP depayloader"
 msgstr "Depayloader RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:1038
 #, c-format
 msgid "%s demuxer"
 msgstr "Demultiplexer %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:1040
 #, c-format
 msgid "%s decoder"
 msgstr "Dekodér %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:1078
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "Payloader RTP %s, video"
 
-#: gst-libs/gst/pbutils/descriptions.c:1080
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "Payloader RTP %s, audio"
 
-#: gst-libs/gst/pbutils/descriptions.c:1082
 #, c-format
 msgid "%s RTP payloader"
 msgstr "Payloader RTP %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:1089
 #, c-format
 msgid "%s muxer"
 msgstr "Multiplexer %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:1091
 #, c-format
 msgid "%s encoder"
 msgstr "Kodér %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:1123
 #, c-format
 msgid "GStreamer element %s"
 msgstr "Prvek systému GStreamer %s"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:566
 msgid "Unknown source element"
 msgstr "Neznámý zdrojový prvek"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:569
 msgid "Unknown sink element"
 msgstr "Neznámý spotřebičový prvek"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:572
 msgid "Unknown element"
 msgstr "Neznámý prvek"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:575
 msgid "Unknown decoder element"
 msgstr "Neznámý dekodérový prvek"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:578
 msgid "Unknown encoder element"
 msgstr "Neznámý kodérový prvek"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:583
 msgid "Plugin or element of unknown type"
 msgstr "Zásuvný modul nebo prvek neznámého typu"
 
-#: gst-libs/gst/tag/gsttagdemux.c:1271
 msgid "Failed to read tag: not enough data"
 msgstr "Selhalo čtení značky: nedostatek dat"
 
-#: gst-libs/gst/tag/tags.c:79
 msgid "track ID"
 msgstr "ID stopy"
 
-#: gst-libs/gst/tag/tags.c:79
 msgid "MusicBrainz track ID"
 msgstr "ID stopy z MusicBrainz"
 
-#: gst-libs/gst/tag/tags.c:81
 msgid "artist ID"
 msgstr "ID umělce"
 
-#: gst-libs/gst/tag/tags.c:81
 msgid "MusicBrainz artist ID"
 msgstr "ID umělce z MusicBrainz"
 
-#: gst-libs/gst/tag/tags.c:83
 msgid "album ID"
 msgstr "ID alba"
 
-#: gst-libs/gst/tag/tags.c:83
 msgid "MusicBrainz album ID"
 msgstr "ID alba z MusicBrainz"
 
-#: gst-libs/gst/tag/tags.c:86
 msgid "album artist ID"
 msgstr "ID umělce alba"
 
-#: gst-libs/gst/tag/tags.c:86
 msgid "MusicBrainz album artist ID"
 msgstr "ID umělce alba z MusicBrainz"
 
-#: gst-libs/gst/tag/tags.c:88
 msgid "track TRM ID"
 msgstr "ID stopy TRM"
 
-#: gst-libs/gst/tag/tags.c:88
 msgid "MusicBrainz TRM ID"
 msgstr "ID stopy TRM z MusicBrainz"
 
-#: gst-libs/gst/tag/tags.c:110
 msgid "capturing shutter speed"
 msgstr "rychlost závěrky při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:111
 msgid "Shutter speed used when capturing an image, in seconds"
 msgstr "Rychlost závěrky při zachytávání obrazu, v sekundách"
 
-#: gst-libs/gst/tag/tags.c:114
 msgid "capturing focal ratio"
 msgstr "ohnisková vzdálenost při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:115
 msgid "Focal ratio (f-number) used when capturing the image"
 msgstr "Clonové číslo (číslo F) použité při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:118
 msgid "capturing focal length"
 msgstr "ohnisková vzdálenost při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:119
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Ohnisková vzdálenost čoček použitá při záchytávání obrazu, v mm"
 
-#: gst-libs/gst/tag/tags.c:123
 msgid "capturing 35 mm equivalent focal length"
 msgstr "ohnisková vzdálenost při zachytávání ekvivalentní 35 mm"
 
-#: gst-libs/gst/tag/tags.c:124
-msgid "35 mm equivalent focal length of the lens used capturing the image, in mm"
-msgstr "Ohnisková vzdálenost čoček ekvivalentní 35 mm použitá při záchytávání obrazu, v mm"
+msgid ""
+"35 mm equivalent focal length of the lens used capturing the image, in mm"
+msgstr ""
+"Ohnisková vzdálenost čoček ekvivalentní 35 mm použitá při záchytávání "
+"obrazu, v mm"
 
-#: gst-libs/gst/tag/tags.c:128
 msgid "capturing digital zoom ratio"
 msgstr "stupeň digitálního přiblížení při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:129
 msgid "Digital zoom ratio used when capturing an image"
 msgstr "Stupeň digitálního přiblížení použitého při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:132
 msgid "capturing iso speed"
 msgstr "rychlost ISO při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:133
 msgid "The ISO speed used when capturing an image"
 msgstr "Rychlost ISO použitá při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:136
 msgid "capturing exposure program"
 msgstr "program expozice při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:137
 msgid "The exposure program used when capturing an image"
 msgstr "Program expozice použitý při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:140
 msgid "capturing exposure mode"
 msgstr "režim expozice při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:141
 msgid "The exposure mode used when capturing an image"
 msgstr "Režim expozice použitý při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:144
 msgid "capturing exposure compensation"
 msgstr "kompenzace expozice při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:145
 msgid "The exposure compensation used when capturing an image"
 msgstr "Kompenzace expozice použitá při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:148
 msgid "capturing scene capture type"
 msgstr "typ zachycení scény při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:149
 msgid "The scene capture mode used when capturing an image"
 msgstr "Režim zachycení scény použitý při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:152
 msgid "capturing gain adjustment"
 msgstr "úprava zesílení při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:153
 msgid "The overall gain adjustment applied on an image"
 msgstr "Úprava celkového zesílení při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:156
 msgid "capturing white balance"
 msgstr "vyvážení bílé při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:157
 msgid "The white balance mode set when capturing an image"
 msgstr "Režim vyvážení bílé nastavený při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:160
 msgid "capturing contrast"
 msgstr "kontrast při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:161
 msgid "The direction of contrast processing applied when capturing an image"
 msgstr "Nastavené zpracování kontrastu použité při zachytávání obrazuj"
 
-#: gst-libs/gst/tag/tags.c:165
 msgid "capturing saturation"
 msgstr "sytost při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:166
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr "Nastavené zpracování sytosti použité při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:170
 msgid "capturing sharpness"
 msgstr "ostrost při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:171
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr "Nastavené zpracování ostrosti použité při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:175
 msgid "capturing flash fired"
 msgstr "použití blesku při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:176
 msgid "If the flash fired while capturing an image"
 msgstr "Zda byl při zachytávání obrazu použit blesk"
 
-#: gst-libs/gst/tag/tags.c:179
 msgid "capturing flash mode"
 msgstr "režim blesku při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:180
 msgid "The selected flash mode while capturing an image"
 msgstr "Režim blesku vybraný při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:183
 msgid "capturing metering mode"
 msgstr "režim měření při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:184
-msgid "The metering mode used while determining exposure for capturing an image"
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
 msgstr "Režim měření použitý pro určení expozice při zachytávání obrazu"
 
-#: gst-libs/gst/tag/tags.c:188
 msgid "capturing source"
 msgstr "zdroj při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:189
 msgid "The source or type of device used for the capture"
 msgstr "Zdroj nebo typ zařízení použitého při zachytávání"
 
-#: gst-libs/gst/tag/tags.c:192
 msgid "image horizontal ppi"
 msgstr "pixelů na palec vodorovně v obrazu"
 
-#: gst-libs/gst/tag/tags.c:193
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Zamýšlená hustota pixelů multimédia (image/video) vodorovně v pixelech na palec"
+msgstr ""
+"Zamýšlená hustota pixelů multimédia (image/video) vodorovně v pixelech na "
+"palec"
 
-#: gst-libs/gst/tag/tags.c:196
 msgid "image vertical ppi"
 msgstr "pixelů na palec svisle v obrazu"
 
-#: gst-libs/gst/tag/tags.c:197
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Zamýšlená hustota pixelů multimédia (image/video) svisle v pixelech na palec"
+msgstr ""
+"Zamýšlená hustota pixelů multimédia (image/video) svisle v pixelech na palec"
 
-#: gst-libs/gst/tag/tags.c:200
 msgid "ID3v2 frame"
 msgstr "Rámec ID3v2"
 
-#: gst-libs/gst/tag/tags.c:200
 msgid "unparsed id3v2 tag frame"
 msgstr "nezpracovaný rámec štítků id3v2"
 
-#: gst-libs/gst/tag/tags.c:204
 msgid "musical-key"
 msgstr "klíčové místo skladby"
 
-#: gst-libs/gst/tag/tags.c:204
 msgid "Initial key in which the sound starts"
 msgstr "Počáteční klíčové místo, od kterého se má zvuk spouštět"
 
-#: tools/gst-device-monitor.c:156 tools/gst-play.c:1166
 msgid "Print version information and exit"
 msgstr "Vypsat informace o verzi a skončit"
 
-#: tools/gst-device-monitor.c:158
-msgid "Don't exit after showing the initial device list, but wait for devices to added/removed."
-msgstr "Po zobrazení počátečního seznamu zařízení neskončit, ale ček na přidání/odebrání zařízení."
+msgid ""
+"Don't exit after showing the initial device list, but wait for devices to "
+"added/removed."
+msgstr ""
+"Po zobrazení počátečního seznamu zařízení neskončit, ale ček na přidání/"
+"odebrání zařízení."
 
-#: tools/gst-play.c:275
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Hlasitost: %.0f %%"
 
-#: tools/gst-play.c:314
 msgid "Buffering..."
 msgstr "Ukládá se do vyrovnávací paměti…"
 
-#: tools/gst-play.c:335
 msgid "Clock lost, selecting a new one\n"
 msgstr "Bylo ztraceno časování, vybírá se nové\n"
 
-#: tools/gst-play.c:365 tools/gst-play.c:411 tools/gst-play.c:763
-#: tools/gst-play.c:1070
 msgid "Reached end of play list."
 msgstr "Dosažen konec seznamu k přehrání"
 
-#: tools/gst-play.c:493
 msgid "Paused"
 msgstr "Pozastaveno"
 
-#: tools/gst-play.c:551
 #, c-format
 msgid "Now playing %s\n"
 msgstr "Nyní se přehrává %s\n"
 
-#: tools/gst-play.c:614
 #, c-format
 msgid "About to finish, preparing next title: %s"
 msgstr "Blíží se konec, připravuje se následující titul: %s"
 
-#: tools/gst-play.c:859
 #, c-format
 msgid "Playback rate: %.2f"
 msgstr "Rychlost přehrávání: %.2f"
 
-#: tools/gst-play.c:863
 #, c-format
 msgid "Could not change playback rate to %.2f"
 msgstr "Nezdařilo se změnit rychlost přehrávání na %.2f"
 
-#: tools/gst-play.c:1010
 msgid "space"
 msgstr "mezerník"
 
-#: tools/gst-play.c:1010
 msgid "pause/unpause"
 msgstr "pozastavit/pokračovat"
 
-#: tools/gst-play.c:1011
 msgid "q or ESC"
 msgstr "q nebo ESC"
 
-#: tools/gst-play.c:1011
 msgid "quit"
 msgstr "ukončit"
 
-#: tools/gst-play.c:1012
 msgid "> or n"
 msgstr "> nebo n"
 
-#: tools/gst-play.c:1012
 msgid "play next"
 msgstr "přehrát následující"
 
-#: tools/gst-play.c:1013
 msgid "< or b"
 msgstr "< nebo b"
 
-#: tools/gst-play.c:1013
 msgid "play previous"
 msgstr "přehrát předchozí"
 
-#: tools/gst-play.c:1014
 msgid "seek forward"
 msgstr "posounout vpřed"
 
-#: tools/gst-play.c:1015
 msgid "seek backward"
 msgstr "posunout zpět"
 
-#: tools/gst-play.c:1016
 msgid "volume up"
 msgstr "zvýšit hlasitost"
 
-#: tools/gst-play.c:1017
 msgid "volume down"
 msgstr "snížit hlasitost"
 
-#: tools/gst-play.c:1018
 msgid "increase playback rate"
 msgstr "zvýšit rychlost přehrávání"
 
-#: tools/gst-play.c:1019
 msgid "decrease playback rate"
 msgstr "snížti rychlost přehrávání"
 
-#: tools/gst-play.c:1020
 msgid "change playback direction"
 msgstr "změnit směr přehrávání"
 
-#: tools/gst-play.c:1021
 msgid "enable/disable trick modes"
 msgstr "zapnout/vypnout trikový režim"
 
-#: tools/gst-play.c:1022
 msgid "change audio track"
 msgstr "změnit stopu zvuku"
 
-#: tools/gst-play.c:1023
 msgid "change video track"
 msgstr "změnit stopu videa"
 
-#: tools/gst-play.c:1024
 msgid "change subtitle track"
 msgstr "změnit stopu titulků"
 
-#: tools/gst-play.c:1025
 msgid "seek to beginning"
 msgstr "přeskočit na začátek"
 
-#: tools/gst-play.c:1026
 msgid "show keyboard shortcuts"
 msgstr "zobrazit klávesové zkratky"
 
-#: tools/gst-play.c:1029
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktivní režim – ovládání klávesnicí:"
 
-#: tools/gst-play.c:1161
 msgid "Output status information and property notifications"
 msgstr "Vypsat upozornění na vlastnosti a stavové informace"
 
-#: tools/gst-play.c:1163
 msgid "Control playback behaviour setting playbin 'flags' property"
-msgstr "Vlastnost „flags“ nastavení chování pro ovládání přehrávání u prvku playbin"
+msgstr ""
+"Vlastnost „flags“ nastavení chování pro ovládání přehrávání u prvku playbin"
 
-#: tools/gst-play.c:1168
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Spotřebič videa, který se má použít (výchozí je autovideosink)"
 
-#: tools/gst-play.c:1170
 msgid "Audio sink to use (default is autoaudiosink)"
 msgstr "Spotřebič zvuku, který se má použít (výchozí je autoaudiosink)"
 
-#: tools/gst-play.c:1172
 msgid "Enable gapless playback"
 msgstr "Zapnout přehrávání bez mezer"
 
-#: tools/gst-play.c:1174
 msgid "Shuffle playlist"
 msgstr "Náhodně zamíchat seznam k přehrání"
 
-#: tools/gst-play.c:1177
 msgid "Disable interactive control via the keyboard"
 msgstr "Zakázat interaktivní ovládání klávesnicí"
 
-#: tools/gst-play.c:1179
 msgid "Volume"
 msgstr "Hlasitost"
 
-#: tools/gst-play.c:1181
 msgid "Playlist file containing input media files"
 msgstr "Soubor se seznamem k přehrání obsahující vstupní multimediální soubory"
 
-#: tools/gst-play.c:1183
 msgid "Do not print any output (apart from errors)"
 msgstr "Nevypisovat žádný výstup (mimo chyb)"
 
-#: tools/gst-play.c:1254
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Použítí: %s SOUBOR1|URI1 [SOUBOR2|URI2] [SOUBOR3|URI3] …"
 
-#: tools/gst-play.c:1258
 msgid "You must provide at least one filename or URI to play."
 msgstr "Musíte zadat minimálně jeden název souboru nebo adresu URI k přehrání."
 
-#: tools/gst-play.c:1298
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Zmáčknutím „k“ si zobrazíte seznam klávesových zkratek.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Nelze vytvořit prvek „decodebin3“."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Nelze vytvořit prvek „urisourcebin“."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2016-11-02 13:38+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -69,6 +69,15 @@ msgstr "无法搜索 CD。"
 msgid "Could not read CD."
 msgstr "无法读取 CD。"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "未找到组件‘%s’－请检查您的 GStreamer 安装情况。"
@@ -82,11 +91,9 @@ msgstr "此文件是个文本文件"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "无法创建“uridecodebin”组件。"
 
-msgid "Could not create \"decodebin3\" element."
-msgstr "无法创建“decodebin3”组件。"
-
-msgid "Could not create \"urisourcebin\" element."
-msgstr "无法创建“urisourcebin”组件。"
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "无法创建“uridecodebin”组件。"
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -217,6 +224,12 @@ msgstr "Sami 字幕格式"
 
 msgid "TMPlayer subtitle format"
 msgstr "TMPlayer 字幕格式"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Kate 字幕格式"
@@ -648,6 +661,12 @@ msgstr "播放列表文件含有媒体文件"
 msgid "Do not print any output (apart from errors)"
 msgstr "不显示任何输出（除了错误信息）"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "用法：%s [文件1|URI1] [文件2|URI2] [文件3|URI3] ..."
@@ -657,6 +676,12 @@ msgstr "你必须提供至少一个文件名或URI来播放。"
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "按“k”键来显示键盘快捷键列表。\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "无法创建“decodebin3”组件。"
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "无法创建“urisourcebin”组件。"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "内部数据流错误。"

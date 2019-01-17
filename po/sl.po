@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2013-01-05 10:10+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -75,6 +75,15 @@ msgstr "Po CD-ju ni mogoče iskati."
 msgid "Could not read CD."
 msgstr "CD-ja ni mogoče prebrati."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Predmet '%s' manjka - preverite namestitev paketa GStreamer."
@@ -88,10 +97,7 @@ msgstr "Datoteka je videti kot besedilna datoteka"
 msgid "Could not create \"uridecodebin\" element."
 msgstr ""
 
-msgid "Could not create \"decodebin3\" element."
-msgstr ""
-
-msgid "Could not create \"urisourcebin\" element."
+msgid "Could not create \"uridecodebin3\" element."
 msgstr ""
 
 #, c-format
@@ -223,6 +229,12 @@ msgstr "Oblika podnapisov Sami"
 
 msgid "TMPlayer subtitle format"
 msgstr "Oblika podnapisov TMPlayer"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Oblika podnapisov Kate"
@@ -658,6 +670,12 @@ msgid "Playlist file containing input media files"
 msgstr ""
 
 msgid "Do not print any output (apart from errors)"
+msgstr ""
+
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
 msgstr ""
 
 #, c-format

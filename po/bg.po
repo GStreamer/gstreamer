@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2016-02-21 21:03+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -75,6 +75,15 @@ msgstr "По CD-то не може да се търси."
 msgid "Could not read CD."
 msgstr "CD-то не може да бъде прочетено."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Елементът „%s“ липсва — проверете инсталацията на GStreamer."
@@ -89,11 +98,7 @@ msgid "Could not create \"uridecodebin\" element."
 msgstr "Не може да се създаде елемент „uridecodebin“."
 
 #, fuzzy
-msgid "Could not create \"decodebin3\" element."
-msgstr "Не може да се създаде елемент „uridecodebin“."
-
-#, fuzzy
-msgid "Could not create \"urisourcebin\" element."
+msgid "Could not create \"uridecodebin3\" element."
 msgstr "Не може да се създаде елемент „uridecodebin“."
 
 #, c-format
@@ -225,6 +230,12 @@ msgstr "Субтитри, формат Sami"
 
 msgid "TMPlayer subtitle format"
 msgstr "Субтитри, формат TMPlayer"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Субтитри, формат Kate"
@@ -663,6 +674,12 @@ msgstr "Файл със списък за изпълнение"
 msgid "Do not print any output (apart from errors)"
 msgstr "Без извеждане на информация (освен грешките)"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Употреба: %s ФАЙЛ_1|АДРЕС_1 [ФАЙЛ_2|АДРЕС_2] [ФАЙЛ_3|АДРЕС_3]…"
@@ -672,6 +689,14 @@ msgstr "Трябва да укажете поне един файл или ад�
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Натиснете „k“, за да видите списъка с клавишни комбинации.\n"
+
+#, fuzzy
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Не може да се създаде елемент „uridecodebin“."
+
+#, fuzzy
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Не може да се създаде елемент „uridecodebin“."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Вътрешна грешка на потока от данни."

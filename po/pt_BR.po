@@ -1,18 +1,19 @@
 # Brazilian Portuguese translation of gst-plugins-base.
-# Copyright (C) 2008-2016 Free Software Foundation, Inc.
+# Copyright (C) 2008-2018 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2016.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2018.
 #
 # PCM -> PCM
 # buffering -> preenchendo buffer
 # sink -> consumidor
+# handler -> controlador
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.7.90\n"
+"Project-Id-Version: gst-plugins-base-1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
-"PO-Revision-Date: 2016-05-06 16:47-0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
+"PO-Revision-Date: 2018-10-20 16:32-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
 "net>\n"
@@ -20,6 +21,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -79,6 +81,15 @@ msgstr "Não foi possível buscar no CD."
 msgid "Could not read CD."
 msgstr "Não foi possível ler o CD."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
@@ -88,17 +99,13 @@ msgid "Could not determine type of stream"
 msgstr "Não foi possível determinar o tipo de fluxo"
 
 msgid "This appears to be a text file"
-msgstr "Este parece ser um arquivo de texto"
+msgstr "Este arquivo parece ser de texto"
 
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Não foi possível criar o elemento \"uridecodebin\"."
 
 #, fuzzy
-msgid "Could not create \"decodebin3\" element."
-msgstr "Não foi possível criar o elemento \"decodebin2\"."
-
-#, fuzzy
-msgid "Could not create \"urisourcebin\" element."
+msgid "Could not create \"uridecodebin3\" element."
 msgstr "Não foi possível criar o elemento \"uridecodebin\"."
 
 #, c-format
@@ -130,7 +137,7 @@ msgid "Both autoaudiosink and %s elements are missing."
 msgstr "Os elementos autoaudiosink e %s estão faltando."
 
 msgid "The autoaudiosink element is missing."
-msgstr "O elemento autoaudiosink não está faltando."
+msgstr "O elemento autoaudiosink está faltando."
 
 #, c-format
 msgid "Configured audiosink %s is not working."
@@ -163,7 +170,7 @@ msgstr "Este tipo de fluxo ainda não pode ser reproduzido."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Nenhum manipulador para o URI \"%s\" foi implementado."
+msgstr "Nenhum controlador para o URI \"%s\" foi implementado."
 
 msgid "Source element is invalid."
 msgstr "O elemente de origem é inválido."
@@ -232,12 +239,17 @@ msgstr "Formato de legendas Sami"
 msgid "TMPlayer subtitle format"
 msgstr "Formato de legendas TMPlayer"
 
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
+
 msgid "Kate subtitle format"
 msgstr "Formato de legendas Kate"
 
-#, fuzzy
 msgid "WebVTT subtitle format"
-msgstr "Formato de legendas Kate"
+msgstr "Formato de legendas WebVTT"
 
 msgid "Uncompressed video"
 msgstr "Vídeo sem compressão"
@@ -274,7 +286,7 @@ msgstr "Áudio sem compressão"
 
 #, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Áudio Raw de %d bits %s"
+msgstr "Áudio bruto de %d bits %s"
 
 msgid "Audio CD source"
 msgstr "Origem: CD de áudio"
@@ -337,7 +349,7 @@ msgid "GStreamer element %s"
 msgstr "Elemento \"%s\" do GStreamer"
 
 msgid "Unknown source element"
-msgstr "Elemento de origem desconhecida"
+msgstr "Elemento de origem desconhecido"
 
 msgid "Unknown sink element"
 msgstr "Elemento consumidor desconhecido"
@@ -405,14 +417,14 @@ msgstr "distância focal ao capturar"
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Distância focal das lentes utilizada ao capturar a imagem, em mm"
 
-#, fuzzy
 msgid "capturing 35 mm equivalent focal length"
-msgstr "distância focal ao capturar"
+msgstr "distância focal equivalente à captura de 35 mm"
 
-#, fuzzy
 msgid ""
 "35 mm equivalent focal length of the lens used capturing the image, in mm"
-msgstr "Distância focal das lentes utilizada ao capturar a imagem, em mm"
+msgstr ""
+"Distância focal das lentes equivalente a 35 mm utilizada ao capturar a "
+"imagem, em mm"
 
 msgid "capturing digital zoom ratio"
 msgstr "taxa de zoom digital ao capturar"
@@ -505,24 +517,24 @@ msgstr ""
 "uma imagem"
 
 msgid "capturing source"
-msgstr "fonte ao capturar"
+msgstr "origem ao capturar"
 
 msgid "The source or type of device used for the capture"
-msgstr "A fonte ou tipo de dispositivo utilizado para a captura"
+msgstr "A origem ou tipo de dispositivo utilizado para a captura"
 
 msgid "image horizontal ppi"
-msgstr "PPI horizontal da imagem"
+msgstr "PPP horizontal da imagem"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr ""
-"Densidade de pixels horizontais desejado para a mídia (imagem/vídeo), em PPI"
+"Densidade de pixels horizontais desejada para a mídia (imagem/vídeo), em PPP"
 
 msgid "image vertical ppi"
-msgstr "PPI vertical da imagem"
+msgstr "PPP vertical da imagem"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
-"Densidade de pixels verticais desejado para a mídia (imagem/vídeo), em PPI"
+"Densidade de pixels verticais desejada para a mídia (imagem/vídeo), em PPP"
 
 msgid "ID3v2 frame"
 msgstr "quadro ID3v2"
@@ -615,13 +627,13 @@ msgid "volume down"
 msgstr "diminuir volume"
 
 msgid "increase playback rate"
-msgstr "aumentar taxa de reprodução"
+msgstr "aumentar a taxa de reprodução"
 
 msgid "decrease playback rate"
-msgstr "diminuir taxa de reprodução"
+msgstr "diminuir a taxa de reprodução"
 
 msgid "change playback direction"
-msgstr "alterar direção de reprodução"
+msgstr "alterar a direção de reprodução"
 
 msgid "enable/disable trick modes"
 msgstr "ativar/desativar modos avançados"
@@ -686,6 +698,12 @@ msgstr "Arquivo de lista de reprodução que contém arquivos de mídia de entra
 msgid "Do not print any output (apart from errors)"
 msgstr "Não exibir nenhuma saída (além dos erros)"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Uso: %s ARQ1|URI1 [ARQ2|URI2] [ARQ3|URI3] ..."
@@ -695,6 +713,12 @@ msgstr "Você deve fornecer ao menos um nome de arquivo ou URI para reproduzir."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Pressione \"k\" para ver a lista de atalhos do teclado.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Não foi possível criar o elemento \"decodebin3\"."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Não foi possível criar o elemento \"urisourcebin\"."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Erro interno no fluxo de dados."

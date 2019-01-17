@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2016-11-01 23:00+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -76,6 +76,15 @@ msgstr "Suchvorgang auf der CD ist fehlgeschlagen."
 msgid "Could not read CD."
 msgstr "CD konnte nicht gelesen werden."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
@@ -90,11 +99,9 @@ msgstr "Dies scheint eine Textdatei zu sein"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Das Element »uridecodebin« konnte nicht erstellt werden."
 
-msgid "Could not create \"decodebin3\" element."
-msgstr "Das Element »decodebin3« konnte nicht erstellt werden."
-
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Das Element »urisourcebin« konnte nicht erstellt werden."
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Das Element »uridecodebin« konnte nicht erstellt werden."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -226,6 +233,12 @@ msgstr "Untertitel-Format Sami"
 
 msgid "TMPlayer subtitle format"
 msgstr "Untertitel-Format TMPlayer"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Untertitel-Format Kate"
@@ -665,6 +678,12 @@ msgstr "Datei mit Wiedergabeliste enthält Eingabe-Mediendateien"
 msgid "Do not print any output (apart from errors)"
 msgstr "Nichts ausgeben (außer Fehlermeldungen)"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Aufruf: %s DATEI1|URI1 [DATEI2|URI2] [DATEI3|URI3] ..."
@@ -676,6 +695,12 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Geben Sie »k« ein, um die Liste der Tastenkombinationen zu sehen.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Das Element »decodebin3« konnte nicht erstellt werden."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Das Element »urisourcebin« konnte nicht erstellt werden."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interner Fehler im Datenstrom."

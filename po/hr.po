@@ -2,13 +2,13 @@
 # This file is put in the public domain.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018.
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
-"PO-Revision-Date: 2016-11-19 10:06-0800\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
+"PO-Revision-Date: 2018-04-17 13:52-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -18,81 +18,89 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 1.8.7.1\n"
+"X-Generator: Lokalize 2.0\n"
 
 msgid "Could not open device for playback in mono mode."
-msgstr "Uređaj za reprodukciju nije moguće otvoriti u mono načinu."
+msgstr "Uređaj za reprodukciju nije bilo moguće otvoriti u mono načinu."
 
 msgid "Could not open device for playback in stereo mode."
-msgstr "Uređaj za reprodukciju nije moguće otvoriti u stereo načinu."
+msgstr "Uređaj za reprodukciju nije bilo moguće otvoriti u stereo načinu."
 
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "Uređaj za reprodukciju nije moguće otvoriti u %d-kanalskom načinu."
+msgstr ""
+"Uređaj za reprodukciju nije bilo moguće otvoriti u %d-kanalskom načinu."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Audiouređaj nije moguće otvoriti za reprodukciju. Uređaj trenutačno koristi "
-"neka druga aplikacija."
+"Audiouređaj nije bilo moguće otvoriti za reprodukciju. Uređaj trenutačno "
+"koristi neka druga aplikacija."
 
 msgid "Could not open audio device for playback."
-msgstr "Audiouređaj nije moguće otvoriti za reprodukciju."
+msgstr "Audiouređaj nije bilo moguće otvoriti za reprodukciju."
 
 msgid "Error outputting to audio device. The device has been disconnected."
 msgstr "Greška u izlazu na audiouređaj. Uređaj nije spojen."
 
 msgid "Could not open device for recording in mono mode."
-msgstr "Uređaj za snimanje nije moguće otvoriti u mono načinu."
+msgstr "Uređaj za snimanje nije bilo moguće otvoriti u mono načinu."
 
 msgid "Could not open device for recording in stereo mode."
-msgstr "Uređaj za snimanje nije moguće otvoriti u stereo načinu."
+msgstr "Uređaj za snimanje nije bilo moguće otvoriti u stereo načinu."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Uređaj za snimanje nije moguće otvoriti u %d-kanalskom načinu."
+msgstr "Uređaj za snimanje nije bilo moguće otvoriti u %d-kanalskom načinu."
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
 msgstr ""
-"Uređaj nije moguće otvoriti za snimanje. Uređaj trenutačno koristi neka "
+"Uređaj nije bilo moguće otvoriti za snimanje. Uređaj trenutačno koristi neka "
 "druga aplikacija."
 
 msgid "Could not open audio device for recording."
-msgstr "Audiouređaj nije moguće otvoriti za snimanje."
+msgstr "Audiouređaj nije bilo moguće otvoriti za snimanje."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr "Greška pri snimanju s audiouređajem. Uređaj nije spojen."
+msgstr "Greška pri snimanju iz audiouređaja. Uređaj nije spojen."
 
 msgid "Could not open CD device for reading."
-msgstr "CD uređaj nije moguće otvoriti za čitanje."
+msgstr "CD uređaj nije bilo moguće otvoriti za čitanje."
 
 msgid "Could not seek CD."
-msgstr "CD nije moguće pretraživati."
+msgstr "CD nije bilo moguće pretraživati."
 
 msgid "Could not read CD."
-msgstr "CD nije moguće čitati."
+msgstr "CD nije bilo moguće čitati."
+
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Nedostaje element ‘%s’ - provjerite vašu GStreamer instalaciju."
+msgstr "Nedostaje element „%s“ - provjerite vašu GStreamer instalaciju."
 
 msgid "Could not determine type of stream"
-msgstr "Nije moguće odrediti vrstu streama (toka podataka)"
+msgstr "Nije moguće odrediti vrstu struje"
 
 msgid "This appears to be a text file"
 msgstr "Ovo izgleda kao tekstualna datoteka"
 
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Element „uridecodebin“ nije moguće napraviti (kreirati)."
+msgstr "Element „uridecodebin“ nije bilo moguće napraviti."
 
-msgid "Could not create \"decodebin3\" element."
-msgstr "Element „decodebin3“ nije moguće napraviti (kreirati)."
-
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Element „urisourcebin“ nije moguće napraviti (kreirati)."
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Element „uridecodebin“ nije bilo moguće napraviti."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -113,10 +121,10 @@ msgid "The autovideosink element is not working."
 msgstr "Element autovideosink ne radi."
 
 msgid "Custom text sink element is not usable."
-msgstr "Prilagođeni element ‘text sink’ nije upotrebljiv."
+msgstr "Prilagođeni tekstualni sink element nije upotrebljivi."
 
 msgid "No volume control found"
-msgstr "Nije pronađen regulator glasnoće"
+msgstr "Nema regulatora glasnoće"
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
@@ -142,24 +150,24 @@ msgstr ""
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Nema raspoloživog dekodera za vrstu ‘%s’."
+msgstr "Nema raspoloživoga dekodera za vrstu „%s“."
 
 msgid "No URI specified to play from."
 msgstr "Nije navedena URI adresa za reprodukciju."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "URI adresa „%s“ je neispravna."
+msgstr "URI adresa „%s“ je nevaljana."
 
 msgid "This stream type cannot be played yet."
-msgstr "Ova vrsta streama (toka podataka) se još ne može reproducirati."
+msgstr "Ova vrsta struje ne može se još reproducirati."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Za „%s“ URI rukovatelj nije implementiran."
+msgstr "Za „%s“ URI rukovatelj nije implementirani."
 
 msgid "Source element is invalid."
-msgstr "Source (izvor) element nije ispravan."
+msgstr "Source element nije valjani."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -169,13 +177,13 @@ msgid "Can't record audio fast enough"
 msgstr "Audio se ne može dovoljno brzo snimati"
 
 msgid "This CD has no audio tracks"
-msgstr "Ovaj CD nema audio zapisa (tracks)"
+msgstr "Ovaj CD nema audio zapisa"
 
 msgid "ID3 tag"
-msgstr "ID3 tag (oznaka)"
+msgstr "ID3 tag"
 
 msgid "APE tag"
-msgstr "APE tag (oznaka)"
+msgstr "APE tag"
 
 msgid "ICY internet radio"
 msgstr "ICY internetski radio"
@@ -202,11 +210,11 @@ msgid "Lossless MSZH"
 msgstr "Lossless MSZH"
 
 msgid "Run-length encoding"
-msgstr "Run-length kodiranje"
+msgstr "RLE (Run-length encoding)"
 
 # https://en.wikipedia.org/wiki/Timed_text
 msgid "Timed Text"
-msgstr "Timed Text (vremenski nàpasān tekst)"
+msgstr "Timed Text (vremenski napasani tekst)"
 
 msgid "Subtitle"
 msgstr "Podnaslov"
@@ -226,6 +234,12 @@ msgstr "Format podnaslova Sami"
 msgid "TMPlayer subtitle format"
 msgstr "Format podnaslova TMPlayer"
 
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
+
 msgid "Kate subtitle format"
 msgstr "Format naslova Kate"
 
@@ -233,37 +247,37 @@ msgid "WebVTT subtitle format"
 msgstr "Format naslova WebVTT"
 
 msgid "Uncompressed video"
-msgstr "Nesažeti video"
+msgstr "Nekomprimirani video"
 
 msgid "Uncompressed gray"
-msgstr "Nesažeto sivilo"
+msgstr "Nekomprimirano sivilo"
 
 #, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Nesažeti pakirani YUV %s"
+msgstr "Nekomprimirani pakirani YUV %s"
 
 #, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Nesažeti polu-planarni YUV %s"
+msgstr "Nekomprimirani polu-planarni YUV %s"
 
 #, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Nesažeti planarni YUV %s"
+msgstr "Nekomprimirani planarni YUV %s"
 
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Nesažeti %d-bitni %s s paletom"
+msgstr "Nekomprimirani %d-bitni %s s paletom"
 
 #, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Nesažeti %d-bitni %s"
+msgstr "Nekomprimirani %d-bitni %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 inačica %d"
 
 msgid "Uncompressed audio"
-msgstr "Nesažeti audio"
+msgstr "Nekomprimirani audio"
 
 #, c-format
 msgid "Raw %d-bit %s audio"
@@ -279,7 +293,7 @@ msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Izvor je Real Time Streaming Protocol (RTSP)"
 
 msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Izvor je Microsoft Media Server (MMS protokol)"
+msgstr "Izvor je Microsoft Media Server (MMS)"
 
 #, c-format
 msgid "%s protocol source"
@@ -289,191 +303,190 @@ msgstr "Protokol izvora je %s"
 # http://www.rfc-editor.org/rfc/rfc3984.txt
 #, c-format
 msgid "%s video RTP depayloader"
-msgstr "RTP depayloader %s-video (uklanjanje balasta)"
+msgstr "Depayloader RTP %s, video"
 
 #, c-format
 msgid "%s audio RTP depayloader"
-msgstr "RTP depayloader %s-audio (uklanjanje balasta)"
+msgstr "Depayloader RTP %s, audio"
 
 #, c-format
 msgid "%s RTP depayloader"
-msgstr ""
-"RTP depayloader %s (uklanjanje balasta; dio sadržaja koji nije potreban)"
+msgstr "Depayloader RTP %s"
 
 #, c-format
 msgid "%s demuxer"
-msgstr "%s demultipleksor (demuxer)"
+msgstr "Demultipleksor %s (demuxer)"
 
 #, c-format
 msgid "%s decoder"
-msgstr "%s dekoder"
+msgstr "Dekoder %s"
 
 #, c-format
 msgid "%s video RTP payloader"
-msgstr "RTP payloader %s-video (koristan video sadržaj)"
+msgstr "Payloader RTP %s, video"
 
 #, c-format
 msgid "%s audio RTP payloader"
-msgstr "RTP payloader %s-audio (koristan audio sadržaj)"
+msgstr "Payloader RTP %s, audio"
 
 #, c-format
 msgid "%s RTP payloader"
-msgstr "RTP payloader %s (koristan sadržaj; sadržaj potreban za reprodukciju)"
+msgstr "Payloader RTP %s"
 
 #, c-format
 msgid "%s muxer"
-msgstr "%s multipleksor (muxer)"
+msgstr "Multipleksor %s (muxer)"
 
 #, c-format
 msgid "%s encoder"
-msgstr "%s koder (encoder)"
+msgstr "Koder %s (encoder)"
 
 #, c-format
 msgid "GStreamer element %s"
-msgstr "Element GStreamer-a %s"
+msgstr "GStreamer element %s"
 
 msgid "Unknown source element"
-msgstr "Nepoznat element izvora (source element)"
+msgstr "Nepoznati source element"
 
 msgid "Unknown sink element"
-msgstr "Nepoznat sink element (ciljni element)"
+msgstr "Nepoznati sink element"
 
 msgid "Unknown element"
-msgstr "Nepoznat element"
+msgstr "Nepoznati element"
 
 msgid "Unknown decoder element"
-msgstr "Nepoznat element dekodera"
+msgstr "Nepoznati dekoder element"
 
 msgid "Unknown encoder element"
-msgstr "Nepoznat element kodera"
+msgstr "Nepoznati koder element"
 
 msgid "Plugin or element of unknown type"
 msgstr "Plugin ili element nepoznate vrste"
 
 msgid "Failed to read tag: not enough data"
-msgstr "Nije uspjelo pročitati tag (oznaku): nema dovoljno podataka"
+msgstr "Nije uspjelo pročitati tag: nema dovoljno podataka"
 
 msgid "track ID"
-msgstr "ID pjesme (track)"
+msgstr "ID zapis"
 
 msgid "MusicBrainz track ID"
-msgstr "MusicBrainz ID pjesme (track)"
+msgstr "ID zapis iz MusicBrainz"
 
 msgid "artist ID"
 msgstr "ID izvođača"
 
 msgid "MusicBrainz artist ID"
-msgstr "MusicBrainz ID izvođača"
+msgstr "ID izvođača iz MusicBrainz"
 
 msgid "album ID"
 msgstr "ID albuma"
 
 msgid "MusicBrainz album ID"
-msgstr "MusicBrainz ID albuma"
+msgstr "ID albuma iz MusicBrainz"
 
 msgid "album artist ID"
 msgstr "ID izvođača albuma"
 
 msgid "MusicBrainz album artist ID"
-msgstr "MusicBrainz ID izvođača albuma"
+msgstr "ID izvođača albuma iz MusicBrainz"
 
 msgid "track TRM ID"
-msgstr "TRM ID pjesme (track)"
+msgstr "ID zapisa TRM"
 
 msgid "MusicBrainz TRM ID"
-msgstr "MusicBrainz TRM ID"
+msgstr "ID zapisa TRM iz MusicBrainz"
 
 msgid "capturing shutter speed"
 msgstr "vrijeme ekspozicije"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Primijenjeno vrijeme ekspozicije pri snimanje slike u sekundama"
+msgstr "Vrijeme ekspozicije korišteno prilikom snimanja slike u sekundama"
 
 msgid "capturing focal ratio"
 msgstr "Otvor blende (f broj)"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Primijenjen otvor blende (f-broj) pri snimanje slike"
+msgstr "Otvor blende (f-broj) korišten prilikom snimanja slike"
 
 msgid "capturing focal length"
 msgstr "žarišna duljina"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Primijenjena žarišna duljina leće pri snimanju slike u mm"
+msgstr "Žarišna duljina leće korištena prilikom snimanja slike u mm"
 
 msgid "capturing 35 mm equivalent focal length"
-msgstr "snimanje s 35mm ekvivalent žarišne duljine"
+msgstr "Snimanje odgovara ekvivalentnoj žarišnoj duljini od 35 mm"
 
 msgid ""
 "35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr ""
-"Primijenjen ekvivalent od 35 mm žarišne duljine leće pri snimanju slike, u mm"
+"35 mm ekvivalentna žarišna duljina objektiva korištena pri snimanju, u mm"
 
 msgid "capturing digital zoom ratio"
 msgstr "digitalno povećanje"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr "Primijenjeno digitalno povećanje pri snimanju slike"
+msgstr "Korišteno digitalno povećanje pri snimanju slike"
 
 msgid "capturing iso speed"
-msgstr "iso brzina"
+msgstr "ISO brzina"
 
 msgid "The ISO speed used when capturing an image"
-msgstr "Primijenjena ISO brzina pri snimanju slike"
+msgstr "Korištena ISO brzina pri snimanju slike"
 
 msgid "capturing exposure program"
 msgstr "program ekspozicije"
 
 msgid "The exposure program used when capturing an image"
-msgstr "Primijenjeni program ekspozicije pri snimanju slike"
+msgstr "Korišteni program ekspozicije pri snimanju slike"
 
 msgid "capturing exposure mode"
 msgstr "način ekspozicije"
 
 msgid "The exposure mode used when capturing an image"
-msgstr "Primijenjeni način ekspozicije pri snimanju slike"
+msgstr "Korišteni način ekspozicije pri snimanju slike"
 
 msgid "capturing exposure compensation"
 msgstr "korektura ekspozicije"
 
 msgid "The exposure compensation used when capturing an image"
-msgstr "Primijenjena korektura ekspozicije pri snimanju slike"
+msgstr "Korištena korektura ekspozicije pri snimanju slike"
 
 msgid "capturing scene capture type"
-msgstr "izbor vrsta scene (motiv)"
+msgstr "izbor motiva"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr "Primijenjen izbor scene (motiva) pri snimanju slike"
+msgstr "Korišteni motiv pri snimanju slike"
 
 msgid "capturing gain adjustment"
-msgstr "korektura pojačanja"
+msgstr "korekcija osvjetljenja"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr "Primijenjena ukupna korekcija pojačanja na sliku"
+msgstr "Korištena ukupna korekcija osvjetljenja za sliku"
 
 msgid "capturing white balance"
-msgstr "balans bijele boje"
+msgstr "balans bijele"
 
 msgid "The white balance mode set when capturing an image"
-msgstr "Postavljeni balans bijele boje pri snimanju slike"
+msgstr "Korišteni balans bijele pri snimanju slike"
 
 msgid "capturing contrast"
 msgstr "kontrast"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr "Primijenjena prilagodba za obradu kontrasta pri snimanju slike"
+msgstr "Korištena prilagodba za obradu kontrasta pri snimanju slike"
 
 msgid "capturing saturation"
 msgstr "zasićenje"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr "Primijenjena prilagodba za obradu zasićenja pri snimanju slike"
+msgstr "Korištena prilagodba za obradu zasićenja pri snimanju slike"
 
 msgid "capturing sharpness"
 msgstr "oštrina"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr "Primijenjena prilagodba za obradu oštrine pri snimanju slike"
+msgstr "Korištena prilagodba za obradu oštrine pri snimanju slike"
 
 msgid "capturing flash fired"
 msgstr "uključivanje bljeskalice"
@@ -485,7 +498,7 @@ msgid "capturing flash mode"
 msgstr "način bljeskalice"
 
 msgid "The selected flash mode while capturing an image"
-msgstr "Odabrani način bljeskalice pri snimanju slike"
+msgstr "Odabrani način bljeskalice korišten pri snimanju slike"
 
 msgid "capturing metering mode"
 msgstr "metoda mjerenja"
@@ -493,7 +506,7 @@ msgstr "metoda mjerenja"
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
-"Primijenjena metoda mjerenja za određivanje ekspozicije pri snimanju slike"
+"Korištena metoda mjerenja za određivanje ekspozicije pri snimanju slike"
 
 msgid "capturing source"
 msgstr "izvor za snimanje"
@@ -514,10 +527,10 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Okomita rezolucija slike ili videa u ppi"
 
 msgid "ID3v2 frame"
-msgstr "ID3v2 slika (okvir)"
+msgstr "Okvir ID3v2"
 
 msgid "unparsed id3v2 tag frame"
-msgstr "neobrađeni id3v2 tag slike (okvira)"
+msgstr "neobrađeni okvir taga id3v2"
 
 msgid "musical-key"
 msgstr "glazbeni ključ"
@@ -526,13 +539,13 @@ msgid "Initial key in which the sound starts"
 msgstr "Početni ključ u kojem audio započinje"
 
 msgid "Print version information and exit"
-msgstr "Ispiši obavijesti o inačici i iziđi"
+msgstr "informira o inačici ovog programa i iziđe"
 
 msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
-"Ne izlazi nakon prikaza popisa početnih uređaja, već pričekaj da se uređaji "
+"Ne izlazi nakon prikaza popisa početnih uređaja već pričeka da se uređaji "
 "dodaju ili uklone."
 
 #, c-format
@@ -543,10 +556,10 @@ msgid "Buffering..."
 msgstr "Punjenje međuspremnika..."
 
 msgid "Clock lost, selecting a new one\n"
-msgstr "Sat (vrijeme) je izgubljen, biranje novoga sata\n"
+msgstr "Vrijeme je izgubljeno, bira se novo\n"
 
 msgid "Reached end of play list."
-msgstr "Dosegnut je kraj popisa za reprodukciju."
+msgstr "Dosegnuti je kraj popisa za reprodukciju."
 
 msgid "Paused"
 msgstr "Pauziranje"
@@ -557,7 +570,7 @@ msgstr "Upravo se reproducira %s\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr "Bliži se konac, priprema se novi naslov: %s"
+msgstr "Bliži se kraj, priprema se novi naslov: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
@@ -565,19 +578,19 @@ msgstr "Brzina reproduciranja: %.2f"
 
 #, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "Brzinu reprodukcije nije moguće promijeniti na %.2f"
+msgstr "Brzinu reprodukcije nije bilo moguće promijeniti na %.2f"
 
 msgid "space"
-msgstr "razmak (tipkovnica)"
+msgstr "tipka za razmak"
 
 msgid "pause/unpause"
-msgstr "pauziraj/nastavi (pause/unpause)"
+msgstr "pauza/nastavi"
 
 msgid "q or ESC"
 msgstr "q ili ESC"
 
 msgid "quit"
-msgstr "prekini"
+msgstr "svršetak"
 
 msgid "> or n"
 msgstr "> ili n"
@@ -604,56 +617,56 @@ msgid "volume down"
 msgstr "tiše"
 
 msgid "increase playback rate"
-msgstr "povećaj brzinu reprodukcije"
+msgstr "brže reproducirati"
 
 msgid "decrease playback rate"
-msgstr "smanji brzinu reprodukcije"
+msgstr "sporije reproducirati"
 
 msgid "change playback direction"
-msgstr "promjeni smjer reprodukcije"
+msgstr "promjena smjera reprodukcije"
 
 msgid "enable/disable trick modes"
-msgstr "omogući ili onemogući preporuke (trick modes)"
+msgstr "omogući ili onemogući preporuke"
 
 msgid "change audio track"
-msgstr "promijeni pjesmu (audio track)"
+msgstr "promijeni audio zapis"
 
 msgid "change video track"
-msgstr "promijeni video zapis (video track)"
+msgstr "promijeni video zapis"
 
 msgid "change subtitle track"
-msgstr "promijeni podnaslov (subtitle track)"
+msgstr "promijeni zapis podnaslova"
 
 msgid "seek to beginning"
 msgstr "skoči na početak"
 
 msgid "show keyboard shortcuts"
-msgstr "prikaži tipkovničke prečace"
+msgstr "tipkovnički prečaci"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktivni način - tipkovničko upravljanje:"
 
 msgid "Output status information and property notifications"
-msgstr "Prikaži statusne obavijesti i priopćenje o osobitostima"
+msgstr "Prikaže statusne obavijesti i priopćenje o osobitostima"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
 "Ponašanje reprodukcije kontrolirati korištenjem „playbin 'flags'“ svojstvom"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr "Video sink (cilj) koji će se koristiti (zadani je autovideosink)"
+msgstr "Video sink koji će se koristiti (zadani je autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr "Audio sink (cilj) koji će se koristiti (zadani je autovideosink)"
+msgstr "Audio sink koji će se koristiti (zadani je autovideosink)"
 
 msgid "Enable gapless playback"
 msgstr "Omogući reprodukciju bez prekida"
 
 msgid "Shuffle playlist"
-msgstr "Izmiješaj popis za reprodukciju (Shuffle playlist)"
+msgstr "Izmiješa popis za reprodukciju"
 
 msgid "Disable interactive control via the keyboard"
-msgstr "Onemogući interaktivno upravljanje s pomoću tipkovnice"
+msgstr "Onemogući interaktivno upravljanje pomoću tipkovnice"
 
 msgid "Volume"
 msgstr "Glasnoća"
@@ -663,7 +676,13 @@ msgstr ""
 "Datoteka s popisom za reprodukciju sadrži ulazne multimedijalne datoteke"
 
 msgid "Do not print any output (apart from errors)"
-msgstr "Ne ispisuj nikakve izlazne informacije (osim greški)"
+msgstr "Ne ispisuje nikakve izlazne informacije (osim greški)"
+
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -673,7 +692,13 @@ msgid "You must provide at least one filename or URI to play."
 msgstr "Morate navesti barem jednu datoteku ili URI adresu za reprodukciju."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr "Pritisnite ‘k’ da pogledate listu tipkovničkih prečaca.\n"
+msgstr "Pritisnite „k“ da pogledate listu tipkovničkih prečaca.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Element „decodebin3“ nije bilo moguće napraviti."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Element „urisourcebin“ nije bilo moguće napraviti."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interna greška toka (stream) podataka."

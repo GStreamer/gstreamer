@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2016-11-03 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -97,6 +97,15 @@ msgstr "Kunne ikke søge på cd."
 msgid "Could not read CD."
 msgstr "Kunne ikke læse cd."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Elementet »%s« mangler - kontroller din GStreamer-installation."
@@ -110,11 +119,9 @@ msgstr "Denne fremstår som en tekstfil"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Kunne ikke oprette elementet »uridecodebin«."
 
-msgid "Could not create \"decodebin3\" element."
-msgstr "Kunne ikke oprette elementet »decodebin3«."
-
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Kunne ikke oprette elementet »urisourcebin«."
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Kunne ikke oprette elementet »uridecodebin«."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -246,6 +253,12 @@ msgstr "Sami-undertekstformat"
 
 msgid "TMPlayer subtitle format"
 msgstr "TMPlayer-undertekstformat"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Kate-undertekstformat"
@@ -699,6 +712,12 @@ msgstr "Afspilningsfil der indeholder mediefiler"
 msgid "Do not print any output (apart from errors)"
 msgstr "Udskriv ikke noget (undtagen fejl)"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Brug: %s FIL1|URI1 [FIL2|URI2] [FIL3|URI3] ..."
@@ -708,6 +727,12 @@ msgstr "Du skal angive mindst et filnavn eller en adresse for at afspille."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Tryk »k« for at se en liste over genvejstaster.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Kunne ikke oprette elementet »decodebin3«."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Kunne ikke oprette elementet »urisourcebin«."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Intern datastrømsfejl."

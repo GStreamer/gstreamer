@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2016-12-04 14:32+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -74,6 +74,15 @@ msgstr "Не могу да премотам ЦД."
 msgid "Could not read CD."
 msgstr "Не могу да читам ЦД."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Недостаје елемент „%s“ — проверите вашу инсталацију Гстримера."
@@ -87,11 +96,9 @@ msgstr "Изгледа да је ово текстуална датотека"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Не могу да направим „uridecodebin“ елемент."
 
-msgid "Could not create \"decodebin3\" element."
-msgstr "Не могу да направим „decodebin3“ елемент."
-
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Не могу да направим „urisourcebin“ елемент."
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Не могу да направим „uridecodebin“ елемент."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -222,6 +229,12 @@ msgstr "Сами запис превода"
 
 msgid "TMPlayer subtitle format"
 msgstr "ТМПлејер запис превода"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Кејт запис превода"
@@ -657,6 +670,12 @@ msgstr "Датотека списка нумера садржи датотеке
 msgid "Do not print any output (apart from errors)"
 msgstr "Не исписује никакав излаз (осим грешака)"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
@@ -668,6 +687,12 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Притисните „k“ да видите списак пречица тастатуре.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Не могу да направим „decodebin3“ елемент."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Не могу да направим „urisourcebin“ елемент."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Унутрашња грешка тока података."

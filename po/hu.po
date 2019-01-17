@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2017-03-19 00:47+0100\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -77,6 +77,15 @@ msgstr "Nem kereshető a CD."
 msgid "Could not read CD."
 msgstr "Nem olvasható a CD."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "A(z) „%s” elem hiányzik - ellenőrizze a Gstreamer telepítését."
@@ -90,11 +99,9 @@ msgstr "Ez egy szövegfájlnak tűnik"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nem hozható létre „uridecodebin” elem."
 
-msgid "Could not create \"decodebin3\" element."
-msgstr "Nem hozható létre „decodebin3” elem."
-
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Nem hozható létre „urisourcebin” elem."
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Nem hozható létre „uridecodebin” elem."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -225,6 +232,12 @@ msgstr "Sami feliratformátum"
 
 msgid "TMPlayer subtitle format"
 msgstr "TMPlayer feliratformátum"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Kate feliratformátum"
@@ -661,6 +674,12 @@ msgstr "Bemeneti médiafájlokat tartalmazó lejátszólista fájl"
 msgid "Do not print any output (apart from errors)"
 msgstr "Ne írjon ki semmilyen kimenetet (a hibákon kívül)"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Használat: %s FÁJL1|URI1 [FÁJL2|URI2] [FÁJL3|URI3] …"
@@ -671,3 +690,9 @@ msgstr "Meg kell adnia legalább egy fájlnevet vagy URI-t a lejátszáshoz."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
 "Nyomja meg a „k” billentyűt a gyorsbillentyűk listájának megtekintéséhez.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Nem hozható létre „decodebin3” elem."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Nem hozható létre „urisourcebin” elem."

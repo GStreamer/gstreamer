@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2016-11-02 13:29+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -76,6 +76,15 @@ msgstr "Không thể di chuyển vị trí đọc trên đĩa CD."
 msgid "Could not read CD."
 msgstr "Không thể đọc đĩa CD."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Thiếu phần tử “%s” — hãy kiểm tra lại phần cài đặt GStreamer."
@@ -89,11 +98,9 @@ msgstr "Hình như đây là tập tin văn bản"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Không thể tạo phần tử “uridecodebin”."
 
-msgid "Could not create \"decodebin3\" element."
-msgstr "Không thể tạo phần tử “uridecodebin3”."
-
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Không thể tạo phần tử “urisourcebin”."
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Không thể tạo phần tử “uridecodebin”."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -225,6 +232,12 @@ msgstr "Định dạng phụ đề Sami"
 
 msgid "TMPlayer subtitle format"
 msgstr "Định dạng phụ đề TMPlayer"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Định dạng phụ đề Kate"
@@ -665,6 +678,12 @@ msgstr "Tập tin danh sách phát có chứa các tập tin đa phương tiện
 msgid "Do not print any output (apart from errors)"
 msgstr "Đừng in bất kỳ cái gì ra (ngoại trừ lỗi)"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Cách dùng: %s TẬP-TIN1|URI1 [TẬP-TIN2|URI2] [TẬP-TIN3|URI3] …"
@@ -674,6 +693,12 @@ msgstr "Bạn phải cung cấp ít nhất là một tên tập tin hay URI đ�
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Nhấn phím “k” để xem toàn bộ phím tắt.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Không thể tạo phần tử “uridecodebin3”."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Không thể tạo phần tử “urisourcebin”."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Lỗi luồng dữ liệu nội bộ."

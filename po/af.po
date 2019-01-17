@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -76,6 +76,15 @@ msgstr "Kon nie vfs-lêer \"%s\" toemaak nie."
 msgid "Could not read CD."
 msgstr "Kon nie skryf na toestel \"%s\" nie."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
@@ -92,11 +101,7 @@ msgid "Could not create \"uridecodebin\" element."
 msgstr "Kon nie skryf na lêer \"%s\" nie."
 
 #, fuzzy
-msgid "Could not create \"decodebin3\" element."
-msgstr "Kon nie skryf na lêer \"%s\" nie."
-
-#, fuzzy
-msgid "Could not create \"urisourcebin\" element."
+msgid "Could not create \"uridecodebin3\" element."
 msgstr "Kon nie skryf na lêer \"%s\" nie."
 
 #, c-format
@@ -227,6 +232,12 @@ msgid "Sami subtitle format"
 msgstr ""
 
 msgid "TMPlayer subtitle format"
+msgstr ""
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
 msgstr ""
 
 msgid "Kate subtitle format"
@@ -660,6 +671,12 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr ""
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
@@ -669,6 +686,14 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Kon nie skryf na lêer \"%s\" nie."
+
+#, fuzzy
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Kon nie skryf na lêer \"%s\" nie."
 
 #~ msgid "Bass"
 #~ msgstr "Bas"

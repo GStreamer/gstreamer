@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2017-02-20 15:34+0100\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
@@ -76,6 +76,15 @@ msgstr "Impussibil cirî tal CD."
 msgid "Could not read CD."
 msgstr "Impussibil lei il CD."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Al mancje l'element '%s' - controlâ la instalazion di GStreamer."
@@ -89,11 +98,9 @@ msgstr "Chest al semee jessi un file di test"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Impussibil creâ l'element \"uridecodebin\"."
 
-msgid "Could not create \"decodebin3\" element."
-msgstr "Impussibil creâ l'element \"decodebin3\"."
-
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Impussibil creâ l'element \"urisourcebin\"."
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Impussibil creâ l'element \"uridecodebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -224,6 +231,12 @@ msgstr "Formât sottitul Sami"
 
 msgid "TMPlayer subtitle format"
 msgstr "Formât sottitul TMPlayer"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Formât sottitul Kate"
@@ -656,6 +669,12 @@ msgstr "Il file de liste di riproduzion al conten file multimediâi di jentrade"
 msgid "Do not print any output (apart from errors)"
 msgstr "No sta a stampâ nissun output (infûr dai erôrs)"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Ûs: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -665,3 +684,9 @@ msgstr "Si scugne furnî almancul un non di file o URI par riprodusi."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Fracâ 'k' par viodi un liste des scurtis di tastiere.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Impussibil creâ l'element \"decodebin3\"."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Impussibil creâ l'element \"urisourcebin\"."

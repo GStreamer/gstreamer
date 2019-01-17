@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2017-01-05 01:29+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
@@ -74,6 +74,15 @@ msgstr "Kunne ikke søke på CD."
 msgid "Could not read CD."
 msgstr "Kunne ikke lese CD."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Mangler elementet «%s» - kontroller GStreamer-installasjonen."
@@ -87,11 +96,9 @@ msgstr "Dette ser ut som en tekstfil"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Kunne ikke opprette elementet «uridecodebin»"
 
-msgid "Could not create \"decodebin3\" element."
-msgstr "Kunne ikke opprette elementet «decodebin3»"
-
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Kunne ikke opprette elementet «urisourcebin»"
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Kunne ikke opprette elementet «uridecodebin»"
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -222,6 +229,12 @@ msgstr "Samisk undertekstformat"
 
 msgid "TMPlayer subtitle format"
 msgstr "TMPlayer undertekstformat"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Kate undertekstformat"
@@ -657,6 +670,12 @@ msgstr "Spillelistefil som inneholder inngangsmediefiler"
 msgid "Do not print any output (apart from errors)"
 msgstr "Ikke skriv noe utdata (bortsett fra feil)"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Bruk: %s FIL1|URI1 [FILE|URI2] [FILE|URI3] ..."
@@ -666,6 +685,12 @@ msgstr "Du må ha med minst ett filnavn eller nettadresse å spille."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Trykk «k» for å se en liste over hurtigtaster.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Kunne ikke opprette elementet «decodebin3»"
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Kunne ikke opprette elementet «urisourcebin»"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Intern feil i datastrøm."

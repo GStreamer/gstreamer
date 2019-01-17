@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2016-11-14 20:50+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -72,6 +72,15 @@ msgstr "Tak dapat mencari CD."
 msgid "Could not read CD."
 msgstr "Tak dapat membaca CD."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Elemen '%s' hilang - cek instalasi GStreamer anda."
@@ -85,11 +94,9 @@ msgstr "Ini kelihatannya merupakan berkas teks"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Tak dapat membuat elemen \"uridecodebin\"."
 
-msgid "Could not create \"decodebin3\" element."
-msgstr "Tak dapat membuat elemen \"decodebin3”."
-
-msgid "Could not create \"urisourcebin\" element."
-msgstr "Tak dapat membuat elemen \"urisourcebin\"."
+#, fuzzy
+msgid "Could not create \"uridecodebin3\" element."
+msgstr "Tak dapat membuat elemen \"uridecodebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -220,6 +227,12 @@ msgstr "Format subjudul Sami"
 
 msgid "TMPlayer subtitle format"
 msgstr "Format subjudul TMPlayer"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Format subjudul Kate"
@@ -657,6 +670,12 @@ msgstr "Berkas senarai putar berisi masukan berkas media"
 msgid "Do not print any output (apart from errors)"
 msgstr "Jangan cetak keluaran apapun (selain galat)"
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Penggunaan: %s BERKAS1|URI1 [BERKAS2|URI2] [BERKAS3|URI3] ..."
@@ -667,6 +686,12 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Tekan ‘k’ untuk melihat daftar jalan pintas papan ketik.\n"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Tak dapat membuat elemen \"decodebin3”."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Tak dapat membuat elemen \"urisourcebin\"."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Galat arus data internal."

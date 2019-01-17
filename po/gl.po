@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2012-12-15 03:40+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -77,6 +77,15 @@ msgstr "Non foi posíbel buscar no CD."
 msgid "Could not read CD."
 msgstr "Non foi posíbel ler o CD."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Falta o elemento «%s» - comprobe a instalación do GStreamer."
@@ -92,11 +101,7 @@ msgid "Could not create \"uridecodebin\" element."
 msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
 
 #, fuzzy
-msgid "Could not create \"decodebin3\" element."
-msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
-
-#, fuzzy
-msgid "Could not create \"urisourcebin\" element."
+msgid "Could not create \"uridecodebin3\" element."
 msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
 
 #, c-format
@@ -229,6 +234,12 @@ msgstr "Formato de subtítulos Sami"
 
 msgid "TMPlayer subtitle format"
 msgstr "Formato de subtítulos TMPlayer"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Formato de subtítulos Kate"
@@ -667,6 +678,12 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr ""
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
@@ -676,6 +693,14 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
+
+#, fuzzy
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Non foi posíbel crear o elemento \"decodebin\" ."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Produciuse un erro no fluxo de datos internos."

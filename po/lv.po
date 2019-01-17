@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2014-04-20 16:15+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -78,6 +78,15 @@ msgstr "Nevarēja meklēt pa CD."
 msgid "Could not read CD."
 msgstr "Nevarēja nolasīt CD."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Trūkst elements “%s” - pārbaudiet savu GStreamer instalāciju."
@@ -92,11 +101,7 @@ msgid "Could not create \"uridecodebin\" element."
 msgstr "Nevarēja izveidot “uridecodebin” elementu."
 
 #, fuzzy
-msgid "Could not create \"decodebin3\" element."
-msgstr "Nav iespējams izveidot \"decodebin2\" elementu."
-
-#, fuzzy
-msgid "Could not create \"urisourcebin\" element."
+msgid "Could not create \"uridecodebin3\" element."
 msgstr "Nevarēja izveidot “uridecodebin” elementu."
 
 #, c-format
@@ -228,6 +233,12 @@ msgstr "Sami subtitru formāts"
 
 msgid "TMPlayer subtitle format"
 msgstr "TMPlayer subtitru formāts"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Kate subtitru formāts"
@@ -664,6 +675,12 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr ""
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr "Lietojums: %s DATNE1|URI1 [DATNE2|URI2] [DATNE3|URI3] ..."
@@ -673,6 +690,14 @@ msgstr "Jums jānorāda vismaz viens datnes nosaukums vai atskaņojamais URI."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Nav iespējams izveidot \"decodebin2\" elementu."
+
+#, fuzzy
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Nevarēja izveidot “uridecodebin” elementu."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Iekšējās datu plūsmas kļūda."

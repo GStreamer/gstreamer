@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2011-06-04 21:11+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -72,6 +72,15 @@ msgstr "Ne eblis traserĉi la KD-n."
 msgid "Could not read CD."
 msgstr "Ne eblis legi la KD-n."
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
@@ -87,11 +96,7 @@ msgid "Could not create \"uridecodebin\" element."
 msgstr "Ne eblis krei \"decodebin\"-elementon."
 
 #, fuzzy
-msgid "Could not create \"decodebin3\" element."
-msgstr "Ne eblis krei \"decodebin\"-elementon."
-
-#, fuzzy
-msgid "Could not create \"urisourcebin\" element."
+msgid "Could not create \"uridecodebin3\" element."
 msgstr "Ne eblis krei \"decodebin\"-elementon."
 
 #, c-format
@@ -222,6 +227,12 @@ msgid "Sami subtitle format"
 msgstr ""
 
 msgid "TMPlayer subtitle format"
+msgstr ""
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
 msgstr ""
 
 msgid "Kate subtitle format"
@@ -654,6 +665,12 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr ""
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
@@ -663,6 +680,14 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "Ne eblis krei \"decodebin\"-elementon."
+
+#, fuzzy
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "Ne eblis krei \"decodebin\"-elementon."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interna datumflu-eraro."

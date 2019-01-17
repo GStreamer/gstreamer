@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2017-05-04 15:02+0300\n"
+"POT-Creation-Date: 2019-01-17 01:50+0000\n"
 "PO-Revision-Date: 2010-10-25 10:27+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -72,6 +72,15 @@ msgstr "CDをシークすることができませんでした"
 msgid "Could not read CD."
 msgstr "CD を読むことができませんでした"
 
+msgid "failed to draw pattern"
+msgstr ""
+
+msgid "A GL error occurred"
+msgstr ""
+
+msgid "format wasn't negotiated before get function"
+msgstr ""
+
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
@@ -89,11 +98,7 @@ msgid "Could not create \"uridecodebin\" element."
 msgstr "\"decodebin\" エレメントを作成できません。"
 
 #, fuzzy
-msgid "Could not create \"decodebin3\" element."
-msgstr "\"decodebin2\" エレメントを作成できませんでした"
-
-#, fuzzy
-msgid "Could not create \"urisourcebin\" element."
+msgid "Could not create \"uridecodebin3\" element."
 msgstr "\"decodebin\" エレメントを作成できません。"
 
 #, c-format
@@ -228,6 +233,12 @@ msgstr "Sami 字幕形式"
 
 msgid "TMPlayer subtitle format"
 msgstr "TMPlayer 字幕形式"
+
+msgid "CEA 608 Closed Caption"
+msgstr ""
+
+msgid "CEA 708 Closed Caption"
+msgstr ""
 
 msgid "Kate subtitle format"
 msgstr "Kate 字幕形式"
@@ -667,6 +678,12 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr ""
 
+msgid "Use playbin3 pipeline"
+msgstr ""
+
+msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgstr ""
+
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
 msgstr ""
@@ -676,6 +693,14 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "\"decodebin2\" エレメントを作成できませんでした"
+
+#, fuzzy
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "\"decodebin\" エレメントを作成できません。"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "内部データストリームエラー"
