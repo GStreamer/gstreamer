@@ -276,11 +276,6 @@ gst_msdk_buffer_pool_acquire_buffer (GstBufferPool * pool,
   ret =
       GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (pool, &buf, params);
 
-  /* When using video memory, mfx surface is still locked even though
-   * it's finished by SyncOperation. There's no way to get notified when it gets unlocked.
-   * So we need to confirm if it's unlocked every time a gst buffer is acquired.
-   * If it's still locked, we can replace it with new unlocked/unused surface.
-   */
   if (ret != GST_FLOW_OK || priv->memory_type == GST_MSDK_MEMORY_TYPE_SYSTEM) {
     if (buf)
       *out_buffer_ptr = buf;
@@ -288,6 +283,12 @@ gst_msdk_buffer_pool_acquire_buffer (GstBufferPool * pool,
   }
 
   surface = gst_msdk_get_surface_from_buffer (buf);
+
+  /* When using video memory, mfx surface is still locked even though
+   * it's finished by SyncOperation. There's no way to get notified when it gets unlocked.
+   * So we need to confirm if it's unlocked every time a gst buffer is acquired.
+   * If it's still locked, we can replace it with new unlocked/unused surface.
+   */
   if (!surface || surface->Data.Locked > 0) {
     if (!gst_msdk_video_memory_get_surface_available (gst_buffer_peek_memory
             (buf, 0))) {
