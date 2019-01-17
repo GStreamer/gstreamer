@@ -36,6 +36,8 @@ GObject
         GstTypeFindElement
         GstValve
       GstPad
+        GstMultiQueuePad
+        GstSelectorPad
       GstPadTemplate
       GstPlugin
       GstPluginFeature

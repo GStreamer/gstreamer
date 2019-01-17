@@ -289,6 +289,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstQueue2::bitrate</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Bitrate (bits/s)</NICK>
+<BLURB>Conversion value between data size and time.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstQueue2::use-bitrate-query</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use bitrate from downstream query</NICK>
+<BLURB>Use a bitrate from a downstream query to estimate buffer duration if not provided.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQueue::current-level-buffers</NAME>
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
@@ -691,7 +711,7 @@
 <ARG>
 <NAME>GstIdentity::error-after</NAME>
 <TYPE>gint</TYPE>
-<RANGE></RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Error After</NICK>
 <BLURB>Error after N buffers.</BLURB>
@@ -786,6 +806,16 @@
 <NICK>Drop allocation query</NICK>
 <BLURB>Don't forward allocation queries.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::eos-after</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>EOS After</NICK>
+<BLURB>EOS after N buffers.</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
