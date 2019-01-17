@@ -1,3 +1,660 @@
+=== release 1.15.1 ===
+
+2019-01-17 02:38:28 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.15.1
+
+2018-02-20 10:57:42 -0800  Varunkumar Allagadapa <varunkum@xilinx.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Add dynamic IDR insertion support on zynq
+	  As the pi, the zynq has its own API to request keyframe.
+
+2019-01-07 13:29:37 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxbufferpool.c:
+	  omxbufferpool: fix race when releasing input buffers
+	  If buffers were released from the pool while
+	  gst_omx_video_enc_handle_frame() was waiting for new buffers,
+	  gst_omx_port_acquire_buffer() was never awaken as the buffers weren't
+	  released through OMX's messaging system.
+	  GQueue isn't thread safe so also protect it with the lock mutex.
+
+2018-11-15 11:17:59 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxbufferpool.c:
+	* omx/gstomxbufferpool.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxbufferpool: fix early input buffer release
+	  We used to track the 'allocating' status on the pool. It is used while
+	  allocating so output buffers aren't passed right away to OMX and input
+	  ones are not re-added to the pending queue.
+	  This was causing a bug when exporting buffers to v4l2src. On start
+	  v4l2src acquires a buffer, read its stride and release it right away.
+	  As no buffer was received by the encoder element at this point, 'allocating'
+	  was still on TRUE and so the the buffer wasn't put back to the pending
+	  queue and, as result, no longer available to the pool.
+	  Fix this by checking the active status of the pool instead of manually
+	  tracking it down. The pool is considered as active at the very end of
+	  the activation process so we're good when buffers are released during
+	  the activation.
+
+2018-12-05 17:24:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From ed78bee to 59cb678
+
+2018-11-23 12:57:15 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: fix OMX_EventBufferFlag OMX_API_TRACE struct
+	  The GType was missing from the second field of the struct.
+
+2018-11-05 05:43:43 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	* gst-omx.doap:
+	  Update git locations to gitlab
+
+2018-09-18 16:50:11 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: rename OMX_PERFORMANCE debug cat to OMX_API_TRACE
+	  This debug category can now be used to track more OMX calls and events
+	  so best to rename it to something more generic.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797171
+
+2018-08-21 17:35:04 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: log OMX commands with OMX_PERFORMANCE debug category
+	  It has been useful to have a clear raw and structured view of the gst
+	  <-> OMX exchanges when debugging.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797171
+
+2018-08-21 16:50:38 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: factor out gst_omx_component_send_command()
+	  No semantic change. I'm going to add extra debug in this function.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797171
+
+2018-08-21 15:14:09 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: log OMX events with OMX_PERFORMANCE debug category
+	  It has been useful to have a clear raw and structured view of the gst
+	  <-> OMX exchanges when debugging.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797171
+
+2018-08-22 12:51:30 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: rename log_omx_performance() to log_omx_performance_buffer()
+	  I'm about to log more things under this category
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797171
+
+2018-09-07 22:57:30 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Remove spurious locking
+	  The method we call in the context of pushing a buffer are all thread
+	  safe. Holding a lock would prevent input buffers from being queued while
+	  pushing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=715192
+
+2018-09-07 23:09:29 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Remove unneeded size check
+	  We only enter this branch if nFilledLen > 0, there is not need
+	  to check again.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=715192
+
+2018-09-07 22:55:41 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Remove spurious unlock in error case
+	  This was forgotton in previous patch. We no long hold the lock when goto
+	  invalid_buffer is called.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=715192
+
+2018-08-31 17:28:03 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: don't hold the stream lock when trying to push a frame
+	  The base class methods will lock this properly when needed, there seems
+	  to be no need to lock it explicitly.
+	  This allows the patch in gstvideodec for unlocking the stream lock
+	  when pushing buffers out to work.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=715192
+
+2018-07-31 13:22:31 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: don't import OMX buffers from downstream
+	  We already have code configuring the encoder stride and slice height
+	  when receiving the first buffer from upstream.
+	  We don't have an equivalent when the encoder is exporting its buffers to the
+	  decoder.
+	  There is no point adding it and making the code even more
+	  complex as we wouldn't gain anything by exporting from the encoder to
+	  the decoder. The dynamic buffer mode already ensures 0-copy between OMX
+	  components.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-05-15 11:59:26 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxbufferpool.c:
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: implement dmabuf export on input buffers
+	  Propose pool upstream so input buffers can be allocated by the port and
+	  exported as dmabuf.
+	  The actual OMX buffers are allocated when the pool is activated, so we
+	  don't end up doing useless allocations if the pool isn't used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-08-13 15:10:37 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudiodec.c:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudiosink.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: allow gst_omx_port_acquire_buffer() to not wait for buffers
+	  Will be needed to implement GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-07-31 15:04:33 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: don't import non-dmabuf when dec is in dmabuf mode
+	  Fix 'omxh264dec ! videocrop' pipeline.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-08-02 11:29:12 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: factor out gst_omx_try_importing_buffer()
+	  No semantic change, just make the code clearer and improve debug output.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-07-26 16:30:08 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fix gst_video_info_from_caps() caps assertion
+	  The "use buffers" code path uses gst_video_info_from_caps() which is
+	  asserting if caps is NULL (because pool was rejected).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-07-26 16:22:50 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fix pool caps reference stealing
+	  gst_buffer_pool_config_get_params() doesn't ref the returning caps;
+	  so gst_caps_replace() was unreffing the reference owned by the pool.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-07-25 09:57:20 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: prevent timeout when shutting down because of pending out buffers
+	  The OMX transition state to Loaded won't be complete until all buffers
+	  have been freed. There is no point waiting, and timeout, if we know that
+	  output buffers haven't been freed yet.
+	  The typical scenario is output buffers being still used downstream
+	  and being freed later when released back to the pool.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-07-24 15:14:31 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxbufferpool.c:
+	  omxbufferpool: reference the OMX component
+	  Now that the pool is responsible of freeing the OMX buffers, we need to
+	  ensure that the OMX component stay alive while the pool is as we rely on
+	  the component to free the buffers.
+	  The GstOMXPort is owned by the component so no need to ref this one.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-07-24 15:06:01 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxaudiodec.c:
+	* omx/gstomxaudioenc.c:
+	* omx/gstomxaudiosink.c:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  turn GstOMXComponent to a GstMiniObject
+	  Will use it for refcounting.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-05-28 12:20:45 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxbufferpool.c:
+	* omx/gstomxvideodec.c:
+	  omxbufferpool: deallocate OMX buffers when stopping
+	  The pool is stopped when all the buffers have been released. Deallocate
+	  when stopping so we are sure that the buffers aren't still used by
+	  another element.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-05-24 16:28:21 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: call gst_omx_buffer_unmap() when handling BUFFER_DONE
+	  When using a input buffer pool, the buffer may be released to the pool when
+	  gst_omx_buffer_unmap() is called. We need to have buf->used unset at
+	  this point as the pool may use it to check the status of the pool.
+	  {Empty,Fill}BufferDone is called from OMX internal threads while
+	  messages are handled from gst elements' thread. Best to do all this
+	  when handling the message so we don't mess with OMX threads and keep
+	  the original thread/logic split.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-05-25 14:44:16 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideo{enc,dec}: stop calling shutdown() in change_state
+	  This is no longer needed since we implemented close() vfuncs as the
+	  encoder/decoder base class already take care of calling close() (which
+	  is calling shutdown()) in its own change_state implementation.
+	  We also move the shut down of the component from PAUSED_TO_READY to READY_TO_NULL.
+	  By doing so upstream will have already deactivated the pool from the
+	  encoder and so won't be preventing the OMX state change as the buffers
+	  will all be released.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-05-15 16:21:26 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxbufferpool.c:
+	  omx: factor out gst_omx_buffer_get/set_omx_buf()
+	  Move the qdata code to helper functions as I'm going to need them in
+	  omxvideoenc to implement dmabuf export.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-05-15 11:01:13 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: factor out gst_omx_video_enc_set_to_idle()
+	  No semantic change. We'll have to use this when the input pool is
+	  activated so we can allocate buffers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-05-15 09:56:10 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: factor out gst_omx_video_enc_deallocate_in_buffers()
+	  Will add extra code when adding input buffer pool.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-05-14 15:16:38 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: add pBuffer to OMX_PERFORMANCE logs
+	  Can be useful to check the fd being passed when using dmabuf.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-03-21 12:43:33 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omx: factor out gst_omx_port_set_dmabuf()
+	  No semantic change. I also made the debug message a bit clearer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
+2018-08-22 15:56:18 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: wait for flush complete and buffers being released when flushing
+	  When flusing we should wait for OMX to send the flush command complete event
+	  AND all ports being released.
+	  We were stopping as soon as one of those condition was met.
+	  Fix a race between FillThisBufferDone/EmptyBufferDone and the flush
+	  EventCmdComplete messages. The OMX implementation is supposed to release
+	  its buffers before posting the EventCmdComplete event but the ordering
+	  isn't guaranteed as the FillThisBufferDone/EmptyBufferDone and
+	  EventHandler callbacks can be called from different threads (cf 2.7
+	  'Thread Safety' in the spec).
+	  Only wait for buffers currently used by OMX as some buffers may not be
+	  in the pending queue because they are held downstream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789475
+
+2018-08-22 15:52:23 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: factor out should_wait_until_flushed()
+	  No semantic change. Makes the code easier to understand and I'm about to
+	  change the waiting condition.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=789475
+
+2018-08-28 13:10:35 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: pause component when flushing
+	  As stated in the spec ("6.1.3 Seek Event Sequence") we should pause
+	  before flushing.
+	  We were pausing the decoder but not the encoder so I just aligned the
+	  two code paths.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797038
+
+2018-07-12 12:41:18 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: fix vertical padding in NV16 formats
+	  My previous patch to calculate the vertical padding was always halfing
+	  the height of the chroma plane which is incorrect for NV16 formats.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796749
+
+2018-07-05 15:13:47 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: include vertical padding in nFilledLen when copying
+	  According to the OMX spec (3.1.3.7.1) nFilledLen is meant to include any
+	  padding. We use to include the horizontal one (stride) but not the
+	  vertical one if nSliceHeight is bigger than the actual height.
+	  The calculated nFilledLen was wrong as it didn't include the padding
+	  between planes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796749
+
+2018-04-26 12:30:47 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: implement decide_allocation
+	  Increase the number of output buffers by the number of buffers requested
+	  downstream.
+	  Prevent buffers starvation if downstream is going to use dynamic buffer
+	  mode on its input.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795746
+
+2018-04-26 12:29:16 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: implement propose_allocation
+	  Tell upstream about how many buffer we plan to use so they can adjust
+	  their own number of buffers accordingly if needed.
+	  Same logic as the existing gst_omx_video_enc_propose_allocation().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795746
+
+2018-05-17 09:54:11 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: always signal drain cond when stopping streaming loop
+	  Similar change as the one I just did in omxvideodec.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796207
+
+2018-05-16 17:06:29 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: always signal drain cond when stopping streaming loop
+	  If for some reason something goes wrong and we stop the streaming loop
+	  we may end up with other threads still waiting on the drain cond.
+	  No more buffers will be produced by the component so they were waiting
+	  forever.
+	  Fix this by always signalling this cond when stopping the streaming
+	  loop.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796207
+
+2018-05-16 17:02:01 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideoenc: factor out gst_omx_video_enc_pause_loop()
+	  No semantic change. I'm going to use it in more failure cases.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796207
+
+2018-05-17 14:24:52 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* config/zynqultrascaleplus/gstomx.conf:
+	  zynqultrascaleplus: enable 'ensure-buffer-count-actual' hack
+	  https://bugzilla.gnome.org/show_bug.cgi?id=791211
+
+2018-04-27 16:26:36 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	* omx/gstomx.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideodec/enc: add hack updating nBufferCountActual before allocating
+	  The OMX specs states that the nBufferCountActual of a port has to default
+	  to its nBufferCountMin. If we don't change nBufferCountActual we purely rely
+	  on this default. But in some cases, OMX may change nBufferCountMin before we
+	  allocate buffers. Like for example when configuring the input ports with the
+	  actual format, it may decrease the number of minimal buffers required.
+	  This method checks this and update nBufferCountActual if needed so we'll use
+	  less buffers than the worst case in such scenarios.
+	  SetParameter() needs to be called when the port is either disabled or
+	  the component in the Loaded state.
+	  Don't do this for the decoder output as
+	  gst_omx_video_dec_allocate_output_buffers() already check
+	  nBufferCountMin when computing the number of output buffers.
+	  On some platform, like rpi, the default nBufferCountActual is much
+	  higher than nBufferCountMin so only enable this using a specific gst-omx
+	  hack.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=791211
+
+2018-05-28 15:02:13 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvidee{enc,dec}: refresh input port definition after setting format
+	  Setting the input format and the associated encoder/decoder settings
+	  may also affect the nBufferCountMin of the input port.
+	  Refresh the input port so we'll use up to date values in propose/decide
+	  allocation.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796445
+
+2018-05-07 11:59:08 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: always consider component in 'invalid' state when an error occured
+	  gst_omx_component_get_state() used to early return if there was no
+	  pending state change. So if the component raised an error it wasn't
+	  considered in the invalid state until the next requested state change.
+	  Fix this by checking first if we received an error.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795874
+
+2018-05-25 01:35:58 +1000  Matthew Waters <matthew@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Update option names to omit 'with_omx' prefixes
+	  Companion commit to:
+	  https://cgit.freedesktop.org/gstreamer/gstreamer/commit/?id=4fb02fc85b70be631f5331b2547e5dc61ef7a43a
+	  https://cgit.freedesktop.org/gstreamer/gst-plugins-base/commit/?id=1e1a5d658e4a031535c44823fd398d3052ca2000
+	  etc...
+
+2018-03-21 13:52:23 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: pass a GstOMXBufferMode to gst_omx_buffer_pool_new()
+	  The output_mode is supposed to be a GstOMXBufferMode, not a boolean.
+
+2018-05-03 09:27:15 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* config/zynqultrascaleplus/gstomx.conf:
+	  zynq: remove 'no-disable-outport' hack
+	  No longer needed with newer version of the OMX stack.
+
+2018-03-13 16:15:30 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxh264enc.c:
+	* omx/gstomxh265enc.c:
+	  omxh26{4,5}enc: don't pick default 10-bit profile
+	  The OMX stack of the zynqultrascaleplus (the only one supporting
+	  NV12_10LE32 and NV16_10LE32) will now pick the proper profile if none
+	  has been requested. Best to rely on its default than hardcoding a
+	  specific one in gst-omx.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794319
+
+2018-03-06 14:16:56 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxh264utils.c:
+	  omxh264: sync with supported profiles on zynqultrascaleplus
+	  Add extra supported AVC profiles and remove extended and 4:4:4 profiles
+	  which are actually not implemented.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794177
+
+2018-03-06 10:45:14 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxh264enc.c:
+	* omx/gstomxh264utils.c:
+	* omx/gstomxh264utils.h:
+	  omxh264: factor out gst_omx_h264_utils_get_profile_from_enum()
+	  Move the profile <-> enum mapping to one place. Make changes easier as
+	  I'm about to add extra profiles.
+	  No semantic change.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794177
+
+2018-03-06 11:02:44 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxh265utils.c:
+	  omxh265: add format range extension profiles on zynqultrascaleplus
+	  The zynqultrascaleplus OMX gained support for more format range
+	  extensions profiles (A.3.5).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794177
+
+2018-03-06 10:45:14 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxh265enc.c:
+	* omx/gstomxh265utils.c:
+	* omx/gstomxh265utils.h:
+	  omxh265: factor out gst_omx_h265_utils_get_profile_from_enum()
+	  Move the profile <-> enum mapping to one place. Make changes easier as
+	  I'm about to add some profiles.
+	  No semantic change.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794177
+
+2018-03-08 12:22:26 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: add NV16 support
+	  NV16 format wasn't supported on encoder input while it was on decoder
+	  output.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794175
+
+2018-03-08 12:09:38 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideo.c:
+	  omxvideo: display port number when listing supported formats
+	  More convenient when debugging.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794175
+
+2018-03-29 16:42:40 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.h:
+	* omx/gstomxvideoenc.c:
+	* omx/gstomxvideoenc.h:
+	  omxvideoenc: restore OMX default target-bitrate if requested by user
+	  0xffffffff is the magic number in gst-omx meaning 'the default value
+	  defined in OMX'. This works fine with OMX parameters which are only set
+	  once when starting the component but not with configs which can be
+	  changed while PLAYING.
+	  Save the actual OMX default bitrate so we can restore it later if user
+	  sets back 0xffffffff on the property.
+	  Added GST_OMX_PROP_OMX_DEFAULT so we stop hardcoding magic numbers
+	  everywhere.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794998
+
+2018-03-29 11:36:00 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: use gst_omx_video_enc_set_bitrate() when setting bitrate in set_format
+	  We weren't using the usual pattern when re-setting the bitrate:
+	  - get parameters from OMX
+	  - update only the fields different from 0xffffffff (OMX defaults)
+	  - set parameters
+	  Also added a comment explaining why we re-set this param.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794998
+
+2018-03-29 11:26:04 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: factor out gst_omx_video_enc_set_bitrate()
+	  No semantic change, I'm about to re-use this function in set_format().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794998
+
+2018-04-20 11:54:14 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: fix miscellaneous meson warnings
+	  cc.has_header*() doesn't have a 'required:' kwarg.
+
+2018-04-18 12:42:55 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc/dec: fix handling of component enabling failing
+	  - Report the error from OMX if any (OMX_EventError)
+	  - If not report the failing to the application (GST_ELEMENT_ERROR)
+	  - return GST_FLOW_ERROR rather than FALSE
+	  - don't leak @frame
+	  https://bugzilla.gnome.org/show_bug.cgi?id=795352
+
+2018-04-16 10:53:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From 3fa2c9e to ed78bee
+
+2018-03-14 14:53:50 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  log_omx_performance: convert pointers to strings
+	  G_TYPE_POINTER are not serialized in logs.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794331
+
+2018-04-02 15:14:51 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: remove duplicated debug message
+	  We already have the exact same message at the beginning of
+	  gst_omx_video_enc_handle_frame(). Having it twice is confusing when
+	  reading/grepping logs.
+	  I kept the earlier one to keep the symetry with
+	  gst_omx_video_dec_handle_frame().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=794897
+
+2018-02-22 11:27:03 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: add 'roi' qp-mode on zynqultrascaleplus
+	  New QP mode used to handle ROI metadata.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=793696
+
+2018-03-20 10:31:10 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
 === release 1.14.0 ===
 
 2018-03-19 20:31:02 +0000  Tim-Philipp Müller <tim@centricular.com>
