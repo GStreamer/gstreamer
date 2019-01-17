@@ -16,13 +16,9 @@ if test $HAVE_SIDPLAY = "yes"; then
 
   LIBS="-lsidplay"
 
-  AC_TRY_RUN([
-    #include <sidplay/player.h>
-    int main()
-    { sidTune tune = sidTune(0);  }
-    ],
+  AC_TRY_LINK([#include <sidplay/player.h>],
+    [sidTune tune = sidTune(0);],
     HAVE_SIDPLAY="yes",
-    HAVE_SIDPLAY="no",
     HAVE_SIDPLAY="no")
 
   LIBS="$ac_libs_safe"
