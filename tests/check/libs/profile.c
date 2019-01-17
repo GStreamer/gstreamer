@@ -686,13 +686,14 @@ profile_suite (void)
   TCase *tc_chain = tcase_create ("general");
   gboolean can_write;
 
-  /* cehck if we can create profiles */
+  /* check if we can create profiles */
 #ifdef G_OS_UNIX
-  gchar *gst_dir;
-
-  gst_dir = g_build_filename (g_get_user_data_dir (), "gstreamer-1.0", NULL);
-  can_write = (g_access (gst_dir, R_OK | W_OK | X_OK) == 0);
-  g_free (gst_dir);
+  {
+    gchar *gst_dir =
+        g_build_filename (g_get_user_data_dir (), "gstreamer-1.0", NULL);
+    can_write = (g_access (gst_dir, R_OK | W_OK | X_OK) == 0);
+    g_free (gst_dir);
+  }
 #else
   can_write = FALSE;            /* FIXME: fix can_write test on Windows */
 #endif
