@@ -3,10 +3,10 @@
   <description>All libav codecs and formats (local snapshot)</description>
   <filename>../../ext/libav/.libs/libgstlibav.so</filename>
   <basename>libgstlibav.so</basename>
-  <version>1.15.0.1</version>
+  <version>1.15.1</version>
   <license>LGPL</license>
   <source>gst-libav</source>
-  <package>GStreamer libav git</package>
+  <package>GStreamer libav source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -68,7 +68,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)U8</details>
+          <details>audio/x-raw, format=(string)U8, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -89,7 +89,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)U8</details>
+          <details>audio/x-raw, format=(string)U8, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -110,7 +110,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -131,7 +131,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S32LE</details>
+          <details>audio/x-raw, format=(string)S32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -152,7 +152,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -194,7 +194,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -215,7 +215,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -236,7 +236,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -257,7 +257,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -278,7 +278,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -299,7 +299,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -320,7 +320,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -341,7 +341,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -362,7 +362,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -383,7 +383,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -404,7 +404,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -425,7 +425,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -446,7 +446,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -467,7 +467,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -488,7 +488,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -509,7 +509,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -530,7 +530,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -551,7 +551,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -572,7 +572,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -593,7 +593,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -614,7 +614,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -635,7 +635,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -656,7 +656,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -677,7 +677,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -698,7 +698,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -719,7 +719,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -740,7 +740,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -761,7 +761,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -782,7 +782,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -803,7 +803,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -824,7 +824,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -845,7 +845,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -866,7 +866,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -887,7 +887,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -908,7 +908,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -929,7 +929,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -950,7 +950,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -971,7 +971,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -992,7 +992,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -1013,7 +1013,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -1055,7 +1055,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -1097,7 +1097,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -1118,7 +1118,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -1139,7 +1139,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -1223,7 +1223,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE }, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -1245,6 +1245,48 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, GBRA, xRGB, RGBx, xBGR, BGRx, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_aptx</name>
+      <longname>libav aptX (Audio Processing Technology for Bluetooth) decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav aptx decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S32LE, layout=(string)non-interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_aptx_hd</name>
+      <longname>libav aptX HD (Audio Processing Technology for Bluetooth) decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav aptx_hd decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -1307,7 +1349,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -1328,7 +1370,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -1349,7 +1391,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -1370,7 +1412,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -1391,7 +1433,28 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_atrac9</name>
+      <longname>libav ATRAC9 (Adaptive TRansform Acoustic Coding 9) decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav atrac9 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -1580,7 +1643,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -1601,7 +1664,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -1706,7 +1769,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -2000,7 +2063,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -2021,7 +2084,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -2084,7 +2147,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ S16LE, S32LE, F32LE }</details>
+          <details>audio/x-raw, format=(string){ S16LE, S32LE, F32LE }, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -2189,7 +2252,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -2225,13 +2288,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>unknown/unknown</details>
+          <details>audio/x-dsd, lsbf=(boolean)true, planar=(boolean)false</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -2246,13 +2309,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>unknown/unknown</details>
+          <details>audio/x-dsd, lsbf=(boolean)true, planar=(boolean)true</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -2267,13 +2330,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>unknown/unknown</details>
+          <details>audio/x-dsd, lsbf=(boolean)false, planar=(boolean)false</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -2288,13 +2351,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>unknown/unknown</details>
+          <details>audio/x-dsd, lsbf=(boolean)false, planar=(boolean)true</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -2315,7 +2378,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -2357,7 +2420,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -2378,7 +2441,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -2399,7 +2462,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -2504,7 +2567,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -2672,7 +2735,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -2798,7 +2861,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ S16LE, S32LE }</details>
+          <details>audio/x-raw, format=(string){ S16LE, S32LE }, layout=(string)interleaved; audio/x-raw, format=(string){ S16LE, S32LE }, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -2987,7 +3050,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -3008,7 +3071,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -3029,7 +3092,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -3050,7 +3113,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -3071,7 +3134,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -3134,7 +3197,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -3155,7 +3218,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -3176,7 +3239,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -3428,7 +3491,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -3496,6 +3559,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_ilbc</name>
+      <longname>libav iLBC (Internet Low Bitrate Codec) decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav ilbc decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_imc</name>
       <longname>libav IMC (Intel Music Coder) decoder</longname>
       <class>Codec/Decoder/Audio</class>
@@ -3512,7 +3596,28 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_imm4</name>
+      <longname>libav Infinity IMM4 decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav imm4 decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, GBRA, xRGB, RGBx, xBGR, BGRx, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE }</details>
         </caps>
       </pads>
     </element>
@@ -3617,7 +3722,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -3638,7 +3743,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -3848,7 +3953,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -3869,7 +3974,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -3926,13 +4031,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>unknown/unknown</details>
+          <details>audio/x-voxware</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4016,7 +4121,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -4079,7 +4184,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4100,7 +4205,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4121,7 +4226,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4136,13 +4241,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-gst-av-mp3adu</details>
+          <details>audio/x-gst-av-mp3adufloat</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4157,13 +4262,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-gst-av-mp3adu</details>
+          <details>audio/x-gst-av-mp3adufloat</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4184,7 +4289,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4199,13 +4304,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-gst-av-mp3on4</details>
+          <details>audio/x-gst-av-mp3on4float</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4220,13 +4325,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-gst-av-mp3on4</details>
+          <details>audio/x-gst-av-mp3on4float</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4247,7 +4352,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4268,7 +4373,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4609,6 +4714,27 @@
       </pads>
     </element>
     <element>
+      <name>avdec_mwsc</name>
+      <longname>libav MatchWare Screen Capture Codec decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav mwsc decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, GBRA, xRGB, RGBx, xBGR, BGRx, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avdec_mxpeg</name>
       <longname>libav Mobotix MxPEG video decoder</longname>
       <class>Codec/Decoder/Video</class>
@@ -4646,7 +4772,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4688,7 +4814,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4709,7 +4835,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -4730,7 +4856,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -4814,7 +4940,28 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S32LE</details>
+          <details>audio/x-raw, format=(string)S32LE, layout=(string)non-interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_pcm_vidc</name>
+      <longname>libav PCM Archimedes VIDC decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav pcm_vidc decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
       </pads>
     </element>
@@ -4967,7 +5114,7 @@
     </element>
     <element>
       <name>avdec_prores</name>
-      <longname>libav ProRes decoder</longname>
+      <longname>libav ProRes (iCodec Pro) decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>libav prores decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
@@ -4987,17 +5134,17 @@
       </pads>
     </element>
     <element>
-      <name>avdec_prores_lgpl</name>
-      <longname>libav Apple ProRes (iCodec Pro) decoder</longname>
+      <name>avdec_prosumer</name>
+      <longname>libav Brooktree ProSumer Video decoder</longname>
       <class>Codec/Decoder/Video</class>
-      <description>libav prores_lgpl decoder</description>
+      <description>libav prosumer decoder</description>
       <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-prores</details>
+          <details>unknown/unknown</details>
         </caps>
         <caps>
           <name>src</name>
@@ -5066,7 +5213,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5087,7 +5234,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5108,7 +5255,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5213,7 +5360,28 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_rasc</name>
+      <longname>libav RemotelyAnywhere Screen Capture decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav rasc decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, GBRA, xRGB, RGBx, xBGR, BGRx, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE }</details>
         </caps>
       </pads>
     </element>
@@ -5234,7 +5402,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5255,7 +5423,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5297,7 +5465,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5465,7 +5633,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5487,6 +5655,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, GBRA, xRGB, RGBx, xBGR, BGRx, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_sbc</name>
+      <longname>libav SBC (low-complexity subband codec) decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>libav sbc decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -5549,7 +5738,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5633,7 +5822,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ S16LE, U8 }</details>
+          <details>audio/x-raw, format=(string){ S16LE, U8 }, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -5654,7 +5843,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5675,7 +5864,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5780,7 +5969,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5801,7 +5990,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -5948,7 +6137,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE }, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -6116,7 +6305,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -6200,7 +6389,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -6242,7 +6431,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -6263,7 +6452,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -6452,7 +6641,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -6704,7 +6893,28 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdec_wcmv</name>
+      <longname>libav WinCAM Motion Video decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>libav wcmv decoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YUY2, RGB, BGR, Y42B, Y444, YUV9, Y41B, GRAY8, RGB8P, I420, Y42B, Y444, UYVY, NV12, NV21, ARGB, RGBA, ABGR, BGRA, GRAY16_BE, GRAY16_LE, A420, RGB16, RGB15, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, GBRA, xRGB, RGBx, xBGR, BGRx, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE }</details>
         </caps>
       </pads>
     </element>
@@ -6746,7 +6956,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ S16LE, S32LE }</details>
+          <details>audio/x-raw, format=(string){ S16LE, S32LE }, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -6767,7 +6977,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -6788,7 +6998,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -6809,7 +7019,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -6830,7 +7040,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -6956,7 +7166,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -6977,7 +7187,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }</details>
+          <details>audio/x-raw, format=(string){ U8, S16LE, S32LE, F32LE, F64LE }, layout=(string){ interleaved, non-interleaved }</details>
         </caps>
       </pads>
     </element>
@@ -7124,7 +7334,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -7145,7 +7355,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, format=(string)F32LE, layout=(string)non-interleaved</details>
         </caps>
       </pads>
     </element>
@@ -7379,9 +7589,9 @@
     </element>
     <element>
       <name>avdemux_avs</name>
-      <longname>libav AVS demuxer</longname>
+      <longname>libav Argonaut Games Creature Shock demuxer</longname>
       <class>Codec/Demuxer</class>
-      <description>libav AVS demuxer</description>
+      <description>libav Argonaut Games Creature Shock demuxer</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
         <caps>
@@ -7486,17 +7696,17 @@
       </pads>
     </element>
     <element>
-      <name>avdemux_ea</name>
-      <longname>libav Electronic Arts Multimedia demuxer</longname>
+      <name>avdemux_dsf</name>
+      <longname>libav DSD Stream File (DSF) demuxer</longname>
       <class>Codec/Demuxer</class>
-      <description>libav Electronic Arts Multimedia demuxer</description>
+      <description>libav DSD Stream File (DSF) demuxer</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-gst-av-ea</details>
+          <details>application/x-gst-av-dsf</details>
         </caps>
         <caps>
           <name>audio_%u</name>
@@ -7513,17 +7723,17 @@
       </pads>
     </element>
     <element>
-      <name>avdemux_ffm</name>
-      <longname>libav FFM (FFserver live feed) demuxer</longname>
+      <name>avdemux_ea</name>
+      <longname>libav Electronic Arts Multimedia demuxer</longname>
       <class>Codec/Demuxer</class>
-      <description>libav FFM (FFserver live feed) demuxer</description>
+      <description>libav Electronic Arts Multimedia demuxer</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-gst-av-ffm</details>
+          <details>application/x-gst-av-ea</details>
         </caps>
         <caps>
           <name>audio_%u</name>
@@ -7632,6 +7842,33 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>application/x-gst-av-idcin</details>
+        </caps>
+        <caps>
+          <name>audio_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avdemux_iff</name>
+      <longname>libav IFF (Interchange File Format) demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>libav IFF (Interchange File Format) demuxer</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Edward Hervey &lt;bilboed@bilboed.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-iff</details>
         </caps>
         <caps>
           <name>audio_%u</name>
@@ -8267,7 +8504,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 6 ], rate=(int){ 96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350 }, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 6 ], rate=(int){ 96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350 }, format=(string)F32LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8288,7 +8525,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)2, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000103, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000007, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000c03, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000033, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000107, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c07, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)2, channel-mask=(bitmask)0x000000000000000c, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x000000000000000b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000010b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000000f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c0b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000003b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000010f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x0000000000000c0f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000103, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000007, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000c03, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000033, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000107, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c07, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, channel-mask=(bitmask)0x000000000000000c, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x000000000000000b, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000010b, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000000f, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c0b, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000003b, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000010f, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x0000000000000c0f, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8309,7 +8546,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)2, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000103, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000007, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000c03, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000033, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000107, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c07, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)2, channel-mask=(bitmask)0x000000000000000c, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x000000000000000b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000010b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000000f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c0b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000003b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000010f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x0000000000000c0f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000103, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000007, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000c03, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000033, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000107, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c07, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, channel-mask=(bitmask)0x000000000000000c, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x000000000000000b, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000010b, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000000f, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c0b, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000003b, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000010f, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x0000000000000c0f, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int){ 48000, 44100, 32000 }, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8330,7 +8567,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8351,7 +8588,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8372,7 +8609,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8393,7 +8630,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8414,7 +8651,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int){ 11025, 22050, 44100 }, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int){ 11025, 22050, 44100 }, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8435,7 +8672,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8456,7 +8693,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ S32LE, S16LE }; audio/x-raw, channels=(int)2, rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ S32LE, S16LE }; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000007, rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ S32LE, S16LE }; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000107, rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ S32LE, S16LE }; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ S32LE, S16LE }; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ S32LE, S16LE }; audio/x-raw, channels=(int)7, channel-mask=(bitmask)0x000000000000013f, rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ S32LE, S16LE }; audio/x-raw, channels=(int)8, channel-mask=(bitmask)0x00000000000000ff, rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ S32LE, S16LE }</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int)[ 4000, 96000 ], format=(string){ S32LE, S16LE }, layout=(string)interleaved; audio/x-raw, channels=(int)2, rate=(int)[ 4000, 96000 ], format=(string){ S32LE, S16LE }, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000007, rate=(int)[ 4000, 96000 ], format=(string){ S32LE, S16LE }, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000107, rate=(int)[ 4000, 96000 ], format=(string){ S32LE, S16LE }, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int)[ 4000, 96000 ], format=(string){ S32LE, S16LE }, layout=(string)interleaved; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int)[ 4000, 96000 ], format=(string){ S32LE, S16LE }, layout=(string)interleaved; audio/x-raw, channels=(int)7, channel-mask=(bitmask)0x000000000000013f, rate=(int)[ 4000, 96000 ], format=(string){ S32LE, S16LE }, layout=(string)interleaved; audio/x-raw, channels=(int)8, channel-mask=(bitmask)0x00000000000000ff, rate=(int)[ 4000, 96000 ], format=(string){ S32LE, S16LE }, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8520,6 +8757,48 @@
           <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string){ RGB, RGBA, RGB8P, GRAY8, GRAY16_BE }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_aptx</name>
+      <longname>libav aptX (Audio Processing Technology for Bluetooth) encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav aptx encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)2, rate=(int){ 8000, 16000, 24000, 32000, 44100, 48000 }, format=(string)S32LE, layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_aptx_hd</name>
+      <longname>libav aptX HD (Audio Processing Technology for Bluetooth) encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav aptx_hd encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)2, rate=(int){ 8000, 16000, 24000, 32000, 44100, 48000 }, format=(string)S32LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8687,7 +8966,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8708,7 +8987,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, layout=(string)interleaved, format=(string)S32LE; audio/x-raw, channels=(int)2, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, layout=(string)interleaved, format=(string)S32LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000c03, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, layout=(string)interleaved, format=(string)S32LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c07, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, layout=(string)interleaved, format=(string)S32LE; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x0000000000000c0f, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, layout=(string)interleaved, format=(string)S32LE</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, format=(string)S32LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, format=(string)S32LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000c03, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, format=(string)S32LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c07, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, format=(string)S32LE, layout=(string)interleaved; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x0000000000000c0f, rate=(int){ 8000, 16000, 32000, 11025, 22050, 44100, 12000, 24000, 48000 }, format=(string)S32LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8792,7 +9071,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)2, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000103, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000007, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000c03, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000033, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000107, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c07, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)2, channel-mask=(bitmask)0x000000000000000c, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x000000000000000b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000010b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000000f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c0b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000003b, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000010f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x0000000000000c0f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int){ 48000, 44100, 32000 }, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000103, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000007, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000c03, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000033, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000107, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c07, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, channel-mask=(bitmask)0x000000000000000c, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x000000000000000b, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000010b, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000000f, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000c0b, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000003b, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000010f, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x0000000000000c0f, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int){ 48000, 44100, 32000 }, format=(string)F32LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8813,7 +9092,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ I420, A420, Y444, Y42B, Y41B, YUV9, BGRx, BGRA, I420_10LE, I422_10LE, Y444_10LE, I420_12LE, I422_12LE, Y444_12LE, A444_10LE, A422_10LE, A420_10LE, GRAY16_LE, GRAY8, GBR_10LE, GBR_12LE }</details>
+          <details>video/x-raw, format=(string){ I420, A420, Y444, Y42B, Y41B, YUV9, BGRx, BGRA, I420_10LE, I422_10LE, Y444_10LE, I420_12LE, I422_12LE, Y444_12LE, A444_10LE, A422_10LE, A420_10LE, GRAY16_LE, GRAY8, GBR_10LE, GBR_12LE, GBRA_12LE }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8939,7 +9218,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int){ 16000 }, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int){ 16000 }, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8960,7 +9239,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -8981,7 +9260,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int){ 8000 }, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int){ 8000 }, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9002,7 +9281,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9107,7 +9386,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ RGB, Y444, GRAY8, I420, Y42B, YUV9, Y41B }</details>
+          <details>video/x-raw, format=(string){ RGB, Y444, GRAY8, I420, Y42B, YUV9, Y41B, RGB8P }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9160,6 +9439,27 @@
       </pads>
     </element>
     <element>
+      <name>avenc_magicyuv</name>
+      <longname>libav MagicYUV video encoder</longname>
+      <class>Codec/Encoder/Video</class>
+      <description>libav magicyuv encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ GBR, GBRA, Y42B, I420, Y444, GRAY8 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avenc_mjpeg</name>
       <longname>libav MJPEG (Motion JPEG) encoder</longname>
       <class>Codec/Encoder/Image</class>
@@ -9191,7 +9491,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)2, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000103, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000033, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x000000000000000b, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000007, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000107, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000000f, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000010f, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000103, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000033, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x000000000000000b, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)3, channel-mask=(bitmask)0x0000000000000007, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x0000000000000107, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)4, channel-mask=(bitmask)0x000000000000000f, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x000000000000010f, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9212,7 +9512,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)2, rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9233,7 +9533,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)2, rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9380,7 +9680,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)F32LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9401,7 +9701,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int)48000, layout=(string)interleaved, format=(string)F32LE; audio/x-raw, channels=(int)2, rate=(int)48000, layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int)48000, format=(string)F32LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, rate=(int)48000, format=(string)F32LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9450,6 +9750,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>image/pbm</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_pcm_vidc</name>
+      <longname>libav PCM Archimedes VIDC encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav pcm_vidc encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
       </pads>
     </element>
@@ -9569,7 +9890,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string)I422_10LE</details>
+          <details>video/x-raw, format=(string){ I422_10LE, Y444_10LE }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9590,7 +9911,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string)I422_10LE</details>
+          <details>video/x-raw, format=(string){ I422_10LE, Y444_10LE }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9674,7 +9995,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)1, rate=(int)8000, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)1, rate=(int)8000, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9695,7 +10016,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int){ 22050 }, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int){ 22050 }, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9779,13 +10100,34 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)48000, layout=(string)interleaved, format=(string){ S32LE, S16LE }</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)48000, format=(string){ S32LE, S16LE }, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-smpte-302m</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avenc_sbc</name>
+      <longname>libav SBC (low-complexity subband codec) encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>libav sbc encoder</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, channels=(int)1, rate=(int){ 16000, 32000, 44100, 48000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)2, rate=(int){ 16000, 32000, 44100, 48000 }, format=(string)S16LE, layout=(string)interleaved</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>unknown/unknown</details>
         </caps>
       </pads>
     </element>
@@ -9842,7 +10184,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9863,7 +10205,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9968,7 +10310,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)2, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, layout=(string)interleaved, format=(string)S16LE</details>
+          <details>audio/x-raw, channels=(int)2, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)5, channel-mask=(bitmask)0x0000000000000037, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved; audio/x-raw, channels=(int)6, channel-mask=(bitmask)0x000000000000003f, rate=(int){ 44100, 48000, 88200, 96000, 176400, 192000 }, format=(string)S16LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -9989,7 +10331,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ U8, S16LE, S32LE }</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string){ U8, S16LE, S32LE }, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -10010,7 +10352,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ RGB, RGBA, Y42B, I420, Y444 }</details>
+          <details>video/x-raw, format=(string){ GBR, GBRA, Y42B, I420, Y444 }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -10052,7 +10394,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string){ U8, S16LE, S32LE, F32LE }</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string){ U8, S16LE, S32LE, F32LE }, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -10073,7 +10415,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)F32LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -10094,7 +10436,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], layout=(string)interleaved, format=(string)F32LE</details>
+          <details>audio/x-raw, channels=(int)[ 1, 2 ], rate=(int)[ 4000, 96000 ], format=(string)F32LE, layout=(string)interleaved</details>
         </caps>
         <caps>
           <name>src</name>
@@ -10591,6 +10933,21 @@
       </pads>
     </element>
     <element>
+      <name>avmux_codec2</name>
+      <longname>libav codec2 .c2 muxer muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav codec2 .c2 muxer muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-codec2</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>avmux_dash</name>
       <longname>libav DASH Muxer muxer</longname>
       <class>Codec/Muxer</class>
@@ -10714,29 +11071,23 @@
       </pads>
     </element>
     <element>
-      <name>avmux_ffm</name>
-      <longname>libav FFM (FFserver live feed) muxer</longname>
+      <name>avmux_film_cpk</name>
+      <longname>libav Sega FILM / CPK muxer</longname>
       <class>Codec/Muxer</class>
-      <description>libav FFM (FFserver live feed) muxer</description>
+      <description>libav Sega FILM / CPK muxer</description>
       <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
       <pads>
-        <caps>
-          <name>audio_%u</name>
-          <direction>sink</direction>
-          <presence>request</presence>
-          <details>audio/mpeg, channels=(int)[ 1, 2 ], rate=(int){ 48000, 44100, 32000, 24000, 22050, 16000 }, mpegversion=(int)1, layer=(int)2</details>
-        </caps>
         <caps>
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/mpeg, mpegversion=(int)1, systemstream=(boolean)false</details>
+          <details>video/x-cinepak</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-gst-av-ffm</details>
+          <details>application/x-gst-av-film_cpk</details>
         </caps>
       </pads>
     </element>
@@ -11886,6 +12237,21 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-gst-av-vcd</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>avmux_vidc</name>
+      <longname>libav PCM Archimedes VIDC muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>libav PCM Archimedes VIDC muxer</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;, Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-gst-av-vidc</details>
         </caps>
       </pads>
     </element>

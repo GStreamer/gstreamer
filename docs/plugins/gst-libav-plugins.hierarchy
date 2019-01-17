@@ -59,11 +59,14 @@ GObject
           avdec_amrnb
           avdec_amrwb
           avdec_ape
+          avdec_aptx
+          avdec_aptx_hd
           avdec_atrac1
           avdec_atrac3
           avdec_atrac3al
           avdec_atrac3plus
           avdec_atrac3plusal
+          avdec_atrac9
           avdec_binkaudio_dct
           avdec_binkaudio_rdft
           avdec_bmv_audio
@@ -91,6 +94,7 @@ GObject
           avdec_gsm
           avdec_gsm_ms
           avdec_iac
+          avdec_ilbc
           avdec_imc
           avdec_interplay_dpcm
           avdec_interplayacm
@@ -113,6 +117,7 @@ GObject
           avdec_opus
           avdec_paf_audio
           avdec_pcm_lxf
+          avdec_pcm_vidc
           avdec_qcelp
           avdec_qdm2
           avdec_qdmc
@@ -121,6 +126,7 @@ GObject
           avdec_real_288
           avdec_roq_dpcm
           avdec_s302m
+          avdec_sbc
           avdec_sdx2_dpcm
           avdec_shorten
           avdec_sipr
@@ -154,6 +160,8 @@ GObject
           avenc_adpcm_swf
           avenc_adpcm_yamaha
           avenc_alac
+          avenc_aptx
+          avenc_aptx_hd
           avenc_comfortnoise
           avenc_dca
           avenc_eac3
@@ -166,9 +174,11 @@ GObject
           avenc_mp2fixed
           avenc_nellymoser
           avenc_opus
+          avenc_pcm_vidc
           avenc_real_144
           avenc_roq_dpcm
           avenc_s302m
+          avenc_sbc
           avenc_sonic
           avenc_sonicls
           avenc_truehd
@@ -264,6 +274,7 @@ GObject
           avdec_idcinvideo
           avdec_idf
           avdec_iff
+          avdec_imm4
           avdec_indeo2
           avdec_indeo3
           avdec_indeo4
@@ -300,6 +311,7 @@ GObject
           avdec_mts2
           avdec_mvc1
           avdec_mvc2
+          avdec_mwsc
           avdec_mxpeg
           avdec_nuv
           avdec_paf_video
@@ -313,13 +325,14 @@ GObject
           avdec_png
           avdec_ppm
           avdec_prores
-          avdec_prores_lgpl
+          avdec_prosumer
           avdec_psd
           avdec_ptx
           avdec_qdraw
           avdec_qpeg
           avdec_qtrle
           avdec_r10k
+          avdec_rasc
           avdec_rl2
           avdec_roqvideo
           avdec_rpza
@@ -374,6 +387,7 @@ GObject
           avdec_vp8
           avdec_vp9
           avdec_vqavideo
+          avdec_wcmv
           avdec_webp
           avdec_wmv1
           avdec_wmv2
@@ -421,6 +435,7 @@ GObject
           avenc_jpeg2000
           avenc_jpegls
           avenc_ljpeg
+          avenc_magicyuv
           avenc_mjpeg
           avenc_mpeg1video
           avenc_mpeg2video
@@ -464,12 +479,13 @@ GObject
         avdemux_bfstm
         avdemux_brstm
         avdemux_daud
+        avdemux_dsf
         avdemux_ea
-        avdemux_ffm
         avdemux_film_cpk
         avdemux_gif
         avdemux_gxf
         avdemux_idcin
+        avdemux_iff
         avdemux_ipmovie
         avdemux_ivf
         avdemux_mm
@@ -507,12 +523,13 @@ GObject
         avmux_avm2
         avmux_bit
         avmux_caf
+        avmux_codec2
         avmux_dash
         avmux_daud
         avmux_dv
         avmux_dvd
         avmux_f4v
-        avmux_ffm
+        avmux_film_cpk
         avmux_filmstrip
         avmux_fits
         avmux_flv
@@ -562,6 +579,7 @@ GObject
         avmux_uncodedframecrc
         avmux_vc1test
         avmux_vcd
+        avmux_vidc
         avmux_vob
         avmux_voc
         avmux_w64
