@@ -2006,27 +2006,6 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 #endif
 
-  no_colors = g_getenv ("GST_INSPECT_NO_COLORS");
-  /* We only support truecolor */
-  colored_output &= (no_colors == NULL);
-
-#ifdef G_OS_UNIX
-  if (isatty (STDOUT_FILENO)) {
-    if (redirect_stdout ())
-      loop = g_main_loop_new (NULL, FALSE);
-  } else {
-    colored_output = FALSE;
-  }
-#elif defined(G_OS_WIN32)
-  {
-    gint fd = _fileno (stdout);
-    /* On Windows 10, g_log_writer_supports_color will also setup the console
-     * so that it correctly interprets ANSI VT sequences if it's supported */
-    if (!_isatty (fd) || !g_log_writer_supports_color (fd))
-      colored_output = FALSE;
-  }
-#endif
-
   gst_tools_print_version ();
 
   if (print_all && argc > 1) {
@@ -2076,6 +2055,27 @@ main (int argc, char *argv[])
     }
     return exit_code;
   }
+
+  no_colors = g_getenv ("GST_INSPECT_NO_COLORS");
+  /* We only support truecolor */
+  colored_output &= (no_colors == NULL);
+
+#ifdef G_OS_UNIX
+  if (isatty (STDOUT_FILENO)) {
+    if (redirect_stdout ())
+      loop = g_main_loop_new (NULL, FALSE);
+  } else {
+    colored_output = FALSE;
+  }
+#elif defined(G_OS_WIN32)
+  {
+    gint fd = _fileno (stdout);
+    /* On Windows 10, g_log_writer_supports_color will also setup the console
+     * so that it correctly interprets ANSI VT sequences if it's supported */
+    if (!_isatty (fd) || !g_log_writer_supports_color (fd))
+      colored_output = FALSE;
+  }
+#endif
 
   /* if no arguments, print out list of elements */
   if (uri_handlers) {
