@@ -791,8 +791,8 @@ GST_START_TEST (rtp_h264depay_bytestream)
   GstBuffer *buf;
   GstSample *s;
   GstCaps *caps;
-  guint32 dw;
-  guint8 b;
+  guint32 dw = 0;
+  guint8 b = 0;
   guint off, left;
 
   s = rtp_h264depay_run ("byte-stream");
