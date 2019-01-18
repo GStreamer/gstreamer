@@ -371,11 +371,13 @@ void WPEThreadedView::loadUri(const gchar* uri)
 
 void WPEThreadedView::setDrawBackground(gboolean drawsBackground)
 {
-#if 1
-    // See https://bugs.webkit.org/show_bug.cgi?id=192305
-    GST_FIXME("set_draws_background API not upstream yet");
+#if WEBKIT_CHECK_VERSION(2, 23, 0)
+    GST_DEBUG("%s background rendering", drawsBackground ? "Enabling" : "Disabling");
+    WebKitColor color;
+    webkit_color_parse(&color, drawsBackground ? "white" : "transparent");
+    webkit_web_view_set_background_color(webkit.view, &color);
 #else
-    webkit_web_view_set_draws_background(webkit.view, drawsBackground);
+    GST_FIXME("webkit_web_view_set_background_color is not implemented in WPE %u.%u. Please upgrade to 2.24", webkit_get_major_version(), webkit_get_minor_version());
 #endif
 }
 
