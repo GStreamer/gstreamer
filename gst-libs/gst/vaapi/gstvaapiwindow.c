@@ -247,8 +247,8 @@ gst_vaapi_window_new_internal (GType type, GstVaapiDisplay * display,
 
   window = g_object_new (type, "display", display, "native-id", id, NULL);
 
-  GST_DEBUG_OBJECT (window, "new window with id = 0x%08lx and size %ux%u", id,
-      width, height);
+  GST_DEBUG_OBJECT (window, "new window with id = 0x%08" G_GSIZE_MODIFIER
+      "x and size %ux%u", id, width, height);
 
   if (!gst_vaapi_window_create (window, width, height))
     goto error;
