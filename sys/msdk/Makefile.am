@@ -96,8 +96,9 @@ noinst_HEADERS += \
 	gstmsdkallocator_libva.h
 endif
 
-# TODO: add support for windows compilation
+# Windows compilation files, used by meson
 EXTRA_DIST = \
-	msdk_d3d.c
+	msdk_d3d.c \
+	gstmsdkallocator_d3d.c
 
 libgstmsdk_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
