@@ -101,7 +101,7 @@ ges_transition_clip_update_vtype_internal (GESClip *
     GESAsset *asset =
         ges_asset_request (GES_TYPE_TRANSITION_CLIP, asset_id, NULL);
 
-    /* We already checked the value, so we can be sure no error will accured */
+    /* We already checked the value, so we can be sure no error occurred */
     ges_extractable_set_asset (GES_EXTRACTABLE (self), asset);
     gst_object_unref (asset);
   }

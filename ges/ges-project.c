@@ -528,7 +528,7 @@ ges_project_class_init (GESProjectClass * klass)
   /**
    * GESProject::error-loading-asset:
    * @project: the #GESProject on which a problem happend when creted a #GESAsset
-   * @error: The #GError defining the error that accured, might be %NULL
+   * @error: The #GError defining the error that occured, might be %NULL
    * @id: The @id of the asset that failed loading
    * @extractable_type: The @extractable_type of the asset that
    * failed loading

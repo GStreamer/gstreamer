@@ -131,7 +131,7 @@ struct _GESAssetPrivate
   GList *proxies;
   GESAsset *proxy_target;
 
-  /* The error that accured when an asset has been initialized with error */
+  /* The error that occurred when an asset has been initialized with error */
   GError *error;
 };
 

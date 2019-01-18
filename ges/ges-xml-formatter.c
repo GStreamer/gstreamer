@@ -841,7 +841,7 @@ static void
 _error_parsing (GMarkupParseContext * context, GError * error,
     gpointer user_data)
 {
-  GST_WARNING ("Error accured when parsing %s", error->message);
+  GST_WARNING ("Error occurred when parsing %s", error->message);
 }
 
 /***********************************************
