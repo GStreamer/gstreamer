@@ -261,7 +261,7 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc)
   pulsesrc->read_buffer = NULL;
   pulsesrc->read_buffer_length = 0;
 
-  pulsesrc->format = NULL;
+  pa_sample_spec_init (&pulsesrc->sample_spec);
 
   pulsesrc->operation_success = FALSE;
   pulsesrc->paused = TRUE;
@@ -340,8 +340,6 @@ gst_pulsesrc_finalize (GObject * object)
     gst_structure_free (pulsesrc->properties);
   if (pulsesrc->proplist)
     pa_proplist_free (pulsesrc->proplist);
-  if (pulsesrc->format)
-    pa_format_info_free (pulsesrc->format);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -630,7 +628,7 @@ gst_pulsesrc_set_stream_volume (GstPulseSrc * pulsesrc, gdouble volume)
 
   GST_DEBUG_OBJECT (pulsesrc, "setting volume to %f", volume);
 
-  gst_pulse_cvolume_from_linear (&v, pulsesrc->channels, volume);
+  gst_pulse_cvolume_from_linear (&v, pulsesrc->sample_spec.channels, volume);
 
   if (!(o = pa_context_set_source_output_volume (pulsesrc->context,
               pulsesrc->source_output_idx, &v, NULL, NULL)))
@@ -1222,7 +1220,7 @@ gst_pulsesrc_delay (GstAudioSrc * asrc)
     if (negative)
       result = 0;
     else
-      result = (guint) ((t * pulsesrc->rate) / 1000000LL);
+      result = (guint) ((t * pulsesrc->sample_spec.rate) / 1000000LL);
   }
   return result;
 
@@ -1240,7 +1238,7 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps ** caps,
     GstAudioRingBufferSpec * rspec)
 {
   pa_channel_map channel_map;
-  pa_format_info *formats[1];
+  const pa_channel_map *m;
   GstStructure *s;
   gboolean need_channel_layout = FALSE;
   GstAudioRingBufferSpec new_spec, *spec = NULL;
@@ -1300,16 +1298,8 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps ** caps,
     g_assert_not_reached ();
   }
 
-  if (!gst_pulse_fill_format_info (spec, &pulsesrc->format, &pulsesrc->rate,
-          &pulsesrc->channels))
+  if (!gst_pulse_fill_sample_spec (spec, &pulsesrc->sample_spec))
     goto invalid_spec;
-
-  if (need_channel_layout) {
-    pa_channel_map_init_auto (&channel_map, pulsesrc->channels,
-        PA_CHANNEL_MAP_DEFAULT);
-  }
-
-  pa_format_info_set_channel_map (pulsesrc->format, &channel_map);
 
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
 
@@ -1317,19 +1307,25 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps ** caps,
     goto bad_context;
 
   name = "Record Stream";
+  if (pulsesrc->proplist) {
+    if (!(pulsesrc->stream = pa_stream_new_with_proplist (pulsesrc->context,
+                name, &pulsesrc->sample_spec,
+                (need_channel_layout) ? NULL : &channel_map,
+                pulsesrc->proplist)))
+      goto create_failed;
 
-  formats[0] = pulsesrc->format;
-
-  if (!(pulsesrc->stream = pa_stream_new_extended (pulsesrc->context,
-              name, formats, 1, pulsesrc->proplist)))
+  } else if (!(pulsesrc->stream = pa_stream_new (pulsesrc->context,
+              name, &pulsesrc->sample_spec,
+              (need_channel_layout) ? NULL : &channel_map)))
     goto create_failed;
 
   if (caps) {
-    gst_pulse_channel_map_to_gst (&channel_map, &new_spec);
+    m = pa_stream_get_channel_map (pulsesrc->stream);
+    gst_pulse_channel_map_to_gst (m, &new_spec);
     gst_audio_channel_positions_to_valid_order (new_spec.info.position,
         new_spec.info.channels);
     gst_caps_unref (*caps);
-    *caps = gst_pulse_format_info_to_caps (pulsesrc->format);
+    *caps = gst_audio_info_to_caps (&new_spec.info);
 
     GST_DEBUG_OBJECT (pulsesrc, "Caps are %" GST_PTR_FORMAT, *caps);
   }
@@ -1483,15 +1479,10 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
 
   {
     GstAudioRingBufferSpec s = *spec;
-    pa_channel_map m;
+    const pa_channel_map *m;
 
-    if (gst_pulse_format_info_get_channel_map (pulsesrc->format, &m) < 0) {
-      GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
-          ("Could not get channel map for stream"), (NULL));
-      goto unlock_and_fail;
-    }
-
-    gst_pulse_channel_map_to_gst (&m, &s);
+    m = pa_stream_get_channel_map (pulsesrc->stream);
+    gst_pulse_channel_map_to_gst (m, &s);
     gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SRC
         (pulsesrc)->ringbuffer, s.info.position);
   }

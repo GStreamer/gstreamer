@@ -138,7 +138,7 @@ gst_pulse_fill_sample_spec (GstAudioRingBufferSpec * spec, pa_sample_spec * ss)
 
 gboolean
 gst_pulse_fill_format_info (GstAudioRingBufferSpec * spec, pa_format_info ** f,
-    guint * rate, guint * channels)
+    guint * channels)
 {
   pa_format_info *format;
   pa_sample_format_t sf = PA_SAMPLE_INVALID;
@@ -186,10 +186,7 @@ gst_pulse_fill_format_info (GstAudioRingBufferSpec * spec, pa_format_info ** f,
     goto fail;
 
   *f = format;
-  if (rate)
-    *rate = GST_AUDIO_INFO_RATE (ainfo);
-  if (channels)
-    *channels = GST_AUDIO_INFO_CHANNELS (ainfo);
+  *channels = GST_AUDIO_INFO_CHANNELS (ainfo);
 
   return TRUE;
 
@@ -437,34 +434,12 @@ gst_pulse_format_info_int_prop_to_value (pa_format_info * format,
   return TRUE;
 }
 
-/* FIXME: switch to PA API when it is available */
-int
-gst_pulse_format_info_get_channel_map (pa_format_info * f, pa_channel_map * map)
-{
-  int r;
-  char *map_str;
-
-  r = pa_format_info_get_prop_string (f, PA_PROP_FORMAT_CHANNEL_MAP, &map_str);
-  if (r < 0)
-    return r;
-
-  map = pa_channel_map_parse (map, map_str);
-  pa_xfree (map_str);
-
-  if (!map)
-    return -PA_ERR_INVALID;
-
-  return 0;
-}
-
 GstCaps *
 gst_pulse_format_info_to_caps (pa_format_info * format)
 {
   GstCaps *ret = NULL;
   GValue v = { 0, };
   pa_sample_spec ss;
-  pa_channel_map map;
-  int channels = 0;
 
   switch (format->encoding) {
     case PA_ENCODING_PCM:{
@@ -528,25 +503,6 @@ gst_pulse_format_info_to_caps (pa_format_info * format)
   if (gst_pulse_format_info_int_prop_to_value (format, PA_PROP_FORMAT_CHANNELS,
           &v))
     gst_caps_set_value (ret, "channels", &v);
-
-  if (pa_format_info_get_prop_int (format, PA_PROP_FORMAT_CHANNELS,
-          &channels) == 0
-      && gst_pulse_format_info_get_channel_map (format, &map) == 0) {
-    guint64 channel_mask;
-    GstAudioRingBufferSpec spec;
-
-    GST_AUDIO_INFO_CHANNELS (&spec.info) = channels;
-
-    if (gst_pulse_channel_map_to_gst (&map, &spec) &&
-        !(GST_AUDIO_INFO_IS_UNPOSITIONED (&spec.info)) &&
-        gst_audio_channel_positions_to_mask (&GST_AUDIO_INFO_POSITION
-            (&spec.info, 0), channels, FALSE, &channel_mask)) {
-      gst_caps_set_simple (ret, "channel-mask", GST_TYPE_BITMASK,
-          channel_mask, NULL);
-    } else {
-      GST_WARNING ("Could not convert channel map to channel mask");
-    }
-  }
 
 out:
   return ret;

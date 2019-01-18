@@ -75,7 +75,7 @@
 gboolean gst_pulse_fill_sample_spec (GstAudioRingBufferSpec * spec,
     pa_sample_spec * ss);
 gboolean gst_pulse_fill_format_info (GstAudioRingBufferSpec * spec,
-    pa_format_info ** f, guint * rate, guint * channels);
+    pa_format_info ** f, guint * channels);
 const char * gst_pulse_sample_format_to_caps_format (pa_sample_format_t sf);
 
 gchar *gst_pulse_client_name (void);
@@ -91,8 +91,6 @@ void gst_pulse_cvolume_from_linear (pa_cvolume *v, unsigned channels, gdouble vo
 pa_proplist *gst_pulse_make_proplist (const GstStructure *properties);
 GstStructure *gst_pulse_make_structure (pa_proplist *properties);
 
-int gst_pulse_format_info_get_channel_map (pa_format_info * format,
-    pa_channel_map *map);
 GstCaps * gst_pulse_format_info_to_caps (pa_format_info * format);
 GstCaps * gst_pulse_fix_pcm_caps (GstCaps * incaps);
 
