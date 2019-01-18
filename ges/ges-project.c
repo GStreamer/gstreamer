@@ -353,6 +353,12 @@ ges_missing_uri_default (GESProject * self, GError * error,
   return NULL;
 }
 
+gchar *
+ges_uri_asset_try_update_id (GError * error, GESAsset * wrong_asset)
+{
+  return ges_missing_uri_default (NULL, error, wrong_asset);
+}
+
 static void
 ges_uri_assets_validate_uri (const gchar * nid)
 {

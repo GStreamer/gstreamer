@@ -65,7 +65,10 @@ struct _GESUriClipAssetClass
   GstDiscoverer *discoverer;
   GstDiscoverer *sync_discoverer;
 
-  gpointer _ges_reserved[GES_PADDING];
+  void (*discovered) (GstDiscoverer * discoverer, GstDiscovererInfo * info,
+                     GError * err, gpointer user_data);
+
+  gpointer _ges_reserved[GES_PADDING -1];
 };
 
 GES_API

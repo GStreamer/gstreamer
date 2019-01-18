@@ -26,7 +26,7 @@
  * The #GESUriClipAsset is a special #GESAsset that lets you handle
  * the media file to use inside the GStreamer Editing Services. It has APIs that
  * let you get information about the medias. Also, the tags found in the media file are
- * set as Metadatas of the Asser.
+ * set as Metadata of the Asset.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -43,7 +43,6 @@
 static GHashTable *parent_newparent_table = NULL;
 
 static GstDiscoverer *discoverer = NULL;
-static GstDiscoverer *sync_discoverer = NULL;
 
 static void
 initable_iface_init (GInitableIface * initable_iface)
@@ -74,6 +73,13 @@ struct _GESUriClipAssetPrivate
 
   GList *asset_trackfilesources;
 };
+
+typedef struct
+{
+  GMainLoop *ml;
+  GESAsset *asset;
+  GError *error;
+} RequestSyncData;
 
 struct _GESUriSourceAssetPrivate
 {
@@ -215,6 +221,8 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
   GES_ASSET_CLASS (klass)->start_loading = _start_loading;
   GES_ASSET_CLASS (klass)->request_id_update = _request_id_update;
   GES_ASSET_CLASS (klass)->inform_proxy = _asset_proxied;
+
+  klass->discovered = discoverer_discovered_cb;
 
 
   /**
@@ -402,6 +410,26 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
     g_error_free (error);
 }
 
+static void
+asset_ready_cb (GESAsset * source, GAsyncResult * res, RequestSyncData * data)
+{
+  data->asset = ges_asset_request_finish (res, &data->error);
+
+  if (data->error) {
+    gchar *possible_uri = ges_uri_asset_try_update_id (data->error, source);
+
+    if (possible_uri) {
+      g_clear_error (&data->error);
+      ges_asset_request_async (GES_TYPE_URI_CLIP, possible_uri, NULL,
+          (GAsyncReadyCallback) asset_ready_cb, data);
+      g_free (possible_uri);
+
+      return;
+    }
+  }
+  g_main_loop_quit (data->ml);
+}
+
 /* API implementation */
 /**
  * ges_uri_clip_asset_get_info:
@@ -496,7 +524,6 @@ ges_uri_clip_asset_new (const gchar * uri, GCancellable * cancellable,
       callback, user_data);
 }
 
-
 /**
  * ges_uri_clip_asset_finish:
  * @res: The #GAsyncResult from which to get the newly created #GESUriClipAsset
@@ -537,10 +564,8 @@ GESUriClipAsset *
 ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
 {
   GError *lerror = NULL;
-  GstDiscovererInfo *info;
-  GstDiscoverer *discoverer;
   GESUriClipAsset *asset;
-  gchar *first_file, *first_file_uri;
+  RequestSyncData data = { 0, };
 
   asset = GES_URI_CLIP_ASSET (ges_asset_request (GES_TYPE_URI_CLIP, uri,
           &lerror));
@@ -548,61 +573,21 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
   if (asset)
     return asset;
 
-  if (lerror && lerror->domain == GES_ERROR &&
-      lerror->code == GES_ERROR_ASSET_WRONG_ID) {
-    g_propagate_error (error, lerror);
+  data.ml = g_main_loop_new (NULL, TRUE);
+  ges_asset_request_async (GES_TYPE_URI_CLIP, uri, NULL,
+      (GAsyncReadyCallback) asset_ready_cb, &data);
+  g_main_loop_run (data.ml);
+  g_main_loop_unref (data.ml);
+
+  if (data.error) {
+    GST_ERROR ("Got an error requesting asset: %s", data.error->message);
+    if (error != NULL)
+      g_propagate_error (error, data.error);
 
     return NULL;
   }
 
-  asset = g_object_new (GES_TYPE_URI_CLIP_ASSET, "id", uri,
-      "extractable-type", GES_TYPE_URI_CLIP, NULL);
-  discoverer = GES_URI_CLIP_ASSET_GET_CLASS (asset)->sync_discoverer;
-
-  if (g_str_has_prefix (uri, GES_MULTI_FILE_URI_PREFIX)) {
-    GESMultiFileURI *uri_data;
-
-    uri_data = ges_multi_file_uri_new (uri);
-    first_file = g_strdup_printf (uri_data->location, uri_data->start);
-    first_file_uri = gst_filename_to_uri (first_file, &lerror);
-    info = gst_discoverer_discover_uri (discoverer, first_file_uri, &lerror);
-    GST_DEBUG ("Got multifile uri. Discovering first file %s", first_file_uri);
-    g_free (uri_data);
-    g_free (first_file_uri);
-    g_free (first_file);
-  } else {
-    info = gst_discoverer_discover_uri (discoverer, uri, &lerror);
-  }
-
-  /* We might get a discoverer info but it might have a non-OK result. We
-   * should consider that an error */
-  if (!lerror && info
-      && gst_discoverer_info_get_result (info) != GST_DISCOVERER_OK) {
-    lerror =
-        g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
-        "Stream %s discovering failed (error code: %d)", uri,
-        gst_discoverer_info_get_result (info));
-  }
-
-  _set_meta_file_size (uri, asset);
-
-  ges_asset_cache_put (gst_object_ref (asset), NULL);
-  ges_uri_clip_asset_set_info (asset, info);
-  ges_asset_cache_set_loaded (GES_TYPE_URI_CLIP, uri, lerror);
-
-  if (info == NULL || lerror != NULL) {
-    gst_object_unref (asset);
-    if (info)
-      gst_discoverer_info_unref (info);
-    if (lerror)
-      g_propagate_error (error, lerror);
-
-    return NULL;
-  }
-
-  gst_discoverer_info_unref (info);
-
-  return asset;
+  return GES_URI_CLIP_ASSET (data.asset);
 }
 
 /**
@@ -619,7 +604,6 @@ ges_uri_clip_asset_class_set_timeout (GESUriClipAssetClass * klass,
   g_return_if_fail (GES_IS_URI_CLIP_ASSET_CLASS (klass));
 
   g_object_set (klass->discoverer, "timeout", timeout, NULL);
-  g_object_set (klass->sync_discoverer, "timeout", timeout, NULL);
 }
 
 /**
@@ -756,7 +740,6 @@ void
 _ges_uri_asset_cleanup (void)
 {
   g_clear_object (&discoverer);
-  g_clear_object (&sync_discoverer);
   if (parent_newparent_table) {
     g_hash_table_destroy (parent_newparent_table);
     parent_newparent_table = NULL;
@@ -798,28 +781,14 @@ _ges_uri_asset_ensure_setup (gpointer uriasset_class)
   /* The class structure keeps weak pointers on the discoverers so they
    * can be properly cleaned up in _ges_uri_asset_cleanup(). */
   if (!klass->discoverer) {
-    klass->discoverer = discoverer;
+    klass->discoverer = klass->sync_discoverer = discoverer;
     g_object_add_weak_pointer (G_OBJECT (discoverer),
         (gpointer *) & klass->discoverer);
+    g_object_add_weak_pointer (G_OBJECT (discoverer),
+        (gpointer *) & klass->sync_discoverer);
 
     g_signal_connect (klass->discoverer, "discovered",
-        G_CALLBACK (discoverer_discovered_cb), NULL);
-  }
-
-  if (!sync_discoverer) {
-    sync_discoverer = gst_discoverer_new (timeout, &err);
-
-    if (!sync_discoverer) {
-      GST_ERROR ("Could not create discoverer: %s", err->message);
-      g_error_free (err);
-      return FALSE;
-    }
-  }
-
-  if (!klass->sync_discoverer) {
-    klass->sync_discoverer = sync_discoverer;
-    g_object_add_weak_pointer (G_OBJECT (sync_discoverer),
-        (gpointer *) & klass->sync_discoverer);
+        G_CALLBACK (klass->discovered), NULL);
   }
 
   /* We just start the discoverer and let it live */

@@ -219,6 +219,7 @@ G_GNUC_INTERNAL  gchar * ges_project_try_updating_id              (GESProject *s
 G_GNUC_INTERNAL  void ges_project_add_loading_asset               (GESProject *project,
                                                                    GType extractable_type,
                                                                    const gchar *id);
+G_GNUC_INTERNAL  gchar* ges_uri_asset_try_update_id               (GError *error, GESAsset *wrong_asset);
 /************************************************
  *                                              *
  *   GESBaseXmlFormatter internal methods       *
