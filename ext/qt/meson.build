@@ -49,7 +49,7 @@ if have_cxx and build_gstgl
       endif
     endif
     if not have_qpa_include
-      qmake = find_program('qmake')
+      qmake = find_program('qmake-qt5', 'qmake')
       if qmake.found()
         qt_version = run_command(qmake, '-query', 'QT_VERSION').stdout().strip()
         qt_include_dir = run_command(qmake, '-query', 'QT_INSTALL_HEADERS').stdout().strip()
