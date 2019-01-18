@@ -124,7 +124,7 @@ _parse_project (GMarkupParseContext * context, const gchar * element_name,
   if (g_strcmp0 (element_name, "project")) {
     g_set_error (error, G_MARKUP_ERROR,
         G_MARKUP_ERROR_INVALID_CONTENT,
-        "element '%s', Missing project element'", element_name);
+        "Found element '%s', Missing '<project>' element'", element_name);
   } else {
     priv->project_opened = TRUE;
     if (!g_markup_collect_attributes (element_name, attribute_names,
