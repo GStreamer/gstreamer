@@ -129,8 +129,12 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
 
         if (MFX_ERR_NONE != status) {
           GST_ERROR ("failed to get dmabuf handle");
-          vaDestroyImage (gst_msdk_context_get_handle (context),
+          va_status = vaDestroyImage (gst_msdk_context_get_handle (context),
               msdk_mids[i].image.image_id);
+          if (va_status == VA_STATUS_SUCCESS) {
+            msdk_mids[i].image.image_id = VA_INVALID_ID;
+            msdk_mids[i].image.buf = VA_INVALID_ID;
+          }
         }
       } else {
         /* useful to check the image mapping state later */
@@ -209,7 +213,11 @@ gst_msdk_frame_free (mfxHDL pthis, mfxFrameAllocResponse * resp)
       if (mem->info.mem_type == VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME)
         vaReleaseBufferHandle (dpy, mem->image.buf);
 
-      vaDestroyImage (dpy, mem->image.image_id);
+      if (mem->image.image_id != VA_INVALID_ID &&
+          vaDestroyImage (dpy, mem->image.image_id) == VA_STATUS_SUCCESS) {
+        mem_id->image.image_id = VA_INVALID_ID;
+        mem_id->image.buf = VA_INVALID_ID;
+      }
     }
 
     va_status =
@@ -265,6 +273,10 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
 
     if (status != MFX_ERR_NONE) {
       GST_WARNING ("failed to map");
+      if (vaDestroyImage (dpy, mem_id->image.image_id) == VA_STATUS_SUCCESS) {
+        mem_id->image.image_id = VA_INVALID_ID;
+        mem_id->image.buf = VA_INVALID_ID;
+      }
       return status;
     }
 
@@ -331,6 +343,11 @@ gst_msdk_frame_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
   if (mem_id->fourcc != MFX_FOURCC_P8) {
     vaUnmapBuffer (dpy, mem_id->image.buf);
     va_status = vaDestroyImage (dpy, mem_id->image.image_id);
+
+    if (va_status == VA_STATUS_SUCCESS) {
+      mem_id->image.image_id = VA_INVALID_ID;
+      mem_id->image.buf = VA_INVALID_ID;
+    }
   } else {
     va_status = vaUnmapBuffer (dpy, *(mem_id->surface));
   }
