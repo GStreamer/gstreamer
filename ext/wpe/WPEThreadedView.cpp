@@ -76,6 +76,11 @@ WPEThreadedView::~WPEThreadedView()
         }
     }
 
+    {
+        GMutexHolder lock(threading.mutex);
+        wpe_view_backend_exportable_fdo_destroy(wpe.exportable);
+    }
+
     if (gst.display) {
         gst_object_unref(gst.display);
         gst.display = nullptr;
