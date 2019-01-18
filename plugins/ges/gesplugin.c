@@ -26,13 +26,19 @@
 #endif
 
 #include <gst/gst.h>
+
 #include "gessrc.h"
+#include "gesdemux.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean res = 1;
+
   res |= gst_element_register (plugin, "gessrc", GST_RANK_NONE, GES_SRC_TYPE);
+
+  res |= gst_element_register (plugin, "gesdemux", GST_RANK_PRIMARY,
+      GES_DEMUX_TYPE);
 
   return res;
 }
