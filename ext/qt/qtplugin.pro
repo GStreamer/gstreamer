@@ -2,7 +2,7 @@ TEMPLATE = lib
 
 TARGET = gstqmlgl
 
-QT += qml quick widgets gui
+QT += qml quick gui
 
 QT_CONFIG -= no-pkg-config
 CONFIG += link_pkgconfig debug
