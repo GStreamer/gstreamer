@@ -35,7 +35,7 @@
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
 #endif
 
-#if GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_EGLFS)
+#if GST_GL_HAVE_PLATFORM_EGL && (defined (HAVE_QT_EGLFS) || defined (HAVE_QT_ANDROID))
 #if GST_GL_HAVE_WINDOW_VIV_FB
 #include <qpa/qplatformnativeinterface.h>
 #include <gst/gl/viv-fb/gstgldisplay_viv_fb.h>
@@ -189,6 +189,8 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
     platform = GST_GL_PLATFORM_EAGL;
 #elif GST_GL_HAVE_WINDOW_WIN32 && GST_GL_HAVE_PLATFORM_WGL && defined (HAVE_QT_WIN32)
     platform = GST_GL_PLATFORM_WGL;
+#elif GST_GL_HAVE_WINDOW_ANDROID && GST_GL_HAVE_PLATFORM_EGL && defined (HAVE_QT_ANDROID)
+    platform = GST_GL_PLATFORM_EGL;
 #else
     GST_ERROR ("Unknown platform");
     return FALSE;

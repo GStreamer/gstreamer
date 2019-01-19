@@ -5,15 +5,20 @@ TARGET = gstqmlgl
 QT += qml quick widgets gui
 
 QT_CONFIG -= no-pkg-config
-CONFIG += link_pkgconfig debug plugin
+CONFIG += link_pkgconfig debug
 PKGCONFIG = \
     gstreamer-1.0 \
     gstreamer-video-1.0 \
     gstreamer-gl-1.0
 
-DEFINES += \
-    GST_USE_UNSTABLE_API \
-    HAVE_QT_WIN32
+android {
+    CONFIG += static
+} else {
+    CONFIG += plugin
+}
+
+android:DEFINES += HAVE_QT_ANDROID
+win32:DEFINES += HAVE_QT_WIN32
 
 SOURCES += \
     gstplugin.cc \
@@ -37,4 +42,3 @@ INCLUDEPATH += \
     $$(GSTREAMER_ROOT)/include \
     $$[QT_INSTALL_PREFIX]/include/QtGui/$$[QT_VERSION]/QtGui/
 
-    
