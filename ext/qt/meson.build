@@ -93,7 +93,7 @@ if have_cxx and build_gstgl
           qt5androidextras = dependency('qt5', modules : ['AndroidExtras'], required : false)
           if qt5androidextras.found()
             optional_deps += qt5androidextras
-            # also uses the HAVE_QT_EGLFS define below
+            qt_defines += ['-DHAVE_QT_ANDROID']
             have_qt_windowing = true
           endif
         endif
