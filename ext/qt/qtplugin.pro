@@ -39,6 +39,4 @@ HEADERS += \
     qtitem.h
 
 INCLUDEPATH += \
-    $$(GSTREAMER_ROOT)/include \
-    $$[QT_INSTALL_PREFIX]/include/QtGui/$$[QT_VERSION]/QtGui/
-
+    $$(GSTREAMER_ROOT)/include

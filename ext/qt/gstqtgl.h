@@ -47,7 +47,7 @@
 
 #if defined(QT_OPENGL_ES_2)
 #define GLsync gst_qt_GLsync
-#include <QOpenGLContext>
-#include <QOpenGLFunctions>
+#include <QtGui/QOpenGLContext>
+#include <QtGui/QOpenGLFunctions>
 #undef GLsync
 #endif /* defined(QT_OPENGL_ES_2) */
