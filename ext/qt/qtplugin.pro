@@ -19,6 +19,7 @@ android {
 
 android:DEFINES += HAVE_QT_ANDROID
 win32:DEFINES += HAVE_QT_WIN32
+macx:DEFINES += HAVE_QT_MAC
 
 SOURCES += \
     gstplugin.cc \
