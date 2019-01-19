@@ -37,6 +37,3 @@ HEADERS += \
     gstqtsrc.h \
     qtwindow.h \
     qtitem.h
-
-INCLUDEPATH += \
-    $$(GSTREAMER_ROOT)/include
