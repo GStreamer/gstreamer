@@ -70,14 +70,17 @@ if cxx.has_header('mfxvp9.h', args: '-I' + mfx_incdir)
 endif
 
 if host_machine.system() == 'windows'
-  legacy_stdio_dep = cc.find_library('legacy_stdio_definitions', required: true)
-  d3d11_dep = cc.find_library('d3d11', required: true)
+  if cc.get_id() != 'msvc' and msdk_option.enabled()
+    error('msdk plugin can only be built with MSVC')
+  endif
+  legacy_stdio_dep = cc.find_library('legacy_stdio_definitions', required: get_option('msdk'))
+  d3d11_dep = cc.find_library('d3d11', required: get_option('msdk'))
   msdk_deps = declare_dependency(dependencies: [d3d11_dep, legacy_stdio_dep])
   msdk_deps_found = d3d11_dep.found() and legacy_stdio_dep.found() and cc.get_id() == 'msvc'
 else
-  libva_dep = dependency('libva-drm', required: true)
-  libdl_dep = cc.find_library('dl', required: true)
-  libgudev_dep = dependency('gudev-1.0', required: true)
+  libva_dep = dependency('libva-drm', required: get_option('msdk'))
+  libdl_dep = cc.find_library('dl', required: get_option('msdk'))
+  libgudev_dep = dependency('gudev-1.0', required: get_option('msdk'))
   msdk_deps = declare_dependency(dependencies: [libva_dep, libdl_dep, libgudev_dep])
   msdk_deps_found = libva_dep.found() and libdl_dep.found() and libgudev_dep.found()
 endif
