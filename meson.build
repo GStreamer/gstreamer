@@ -41,9 +41,9 @@ subprojects = {
     'gst-omx': { 'option': get_option('omx'), },
     'gst-libav': { 'option': get_option('libav') },
     'gstreamer-vaapi': { 'option': get_option('vaapi') },
+    'gst-rtsp-server': { 'option': get_option('rtsp_server') },
     'gst-devtools': { 'option': get_option('devtools') },
     'gst-editing-services': { 'option': get_option('ges') },
-    'gst-rtsp-server': { 'option': get_option('rtsp_server') },
     'gstreamer-sharp': { 'option': get_option('sharp') },
 }
 
