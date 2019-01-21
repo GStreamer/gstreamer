@@ -19,10 +19,23 @@ you can install these with:
 
     sudo apt-get install mono-mcs mono-devel
 
-Building & Installing
+Building
 ----
 
     meson build && ninja -C build/
+
+Installing
+----
+
+This package is not installed as part of the system. It should either
+be built into a Nuget or used as a subproject like this. For example,
+with meson, one would use it like this:
+
+
+    subproject('gstreamer-sharp', default_options: ['install=false'])
+    gst_sharp = subproject('gstreamer-sharp')
+    gst_sharp_dep = gst_sharp.get_variable('gst_sharp_dep')
+
 
 HACKING
 -------
