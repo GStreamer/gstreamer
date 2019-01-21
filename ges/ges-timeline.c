@@ -605,7 +605,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
       G_TYPE_PTR_ARRAY);
 
   /**
-   * GESTimeline::track-elements-snapping:
+   * GESTimeline::snapping-started:
    * @timeline: the #GESTimeline
    * @obj1: the first #GESTrackElement that was snapping.
    * @obj2: the second #GESTrackElement that was snapping.
@@ -620,7 +620,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
       G_TYPE_UINT64);
 
   /**
-   * GESTimeline::snapping-end:
+   * GESTimeline::snapping-ended:
    * @timeline: the #GESTimeline
    * @obj1: the first #GESTrackElement that was snapping.
    * @obj2: the second #GESTrackElement that was snapping.
