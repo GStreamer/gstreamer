@@ -933,7 +933,12 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     if (thiz->initialized && thiz->do_renego)
       gst_video_codec_frame_ref (frame);
 
-    gst_msdkdec_negotiate (thiz, hard_reset);
+    if (!gst_msdkdec_negotiate (thiz, hard_reset)) {
+      GST_ELEMENT_ERROR (thiz, CORE, NEGOTIATION,
+          ("Could not negotiate the stream"), (NULL));
+      flow = GST_FLOW_ERROR;
+      goto error;
+    }
   }
 
   for (;;) {
