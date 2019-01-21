@@ -8,8 +8,8 @@ foreach plugin : ['accurip', 'adpcmdec', 'adpcmenc', 'aiff', 'asfmux',
                   'ivfparse', 'ivtc', 'jp2kdecimator', 'jpegformat', 'librfb',
                   'midi', 'mpegdemux', 'mpegpsmux', 'mpegtsdemux', 'mpegtsmux',
                   'mxf', 'netsim', 'onvif', 'pcapparse', 'pnm', 'proxy',
-                  'rawparse', 'removesilence', 'sdp', 'segmentclip', 'siren',
-                  'smooth', 'speed', 'subenc', 'timecode',
+                  'rawparse', 'removesilence', 'rist', 'sdp', 'segmentclip',
+                  'siren', 'smooth', 'speed', 'subenc', 'timecode',
                   'videofilters', 'videoframe_audiolevel', 'videoparsers',
                   'videosignal', 'vmnc', 'y4m', 'yadif']
   if not get_option(plugin).disabled()
