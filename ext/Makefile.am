@@ -394,6 +394,12 @@ else
 TTML_DIR=
 endif
 
+if USE_WPE
+WPE_DIR=wpe
+else
+WPE_DIR=
+endif
+
 SUBDIRS=\
 	$(VOAACENC_DIR) \
 	$(ASSRENDER_DIR) \
@@ -461,7 +467,8 @@ SUBDIRS=\
 	$(VULKAN_DIR) \
 	$(WEBRTCDSP_DIR) \
 	$(TTML_DIR) \
-	$(WEBRTC_DIR)
+	$(WEBRTC_DIR) \
+	$(WPE_DIR)
 
 DIST_SUBDIRS = \
 	assrender \
@@ -527,6 +534,7 @@ DIST_SUBDIRS = \
 	vulkan \
 	webrtcdsp \
 	ttml \
-	webrtc
+	webrtc \
+	wpe
 
 include $(top_srcdir)/common/parallel-subdirs.mak

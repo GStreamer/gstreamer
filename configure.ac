@@ -2305,6 +2305,15 @@ AG_GST_CHECK_FEATURE(WEBRTC, [WebRTC], webrtc, [
   ])
 ])
 
+dnl *** WPE ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_WPE, true)
+AG_GST_CHECK_FEATURE(WPE, [WPE plug-in], wpe, [
+PKG_CHECK_MODULES(WPE, [ wpe-webkit-0.1 >= 2.22 wpebackend-fdo-0.1 egl xkbcommon ], [
+    HAVE_WPE="yes" ], [
+    HAVE_WPE="no"
+  ])
+])
+
 dnl *** usrsctp ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SCTP, true)
 AG_GST_CHECK_FEATURE(SCTP, [sctp plug-in], sctp, [
@@ -2695,6 +2704,7 @@ ext/zbar/Makefile
 ext/dtls/Makefile
 ext/webrtc/Makefile
 ext/webrtcdsp/Makefile
+ext/wpe/Makefile
 ext/ttml/Makefile
 po/Makefile.in
 docs/Makefile
