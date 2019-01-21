@@ -345,6 +345,13 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
         msdk_status_to_string (status));
   }
 
+  /* Force the structure to MFX_PICSTRUCT_PROGRESSIVE if it is unknow to
+   * work-around MSDK issue:
+   * https://github.com/Intel-Media-SDK/MediaSDK/issues/1139
+   */
+  if (thiz->param.mfx.FrameInfo.PicStruct == MFX_PICSTRUCT_UNKNOWN)
+    thiz->param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+
   status = MFXVideoDECODE_QueryIOSurf (session, &thiz->param, &request);
   if (status < MFX_ERR_NONE) {
     GST_ERROR_OBJECT (thiz, "Query IO surfaces failed (%s)",
