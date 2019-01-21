@@ -161,9 +161,9 @@ free_surface (GstMsdkDec * thiz, MsdkSurface * s)
     gst_video_frame_unmap (&s->data);
 
   gst_buffer_unref (s->buf);
+  thiz->decoded_msdk_surfaces = g_list_remove (thiz->decoded_msdk_surfaces, s);
 
   g_slice_free (MsdkSurface, s);
-  thiz->decoded_msdk_surfaces = g_list_remove (thiz->decoded_msdk_surfaces, s);
 }
 
 static MsdkSurface *
