@@ -408,7 +408,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
         msdk_status_to_string (status));
   }
 
-  g_array_set_size (thiz->tasks, 0);
+  g_array_set_size (thiz->tasks, 0);    /* resets array content */
   g_array_set_size (thiz->tasks, thiz->param.AsyncDepth);
   thiz->next_task = 0;
 
