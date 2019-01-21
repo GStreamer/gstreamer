@@ -75,6 +75,25 @@ gst_msdk_buffer_pool_get_options (GstBufferPool * pool)
   return options;
 }
 
+static inline GstMsdkMemoryType
+_msdk_get_memory_type (GstStructure * config)
+{
+  gboolean video, dmabuf;
+
+  video = gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_MSDK_USE_VIDEO_MEMORY);
+  dmabuf = gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_MSDK_USE_DMABUF);
+
+  if (video && !dmabuf)
+    return GST_MSDK_MEMORY_TYPE_VIDEO;
+  if (video && dmabuf)
+    return GST_MSDK_MEMORY_TYPE_DMABUF;
+  if (!video && dmabuf)
+    GST_WARNING ("Can't use DMAbuf since it's system msdk bufferpool");
+  return GST_MSDK_MEMORY_TYPE_SYSTEM;
+}
+
 static gboolean
 gst_msdk_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
@@ -121,37 +140,24 @@ gst_msdk_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     gst_buffer_pool_config_set_video_alignment (config, &alignment);
   }
 
-  if (gst_buffer_pool_config_has_option (config,
-          GST_BUFFER_POOL_OPTION_MSDK_USE_VIDEO_MEMORY))
-    priv->memory_type = GST_MSDK_MEMORY_TYPE_VIDEO;
-
-  if ((priv->memory_type & GST_MSDK_MEMORY_TYPE_VIDEO) && (!priv->context
-          || !priv->alloc_response)) {
+  priv->memory_type = _msdk_get_memory_type (config);
+  if (((priv->memory_type == GST_MSDK_MEMORY_TYPE_VIDEO)
+          || (priv->memory_type == GST_MSDK_MEMORY_TYPE_DMABUF))
+      && (!priv->context || !priv->alloc_response)) {
     GST_ERROR_OBJECT (pool,
         "No MSDK context or Allocation response for using video memory");
     goto error_invalid_config;
-  }
-
-  if (gst_buffer_pool_config_has_option (config,
-          GST_BUFFER_POOL_OPTION_MSDK_USE_DMABUF))
-    priv->memory_type |= GST_MSDK_MEMORY_TYPE_DMABUF;
-
-  if (!(priv->memory_type & GST_MSDK_MEMORY_TYPE_VIDEO) &&
-      priv->memory_type & GST_MSDK_MEMORY_TYPE_DMABUF) {
-    GST_WARNING_OBJECT (pool,
-        "Can't use dmabuf since this is system msdk bufferpool");
-    priv->memory_type = GST_MSDK_MEMORY_TYPE_SYSTEM;
   }
 
   /* create a new allocator if needed */
   if (!allocator) {
     GstAllocationParams params = { 0, 31, 0, 0, };
 
-    if (priv->memory_type & GST_MSDK_MEMORY_TYPE_DMABUF)
+    if (priv->memory_type == GST_MSDK_MEMORY_TYPE_DMABUF)
       allocator =
           gst_msdk_dmabuf_allocator_new (priv->context, &video_info,
           priv->alloc_response);
-    else if (priv->memory_type & GST_MSDK_MEMORY_TYPE_VIDEO)
+    else if (priv->memory_type == GST_MSDK_MEMORY_TYPE_VIDEO)
       allocator =
           gst_msdk_video_allocator_new (priv->context, &video_info,
           priv->alloc_response);
@@ -212,9 +218,9 @@ gst_msdk_buffer_pool_alloc_buffer (GstBufferPool * pool,
 
   buf = gst_buffer_new ();
 
-  if (priv->memory_type & GST_MSDK_MEMORY_TYPE_DMABUF)
+  if (priv->memory_type == GST_MSDK_MEMORY_TYPE_DMABUF)
     mem = gst_msdk_dmabuf_memory_new (priv->allocator);
-  else if (priv->memory_type & GST_MSDK_MEMORY_TYPE_VIDEO)
+  else if (priv->memory_type == GST_MSDK_MEMORY_TYPE_VIDEO)
     mem = gst_msdk_video_memory_new (priv->allocator);
   else
     mem = gst_msdk_system_memory_new (priv->allocator);
@@ -228,9 +234,9 @@ gst_msdk_buffer_pool_alloc_buffer (GstBufferPool * pool,
     GstVideoMeta *vmeta;
     GstVideoInfo *info;
 
-    if (priv->memory_type & GST_MSDK_MEMORY_TYPE_DMABUF)
+    if (priv->memory_type == GST_MSDK_MEMORY_TYPE_DMABUF)
       info = &GST_MSDK_DMABUF_ALLOCATOR_CAST (priv->allocator)->image_info;
-    else if (priv->memory_type & GST_MSDK_MEMORY_TYPE_VIDEO)
+    else if (priv->memory_type == GST_MSDK_MEMORY_TYPE_VIDEO)
       info = &GST_MSDK_VIDEO_ALLOCATOR_CAST (priv->allocator)->image_info;
     else
       info = &GST_MSDK_SYSTEM_ALLOCATOR_CAST (priv->allocator)->image_info;
@@ -240,8 +246,7 @@ gst_msdk_buffer_pool_alloc_buffer (GstBufferPool * pool,
         GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
         GST_VIDEO_INFO_N_PLANES (info), info->offset, info->stride);
 
-    if ((priv->memory_type & GST_MSDK_MEMORY_TYPE_VIDEO) &&
-        !(priv->memory_type & GST_MSDK_MEMORY_TYPE_DMABUF)) {
+    if (priv->memory_type == GST_MSDK_MEMORY_TYPE_VIDEO) {
       vmeta->map = gst_video_meta_map_msdk_memory;
       vmeta->unmap = gst_video_meta_unmap_msdk_memory;
     }
@@ -295,7 +300,7 @@ gst_msdk_buffer_pool_acquire_buffer (GstBufferPool * pool,
    * the fd of surface match, since there is no guarantee that fd matches
    * between surface and memory.
    */
-  if (priv->memory_type & GST_MSDK_MEMORY_TYPE_DMABUF) {
+  if (priv->memory_type == GST_MSDK_MEMORY_TYPE_DMABUF) {
     surface = gst_msdk_get_surface_from_buffer (buf);
     gst_msdk_get_dmabuf_info_from_surface (surface, &fd, NULL);
 
