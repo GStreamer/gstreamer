@@ -46,7 +46,6 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaapiWindow, gst_vaapi_window,
 enum
 {
   PROP_DISPLAY = 1,
-  PROP_NATIVE_ID,
   N_PROPERTIES
 };
 static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
@@ -163,12 +162,6 @@ gst_vaapi_window_set_property (GObject * object, guint property_id,
       g_assert (window->display != NULL);
       window->has_vpp = GST_VAAPI_DISPLAY_HAS_VPP (window->display);
       break;
-    case PROP_NATIVE_ID:{
-      gulong id = g_value_get_ulong (value);
-      window->use_foreign_window = (id != GST_VAAPI_ID_INVALID);
-      GST_VAAPI_WINDOW_ID (window) = window->use_foreign_window ? id : 0;
-      break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -184,9 +177,6 @@ gst_vaapi_window_get_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_DISPLAY:
       g_value_set_object (value, window->display);
-      break;
-    case PROP_NATIVE_ID:
-      g_value_set_ulong (value, window->native_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -213,16 +203,6 @@ gst_vaapi_window_class_init (GstVaapiWindowClass * klass)
       "The VA-API display object to use", GST_TYPE_VAAPI_DISPLAY,
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
 
-  /**
-   * GstVaapiWindow:native-id:
-   *
-   * Native window ID: either XDisplay, EGLDisplay, or drm-fd.
-   */
-  g_properties[PROP_NATIVE_ID] =
-      g_param_spec_ulong ("native-id", "Native window id",
-      "Native window ID", 0, G_MAXULONG, 0,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
-
   g_object_class_install_properties (object_class, N_PROPERTIES, g_properties);
 }
 
@@ -245,7 +225,12 @@ gst_vaapi_window_new_internal (GType type, GstVaapiDisplay * display,
     g_return_val_if_fail (height > 0, NULL);
   }
 
-  window = g_object_new (type, "display", display, "native-id", id, NULL);
+  window = g_object_new (type, "display", display, NULL);
+  if (!window)
+    return NULL;
+
+  window->use_foreign_window = id != GST_VAAPI_ID_INVALID;
+  GST_VAAPI_WINDOW_ID (window) = window->use_foreign_window ? id : 0;
 
   GST_DEBUG_OBJECT (window, "new window with id = 0x%08" G_GSIZE_MODIFIER
       "x and size %ux%u", id, width, height);
