@@ -846,9 +846,10 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   gsize data_size;
   gboolean hard_reset = FALSE;
 
-  /* configure the subclss inorder to fill the CodecID field of mfxVideoParam
-   * and also to load the PluginID for some of the codecs which is mandatory
-   * to invoke the MFXVideoDECODE_DecodeHeader API.
+  /* configure the subclass in order to fill the CodecID field of
+   * mfxVideoParam and also to load the PluginID for some of the
+   * codecs which is mandatory to invoke the
+   * MFXVideoDECODE_DecodeHeader API.
    *
    * For non packetized formats (currently only vc1), there
    * could be headers received as codec_data which are not available
@@ -979,7 +980,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     /* media-sdk requires complete reset since the surface is inadaquate to
      * do further decoding */
     if (status == MFX_ERR_INCOMPATIBLE_VIDEO_PARAM) {
-      /* Requires memory re-allocation ,initiate hard reset */
+      /* Requires memory re-allocation, do a hard reset */
       if (!gst_msdkdec_negotiate (thiz, TRUE))
         goto error;
       status =
