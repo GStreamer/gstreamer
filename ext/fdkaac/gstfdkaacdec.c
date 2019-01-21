@@ -32,12 +32,19 @@
  * - Error concealment
  */
 
+#ifndef HAVE_FDK_AAC_0_1_4
+#define AAC_PCM_MAX_OUTPUT_CHANNELS AAC_PCM_OUTPUT_CHANNELS
+#define CHANNELS_CAPS_STR "channels = (int) [1, 6]"
+#else
+#define CHANNELS_CAPS_STR "channels = (int) [1, 8]"
+#endif
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, "
         "mpegversion = (int) 4, "
-        "stream-format = (string) { adts, adif, raw }")
+        "stream-format = (string) { adts, adif, raw }, " CHANNELS_CAPS_STR)
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -46,7 +53,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_NE (S16) ", "
         "layout = (string) interleaved, "
-        "rate = (int) [8000, 96000], " "channels = (int) [1, 8]")
+        "rate = (int) [8000, 96000], " CHANNELS_CAPS_STR)
     );
 
 GST_DEBUG_CATEGORY_STATIC (gst_fdkaacdec_debug);
