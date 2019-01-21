@@ -525,7 +525,7 @@ ges_uri_clip_asset_is_image (GESUriClipAsset * self)
  *   GError *error = NULL;
  *   GESUriClipAsset *filesource_asset;
  *
- *   filesource_asset = GES_URI_CLIP_ASSET (ges_asset_request_finish (res, &error));
+ *   filesource_asset = ges_uri_clip_asset_finish (res, &error);
  *   if (filesource_asset) {
  *    g_print ("The file: %s is usable as a FileSource, it is%s an image and lasts %" GST_TIME_FORMAT,
  *        ges_asset_get_id (GES_ASSET (filesource_asset))
@@ -551,17 +551,42 @@ ges_uri_clip_asset_new (const gchar * uri, GCancellable * cancellable,
       callback, user_data);
 }
 
+
+/**
+ * ges_uri_clip_asset_finish:
+ * @res: The #GAsyncResult from which to get the newly created #GESUriClipAsset
+ * @error: An error to be set in case something wrong happens or %NULL
+ *
+ * Finalize the request of an async #GESUriClipAsset
+ *
+ * Returns: (transfer full): The #GESUriClipAsset previously requested
+ */
+GESUriClipAsset *
+ges_uri_clip_asset_finish (GAsyncResult * res, GError ** error)
+{
+  GESAsset *asset;
+
+  g_return_val_if_fail (G_IS_ASYNC_RESULT (res), NULL);
+
+  asset = ges_asset_request_finish (res, error);
+  if (asset != NULL) {
+    return GES_URI_CLIP_ASSET (asset);
+  }
+
+  return NULL;
+}
+
 /**
  * ges_uri_clip_asset_request_sync:
  * @uri: The URI of the file for which to create a #GESUriClipAsset.
  * You can also use multi file uris for #GESMultiFileSource.
- * @error: (allow-none): An error to be set in case something wrong happens or %NULL
+ * @error: An error to be set in case something wrong happens or %NULL
  *
  * Creates a #GESUriClipAsset for @uri syncronously. You should avoid
  * to use it in application, and rather create #GESUriClipAsset asynchronously
  *
- * Returns: (transfer none) (nullable): A reference to the requested asset or
- * %NULL if an error happened
+ * Returns: (transfer full): A reference to the requested asset or %NULL if
+ * an error happened
  */
 GESUriClipAsset *
 ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)

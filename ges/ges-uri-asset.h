@@ -80,6 +80,8 @@ void ges_uri_clip_asset_new                         (const gchar *uri,
                                                      GAsyncReadyCallback callback,
                                                      gpointer user_data);
 GES_API
+GESUriClipAsset * ges_uri_clip_asset_finish (GAsyncResult * res, GError ** error);
+GES_API
 GESUriClipAsset* ges_uri_clip_asset_request_sync    (const gchar *uri, GError **error);
 GES_API
 void ges_uri_clip_asset_class_set_timeout           (GESUriClipAssetClass *klass,
