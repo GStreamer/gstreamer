@@ -410,8 +410,12 @@ if build_gstgl
     set_variable('gst_gl_have_platform_@0@'.format(p), gst_gl_platforms.contains(p))
   endforeach
 
-  foreach api : ['opengl', 'gles2']
+  foreach api : ['gl', 'gles2']
     set_variable('gst_gl_have_api_@0@'.format(api), gst_gl_apis.contains(api))
+    # temporary backwards compat for older meson-generated .pc file with 'opengl' instead of 'gl'
+    if gst_gl_apis.contains('opengl')
+      gst_gl_have_api_gl = true
+    endif
   endforeach
 endif
 

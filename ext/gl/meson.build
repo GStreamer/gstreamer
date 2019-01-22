@@ -12,7 +12,7 @@ if build_gstgl and gstgl_dep.found()
   optional_deps = []
   opengl_defines = ['-DGST_USE_UNSTABLE_API'] # for videoaggregator
 
-  if gst_gl_have_api_opengl # have desktop GL
+  if gst_gl_have_api_gl # have desktop GL
     opengl_sources += [
       'gstglmosaic.c',
     ]
