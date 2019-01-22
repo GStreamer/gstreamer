@@ -96,7 +96,7 @@ srt_caller_invoke_removed_closure (SRTCaller * caller, GstSRTObject * srtobject)
   g_value_set_int (&values[0], caller->sock);
 
   g_value_init (&values[1], G_TYPE_SOCKET_ADDRESS);
-  g_value_set_pointer (&values[1], caller->sockaddr);
+  g_value_set_object (&values[1], caller->sockaddr);
 
   g_closure_invoke (srtobject->caller_removed_closure, NULL, 2, values, NULL);
 
@@ -657,15 +657,17 @@ idle_listen_source_cb (gpointer data)
 
     /* notifying caller-added */
     if (srtobject->caller_added_closure != NULL) {
-      GValue values[2] = { G_VALUE_INIT };
+      GValue values[2] = { G_VALUE_INIT, G_VALUE_INIT };
 
       g_value_init (&values[0], G_TYPE_INT);
       g_value_set_int (&values[0], caller->sock);
 
       g_value_init (&values[1], G_TYPE_SOCKET_ADDRESS);
-      g_value_set_pointer (&values[1], caller->sockaddr);
+      g_value_set_object (&values[1], caller->sockaddr);
 
       g_closure_invoke (srtobject->caller_added_closure, NULL, 2, values, NULL);
+
+      g_value_unset (&values[1]);
     }
 
     GST_DEBUG_OBJECT (srtobject->element, "Accept to connect");
@@ -938,11 +940,15 @@ gst_srt_object_open_full (GstSRTObject * srtobject,
   if (caller_added_func != NULL) {
     srtobject->caller_added_closure =
         g_cclosure_new (G_CALLBACK (caller_added_func), srtobject, NULL);
+    g_closure_set_marshal (srtobject->caller_added_closure,
+        g_cclosure_marshal_generic);
   }
 
   if (caller_removed_func != NULL) {
     srtobject->caller_removed_closure =
         g_cclosure_new (G_CALLBACK (caller_removed_func), srtobject, NULL);
+    g_closure_set_marshal (srtobject->caller_removed_closure,
+        g_cclosure_marshal_generic);
   }
 
   addr_str = gst_uri_get_host (srtobject->uri);
