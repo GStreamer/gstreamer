@@ -28,7 +28,7 @@
 #include <gio/gnetworking.h>
 #include <stdlib.h>
 
-GST_DEBUG_CATEGORY (gst_debug_srtobject);
+GST_DEBUG_CATEGORY_EXTERN (gst_debug_srtobject);
 #define GST_CAT_DEFAULT gst_debug_srtobject
 
 enum

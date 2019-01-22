@@ -25,9 +25,14 @@
 #include "gstsrtsrc.h"
 #include "gstsrtsink.h"
 
+GST_DEBUG_CATEGORY (gst_debug_srtobject);
+#define GST_CAT_DEFAULT gst_debug_srtobject
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_debug_srtobject, "srtobject", 0, "SRT Object");
+
   if (!gst_element_register (plugin, "srtsrc", GST_RANK_PRIMARY,
           GST_TYPE_SRT_SRC))
     return FALSE;
