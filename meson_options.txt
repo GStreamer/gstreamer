@@ -73,7 +73,12 @@ option('twolame', type : 'feature', value : 'auto', description : 'twolame mp2 a
 option('vpx', type : 'feature', value : 'auto', description : 'VP8 and VP9 video codec plugin')
 option('waveform', type : 'feature', value : 'auto', description : 'Windows waveform audio sink plugin')
 option('wavpack', type : 'feature', value : 'auto', description : 'Wavpack audio codec plugin')
-option('x11', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin')
+
+# ximagesrc plugin options
+option('ximagesrc', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin')
+option('ximagesrc-xshm', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XSHM support)')
+option('ximagesrc-xfixes', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XFixes support)')
+option('ximagesrc-xdamage', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XDamage support)')
 
 # v4l2 plugin options
 option('v4l2', type : 'feature', value : 'auto', description : 'Build video4linux2 source/sink plugin')
