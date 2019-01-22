@@ -27,10 +27,32 @@ python = pymod.find_installation(get_option('python'))
 python_dep = python.dependency(required : true)
 
 python_abi_flags = python.get_variable('ABIFLAGS', '')
-pylib_loc = python.get_variable('LIBPL', '')
-if host_machine.system() != 'windows'
-    assert(pylib_loc != '', 'Python dynamic library path could not be determined')
+pylib_loc = get_option('libpython-dir')
+if pylib_loc == ''
+  check_path_exists = 'import os, sys; assert(os.path.exists(sys.argv[1]))'
+  pylib_loc = python.get_variable('LIBPL', '')
+  if host_machine.system() != 'windows'
+    pylib_ldlibrary = python.get_variable('LDLIBRARY', '')
+    if host_machine.system() == 'darwin'
+      # OSX is a pain. Python as shipped by apple installs libpython in /usr/lib
+      # so we hardcode that. Other systems can use -Dlibpythondir to
+      # override this.
+      pylib_loc = '/usr/lib'
+    else
+      if run_command(python, '-c', check_path_exists, join_paths(pylib_loc, pylib_ldlibrary)).returncode() != 0
+        # Workaround for Fedora
+        pylib_loc = python.get_variable('LIBDIR', '')
+        message('pylib_loc = @0@'.format(pylib_loc))
+      endif
+    endif
+
+    assert(
+      run_command(python, '-c', check_path_exists, join_paths(pylib_loc, pylib_ldlibrary)).returncode() == 0,
+      'Python dynamic library path could not be determined'
+    )
+  endif
 endif
+
 message('python_abi_flags = @0@'.format(python_abi_flags))
 message('pylib_loc = @0@'.format(pylib_loc))
 
