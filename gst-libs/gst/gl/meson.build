@@ -455,7 +455,7 @@ endif
 if gl_dep.found()
   gl_lib_deps += gl_dep
   glconf.set10('GST_GL_HAVE_OPENGL', 1)
-  enabled_gl_apis += 'opengl'
+  enabled_gl_apis += 'gl'
 endif
 
 # EGL checks
