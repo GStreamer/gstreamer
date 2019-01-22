@@ -925,8 +925,8 @@ AG_GST_CHECK_FEATURE(QT, [Qt elements], qt, [
                 QT_LIBS="$QT_LIBS $GNUSTL_LIBS"
                 ], [
                 AC_MSG_NOTICE([Could not find Standard C++ library])])
-              AC_DEFINE([HAVE_QT_EGLFS], [],
-                [Define if Qt eglfs integration is installed])
+              AC_DEFINE([HAVE_QT_ANDROID], [],
+                [Define if Qt Android integration is installed])
               QT_CFLAGS="$QT_CFLAGS $QT_ANDROID_CFLAGS"
               QT_LIBS="$QT_LIBS $QT_ANDROID_LIBS"
               HAVE_QT_WINDOWING="yes"
