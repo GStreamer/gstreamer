@@ -2,9 +2,9 @@ x11_dep = dependency('x11', required : get_option('ximagesrc'))
 
 if x11_dep.found()
   x_args = []
-  # FIXME: Need to check for XShmAttach inside libXext
   xshm_dep = dependency('xext', required : get_option('ximagesrc-xshm'))
-  if xshm_dep.found()
+  # FIXME: should add a 'required' arg to cc.has_function() in Meson and use it here
+  if xshm_dep.found() and cc.has_function('XShmAttach', dependencies: xshm_dep)
     x_args += ['-DHAVE_XSHM']
   endif
 
