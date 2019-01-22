@@ -33,7 +33,7 @@
  * ]| This pipeline shows how to connect SRT server by setting #GstSRTSrc:uri property.
  *
  * |[
- * gst-launch-1.0 -v srtsrc uri="srt://127.0.0.1:7001?mode=listener" ! fakesink
+ * gst-launch-1.0 -v srtsrc uri="srt://:7001?mode=listener" ! fakesink
  * ]| This pipeline shows how to wait SRT connection by setting #GstSRTSrc:uri property.
  *
  * |[

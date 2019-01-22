@@ -29,11 +29,11 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch-1.0 -v audiotestsrc ! srtsink uri://host?mode=caller
+ * gst-launch-1.0 -v audiotestsrc ! srtsink uri=srt://host
  * ]| This pipeline shows how to serve SRT packets through the default port.
  *
  * |[
- * gst-launch-1.0 -v audiotestsrc ! srtsink uri://host:port?mode=listener
+ * gst-launch-1.0 -v audiotestsrc ! srtsink uri=srt://:port
  * ]| This pipeline shows how to wait SRT callers.
  * </refsect2>
  * 

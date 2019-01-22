@@ -440,8 +440,8 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
 }
 
 static void
-gst_srt_object_set_enum_value (GstStructure * s, GType enum_type, gpointer key,
-    gpointer value)
+gst_srt_object_set_enum_value (GstStructure * s, GType enum_type,
+    gconstpointer key, gconstpointer value)
 {
   GEnumClass *enum_class;
   GEnumValue *enum_value;
@@ -517,6 +517,7 @@ gst_srt_object_set_uri (GstSRTObject * srtobject, const gchar * uri,
   GHashTable *query_table = NULL;
   GHashTableIter iter;
   gpointer key, value;
+  const char *addr_str;
 
   if (srtobject->opened) {
     g_warning
@@ -544,29 +545,34 @@ gst_srt_object_set_uri (GstSRTObject * srtobject, const gchar * uri,
       gst_uri_get_host (srtobject->uri), gst_uri_get_port (srtobject->uri),
       query_table == NULL ? 0 : g_hash_table_size (query_table));
 
-  if (!query_table) {
-    GST_DEBUG_OBJECT (srtobject->element, "No parameters from uri");
-    return TRUE;
-  }
+  addr_str = gst_uri_get_host (srtobject->uri);
+  if (addr_str)
+    gst_srt_object_set_enum_value (srtobject->parameters,
+        GST_TYPE_SRT_CONNECTION_MODE, "mode", "caller");
+  else
+    gst_srt_object_set_enum_value (srtobject->parameters,
+        GST_TYPE_SRT_CONNECTION_MODE, "mode", "listener");
 
-  g_hash_table_iter_init (&iter, query_table);
-  while (g_hash_table_iter_next (&iter, &key, &value)) {
-    if (!g_strcmp0 ("mode", key)) {
-      gst_srt_object_set_enum_value (srtobject->parameters,
-          GST_TYPE_SRT_CONNECTION_MODE, key, value);
-    } else if (!g_strcmp0 ("localaddress", key)) {
-      gst_srt_object_set_string_value (srtobject->parameters, key, value);
-    } else if (!g_strcmp0 ("localport", key)) {
-      gst_srt_object_set_uint_value (srtobject->parameters, key, value);
-    } else if (!g_strcmp0 ("passphrase", key)) {
-      gst_srt_object_set_string_value (srtobject->parameters, key, value);
-    } else if (!g_strcmp0 ("pbkeylen", key)) {
-      gst_srt_object_set_enum_value (srtobject->parameters,
-          GST_TYPE_SRT_KEY_LENGTH_BITS, key, value);
+  if (query_table) {
+    g_hash_table_iter_init (&iter, query_table);
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+      if (!g_strcmp0 ("mode", key)) {
+        gst_srt_object_set_enum_value (srtobject->parameters,
+            GST_TYPE_SRT_CONNECTION_MODE, key, value);
+      } else if (!g_strcmp0 ("localaddress", key)) {
+        gst_srt_object_set_string_value (srtobject->parameters, key, value);
+      } else if (!g_strcmp0 ("localport", key)) {
+        gst_srt_object_set_uint_value (srtobject->parameters, key, value);
+      } else if (!g_strcmp0 ("passphrase", key)) {
+        gst_srt_object_set_string_value (srtobject->parameters, key, value);
+      } else if (!g_strcmp0 ("pbkeylen", key)) {
+        gst_srt_object_set_enum_value (srtobject->parameters,
+            GST_TYPE_SRT_KEY_LENGTH_BITS, key, value);
+      }
     }
-  }
 
-  g_hash_table_unref (query_table);
+    g_hash_table_unref (query_table);
+  }
 
   gst_srt_object_validate_parameters (srtobject->parameters, srtobject->uri);
 
@@ -954,10 +960,10 @@ gst_srt_object_open_full (GstSRTObject * srtobject,
   addr_str = gst_uri_get_host (srtobject->uri);
 
   if (addr_str == NULL) {
-    addr_str = GST_SRT_DEFAULT_LOCALADDRESS;
-    GST_WARNING_OBJECT (srtobject->element,
-        "Given uri doesn't have hostname or address. Use default localaddress (%s)",
-        addr_str);
+    addr_str = "0.0.0.0";
+    GST_DEBUG_OBJECT (srtobject->element,
+        "Given uri doesn't have hostname or address. Use any (%s) and"
+        " setting listener mode", addr_str);
   }
 
   socket_address =
