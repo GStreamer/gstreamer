@@ -494,15 +494,18 @@ gst_srt_object_validate_parameters (GstStructure * s, GstUri * uri)
     guint local_port;
     const gchar *local_address = gst_structure_get_string (s, "localaddress");
 
-
     if (local_address == NULL) {
-      gst_srt_object_set_string_value (s, "localaddress",
-          GST_SRT_DEFAULT_LOCALADDRESS);
+      local_address =
+          gst_uri_get_host (uri) ==
+          NULL ? GST_SRT_DEFAULT_LOCALADDRESS : gst_uri_get_host (uri);
+      gst_srt_object_set_string_value (s, "localaddress", local_address);
     }
 
     if (!gst_structure_get_uint (s, "localport", &local_port)) {
-      gst_srt_object_set_uint_value (s, "localport",
-          G_STRINGIFY (GST_SRT_DEFAULT_PORT));
+      local_port =
+          gst_uri_get_port (uri) ==
+          GST_URI_NO_PORT ? GST_SRT_DEFAULT_PORT : gst_uri_get_port (uri);
+      gst_structure_set (s, "localport", G_TYPE_UINT, local_port, NULL);
     }
   }
 }
