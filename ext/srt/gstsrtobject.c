@@ -928,6 +928,7 @@ gst_srt_object_open_full (GstSRTObject * srtobject,
 
   gpointer sa;
   size_t sa_len;
+  const gchar *addr_str;
 
   srtobject->opened = FALSE;
 
@@ -941,8 +942,17 @@ gst_srt_object_open_full (GstSRTObject * srtobject,
         g_cclosure_new (G_CALLBACK (caller_removed_func), srtobject, NULL);
   }
 
+  addr_str = gst_uri_get_host (srtobject->uri);
+
+  if (addr_str == NULL) {
+    addr_str = GST_SRT_DEFAULT_LOCALADDRESS;
+    GST_WARNING_OBJECT (srtobject->element,
+        "Given uri doesn't have hostname or address. Use default localaddress (%s)",
+        addr_str);
+  }
+
   socket_address =
-      g_inet_socket_address_new_from_string (gst_uri_get_host (srtobject->uri),
+      g_inet_socket_address_new_from_string (addr_str,
       gst_uri_get_port (srtobject->uri));
 
   if (socket_address == NULL) {
