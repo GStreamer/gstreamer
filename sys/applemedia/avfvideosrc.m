@@ -159,6 +159,7 @@ gst_avf_video_source_device_type_get_type (void)
   GstPushSrc *pushSrc;
 
   gint deviceIndex;
+  const gchar *deviceName;
   GstAVFVideoSourcePosition position;
   GstAVFVideoSourceOrientation orientation;
   GstAVFVideoSourceDeviceType deviceType;
@@ -200,6 +201,7 @@ gst_avf_video_source_device_type_get_type (void)
 - (void)finalize;
 
 @property int deviceIndex;
+@property const gchar *deviceName;
 @property GstAVFVideoSourcePosition position;
 @property GstAVFVideoSourceOrientation orientation;
 @property GstAVFVideoSourceDeviceType deviceType;
@@ -287,7 +289,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
 
 @implementation GstAVFVideoSrcImpl
 
-@synthesize deviceIndex, position, orientation, deviceType, doStats,
+@synthesize deviceIndex, deviceName, position, orientation, deviceType, doStats,
     fps, captureScreen, captureScreenCursor, captureScreenMouseClicks;
 
 - (id)init
@@ -303,6 +305,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
     pushSrc = src;
 
     deviceIndex = DEFAULT_DEVICE_INDEX;
+    deviceName = NULL;
     position = DEFAULT_POSITION;
     orientation = DEFAULT_ORIENTATION;
     deviceType = DEFAULT_DEVICE_TYPE;
@@ -364,7 +367,8 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
   }
   g_assert (device != nil);
 
-  GST_INFO ("Opening '%s'", [[device localizedName] UTF8String]);
+  deviceName = [[device localizedName] UTF8String];
+  GST_INFO ("Opening '%s'", deviceName);
 
   input = [AVCaptureDeviceInput deviceInputWithDevice:device
                                                 error:&err];
@@ -1259,6 +1263,7 @@ enum
 {
   PROP_0,
   PROP_DEVICE_INDEX,
+  PROP_DEVICE_NAME,
   PROP_POSITION,
   PROP_ORIENTATION,
   PROP_DEVICE_TYPE,
@@ -1337,6 +1342,10 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
           "The zero-based device index",
           -1, G_MAXINT, DEFAULT_DEVICE_INDEX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
+      g_param_spec_string ("device-name", "Device Name",
+          "The name of the currently opened capture device",
+          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_POSITION,
                                    g_param_spec_enum ("position", "Position",
                                                       "The position of the capture device (front or back-facing)",
@@ -1413,6 +1422,9 @@ gst_avf_video_src_get_property (GObject * object, guint prop_id, GValue * value,
 #endif
     case PROP_DEVICE_INDEX:
       g_value_set_int (value, impl.deviceIndex);
+      break;
+    case PROP_DEVICE_NAME:
+      g_value_set_string (value, impl.deviceName);
       break;
     case PROP_POSITION:
       g_value_set_enum(value, impl.position);
