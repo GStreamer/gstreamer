@@ -360,7 +360,7 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
    * The local port to bind when #GstSRTSrc:mode is listener or rendezvous.
    * This property can be set by URI parameters.
    */
-  g_object_class_install_property (gobject_class, PROP_POLL_TIMEOUT,
+  g_object_class_install_property (gobject_class, PROP_LOCALPORT,
       g_param_spec_uint ("localport", "Local port",
           "Local port to bind", 0,
           65535, GST_SRT_DEFAULT_PORT,
@@ -373,7 +373,7 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
    * The password for the encrypted transmission.
    * This property can be set by URI parameters.
    */
-  g_object_class_install_property (gobject_class, PROP_LOCALADDRESS,
+  g_object_class_install_property (gobject_class, PROP_PASSPHRASE,
       g_param_spec_string ("passphrase", "Passphrase",
           "Password for the encrypted transmission", "",
           G_PARAM_WRITABLE | GST_PARAM_MUTABLE_READY | G_PARAM_STATIC_STRINGS));
