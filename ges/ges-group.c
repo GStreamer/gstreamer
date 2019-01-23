@@ -455,7 +455,8 @@ _child_added (GESContainer * group, GESTimelineElement * child)
   GESGroupPrivate *priv = GES_GROUP (group)->priv;
   GstClockTime last_child_end = 0, first_child_start = G_MAXUINT64;
 
-  if (!GES_TIMELINE_ELEMENT_TIMELINE (group)) {
+  if (!GES_TIMELINE_ELEMENT_TIMELINE (group)
+      && GES_TIMELINE_ELEMENT_TIMELINE (child)) {
     timeline_add_group (GES_TIMELINE_ELEMENT_TIMELINE (child),
         GES_GROUP (group));
     timeline_emit_group_added (GES_TIMELINE_ELEMENT_TIMELINE (child),
@@ -554,8 +555,9 @@ _child_removed (GESContainer * group, GESTimelineElement * child)
   g_free (signals_ids_key);
   if (children == NULL) {
     GST_FIXME_OBJECT (group, "Auto destroy myself?");
-    timeline_remove_group (GES_TIMELINE_ELEMENT_TIMELINE (group),
-        GES_GROUP (group));
+    if (GES_TIMELINE_ELEMENT_TIMELINE (group))
+      timeline_remove_group (GES_TIMELINE_ELEMENT_TIMELINE (group),
+          GES_GROUP (group));
     return;
   }
 
