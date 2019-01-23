@@ -1048,6 +1048,112 @@ GST_START_TEST (test_ssrc_collision_when_receiving)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_ssrc_collision_third_party)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  GSocketAddress *saddr;
+  gboolean had_collision = FALSE;
+  guint i;
+
+  g_signal_connect (h->internal_session, "on-ssrc-collision",
+      G_CALLBACK (on_ssrc_collision_cb), &had_collision);
+
+  for (i = 0; i < 4; i++) {
+    /* Receive 4 buffers SSRC=0x12345678 from 127.0.0.1 to pass probation */
+    buf = generate_test_buffer (i, 0x12345678);
+    saddr = g_inet_socket_address_new_from_string ("127.0.0.1", 8080);
+    gst_buffer_add_net_address_meta (buf, saddr);
+    g_object_unref (saddr);
+    fail_unless_equals_int (GST_FLOW_OK, session_harness_recv_rtp (h, buf));
+  }
+
+  /* Check that we received the first 4 buffer */
+  for (i = 0; i < 4; i++) {
+    buf = gst_harness_pull (h->recv_rtp_h);
+    fail_unless (buf);
+    gst_buffer_unref (buf);
+  }
+  fail_unless (had_collision == FALSE);
+
+  /* Receive buffer SSRC=0x12345678 from 127.0.0.2 */
+  buf = generate_test_buffer (0, 0x12345678);
+  saddr = g_inet_socket_address_new_from_string ("127.0.0.2", 8080);
+  gst_buffer_add_net_address_meta (buf, saddr);
+  g_object_unref (saddr);
+  fail_unless_equals_int (GST_FLOW_OK, session_harness_recv_rtp (h, buf));
+
+  /* Verify the packet we just sent has been dropped */
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->recv_rtp_h));
+
+  /* Receive another buffer SSRC=0x12345678 from 127.0.0.1 */
+  buf = generate_test_buffer (0, 0x12345678);
+  saddr = g_inet_socket_address_new_from_string ("127.0.0.1", 8080);
+  gst_buffer_add_net_address_meta (buf, saddr);
+  g_object_unref (saddr);
+  fail_unless_equals_int (GST_FLOW_OK, session_harness_recv_rtp (h, buf));
+
+
+  /* Check that we received the other buffer */
+  buf = gst_harness_pull (h->recv_rtp_h);
+  fail_unless (buf);
+  gst_buffer_unref (buf);
+  fail_unless (had_collision == FALSE);
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_ssrc_collision_third_party_favor_new)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  GSocketAddress *saddr;
+  gboolean had_collision = FALSE;
+  guint i;
+
+  g_object_set (h->internal_session, "favor-new", TRUE, NULL);
+  g_signal_connect (h->internal_session, "on-ssrc-collision",
+      G_CALLBACK (on_ssrc_collision_cb), &had_collision);
+
+  for (i = 0; i < 4; i++) {
+    /* Receive 4 buffers SSRC=0x12345678 from 127.0.0.1 to pass probation */
+    buf = generate_test_buffer (i, 0x12345678);
+    saddr = g_inet_socket_address_new_from_string ("127.0.0.1", 8080);
+    gst_buffer_add_net_address_meta (buf, saddr);
+    g_object_unref (saddr);
+    fail_unless_equals_int (GST_FLOW_OK, session_harness_recv_rtp (h, buf));
+  }
+
+  /* Check that we received the first 4 buffer */
+  for (i = 0; i < 4; i++) {
+    buf = gst_harness_pull (h->recv_rtp_h);
+    fail_unless (buf);
+    gst_buffer_unref (buf);
+  }
+  fail_unless (had_collision == FALSE);
+
+  /* Receive buffer SSRC=0x12345678 from 127.0.0.2 */
+  buf = generate_test_buffer (0, 0x12345678);
+  saddr = g_inet_socket_address_new_from_string ("127.0.0.2", 8080);
+  gst_buffer_add_net_address_meta (buf, saddr);
+  g_object_unref (saddr);
+  fail_unless_equals_int (GST_FLOW_OK, session_harness_recv_rtp (h, buf));
+
+  /* Check that we received the other buffer */
+  buf = gst_harness_pull (h->recv_rtp_h);
+  fail_unless (buf);
+  gst_buffer_unref (buf);
+  fail_unless (had_collision == FALSE);
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_request_fir)
 {
   SessionHarness *h = session_harness_new ();
@@ -2050,6 +2156,8 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_ignore_suspicious_bye);
   tcase_add_test (tc_chain, test_ssrc_collision_when_sending);
   tcase_add_test (tc_chain, test_ssrc_collision_when_receiving);
+  tcase_add_test (tc_chain, test_ssrc_collision_third_party);
+  tcase_add_test (tc_chain, test_ssrc_collision_third_party_favor_new);
   tcase_add_test (tc_chain, test_request_fir);
   tcase_add_test (tc_chain, test_request_pli);
   tcase_add_test (tc_chain, test_request_nack);
