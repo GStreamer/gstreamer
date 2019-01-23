@@ -1869,6 +1869,7 @@ _gst_gl_upload_set_caps_unlocked (GstGLUpload * upload, GstCaps * in_caps,
   gst_video_info_from_caps (&upload->priv->in_info, in_caps);
   gst_video_info_from_caps (&upload->priv->out_info, out_caps);
 
+  upload->priv->method = NULL;
   upload->priv->method_impl = NULL;
   upload->priv->method_i = 0;
 
