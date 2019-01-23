@@ -223,7 +223,7 @@ GST_START_TEST (info_log_handler)
   guint removed;
 
   removed = gst_debug_remove_log_function (gst_debug_log_default);
-  fail_unless (removed == 1);
+  fail_unless_equals_int (removed, 1);
 }
 
 GST_END_TEST;
@@ -369,8 +369,8 @@ GST_START_TEST (info_set_and_unset_single)
   cat2 = gst_debug_category_get_threshold (states);
 
   gst_debug_set_default_threshold (orig);
-  fail_unless (cat1 = GST_LEVEL_DEBUG);
-  fail_unless (cat2 = GST_LEVEL_WARNING);
+  fail_unless_equals_int (cat1, GST_LEVEL_DEBUG);
+  fail_unless_equals_int (cat2, GST_LEVEL_WARNING);
 }
 
 GST_END_TEST;
@@ -399,9 +399,9 @@ GST_START_TEST (info_set_and_unset_multiple)
 
   gst_debug_set_default_threshold (orig);
 
-  fail_unless (cat1 = GST_LEVEL_DEBUG);
-  fail_unless (cat2 = GST_LEVEL_WARNING);
-  fail_unless (cat3 = GST_LEVEL_WARNING);
+  fail_unless_equals_int (cat1, GST_LEVEL_DEBUG);
+  fail_unless_equals_int (cat2, GST_LEVEL_WARNING);
+  fail_unless_equals_int (cat3, GST_LEVEL_WARNING);
 }
 
 GST_END_TEST;
