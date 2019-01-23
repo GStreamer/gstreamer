@@ -16,7 +16,7 @@ be signalled.
 
 Several things can happen that require the preroll cond to be signalled.
 These include state changes or flush events. The prerolling is
-implemented in sinks (see [element-sink](design/element-sink.md)
+implemented in sinks (see [Sink elements](design/element-sink.md)).
 
 ## Committing the state
 
@@ -26,8 +26,8 @@ in the `PAUSED` state could unqueue the buffer again.
 
 The state is commited in the following conditions:
 
-- a buffer is received on a sinkpad
-- an GAP event is received on a sinkpad.
+- a buffer is received on a sinkpad;
+- an GAP event is received on a sinkpad;
 - an EOS event is received on a sinkpad.
 
 We require the state change to be commited in EOS as well, since an EOS
