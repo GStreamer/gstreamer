@@ -1002,6 +1002,78 @@ GST_START_TEST (test_ssrc_collision_when_sending)
 
 GST_END_TEST;
 
+GST_START_TEST (test_ssrc_collision_when_sending_loopback)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  GstEvent *ev;
+  GSocketAddress *saddr;
+  gboolean had_collision = FALSE;
+  guint new_ssrc;
+  const GstStructure *s;
+
+  g_signal_connect (h->internal_session, "on-ssrc-collision",
+      G_CALLBACK (on_ssrc_collision_cb), &had_collision);
+
+  /* Push SDES with identical SSRC as what we will use for sending RTP,
+     establishing this as a non-internal SSRC */
+  buf = gst_rtcp_buffer_new (1400);
+  add_rtcp_sdes_packet (buf, 0x12345678, "test@foo.bar");
+  saddr = g_inet_socket_address_new_from_string ("127.0.0.1", 8080);
+  gst_buffer_add_net_address_meta (buf, saddr);
+  g_object_unref (saddr);
+  session_harness_recv_rtcp (h, buf);
+
+  fail_unless (had_collision == FALSE);
+
+  /* Push RTP buffer making our internal SSRC=0x12345678 */
+  buf = generate_test_buffer (0, 0x12345678);
+  fail_unless_equals_int (GST_FLOW_OK, session_harness_send_rtp (h, buf));
+
+  fail_unless (had_collision == TRUE);
+
+  /* Verify the packet we just sent is not being boomeranged back to us
+     as a received packet! */
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->recv_rtp_h));
+
+  while ((ev = gst_harness_try_pull_upstream_event (h->send_rtp_h)) != NULL) {
+    if (GST_EVENT_CUSTOM_UPSTREAM == GST_EVENT_TYPE (ev) &&
+        gst_event_has_name (ev, "GstRTPCollision"))
+      break;
+    gst_event_unref (ev);
+  }
+  fail_unless (ev != NULL);
+
+  s = gst_event_get_structure (ev);
+  fail_unless (gst_structure_get_uint (s, "ssrc", &new_ssrc));
+  gst_event_unref (ev);
+
+  /* reset collision detection */
+  had_collision = FALSE;
+
+  /* Push SDES from same address but with the new SSRC, as if someone
+   * was looping back our packets to us */
+  buf = gst_rtcp_buffer_new (1400);
+  add_rtcp_sdes_packet (buf, new_ssrc, "test@foo.bar");
+  saddr = g_inet_socket_address_new_from_string ("127.0.0.1", 8080);
+  gst_buffer_add_net_address_meta (buf, saddr);
+  g_object_unref (saddr);
+  session_harness_recv_rtcp (h, buf);
+
+  /* Make sure we didn't detect a collision */
+  fail_unless (had_collision == FALSE);
+
+  /* Make sure there is no collision event either */
+  while ((ev = gst_harness_try_pull_upstream_event (h->send_rtp_h)) != NULL) {
+    fail_if (GST_EVENT_CUSTOM_UPSTREAM == GST_EVENT_TYPE (ev) &&
+        gst_event_has_name (ev, "GstRTPCollision"));
+    gst_event_unref (ev);
+  }
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_ssrc_collision_when_receiving)
 {
@@ -2155,6 +2227,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_dont_lock_on_stats);
   tcase_add_test (tc_chain, test_ignore_suspicious_bye);
   tcase_add_test (tc_chain, test_ssrc_collision_when_sending);
+  tcase_add_test (tc_chain, test_ssrc_collision_when_sending_loopback);
   tcase_add_test (tc_chain, test_ssrc_collision_when_receiving);
   tcase_add_test (tc_chain, test_ssrc_collision_third_party);
   tcase_add_test (tc_chain, test_ssrc_collision_third_party_favor_new);
