@@ -5,6 +5,7 @@ avtp_sources = [
   'gstavtpbasedepayload.c',
   'gstavtpbasepayload.c',
   'gstavtpsink.c',
+  'gstavtpsrc.c',
 ]
 
 avtp_dep = dependency('avtp', required: get_option('avtp'))
