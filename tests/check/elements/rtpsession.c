@@ -946,12 +946,26 @@ add_rtcp_sdes_packet (GstBuffer * gstbuf, guint32 ssrc, const char *cname)
   gst_rtcp_buffer_unmap (&buffer);
 }
 
+
+static void
+on_ssrc_collision_cb (GstElement * rtpsession, guint ssrc, gpointer user_data)
+{
+  gboolean *had_collision = user_data;
+
+  *had_collision = TRUE;
+}
+
 GST_START_TEST (test_ssrc_collision_when_sending)
 {
   SessionHarness *h = session_harness_new ();
   GstBuffer *buf;
   GstEvent *ev;
   GSocketAddress *saddr;
+  gboolean had_collision = FALSE;
+
+  g_signal_connect (h->internal_session, "on-ssrc-collision",
+      G_CALLBACK (on_ssrc_collision_cb), &had_collision);
+
 
   /* Push SDES with identical SSRC as what we will use for sending RTP,
      establishing this as a non-internal SSRC */
@@ -962,10 +976,13 @@ GST_START_TEST (test_ssrc_collision_when_sending)
   g_object_unref (saddr);
   session_harness_recv_rtcp (h, buf);
 
+  fail_unless (had_collision == FALSE);
 
   /* Push RTP buffer making our internal SSRC=0x12345678 */
   buf = generate_test_buffer (0, 0x12345678);
   fail_unless_equals_int (GST_FLOW_OK, session_harness_send_rtp (h, buf));
+
+  fail_unless (had_collision == TRUE);
 
   /* Verify the packet we just sent is not being boomeranged back to us
      as a received packet! */
