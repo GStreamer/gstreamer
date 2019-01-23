@@ -5,7 +5,8 @@ libgstavtp_la_SOURCES = \
 	gstavtpaafdepay.c \
 	gstavtpaafpay.c \
 	gstavtpbasedepayload.c \
-	gstavtpbasepayload.c
+	gstavtpbasepayload.c \
+	gstavtpsink.c
 
 libgstavtp_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
@@ -25,4 +26,5 @@ noinst_HEADERS = \
 	gstavtpaafdepay.h \
 	gstavtpaafpay.h \
 	gstavtpbasedepayload.h \
-	gstavtpbasepayload.h
+	gstavtpbasepayload.h \
+	gstavtpsink.h

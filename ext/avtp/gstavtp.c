@@ -52,6 +52,7 @@
 
 #include "gstavtpaafdepay.h"
 #include "gstavtpaafpay.h"
+#include "gstavtpsink.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -59,6 +60,8 @@ plugin_init (GstPlugin * plugin)
   if (!gst_avtp_aaf_pay_plugin_init (plugin))
     return FALSE;
   if (!gst_avtp_aaf_depay_plugin_init (plugin))
+    return FALSE;
+  if (!gst_avtp_sink_plugin_init (plugin))
     return FALSE;
 
   return TRUE;
