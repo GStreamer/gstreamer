@@ -471,13 +471,13 @@ gst_tag_lookup (const gchar * tag_name)
 }
 
 /**
- * gst_tag_register:
+ * gst_tag_register: (skip)
  * @name: the name or identifier string
  * @flag: a flag describing the type of tag info
  * @type: the type this data is in
  * @nick: human-readable name
  * @blurb: a human-readable description about this tag
- * @func: (allow-none) (scope call): function for merging multiple values of this tag, or %NULL
+ * @func: (allow-none): function for merging multiple values of this tag, or %NULL
  *
  * Registers a new tag type for the use with GStreamer's type system. If a type
  * with that name is already registered, that one is used.
@@ -515,13 +515,13 @@ gst_tag_register (const gchar * name, GstTagFlag flag, GType type,
 }
 
 /**
- * gst_tag_register_static:
+ * gst_tag_register_static: (skip)
  * @name: the name or identifier string (string constant)
  * @flag: a flag describing the type of tag info
  * @type: the type this data is in
  * @nick: human-readable name or short description (string constant)
  * @blurb: a human-readable description for this tag (string constant)
- * @func: (allow-none) (scope call): function for merging multiple values of this tag, or %NULL
+ * @func: (allow-none): function for merging multiple values of this tag, or %NULL
  *
  * Registers a new tag type for the use with GStreamer's type system.
  *
