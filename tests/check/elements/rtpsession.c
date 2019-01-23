@@ -949,22 +949,36 @@ add_rtcp_sdes_packet (GstBuffer * gstbuf, guint32 ssrc, const char *cname)
 GST_START_TEST (test_ssrc_collision_when_sending)
 {
   SessionHarness *h = session_harness_new ();
-  GstBuffer *buf = gst_rtcp_buffer_new (1400);
+  GstBuffer *buf;
+  GstEvent *ev;
+  GSocketAddress *saddr;
 
-/* Push SDES with identical SSRC as what we will use for sending RTP,
-   establishing this as a non-internal SSRC */
+  /* Push SDES with identical SSRC as what we will use for sending RTP,
+     establishing this as a non-internal SSRC */
+  buf = gst_rtcp_buffer_new (1400);
   add_rtcp_sdes_packet (buf, 0x12345678, "test@foo.bar");
+  saddr = g_inet_socket_address_new_from_string ("127.0.0.1", 8080);
+  gst_buffer_add_net_address_meta (buf, saddr);
+  g_object_unref (saddr);
   session_harness_recv_rtcp (h, buf);
 
+
   /* Push RTP buffer making our internal SSRC=0x12345678 */
-  fail_unless_equals_int (GST_FLOW_OK,
-      session_harness_send_rtp (h, generate_test_buffer (0, 0x12345678)));
+  buf = generate_test_buffer (0, 0x12345678);
+  fail_unless_equals_int (GST_FLOW_OK, session_harness_send_rtp (h, buf));
 
   /* Verify the packet we just sent is not being boomeranged back to us
      as a received packet! */
   fail_unless_equals_int (0, gst_harness_buffers_in_queue (h->recv_rtp_h));
 
-  /* FIXME: verify a Collision event coming upstream! */
+  while ((ev = gst_harness_try_pull_upstream_event (h->send_rtp_h)) != NULL) {
+    if (GST_EVENT_CUSTOM_UPSTREAM == GST_EVENT_TYPE (ev) &&
+        gst_event_has_name (ev, "GstRTPCollision"))
+      break;
+    gst_event_unref (ev);
+  }
+  fail_unless (ev != NULL);
+  gst_event_unref (ev);
 
   session_harness_free (h);
 }

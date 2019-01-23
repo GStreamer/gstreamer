@@ -1579,6 +1579,27 @@ rtp_session_add_conflicting_address (RTPSession * sess,
       add_conflicting_address (sess->conflicting_addresses, address, time);
 }
 
+static void
+rtp_session_have_conflict (RTPSession * sess, RTPSource * source,
+    GSocketAddress * address, GstClockTime current_time)
+{
+  guint32 ssrc = rtp_source_get_ssrc (source);
+
+  /* Its a new collision, lets change our SSRC */
+  rtp_session_add_conflicting_address (sess, address, current_time);
+
+  /* mark the source BYE */
+  rtp_source_mark_bye (source, "SSRC Collision");
+  /* if we were suggesting this SSRC, change to something else */
+  if (sess->suggested_ssrc == ssrc) {
+    sess->suggested_ssrc = rtp_session_create_new_ssrc (sess);
+    sess->internal_ssrc_set = TRUE;
+  }
+
+  on_ssrc_collision (sess, source);
+
+  rtp_session_schedule_bye_locked (sess, current_time);
+}
 
 static gboolean
 check_collision (RTPSession * sess, RTPSource * source,
@@ -1672,22 +1693,11 @@ check_collision (RTPSession * sess, RTPSource * source,
        */
       GST_DEBUG ("Our packets are being looped back to us, dropping");
     } else {
-      /* Its a new collision, lets change our SSRC */
-      rtp_session_add_conflicting_address (sess, pinfo->address,
+      GST_DEBUG ("Collision for SSRC %x from new incoming packet,"
+          " change our sender ssrc", ssrc);
+
+      rtp_session_have_conflict (sess, source, pinfo->address,
           pinfo->current_time);
-
-      GST_DEBUG ("Collision for SSRC %x", ssrc);
-      /* mark the source BYE */
-      rtp_source_mark_bye (source, "SSRC Collision");
-      /* if we were suggesting this SSRC, change to something else */
-      if (sess->suggested_ssrc == ssrc) {
-        sess->suggested_ssrc = rtp_session_create_new_ssrc (sess);
-        sess->internal_ssrc_set = TRUE;
-      }
-
-      on_ssrc_collision (sess, source);
-
-      rtp_session_schedule_bye_locked (sess, pinfo->current_time);
     }
   }
 
@@ -3115,9 +3125,31 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   if (created)
     on_new_sender_ssrc (sess, source);
 
-  if (!source->internal)
-    /* FIXME: Send GstRTPCollision upstream  */
-    goto collision;
+  if (!source->internal) {
+    GSocketAddress *from;
+
+    if (source->rtp_from)
+      from = source->rtp_from;
+    else
+      from = source->rtcp_from;
+    if (from) {
+      if (rtp_session_find_conflicting_address (sess, from, current_time)) {
+        /* Its a known conflict, its probably a loop, not a collision
+         * lets just drop the incoming packet
+         */
+        GST_LOG ("Our packets are being looped back to us, ignoring collision");
+      } else {
+        GST_DEBUG ("Collision for SSRC %x, change our sender ssrc", pinfo.ssrc);
+
+        rtp_session_have_conflict (sess, source, from, current_time);
+
+        goto collision;
+      }
+    } else {
+      GST_LOG ("Ignoring collision on sent SSRC %x because remote source"
+          " doesn't have an address", pinfo.ssrc);
+    }
+  }
 
   prevsender = RTP_SOURCE_IS_SENDER (source);
   oldrate = source->bitrate;
