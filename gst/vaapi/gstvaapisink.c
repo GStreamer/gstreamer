@@ -439,6 +439,35 @@ gst_vaapisink_x11_handle_events (GstVaapiSink * sink)
     }
     if (do_expose)
       gst_vaapisink_video_overlay_expose (GST_VIDEO_OVERLAY (sink));
+
+    /* Handle Display events */
+    for (;;) {
+      gst_vaapi_display_lock (display);
+      if (XPending (x11_dpy) == 0) {
+        gst_vaapi_display_unlock (display);
+        break;
+      }
+      XNextEvent (x11_dpy, &e);
+      gst_vaapi_display_unlock (display);
+
+      switch (e.type) {
+        case ClientMessage:{
+          Atom wm_delete;
+
+          wm_delete = XInternAtom (x11_dpy, "WM_DELETE_WINDOW", False);
+          if (wm_delete == (Atom) e.xclient.data.l[0]) {
+            /* Handle window deletion by posting an error on the bus */
+            GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
+                ("Output window was closed"), (NULL));
+            return FALSE;
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    }
+
   }
   return TRUE;
 }

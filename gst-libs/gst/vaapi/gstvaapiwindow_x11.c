@@ -226,7 +226,7 @@ gst_vaapi_window_x11_create (GstVaapiWindow * window, guint * width,
   const GstVaapiDisplayClass *display_class;
   const GstVaapiWindowClass *window_class;
   XWindowAttributes wattr;
-  Atom atoms[2];
+  Atom wm_delete, atoms[2];
   gboolean ok;
 
   static const char *atom_names[2] = {
@@ -269,8 +269,16 @@ gst_vaapi_window_x11_create (GstVaapiWindow * window, guint * width,
   priv->atom_NET_WM_STATE_FULLSCREEN = atoms[1];
 
   xid = x11_create_window (dpy, *width, *height, vid, cmap);
-  if (xid)
+  if (xid) {
+    /* Tell the window manager we'd like delete client messages instead of
+     * being killed */
+    wm_delete = XInternAtom (dpy, "WM_DELETE_WINDOW", True);
+    if (wm_delete != None) {
+      (void) XSetWMProtocols (dpy, xid, &wm_delete, 1);
+    }
+
     XRaiseWindow (dpy, xid);
+  }
   GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
 
   GST_DEBUG ("xid %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (xid));
