@@ -308,12 +308,16 @@ gst_v4l2_src_parse_fixed_struct (GstStructure * s,
 
 /* TODO Consider framerate */
 static gint
-gst_v4l2src_fixed_caps_compare (GstStructure * a, GstStructure * b,
+gst_v4l2src_fixed_caps_compare (GstCaps * caps_a, GstCaps * caps_b,
     struct PreferedCapsInfo *pref)
 {
+  GstStructure *a, *b;
   gint aw = G_MAXINT, ah = G_MAXINT, ad = G_MAXINT;
   gint bw = G_MAXINT, bh = G_MAXINT, bd = G_MAXINT;
   gint ret;
+
+  a = gst_caps_get_structure (caps_a, 0);
+  b = gst_caps_get_structure (caps_b, 0);
 
   gst_v4l2_src_parse_fixed_struct (a, &aw, &ah, NULL, NULL);
   gst_v4l2_src_parse_fixed_struct (b, &bw, &bh, NULL, NULL);
@@ -402,8 +406,6 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
 
   GST_DEBUG_OBJECT (basesrc, "fixating caps %" GST_PTR_FORMAT, caps);
 
-  caps = gst_caps_make_writable (caps);
-
   /* We consider the first structure from peercaps to be a preference. This is
    * useful for matching a reported native display, or simply to avoid
    * transformation to happen downstream. */
@@ -418,17 +420,24 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
   GST_DEBUG_OBJECT (basesrc, "Prefered size %ix%i", pref.width, pref.height);
 
   /* Sort the structures to get the caps that is nearest to our preferences,
-   * first */
-  while ((s = gst_caps_steal_structure (caps, 0))) {
+   * first. Use single struct caps for sorting so we preserve the features.  */
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstCaps *tmp = gst_caps_copy_nth (caps, i);
+
+    s = gst_caps_get_structure (tmp, 0);
     gst_v4l2_src_fixate_struct_with_preference (s, &pref);
-    caps_list = g_list_insert_sorted_with_data (caps_list, s,
+
+    caps_list = g_list_insert_sorted_with_data (caps_list, tmp,
         (GCompareDataFunc) gst_v4l2src_fixed_caps_compare, &pref);
   }
 
+  gst_caps_unref (caps);
+  caps = gst_caps_new_empty ();
+
   while (caps_list) {
-    s = caps_list->data;
+    GstCaps *tmp = caps_list->data;
     caps_list = g_list_delete_link (caps_list, caps_list);
-    gst_caps_append_structure (caps, s);
+    gst_caps_append (caps, tmp);
   }
 
   GST_DEBUG_OBJECT (basesrc, "sorted and normalized caps %" GST_PTR_FORMAT,
