@@ -164,6 +164,7 @@
 #define ST_AUDIO_AAC_LOAS               0x11
 #define ST_VIDEO_MPEG4                  0x10
 #define ST_VIDEO_H264                   0x1b
+#define ST_VIDEO_H265                   0x24
 
 /* Un-official Dirac extension */
 #define ST_VIDEO_DIRAC                  0xd1
