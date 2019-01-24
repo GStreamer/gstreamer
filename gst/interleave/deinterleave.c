@@ -365,12 +365,22 @@ gst_deinterleave_check_caps_change (GstDeinterleave * self,
   gint i;
   gboolean same_layout = TRUE;
   gboolean was_unpositioned;
-  gboolean is_unpositioned = GST_AUDIO_INFO_IS_UNPOSITIONED (new_info);
-  gint new_channels = GST_AUDIO_INFO_CHANNELS (new_info);
+  gboolean is_unpositioned;
+  gint new_channels;
   gint old_channels;
 
-  was_unpositioned = GST_AUDIO_INFO_IS_UNPOSITIONED (old_info);
+  new_channels = GST_AUDIO_INFO_CHANNELS (new_info);
   old_channels = GST_AUDIO_INFO_CHANNELS (old_info);
+
+  if (GST_AUDIO_INFO_IS_UNPOSITIONED (new_info) || new_channels == 1)
+    is_unpositioned = TRUE;
+  else
+    is_unpositioned = FALSE;
+
+  if (GST_AUDIO_INFO_IS_UNPOSITIONED (old_info) || old_channels == 1)
+    was_unpositioned = TRUE;
+  else
+    was_unpositioned = FALSE;
 
   /* We allow caps changes as long as the number of channels doesn't change
    * and the channel positions stay the same. _getcaps() should've cared
