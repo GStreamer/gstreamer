@@ -112,6 +112,9 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTimelineElement, ges_timeline_element,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, ges_extractable_interface_init)
     G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
 
+/*********************************************
+ *      Virtual methods implementation       *
+ *********************************************/
 static void
 _set_child_property (GESTimelineElement * self G_GNUC_UNUSED, GObject * child,
     GParamSpec * pspec, GValue * value)
@@ -516,6 +519,74 @@ _set_name (GESTimelineElement * self, const gchar * wanted_name)
 
   g_free (self->name);
   self->name = name;
+}
+
+/*********************************************
+ *       Internal and private helpers        *
+ *********************************************/
+gdouble
+ges_timeline_element_get_media_duration_factor (GESTimelineElement * self)
+{
+  gdouble media_duration_factor;
+  GESEffectClass *class;
+  GList *props;
+
+  media_duration_factor = 1.0;
+
+  class = GES_EFFECT_CLASS (g_type_class_ref (GES_TYPE_EFFECT));
+
+  for (props = class->rate_properties; props != NULL; props = props->next) {
+    GObject *child;
+    GParamSpec *pspec;
+    if (ges_timeline_element_lookup_child (self, props->data, &child, &pspec)) {
+      if (G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_FLOAT) {
+        gfloat rate_change;
+        g_object_get (child, pspec->name, &rate_change, NULL);
+        media_duration_factor *= rate_change;
+      } else if (G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_DOUBLE) {
+        gdouble rate_change;
+        g_object_get (child, pspec->name, &rate_change, NULL);
+        media_duration_factor *= rate_change;
+      } else {
+        GST_WARNING_OBJECT (self,
+            "Rate property %s in child %" GST_PTR_FORMAT
+            " is of unsupported type %s", pspec->name, child,
+            G_VALUE_TYPE_NAME (pspec->value_type));
+      }
+
+      gst_object_unref (child);
+      g_param_spec_unref (pspec);
+
+      GST_DEBUG_OBJECT (self,
+          "Added rate changing property %s, set to value %lf",
+          (const char *) props->data, media_duration_factor);
+    }
+  }
+
+  g_type_class_unref (class);
+  return media_duration_factor;
+}
+
+GESTimelineElement *
+ges_timeline_element_get_copied_from (GESTimelineElement * self)
+{
+  GESTimelineElement *copied_from = self->priv->copied_from;
+  self->priv->copied_from = NULL;
+  return copied_from;
+}
+
+GESTimelineElementFlags
+ges_timeline_element_flags (GESTimelineElement * self)
+{
+  return self->priv->flags;
+}
+
+void
+ges_timeline_element_set_flags (GESTimelineElement * self,
+    GESTimelineElementFlags flags)
+{
+  self->priv->flags = flags;
+
 }
 
 /*********************************************
@@ -1877,73 +1948,6 @@ ges_timeline_element_get_layer_priority (GESTimelineElement * self)
     return self->priority;
 
   return GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_layer_priority (self);
-}
-
-/* Internal */
-gdouble
-ges_timeline_element_get_media_duration_factor (GESTimelineElement * self)
-{
-  gdouble media_duration_factor;
-  GESEffectClass *class;
-  GList *props;
-
-  media_duration_factor = 1.0;
-
-  class = GES_EFFECT_CLASS (g_type_class_ref (GES_TYPE_EFFECT));
-
-  for (props = class->rate_properties; props != NULL; props = props->next) {
-    GObject *child;
-    GParamSpec *pspec;
-    if (ges_timeline_element_lookup_child (self, props->data, &child, &pspec)) {
-      if (G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_FLOAT) {
-        gfloat rate_change;
-        g_object_get (child, pspec->name, &rate_change, NULL);
-        media_duration_factor *= rate_change;
-      } else if (G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_DOUBLE) {
-        gdouble rate_change;
-        g_object_get (child, pspec->name, &rate_change, NULL);
-        media_duration_factor *= rate_change;
-      } else {
-        GST_WARNING_OBJECT (self,
-            "Rate property %s in child %" GST_PTR_FORMAT
-            " is of unsupported type %s", pspec->name, child,
-            G_VALUE_TYPE_NAME (pspec->value_type));
-      }
-
-      gst_object_unref (child);
-      g_param_spec_unref (pspec);
-
-      GST_DEBUG_OBJECT (self,
-          "Added rate changing property %s, set to value %lf",
-          (const char *) props->data, media_duration_factor);
-    }
-  }
-
-  g_type_class_unref (class);
-  return media_duration_factor;
-}
-
-/* Internal */
-GESTimelineElement *
-ges_timeline_element_get_copied_from (GESTimelineElement * self)
-{
-  GESTimelineElement *copied_from = self->priv->copied_from;
-  self->priv->copied_from = NULL;
-  return copied_from;
-}
-
-GESTimelineElementFlags
-ges_timeline_element_flags (GESTimelineElement * self)
-{
-  return self->priv->flags;
-}
-
-void
-ges_timeline_element_set_flags (GESTimelineElement * self,
-    GESTimelineElementFlags flags)
-{
-  self->priv->flags = flags;
-
 }
 
 /**
