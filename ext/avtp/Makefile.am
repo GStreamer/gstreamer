@@ -2,7 +2,9 @@ plugin_LTLIBRARIES = libgstavtp.la
 
 libgstavtp_la_SOURCES = \
 	gstavtp.c \
+	gstavtpaafdepay.c \
 	gstavtpaafpay.c \
+	gstavtpbasedepayload.c \
 	gstavtpbasepayload.c
 
 libgstavtp_la_CFLAGS = \
@@ -20,5 +22,7 @@ libgstavtp_la_LIBADD = \
 libgstavtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
+	gstavtpaafdepay.h \
 	gstavtpaafpay.h \
+	gstavtpbasedepayload.h \
 	gstavtpbasepayload.h
