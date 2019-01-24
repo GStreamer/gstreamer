@@ -41,6 +41,10 @@ G_BEGIN_DECLS
         (GST_OBJECT_FLAG_IS_SET (obj, GST_V4L2_ALLOCATOR_FLAG_ ## type ## _REQBUFS))
 #define GST_V4L2_ALLOCATOR_CAN_ALLOCATE(obj,type) \
         (GST_OBJECT_FLAG_IS_SET (obj, GST_V4L2_ALLOCATOR_FLAG_ ## type ## _CREATE_BUFS))
+#define GST_V4L2_ALLOCATOR_CAN_ORPHAN_BUFS(obj) \
+        (GST_OBJECT_FLAG_IS_SET (obj, GST_V4L2_ALLOCATOR_FLAG_SUPPORTS_ORPHANED_BUFS))
+#define GST_V4L2_ALLOCATOR_IS_ORPHANED(obj) \
+        (GST_OBJECT_FLAG_IS_SET (obj, GST_V4L2_ALLOCATOR_FLAG_ORPHANED))
 
 #define GST_V4L2_MEMORY_QUARK gst_v4l2_memory_quark ()
 
@@ -59,6 +63,8 @@ enum _GstV4l2AllocatorFlags
   GST_V4L2_ALLOCATOR_FLAG_USERPTR_CREATE_BUFS = (GST_ALLOCATOR_FLAG_LAST << 3),
   GST_V4L2_ALLOCATOR_FLAG_DMABUF_REQBUFS      = (GST_ALLOCATOR_FLAG_LAST << 4),
   GST_V4L2_ALLOCATOR_FLAG_DMABUF_CREATE_BUFS  = (GST_ALLOCATOR_FLAG_LAST << 5),
+  GST_V4L2_ALLOCATOR_FLAG_SUPPORTS_ORPHANED_BUFS = (GST_ALLOCATOR_FLAG_LAST << 6),
+  GST_V4L2_ALLOCATOR_FLAG_ORPHANED            = (GST_ALLOCATOR_FLAG_LAST << 7),
 };
 
 enum _GstV4l2Return
@@ -121,6 +127,8 @@ guint                gst_v4l2_allocator_start          (GstV4l2Allocator * alloc
                                                         guint32 count, guint32 memory);
 
 GstV4l2Return        gst_v4l2_allocator_stop           (GstV4l2Allocator * allocator);
+
+gboolean             gst_v4l2_allocator_orphan         (GstV4l2Allocator * allocator);
 
 GstV4l2MemoryGroup*  gst_v4l2_allocator_alloc_mmap     (GstV4l2Allocator * allocator);
 

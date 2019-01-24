@@ -503,6 +503,9 @@ gst_v4l2_allocator_probe (GstV4l2Allocator * allocator, guint32 memory,
       flags |= bcreate_flag;
   }
 
+  if (breq.capabilities & V4L2_BUF_CAP_SUPPORTS_ORPHANED_BUFS)
+    flags |= GST_V4L2_ALLOCATOR_FLAG_SUPPORTS_ORPHANED_BUFS;
+
   return flags;
 }
 
@@ -517,6 +520,9 @@ gst_v4l2_allocator_create_buf (GstV4l2Allocator * allocator)
 
   if (!g_atomic_int_get (&allocator->active))
     goto done;
+
+  if (GST_V4L2_ALLOCATOR_IS_ORPHANED (allocator))
+    goto orphaned_bug;
 
   bcreate.memory = allocator->memory;
   bcreate.format = obj->format;
@@ -542,6 +548,12 @@ done:
   GST_OBJECT_UNLOCK (allocator);
   return group;
 
+orphaned_bug:
+  {
+    GST_ERROR_OBJECT (allocator, "allocator was orphaned, "
+        "not creating new buffers");
+    goto done;
+  }
 create_bufs_failed:
   {
     GST_WARNING_OBJECT (allocator, "error creating a new buffer: %s",
@@ -667,6 +679,9 @@ gst_v4l2_allocator_start (GstV4l2Allocator * allocator, guint32 count,
   if (g_atomic_int_get (&allocator->active))
     goto already_active;
 
+  if (GST_V4L2_ALLOCATOR_IS_ORPHANED (allocator))
+    goto orphaned;
+
   if (obj->ioctl (obj->video_fd, VIDIOC_REQBUFS, &breq) < 0)
     goto reqbufs_failed;
 
@@ -713,6 +728,11 @@ done:
 already_active:
   {
     GST_ERROR_OBJECT (allocator, "allocator already active");
+    goto error;
+  }
+orphaned:
+  {
+    GST_ERROR_OBJECT (allocator, "allocator was orphaned");
     goto error;
   }
 reqbufs_failed:
@@ -765,10 +785,12 @@ gst_v4l2_allocator_stop (GstV4l2Allocator * allocator)
       gst_v4l2_memory_group_free (group);
   }
 
-  /* Not all drivers support rebufs(0), so warn only */
-  if (obj->ioctl (obj->video_fd, VIDIOC_REQBUFS, &breq) < 0)
-    GST_WARNING_OBJECT (allocator,
-        "error releasing buffers buffers: %s", g_strerror (errno));
+  if (!GST_V4L2_ALLOCATOR_IS_ORPHANED (allocator)) {
+    /* Not all drivers support rebufs(0), so warn only */
+    if (obj->ioctl (obj->video_fd, VIDIOC_REQBUFS, &breq) < 0)
+      GST_WARNING_OBJECT (allocator,
+          "error releasing buffers buffers: %s", g_strerror (errno));
+  }
 
   allocator->count = 0;
 
@@ -777,6 +799,26 @@ gst_v4l2_allocator_stop (GstV4l2Allocator * allocator)
 done:
   GST_OBJECT_UNLOCK (allocator);
   return ret;
+}
+
+gboolean
+gst_v4l2_allocator_orphan (GstV4l2Allocator * allocator)
+{
+  GstV4l2Object *obj = allocator->obj;
+  struct v4l2_requestbuffers breq = { 0, obj->type, allocator->memory };
+
+  if (!GST_V4L2_ALLOCATOR_CAN_ORPHAN_BUFS (allocator))
+    return FALSE;
+
+  GST_OBJECT_FLAG_SET (allocator, GST_V4L2_ALLOCATOR_FLAG_ORPHANED);
+
+  if (obj->ioctl (obj->video_fd, VIDIOC_REQBUFS, &breq) < 0) {
+    GST_ERROR_OBJECT (allocator,
+        "error orphaning buffers buffers: %s", g_strerror (errno));
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 GstV4l2MemoryGroup *
