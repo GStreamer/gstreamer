@@ -108,7 +108,8 @@ static GstStaticPadTemplate video_template =
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("video/mpeg, "
         "mpegversion = (int) { 1, 2, 4 }, " "systemstream = (boolean) FALSE, "
-        "parsed = (boolean) FALSE; " "video/x-h264")
+        "parsed = (boolean) FALSE; " "video/x-h264, "
+        "stream-format=(string)byte-stream;")
     );
 
 static GstStaticPadTemplate audio_template =
