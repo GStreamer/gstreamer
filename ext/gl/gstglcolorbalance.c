@@ -181,7 +181,7 @@ static GstCaps *
 gcb_transform_internal_caps (GstGLFilter * filter,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
 {
-  GstCaps *tmp = gst_caps_make_writable (caps);
+  GstCaps *tmp = gst_caps_copy (caps);
   gint i;
   /* If we're not in passthrough mode, we can only output 2D textures,
    * but can always receive any compatible texture.
