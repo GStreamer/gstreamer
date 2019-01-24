@@ -24,7 +24,7 @@ by exclamation marks (!). Properties may be appended to elements in the
 form `property=value`.
 
 For a more complete description of possible PIPELINE-DESCRIPTIONS see the
-section *pipeline description* below or consult the GStreamer documentation.
+section [Pipeline Description](#pipeline-description) below or consult the GStreamer documentation.
 
 Please note that `gst-launch-1.0` is primarily a debugging tool. You should
 not build applications on top of it. For applications, use the
@@ -68,15 +68,15 @@ Do not install a fault handler
 Print memory allocation traces. The feature must be enabled at compile
 time to work.
 
-## Gstreamer Options
+## GStreamer Options
 
 `gst-launch-1.0` also accepts the following options that are common to
 all GStreamer applications:
 
 ## Pipeline Description
 
-A pipeline consists *elements* and *links*. *elements* can be put
-into *bins* of different sorts. *elements*, *links* and *bins* can be
+A pipeline consists of *elements* and *links*. *Elements* can be put
+into *bins* of different sorts. *Elements*, *links*, and *bins* can be
 specified in a pipeline description in any order.
 
 ### Elements
@@ -107,7 +107,7 @@ Specifies that a bin of type `BINTYPE` is created and the given properties
 are set. Every element between the braces is put into the bin. Please
 note the dot that has to be used after the `BINTYPE`. You will almost
 never need this functionality, it is only really useful for applications
-using the `gst_parse_launch()` API with 'bin' as bintype. That way it is
+using the `gst_parse_launch()` API with `bin` as bintype. That way it is
 possible to build partial pipelines instead of a full-fledged top-level
 pipeline.
 
@@ -154,17 +154,20 @@ NAME=[(TYPE)] VALUE in lists and ranges: [(TYPE)] VALUE
 Sets the requested property in capabilities. The name is an alphanumeric
 value and the type can have the following case-insensitive values:
 
-- **i** or **int** for integer values or ranges - **f** or **float** for
-float values or ranges - **4** or **fourcc** for FOURCC values
-- **b**, **bool** or **boolean** for boolean values
-- **s**, **str** or **string** for strings - **fraction** for fractions
-(framerate, pixel-aspect-ratio)
-- **l** or **list** for lists If no type was given, the following order is
+- `i` or `int` for integer values or ranges;
+- `f` or `float` for float values or ranges;
+- `4` or `fourcc` for FOURCC values;
+- `b`, `bool`, or `boolean` for boolean values;
+- `s`, `str`, or `string` for strings;
+- `fraction` for fractions (framerate, pixel-aspect-ratio);
+- `l` or `list` for lists.
+
+If no type was given, the following order is
 tried: integer, float, boolean, string. Integer values must be parsable by
-**strtol()**, floats by **strtod()**. FOURCC values may either be integers or
-strings. Boolean values are (case insensitive) *yes*, *no*, *true* or *false*
+`strtol()`, floats by `strtod()`. FOURCC values may either be integers or
+strings. Boolean values are (case insensitive) `yes`, `no`, `true` or `false`
 and may like strings be escaped with `"` or `'`. Ranges are in this format: `[
-VALUE, VALUE] Lists use this format: (VALUE [, VALUE ...])`
+VALUE, VALUE]`; lists use this format: `(VALUE [, VALUE ...])`.
 
 ## Pipeline Control
 
@@ -274,10 +277,10 @@ gst-launch-1.0 cdparanoiasrc track=5 ! audioconvert ! lame ! id3v2mux
 ```
 
 Using `gst-inspect-1.0`, it is possible to discover settings like
-the above for cdparanoiasrc that will tell it to rip the entire CD or
+the above for "cdparanoiasrc" that will tell it to rip the entire CD or
 only tracks of it. Alternatively, you can use an URI and `gst-launch-1.0`
 will find an element (such as cdparanoia) that supports that protocol
-for you, e.g.: 
+for you, e.g.:
 
 ```
 gst-launch-1.0 [cdda://5] ! lame vbr=new vbr-quality=6 !
@@ -384,7 +387,7 @@ gst-launch-1.0 videotestsrc ! ximagesink
 
 ### Automatic linking
 
-You can use the decodebin element to automatically select the right
+You can use the "decodebin" element to automatically select the right
 elements to get a working pipeline.
 
 Play any supported audio format:
