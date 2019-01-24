@@ -43,6 +43,12 @@
 
 #define DEFAULT_PAGER "less"
 
+/* "R" : support color
+ * "X" : do not clear the screen when leaving the pager
+ * "F" : skip the pager if content fit into the screen
+ */
+#define DEFAULT_LESS_OPTS "RXF"
+
 gboolean colored_output = TRUE;
 
 GPid child_pid = -1;
@@ -1882,12 +1888,8 @@ redirect_stdout (void)
 
   argv = g_strsplit (pager, " ", 0);
 
-  /* "R" : support color
-   * "X" : Do not init/deinit terminal. Uncleared "inspected output" on terminal
-   *       seems to be more useful
-   */
   envp = g_get_environ ();
-  envp = g_environ_setenv (envp, "LESS", "-RX", TRUE);
+  envp = g_environ_setenv (envp, "LESS", DEFAULT_LESS_OPTS, TRUE);
 
   if (!g_spawn_async_with_pipes (NULL, argv, envp,
           G_SPAWN_DO_NOT_REAP_CHILD | G_SPAWN_SEARCH_PATH,
