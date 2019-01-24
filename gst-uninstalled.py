@@ -193,6 +193,11 @@ def get_subprocess_env(options, gst_version):
 
     return env
 
+def get_windows_shell():
+    command = ['powershell.exe' ,'-noprofile', '-executionpolicy', 'bypass', '-file', 'cmd_or_ps.ps1']
+    result = subprocess.check_output(command)
+    return result.decode().strip()
+
 # https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
 def in_venv():
     return (hasattr(sys, 'real_prefix') or
@@ -226,8 +231,15 @@ if __name__ == "__main__":
 
     if not args:
         if os.name is 'nt':
-            args = [os.environ.get("COMSPEC", r"C:\WINDOWS\system32\cmd.exe")]
-            args += ['/k', 'prompt [gst-{}] $P$G'.format(gst_version)]
+            shell = get_windows_shell()
+            if shell == 'powershell.exe':
+                args = ['powershell.exe']
+                args += ['-NoLogo', '-NoExit']
+                prompt = 'function global:prompt {  "[gst-' + gst_version + '"+"] PS " + $PWD + "> "}'
+                args += ['-Command', prompt]
+            else:
+                args = [os.environ.get("COMSPEC", r"C:\WINDOWS\system32\cmd.exe")]
+                args += ['/k', 'prompt [gst-{}] $P$G'.format(gst_version)]
         else:
             args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
         if "bash" in args[0] and not strtobool(os.environ.get("GST_BUILD_DISABLE_PS1_OVERRIDE", r"FALSE")):
