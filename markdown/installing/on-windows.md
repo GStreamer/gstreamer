@@ -31,10 +31,10 @@ or newer. Take a look at its [system
 requirements](http://www.microsoft.com/visualstudio/en-us/products/2010-editions/visual-cpp-express)).
 
 Installing GStreamer for 32-bit platforms requires approximately 286MB of
-free disk space for the runtime and 207MB for the development files.
+free disk space for the runtime and 207MB for the development files (as of some older version).
 
-Installing GStreamer for 64-bits platforms requires approximately 340MB of
-free disk space for the runtime and 216MB for the development files.
+Installing GStreamer for 64-bits platforms requires up to approximately 350MB of
+free disk space for the runtime and 400MB for the development files (as of version 1.15.1).
 
 ## Download and install GStreamer binaries
 
