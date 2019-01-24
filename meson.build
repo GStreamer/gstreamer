@@ -55,10 +55,7 @@ os.symlink(os.path.join('@1@', 'subprojects', '@0@'),
   os.path.join('@1@', '@0@'))
 '''
 
-# On Windows, if flex/bison aren't found, we use a subproject to get them
-flex = find_program('flex', 'win_flex', required : build_system != 'windows')
-bison = find_program('bison', 'win_bison', required : build_system != 'windows')
-if not flex.found() or not bison.found()
+if build_system == 'windows'
   subproject('win-flex-bison-binaries')
 endif
 
