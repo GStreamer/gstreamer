@@ -64,6 +64,8 @@ struct _GstV4l2BufferPool
   gboolean empty;
   GCond empty_cond;
 
+  gboolean orphaned;
+
   GstV4l2Allocator *vallocator;
   GstAllocator *allocator;
   GstAllocationParams params;
@@ -108,6 +110,8 @@ void                gst_v4l2_buffer_pool_copy_at_threshold (GstV4l2BufferPool * 
                                                             gboolean copy);
 
 gboolean            gst_v4l2_buffer_pool_flush   (GstBufferPool *pool);
+
+gboolean            gst_v4l2_buffer_pool_orphan  (GstBufferPool ** pool);
 
 G_END_DECLS
 
