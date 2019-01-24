@@ -1,7 +1,7 @@
 # gst-launch-1.0
 
 > ![information] This content comes mostly from the Linux man page for
-> the `gst-launch-1.0` tool. As such, it is very Linux-centric
+> the `gst-launch-1.0` tool. As such, it is very Linux-centric
 > regarding path specification and plugin names. Please be patient while
 > it is rewritten to be more generic.
 
@@ -17,23 +17,23 @@ gst-launch-1.0 [OPTIONS] PIPELINE-DESCRIPTION
 
 ## Description
 
-`gst-launch-1.0` is a tool that builds and runs basic *GStreamer* pipelines.
+`gst-launch-1.0` is a tool that builds and runs basic *GStreamer* pipelines.
 
 In its simplest form, a PIPELINE-DESCRIPTION is a list of elements separated
 by exclamation marks (!). Properties may be appended to elements in the
 form `property=value`.
 
 For a more complete description of possible PIPELINE-DESCRIPTIONS see the
-section [Pipeline Description](#pipeline-description) below or consult the GStreamer documentation.
+section [Pipeline Description](#pipeline-description) below or consult the GStreamer documentation.
 
-Please note that `gst-launch-1.0` is primarily a debugging tool. You should
+Please note that `gst-launch-1.0` is primarily a debugging tool. You should
 not build applications on top of it. For applications, use the
 `gst_parse_launch()` function of the GStreamer API as an easy way to construct
 pipelines from pipeline descriptions.
 
 ## Options
 
-*gst-launch-1.0* accepts the following options:
+*gst-launch-1.0* accepts the following options:
 
 **--help**
 
@@ -70,13 +70,13 @@ time to work.
 
 ## GStreamer Options
 
-`gst-launch-1.0` also accepts the following options that are common to
+`gst-launch-1.0` also accepts the following options that are common to
 all GStreamer applications:
 
 ## Pipeline Description
 
-A pipeline consists of *elements* and *links*. *Elements* can be put
-into *bins* of different sorts. *Elements*, *links*, and *bins* can be
+A pipeline consists of *elements* and *links*. *Elements* can be put
+into *bins* of different sorts. *Elements*, *links*, and *bins* can be
 specified in a pipeline description in any order.
 
 ### Elements
@@ -93,7 +93,7 @@ Creates an element of type `ELEMENTTYPE` and sets its `PROPERTIES`.
 PROPERTY=VALUE ...
 ```
 
-Sets the property to the specified value. You can use `gst-inspect-1.0` to find
+Sets the property to the specified value. You can use `gst-inspect-1.0` to find
 out about properties and allowed values of different elements. Enumeration
 properties can be set by name, nick or value.
 
@@ -154,18 +154,18 @@ NAME=[(TYPE)] VALUE in lists and ranges: [(TYPE)] VALUE
 Sets the requested property in capabilities. The name is an alphanumeric
 value and the type can have the following case-insensitive values:
 
-- `i` or `int` for integer values or ranges;
-- `f` or `float` for float values or ranges;
-- `4` or `fourcc` for FOURCC values;
-- `b`, `bool`, or `boolean` for boolean values;
-- `s`, `str`, or `string` for strings;
-- `fraction` for fractions (framerate, pixel-aspect-ratio);
-- `l` or `list` for lists.
+- `i` or `int` for integer values or ranges;
+- `f` or `float` for float values or ranges;
+- `4` or `fourcc` for FOURCC values;
+- `b`, `bool`, or `boolean` for boolean values;
+- `s`, `str`, or `string` for strings;
+- `fraction` for fractions (framerate, pixel-aspect-ratio);
+- `l` or `list` for lists.
 
 If no type was given, the following order is
 tried: integer, float, boolean, string. Integer values must be parsable by
-`strtol()`, floats by `strtod()`. FOURCC values may either be integers or
-strings. Boolean values are (case insensitive) `yes`, `no`, `true` or `false`
+`strtol()`, floats by `strtod()`. FOURCC values may either be integers or
+strings. Boolean values are (case insensitive) `yes`, `no`, `true` or `false`
 and may like strings be escaped with `"` or `'`. Ranges are in this format: `[
 VALUE, VALUE]`; lists use this format: `(VALUE [, VALUE ...])`.
 
@@ -276,7 +276,7 @@ gst-launch-1.0 cdparanoiasrc track=5 ! audioconvert ! lame ! id3v2mux
 ! filesink location=track5.mp3
 ```
 
-Using `gst-inspect-1.0`, it is possible to discover settings like
+Using `gst-inspect-1.0`, it is possible to discover settings like
 the above for "cdparanoiasrc" that will tell it to rip the entire CD or
 only tracks of it. Alternatively, you can use an URI and `gst-launch-1.0`
 will find an element (such as cdparanoia) that supports that protocol
