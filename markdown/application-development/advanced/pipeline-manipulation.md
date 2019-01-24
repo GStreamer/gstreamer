@@ -77,9 +77,9 @@ Probe types:
     Blocking probes are used to temporarily block pads because they are
     unlinked or because you are going to unlink them. If the dataflow is
     not blocked, the pipeline would go into an error state if data is
-    pushed on an unlinked pad. We will se how to use blocking probes to
-    partially preroll a pipeline. See also [Play a region of a media
-    file](#play-a-region-of-a-media-file).
+    pushed on an unlinked pad. We will see how to use blocking probes to
+    partially preroll a pipeline. See also [Play a section of a media
+    file](#play-a-section-of-a-media-file).
 
   - Be notified when no activity is happening on a pad. You install this
     probe with the `GST_PAD_PROBE_TYPE_IDLE` flag. You can specify
@@ -482,10 +482,10 @@ how to statically embed plugins in your application.
 There are two possible elements that you can use for the above-mentioned
 purposes: `appsrc` (an imaginary source) and `appsink` (an imaginary sink). The
 same method applies to these elements. We will discuss how to use them to insert
-(using `appsrc`) or to grab (using appsink) data from a pipeline, and how to set
+(using `appsrc`) or to grab (using `appsink`) data from a pipeline, and how to set
 negotiation.
 
-Both `appsrc` and appsink provide 2 sets of API. One API uses standard
+Both `appsrc` and `appsink` provide 2 sets of API. One API uses standard
 `GObject` (action) signals and properties. The same API is also available
 as a regular C API. The C API is more performant but requires you to
 link to the app library in order to use the elements.
@@ -570,7 +570,7 @@ When `appsrc` is configured in push mode (`stream-type` is stream or
 seekable), the application repeatedly calls the `push-buffer` method with
 a new buffer. Optionally, the queue size in the `appsrc` can be controlled
 with the `enough-data` and `need-data` signals by respectively
-stopping/starting the `push-buffer` calls. The value of the min-percent
+stopping/starting the `push-buffer` calls. The value of the `min-percent`
 property defines how empty the internal `appsrc` queue needs to be before
 the `need-data` signal is issued. You can set this to some positive value
 to avoid completely draining the queue.
@@ -1071,7 +1071,7 @@ pipelines:
     pipeline is removed, a new clock has to be selected.
 
   - Adding and removing elements might cause upstream or downstream
-    elements to renegotiate caps and or allocators. You don't really
+    elements to renegotiate caps and/or allocators. You don't really
     need to do anything from the application, plugins largely adapt
     themselves to the new pipeline topology in order to optimize their
     formats and allocation strategy.
@@ -1099,7 +1099,7 @@ element1 |      | element2 |      | element3
 
 ```
 
-We want to change element2 by element4 while the pipeline is in the
+We want to replace element2 by element4 while the pipeline is in the
 PLAYING state. Let's say that element2 is a visualization and that you
 want to switch the visualization in the pipeline.
 
@@ -1107,7 +1107,7 @@ We can't just unlink element2's sinkpad from element1's source pad
 because that would leave element1's source pad unlinked and would cause
 a streaming error in the pipeline when data is pushed on the source pad.
 The technique is to block the dataflow from element1's source pad before
-we change element2 by element4 and then resume dataflow as shown in the
+we replace element2 by element4 and then resume dataflow as shown in the
 following steps:
 
   - Block element1's source pad with a blocking pad probe. When the pad
@@ -1125,7 +1125,7 @@ following steps:
 
       - Put an event probe on element2's source pad.
 
-      - Send `EOS` to element2's sinkpad. This makes sure the all the data
+      - Send `EOS` to element2's sink pad. This makes sure that all the data
         inside element2 is forced out.
 
       - Wait for the `EOS` event to appear on element2's source pad. When
