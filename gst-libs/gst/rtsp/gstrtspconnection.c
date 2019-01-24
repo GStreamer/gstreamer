@@ -1229,7 +1229,11 @@ error:
     if (G_UNLIKELY (r == 0))
       return GST_RTSP_EEOF;
 
-    GST_DEBUG ("%s", err->message);
+    if (!g_error_matches (err, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK))
+      GST_WARNING ("%s", err->message);
+    else
+      GST_DEBUG ("%s", err->message);
+
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       g_clear_error (&err);
       return GST_RTSP_EINTR;
@@ -1245,10 +1249,7 @@ error:
   }
 }
 
-/* NOTE: This changes the values of vectors if multiple iterations are needed!
- *
- * Depends on https://gitlab.gnome.org/GNOME/glib/merge_requests/333
- */
+/* NOTE: This changes the values of vectors if multiple iterations are needed! */
 #if GLIB_CHECK_VERSION(2, 59, 0)
 static GstRTSPResult
 writev_bytes (GOutputStream * stream, GOutputVector * vectors, gint n_vectors,
@@ -1257,23 +1258,30 @@ writev_bytes (GOutputStream * stream, GOutputVector * vectors, gint n_vectors,
   gsize _bytes_written = 0;
   gsize written;
   GError *err = NULL;
+  GPollableReturn res = G_POLLABLE_RETURN_OK;
 
   while (n_vectors > 0) {
-    gboolean res;
-
-    if (block)
-      res = g_output_stream_writev (stream, vectors, n_vectors, &written,
-          cancellable, &err);
-    else
+    if (block) {
+      if (G_UNLIKELY (!g_output_stream_writev (stream, vectors, n_vectors,
+                  &written, cancellable, &err))) {
+        /* This will never return G_IO_ERROR_WOULD_BLOCK */
+        res = G_POLLABLE_RETURN_FAILED;
+        goto error;
+      }
+    } else {
       res =
           g_pollable_output_stream_writev_nonblocking (G_POLLABLE_OUTPUT_STREAM
           (stream), vectors, n_vectors, &written, cancellable, &err);
+
+      if (res != G_POLLABLE_RETURN_OK) {
+        g_assert (written == 0);
+        goto error;
+      }
+    }
     _bytes_written += written;
-    if (G_UNLIKELY (!res || written == 0))
-      goto error;
 
     /* skip vectors that have been written in full */
-    while (written >= vectors[0].size) {
+    while (written > 0 && written >= vectors[0].size) {
       written -= vectors[0].size;
       ++vectors;
       --n_vectors;
@@ -1296,11 +1304,11 @@ error:
     *bytes_written = _bytes_written;
 
     if (err)
-      GST_DEBUG ("%s", err->message);
-    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
-      g_clear_error (&err);
+      GST_WARNING ("%s", err->message);
+    if (res == G_POLLABLE_RETURN_WOULD_BLOCK) {
+      g_assert (!err);
       return GST_RTSP_EINTR;
-    } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
+    } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       g_clear_error (&err);
       return GST_RTSP_EINTR;
     } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_TIMED_OUT)) {
