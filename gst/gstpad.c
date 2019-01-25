@@ -1373,8 +1373,7 @@ cleanup_hook (GstPad * pad, GHook * hook)
   GstPadProbeType type;
 
   GST_DEBUG_OBJECT (pad,
-      "cleaning up hook %" G_GUINT64_FORMAT " with flags %08x",
-      (guint64) hook->hook_id, hook->flags);
+      "cleaning up hook %lu with flags %08x", hook->hook_id, hook->flags);
 
   if (!G_HOOK_IS_VALID (hook))
     return;
