@@ -142,6 +142,7 @@ static GstX264EncVTable default_vtable;
 
 static GstX264EncVTable *vtable_8bit = NULL, *vtable_10bit = NULL;
 
+#if X264_BUILD < 153
 #define LOAD_SYMBOL(name) G_STMT_START { \
   if (!g_module_symbol (module, #name, (gpointer *) &vtable->name)) { \
     GST_ERROR ("Failed to load '" #name "' from '%s'", filename); \
@@ -171,9 +172,7 @@ load_x264 (const gchar * filename)
         "' from '%s'. Incompatible version?", filename);
     goto error;
   }
-#if X264_BUILD < 153
   LOAD_SYMBOL (x264_bit_depth);
-#endif
   LOAD_SYMBOL (x264_chroma_format);
   LOAD_SYMBOL (x264_encoder_close);
   LOAD_SYMBOL (x264_encoder_delayed_frames);
@@ -207,6 +206,7 @@ unload_x264 (GstX264EncVTable * vtable)
 #endif
 
 #undef LOAD_SYMBOL
+#endif
 
 static gboolean
 gst_x264_enc_add_x264_chroma_format (GstStructure * s,
