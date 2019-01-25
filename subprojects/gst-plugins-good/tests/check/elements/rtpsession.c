@@ -672,8 +672,10 @@ GST_START_TEST (test_internal_sources_timeout)
   gst_buffer_unref (buf);
 
   /* ok, now let's push some RTP packets */
-  caps = gst_caps_new_simple ("application/x-rtp",
-      "ssrc", G_TYPE_UINT, 0x01BADBAD, NULL);
+  caps = generate_caps ();
+  gst_caps_set_simple (caps,
+      "ssrc", G_TYPE_UINT, 0x01BADBAD,
+      "rtx-ssrc", G_TYPE_UINT, 0x01020304, NULL);
   gst_harness_set_src_caps (h->send_rtp_h, caps);
 
   for (i = 1; i < 4; i++) {
@@ -681,6 +683,11 @@ GST_START_TEST (test_internal_sources_timeout)
     res = session_harness_send_rtp (h, buf);
     fail_unless_equals_int (GST_FLOW_OK, res);
   }
+
+  /* "rtx" packet */
+  buf = generate_test_buffer (5, 0x01020304);
+  res = session_harness_send_rtp (h, buf);
+  fail_unless_equals_int (GST_FLOW_OK, res);
 
   /* internal ssrc must have changed already */
   g_object_get (h->internal_session, "internal-ssrc", &internal_ssrc, NULL);
@@ -701,9 +708,14 @@ GST_START_TEST (test_internal_sources_timeout)
     if (rtcp_type == GST_RTCP_TYPE_SR) {
       gst_rtcp_packet_sr_get_sender_info (&rtcp_packet, &ssrc, NULL, NULL, NULL,
           NULL);
-      fail_unless_equals_int (internal_ssrc, ssrc);
-      fail_unless_equals_int (0x01BADBAD, ssrc);
-      j |= 0x1;
+      if (ssrc == 0x01BADBAD) {
+        g_assert_cmpint (ssrc, ==, internal_ssrc);
+        j |= 0x1;
+      } else {
+        g_assert_cmpint (ssrc, !=, internal_ssrc);
+        g_assert_cmpint (ssrc, ==, 0x01020304);
+        j |= 0x4;
+      }
     } else if (rtcp_type == GST_RTCP_TYPE_RR) {
       ssrc = gst_rtcp_packet_rr_get_ssrc (&rtcp_packet);
       if (internal_ssrc != ssrc)
@@ -712,10 +724,12 @@ GST_START_TEST (test_internal_sources_timeout)
     gst_rtcp_buffer_unmap (&rtcp);
     gst_buffer_unref (buf);
   }
-  fail_unless_equals_int (0x3, j);      /* verify we got both SR and RR */
+  fail_unless_equals_int (0x7, j);      /* verify we got both SR and RR */
 
   /* go 30 seconds in the future and observe both sources timing out:
-   * 0xDEADBEEF -> BYE, 0x01BADBAD -> becomes receiver only */
+   * 0xDEADBEEF -> BYE,
+   * 0x01BADBAD -> becomes receiver only,
+   * 0x01020304 -> becomes receiver only */
   fail_unless (session_harness_advance_and_crank (h, 30 * GST_SECOND));
 
   /* verify BYE and RR */
@@ -737,6 +751,11 @@ GST_START_TEST (test_internal_sources_timeout)
         fail_unless_equals_int (internal_ssrc, ssrc);
         /* 2 => RR, SDES. There is no BYE here */
         fail_unless_equals_int (2, gst_rtcp_buffer_get_packet_count (&rtcp));
+      } else if (ssrc == 0x01020304) {
+        j |= 0x4;
+        g_assert_cmpint (ssrc, !=, internal_ssrc);
+        /* 2 => RR, SDES. There is no BYE here */
+        g_assert_cmpint (gst_rtcp_buffer_get_packet_count (&rtcp), ==, 2);
       } else if (ssrc == 0xDEADBEEF) {
         j |= 0x2;
         g_assert_cmpint (ssrc, !=, internal_ssrc);
@@ -753,7 +772,7 @@ GST_START_TEST (test_internal_sources_timeout)
     gst_rtcp_buffer_unmap (&rtcp);
     gst_buffer_unref (buf);
   }
-  fail_unless_equals_int (0x3, j);      /* verify we got both BYE and RR */
+  fail_unless_equals_int (0x7, j);      /* verify we got both all BYE and RR */
 
   session_harness_free (h);
 }
