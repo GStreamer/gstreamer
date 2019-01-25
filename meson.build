@@ -348,7 +348,8 @@ endif
 backtrace_deps = []
 unwind_dep = dependency('libunwind', required : get_option('libunwind'))
 dw_dep = dependency('libdw', required: get_option('libdw'))
-backtrace_deps = [unwind_dep, dw_dep]
+dbghelp_dep = dependency('DbgHelp', required : get_option('dbghelp'))
+backtrace_deps = [unwind_dep, dw_dep, dbghelp_dep]
 if unwind_dep.found()
   cdata.set('HAVE_UNWIND', 1)
   if dw_dep.found()
@@ -356,12 +357,12 @@ if unwind_dep.found()
   else
     message('Support for backtraces is partial only.')
   endif
+elif cc.has_function('backtrace')
+  cdata.set('HAVE_BACKTRACE', 1)
+elif dbghelp_dep.found()
+  cdata.set('HAVE_DBGHELP', 1)
 else
-  if cc.has_function('backtrace')
-    cdata.set('HAVE_BACKTRACE', 1)
-  else
-      message('NO backtraces support.')
-  endif
+  message('NO backtraces support.')
 endif
 
 if cc.has_header('execinfo.h')

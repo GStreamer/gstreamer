@@ -155,6 +155,12 @@ static char *gst_info_printf_pointer_extension_func (const char *format,
 #define BT_BUF_SIZE 100
 #endif /* HAVE_BACKTRACE */
 
+#ifdef HAVE_DBGHELP
+#include <Windows.h>
+#include <dbghelp.h>
+#include <tlhelp32.h>
+#endif /* HAVE_DBGHELP */
+
 extern gboolean gst_is_initialized (void);
 
 /* we want these symbols exported even if debug is disabled, to maintain
@@ -2763,6 +2769,98 @@ generate_backtrace_trace (void)
 #define generate_backtrace_trace() NULL
 #endif /* HAVE_BACKTRACE */
 
+#ifdef HAVE_DBGHELP
+static void
+dbghelp_initialize_symbols (HANDLE process)
+{
+  static gsize initialization_value = 0;
+
+  if (g_once_init_enter (&initialization_value)) {
+    GST_INFO ("Initializing Windows symbol handler");
+    SymSetOptions (SYMOPT_LOAD_LINES);
+    SymInitialize (process, NULL, TRUE);
+    GST_INFO ("Initialized Windows symbol handler");
+
+    g_once_init_leave (&initialization_value, 1);
+  }
+}
+
+static gchar *
+generate_dbghelp_trace (void)
+{
+  HANDLE process = GetCurrentProcess ();
+  HANDLE thread = GetCurrentThread ();
+  IMAGEHLP_MODULE64 module_info;
+  DWORD machine;
+  CONTEXT context;
+  STACKFRAME64 frame = { 0 };
+  PVOID save_context;
+  GString *trace = g_string_new (NULL);
+
+  dbghelp_initialize_symbols (process);
+
+  memset (&context, 0, sizeof (CONTEXT));
+  context.ContextFlags = CONTEXT_FULL;
+
+  RtlCaptureContext (&context);
+
+  frame.AddrPC.Mode = AddrModeFlat;
+  frame.AddrStack.Mode = AddrModeFlat;
+  frame.AddrFrame.Mode = AddrModeFlat;
+
+#if (defined _M_IX86)
+  machine = IMAGE_FILE_MACHINE_I386;
+  frame.AddrFrame.Offset = context.Ebp;
+  frame.AddrPC.Offset = context.Eip;
+  frame.AddrStack.Offset = context.Esp;
+#elif (defined _M_X64)
+  machine = IMAGE_FILE_MACHINE_AMD64;
+  frame.AddrFrame.Offset = context.Rbp;
+  frame.AddrPC.Offset = context.Rip;
+  frame.AddrStack.Offset = context.Rsp;
+#else
+  goto done;
+#endif
+
+  module_info.SizeOfStruct = sizeof (module_info);
+  save_context = (machine == IMAGE_FILE_MACHINE_I386) ? NULL : &context;
+
+  while (TRUE) {
+    char buffer[sizeof (SYMBOL_INFO) + MAX_SYM_NAME * sizeof (TCHAR)];
+    PSYMBOL_INFO symbol = (PSYMBOL_INFO) buffer;
+    IMAGEHLP_LINE64 line;
+    DWORD displacement = 0;
+
+    symbol->SizeOfStruct = sizeof (SYMBOL_INFO);
+    symbol->MaxNameLen = MAX_SYM_NAME;
+
+    line.SizeOfStruct = sizeof (line);
+
+    if (!StackWalk64 (machine, process, thread, &frame, save_context, 0,
+            SymFunctionTableAccess64, SymGetModuleBase64, 0))
+      break;
+
+    if (SymFromAddr (process, frame.AddrPC.Offset, 0, symbol))
+      g_string_append_printf (trace, "%s ", symbol->Name);
+    else
+      g_string_append (trace, "?? ");
+
+    if (SymGetLineFromAddr64 (process, frame.AddrPC.Offset, &displacement,
+            &line))
+      g_string_append_printf (trace, "(%s:%u)", line.FileName, line.LineNumber);
+    else if (SymGetModuleInfo64 (process, frame.AddrPC.Offset, &module_info))
+      g_string_append_printf (trace, "(%s)", module_info.ImageName);
+    else
+      g_string_append_printf (trace, "(%s)", "??");
+
+    g_string_append (trace, "\n");
+  }
+
+done:
+  return g_string_free (trace, FALSE);
+}
+#endif /* HAVE_DBGHELP */
+
 /**
  * gst_debug_get_stack_trace:
  * @flags: A set of #GstStackTraceFlags to determine how the stack
@@ -2788,6 +2886,10 @@ gst_debug_get_stack_trace (GstStackTraceFlags flags)
     trace = generate_unwind_trace (flags);
 #endif /* HAVE_UNWIND */
 
+#ifdef HAVE_DBGHELP
+  trace = generate_dbghelp_trace ();
+#endif
+
   if (trace)
     return trace;
   else if (have_backtrace)
@@ -2799,7 +2901,7 @@ gst_debug_get_stack_trace (GstStackTraceFlags flags)
 /**
  * gst_debug_print_stack_trace:
  *
- * If libunwind or glibc backtrace are present
+ * If libunwind, glibc backtrace or DbgHelp are present
  * a stack trace is printed.
  */
 void
