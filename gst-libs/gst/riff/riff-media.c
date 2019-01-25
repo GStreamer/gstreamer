@@ -353,6 +353,17 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("ITU H.264");
       break;
 
+    case GST_MAKE_FOURCC ('X', '2', '6', '5'):
+    case GST_MAKE_FOURCC ('x', '2', '6', '5'):
+    case GST_MAKE_FOURCC ('H', '2', '6', '5'):
+    case GST_MAKE_FOURCC ('h', '2', '6', '5'):
+    case GST_MAKE_FOURCC ('h', 'v', 'c', '1'):
+    case GST_MAKE_FOURCC ('H', 'V', 'C', '1'):
+      caps = gst_caps_new_empty_simple ("video/x-h265");
+      if (codec_name)
+        *codec_name = g_strdup ("H.265");
+      break;
+
     case GST_RIFF_VSSH:
       caps = gst_caps_new_simple ("video/x-h264",
           "variant", G_TYPE_STRING, "videosoft", NULL);
@@ -1887,6 +1898,7 @@ gst_riff_create_video_template_caps (void)
     GST_MAKE_FOURCC ('H', '2', '6', '3'),
     GST_MAKE_FOURCC ('V', 'X', '1', 'K'),
     GST_MAKE_FOURCC ('H', '2', '6', '4'),
+    GST_MAKE_FOURCC ('H', '2', '6', '5'),
     GST_MAKE_FOURCC ('H', 'F', 'Y', 'U'),
     GST_MAKE_FOURCC ('I', '2', '6', '3'),
     GST_MAKE_FOURCC ('I', '4', '2', '0'),
