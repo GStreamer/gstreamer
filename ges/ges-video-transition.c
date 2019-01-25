@@ -209,21 +209,20 @@ ges_video_transition_init (GESVideoTransition * self)
 }
 
 static void
-release_mixer (GstElement ** mixer, GstPad ** sinka, GstPad ** sinkb)
+ges_video_transition_release_mixer (GESVideoTransition * self)
 {
-  if (*sinka && *sinkb) {
-    gst_element_release_request_pad (*mixer, *sinka);
-    gst_element_release_request_pad (*mixer, *sinkb);
-    gst_object_unref (*sinka);
-    gst_object_unref (*sinkb);
-    *sinka = NULL;
-    *sinkb = NULL;
+  GESVideoTransitionPrivate *priv = self->priv;
+
+  if (priv->mixer_ghosta && priv->mixer_ghostb) {
+    gst_element_release_request_pad (priv->mixer, priv->mixer_ghosta);
+    gst_element_release_request_pad (priv->mixer, priv->mixer_ghostb);
+    gst_clear_object (&priv->mixer_ghosta);
+    gst_clear_object (&priv->mixer_ghostb);
   }
 
-  if (*mixer) {
-    gst_object_unref (*mixer);
-    *mixer = NULL;
-  }
+  gst_clear_object (&priv->mixer_sinka);
+  gst_clear_object (&priv->mixer_sinkb);
+  gst_clear_object (&priv->mixer);
 }
 
 static void
@@ -249,7 +248,7 @@ ges_video_transition_dispose (GObject * object)
     priv->smpte_control_source = NULL;
   }
 
-  release_mixer (&priv->mixer, &priv->mixer_ghosta, &priv->mixer_ghostb);
+  ges_video_transition_release_mixer (self);
 
   g_signal_handlers_disconnect_by_func (GES_TRACK_ELEMENT (self),
       duration_changed_cb, NULL);
