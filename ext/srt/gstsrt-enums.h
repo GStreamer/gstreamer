@@ -45,22 +45,22 @@ typedef enum
 
 /**
  * GstSRTKeyLengthBits:
- * @GST_SRT_KEY_LENGTH_BITS_NO_KEY: no encryption
- * @GST_SRT_KEY_LENGTH_BITS_0: no encryption
- * @GST_SRT_KEY_LENGTH_BITS_128: 128-bit length
- * @GST_SRT_KEY_LENGTH_BITS_192: 192-bit length
- * @GST_SRT_KEY_LENGTH_BITS_256: 256-bit length
+ * @GST_SRT_KEY_LENGTH_NO_KEY: no encryption
+ * @GST_SRT_KEY_LENGTH_0: no encryption
+ * @GST_SRT_KEY_LENGTH_16: 16 bytes (128-bit) length
+ * @GST_SRT_KEY_LENGTH_24: 24 bytes (192-bit) length
+ * @GST_SRT_KEY_LENGTH_32: 32 bytes (256-bit) length
  *
  * Crypto key length in bits
  */
 typedef enum
 {
-  GST_SRT_KEY_LENGTH_BITS_NO_KEY = 0,
-  GST_SRT_KEY_LENGTH_BITS_0 = GST_SRT_KEY_LENGTH_BITS_NO_KEY,
-  GST_SRT_KEY_LENGTH_BITS_128 = 128,
-  GST_SRT_KEY_LENGTH_BITS_192 = 192,
-  GST_SRT_KEY_LENGTH_BITS_256 = 256,
-} GstSRTKeyLengthBits;
+  GST_SRT_KEY_LENGTH_NO_KEY = 0,
+  GST_SRT_KEY_LENGTH_0 = GST_SRT_KEY_LENGTH_NO_KEY,
+  GST_SRT_KEY_LENGTH_16 = 16,
+  GST_SRT_KEY_LENGTH_24 = 24,
+  GST_SRT_KEY_LENGTH_32 = 32,
+} GstSRTKeyLength;
 
 G_END_DECLS
 

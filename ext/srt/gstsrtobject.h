@@ -37,11 +37,10 @@ G_BEGIN_DECLS
 #define GST_SRT_DEFAULT_URI GST_SRT_DEFAULT_URI_SCHEME"://"GST_SRT_DEFAULT_HOST":"G_STRINGIFY(GST_SRT_DEFAULT_PORT)
 
 #define GST_SRT_DEFAULT_MODE GST_SRT_CONNECTION_MODE_CALLER
-#define GST_SRT_DEFAULT_PBKEYLEN GST_SRT_KEY_LENGTH_BITS_128
+#define GST_SRT_DEFAULT_PBKEYLEN GST_SRT_KEY_LENGTH_0
 #define GST_SRT_DEFAULT_POLL_TIMEOUT -1
 #define GST_SRT_DEFAULT_LATENCY 125
 #define GST_SRT_DEFAULT_MSG_SIZE 1316
-#define GST_SRT_DEFAULT_KEY_LENGTH 16
 
 typedef struct _GstSRTObject GstSRTObject;
 
@@ -72,6 +71,8 @@ struct _GstSRTObject
 
   GClosure                     *caller_added_closure;
   GClosure                     *caller_removed_closure;
+
+  gchar                        *passphrase;
 };
 
 

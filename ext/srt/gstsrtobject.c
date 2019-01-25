@@ -122,7 +122,8 @@ static struct srt_constant_params srt_params[] = {
 static gint srt_init_refcount = 0;
 
 static gboolean
-gst_srt_object_set_default_params (SRTSOCKET sock, GError ** error)
+gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
+    GError ** error)
 {
   struct srt_constant_params *params = srt_params;
 
@@ -131,6 +132,28 @@ gst_srt_object_set_default_params (SRTSOCKET sock, GError ** error)
       g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
           "failed to set %s (reason: %s)", params->name,
           srt_getlasterror_str ());
+      return FALSE;
+    }
+  }
+
+  if (srtobject->passphrase != NULL && srtobject->passphrase[0] != '\0') {
+    gint pbkeylen;
+
+    if (srt_setsockopt (sock, 0, SRTO_PASSPHRASE, srtobject->passphrase,
+            strlen (srtobject->passphrase))) {
+      g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
+          "failed to set passphrase (reason: %s)", srt_getlasterror_str ());
+
+      return FALSE;
+    }
+
+    if (!gst_structure_get_int (srtobject->parameters, "pbkeylen", &pbkeylen)) {
+      pbkeylen = GST_SRT_DEFAULT_PBKEYLEN;
+    }
+
+    if (srt_setsockopt (sock, 0, SRTO_PBKEYLEN, &pbkeylen, sizeof (int))) {
+      g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
+          "failed to set pbkeylen (reason: %s)", srt_getlasterror_str ());
       return FALSE;
     }
   }
@@ -187,6 +210,8 @@ gst_srt_object_destroy (GstSRTObject * srtobject)
   GST_DEBUG_OBJECT (srtobject->element, "Destroying srtobject");
   gst_structure_free (srtobject->parameters);
 
+  g_free (srtobject->passphrase);
+
   if (g_atomic_int_dec_and_test (&srt_init_refcount)) {
     srt_cleanup ();
     GST_DEBUG_OBJECT (srtobject->element, "Cleaning up SRT");
@@ -225,7 +250,8 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
       gst_structure_set_value (srtobject->parameters, "localport", value);
       break;
     case PROP_PASSPHRASE:
-      gst_structure_set_value (srtobject->parameters, "passphrase", value);
+      g_free (srtobject->passphrase);
+      srtobject->passphrase = g_value_dup_string (value);
       break;
     case PROP_PBKEYLEN:
       gst_structure_set_value (srtobject->parameters, "pbkeylen", value);
@@ -268,11 +294,11 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
       break;
     }
     case PROP_PBKEYLEN:{
-      GstSRTKeyLengthBits v;
+      GstSRTKeyLength v;
       if (!gst_structure_get_enum (srtobject->parameters, "pbkeylen",
-              GST_TYPE_SRT_KEY_LENGTH_BITS, (gint *) & v)) {
+              GST_TYPE_SRT_KEY_LENGTH, (gint *) & v)) {
         GST_WARNING_OBJECT (srtobject->element, "Failed to get 'pbkeylen'");
-        v = GST_SRT_KEY_LENGTH_BITS_NO_KEY;
+        v = GST_SRT_KEY_LENGTH_NO_KEY;
       }
       g_value_set_enum (value, v);
       break;
@@ -386,7 +412,7 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
    */
   g_object_class_install_property (gobject_class, PROP_PBKEYLEN,
       g_param_spec_enum ("pbkeylen", "Crypto key length",
-          "Crypto key length in bits", GST_TYPE_SRT_KEY_LENGTH_BITS,
+          "Crypto key length in bytes", GST_TYPE_SRT_KEY_LENGTH,
           GST_SRT_DEFAULT_PBKEYLEN,
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));
@@ -564,10 +590,11 @@ gst_srt_object_set_uri (GstSRTObject * srtobject, const gchar * uri,
       } else if (!g_strcmp0 ("localport", key)) {
         gst_srt_object_set_uint_value (srtobject->parameters, key, value);
       } else if (!g_strcmp0 ("passphrase", key)) {
-        gst_srt_object_set_string_value (srtobject->parameters, key, value);
+        g_free (srtobject->passphrase);
+        srtobject->passphrase = g_strdup (value);
       } else if (!g_strcmp0 ("pbkeylen", key)) {
         gst_srt_object_set_enum_value (srtobject->parameters,
-            GST_TYPE_SRT_KEY_LENGTH_BITS, key, value);
+            GST_TYPE_SRT_KEY_LENGTH, key, value);
       }
     }
 
@@ -719,7 +746,7 @@ gst_srt_object_wait_connect (GstSRTObject * srtobject,
     goto failed;
   }
 
-  if (!gst_srt_object_set_default_params (sock, error)) {
+  if (!gst_srt_object_set_common_params (sock, srtobject, error)) {
     goto failed;
   }
 
@@ -806,7 +833,7 @@ gst_srt_object_connect (GstSRTObject * srtobject,
     goto failed;
   }
 
-  if (!gst_srt_object_set_default_params (sock, error)) {
+  if (!gst_srt_object_set_common_params (sock, srtobject, error)) {
     goto failed;
   }
 
