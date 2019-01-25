@@ -900,8 +900,11 @@ send_message (GstRTSPClient * client, GstRTSPContext * ctx,
       0, ctx, message);
 
   g_mutex_lock (&priv->send_lock);
-  if (priv->send_func)
+  if (priv->send_messages_func) {
+    priv->send_messages_func (client, message, 1, close, priv->send_data);
+  } else if (priv->send_func) {
     priv->send_func (client, message, close, priv->send_data);
+  }
   g_mutex_unlock (&priv->send_lock);
 
   gst_rtsp_message_unset (message);
@@ -1173,8 +1176,12 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
     g_mutex_unlock (&priv->send_lock);
     return FALSE;
   }
-  if (priv->send_func)
+  if (priv->send_messages_func) {
+    ret =
+        priv->send_messages_func (client, &message, 1, FALSE, priv->send_data);
+  } else if (priv->send_func) {
     ret = priv->send_func (client, &message, FALSE, priv->send_data);
+  }
   g_mutex_unlock (&priv->send_lock);
 
   gst_rtsp_message_unset (&message);
@@ -4186,6 +4193,9 @@ gst_rtsp_client_get_connection (GstRTSPClient * client)
  *
  * By default, the client will send the messages on the #GstRTSPConnection that
  * was configured with gst_rtsp_client_attach() was called.
+ *
+ * It is only allowed to set either a `send_func` or a `send_messages_func`
+ * but not both at the same time.
  */
 void
 gst_rtsp_client_set_send_func (GstRTSPClient * client,
@@ -4200,6 +4210,7 @@ gst_rtsp_client_set_send_func (GstRTSPClient * client,
   priv = client->priv;
 
   g_mutex_lock (&priv->send_lock);
+  g_assert (func == NULL || priv->send_messages_func == NULL);
   priv->send_func = func;
   old_notify = priv->send_notify;
   old_data = priv->send_data;
@@ -4225,6 +4236,9 @@ gst_rtsp_client_set_send_func (GstRTSPClient * client,
  * By default, the client will send the messages on the #GstRTSPConnection that
  * was configured with gst_rtsp_client_attach() was called.
  *
+ * It is only allowed to set either a `send_func` or a `send_messages_func`
+ * but not both at the same time.
+ *
  * Since: 1.16
  */
 void
@@ -4241,6 +4255,7 @@ gst_rtsp_client_set_send_messages_func (GstRTSPClient * client,
   priv = client->priv;
 
   g_mutex_lock (&priv->send_lock);
+  g_assert (func == NULL || priv->send_func == NULL);
   priv->send_messages_func = func;
   old_notify = priv->send_messages_notify;
   old_data = priv->send_messages_data;
@@ -4325,64 +4340,6 @@ gst_rtsp_client_send_message (GstRTSPClient * client, GstRTSPSession * session,
     gst_rtsp_context_pop_current (ctx);
 
   return GST_RTSP_OK;
-}
-
-static gboolean
-do_send_message (GstRTSPClient * client, GstRTSPMessage * message,
-    gboolean close, gpointer user_data)
-{
-  GstRTSPClientPrivate *priv = client->priv;
-  guint id = 0;
-  GstRTSPResult ret;
-
-  /* send the message */
-  ret = gst_rtsp_watch_send_message (priv->watch, message, &id);
-  if (ret != GST_RTSP_OK)
-    goto error;
-
-  /* if close flag is set, store the seq number so we can wait until it's
-   * written to the client to close the connection */
-  if (close)
-    priv->close_seq = id;
-
-  if (gst_rtsp_message_get_type (message) == GST_RTSP_MESSAGE_DATA) {
-    guint8 channel = 0;
-    GstRTSPResult r;
-
-    r = gst_rtsp_message_parse_data (message, &channel);
-    if (r != GST_RTSP_OK) {
-      ret = r;
-      goto error;
-    }
-
-    /* check if the message has been queued for transmission in watch */
-    if (id) {
-      /* store the seq number so we can wait until it has been sent */
-      GST_DEBUG_OBJECT (client, "wait for message %d, channel %d", id, channel);
-      set_data_seq (client, channel, id);
-    } else {
-      GstRTSPStreamTransport *trans;
-
-      trans =
-          g_hash_table_lookup (priv->transports,
-          GINT_TO_POINTER ((gint) channel));
-      if (trans) {
-        GST_DEBUG_OBJECT (client, "emit 'message-sent' signal");
-        g_mutex_unlock (&priv->send_lock);
-        gst_rtsp_stream_transport_message_sent (trans);
-        g_mutex_lock (&priv->send_lock);
-      }
-    }
-  }
-
-  return ret == GST_RTSP_OK;
-
-  /* ERRORS */
-error:
-  {
-    GST_DEBUG_OBJECT (client, "got error %d", ret);
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -4787,9 +4744,7 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
   /* create watch for the connection and attach */
   priv->watch = gst_rtsp_watch_new (priv->connection, &watch_funcs,
       g_object_ref (client), (GDestroyNotify) client_watch_notify);
-  gst_rtsp_client_set_send_func (client, do_send_message,
-      g_source_ref ((GSource *) priv->watch),
-      (GDestroyNotify) gst_rtsp_watch_unref);
+  gst_rtsp_client_set_send_func (client, NULL, NULL, NULL);
   gst_rtsp_client_set_send_messages_func (client, do_send_messages, priv->watch,
       (GDestroyNotify) gst_rtsp_watch_unref);
 
