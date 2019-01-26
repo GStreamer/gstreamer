@@ -401,6 +401,7 @@ gst_base_sink_set_last_sample_enabled
 gst_base_sink_is_last_sample_enabled
 gst_base_sink_get_drop_out_of_segment
 gst_base_sink_set_drop_out_of_segment
+gst_base_sink_get_stats
 
 GST_BASE_SINK_PAD
 GST_BASE_SINK_GET_PREROLL_COND

@@ -305,6 +305,7 @@ enum
   PROP_THROTTLE_TIME,
   PROP_MAX_BITRATE,
   PROP_PROCESSING_DEADLINE,
+  PROP_STATS,
   PROP_LAST
 };
 
@@ -553,6 +554,24 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
           "Maximum processing deadline in nanoseconds", 0, G_MAXUINT64,
           DEFAULT_PROCESSING_DEADLINE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
+  /**
+   * GstBaseSink::stats:
+   *
+   * Various #GstBaseSink statistics. This property returns a #GstStructure
+   * with name `application/x-gst-base-sink-stats` with the following fields:
+   *
+   * - "average-rate"  G_TYPE_DOUBLE   average frame rate
+   * - "dropped" G_TYPE_UINT64   Number of dropped frames
+   * - "rendered" G_TYPE_UINT64   Number of rendered frames
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Statistics",
+          "Sink Statistics", GST_TYPE_STRUCTURE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
@@ -1599,6 +1618,9 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_PROCESSING_DEADLINE:
       g_value_set_uint64 (value, gst_base_sink_get_processing_deadline (sink));
+      break;
+    case PROP_STATS:
+      g_value_take_boxed (value, gst_base_sink_get_stats (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -5374,4 +5396,32 @@ activate_failed:
         "element failed to change states -- activation problem?");
     return GST_STATE_CHANGE_FAILURE;
   }
+}
+
+/**
+ * gst_base_sink_get_stats:
+ * @sink: #GstBaseSink
+ *
+ * Return various #GstBaseSink statistics. This function returns a #GstStructure
+ * with name `application/x-gst-base-sink-stats` with the following fields:
+ *
+ * - "average-rate" G_TYPE_DOUBLE   average frame rate
+ * - "dropped" G_TYPE_UINT64   Number of dropped frames
+ * - "rendered" G_TYPE_UINT64   Number of rendered frames
+ *
+ * Returns: (transfer full) pointer to #GstStructure
+ *
+ *  Since: 1.18
+ */
+GstStructure *
+gst_base_sink_get_stats (GstBaseSink * sink)
+{
+  GstBaseSinkPrivate *priv = NULL;
+
+  g_return_val_if_fail (sink != NULL, NULL);
+  priv = sink->priv;
+  return gst_structure_new ("application/x-gst-base-sink-stats",
+      "average-rate", G_TYPE_DOUBLE, priv->avg_rate,
+      "dropped", G_TYPE_UINT64, priv->dropped,
+      "rendered", G_TYPE_UINT64, priv->rendered, NULL);
 }
