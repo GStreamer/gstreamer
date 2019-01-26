@@ -26,9 +26,13 @@ from launcher.baseclasses import TestsManager
 
 class PythonTest(Test):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._testname = self.classname
+
     def build_arguments(self):
         """Builds subprocess arguments."""
-        self.add_arguments('-m', 'unittest', '.'.join(self.classname.split('.')[1:]))
+        self.add_arguments('-m', 'unittest', self._testname)
 
 
 class PythonTestsManager(TestsManager):
