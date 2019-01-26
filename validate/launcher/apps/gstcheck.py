@@ -72,6 +72,7 @@ class MesonTestsManager(TestsManager):
     def __init__(self):
         super().__init__()
         self.rebuilt = None
+        self._registered = False
 
     def add_options(self, parser):
         if self.arggroup:
@@ -160,7 +161,7 @@ class MesonTestsManager(TestsManager):
         return name.replace('..', '.').replace(' ', '-')
 
     def list_tests(self):
-        if self.tests:
+        if self._registered is True:
             return self.tests
 
         mesontests = self.get_meson_tests()
@@ -168,6 +169,7 @@ class MesonTestsManager(TestsManager):
             self.add_test(MesonTest(self.get_test_name(test),
                                     self.options, self.reporter, test))
 
+        self._registered = True
         return self.tests
 
 
@@ -307,4 +309,5 @@ class GstCheckTestsManager(MesonTestsManager):
                     self.add_test(MesonTest(name, self.options, self.reporter, test,
                                             child_env))
         self.save_tests_info()
+        self._registered = True
         return self.tests
