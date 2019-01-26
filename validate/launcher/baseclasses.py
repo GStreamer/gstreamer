@@ -49,6 +49,8 @@ try:
 except ImportError:
     import xml.etree.cElementTree as ET
 
+from .vfb_server import get_virual_frame_buffer_server
+from .httpserver import HTTPServer
 from .utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
     Protocols, look_for_file_in_source_dir, get_data_file, BackTraceGenerator, \
     check_bugs_resolution
@@ -1414,6 +1416,9 @@ class _TestsLauncher(Loggable):
         self.jobs = []
         self.total_num_tests = 0
         self.server = None
+        self.httpsrv = None
+        self.vfb_server = None
+
 
     def _list_app_dirs(self):
         app_dirs = []
@@ -1588,6 +1593,19 @@ class _TestsLauncher(Loggable):
 
             if not tester.check_expected_failures():
                 return False
+
+        if self.needs_http_server() or options.httponly is True:
+            self.httpsrv = HTTPServer(options)
+            self.httpsrv.start()
+
+        if options.no_display:
+            self.vfb_server = get_virual_frame_buffer_server(options)
+            res = vfb_server.start()
+            if res[0] is False:
+                printc("Could not start virtual frame server: %s" % res[1],
+                       Colors.FAIL)
+                return False
+            os.environ["DISPLAY"] = vfb_server.display_id
 
         return True
 
@@ -1790,30 +1808,37 @@ class _TestsLauncher(Loggable):
         self._stop_server()
 
     def run_tests(self):
-        self._start_server()
-        if self.options.forever:
-            r = 1
-            while True:
-                printc("Running iteration %d" % r, title=True)
+        try:
+            self._start_server()
+            if self.options.forever:
+                r = 1
+                while True:
+                    printc("Running iteration %d" % r, title=True)
 
-                if not self._run_tests():
-                    break
-                r += 1
-                self.clean_tests()
+                    if not self._run_tests():
+                        break
+                    r += 1
+                    self.clean_tests()
 
-            return False
-        elif self.options.n_runs:
-            res = True
-            for r in range(self.options.n_runs):
-                t = "Running iteration %d" % r
-                print("%s\n%s\n%s\n" % ("=" * len(t), t, "=" * len(t)))
-                if not self._run_tests():
-                    res = False
-                self.clean_tests()
+                return False
+            elif self.options.n_runs:
+                res = True
+                for r in range(self.options.n_runs):
+                    t = "Running iteration %d" % r
+                    print("%s\n%s\n%s\n" % ("=" * len(t), t, "=" * len(t)))
+                    if not self._run_tests():
+                        res = False
+                    self.clean_tests()
 
-            return res
-        else:
-            return self._run_tests()
+                return res
+            else:
+                return self._run_tests()
+        finally:
+            if self.httpsrv:
+                self.httpsrv.stop()
+            if self.vfb_server:
+                vfb_server.stop()
+            self.clean_tests()
 
     def final_report(self):
         return self.reporter.final_report()

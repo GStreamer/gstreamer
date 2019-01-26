@@ -29,8 +29,6 @@ import subprocess
 
 
 from .loggable import Loggable
-from .httpserver import HTTPServer
-from .vfb_server import get_virual_frame_buffer_server
 from .baseclasses import _TestsLauncher, ScenarioManager
 from .utils import printc, path2url, DEFAULT_MAIN_DIR, launch_command, Colors, Protocols, which
 
@@ -581,22 +579,9 @@ Note that all testsuite should be inside python modules, so the directory should
         printc("\nNumber of tests: %d" % len(tests), Colors.OKGREEN)
         return 0
 
-    httpsrv = HTTPServer(options)
-    if tests_launcher.needs_http_server() or options.httponly is True:
-        httpsrv.start()
-
-    vfb_server = get_virual_frame_buffer_server(options)
-    if options.no_display:
-        res = vfb_server.start()
-        if res[0] is False:
-            printc("Could not start virtual frame server: %s" % res[1],
-                   Colors.FAIL)
-            exit(1)
-        os.environ["DISPLAY"] = vfb_server.display_id
-
     if options.httponly is True:
         print("Running HTTP server only")
-        return
+        return 0
 
     # There seems to be some issue with forking, dconf and some gtype
     # initialization that deadlocks occasionally, setting the
@@ -615,9 +600,6 @@ Note that all testsuite should be inside python modules, so the directory should
         res = tests_launcher.final_report()
         if options.ignore_numfailures:
             res = 0
-        tests_launcher.clean_tests()
-        httpsrv.stop()
-        vfb_server.stop()
         if exception is not None:
             raise exception
 
