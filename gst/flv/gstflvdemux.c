@@ -2686,7 +2686,8 @@ gst_flv_demux_loop (GstPad * pad)
   }
 
   /* pause if something went wrong or at end */
-  if (G_UNLIKELY (ret != GST_FLOW_OK))
+  if (G_UNLIKELY (ret != GST_FLOW_OK) && !(ret == GST_FLOW_NOT_LINKED
+          && !demux->no_more_pads))
     goto pause;
 
   gst_object_unref (demux);
