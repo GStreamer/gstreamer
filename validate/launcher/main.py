@@ -135,6 +135,9 @@ http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
                       dir(Protocols) if isinstance(getattr(Protocols, att), str) and not
                       att.startswith("_")]))
 
+if "--help" not in sys.argv:
+    HELP = "Use --help for the full help"
+
 QA_ASSETS = "gst-integration-testsuites"
 MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.freedesktop.org/gstreamer/gst-integration-testsuites.git"
@@ -342,235 +345,248 @@ class LauncherConfig(Loggable):
                 if path not in self.paths:
                     self.paths.append(path)
 
+    @staticmethod
+    def create_parser():
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawTextHelpFormatter,
+            prog='gst-validate-launcher', description=HELP)
 
-def main(libsdir):
-    if "--help" in sys.argv:
-        _help_message = HELP
-    else:
-        _help_message = "Use --help for the full help"
+        parser.add_argument('testsuites', metavar='N', nargs='*',
+                            help="""Lets you specify a test to run, a testsuite name or a file where the testsuite to execute is defined.
 
-    DEFAULT_TESTSUITES_DIRS.append(os.path.join(libsdir, "testsuites"))
+    In the module if you want to work with a specific test manager(s) (for example,
+    'ges' or 'validate'), you should define the TEST_MANAGER variable in the
+    testsuite file (it can be a list of test manager names)
 
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawTextHelpFormatter,
-        prog='gst-validate-launcher', description=_help_message)
+    In this file you should implement a setup_tests function. That function takes
+    a TestManager and the GstValidateLauncher option as parameters and return True
+    if it succeeded loading the tests, False otherwise.
+    You will be able to configure the TestManager with its various methods. This
+    function will be called with each TestManager usable, for example you will be
+    passed the 'validate' TestManager in case the GstValidateManager launcher is
+    available. You should configure it using:
 
-    parser.add_argument('testsuites', metavar='N', nargs='*',
-                        help="""Lets you specify a test to run, a testsuite name or a file where the testsuite to execute is defined.
+    * test_manager.add_scenarios: which allows you to register a list of scenario names to be run
+    * test_manager.set_default_blacklist: Lets you set a list of tuple of the form:
+            (@regex_defining_blacklister_test_names, @reason_for_the_blacklisting)
+    * test_manager.add_generators: which allows you to register a list of #GstValidateTestsGenerator
+        to be used to generate tests
+    * test_manager.add_encoding_formats:: which allows you to register a list #MediaFormatCombination to be used for transcoding tests
 
-In the module if you want to work with a specific test manager(s) (for example,
-'ges' or 'validate'), you should define the TEST_MANAGER variable in the
-testsuite file (it can be a list of test manager names)
+    You can also set default values with:
+        * test_manager.register_defaults: Sets default values for all parametters
+        * test_manager.register_default_test_generators: Sets default values for the TestsGenerators to be used
+        * test_manager.register_default_scenarios: Sets default values for the scenarios to be executed
+        * test_manager.register_default_encoding_formats: Sets default values for the encoding formats to be tested
 
-In this file you should implement a setup_tests function. That function takes
-a TestManager and the GstValidateLauncher option as parameters and return True
-if it succeeded loading the tests, False otherwise.
-You will be able to configure the TestManager with its various methods. This
-function will be called with each TestManager usable, for example you will be
-passed the 'validate' TestManager in case the GstValidateManager launcher is
-available. You should configure it using:
+    Note that all testsuite should be inside python modules, so the directory should contain a __init__.py file
+    """,
+                            default=["validate"])
+        parser.add_argument("-d", "--debug", dest="debug",
+                            action="store_true",
+                            help="Let user debug the process on timeout")
+        parser.add_argument("--timeout-factor", dest="timeout_factor",
+                            default=1.0, type=float,
+                            help="Factor to be applied on all timeout values.")
+        parser.add_argument("-f", "--forever", dest="forever",
+                            action="store_true",
+                            help="Keep running tests until one fails")
+        parser.add_argument("--n-runs", dest="n_runs", action='store',
+                            help="Number of runs, if the testsuites."
+                            " Meaning no failure will stop the testuite"
+                            " run meanwhile.", type=int),
+        parser.add_argument("-F", "--fatal-error", dest="fatal_error",
+                            action="store_true",
+                            help="Stop on first fail")
+        parser.add_argument("--fail-on-testlist-change",
+                            dest="fail_on_testlist_change",
+                            action="store_true",
+                            help="Fail the testsuite if a test has been added"
+                            " or removed without being explicitely added/removed "
+                            "from the testlist file.")
+        parser.add_argument("-t", "--wanted-tests", dest="wanted_tests",
+                            action="append",
+                            help="Define the tests to execute, it can be a regex."
+                            " If it contains defaults_only, only default scenarios"
+                            " will be executed")
+        parser.add_argument("-b", "--blacklisted-tests", dest="blacklisted_tests",
+                            action="append",
+                            help="Define the tests not to execute, it can be a regex.")
+        parser.add_argument("--check-bugs", dest="check_bugs_status",
+                            action="store_true",
+                            help="Check if the bug linked to blacklisted tests has"
+                            " been marked as resolved. (only work with bugzilla "
+                            "for the time being).")
+        parser.add_argument("-L", "--list-tests",
+                            dest="list_tests",
+                            action="store_true",
+                            help="List tests and exit")
+        parser.add_argument("-m", "--mute", dest="mute",
+                            action="store_true",
+                            help="Mute playback output, which means that we use "
+                            "a fakesink")
+        parser.add_argument("-n", "--no-color", dest="no_color",
+                            action="store_true",
+                            help="Set it to output no colored text in the terminal")
+        parser.add_argument("-g", "--generate-media-info", dest="generate_info",
+                            action="store_true",
+                            help="Set it in order to generate the missing .media_infos files")
+        parser.add_argument("--update-media-info", dest="update_media_info",
+                            action="store_true",
+                            help="Set it in order to update existing .media_infos files")
+        parser.add_argument(
+            "-G", "--generate-media-info-with-frame-detection", dest="generate_info_full",
+            action="store_true",
+            help="Set it in order to generate the missing .media_infos files. "
+            "It implies --generate-media-info but enabling frame detection")
+        parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
+                            action='store',
+                            help="Defines the limit for which a test is considered as long (in seconds)."
+                            " Note that 0 will enable all tests", type=int),
+        parser.add_argument("--dump-on-failure", dest="dump_on_failure",
+                            action="store_true", default=False,
+                            help="Dump logs to stdout when a test fails")
+        parser.add_argument("-c", "--config", dest="config",
+                            help="This is DEPRECATED, prefer using the testsuite format"
+                            " to configure testsuites")
+        parser.add_argument("-vg", "--valgrind", dest="valgrind",
+                            action="store_true",
+                            help="Run the tests inside Valgrind")
+        parser.add_argument("--gdb", dest="gdb",
+                            action="store_true",
+                            help="Run the tests inside gdb (implies"
+                            " --output-dir=stdout and --jobs=1)")
+        parser.add_argument("--gdb-non-stop", dest="gdb_non_stop",
+                            action="store_true",
+                            help="Run the test automatically in gdb (implies --gdb)")
+        parser.add_argument("-nd", "--no-display", dest="no_display",
+                            action="store_true",
+                            help="Run the tests without outputting graphics"
+                            " on any display. It tries to run all graphical operation"
+                            " in a virtual framebuffer."
+                            " Note that it is currently implemented only"
+                            " for the X  server thanks to Xvfb (which is requeried in that case)")
+        parser.add_argument('--xunit-file', dest='xunit_file',
+                            action='store', metavar="FILE",
+                            help=("Path to xml file to store the xunit report in."))
+        parser.add_argument('--shuffle', dest="shuffle", action="store_true",
+                            help="Runs the test in a random order. Can help speed up the overall"
+                            " test time by running synchronized and unsynchronized tests"
+                            " at the same time")
+        dir_group = parser.add_argument_group(
+            "Directories and files to be used by the launcher")
+        dir_group.add_argument("-M", "--main-dir", dest="main_dir",
+                               help="Main directory where to put files."
+                               " Respects the GST_VALIDATE_LAUNCHER_MAIN_DIR environment variable."
+                               " Default is %s" % DEFAULT_MAIN_DIR)
+        dir_group.add_argument("--testsuites-dir", dest="testsuites_dirs", action='append',
+                               help="Directory where to look for testsuites. Default is %s"
+                               % DEFAULT_TESTSUITES_DIRS)
+        dir_group.add_argument("-o", "--output-dir", dest="output_dir",
+                               help="Directory where to store logs and rendered files. Default is MAIN_DIR")
+        dir_group.add_argument("-l", "--logs-dir", dest="logsdir",
+                               help="Directory where to store logs, default is OUTPUT_DIR/logs.")
+        dir_group.add_argument("-R", "--render-path", dest="dest",
+                               help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")
+        dir_group.add_argument("-p", "--medias-paths", dest="user_paths", action="append",
+                               help="Paths in which to look for media files")
+        dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
+                               help="Paths where to clone the testuite to run."
+                               " default is MAIN_DIR/gst-integration-testsuites")
+        dir_group.add_argument("-rl", "--redirect-logs", dest="redirect_logs",
+                               help="Redirect logs to 'stdout' or 'sdterr'.")
+        dir_group.add_argument("-v", "--verbose", dest="verbose",
+                               default=False, action='store_true',
+                               help="Redirect logs to stdout.")
+        dir_group.add_argument("-j", "--jobs", dest="num_jobs",
+                               help="Number of tests to execute simultaneously"
+                               " (Defaults to number of cores of the processor)",
+                               type=int)
+        dir_group.add_argument("--ignore-numfailures", dest="ignore_numfailures",
+                               help="Ignore the number of failed test in exit code",
+                               default=False, action='store_true')
 
-   * test_manager.add_scenarios: which allows you to register a list of scenario names to be run
-   * test_manager.set_default_blacklist: Lets you set a list of tuple of the form:
-         (@regex_defining_blacklister_test_names, @reason_for_the_blacklisting)
-   * test_manager.add_generators: which allows you to register a list of #GstValidateTestsGenerator
-     to be used to generate tests
-   * test_manager.add_encoding_formats:: which allows you to register a list #MediaFormatCombination to be used for transcoding tests
+        http_server_group = parser.add_argument_group(
+            "Handle the HTTP server to be created")
+        http_server_group.add_argument(
+            "--http-server-port", dest="http_server_port",
+            help="Port on which to run the http server on localhost", type=int)
+        http_server_group.add_argument(
+            "--http-bandwith-limitation", dest="http_bandwith",
+            help="The artificial bandwith limitation to introduce to the local server (in Bytes/sec) (default: 1 MBps)")
+        http_server_group.add_argument(
+            "-s", "--folder-for-http-server", dest="http_server_dir",
+            help="Folder in which to create an http server on localhost. Default is PATHS")
+        http_server_group.add_argument("--http-only", dest="httponly",
+                                       action='store_true',
+                                       help="Start the http server and quit")
 
-You can also set default values with:
-    * test_manager.register_defaults: Sets default values for all parametters
-    * test_manager.register_default_test_generators: Sets default values for the TestsGenerators to be used
-    * test_manager.register_default_scenarios: Sets default values for the scenarios to be executed
-    * test_manager.register_default_encoding_formats: Sets default values for the encoding formats to be tested
+        assets_group = parser.add_argument_group("Handle remote assets")
+        assets_group.add_argument(
+            "--get-assets-command", dest="get_assets_command",
+            help="Command to get assets")
+        assets_group.add_argument("--remote-assets-url", dest="remote_assets_url",
+                                  help="Url to the remote assets (default:%s)" % DEFAULT_GST_QA_ASSETS_REPO)
+        assets_group.add_argument("-S", "--sync", dest="sync", action="store_true",
+                                  help="Synchronize asset repository")
+        assets_group.add_argument("-fs", "--force-sync", dest="force_sync", action="store_true",
+                                  help="Synchronize asset repository reseting any change that might have"
+                                  " happened in the testsuite")
+        assets_group.add_argument("--sync-all", dest="sync_all", action="store_true",
+                                  help="Synchronize asset repository,"
+                                  " including big media files")
+        assets_group.add_argument("--usage", action=PrintUsage,
+                                  help="Print usage documentation")
+        return parser
 
-Note that all testsuite should be inside python modules, so the directory should contain a __init__.py file
-""",
-                        default=["validate"])
-    parser.add_argument("-d", "--debug", dest="debug",
-                        action="store_true",
-                        help="Let user debug the process on timeout")
-    parser.add_argument("--timeout-factor", dest="timeout_factor",
-                        default=1.0, type=float,
-                        help="Factor to be applied on all timeout values.")
-    parser.add_argument("-f", "--forever", dest="forever",
-                        action="store_true",
-                        help="Keep running tests until one fails")
-    parser.add_argument("--n-runs", dest="n_runs", action='store',
-                        help="Number of runs, if the testsuites."
-                        " Meaning no failure will stop the testuite"
-                        " run meanwhile.", type=int),
-    parser.add_argument("-F", "--fatal-error", dest="fatal_error",
-                        action="store_true",
-                        help="Stop on first fail")
-    parser.add_argument("--fail-on-testlist-change",
-                        dest="fail_on_testlist_change",
-                        action="store_true",
-                        help="Fail the testsuite if a test has been added"
-                        " or removed without being explicitely added/removed "
-                        "from the testlist file.")
-    parser.add_argument("-t", "--wanted-tests", dest="wanted_tests",
-                        action="append",
-                        help="Define the tests to execute, it can be a regex."
-                        " If it contains defaults_only, only default scenarios"
-                        " will be executed")
-    parser.add_argument("-b", "--blacklisted-tests", dest="blacklisted_tests",
-                        action="append",
-                        help="Define the tests not to execute, it can be a regex.")
-    parser.add_argument("--check-bugs", dest="check_bugs_status",
-                        action="store_true",
-                        help="Check if the bug linked to blacklisted tests has"
-                        " been marked as resolved. (only work with bugzilla "
-                        "for the time being).")
-    parser.add_argument("-L", "--list-tests",
-                        dest="list_tests",
-                        action="store_true",
-                        help="List tests and exit")
-    parser.add_argument("-m", "--mute", dest="mute",
-                        action="store_true",
-                        help="Mute playback output, which means that we use "
-                        "a fakesink")
-    parser.add_argument("-n", "--no-color", dest="no_color",
-                        action="store_true",
-                        help="Set it to output no colored text in the terminal")
-    parser.add_argument("-g", "--generate-media-info", dest="generate_info",
-                        action="store_true",
-                        help="Set it in order to generate the missing .media_infos files")
-    parser.add_argument("--update-media-info", dest="update_media_info",
-                        action="store_true",
-                        help="Set it in order to update existing .media_infos files")
-    parser.add_argument(
-        "-G", "--generate-media-info-with-frame-detection", dest="generate_info_full",
-        action="store_true",
-        help="Set it in order to generate the missing .media_infos files. "
-        "It implies --generate-media-info but enabling frame detection")
-    parser.add_argument("-lt", "--long-test-limit", dest="long_limit",
-                        action='store',
-                        help="Defines the limit for which a test is considered as long (in seconds)."
-                             " Note that 0 will enable all tests", type=int),
-    parser.add_argument("--dump-on-failure", dest="dump_on_failure",
-                        action="store_true", default=False,
-                        help="Dump logs to stdout when a test fails")
-    parser.add_argument("-c", "--config", dest="config",
-                        help="This is DEPRECATED, prefer using the testsuite format"
-                        " to configure testsuites")
-    parser.add_argument("-vg", "--valgrind", dest="valgrind",
-                        action="store_true",
-                        help="Run the tests inside Valgrind")
-    parser.add_argument("--gdb", dest="gdb",
-                        action="store_true",
-                        help="Run the tests inside gdb (implies"
-                        " --output-dir=stdout and --jobs=1)")
-    parser.add_argument("--gdb-non-stop", dest="gdb_non_stop",
-                        action="store_true",
-                        help="Run the test automatically in gdb (implies --gdb)")
-    parser.add_argument("-nd", "--no-display", dest="no_display",
-                        action="store_true",
-                        help="Run the tests without outputting graphics"
-                             " on any display. It tries to run all graphical operation"
-                             " in a virtual framebuffer."
-                             " Note that it is currently implemented only"
-                             " for the X  server thanks to Xvfb (which is requeried in that case)")
-    parser.add_argument('--xunit-file', dest='xunit_file',
-                        action='store', metavar="FILE",
-                        help=("Path to xml file to store the xunit report in."))
-    parser.add_argument('--shuffle', dest="shuffle", action="store_true",
-                        help="Runs the test in a random order. Can help speed up the overall"
-                             " test time by running synchronized and unsynchronized tests"
-                             " at the same time")
-    dir_group = parser.add_argument_group(
-        "Directories and files to be used by the launcher")
-    dir_group.add_argument("-M", "--main-dir", dest="main_dir",
-                           help="Main directory where to put files."
-                           " Respects the GST_VALIDATE_LAUNCHER_MAIN_DIR environment variable."
-                           " Default is %s" % DEFAULT_MAIN_DIR)
-    dir_group.add_argument("--testsuites-dir", dest="testsuites_dirs", action='append',
-                           help="Directory where to look for testsuites. Default is %s"
-                           % DEFAULT_TESTSUITES_DIRS)
-    dir_group.add_argument("-o", "--output-dir", dest="output_dir",
-                           help="Directory where to store logs and rendered files. Default is MAIN_DIR")
-    dir_group.add_argument("-l", "--logs-dir", dest="logsdir",
-                           help="Directory where to store logs, default is OUTPUT_DIR/logs.")
-    dir_group.add_argument("-R", "--render-path", dest="dest",
-                           help="Set the path to which projects should be rendered, default is OUTPUT_DIR/rendered")
-    dir_group.add_argument("-p", "--medias-paths", dest="user_paths", action="append",
-                           help="Paths in which to look for media files")
-    dir_group.add_argument("-a", "--clone-dir", dest="clone_dir",
-                           help="Paths where to clone the testuite to run."
-                           " default is MAIN_DIR/gst-integration-testsuites")
-    dir_group.add_argument("-rl", "--redirect-logs", dest="redirect_logs",
-                           help="Redirect logs to 'stdout' or 'sdterr'.")
-    dir_group.add_argument("-v", "--verbose", dest="verbose",
-                           default=False, action='store_true',
-                           help="Redirect logs to stdout.")
-    dir_group.add_argument("-j", "--jobs", dest="num_jobs",
-                           help="Number of tests to execute simultaneously"
-                           " (Defaults to number of cores of the processor)",
-                           type=int)
-    dir_group.add_argument("--ignore-numfailures", dest="ignore_numfailures",
-                           help="Ignore the number of failed test in exit code",
-                           default=False, action='store_true')
 
-    http_server_group = parser.add_argument_group(
-        "Handle the HTTP server to be created")
-    http_server_group.add_argument(
-        "--http-server-port", dest="http_server_port",
-        help="Port on which to run the http server on localhost", type=int)
-    http_server_group.add_argument(
-        "--http-bandwith-limitation", dest="http_bandwith",
-        help="The artificial bandwith limitation to introduce to the local server (in Bytes/sec) (default: 1 MBps)")
-    http_server_group.add_argument(
-        "-s", "--folder-for-http-server", dest="http_server_dir",
-        help="Folder in which to create an http server on localhost. Default is PATHS")
-    http_server_group.add_argument("--http-only", dest="httponly",
-                                   action='store_true',
-                                   help="Start the http server and quit")
-
-    assets_group = parser.add_argument_group("Handle remote assets")
-    assets_group.add_argument(
-        "--get-assets-command", dest="get_assets_command",
-        help="Command to get assets")
-    assets_group.add_argument("--remote-assets-url", dest="remote_assets_url",
-                              help="Url to the remote assets (default:%s)" % DEFAULT_GST_QA_ASSETS_REPO)
-    assets_group.add_argument("-S", "--sync", dest="sync", action="store_true",
-                              help="Synchronize asset repository")
-    assets_group.add_argument("-fs", "--force-sync", dest="force_sync", action="store_true",
-                              help="Synchronize asset repository reseting any change that might have"
-                              " happened in the testsuite")
-    assets_group.add_argument("--sync-all", dest="sync_all", action="store_true",
-                              help="Synchronize asset repository,"
-                              " including big media files")
-    assets_group.add_argument("--usage", action=PrintUsage,
-                              help="Print usage documentation")
-
+def setup_launcher_from_args(args):
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
-
-    tests_launcher = _TestsLauncher(libsdir)
+    parser = LauncherConfig.create_parser()
+    tests_launcher = _TestsLauncher()
     tests_launcher.add_options(parser)
 
-    if _help_message == HELP and which(LESS):
+    if "--help" in sys.argv and which(LESS):
         tmpf = tempfile.NamedTemporaryFile(mode='r+')
 
         parser.print_help(file=tmpf)
-        exit(os.system("%s %s" % (LESS, tmpf.name)))
+        os.system("%s %s" % (LESS, tmpf.name))
+        return False, None, None
 
     options = LauncherConfig()
-    parser.parse_args(namespace=options)
+    parser.parse_args(args=args, namespace=options)
     if not options.cleanup():
-        exit(1)
+        return False, None, None
 
     if options.remote_assets_url and options.sync and not os.path.exists(options.clone_dir):
         if not download_assets(options):
-            exit(1)
+            return False, None, None
 
     # Ensure that the scenario manager singleton is ready to be used
     ScenarioManager().config = options
     if not tests_launcher.set_settings(options, []):
-        exit(1)
+        return False, None, None
+
+    return True, options, tests_launcher
+
+
+def main(libsdir):
+    global LIBSDIR
+    LIBSDIR = libsdir
+
+    DEFAULT_TESTSUITES_DIRS.append(os.path.join(LIBSDIR, "testsuites"))
+    os.environ["GST_VALIDATE_APPS_DIR"] = os.path.join(
+        LIBSDIR, "apps") + os.pathsep + os.environ.get("GST_VALIDATE_APPS_DIR", "")
+
+    res, options, tests_launcher = setup_launcher_from_args(sys.argv[1:])
+    if res is False:
+        return 1
+
     if options.list_tests:
         if tests_launcher.list_tests() == -1:
             printc("\nFailling as tests have been removed/added "
                    " (--fail-on-testlist-change)", Colors.FAIL)
-            exit(1)
+            return 1
 
         tests = tests_launcher.tests
         for test in tests:

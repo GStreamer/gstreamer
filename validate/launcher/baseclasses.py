@@ -1399,11 +1399,10 @@ class GstValidateTestsGenerator(TestsGenerator):
 
 class _TestsLauncher(Loggable):
 
-    def __init__(self, libsdir):
+    def __init__(self):
 
         Loggable.__init__(self)
 
-        self.libsdir = libsdir
         self.options = None
         self.testers = []
         self.tests = []
@@ -1419,15 +1418,12 @@ class _TestsLauncher(Loggable):
         self.httpsrv = None
         self.vfb_server = None
 
-
     def _list_app_dirs(self):
         app_dirs = []
-        app_dirs.append(os.path.join(self.libsdir, "apps"))
-        env_dirs = os.environ.get("GST_VALIDATE_APPS_DIR")
+        env_dirs = os.environ["GST_VALIDATE_APPS_DIR"]
         if env_dirs is not None:
             for dir_ in env_dirs.split(":"):
                 app_dirs.append(dir_)
-                sys.path.append(dir_)
 
         return app_dirs
 
@@ -1600,12 +1596,12 @@ class _TestsLauncher(Loggable):
 
         if options.no_display:
             self.vfb_server = get_virual_frame_buffer_server(options)
-            res = vfb_server.start()
+            res = self.vfb_server.start()
             if res[0] is False:
                 printc("Could not start virtual frame server: %s" % res[1],
                        Colors.FAIL)
                 return False
-            os.environ["DISPLAY"] = vfb_server.display_id
+            os.environ["DISPLAY"] = self.vfb_server.display_id
 
         return True
 
@@ -1837,7 +1833,7 @@ class _TestsLauncher(Loggable):
             if self.httpsrv:
                 self.httpsrv.stop()
             if self.vfb_server:
-                vfb_server.stop()
+                self.vfb_server.stop()
             self.clean_tests()
 
     def final_report(self):
