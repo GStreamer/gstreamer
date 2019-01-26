@@ -625,6 +625,7 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
     ges_extractable_set_asset (GES_EXTRACTABLE (clip), asset);
 
     g_slice_free (NewAssetUData, mudata);
+    gst_clear_object (&asset);
   } else {
     gst_object_ref_sink (clip);
   }
