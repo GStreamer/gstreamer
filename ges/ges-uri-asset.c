@@ -206,6 +206,8 @@ ges_uri_clip_asset_dispose (GObject * object)
     prif->asset_trackfilesources = NULL;
   }
 
+  gst_clear_object (&prif->info);
+
   G_OBJECT_CLASS (ges_uri_clip_asset_parent_class)->dispose (object);
 }
 
