@@ -147,6 +147,8 @@ _set_child_property (GESTimelineElement * self G_GNUC_UNUSED, GObject * child,
     g_object_set (nleobject, "media-duration-factor", media_duration_factor,
         NULL);
   }
+
+  g_free (full_property_name);
 }
 
 static void
