@@ -424,7 +424,8 @@ class Test(Loggable):
                      ('leak-check', 'full'),
                      ('leak-resolution', 'high'),
                      # TODO: errors-for-leak-kinds should be set to all instead of definite
-                     #       and all false positives should be added to suppression files.
+                     # and all false positives should be added to suppression
+                     # files.
                      ('errors-for-leak-kinds', 'definite'),
                      ('num-callers', '20'),
                      ('error-exitcode', str(VALGRIND_ERROR_CODE)),
@@ -512,7 +513,8 @@ class Test(Loggable):
             self.command = self.use_gdb(self.command)
 
             self.previous_sigint_handler = signal.getsignal(signal.SIGINT)
-            # Make the gst-validate executable ignore SIGINT while gdb is running.
+            # Make the gst-validate executable ignore SIGINT while gdb is
+            # running.
             signal.signal(signal.SIGINT, signal.SIG_IGN)
 
         if self.options.valgrind:
@@ -684,7 +686,8 @@ class GstValidateTest(Test):
         if override_path:
             if extra_env_variables:
                 if extra_env_variables.get("GST_VALIDATE_OVERRIDE", ""):
-                    extra_env_variables["GST_VALIDATE_OVERRIDE"] += os.path.pathsep
+                    extra_env_variables[
+                        "GST_VALIDATE_OVERRIDE"] += os.path.pathsep
 
             extra_env_variables["GST_VALIDATE_OVERRIDE"] = override_path
 
