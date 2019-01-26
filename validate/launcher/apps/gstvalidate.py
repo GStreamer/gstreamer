@@ -172,7 +172,16 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         """
         GstValidateTestsGenerator.__init__(self, name, test_manager)
         self._pipeline_template = pipeline_template
-        self._pipelines_descriptions = pipelines_descriptions
+        self._pipelines_descriptions = []
+        for description in pipelines_descriptions or []:
+            if not isinstance(description, dict):
+                desc_dict = {"name": description[0],
+                     "pipeline": description[1]}
+                if len(description) >= 3:
+                    desc_dict["extra_data"] = description[2]
+                self._pipelines_descriptions.append(desc_dict)
+            else:
+                self._pipelines_descriptions.append(description)
         self._valid_scenarios = valid_scenarios
 
     @classmethod
@@ -183,22 +192,26 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         name = os.path.basename(json_file).replace('.json', '')
         pipelines_descriptions = []
         for test_name, defs in descriptions.items():
-            pipeline = defs['pipeline']
+            tests_definition = {'name': test_name, 'pipeline': defs['pipeline']}
             scenarios = []
             for scenario in defs['scenarios']:
-                scenario_name = scenario_file = scenario['name']
-                actions = scenario.get('actions')
-                if actions:
-                    scenario_dir = os.path.join(
-                        test_manager.options.privatedir, name, test_name)
-                    scenario_file = os.path.join(
-                        scenario_dir, scenario_name + '.scenario')
-                    os.makedirs(scenario_dir, exist_ok=True)
-                    with open(scenario_file, 'w') as f:
-                        f.write('\n'.join(actions) + '\n')
-                scenarios.append(scenario_file)
-            extra_datas = {'scenarios': scenarios}
-            pipelines_descriptions.append([test_name, pipeline, extra_datas])
+                if isinstance(scenario, str):
+                    scenarios.append(scenario)
+                else:
+                    scenario_name = scenario_file = scenario['name']
+                    actions = scenario.get('actions')
+                    if actions:
+                        scenario_dir = os.path.join(
+                            test_manager.options.privatedir, name, test_name)
+                        scenario_file = os.path.join(
+                            scenario_dir, scenario_name + '.scenario')
+                        os.makedirs(scenario_dir, exist_ok=True)
+                        with open(scenario_file, 'w') as f:
+                            f.write('\n'.join(actions) + '\n')
+                    scenarios.append(scenario_file)
+            tests_definition['extra_data'] = {'scenarios': scenarios}
+            tests_definition['pipeline_data'] = {"config_path": os.path.dirname(json_file)}
+            pipelines_descriptions.append(tests_definition)
 
         return GstValidatePipelineTestsGenerator(name, test_manager, pipelines_descriptions=pipelines_descriptions)
 
@@ -228,19 +241,16 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
     def populate_tests(self, uri_minfo_special_scenarios, scenarios):
         for description in self._pipelines_descriptions:
-            name = description[0]
-            pipeline = description[1]
-            if len(description) == 3:
-                extra_datas = description[2]
-            else:
-                extra_datas = {}
+            pipeline = description['pipeline']
+            extra_data = description.get('extra_data', {})
+            pipeline_data = description.get('pipeline_data', {})
 
-            for scenario in extra_datas.get('scenarios', scenarios):
+            for scenario in extra_data.get('scenarios', scenarios):
                 if isinstance(scenario, str):
                     scenario = self.test_manager.scenarios_manager.get_scenario(
                         scenario)
 
-                mediainfo = FakeMediaDescriptor(extra_datas, pipeline)
+                mediainfo = FakeMediaDescriptor(extra_data, pipeline)
                 if not mediainfo.is_compatible(scenario):
                     continue
 
@@ -254,14 +264,14 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                     audiosink = 'autoaudiosink'
                     videosink = 'autovideosink'
 
-                pipeline_desc = pipeline % {'videosink': videosink,
-                                            'audiosink': audiosink}
+                pipeline_data.update({'videosink': videosink, 'audiosink': audiosink})
+                pipeline_desc = pipeline % pipeline_data
 
                 fname = self.get_fname(
-                    scenario, protocol=mediainfo.get_protocol(), name=name)
+                    scenario, protocol=mediainfo.get_protocol(), name=description["name"])
 
-                expected_failures = extra_datas.get("expected-failures")
-                extra_env_vars = extra_datas.get("extra_env_vars")
+                expected_failures = extra_data.get("expected-failures")
+                extra_env_vars = extra_data.get("extra_env_vars")
                 self.add_test(GstValidateLaunchTest(fname,
                                                     self.test_manager.options,
                                                     self.test_manager.reporter,
