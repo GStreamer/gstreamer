@@ -19,6 +19,7 @@
 import argparse
 import json
 import os
+import sys
 import re
 import pickle
 import platform
@@ -30,6 +31,7 @@ import concurrent.futures as conc
 
 from launcher import config
 from launcher.utils import printc, Colors
+from launcher.main import setup_launcher_from_args
 
 
 class MesonTest(Test):
@@ -166,11 +168,34 @@ class MesonTestsManager(TestsManager):
 
         mesontests = self.get_meson_tests()
         for test in mesontests:
-            self.add_test(MesonTest(self.get_test_name(test),
-                                    self.options, self.reporter, test))
+            if not self.setup_tests_from_sublauncher(test):
+                self.add_test(MesonTest(self.get_test_name(test),
+                                        self.options, self.reporter, test))
 
         self._registered = True
         return self.tests
+
+    def setup_tests_from_sublauncher(self, test):
+        cmd = test['cmd']
+        binary = cmd[0]
+        sublauncher_tests = set()
+        if binary != sys.argv[0]:
+            return sublauncher_tests
+
+        res, _, tests_launcher = setup_launcher_from_args(cmd[1:], main_options=self.options)
+        if res is False:
+            return sublauncher_tests
+
+        for sublauncher_test in tests_launcher.list_tests():
+            name = self.get_test_name(test)
+            sublauncher_tests.add(name)
+
+            sublauncher_test.generator = None
+            sublauncher_test.options = self.options
+            sublauncher_test.classname = name + '.' + sublauncher_test.classname
+            self.add_test(sublauncher_test)
+
+        return sublauncher_tests
 
 
 class GstCheckTestsManager(MesonTestsManager):
@@ -268,7 +293,12 @@ class GstCheckTestsManager(MesonTestsManager):
         self.load_tests_info()
         mesontests = self.get_meson_tests()
         to_inspect = []
+        all_sublaunchers_tests = set()
         for test in mesontests:
+            sublauncher_tests = self.setup_tests_from_sublauncher(test)
+            if sublauncher_tests:
+                all_sublaunchers_tests |= sublauncher_tests
+                continue
             binary = test['cmd'][0]
             test_info = self.check_binary_ts(binary)
             if test_info is True:
@@ -296,9 +326,11 @@ class GstCheckTestsManager(MesonTestsManager):
                 e.result()
 
         for test in mesontests:
+            name = self.get_test_name(test)
+            if name in all_sublaunchers_tests:
+                continue
             gst_tests = self.tests_info[test['cmd'][0]][1]
             if not gst_tests:
-                name = self.get_test_name(test)
                 child_env = self.get_child_env(name)
                 self.add_test(MesonTest(name, self.options, self.reporter, test,
                                         child_env))

@@ -592,6 +592,7 @@ class GstValidateTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 
 class GstValidateListener(socketserver.BaseRequestHandler):
+
     def handle(self):
         """Implements BaseRequestHandler handle method"""
         test = None
@@ -1518,6 +1519,7 @@ class _TestsLauncher(Loggable):
                         tester.name not in wanted_test_manager:
                     continue
 
+                prev_testsuite_name = TestsManager.loading_testsuite
                 if self.options.user_paths:
                     TestsManager.loading_testsuite = tester.name
                     tester.register_defaults()
@@ -1526,7 +1528,8 @@ class _TestsLauncher(Loggable):
                     TestsManager.loading_testsuite = testsuite.__name__
                     if testsuite.setup_tests(tester, self.options):
                         loaded = True
-                    TestsManager.loading_testsuite = None
+                if prev_testsuite_name:
+                    TestsManager.loading_testsuite = prev_testsuite_name
 
             if not loaded:
                 printc("Could not load testsuite: %s"

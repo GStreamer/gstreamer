@@ -540,7 +540,7 @@ class LauncherConfig(Loggable):
         return parser
 
 
-def setup_launcher_from_args(args):
+def setup_launcher_from_args(args, main_options=None):
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
     parser = LauncherConfig.create_parser()
     tests_launcher = _TestsLauncher()
@@ -555,6 +555,11 @@ def setup_launcher_from_args(args):
 
     options = LauncherConfig()
     parser.parse_args(args=args, namespace=options)
+    if main_options:
+        # Override output directories and logging properties of the sub launcher.
+        for option in ["main_dir", "output_dir", "logsdir", "dest", "clone_dir",
+                       "redirect_logs", "verbose"]:
+            setattr(options, option, getattr(main_options, option))
     if not options.cleanup():
         return False, None, None
 
