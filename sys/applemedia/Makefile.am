@@ -109,6 +109,7 @@ if HAVE_AVFOUNDATION
 
 libgstapplemedia_la_SOURCES +=			\
 	avfvideosrc.m				\
+	avfdeviceprovider.m			\
 	avfassetsrc.m				\
 	avsamplevideosink.m
 

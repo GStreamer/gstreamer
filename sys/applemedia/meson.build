@@ -35,7 +35,8 @@ if avfoundation_dep.found()
     applemedia_sources += [
         'avfvideosrc.m',
         'avfassetsrc.m',
-        'avsamplevideosink.m'
+        'avsamplevideosink.m',
+        'avfdeviceprovider.m',
     ]
     applemedia_frameworks += [avfoundation_dep]
 endif

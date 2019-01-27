@@ -48,6 +48,10 @@
 GST_DEBUG_CATEGORY (gst_avf_video_src_debug);
 #define GST_CAT_DEFAULT gst_avf_video_src_debug
 
+static GstVideoFormat get_gst_video_format(NSNumber *pixel_format);
+static CMVideoDimensions
+get_oriented_dimensions(GstAVFVideoSourceOrientation orientation, CMVideoDimensions dimensions);
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -507,27 +511,11 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
 
 - (GstVideoFormat)getGstVideoFormat:(NSNumber *)pixel_format
 {
-  GstVideoFormat gst_format = GST_VIDEO_FORMAT_UNKNOWN;
-
-  switch ([pixel_format integerValue]) {
-  case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange: /* 420v */
-    gst_format = GST_VIDEO_FORMAT_NV12;
-    break;
-  case kCVPixelFormatType_422YpCbCr8: /* 2vuy */
-    gst_format = GST_VIDEO_FORMAT_UYVY;
-    break;
-  case kCVPixelFormatType_32BGRA: /* BGRA */
-    gst_format = GST_VIDEO_FORMAT_BGRA;
-    break;
-  case kCVPixelFormatType_422YpCbCr8_yuvs: /* yuvs */
-    gst_format = GST_VIDEO_FORMAT_YUY2;
-    break;
-  default:
+  GstVideoFormat gst_format = get_gst_video_format(pixel_format);
+  if (gst_format == GST_VIDEO_FORMAT_UNKNOWN) {
     GST_LOG_OBJECT (element, "Pixel format %s is not handled by avfvideosrc",
         [[pixel_format stringValue] UTF8String]);
-    break;
   }
-
   return gst_format;
 }
 
@@ -568,96 +556,16 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
 
 - (CMVideoDimensions)orientedDimensions:(CMVideoDimensions)dimensions
 {
-  CMVideoDimensions orientedDimensions;
-  if (orientation == GST_AVF_VIDEO_SOURCE_ORIENTATION_PORTRAIT_UPSIDE_DOWN ||
-      orientation == GST_AVF_VIDEO_SOURCE_ORIENTATION_PORTRAIT) {
-    orientedDimensions.width = dimensions.height;
-    orientedDimensions.height = dimensions.width;
-  } else {
-    orientedDimensions = dimensions;
-  }
-  return orientedDimensions;
+  return get_oriented_dimensions(orientation, dimensions);
 }
 
 - (GstCaps *)getDeviceCaps
 {
-  NSArray *formats = [device valueForKey:@"formats"];
-  NSArray *pixel_formats = output.availableVideoCVPixelFormatTypes;
-  GstCaps *result_caps, *result_gl_caps;
-#if !HAVE_IOS
-  GstVideoFormat gl_format = GST_VIDEO_FORMAT_UYVY;
-#else
-  GstVideoFormat gl_format = GST_VIDEO_FORMAT_NV12;
-#endif
-
   GST_DEBUG_OBJECT (element, "Getting device caps");
+  GstCaps *device_caps = gst_av_capture_device_get_caps (device, output, orientation);
+  GST_DEBUG_OBJECT (element, "Device returned the following caps %" GST_PTR_FORMAT, device_caps);
 
-  result_caps = gst_caps_new_empty ();
-  result_gl_caps = gst_caps_new_empty ();
-
-  /* Do not use AVCaptureDeviceFormat or AVFrameRateRange only
-   * available in iOS >= 7.0. We use a dynamic approach with key-value
-   * coding or performSelector */
-  for (NSObject *f in [formats reverseObjectEnumerator]) {
-    /* formatDescription can't be retrieved with valueForKey so use a selector here */
-    CMFormatDescriptionRef formatDescription = (__bridge CMFormatDescriptionRef) [f performSelector:@selector(formatDescription)];
-    CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
-    dimensions = [self orientedDimensions:dimensions];
-
-    for (NSObject *rate in [f valueForKey:@"videoSupportedFrameRateRanges"]) {
-      int min_fps_n, min_fps_d, max_fps_n, max_fps_d;
-      gdouble min_fps, max_fps;
-
-      [[rate valueForKey:@"minFrameRate"] getValue:&min_fps];
-      gst_util_double_to_fraction (min_fps, &min_fps_n, &min_fps_d);
-
-      [[rate valueForKey:@"maxFrameRate"] getValue:&max_fps];
-      gst_util_double_to_fraction (max_fps, &max_fps_n, &max_fps_d);
-
-      for (NSNumber *pixel_format in pixel_formats) {
-        GstVideoFormat gst_format = [self getGstVideoFormat:pixel_format];
-
-        if (gst_format != GST_VIDEO_FORMAT_UNKNOWN) {
-          if (min_fps != max_fps)
-            gst_caps_append (result_caps, GST_AVF_FPS_RANGE_CAPS_NEW (gst_format, dimensions.width, dimensions.height, min_fps_n, min_fps_d, max_fps_n, max_fps_d));
-          else
-            gst_caps_append (result_caps, GST_AVF_CAPS_NEW (gst_format, dimensions.width, dimensions.height, max_fps_n, max_fps_d));
-        }
-
-        if (gst_format == gl_format) {
-          GstCaps *gl_caps;
-          if (min_fps != max_fps) {
-            gl_caps = GST_AVF_FPS_RANGE_CAPS_NEW (gl_format,
-                    dimensions.width, dimensions.height,
-                    min_fps_n, min_fps_d,
-                    max_fps_n, max_fps_d);
-          } else {
-            gl_caps = GST_AVF_CAPS_NEW (gl_format,
-                    dimensions.width, dimensions.height,
-                    max_fps_n, max_fps_d);
-          }
-          gst_caps_set_features (gl_caps, 0,
-                  gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-                      NULL));
-          gst_caps_set_simple (gl_caps,
-                  "texture-target", G_TYPE_STRING,
-#if !HAVE_IOS
-                  GST_GL_TEXTURE_TARGET_RECTANGLE_STR,
-#else
-                  GST_GL_TEXTURE_TARGET_2D_STR,
-#endif
-                  NULL);
-          gst_caps_append (result_gl_caps, gl_caps);
-        }
-      }
-    }
-  }
-
-  result_gl_caps = gst_caps_simplify (gst_caps_merge (result_gl_caps, result_caps));
-
-  GST_DEBUG_OBJECT (element, "Device returned the following caps %" GST_PTR_FORMAT, result_gl_caps);
-
-  return result_gl_caps;
+  return device_caps;
 }
 
 - (BOOL)setDeviceCaps:(GstVideoInfo *)info
@@ -1604,4 +1512,121 @@ static void
 gst_avf_video_src_set_context (GstElement * element, GstContext * context)
 {
   [GST_AVF_VIDEO_SRC_IMPL (element) setContext:context];
+}
+
+GstCaps*
+gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutput *output, GstAVFVideoSourceOrientation orientation)
+{
+  NSArray *formats = [device valueForKey:@"formats"];
+  NSArray *pixel_formats = output.availableVideoCVPixelFormatTypes;
+  GstCaps *result_caps, *result_gl_caps;
+#if !HAVE_IOS
+  GstVideoFormat gl_format = GST_VIDEO_FORMAT_UYVY;
+#else
+  GstVideoFormat gl_format = GST_VIDEO_FORMAT_NV12;
+#endif
+
+  result_caps = gst_caps_new_empty ();
+  result_gl_caps = gst_caps_new_empty ();
+
+  /* Do not use AVCaptureDeviceFormat or AVFrameRateRange only
+   * available in iOS >= 7.0. We use a dynamic approach with key-value
+   * coding or performSelector */
+  for (NSObject *f in [formats reverseObjectEnumerator]) {
+    /* formatDescription can't be retrieved with valueForKey so use a selector here */
+    CMFormatDescriptionRef formatDescription = (__bridge CMFormatDescriptionRef) [f performSelector:@selector(formatDescription)];
+    CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions (formatDescription);
+    dimensions = get_oriented_dimensions (orientation, dimensions);
+
+    for (NSObject *rate in [f valueForKey:@"videoSupportedFrameRateRanges"]) {
+      int min_fps_n, min_fps_d, max_fps_n, max_fps_d;
+      gdouble min_fps, max_fps;
+
+      [[rate valueForKey:@"minFrameRate"] getValue:&min_fps];
+      gst_util_double_to_fraction (min_fps, &min_fps_n, &min_fps_d);
+
+      [[rate valueForKey:@"maxFrameRate"] getValue:&max_fps];
+      gst_util_double_to_fraction (max_fps, &max_fps_n, &max_fps_d);
+
+      for (NSNumber *pixel_format in pixel_formats) {
+        GstVideoFormat gst_format = get_gst_video_format (pixel_format);
+
+        if (gst_format != GST_VIDEO_FORMAT_UNKNOWN) {
+          if (min_fps != max_fps)
+            gst_caps_append (result_caps, GST_AVF_FPS_RANGE_CAPS_NEW (gst_format, dimensions.width, dimensions.height, min_fps_n, min_fps_d, max_fps_n, max_fps_d));
+          else
+            gst_caps_append (result_caps, GST_AVF_CAPS_NEW (gst_format, dimensions.width, dimensions.height, max_fps_n, max_fps_d));
+        }
+
+        if (gst_format == gl_format) {
+          GstCaps *gl_caps;
+          if (min_fps != max_fps) {
+            gl_caps = GST_AVF_FPS_RANGE_CAPS_NEW (gl_format,
+                                                  dimensions.width, dimensions.height,
+                                                  min_fps_n, min_fps_d,
+                                                  max_fps_n, max_fps_d);
+          } else {
+            gl_caps = GST_AVF_CAPS_NEW (gl_format,
+                                        dimensions.width, dimensions.height,
+                                        max_fps_n, max_fps_d);
+          }
+          gst_caps_set_features (gl_caps, 0,
+                                 gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+                                                        NULL));
+          gst_caps_set_simple (gl_caps,
+                               "texture-target", G_TYPE_STRING,
+#if !HAVE_IOS
+                               GST_GL_TEXTURE_TARGET_RECTANGLE_STR,
+#else
+                               GST_GL_TEXTURE_TARGET_2D_STR,
+#endif
+                               NULL);
+          gst_caps_append (result_gl_caps, gl_caps);
+        }
+      }
+    }
+  }
+
+  result_gl_caps = gst_caps_simplify (gst_caps_merge (result_gl_caps, result_caps));
+
+  return result_gl_caps;
+}
+
+static GstVideoFormat
+get_gst_video_format (NSNumber *pixel_format)
+{
+  GstVideoFormat gst_format = GST_VIDEO_FORMAT_UNKNOWN;
+
+  switch ([pixel_format integerValue]) {
+    case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange: /* 420v */
+      gst_format = GST_VIDEO_FORMAT_NV12;
+      break;
+    case kCVPixelFormatType_422YpCbCr8: /* 2vuy */
+      gst_format = GST_VIDEO_FORMAT_UYVY;
+      break;
+    case kCVPixelFormatType_32BGRA: /* BGRA */
+      gst_format = GST_VIDEO_FORMAT_BGRA;
+      break;
+    case kCVPixelFormatType_422YpCbCr8_yuvs: /* yuvs */
+      gst_format = GST_VIDEO_FORMAT_YUY2;
+      break;
+    default:
+      break;
+  }
+
+  return gst_format;
+}
+
+static CMVideoDimensions
+get_oriented_dimensions (GstAVFVideoSourceOrientation orientation, CMVideoDimensions dimensions)
+{
+  CMVideoDimensions orientedDimensions;
+  if (orientation == GST_AVF_VIDEO_SOURCE_ORIENTATION_PORTRAIT_UPSIDE_DOWN ||
+      orientation == GST_AVF_VIDEO_SOURCE_ORIENTATION_PORTRAIT) {
+    orientedDimensions.width = dimensions.height;
+    orientedDimensions.height = dimensions.width;
+  } else {
+    orientedDimensions = dimensions;
+  }
+  return orientedDimensions;
 }

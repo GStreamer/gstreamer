@@ -20,6 +20,7 @@
 #ifndef __GST_AVF_VIDEO_SRC_H__
 #define __GST_AVF_VIDEO_SRC_H__
 
+#import <AVFoundation/AVFoundation.h>
 #include <gst/base/gstpushsrc.h>
 
 G_BEGIN_DECLS
@@ -81,6 +82,8 @@ struct _GstAVFVideoSrcClass
 };
 
 GType gst_avf_video_src_get_type (void);
+
+GstCaps *gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutput *output, GstAVFVideoSourceOrientation orientation);
 
 G_END_DECLS
 
