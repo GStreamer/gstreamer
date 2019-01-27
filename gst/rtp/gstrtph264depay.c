@@ -1103,6 +1103,8 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
         /* STAP-A    Single-time aggregation packet     5.7.1 */
         while (payload_len > 2) {
+          gboolean last = FALSE;
+
           /*                      1
            *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
            * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -1136,8 +1138,11 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
           gst_rtp_copy_video_meta (rtph264depay, outbuf, rtp->buffer);
 
+          if (payload_len - nalu_size <= 2)
+            last = TRUE;
+
           gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf, timestamp,
-              marker);
+              marker && last);
 
           payload += nalu_size;
           payload_len -= nalu_size;
