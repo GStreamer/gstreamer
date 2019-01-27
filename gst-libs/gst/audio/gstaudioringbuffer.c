@@ -1826,7 +1826,7 @@ gst_audio_ring_buffer_read (GstAudioRingBuffer * buf, guint64 sample,
       /* Reorder from device order to GStreamer order */
       for (i = 0; i < sampleslen; i++) {
         for (j = 0; j < channels; j++) {
-          memcpy (data + reorder_map[j] * bps, ptr + j * bps, bps);
+          memcpy (data + i * bpf + reorder_map[j] * bps, ptr + j * bps, bps);
         }
         ptr += bpf;
       }
