@@ -61,6 +61,7 @@ GST_START_TEST (test_transition_basic)
   fail_unless (ges_video_transition_get_transition_type
       (GES_VIDEO_TRANSITION (trackelement)) == 1);
 
+  gst_object_unref (tr1);
   gst_object_unref (timeline);
 
   ges_deinit ();

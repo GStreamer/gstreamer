@@ -200,6 +200,7 @@ GST_START_TEST (test_filesource_properties)
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));
 
+  gst_object_unref (asset);
   gst_object_unref (timeline);
 
   ges_deinit ();
@@ -264,6 +265,7 @@ GST_START_TEST (test_filesource_images)
   ASSERT_OBJECT_REFCOUNT (track_element, "1 in track, 1 in clip 2 in timeline",
       4);
 
+  gst_object_unref (asset);
   gst_object_unref (timeline);
 
   ges_deinit ();
