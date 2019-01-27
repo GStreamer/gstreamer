@@ -1363,6 +1363,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 #endif
 
         while (payload_len > 2) {
+          gboolean last = FALSE;
 
           nalu_size = (payload[0] << 8) | payload[1];
 
@@ -1389,8 +1390,11 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
           gst_rtp_copy_video_meta (rtph265depay, outbuf, rtp->buffer);
 
+          if (payload_len - nalu_size <= 2)
+            last = TRUE;
+
           gst_rtp_h265_depay_handle_nal (rtph265depay, outbuf, timestamp,
-              marker);
+              marker && last);
 
           payload += nalu_size;
           payload_len -= nalu_size;
