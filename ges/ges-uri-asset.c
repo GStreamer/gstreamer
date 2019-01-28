@@ -206,9 +206,6 @@ ges_uri_clip_asset_dispose (GObject * object)
 static void
 ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
 {
-  GError *err;
-  GstClockTime timeout;
-  const gchar *timeout_str;
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->get_property = ges_uri_clip_asset_get_property;
@@ -231,59 +228,7 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
   g_object_class_install_property (object_class, PROP_DURATION,
       properties[PROP_DURATION]);
 
-  timeout = DEFAULT_DISCOVERY_TIMEOUT;
-  errno = 0;
-  timeout_str = g_getenv ("GES_DISCOVERY_TIMEOUT");
-  if (timeout_str)
-    timeout = g_ascii_strtod (timeout_str, NULL) * GST_SECOND;
-  else
-    errno = 10;
-
-  if (errno)
-    timeout = DEFAULT_DISCOVERY_TIMEOUT;
-
-  if (!discoverer) {
-    discoverer = gst_discoverer_new (timeout, &err);
-    if (!discoverer) {
-      GST_ERROR ("Could not create discoverer: %s", err->message);
-      g_error_free (err);
-      return;
-    }
-  }
-
-  /* The class structure keeps weak pointers on the discoverers so they
-   * can be properly cleaned up in _ges_uri_asset_cleanup(). */
-  if (!klass->discoverer) {
-    klass->discoverer = discoverer;
-    g_object_add_weak_pointer (G_OBJECT (discoverer),
-        (gpointer *) & klass->discoverer);
-  }
-
-  if (!sync_discoverer) {
-    sync_discoverer = gst_discoverer_new (timeout, &err);
-
-    if (!sync_discoverer) {
-      GST_ERROR ("Could not create discoverer: %s", err->message);
-      g_error_free (err);
-      return;
-    }
-  }
-
-  if (!klass->sync_discoverer) {
-    klass->sync_discoverer = sync_discoverer;
-    g_object_add_weak_pointer (G_OBJECT (sync_discoverer),
-        (gpointer *) & klass->sync_discoverer);
-  }
-
-  g_signal_connect (klass->discoverer, "discovered",
-      G_CALLBACK (discoverer_discovered_cb), NULL);
-
-  /* We just start the discoverer and let it live */
-  gst_discoverer_start (klass->discoverer);
-  if (parent_newparent_table == NULL) {
-    parent_newparent_table = g_hash_table_new_full (g_file_hash,
-        (GEqualFunc) g_file_equal, g_object_unref, g_object_unref);
-  }
+  _ges_uri_asset_ensure_setup (klass);
 }
 
 static void
@@ -816,4 +761,73 @@ _ges_uri_asset_cleanup (void)
     g_hash_table_destroy (parent_newparent_table);
     parent_newparent_table = NULL;
   }
+}
+
+gboolean
+_ges_uri_asset_ensure_setup (gpointer uriasset_class)
+{
+  GESUriClipAssetClass *klass;
+  GError *err;
+  GstClockTime timeout;
+  const gchar *timeout_str;
+
+  g_return_val_if_fail (GES_IS_URI_CLIP_ASSET_CLASS (uriasset_class), FALSE);
+
+  klass = GES_URI_CLIP_ASSET_CLASS (uriasset_class);
+
+  timeout = DEFAULT_DISCOVERY_TIMEOUT;
+  errno = 0;
+  timeout_str = g_getenv ("GES_DISCOVERY_TIMEOUT");
+  if (timeout_str)
+    timeout = g_ascii_strtod (timeout_str, NULL) * GST_SECOND;
+  else
+    errno = 10;
+
+  if (errno)
+    timeout = DEFAULT_DISCOVERY_TIMEOUT;
+
+  if (!discoverer) {
+    discoverer = gst_discoverer_new (timeout, &err);
+    if (!discoverer) {
+      GST_ERROR ("Could not create discoverer: %s", err->message);
+      g_error_free (err);
+      return FALSE;
+    }
+  }
+
+  /* The class structure keeps weak pointers on the discoverers so they
+   * can be properly cleaned up in _ges_uri_asset_cleanup(). */
+  if (!klass->discoverer) {
+    klass->discoverer = discoverer;
+    g_object_add_weak_pointer (G_OBJECT (discoverer),
+        (gpointer *) & klass->discoverer);
+
+    g_signal_connect (klass->discoverer, "discovered",
+        G_CALLBACK (discoverer_discovered_cb), NULL);
+  }
+
+  if (!sync_discoverer) {
+    sync_discoverer = gst_discoverer_new (timeout, &err);
+
+    if (!sync_discoverer) {
+      GST_ERROR ("Could not create discoverer: %s", err->message);
+      g_error_free (err);
+      return FALSE;
+    }
+  }
+
+  if (!klass->sync_discoverer) {
+    klass->sync_discoverer = sync_discoverer;
+    g_object_add_weak_pointer (G_OBJECT (sync_discoverer),
+        (gpointer *) & klass->sync_discoverer);
+  }
+
+  /* We just start the discoverer and let it live */
+  gst_discoverer_start (klass->discoverer);
+  if (parent_newparent_table == NULL) {
+    parent_newparent_table = g_hash_table_new_full (g_file_hash,
+        (GEqualFunc) g_file_equal, g_object_unref, g_object_unref);
+  }
+
+  return TRUE;
 }

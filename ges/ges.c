@@ -78,6 +78,12 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   }
 
   uriasset_klass = g_type_class_ref (GES_TYPE_URI_CLIP_ASSET);
+
+  if (!_ges_uri_asset_ensure_setup (uriasset_klass)) {
+    GST_ERROR ("cannot setup uri asset");
+    goto failed;
+  }
+
   if (!uriasset_klass || !uriasset_klass->discoverer) {
     GST_ERROR ("missing uri asset class %p or discoverer %p", uriasset_klass,
         uriasset_klass ? uriasset_klass->discoverer : NULL);

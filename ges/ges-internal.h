@@ -167,6 +167,8 @@ ges_effect_assect_id_get_type_and_bindesc (const char    *id,
 
 G_GNUC_INTERNAL void _ges_uri_asset_cleanup (void);
 
+G_GNUC_INTERNAL gboolean _ges_uri_asset_ensure_setup (gpointer uriasset_class);
+
 /* GESExtractable internall methods
  *
  * FIXME Check if that should be public later
