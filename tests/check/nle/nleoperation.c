@@ -134,6 +134,8 @@ GST_START_TEST (test_simple_operation)
   GstElement *comp, *oper, *source;
   GList *segments = NULL;
 
+  ges_init ();
+
   comp =
       gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
   gst_element_set_state (comp, GST_STATE_READY);
@@ -212,6 +214,8 @@ GST_START_TEST (test_simple_operation)
           2 * GST_SECOND, 3 * GST_SECOND, 2 * GST_SECOND));
 
   fill_pipeline_and_check (comp, segments);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -221,6 +225,8 @@ GST_START_TEST (test_pyramid_operations)
   GstElement *comp, *oper1, *oper2, *source;
   gboolean ret = FALSE;
   GList *segments = NULL;
+
+  ges_init ();
 
   comp =
       gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
@@ -304,6 +310,8 @@ GST_START_TEST (test_pyramid_operations)
           8 * GST_SECOND, 10 * GST_SECOND, 8 * GST_SECOND));
 
   fill_pipeline_and_check (comp, segments);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -313,6 +321,8 @@ GST_START_TEST (test_pyramid_operations2)
   gboolean ret;
   GstElement *comp, *oper, *source1, *source2, *def;
   GList *segments = NULL;
+
+  ges_init ();
 
   comp =
       gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
@@ -401,6 +411,8 @@ GST_START_TEST (test_pyramid_operations2)
           5 * GST_SECOND, 6 * GST_SECOND, 5 * GST_SECOND));
 
   fill_pipeline_and_check (comp, segments);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -410,6 +422,8 @@ GST_START_TEST (test_pyramid_operations_expandable)
   GstElement *comp, *oper, *source1, *source2, *def;
   gboolean ret = FALSE;
   GList *segments = NULL;
+
+  ges_init ();
 
   comp =
       gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
@@ -485,6 +499,8 @@ GST_START_TEST (test_pyramid_operations_expandable)
           4 * GST_SECOND, 6 * GST_SECOND, 4 * GST_SECOND));
 
   fill_pipeline_and_check (comp, segments);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -495,6 +511,8 @@ GST_START_TEST (test_complex_operations)
   GstElement *comp, *oper, *source1, *source2;
   gboolean ret = FALSE;
   GList *segments = NULL;
+
+  ges_init ();
 
   comp =
       gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
@@ -580,6 +598,8 @@ GST_START_TEST (test_complex_operations)
           4 * GST_SECOND, 6 * GST_SECOND, 4 * GST_SECOND));
 
   fill_pipeline_and_check (comp, segments);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -590,6 +610,8 @@ GST_START_TEST (test_complex_operations_bis)
   GstElement *comp, *oper, *source1, *source2;
   gboolean ret;
   GList *segments = NULL;
+
+  ges_init ();
 
   comp =
       gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
@@ -680,6 +702,8 @@ GST_START_TEST (test_complex_operations_bis)
           0 * GST_SECOND, 2 * GST_SECOND, 4 * GST_SECOND));
 
   fill_pipeline_and_check (comp, segments);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -692,11 +716,6 @@ gnonlin_suite (void)
   Suite *s = suite_create ("nleoperation");
   TCase *tc_chain = tcase_create ("nleoperation");
 
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
-
-  ges_init ();
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_simple_operation);

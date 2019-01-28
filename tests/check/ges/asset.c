@@ -51,6 +51,7 @@ GST_START_TEST (test_basic)
 
   g_main_loop_run (mainloop);
   g_main_loop_unref (mainloop);
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -96,6 +97,7 @@ GST_START_TEST (test_transition_change_asset)
   fail_unless_equals_int (GES_TRANSITION_CLIP (extractable)->vtype, 26);
 
   gst_object_unref (extractable);
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -104,15 +106,20 @@ GST_START_TEST (test_uri_clip_change_asset)
 {
   GESAsset *asset, *asset1;
   GESExtractable *extractable;
-  GESLayer *layer = ges_layer_new ();
-  gchar *uri = ges_test_file_uri ("audio_video.ogg");
-  gchar *uri1 = ges_test_file_uri ("audio_only.ogg");
-  GESTimeline *timeline = ges_timeline_new_audio_video ();
-
-  ges_timeline_add_layer (timeline, layer);
+  GESLayer *layer;
+  gchar *uri;
+  gchar *uri1;
+  GESTimeline *timeline;
 
   gst_init (NULL, NULL);
   ges_init ();
+
+  layer = ges_layer_new ();
+  uri = ges_test_file_uri ("audio_video.ogg");
+  uri1 = ges_test_file_uri ("audio_only.ogg");
+  timeline = ges_timeline_new_audio_video ();
+
+  ges_timeline_add_layer (timeline, layer);
 
   asset = GES_ASSET (ges_uri_clip_asset_request_sync (uri, NULL));
 
@@ -136,6 +143,8 @@ GST_START_TEST (test_uri_clip_change_asset)
 
   g_free (uri);
   g_free (uri1);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -144,6 +153,9 @@ GST_START_TEST (test_list_asset)
 {
   GList *assets;
   GEnumClass *enum_class;
+
+  ges_init ();
+
   enum_class = g_type_class_peek (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
 
   fail_unless (ges_init ());
@@ -153,6 +165,8 @@ GST_START_TEST (test_list_asset)
   /* note: we do not have a a for value=0 "Transition not set" */
   assert_equals_int (g_list_length (assets), enum_class->n_values - 1);
   g_list_free (assets);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -196,6 +210,8 @@ GST_START_TEST (test_proxy_asset)
 
   gst_object_unref (identity);
   gst_object_unref (nothing_at_all);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -206,12 +222,7 @@ ges_suite (void)
   Suite *s = suite_create ("ges");
   TCase *tc_chain = tcase_create ("a");
 
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
-
   suite_add_tcase (s, tc_chain);
-  ges_init ();
 
   /* Must be first until we implement deinit */
   tcase_add_test (tc_chain, test_list_asset);

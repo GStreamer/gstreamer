@@ -45,6 +45,8 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
   GstMessage *message;
   gboolean carry_on, ret = FALSE;
 
+  ges_init ();
+
   pipeline = gst_pipeline_new ("test_pipeline");
   comp =
       gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
@@ -161,6 +163,8 @@ GST_START_TEST (test_change_object_start_stop_in_current_stack)
   gst_check_objects_destroyed_on_unref (pipeline, comp, def, NULL);
   ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "main bus", 1, 2);
   gst_object_unref (bus);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -169,6 +173,8 @@ GST_START_TEST (test_remove_invalid_object)
 {
   GstBin *composition;
   GstElement *source1, *source2;
+
+  ges_init ();
 
   composition = GST_BIN (gst_element_factory_make ("nlecomposition",
           "composition"));
@@ -184,6 +190,8 @@ GST_START_TEST (test_remove_invalid_object)
   gst_element_set_state (GST_ELEMENT (composition), GST_STATE_NULL);
   gst_object_unref (composition);
   gst_object_unref (source2);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -210,6 +218,8 @@ GST_START_TEST (test_remove_last_object)
   gboolean ret;
   gint64 position = 0;
   GstClockTime duration;
+
+  ges_init ();
 
   pipeline = GST_ELEMENT (gst_pipeline_new (NULL));
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
@@ -295,6 +305,8 @@ GST_START_TEST (test_remove_last_object)
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
   gst_object_unref (bus);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -306,6 +318,8 @@ GST_START_TEST (test_dispose_on_commit)
   GstElement *audiotestsrc;
   GstElement *pipeline, *fakesink;
   gboolean ret;
+
+  ges_init ();
 
   composition = gst_element_factory_make ("nlecomposition", "composition");
   pipeline = GST_ELEMENT (gst_pipeline_new (NULL));
@@ -326,6 +340,8 @@ GST_START_TEST (test_dispose_on_commit)
   g_signal_emit_by_name (composition, "commit", TRUE, &ret);
 
   gst_object_unref (pipeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -343,6 +359,8 @@ GST_START_TEST (test_simple_audiomixer)
 
   gboolean carry_on = TRUE, ret;
   GstClockTime total_time = 10 * GST_SECOND;
+
+  ges_init ();
 
   pipeline = GST_ELEMENT (gst_pipeline_new (NULL));
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
@@ -429,6 +447,8 @@ GST_START_TEST (test_simple_audiomixer)
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (bus);
   gst_object_unref (pipeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -439,11 +459,6 @@ gnonlin_suite (void)
   Suite *s = suite_create ("nlecomposition");
   TCase *tc_chain = tcase_create ("nlecomposition");
 
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
-
-  ges_init ();
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_change_object_start_stop_in_current_stack);

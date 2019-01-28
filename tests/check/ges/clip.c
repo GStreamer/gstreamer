@@ -30,6 +30,8 @@ GST_START_TEST (test_object_properties)
   GESLayer *layer;
   GESTrackElement *trackelement;
 
+  ges_init ();
+
   track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
 
@@ -97,6 +99,8 @@ GST_START_TEST (test_object_properties)
       GES_TIMELINE_ELEMENT (trackelement));
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -113,6 +117,8 @@ GST_START_TEST (test_split_direct_bindings)
   GESAsset *asset;
 
   GESTrackElement *element;
+
+  ges_init ();
 
   fail_unless ((timeline = ges_timeline_new ()));
   fail_unless ((layer = ges_layer_new ()));
@@ -181,6 +187,8 @@ GST_START_TEST (test_split_direct_bindings)
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 5 * GST_SECOND);
   check_layer (clip, 0);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -197,6 +205,8 @@ GST_START_TEST (test_split_direct_absolute_bindings)
   GESAsset *asset;
 
   GESTrackElement *element;
+
+  ges_init ();
 
   fail_unless ((timeline = ges_timeline_new ()));
   fail_unless ((layer = ges_layer_new ()));
@@ -265,6 +275,8 @@ GST_START_TEST (test_split_direct_absolute_bindings)
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 5 * GST_SECOND);
   check_layer (clip, 0);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -277,6 +289,8 @@ GST_START_TEST (test_split_object)
   GESClip *clip, *splitclip;
   GList *splittrackelements;
   GESTrackElement *trackelement, *splittrackelement;
+
+  ges_init ();
 
   layer = ges_layer_new ();
   fail_unless (layer != NULL);
@@ -355,6 +369,8 @@ GST_START_TEST (test_split_object)
 
   check_destroyed (G_OBJECT (timeline), G_OBJECT (splitclip), clip,
       splittrackelement, NULL);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -368,6 +384,8 @@ GST_START_TEST (test_clip_group_ungroup)
   GESLayer *layer;
   GESContainer *regrouped_clip;
   GESTrack *audio_track, *video_track;
+
+  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -479,6 +497,8 @@ GST_START_TEST (test_clip_group_ungroup)
   g_list_free_full (tmp, gst_object_unref);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -498,6 +518,8 @@ GST_START_TEST (test_clip_refcount_remove_child)
   GESTrack *track;
   gboolean called;
   GESTrackElement *effect;
+
+  ges_init ();
 
   clip = GES_CLIP (ges_test_clip_new ());
   track = GES_TRACK (ges_audio_track_new ());
@@ -519,6 +541,8 @@ GST_START_TEST (test_clip_refcount_remove_child)
 
   check_destroyed (G_OBJECT (track), NULL, NULL);
   check_destroyed (G_OBJECT (clip), NULL, NULL);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -531,6 +555,8 @@ GST_START_TEST (test_clip_find_track_element)
   GESTrack *track, *track1, *track2;
 
   GESTrackElement *effect, *effect1, *effect2, *foundelem;
+
+  ges_init ();
 
   clip = GES_CLIP (ges_test_clip_new ());
   track = GES_TRACK (ges_audio_track_new ());
@@ -583,6 +609,8 @@ GST_START_TEST (test_clip_find_track_element)
   g_list_free_full (foundelements, gst_object_unref);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -595,6 +623,8 @@ GST_START_TEST (test_effects_priorities)
   GESLayer *layer, *layer1;
 
   GESTrackElement *effect, *effect1, *effect2;
+
+  ges_init ();
 
   clip = GES_CLIP (ges_test_clip_new ());
   audio_track = GES_TRACK (ges_audio_track_new ());
@@ -673,6 +703,8 @@ GST_START_TEST (test_effects_priorities)
       _PRIORITY (effect2));
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -682,12 +714,6 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges-clip");
   TCase *tc_chain = tcase_create ("clip");
-
-  ges_init ();
-
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
 
   suite_add_tcase (s, tc_chain);
 

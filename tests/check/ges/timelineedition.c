@@ -47,6 +47,8 @@ GST_START_TEST (test_basic_timeline_edition)
   GESTrackElement *trackelement, *trackelement1, *trackelement2;
   GESContainer *clip, *clip1, *clip2;
 
+  ges_init ();
+
   track = GES_TRACK (ges_audio_track_new ());
   fail_unless (track != NULL);
 
@@ -230,6 +232,8 @@ GST_START_TEST (test_basic_timeline_edition)
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -242,6 +246,8 @@ GST_START_TEST (test_snapping)
   GESContainer *clip, *clip1, *clip2;
   GESLayer *layer;
   GList *trackelements;
+
+  ges_init ();
 
   track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
@@ -474,6 +480,8 @@ GST_START_TEST (test_snapping)
 
   check_destroyed (G_OBJECT (timeline), G_OBJECT (trackelement),
       trackelement1, trackelement2, clip, clip1, clip2, layer, NULL);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -498,8 +506,11 @@ GST_START_TEST (test_simple_triming)
   GESTimeline *timeline;
   GESLayer *layer;
   GESTimelineElement *element;
+  gchar *uri;
 
-  gchar *uri = ges_test_file_uri ("audio_video.ogg");
+  ges_init ();
+
+  uri = ges_test_file_uri ("audio_video.ogg");
 
   project = ges_project_new (NULL);
 
@@ -535,6 +546,8 @@ GST_START_TEST (test_simple_triming)
   g_main_loop_unref (mainloop);
   gst_object_unref (timeline);
   gst_object_unref (project);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -547,6 +560,8 @@ GST_START_TEST (test_timeline_edition_mode)
   GESContainer *clip, *clip1, *clip2;
   GESLayer *layer, *layer1, *layer2;
   GList *trackelements, *layers, *tmp;
+
+  ges_init ();
 
   track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
@@ -969,6 +984,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement1, 25, 5, 37);
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -982,6 +998,8 @@ GST_START_TEST (test_groups)
   GESClip *c, *c1, *c2, *c3, *c4, *c5;
 
   GList *clips = NULL;
+
+  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
 
@@ -1153,6 +1171,8 @@ GST_START_TEST (test_groups)
 
   gst_object_unref (timeline);
   gst_object_unref (asset);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -1166,6 +1186,8 @@ GST_START_TEST (test_snapping_groups)
   GESClip *c, *c1, *c2, *c3, *c4, *c5;
 
   GList *clips = NULL;
+
+  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
   g_object_set (timeline, "snapping-distance", (guint64) 3, NULL);
@@ -1249,6 +1271,8 @@ GST_START_TEST (test_snapping_groups)
 
   gst_object_unref (timeline);
   gst_object_unref (asset);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -1307,8 +1331,13 @@ GST_START_TEST (test_scaling)
   GESLayer *layer;
   GESAsset *asset1, *asset2;
   GESClip *clip;
-  GESTrack *trackv = GES_TRACK (ges_video_track_new ());
-  GstCaps *caps =
+  GESTrack *trackv;
+  GstCaps *caps;
+
+  ges_init ();
+
+  trackv = GES_TRACK (ges_video_track_new ());
+  caps =
       gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, 1200, "height",
       G_TYPE_INT, 1000, NULL);
 
@@ -1491,6 +1520,8 @@ GST_START_TEST (test_scaling)
   fail_unless (check_frame_positioner_size (clip, 320, 240));
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -1500,12 +1531,6 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges-timeline-edition");
   TCase *tc_chain = tcase_create ("timeline-edition");
-
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
-
-  ges_init ();
 
   suite_add_tcase (s, tc_chain);
 

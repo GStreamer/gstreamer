@@ -33,6 +33,8 @@ GST_START_TEST (test_tempochange)
   GList *tmp;
   int found;
 
+  ges_init ();
+
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
   track_audio = GES_TRACK (ges_audio_track_new ());
@@ -120,6 +122,8 @@ GST_START_TEST (test_tempochange)
   ges_layer_remove_clip (layer, clip3);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -131,12 +135,6 @@ ges_suite (void)
   TCase *tc_chain = tcase_create ("tempochange");
   GstPluginFeature *pitch = gst_registry_find_feature (gst_registry_get (),
       "pitch", GST_TYPE_ELEMENT_FACTORY);
-
-  ges_init ();
-
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
 
   if (pitch) {
     gst_object_unref (pitch);

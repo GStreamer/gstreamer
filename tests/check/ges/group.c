@@ -32,6 +32,8 @@ GST_START_TEST (test_move_group)
 
   GList *clips = NULL;
 
+  ges_init ();
+
   timeline = ges_timeline_new_audio_video ();
 
   layer = ges_timeline_append_layer (timeline);
@@ -308,6 +310,8 @@ GST_START_TEST (test_move_group)
   ASSERT_OBJECT_REFCOUNT (group, "2 ref for the timeline", 2);
   check_destroyed (G_OBJECT (timeline), G_OBJECT (group), NULL);
   gst_object_unref (asset);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -331,6 +335,8 @@ GST_START_TEST (test_group_in_group)
 
   guint nb_layer_notifies = 0;
   GList *clips = NULL;
+
+  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
 
@@ -487,6 +493,8 @@ GST_START_TEST (test_group_in_group)
 
   gst_object_unref (timeline);
   gst_object_unref (asset);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -510,6 +518,8 @@ GST_START_TEST (test_group_in_group_layer_moving)
   GESClip *c, *c1;
 
   GList *clips = NULL;
+
+  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
 
@@ -622,6 +632,8 @@ GST_START_TEST (test_group_in_group_layer_moving)
 
   gst_object_unref (timeline);
   gst_object_unref (asset);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -636,6 +648,8 @@ GST_START_TEST (test_group_in_self)
   GESGroup *group;
 
   GList *clips = NULL;
+
+  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
 
@@ -659,6 +673,8 @@ GST_START_TEST (test_group_in_self)
 
   gst_object_unref (timeline);
   gst_object_unref (asset);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -684,6 +700,8 @@ GST_START_TEST (test_group_serialization)
 
   GError *err = NULL;
   GList *tmp, *clips = NULL;
+
+  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
 
@@ -744,6 +762,8 @@ GST_START_TEST (test_group_serialization)
 
 
   g_free (tmpuri);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -753,11 +773,6 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges-group");
   TCase *tc_chain = tcase_create ("group");
-
-  ges_init ();
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
 
   suite_add_tcase (s, tc_chain);
 

@@ -86,6 +86,8 @@ GST_START_TEST (test_filesource_basic)
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
+  ges_init ();
+
   timeline = ges_timeline_new_audio_video ();
   fail_unless (timeline != NULL);
 
@@ -99,6 +101,8 @@ GST_START_TEST (test_filesource_basic)
   g_main_loop_run (mainloop);
   g_main_loop_unref (mainloop);
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -122,6 +126,8 @@ GST_START_TEST (test_filesource_properties)
   GESUriClipAsset *asset;
   GESLayer *layer;
   GESTrackElement *trackelement;
+
+  ges_init ();
 
   track = ges_track_new (GES_TRACK_TYPE_AUDIO, gst_caps_ref (GST_CAPS_ANY));
   fail_unless (track != NULL);
@@ -195,6 +201,8 @@ GST_START_TEST (test_filesource_properties)
       GES_TIMELINE_ELEMENT (trackelement));
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -209,6 +217,8 @@ GST_START_TEST (test_filesource_images)
   GESTimeline *timeline;
   GESLayer *layer;
   GESTrackElement *track_element;
+
+  ges_init ();
 
   a = GES_TRACK (ges_audio_track_new ());
   v = GES_TRACK (ges_video_track_new ());
@@ -255,6 +265,8 @@ GST_START_TEST (test_filesource_images)
       4);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -283,12 +295,6 @@ main (int argc, char **argv)
   Suite *s;
 
   gst_check_init (&argc, &argv);
-
-  ges_init ();
-
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
 
   s = ges_suite ();
 

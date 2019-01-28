@@ -739,35 +739,45 @@ test_one_bin_after_other_full (void)
 
 GST_START_TEST (test_simplest)
 {
+  ges_init ();
   test_simplest_full ();
+  ges_deinit ();
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_time_duration)
 {
+  ges_init ();
   test_time_duration_full ();
+  ges_deinit ();
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_one_after_other)
 {
+  ges_init ();
   test_one_after_other_full ();
+  ges_deinit ();
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_one_under_another)
 {
+  ges_init ();
   test_one_under_another_full ();
+  ges_deinit ();
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_one_bin_after_other)
 {
+  ges_init ();
   test_one_bin_after_other_full ();
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -778,13 +788,7 @@ gnonlin_suite (void)
   Suite *s = suite_create ("gnonlin-simple");
   TCase *tc_chain = tcase_create ("general");
 
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
-
   suite_add_tcase (s, tc_chain);
-
-  ges_init ();
 
   tcase_add_test (tc_chain, test_time_duration);
   tcase_add_test (tc_chain, test_simplest);

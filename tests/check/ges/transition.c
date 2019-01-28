@@ -33,6 +33,8 @@ GST_START_TEST (test_transition_basic)
   GESTransitionClip *tr1, *tr2;
   GESTrackElement *trackelement;
 
+  ges_init ();
+
   track = GES_TRACK (ges_video_track_new ());
   layer = ges_layer_new ();
   timeline = ges_timeline_new ();
@@ -60,6 +62,8 @@ GST_START_TEST (test_transition_basic)
       (GES_VIDEO_TRANSITION (trackelement)) == 1);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -71,6 +75,8 @@ GST_START_TEST (test_transition_properties)
   GESTimeline *timeline;
   GESLayer *layer;
   GESTrackElement *trackelement;
+
+  ges_init ();
 
   clip = GES_CLIP (ges_transition_clip_new
       (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
@@ -162,6 +168,8 @@ GST_START_TEST (test_transition_properties)
   assert_equals_int (GES_TRANSITION_CLIP (clip)->vtype, 1);
 
   check_destroyed (G_OBJECT (timeline), G_OBJECT (track), clip, NULL);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -173,12 +181,6 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges-transition");
   TCase *tc_chain = tcase_create ("transition");
-
-  ges_init ();
-
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
 
   suite_add_tcase (s, tc_chain);
 

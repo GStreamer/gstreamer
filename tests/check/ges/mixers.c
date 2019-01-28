@@ -30,8 +30,13 @@ GST_START_TEST (simple_smart_adder_test)
 {
   GstPad *requested_pad;
   GstPadTemplate *template = NULL;
-  GESTrack *track = GES_TRACK (ges_audio_track_new ());
-  GstElement *smart_adder = ges_smart_adder_new (track);
+  GESTrack *track;
+  GstElement *smart_adder;
+
+  ges_init ();
+
+  track = GES_TRACK (ges_audio_track_new ());
+  smart_adder = ges_smart_adder_new (track);
 
   fail_unless (GES_IS_SMART_ADDER (smart_adder));
   fail_unless (GST_IS_ELEMENT (smart_adder));
@@ -48,6 +53,8 @@ GST_START_TEST (simple_smart_adder_test)
 
   gst_object_unref (smart_adder);
   gst_object_unref (track);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -85,9 +92,15 @@ GST_START_TEST (simple_audio_mixed_with_pipeline)
   GESClip *tmpclip;
   GstMessage *message;
   GESLayer *layer, *layer1;
-  GESTrack *track = GES_TRACK (ges_audio_track_new ());
-  GESTimeline *timeline = ges_timeline_new ();
-  GESPipeline *pipeline = ges_test_create_pipeline (timeline);
+  GESTrack *track;
+  GESTimeline *timeline;
+  GESPipeline *pipeline;
+
+  ges_init ();
+
+  track = GES_TRACK (ges_audio_track_new ());
+  timeline = ges_timeline_new ();
+  pipeline = ges_test_create_pipeline (timeline);
 
   ges_timeline_add_track (timeline, track);
   layer = ges_timeline_append_layer (timeline);
@@ -136,6 +149,8 @@ done:
   gst_object_unref (bus);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -147,10 +162,17 @@ GST_START_TEST (audio_video_mixed_with_pipeline)
   GESClip *tmpclip;
   GstMessage *message;
   GESLayer *layer, *layer1;
-  GESTrack *track = GES_TRACK (ges_video_track_new ());
-  GESTrack *track_audio = GES_TRACK (ges_audio_track_new ());
-  GESTimeline *timeline = ges_timeline_new ();
-  GESPipeline *pipeline = ges_test_create_pipeline (timeline);
+  GESTrack *track;
+  GESTrack *track_audio;
+  GESTimeline *timeline;
+  GESPipeline *pipeline;
+
+  ges_init ();
+
+  track = GES_TRACK (ges_video_track_new ());
+  track_audio = GES_TRACK (ges_audio_track_new ());
+  timeline = ges_timeline_new ();
+  pipeline = ges_test_create_pipeline (timeline);
 
   ges_timeline_add_track (timeline, track);
   ges_timeline_add_track (timeline, track_audio);
@@ -196,6 +218,8 @@ done:
   gst_object_unref (bus);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -206,11 +230,6 @@ ges_suite (void)
   Suite *s = suite_create ("Smart mixers");
   TCase *tc_chain = tcase_create ("smart-mixers");
 
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
-
-  ges_init ();
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, simple_smart_adder_test);

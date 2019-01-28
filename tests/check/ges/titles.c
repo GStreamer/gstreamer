@@ -25,10 +25,14 @@ GST_START_TEST (test_title_source_basic)
 {
   GESTitleClip *source;
 
+  ges_init ();
+
   source = ges_title_clip_new ();
   fail_unless (source != NULL);
 
   gst_object_unref (source);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -40,6 +44,8 @@ GST_START_TEST (test_title_source_properties)
   GESTimeline *timeline;
   GESLayer *layer;
   GESTrackElement *trackelement;
+
+  ges_init ();
 
   track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
@@ -97,6 +103,8 @@ GST_START_TEST (test_title_source_properties)
   ges_container_remove (GES_CONTAINER (clip),
       GES_TIMELINE_ELEMENT (trackelement));
   gst_object_unref (clip);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -113,6 +121,8 @@ GST_START_TEST (test_title_source_in_layer)
   guint32 color;
   gdouble xpos;
   gdouble ypos;
+
+  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -195,6 +205,8 @@ GST_START_TEST (test_title_source_in_layer)
 
   gst_object_unref (track_element);
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -204,12 +216,6 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges-titles");
   TCase *tc_chain = tcase_create ("titles");
-
-  ges_init ();
-
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
 
   suite_add_tcase (s, tc_chain);
 

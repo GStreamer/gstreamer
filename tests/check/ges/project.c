@@ -61,6 +61,8 @@ GST_START_TEST (test_project_simple)
   g_main_loop_unref (mainloop);
   g_signal_handlers_disconnect_by_func (project, (GCallback) project_loaded_cb,
       mainloop);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -124,6 +126,8 @@ GST_START_TEST (test_project_add_assets)
   gst_object_unref (project);
   ASSERT_OBJECT_REFCOUNT (asset, "The asset (1 ref in cache)", 1);
   ASSERT_OBJECT_REFCOUNT (project, "The project (1 ref in cache)", 1);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -173,6 +177,7 @@ GST_START_TEST (test_project_unexistant_effect)
 
   ASSERT_OBJECT_REFCOUNT (project, "The project (1 ref in cache)", 1);
 
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -426,8 +431,11 @@ GST_START_TEST (test_project_add_properties)
   GESTimeline *timeline;
   GESAsset *formatter_asset;
   gboolean saved;
-  gchar *uri = ges_test_file_uri ("test-properties.xges");
+  gchar *uri;
 
+  ges_init ();
+
+  uri = ges_test_file_uri ("test-properties.xges");
   project = ges_project_new (uri);
   mainloop = g_main_loop_new (NULL, FALSE);
 
@@ -479,6 +487,8 @@ GST_START_TEST (test_project_add_properties)
       mainloop);
   g_signal_handlers_disconnect_by_func (project, (GCallback) asset_added_cb,
       NULL);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -489,8 +499,11 @@ GST_START_TEST (test_project_load_xges)
   GESProject *loaded_project, *saved_project;
   GESTimeline *timeline;
   GESAsset *formatter_asset;
-  gchar *uri = ges_test_file_uri ("test-project.xges");
+  gchar *uri;
 
+  ges_init ();
+
+  uri = ges_test_file_uri ("test-project.xges");
   loaded_project = ges_project_new (uri);
   mainloop = g_main_loop_new (NULL, FALSE);
   fail_unless (GES_IS_PROJECT (loaded_project));
@@ -557,6 +570,8 @@ GST_START_TEST (test_project_load_xges)
       (GCallback) project_loaded_cb, mainloop);
   g_signal_handlers_disconnect_by_func (saved_project,
       (GCallback) asset_added_cb, NULL);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -569,8 +584,11 @@ GST_START_TEST (test_project_auto_transition)
   GESLayer *layer = NULL;
   GESAsset *formatter_asset;
   gboolean saved;
-  gchar *tmpuri, *uri = ges_test_file_uri ("test-auto-transition.xges");
+  gchar *tmpuri, *uri;
 
+  ges_init ();
+
+  uri = ges_test_file_uri ("test-auto-transition.xges");
   project = ges_project_new (uri);
   mainloop = g_main_loop_new (NULL, FALSE);
   fail_unless (GES_IS_PROJECT (project));
@@ -638,6 +656,8 @@ GST_START_TEST (test_project_auto_transition)
       mainloop);
   g_signal_handlers_disconnect_by_func (project, (GCallback) asset_added_cb,
       NULL);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -734,12 +754,7 @@ ges_suite (void)
   Suite *s = suite_create ("ges-project");
   TCase *tc_chain = tcase_create ("project");
 
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
-
   suite_add_tcase (s, tc_chain);
-  ges_init ();
 
   tcase_add_test (tc_chain, test_project_simple);
   tcase_add_test (tc_chain, test_project_add_assets);

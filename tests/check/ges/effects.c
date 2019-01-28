@@ -29,9 +29,13 @@ GST_START_TEST (test_effect_basic)
 {
   GESEffect *effect;
 
+  ges_init ();
+
   effect = ges_effect_new ("agingtv");
   fail_unless (effect != NULL);
   gst_object_unref (effect);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -43,6 +47,8 @@ GST_START_TEST (test_add_effect_to_clip)
   GESTrack *track_audio, *track_video;
   GESEffect *effect;
   GESTestClip *source;
+
+  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -74,6 +80,8 @@ GST_START_TEST (test_add_effect_to_clip)
   ges_layer_remove_clip (layer, (GESClip *) source);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -88,6 +96,8 @@ GST_START_TEST (test_get_effects_from_tl)
   GESTestClip *source;
   GList *effects, *tmp = NULL;
   gint effect_prio = -1;
+
+  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -160,6 +170,8 @@ GST_START_TEST (test_get_effects_from_tl)
   ges_layer_remove_clip (layer, (GESClip *) source);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -179,6 +191,8 @@ GST_START_TEST (test_effect_clip)
     GES_TRACK_TYPE_VIDEO, GES_TRACK_TYPE_VIDEO,
     GES_TRACK_TYPE_AUDIO
   };
+
+  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -231,6 +245,8 @@ GST_START_TEST (test_effect_clip)
   ges_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -245,6 +261,8 @@ GST_START_TEST (test_priorities_clip)
   GESEffect *effect, *effect1, *audio_effect = NULL, *video_effect = NULL;
 
   gint effect_prio = -1;
+
+  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -342,6 +360,8 @@ GST_START_TEST (test_priorities_clip)
   ges_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -358,6 +378,8 @@ GST_START_TEST (test_effect_set_properties)
   GParamSpec **pspecs, *spec;
   GValue val = { 0 };
   GValue nval = { 0 };
+
+  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -412,6 +434,8 @@ GST_START_TEST (test_effect_set_properties)
   ges_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -443,6 +467,8 @@ GST_START_TEST (test_clip_signals)
   GESTimelineElement *effect;
   GValue val = { 0, };
   gboolean effect_added = FALSE;
+
+  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -482,6 +508,8 @@ GST_START_TEST (test_clip_signals)
   ges_layer_remove_clip (layer, (GESClip *) effect_clip);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -494,6 +522,8 @@ GST_START_TEST (test_split_clip_effect_priorities)
   GESClip *clip, *nclip;
   GESEffect *effect;
   GESTrackElement *source, *nsource, *neffect;
+
+  ges_init ();
 
   timeline = ges_timeline_new ();
   layer = ges_layer_new ();
@@ -534,6 +564,8 @@ GST_START_TEST (test_split_clip_effect_priorities)
   assert_equals_uint64 (GES_TIMELINE_ELEMENT_PRIORITY (nsource), 6);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -544,12 +576,6 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges");
   TCase *tc_chain = tcase_create ("effect");
-
-  ges_init ();
-
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
 
   suite_add_tcase (s, tc_chain);
 

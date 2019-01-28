@@ -139,6 +139,8 @@ GST_START_TEST (test_ges_scenario)
   /* Finally clean up our object */
   ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -253,6 +255,8 @@ GST_START_TEST (test_ges_timeline_add_layer)
 
   /* theoretically this is all we need to do to ensure cleanup */
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -266,6 +270,8 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   GESTrack *track;
   GESTestClip *s1, *s2, *s3;
   GList *trackelements, *tmp, *layers;
+
+  ges_init ();
 
   /* Timeline and 1 Layer */
   GST_DEBUG ("Create a timeline");
@@ -354,6 +360,8 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
 
   /* theoretically this is all we need to do to ensure cleanup */
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -366,6 +374,8 @@ GST_START_TEST (test_ges_timeline_remove_track)
   GESTestClip *s1, *s2, *s3;
   GESTrackElement *t1, *t2, *t3;
   GList *trackelements, *tmp, *layers;
+
+  ges_init ();
 
   /* Timeline and 1 Layer */
   GST_DEBUG ("Create a timeline");
@@ -489,6 +499,8 @@ GST_START_TEST (test_ges_timeline_remove_track)
 
   gst_check_objects_destroyed_on_unref (G_OBJECT (timeline),
       G_OBJECT (layer), t1, t2, t3, NULL);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -524,6 +536,8 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   GESTrackElement *t1, *t2, *t3;
   GList *trackelements, *tmp, *layers;
   SelectTracksData st_data = { &s1, &s2, &s3, &track1, &track2 };
+
+  ges_init ();
 
   /* Timeline and 1 Layer */
   GST_DEBUG ("Create a timeline");
@@ -655,6 +669,8 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   gst_object_unref (t3);
 
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -666,6 +682,8 @@ GST_START_TEST (test_ges_pipeline_change_state)
   GESLayer *layer;
   GESTimeline *timeline;
   GESPipeline *pipeline;
+
+  ges_init ();
 
   layer = ges_layer_new ();
   timeline = ges_timeline_new_audio_video ();
@@ -687,6 +705,8 @@ GST_START_TEST (test_ges_pipeline_change_state)
       GST_STATE_CHANGE_SUCCESS);
 
   gst_object_unref (pipeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -697,6 +717,8 @@ GST_START_TEST (test_ges_timeline_element_name)
   GESAsset *asset;
   GESTimeline *timeline;
   GESLayer *layer;
+
+  ges_init ();
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
@@ -749,6 +771,8 @@ GST_START_TEST (test_ges_timeline_element_name)
   gst_object_unref (clip4);
   gst_object_unref (clip5);
   gst_object_unref (timeline);
+
+  ges_deinit ();
 }
 
 GST_END_TEST;
@@ -758,12 +782,6 @@ ges_suite (void)
 {
   Suite *s = suite_create ("ges-basic");
   TCase *tc_chain = tcase_create ("basic");
-
-  ges_init ();
-
-  if (atexit (ges_deinit) != 0) {
-    GST_ERROR ("failed to set ges_deinit as exit function");
-  }
 
   suite_add_tcase (s, tc_chain);
 
