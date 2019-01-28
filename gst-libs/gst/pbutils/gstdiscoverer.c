@@ -124,8 +124,8 @@ struct _GstDiscovererPrivate
 
   /* Custom main context variables */
   GMainContext *ctx;
-  guint sourceid;
-  guint timeoutid;
+  GSource *bus_source;
+  GSource *timeout_source;
 
   /* reusable queries */
   GstQuery *seeking_query;
@@ -1323,9 +1323,10 @@ discoverer_collect (GstDiscoverer * dc)
   GST_DEBUG ("Collecting information");
 
   /* Stop the timeout handler if present */
-  if (dc->priv->timeoutid) {
-    g_source_remove (dc->priv->timeoutid);
-    dc->priv->timeoutid = 0;
+  if (dc->priv->timeout_source) {
+    g_source_destroy (dc->priv->timeout_source);
+    g_source_unref (dc->priv->timeout_source);
+    dc->priv->timeout_source = NULL;
   }
 
   if (dc->priv->streams) {
@@ -1457,8 +1458,8 @@ handle_current_async (GstDiscoverer * dc)
   /* Attach a timeout to the main context */
   source = g_timeout_source_new (dc->priv->timeout / GST_MSECOND);
   g_source_set_callback_indirect (source, g_object_ref (dc), &cb_funcs);
-  dc->priv->timeoutid = g_source_attach (source, dc->priv->ctx);
-  g_source_unref (source);
+  g_source_attach (source, dc->priv->ctx);
+  dc->priv->timeout_source = source;
 }
 
 
@@ -1794,12 +1795,13 @@ static gboolean
 async_timeout_cb (GstDiscoverer * dc)
 {
   if (!g_source_is_destroyed (g_main_current_source ())) {
-    dc->priv->timeoutid = 0;
     GST_DEBUG ("Setting result to TIMEOUT");
     dc->priv->current_info->result = GST_DISCOVERER_TIMEOUT;
     dc->priv->processing = FALSE;
     discoverer_collect (dc);
     discoverer_cleanup (dc);
+    g_source_unref (dc->priv->timeout_source);
+    dc->priv->timeout_source = NULL;
   }
   return FALSE;
 }
@@ -2198,8 +2200,8 @@ gst_discoverer_start (GstDiscoverer * discoverer)
   source = gst_bus_create_watch (discoverer->priv->bus);
   g_source_set_callback (source, (GSourceFunc) gst_bus_async_signal_func,
       NULL, NULL);
-  discoverer->priv->sourceid = g_source_attach (source, ctx);
-  g_source_unref (source);
+  g_source_attach (source, ctx);
+  discoverer->priv->bus_source = source;
   discoverer->priv->ctx = g_main_context_ref (ctx);
 
   start_discovering (discoverer);
@@ -2241,14 +2243,16 @@ gst_discoverer_stop (GstDiscoverer * discoverer)
   DISCO_UNLOCK (discoverer);
 
   /* Remove timeout handler */
-  if (discoverer->priv->timeoutid) {
-    g_source_remove (discoverer->priv->timeoutid);
-    discoverer->priv->timeoutid = 0;
+  if (discoverer->priv->timeout_source) {
+    g_source_destroy (discoverer->priv->timeout_source);
+    g_source_unref (discoverer->priv->timeout_source);
+    discoverer->priv->timeout_source = NULL;
   }
   /* Remove signal watch */
-  if (discoverer->priv->sourceid) {
-    g_source_remove (discoverer->priv->sourceid);
-    discoverer->priv->sourceid = 0;
+  if (discoverer->priv->bus_source) {
+    g_source_destroy (discoverer->priv->bus_source);
+    g_source_unref (discoverer->priv->bus_source);
+    discoverer->priv->bus_source = NULL;
   }
   /* Unref main context */
   if (discoverer->priv->ctx) {
