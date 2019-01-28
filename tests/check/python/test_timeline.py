@@ -244,3 +244,17 @@ class TestTransitions(GESSimpleTimelineTest):
         # transition and once for the audio transition.
         self.assertEqual(
             signals, ["notify::start", "clip-added", "clip-added"])
+
+
+class TestPriorities(GESSimpleTimelineTest):
+
+    def test_clips_priorities(self):
+        clip = self.add_clip(0, 0, 100)
+        clip1 = self.add_clip(100, 0, 100)
+        self.timeline.commit()
+
+        self.assertLess(clip.props.priority, clip1.props.priority)
+
+        clip.props.start = 101
+        self.timeline.commit()
+        self.assertGreater(clip.props.priority, clip1.props.priority)
