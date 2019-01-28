@@ -282,7 +282,7 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
   gst_discoverer_start (klass->discoverer);
   if (parent_newparent_table == NULL) {
     parent_newparent_table = g_hash_table_new_full (g_file_hash,
-        (GEqualFunc) g_file_equal, gst_object_unref, gst_object_unref);
+        (GEqualFunc) g_file_equal, g_object_unref, g_object_unref);
   }
 }
 
@@ -812,4 +812,8 @@ _ges_uri_asset_cleanup (void)
 {
   g_clear_object (&discoverer);
   g_clear_object (&sync_discoverer);
+  if (parent_newparent_table) {
+    g_hash_table_destroy (parent_newparent_table);
+    parent_newparent_table = NULL;
+  }
 }
