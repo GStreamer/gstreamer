@@ -245,6 +245,134 @@ GST_START_TEST (test_disco_missing_plugins)
 
 GST_END_TEST;
 
+typedef struct _AsyncTestData
+{
+  gchar *uri;
+  GMainLoop *loop;
+  GstDiscovererResult result;
+} AsyncTestData;
+
+static void
+discovered_cb (GstDiscoverer * discoverer,
+    GstDiscovererInfo * info, GError * err, AsyncTestData * data)
+{
+  const gchar *uri = gst_discoverer_info_get_uri (info);
+
+  fail_unless_equals_string (data->uri, uri);
+
+  /* cannot ensure GST_DISCOVERER_OK since there might be missing plugins */
+  data->result = gst_discoverer_info_get_result (info);
+
+  g_main_loop_quit (data->loop);
+}
+
+static void
+test_disco_async_with_context (GMainContext * context)
+{
+  GstDiscoverer *dc;
+  GError *err = NULL;
+  AsyncTestData data = { 0, };
+  gchar *path =
+      g_build_filename (GST_TEST_FILES_PATH, "theora-vorbis.ogg", NULL);
+
+  if (context)
+    g_main_context_push_thread_default (context);
+
+  data.uri = gst_filename_to_uri (path, &err);
+  /* something wrong if we have error here */
+  fail_unless (err == NULL);
+  g_free (path);
+
+  data.loop = g_main_loop_new (context, FALSE);
+
+  /* high timeout, in case we're running under valgrind */
+  dc = gst_discoverer_new (5 * GST_SECOND, &err);
+  fail_unless (dc != NULL);
+  fail_unless (err == NULL);
+
+  g_signal_connect (dc, "discovered", G_CALLBACK (discovered_cb), &data);
+
+  gst_discoverer_start (dc);
+  fail_unless (gst_discoverer_discover_uri_async (dc, data.uri) == TRUE);
+
+  g_main_loop_run (data.loop);
+
+  if (have_theora && have_ogg) {
+    fail_unless_equals_int (data.result, GST_DISCOVERER_OK);
+  } else {
+    fail_unless_equals_int (data.result, GST_DISCOVERER_MISSING_PLUGINS);
+  }
+
+  gst_discoverer_stop (dc);
+  g_object_unref (dc);
+  g_free (data.uri);
+
+  g_main_loop_unref (data.loop);
+
+  if (context)
+    g_main_context_pop_thread_default (context);
+}
+
+GST_START_TEST (test_disco_async)
+{
+  /* use default GMainContext */
+  test_disco_async_with_context (NULL);
+}
+
+GST_END_TEST;
+
+typedef struct _CustomContextData
+{
+  GMutex lock;
+  GCond cond;
+  gboolean finish;
+} CustomContextData;
+
+
+static gpointer
+custom_context_thread_func (CustomContextData * data)
+{
+  GMainContext *context;
+
+  /* test async APIs with custom GMainContext */
+  context = g_main_context_new ();
+  test_disco_async_with_context (context);
+  g_main_context_unref (context);
+
+  data->finish = TRUE;
+  g_cond_signal (&data->cond);
+
+  return NULL;
+}
+
+GST_START_TEST (test_disco_async_custom_context)
+{
+  GThread *thread;
+  CustomContextData data;
+
+  g_mutex_init (&data.lock);
+  g_cond_init (&data.cond);
+  data.finish = FALSE;
+
+  /* ensure default context here, but we will use other thread default context
+   * instead of this */
+  g_main_context_default ();
+
+  thread = g_thread_new ("test-custom-context-thread",
+      (GThreadFunc) custom_context_thread_func, &data);
+
+  g_mutex_lock (&data.lock);
+  while (data.finish)
+    g_cond_wait (&data.cond, &data.lock);
+  g_mutex_unlock (&data.lock);
+
+  g_thread_join (thread);
+  g_mutex_clear (&data.lock);
+  g_cond_clear (&data.cond);
+}
+
+GST_END_TEST;
+
 static Suite *
 discoverer_suite (void)
 {
@@ -264,6 +392,8 @@ discoverer_suite (void)
   tcase_add_test (tc_chain, test_disco_sync_reuse_timeout);
   tcase_add_test (tc_chain, test_disco_missing_plugins);
   tcase_add_test (tc_chain, test_disco_serializing);
+  tcase_add_test (tc_chain, test_disco_async);
+  tcase_add_test (tc_chain, test_disco_async_custom_context);
   return s;
 }
 
