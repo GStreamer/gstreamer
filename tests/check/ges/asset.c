@@ -27,14 +27,20 @@
 static GMainLoop *mainloop;
 
 static void
-source_asset_created (GObject * source, GAsyncResult * res, gpointer udata)
+source_asset_created (GObject * source, GAsyncResult * res,
+    gpointer expected_ok)
 {
   GError *error = NULL;
 
   GESAsset *a = ges_asset_request_finish (res, &error);
 
-  fail_unless (a == NULL);
-  assert_equals_int (error->domain, GST_RESOURCE_ERROR);
+  if (GPOINTER_TO_INT (expected_ok)) {
+    fail_unless (a != NULL);
+    fail_unless (error == NULL);
+  } else {
+    fail_unless (a == NULL);
+    assert_equals_int (error->domain, GST_RESOURCE_ERROR);
+  }
 
   g_clear_error (&error);
   g_main_loop_quit (mainloop);
@@ -46,11 +52,100 @@ GST_START_TEST (test_basic)
 
   mainloop = g_main_loop_new (NULL, FALSE);
   ges_asset_request_async (GES_TYPE_URI_CLIP,
-      "file:///this/is/not/for/real", NULL, source_asset_created, NULL);
+      "file:///this/is/not/for/real", NULL, source_asset_created,
+      GINT_TO_POINTER (FALSE));
 
   g_main_loop_run (mainloop);
   g_main_loop_unref (mainloop);
   ges_deinit ();
+}
+
+GST_END_TEST;
+
+typedef struct _CustomContextData
+{
+  GMutex lock;
+  GCond cond;
+  gboolean finish;
+  gboolean expected_ok;
+  gchar *uri;
+} CustomContextData;
+
+static gpointer
+custom_context_thread_func (CustomContextData * data)
+{
+  GMainContext *context;
+
+  context = g_main_context_new ();
+  mainloop = g_main_loop_new (context, FALSE);
+
+  g_main_context_push_thread_default (context);
+
+  /* To use custom context, we need to call ges_init() in the thread */
+  fail_unless (ges_init ());
+
+  ges_asset_request_async (GES_TYPE_URI_CLIP,
+      data->uri, NULL, source_asset_created,
+      GINT_TO_POINTER (data->expected_ok));
+  g_main_loop_run (mainloop);
+
+  g_main_context_pop_thread_default (context);
+  ges_deinit ();
+  g_main_context_unref (context);
+  g_main_loop_unref (mainloop);
+
+  data->finish = TRUE;
+  g_cond_signal (&data->cond);
+
+  return NULL;
+}
+
+GST_START_TEST (test_custom_context)
+{
+  GThread *thread;
+  CustomContextData data;
+
+  mainloop = NULL;
+
+  g_mutex_init (&data.lock);
+  g_cond_init (&data.cond);
+  /* ensure default context here, but we will not use the default context */
+  g_main_context_default ();
+
+  /* first run with invalid uri */
+  data.finish = FALSE;
+  data.expected_ok = FALSE;
+  data.uri = g_strdup ("file:///this/is/not/for/real");
+
+  thread = g_thread_new ("test-custom-context-thread",
+      (GThreadFunc) custom_context_thread_func, &data);
+
+  g_mutex_lock (&data.lock);
+  while (data.finish)
+    g_cond_wait (&data.cond, &data.lock);
+  g_mutex_unlock (&data.lock);
+
+  g_thread_join (thread);
+  g_free (data.uri);
+
+  /* second run with valid uri */
+  data.finish = FALSE;
+  data.expected_ok = TRUE;
+  data.uri = ges_test_file_uri ("audio_video.ogg");
+
+  thread = g_thread_new ("test-custom-context-thread",
+      (GThreadFunc) custom_context_thread_func, &data);
+
+  g_mutex_lock (&data.lock);
+  while (data.finish)
+    g_cond_wait (&data.cond, &data.lock);
+  g_mutex_unlock (&data.lock);
+
+  g_thread_join (thread);
+  g_free (data.uri);
+
+  g_mutex_clear (&data.lock);
+  g_cond_clear (&data.cond);
 }
 
 GST_END_TEST;
@@ -222,6 +317,7 @@ ges_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_basic);
+  tcase_add_test (tc_chain, test_custom_context);
   tcase_add_test (tc_chain, test_transition_change_asset);
   tcase_add_test (tc_chain, test_uri_clip_change_asset);
   tcase_add_test (tc_chain, test_list_asset);
