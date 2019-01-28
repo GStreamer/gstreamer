@@ -26,7 +26,7 @@
 #include <gst/base/gstbytereader.h>
 #include "video-anc.h"
 
-#if !GLIB_CHECK_VERSION(2, 42, 0)
+#if !GLIB_CHECK_VERSION(2, 47, 4)
 #ifdef __GNUC__
 #define G_GNUC_CHECK_VERSION(major, minor) \
     ((__GNUC__ > (major)) || \
