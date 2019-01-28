@@ -219,9 +219,6 @@ ges_deinit (void)
   /* Register track elements */
   g_type_class_unref (g_type_class_peek (GES_TYPE_EFFECT));
 
-  g_type_class_unref (g_type_class_peek (GST_TYPE_FRAME_POSITIONNER));
-  g_type_class_unref (g_type_class_peek (GES_TYPE_PIPELINE));
-
   ges_asset_cache_deinit ();
 
   ges_initialized = FALSE;
