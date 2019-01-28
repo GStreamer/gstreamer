@@ -17,8 +17,8 @@ This guide is intended to help you understand the GStreamer framework
 so you can develop applications based on it. The first
 chapters will focus on development of a simple audio player, with much
 effort going into helping you understand GStreamer concepts. Later
-chapters will go into more advanced topics related to media playback,
-but also at other forms of media processing (capture, editing, etc.).
+chapters will go into more advanced topics related to media playback and
+other forms of media processing (capture, editing, etc.).
 
 ## Introduction
 
@@ -49,7 +49,7 @@ Especially,
 
   - GObject casting
 
-  - GObject referecing/dereferencing
+  - GObject referencing/dereferencing
 
   - glib memory management
 
@@ -72,15 +72,15 @@ application programming. At the end of this part, you should be able to
 build your own audio player using GStreamer
 
 In [Advanced GStreamer concepts][advanced], we will move on to advanced
-subjects which make GStreamer stand out of its competitors. We will discuss
+subjects which make GStreamer stand out from its competitors. We will discuss
 application-pipeline interaction using dynamic parameters and interfaces, we
 will discuss threading and threaded pipelines, scheduling and clocks (and
 synchronization). Most of those topics are not just there to introduce you to
-their API, but primarily to give a deeper insight in solving application
+their API, but primarily to give a deeper insight into solving application
 programming problems with GStreamer and understanding their concepts.
 
 Next, in [Higher-level interfaces for GStreamer applications][highlevel], we
-will go into higher-level programming APIs for GStreamer. You don't exactly
+will go into higher-level programming APIs for GStreamer. You don't
 need to know all the details from the previous parts to understand this, but
 you will need to understand basic GStreamer concepts nevertheless. We will,
 amongst others, discuss playbin and autopluggers.
