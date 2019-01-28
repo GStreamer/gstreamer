@@ -47,13 +47,16 @@ GST_DEBUG_CATEGORY (_ges_debug);
 
 G_LOCK_DEFINE_STATIC (init_lock);
 
-static gboolean ges_initialized = FALSE;
+/* (without holding ref) thread object for thread_self() validation
+ * between init/deinit
+ */
+static GThread *initialized_thread = NULL;
 
 static gboolean
 ges_init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     GError ** error)
 {
-  if (ges_initialized) {
+  if (initialized_thread) {
     GST_DEBUG ("already initialized");
     return TRUE;
   }
@@ -72,7 +75,7 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   GESUriClipAssetClass *uriasset_klass = NULL;
   GstElementFactory *nlecomposition_factory = NULL;
 
-  if (ges_initialized) {
+  if (initialized_thread) {
     GST_DEBUG ("already initialized ges");
     return TRUE;
   }
@@ -124,7 +127,7 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   gst_element_register (NULL, "gespipeline", 0, GES_TYPE_PIPELINE);
 
   /* TODO: user-defined types? */
-  ges_initialized = TRUE;
+  initialized_thread = g_thread_self ();
   g_type_class_unref (uriasset_klass);
 
   GST_DEBUG ("GStreamer Editing Services initialized");
@@ -146,6 +149,11 @@ failed:
  * Initialize the GStreamer Editing Service. Call this before any usage of
  * GES. You should take care of initilizing GStreamer before calling this
  * function.
+ *
+ * MT safety.
+ * GStreamer Editing Services do not guarantee MT safety.
+ * An application is required to use GES APIs (including ges_deinit())
+ * in the thread where ges_init() was called.
  */
 
 gboolean
@@ -170,8 +178,9 @@ ges_init (void)
  * It is normally not needed to call this function in a normal application as the
  * resources will automatically be freed when the program terminates.
  * This function is therefore mostly used by testsuites and other memory profiling tools.
+ * This function should be called from the thread where ges_init() was called.
  *
- * After this call GES (including this method) should not be used anymore.
+ * After this call GES should not be used until another ges_init() call.
  */
 void
 ges_deinit (void)
@@ -180,11 +189,14 @@ ges_deinit (void)
 
   GST_INFO ("deinitializing GES");
 
-  if (!ges_initialized) {
+  if (!initialized_thread) {
     GST_DEBUG ("nothing to deinitialize");
     G_UNLOCK (init_lock);
     return;
   }
+
+  /* Allow deinit only from a thread where ges_init() was called */
+  g_assert (initialized_thread == g_thread_self ());
 
   _ges_uri_asset_cleanup ();
 
@@ -210,7 +222,7 @@ ges_deinit (void)
 
   ges_asset_cache_deinit ();
 
-  ges_initialized = FALSE;
+  initialized_thread = NULL;
   G_UNLOCK (init_lock);
 
   GST_INFO ("deinitialized GES");
@@ -335,7 +347,7 @@ ges_init_check (int *argc, char **argv[], GError ** err)
 
   G_LOCK (init_lock);
 
-  if (ges_initialized) {
+  if (initialized_thread) {
     GST_DEBUG ("already initialized ges");
     G_UNLOCK (init_lock);
     return TRUE;
@@ -374,5 +386,5 @@ ges_init_check (int *argc, char **argv[], GError ** err)
 gboolean
 ges_is_initialized (void)
 {
-  return ges_initialized;
+  return initialized_thread ? TRUE : FALSE;
 }

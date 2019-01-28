@@ -1082,6 +1082,14 @@ done:
  * method. This asset can not be used as is.
  * @user_data: The user data to pass when @callback is called
  *
+ * The @callback will be called from a running #GMainLoop which is iterating a #GMainContext.
+ * Note that, users should ensure the #GMainContext, since this method will notify
+ * @callback from the thread which was associated with a thread default
+ * #GMainContext at calling ges_init().
+ * For example, if a user wants non-default #GMainContext to be associated
+ * with @callback, ges_init() must be called after g_main_context_push_thread_default ()
+ * with custom #GMainContext.
+ *
  * Request a new #GESAsset asyncronously, @callback will be called when the materail is
  * ready to be used or if an error occured.
  *
