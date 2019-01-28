@@ -1,5 +1,5 @@
 [wrap-git]
 directory=gl-headers
-url=https://github.com/centricular/gl-headers.git
-push-url=git@github.com:centricular/gl-headers.git
+url=https://gitlab.freedesktop.org/gstreamer/meson-ports/gl-headers.git
+push-url=git@gitlab.freedesktop.org:gstreamer/meson-ports/gl-headers.git
 revision=master
