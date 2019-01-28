@@ -78,11 +78,16 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   }
 
   uriasset_klass = g_type_class_ref (GES_TYPE_URI_CLIP_ASSET);
-  if (!uriasset_klass || !uriasset_klass->discoverer)
+  if (!uriasset_klass || !uriasset_klass->discoverer) {
+    GST_ERROR ("missing uri asset class %p or discoverer %p", uriasset_klass,
+        uriasset_klass ? uriasset_klass->discoverer : NULL);
     goto failed;
+  }
 
-  if (!uriasset_klass->sync_discoverer)
+  if (!uriasset_klass->sync_discoverer) {
+    GST_ERROR ("missing sync discoverer");
     goto failed;
+  }
 
   nlecomposition_factory = gst_element_factory_find ("nlecomposition");
   if (!nlecomposition_factory) {
