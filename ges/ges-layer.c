@@ -234,6 +234,9 @@ ges_layer_resync_priorities_by_type (GESLayer * layer,
   GList *tmp;
   GESTimelineElement *element;
 
+  layer->priv->clips_start =
+      g_list_sort (layer->priv->clips_start,
+      (GCompareFunc) element_start_compare);
   for (tmp = layer->priv->clips_start; tmp; tmp = tmp->next) {
 
     element = GES_TIMELINE_ELEMENT (tmp->data);
@@ -783,6 +786,9 @@ ges_layer_get_clips_in_interval (GESLayer * layer, GstClockTime start,
 
   g_return_val_if_fail (GES_IS_LAYER (layer), NULL);
 
+  layer->priv->clips_start =
+      g_list_sort (layer->priv->clips_start,
+      (GCompareFunc) element_start_compare);
   for (tmp = layer->priv->clips_start; tmp; tmp = tmp->next) {
     clip_intersects = FALSE;
     clip_start = ges_timeline_element_get_start (tmp->data);
