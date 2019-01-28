@@ -42,7 +42,6 @@ source_asset_created (GObject * source, GAsyncResult * res, gpointer udata)
 
 GST_START_TEST (test_basic)
 {
-  gst_init (NULL, NULL);
   ges_init ();
 
   mainloop = g_main_loop_new (NULL, FALSE);
@@ -62,7 +61,6 @@ GST_START_TEST (test_transition_change_asset)
   GESAsset *a;
   GESExtractable *extractable;
 
-  gst_init (NULL, NULL);
   ges_init ();
 
   a = ges_asset_request (GES_TYPE_TRANSITION_CLIP, "box-wipe-lc", NULL);
@@ -111,7 +109,6 @@ GST_START_TEST (test_uri_clip_change_asset)
   gchar *uri1;
   GESTimeline *timeline;
 
-  gst_init (NULL, NULL);
   ges_init ();
 
   layer = ges_layer_new ();
