@@ -48,7 +48,6 @@ GST_DEBUG_CATEGORY (_ges_debug);
 G_LOCK_DEFINE_STATIC (init_lock);
 
 static gboolean ges_initialized = FALSE;
-static gboolean ges_deinitialized = FALSE;
 
 static gboolean
 ges_init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
@@ -179,16 +178,11 @@ ges_deinit (void)
 {
   G_LOCK (init_lock);
 
-  if (!ges_initialized) {
-    G_UNLOCK (init_lock);
-    return;
-  }
-
   GST_INFO ("deinitializing GES");
 
-  if (ges_deinitialized) {
+  if (!ges_initialized) {
+    GST_DEBUG ("nothing to deinitialize");
     G_UNLOCK (init_lock);
-    GST_DEBUG ("already deinitialized");
     return;
   }
 
@@ -219,7 +213,7 @@ ges_deinit (void)
 
   ges_asset_cache_deinit ();
 
-  ges_deinitialized = TRUE;
+  ges_initialized = FALSE;
   G_UNLOCK (init_lock);
 
   GST_INFO ("deinitialized GES");
