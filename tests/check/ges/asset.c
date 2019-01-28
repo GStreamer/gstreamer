@@ -221,11 +221,10 @@ ges_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  /* Must be first until we implement deinit */
-  tcase_add_test (tc_chain, test_list_asset);
   tcase_add_test (tc_chain, test_basic);
   tcase_add_test (tc_chain, test_transition_change_asset);
   tcase_add_test (tc_chain, test_uri_clip_change_asset);
+  tcase_add_test (tc_chain, test_list_asset);
   tcase_add_test (tc_chain, test_proxy_asset);
 
   return s;
