@@ -51,6 +51,8 @@ typedef struct
   gboolean list_transitions;
   gboolean inspect_action_type;
   gchar *sanitized_timeline;
+  const gchar *video_track_caps;
+  const gchar *audio_track_caps;
 } ParsedOptions;
 
 struct _GESLauncherPrivate
@@ -93,6 +95,29 @@ _parse_track_type (const gchar * option_name, const gchar * value,
 }
 
 static gboolean
+_set_track_restriction_caps (GESTrack * track, const gchar * caps_str)
+{
+  GstCaps *caps;
+
+  if (!caps_str)
+    return TRUE;
+
+  caps = gst_caps_from_string (caps_str);
+
+  if (!caps) {
+    g_printerr ("Could not create caps for %s from: %s",
+        G_OBJECT_TYPE_NAME (track), caps_str);
+
+    return FALSE;
+  }
+
+  ges_track_set_restriction_caps (track, caps);
+
+  gst_caps_unref (caps);
+  return TRUE;
+}
+
+static gboolean
 _timeline_set_user_options (GESLauncher * self, GESTimeline * timeline,
     const gchar * load_path)
 {
@@ -122,6 +147,9 @@ retry:
     if (!has_video && opts->track_types & GES_TRACK_TYPE_VIDEO) {
       trackv = GES_TRACK (ges_video_track_new ());
 
+      if (!_set_track_restriction_caps (trackv, opts->video_track_caps))
+        return FALSE;
+
       if (opts->disable_mixing)
         ges_track_set_mixing (trackv, FALSE);
 
@@ -131,6 +159,10 @@ retry:
 
     if (!has_audio && opts->track_types & GES_TRACK_TYPE_AUDIO) {
       tracka = GES_TRACK (ges_audio_track_new ());
+
+      if (!_set_track_restriction_caps (tracka, opts->audio_track_caps))
+        return FALSE;
+
       if (opts->disable_mixing)
         ges_track_set_mixing (tracka, FALSE);
 
@@ -390,7 +422,7 @@ _run_pipeline (GESLauncher * self)
     }
 
     if (!_timeline_set_user_options (self, self->priv->timeline, NULL)) {
-      g_error ("Could not properly set tracks");
+      g_printerr ("Could not properly set tracks\n");
       return FALSE;
     }
   }
@@ -671,6 +703,14 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   GOptionEntry options[] = {
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &opts->disable_mixing,
         "Do not use mixing elements to mix layers together.", NULL},
+    {"track-types", 't', 0, G_OPTION_ARG_CALLBACK, &_parse_track_type,
+          "Specify the track types to be created. "
+          "When loading a project, only relevant tracks will be added to the timeline.",
+        "<track-types>"},
+    {"video-caps", 't', 0, G_OPTION_ARG_STRING, &opts->video_track_caps,
+        "Specify the track restriction caps of the video track.",},
+    {"audio-caps", 't', 0, G_OPTION_ARG_STRING, &opts->audio_track_caps,
+        "Specify the track restriction caps of the audio track.",},
     {"track-types", 't', 0, G_OPTION_ARG_CALLBACK, &_parse_track_type,
           "Specify the track types to be created. "
           "When loading a project, only relevant tracks will be added to the timeline.",
