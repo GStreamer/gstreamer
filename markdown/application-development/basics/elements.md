@@ -386,7 +386,7 @@ them, since adding an element to a bin will disconnect any already
 existing links. Also, you cannot directly link elements that are not in
 the same bin or pipeline; if you want to link elements or pads at
 different hierarchy levels, you will need to use ghost pads (more about
-ghost pads later, see [Ghost pads][ghostpads]
+[ghost pads][ghostpads] later).
 
 [ghostpads]: application-development/basics/pads.md#ghost-pads
 
@@ -438,7 +438,7 @@ element to `READY` and `PAUSED` in between.
 
 When moved to `GST_STATE_PLAYING`, pipelines will process data
 automatically. They do not need to be iterated in any form. Internally,
-GStreamer will start threads that take this task on to them. GStreamer
+GStreamer will start threads that take on this task for them. GStreamer
 will also take care of switching messages from the pipeline's thread
 into the application's own thread, by using a
 [`GstBus`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstBus.html).
