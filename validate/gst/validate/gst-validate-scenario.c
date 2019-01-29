@@ -1704,6 +1704,7 @@ gst_validate_execute_action (GstValidateActionType * action_type,
   gst_validate_print_action (action, NULL);
 
   action->priv->execution_time = gst_util_get_timestamp ();
+  action->priv->state = GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS;
   res = action_type->execute (scenario, action);
   gst_object_unref (scenario);
 
@@ -1958,7 +1959,11 @@ execute_next_action (GstValidateScenario * scenario)
     act = scenario->priv->actions->data;
 
   if (act) {
-    if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK && act->repeat <= 0) {
+
+    if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS) {
+      return G_SOURCE_CONTINUE;
+    } else if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_OK
+        && act->repeat <= 0) {
       tmp = priv->actions;
       priv->actions = g_list_remove_link (priv->actions, tmp);
 
