@@ -77,7 +77,11 @@ if have_cxx and build_gstgl
     endif
 
     if gst_gl_have_platform_egl
+      # Embedded linux (e.g. i.MX6) with or without windowing support
+      qt_defines += ['-DHAVE_QT_EGLFS']
+      have_qt_windowing = true
       if have_qpa_include
+        # Wayland windowing
         if gst_gl_have_window_wayland
           # FIXME: automagic
           qt5waylandextras = dependency('qt5', modules : ['WaylandClient'], required : false)
@@ -87,19 +91,23 @@ if have_cxx and build_gstgl
             have_qt_windowing = true
           endif
         endif
+        # Android windowing
         if gst_gl_have_window_android
           # FIXME: automagic
-          # FIXME: untested
           qt5androidextras = dependency('qt5', modules : ['AndroidExtras'], required : false)
-          if qt5androidextras.found()
-            optional_deps += qt5androidextras
+          # for gl functions in QtGui/qopenglfunctions.h
+          # FIXME: automagic
+          glesv2_dep = cc.find_library('GLESv2', required : false)
+          if glesv2_dep.found() and qt5androidextras.found()
+            optional_deps += [qt5androidextras, glesv2_dep]
             qt_defines += ['-DHAVE_QT_ANDROID']
             have_qt_windowing = true
+            # Needed for C++11 support in Cerbero. People building with Android
+            # in some other way need to add the necessary bits themselves.
+            optional_deps += dependency('gnustl', required : false)
           endif
         endif
       endif
-      qt_defines += ['-DHAVE_QT_EGLFS']
-      have_qt_windowing = true
     endif
 
     if gst_gl_have_platform_wgl and gst_gl_have_window_win32
