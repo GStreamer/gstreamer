@@ -498,7 +498,7 @@ gst_date_time_check_fields (gint * year, gint * month, gint * day,
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full) (nullable): the newly created #GstDateTime
+ * Return value: (transfer full): the newly created #GstDateTime
  */
 GstDateTime *
 gst_date_time_new_local_time (gint year, gint month, gint day, gint hour,
@@ -607,7 +607,7 @@ __gst_date_time_compare (const GstDateTime * dt1, const GstDateTime * dt2)
  *
  * Free-function: gst_date_time_unref
  *
- * Return value: (transfer full) (nullable): the newly created #GstDateTime
+ * Return value: (transfer full): the newly created #GstDateTime
  */
 GstDateTime *
 gst_date_time_new (gfloat tzoffset, gint year, gint month, gint day, gint hour,
