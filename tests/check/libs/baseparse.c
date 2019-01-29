@@ -505,7 +505,7 @@ _src_getrange_pull_short_read (GstPad * pad, GstObject * parent,
   memcpy (data, &raw_buffer[offset], buffer_size);
   buf = gst_buffer_new_wrapped (data, buffer_size);
 
-  GST_BUFFER_PTS (buffer) =
+  GST_BUFFER_PTS (buf) =
       gst_util_uint64_scale_round (buffer_pull_count,
       GST_SECOND * TEST_VIDEO_FPS_D, TEST_VIDEO_FPS_N);
   GST_BUFFER_DURATION (buf) =
