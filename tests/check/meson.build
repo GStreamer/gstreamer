@@ -16,6 +16,7 @@ ges_tests = [
     ['ges/project'],
     ['ges/track'],
     ['ges/tempochange'],
+    ['ges/negative'],
     ['nle/simple'],
     ['nle/complex'],
     ['nle/nleoperation'],
