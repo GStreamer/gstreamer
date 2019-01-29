@@ -832,8 +832,7 @@ gst_pad_get_property (GObject * object, guint prop_id,
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: (transfer floating) (nullable): a new #GstPad, or %NULL in
- * case of an error.
+ * Returns: (transfer floating): a new #GstPad.
  *
  * MT safe.
  */
@@ -854,8 +853,7 @@ gst_pad_new (const gchar * name, GstPadDirection direction)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: (transfer floating) (nullable): a new #GstPad, or %NULL in
- * case of an error.
+ * Returns: (transfer floating): a new #GstPad.
  */
 GstPad *
 gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
@@ -880,8 +878,7 @@ gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: (transfer floating) (nullable): a new #GstPad, or %NULL in
- * case of an error.
+ * Returns: (transfer floating): a new #GstPad.
  */
 GstPad *
 gst_pad_new_from_static_template (GstStaticPadTemplate * templ,
