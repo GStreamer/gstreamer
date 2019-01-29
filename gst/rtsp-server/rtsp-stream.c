@@ -1359,7 +1359,10 @@ again:
     else
       flags |= GST_RTSP_ADDRESS_FLAG_IPV4;
 
-    addr = gst_rtsp_address_pool_acquire_address (pool, flags, 2);
+    if (*server_addr_out)
+      addr = *server_addr_out;
+    else
+      addr = gst_rtsp_address_pool_acquire_address (pool, flags, 2);
 
     if (addr == NULL)
       goto no_address;
