@@ -121,7 +121,15 @@ if have_cxx and build_gstgl
       endif
     endif
 
-    # FIXME: OSX/iOS definitions
+    # FIXME: iOS definitions
+    if gst_gl_have_window_cocoa and gst_gl_have_platform_cgl
+      qt5macextras = dependency('qt5', modules : ['MacExtras'], required : false)
+      if qt5macextras.found()
+	qt_defines += ['-DHAVE_QT_MAC']
+	optional_deps += qt5macextras
+	have_qt_windowing = true
+      endif
+    endif
 
     if have_qt_windowing
       # Build it!
