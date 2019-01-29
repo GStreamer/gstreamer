@@ -37,6 +37,7 @@ import queue
 import configparser
 import xml
 import random
+import shutil
 import uuid
 
 from .utils import which
@@ -568,6 +569,9 @@ class Test(Loggable):
             message = "%s %s: %s%s" % (self.number, self.classname, self.result,
                                        " (" + self.message + ")" if self.message else "")
             end = "\r"
+            term_width = shutil.get_terminal_size((80, 20))[0]
+            if len(message) > term_width:
+                message = message[0:term_width - 2] + '…'
 
         printc(message, color=utils.get_color_for_result(self.result), end=end)
         self.close_logfile()
