@@ -681,8 +681,23 @@ _extract (GESAsset * asset, GError ** error)
 }
 
 static void
+ges_uri_source_asset_dispose (GObject * object)
+{
+  GESUriSourceAsset *self = GES_URI_SOURCE_ASSET (object);
+  GESUriSourceAssetPrivate *priv = self->priv;
+
+  gst_clear_object (&priv->sinfo);
+
+  G_OBJECT_CLASS (ges_uri_source_asset_parent_class)->dispose (object);
+}
+
+static void
 ges_uri_source_asset_class_init (GESUriSourceAssetClass * klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  object_class->dispose = ges_uri_source_asset_dispose;
+
   GES_ASSET_CLASS (klass)->extract = _extract;
 }
 
