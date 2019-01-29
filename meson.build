@@ -59,6 +59,8 @@ if build_system == 'windows'
   subproject('win-flex-bison-binaries')
 endif
 
+subproject('orc', required: get_option('orc'))
+
 subprojects_names = []
 foreach project_name, build_infos: subprojects
   is_required = build_infos.get('option', true)

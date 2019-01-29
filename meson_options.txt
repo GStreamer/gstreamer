@@ -15,3 +15,4 @@ option('examples', type : 'feature', value : 'auto', description : 'Build exampl
 option('gtk_doc', type : 'feature', value : 'auto', description : 'Generate API documentation with gtk-doc')
 option('introspection', type : 'feature', value : 'auto', description : 'Generate introspection data')
 option('nls', type : 'feature', value : 'auto', description : 'Enable native language support (translations)')
+option('orc', type : 'feature', value : 'auto', description : 'Enable Optimized Inner Loop Runtime Compiler')
