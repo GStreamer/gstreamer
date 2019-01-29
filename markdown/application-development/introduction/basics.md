@@ -25,20 +25,20 @@ great deal in the *GStreamer Plugin Writer's Guide*.
 
 ## Pads
 
-*Pads* are element's input and output, where you can connect other
+*Pads* are an element's input and output, where you can connect other
 elements. They are used to negotiate links and data flow between
 elements in GStreamer. A pad can be viewed as a “plug” or “port” on an
 element where links may be made with other elements, and through which
 data can flow to or from those elements. Pads have specific data
 handling capabilities: a pad can restrict the type of data that flows
 through it. Links are only allowed between two pads when the allowed
-data types of the two pads are compatible. Data types are negotiated
-between pads using a process called *caps negotiation*. Data types are
-described as a `GstCaps`.
+data types (capabilities) of the two pads are compatible. Data types are 
+negotiated between pads using a process called *caps negotiation*. Data 
+types are described by `GstCaps`.
 
 An analogy may be helpful here. A pad is similar to a plug or jack on a
 physical device. Consider, for example, a home theater system consisting
-of an amplifier, a DVD player, and a (silent) video projector. Linking
+of an audio amplifier, a DVD player, and a (silent) video projector. Linking
 the DVD player to the amplifier is allowed because both devices have
 audio jacks, and linking the projector to the DVD player is allowed
 because both devices have compatible video jacks. Links between the

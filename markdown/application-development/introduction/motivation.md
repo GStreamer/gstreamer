@@ -80,7 +80,7 @@ High performance is obtained by:
 
 The core of GStreamer is essentially media-agnostic. It only knows about
 bytes and blocks, and only contains basic elements. The core of
-GStreamer is functional enough to even implement low-level system tools,
+GStreamer is even functional enough to implement low-level system tools,
 like cp.
 
 All of the media handling functionality is provided by plugins external
