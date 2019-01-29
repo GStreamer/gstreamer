@@ -140,9 +140,9 @@ receive a `FLUSHING` error and stop the streaming threads before the
 elements are set to the `READY` or `NULL` state.
 
 Note, however, that if elements are added to a bin or pipeline that's
-already running, , e.g. from within a "pad-added" signal callback, its
+already running, e.g. from within a "pad-added" signal callback, its
 state will not automatically be brought in line with the current state
 or target state of the bin or pipeline it was added to. Instead, you
-have to need to set it to the desired target state yourself using
+need to set it to the desired target state yourself using
 `gst_element_set_state ()` or `gst_element_sync_state_with_parent ()`
 when adding elements to an already-running pipeline.
