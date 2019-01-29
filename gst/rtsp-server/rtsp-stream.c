@@ -1076,7 +1076,8 @@ no_address:
  * won't release the address from the pool.
  *
  * Returns: (nullable): the #GstRTSPAddress of @stream or %NULL when
- * the address could be reserved. gst_rtsp_address_free() after usage.
+ * the address could not be reserved. gst_rtsp_address_free() after
+ * usage.
  */
 GstRTSPAddress *
 gst_rtsp_stream_reserve_address (GstRTSPStream * stream,
@@ -1448,7 +1449,10 @@ again:
       else
         flags |= GST_RTSP_ADDRESS_FLAG_IPV4;
 
-      addr = gst_rtsp_address_pool_acquire_address (pool, flags, 2);
+      if (*server_addr_out)
+        addr = *server_addr_out;
+      else
+        addr = gst_rtsp_address_pool_acquire_address (pool, flags, 2);
 
       if (addr == NULL)
         goto no_address;
