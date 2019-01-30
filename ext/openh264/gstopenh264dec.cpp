@@ -113,12 +113,34 @@ gst_openh264dec_init (GstOpenh264Dec * openh264dec)
   gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (openh264dec), TRUE);
 }
 
+static void
+openh264_trace_cb (void *ctx, int level, const char *string)
+{
+  GObject *o = G_OBJECT (ctx);
+  GstDebugLevel lvl = GST_LEVEL_WARNING;
+
+  if (level >= WELS_LOG_DETAIL)
+    lvl = GST_LEVEL_LOG;
+  else if (level >= WELS_LOG_DEBUG)
+    lvl = GST_LEVEL_DEBUG;
+  else if (level >= WELS_LOG_INFO)
+    lvl = GST_LEVEL_INFO;
+  else if (level >= WELS_LOG_WARNING)
+    lvl = GST_LEVEL_WARNING;
+  else if (level >= WELS_LOG_ERROR)
+    lvl = GST_LEVEL_ERROR;
+
+  gst_debug_log (GST_CAT_DEFAULT, lvl, "", "", 0, o, "%s", string);
+}
+
 static gboolean
 gst_openh264dec_start (GstVideoDecoder * decoder)
 {
   GstOpenh264Dec *openh264dec = GST_OPENH264DEC (decoder);
   gint ret;
   SDecodingParam dec_param = { 0 };
+  int log_level;
+  WelsTraceCallback log_cb;
 
   if (openh264dec->decoder != NULL) {
     openh264dec->decoder->Uninitialize ();
@@ -126,6 +148,14 @@ gst_openh264dec_start (GstVideoDecoder * decoder)
     openh264dec->decoder = NULL;
   }
   WelsCreateDecoder (&(openh264dec->decoder));
+
+  log_level = WELS_LOG_WARNING;
+  log_cb = openh264_trace_cb;
+  openh264dec->decoder->SetOption (DECODER_OPTION_TRACE_LEVEL, &log_level);
+  openh264dec->decoder->SetOption (DECODER_OPTION_TRACE_CALLBACK,
+      (void *) &log_cb);
+  openh264dec->decoder->SetOption (DECODER_OPTION_TRACE_CALLBACK_CONTEXT,
+      (void *) &decoder);
 
   dec_param.uiTargetDqLayer = 255;
   dec_param.eEcActiveIdc = ERROR_CON_FRAME_COPY;
