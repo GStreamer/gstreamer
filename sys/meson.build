@@ -1,6 +1,7 @@
 subdir('androidmedia')
 subdir('applemedia')
 subdir('bluez')
+subdir('d3d11')
 subdir('d3dvideosink')
 subdir('decklink')
 subdir('directsound')
