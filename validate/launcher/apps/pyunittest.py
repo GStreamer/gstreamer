@@ -63,8 +63,7 @@ class PythonTestsManager(TestsManager):
             for testsuite in testsuites:
                 for _tests in testsuite:
                     if isinstance(_tests, unittest.loader._FailedTest):
-                        print(_tests._exception)
-                        continue
+                        raise(_tests._exception)
                     for test in _tests:
                         self.add_test(PythonTest(
                             sys.executable, test.id(),
