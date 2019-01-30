@@ -28,6 +28,10 @@
 #endif
 
 #include "gstopenh264dec.h"
+
+#include <wels/codec_ver.h>
+#define OPENH264_VERSION_CHECK(maj,min) ((OPENH264_MAJOR > (maj)) || (OPENH264_MAJOR == (maj) && OPENH264_MINOR >= (min)))
+
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
