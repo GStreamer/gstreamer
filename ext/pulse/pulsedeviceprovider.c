@@ -253,13 +253,54 @@ static void
 get_server_info_cb (pa_context * context, const pa_server_info * info,
     void *userdata)
 {
+  GList *tmp, *devices = NULL;
   GstPulseDeviceProvider *self = userdata;
 
+  GST_OBJECT_LOCK (self);
   g_free (self->default_sink_name);
   g_free (self->default_source_name);
   self->default_sink_name = g_strdup (info->default_sink_name);
   self->default_source_name = g_strdup (info->default_source_name);
   GST_DEBUG_OBJECT (self, "Default sink name: %s", self->default_sink_name);
+
+  for (tmp = GST_DEVICE_PROVIDER (self)->devices; tmp; tmp = tmp->next)
+    devices = g_list_prepend (devices, gst_object_ref (tmp->data));
+  GST_OBJECT_UNLOCK (self);
+
+  for (tmp = devices; tmp; tmp = tmp->next) {
+    GstPulseDevice *dev = tmp->data;
+    GstStructure *props = gst_device_get_properties (GST_DEVICE (dev));
+    gboolean was_default = FALSE, is_default = FALSE;
+
+    g_assert (props);
+    gst_structure_get_boolean (props, "is-default", &was_default);
+    switch (dev->type) {
+      case GST_PULSE_DEVICE_TYPE_SINK:
+        is_default = !g_strcmp0 (dev->internal_name, self->default_sink_name);
+        break;
+      case GST_PULSE_DEVICE_TYPE_SOURCE:
+        is_default = !g_strcmp0 (dev->internal_name, self->default_source_name);
+        break;
+    }
+
+    if (was_default != is_default) {
+      GstDevice *updated_device;
+      gchar *name = gst_device_get_display_name (GST_DEVICE (dev));
+
+      gst_structure_set (props, "is-default", G_TYPE_BOOLEAN, is_default, NULL);
+      updated_device = gst_pulse_device_new (dev->device_index,
+          name, gst_device_get_caps (GST_DEVICE (dev)), dev->internal_name,
+          dev->type, props, is_default);
+
+      gst_device_provider_device_changed (GST_DEVICE_PROVIDER (self),
+          updated_device, GST_DEVICE (dev));
+
+      g_free (name);
+    } else {
+      gst_structure_free (props);
+    }
+  }
+  g_list_free_full (devices, gst_object_unref);
 
   pa_threaded_mainloop_signal (self->mainloop, 0);
 }
