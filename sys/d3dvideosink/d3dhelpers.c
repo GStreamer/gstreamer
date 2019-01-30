@@ -1269,8 +1269,7 @@ d3d_notify_device_lost (GstD3DVideoSink * sink)
   LOCK_SINK (sink);
 
   if (!sink->d3d.device_lost) {
-    GST_WARNING_OBJECT (sink,
-        "D3D Device has been lost. Cleanup up resources..");
+    GST_WARNING_OBJECT (sink, "D3D Device has been lost. Clean up resources.");
 
     /* Stream will continue with GST_FLOW_OK, until device has been reset */
     sink->d3d.device_lost = TRUE;
