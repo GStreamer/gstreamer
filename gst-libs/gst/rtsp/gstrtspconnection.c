@@ -1250,7 +1250,7 @@ error:
 }
 
 /* NOTE: This changes the values of vectors if multiple iterations are needed! */
-#if GLIB_CHECK_VERSION(2, 59, 0)
+#if GLIB_CHECK_VERSION(2, 59, 1)
 static GstRTSPResult
 writev_bytes (GOutputStream * stream, GOutputVector * vectors, gint n_vectors,
     gsize * bytes_written, gboolean block, GCancellable * cancellable)
