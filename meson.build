@@ -322,7 +322,8 @@ libsinc = include_directories('gst-libs')
 have_orcc = false
 orcc_args = []
 # Used by various libraries/elements that use Orc code
-orc_dep = dependency('orc-0.4', version : orc_req, required : get_option('orc'))
+orc_dep = dependency('orc-0.4', version : orc_req, required : get_option('orc'),
+    fallback : ['orc', 'orc_dep'])
 orcc = find_program('orcc', required : get_option('orc'))
 if orc_dep.found() and orcc.found()
   have_orcc = true
