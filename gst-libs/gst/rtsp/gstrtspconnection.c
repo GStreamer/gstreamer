@@ -1331,7 +1331,7 @@ writev_bytes (GOutputStream * stream, GOutputVector * vectors, gint n_vectors,
   gsize _bytes_written = 0;
   guint written;
   gint i;
-  GstRTSPResult res;
+  GstRTSPResult res = GST_RTSP_OK;
 
   for (i = 0; i < n_vectors; i++) {
     written = 0;
