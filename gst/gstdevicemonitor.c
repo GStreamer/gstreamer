@@ -234,15 +234,18 @@ bus_sync_message (GstBus * bus, GstMessage * message,
 {
   GstMessageType type = GST_MESSAGE_TYPE (message);
 
-  if (type == GST_MESSAGE_DEVICE_ADDED || type == GST_MESSAGE_DEVICE_REMOVED) {
+  if (type == GST_MESSAGE_DEVICE_ADDED || type == GST_MESSAGE_DEVICE_REMOVED ||
+      type == GST_MESSAGE_DEVICE_CHANGED) {
     gboolean matches = TRUE;
     GstDevice *device;
     GstDeviceProvider *provider;
 
     if (type == GST_MESSAGE_DEVICE_ADDED)
       gst_message_parse_device_added (message, &device);
-    else
+    else if (type == GST_MESSAGE_DEVICE_REMOVED)
       gst_message_parse_device_removed (message, &device);
+    else
+      gst_message_parse_device_changed (message, &device, NULL);
 
     GST_OBJECT_LOCK (monitor);
     provider =

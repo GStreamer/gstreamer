@@ -162,6 +162,11 @@ GST_API
 const gchar * gst_device_provider_class_get_metadata       (GstDeviceProviderClass * klass,
                                                             const gchar * key);
 
+GST_API
+void gst_device_provider_device_changed                    (GstDeviceProvider * provider,
+                                                            GstDevice *device,
+                                                            GstDevice *changed_device);
+
 /* factory management */
 
 GST_API

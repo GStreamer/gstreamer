@@ -119,6 +119,8 @@ typedef struct _GstMessage GstMessage;
  * @GST_MESSAGE_REDIRECT: Message indicating to request the application to
  *     try to play the given URL(s). Useful if for example a HTTP 302/303
  *     response is received with a non-HTTP URL inside. (Since 1.10)
+ * @GST_MESSAGE_DEVICE_CHANGED: Message indicating a #GstDevice was changed
+ *     a #GstDeviceProvider (Since 1.16)
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.
@@ -171,6 +173,7 @@ typedef enum
   GST_MESSAGE_STREAM_COLLECTION = GST_MESSAGE_EXTENDED + 4,
   GST_MESSAGE_STREAMS_SELECTED  = GST_MESSAGE_EXTENDED + 5,
   GST_MESSAGE_REDIRECT          = GST_MESSAGE_EXTENDED + 6,
+  GST_MESSAGE_DEVICE_CHANGED    = GST_MESSAGE_EXTENDED + 6,
   GST_MESSAGE_ANY               = (gint) (0xffffffff)
 } GstMessageType;
 
@@ -805,6 +808,15 @@ GstMessage *    gst_message_new_device_removed    (GstObject * src, GstDevice * 
 
 GST_API
 void            gst_message_parse_device_removed  (GstMessage * message, GstDevice ** device);
+
+/* DEVICE_CHANGED */
+
+GST_API
+GstMessage *    gst_message_new_device_changed    (GstObject * src, GstDevice * device, GstDevice *changed_device);
+
+GST_API
+void            gst_message_parse_device_changed  (GstMessage * message, GstDevice ** device, GstDevice ** changed_device);
+
 
 /* PROPERTY_NOTIFY */
 

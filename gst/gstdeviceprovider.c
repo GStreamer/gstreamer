@@ -772,3 +772,53 @@ gst_device_provider_unhide_provider (GstDeviceProvider * provider,
     g_free (unhidden_name);
   }
 }
+
+/**
+ * gst_device_provider_device_changed:
+ * @device: (transfer-none): the new version of @changed_device
+ * @changed_device: (transfer-floating): the old version of the device that has been udpated
+ *
+ * This function is used when @changed_device was modified into its new form
+ * @device. This will post a `DEVICE_CHANGED` message on the bus to let
+ * the application know that the device was modified. #GstDevice is immutable
+ * for MT. safety purposes so this is an "atomic" way of letting the application
+ * know when a device was modified.
+ *
+ * Since: 1.16
+ */
+void
+gst_device_provider_device_changed (GstDeviceProvider * provider,
+    GstDevice * device, GstDevice * changed_device)
+{
+  GList *dev_lst;
+  GstMessage *message;
+
+  g_return_if_fail (GST_IS_DEVICE_PROVIDER (provider));
+  g_return_if_fail (GST_IS_DEVICE (device));
+  g_return_if_fail (GST_IS_DEVICE (changed_device));
+
+  GST_OBJECT_LOCK (provider);
+  dev_lst = g_list_find (provider->devices, changed_device);
+  if (!dev_lst) {
+    GST_ERROR_OBJECT (provider,
+        "Trying to update a device we do not have in our own list!");
+
+    GST_OBJECT_UNLOCK (provider);
+    return;
+  }
+
+  if (!gst_object_set_parent (GST_OBJECT (device), GST_OBJECT (provider))) {
+    GST_OBJECT_UNLOCK (provider);
+    GST_WARNING_OBJECT (provider, "Could not parent device %p to provider,"
+        " it already has a parent", device);
+    return;
+  }
+  dev_lst->data = device;
+  GST_OBJECT_UNLOCK (provider);
+
+  message =
+      gst_message_new_device_changed (GST_OBJECT (provider), device,
+      changed_device);
+  gst_bus_post (provider->priv->bus, message);
+  gst_object_unparent (GST_OBJECT (changed_device));
+}
