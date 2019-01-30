@@ -160,7 +160,7 @@ print_structure_field (GQuark field_id, const GValue * value,
 }
 
 static void
-device_added (GstDevice * device)
+print_device (GstDevice * device, gboolean modified)
 {
   gchar *device_class, *str, *name;
   GstCaps *caps;
@@ -175,7 +175,7 @@ device_added (GstDevice * device)
   device_class = gst_device_get_device_class (device);
   props = gst_device_get_properties (device);
 
-  g_print ("\nDevice found:\n\n");
+  g_print ("\nDevice %s:\n\n", modified ? "modified" : "found");
   g_print ("\tname  : %s\n", name);
   g_print ("\tclass : %s\n", device_class);
   for (i = 0; i < size; ++i) {
@@ -226,12 +226,17 @@ bus_msg_handler (GstBus * bus, GstMessage * msg, gpointer user_data)
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_DEVICE_ADDED:
       gst_message_parse_device_added (msg, &device);
-      device_added (device);
+      print_device (device, FALSE);
       gst_object_unref (device);
       break;
     case GST_MESSAGE_DEVICE_REMOVED:
       gst_message_parse_device_removed (msg, &device);
       device_removed (device);
+      gst_object_unref (device);
+      break;
+    case GST_MESSAGE_DEVICE_CHANGED:
+      gst_message_parse_device_changed (msg, &device, NULL);
+      print_device (device, TRUE);
       gst_object_unref (device);
       break;
     default:
@@ -344,7 +349,7 @@ main (int argc, char **argv)
     while (devices != NULL) {
       GstDevice *device = devices->data;
 
-      device_added (device);
+      print_device (device, FALSE);
       gst_object_unref (device);
       devices = g_list_delete_link (devices, devices);
     }
