@@ -313,7 +313,7 @@ class TestTransitions(common.GESSimpleTimelineTest):
             self.assertEqual(len(clips), 4)
 
 
-class TestPriorities(GESSimpleTimelineTest):
+class TestPriorities(common.GESSimpleTimelineTest):
 
     def test_clips_priorities(self):
         clip = self.add_clip(0, 0, 100)
