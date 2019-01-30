@@ -43,41 +43,50 @@ def override(cls):
 
     return cls
 
+real_init = GstPbutils.pb_utils_init
+def init():
+    if not Gst.is_initialized():
+        raise RuntimeError("Gst.init() needs to be called before importing GstPbutils")
 
-@override
-class EncodingVideoProfile(GstPbutils.EncodingVideoProfile):
-    def __init__(self, format, preset=None, restriction=None, presence=0):
-        GstPbutils.EncodingVideoProfile.__init__(self)
-        self.set_format(format)
-        if preset is not None:
-            self.set_preset(preset)
-        if restriction is None:
-            restriction = Gst.Caps('ANY')
-        self.set_restriction(restriction)
-        self.set_presence(presence)
+    real_init()
 
+    @override
+    class EncodingVideoProfile(GstPbutils.EncodingVideoProfile):
+        def __init__(self, format, preset=None, restriction=None, presence=0):
+            GstPbutils.EncodingVideoProfile.__init__(self)
+            self.set_format(format)
+            if preset is not None:
+                self.set_preset(preset)
+            if restriction is None:
+                restriction = Gst.Caps('ANY')
+            self.set_restriction(restriction)
+            self.set_presence(presence)
 
-@override
-class EncodingAudioProfile(GstPbutils.EncodingAudioProfile):
-    def __init__(self, format, preset=None, restriction=None, presence=0):
-        GstPbutils.EncodingAudioProfile.__init__(self)
-        self.set_format(format)
-        if preset is not None:
-            self.set_preset(preset)
-        if restriction is None:
-            restriction = Gst.Caps('ANY')
-        self.set_restriction(restriction)
-        self.set_presence(presence)
+    @override
+    class EncodingAudioProfile(GstPbutils.EncodingAudioProfile):
+        def __init__(self, format, preset=None, restriction=None, presence=0):
+            GstPbutils.EncodingAudioProfile.__init__(self)
+            self.set_format(format)
+            if preset is not None:
+                self.set_preset(preset)
+            if restriction is None:
+                restriction = Gst.Caps('ANY')
+            self.set_restriction(restriction)
+            self.set_presence(presence)
 
+    @override
+    class EncodingContainerProfile(GstPbutils.EncodingContainerProfile):
+        def __init__(self, name, description, format, preset=None):
+            GstPbutils.EncodingContainerProfile.__init__(self)
+            self.set_format(format)
+            if name is not None:
+                self.set_name(name)
+            if description is not None:
+                self.set_description(description)
+            if preset is not None:
+                self.set_preset(preset)
 
-@override
-class EncodingContainerProfile(GstPbutils.EncodingContainerProfile):
-    def __init__(self, name, description, format, preset=None):
-        GstPbutils.EncodingContainerProfile.__init__(self)
-        self.set_format(format)
-        if name is not None:
-            self.set_name(name)
-        if description is not None:
-            self.set_description(description)
-        if preset is not None:
-            self.set_preset(preset)
+GstPbutils.pb_utils_init = init
+GstPbutils.init = init
+if Gst.is_initialized():
+    init()

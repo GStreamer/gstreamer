@@ -626,7 +626,7 @@ def init_pygst():
 
 def deinit_pygst():
     for fname, func in real_functions:
-        if fname not in ["init", "init_check", "deinit"]:
+        if fname not in ["init", "init_check", "deinit", "is_initialized"]:
             setattr(Gst, fname, fake_method)
     for cname_class, methods in class_methods:
         for mname, method in methods:
