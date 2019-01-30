@@ -1266,8 +1266,8 @@ class TestsManager(Loggable):
 
     def set_blacklists(self):
         if self.blacklisted_tests:
-            printc("\nCurrently 'hardcoded' %s blacklisted tests:" %
-                   self.name, Colors.WARNING, title_char='-')
+            self.info("Currently 'hardcoded' %s blacklisted tests:" %
+                      self.name)
 
         if self.options.check_bugs_status:
             if not check_bugs_resolution(self.blacklisted_tests):
@@ -1276,7 +1276,7 @@ class TestsManager(Loggable):
         for name, bug in self.blacklisted_tests:
             self._add_blacklist(name)
             if not self.options.check_bugs_status:
-                print("  + %s \n   --> bug: %s\n" % (name, bug))
+                self.info("  + %s --> bug: %s" % (name, bug))
 
         return True
 
