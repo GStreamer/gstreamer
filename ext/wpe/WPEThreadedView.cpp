@@ -330,14 +330,14 @@ void WPEThreadedView::loadUriUnlocked(const gchar* uri)
 {
     if (webkit.uri)
         g_free(webkit.uri);
+
+    GST_DEBUG("loading %s", uri);
     webkit.uri = g_strdup(uri);
     webkit_web_view_load_uri(webkit.view, webkit.uri);
 }
 
 void WPEThreadedView::loadUri(const gchar* uri)
 {
-    GST_DEBUG("loading %s", uri);
-
     struct UriContext {
         WPEThreadedView& view;
         const gchar* uri;
