@@ -171,13 +171,16 @@ src_pad_probe_cb (GstPad * pad, GstPadProbeInfo * info, ProbeData * data)
 static GstFlowReturn
 gst_test_src_bin_chain (GstPad * pad, GstObject * object, GstBuffer * buffer)
 {
-  GstFlowReturn res;
+  GstFlowReturn res, chain_res;
 
   GstTestSrcBin *self = GST_TEST_SRC_BIN (gst_object_get_parent (object));
 
-  res = gst_flow_combiner_update_pad_flow (self->flow_combiner, pad,
-      gst_proxy_pad_chain_default (pad, GST_OBJECT (self), buffer));
+  chain_res = gst_proxy_pad_chain_default (pad, GST_OBJECT (self), buffer);
+  res = gst_flow_combiner_update_pad_flow (self->flow_combiner, pad, chain_res);
   gst_object_unref (self);
+
+  if (res == GST_FLOW_FLUSHING)
+    return chain_res;
 
   return res;
 }
