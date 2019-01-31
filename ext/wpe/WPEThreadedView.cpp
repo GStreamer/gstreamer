@@ -204,8 +204,11 @@ void WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
 
             view.wpe.exportable = wpe_view_backend_exportable_fdo_egl_create(&s_exportableClient,
                 &view, view.wpe.width, view.wpe.height);
-            auto* viewBackend = webkit_web_view_backend_new(
-                wpe_view_backend_exportable_fdo_get_view_backend(view.wpe.exportable), nullptr, nullptr);
+            auto* wpeViewBackend = wpe_view_backend_exportable_fdo_get_view_backend(view.wpe.exportable);
+            auto* viewBackend = webkit_web_view_backend_new(wpeViewBackend, nullptr, nullptr);
+#if defined(WPE_BACKEND_CHECK_VERSION) && WPE_BACKEND_CHECK_VERSION(1, 1, 0)
+            wpe_view_backend_add_activity_state(wpeViewBackend, wpe_view_activity_state_visible | wpe_view_activity_state_focused | wpe_view_activity_state_in_window);
+#endif
 
             view.webkit.view = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
                 "backend", viewBackend, nullptr));
