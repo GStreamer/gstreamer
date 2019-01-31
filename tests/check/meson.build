@@ -206,7 +206,7 @@ if have_orcc
     orc_test_dep = cc.find_library('orc-test-0.4', required : false)
   endif
   if not orc_test_dep.found()
-    orc_test_dep = dependency('', fallback: ['orc', 'orc_test_dep'])
+    orc_test_dep = dependency('', fallback: ['orc', 'orc_test_dep'], required: false)
   endif
 endif
 
