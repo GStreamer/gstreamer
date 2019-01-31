@@ -156,9 +156,8 @@ if have_orcc
   # FIXME: there should really just be a separate orc-test-0.4.pc file for this
   if orc_dep.type_name() == 'pkgconfig'
     orc_test_dep = cc.find_library('orc-test-0.4', required : false)
-  endif
-  if not orc_test_dep.found()
-    orc_test_dep = dependency('', fallback: ['orc', 'orc_test_dep'])
+  else
+    orc_test_dep = dependency('', fallback: ['orc', 'orc_test_dep'], required: false)
   endif
 endif
 
