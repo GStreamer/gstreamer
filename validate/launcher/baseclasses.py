@@ -1769,6 +1769,8 @@ class _TestsLauncher(Loggable):
             all_tests = self.list_tests()
             self.all_tests = all_tests
         self.total_num_tests = len(self.all_tests)
+        if not sys.stdout.isatty():
+            printc("\nRunning %d tests..." % self.total_num_tests, color=Colors.HEADER)
 
         self.reporter.init_timer()
         alone_tests = []
