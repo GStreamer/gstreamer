@@ -569,11 +569,15 @@ class Test(Loggable):
             message = "%s %s: %s%s" % (self.number, self.classname, self.result,
                                        " (" + self.message + ")" if self.message else "")
             end = "\r"
-            term_width = shutil.get_terminal_size((80, 20))[0]
-            if len(message) > term_width:
-                message = message[0:term_width - 2] + '…'
+            if sys.stdout.isatty():
+                term_width = shutil.get_terminal_size((80, 20))[0]
+                if len(message) > term_width:
+                    message = message[0:term_width - 2] + '…'
+            else:
+                message = None
 
-        printc(message, color=utils.get_color_for_result(self.result), end=end)
+        if message is not None:
+            printc(message, color=utils.get_color_for_result(self.result), end=end)
         self.close_logfile()
 
         if self.options.dump_on_failure:
