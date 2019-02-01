@@ -17,14 +17,6 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-
-/* qt uses the same trick as us to typedef GLsync on gles2 but to a different
- * type which confuses the preprocessor.  As it's never actually used by qt
- * public headers, define it to something else to avoid redefinition
- * warnings/errors */
-
-#include <gst/gl/gstglconfig.h>
-#include <gst/gl/gstglfuncs.h>
 #include <QtCore/qglobal.h>
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 9, 0))
 #include <QtGui/qtgui-config.h>
@@ -46,8 +38,15 @@
 #endif
 
 #if defined(QT_OPENGL_ES_2)
-#define GLsync gst_qt_GLsync
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLFunctions>
-#undef GLsync
 #endif /* defined(QT_OPENGL_ES_2) */
+
+/* qt uses the same trick as us to typedef GLsync on GLES2 but to a different
+ * type which confuses the preprocessor. Instead of trying to reconcile the
+ * two, we instead use the GLsync definition from Qt from above, and ensure
+ * that we don't typedef GLsync in gstglfuncs.h */
+#include <gst/gl/gstglconfig.h>
+#undef GST_GL_HAVE_GLSYNC
+#define GST_GL_HAVE_GLSYNC 1
+#include <gst/gl/gstglfuncs.h>
