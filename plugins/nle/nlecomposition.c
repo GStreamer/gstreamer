@@ -2899,14 +2899,16 @@ _activate_new_stack (NleComposition * comp)
   GST_DEBUG_OBJECT (comp, "New stack activated!");
 
 resync_state:
-  if (!gst_element_set_locked_state (priv->current_bin, FALSE)) {
-    GST_ERROR_OBJECT (comp, "set locked state failure");
-    return FALSE;
-  }
+  gst_element_set_locked_state (priv->current_bin, FALSE);
 
   GST_DEBUG ("going back to parent state");
   if (!gst_element_sync_state_with_parent (priv->current_bin)) {
-    GST_ERROR_OBJECT (comp, "Cannot sync current stack's state");
+    gst_element_set_locked_state (priv->current_bin, TRUE);
+    gst_element_set_state (priv->current_bin, GST_STATE_NULL);
+
+    GST_ELEMENT_ERROR (comp, CORE, STATE_CHANGE, (NULL),
+        ("Could not sync %" GST_PTR_FORMAT " state with parent",
+            priv->current_bin));
     return FALSE;
   }
 
