@@ -342,25 +342,6 @@ gst_validate_action_unref (GstValidateAction * action)
   gst_mini_object_unref (GST_MINI_OBJECT (action));
 }
 
-static const gchar *
-gst_validate_action_get_string (GstValidateAction * action,
-    const gchar * fieldname)
-{
-  GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
-  const gchar *res, *val;
-
-  res = val = gst_structure_get_string (action->structure, fieldname);
-  if (val && scenario) {
-    val = gst_structure_get_string (scenario->priv->vars, val);
-
-    if (val)
-      res = val;
-  }
-  g_clear_object (&scenario);
-
-  return res;
-}
-
 static GstValidateAction *
 gst_validate_action_new (GstValidateScenario * scenario,
     GstValidateActionType * action_type)
@@ -2560,6 +2541,34 @@ _compare_actions (GstValidateAction * a, GstValidateAction * b)
 }
 
 static gboolean
+_structure_set_variables (GQuark field_id, GValue * value,
+    GstValidateAction * action)
+{
+  GstValidateScenario *scenario;
+  const gchar *var_value;
+
+  if (!G_VALUE_HOLDS_STRING (value))
+    return TRUE;
+
+  scenario = gst_validate_action_get_scenario (action);
+  if (!scenario)
+    return TRUE;
+
+  var_value =
+      gst_structure_get_string (scenario->priv->vars,
+      g_value_get_string (value));
+  if (var_value) {
+    GST_INFO_OBJECT (action, "Setting variable %s to %s",
+        g_value_get_string (value), var_value);
+    g_value_set_string (value, var_value);
+  }
+
+  g_clear_object (&scenario);
+
+  return TRUE;
+}
+
+static gboolean
 gst_validate_action_default_prepare_func (GstValidateAction * action)
 {
   gulong i;
@@ -2584,6 +2593,8 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
         time, NULL);
   }
   gst_object_unref (scenario);
+  gst_structure_filter_and_map_in_place (action->structure,
+      (GstStructureFilterMapFunc) _structure_set_variables, action);
 
   return TRUE;
 }
@@ -3645,7 +3656,7 @@ _check_last_sample_checksum (GstValidateScenario * scenario,
   const gchar *target_sum;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
 
-  target_sum = gst_validate_action_get_string (action, "checksum");
+  target_sum = gst_structure_get_string (action->structure, "checksum");
   g_object_get (sink, "last-sample", &sample, NULL);
   if (sample == NULL) {
     GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
