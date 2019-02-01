@@ -363,7 +363,7 @@ mkdir -p $basedir/tools
 cat >$basedir/tools/Makefile.am <<EOF
 bin_PROGRAMS = ${gst__replace}
 
-# sources used to compile this plug-in
+# sources used to compile this program
 ${gst_replace}_SOURCES = ${gstreplace}.c
 
 # compiler and linker flags used to compile the program, set in configure.ac
