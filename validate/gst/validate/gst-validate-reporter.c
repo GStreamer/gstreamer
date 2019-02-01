@@ -286,7 +286,9 @@ gst_validate_reporter_g_log_func (const gchar * log_domain,
     GLogLevelFlags log_level, const gchar * message,
     GstValidateReporter * reporter)
 {
-  if (log_level & G_LOG_LEVEL_CRITICAL)
+  if (log_level & G_LOG_LEVEL_ERROR)
+    gst_validate_default_log_hanlder (log_domain, log_level, message, reporter);
+  else if (log_level & G_LOG_LEVEL_CRITICAL)
     GST_VALIDATE_REPORT (reporter, G_LOG_CRITICAL, "%s", message);
   else if (log_level & G_LOG_LEVEL_WARNING)
     GST_VALIDATE_REPORT (reporter, G_LOG_WARNING, "%s", message);
