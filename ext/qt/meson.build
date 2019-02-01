@@ -18,7 +18,7 @@ moc_headers = [
 if have_cxx and build_gstgl
   qt5_mod = import('qt5')
   qt5qml_dep = dependency('qt5', modules : ['Core', 'Gui', 'Qml', 'Quick'],
-                          required: get_option('qt5'))
+                          required: get_option('qt5'), static: host_machine.system() == 'ios')
 
   # FIXME Add a way to get that information out of the qt5 module
   moc = find_program('moc-qt5', 'moc', required : get_option('qt5'))
@@ -121,13 +121,19 @@ if have_cxx and build_gstgl
       endif
     endif
 
-    # FIXME: iOS definitions
     if gst_gl_have_window_cocoa and gst_gl_have_platform_cgl
       # FIXME: automagic
       qt5macextras = dependency('qt5', modules : ['MacExtras'], required : false)
       if qt5macextras.found()
         qt_defines += ['-DHAVE_QT_MAC']
         optional_deps += qt5macextras
+        have_qt_windowing = true
+      endif
+    endif
+
+    if gst_gl_have_window_eagl and gst_gl_have_platform_eagl
+      if host_machine.system() == 'ios'
+        qt_defines += ['-DHAVE_QT_IOS']
         have_qt_windowing = true
       endif
     endif
