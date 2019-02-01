@@ -2760,9 +2760,15 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         scenario->priv->interlaced_actions = NULL;
         scenario->priv->on_addition_actions = NULL;
 
-        if (nb_actions > 0)
+
+        if (nb_actions > 0) {
+          GstClockTime position = GST_CLOCK_TIME_NONE;
+
+          _get_position (scenario, NULL, &position);
           GST_VALIDATE_REPORT (scenario, SCENARIO_NOT_ENDED,
-              "%i actions were not executed: %s", nb_actions, actions);
+              "%i actions were not executed: %s (position: %" GST_TIME_FORMAT
+              ")", nb_actions, actions, GST_TIME_ARGS (position));
+        }
         g_free (actions);
       }
       SCENARIO_UNLOCK (scenario);
