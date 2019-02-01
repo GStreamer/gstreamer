@@ -162,7 +162,7 @@ struct _GstValidateScenarioPrivate
    * GST_MESSAGE_STREAMS_SELECTED to be completed. */
   GstValidateAction *pending_switch_track;
 
-  GstStructure *constants;
+  GstStructure *vars;
 
   GWeakRef ref_pipeline;
 };
@@ -351,7 +351,7 @@ gst_validate_action_get_string (GstValidateAction * action,
 
   res = val = gst_structure_get_string (action->structure, fieldname);
   if (val && scenario) {
-    val = gst_structure_get_string (scenario->priv->constants, val);
+    val = gst_structure_get_string (scenario->priv->vars, val);
 
     if (val)
       res = val;
@@ -732,10 +732,11 @@ _set_const_func (GQuark field_id, const GValue * value, GstStructure * consts)
 }
 
 static GstValidateExecuteActionReturn
-_execute_add_consts (GstValidateScenario * scenario, GstValidateAction * action)
+_execute_define_vars (GstValidateScenario * scenario,
+    GstValidateAction * action)
 {
   gst_structure_foreach (action->structure,
-      (GstStructureForeachFunc) _set_const_func, scenario->priv->constants);
+      (GstStructureForeachFunc) _set_const_func, scenario->priv->vars);
 
   return GST_VALIDATE_EXECUTE_ACTION_OK;
 }
@@ -3202,7 +3203,7 @@ gst_validate_scenario_init (GstValidateScenario * scenario)
   priv->segment_start = 0;
   priv->segment_stop = GST_CLOCK_TIME_NONE;
   priv->action_execution_interval = 10;
-  priv->constants = gst_structure_new_empty ("constants");
+  priv->vars = gst_structure_new_empty ("vars");
   g_weak_ref_init (&scenario->priv->ref_pipeline, NULL);
 
   g_mutex_init (&priv->lock);
@@ -3244,7 +3245,7 @@ gst_validate_scenario_finalize (GObject * object)
   g_list_free_full (priv->needs_parsing,
       (GDestroyNotify) gst_mini_object_unref);
   g_free (priv->pipeline_name);
-  gst_structure_free (priv->constants);
+  gst_structure_free (priv->vars);
   g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->finalize (object);
@@ -4444,15 +4445,15 @@ init_scenarios (void)
       "Changes the state of the pipeline to any GstState",
       GST_VALIDATE_ACTION_TYPE_ASYNC & GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK);
 
-  REGISTER_ACTION_TYPE ("define-consts", _execute_add_consts,
+  REGISTER_ACTION_TYPE ("set-vars", _execute_define_vars,
       ((GstValidateActionParameter []) {
         {NULL}
       }),
-      "Define constants to be used in other actions.\n"
-      "For example you can define constants for buffer checksum"
+      "Define vars to be used in other actions.\n"
+      "For example you can define vars for buffer checksum"
       " to be used in the \"check-last-sample\" action type as follow:\n\n"
       "```\n"
-      " define-consts, frame1=SomeRandomHash1,frame2=Anotherhash...\n"
+      " set-vars, frame1=SomeRandomHash1,frame2=Anotherhash...\n"
       " check-last-sample, checksum=frame1\n"
       "```\n",
       GST_VALIDATE_ACTION_TYPE_NONE);
