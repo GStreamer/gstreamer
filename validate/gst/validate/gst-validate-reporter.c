@@ -257,14 +257,28 @@ done:
 }
 
 static void
+gst_validate_default_log_hanlder (const gchar * log_domain,
+    GLogLevelFlags log_level, const gchar * message, gpointer user_data)
+{
+  gchar *trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
+
+  if (trace) {
+    g_print ("\nStack trace:\n%s\n", trace);
+    g_free (trace);
+  }
+
+  g_log_default_handler (log_domain, log_level, message, user_data);
+}
+
+static void
 gst_validate_reporter_destroyed (gpointer udata, GObject * freed_reporter)
 {
   g_log_set_handler ("GStreamer",
-      G_LOG_LEVEL_MASK, (GLogFunc) g_log_default_handler, NULL);
+      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_default_log_hanlder, NULL);
   g_log_set_handler ("GLib",
-      G_LOG_LEVEL_MASK, (GLogFunc) g_log_default_handler, NULL);
+      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_default_log_hanlder, NULL);
   g_log_set_handler ("GLib-GObject",
-      G_LOG_LEVEL_MASK, (GLogFunc) g_log_default_handler, NULL);
+      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_default_log_hanlder, NULL);
 }
 
 static void
