@@ -8,12 +8,12 @@ while [ "$1" ] ; do
   case $1 in
     --help)
       cat <<-EOF
-Usage: element-maker [OPTIONS] _NAME BASE_CLASS
+Usage: $(basename "$0") [OPTIONS] APP_NAME
 Create a GStreamer application from a template.
 Options:
   --help             Print this information
   --prefix PREFIX    Use PREFIX instead of "gst"
-Example: 'gst-app-maker my_app' will create the file gstmyapp.c.
+Example: '$(basename "$0") my_app' will create the file gstmyapp.c.
 EOF
       exit 0
       ;;
@@ -36,7 +36,7 @@ EOF
 done
 
 if [ "$name" = "" ] ; then
-  echo "Usage: element-maker [OPTIONS] ELEMENT_NAME BASE_CLASS"
+  echo "Usage: $(basename "$0") [OPTIONS] APP_NAME"
   exit 1
 fi
 
