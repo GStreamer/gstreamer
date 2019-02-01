@@ -2988,10 +2988,8 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   if (relative_scenario) {
     gchar *relative_dir = g_path_get_dirname (relative_scenario);
     gchar *tmp_scenarios_path =
-        g_strdup_printf ("%s%c%s", relative_dir, G_SEARCHPATH_SEPARATOR,
-        scenarios_path);
-
-    GST_ERROR ("Checking %s", relative_dir);
+        g_strdup_printf ("%s%c%s", scenarios_path, G_SEARCHPATH_SEPARATOR,
+        relative_dir);
 
     g_free (scenarios_path);
     scenarios_path = tmp_scenarios_path;
@@ -3025,13 +3023,6 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
       lfilename =
           g_strdup_printf ("%s" GST_VALIDATE_SCENARIO_SUFFIX, scenarios[i]);
 
-    tldir = g_build_filename ("data", "scenarios", lfilename, NULL);
-
-    if ((ret = _load_scenario_file (scenario, tldir, &is_config)))
-      goto check_scenario;
-
-    g_free (tldir);
-
     if (env_scenariodir) {
       guint i;
 
@@ -3042,6 +3033,13 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
         g_free (tldir);
       }
     }
+
+    tldir = g_build_filename ("data", "scenarios", lfilename, NULL);
+
+    if ((ret = _load_scenario_file (scenario, tldir, &is_config)))
+      goto check_scenario;
+
+    g_free (tldir);
 
     /* Try from local profiles */
     tldir =
