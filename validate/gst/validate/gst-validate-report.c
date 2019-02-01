@@ -215,36 +215,41 @@ gst_validate_report_load_issues (void)
   _gst_validate_issues = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) gst_validate_issue_unref);
 
+  /* **
+   * WARNING: The `summary` is used to define known issues in the testsuites.
+   * Avoid changing them or **make sure** to at least update the validate test
+   * suite if you do so.
+   * **/
   REGISTER_VALIDATE_ISSUE (WARNING, BUFFER_BEFORE_SEGMENT,
-      _("buffer was received before a segment"),
+      "buffer was received before a segment",
       _("in push mode, a segment event must be received before a buffer"));
   REGISTER_VALIDATE_ISSUE (ISSUE, BUFFER_IS_OUT_OF_SEGMENT,
-      _("buffer is out of the segment range"),
+      "buffer is out of the segment range",
       _("buffer being pushed is out of the current segment's start-stop "
           "range. Meaning it is going to be discarded downstream without "
           "any use"));
   REGISTER_VALIDATE_ISSUE (WARNING, BUFFER_TIMESTAMP_OUT_OF_RECEIVED_RANGE,
-      _("buffer timestamp is out of the received buffer timestamps' range"),
+      "buffer timestamp is out of the received buffer timestamps' range",
       _("a buffer leaving an element should have its timestamps in the range "
           "of the received buffers timestamps. i.e. If an element received "
           "buffers with timestamps from 0s to 10s, it can't push a buffer with "
           "a 11s timestamp, because it doesn't have data for that"));
   REGISTER_VALIDATE_ISSUE (WARNING, WRONG_BUFFER,
-      _("Received buffer does not correspond to wanted one."),
+      "Received buffer does not correspond to wanted one.",
       _("When checking playback of a file against a MediaInfo file"
           " all buffers coming into the decoders might be checked"
           " and should have the exact expected metadatas and hash of the"
           " content"));
   REGISTER_VALIDATE_ISSUE (CRITICAL, WRONG_FLOW_RETURN,
-      _("flow return from pad push doesn't match expected value"),
+      "flow return from pad push doesn't match expected value",
       _("flow return from a 1:1 sink/src pad element is as simple as "
           "returning what downstream returned. For elements that have multiple "
           "src pads, flow returns should be properly combined"));
   REGISTER_VALIDATE_ISSUE (ISSUE, BUFFER_AFTER_EOS,
-      _("buffer was received after EOS"),
+      "buffer was received after EOS",
       _("a pad shouldn't receive any more buffers after it gets EOS"));
   REGISTER_VALIDATE_ISSUE (WARNING, FLOW_ERROR_WITHOUT_ERROR_MESSAGE,
-      _("GST_FLOW_ERROR returned without posting an ERROR on the bus"),
+      "GST_FLOW_ERROR returned without posting an ERROR on the bus",
       _("Element MUST post a GST_MESSAGE_ERROR with GST_ELEMENT_ERROR before"
           " returning GST_FLOW_ERROR"));
   REGISTER_VALIDATE_ISSUE (WARNING, BUFFER_MISSING_DISCONT,
@@ -252,157 +257,153 @@ gst_validate_report_load_issues (void)
       _("Buffers after SEGMENT and FLUSH must have a DISCONT flag"));
 
   REGISTER_VALIDATE_ISSUE (ISSUE, CAPS_IS_MISSING_FIELD,
-      _("caps is missing a required field for its type"),
+      "caps is missing a required field for its type",
       _("some caps types are expected to contain a set of basic fields. "
           "For example, raw video should have 'width', 'height', 'framerate' "
           "and 'pixel-aspect-ratio'"));
   REGISTER_VALIDATE_ISSUE (WARNING, CAPS_FIELD_HAS_BAD_TYPE,
-      _("caps field has an unexpected type"),
+      "caps field has an unexpected type",
       _("some common caps fields should always use the same expected types"));
   REGISTER_VALIDATE_ISSUE (WARNING, CAPS_EXPECTED_FIELD_NOT_FOUND,
-      _("caps expected field wasn't present"),
+      "caps expected field wasn't present",
       _("a field that should be present in the caps wasn't found. "
           "Fields sets on a sink pad caps should be propagated downstream "
           "when it makes sense to do so"));
   REGISTER_VALIDATE_ISSUE (CRITICAL, GET_CAPS_NOT_PROXYING_FIELDS,
-      _("getcaps function isn't proxying downstream fields correctly"),
+      "getcaps function isn't proxying downstream fields correctly",
       _("elements should set downstream caps restrictions on its caps when "
           "replying upstream's getcaps queries to avoid upstream sending data"
           " in an unsupported format"));
   REGISTER_VALIDATE_ISSUE (CRITICAL, CAPS_FIELD_UNEXPECTED_VALUE,
-      _("a field in caps has an unexpected value"),
+      "a field in caps has an unexpected value",
       _("fields set on a sink pad should be propagated downstream via "
           "set caps"));
 
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_NEWSEGMENT_NOT_PUSHED,
-      _("new segment event wasn't propagated downstream"),
+      "new segment event wasn't propagated downstream",
       _("segments received from upstream should be pushed downstream"));
   REGISTER_VALIDATE_ISSUE (WARNING, SERIALIZED_EVENT_WASNT_PUSHED_IN_TIME,
-      _("a serialized event received should be pushed in the same 'time' "
-          "as it was received"),
+      "a serialized event received should be pushed in the same 'time' "
+      "as it was received",
       _("serialized events should be pushed in the same order they are "
           "received and serialized with buffers. If an event is received after"
           " a buffer with timestamp end 'X', it should be pushed right after "
           "buffers with timestamp end 'X'"));
   REGISTER_VALIDATE_ISSUE (ISSUE, EOS_HAS_WRONG_SEQNUM,
-      _("EOS events that are part of the same pipeline 'operation' should "
-          "have the same seqnum"),
+      "EOS events that are part of the same pipeline 'operation' should "
+      "have the same seqnum",
       _("when events/messages are created from another event/message, "
           "they should have their seqnums set to the original event/message "
           "seqnum"));
   REGISTER_VALIDATE_ISSUE (ISSUE, FLUSH_START_HAS_WRONG_SEQNUM,
-      _
-      ("FLUSH_START events that are part of the same pipeline 'operation' should "
-          "have the same seqnum"),
+      "FLUSH_START events that are part of the same pipeline 'operation' should "
+      "have the same seqnum",
       _("when events/messages are created from another event/message, "
           "they should have their seqnums set to the original event/message "
           "seqnum"));
   REGISTER_VALIDATE_ISSUE (ISSUE, FLUSH_STOP_HAS_WRONG_SEQNUM,
-      _
-      ("FLUSH_STOP events that are part of the same pipeline 'operation' should "
-          "have the same seqnum"),
+      "FLUSH_STOP events that are part of the same pipeline 'operation' should "
+      "have the same seqnum",
       _("when events/messages are created from another event/message, "
           "they should have their seqnums set to the original event/message "
           "seqnum"));
   REGISTER_VALIDATE_ISSUE (ISSUE, SEGMENT_HAS_WRONG_SEQNUM,
-      _("SEGMENT events that are part of the same pipeline 'operation' should "
-          "have the same seqnum"),
+      "SEGMENT events that are part of the same pipeline 'operation' should "
+      "have the same seqnum",
       _("when events/messages are created from another event/message, "
           "they should have their seqnums set to the original event/message "
           "seqnum"));
   REGISTER_VALIDATE_ISSUE (CRITICAL, SEGMENT_HAS_WRONG_START,
-      _("A segment doesn't have the proper time value after an ACCURATE seek"),
+      "A segment doesn't have the proper time value after an ACCURATE seek",
       _("If a seek with the ACCURATE flag was accepted, the following segment "
           "should have a time value corresponding exactly to the requested start "
           "seek time"));
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_SERIALIZED_OUT_OF_ORDER,
-      _("a serialized event received should be pushed in the same order "
-          "as it was received"),
+      "a serialized event received should be pushed in the same order "
+      "as it was received",
       _("serialized events should be pushed in the same order they are "
           "received."));
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_NEW_SEGMENT_MISMATCH,
-      _("a new segment event has different value than the received one"),
+      "a new segment event has different value than the received one",
       _("when receiving a new segment, an element should push an equivalent "
           "segment downstream"));
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_FLUSH_START_UNEXPECTED,
-      _("received an unexpected flush start event"), NULL);
+      "received an unexpected flush start event", NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_FLUSH_STOP_UNEXPECTED,
-      _("received an unexpected flush stop event"), NULL);
+      "received an unexpected flush stop event", NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_CAPS_DUPLICATE,
-      _("received the same caps twice"), NULL);
+      "received the same caps twice", NULL);
 
   REGISTER_VALIDATE_ISSUE (CRITICAL, EVENT_SEEK_NOT_HANDLED,
-      _("seek event wasn't handled"), NULL);
+      "seek event wasn't handled", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, EVENT_SEEK_RESULT_POSITION_WRONG,
-      _("position after a seek is wrong"), NULL);
+      "position after a seek is wrong", NULL);
 
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_EOS_WITHOUT_SEGMENT,
-      _("EOS received without segment event before"),
+      "EOS received without segment event before",
       _("A segment event should always be sent before data flow"
           " EOS being some kind of data flow, there is no exception"
           " in that regard"));
 
   REGISTER_VALIDATE_ISSUE (CRITICAL, EVENT_INVALID_SEQNUM,
-      _("Event has an invalid seqnum"),
+      "Event has an invalid seqnum",
       _("An event is using GST_SEQNUM_INVALID. This should never happen"));
 
   REGISTER_VALIDATE_ISSUE (CRITICAL, STATE_CHANGE_FAILURE,
-      _("state change failed"), NULL);
+      "state change failed", NULL);
 
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_SIZE_INCORRECT,
-      _("resulting file size wasn't within the expected values"), NULL);
+      "resulting file size wasn't within the expected values", NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_DURATION_INCORRECT,
-      _("resulting file duration wasn't within the expected values"), NULL);
+      "resulting file duration wasn't within the expected values", NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_SEEKABLE_INCORRECT,
-      _("resulting file wasn't seekable or not seekable as expected"), NULL);
+      "resulting file wasn't seekable or not seekable as expected", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_PROFILE_INCORRECT,
-      _("resulting file stream profiles didn't match expected values"), NULL);
+      "resulting file stream profiles didn't match expected values", NULL);
   REGISTER_VALIDATE_ISSUE (ISSUE, FILE_TAG_DETECTION_INCORRECT,
-      _("detected tags are different than expected ones"), NULL);
+      "detected tags are different than expected ones", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_FRAMES_INCORRECT,
-      _("resulting file frames are not as expected"), NULL);
+      "resulting file frames are not as expected", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, FILE_SEGMENT_INCORRECT,
-      _("resulting segment is not as expected"), NULL);
+      "resulting segment is not as expected", NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_NO_STREAM_INFO,
-      _("the discoverer could not determine the stream info"), NULL);
+      "the discoverer could not determine the stream info", NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, FILE_NO_STREAM_ID,
-      _("the discoverer found a stream that had no stream ID"), NULL);
+      "the discoverer found a stream that had no stream ID", NULL);
 
 
   REGISTER_VALIDATE_ISSUE (CRITICAL, ALLOCATION_FAILURE,
-      _("a memory allocation failed during Validate run"), NULL);
+      "a memory allocation failed during Validate run", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, MISSING_PLUGIN,
-      _("a gstreamer plugin is missing and prevented Validate from running"),
+      "a gstreamer plugin is missing and prevented Validate from running",
       NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, NOT_NEGOTIATED,
-      _("a NOT NEGOTIATED message has been posted on the bus."), NULL);
+      "a NOT NEGOTIATED message has been posted on the bus.", NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, WARNING_ON_BUS,
-      _("We got a WARNING message on the bus"), NULL);
+      "We got a WARNING message on the bus", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, ERROR_ON_BUS,
-      _("We got an ERROR message on the bus"), NULL);
+      "We got an ERROR message on the bus", NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, QUERY_POSITION_SUPERIOR_DURATION,
-      _("Query position reported a value superior than what query duration "
-          "returned"), NULL);
+      "Query position reported a value superior than what query duration "
+      "returned", NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, QUERY_POSITION_OUT_OF_SEGMENT,
-      _("Query position reported a value outside of the current expected "
-          "segment"), NULL);
+      "Query position reported a value outside of the current expected "
+      "segment", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_NOT_ENDED,
-      _("The program stopped before some actions were executed"), NULL);
+      "The program stopped before some actions were executed", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_TIMEOUT,
-      _("The execution of an action timed out"), NULL);
+      "The execution of an action timed out", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_FILE_MALFORMED,
-      _("The scenario file was malformed"), NULL);
+      "The scenario file was malformed", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_EXECUTION_ERROR,
-      _("The execution of an action did not properly happen"), NULL);
+      "The execution of an action did not properly happen", NULL);
   REGISTER_VALIDATE_ISSUE (ISSUE, SCENARIO_ACTION_EXECUTION_ISSUE,
-      _("An issue happened during the execution of a scenario"), NULL);
+      "An issue happened during the execution of a scenario", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, CONFIG_LATENCY_TOO_HIGH,
-      _
-      ("The pipeline latency is higher than the maximum allowed by the scenario"),
+      "The pipeline latency is higher than the maximum allowed by the scenario",
       NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, CONFIG_TOO_MANY_BUFFERS_DROPPED,
-      _
-      ("The number of dropped buffers is higher than the maximum allowed by the scenario"),
+      "The number of dropped buffers is higher than the maximum allowed by the scenario",
       NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, CONFIG_BUFFER_FREQUENCY_TOO_LOW,
       _
@@ -411,8 +412,8 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_WARNING, _("We got a g_log warning"),
       NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, G_LOG_CRITICAL,
-      _("We got a g_log critical issue"), NULL);
-  REGISTER_VALIDATE_ISSUE (ISSUE, G_LOG_ISSUE, _("We got a g_log issue"), NULL);
+      "We got a g_log critical issue", NULL);
+  REGISTER_VALIDATE_ISSUE (ISSUE, G_LOG_ISSUE, "We got a g_log issue", NULL);
 }
 
 gboolean
