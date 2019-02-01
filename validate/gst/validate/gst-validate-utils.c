@@ -495,19 +495,18 @@ gst_validate_utils_parse_expression (const gchar * expr,
 guint
 gst_validate_utils_flags_from_str (GType type, const gchar * str_flags)
 {
-  guint i;
-  gint flags = 0;
-  GFlagsClass *class = g_type_class_ref (type);
+  guint flags;
+  GValue value = G_VALUE_INIT;
+  g_value_init (&value, type);
 
-  for (i = 0; i < class->n_values; i++) {
-    if (class->values[i].value_nick == NULL)
-      continue;
+  if (!gst_value_deserialize (&value, str_flags)) {
+    g_error ("Invalid flags: %s", str_flags);
 
-    if (g_strrstr (str_flags, class->values[i].value_nick)) {
-      flags |= class->values[i].value;
-    }
+    return 0;
   }
-  g_type_class_unref (class);
+
+  flags = g_value_get_flags (&value);
+  g_value_unset (&value);
 
   return flags;
 }
@@ -524,20 +523,19 @@ gboolean
 gst_validate_utils_enum_from_str (GType type, const gchar * str_enum,
     guint * enum_value)
 {
-  guint i;
-  GEnumClass *class = g_type_class_ref (type);
-  gboolean ret = FALSE;
+  GValue value = G_VALUE_INIT;
+  g_value_init (&value, type);
 
-  for (i = 0; i < class->n_values; i++) {
-    if (g_strrstr (str_enum, class->values[i].value_nick)) {
-      *enum_value = class->values[i].value;
-      ret = TRUE;
-    }
+  if (!gst_value_deserialize (&value, str_enum)) {
+    g_error ("Invalid enum: %s", str_enum);
+
+    return FALSE;
   }
 
-  g_type_class_unref (class);
+  *enum_value = g_value_get_enum (&value);
+  g_value_unset (&value);
 
-  return ret;
+  return TRUE;
 }
 
 /* Parse file that contains a list of GStructures */

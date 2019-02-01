@@ -1123,8 +1123,7 @@ execute_switch_track_pb (GstValidateScenario * scenario,
   if (!(type = gst_structure_get_string (action->structure, "type")))
     type = "audio";
 
-  tflag =
-      gst_validate_utils_flags_from_str (g_type_from_name ("GstPlayFlags"),
+  tflag = gst_validate_utils_flags_from_str (g_type_from_name ("GstPlayFlags"),
       type);
   current_txt = g_strdup_printf ("current-%s", type);
 
@@ -2896,7 +2895,6 @@ _load_scenario_file (GstValidateScenario * scenario,
     GstValidateActionType *action_type;
     const gchar *type;
     GstStructure *structure = (GstStructure *) tmp->data;
-
 
     type = gst_structure_get_name (structure);
     if (!g_strcmp0 (type, "description")) {
