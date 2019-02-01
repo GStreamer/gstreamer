@@ -2771,7 +2771,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
       stop_action_type = _find_action_type ("stop");
       stop_action = gst_validate_action_new (scenario, stop_action_type);
-      s = gst_structure_from_string ("stop;", NULL);
+      s = gst_structure_from_string ("stop, generated-after-eos=true;", NULL);
       _fill_action (scenario, stop_action, s, FALSE);
       gst_structure_free (s);
       gst_validate_execute_action (stop_action_type, stop_action);
