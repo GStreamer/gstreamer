@@ -123,7 +123,6 @@ struct _GstValidateScenarioPrivate
 
   /*  List of action that need parsing when reaching ASYNC_DONE
    *  most probably to be able to query duration */
-  GList *needs_parsing;
 
   GstEvent *last_seek;
   GstSeekFlags seek_flags;
@@ -240,6 +239,7 @@ struct _GstValidateActionPrivate
   GstClockTime timeout;
 
   GWeakRef scenario;
+  gboolean needs_playback_parsing;
 };
 
 static JsonNode *
@@ -1683,6 +1683,50 @@ no:
   return FALSE;
 }
 
+static gboolean
+_set_action_playback_time (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  if (!gst_validate_action_get_clocktime (scenario, action,
+          "playback-time", &action->playback_time)) {
+    gchar *str = gst_structure_to_string (action->structure);
+
+    g_error ("Could not parse playback-time on structure: %s", str);
+    g_free (str);
+
+    return FALSE;
+  }
+
+  gst_structure_set (action->structure, "playback-time", GST_TYPE_CLOCK_TIME,
+      action->playback_time, NULL);
+
+  return TRUE;
+}
+
+static gboolean
+gst_validate_parse_next_action_playback_time (GstValidateScenario * self)
+{
+  GstValidateAction *action;
+  GstValidateScenarioPrivate *priv = self->priv;
+
+  if (!priv->actions) {
+    return TRUE;
+  }
+
+  action = (GstValidateAction *) priv->actions->data;
+  if (!action->priv->needs_playback_parsing)
+    return TRUE;
+
+  if (!_set_action_playback_time (self, action)) {
+    GST_ERROR_OBJECT (self, "Could not set playback_time!");
+
+    return FALSE;
+  }
+  action->priv->needs_playback_parsing = FALSE;
+
+  return TRUE;
+}
+
 GstValidateExecuteActionReturn
 gst_validate_execute_action (GstValidateActionType * action_type,
     GstValidateAction * action)
@@ -1728,26 +1772,6 @@ gst_validate_execute_action (GstValidateActionType * action_type,
   return res;
 }
 
-static gboolean
-_set_action_playback_time (GstValidateScenario * scenario,
-    GstValidateAction * action)
-{
-  if (!gst_validate_action_get_clocktime (scenario, action,
-          "playback-time", &action->playback_time)) {
-    gchar *str = gst_structure_to_string (action->structure);
-
-    g_error ("Could not parse playback-time on structure: %s", str);
-    g_free (str);
-
-    return FALSE;
-  }
-
-  gst_structure_set (action->structure, "playback-time", GST_TYPE_CLOCK_TIME,
-      action->playback_time, NULL);
-
-  return TRUE;
-}
-
 /* scenario can be NULL **only** if the action is a CONFIG action and
  * add_to_lists is FALSE */
 static GstValidateExecuteActionReturn
@@ -1760,7 +1784,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   const gchar *str_playback_time = NULL;
   GstValidateScenarioPrivate *priv = scenario ? scenario->priv : NULL;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
-  gboolean optional;
+  gboolean optional, needs_parsing;
 
   action->type = gst_structure_get_name (structure);
   action_type = _find_action_type (action->type);
@@ -1780,11 +1804,10 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
       (str_playback_time =
           gst_structure_get_string (structure, "playback_time"))) {
 
-    if (add_to_lists && priv)
-      priv->needs_parsing = g_list_append (priv->needs_parsing, action);
-    else if (!_set_action_playback_time (scenario, action))
-      return GST_VALIDATE_EXECUTE_ACTION_ERROR;
-
+    if (add_to_lists && priv) {
+      action->priv->needs_playback_parsing = TRUE;
+      needs_parsing = TRUE;
+    }
   } else
     GST_INFO_OBJECT (scenario,
         "No playback time for action %" GST_PTR_FORMAT, structure);
@@ -1825,13 +1848,13 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   if (!add_to_lists)
     return res;
 
-  if (str_playback_time == NULL && priv != NULL) {
+  if (priv != NULL) {
     GstValidateActionType *type = _find_action_type (action->type);
     gboolean can_execute_on_addition =
         type->flags & GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION
         && !GST_CLOCK_TIME_IS_VALID (action->playback_time);
 
-    if (priv->needs_parsing)
+    if (needs_parsing)
       can_execute_on_addition = FALSE;
 
     if (can_execute_on_addition) {
@@ -1971,6 +1994,13 @@ execute_next_action (GstValidateScenario * scenario)
       tmp = priv->actions;
       priv->actions = g_list_remove_link (priv->actions, tmp);
 
+      if (!gst_validate_parse_next_action_playback_time (scenario)) {
+        g_error ("Could not determine next action playback time!");
+
+        return G_SOURCE_REMOVE;
+      }
+
+
       GST_INFO_OBJECT (scenario, "Action %" GST_PTR_FORMAT " is DONE now"
           " executing next", act->structure);
 
@@ -2055,6 +2085,12 @@ execute_next_action (GstValidateScenario * scenario)
   if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
     tmp = priv->actions;
     priv->actions = g_list_remove_link (priv->actions, tmp);
+
+    if (!gst_validate_parse_next_action_playback_time (scenario)) {
+      g_error ("Could not determine next action playback time!");
+
+      return G_SOURCE_REMOVE;
+    }
 
     if (act->priv->state != GST_VALIDATE_EXECUTE_ACTION_INTERLACED)
       gst_validate_action_unref (act);
@@ -2799,17 +2835,6 @@ gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
   }
 }
 
-static gint
-_compare_actions (GstValidateAction * a, GstValidateAction * b)
-{
-  if (a->action_number < b->action_number)
-    return -1;
-  else if (a->action_number == b->action_number)
-    return 0;
-
-  return 1;
-}
-
 static gboolean
 _structure_set_variables (GQuark field_id, GValue * value,
     GstValidateAction * action)
@@ -2977,22 +3002,8 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
       }
 
-      if (priv->needs_parsing) {
-        GList *tmp;
-
-        for (tmp = priv->needs_parsing; tmp; tmp = tmp->next) {
-          GstValidateAction *action = (GstValidateAction *) tmp->data;
-
-          if (!_set_action_playback_time (scenario, action))
-            return FALSE;
-
-          priv->actions = g_list_insert_sorted (priv->actions, action,
-              (GCompareFunc) _compare_actions);
-        }
-
-        g_list_free (priv->needs_parsing);
-        priv->needs_parsing = NULL;
-      }
+      if (!gst_validate_parse_next_action_playback_time (scenario))
+        return FALSE;
       _add_execute_actions_gsource (scenario);
       break;
     case GST_MESSAGE_STATE_CHANGED:
@@ -3608,8 +3619,6 @@ gst_validate_scenario_finalize (GObject * object)
   g_list_free_full (priv->interlaced_actions,
       (GDestroyNotify) gst_mini_object_unref);
   g_list_free_full (priv->on_addition_actions,
-      (GDestroyNotify) gst_mini_object_unref);
-  g_list_free_full (priv->needs_parsing,
       (GDestroyNotify) gst_mini_object_unref);
   g_free (priv->pipeline_name);
   gst_structure_free (priv->vars);
