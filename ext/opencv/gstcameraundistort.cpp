@@ -276,11 +276,9 @@ gst_camera_undistort_get_property (GObject * object, guint prop_id,
 
 gboolean
 gst_camera_undistort_set_info (GstOpencvVideoFilter * cvfilter,
-    gint in_width, gint in_height, __attribute__((unused))
-    int in_cv_type,
-    __attribute__((unused)) gint out_width,
-    __attribute__((unused)) gint out_height, __attribute__((unused))
-    int out_cv_type)
+    gint in_width, gint in_height, G_GNUC_UNUSED int in_cv_type,
+    G_GNUC_UNUSED gint out_width, G_GNUC_UNUSED gint out_height,
+    G_GNUC_UNUSED int out_cv_type)
 {
   GstCameraUndistort *undist = GST_CAMERA_UNDISTORT (cvfilter);
 
