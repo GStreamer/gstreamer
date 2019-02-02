@@ -441,6 +441,8 @@ static gboolean
 _set_variable_func (const gchar * name, double *value, gpointer user_data)
 {
   gboolean res;
+  const gchar *value_str;
+  gchar *tmp;
   GstValidateScenario *scenario = GST_VALIDATE_SCENARIO (user_data);
   GstElement *pipeline = gst_validate_scenario_get_pipeline (scenario);
 
@@ -450,7 +452,7 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
     return FALSE;
   }
 
-  if (!g_strcmp0 (name, "duration")) {
+  if (!g_strcmp0 (name, "$duration") || !g_strcmp0 (name, "duration")) {
     gint64 duration;
 
     if (!(res =
@@ -478,7 +480,7 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
       *value = ((double) duration / GST_SECOND);
 
     goto done;
-  } else if (!g_strcmp0 (name, "position")) {
+  } else if (!g_strcmp0 (name, "$position") || !g_strcmp0 (name, "position")) {
     gint64 position;
 
     if (!gst_element_query_position (pipeline, GST_FORMAT_TIME, &position)) {
@@ -494,13 +496,34 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
     goto done;
   }
 
-fail:
-  gst_object_unref (pipeline);
-  return FALSE;
+  if (name[0] != '$') {
+    g_error ("Variable name %s is invalid as it doesn't start with $", name);
+
+    goto fail;
+  }
+
+  if (gst_structure_get_double (scenario->priv->vars, &name[1], value))
+    goto done;
+
+  value_str = gst_structure_get_string (scenario->priv->vars, &name[1]);
+  *value = g_strtod (value_str, &tmp);
+  if (tmp[0] != '\0') {
+    gchar *vars = gst_structure_to_string (scenario->priv->vars);
+    g_error ("Variable name: %s=%s is not a double (%s)", name, value_str,
+        vars);
+    g_free (vars);
+
+    goto fail;
+  }
+
 
 done:
   gst_object_unref (pipeline);
   return TRUE;
+
+fail:
+  gst_object_unref (pipeline);
+  return FALSE;
 }
 
 /* Check that @list doesn't contain any non-optional actions */
@@ -1757,8 +1780,8 @@ gst_validate_execute_action (GstValidateActionType * action_type,
   gst_object_unref (scenario);
 
   if (!gst_structure_has_field (action->structure, "sub-action")) {
-    gst_structure_free (action->structure);
 
+    gst_structure_free (action->structure);
     action->priv->printed = FALSE;
     action->structure = gst_structure_copy (action->priv->main_structure);
 

@@ -361,8 +361,8 @@ _read_builtin (MathParser * parser)
   gint pos = 0;
 
   c = _peek (parser);
-  if (isalpha (c) || c == '_') {
-    while (isalpha (c) || isdigit (c) || c == '_') {
+  if (isalpha (c) || c == '_' || c == '$') {
+    while (isalpha (c) || isdigit (c) || c == '_' || c == '$') {
       token[pos++] = _next (parser);
       c = _peek (parser);
     }
@@ -389,7 +389,10 @@ _read_builtin (MathParser * parser)
           && parser->variable_func (token, &v1, parser->user_data)) {
         v0 = v1;
       } else {
-        _error (parser, "Could not look up value for variable %s!");
+        gchar *err =
+            g_strdup_printf ("Could not look up value for variable %s!", token);
+        _error (parser, err);
+        g_free (err);
       }
     }
   } else {
