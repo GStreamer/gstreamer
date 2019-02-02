@@ -274,6 +274,7 @@ struct _GstRtpJitterBufferPrivate
   gboolean ts_discont;
   gboolean active;
   guint64 out_offset;
+  guint32 segment_seqnum;
 
   gboolean timer_running;
   GThread *timer_thread;
@@ -1019,6 +1020,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->last_pts = -1;
   priv->last_rtptime = -1;
   priv->avg_jitter = 0;
+  priv->segment_seqnum = GST_SEQNUM_INVALID;
   priv->timers = g_array_new (FALSE, TRUE, sizeof (TimerData));
   priv->rtx_stats_timers = timer_queue_new ();
   priv->jbuf = rtp_jitter_buffer_new ();
@@ -1610,6 +1612,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->last_rtptime = -1;
   priv->last_in_pts = 0;
   priv->equidistant = 0;
+  priv->segment_seqnum = GST_SEQNUM_INVALID;
   GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
   rtp_jitter_buffer_flush (priv->jbuf, (GFunc) free_item, NULL);
   rtp_jitter_buffer_disable_buffering (priv->jbuf, FALSE);
@@ -1801,6 +1804,8 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
       GstSegment segment;
       gst_event_copy_segment (event, &segment);
 
+      priv->segment_seqnum = gst_event_get_seqnum (event);
+
       /* we need time for now */
       if (segment.format != GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (jitterbuffer, "ignoring non-TIME newsegment");
@@ -1808,6 +1813,7 @@ queue_event (GstRtpJitterBuffer * jitterbuffer, GstEvent * event)
 
         gst_segment_init (&segment, GST_FORMAT_TIME);
         event = gst_event_new_segment (&segment);
+        gst_event_set_seqnum (event, priv->segment_seqnum);
       }
 
       priv->segment = segment;
@@ -3940,8 +3946,13 @@ do_eos_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   GST_INFO_OBJECT (jitterbuffer, "got the NPT timeout");
   remove_timer (jitterbuffer, timer);
   if (!priv->eos) {
+    GstEvent *event;
+
     /* there was no EOS in the buffer, put one in there now */
-    queue_event (jitterbuffer, gst_event_new_eos ());
+    event = gst_event_new_eos ();
+    if (priv->segment_seqnum != GST_SEQNUM_INVALID)
+      gst_event_set_seqnum (event, priv->segment_seqnum);
+    queue_event (jitterbuffer, event);
   }
   JBUF_SIGNAL_EVENT (priv);
 
@@ -4208,6 +4219,8 @@ pause:
     gst_pad_pause_task (priv->srcpad);
     if (result == GST_FLOW_EOS) {
       event = gst_event_new_eos ();
+      if (priv->segment_seqnum != GST_SEQNUM_INVALID)
+        gst_event_set_seqnum (event, priv->segment_seqnum);
       gst_pad_push_event (priv->srcpad, event);
     }
     return;
