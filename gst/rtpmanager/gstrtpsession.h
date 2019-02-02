@@ -53,6 +53,8 @@ struct _GstRtpSession {
   GstPad        *send_rtp_src;
   GstPad        *send_rtcp_src;
 
+  guint32        recv_rtcp_segment_seqnum;
+
   GstRtpSessionPrivate *priv;
 };
 
