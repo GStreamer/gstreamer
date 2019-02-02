@@ -611,9 +611,12 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
       GST_ERROR_OBJECT (thiz, "failed to do sync operation");
       return GST_FLOW_ERROR;
     }
+  }
+
+  if (G_LIKELY (task->sync_point || (task->surface && task->decode_only))) {
+    gboolean decode_only = task->decode_only;
 
     frame = gst_msdkdec_get_oldest_frame (decoder);
-    task->sync_point = NULL;
 
     l = g_list_find_custom (thiz->decoded_msdk_surfaces, task->surface,
         _find_msdk_surface);
@@ -634,11 +637,16 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
     }
 
     free_surface (thiz, surface);
+    task->sync_point = NULL;
+    task->surface = NULL;
+    task->decode_only = FALSE;
 
     if (!frame)
       return GST_FLOW_FLUSHING;
     gst_video_codec_frame_unref (frame);
 
+    if (decode_only)
+      GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
     flow = gst_video_decoder_finish_frame (decoder, frame);
     return flow;
   }
@@ -1017,9 +1025,11 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
         break;
       }
     } else if (status == MFX_ERR_MORE_DATA) {
+      task->decode_only = TRUE;
+      thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
       if (surface->surface->Data.Locked > 0)
         surface = NULL;
-      flow = GST_FLOW_OK;
+      flow = GST_VIDEO_DECODER_FLOW_NEED_DATA;
       break;
     } else if (status == MFX_ERR_MORE_SURFACE) {
       surface = NULL;

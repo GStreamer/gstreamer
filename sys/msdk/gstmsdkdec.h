@@ -113,6 +113,8 @@ struct _MsdkDecTask
 {
   mfxFrameSurface1 *surface;
   mfxSyncPoint sync_point;
+
+  gboolean decode_only;
 };
 
 GType gst_msdkdec_get_type (void);
