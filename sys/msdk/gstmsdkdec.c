@@ -878,6 +878,13 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     }
   }
 
+  /* Current frame-codec could be pushed and released before this
+   * function ends -- because msdkdec pushes the oldest frame,
+   * according its PTS, and it could be this very same frame-codec
+   * among others pending frame-codecs.
+   *
+   * Instead of copying the input data into the mfxBitstream, let's
+   * keep an extra reference to frame-codec's input buffer */
   input_buffer = gst_buffer_ref (frame->input_buffer);
   if (!gst_buffer_map (input_buffer, &map_info, GST_MAP_READ)) {
     gst_buffer_unref (input_buffer);
