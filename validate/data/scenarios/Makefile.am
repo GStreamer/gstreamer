@@ -24,6 +24,8 @@ scenarios_DATA = simple_seeks.scenario \
                  change_state_intensive.scenario\
                  play_15s.scenario \
                  switch_audio_track.scenario \
-                 trick_mode_seeks.scenario
+                 trick_mode_seeks.scenario \
+                 includes/default-seek-flags.scenario \
+                 rtsp_overrides/includes/default-seek-flags.scenario
 
 EXTRA_DIST = ${scenarios_DATA}

@@ -709,6 +709,9 @@ class GstValidateRTSPTest(GstValidateBaseRTSPTest, GstValidateLaunchTest):
 
     def get_subproc_env(self):
         env = super().get_subproc_env()
+        path = env.get('GST_VALIDATE_SCENARIOS_PATH', '')
+        override_dir = get_data_file(os.path.join('data', 'scenarios'), 'rtsp_overrides')
+        env['GST_VALIDATE_SCENARIOS_PATH'] = '%s:%s' % (override_dir, path)
         if self.rtsp2:
             env['GST_VALIDATE_SCENARIO'] = env.get('GST_VALIDATE_SCENARIO', '') + ':' + 'force_rtsp2'
 

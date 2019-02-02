@@ -23,8 +23,16 @@ _scenarios = ['simple_seeks.scenario',
               'play_15s.scenario',
               'change_state_intensive.scenario',
               'switch_audio_track.scenario',
-              'force_rtsp2.scenario', ]
+              'force_rtsp2.scenario',]
 
 install_data(sources: _scenarios,
+             install_dir: get_option('datadir') + '/gstreamer-' +
+             apiversion + '/validate/scenarios')
+
+install_subdir('includes',
+             install_dir: get_option('datadir') + '/gstreamer-' +
+             apiversion + '/validate/scenarios')
+
+install_subdir('rtsp_overrides',
              install_dir: get_option('datadir') + '/gstreamer-' +
              apiversion + '/validate/scenarios')
