@@ -167,6 +167,8 @@ struct _GstRTSPStream {
   gchar *stream_id;
 
   GstStructure     *rtx_pt_map;
+
+  guint32       segment_seqnum[2];
 };
 
 /**

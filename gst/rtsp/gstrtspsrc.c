@@ -2578,7 +2578,8 @@ gst_rtspsrc_set_state (GstRTSPSrc * src, GstState state)
 }
 
 static void
-gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
+gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing,
+    guint32 seqnum)
 {
   GstEvent *event;
   gint cmd;
@@ -2586,11 +2587,13 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
 
   if (flush) {
     event = gst_event_new_flush_start ();
+    gst_event_set_seqnum (event, seqnum);
     GST_DEBUG_OBJECT (src, "start flush");
     cmd = CMD_WAIT;
     state = GST_STATE_PAUSED;
   } else {
     event = gst_event_new_flush_stop (FALSE);
+    gst_event_set_seqnum (event, seqnum);
     GST_DEBUG_OBJECT (src, "stop flush; playing %d", playing);
     cmd = CMD_LOOP;
     if (playing)
@@ -2719,7 +2722,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
    * blocking in preroll). */
   if (flush) {
     GST_DEBUG_OBJECT (src, "starting flush");
-    gst_rtspsrc_flush (src, TRUE, FALSE);
+    gst_rtspsrc_flush (src, TRUE, FALSE, gst_event_get_seqnum (event));
   } else {
     if (src->task) {
       gst_task_pause (src->task);
@@ -2768,7 +2771,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   if (flush) {
     /* if we started flush, we stop now */
     GST_DEBUG_OBJECT (src, "stopping flush");
-    gst_rtspsrc_flush (src, FALSE, playing);
+    gst_rtspsrc_flush (src, FALSE, playing, gst_event_get_seqnum (event));
   }
 
   /* now we did the seek and can activate the new segment values */
@@ -3210,6 +3213,24 @@ was_ok:
     GST_OBJECT_UNLOCK (src);
     return GST_PAD_PROBE_OK;
   }
+}
+
+static GstPadProbeReturn
+udpsrc_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  guint32 *segment_seqnum = user_data;
+
+  switch (GST_EVENT_TYPE (info->data)) {
+    case GST_EVENT_SEGMENT:
+      if (!gst_event_is_writable (info->data))
+        info->data = gst_event_make_writable (info->data);
+
+      *segment_seqnum = gst_event_get_seqnum (info->data);
+    default:
+      break;
+  }
+
+  return GST_PAD_PROBE_OK;
 }
 
 static gboolean
@@ -4297,6 +4318,10 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
         GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
         GST_PAD_PROBE_TYPE_BUFFER_LIST, pad_blocked, src, NULL);
 
+    gst_pad_add_probe (stream->blockedpad,
+        GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, udpsrc_probe_cb,
+        &(stream->segment_seqnum[0]), NULL);
+
     if (stream->channelpad[0]) {
       GST_DEBUG_OBJECT (src, "connecting UDP source 0 to manager");
       /* configure for UDP delivery, we need to connect the UDP pads to
@@ -4332,6 +4357,9 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
       GST_DEBUG_OBJECT (src, "connecting UDP source 1 to manager");
 
       pad = gst_element_get_static_pad (stream->udpsrc[1], "src");
+      gst_pad_add_probe (pad,
+          GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, udpsrc_probe_cb,
+          &(stream->segment_seqnum[1]), NULL);
       gst_pad_link_full (pad, stream->channelpad[1],
           GST_PAD_LINK_CHECK_NOTHING);
       gst_object_unref (pad);
@@ -4831,8 +4859,16 @@ gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
     goto done;
 
   if (stream->udpsrc[0]) {
-    gst_event_ref (event);
-    res = gst_element_send_event (stream->udpsrc[0], event);
+    GstEvent *sent_event;
+
+    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+      sent_event = gst_event_new_eos ();
+      gst_event_set_seqnum (sent_event, stream->segment_seqnum[0]);
+    } else {
+      sent_event = gst_event_ref (event);
+    }
+
+    res = gst_element_send_event (stream->udpsrc[0], sent_event);
   } else if (stream->channelpad[0]) {
     gst_event_ref (event);
     if (GST_PAD_IS_SRC (stream->channelpad[0]))
@@ -4842,8 +4878,16 @@ gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
   }
 
   if (stream->udpsrc[1]) {
-    gst_event_ref (event);
-    res &= gst_element_send_event (stream->udpsrc[1], event);
+    GstEvent *sent_event;
+
+    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+      sent_event = gst_event_new_eos ();
+      gst_event_set_seqnum (sent_event, stream->segment_seqnum[1]);
+    } else {
+      sent_event = gst_event_ref (event);
+    }
+
+    res &= gst_element_send_event (stream->udpsrc[1], sent_event);
   } else if (stream->channelpad[1]) {
     gst_event_ref (event);
     if (GST_PAD_IS_SRC (stream->channelpad[1]))
