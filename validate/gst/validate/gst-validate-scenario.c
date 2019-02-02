@@ -2815,7 +2815,8 @@ _structure_set_variables (GQuark field_id, GValue * value,
     GstValidateAction * action)
 {
   GstValidateScenario *scenario;
-  const gchar *var_value;
+  const gchar *var_value, *pvarname;
+  gint varname_len;
 
   if (!G_VALUE_HOLDS_STRING (value))
     return TRUE;
@@ -2824,12 +2825,22 @@ _structure_set_variables (GQuark field_id, GValue * value,
   if (!scenario)
     return TRUE;
 
-  var_value =
-      gst_structure_get_string (scenario->priv->vars,
-      g_value_get_string (value));
-  if (var_value) {
-    GST_INFO_OBJECT (action, "Setting variable %s to %s",
-        g_value_get_string (value), var_value);
+  pvarname = g_value_get_string (value);
+  varname_len = strlen (pvarname);
+  if (varname_len > 3 && pvarname[0] == '$' && pvarname[1] == '('
+      && pvarname[varname_len - 1] == ')') {
+    gchar *varname = g_malloc (sizeof (gchar) * varname_len - 3);
+    strncpy (varname, &pvarname[2], varname_len - 3);
+    varname[varname_len - 3] = '\0';
+
+    var_value = gst_structure_get_string (scenario->priv->vars, varname);
+    if (!var_value) {
+      g_error ("Trying to use undefined variable : %s", pvarname);
+
+      return TRUE;
+    }
+
+    GST_INFO_OBJECT (action, "Setting variable %s to %s", varname, var_value);
     g_value_set_string (value, var_value);
   }
 
