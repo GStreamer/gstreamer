@@ -119,6 +119,11 @@ GST_VALIDATE_API
 void                  gst_validate_action_set_done     (GstValidateAction *action);
 GST_VALIDATE_API
 GstValidateScenario * gst_validate_action_get_scenario (GstValidateAction *action);
+GST_VALIDATE_API
+GstValidateAction   * gst_validate_action_new          (GstValidateScenario * scenario,
+                                                        GstValidateActionType * action_type,
+                                                        GstStructure *structure,
+                                                        gboolean add_to_lists);
 
 #define GST_TYPE_VALIDATE_ACTION            (gst_validate_action_get_type ())
 #define GST_IS_VALIDATE_ACTION(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION))

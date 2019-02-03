@@ -104,6 +104,9 @@ static GList *action_types = NULL;
 static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
 static GstValidateActionType *_find_action_type (const gchar * type_name);
+static GstValidateExecuteActionReturn
+_fill_action (GstValidateScenario * scenario, GstValidateAction * action,
+    GstStructure * structure, gboolean add_to_lists);
 
 /* GstValidateScenario is not really thread safe and
  * everything should be done from the thread GstValidate
@@ -279,8 +282,6 @@ gst_validate_action_get_type (void)
   return _gst_validate_action_type;
 }
 
-static GstValidateAction *gst_validate_action_new (GstValidateScenario *
-    scenario, GstValidateActionType * type);
 static gboolean execute_next_action (GstValidateScenario * scenario);
 static gboolean
 gst_validate_scenario_load (GstValidateScenario * scenario,
@@ -291,7 +292,7 @@ _action_copy (GstValidateAction * act)
 {
   GstValidateScenario *scenario = gst_validate_action_get_scenario (act);
   GstValidateAction *copy = gst_validate_action_new (scenario,
-      _find_action_type (act->type));
+      _find_action_type (act->type), NULL, FALSE);
 
   gst_object_unref (scenario);
 
@@ -345,9 +346,10 @@ gst_validate_action_unref (GstValidateAction * action)
   gst_mini_object_unref (GST_MINI_OBJECT (action));
 }
 
-static GstValidateAction *
+GstValidateAction *
 gst_validate_action_new (GstValidateScenario * scenario,
-    GstValidateActionType * action_type)
+    GstValidateActionType * action_type, GstStructure * structure,
+    gboolean add_to_lists)
 {
   GstValidateAction *action = g_slice_new0 (GstValidateAction);
 
@@ -358,6 +360,9 @@ gst_validate_action_new (GstValidateScenario * scenario,
   action->repeat = -1;
 
   g_weak_ref_set (&action->priv->scenario, scenario);
+  if (structure)
+    action->priv->state =
+        _fill_action (scenario, action, structure, add_to_lists);
 
   return action;
 }
@@ -3140,9 +3145,9 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       GST_DEBUG_OBJECT (scenario, "Got EOS; generate 'stop' action");
 
       stop_action_type = _find_action_type ("stop");
-      stop_action = gst_validate_action_new (scenario, stop_action_type);
-      s = gst_structure_from_string ("stop, generated-after-eos=true;", NULL);
-      _fill_action (scenario, stop_action, s, FALSE);
+      stop_action = gst_validate_action_new (scenario, stop_action_type,
+          gst_structure_from_string ("stop, generated-after-eos=true;", NULL),
+          FALSE);
       gst_structure_free (s);
       gst_validate_execute_action (stop_action_type, stop_action);
       gst_mini_object_unref (GST_MINI_OBJECT (stop_action));
@@ -3340,9 +3345,8 @@ _load_scenario_file (GstValidateScenario * scenario,
       }
     }
 
-    action = gst_validate_action_new (scenario, action_type);
-    if (_fill_action (scenario, action,
-            structure, TRUE) == GST_VALIDATE_EXECUTE_ACTION_ERROR)
+    action = gst_validate_action_new (scenario, action_type, structure, TRUE);
+    if (action->priv->state == GST_VALIDATE_EXECUTE_ACTION_ERROR)
       goto failed;
 
     action->action_number = priv->num_actions++;
@@ -5139,8 +5143,7 @@ init_scenarios (void)
       gst_structure_set (plug_conf, "as-config", G_TYPE_BOOLEAN, TRUE, NULL);
       gst_structure_set_name (plug_conf, action_typename);
 
-      action = gst_validate_action_new (NULL, atype);
-      _fill_action (NULL, action, plug_conf, FALSE);
+      action = gst_validate_action_new (NULL, atype, plug_conf, FALSE);
     }
   }
 }
