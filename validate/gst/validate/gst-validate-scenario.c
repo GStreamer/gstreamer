@@ -2,7 +2,8 @@
  *
  * Copyright (C) 2013 Collabora Ltd.
  *  Author: Thibault Saunier <thibault.saunier@collabora.com>
- * Copyright (C) 2018 Thibault Saunier <tsaunier@igalia.com>
+ * Copyright (C) 2018-2019 Igalia S.L
+
  *
  * gst-validate-scenario.c - Validate Scenario class
  *
@@ -123,6 +124,8 @@ struct _GstValidateScenarioPrivate
   GList *actions;
   GList *interlaced_actions;    /* MT safe. Protected with SCENARIO_LOCK */
   GList *on_addition_actions;   /* MT safe. Protected with SCENARIO_LOCK */
+
+  gboolean needs_playback_parsing;
 
   /*  List of action that need parsing when reaching ASYNC_DONE
    *  most probably to be able to query duration */
@@ -340,7 +343,7 @@ gst_validate_action_init (GstValidateAction * action)
   g_weak_ref_init (&action->priv->scenario, NULL);
 }
 
-static void
+void
 gst_validate_action_unref (GstValidateAction * action)
 {
   gst_mini_object_unref (GST_MINI_OBJECT (action));
@@ -442,93 +445,115 @@ _find_action_type (const gchar * type_name)
   return NULL;
 }
 
-static gboolean
-_set_variable_func (const gchar * name, double *value, gpointer user_data)
+static void
+_update_well_known_vars (GstValidateScenario * scenario)
 {
-  gboolean res;
-  const gchar *value_str;
-  gchar *tmp;
-  GstValidateScenario *scenario = GST_VALIDATE_SCENARIO (user_data);
+  gint64 duration, position;
+  gdouble dduration, dposition;
   GstElement *pipeline = gst_validate_scenario_get_pipeline (scenario);
 
-  if (!pipeline) {
-    GST_ERROR_OBJECT (scenario, "No pipeline set anymore!");
+  gst_structure_remove_fields (scenario->priv->vars, "position", "duration",
+      NULL);
 
-    return FALSE;
+  if (!pipeline)
+    return;
+
+  if (!gst_element_query_duration (pipeline, GST_FORMAT_TIME, &duration) ||
+      !GST_CLOCK_TIME_IS_VALID (duration)) {
+    GstValidateMonitor *monitor =
+        (GstValidateMonitor *) (g_object_get_data ((GObject *)
+            pipeline, "validate-monitor"));
+    GST_INFO_OBJECT (scenario,
+        "Could not query duration. Trying to get duration from media-info");
+    if (monitor && monitor->media_descriptor)
+      duration =
+          gst_validate_media_descriptor_get_duration
+          (monitor->media_descriptor);
   }
 
-  if (!g_strcmp0 (name, "$duration") || !g_strcmp0 (name, "duration")) {
-    gint64 duration;
+  if (!GST_CLOCK_TIME_IS_VALID (duration))
+    dduration = G_MAXDOUBLE;
+  else
+    dduration = ((double) duration / GST_SECOND);
 
-    if (!(res =
-            gst_element_query_duration (pipeline, GST_FORMAT_TIME, &duration))
-        || !GST_CLOCK_TIME_IS_VALID (duration)) {
-      GstValidateMonitor *monitor =
-          (GstValidateMonitor *) (g_object_get_data ((GObject *)
-              pipeline, "validate-monitor"));
-      GST_WARNING_OBJECT (scenario,
-          "Could not query duration. Trying to get duration from media-info");
-      if (monitor && monitor->media_descriptor)
-        duration =
-            gst_validate_media_descriptor_get_duration
-            (monitor->media_descriptor);
-      else {
-        GST_ERROR_OBJECT (scenario, "Media-info not set");
-        if (!res)
-          goto fail;
+  gst_structure_set (scenario->priv->vars, "duration", G_TYPE_DOUBLE, dduration,
+      NULL);
+  if (gst_element_query_position (pipeline, GST_FORMAT_TIME, &position)) {
+
+    if (!GST_CLOCK_TIME_IS_VALID (position))
+      dposition = G_MAXDOUBLE;
+    else
+      dposition = ((double) position / GST_SECOND);
+
+    gst_structure_set (scenario->priv->vars, "position", G_TYPE_DOUBLE,
+        dposition, NULL);
+  } else {
+    GST_WARNING_OBJECT (scenario, "Could not query position");
+  }
+}
+
+static gchar *
+_replace_variables_in_string (GstValidateScenario * scenario,
+    GstValidateAction * action, const gchar * in_string)
+{
+  GRegex *regex;
+  gint varname_len;
+  GMatchInfo *match_info;
+  const gchar *var_value;
+  gchar *tmpstring, *string = g_strdup (in_string);
+
+  _update_well_known_vars (scenario);
+  regex = g_regex_new ("\\$\\((\\w+)\\)", 0, 0, NULL);
+  g_regex_match (regex, string, 0, &match_info);
+  while (g_match_info_matches (match_info)) {
+    GRegex *replace_regex;
+    gchar *tmp, *varname, *pvarname = g_match_info_fetch (match_info, 0);
+
+    varname_len = strlen (pvarname);
+    varname = g_malloc (sizeof (gchar) * varname_len - 3);
+    strncpy (varname, &pvarname[2], varname_len - 3);
+    varname[varname_len - 3] = '\0';
+
+    if (gst_structure_has_field_typed (scenario->priv->vars, varname,
+            G_TYPE_DOUBLE)) {
+      var_value = varname;
+    } else {
+      var_value = gst_structure_get_string (scenario->priv->vars, varname);
+      if (!var_value) {
+        g_error ("Trying to use undefined variable : %s (%s)", varname,
+            gst_structure_to_string (scenario->priv->vars));
+
+        return NULL;
       }
     }
 
-    if (!GST_CLOCK_TIME_IS_VALID (duration))
-      *value = G_MAXDOUBLE;
-    else
-      *value = ((double) duration / GST_SECOND);
+    tmp = g_strdup_printf ("\\$\\(%s\\)", varname);
+    replace_regex = g_regex_new (tmp, 0, 0, NULL);
+    tmpstring = string;
+    string = g_regex_replace (replace_regex, string, -1, 0, var_value, 0, NULL);
 
-    goto done;
-  } else if (!g_strcmp0 (name, "$position") || !g_strcmp0 (name, "position")) {
-    gint64 position;
+    GST_INFO_OBJECT (action, "Setting variable %s to %s", varname, var_value);
+    g_free (tmpstring);
+    g_regex_unref (replace_regex);
+    g_free (pvarname);
 
-    if (!gst_element_query_position (pipeline, GST_FORMAT_TIME, &position)) {
-      GST_WARNING_OBJECT (scenario, "Could not query position");
-      goto fail;
-    }
-
-    if (!GST_CLOCK_TIME_IS_VALID (position))
-      *value = G_MAXDOUBLE;
-    else
-      *value = ((double) position / GST_SECOND);
-
-    goto done;
+    g_match_info_next (match_info, NULL);
   }
+  g_match_info_free (match_info);
+  g_regex_unref (regex);
 
-  if (name[0] != '$') {
-    g_error ("Variable name %s is invalid as it doesn't start with $", name);
+  return string;
+}
 
-    goto fail;
-  }
+static gboolean
+_set_variable_func (const gchar * name, double *value, gpointer user_data)
+{
+  GstValidateScenario *scenario = (GstValidateScenario *) user_data;
 
-  if (gst_structure_get_double (scenario->priv->vars, &name[1], value))
-    goto done;
+  if (!gst_structure_get_double (scenario->priv->vars, name, value))
+    return FALSE;
 
-  value_str = gst_structure_get_string (scenario->priv->vars, &name[1]);
-  *value = g_strtod (value_str, &tmp);
-  if (tmp[0] != '\0') {
-    gchar *vars = gst_structure_to_string (scenario->priv->vars);
-    g_error ("Variable name: %s=%s is not a double (%s)", name, value_str,
-        vars);
-    g_free (vars);
-
-    goto fail;
-  }
-
-
-done:
-  gst_object_unref (pipeline);
   return TRUE;
-
-fail:
-  gst_object_unref (pipeline);
-  return FALSE;
 }
 
 /* Check that @list doesn't contain any non-optional actions */
@@ -587,20 +612,27 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
 {
   if (!gst_validate_utils_get_clocktime (action->structure, name, retval)) {
     gdouble val;
-    gchar *error = NULL;
-    const gchar *strval;
+    gchar *error = NULL, *strval;
+    const gchar *tmpvalue = gst_structure_get_string (action->structure, name);
 
-    if (!(strval = gst_structure_get_string (action->structure, name))) {
-      GST_INFO_OBJECT (scenario, "Could not find %s", name);
+    if (!tmpvalue) {
+      GST_INFO_OBJECT (scenario, "Could not find %s (%" GST_PTR_FORMAT ")",
+          name, action->structure);
       return -1;
     }
 
-    val = gst_validate_utils_parse_expression (strval, _set_variable_func,
-        scenario, &error);
+    strval = _replace_variables_in_string (scenario, action, tmpvalue);
+    if (!strval)
+      return FALSE;
 
+    val =
+        gst_validate_utils_parse_expression (strval, _set_variable_func,
+        scenario, &error);
     if (error) {
-      GST_WARNING ("Error while parsing %s: %s", strval, error);
+      GST_WARNING ("Error while parsing %s: %s (%" GST_PTR_FORMAT ")",
+          strval, error, scenario->priv->vars);
       g_free (error);
+      g_free (strval);
 
       return FALSE;
     } else if (val == -1.0) {
@@ -609,6 +641,8 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
       *retval = val * GST_SECOND;
       *retval = GST_ROUND_UP_4 (*retval);
     }
+    gst_structure_set (action->structure, name, G_TYPE_UINT64, *retval, NULL);
+    g_free (strval);
 
     return TRUE;
   }
@@ -1737,9 +1771,8 @@ gst_validate_parse_next_action_playback_time (GstValidateScenario * self)
   GstValidateAction *action;
   GstValidateScenarioPrivate *priv = self->priv;
 
-  if (!priv->actions) {
+  if (!priv->actions)
     return TRUE;
-  }
 
   action = (GstValidateAction *) priv->actions->data;
   if (!action->priv->needs_playback_parsing)
@@ -1785,7 +1818,6 @@ gst_validate_execute_action (GstValidateActionType * action_type,
   gst_object_unref (scenario);
 
   if (!gst_structure_has_field (action->structure, "sub-action")) {
-
     gst_structure_free (action->structure);
     action->priv->printed = FALSE;
     action->structure = gst_structure_copy (action->priv->main_structure);
@@ -1811,7 +1843,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   GstValidateActionType *action_type;
   const gchar *str_playback_time = NULL;
   GstValidateScenarioPrivate *priv = scenario ? scenario->priv : NULL;
-  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_NONE;
   gboolean optional, needs_parsing;
 
   action->type = gst_structure_get_name (structure);
@@ -2074,19 +2106,6 @@ execute_next_action (GstValidateScenario * scenario)
   }
 
   type = _find_action_type (act->type);
-
-  if (act->repeat == -1 &&
-      !gst_structure_get_int (act->structure, "repeat", &act->repeat)) {
-    gchar *error = NULL;
-    const gchar *repeat_expr = gst_structure_get_string (act->structure,
-        "repeat");
-
-    if (repeat_expr) {
-      act->repeat =
-          gst_validate_utils_parse_expression (repeat_expr,
-          _set_variable_func, scenario, &error);
-    }
-  }
 
   GST_DEBUG_OBJECT (scenario, "Executing %" GST_PTR_FORMAT
       " at %" GST_TIME_FORMAT, act->structure, GST_TIME_ARGS (position));
@@ -2867,9 +2886,8 @@ static gboolean
 _structure_set_variables (GQuark field_id, GValue * value,
     GstValidateAction * action)
 {
+  gchar *str;
   GstValidateScenario *scenario;
-  const gchar *var_value, *pvarname;
-  gint varname_len;
 
   if (!G_VALUE_HOLDS_STRING (value))
     return TRUE;
@@ -2878,26 +2896,14 @@ _structure_set_variables (GQuark field_id, GValue * value,
   if (!scenario)
     return TRUE;
 
-  pvarname = g_value_get_string (value);
-  varname_len = strlen (pvarname);
-  if (varname_len > 3 && pvarname[0] == '$' && pvarname[1] == '('
-      && pvarname[varname_len - 1] == ')') {
-    gchar *varname = g_malloc (sizeof (gchar) * varname_len - 3);
-    strncpy (varname, &pvarname[2], varname_len - 3);
-    varname[varname_len - 3] = '\0';
-
-    var_value = gst_structure_get_string (scenario->priv->vars, varname);
-    if (!var_value) {
-      g_error ("Trying to use undefined variable : %s", pvarname);
-
-      return TRUE;
-    }
-
-    GST_INFO_OBJECT (action, "Setting variable %s to %s", varname, var_value);
-    g_value_set_string (value, var_value);
+  str =
+      _replace_variables_in_string (scenario, action,
+      g_value_get_string (value));
+  if (str) {
+    g_value_set_string (value, str);
+    g_free (str);
   }
-
-  g_clear_object (&scenario);
+  gst_object_unref (scenario);
 
   return TRUE;
 }
@@ -2905,30 +2911,64 @@ _structure_set_variables (GQuark field_id, GValue * value,
 static gboolean
 gst_validate_action_default_prepare_func (GstValidateAction * action)
 {
-  gulong i;
-  GstClockTime time;
-  const gchar *vars[] = { "duration", "start", "stop" };
+  gint i;
+  GstClockTime tmp;
+  gchar *repeat_expr;
+  gchar *error = NULL;
+  GstValidateActionType *type = gst_validate_get_action_type (action->type);
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
-  for (i = 0; i < G_N_ELEMENTS (vars); i++) {
-    gint res = gst_validate_action_get_clocktime (scenario, action, vars[i],
-        &time);
-    if (res == FALSE) {
-      GST_ERROR_OBJECT (scenario, "Could not get clocktime for"
-          " variable %s", vars[i]);
-
-      gst_object_unref (scenario);
-      return FALSE;
-    } else if (res == -1) {
-      continue;
-    }
-
-    gst_structure_set (action->structure, vars[i], GST_TYPE_CLOCK_TIME,
-        time, NULL);
-  }
-  gst_object_unref (scenario);
   gst_structure_filter_and_map_in_place (action->structure,
       (GstStructureFilterMapFunc) _structure_set_variables, action);
+
+  for (i = 0; type->parameters[i].name; i++) {
+    if (g_str_has_suffix (type->parameters[i].types, "(GstClockTime)"))
+      gst_validate_action_get_clocktime (scenario, action,
+          type->parameters[i].name, &tmp);
+  }
+
+  if (action->repeat > 0) {
+    GST_ERROR ("Repeat already set!");
+    return TRUE;
+  }
+
+  if (!gst_structure_has_field (action->structure, "repeat"))
+    return TRUE;
+
+  if (gst_structure_get_int (action->structure, "repeat", &action->repeat))
+    return TRUE;
+
+  if (gst_structure_get_double (action->structure, "repeat",
+          (gdouble *) & action->repeat))
+    return TRUE;
+
+  repeat_expr =
+      g_strdup (gst_structure_get_string (action->structure, "repeat"));
+  if (!repeat_expr) {
+    g_error ("Invalid value for 'repeat' in %s",
+        gst_structure_to_string (action->structure));
+
+    return FALSE;
+  }
+
+  action->repeat =
+      gst_validate_utils_parse_expression (repeat_expr, _set_variable_func,
+      scenario, &error);
+  if (error) {
+    g_error ("Invalid value for 'repeat' in %s: %s",
+        gst_structure_to_string (action->structure), error);
+
+    return FALSE;
+  }
+  g_free (repeat_expr);
+
+  gst_structure_set (action->structure, "repeat", G_TYPE_INT, action->repeat,
+      NULL);
+  gst_structure_set (action->priv->main_structure, "repeat", G_TYPE_INT,
+      action->repeat, NULL);
+
+  if (scenario)
+    gst_object_unref (scenario);
 
   return TRUE;
 }
@@ -3030,8 +3070,11 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
       }
 
-      if (!gst_validate_parse_next_action_playback_time (scenario))
-        return FALSE;
+      if (scenario->priv->needs_playback_parsing) {
+        scenario->priv->needs_playback_parsing = FALSE;
+        if (!gst_validate_parse_next_action_playback_time (scenario))
+          return FALSE;
+      }
       _add_execute_actions_gsource (scenario);
       break;
     case GST_MESSAGE_STATE_CHANGED:
@@ -3145,9 +3188,9 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       GST_DEBUG_OBJECT (scenario, "Got EOS; generate 'stop' action");
 
       stop_action_type = _find_action_type ("stop");
+      s = gst_structure_from_string ("stop, generated-after-eos=true;", NULL);
       stop_action = gst_validate_action_new (scenario, stop_action_type,
-          gst_structure_from_string ("stop, generated-after-eos=true;", NULL),
-          FALSE);
+          s, FALSE);
       gst_structure_free (s);
       gst_validate_execute_action (stop_action_type, stop_action);
       gst_mini_object_unref (GST_MINI_OBJECT (stop_action));
@@ -3607,6 +3650,7 @@ gst_validate_scenario_init (GstValidateScenario * scenario)
   priv->segment_stop = GST_CLOCK_TIME_NONE;
   priv->action_execution_interval = 10;
   priv->vars = gst_structure_new_empty ("vars");
+  priv->needs_playback_parsing = TRUE;
   g_weak_ref_init (&scenario->priv->ref_pipeline, NULL);
   priv->max_latency = GST_CLOCK_TIME_NONE;
   priv->max_dropped = -1;
@@ -4235,8 +4279,8 @@ _action_set_done (GstValidateAction * action)
   action->priv->state = _execute_sub_action_action (action);
 
   if (action->priv->state != GST_VALIDATE_EXECUTE_ACTION_ASYNC) {
-    GST_DEBUG_OBJECT (scenario, "Sub action executed ASYNC");
 
+    GST_DEBUG_OBJECT (scenario, "Sub action executed ASYNC");
     execute_next_action (scenario);
   }
   gst_object_unref (scenario);
@@ -4667,7 +4711,7 @@ init_scenarios (void)
           .name = "start",
           .description = "The starting value of the seek",
           .mandatory = TRUE,
-          .types = "double or string",
+          .types = "double or string (GstClockTime)",
           .possible_variables = "position: The current position in the stream\n"
             "duration: The duration of the stream",
            NULL
@@ -4693,7 +4737,7 @@ init_scenarios (void)
           "  [none, set, end]",
           .mandatory = FALSE,
           .types = "string",
-        .possible_variables = NULL,
+          .possible_variables = NULL,
           .def = "set"
         },
         {
@@ -4705,10 +4749,14 @@ init_scenarios (void)
           .possible_variables = NULL,
           .def = "set"
         },
-        {"stop", "The stop value of the seek", FALSE, "double or ",
-          "position: The current position in the stream\n"
-            "duration: The duration of the stream"
-            "GST_CLOCK_TIME_NONE",
+        {
+          .name = "stop",
+          .description = "The stop value of the seek",
+          .mandatory = FALSE,
+          .types = "double or string (GstClockTime)",
+          .possible_variables = "position: The current position in the stream\n"
+            "duration: The duration of the stream",
+          .def ="GST_CLOCK_TIME_NONE",
         },
         {NULL}
       }),
@@ -4783,6 +4831,7 @@ init_scenarios (void)
           .name = "duration",
           .description = "the duration while no other action will be executed",
           .mandatory = FALSE,
+          .types = "double or string (GstClockTime)",
           NULL},
         {
           .name = "target-element-name",
@@ -5144,6 +5193,7 @@ init_scenarios (void)
       gst_structure_set_name (plug_conf, action_typename);
 
       action = gst_validate_action_new (NULL, atype, plug_conf, FALSE);
+      gst_validate_action_unref (action);
     }
   }
 }

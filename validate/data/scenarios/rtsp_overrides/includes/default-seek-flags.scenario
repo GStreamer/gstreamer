@@ -1,2 +1,2 @@
 set-vars,\
-  default-flags=flush
+  default_flags=flush

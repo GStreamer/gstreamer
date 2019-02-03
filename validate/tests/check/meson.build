@@ -3,7 +3,8 @@ validate_tests = [
   ['validate/padmonitor'],
   ['validate/monitoring'],
   ['validate/reporting'],
-  ['validate/overrides']
+  ['validate/overrides'],
+  ['validate/scenario']
 ]
 
 test_defines = [
@@ -38,6 +39,7 @@ foreach t : validate_tests
         c_args : gst_c_args + test_defines,
         include_directories : [inc_dirs],
         dependencies : [validate_dep, gst_check_dep],
+        link_with: gstvalidate
     )
     env.set('GST_REGISTRY',
             '@0@/@1@.registry'.format(meson.current_build_dir(), test_name))

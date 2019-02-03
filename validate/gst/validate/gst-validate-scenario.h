@@ -47,7 +47,8 @@ typedef enum
   GST_VALIDATE_EXECUTE_ACTION_ASYNC,
   GST_VALIDATE_EXECUTE_ACTION_INTERLACED,
   GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED,
-  GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS
+  GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS,
+  GST_VALIDATE_EXECUTE_ACTION_NONE,
 } GstValidateActionReturn;
 
 /* TODO 2.0 -- Make it an actual enum type */
@@ -124,6 +125,8 @@ GstValidateAction   * gst_validate_action_new          (GstValidateScenario * sc
                                                         GstValidateActionType * action_type,
                                                         GstStructure *structure,
                                                         gboolean add_to_lists);
+GST_VALIDATE_API
+void gst_validate_action_unref             (GstValidateAction * action);
 
 #define GST_TYPE_VALIDATE_ACTION            (gst_validate_action_get_type ())
 #define GST_IS_VALIDATE_ACTION(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_ACTION))
@@ -214,8 +217,11 @@ gboolean gst_validate_print_action_types (const gchar ** wanted_types, gint num_
  * @mandatory: Whether the parameter is mandatory for
  *             a specific action type
  * @types: The types the parameter can take described as a
- * string. It can be precisely describing how the typing works
+ *         string. It can be precisely describing how the typing works
  *         using '\n' between the various acceptable types.
+ *         NOTE: The types should end with `(GstClockTime)` if its final
+ *         type is a GstClockTime, this way it will be processed when preparing
+ *         the actions.
  * @possible_variables: The name of the variables that can be
  *                      used to compute the value of the parameter.
  *                      For example for the start value of a seek

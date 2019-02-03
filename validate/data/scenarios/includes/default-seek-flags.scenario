@@ -1,2 +1,2 @@
 set-vars,\
-  default-flags=accurate+flush
+  default_flags=accurate+flush
