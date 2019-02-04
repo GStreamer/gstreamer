@@ -1001,8 +1001,6 @@ gst_video_decoder_negotiate_default_caps (GstVideoDecoder * decoder)
     GstCaps *sinkcaps = decoder->priv->input_state->caps;
     GstStructure *structure = gst_caps_get_structure (sinkcaps, 0);
     gint width, height;
-    gint par_n, par_d;
-    gint fps_n, fps_d;
 
     if (gst_structure_get_int (structure, "width", &width)) {
       for (i = 0; i < caps_size; i++) {
@@ -1017,26 +1015,11 @@ gst_video_decoder_negotiate_default_caps (GstVideoDecoder * decoder)
             G_TYPE_INT, height, NULL);
       }
     }
-
-    if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
-      for (i = 0; i < caps_size; i++) {
-        gst_structure_set (gst_caps_get_structure (caps, i), "framerate",
-            GST_TYPE_FRACTION, fps_n, fps_d, NULL);
-      }
-    }
-
-    if (gst_structure_get_fraction (structure, "pixel-aspect-ratio", &par_n,
-            &par_d)) {
-      for (i = 0; i < caps_size; i++) {
-        gst_structure_set (gst_caps_get_structure (caps, i),
-            "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
-      }
-    }
   }
 
   for (i = 0; i < caps_size; i++) {
     structure = gst_caps_get_structure (caps, i);
-    /* Random I420 1280x720@30 for fixation */
+    /* Random I420 1280x720 for fixation */
     if (gst_structure_has_field (structure, "format"))
       gst_structure_fixate_field_string (structure, "format", "I420");
     else
@@ -1051,20 +1034,6 @@ gst_video_decoder_negotiate_default_caps (GstVideoDecoder * decoder)
       gst_structure_fixate_field_nearest_int (structure, "height", 720);
     else
       gst_structure_set (structure, "height", G_TYPE_INT, 720, NULL);
-
-    if (gst_structure_has_field (structure, "framerate"))
-      gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30,
-          1);
-    else
-      gst_structure_set (structure, "framerate", GST_TYPE_FRACTION, 30, 1,
-          NULL);
-
-    if (gst_structure_has_field (structure, "pixel-aspect-ratio"))
-      gst_structure_fixate_field_nearest_fraction (structure,
-          "pixel-aspect-ratio", 1, 1);
-    else
-      gst_structure_set (structure, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          1, 1, NULL);
   }
   caps = gst_caps_fixate (caps);
 
