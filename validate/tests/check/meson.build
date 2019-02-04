@@ -4,7 +4,8 @@ validate_tests = [
   ['validate/monitoring'],
   ['validate/reporting'],
   ['validate/overrides'],
-  ['validate/scenario']
+  ['validate/scenario'],
+  ['validate/expression_parser'],
 ]
 
 test_defines = [

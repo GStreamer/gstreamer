@@ -29,6 +29,8 @@
 #  include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <locale.h>             /* for LC_NUMERIC */
+
 #include <string.h>
 /* For g_stat () */
 #include <glib/gstdio.h>
@@ -300,6 +302,8 @@ gst_validate_init (void)
 
   _priv_start_time = gst_util_get_timestamp ();
   _Q_VALIDATE_MONITOR = g_quark_from_static_string ("validate-monitor");
+
+  setlocale (LC_NUMERIC, "C");
 
   /* init the report system (can be called multiple times) */
   gst_validate_report_init ();
