@@ -157,6 +157,7 @@ struct _GstValidateScenarioPrivate
   GList *overrides;
 
   gchar *pipeline_name;
+  GstClockTime max_latency;
 
   /* 'switch-track action' currently waiting for
    * GST_MESSAGE_STREAMS_SELECTED to be completed. */
@@ -2634,6 +2635,36 @@ streams_list_contain (GList * streams, const gchar * stream_id)
   return FALSE;
 }
 
+static void
+gst_validate_scenario_check_latency (GstValidateScenario * scenario,
+    GstElement * pipeline)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+  GstQuery *query;
+  GstClockTime min_latency;
+
+  query = gst_query_new_latency ();
+  if (!gst_element_query (GST_ELEMENT_CAST (pipeline), query)) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Failed to perfom LATENCY query");
+    gst_query_unref (query);
+    return;
+  }
+
+  gst_query_parse_latency (query, NULL, &min_latency, NULL);
+  GST_DEBUG_OBJECT (scenario, "Pipeline latency: %" GST_TIME_FORMAT
+      " max allowed: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (min_latency), GST_TIME_ARGS (priv->max_latency));
+
+  if (priv->max_latency != GST_CLOCK_TIME_NONE &&
+      min_latency > priv->max_latency) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_LATENCY_TOO_HIGH,
+        "Pipeline latency is too high: %" GST_TIME_FORMAT " (max allowed %"
+        GST_TIME_FORMAT ")", GST_TIME_ARGS (min_latency),
+        GST_TIME_ARGS (priv->max_latency));
+  }
+}
+
 static gboolean
 message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 {
@@ -2702,6 +2733,11 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 
         if (pstate == GST_STATE_READY && nstate == GST_STATE_PAUSED)
           _add_execute_actions_gsource (scenario);
+
+        /* GstBin only send a new latency message when reaching PLAYING if
+         * async-handling=true so check the latency manually. */
+        if (nstate == GST_STATE_PLAYING)
+          gst_validate_scenario_check_latency (scenario, pipeline);
       }
       break;
     }
@@ -2858,6 +2894,9 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       g_list_free_full (streams_selected, gst_object_unref);
       break;
     }
+    case GST_MESSAGE_LATENCY:
+      gst_validate_scenario_check_latency (scenario, pipeline);
+      break;
 
     default:
       break;
@@ -2895,6 +2934,7 @@ _load_scenario_file (GstValidateScenario * scenario,
   gboolean ret = TRUE;
   GList *structures, *tmp;
   GstValidateScenarioPrivate *priv = scenario->priv;
+  GList *config;
 
   *is_config = FALSE;
 
@@ -2921,6 +2961,9 @@ _load_scenario_file (GstValidateScenario * scenario,
         g_free (priv->pipeline_name);
         priv->pipeline_name = g_strdup (pipeline_name);
       }
+
+      gst_validate_utils_get_clocktime (structure, "max-latency",
+          &priv->max_latency);
 
       continue;
     } else if (!g_strcmp0 (type, "include")) {
@@ -2971,6 +3014,14 @@ _load_scenario_file (GstValidateScenario * scenario,
       goto failed;
 
     action->action_number = priv->num_actions++;
+  }
+
+  /* max latency can be overriden using config */
+  for (config = gst_validate_plugin_get_config (NULL); config;
+      config = g_list_next (config)) {
+    if (gst_validate_utils_get_clocktime (config->data, "max-latency",
+            &priv->max_latency))
+      break;
   }
 
 done:
@@ -3216,6 +3267,7 @@ gst_validate_scenario_init (GstValidateScenario * scenario)
   priv->action_execution_interval = 10;
   priv->vars = gst_structure_new_empty ("vars");
   g_weak_ref_init (&scenario->priv->ref_pipeline, NULL);
+  priv->max_latency = GST_CLOCK_TIME_NONE;
 
   g_mutex_init (&priv->lock);
 }
@@ -4243,6 +4295,16 @@ init_scenarios (void)
         .types = "string",
         .possible_variables = NULL,
         .def = "NULL"
+      },
+      {
+        .name = "max-latency",
+        .description = "The maximum latency in nanoseconds allowed for this pipeline.\n"
+          "It can be overriden using core configuration, like for example by defining the "
+          "env variable GST_VALIDATE_CONFIG=core,max-latency=33000000",
+        .mandatory = FALSE,
+        .types = "double, int",
+        .possible_variables = NULL,
+        .def = "infinite (GST_CLOCK_TIME_NONE)"
       },
       {NULL}
       }),

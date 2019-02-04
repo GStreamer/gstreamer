@@ -396,6 +396,10 @@ gst_validate_report_load_issues (void)
       _("The execution of an action did not properly happen"), NULL);
   REGISTER_VALIDATE_ISSUE (ISSUE, SCENARIO_ACTION_EXECUTION_ISSUE,
       _("An issue happened during the execution of a scenario"), NULL);
+  REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_LATENCY_TOO_HIGH,
+      _
+      ("The pipeline latency is higher than the maximum allowed by the scenario"),
+      NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_WARNING, _("We got a g_log warning"),
       NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, G_LOG_CRITICAL,
