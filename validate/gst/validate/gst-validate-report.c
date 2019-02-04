@@ -769,6 +769,9 @@ _append_value (GQuark field_id, const GValue * value, GString * string)
   if (g_strcmp0 (g_quark_to_string (field_id), "sub-action") == 0)
     return TRUE;
 
+  if (g_strcmp0 (g_quark_to_string (field_id), "repeat") == 0)
+    return TRUE;
+
   if (G_VALUE_TYPE (value) == GST_TYPE_CLOCK_TIME)
     val_str = g_strdup_printf ("%" GST_TIME_FORMAT,
         GST_TIME_ARGS (g_value_get_uint64 (value)));
@@ -806,7 +809,8 @@ gst_validate_print_action (GstValidateAction * action, const gchar * message)
       g_string_append_printf (string, "(subaction)");
 
     if (gst_structure_get_int (action->structure, "repeat", &nrepeats))
-      g_string_append_printf (string, "(%d/%d)", action->repeat, nrepeats);
+      g_string_append_printf (string, "(%d/%d)", nrepeats - action->repeat + 1,
+          nrepeats);
 
     g_string_append_printf (string, "%s",
         gst_structure_get_name (action->structure));

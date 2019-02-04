@@ -20,7 +20,7 @@ GST_START_TEST (test_expression_parser)
           NULL, NULL, NULL), 20);
 
   fail_unless_equals_float (gst_validate_utils_parse_expression
-      ("100, (10 / 0.1)", NULL, NULL, NULL), 1);
+      ("max(100, (10 / 0.1))", NULL, NULL, NULL), 100);
 
   fail_unless_equals_float (gst_validate_utils_parse_expression
       ("min(10, (duration - 0.1) / 0.1)", get_var, GINT_TO_POINTER (1), NULL),
