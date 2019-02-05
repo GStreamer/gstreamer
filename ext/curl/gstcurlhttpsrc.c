@@ -979,6 +979,7 @@ retry:
         src->buffer_len, src->uri);
     *outbuf = gst_buffer_new_allocate (NULL, src->buffer_len, NULL);
     gst_buffer_fill (*outbuf, 0, src->buffer, src->buffer_len);
+    GST_BUFFER_OFFSET (*outbuf) = basesrc->segment.position;
 
     g_free (src->buffer);
     src->buffer = NULL;
