@@ -123,7 +123,8 @@ gst_rtp_dummy_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GstMemory *mem = gst_buffer_get_memory (buf, 0);
     gsize size, offset, maxsize;
     size = gst_memory_get_sizes (mem, &offset, &maxsize);
-    GST_LOG ("\tsize=%zd offset=%zd maxsize=%zd", size, offset, maxsize);
+    GST_LOG ("\tsize=%" G_GSIZE_FORMAT " offset=%" G_GSIZE_FORMAT " maxsize=%"
+        G_GSIZE_FORMAT, size, offset, maxsize);
     gst_memory_unref (mem);
   }
 
@@ -144,7 +145,8 @@ gst_rtp_dummy_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GstMemory *mem = gst_buffer_get_memory (buf, 0);
     gsize size, offset, maxsize;
     size = gst_memory_get_sizes (mem, &offset, &maxsize);
-    GST_LOG ("\tsize=%zd offset=%zd maxsize=%zd", size, offset, maxsize);
+    GST_LOG ("\tsize=%" G_GSIZE_FORMAT " offset=%" G_GSIZE_FORMAT " maxsize=%"
+        G_GSIZE_FORMAT, size, offset, maxsize);
     gst_memory_unref (mem);
   }
 
