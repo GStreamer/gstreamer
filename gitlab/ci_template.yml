@@ -143,6 +143,7 @@ build android arm64 api28:
     # rtpbin.test_cleanup_recv: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/546
     # souphttpsrc.test_icy_stream: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/307
     # rtspserver.test_shared_tcp: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/54
+    # rtspserver.test_shared_udp: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/61
     # rtpsession.test_multiple_senders_roundrobin_rbs: https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/548
     # dtls: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/811
     # mpegtsmux.test_align: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/844
@@ -205,6 +206,7 @@ build android arm64 api28:
       -b check.gst-plugins-base.pipelines_tcp.test_that_tcpserversink_and_tcpclientsrc_are_symmetrical
       -b check.gstreamer.elements_capsfilter.test_unfixed_downstream_caps
       -b check.gst-rtsp-server.gst_rtspclientsink.test_record
+      -b check.gst-rtsp-server.gst_rtspserver.test_shared_udp
   script:
     - cd gst-build/
     - >
