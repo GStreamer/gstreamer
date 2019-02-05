@@ -268,6 +268,7 @@ ges_timeline_new_from_uri_from_main_thread (TimelineConstructionData * data)
   GESUriClipAssetClass *klass = g_type_class_peek (GES_TYPE_URI_CLIP_ASSET);
   GstDiscoverer *previous_discoverer = klass->discoverer;
   GstClockTime timeout;
+  G_GNUC_UNUSED void *unused;
 
   g_object_get (previous_discoverer, "timeout", &timeout, NULL);
 
@@ -294,7 +295,7 @@ ges_timeline_new_from_uri_from_main_thread (TimelineConstructionData * data)
       g_signal_connect (project, "error-loading-asset",
       G_CALLBACK (error_loading_asset_cb), data);
 
-  GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &data->error));
+  unused = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &data->error));
   if (data->error) {
     g_mutex_unlock (&data->lock);
 
