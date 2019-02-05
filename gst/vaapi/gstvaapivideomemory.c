@@ -162,30 +162,6 @@ ensure_image_is_current (GstVaapiVideoMemory * mem)
   return TRUE;
 }
 
-static GstVaapiSurface *
-new_surface (GstVaapiDisplay * display, const GstVideoInfo * vip,
-    GstVaapiImageUsageFlags usage_flag)
-{
-  GstVaapiSurface *surface;
-  GstVaapiChromaType chroma_type;
-
-  /* Try with explicit format first */
-  if (!use_native_formats (usage_flag) &&
-      GST_VIDEO_INFO_FORMAT (vip) != GST_VIDEO_FORMAT_ENCODED) {
-    surface = gst_vaapi_surface_new_full (display, vip, 0);
-    if (surface)
-      return surface;
-  }
-
-  /* Try to pick something compatible, i.e. with same chroma type */
-  chroma_type =
-      gst_vaapi_video_format_get_chroma_type (GST_VIDEO_INFO_FORMAT (vip));
-  if (!chroma_type)
-    return NULL;
-  return gst_vaapi_surface_new (display, chroma_type,
-      GST_VIDEO_INFO_WIDTH (vip), GST_VIDEO_INFO_HEIGHT (vip));
-}
-
 static GstVaapiSurfaceProxy *
 new_surface_proxy (GstVaapiVideoMemory * mem)
 {
@@ -743,63 +719,117 @@ error_cannot_map:
   }
 }
 
-static inline gboolean
-allocator_configure_surface_info (GstVaapiDisplay * display,
-    GstVaapiVideoAllocator * allocator, GstVaapiImageUsageFlags req_usage_flag)
+#ifndef GST_DISABLE_GST_DEBUG
+static const gchar *
+gst_vaapi_image_usage_flags_to_string (GstVaapiImageUsageFlags usage_flag)
 {
-  const GstVideoInfo *vinfo;
-  GstVideoInfo *sinfo;
-  GstVaapiSurface *surface = NULL;
-  GstVideoFormat fmt;
+  switch (usage_flag) {
+    case GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS:
+      return "native uploading";
+    case GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER:
+      return "direct rendering";
+    case GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_UPLOAD:
+      return "direct uploading";
+    default:
+      return "unknown";
+  }
+}
+#endif
 
-  vinfo = &allocator->allocation_info;
-  allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
+static inline gboolean
+allocator_configure_surface_try_specified_format (GstVaapiDisplay * display,
+    const GstVideoInfo * allocation_info, GstVaapiImageUsageFlags usage_flag,
+    GstVideoInfo * ret_surface_info, GstVaapiImageUsageFlags * ret_usage_flag)
+{
+  GstVaapiImageUsageFlags rflag;
+  GstVaapiSurface *surface;
+  GstVideoInfo sinfo, rinfo;
 
-  fmt = gst_vaapi_video_format_get_best_native (GST_VIDEO_INFO_FORMAT (vinfo));
-  if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
-    goto error_invalid_format;
-
-  gst_video_info_set_format (&allocator->surface_info, fmt,
-      GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo));
-
-  /* nothing to configure */
-  if (use_native_formats (req_usage_flag)
-      || GST_VIDEO_INFO_FORMAT (vinfo) == GST_VIDEO_FORMAT_ENCODED)
-    return TRUE;
-
-  surface = new_surface (display, vinfo, req_usage_flag);
+  /* Try to create a surface with the given allocation info */
+  surface = gst_vaapi_surface_new_full (display, allocation_info, 0);
   if (!surface)
-    goto error_no_surface;
+    return FALSE;
 
-  sinfo = &allocator->surface_info;
-  if (!gst_video_info_update_from_surface (sinfo, surface))
-    goto bail;
-
-  /* if not the same format, don't use derived images */
-  if (GST_VIDEO_INFO_FORMAT (sinfo) != GST_VIDEO_INFO_FORMAT (vinfo))
-    goto bail;
-
-  if (use_direct_rendering (req_usage_flag)
-      && !use_direct_uploading (req_usage_flag)) {
-    allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
-    GST_INFO_OBJECT (allocator, "has direct-rendering for %s surfaces",
-        GST_VIDEO_INFO_FORMAT_STRING (sinfo));
-  } else if (!use_direct_rendering (req_usage_flag)
-      && use_direct_uploading (req_usage_flag)) {
-    allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_UPLOAD;
-    GST_INFO_OBJECT (allocator, "has direct-uploading for %s surfaces",
-        GST_VIDEO_INFO_FORMAT_STRING (sinfo));
+  /* surface created and just native format usage was requested */
+  if (use_native_formats (usage_flag)) {
+    rflag = GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
+    rinfo = *allocation_info;
+    goto out;
   }
 
-bail:
-  if (surface)
-    gst_vaapi_object_unref (surface);
+  /* Further checks whether that surface can support direct
+   * upload/render */
+  if (gst_video_info_update_from_surface (&sinfo, surface)) {
+    if (GST_VIDEO_INFO_FORMAT (&sinfo) ==
+        GST_VIDEO_INFO_FORMAT (allocation_info)) {
+      /* Set the correct flag */
+      if (use_direct_rendering (usage_flag)
+          && !use_direct_uploading (usage_flag)) {
+        rflag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_RENDER;
+      } else if (!use_direct_rendering (usage_flag)
+          && use_direct_uploading (usage_flag)) {
+        rflag = GST_VAAPI_IMAGE_USAGE_FLAG_DIRECT_UPLOAD;
+      } else {
+        g_assert_not_reached ();
+      }
+    } else {
+      /* It shouldn't happen, but still it's possible. Just use
+       * native. */
+      GST_FIXME ("Got a derive image with different format!");
+      rflag = GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
+    }
+
+    rinfo = sinfo;
+    goto out;
+  }
+
+  /* Can not derive image or not the same format, don't use derived
+     images, just fallback to use native */
+  rflag = GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
+  rinfo = *allocation_info;
+
+out:
+  gst_vaapi_object_unref (surface);
+
+  *ret_surface_info = rinfo;
+  *ret_usage_flag = rflag;
+  return TRUE;
+}
+
+static inline gboolean
+allocator_configure_surface_try_other_format (GstVaapiDisplay * display,
+    const GstVideoInfo * allocation_info, GstVideoInfo * ret_surface_info)
+{
+  GstVaapiSurface *surface;
+  GstVideoFormat fmt;
+  GstVideoInfo sinfo;
+
+  /* Find a best native surface format if possible */
+  fmt = gst_vaapi_video_format_get_best_native
+      (GST_VIDEO_INFO_FORMAT (allocation_info));
+  if (fmt == GST_VIDEO_FORMAT_UNKNOWN
+      || fmt == GST_VIDEO_INFO_FORMAT (allocation_info))
+    goto error_invalid_format;
+
+  /* create a info with "best native" format */
+  gst_video_info_set_format (&sinfo, fmt,
+      GST_VIDEO_INFO_WIDTH (allocation_info),
+      GST_VIDEO_INFO_HEIGHT (allocation_info));
+
+  /* try it */
+  surface = gst_vaapi_surface_new_full (display, &sinfo, 0);
+  if (!surface)
+    goto error_no_surface;
+  gst_vaapi_object_unref (surface);
+
+  *ret_surface_info = sinfo;
   return TRUE;
 
   /* ERRORS */
 error_invalid_format:
   {
-    GST_ERROR ("Cannot handle format %s", GST_VIDEO_INFO_FORMAT_STRING (vinfo));
+    GST_ERROR ("Cannot handle format %s",
+        GST_VIDEO_INFO_FORMAT_STRING (allocation_info));
     return FALSE;
   }
 error_no_surface:
@@ -807,6 +837,50 @@ error_no_surface:
     GST_ERROR ("Cannot create a VA Surface");
     return FALSE;
   }
+}
+
+static inline gboolean
+allocator_configure_surface_info (GstVaapiDisplay * display,
+    GstVaapiVideoAllocator * allocator, GstVaapiImageUsageFlags req_usage_flag)
+{
+  GstVaapiImageUsageFlags usage_flag;
+  GstVideoInfo allocation_info, surface_info;
+
+  /* get rid of possible encoded format and assume NV12 */
+  allocation_info = allocator->allocation_info;
+  gst_video_info_force_nv12_if_encoded (&allocation_info);
+
+  /* Step1: Try the specified format and flag. May fallback to native if
+     direct upload/rendering is unavailable. */
+  if (allocator_configure_surface_try_specified_format (display,
+          &allocation_info, req_usage_flag, &surface_info, &usage_flag)) {
+    allocator->usage_flag = usage_flag;
+    allocator->surface_info = surface_info;
+    goto success;
+  }
+
+  /* Step2: Try other surface format. Because format is different,
+     direct upload/rendering is unavailable, always use native */
+  if (allocator_configure_surface_try_other_format (display, &allocation_info,
+          &surface_info)) {
+    allocator->usage_flag = GST_VAAPI_IMAGE_USAGE_FLAG_NATIVE_FORMATS;
+    allocator->surface_info = surface_info;
+    goto success;
+  }
+
+  GST_INFO_OBJECT (allocator, "Failed to configure the video format: %s"
+      " with usage flag: %s",
+      GST_VIDEO_INFO_FORMAT_STRING (&allocator->allocation_info),
+      gst_vaapi_image_usage_flags_to_string (req_usage_flag));
+  return FALSE;
+
+success:
+  GST_DEBUG_OBJECT (allocator, "success to set the surface format %s"
+      " for video format %s with %s",
+      GST_VIDEO_INFO_FORMAT_STRING (&allocator->surface_info),
+      GST_VIDEO_INFO_FORMAT_STRING (&allocator->allocation_info),
+      gst_vaapi_image_usage_flags_to_string (allocator->usage_flag));
+  return TRUE;
 }
 
 static inline gboolean
