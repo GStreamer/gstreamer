@@ -160,6 +160,11 @@ nle_source_dispose (GObject * object)
     priv->staticpad = NULL;
   }
 
+  if (priv->seek_event) {
+    gst_event_unref (priv->seek_event);
+    priv->seek_event = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
