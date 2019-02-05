@@ -69,7 +69,7 @@ typedef IID CLSID;
 #define MIDL_DEFINE_GUID(type,name,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) \
         const type name = {l,w1,w2,{b1,b2,b3,b4,b5,b6,b7,b8}}
 
-#endif !_MIDL_USE_GUIDDEF_
+#endif // !_MIDL_USE_GUIDDEF_
 
 MIDL_DEFINE_GUID(IID, LIBID_DeckLinkAPI,0xD864517A,0xEDD5,0x466D,0x86,0x7D,0xC8,0x19,0xF1,0xC0,0x52,0xBB);
 

@@ -105,7 +105,7 @@ void
 vad_set_threshold (struct _vad_s *p, gint threshold_db)
 {
   gint power = (gint) (threshold_db / 10.0);
-  p->threshold = (guint64) (pow (10, (power)) * 4294967295);
+  p->threshold = (guint64) (pow (10, (power)) * 4294967295UL);
 }
 
 gint

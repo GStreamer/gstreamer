@@ -475,8 +475,8 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
    * Note that this flag will have no effect in practice if the video stream
    * does not contain timecode metadata.
    */
-  if (self->timecode_format == GST_DECKLINK_TIMECODE_FORMAT_VITC ||
-      self->timecode_format == GST_DECKLINK_TIMECODE_FORMAT_VITCFIELD2)
+  if ((gint64) self->timecode_format == (gint64) GST_DECKLINK_TIMECODE_FORMAT_VITC ||
+      (gint64) self->timecode_format == (gint64) GST_DECKLINK_TIMECODE_FORMAT_VITCFIELD2)
     flags = bmdVideoOutputVITC;
   else
     flags = bmdVideoOutputRP188;

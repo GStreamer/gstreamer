@@ -32,7 +32,7 @@ extern "C" {
 IDeckLinkIterator*		CreateDeckLinkIteratorInstance (void)
 {
 	IDeckLinkIterator *deckLinkIterator = NULL;
-	HRESULT res = CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL,
+	CoCreateInstance(CLSID_CDeckLinkIterator, NULL, CLSCTX_ALL,
 		IID_IDeckLinkIterator, (void**)&deckLinkIterator);
 	return deckLinkIterator;
 }

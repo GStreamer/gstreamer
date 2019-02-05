@@ -357,7 +357,7 @@ ladspa_plugin_path_search (GstPlugin * plugin)
     g_string_append_printf (ladspa_path,
         "%s" G_SEARCHPATH_SEPARATOR_S GST_LADSPA_DEFAULT_PATH, search_path);
   } else {
-    g_string_append_printf (ladspa_path, GST_LADSPA_DEFAULT_PATH);
+    g_string_append (ladspa_path, GST_LADSPA_DEFAULT_PATH);
   }
 
 #ifdef G_OS_WIN32

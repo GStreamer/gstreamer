@@ -442,6 +442,12 @@ typedef struct
     0x9B496CE1, 0x811B, 0x11cf, { 0x8C, 0x77, 0x00, 0xAA, 0x00, 0x6B, 0x68, 0x14 }
 #endif
 
+/* GCC warns about this, but it seems to be correct and MSVC doesn't warn about
+ * it. XXX: Check again after the toolchain is updated:
+ * https://gitlab.freedesktop.org/gstreamer/cerbero/merge_requests/69 */
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wmissing-braces"
+#endif
 static const KsPropertySetMapping known_property_sets[] = {
   {{STATIC_KSPROPSETID_General}, "General"},
   {{STATIC_KSPROPSETID_MediaSeeking}, "MediaSeeking"},

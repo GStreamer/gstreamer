@@ -730,7 +730,8 @@ gst_wasapi_util_waveformatex_to_channel_mask (WAVEFORMATEXTENSIBLE * format,
 
   /* XXX: Warn if some channel masks couldn't be mapped? */
 
-  GST_DEBUG ("Converted WASAPI mask 0x%x -> 0x%x", dwChannelMask, mask);
+  GST_DEBUG ("Converted WASAPI mask 0x%" G_GINT64_MODIFIER "x -> 0x%"
+      G_GINT64_MODIFIER "x", (guint64) dwChannelMask, (guint64) mask);
 
 out:
   if (out_position)
