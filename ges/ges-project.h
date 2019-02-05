@@ -126,6 +126,8 @@ const GList *ges_project_list_encoding_profiles (GESProject *project);
 GES_API
 gboolean ges_add_missing_uri_relocation_uri    (const gchar * uri,
                                                 gboolean recurse);
+GES_API
+void ges_project_add_formatter (GESProject * project, GESFormatter * formatter);
 
 G_END_DECLS
 
