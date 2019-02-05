@@ -51,7 +51,9 @@
 
 gboolean colored_output = TRUE;
 
+#ifdef G_OS_UNIX
 GPid child_pid = -1;
+#endif
 GMainLoop *loop = NULL;
 
 /* Console colors */

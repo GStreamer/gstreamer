@@ -1555,7 +1555,8 @@ gst_harness_create_buffer (GstHarness * h, gsize size)
     g_assert_cmpint (flow, ==, GST_FLOW_OK);
     if (gst_buffer_get_size (ret) != size) {
       GST_DEBUG_OBJECT (h,
-          "use fallback, pool is configured with a different size (%zu != %zu)",
+          "use fallback, pool is configured with a different size (%"
+          G_GSIZE_FORMAT " != %" G_GSIZE_FORMAT ")",
           size, gst_buffer_get_size (ret));
       gst_buffer_unref (ret);
       ret = NULL;
