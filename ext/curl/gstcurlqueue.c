@@ -83,8 +83,9 @@ gst_curl_http_src_add_queue_item (GstCurlHttpSrcQueueElement ** queue,
   }
 
   insert_point->p = s;
-  g_mutex_init (&insert_point->running);
+  g_atomic_int_set (&insert_point->running, 0);
   insert_point->next = NULL;
+  s->connection_status = GSTCURL_CONNECTED;
   return TRUE;
 }
 
@@ -127,6 +128,7 @@ gst_curl_http_src_remove_queue_item (GstCurlHttpSrcQueueElement ** queue,
     prev_qelement->next = this_qelement->next;
   }
   g_free (this_qelement);
+  s->connection_status = GSTCURL_NOT_CONNECTED;
   return TRUE;
 }
 
@@ -164,12 +166,13 @@ gst_curl_http_src_remove_queue_handle (GstCurlHttpSrcQueueElement ** queue,
      this_qelement->p->uri); */
   /* First, signal the transfer owner thread to wake up */
   g_mutex_lock (&this_qelement->p->buffer_mutex);
-  g_cond_signal (&this_qelement->p->signal);
+  g_cond_signal (&this_qelement->p->buffer_cond);
   if (this_qelement->p->state != GSTCURL_UNLOCK) {
     this_qelement->p->state = GSTCURL_DONE;
   } else {
     this_qelement->p->pending_state = GSTCURL_DONE;
   }
+  this_qelement->p->connection_status = GSTCURL_NOT_CONNECTED;
   this_qelement->p->curl_result = result;
   g_mutex_unlock (&this_qelement->p->buffer_mutex);
 

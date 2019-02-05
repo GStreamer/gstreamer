@@ -110,18 +110,12 @@ struct _GstCurlHttpSrcMultiTaskContext
   guint       refcount;
   GCond       signal;
 
-  GstCurlHttpSrc  *request_removal_element;
-
   GstCurlHttpSrcQueueElement  *queue;
 
   enum
   {
-    GSTCURL_MULTI_LOOP_STATE_WAIT = 0,
-    GSTCURL_MULTI_LOOP_STATE_QUEUE_EVENT,
     GSTCURL_MULTI_LOOP_STATE_RUNNING,
-    GSTCURL_MULTI_LOOP_STATE_REQUEST_REMOVAL,
-    GSTCURL_MULTI_LOOP_STATE_STOP,
-    GSTCURL_MULTI_LOOP_STATE_MAX
+    GSTCURL_MULTI_LOOP_STATE_STOP
   } state;
 
   /* < private > */
@@ -200,11 +194,16 @@ struct _GstCurlHttpSrc
   } state, pending_state;
   CURL *curl_handle;
   GMutex buffer_mutex;
-  GCond signal;
+  GCond buffer_cond;
   gchar *buffer;
   guint buffer_len;
   gboolean transfer_begun;
   gboolean data_received;
+  enum {
+    GSTCURL_NOT_CONNECTED,
+    GSTCURL_CONNECTED,
+    GSTCURL_WANT_REMOVAL
+  } connection_status;
 
   /*
    * Response Headers
@@ -218,34 +217,6 @@ struct _GstCurlHttpSrc
   char curl_errbuf[CURL_ERROR_SIZE];
 
   GstCaps *caps;
-};
-
-enum
-{
-  PROP_0,
-  PROP_URI,
-  PROP_USERNAME,
-  PROP_PASSWORD,
-  PROP_PROXYURI,
-  PROP_PROXYUSERNAME,
-  PROP_PROXYPASSWORD,
-  PROP_COOKIES,
-  PROP_USERAGENT,
-  PROP_HEADERS,
-  PROP_COMPRESS,
-  PROP_REDIRECT,
-  PROP_MAXREDIRECT,
-  PROP_KEEPALIVE,
-  PROP_TIMEOUT,
-  PROP_STRICT_SSL,
-  PROP_SSL_CA_FILE,
-  PROP_RETRIES,
-  PROP_CONNECTIONMAXTIME,
-  PROP_MAXCONCURRENT_SERVER,
-  PROP_MAXCONCURRENT_PROXY,
-  PROP_MAXCONCURRENT_GLOBAL,
-  PROP_HTTPVERSION,
-  PROP_MAX
 };
 
 GType gst_curl_http_src_get_type (void);
