@@ -48,6 +48,10 @@ if vpx_dep.found()
     vpx_args += '-DHAVE_VPX_1_4'
   endif
 
+  if dependency('vpx', version : '>=1.8.0', required : false).found()
+    vpx_args += '-DHAVE_VPX_1_8'
+  endif
+
   gstvpx = library('gstvpx',
     vpx_sources,
     c_args : gst_plugins_good_args + vpx_args,
