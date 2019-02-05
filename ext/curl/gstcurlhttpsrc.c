@@ -127,6 +127,15 @@ GST_DEBUG_CATEGORY_STATIC (gst_curl_http_src_debug);
 #define GST_CAT_DEFAULT gst_curl_http_src_debug
 GST_DEBUG_CATEGORY_STATIC (gst_curl_loop_debug);
 
+#define CURL_HTTP_SRC_ERROR(src,cat,code,error_message)     \
+  do { \
+    GST_ELEMENT_ERROR_WITH_DETAILS ((src), cat, code, ("%s", error_message), \
+        ("%s (%d), URL: %s, Redirect to: %s", (src)->reason_phrase, \
+            (src)->status_code, (src)->uri, GST_STR_NULL ((src)->redirect_uri)), \
+            ("http-status-code", G_TYPE_UINT, (src)->status_code, \
+             "http-redirect-uri", G_TYPE_STRING, GST_STR_NULL ((src)->redirect_uri), NULL)); \
+  } while(0)
+
 enum
 {
   PROP_0,
@@ -710,8 +719,8 @@ gst_curl_http_src_init (GstCurlHttpSrc * source)
   source->http_headers = NULL;
   source->content_type = NULL;
   source->status_code = 0;
+  source->reason_phrase = NULL;
   source->hdrs_updated = FALSE;
-
   source->curl_result = CURLE_OK;
   gst_caps_replace (&source->caps, NULL);
 
@@ -948,6 +957,8 @@ retry:
       src->state = GSTCURL_NONE;
       src->transfer_begun = FALSE;
       src->status_code = 0;
+      g_free (src->reason_phrase);
+      src->reason_phrase = NULL;
       src->hdrs_updated = FALSE;
       if (src->http_headers != NULL) {
         gst_structure_free (src->http_headers);
@@ -981,6 +992,8 @@ retry:
     src->state = GSTCURL_NONE;
     src->transfer_begun = FALSE;
     src->status_code = 0;
+    g_free (src->reason_phrase);
+    src->reason_phrase = NULL;
     src->hdrs_updated = FALSE;
     gst_curl_http_src_destroy_easy_handle (src);
     ret = GST_FLOW_EOS;
@@ -1168,8 +1181,8 @@ gst_curl_http_src_handle_response (GstCurlHttpSrc * src)
 
   GSTCURL_FUNCTION_ENTRY (src);
 
-  GST_TRACE_OBJECT (src, "status code: %d, curl return code %d",
-      src->status_code, src->curl_result);
+  GST_TRACE_OBJECT (src, "status code: %d (%s), curl return code %d",
+      src->status_code, src->reason_phrase, src->curl_result);
 
   /* Check the curl result code first - anything not 0 is probably a failure */
   if (src->curl_result != 0) {
@@ -1186,6 +1199,7 @@ gst_curl_http_src_handle_response (GstCurlHttpSrc * src)
     GST_WARNING_OBJECT (src, "Transfer for URI %s returned error status %u",
         src->uri, src->status_code);
     src->retries_remaining = 0;
+    CURL_HTTP_SRC_ERROR (src, RESOURCE, NOT_FOUND, (src->reason_phrase));
     return GST_FLOW_ERROR;
   } else if (src->status_code == 0) {
     if (curl_easy_getinfo (src->curl_handle, CURLINFO_TOTAL_TIME,
@@ -1435,6 +1449,8 @@ gst_curl_http_src_cleanup_instance (GstCurlHttpSrc * src)
     gst_structure_free (src->http_headers);
     src->http_headers = NULL;
   }
+  g_free (src->reason_phrase);
+  src->reason_phrase = NULL;
   gst_caps_replace (&src->caps, NULL);
 
   gst_curl_http_src_destroy_easy_handle (src);
@@ -1818,8 +1834,10 @@ gst_curl_http_src_get_header (void *header, size_t size, size_t nmemb,
     } else {
       s->status_code =
           (guint) g_ascii_strtoll (status_line_fields[1], NULL, 10);
+      g_free (s->reason_phrase);
+      s->reason_phrase = g_strdup (status_line_fields[2]);
       GST_INFO_OBJECT (s, "Received status %u for request for URI %s: %s",
-          s->status_code, s->uri, status_line_fields[2]);
+          s->status_code, s->uri, s->reason_phrase);
       gst_structure_set (s->http_headers, HTTP_STATUS_CODE,
           G_TYPE_UINT, s->status_code, NULL);
       g_strfreev (status_line_fields);
