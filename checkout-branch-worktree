@@ -73,7 +73,7 @@ if __name__ == "__main__":
                         help="The meson build directory")
     options = parser.parse_args()
 
-    if options.no_color:
+    if options.no_color or not Colors.can_enable():
         Colors.disable()
 
     if not os.path.exists(options.builddir):

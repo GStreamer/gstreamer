@@ -136,7 +136,7 @@ if __name__ == "__main__":
                         help="Use a android repo manifest to sync repositories"
                         " Note that it will let all repositories in detached state")
     options = parser.parse_args()
-    if options.no_color:
+    if options.no_color or not Colors.can_enable():
         Colors.disable()
 
     if options.no_interaction:

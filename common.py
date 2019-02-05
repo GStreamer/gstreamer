@@ -1,9 +1,10 @@
-import argparse
 import os
 import sys
-import shutil
-import subprocess
 import shlex
+import shutil
+import argparse
+import platform
+import subprocess
 
 
 ROOTDIR = os.path.abspath(os.path.dirname(__file__))
@@ -18,6 +19,27 @@ class Colors:
     ENDC = '\033[0m'
 
     force_disable = False
+
+    def _windows_ansi():
+        from ctypes import windll, byref
+        from ctypes.wintypes import DWORD
+
+        kernel = windll.kernel32
+        stdout = kernel.GetStdHandle(-11)
+        mode = DWORD()
+        if not kernel.GetConsoleMode(stdout, byref(mode)):
+            return False
+        # Try setting ENABLE_VIRTUAL_TERMINAL_PROCESSING (0x4)
+        # If that fails (returns 0), we disable colors
+        return kernel.SetConsoleMode(stdout, mode.value | 0x4) or os.environ.get('ANSICON')
+
+    @classmethod
+    def can_enable(cls):
+        if not os.isatty(sys.stdout.fileno()):
+            return False
+        if platform.system().lower() == 'windows':
+            return cls._windows_ansi()
+        return os.environ.get('TERM') != 'dumb'
 
     @classmethod
     def disable(cls):
@@ -44,7 +66,8 @@ class Colors:
 
 def git(*args, repository_path='.'):
     return subprocess.check_output(["git"] + list(args), cwd=repository_path,
-                                   ).decode()
+                                   stdin=subprocess.DEVNULL,
+                                   stderr=subprocess.STDOUT).decode()
 
 def accept_command(commands):
     """Search @commands and returns the first found absolute path."""
