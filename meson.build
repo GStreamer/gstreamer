@@ -110,9 +110,6 @@ if gstvalidate_dep.found()
     cdata.set('HAVE_GST_VALIDATE', 1)
 endif
 
-configure_file(output : 'config.h', configuration : cdata)
-
-
 gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
 
@@ -127,6 +124,72 @@ gir_init_section = [ '--add-init-section=' + \
     'g_setenv("GST_DEBUG", "0", TRUE);' + \
     'gst_init(NULL,NULL);' + \
     'ges_init();', '--quiet']
+
+has_python = false
+if build_gir
+  pymod = import('python')
+  python = pymod.find_installation(required: get_option('python'))
+  python_dep = python.dependency(required : get_option('python'))
+  if python_dep.found()
+    python_abi_flags = python.get_variable('ABIFLAGS', '')
+    pylib_loc = get_option('libpython-dir')
+
+    error_msg = ''
+    if not cc.compiles('#include <Python.h>', dependencies: [python_dep])
+      error_msg = 'Could not compile a simple program against python'
+    elif pylib_loc == ''
+      check_path_exists = 'import os, sys; assert(os.path.exists(sys.argv[1]))'
+      pylib_loc = python.get_variable('LIBPL', '')
+      if host_machine.system() != 'windows'
+        pylib_ldlibrary = python.get_variable('LDLIBRARY', '')
+        if host_machine.system() == 'darwin'
+          # OSX is a pain. Python as shipped by apple installs libpython in /usr/lib
+          # so we hardcode that. Other systems can use -Dlibpythondir to
+          # override this.
+          pylib_loc = '/usr/lib'
+        else
+          if run_command(python, '-c', check_path_exists, join_paths(pylib_loc, pylib_ldlibrary)).returncode() != 0
+            # Workaround for Fedora
+            pylib_loc = python.get_variable('LIBDIR', '')
+            message('pylib_loc = @0@'.format(pylib_loc))
+          endif
+        endif
+
+        res = run_command(python, '-c', check_path_exists, join_paths(pylib_loc, pylib_ldlibrary))
+        if res.returncode() != 0
+          error_msg = '@0@ doesn\' exist, can\'t use python'.format(join_paths(pylib_loc, pylib_ldlibrary))
+        endif
+      endif
+      if error_msg == ''
+        pylib_suffix = 'so'
+        if host_machine.system() == 'windows'
+          pylib_suffix = 'dll'
+        elif host_machine.system() == 'darwin'
+          pylib_suffix = 'dylib'
+        endif
+
+        gmodule_dep = dependency('gmodule-2.0')
+        libges_deps = libges_deps + [python_dep, gmodule_dep]
+        has_python = true
+        message('python_abi_flags = @0@'.format(python_abi_flags))
+        message('pylib_loc = @0@'.format(pylib_loc))
+        cdata.set('HAS_PYTHON', true)
+        cdata.set('PY_LIB_LOC', '"@0@"'.format(pylib_loc))
+        cdata.set('PY_ABI_FLAGS', '"@0@"'.format(python_abi_flags))
+        cdata.set('PY_LIB_SUFFIX', '"@0@"'.format(pylib_suffix))
+        cdata.set('PYTHON_VERSION', '"@0@"'.format(python_dep.version()))
+      else
+          if get_option('python').enabled()
+            error(error_msg)
+          else
+            message(error_msg)
+          endif
+      endif
+    endif
+  endif
+endif
+
+configure_file(output : 'config.h', configuration : cdata)
 
 ges_c_args = ['-DHAVE_CONFIG_H', '-DG_LOG_DOMAIN="GES"']
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))

@@ -36,6 +36,14 @@
 #include "ges-formatter.h"
 #include "ges-internal.h"
 #include "ges.h"
+#ifdef HAS_PYTHON
+#include <Python.h>
+#include "ges-resources.h"
+#endif
+
+GST_DEBUG_CATEGORY_STATIC (ges_formatter_debug);
+#undef GST_CAT_DEFAULT
+#define GST_CAT_DEFAULT ges_formatter_debug
 
 /* TODO Add a GCancellable somewhere in the API */
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
@@ -100,10 +108,9 @@ _register_metas (GESExtractableInterface * iface, GObjectClass * class,
   ges_meta_container_register_meta_string (container, GES_META_READ_WRITE,
       GES_META_FORMAT_VERSION, NULL);
 
-  g_clear_pointer (&fclass->name, g_free);
-  g_clear_pointer (&fclass->description, g_free);
-  g_clear_pointer (&fclass->extension, g_free);
-  g_clear_pointer (&fclass->mimetype, g_free);
+  /* We are leaking the metadata but we don't really have choice here
+   * as calling ges_init() after deinit() is allowed.
+   */
 
   return TRUE;
 }
@@ -513,11 +520,110 @@ _list_formatters (GType * formatters, guint n_formatters)
   }
 }
 
+static void
+load_python_formatters (void)
+{
+#ifdef HAS_PYTHON
+  PyGILState_STATE state = 0;
+  PyObject *main_module, *main_locals;
+  GError *err = NULL;
+  GResource *resource = ges_get_resource ();
+  GBytes *bytes =
+      g_resource_lookup_data (resource, "/ges/python/gesotioformatter.py",
+      G_RESOURCE_LOOKUP_FLAGS_NONE, &err);
+  PyObject *code = NULL, *res = NULL;
+  gboolean we_initialized = FALSE;
+  GModule *libpython;
+  gpointer has_python = NULL;
+
+  GST_LOG ("Checking to see if libpython is already loaded");
+  if (g_module_symbol (g_module_open (NULL, G_MODULE_BIND_LOCAL),
+          "_Py_NoneStruct", &has_python) && has_python) {
+    GST_LOG ("libpython is already loaded");
+  } else {
+    const gchar *libpython_path =
+        PY_LIB_LOC "/libpython" PYTHON_VERSION PY_ABI_FLAGS "." PY_LIB_SUFFIX;
+    GST_LOG ("loading libpython from '%s'", libpython_path);
+    libpython = g_module_open (libpython_path, 0);
+    if (!libpython) {
+      GST_ERROR ("Couldn't g_module_open libpython. Reason: %s",
+          g_module_error ());
+      return;
+    }
+  }
+
+  if (!Py_IsInitialized ()) {
+    GST_LOG ("python wasn't initialized");
+    /* set the correct plugin for registering stuff */
+    Py_Initialize ();
+    we_initialized = TRUE;
+  } else {
+    GST_LOG ("python was already initialized");
+    state = PyGILState_Ensure ();
+  }
+
+  if (!bytes) {
+    GST_DEBUG ("Could not load gesotioformatter: %s\n", err->message);
+
+    g_clear_error (&err);
+
+    goto done;
+  }
+
+  main_module = PyImport_AddModule ("__main__");
+  if (main_module == NULL) {
+    GST_WARNING ("Could not add main module");
+    PyErr_Print ();
+    PyErr_Clear ();
+    goto done;
+  }
+
+  main_locals = PyModule_GetDict (main_module);
+  /* Compiling the code ourself so it has a proper filename */
+  code =
+      Py_CompileString (g_bytes_get_data (bytes, NULL), "gesotioformatter.py",
+      Py_file_input);
+  if (PyErr_Occurred ()) {
+    PyErr_Print ();
+    PyErr_Clear ();
+    goto done;
+  }
+  res = PyEval_EvalCode ((gpointer) code, main_locals, main_locals);
+  Py_XDECREF (code);
+  Py_XDECREF (res);
+  if (PyErr_Occurred ()) {
+    PyErr_Print ();
+    PyErr_Clear ();
+  }
+
+done:
+  if (bytes)
+    g_bytes_unref (bytes);
+
+  if (we_initialized) {
+    PyEval_SaveThread ();
+  } else {
+    PyGILState_Release (state);
+  }
+#endif /* HAS_PYTHON */
+}
+
 void
 _init_formatter_assets (void)
 {
   GType *formatters;
   guint n_formatters;
+  static gsize init_debug = 0;
+
+  if (g_once_init_enter (&init_debug)) {
+
+    GST_DEBUG_CATEGORY_INIT (ges_formatter_debug, "gesformatter",
+        GST_DEBUG_FG_YELLOW, "ges formatter");
+    g_once_init_leave (&init_debug, TRUE);
+  }
+
+  load_python_formatters ();
+
 
   formatters = g_type_children (GES_TYPE_FORMATTER, &n_formatters);
   _list_formatters (formatters, n_formatters);

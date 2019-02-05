@@ -8,3 +8,7 @@ option('xptv', type : 'feature', value : 'auto',
        description : 'Build the deprecated xptv formater')
 option('doc', type : 'feature', value : 'auto', yield: true,
        description: 'Enable documentation.')
+option('python', type : 'feature', value : 'auto', yield: true,
+       description: 'Enable python formatters.')
+option('libpython-dir', type : 'string', value : '',
+        description: 'Path to find libpythonXX.so')
