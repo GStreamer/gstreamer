@@ -59,6 +59,7 @@ if host_machine.system() != 'windows'
     [['elements/cccombiner.c']],
     [['elements/ccextractor.c']],
     [['elements/curlhttpsink.c'], not curl_dep.found(), [curl_dep]],
+    [['elements/curlhttpsrc.c'], not curl_dep.found(), [curl_dep, gio_dep]],
     [['elements/curlfilesink.c'],
         not curl_dep.found() or not cdata.has('HAVE_UNISTD_H'), [curl_dep]],
     [['elements/curlftpsink.c'], not curl_dep.found(), [curl_dep]],
