@@ -1054,6 +1054,10 @@ AG_GST_CHECK_FEATURE(VPX, [VPX decoder], vpx, [
       AC_DEFINE(HAVE_VPX_1_4, 1, [Defined if the VPX library version is 1.4 or bigger])
     ], [true])
 
+    PKG_CHECK_MODULES(VPX_180, vpx >= 1.8.0, [
+      AC_DEFINE(HAVE_VPX_1_8, 1, [Defined if the VPX library version is 1.8 or bigger])
+    ], [true])
+
     LIBS="$OLD_LIBS"
     CFLAGS="$OLD_CFLAGS"
   fi
