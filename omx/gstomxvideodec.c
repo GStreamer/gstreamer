@@ -784,6 +784,8 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
       max = min;
     } else if (max < min) {
       /* Can't use pool because can't have enough buffers */
+      GST_DEBUG_OBJECT (self,
+          "pool can only provide %d buffers but %d are required", max, min);
       caps = NULL;
     } else {
       min = max;
