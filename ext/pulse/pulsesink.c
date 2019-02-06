@@ -2183,8 +2183,9 @@ gst_pulsesink_query_getcaps (GstPulseSink * psink, GstCaps * filter)
   }
 
   for (i = g_list_first (device_info.formats); i; i = g_list_next (i)) {
-    gst_caps_append (ret,
-        gst_pulse_format_info_to_caps ((pa_format_info *) i->data));
+    GstCaps *caps = gst_pulse_format_info_to_caps ((pa_format_info *) i->data);
+    if (caps)
+      gst_caps_append (ret, caps);
   }
 
 unlock:
