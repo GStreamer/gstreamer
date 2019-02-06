@@ -289,7 +289,9 @@ class GstCheckTestsManager(MesonTestsManager):
         if self.tests:
             return self.tests
 
-        self.rebuild(all=True)
+        if not self.rebuild():
+            raise RuntimeError("Could not rebuild GStreamer unit tests")
+
         self.load_tests_info()
         mesontests = self.get_meson_tests()
         to_inspect = []
