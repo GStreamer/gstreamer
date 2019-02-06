@@ -62,7 +62,7 @@ def create_main_loop():
 
 def create_project(with_group=False, saved=False):
     """Creates a project with two clips in a group."""
-    project = GES.Project()
+    project = GES.Project.new(None)
     timeline = project.extract()
     layer = timeline.append_layer()
 
