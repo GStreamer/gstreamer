@@ -400,6 +400,10 @@ gst_validate_report_load_issues (void)
       _
       ("The pipeline latency is higher than the maximum allowed by the scenario"),
       NULL);
+  REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_ACTION_TOO_MANY_BUFFERS_DROPPED,
+      _
+      ("The number of dropped buffers is higher than the maximum allowed by the scenario"),
+      NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_WARNING, _("We got a g_log warning"),
       NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, G_LOG_CRITICAL,

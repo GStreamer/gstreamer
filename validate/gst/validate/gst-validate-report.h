@@ -121,6 +121,7 @@ typedef enum {
 #define SCENARIO_ACTION_TIMEOUT                  _QUARK("scenario::action-timeout")
 #define SCENARIO_ACTION_EXECUTION_ISSUE          _QUARK("scenario::execution-issue")
 #define SCENARIO_ACTION_LATENCY_TOO_HIGH         _QUARK("scenario::latency-too-high")
+#define SCENARIO_ACTION_TOO_MANY_BUFFERS_DROPPED _QUARK("scenario::too-many-buffers-dropped")
 
 #define G_LOG_ISSUE                              _QUARK("g-log::issue")
 #define G_LOG_WARNING                            _QUARK("g-log::warning")

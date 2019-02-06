@@ -158,6 +158,8 @@ struct _GstValidateScenarioPrivate
 
   gchar *pipeline_name;
   GstClockTime max_latency;
+  gint dropped;
+  gint max_dropped;
 
   /* 'switch-track action' currently waiting for
    * GST_MESSAGE_STREAMS_SELECTED to be completed. */
@@ -822,6 +824,27 @@ _action_sets_state (GstValidateAction * action)
 
 }
 
+static void
+gst_validate_scenario_check_dropped (GstValidateScenario * scenario)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+  guint dropped;
+
+  dropped = g_atomic_int_get (&priv->dropped);
+
+  if (priv->max_dropped == -1 || dropped != -1)
+    return;
+
+  GST_DEBUG_OBJECT (scenario, "Number of dropped buffers: %d (max allowed: %d)",
+      dropped, priv->max_dropped);
+
+  if (dropped > priv->max_dropped) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_TOO_MANY_BUFFERS_DROPPED,
+        "Too many buffers have been dropped: %d (max allowed: %d)",
+        dropped, priv->max_dropped);
+  }
+}
+
 static GstValidateExecuteActionReturn
 _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
 {
@@ -837,6 +860,8 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
     priv->execute_actions_source_id = 0;
   }
   SCENARIO_UNLOCK (scenario);
+
+  gst_validate_scenario_check_dropped (scenario);
 
   gst_bus_post (bus,
       gst_message_new_request_state (GST_OBJECT_CAST (scenario),
@@ -2898,6 +2923,18 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       gst_validate_scenario_check_latency (scenario, pipeline);
       break;
 
+    case GST_MESSAGE_QOS:
+    {
+      guint64 dropped;
+
+      /* Check the maximum allowed when scenario is terminating so the report
+       * will include the actual number of dropped buffers. */
+      gst_message_parse_qos_stats (message, NULL, NULL, &dropped);
+      if (dropped != -1)
+        g_atomic_int_set (&priv->dropped, dropped);
+      break;
+    }
+
     default:
       break;
   }
@@ -2965,6 +3002,8 @@ _load_scenario_file (GstValidateScenario * scenario,
       gst_validate_utils_get_clocktime (structure, "max-latency",
           &priv->max_latency);
 
+      gst_structure_get_int (structure, "max-dropped", &priv->max_dropped);
+
       continue;
     } else if (!g_strcmp0 (type, "include")) {
       const gchar *location = gst_structure_get_string (structure, "location");
@@ -3016,12 +3055,13 @@ _load_scenario_file (GstValidateScenario * scenario,
     action->action_number = priv->num_actions++;
   }
 
-  /* max latency can be overriden using config */
+  /* max-latency and max-dropped can be overriden using config */
   for (config = gst_validate_plugin_get_config (NULL); config;
       config = g_list_next (config)) {
-    if (gst_validate_utils_get_clocktime (config->data, "max-latency",
-            &priv->max_latency))
-      break;
+    gst_validate_utils_get_clocktime (config->data, "max-latency",
+        &priv->max_latency);
+
+    gst_structure_get_int (config->data, "max-dropped", &priv->max_dropped);
   }
 
 done:
@@ -3268,6 +3308,7 @@ gst_validate_scenario_init (GstValidateScenario * scenario)
   priv->vars = gst_structure_new_empty ("vars");
   g_weak_ref_init (&scenario->priv->ref_pipeline, NULL);
   priv->max_latency = GST_CLOCK_TIME_NONE;
+  priv->max_dropped = -1;
 
   g_mutex_init (&priv->lock);
 }
@@ -4305,6 +4346,16 @@ init_scenarios (void)
         .types = "double, int",
         .possible_variables = NULL,
         .def = "infinite (GST_CLOCK_TIME_NONE)"
+      },
+      {
+        .name = "max-dropped",
+        .description = "The maximum number of buffers which can be dropped by the QoS system allowed for this pipeline.\n"
+          "It can be overriden using core configuration, like for example by defining the "
+          "env variable GST_VALIDATE_CONFIG=core,max-dropped=100",
+        .mandatory = FALSE,
+        .types = "int",
+        .possible_variables = NULL,
+        .def = "infinite (-1)"
       },
       {NULL}
       }),
