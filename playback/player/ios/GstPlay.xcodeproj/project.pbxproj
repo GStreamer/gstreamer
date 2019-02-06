@@ -8,11 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		19A17EFC8D41A75E8D3DB72E /* OnlineMedia.plist in Resources */ = {isa = PBXBuildFile; fileRef = 19A176455D27298FE4041DC3 /* OnlineMedia.plist */; };
-		637F54472097C4DA00C00B38 /* libstdc++.6.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 637F54462097C4D900C00B38 /* libstdc++.6.tbd */; };
 		AD2B881F198D631B0070367B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B881E198D631B0070367B /* Foundation.framework */; };
 		AD2B8821198D631B0070367B /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B8820198D631B0070367B /* CoreGraphics.framework */; };
 		AD2B8823198D631B0070367B /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B8822198D631B0070367B /* UIKit.framework */; };
-		AD2B8825198D631B0070367B /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AD2B8824198D631B0070367B /* GStreamer.framework */; };
 		AD2B882B198D631B0070367B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AD2B8829198D631B0070367B /* InfoPlist.strings */; };
 		AD2B882D198D631B0070367B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B882C198D631B0070367B /* main.m */; };
 		AD2B8831198D631B0070367B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B8830198D631B0070367B /* AppDelegate.m */; };
@@ -24,6 +22,8 @@
 		AD2B885C198D65470070367B /* MainStoryboard_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AD2B885A198D65470070367B /* MainStoryboard_iPad.storyboard */; };
 		AD2B8861198D65780070367B /* LibraryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B885E198D65780070367B /* LibraryViewController.m */; };
 		AD2B8862198D65780070367B /* VideoViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = AD2B8860198D65780070367B /* VideoViewController.m */; };
+		C911037C220A89150054FB11 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C911037B220A89150054FB11 /* GStreamer.framework */; };
+		C9C4AEFD2136C6880048ED8D /* ssl in Resources */ = {isa = PBXBuildFile; fileRef = C9C4AEFB2136C6430048ED8D /* ssl */; };
 		F4D8C7D71ED455260019B8A3 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = F4D8C7D61ED455260019B8A3 /* libiconv.tbd */; };
 /* End PBXBuildFile section */
 
@@ -55,6 +55,8 @@
 		AD2B885E198D65780070367B /* LibraryViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LibraryViewController.m; sourceTree = "<group>"; };
 		AD2B885F198D65780070367B /* VideoViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoViewController.h; sourceTree = "<group>"; };
 		AD2B8860198D65780070367B /* VideoViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoViewController.m; sourceTree = "<group>"; };
+		C911037B220A89150054FB11 /* GStreamer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GStreamer.framework; path = ../../../../../../../../../Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework; sourceTree = "<group>"; };
+		C9C4AEFB2136C6430048ED8D /* ssl */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ssl; sourceTree = "<group>"; };
 		F4D8C7D61ED455260019B8A3 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -63,10 +65,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				637F54472097C4DA00C00B38 /* libstdc++.6.tbd in Frameworks */,
+				C911037C220A89150054FB11 /* GStreamer.framework in Frameworks */,
 				F4D8C7D71ED455260019B8A3 /* libiconv.tbd in Frameworks */,
 				AD2B8821198D631B0070367B /* CoreGraphics.framework in Frameworks */,
-				AD2B8825198D631B0070367B /* GStreamer.framework in Frameworks */,
 				AD2B8823198D631B0070367B /* UIKit.framework in Frameworks */,
 				AD2B881F198D631B0070367B /* Foundation.framework in Frameworks */,
 			);
@@ -95,6 +96,7 @@
 		AD2B881D198D631B0070367B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C911037B220A89150054FB11 /* GStreamer.framework */,
 				637F54462097C4D900C00B38 /* libstdc++.6.tbd */,
 				637F54422097C36400C00B38 /* libstdc++.tbd */,
 				F4D8C7D61ED455260019B8A3 /* libiconv.tbd */,
@@ -129,6 +131,7 @@
 		AD2B8827198D631B0070367B /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				C9C4AEFB2136C6430048ED8D /* ssl */,
 				AD2B8828198D631B0070367B /* GstPlay-Info.plist */,
 				AD2B8829198D631B0070367B /* InfoPlist.strings */,
 				AD2B882C198D631B0070367B /* main.m */,
@@ -198,6 +201,7 @@
 				AD2B8833198D631B0070367B /* fonts.conf in Resources */,
 				AD2B882B198D631B0070367B /* InfoPlist.strings in Resources */,
 				19A17EFC8D41A75E8D3DB72E /* OnlineMedia.plist in Resources */,
+				C9C4AEFD2136C6880048ED8D /* ssl in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,7 +240,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libstdc++";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -278,7 +282,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -290,7 +294,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libstdc++";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
@@ -325,7 +329,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -337,24 +341,24 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_CXX_LIBRARY = "libc++";
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				CLANG_CXX_LIBRARY = "libstdc++";
 				ENABLE_BITCODE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
-					"~/Library/Developer/GStreamer/iPhone.sdk",
+					"$(HOME)/Library/Developer/GStreamer/iPhone.sdk",
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "GstPlay/GstPlay-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"",
 					../lib,
 				);
 				INFOPLIST_FILE = "GstPlay/GstPlay-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
+					"-lc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
@@ -391,24 +395,24 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_CXX_LIBRARY = "libc++";
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				CLANG_CXX_LIBRARY = "libstdc++";
 				ENABLE_BITCODE = YES;
 				FRAMEWORK_SEARCH_PATHS = (
-					"~/Library/Developer/GStreamer/iPhone.sdk",
+					"$(HOME)/Library/Developer/GStreamer/iPhone.sdk",
 					"$(DEVELOPER_FRAMEWORKS_DIR)",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "GstPlay/GstPlay-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"",
 					../lib,
 				);
 				INFOPLIST_FILE = "GstPlay/GstPlay-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
+					"-lc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
