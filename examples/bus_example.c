@@ -3,14 +3,12 @@
 static GMainLoop *loop;
 
 static gboolean
-my_bus_callback (GstBus     *bus,
-         GstMessage *message,
-         gpointer    data)
+my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
   g_print ("Got %s message\n", GST_MESSAGE_TYPE_NAME (message));
 
   switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ERROR: {
+    case GST_MESSAGE_ERROR:{
       GError *err;
       gchar *debug;
 
@@ -39,8 +37,7 @@ my_bus_callback (GstBus     *bus,
 }
 
 gint
-main (gint   argc,
-      gchar *argv[])
+main (gint argc, gchar * argv[])
 {
   GstElement *pipeline;
   GstBus *bus;

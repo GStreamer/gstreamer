@@ -1,6 +1,8 @@
 #include <gst/gst.h>
 
-int main(int argc, char *argv[]) {
+int
+main (int argc, char *argv[])
+{
   GstElement *pipeline, *source, *sink;
   GstBus *bus;
   GstMessage *msg;
@@ -42,7 +44,9 @@ int main(int argc, char *argv[]) {
 
   /* Wait until error or EOS */
   bus = gst_element_get_bus (pipeline);
-  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+  msg =
+      gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
 
   /* Parse message */
   if (msg != NULL) {
@@ -52,8 +56,10 @@ int main(int argc, char *argv[]) {
     switch (GST_MESSAGE_TYPE (msg)) {
       case GST_MESSAGE_ERROR:
         gst_message_parse_error (msg, &err, &debug_info);
-        g_printerr ("Error received from element %s: %s\n", GST_OBJECT_NAME (msg->src), err->message);
-        g_printerr ("Debugging information: %s\n", debug_info ? debug_info : "none");
+        g_printerr ("Error received from element %s: %s\n",
+            GST_OBJECT_NAME (msg->src), err->message);
+        g_printerr ("Debugging information: %s\n",
+            debug_info ? debug_info : "none");
         g_clear_error (&err);
         g_free (debug_info);
         break;

@@ -1,7 +1,9 @@
 #include <gst/gst.h>
 
 /* Functions below print the Capabilities in a human-friendly format */
-static gboolean print_field (GQuark field, const GValue * value, gpointer pfx) {
+static gboolean
+print_field (GQuark field, const GValue * value, gpointer pfx)
+{
   gchar *str = gst_value_serialize (value);
 
   g_print ("%s  %15s: %s\n", (gchar *) pfx, g_quark_to_string (field), str);
@@ -9,7 +11,9 @@ static gboolean print_field (GQuark field, const GValue * value, gpointer pfx) {
   return TRUE;
 }
 
-static void print_caps (const GstCaps * caps, const gchar * pfx) {
+static void
+print_caps (const GstCaps * caps, const gchar * pfx)
+{
   guint i;
 
   g_return_if_fail (caps != NULL);
@@ -32,11 +36,14 @@ static void print_caps (const GstCaps * caps, const gchar * pfx) {
 }
 
 /* Prints information about a Pad Template, including its Capabilities */
-static void print_pad_templates_information (GstElementFactory * factory) {
+static void
+print_pad_templates_information (GstElementFactory * factory)
+{
   const GList *pads;
   GstStaticPadTemplate *padtemplate;
 
-  g_print ("Pad Templates for %s:\n", gst_element_factory_get_longname (factory));
+  g_print ("Pad Templates for %s:\n",
+      gst_element_factory_get_longname (factory));
   if (!gst_element_factory_get_num_pad_templates (factory)) {
     g_print ("  none\n");
     return;
@@ -77,7 +84,9 @@ static void print_pad_templates_information (GstElementFactory * factory) {
 }
 
 /* Shows the CURRENT capabilities of the requested pad in the given element */
-static void print_pad_capabilities (GstElement *element, gchar *pad_name) {
+static void
+print_pad_capabilities (GstElement * element, gchar * pad_name)
+{
   GstPad *pad = NULL;
   GstCaps *caps = NULL;
 
@@ -100,7 +109,9 @@ static void print_pad_capabilities (GstElement *element, gchar *pad_name) {
   gst_object_unref (pad);
 }
 
-int main(int argc, char *argv[]) {
+int
+main (int argc, char *argv[])
+{
   GstElement *pipeline, *source, *sink;
   GstElementFactory *source_factory, *sink_factory;
   GstBus *bus;
@@ -150,14 +161,16 @@ int main(int argc, char *argv[]) {
   /* Start playing */
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
-    g_printerr ("Unable to set the pipeline to the playing state (check the bus for error messages).\n");
+    g_printerr
+        ("Unable to set the pipeline to the playing state (check the bus for error messages).\n");
   }
 
   /* Wait until error, EOS or State Change */
   bus = gst_element_get_bus (pipeline);
   do {
-    msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS |
-        GST_MESSAGE_STATE_CHANGED);
+    msg =
+        gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+        GST_MESSAGE_ERROR | GST_MESSAGE_EOS | GST_MESSAGE_STATE_CHANGED);
 
     /* Parse message */
     if (msg != NULL) {
@@ -167,8 +180,10 @@ int main(int argc, char *argv[]) {
       switch (GST_MESSAGE_TYPE (msg)) {
         case GST_MESSAGE_ERROR:
           gst_message_parse_error (msg, &err, &debug_info);
-          g_printerr ("Error received from element %s: %s\n", GST_OBJECT_NAME (msg->src), err->message);
-          g_printerr ("Debugging information: %s\n", debug_info ? debug_info : "none");
+          g_printerr ("Error received from element %s: %s\n",
+              GST_OBJECT_NAME (msg->src), err->message);
+          g_printerr ("Debugging information: %s\n",
+              debug_info ? debug_info : "none");
           g_clear_error (&err);
           g_free (debug_info);
           terminate = TRUE;
@@ -181,9 +196,11 @@ int main(int argc, char *argv[]) {
           /* We are only interested in state-changed messages from the pipeline */
           if (GST_MESSAGE_SRC (msg) == GST_OBJECT (pipeline)) {
             GstState old_state, new_state, pending_state;
-            gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
+            gst_message_parse_state_changed (msg, &old_state, &new_state,
+                &pending_state);
             g_print ("\nPipeline state changed from %s to %s:\n",
-                gst_element_state_get_name (old_state), gst_element_state_get_name (new_state));
+                gst_element_state_get_name (old_state),
+                gst_element_state_get_name (new_state));
             /* Print the current capabilities of the sink element */
             print_pad_capabilities (sink, "sink");
           }

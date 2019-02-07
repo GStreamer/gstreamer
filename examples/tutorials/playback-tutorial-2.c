@@ -2,32 +2,38 @@
 #include <gst/gst.h>
 
 /* Structure to contain all our information, so we can pass it around */
-typedef struct _CustomData {
-  GstElement *playbin;  /* Our one and only element */
+typedef struct _CustomData
+{
+  GstElement *playbin;          /* Our one and only element */
 
-  gint n_video;          /* Number of embedded video streams */
-  gint n_audio;          /* Number of embedded audio streams */
-  gint n_text;           /* Number of embedded subtitle streams */
+  gint n_video;                 /* Number of embedded video streams */
+  gint n_audio;                 /* Number of embedded audio streams */
+  gint n_text;                  /* Number of embedded subtitle streams */
 
-  gint current_video;    /* Currently playing video stream */
-  gint current_audio;    /* Currently playing audio stream */
-  gint current_text;     /* Currently playing subtitle stream */
+  gint current_video;           /* Currently playing video stream */
+  gint current_audio;           /* Currently playing audio stream */
+  gint current_text;            /* Currently playing subtitle stream */
 
-  GMainLoop *main_loop;  /* GLib's Main Loop */
+  GMainLoop *main_loop;         /* GLib's Main Loop */
 } CustomData;
 
 /* playbin flags */
-typedef enum {
-  GST_PLAY_FLAG_VIDEO         = (1 << 0), /* We want video output */
-  GST_PLAY_FLAG_AUDIO         = (1 << 1), /* We want audio output */
-  GST_PLAY_FLAG_TEXT          = (1 << 2)  /* We want subtitle output */
+typedef enum
+{
+  GST_PLAY_FLAG_VIDEO = (1 << 0),       /* We want video output */
+  GST_PLAY_FLAG_AUDIO = (1 << 1),       /* We want audio output */
+  GST_PLAY_FLAG_TEXT = (1 << 2) /* We want subtitle output */
 } GstPlayFlags;
 
 /* Forward definition for the message and keyboard processing functions */
-static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data);
-static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data);
+static gboolean handle_message (GstBus * bus, GstMessage * msg,
+    CustomData * data);
+static gboolean handle_keyboard (GIOChannel * source, GIOCondition cond,
+    CustomData * data);
 
-int main(int argc, char *argv[]) {
+int
+main (int argc, char *argv[])
+{
   CustomData data;
   GstBus *bus;
   GstStateChangeReturn ret;
@@ -46,10 +52,14 @@ int main(int argc, char *argv[]) {
   }
 
   /* Set the URI to play */
-  g_object_set (data.playbin, "uri", "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.ogv", NULL);
+  g_object_set (data.playbin, "uri",
+      "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.ogv",
+      NULL);
 
   /* Set the subtitle URI to play and some font description */
-  g_object_set (data.playbin, "suburi", "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer_gr.srt", NULL);
+  g_object_set (data.playbin, "suburi",
+      "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer_gr.srt",
+      NULL);
   g_object_set (data.playbin, "subtitle-font-desc", "Sans, 18", NULL);
 
   /* Set flags to show Audio, Video and Subtitles */
@@ -59,7 +69,7 @@ int main(int argc, char *argv[]) {
 
   /* Add a bus watch, so we get notified when a message arrives */
   bus = gst_element_get_bus (data.playbin);
-  gst_bus_add_watch (bus, (GstBusFunc)handle_message, &data);
+  gst_bus_add_watch (bus, (GstBusFunc) handle_message, &data);
 
   /* Add a keyboard watch so we get notified of keystrokes */
 #ifdef G_OS_WIN32
@@ -67,7 +77,7 @@ int main(int argc, char *argv[]) {
 #else
   io_stdin = g_io_channel_unix_new (fileno (stdin));
 #endif
-  g_io_add_watch (io_stdin, G_IO_IN, (GIOFunc)handle_keyboard, &data);
+  g_io_add_watch (io_stdin, G_IO_IN, (GIOFunc) handle_keyboard, &data);
 
   /* Start playing */
   ret = gst_element_set_state (data.playbin, GST_STATE_PLAYING);
@@ -91,7 +101,9 @@ int main(int argc, char *argv[]) {
 }
 
 /* Extract some metadata from the streams and print it on the screen */
-static void analyze_streams (CustomData *data) {
+static void
+analyze_streams (CustomData * data)
+{
   gint i;
   GstTagList *tags;
   gchar *str;
@@ -103,7 +115,7 @@ static void analyze_streams (CustomData *data) {
   g_object_get (data->playbin, "n-text", &data->n_text, NULL);
 
   g_print ("%d video stream(s), %d audio stream(s), %d text stream(s)\n",
-    data->n_video, data->n_audio, data->n_text);
+      data->n_video, data->n_audio, data->n_text);
 
   g_print ("\n");
   for (i = 0; i < data->n_video; i++) {
@@ -163,21 +175,27 @@ static void analyze_streams (CustomData *data) {
   g_object_get (data->playbin, "current-text", &data->current_text, NULL);
 
   g_print ("\n");
-  g_print ("Currently playing video stream %d, audio stream %d and subtitle stream %d\n",
+  g_print
+      ("Currently playing video stream %d, audio stream %d and subtitle stream %d\n",
       data->current_video, data->current_audio, data->current_text);
-  g_print ("Type any number and hit ENTER to select a different subtitle stream\n");
+  g_print
+      ("Type any number and hit ENTER to select a different subtitle stream\n");
 }
 
 /* Process messages from GStreamer */
-static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data) {
+static gboolean
+handle_message (GstBus * bus, GstMessage * msg, CustomData * data)
+{
   GError *err;
   gchar *debug_info;
 
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ERROR:
       gst_message_parse_error (msg, &err, &debug_info);
-      g_printerr ("Error received from element %s: %s\n", GST_OBJECT_NAME (msg->src), err->message);
-      g_printerr ("Debugging information: %s\n", debug_info ? debug_info : "none");
+      g_printerr ("Error received from element %s: %s\n",
+          GST_OBJECT_NAME (msg->src), err->message);
+      g_printerr ("Debugging information: %s\n",
+          debug_info ? debug_info : "none");
       g_clear_error (&err);
       g_free (debug_info);
       g_main_loop_quit (data->main_loop);
@@ -186,16 +204,18 @@ static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data) 
       g_print ("End-Of-Stream reached.\n");
       g_main_loop_quit (data->main_loop);
       break;
-    case GST_MESSAGE_STATE_CHANGED: {
+    case GST_MESSAGE_STATE_CHANGED:{
       GstState old_state, new_state, pending_state;
-      gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
+      gst_message_parse_state_changed (msg, &old_state, &new_state,
+          &pending_state);
       if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin)) {
         if (new_state == GST_STATE_PLAYING) {
           /* Once we are in the playing state, analyze the streams */
           analyze_streams (data);
         }
       }
-    } break;
+    }
+      break;
     default:
       break;
   }
@@ -205,10 +225,13 @@ static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data) 
 }
 
 /* Process keyboard input */
-static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomData *data) {
+static gboolean
+handle_keyboard (GIOChannel * source, GIOCondition cond, CustomData * data)
+{
   gchar *str = NULL;
 
-  if (g_io_channel_read_line (source, &str, NULL, NULL, NULL) == G_IO_STATUS_NORMAL) {
+  if (g_io_channel_read_line (source, &str, NULL, NULL,
+          NULL) == G_IO_STATUS_NORMAL) {
     int index = g_ascii_strtoull (str, NULL, 0);
     if (index < 0 || index >= data->n_text) {
       g_printerr ("Index out of bounds\n");

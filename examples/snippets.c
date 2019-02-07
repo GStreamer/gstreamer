@@ -1,8 +1,7 @@
 #include <gst/gst.h>
-  
+
 static void
-link_to_multiplexer (GstPad     *tolink_pad,
-                     GstElement *mux)
+link_to_multiplexer (GstPad * tolink_pad, GstElement * mux)
 {
   GstPad *pad;
   gchar *srcname, *sinkname;
@@ -19,9 +18,9 @@ link_to_multiplexer (GstPad     *tolink_pad,
 }
 
 static void
-some_function (GstElement *tee)
+some_function (GstElement * tee)
 {
-  GstPad * pad;
+  GstPad *pad;
   gchar *name;
 
   pad = gst_element_get_request_pad (tee, "src%d");

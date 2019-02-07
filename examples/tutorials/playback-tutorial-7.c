@@ -1,6 +1,8 @@
 #include <gst/gst.h>
 
-int main(int argc, char *argv[]) {
+int
+main (int argc, char *argv[])
+{
   GstElement *pipeline, *bin, *equalizer, *convert, *sink;
   GstPad *pad, *ghost_pad;
   GstBus *bus;
@@ -10,7 +12,10 @@ int main(int argc, char *argv[]) {
   gst_init (&argc, &argv);
 
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
+  pipeline =
+      gst_parse_launch
+      ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm",
+      NULL);
 
   /* Create the elements inside the sink bin */
   equalizer = gst_element_factory_make ("equalizer-3bands", "equalizer");
@@ -32,8 +37,8 @@ int main(int argc, char *argv[]) {
   gst_object_unref (pad);
 
   /* Configure the equalizer */
-  g_object_set (G_OBJECT (equalizer), "band1", (gdouble)-24.0, NULL);
-  g_object_set (G_OBJECT (equalizer), "band2", (gdouble)-24.0, NULL);
+  g_object_set (G_OBJECT (equalizer), "band1", (gdouble) - 24.0, NULL);
+  g_object_set (G_OBJECT (equalizer), "band2", (gdouble) - 24.0, NULL);
 
   /* Set playbin2's audio sink to be our sink bin */
   g_object_set (GST_OBJECT (pipeline), "audio-sink", bin, NULL);
@@ -43,7 +48,9 @@ int main(int argc, char *argv[]) {
 
   /* Wait until error or EOS */
   bus = gst_element_get_bus (pipeline);
-  msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+  msg =
+      gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
 
   /* Free resources */
   if (msg != NULL)

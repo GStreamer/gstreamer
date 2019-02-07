@@ -3,13 +3,17 @@
 #include <gst/pbutils/pbutils.h>
 
 /* Structure to contain all our information, so we can pass it around */
-typedef struct _CustomData {
+typedef struct _CustomData
+{
   GstDiscoverer *discoverer;
   GMainLoop *loop;
 } CustomData;
 
 /* Print a tag in a human-readable format (name: value) */
-static void print_tag_foreach (const GstTagList *tags, const gchar *tag, gpointer user_data) {
+static void
+print_tag_foreach (const GstTagList * tags, const gchar * tag,
+    gpointer user_data)
+{
   GValue val = { 0, };
   gchar *str;
   gint depth = GPOINTER_TO_INT (user_data);
@@ -28,7 +32,9 @@ static void print_tag_foreach (const GstTagList *tags, const gchar *tag, gpointe
 }
 
 /* Print information regarding a stream */
-static void print_stream_info (GstDiscovererStreamInfo *info, gint depth) {
+static void
+print_stream_info (GstDiscovererStreamInfo * info, gint depth)
+{
   gchar *desc = NULL;
   GstCaps *caps;
   const GstTagList *tags;
@@ -43,7 +49,9 @@ static void print_stream_info (GstDiscovererStreamInfo *info, gint depth) {
     gst_caps_unref (caps);
   }
 
-  g_print ("%*s%s: %s\n", 2 * depth, " ", gst_discoverer_stream_info_get_stream_type_nick (info), (desc ? desc : ""));
+  g_print ("%*s%s: %s\n", 2 * depth, " ",
+      gst_discoverer_stream_info_get_stream_type_nick (info),
+      (desc ? desc : ""));
 
   if (desc) {
     g_free (desc);
@@ -58,7 +66,9 @@ static void print_stream_info (GstDiscovererStreamInfo *info, gint depth) {
 }
 
 /* Print information regarding a stream and its substreams, if any */
-static void print_topology (GstDiscovererStreamInfo *info, gint depth) {
+static void
+print_topology (GstDiscovererStreamInfo * info, gint depth)
+{
   GstDiscovererStreamInfo *next;
 
   if (!info)
@@ -73,7 +83,9 @@ static void print_topology (GstDiscovererStreamInfo *info, gint depth) {
   } else if (GST_IS_DISCOVERER_CONTAINER_INFO (info)) {
     GList *tmp, *streams;
 
-    streams = gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO (info));
+    streams =
+        gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO
+        (info));
     for (tmp = streams; tmp; tmp = tmp->next) {
       GstDiscovererStreamInfo *tmpinf = (GstDiscovererStreamInfo *) tmp->data;
       print_topology (tmpinf, depth + 1);
@@ -84,7 +96,10 @@ static void print_topology (GstDiscovererStreamInfo *info, gint depth) {
 
 /* This function is called every time the discoverer has information regarding
  * one of the URIs we provided.*/
-static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info, GError *err, CustomData *data) {
+static void
+on_discovered_cb (GstDiscoverer * discoverer, GstDiscovererInfo * info,
+    GError * err, CustomData * data)
+{
   GstDiscovererResult result;
   const gchar *uri;
   const GstTagList *tags;
@@ -128,7 +143,8 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 
   /* If we got no error, show the retrieved information */
 
-  g_print ("\nDuration: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
+  g_print ("\nDuration: %" GST_TIME_FORMAT "\n",
+      GST_TIME_ARGS (gst_discoverer_info_get_duration (info)));
 
   tags = gst_discoverer_info_get_tags (info);
   if (tags) {
@@ -136,7 +152,8 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
     gst_tag_list_foreach (tags, print_tag_foreach, GINT_TO_POINTER (1));
   }
 
-  g_print ("Seekable: %s\n", (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
+  g_print ("Seekable: %s\n",
+      (gst_discoverer_info_get_seekable (info) ? "yes" : "no"));
 
   g_print ("\n");
 
@@ -155,16 +172,21 @@ static void on_discovered_cb (GstDiscoverer *discoverer, GstDiscovererInfo *info
 
 /* This function is called when the discoverer has finished examining
  * all the URIs we provided.*/
-static void on_finished_cb (GstDiscoverer *discoverer, CustomData *data) {
+static void
+on_finished_cb (GstDiscoverer * discoverer, CustomData * data)
+{
   g_print ("Finished discovering\n");
 
   g_main_loop_quit (data->loop);
 }
 
-int main (int argc, char **argv) {
+int
+main (int argc, char **argv)
+{
   CustomData data;
   GError *err = NULL;
-  gchar *uri = "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm";
+  gchar *uri =
+      "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm";
 
   /* if a URI was provided, use it instead of the default one */
   if (argc > 1) {
@@ -188,8 +210,10 @@ int main (int argc, char **argv) {
   }
 
   /* Connect to the interesting signals */
-  g_signal_connect (data.discoverer, "discovered", G_CALLBACK (on_discovered_cb), &data);
-  g_signal_connect (data.discoverer, "finished", G_CALLBACK (on_finished_cb), &data);
+  g_signal_connect (data.discoverer, "discovered",
+      G_CALLBACK (on_discovered_cb), &data);
+  g_signal_connect (data.discoverer, "finished", G_CALLBACK (on_finished_cb),
+      &data);
 
   /* Start the discoverer process (nothing to do yet) */
   gst_discoverer_start (data.discoverer);

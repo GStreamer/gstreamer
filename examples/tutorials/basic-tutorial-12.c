@@ -1,16 +1,19 @@
 #include <gst/gst.h>
 #include <string.h>
 
-typedef struct _CustomData {
+typedef struct _CustomData
+{
   gboolean is_live;
   GstElement *pipeline;
   GMainLoop *loop;
 } CustomData;
 
-static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
+static void
+cb_message (GstBus * bus, GstMessage * msg, CustomData * data)
+{
 
   switch (GST_MESSAGE_TYPE (msg)) {
-    case GST_MESSAGE_ERROR: {
+    case GST_MESSAGE_ERROR:{
       GError *err;
       gchar *debug;
 
@@ -28,11 +31,12 @@ static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
       gst_element_set_state (data->pipeline, GST_STATE_READY);
       g_main_loop_quit (data->loop);
       break;
-    case GST_MESSAGE_BUFFERING: {
+    case GST_MESSAGE_BUFFERING:{
       gint percent = 0;
 
       /* If the stream is live, we do not care about buffering. */
-      if (data->is_live) break;
+      if (data->is_live)
+        break;
 
       gst_message_parse_buffering (msg, &percent);
       g_print ("Buffering (%3d%%)\r", percent);
@@ -51,10 +55,12 @@ static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
     default:
       /* Unhandled message */
       break;
-    }
+  }
 }
 
-int main(int argc, char *argv[]) {
+int
+main (int argc, char *argv[])
+{
   GstElement *pipeline;
   GstBus *bus;
   GstStateChangeReturn ret;
@@ -68,7 +74,10 @@ int main(int argc, char *argv[]) {
   memset (&data, 0, sizeof (data));
 
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
+  pipeline =
+      gst_parse_launch
+      ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm",
+      NULL);
   bus = gst_element_get_bus (pipeline);
 
   /* Start playing */

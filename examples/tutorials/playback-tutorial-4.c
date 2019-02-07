@@ -4,18 +4,23 @@
 #define GRAPH_LENGTH 78
 
 /* playbin flags */
-typedef enum {
-  GST_PLAY_FLAG_DOWNLOAD      = (1 << 7) /* Enable progressive download (on selected formats) */
+typedef enum
+{
+  GST_PLAY_FLAG_DOWNLOAD = (1 << 7)     /* Enable progressive download (on selected formats) */
 } GstPlayFlags;
 
-typedef struct _CustomData {
+typedef struct _CustomData
+{
   gboolean is_live;
   GstElement *pipeline;
   GMainLoop *loop;
   gint buffering_level;
 } CustomData;
 
-static void got_location (GstObject *gstobject, GstObject *prop_object, GParamSpec *prop, gpointer data) {
+static void
+got_location (GstObject * gstobject, GstObject * prop_object, GParamSpec * prop,
+    gpointer data)
+{
   gchar *location;
   g_object_get (G_OBJECT (prop_object), "temp-location", &location, NULL);
   g_print ("Temporary file: %s\n", location);
@@ -24,10 +29,12 @@ static void got_location (GstObject *gstobject, GstObject *prop_object, GParamSp
   /* g_object_set (G_OBJECT (prop_object), "temp-remove", FALSE, NULL); */
 }
 
-static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
+static void
+cb_message (GstBus * bus, GstMessage * msg, CustomData * data)
+{
 
   switch (GST_MESSAGE_TYPE (msg)) {
-    case GST_MESSAGE_ERROR: {
+    case GST_MESSAGE_ERROR:{
       GError *err;
       gchar *debug;
 
@@ -47,7 +54,8 @@ static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
       break;
     case GST_MESSAGE_BUFFERING:
       /* If the stream is live, we do not care about buffering. */
-      if (data->is_live) break;
+      if (data->is_live)
+        break;
 
       gst_message_parse_buffering (msg, &data->buffering_level);
 
@@ -65,10 +73,12 @@ static void cb_message (GstBus *bus, GstMessage *msg, CustomData *data) {
     default:
       /* Unhandled message */
       break;
-    }
+  }
 }
 
-static gboolean refresh_ui (CustomData *data) {
+static gboolean
+refresh_ui (CustomData * data)
+{
   GstQuery *query;
   gboolean result;
 
@@ -88,15 +98,15 @@ static gboolean refresh_ui (CustomData *data) {
       gst_query_parse_nth_buffering_range (query, range, &start, &stop);
       start = start * GRAPH_LENGTH / (stop - start);
       stop = stop * GRAPH_LENGTH / (stop - start);
-      for (i = (gint)start; i < stop; i++)
-        graph [i] = '-';
+      for (i = (gint) start; i < stop; i++)
+        graph[i] = '-';
     }
-    if (gst_element_query_position (data->pipeline, GST_FORMAT_TIME, &position) &&
-        GST_CLOCK_TIME_IS_VALID (position) &&
-        gst_element_query_duration (data->pipeline, GST_FORMAT_TIME, &duration) &&
-        GST_CLOCK_TIME_IS_VALID (duration)) {
-      i = (gint)(GRAPH_LENGTH * (double)position / (double)(duration + 1));
-      graph [i] = data->buffering_level < 100 ? 'X' : '>';
+    if (gst_element_query_position (data->pipeline, GST_FORMAT_TIME, &position)
+        && GST_CLOCK_TIME_IS_VALID (position)
+        && gst_element_query_duration (data->pipeline, GST_FORMAT_TIME,
+            &duration) && GST_CLOCK_TIME_IS_VALID (duration)) {
+      i = (gint) (GRAPH_LENGTH * (double) position / (double) (duration + 1));
+      graph[i] = data->buffering_level < 100 ? 'X' : '>';
     }
     g_print ("[%s]", graph);
     if (data->buffering_level < 100) {
@@ -111,7 +121,9 @@ static gboolean refresh_ui (CustomData *data) {
 
 }
 
-int main(int argc, char *argv[]) {
+int
+main (int argc, char *argv[])
+{
   GstElement *pipeline;
   GstBus *bus;
   GstStateChangeReturn ret;
@@ -127,7 +139,10 @@ int main(int argc, char *argv[]) {
   data.buffering_level = 100;
 
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
+  pipeline =
+      gst_parse_launch
+      ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm",
+      NULL);
   bus = gst_element_get_bus (pipeline);
 
   /* Set the download flag */
@@ -154,10 +169,11 @@ int main(int argc, char *argv[]) {
 
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (cb_message), &data);
-  g_signal_connect (pipeline, "deep-notify::temp-location", G_CALLBACK (got_location), NULL);
+  g_signal_connect (pipeline, "deep-notify::temp-location",
+      G_CALLBACK (got_location), NULL);
 
   /* Register a function that GLib will call every second */
-  g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, &data);
+  g_timeout_add_seconds (1, (GSourceFunc) refresh_ui, &data);
 
   g_main_loop_run (main_loop);
 

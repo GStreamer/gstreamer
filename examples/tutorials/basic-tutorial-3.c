@@ -1,7 +1,8 @@
 #include <gst/gst.h>
 
 /* Structure to contain all our information, so we can pass it to callbacks */
-typedef struct _CustomData {
+typedef struct _CustomData
+{
   GstElement *pipeline;
   GstElement *source;
   GstElement *convert;
@@ -9,9 +10,12 @@ typedef struct _CustomData {
 } CustomData;
 
 /* Handler for the pad-added signal */
-static void pad_added_handler (GstElement *src, GstPad *pad, CustomData *data);
+static void pad_added_handler (GstElement * src, GstPad * pad,
+    CustomData * data);
 
-int main(int argc, char *argv[]) {
+int
+main (int argc, char *argv[])
+{
   CustomData data;
   GstBus *bus;
   GstMessage *msg;
@@ -36,7 +40,8 @@ int main(int argc, char *argv[]) {
 
   /* Build the pipeline. Note that we are NOT linking the source at this
    * point. We will do it later. */
-  gst_bin_add_many (GST_BIN (data.pipeline), data.source, data.convert , data.sink, NULL);
+  gst_bin_add_many (GST_BIN (data.pipeline), data.source, data.convert,
+      data.sink, NULL);
   if (!gst_element_link (data.convert, data.sink)) {
     g_printerr ("Elements could not be linked.\n");
     gst_object_unref (data.pipeline);
@@ -44,10 +49,13 @@ int main(int argc, char *argv[]) {
   }
 
   /* Set the URI to play */
-  g_object_set (data.source, "uri", "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
+  g_object_set (data.source, "uri",
+      "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm",
+      NULL);
 
   /* Connect to the pad-added signal */
-  g_signal_connect (data.source, "pad-added", G_CALLBACK (pad_added_handler), &data);
+  g_signal_connect (data.source, "pad-added", G_CALLBACK (pad_added_handler),
+      &data);
 
   /* Start playing */
   ret = gst_element_set_state (data.pipeline, GST_STATE_PLAYING);
@@ -71,8 +79,10 @@ int main(int argc, char *argv[]) {
       switch (GST_MESSAGE_TYPE (msg)) {
         case GST_MESSAGE_ERROR:
           gst_message_parse_error (msg, &err, &debug_info);
-          g_printerr ("Error received from element %s: %s\n", GST_OBJECT_NAME (msg->src), err->message);
-          g_printerr ("Debugging information: %s\n", debug_info ? debug_info : "none");
+          g_printerr ("Error received from element %s: %s\n",
+              GST_OBJECT_NAME (msg->src), err->message);
+          g_printerr ("Debugging information: %s\n",
+              debug_info ? debug_info : "none");
           g_clear_error (&err);
           g_free (debug_info);
           terminate = TRUE;
@@ -85,9 +95,11 @@ int main(int argc, char *argv[]) {
           /* We are only interested in state-changed messages from the pipeline */
           if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data.pipeline)) {
             GstState old_state, new_state, pending_state;
-            gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
+            gst_message_parse_state_changed (msg, &old_state, &new_state,
+                &pending_state);
             g_print ("Pipeline state changed from %s to %s:\n",
-                gst_element_state_get_name (old_state), gst_element_state_get_name (new_state));
+                gst_element_state_get_name (old_state),
+                gst_element_state_get_name (new_state));
           }
           break;
         default:
@@ -107,14 +119,17 @@ int main(int argc, char *argv[]) {
 }
 
 /* This function will be called by the pad-added signal */
-static void pad_added_handler (GstElement *src, GstPad *new_pad, CustomData *data) {
+static void
+pad_added_handler (GstElement * src, GstPad * new_pad, CustomData * data)
+{
   GstPad *sink_pad = gst_element_get_static_pad (data->convert, "sink");
   GstPadLinkReturn ret;
   GstCaps *new_pad_caps = NULL;
   GstStructure *new_pad_struct = NULL;
   const gchar *new_pad_type = NULL;
 
-  g_print ("Received new pad '%s' from '%s':\n", GST_PAD_NAME (new_pad), GST_ELEMENT_NAME (src));
+  g_print ("Received new pad '%s' from '%s':\n", GST_PAD_NAME (new_pad),
+      GST_ELEMENT_NAME (src));
 
   /* If our converter is already linked, we have nothing to do here */
   if (gst_pad_is_linked (sink_pad)) {
@@ -127,7 +142,8 @@ static void pad_added_handler (GstElement *src, GstPad *new_pad, CustomData *dat
   new_pad_struct = gst_caps_get_structure (new_pad_caps, 0);
   new_pad_type = gst_structure_get_name (new_pad_struct);
   if (!g_str_has_prefix (new_pad_type, "audio/x-raw")) {
-    g_print ("It has type '%s' which is not raw audio. Ignoring.\n", new_pad_type);
+    g_print ("It has type '%s' which is not raw audio. Ignoring.\n",
+        new_pad_type);
     goto exit;
   }
 

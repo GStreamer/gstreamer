@@ -2,52 +2,57 @@
 #include <gst/audio/audio.h>
 #include <string.h>
 
-#define CHUNK_SIZE 1024   /* Amount of bytes we are sending in each buffer */
-#define SAMPLE_RATE 44100 /* Samples per second we are sending */
+#define CHUNK_SIZE 1024         /* Amount of bytes we are sending in each buffer */
+#define SAMPLE_RATE 44100       /* Samples per second we are sending */
 
 /* Structure to contain all our information, so we can pass it to callbacks */
-typedef struct _CustomData {
+typedef struct _CustomData
+{
   GstElement *pipeline;
   GstElement *app_source;
 
-  guint64 num_samples;   /* Number of samples generated so far (for timestamp generation) */
-  gfloat a, b, c, d;     /* For waveform generation */
+  guint64 num_samples;          /* Number of samples generated so far (for timestamp generation) */
+  gfloat a, b, c, d;            /* For waveform generation */
 
-  guint sourceid;        /* To control the GSource */
+  guint sourceid;               /* To control the GSource */
 
-  GMainLoop *main_loop;  /* GLib's Main Loop */
+  GMainLoop *main_loop;         /* GLib's Main Loop */
 } CustomData;
 
 /* This method is called by the idle GSource in the mainloop, to feed CHUNK_SIZE bytes into appsrc.
  * The ide handler is added to the mainloop when appsrc requests us to start sending data (need-data signal)
  * and is removed when appsrc has enough data (enough-data signal).
  */
-static gboolean push_data (CustomData *data) {
+static gboolean
+push_data (CustomData * data)
+{
   GstBuffer *buffer;
   GstFlowReturn ret;
   int i;
   GstMapInfo map;
   gint16 *raw;
-  gint num_samples = CHUNK_SIZE / 2; /* Because each sample is 16 bits */
+  gint num_samples = CHUNK_SIZE / 2;    /* Because each sample is 16 bits */
   gfloat freq;
 
   /* Create a new empty buffer */
   buffer = gst_buffer_new_and_alloc (CHUNK_SIZE);
 
   /* Set its timestamp and duration */
-  GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (data->num_samples, GST_SECOND, SAMPLE_RATE);
-  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (num_samples, GST_SECOND, SAMPLE_RATE);
+  GST_BUFFER_TIMESTAMP (buffer) =
+      gst_util_uint64_scale (data->num_samples, GST_SECOND, SAMPLE_RATE);
+  GST_BUFFER_DURATION (buffer) =
+      gst_util_uint64_scale (num_samples, GST_SECOND, SAMPLE_RATE);
 
   /* Generate some psychodelic waveforms */
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
-  raw = (gint16 *)map.data;
+  raw = (gint16 *) map.data;
   data->c += data->d;
   data->d -= data->c / 1000;
   freq = 1100 + 1000 * data->d;
   for (i = 0; i < num_samples; i++) {
     data->a += data->b;
     data->b -= data->a / freq;
-    raw[i] = (gint16)(500 * data->a);
+    raw[i] = (gint16) (500 * data->a);
   }
   gst_buffer_unmap (buffer, &map);
   data->num_samples += num_samples;
@@ -68,7 +73,9 @@ static gboolean push_data (CustomData *data) {
 
 /* This signal callback triggers when appsrc needs data. Here, we add an idle handler
  * to the mainloop to start pushing data into the appsrc */
-static void start_feed (GstElement *source, guint size, CustomData *data) {
+static void
+start_feed (GstElement * source, guint size, CustomData * data)
+{
   if (data->sourceid == 0) {
     g_print ("Start feeding\n");
     data->sourceid = g_idle_add ((GSourceFunc) push_data, data);
@@ -77,7 +84,9 @@ static void start_feed (GstElement *source, guint size, CustomData *data) {
 
 /* This callback triggers when appsrc has enough data and we can stop sending.
  * We remove the idle handler from the mainloop */
-static void stop_feed (GstElement *source, CustomData *data) {
+static void
+stop_feed (GstElement * source, CustomData * data)
+{
   if (data->sourceid != 0) {
     g_print ("Stop feeding\n");
     g_source_remove (data->sourceid);
@@ -86,13 +95,16 @@ static void stop_feed (GstElement *source, CustomData *data) {
 }
 
 /* This function is called when an error message is posted on the bus */
-static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+static void
+error_cb (GstBus * bus, GstMessage * msg, CustomData * data)
+{
   GError *err;
   gchar *debug_info;
 
   /* Print error details on the screen */
   gst_message_parse_error (msg, &err, &debug_info);
-  g_printerr ("Error received from element %s: %s\n", GST_OBJECT_NAME (msg->src), err->message);
+  g_printerr ("Error received from element %s: %s\n",
+      GST_OBJECT_NAME (msg->src), err->message);
   g_printerr ("Debugging information: %s\n", debug_info ? debug_info : "none");
   g_clear_error (&err);
   g_free (debug_info);
@@ -102,7 +114,9 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
 
 /* This function is called when playbin has created the appsrc element, so we have
  * a chance to configure it. */
-static void source_setup (GstElement *pipeline, GstElement *source, CustomData *data) {
+static void
+source_setup (GstElement * pipeline, GstElement * source, CustomData * data)
+{
   GstAudioInfo info;
   GstCaps *audio_caps;
 
@@ -118,13 +132,15 @@ static void source_setup (GstElement *pipeline, GstElement *source, CustomData *
   gst_caps_unref (audio_caps);
 }
 
-int main(int argc, char *argv[]) {
+int
+main (int argc, char *argv[])
+{
   CustomData data;
   GstBus *bus;
 
   /* Initialize cumstom data structure */
   memset (&data, 0, sizeof (data));
-  data.b = 1; /* For waveform generation */
+  data.b = 1;                   /* For waveform generation */
   data.d = 1;
 
   /* Initialize GStreamer */
@@ -132,12 +148,14 @@ int main(int argc, char *argv[]) {
 
   /* Create the playbin element */
   data.pipeline = gst_parse_launch ("playbin uri=appsrc://", NULL);
-  g_signal_connect (data.pipeline, "source-setup", G_CALLBACK (source_setup), &data);
+  g_signal_connect (data.pipeline, "source-setup", G_CALLBACK (source_setup),
+      &data);
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
   bus = gst_element_get_bus (data.pipeline);
   gst_bus_add_signal_watch (bus);
-  g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, &data);
+  g_signal_connect (G_OBJECT (bus), "message::error", (GCallback) error_cb,
+      &data);
   gst_object_unref (bus);
 
   /* Start playing the pipeline */
