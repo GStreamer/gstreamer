@@ -70,8 +70,8 @@ static GstStaticPadTemplate audio_src_template =
         "audio/mpeg, mpegversion = (int) 4, stream-format = (string) raw, framed = (boolean) TRUE; "
         "audio/x-nellymoser, channels = (int) { 1, 2 }, rate = (int) { 5512, 8000, 11025, 16000, 22050, 44100 }; "
         "audio/x-raw, format = (string) { U8, S16LE }, layout = (string) interleaved, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
-        "audio/x-alaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
-        "audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) { 5512, 11025, 22050, 44100 }; "
+        "audio/x-alaw, channels = (int) { 1, 2 }, rate = (int) 8000; "
+        "audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) 8000; "
         "audio/x-speex, channels = (int) 1, rate = (int) 16000;")
     );
 
@@ -1097,7 +1097,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
   }
 
   /* codec tags with special rates */
-  if (codec_tag == 5 || codec_tag == 14)
+  if (codec_tag == 5 || codec_tag == 14 || codec_tag == 7 || codec_tag == 8)
     rate = 8000;
   else if ((codec_tag == 4) || (codec_tag == 11))
     rate = 16000;
