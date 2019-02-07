@@ -466,9 +466,9 @@ class Test(Loggable):
         if not subenv:
             subenv = self.extra_env_variables
 
-        if subenv.get('GST_VALIDATE_CONFIG'):
+        if "GST_VALIDATE_CONFIG" in subenv:
             subenv['GST_VALIDATE_CONFIG'] = '%s%s%s' % (
-                self.proc_env['GST_VALIDATE_CONFIG'], os.pathsep, config)
+                subenv['GST_VALIDATE_CONFIG'], os.pathsep, config)
         else:
             subenv['GST_VALIDATE_CONFIG'] = config
 
