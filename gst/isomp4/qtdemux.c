@@ -10852,14 +10852,17 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       fiel = NULL;
       /* pick 'the' stsd child */
       mp4v = qtdemux_tree_get_child_by_index (stsd, stsd_index);
-      if (!stream->protected) {
-        if (QTDEMUX_TREE_NODE_FOURCC (mp4v) != fourcc) {
+      // We should skip parsing the stsd for non-protected streams if
+      // the entry doesn't match the fourcc, since they don't change
+      // format. However, for protected streams we can have partial
+      // encryption, where parts of the stream are encrypted and parts
+      // not. For both parts of such streams, we should ensure the
+      // esds overrides are parsed for both from the stsd.
+      if (QTDEMUX_TREE_NODE_FOURCC (mp4v) != fourcc) {
+        if (stream->protected && QTDEMUX_TREE_NODE_FOURCC (mp4v) != FOURCC_encv)
           mp4v = NULL;
-        }
-      } else {
-        if (QTDEMUX_TREE_NODE_FOURCC (mp4v) != FOURCC_encv) {
+        else if (!stream->protected)
           mp4v = NULL;
-        }
       }
 
       if (mp4v) {
@@ -12043,20 +12046,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       }
 
       mp4a = qtdemux_tree_get_child_by_index (stsd, stsd_index);
-      if (!stream->protected) {
-      } else {
-        if (QTDEMUX_TREE_NODE_FOURCC (mp4v) != FOURCC_encv) {
-          mp4v = NULL;
-        }
-      }
-      if (stream->protected && fourcc == FOURCC_mp4a) {
-        if (QTDEMUX_TREE_NODE_FOURCC (mp4a) != FOURCC_enca) {
+      if (QTDEMUX_TREE_NODE_FOURCC (mp4a) != fourcc) {
+        if (stream->protected && QTDEMUX_TREE_NODE_FOURCC (mp4a) != FOURCC_enca)
           mp4a = NULL;
-        }
-      } else {
-        if (QTDEMUX_TREE_NODE_FOURCC (mp4a) != FOURCC_mp4a) {
+        else if (!stream->protected)
           mp4a = NULL;
-        }
       }
 
       wave = NULL;
