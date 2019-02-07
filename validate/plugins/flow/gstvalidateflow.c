@@ -380,6 +380,9 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
     lines_actual = g_strsplit (contents, "\n", 0);
   }
 
+  gst_validate_printf (flow, "Checking that flow %s matches expected flow %s\n",
+      flow->expectations_file_path, flow->actual_results_file_path);
+
   for (i = 0; lines_expected[i] && lines_actual[i]; i++) {
     if (strcmp (lines_expected[i], lines_actual[i])) {
       show_mismatch_error (flow, lines_expected, lines_actual, i);
