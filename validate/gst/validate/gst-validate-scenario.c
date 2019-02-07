@@ -3306,8 +3306,12 @@ _load_scenario_file (GstValidateScenario * scenario,
   /* max-latency and max-dropped can be overriden using config */
   for (config = gst_validate_plugin_get_config (NULL); config;
       config = g_list_next (config)) {
+    GstClockTime max_latency;
+
     gst_validate_utils_get_clocktime (config->data, "max-latency",
-        &priv->max_latency);
+        &max_latency);
+    if (GST_CLOCK_TIME_IS_VALID (max_latency))
+      priv->max_latency = max_latency;
 
     gst_structure_get_int (config->data, "max-dropped", &priv->max_dropped);
   }
