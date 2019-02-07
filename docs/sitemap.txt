@@ -9,3 +9,4 @@ index.md
 	gi-index
 	plugins/index.md
 		plugins/ssim.md
+		plugins/validateflow.md
