@@ -1,4 +1,5 @@
 #include "gst_ios_init.h"
+#include <gio/gio.h>
 
 #if defined(GST_IOS_PLUGIN_NLE) || defined(GST_IOS_PLUGINS_GES)
 GST_PLUGIN_STATIC_DECLARE(nle);
@@ -491,7 +492,6 @@ GST_PLUGIN_STATIC_DECLARE(rtspclientsink);
 #endif
 
 #if defined(GST_IOS_GIO_MODULE_GNUTLS)
-  #include <gio/gio.h>
   GST_G_IO_MODULE_DECLARE(gnutls);
 #endif
 
@@ -524,13 +524,26 @@ gst_ios_init (void)
   g_setenv ("XDG_DATA_HOME", resources_dir, TRUE);
   g_setenv ("FONTCONFIG_PATH", resources_dir, TRUE);
 
-  ca_certificates = g_build_filename (resources_dir, "ssl", "certs", "ca-certifcates.crt", NULL);
+  ca_certificates = g_build_filename (resources_dir, "ssl", "certs", "ca-certificates.crt", NULL);
   g_setenv ("CA_CERTIFICATES", ca_certificates, TRUE);
-  g_free (ca_certificates);
     
+#if defined(GST_IOS_GIO_MODULE_GNUTLS)
+  GST_G_IO_MODULE_LOAD(gnutls);
+#endif
+
+  if (ca_certificates) {
+    GTlsBackend *backend = g_tls_backend_get_default ();
+    if (backend) {
+      GTlsDatabase *db = g_tls_file_database_new (ca_certificates, NULL);
+      if (db)
+        g_tls_backend_set_default_database (backend, db);
+    }
+  }
+  g_free (ca_certificates);
+
   gst_init (NULL, NULL);
 
-  #if defined(GST_IOS_PLUGIN_NLE) || defined(GST_IOS_PLUGINS_GES)
+#if defined(GST_IOS_PLUGIN_NLE) || defined(GST_IOS_PLUGINS_GES)
     GST_PLUGIN_STATIC_REGISTER(nle);
 #endif
 #if defined(GST_IOS_PLUGIN_COREELEMENTS) || defined(GST_IOS_PLUGINS_CORE)
@@ -1018,10 +1031,6 @@ gst_ios_init (void)
 #endif
 #if defined(GST_IOS_PLUGIN_RTSPCLIENTSINK) || defined(GST_IOS_PLUGINS_NET)
     GST_PLUGIN_STATIC_REGISTER(rtspclientsink);
-#endif
-
-#if defined(GST_IOS_GIO_MODULE_GNUTLS)
-  GST_G_IO_MODULE_LOAD(gnutls);
 #endif
 
   /* Lower the ranks of filesrc and giosrc so iosavassetsrc is
