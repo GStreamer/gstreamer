@@ -124,6 +124,14 @@ struct _GstValidatePadMonitor {
   /* The GstBuffer that should arrive next in a GList */
   GList *current_buf;
   gboolean check_buffers;
+
+  /* 'min-buffer-frequency' config check */
+  gdouble min_buf_freq;
+  gint buffers_pushed;
+  gint last_buffers_pushed;
+  GstClockTime min_buf_freq_interval_ts;
+  GstClockTime min_buf_freq_first_buffer_ts;
+  GstClockTime min_buf_freq_start;
 };
 
 /**

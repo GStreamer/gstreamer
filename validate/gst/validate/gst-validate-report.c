@@ -404,6 +404,10 @@ gst_validate_report_load_issues (void)
       _
       ("The number of dropped buffers is higher than the maximum allowed by the scenario"),
       NULL);
+  REGISTER_VALIDATE_ISSUE (CRITICAL, CONFIG_BUFFER_FREQUENCY_TOO_LOW,
+      _
+      ("Pad buffers push frequency is lower than the minimum required by the config"),
+      NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, G_LOG_WARNING, _("We got a g_log warning"),
       NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, G_LOG_CRITICAL,

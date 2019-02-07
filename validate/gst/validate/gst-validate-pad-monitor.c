@@ -30,6 +30,8 @@
 #include "gst-validate-element-monitor.h"
 #include "gst-validate-pipeline-monitor.h"
 #include "gst-validate-reporter.h"
+#include "gst-validate-utils.h"
+#include "validate.h"
 #include <string.h>
 #include <stdarg.h>
 
@@ -970,6 +972,13 @@ gst_validate_pad_monitor_reset (GstValidatePadMonitor * pad_monitor)
 
   /* FIXME : Why BYTES and not UNDEFINED ? */
   gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
+
+  pad_monitor->min_buf_freq = 0;
+  pad_monitor->buffers_pushed = 0;
+  pad_monitor->last_buffers_pushed = 0;
+  pad_monitor->min_buf_freq_interval_ts = GST_CLOCK_TIME_NONE;
+  pad_monitor->min_buf_freq_first_buffer_ts = GST_CLOCK_TIME_NONE;
+  pad_monitor->min_buf_freq_start = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -2440,6 +2449,62 @@ gst_validate_pad_monitor_activatemode_func (GstPad * pad, GstObject * parent,
   return ret;
 }
 
+/* The interval between two buffer frequency checks */
+#define BUF_FREQ_CHECK_INTERVAL (GST_SECOND)
+
+static void
+gst_validate_pad_monitor_check_buffer_freq (GstValidatePadMonitor * monitor,
+    GstPad * pad)
+{
+  GstClockTime ts;
+
+  if (!GST_PAD_IS_SRC (pad))
+    return;
+
+  if (!monitor->min_buf_freq)
+    return;
+
+  ts = gst_util_get_timestamp ();
+  monitor->buffers_pushed++;
+
+  /* Same logic as in fpsdisplaysink to compute the buffer frequency */
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID
+          (monitor->min_buf_freq_first_buffer_ts))) {
+    monitor->min_buf_freq_first_buffer_ts = ts;
+    monitor->min_buf_freq_interval_ts = ts;
+    return;
+  }
+
+  if (GST_CLOCK_DIFF (monitor->min_buf_freq_interval_ts,
+          ts) > BUF_FREQ_CHECK_INTERVAL) {
+    guint time_diff;
+    gdouble fps;
+
+    time_diff = (gdouble) (ts - monitor->min_buf_freq_interval_ts) / GST_SECOND;
+    fps =
+        (gdouble) (monitor->buffers_pushed -
+        monitor->last_buffers_pushed) / time_diff;
+
+    if (fps < monitor->min_buf_freq) {
+      if (GST_CLOCK_TIME_IS_VALID (monitor->min_buf_freq_start) &&
+          GST_CLOCK_DIFF (monitor->min_buf_freq_first_buffer_ts,
+              ts) < monitor->min_buf_freq_start) {
+        GST_DEBUG_OBJECT (pad,
+            "buffer frequency is too low (%.2f) but ignore for now (buffer-frequency-start =%"
+            GST_TIME_FORMAT ")", fps,
+            GST_TIME_ARGS (monitor->min_buf_freq_start));
+      } else {
+        GST_VALIDATE_REPORT (monitor, CONFIG_BUFFER_FREQUENCY_TOO_LOW,
+            "Buffers are not pushed fast enough on this pad: %.2f/sec (minimum: %.2f)",
+            fps, monitor->min_buf_freq);
+      }
+    }
+
+    monitor->last_buffers_pushed = monitor->buffers_pushed;
+    monitor->min_buf_freq_interval_ts = ts;
+  }
+}
+
 static gboolean
 gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
     gpointer udata, gboolean pull_mode)
@@ -2495,6 +2560,8 @@ gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
           GST_TIME_ARGS (monitor->segment.stop));
     }
   }
+
+  gst_validate_pad_monitor_check_buffer_freq (monitor, pad);
 
   GST_VALIDATE_MONITOR_UNLOCK (monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (monitor);
@@ -2748,6 +2815,55 @@ gst_validate_pad_monitor_setcaps_post (GstValidatePadMonitor * pad_monitor,
   }
 }
 
+static void
+gst_validate_pad_monitor_get_min_buffer_frequency (GstValidatePadMonitor *
+    monitor, GstPad * pad)
+{
+  GList *config, *l;
+
+  if (!GST_PAD_IS_SRC (pad))
+    return;
+
+  config = gst_validate_plugin_get_config (NULL);
+  for (l = config; l != NULL; l = g_list_next (l)) {
+    GstStructure *s = l->data;
+    gdouble min_buf_freq;
+    const gchar *pad_name;
+    GstElement *element = NULL;
+
+    if (!gst_structure_get_double (s, "min-buffer-frequency", &min_buf_freq)) {
+      gint max_int;
+
+      if (!gst_structure_get_int (s, "min-buffer-frequency", &max_int))
+        goto next;
+
+      min_buf_freq = max_int;
+    }
+
+    pad_name = gst_structure_get_string (s, "name");
+    if (!pad_name)
+      pad_name = "src";
+
+    if (g_strcmp0 (GST_PAD_NAME (pad), pad_name))
+      goto next;
+
+    element = gst_pad_get_parent_element (pad);
+
+    if (!gst_validate_element_matches_target (element, s))
+      goto next;
+
+    monitor->min_buf_freq = min_buf_freq;
+
+    gst_validate_utils_get_clocktime (s, "buffer-frequency-start",
+        &monitor->min_buf_freq_start);
+
+    GST_DEBUG_OBJECT (pad, "pad has a minimum buffer frequency of %f",
+        min_buf_freq);
+  next:
+    g_clear_object (&element);
+  }
+}
+
 static gboolean
 gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
 {
@@ -2806,6 +2922,8 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
 
   if (G_UNLIKELY (GST_PAD_PARENT (pad) == NULL))
     GST_FIXME ("Saw a pad not belonging to any object");
+
+  gst_validate_pad_monitor_get_min_buffer_frequency (pad_monitor, pad);
 
   gst_object_unref (pad);
   return TRUE;

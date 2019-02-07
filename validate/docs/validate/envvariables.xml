@@ -116,6 +116,44 @@
     Note that you will still need to set <envar>GST_DEBUG_DUMP_DOT_DIR</envar>.
   </informalexample>
 
+  <informalexample>
+    You can also check that a src pad is pushing buffers at a
+    minimum frequency. For example to check if <literal>v4l2src</literal> is
+    producing at least 60 frames per second you can do:
+    <programlisting>
+      core,min-buffer-frequency=60,target-element-factory-name=v4l2src
+    </programlisting>
+
+    This config accepts the following fields:
+      <itemizedlist>
+        <listitem>
+          <para><literal>min-buffer-frequency</literal>: the expected minimum
+            rate, in buffers per second, at which buffers are pushed on the pad
+          </para>
+        </listitem>
+        <listitem>
+          <para><literal>target-element-{factory-name,name,klass}</literal>:
+            the factory-name, object name or class of the element to check
+          </para>
+        </listitem>
+        <listitem>
+          <para><literal>name</literal>: (optional) only check the frequency if
+            the src pad has this name
+          </para>
+        </listitem>
+        <listitem>
+          <para><literal>buffer-frequency-start</literal>: (optional) if defined,
+            validate will ignore the frequency of the pad during the time specified
+            in this field, in ns.
+            This can be useful when testing live pipelines where
+            configuring and setting up elements can take some time slowing
+            down the first buffers until the pipeline reaches its cruising
+            speed.
+          </para>
+        </listitem>
+      </itemizedlist>
+  </informalexample>
+
   <para>
     For more examples you can look at the ssim GstValidate plugin documentation to
     see how to configure that plugin.

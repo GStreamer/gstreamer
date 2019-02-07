@@ -123,6 +123,7 @@ typedef enum {
 
 #define CONFIG_LATENCY_TOO_HIGH                  _QUARK("config::latency-too-high")
 #define CONFIG_TOO_MANY_BUFFERS_DROPPED          _QUARK("config::too-many-buffers-dropped")
+#define CONFIG_BUFFER_FREQUENCY_TOO_LOW          _QUARK("config::buffer-frequency-too-low")
 
 #define G_LOG_ISSUE                              _QUARK("g-log::issue")
 #define G_LOG_WARNING                            _QUARK("g-log::warning")
