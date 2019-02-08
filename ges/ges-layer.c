@@ -379,27 +379,11 @@ ges_layer_get_duration (GESLayer * layer)
   return duration;
 }
 
-/* Public methods */
-/**
- * ges_layer_remove_clip:
- * @layer: a #GESLayer
- * @clip: the #GESClip to remove
- *
- * Removes the given @clip from the @layer and unparents it.
- * Unparenting it means the reference owned by @layer on the @clip will be
- * removed. If you wish to use the @clip after this function, make sure you
- * call gst_object_ref() before removing it from the @layer.
- *
- * Returns: %TRUE if the clip could be removed, %FALSE if the layer does
- * not want to remove the clip.
- */
-gboolean
-ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
+static gboolean
+ges_layer_remove_clip_internal (GESLayer * layer, GESClip * clip,
+    gboolean emit_removed)
 {
   GESLayer *current_layer;
-
-  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
-  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
   GST_DEBUG ("layer:%p, clip:%p", layer, clip);
 
@@ -417,8 +401,10 @@ ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
   /* Remove it from our list of controlled objects */
   layer->priv->clips_start = g_list_remove (layer->priv->clips_start, clip);
 
-  /* emit 'clip-removed' */
-  g_signal_emit (layer, ges_layer_signals[OBJECT_REMOVED], 0, clip);
+  if (emit_removed) {
+    /* emit 'clip-removed' */
+    g_signal_emit (layer, ges_layer_signals[OBJECT_REMOVED], 0, clip);
+  }
 
   /* inform the clip it's no longer in a layer */
   ges_clip_set_layer (clip, NULL);
@@ -430,6 +416,29 @@ ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
   gst_object_unref (clip);
 
   return TRUE;
+}
+
+/* Public methods */
+/**
+ * ges_layer_remove_clip:
+ * @layer: a #GESLayer
+ * @clip: the #GESClip to remove
+ *
+ * Removes the given @clip from the @layer and unparents it.
+ * Unparenting it means the reference owned by @layer on the @clip will be
+ * removed. If you wish to use the @clip after this function, make sure you
+ * call gst_object_ref() before removing it from the @layer.
+ *
+ * Returns: %TRUE if the clip could be removed, %FALSE if the layer does
+ * not want to remove the clip.
+ */
+gboolean
+ges_layer_remove_clip (GESLayer * layer, GESClip * clip)
+{
+  g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
+  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
+
+  return ges_layer_remove_clip_internal (layer, clip, TRUE);
 }
 
 /**
