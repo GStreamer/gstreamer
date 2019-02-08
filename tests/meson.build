@@ -4,3 +4,4 @@ if host_machine.system() != 'windows' and gstcheck_dep.found()
 endif
 
 subdir('validate')
+subdir('benchmarks')
