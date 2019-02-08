@@ -109,37 +109,37 @@ class TestEditing(common.GESSimpleTimelineTest):
         self.timeline.props.auto_transition = True
         unused_clip1 = self.add_clip(0, 0, 100)
         clip2 = self.add_clip(50, 0, 100)
-        self.assertEquals(len(self.layer.get_clips()), 4)
+        self.assertEqual(len(self.layer.get_clips()), 4)
 
         layer2 = self.timeline.append_layer()
         clip2.edit([], layer2.get_priority(), GES.EditMode.EDIT_NORMAL,
                    GES.Edge.EDGE_NONE, clip2.props.start)
-        self.assertEquals(len(self.layer.get_clips()), 1)
-        self.assertEquals(len(layer2.get_clips()), 1)
+        self.assertEqual(len(self.layer.get_clips()), 1)
+        self.assertEqual(len(layer2.get_clips()), 1)
 
     def test_transition_moves_when_rippling_to_another_layer(self):
         self.timeline.props.auto_transition = True
         clip1 = self.add_clip(0, 0, 100)
         clip2 = self.add_clip(50, 0, 100)
         all_clips = self.layer.get_clips()
-        self.assertEquals(len(all_clips), 4)
+        self.assertEqual(len(all_clips), 4)
 
         layer2 = self.timeline.append_layer()
         clip1.edit([], layer2.get_priority(), GES.EditMode.EDIT_RIPPLE,
                    GES.Edge.EDGE_NONE, clip1.props.start)
-        self.assertEquals(self.layer.get_clips(), [])
-        self.assertEquals(set(layer2.get_clips()), set(all_clips))
+        self.assertEqual(self.layer.get_clips(), [])
+        self.assertEqual(set(layer2.get_clips()), set(all_clips))
 
     def test_transition_rippling_after_next_clip_stays(self):
         self.timeline.props.auto_transition = True
         clip1 = self.add_clip(0, 0, 100)
         clip2 = self.add_clip(50, 0, 100)
         all_clips = self.layer.get_clips()
-        self.assertEquals(len(all_clips), 4)
+        self.assertEqual(len(all_clips), 4)
 
         clip1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_RIPPLE,
                    GES.Edge.EDGE_NONE, clip2.props.start + 1)
-        self.assertEquals(set(self.layer.get_clips()), set(all_clips))
+        self.assertEqual(set(self.layer.get_clips()), set(all_clips))
 
     def test_transition_rippling_over_does_not_create_another_transition(self):
         self.timeline.props.auto_transition = True
@@ -152,13 +152,13 @@ class TestEditing(common.GESSimpleTimelineTest):
 
         # Rippl clip1 and check that transitions ar always the sames
         all_clips = self.layer.get_clips()
-        self.assertEquals(len(all_clips), 4)
+        self.assertEqual(len(all_clips), 4)
         clip1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_RIPPLE,
                    GES.Edge.EDGE_NONE, 41.5 * Gst.SECOND)
-        self.assertEquals(len(self.layer.get_clips()), 4)
+        self.assertEqual(len(self.layer.get_clips()), 4)
         clip1.edit([], self.layer.get_priority(),
                    GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 35 * Gst.SECOND)
-        self.assertEquals(len(self.layer.get_clips()), 4)
+        self.assertEqual(len(self.layer.get_clips()), 4)
 
 
 class TestSnapping(common.GESSimpleTimelineTest):
@@ -171,7 +171,7 @@ class TestSnapping(common.GESSimpleTimelineTest):
         # Split clip1.
         split_position = 50
         clip2 = clip1.split(split_position)
-        self.assertEquals(len(self.layer.get_clips()), 2)
+        self.assertEqual(len(self.layer.get_clips()), 2)
         self.assertEqual(clip1.props.duration, split_position)
         self.assertEqual(clip2.props.start, split_position)
 
@@ -200,6 +200,7 @@ class TestSnapping(common.GESSimpleTimelineTest):
         self.assertEqual(len(self.layer.get_clips()), 2)
         self.assertEqual(clip1.props.duration, split_position)
         self.assertEqual(clip2.props.start, split_position)
+
 
 class TestTransitions(common.GESSimpleTimelineTest):
 
