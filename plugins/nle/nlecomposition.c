@@ -196,6 +196,7 @@ struct _NleCompositionPrivate
   gboolean waiting_serialized_query_or_buffer;
 
   gboolean tearing_down_stack;
+  gboolean suppress_child_error;
 
   NleUpdateStackReason updating_reason;
 };
@@ -940,22 +941,29 @@ static void
 nle_composition_handle_message (GstBin * bin, GstMessage * message)
 {
   NleComposition *comp = (NleComposition *) bin;
+  NleCompositionPrivate *priv = comp->priv;
 
-  if (comp->priv->tearing_down_stack) {
-    if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
-      GST_FIXME_OBJECT (comp, "Dropping %" GST_PTR_FORMAT " message from "
-          " %" GST_PTR_FORMAT " being teared down to READY",
-          message, GST_MESSAGE_SRC (message));
-    }
-
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR &&
+      (priv->tearing_down_stack || priv->suppress_child_error)) {
+    GST_FIXME_OBJECT (comp, "Dropping %" GST_PTR_FORMAT " message from "
+        " %" GST_PTR_FORMAT " tearing down: %d, suppressing error: %d",
+        message, GST_MESSAGE_SRC (message), priv->tearing_down_stack,
+        priv->suppress_child_error);
+    goto drop;
+  } else if (comp->priv->tearing_down_stack) {
     GST_DEBUG_OBJECT (comp, "Dropping message %" GST_PTR_FORMAT " from "
         "object being teared down to READY!", message);
-    gst_message_unref (message);
-
-    return;
+    goto drop;
   }
 
   GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+
+  return;
+
+drop:
+  gst_message_unref (message);
+
+  return;
 }
 
 static void
@@ -2902,9 +2910,11 @@ resync_state:
   gst_element_set_locked_state (priv->current_bin, FALSE);
 
   GST_DEBUG ("going back to parent state");
+  priv->suppress_child_error = TRUE;
   if (!gst_element_sync_state_with_parent (priv->current_bin)) {
     gst_element_set_locked_state (priv->current_bin, TRUE);
     gst_element_set_state (priv->current_bin, GST_STATE_NULL);
+    priv->suppress_child_error = FALSE;
 
     GST_ELEMENT_ERROR (comp, CORE, STATE_CHANGE, (NULL),
         ("Could not sync %" GST_PTR_FORMAT " state with parent",
@@ -2912,6 +2922,7 @@ resync_state:
     return FALSE;
   }
 
+  priv->suppress_child_error = FALSE;
   GST_DEBUG ("gone back to parent state");
 
   return TRUE;
