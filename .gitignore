@@ -45,5 +45,6 @@ subprojects/pygobject/
 subprojects/pycairo/
 subprojects/json-glib/
 subprojects/orc/
+subprojects/libsoup/
 prefix/
 pygobject
