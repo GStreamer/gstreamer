@@ -469,8 +469,12 @@ ensure_profiles (GstVaapiDisplay * display)
   VAStatus status;
   gboolean success = FALSE;
 
-  if (priv->has_profiles)
+  GST_VAAPI_DISPLAY_LOCK (display);
+
+  if (priv->has_profiles) {
+    GST_VAAPI_DISPLAY_UNLOCK (display);
     return TRUE;
+  }
 
   priv->decoders = g_array_new (FALSE, FALSE, sizeof (GstVaapiConfig));
   if (!priv->decoders)
@@ -553,6 +557,7 @@ ensure_profiles (GstVaapiDisplay * display)
 cleanup:
   g_free (profiles);
   g_free (entrypoints);
+  GST_VAAPI_DISPLAY_UNLOCK (display);
   return success;
 }
 
