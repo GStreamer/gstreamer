@@ -6,12 +6,9 @@ flex_cdata = configuration_data()
 flex_min_version='2.5.31'
 flex = find_program('flex', 'win_flex')
 
-flexversion_res = run_command([flex, '--version'])
-if flexversion_res.returncode() != 0
-  error('Could not get flex version (@0@)'.format(flexversion_res.stderr()))
-endif
-
-flexversion = flexversion_res.stdout().split('\n')[0].split(' ')[-1].strip()
+get_flex_version = find_program('get_flex_version.py')
+flexversion_res = run_command([get_flex_version, flex], check: true)
+flexversion = flexversion_res.stdout().strip()
 if flexversion.version_compare('<' + flex_min_version)
   error('flex version @0@ >= @1@: NO'.format(flexversion, flex_min_version))
 else
