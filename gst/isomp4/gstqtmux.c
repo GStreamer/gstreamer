@@ -2800,7 +2800,8 @@ gst_qt_mux_prefill_samples (GstQTMux * qtmux)
           gst_collect_pads_peek (qtmux->collect, (GstCollectData *) qpad);
       GstVideoTimeCodeMeta *tc_meta;
 
-      if (buffer && (tc_meta = gst_buffer_get_video_time_code_meta (buffer))) {
+      if (buffer && (tc_meta = gst_buffer_get_video_time_code_meta (buffer))
+          && qpad->trak->is_video) {
         GstVideoTimeCode *tc = &tc_meta->tc;
 
         qpad->tc_trak = atom_trak_new (qtmux->context);
@@ -4343,6 +4344,9 @@ gst_qt_mux_check_and_update_timecode (GstQTMux * qtmux, GstQTPad * pad,
   gsize szret;
   guint32 frames_since_daily_jam;
   GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
+
+  if (!pad->trak->is_video)
+    return ret;
 
   if (qtmux_klass->format != GST_QT_MUX_FORMAT_QT)
     return ret;
