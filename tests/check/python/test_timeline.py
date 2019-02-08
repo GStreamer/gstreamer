@@ -69,19 +69,6 @@ class TestSplitting(common.GESSimpleTimelineTest):
         self.track_types = [GES.TrackType.AUDIO]
         super(TestSplitting, self).setUp()
 
-    def assertTimelineTopology(self, topology):
-        res = []
-        for layer in self.timeline.get_layers():
-            layer_timings = []
-            for clip in layer.get_clips():
-                layer_timings.append(
-                    (type(clip), clip.props.start, clip.props.duration))
-
-            res.append(layer_timings)
-
-        self.assertEqual(topology, res)
-        return res
-
     def test_spliting_with_auto_transition_on_the_left(self):
         self.timeline.props.auto_transition = True
         clip1 = self.add_clip(0, 0, 100)

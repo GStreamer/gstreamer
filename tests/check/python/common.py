@@ -175,3 +175,15 @@ class GESSimpleTimelineTest(GESTest):
 
         return clip
 
+    def assertTimelineTopology(self, topology):
+        res = []
+        for layer in self.timeline.get_layers():
+            layer_timings = []
+            for clip in layer.get_clips():
+                layer_timings.append(
+                    (type(clip), clip.props.start, clip.props.duration))
+
+            res.append(layer_timings)
+
+        self.assertEqual(topology, res)
+        return res
