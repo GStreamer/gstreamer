@@ -2092,9 +2092,15 @@ ges_timeline_move_object_simple (GESTimeline * timeline,
 
   /* We only work with GESSource-s and we check that we are not already moving
    * the specified element ourself */
-  if (GES_IS_SOURCE (element) == FALSE ||
-      g_list_find (timeline->priv->movecontext.moving_trackelements, element))
+  if (GES_IS_SOURCE (element) == FALSE) {
+    GST_INFO_OBJECT (element, "Not a source, not moving.");
     return FALSE;
+  }
+
+  if (g_list_find (timeline->priv->movecontext.moving_trackelements, element)) {
+    GST_DEBUG_OBJECT (element, "Already part of the moving context.");
+    return TRUE;
+  }
 
   timeline->priv->needs_rollback = FALSE;
   track_element = GES_TRACK_ELEMENT (element);
