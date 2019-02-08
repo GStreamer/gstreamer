@@ -1729,6 +1729,11 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
       duration = MAX (0, real_dur);
       duration = MIN (duration, max_duration - _INPOINT (track_element));
 
+      if (duration == 0) {
+        GST_INFO_OBJECT (timeline, "Duration would be 0, not rippling");
+        return FALSE;
+      }
+
       /* Not moving, avoid overhead */
       if (duration == _DURATION (track_element)) {
         GST_DEBUG_OBJECT (track_element, "No change in duration");
