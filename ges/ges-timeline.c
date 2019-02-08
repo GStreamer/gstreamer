@@ -1864,7 +1864,8 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
     case GES_EDGE_START:
       GST_INFO ("Ripple start doesn't make sense, trimming instead");
       timeline->priv->movecontext.needs_move_ctx = TRUE;
-      timeline_trim_object (timeline, obj, layers, edge, position);
+      if (!timeline_trim_object (timeline, obj, layers, edge, position))
+        goto error;
       break;
     default:
       GST_DEBUG ("Can not ripple edge: %i", edge);
