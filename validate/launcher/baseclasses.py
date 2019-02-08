@@ -526,7 +526,7 @@ class Test(Loggable):
                            "Test name: %s\n"
                            "Command: '%s'\n"
                            "=================\n\n"
-                           % (self.classname, ' '.join(self.command)))
+                           % (self.classname, self.get_command_repr()))
             self.out.flush()
         else:
             message = "Launching: %s%s\n" \
