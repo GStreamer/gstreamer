@@ -828,20 +828,17 @@ static void
 gst_validate_scenario_check_dropped (GstValidateScenario * scenario)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
-  guint dropped;
 
-  dropped = g_atomic_int_get (&priv->dropped);
-
-  if (priv->max_dropped == -1 || dropped == -1)
+  if (priv->max_dropped == -1 || priv->dropped == -1)
     return;
 
   GST_DEBUG_OBJECT (scenario, "Number of dropped buffers: %d (max allowed: %d)",
-      dropped, priv->max_dropped);
+      priv->dropped, priv->max_dropped);
 
-  if (dropped > priv->max_dropped) {
+  if (priv->dropped > priv->max_dropped) {
     GST_VALIDATE_REPORT (scenario, CONFIG_TOO_MANY_BUFFERS_DROPPED,
         "Too many buffers have been dropped: %d (max allowed: %d)",
-        dropped, priv->max_dropped);
+        priv->dropped, priv->max_dropped);
   }
 }
 
@@ -3173,7 +3170,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
        * will include the actual number of dropped buffers. */
       gst_message_parse_qos_stats (message, NULL, NULL, &dropped);
       if (dropped != -1)
-        g_atomic_int_set (&priv->dropped, dropped);
+        priv->dropped = dropped;
       break;
     }
 
