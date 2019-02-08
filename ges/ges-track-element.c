@@ -828,15 +828,6 @@ ges_track_element_get_all_control_bindings (GESTrackElement * trackelement)
   return priv->bindings_hashtable;
 }
 
-guint32
-_ges_track_element_get_layer_priority (GESTrackElement * element)
-{
-  if (_PRIORITY (element) < LAYER_HEIGHT + MIN_NLE_PRIO)
-    return 0;
-
-  return (_PRIORITY (element) - MIN_NLE_PRIO) / LAYER_HEIGHT;
-}
-
 /**
  * ges_track_element_get_track:
  * @object: a #GESTrackElement

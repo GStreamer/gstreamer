@@ -1018,9 +1018,17 @@ ges_clip_set_layer (GESClip * clip, GESLayer * layer)
     g_object_notify_by_pspec (G_OBJECT (clip), properties[PROP_LAYER]);
 }
 
+/**
+ * ges_clip_get_layer_priority:
+ * @clip: The clip to get the layer priority from
+ *
+ * Returns: The priority of the layer @clip is in, -1 if not in a layer.
+ */
 guint32
 ges_clip_get_layer_priority (GESClip * clip)
 {
+  g_return_val_if_fail (GES_IS_CLIP (clip), -1);
+
   if (clip->priv->layer == NULL)
     return -1;
 

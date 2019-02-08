@@ -353,7 +353,6 @@ G_GNUC_INTERNAL void _ges_container_set_priority_offset   (GESContainer * contai
  ****************************************************/
 G_GNUC_INTERNAL void              ges_clip_set_layer              (GESClip *clip, GESLayer  *layer);
 G_GNUC_INTERNAL gboolean          ges_clip_is_moving_from_layer   (GESClip *clip);
-G_GNUC_INTERNAL guint32           ges_clip_get_layer_priority     (GESClip *clip);
 G_GNUC_INTERNAL void              ges_clip_set_moving_from_layer  (GESClip *clip, gboolean is_moving);
 G_GNUC_INTERNAL GESTrackElement*  ges_clip_create_track_element   (GESClip *clip, GESTrackType type);
 G_GNUC_INTERNAL GList*            ges_clip_create_track_elements  (GESClip *clip, GESTrackType type);
@@ -369,7 +368,6 @@ G_GNUC_INTERNAL void layer_set_priority               (GESLayer * layer, guint p
  ****************************************************/
 #define         NLE_OBJECT_TRACK_ELEMENT_QUARK                  (g_quark_from_string ("nle_object_track_element_quark"))
 G_GNUC_INTERNAL gboolean  ges_track_element_set_track           (GESTrackElement * object, GESTrack * track);
-G_GNUC_INTERNAL guint32   _ges_track_element_get_layer_priority (GESTrackElement * element);
 G_GNUC_INTERNAL void ges_track_element_copy_properties          (GESTimelineElement * element,
                                                                  GESTimelineElement * elementcopy);
 

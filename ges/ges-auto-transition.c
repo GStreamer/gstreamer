@@ -61,8 +61,8 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
     }
   }
 
-  if (_ges_track_element_get_layer_priority (self->next_source) !=
-      _ges_track_element_get_layer_priority (self->previous_source)) {
+  if (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self->next_source) !=
+      GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self->previous_source)) {
     GST_DEBUG_OBJECT (self, "Destroy changed layer");
     g_signal_emit (self, auto_transition_signals[DESTROY_ME], 0);
     return;

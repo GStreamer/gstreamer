@@ -499,16 +499,6 @@ GST_START_TEST (test_group_in_group)
 
 GST_END_TEST;
 
-static guint32
-ges_clip_get_layer_priority (GESClip * clip)
-{
-  GESLayer *layer = ges_clip_get_layer (clip);
-  if (layer == NULL)
-    return -1;
-
-  return ges_layer_get_priority (layer);
-}
-
 GST_START_TEST (test_group_in_group_layer_moving)
 {
   GESAsset *asset;

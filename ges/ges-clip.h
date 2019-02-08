@@ -162,7 +162,9 @@ GList *           ges_clip_find_track_elements    (GESClip * clip, GESTrack * tr
 GES_API
 GESLayer* ges_clip_get_layer              (GESClip *clip);
 GES_API
-gboolean          ges_clip_move_to_layer          (GESClip *clip, GESLayer  *layer);
+gboolean  ges_clip_move_to_layer          (GESClip *clip, GESLayer  *layer);
+GES_API
+guint32 ges_clip_get_layer_priority        (GESClip * clip);
 
 /****************************************************
  *                   Effects                        *
