@@ -839,7 +839,7 @@ gst_validate_scenario_check_dropped (GstValidateScenario * scenario)
       dropped, priv->max_dropped);
 
   if (dropped > priv->max_dropped) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_TOO_MANY_BUFFERS_DROPPED,
+    GST_VALIDATE_REPORT (scenario, CONFIG_TOO_MANY_BUFFERS_DROPPED,
         "Too many buffers have been dropped: %d (max allowed: %d)",
         dropped, priv->max_dropped);
   }
@@ -2925,7 +2925,7 @@ gst_validate_scenario_check_latency (GstValidateScenario * scenario,
 
   if (priv->max_latency != GST_CLOCK_TIME_NONE &&
       min_latency > priv->max_latency) {
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_LATENCY_TOO_HIGH,
+    GST_VALIDATE_REPORT (scenario, CONFIG_LATENCY_TOO_HIGH,
         "Pipeline latency is too high: %" GST_TIME_FORMAT " (max allowed %"
         GST_TIME_FORMAT ")", GST_TIME_ARGS (min_latency),
         GST_TIME_ARGS (priv->max_latency));
