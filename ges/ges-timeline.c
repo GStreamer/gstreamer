@@ -1737,7 +1737,7 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
       /* Not moving, avoid overhead */
       if (duration == _DURATION (track_element)) {
         GST_DEBUG_OBJECT (track_element, "No change in duration");
-        return FALSE;
+        return TRUE;
       }
 
       _set_duration0 (GES_TIMELINE_ELEMENT (track_element), duration);
