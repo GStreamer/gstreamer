@@ -17,6 +17,7 @@ endif
 
 libva_req = ['>= 0.39.0', '!= 0.99.0']
 glib_req = '>= 2.40.0'
+libwayland_req = '>= 1.11.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
 cc = meson.get_compiler('c')
@@ -63,7 +64,7 @@ egl_dep = dependency('egl', required: false)
 gl_dep = dependency('gl', required: false)
 glesv2_dep = dependency('glesv2', required: false)
 libdl_dep = cc.find_library('dl', required: false)
-wayland_client_dep = dependency('wayland-client', required: false)
+wayland_client_dep = dependency('wayland-client', version: libwayland_req, required: false)
 x11_dep = dependency('x11', required: false)
 xrandr_dep = dependency('xrandr', required: false)
 xrender_dep = dependency('xrender', required: false)
