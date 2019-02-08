@@ -832,7 +832,7 @@ gst_validate_scenario_check_dropped (GstValidateScenario * scenario)
 
   dropped = g_atomic_int_get (&priv->dropped);
 
-  if (priv->max_dropped == -1 || dropped != -1)
+  if (priv->max_dropped == -1 || dropped == -1)
     return;
 
   GST_DEBUG_OBJECT (scenario, "Number of dropped buffers: %d (max allowed: %d)",
