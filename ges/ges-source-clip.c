@@ -46,6 +46,48 @@ enum
 
 G_DEFINE_TYPE_WITH_PRIVATE (GESSourceClip, ges_source_clip, GES_TYPE_CLIP);
 
+static gboolean
+_set_start (GESTimelineElement * element, GstClockTime start)
+{
+  GList *tmp;
+  GESTimeline *timeline;
+  GESContainer *container = GES_CONTAINER (element);
+  GstClockTime rollback_start = GES_TIMELINE_ELEMENT_START (element);
+
+  GST_DEBUG_OBJECT (element, "Setting children start, (initiated_move: %"
+      GST_PTR_FORMAT ")", container->initiated_move);
+
+  element->start = start;
+  g_object_notify (G_OBJECT (element), "start");
+  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
+  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
+    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
+
+    if (child != container->initiated_move) {
+      /* Make the snapping happen if in a timeline */
+      timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
+      if (timeline && !container->initiated_move) {
+        if (!ges_timeline_move_object_simple (timeline, child, NULL,
+                GES_EDGE_NONE, start)) {
+          for (tmp = container->children; tmp; tmp = g_list_next (tmp))
+            ges_timeline_element_set_start (tmp->data, rollback_start);
+
+          element->start = rollback_start;
+          g_object_notify (G_OBJECT (element), "start");
+          container->children_control_mode = GES_CHILDREN_UPDATE;
+          return FALSE;
+        }
+      }
+
+      _set_start0 (GES_TIMELINE_ELEMENT (child), start);
+    }
+  }
+
+  container->children_control_mode = GES_CHILDREN_UPDATE;
+
+  return FALSE;
+}
+
 static void
 ges_source_clip_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -76,10 +118,13 @@ static void
 ges_source_clip_class_init (GESSourceClipClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GESTimelineElementClass *element_class = GES_TIMELINE_ELEMENT_CLASS (klass);
 
   object_class->get_property = ges_source_clip_get_property;
   object_class->set_property = ges_source_clip_set_property;
   object_class->finalize = ges_source_clip_finalize;
+
+  element_class->set_start = _set_start;
 }
 
 static void

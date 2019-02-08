@@ -151,7 +151,6 @@ static gboolean
 _set_start (GESTimelineElement * element, GstClockTime start)
 {
   GList *tmp;
-  GESTimeline *timeline;
   GESContainer *container = GES_CONTAINER (element);
 
   GST_DEBUG_OBJECT (element, "Setting children start, (initiated_move: %"
@@ -163,17 +162,7 @@ _set_start (GESTimelineElement * element, GstClockTime start)
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
-    if (child != container->initiated_move) {
-      /* Make the snapping happen if in a timeline */
-      timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
-      if (timeline && !container->initiated_move) {
-        if (ges_timeline_move_object_simple (timeline, child, NULL,
-                GES_EDGE_NONE, start))
-          continue;
-      }
-
-      _set_start0 (GES_TIMELINE_ELEMENT (child), start);
-    }
+    _set_start0 (GES_TIMELINE_ELEMENT (child), start);
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
 
