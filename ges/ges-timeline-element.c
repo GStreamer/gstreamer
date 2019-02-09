@@ -96,6 +96,8 @@ struct _GESTimelineElementPrivate
   GHashTable *children_props;
 
   GESTimelineElement *copied_from;
+
+  GESTimelineElementFlags flags;
 };
 
 typedef struct
@@ -1902,4 +1904,30 @@ ges_timeline_element_get_copied_from (GESTimelineElement * self)
   GESTimelineElement *copied_from = self->priv->copied_from;
   self->priv->copied_from = NULL;
   return copied_from;
+}
+
+GESTimelineElementFlags
+ges_timeline_element_flags (GESTimelineElement * self)
+{
+  return self->priv->flags;
+}
+
+gint32
+_layer_priority (GESTimelineElement * element)
+{
+  if (GES_IS_CLIP (element))
+    return ges_clip_get_layer_priority (GES_CLIP (element));
+
+  if (GES_IS_TRACK_ELEMENT (element))
+    return element->priority / LAYER_HEIGHT;
+
+  return element->priority;
+}
+
+void
+ges_timeline_element_set_flags (GESTimelineElement * self,
+    GESTimelineElementFlags flags)
+{
+  self->priv->flags = flags;
+
 }

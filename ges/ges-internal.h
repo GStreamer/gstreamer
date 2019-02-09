@@ -394,8 +394,25 @@ G_GNUC_INTERNAL GESVideoTestSource * ges_video_test_source_new (void);
 /****************************************************
  *              GESTimelineElement                  *
  ****************************************************/
+typedef enum
+{
+  GES_CLIP_IS_SPLITTING = (1 << 0),
+  GES_CLIP_IS_MOVING = (1 << 1),
+  GES_TIMELINE_ELEMENT_SET_SIMPLE = (1 << 2),
+} GESTimelineElementFlags;
+
 G_GNUC_INTERNAL gdouble ges_timeline_element_get_media_duration_factor(GESTimelineElement *self);
 G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_get_copied_from (GESTimelineElement *self);
+G_GNUC_INTERNAL GESTimelineElementFlags ges_timeline_element_flags (GESTimelineElement *self);
+G_GNUC_INTERNAL void                ges_timeline_element_set_flags (GESTimelineElement *self, GESTimelineElementFlags flags);
+
+/* FIXME: Provide a clean way to get layer prio generically */
+G_GNUC_INTERNAL gint32 _layer_priority (GESTimelineElement * element);
+
+#define ELEMENT_FLAGS(obj)             (ges_timeline_element_flags (GES_TIMELINE_ELEMENT(obj)))
+#define ELEMENT_SET_FLAG(obj,flag)     (ges_timeline_element_set_flags(GES_TIMELINE_ELEMENT(obj), (ELEMENT_FLAGS(obj) | (flag))))
+#define ELEMENT_UNSET_FLAG(obj,flag)   (ges_timeline_element_set_flags(GES_TIMELINE_ELEMENT(obj), (ELEMENT_FLAGS(obj) & ~(flag))))
+#define ELEMENT_FLAG_IS_SET(obj,flag)  ((ELEMENT_FLAGS (obj) & (flag)) == (flag))
 
 /******************************
  *  GESMultiFile internal API *
