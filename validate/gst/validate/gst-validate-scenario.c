@@ -2569,9 +2569,14 @@ appsrc_push_chain_wrapper (GstPad * pad, GstObject * parent, GstBuffer * buffer,
     gpointer * user_data, gboolean * remove_wrapper)
 {
   GstValidateAction *action = (GstValidateAction *) user_data;
-  GstFlowReturn ret = pad->chainfunc (pad, parent, buffer);
+  GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
+  GstFlowReturn ret;
+  GST_VALIDATE_SCENARIO_EOS_HANDLING_LOCK (scenario);
+  ret = pad->chainfunc (pad, parent, buffer);
   gst_validate_action_set_done (action);
   *remove_wrapper = TRUE;
+  GST_VALIDATE_SCENARIO_EOS_HANDLING_UNLOCK (scenario);
+  g_object_unref (scenario);
   return ret;
 }
 
@@ -3015,6 +3020,8 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       GstValidateActionType *stop_action_type;
       GstStructure *s;
 
+      GST_VALIDATE_SCENARIO_EOS_HANDLING_LOCK (scenario);
+
       if (!is_error) {
         priv->got_eos = TRUE;
         if (priv->message_type) {
@@ -3023,6 +3030,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
             GST_DEBUG_OBJECT (scenario,
                 "Waiting for a message and got a next action"
                 " to execute, letting it a chance!");
+            GST_VALIDATE_SCENARIO_EOS_HANDLING_UNLOCK (scenario);
             goto done;
           } else {
             /* Clear current message wait if waiting for EOS */
@@ -3094,6 +3102,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       gst_validate_execute_action (stop_action_type, stop_action);
       gst_mini_object_unref (GST_MINI_OBJECT (stop_action));
 
+      GST_VALIDATE_SCENARIO_EOS_HANDLING_UNLOCK (scenario);
       break;
     }
     case GST_MESSAGE_BUFFERING:

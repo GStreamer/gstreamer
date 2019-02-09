@@ -254,8 +254,24 @@ struct _GstValidateScenario
   /*< private >*/
   GstValidateScenarioPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING + 1];
+  union {
+    gpointer _gst_reserved[GST_PADDING + 1];
+    struct {
+      GMutex eos_handling_lock;
+    } abi;
+  } ABI;
 };
+
+/* Some actions may trigger EOS during their execution. Unlocked this
+ * could cause a race condition as the main thread may terminate the test
+ * in response to the EOS message in the bus while the action is still
+ * going in a different thread.
+ * To avoid this, the handling of the EOS message is protected with this
+ * lock. Actions expecting to cause an EOS can hold the lock for their
+ * duration so that they are guaranteed to finish before the EOS
+ * terminates the test. */
+#define GST_VALIDATE_SCENARIO_EOS_HANDLING_LOCK(scenario) (g_mutex_lock(&(scenario)->ABI.abi.eos_handling_lock))
+#define GST_VALIDATE_SCENARIO_EOS_HANDLING_UNLOCK(scenario) (g_mutex_unlock(&(scenario)->ABI.abi.eos_handling_lock))
 
 GST_VALIDATE_API
 GType gst_validate_scenario_get_type (void);
