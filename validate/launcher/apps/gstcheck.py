@@ -106,10 +106,21 @@ class MesonTestsManager(TestsManager):
         mesontests = []
         for i, bdir in enumerate(self.options.meson_build_dirs):
             bdir = os.path.abspath(bdir)
-            output = subprocess.check_output(
-                [meson, 'introspect', '--tests', bdir])
+            ninja_build = os.path.join(bdir, "build.ninja")
+            dumpfile = os.path.join(self.options.privatedir,
+                      ninja_build.replace(os.path.sep, '_') + '_' + str(os.stat(ninja_build).st_mtime) +  '.json')
+            try:
+                with open(dumpfile, 'r') as f:
+                    tests_json = json.load(f)
+            except FileNotFoundError:
+                output = subprocess.check_output(
+                    [meson, 'introspect', '--tests', bdir])
+                json_str = output.decode()
+                with open(dumpfile, 'w') as f:
+                    f.write(json_str)
+                tests_json = json.loads(json_str)
 
-            for test_dict in json.loads(output.decode()):
+            for test_dict in tests_json:
                 mesontests.append(test_dict)
 
         return mesontests
