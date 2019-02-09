@@ -96,4 +96,16 @@ G_STMT_START {                                          \
   gst_object_unref (tmplayer);                                                 \
 }
 
+#define GES_TIMELINE_ELEMENT_FORMAT \
+    "s<%p>" \
+    " [ %" GST_TIME_FORMAT \
+    " (%" GST_TIME_FORMAT \
+    ") - %" GST_TIME_FORMAT "]"
+
+#define GES_TIMELINE_ELEMENT_ARGS(element) \
+    GES_TIMELINE_ELEMENT_NAME(element), element, \
+    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_START(element)), \
+    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_INPOINT(element)), \
+    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_DURATION(element))
+
 #endif /* _GES_TEST_UTILS */

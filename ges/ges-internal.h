@@ -57,10 +57,10 @@ GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define _set_priority0 ges_timeline_element_set_priority
 
 #define GES_TIMELINE_ELEMENT_FORMAT \
-    "s:%p" \
-    " start: %" GST_TIME_FORMAT \
-    " inpoint: %" GST_TIME_FORMAT \
-    " duration: %" GST_TIME_FORMAT
+    "s<%p>" \
+    " [ %" GST_TIME_FORMAT \
+    " (%" GST_TIME_FORMAT \
+    ") - %" GST_TIME_FORMAT "]"
 
 #define GES_TIMELINE_ELEMENT_ARGS(element) \
     GES_TIMELINE_ELEMENT_NAME(element), element, \
