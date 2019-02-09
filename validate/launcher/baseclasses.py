@@ -1203,11 +1203,9 @@ class TestsManager(Loggable):
         if self._is_test_wanted(test):
             if test not in self.tests:
                 self.tests.append(test)
-                self.tests.sort(key=lambda test: test.classname)
         else:
             if test not in self.tests:
                 self.unwanted_tests.append(test)
-                self.unwanted_tests.sort(key=lambda test: test.classname)
 
     def get_tests(self):
         return self.tests
@@ -1692,7 +1690,8 @@ class _TestsLauncher(Loggable):
                 raise RuntimeError("Unexpected new test in testsuite.")
 
             self.tests.extend(tests)
-        return sorted(list(self.tests), key=lambda t: t.classname)
+        self.tests.sort(key=lambda test: test.classname)
+        return self.tests
 
     def _tester_needed(self, tester):
         for testsuite in self.options.testsuites:
