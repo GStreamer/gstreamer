@@ -66,4 +66,12 @@ def _add_gst_launcher_path():
 if "__main__" == __name__:
     libsdir = _add_gst_launcher_path()
     from launcher.main import main
+    run_profile = os.environ.get('GST_VALIDATE_LAUNCHER_PROFILING', False)
+    if run_profile:
+        import cProfile
+        prof = cProfile.Profile()
+        res = prof.runcall(main, libsdir)
+        prof.dump_stats('gst-validate-launcher-runstats')
+        exit(res)
+
     exit(main(libsdir))
