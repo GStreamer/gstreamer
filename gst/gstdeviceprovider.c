@@ -775,8 +775,8 @@ gst_device_provider_unhide_provider (GstDeviceProvider * provider,
 
 /**
  * gst_device_provider_device_changed:
- * @device: (transfer-none): the new version of @changed_device
- * @changed_device: (transfer-floating): the old version of the device that has been udpated
+ * @device: (transfer none): the new version of @changed_device
+ * @changed_device: (transfer floating): the old version of the device that has been udpated
  *
  * This function is used when @changed_device was modified into its new form
  * @device. This will post a `DEVICE_CHANGED` message on the bus to let
