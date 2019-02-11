@@ -1025,8 +1025,11 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
         break;
       }
     } else if (status == MFX_ERR_MORE_DATA) {
-      task->decode_only = TRUE;
-      thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
+      if (task->surface) {
+        task->decode_only = TRUE;
+        thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
+      }
+
       if (surface->surface->Data.Locked > 0)
         surface = NULL;
       flow = GST_VIDEO_DECODER_FLOW_NEED_DATA;
