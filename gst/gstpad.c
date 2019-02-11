@@ -2082,6 +2082,10 @@ gst_pad_set_link_function_full (GstPad * pad, GstPadLinkFunction link,
  *
  * Sets the given unlink function for the pad. It will be called
  * when the pad is unlinked.
+ *
+ * Note that the pad's lock is already held when the unlink
+ * function is called, so most pad functions cannot be called
+ * from within the callback.
  */
 void
 gst_pad_set_unlink_function_full (GstPad * pad, GstPadUnlinkFunction unlink,

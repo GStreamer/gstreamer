@@ -452,6 +452,9 @@ typedef GstPadLinkReturn	(*GstPadLinkFunction)		(GstPad *pad, GstObject *parent,
  *          during the execution of this function.
  *
  * Function signature to handle a unlinking the pad prom its peer.
+ *
+ * The pad's lock is already held when the unlink function is called, so most
+ * pad functions cannot be called from within the callback.
  */
 typedef void			(*GstPadUnlinkFunction)		(GstPad *pad, GstObject *parent);
 
