@@ -513,7 +513,7 @@ ges_meta_container_register_meta_ ## name (GESMetaContainer *container,\
  * @container: Target container
  * @flags: The #GESMetaFlag to be used
  * @meta_item: Name of the meta item to set
- * @value: (allow-none): Value to set
+ * @value: Value to set
  *
  * Sets a static meta on @container. This method lets you define static
  * metadatas, which means that the type of the registered will be the only
