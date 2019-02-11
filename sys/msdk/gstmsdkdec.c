@@ -1041,6 +1041,12 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       /* If device is busy, wait 1ms and retry, as per MSDK's recomendation */
       g_usleep (1000);
 
+      if (task->surface &&
+          task->surface == surface->surface && !task->sync_point) {
+        free_surface (thiz, surface);
+        surface = NULL;
+      }
+
       /* If the current surface is still busy, we should do sync oepration
        * then tries to decode again
        */
