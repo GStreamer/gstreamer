@@ -335,6 +335,7 @@ gst/validate/Makefile
 gst/overrides/Makefile
 plugins/Makefile
 plugins/fault_injection/Makefile
+plugins/flow/Makefile
 plugins/gapplication/Makefile
 plugins/gtk/Makefile
 plugins/ssim/Makefile

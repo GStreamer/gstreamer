@@ -1,4 +1,4 @@
-SUBDIRS = fault_injection gapplication
+SUBDIRS = flow fault_injection gapplication
 
 if HAVE_GTK
 SUBDIRS += gtk
