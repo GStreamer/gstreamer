@@ -67,4 +67,7 @@ GstValidateActionReturn gst_validate_object_set_property (GstValidateReporter * 
 GST_VALIDATE_API
 void gst_validate_spin_on_fault_signals (void);
 
+GST_VALIDATE_API
+gboolean gst_validate_element_matches_target (GstElement * element, GstStructure * s);
+
 #endif

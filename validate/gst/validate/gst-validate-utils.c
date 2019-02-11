@@ -907,3 +907,35 @@ gst_validate_spin_on_fault_signals (void)
   fault_setup ();
 #endif
 }
+
+/**
+ * gst_validate_element_matches_target:
+ * @element: a #GstElement to check
+ * @structure: a #GstStructure to use for matching
+ *
+ * Check if @element matches one of the 'target-element-name',
+ * 'target-element-klass' or 'target-element-factory-name' defined in @s.
+ *
+ * Return: %TRUE if it matches, %FALSE otherwise or if @s doesn't contain any
+ * target-element field.
+ */
+gboolean
+gst_validate_element_matches_target (GstElement * element, GstStructure * s)
+{
+  const gchar *tmp;
+
+  tmp = gst_structure_get_string (s, "target-element-name");
+  if (tmp != NULL && !strcmp (tmp, GST_ELEMENT_NAME (element)))
+    return TRUE;
+
+  tmp = gst_structure_get_string (s, "target-element-klass");
+  if (tmp != NULL && gst_validate_element_has_klass (element, tmp))
+    return TRUE;
+
+  tmp = gst_structure_get_string (s, "target-element-factory-name");
+  if (tmp != NULL && gst_element_get_factory (element)
+      && !g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (element)), tmp))
+    return TRUE;
+
+  return FALSE;
+}

@@ -3740,24 +3740,7 @@ iterate_children (GstValidateScenario * scenario, GstBin * bin)
 static gboolean
 should_execute_action (GstElement * element, GstValidateAction * action)
 {
-  const gchar *tmp;
-
-  tmp = gst_structure_get_string (action->structure, "target-element-name");
-  if (tmp != NULL && !strcmp (tmp, GST_ELEMENT_NAME (element)))
-    return TRUE;
-
-  tmp = gst_structure_get_string (action->structure, "target-element-klass");
-  if (tmp != NULL && gst_validate_element_has_klass (element, tmp))
-    return TRUE;
-
-  tmp =
-      gst_structure_get_string (action->structure,
-      "target-element-factory-name");
-  if (tmp != NULL && gst_element_get_factory (element)
-      && !g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (element)), tmp))
-    return TRUE;
-
-  return FALSE;
+  return gst_validate_element_matches_target (element, action->structure);
 }
 
 static void
