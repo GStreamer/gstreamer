@@ -61,6 +61,14 @@ __all__.append('TrackElement')
 
 
 class TimelineElement(GES.TimelineElement):
+    def __repr__(self):
+        return "%s [%s (%s) %s]" % (
+            self.props.name,
+            Gst.TIME_ARGS(self.props.start),
+            Gst.TIME_ARGS(self.props.in_point),
+            Gst.TIME_ARGS(self.props.duration),
+        )
+
     def set_child_property(self, prop_name, prop_value):
         res, child, unused_pspec = self.lookup_child(prop_name)
         if not res:
