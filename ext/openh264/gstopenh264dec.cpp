@@ -60,19 +60,20 @@ static GstFlowReturn gst_openh264dec_handle_frame (GstVideoDecoder * decoder,
 static gboolean gst_openh264dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query);
 
-/* pad templates */
+#if HAVE_OPENH264_MAIN_PROFILE
+#define SUPPORTED_PROFILE_STR "profile=(string){ constrained-baseline, baseline, main, high }"
+#else
+#define SUPPORTED_PROFILE_STR "profile=(string){ constrained-baseline, baseline }"
+#endif
 
+/* pad templates */
 static GstStaticPadTemplate gst_openh264dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS
     ("video/x-h264, stream-format=(string)byte-stream, alignment=(string)au, "
-#if HAVE_OPENH264_MAIN_PROFILE
-        "profile=(string){ constrained-baseline, baseline, main, high }"
-#else
-        "profile=(string){ constrained-baseline, baseline }"
-#endif
+      SUPPORTED_PROFILE_STR
     ));
 
 static GstStaticPadTemplate gst_openh264dec_src_template =
