@@ -3032,6 +3032,10 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
           obtain_internal_source (sess, ssrc, &created, GST_CLOCK_TIME_NONE);
       if (source) {
         rtp_source_update_caps (source, caps);
+
+        if (created)
+          on_new_sender_ssrc (sess, source);
+
         g_object_unref (source);
       }
     }
