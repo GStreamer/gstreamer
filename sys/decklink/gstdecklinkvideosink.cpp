@@ -902,9 +902,8 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
            * have no way of knowning the field here
            */
           for (i = 0; i < n; i++) {
-            data[3 * i] =
-                self->info.height ==
-                525 ? self->caption_line - 9 : self->caption_line - 5;
+            data[3 * i] = 0x80 | (self->info.height ==
+                525 ? self->caption_line - 9 : self->caption_line - 5);
             data[3 * i + 1] = cc_meta->data[2 * i];
             data[3 * i + 2] = cc_meta->data[2 * i + 1];
           }
