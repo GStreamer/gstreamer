@@ -201,6 +201,8 @@ struct _RTPSource {
 
   gboolean      pt_set;
   guint8        pt;
+
+  gboolean      disable_rtcp;
 };
 
 struct _RTPSourceClass {

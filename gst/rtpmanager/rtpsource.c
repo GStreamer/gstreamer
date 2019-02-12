@@ -44,6 +44,7 @@ enum
 #define DEFAULT_PROBATION            RTP_DEFAULT_PROBATION
 #define DEFAULT_MAX_DROPOUT_TIME     60000
 #define DEFAULT_MAX_MISORDER_TIME    2000
+#define DEFAULT_DISABLE_RTCP         FALSE
 
 enum
 {
@@ -56,7 +57,8 @@ enum
   PROP_STATS,
   PROP_PROBATION,
   PROP_MAX_DROPOUT_TIME,
-  PROP_MAX_MISORDER_TIME
+  PROP_MAX_MISORDER_TIME,
+  PROP_DISABLE_RTCP
 };
 
 /* GObject vmethods */
@@ -236,6 +238,16 @@ rtp_source_class_init (RTPSourceClass * klass)
           "The maximum time (milliseconds) of misordered packets tolerated.",
           0, G_MAXUINT, DEFAULT_MAX_MISORDER_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * RTPSession::disable-rtcp:
+   *
+   * Allow disabling the sending of RTCP packets for this source.
+   */
+  g_object_class_install_property (gobject_class, PROP_DISABLE_RTCP,
+      g_param_spec_boolean ("disable-rtcp", "Disable RTCP",
+          "Disable sending RTCP packets for this source",
+          DEFAULT_DISABLE_RTCP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (rtp_source_debug, "rtpsource", 0, "RTP Source");
 }
@@ -541,6 +553,9 @@ rtp_source_set_property (GObject * object, guint prop_id,
     case PROP_MAX_MISORDER_TIME:
       src->max_misorder_time = g_value_get_uint (value);
       break;
+    case PROP_DISABLE_RTCP:
+      src->disable_rtcp = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -582,6 +597,9 @@ rtp_source_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_MISORDER_TIME:
       g_value_set_uint (value, src->max_misorder_time);
+      break;
+    case PROP_DISABLE_RTCP:
+      g_value_set_boolean (value, src->disable_rtcp);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

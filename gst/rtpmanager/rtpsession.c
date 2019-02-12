@@ -3476,6 +3476,11 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
     goto reported;
   }
 
+  if (source->disable_rtcp) {
+    GST_DEBUG ("source %08x has RTCP disabled", source->ssrc);
+    goto reported;
+  }
+
   GST_DEBUG ("create RB for SSRC %08x", source->ssrc);
 
   /* get new stats */
@@ -3992,6 +3997,12 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
   /* ignore other sources when we do the timeout after a scheduled BYE */
   if (sess->scheduled_bye && !source->marked_bye)
     return;
+
+  /* skip if RTCP is disabled */
+  if (source->disable_rtcp) {
+    GST_DEBUG ("source %08x has RTCP disabled", source->ssrc);
+    return;
+  }
 
   data->source = source;
 
