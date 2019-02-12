@@ -345,7 +345,7 @@ else
         --disable-programs --disable-ffplay --disable-ffprobe --disable-ffmpeg \
         --disable-encoder=flac --disable-protocols --disable-devices \
         --disable-network --disable-hwaccels --disable-dxva2 --disable-vdpau \
-        --disable-filters --enable-filter=yadif --disable-doc --disable-d3d11va --disable-dxva2 \
+        --disable-filters --enable-filter=yadif --disable-doc --disable-d3d11va \
         --disable-audiotoolbox --disable-videotoolbox --disable-vaapi --disable-crystalhd \
         --disable-mediacodec --disable-nvenc --disable-mmal --disable-omx \
         --disable-omx-rpi --disable-cuda --disable-cuvid --disable-libmfx \
