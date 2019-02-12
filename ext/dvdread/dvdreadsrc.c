@@ -78,7 +78,7 @@ static void gst_dvd_read_src_set_property (GObject * object, guint prop_id,
 static void gst_dvd_read_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstEvent *gst_dvd_read_src_make_clut_change_event (GstDvdReadSrc * src,
-    const guint * clut);
+    const guint32 * clut);
 static gboolean gst_dvd_read_src_get_size (GstDvdReadSrc * src, gint64 * size);
 static gboolean gst_dvd_read_src_do_seek (GstBaseSrc * src, GstSegment * s);
 static gint64 gst_dvd_read_src_convert_timecode (dvd_time_t * time);
@@ -348,6 +348,7 @@ static gboolean
 gst_dvd_read_src_goto_chapter (GstDvdReadSrc * src, gint chapter)
 {
   gint i;
+  const guint8 *palette;
 
   /* make sure the chapter number is valid for this title */
   if (chapter < 0 || chapter >= src->num_chapters) {
@@ -390,8 +391,11 @@ gst_dvd_read_src_goto_chapter (GstDvdReadSrc * src, gint chapter)
   if (src->pending_clut_event)
     gst_event_unref (src->pending_clut_event);
 
+  /* Work around GCC 9 compiler warning here about taking address of packed
+   * member, which may result in an unaligned pointer access */
+  palette = (const guint8 *) src->cur_pgc->palette;
   src->pending_clut_event =
-      gst_dvd_read_src_make_clut_change_event (src, src->cur_pgc->palette);
+      gst_dvd_read_src_make_clut_change_event (src, (const guint32 *) palette);
 
   return TRUE;
 }
@@ -1348,7 +1352,7 @@ gst_dvd_read_src_src_event (GstBaseSrc * basesrc, GstEvent * event)
 
 static GstEvent *
 gst_dvd_read_src_make_clut_change_event (GstDvdReadSrc * src,
-    const guint * clut)
+    const guint32 * clut)
 {
   GstStructure *structure;
   gchar name[16];
