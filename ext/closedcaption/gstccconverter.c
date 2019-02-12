@@ -1292,7 +1292,8 @@ gst_cc_converter_transform (GstBaseTransform * base, GstBuffer * inbuf,
 
   GST_DEBUG_OBJECT (self, "Converted to %" GST_PTR_FORMAT, outbuf);
 
-  return GST_FLOW_OK;
+  return gst_buffer_get_size (outbuf) >
+      0 ? GST_FLOW_OK : GST_BASE_TRANSFORM_FLOW_DROPPED;
 }
 
 static gboolean
