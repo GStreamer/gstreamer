@@ -665,6 +665,7 @@ mpegts_packetizer_new (void)
 void
 mpegts_packetizer_push (MpegTSPacketizer2 * packetizer, GstBuffer * buffer)
 {
+  GstClockTime ts;
   if (G_UNLIKELY (packetizer->empty)) {
     packetizer->empty = FALSE;
     packetizer->offset = GST_BUFFER_OFFSET (buffer);
@@ -674,9 +675,11 @@ mpegts_packetizer_push (MpegTSPacketizer2 * packetizer, GstBuffer * buffer)
       G_GUINT64_FORMAT, gst_buffer_get_size (buffer),
       GST_BUFFER_OFFSET (buffer));
   gst_adapter_push (packetizer->adapter, buffer);
-  /* If buffer timestamp is valid, store it */
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)))
-    packetizer->last_in_time = GST_BUFFER_TIMESTAMP (buffer);
+  /* If the buffer has a valid timestamp, store it - preferring DTS,
+   * which is where upstream arrival times should be stored */
+  ts = GST_BUFFER_DTS_OR_PTS (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (ts))
+    packetizer->last_in_time = ts;
 }
 
 static void
