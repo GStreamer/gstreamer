@@ -910,8 +910,8 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
 
           if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
                   FALSE,
-                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 >> 8,
-                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff, data, 3))
+                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 >> 8,
+                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 & 0xff, data, 3))
             GST_WARNING_OBJECT (self, "Couldn't add meta to ancillary data");
 
           got_captions = TRUE;
@@ -921,8 +921,8 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
         case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:{
           if (!gst_video_vbi_encoder_add_ancillary (self->vbiencoder,
                   FALSE,
-                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 >> 8,
-                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff, cc_meta->data,
+                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 >> 8,
+                  GST_VIDEO_ANCILLARY_DID16_S334_EIA_608 & 0xff, cc_meta->data,
                   cc_meta->size))
             GST_WARNING_OBJECT (self, "Couldn't add meta to ancillary data");
 
