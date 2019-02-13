@@ -543,9 +543,7 @@ gst_fdkaacenc_handle_frame (GstAudioEncoder * enc, GstBuffer * inbuf)
 
   info = gst_audio_encoder_get_audio_info (enc);
 
-  if (!inbuf) {
-    in_args.numInSamples = -1;
-  } else {
+  if (inbuf) {
     if (self->need_reorder) {
       inbuf = gst_buffer_copy (inbuf);
       gst_buffer_map (inbuf, &imap, GST_MAP_READWRITE);
@@ -559,13 +557,20 @@ gst_fdkaacenc_handle_frame (GstAudioEncoder * enc, GstBuffer * inbuf)
     in_args.numInSamples = imap.size / GST_AUDIO_INFO_BPS (info);
 
     in_sizes = imap.size;
-    in_el_sizes = 2;
-    in_desc.bufferIdentifiers = &in_id;
+    in_el_sizes = GST_AUDIO_INFO_BPS (info);
     in_desc.numBufs = 1;
-    in_desc.bufs = (void *) &imap.data;
-    in_desc.bufSizes = &in_sizes;
-    in_desc.bufElSizes = &in_el_sizes;
+  } else {
+    in_args.numInSamples = -1;
+
+    in_sizes = 0;
+    in_el_sizes = 0;
+    in_desc.numBufs = 0;
   }
+
+  in_desc.bufferIdentifiers = &in_id;
+  in_desc.bufs = (void *) &imap.data;
+  in_desc.bufSizes = &in_sizes;
+  in_desc.bufElSizes = &in_el_sizes;
 
   outbuf = gst_audio_encoder_allocate_output_buffer (enc, self->outbuf_size);
   if (!outbuf) {
