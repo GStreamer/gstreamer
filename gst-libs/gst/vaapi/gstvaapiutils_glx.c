@@ -852,8 +852,6 @@ gl_create_pixmap_object (Display * dpy, guint width, guint height)
 
   /* Initialize FBConfig attributes */
   for (attr = fbconfig_attrs; *attr != GL_NONE; attr += 2);
-  *attr++ = GLX_DEPTH_SIZE;
-  *attr++ = wattr.depth;
   if (wattr.depth == 32) {
     *attr++ = GLX_ALPHA_SIZE;
     *attr++ = 8;
