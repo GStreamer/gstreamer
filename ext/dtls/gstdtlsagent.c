@@ -189,13 +189,16 @@ gst_dtls_agent_init (GstDtlsAgent * self)
 #else
   priv->ssl_context = SSL_CTX_new (DTLSv1_method ());
 #endif
-  if (ERR_peek_error () || !priv->ssl_context) {
-    priv->ssl_context = NULL;
-
+  if (!priv->ssl_context) {
     GST_WARNING_OBJECT (self, "Error creating SSL Context");
     ERR_print_errors_cb (ssl_warn_cb, self);
 
     g_return_if_reached ();
+  }
+  /* If any non-fatal issues happened, print them out and carry on */
+  if (ERR_peek_error ()) {
+    ERR_print_errors_cb (ssl_warn_cb, self);
+    ERR_clear_error ();
   }
 
   SSL_CTX_set_verify_depth (priv->ssl_context, 2);
