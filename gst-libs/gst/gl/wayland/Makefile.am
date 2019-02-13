@@ -21,6 +21,7 @@ libgstgl_wayland_la_SOURCES = \
 	$(built_sources)
 
 noinst_HEADERS = \
+	gstgldisplay_wayland_private.h \
 	gstglwindow_wayland_egl.h \
 	wayland_event_source.h \
 	$(built_headers)
