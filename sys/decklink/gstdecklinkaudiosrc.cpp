@@ -197,7 +197,8 @@ gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)
   gst_element_class_add_static_pad_template (element_class, &sink_template);
 
   gst_element_class_set_static_metadata (element_class, "Decklink Audio Source",
-      "Audio/Src", "Decklink Source", "David Schleef <ds@entropywave.com>, "
+      "Audio/Source/Hardware", "Decklink Source",
+      "David Schleef <ds@entropywave.com>, "
       "Sebastian Dröge <sebastian@centricular.com>");
 
   GST_DEBUG_CATEGORY_INIT (gst_decklink_audio_src_debug, "decklinkaudiosrc",

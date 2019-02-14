@@ -235,7 +235,8 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
   gst_caps_unref (templ_caps);
 
   gst_element_class_set_static_metadata (element_class, "Decklink Video Source",
-      "Video/Src", "Decklink Source", "David Schleef <ds@entropywave.com>, "
+      "Video/Source/Hardware", "Decklink Source",
+      "David Schleef <ds@entropywave.com>, "
       "Sebastian Dröge <sebastian@centricular.com>");
 
   GST_DEBUG_CATEGORY_INIT (gst_decklink_video_src_debug, "decklinkvideosrc",

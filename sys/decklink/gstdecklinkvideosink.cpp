@@ -270,7 +270,8 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
   gst_caps_unref (templ_caps);
 
   gst_element_class_set_static_metadata (element_class, "Decklink Video Sink",
-      "Video/Sink", "Decklink Sink", "David Schleef <ds@entropywave.com>, "
+      "Video/Sink/Hardware", "Decklink Sink",
+      "David Schleef <ds@entropywave.com>, "
       "Sebastian Dröge <sebastian@centricular.com>");
 
   GST_DEBUG_CATEGORY_INIT (gst_decklink_video_sink_debug, "decklinkvideosink",
