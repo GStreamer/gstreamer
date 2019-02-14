@@ -118,7 +118,7 @@ gst_nv_h264_enc_class_init (GstNvH264EncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "NVENC H.264 Video Encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       "Encode H.264 video streams using NVIDIA's hardware-accelerated NVENC encoder API",
       "Tim-Philipp Müller <tim@centricular.com>\n"
       "Matthew Waters <matthew@centricular.com>");

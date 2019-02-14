@@ -248,7 +248,7 @@ gst_nvdec_class_init (GstNvDecClass * klass)
       &gst_nvdec_src_template);
 
   gst_element_class_set_static_metadata (element_class, "NVDEC video decoder",
-      "Decoder/Video", "NVDEC video decoder",
+      "Codec/Decoder/Video/Hardware", "NVDEC video decoder",
       "Ericsson AB, http://www.ericsson.com");
 
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_nvdec_start);
