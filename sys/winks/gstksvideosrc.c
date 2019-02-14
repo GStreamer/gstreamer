@@ -167,7 +167,7 @@ gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gst_element_class_set_static_metadata (gstelement_class, "KsVideoSrc",
-      "Source/Video",
+      "Source/Video/Hardware",
       "Stream data from a video capture device through Windows kernel streaming",
       "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>\n"
       "Haakon Sporsheim <hakon.sporsheim@tandberg.com>\n"
