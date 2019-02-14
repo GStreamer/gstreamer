@@ -135,7 +135,7 @@ gst_vtdec_class_init (GstVtdecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Apple VideoToolbox decoder",
-      "Codec/Decoder/Video",
+      "Codec/Decoder/Video/Hardware",
       "Apple VideoToolbox Decoder",
       "Ole André Vadla Ravnås <oleavr@soundrop.com>; "
       "Alessandro Decina <alessandro.d@gmail.com>");
@@ -1051,7 +1051,7 @@ gst_vtdec_hw_class_init (GstVtdecHwClass * klass)
 {
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "Apple VideoToolbox decoder (hardware only)",
-      "Codec/Decoder/Video",
+      "Codec/Decoder/Video/Hardware",
       "Apple VideoToolbox Decoder",
       "Ole André Vadla Ravnås <oleavr@soundrop.com>; "
       "Alessandro Decina <alessandro.d@gmail.com>");

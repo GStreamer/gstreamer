@@ -103,7 +103,7 @@ gst_av_sample_video_sink_class_init (GstAVSampleVideoSinkClass * klass)
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class, "AV Sample video sink",
-      "Sink/Video", "A videosink based on AVSampleBuffer's",
+      "Sink/Video", "A videosink based on AVSampleBuffers",
       "Matthew Waters <matthew@centricular.com>");
 
   gst_element_class_add_static_pad_template (element_class, &gst_av_sample_video_sink_template);

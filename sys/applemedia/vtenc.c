@@ -172,7 +172,7 @@ gst_vtenc_base_init (GstVTEncClass * klass)
   description = g_strdup_printf ("%s encoder", codec_details->name);
 
   gst_element_class_set_metadata (element_class, longname,
-      "Codec/Encoder/Video", description,
+      "Codec/Encoder/Video/Hardware", description,
       "Ole André Vadla Ravnås <oleavr@soundrop.com>, Dominik Röttsches <dominik.rottsches@intel.com>");
 
   g_free (longname);
