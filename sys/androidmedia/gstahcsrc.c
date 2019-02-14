@@ -522,7 +522,7 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Android Camera Source",
-      "Source/Video",
+      "Source/Video/Hardware",
       "Reads frames from android.hardware.Camera class into buffers",
       "Youness Alaoui <youness.alaoui@collabora.co.uk>");
 
