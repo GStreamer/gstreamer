@@ -26,6 +26,22 @@ if not os.path.exists(DEFAULT_BUILDDIR):
     DEFAULT_BUILDDIR = os.path.join(SCRIPTDIR, '_build')
 
 
+def listify(o):
+    if isinstance(o, str):
+        return [o]
+    if isinstance(o, list):
+        return o
+    raise AssertionError('Object {!r} must be a string or a list'.format(o))
+
+def stringify(o):
+    if isinstance(o, str):
+        return o
+    if isinstance(o, list):
+        if len(o) == 1:
+            return o[0]
+        raise AssertionError('Did not expect object {!r} to have more than one element'.format(o))
+    raise AssertionError('Object {!r} must be a string or a list'.format(o))
+
 def prepend_env_var(env, var, value):
     env[var] = os.pathsep + value + os.pathsep + env.get(var, "")
     env[var] = env[var].replace(os.pathsep + os.pathsep, os.pathsep).strip(os.pathsep)
@@ -83,27 +99,28 @@ def get_subprocess_env(options, gst_version):
     mono_paths = set()
     srcdir_path = pathlib.Path(options.srcdir)
     for target in targets:
-        filename = target['filename']
-        root = os.path.dirname(filename)
-        if srcdir_path / "subprojects/gst-devtools/validate/plugins" in (srcdir_path / root).parents:
-            continue
-        if filename.endswith('.dll'):
-            mono_paths.add(os.path.join(options.builddir, root))
-        if typelib_reg.search(filename):
-            prepend_env_var(env, "GI_TYPELIB_PATH",
-                            os.path.join(options.builddir, root))
-        elif sharedlib_reg.search(filename):
-            if target.get('type') != "shared library":
+        filenames = listify(target['filename'])
+        for filename in filenames:
+            root = os.path.dirname(filename)
+            if srcdir_path / "subprojects/gst-devtools/validate/plugins" in (srcdir_path / root).parents:
                 continue
+            if filename.endswith('.dll'):
+                mono_paths.add(os.path.join(options.builddir, root))
+            if typelib_reg.search(filename):
+                prepend_env_var(env, "GI_TYPELIB_PATH",
+                                os.path.join(options.builddir, root))
+            elif sharedlib_reg.search(filename):
+                if not target['type'].startswith('shared'):
+                    continue
+                if target['installed']:
+                    if pluginpath_reg.search(os.path.normpath(stringify(target['install_filename']))):
+                        prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(options.builddir, root))
+                        continue
 
-            if target.get('installed') and pluginpath_reg.search(os.path.normpath(target.get('install_filename'))):
-                prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(options.builddir, root))
-                continue
-
-            prepend_env_var(env, lib_path_envvar,
-                            os.path.join(options.builddir, root))
-        elif target.get('type') == 'executable' and target.get('installed'):
-            paths.add(os.path.join(options.builddir, root))
+                prepend_env_var(env, lib_path_envvar,
+                                os.path.join(options.builddir, root))
+            elif target['type'] == 'executable' and target['installed']:
+                paths.add(os.path.join(options.builddir, root))
 
     for p in paths:
         prepend_env_var(env, 'PATH', p)
