@@ -1,6 +1,6 @@
 project('gst-omx', 'c',
   version : '1.15.1',
-  meson_version : '>= 0.36.0',
+  meson_version : '>= 0.47',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -151,10 +151,9 @@ gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
 
 x11_dep = dependency('x11', required : false)
 
-if host_machine.system() != 'windows'
-  gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+    required : get_option('tests'),
     fallback : ['gstreamer', 'gst_check_dep'])
-endif
 
 libm = cc.find_library('m', required : false)
 glib_dep = dependency('glib-2.0', version : glib_req)
@@ -325,10 +324,20 @@ cdata.set_quoted('GST_OMX_CONFIG_DIR', omx_conf_dir)
 configure_file(output : 'config.h', configuration : cdata)
 
 subdir('config')
-subdir('examples')
+
+if not get_option('examples').disabled()
+  subdir('examples')
+endif
+
 subdir('omx')
-subdir('tools')
-subdir('tests')
+
+if not get_option('tools').disabled()
+  subdir('tools')
+endif
+
+if not get_option('tests').disabled() and gstcheck_dep.found()
+  subdir('tests')
+endif
 
 python3 = find_program('python3')
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
