@@ -127,7 +127,7 @@ gst_msdkh264dec_class_init (GstMsdkH264DecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H264 decoder",
-      "Codec/Decoder/Video",
+      "Codec/Decoder/Video/Hardware",
       "H264 video decoder based on Intel Media SDK",
       "Scott D Phillips <scott.d.phillips@intel.com>");
 

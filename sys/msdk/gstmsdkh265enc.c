@@ -260,7 +260,7 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H265 encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       "H265 video encoder based on Intel Media SDK",
       "Josep Torra <jtorra@oblong.com>");
 

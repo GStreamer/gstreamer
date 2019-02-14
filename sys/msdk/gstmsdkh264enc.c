@@ -543,7 +543,7 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
-      "Intel MSDK H264 encoder", "Codec/Encoder/Video",
+      "Intel MSDK H264 encoder", "Codec/Encoder/Video/Hardware",
       "H264 video encoder based on Intel Media SDK",
       "Josep Torra <jtorra@oblong.com>");
   gst_element_class_add_static_pad_template (element_class, &src_factory);

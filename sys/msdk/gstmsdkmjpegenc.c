@@ -155,7 +155,7 @@ gst_msdkmjpegenc_class_init (GstMsdkMJPEGEncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK MJPEG encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       "MJPEG video encoder based on Intel Media SDK",
       "Scott D Phillips <scott.d.phillips@intel.com>");
 

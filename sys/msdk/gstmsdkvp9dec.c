@@ -166,7 +166,7 @@ gst_msdkvp9dec_class_init (GstMsdkVP9DecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK VP9 decoder",
-      "Codec/Decoder/Video",
+      "Codec/Decoder/Video/Hardware",
       "VP9 video decoder based on Intel Media SDK",
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 

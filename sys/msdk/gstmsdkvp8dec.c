@@ -150,7 +150,7 @@ gst_msdkvp8dec_class_init (GstMsdkVP8DecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK VP8 decoder",
-      "Codec/Decoder/Video",
+      "Codec/Decoder/Video/Hardware",
       "VP8 video decoder based on Intel Media SDK",
       "Hyunjun Ko <zzoon@igalia.com>");
 

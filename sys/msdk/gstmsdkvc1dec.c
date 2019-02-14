@@ -177,7 +177,7 @@ gst_msdkvc1dec_class_init (GstMsdkVC1DecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK VC1 decoder",
-      "Codec/Decoder/Video",
+      "Codec/Decoder/Video/Hardware",
       "VC1/WMV video decoder based on Intel Media SDK",
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");
 
