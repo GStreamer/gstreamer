@@ -345,6 +345,7 @@ VBI_CAT_LEVEL_LOG (GstDebugLevel level,
 }
 #endif	/* GST_DISABLE_GST_DEBUG */
 
+#ifdef G_HAVE_GNUC_VARARGS
 #define error(hook, templ, args...)					\
 	VBI_CAT_LEVEL_LOG (GST_LEVEL_ERROR, NULL, templ , ##args)
 #define warning(hook, templ, args...)					\
@@ -359,6 +360,26 @@ VBI_CAT_LEVEL_LOG (GstDebugLevel level,
 	VBI_CAT_LEVEL_LOG (GST_LEVEL_LOG, NULL, templ , ##args)
 #define debug3(hook, templ, args...)					\
 	VBI_CAT_LEVEL_LOG (GST_LEVEL_TRACE, NULL, templ , ##args)
+#elif defined(G_HAVE_ISO_VARARGS)
+#define error(hook, templ, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_ERROR, NULL, templ, __VA_ARGS__)
+#define warning(hook, templ, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_WARNING, NULL, templ, __VA_ARGS__)
+#define notice(hook, templ, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_INFO, NULL, templ, __VA_ARGS__)
+#define info(hook, templ, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_INFO, NULL, templ, __VA_ARGS__)
+#define debug1(hook, templ, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_DEBUG, NULL, templ, __VA_ARGS__)
+#define debug2(hook, templ, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_LOG, NULL, templ, __VA_ARGS__)
+#define debug3(hook, templ, ...)					\
+	VBI_CAT_LEVEL_LOG (GST_LEVEL_TRACE, NULL, templ, __VA_ARGS__)
+#else
+/* if someone needs this, they can implement the inline functions for it */
+#error "variadic macros are required"
+#endif
+
 
 #if 0				/* Replaced logging with GStreamer logging system */
 extern _vbi_log_hook		_vbi_global_log;
