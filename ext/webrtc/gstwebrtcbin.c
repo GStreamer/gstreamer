@@ -2962,6 +2962,75 @@ _filter_sdp_fields (GQuark field_id, const GValue * value,
 }
 
 static void
+_update_transport_ptmap_from_media (GstWebRTCBin * webrtc,
+    TransportStream * stream, const GstSDPMessage * sdp, guint media_idx)
+{
+  guint i, len;
+  const gchar *proto;
+  const GstSDPMedia *media = gst_sdp_message_get_media (sdp, media_idx);
+
+  /* get proto */
+  proto = gst_sdp_media_get_proto (media);
+  if (proto != NULL) {
+    /* Parse global SDP attributes once */
+    GstCaps *global_caps = gst_caps_new_empty_simple ("application/x-unknown");
+    GST_DEBUG_OBJECT (webrtc, "mapping sdp session level attributes to caps");
+    gst_sdp_message_attributes_to_caps (sdp, global_caps);
+    GST_DEBUG_OBJECT (webrtc, "mapping sdp media level attributes to caps");
+    gst_sdp_media_attributes_to_caps (media, global_caps);
+
+    len = gst_sdp_media_formats_len (media);
+    for (i = 0; i < len; i++) {
+      GstCaps *caps, *outcaps;
+      GstStructure *s;
+      PtMapItem item;
+      gint pt;
+      guint j;
+
+      pt = atoi (gst_sdp_media_get_format (media, i));
+
+      GST_DEBUG_OBJECT (webrtc, " looking at %d pt: %d", i, pt);
+
+      /* convert caps */
+      caps = gst_sdp_media_get_caps_from_media (media, pt);
+      if (caps == NULL) {
+        GST_WARNING_OBJECT (webrtc, " skipping pt %d without caps", pt);
+        continue;
+      }
+
+      /* Merge in global caps */
+      /* Intersect will merge in missing fields to the current caps */
+      outcaps = gst_caps_intersect (caps, global_caps);
+      gst_caps_unref (caps);
+
+      s = gst_caps_get_structure (outcaps, 0);
+      gst_structure_set_name (s, "application/x-rtp");
+      if (!g_strcmp0 (gst_structure_get_string (s, "encoding-name"), "ULPFEC"))
+        gst_structure_set (s, "is-fec", G_TYPE_BOOLEAN, TRUE, NULL);
+
+      item.caps = gst_caps_new_empty ();
+
+      for (j = 0; j < gst_caps_get_size (outcaps); j++) {
+        GstStructure *s = gst_caps_get_structure (outcaps, j);
+        GstStructure *filtered =
+            gst_structure_new_empty (gst_structure_get_name (s));
+
+        gst_structure_foreach (s,
+            (GstStructureForeachFunc) _filter_sdp_fields, filtered);
+        gst_caps_append_structure (item.caps, filtered);
+      }
+
+      item.pt = pt;
+      gst_caps_unref (outcaps);
+
+      g_array_append_val (stream->ptmap, item);
+    }
+
+    gst_caps_unref (global_caps);
+  }
+}
+
+static void
 _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     const GstSDPMessage * sdp, guint media_idx,
     TransportStream * stream, GstWebRTCRTPTransceiver * rtp_trans,
@@ -2990,9 +3059,6 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     const GstSDPMedia *local_media, *remote_media;
     GstWebRTCRTPTransceiverDirection local_dir, remote_dir;
     GstWebRTCDTLSSetup local_setup, remote_setup;
-    guint i, len;
-    const gchar *proto;
-    GstCaps *global_caps;
 
     local_media =
         gst_sdp_message_get_media (webrtc->current_local_description->sdp,
@@ -3013,72 +3079,6 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
 
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE)
       return;
-
-    /* get proto */
-    proto = gst_sdp_media_get_proto (media);
-    if (proto != NULL) {
-      /* Parse global SDP attributes once */
-      global_caps = gst_caps_new_empty_simple ("application/x-unknown");
-      GST_DEBUG_OBJECT (webrtc, "mapping sdp session level attributes to caps");
-      gst_sdp_message_attributes_to_caps (sdp, global_caps);
-      GST_DEBUG_OBJECT (webrtc, "mapping sdp media level attributes to caps");
-      gst_sdp_media_attributes_to_caps (media, global_caps);
-
-      if (!bundled) {
-        /* clear the ptmap */
-        g_array_set_size (stream->ptmap, 0);
-      }
-
-      len = gst_sdp_media_formats_len (media);
-      for (i = 0; i < len; i++) {
-        GstCaps *caps, *outcaps;
-        GstStructure *s;
-        PtMapItem item;
-        gint pt;
-        guint j;
-
-        pt = atoi (gst_sdp_media_get_format (media, i));
-
-        GST_DEBUG_OBJECT (webrtc, " looking at %d pt: %d", i, pt);
-
-        /* convert caps */
-        caps = gst_sdp_media_get_caps_from_media (media, pt);
-        if (caps == NULL) {
-          GST_WARNING_OBJECT (webrtc, " skipping pt %d without caps", pt);
-          continue;
-        }
-
-        /* Merge in global caps */
-        /* Intersect will merge in missing fields to the current caps */
-        outcaps = gst_caps_intersect (caps, global_caps);
-        gst_caps_unref (caps);
-
-        s = gst_caps_get_structure (outcaps, 0);
-        gst_structure_set_name (s, "application/x-rtp");
-        if (!g_strcmp0 (gst_structure_get_string (s, "encoding-name"),
-                "ULPFEC"))
-          gst_structure_set (s, "is-fec", G_TYPE_BOOLEAN, TRUE, NULL);
-
-        item.caps = gst_caps_new_empty ();
-
-        for (j = 0; j < gst_caps_get_size (outcaps); j++) {
-          GstStructure *s = gst_caps_get_structure (outcaps, j);
-          GstStructure *filtered =
-              gst_structure_new_empty (gst_structure_get_name (s));
-
-          gst_structure_foreach (s,
-              (GstStructureForeachFunc) _filter_sdp_fields, filtered);
-          gst_caps_append_structure (item.caps, filtered);
-        }
-
-        item.pt = pt;
-        gst_caps_unref (outcaps);
-
-        g_array_append_val (stream->ptmap, item);
-      }
-
-      gst_caps_unref (global_caps);
-    }
 
     if (prev_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE
         && prev_dir != new_dir) {
@@ -3381,9 +3381,12 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
     bundle_stream = _get_or_create_transport_stream (webrtc, bundle_idx,
         _message_media_is_datachannel (sdp->sdp, bundle_idx));
 
-    g_array_set_size (bundle_stream->ptmap, 0);
-
     _connect_rtpfunnel (webrtc, bundle_idx);
+
+    g_array_set_size (bundle_stream->ptmap, 0);
+    for (i = 0; i < gst_sdp_message_medias_len (sdp->sdp); i++) {
+      _update_transport_ptmap_from_media (webrtc, bundle_stream, sdp->sdp, i);
+    }
   }
 
   for (i = 0; i < gst_sdp_message_medias_len (sdp->sdp); i++) {
@@ -3405,6 +3408,10 @@ _update_transceivers_from_sdp (GstWebRTCBin * webrtc, SDPSource source,
 
     stream = _get_or_create_transport_stream (webrtc, transport_idx,
         _message_media_is_datachannel (sdp->sdp, transport_idx));
+    if (!bundled) {
+      g_array_set_size (stream->ptmap, 0);
+      _update_transport_ptmap_from_media (webrtc, stream, sdp->sdp, i);
+    }
 
     if (trans)
       webrtc_transceiver_set_transport ((WebRTCTransceiver *) trans, stream);
@@ -4277,6 +4284,10 @@ on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
     }
   }
 
+  GST_LOG_OBJECT (webrtc, "requesting aux sender for stream %" GST_PTR_FORMAT
+      " with transport %" GST_PTR_FORMAT " and pt map %" GST_PTR_FORMAT, stream,
+      trans, pt_map);
+
   if (gst_structure_n_fields (pt_map)) {
     GstElement *rtx;
     GstPad *pad;
@@ -4329,6 +4340,9 @@ on_rtpbin_request_aux_receiver (GstElement * rtpbin, guint session_id,
     red_pt = transport_stream_get_pt (stream, "RED");
     rtx_pt = transport_stream_get_pt (stream, "RTX");
   }
+
+  GST_LOG_OBJECT (webrtc, "requesting aux receiver for stream %" GST_PTR_FORMAT
+      " with pt red:%u rtx:%u", stream, red_pt, rtx_pt);
 
   if (red_pt || rtx_pt)
     ret = gst_bin_new (NULL);
