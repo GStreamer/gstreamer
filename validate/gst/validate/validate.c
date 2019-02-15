@@ -127,8 +127,10 @@ create_config (const gchar * config, const gchar * suffix)
 {
   GList *structures = NULL, *tmp, *result = NULL;
 
-  if (!suffix)
+  if (!suffix) {
+    GST_WARNING ("suffix is NULL");
     return NULL;
+  }
 
   structures = gst_validate_utils_structs_parse_from_filename (config);
   if (!structures) {
@@ -197,8 +199,10 @@ gst_validate_plugin_get_config (GstPlugin * plugin)
   }
 
   config = g_getenv ("GST_VALIDATE_CONFIG");
-  if (!config)
+  if (!config) {
+    GST_DEBUG ("GST_VALIDATE_CONFIG not set");
     return NULL;
+  }
 
   tmp = g_strsplit (config, G_SEARCHPATH_SEPARATOR_S, -1);
   for (i = 0; tmp[i] != NULL; i++) {
