@@ -31,7 +31,7 @@
 #  include "config.h"
 #endif
 
-#include <pthread.h>
+#include <glib.h>
 
 #include "misc.h"
 #include "decoder.h"
@@ -517,13 +517,13 @@ vbi_raw_decode (vbi_raw_decoder * rd, uint8_t * raw, vbi_sliced * out)
   rd3 = (vbi3_raw_decoder *) rd->pattern;
   n_lines = rd->count[0] + rd->count[1];
 
-  pthread_mutex_lock (&rd->mutex);
+  g_mutex_lock (&rd->mutex);
 
   {
     n_lines = vbi3_raw_decoder_decode (rd3, out, n_lines, raw);
   }
 
-  pthread_mutex_unlock (&rd->mutex);
+  g_mutex_unlock (&rd->mutex);
 
   return n_lines;
 }
@@ -549,14 +549,14 @@ vbi_raw_decoder_resize (vbi_raw_decoder * rd, int *start, unsigned int *count)
 
   rd3 = (vbi3_raw_decoder *) rd->pattern;
 
-  pthread_mutex_lock (&rd->mutex);
+  g_mutex_lock (&rd->mutex);
 
   {
     if ((rd->start[0] == start[0])
         && (rd->start[1] == start[1])
         && (rd->count[0] == (int) count[0])
         && (rd->count[1] == (int) count[1])) {
-      pthread_mutex_unlock (&rd->mutex);
+      g_mutex_unlock (&rd->mutex);
       return;
     }
 
@@ -574,7 +574,7 @@ vbi_raw_decoder_resize (vbi_raw_decoder * rd, int *start, unsigned int *count)
 #endif
   }
 
-  pthread_mutex_unlock (&rd->mutex);
+  g_mutex_unlock (&rd->mutex);
 }
 
 /**
@@ -600,13 +600,13 @@ vbi_raw_decoder_remove_services (vbi_raw_decoder * rd, unsigned int services)
   rd3 = (vbi3_raw_decoder *) rd->pattern;
   service_set = services;
 
-  pthread_mutex_lock (&rd->mutex);
+  g_mutex_lock (&rd->mutex);
 
   {
     service_set = vbi3_raw_decoder_remove_services (rd3, service_set);
   }
 
-  pthread_mutex_unlock (&rd->mutex);
+  g_mutex_unlock (&rd->mutex);
 
   return service_set;
 }
@@ -632,14 +632,14 @@ vbi_raw_decoder_check_services (vbi_raw_decoder * rd,
 
   service_set = services;
 
-  pthread_mutex_lock (&rd->mutex);
+  g_mutex_lock (&rd->mutex);
 
   {
     service_set = vbi_sampling_par_check_services
         ((vbi_sampling_par *) rd, service_set, strict);
   }
 
-  pthread_mutex_unlock (&rd->mutex);
+  g_mutex_unlock (&rd->mutex);
 
   return (unsigned int) service_set;
 }
@@ -679,7 +679,7 @@ vbi_raw_decoder_add_services (vbi_raw_decoder * rd,
   rd3 = (vbi3_raw_decoder *) rd->pattern;
   service_set = services;
 
-  pthread_mutex_lock (&rd->mutex);
+  g_mutex_lock (&rd->mutex);
 
   {
     vbi3_raw_decoder_set_sampling_par (rd3, (vbi_sampling_par *) rd, strict);
@@ -687,7 +687,7 @@ vbi_raw_decoder_add_services (vbi_raw_decoder * rd,
     service_set = vbi3_raw_decoder_add_services (rd3, service_set, strict);
   }
 
-  pthread_mutex_unlock (&rd->mutex);
+  g_mutex_unlock (&rd->mutex);
 
   return service_set;
 }
@@ -741,7 +741,7 @@ vbi_raw_decoder_parameters (vbi_raw_decoder * rd,
 
   service_set = services;
 
-  pthread_mutex_lock (&rd->mutex);
+  g_mutex_lock (&rd->mutex);
 
   {
     service_set = vbi_sampling_par_from_services
@@ -749,7 +749,7 @@ vbi_raw_decoder_parameters (vbi_raw_decoder * rd,
         (unsigned int *) max_rate, videostd_set, service_set);
   }
 
-  pthread_mutex_unlock (&rd->mutex);
+  g_mutex_unlock (&rd->mutex);
 
   return (unsigned int) service_set;
 }
@@ -774,13 +774,13 @@ vbi_raw_decoder_reset (vbi_raw_decoder * rd)
 
   rd3 = (vbi3_raw_decoder *) rd->pattern;
 
-  pthread_mutex_lock (&rd->mutex);
+  g_mutex_lock (&rd->mutex);
 
   {
     vbi3_raw_decoder_reset (rd3);
   }
 
-  pthread_mutex_unlock (&rd->mutex);
+  g_mutex_unlock (&rd->mutex);
 }
 
 /**
@@ -800,7 +800,7 @@ vbi_raw_decoder_destroy (vbi_raw_decoder * rd)
 
   vbi3_raw_decoder_delete (rd3);
 
-  pthread_mutex_destroy (&rd->mutex);
+  g_mutex_clear (&rd->mutex);
 
   CLEAR (*rd);
 }
@@ -819,7 +819,7 @@ vbi_raw_decoder_init (vbi_raw_decoder * rd)
 
   CLEAR (*rd);
 
-  pthread_mutex_init (&rd->mutex, NULL);
+  g_mutex_init (&rd->mutex);
 
   rd3 = vbi3_raw_decoder_new ( /* sampling_par */ NULL);
   assert (NULL != rd3);

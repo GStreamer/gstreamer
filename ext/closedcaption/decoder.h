@@ -33,7 +33,7 @@
 
 /* Public */
 
-#include <pthread.h>
+#include <glib.h>
 
 /* Bit slicer */
 
@@ -370,7 +370,7 @@ typedef struct vbi_raw_decoder {
 
 	/*< private >*/
 
-	pthread_mutex_t		mutex;
+	GMutex			mutex;
 
 	unsigned int		services;
 #if 0				/* DISABLED LEGACY DECODER */
