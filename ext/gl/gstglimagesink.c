@@ -893,8 +893,7 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
       g_value_set_enum (value, glimage_sink->mview_downmix_mode);
       break;
     default:
-      if (!gst_video_overlay_set_property (object, PROP_LAST, prop_id, value))
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
