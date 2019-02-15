@@ -1054,7 +1054,13 @@ gst_bus_remove_watch (GstBus * bus)
 
   if (bus->priv->signal_watch == NULL) {
     GST_ERROR_OBJECT (bus, "no bus watch was present");
-    goto no_watch;
+    goto error;
+  }
+
+  if (bus->priv->num_signal_watchers > 0) {
+    GST_ERROR_OBJECT (bus,
+        "trying to remove signal watch with gst_bus_remove_watch()");
+    goto error;
   }
 
   watch_id = bus->priv->signal_watch;
@@ -1065,7 +1071,7 @@ gst_bus_remove_watch (GstBus * bus)
 
   return TRUE;
 
-no_watch:
+error:
   GST_OBJECT_UNLOCK (bus);
 
   return FALSE;
