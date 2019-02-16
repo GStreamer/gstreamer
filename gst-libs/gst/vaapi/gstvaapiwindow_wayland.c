@@ -98,7 +98,7 @@ frame_state_free (FrameState * frame)
 
 struct _GstVaapiWindowWaylandPrivate
 {
-  struct wl_shell_surface *shell_surface;
+  struct wl_shell_surface *wl_shell_surface;
   struct wl_surface *surface;
   struct wl_region *opaque_region;
   struct wl_event_queue *event_queue;
@@ -213,20 +213,20 @@ error:
 }
 
 static void
-handle_ping (void *data, struct wl_shell_surface *shell_surface,
+handle_ping (void *data, struct wl_shell_surface *wl_shell_surface,
     uint32_t serial)
 {
-  wl_shell_surface_pong (shell_surface, serial);
+  wl_shell_surface_pong (wl_shell_surface, serial);
 }
 
 static void
-handle_configure (void *data, struct wl_shell_surface *shell_surface,
+handle_configure (void *data, struct wl_shell_surface *wl_shell_surface,
     uint32_t edges, int32_t width, int32_t height)
 {
 }
 
 static void
-handle_popup_done (void *data, struct wl_shell_surface *shell_surface)
+handle_popup_done (void *data, struct wl_shell_surface *wl_shell_surface)
 {
 }
 
@@ -249,9 +249,9 @@ gst_vaapi_window_wayland_set_fullscreen (GstVaapiWindow * window,
   }
 
   if (!fullscreen)
-    wl_shell_surface_set_toplevel (priv->shell_surface);
+    wl_shell_surface_set_toplevel (priv->wl_shell_surface);
   else {
-    wl_shell_surface_set_fullscreen (priv->shell_surface,
+    wl_shell_surface_set_fullscreen (priv->wl_shell_surface,
         WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, NULL);
   }
 
@@ -286,17 +286,17 @@ gst_vaapi_window_wayland_create (GstVaapiWindow * window,
   wl_proxy_set_queue ((struct wl_proxy *) priv->surface, priv->event_queue);
 
   GST_VAAPI_WINDOW_LOCK_DISPLAY (window);
-  priv->shell_surface =
-      wl_shell_get_shell_surface (priv_display->wl_shell, priv->surface);
+  priv->wl_shell_surface = wl_shell_get_shell_surface (priv_display->wl_shell,
+      priv->surface);
   GST_VAAPI_WINDOW_UNLOCK_DISPLAY (window);
-  if (!priv->shell_surface)
+  if (!priv->wl_shell_surface)
     return FALSE;
-  wl_proxy_set_queue ((struct wl_proxy *) priv->shell_surface,
+  wl_proxy_set_queue ((struct wl_proxy *) priv->wl_shell_surface,
       priv->event_queue);
 
-  wl_shell_surface_add_listener (priv->shell_surface,
+  wl_shell_surface_add_listener (priv->wl_shell_surface,
       &shell_surface_listener, priv);
-  wl_shell_surface_set_toplevel (priv->shell_surface);
+  wl_shell_surface_set_toplevel (priv->wl_shell_surface);
 
   priv->poll = gst_poll_new (TRUE);
   gst_poll_fd_init (&priv->pollfd);
@@ -332,7 +332,7 @@ gst_vaapi_window_wayland_finalize (GObject * object)
   if (priv->event_queue)
     wl_display_roundtrip_queue (wl_display, priv->event_queue);
 
-  g_clear_pointer (&priv->shell_surface, wl_shell_surface_destroy);
+  g_clear_pointer (&priv->wl_shell_surface, wl_shell_surface_destroy);
   g_clear_pointer (&priv->surface, wl_surface_destroy);
   g_clear_pointer (&priv->event_queue, wl_event_queue_destroy);
 
