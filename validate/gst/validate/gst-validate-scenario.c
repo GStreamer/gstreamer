@@ -346,6 +346,12 @@ gst_validate_action_init (GstValidateAction * action)
 }
 
 void
+gst_validate_action_ref (GstValidateAction * action)
+{
+  gst_mini_object_ref (GST_MINI_OBJECT (action));
+}
+
+void
 gst_validate_action_unref (GstValidateAction * action)
 {
   gst_mini_object_unref (GST_MINI_OBJECT (action));
@@ -2659,6 +2665,7 @@ appsrc_push_chain_wrapper (GstPad * pad, GstObject * parent, GstBuffer * buffer,
   GST_VALIDATE_SCENARIO_EOS_HANDLING_LOCK (scenario);
   ret = pad->chainfunc (pad, parent, buffer);
   gst_validate_action_set_done (action);
+  gst_validate_action_unref (action);
   *remove_wrapper = TRUE;
   GST_VALIDATE_SCENARIO_EOS_HANDLING_UNLOCK (scenario);
   g_object_unref (scenario);
@@ -2698,6 +2705,12 @@ _execute_appsrc_push (GstValidateScenario * scenario,
   guint64 offset = 0;
   guint64 size = -1;
   gint push_buffer_ret;
+  gboolean wait;
+
+  /* We will only wait for the the buffer to be pushed if we are in a state
+   * that allows flow of buffers (>=PAUSED). Otherwise the buffer will just
+   * be enqueued. */
+  wait = scenario->priv->target_state >= GST_STATE_PAUSED;
 
   target = _get_target_element (scenario, action);
   if (target == NULL) {
@@ -2759,6 +2772,9 @@ _execute_appsrc_push (GstValidateScenario * scenario,
     gst_object_unref (peer_pad);
   }
 
+  /* Keep the action alive until set done is called. */
+  gst_validate_action_ref (action);
+
   g_signal_emit_by_name (target, "push-buffer", buffer, &push_buffer_ret);
   if (push_buffer_ret != GST_FLOW_OK) {
     gchar *structure_string = gst_structure_to_string (action->structure);
@@ -2770,7 +2786,14 @@ _execute_appsrc_push (GstValidateScenario * scenario,
 
   g_free (file_name);
   gst_object_unref (target);
-  return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+
+  if (wait) {
+    return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+  } else {
+    gst_validate_printf (NULL,
+        "Pipeline is not ready to push buffers, interlacing appsrc-push action...");
+    return GST_VALIDATE_EXECUTE_ACTION_INTERLACED;
+  }
 }
 
 static gint
@@ -3356,6 +3379,9 @@ _load_scenario_file (GstValidateScenario * scenario,
       gst_structure_get_boolean (structure, "is-config", is_config);
       gst_structure_get_boolean (structure, "handles-states",
           &priv->handles_state);
+
+      if (!priv->handles_state)
+        priv->target_state = GST_STATE_PLAYING;
 
       pipeline_name = gst_structure_get_string (structure, "pipeline-name");
       if (pipeline_name) {
@@ -5072,7 +5098,7 @@ init_scenarios (void)
         },
         {NULL}
       }),
-      "Queues a buffer from an appsrc and waits for it to be handled by downstream elements in the same streaming thread.",
+      "Queues a buffer in an appsrc. If the pipeline state allows flow of buffers, the next action is not run until the buffer has been pushed.",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("appsrc-eos", _execute_appsrc_eos,

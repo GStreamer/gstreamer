@@ -126,6 +126,8 @@ GstValidateAction   * gst_validate_action_new          (GstValidateScenario * sc
                                                         GstStructure *structure,
                                                         gboolean add_to_lists);
 GST_VALIDATE_API
+void gst_validate_action_ref               (GstValidateAction * action);
+GST_VALIDATE_API
 void gst_validate_action_unref             (GstValidateAction * action);
 
 #define GST_TYPE_VALIDATE_ACTION            (gst_validate_action_get_type ())
