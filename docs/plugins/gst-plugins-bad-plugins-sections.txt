@@ -3629,22 +3629,6 @@ gst_v_c1_parse_get_type
 </SECTION>
 
 <SECTION>
-<FILE>element-vcdsrc</FILE>
-<TITLE>vcdsrc</TITLE>
-GstVCDSrc
-<SUBSECTION Standard>
-GstVCDSrcClass
-GST_VCD_SRC
-GST_VCD_SRC_CAST
-GST_IS_VCD_SRC
-GST_VCD_SRC_CLASS
-GST_IS_VCD_SRC_CLASS
-GST_TYPE_VCD_SRC
-<SUBSECTION Private>
-gst_vcd_src_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-vmncdec</FILE>
 <TITLE>vmncdec</TITLE>
 GstVMncDec

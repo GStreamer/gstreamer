@@ -18,7 +18,7 @@ AM_TESTS_ENVIRONMENT += \
 	    decklinksrc \
 	    decklinksink dtlssrtpdec dtlssrtpenc dvbsrc dvbbasebin dfbvideosink festival fluidsynth \
 	    kmssink \
-	    rsndvdbin vcdsrc rfbsrc vdpauyuvvideo vdpauvideoyuv \
+	    rsndvdbin rfbsrc vdpauyuvvideo vdpauvideoyuv \
 	    vdpaumpegdec vdpaumpeg4dec vdpauh264dec vdpauvideopostprocess vdpausink neonhttpsrc waylandsink"
 
 plugindir = $(libdir)/gstreamer-@GST_API_VERSION@

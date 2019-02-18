@@ -248,7 +248,6 @@
     <xi:include href="xml/element-uvch264mjpgdemux.xml" />
     <xi:include href="xml/element-uvch264src.xml" />
     <xi:include href="xml/element-vc1parse.xml" />
-    <xi:include href="xml/element-vcdsrc.xml" />
     <xi:include href="xml/element-vdpaumpegdec.xml" />
     <xi:include href="xml/element-videoanalyse.xml" />
     <xi:include href="xml/element-videodiff.xml" />
@@ -393,7 +392,6 @@
     <xi:include href="xml/plugin-timecode.xml" />
     <xi:include href="xml/plugin-ttmlsubs.xml" />
     <xi:include href="xml/plugin-uvch264.xml" />
-    <xi:include href="xml/plugin-vcdsrc.xml" />
     <xi:include href="xml/plugin-vdpau.xml" />
     <xi:include href="xml/plugin-videofiltersbad.xml" />
     <xi:include href="xml/plugin-videoframe_audiolevel.xml" />

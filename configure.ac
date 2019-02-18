@@ -888,12 +888,6 @@ AG_GST_CHECK_FEATURE(IPCPIPELINE, [Unix sockets], ipcpipeline, [
     fi
 ])
 
-dnl check for Video CD
-translit(dnm, m, l) AM_CONDITIONAL(USE_VCD, true)
-AG_GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
-  AC_CHECK_HEADER(linux/cdrom.h, HAVE_VCD="yes", HAVE_VCD="no")
-])
-
 dnl check for OpenSL ES
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENSLES, true)
 AG_GST_CHECK_FEATURE(OPENSLES, [OpenSL ES], opensl, [
@@ -2611,7 +2605,6 @@ sys/opensles/Makefile
 sys/shm/Makefile
 sys/tinyalsa/Makefile
 sys/uvch264/Makefile
-sys/vcd/Makefile
 sys/vdpau/Makefile
 sys/wasapi/Makefile
 sys/winks/Makefile
