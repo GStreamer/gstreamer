@@ -154,8 +154,9 @@ build android arm64 api28:
     # netsim.netsim_stress: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/849
     # nle_complex.test_one_expandable_another: https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/55
     # nle_simple.test_simplest: https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/57
-    # ges_basic.test_ges_pipeline_change_stat: https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/58
+    # ges_basic.test_ges_pipeline_change_state: https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/58
     # gst-editing-services.pythontests.pyunittest.python.test_timeline.TestTransitions.test_transition_type: https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/62
+    # gst-editing-services.pythontests.pyunittest.python.test_timeline.TestTransitions.test_auto_transition: https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/63
     # pipelines_tcp.test_that_tcpserversink_and_tcpclientsrc_are_symmetrical: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/221
     # elements_capsfilter.test_unfixed_downstream_caps: https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/335
     # gst_rtspclientsink.test_record: https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/55
@@ -206,6 +207,7 @@ build android arm64 api28:
       -b check.gst-editing-services.nle_simple.test_simplest
       -b check.gst-editing-services.ges_basic.test_ges_pipeline_change_state
       -b check.gst-editing-services.pythontests.pyunittest.python.test_timeline.TestTransitions.test_transition_type
+      -b check.gst-editing-services.pythontests.pyunittest.python.test_timeline.TestTransitions.test_auto_transition
       -b check.gst-plugins-base.pipelines_tcp.test_that_tcpserversink_and_tcpclientsrc_are_symmetrical
       -b check.gstreamer.elements_capsfilter.test_unfixed_downstream_caps
       -b check.gst-rtsp-server.gst_rtspclientsink.test_record
