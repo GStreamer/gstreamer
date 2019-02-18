@@ -48,7 +48,7 @@ subprojects = [
   ['gst-python', { 'option': get_option('python') }],
 ]
 
-python3 = import('python3').find_python()
+python3 = import('python').find_installation()
 symlink = '''
 import os
 
