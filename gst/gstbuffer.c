@@ -178,7 +178,7 @@ gst_atomic_int64_inc (volatile gint64 * atomic)
 static inline gint64
 gst_atomic_int64_inc (volatile gint64 * atomic)
 {
-  InterlockedExchangeAdd (atomic, 1);
+  return InterlockedExchangeAdd64 (atomic, 1);
 }
 #else
 #warning No 64-bit atomic int defined for this platform/toolchain!
