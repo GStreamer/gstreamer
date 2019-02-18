@@ -30,22 +30,23 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
   endif
 endif
 
-subprojects = {
-    'gstreamer': {},
-    'gst-plugins-base': {},
-    'gst-plugins-good': {},
-    'gst-plugins-bad': { 'option': get_option('bad') },
-    'gst-plugins-ugly': { 'option': get_option('ugly') },
-    'pygobject': { 'option': get_option('python') },
-    'gst-python': { 'option': get_option('python') },
-    'gst-omx': { 'option': get_option('omx'), },
-    'gst-libav': { 'option': get_option('libav') },
-    'gstreamer-vaapi': { 'option': get_option('vaapi') },
-    'gst-rtsp-server': { 'option': get_option('rtsp_server') },
-    'gst-devtools': { 'option': get_option('devtools') },
-    'gst-editing-services': { 'option': get_option('ges') },
-    'gstreamer-sharp': { 'option': get_option('sharp') },
-}
+# Ordered list of subprojects (dict has no ordering guarantees)
+subprojects = [
+  ['gstreamer', {}],
+  ['gst-plugins-base', {}],
+  ['gst-plugins-good', {}],
+  ['gst-plugins-bad', { 'option': get_option('bad') }],
+  ['gst-plugins-ugly', { 'option': get_option('ugly') }],
+  ['gst-libav', { 'option': get_option('libav') }],
+  ['gst-rtsp-server', { 'option': get_option('rtsp_server') }],
+  ['gst-devtools', { 'option': get_option('devtools') }],
+  ['gst-editing-services', { 'option': get_option('ges') }],
+  ['gstreamer-vaapi', { 'option': get_option('vaapi') }],
+  ['gst-omx', { 'option': get_option('omx'), }],
+  ['gstreamer-sharp', { 'option': get_option('sharp') }],
+  ['pygobject', { 'option': get_option('python') }],
+  ['gst-python', { 'option': get_option('python') }],
+]
 
 python3 = import('python3').find_python()
 symlink = '''
@@ -63,7 +64,9 @@ endif
 subproject('orc', required: get_option('orc'))
 
 subprojects_names = []
-foreach project_name, build_infos: subprojects
+foreach sp : subprojects
+  project_name = sp[0]
+  build_infos = sp[1]
   is_required = build_infos.get('option', true)
   subproj = subproject(project_name, version: gst_version, required: is_required)
   if subproj.found()
