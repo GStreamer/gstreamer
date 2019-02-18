@@ -183,5 +183,6 @@ G_END_DECLS
 #include <gst/video/gstvideotimecode.h>
 #include <gst/video/gstvideoaffinetransformationmeta.h>
 #include <gst/video/video-anc.h>
+#include <gst/video/video-hdr.h>
 
 #endif /* __GST_VIDEO_H__ */
