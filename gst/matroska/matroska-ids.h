@@ -145,6 +145,20 @@
 #define GST_MATROSKA_ID_VIDEORANGE                 0x55B9
 #define GST_MATROSKA_ID_VIDEOTRANSFERCHARACTERISTICS  0x55BA
 #define GST_MATROSKA_ID_VIDEOPRIMARIES             0x55BB
+#define GST_MATROSKA_ID_MAXCLL                     0x55BC
+#define GST_MATROSKA_ID_MAXFALL                    0x55BD
+#define GST_MATROSKA_ID_MASTERINGMETADATA          0x55D0
+/* IDs in the MasteringMetadata */
+#define GST_MATROSKA_ID_PRIMARYRCHROMATICITYX      0x55D1
+#define GST_MATROSKA_ID_PRIMARYRCHROMATICITYY      0x55D2
+#define GST_MATROSKA_ID_PRIMARYGCHROMATICITYX      0x55D3
+#define GST_MATROSKA_ID_PRIMARYGCHROMATICITYY      0x55D4
+#define GST_MATROSKA_ID_PRIMARYBCHROMATICITYX      0x55D5
+#define GST_MATROSKA_ID_PRIMARYBCHROMATICITYY      0x55D6
+#define GST_MATROSKA_ID_WHITEPOINTCHROMATICITYX    0x55D7
+#define GST_MATROSKA_ID_WHITEPOINTCHROMATICITYY    0x55D8
+#define GST_MATROSKA_ID_LUMINANCEMAX               0x55D9
+#define GST_MATROSKA_ID_LUMINANCEMIN               0x55DA
 
 /* IDs in the TrackAudio master */
 #define GST_MATROSKA_ID_AUDIOSAMPLINGFREQ          0xB5
@@ -627,6 +641,11 @@ typedef struct _GstMatroskaTrackVideoContext {
 
   GstBuffer     *dirac_unit;
   GstVideoColorimetry colorimetry;
+
+  GstVideoMasteringDisplayInfo mastering_display_info;
+  gboolean mastering_display_info_present;
+
+  GstVideoContentLightLevel content_light_level;
 } GstMatroskaTrackVideoContext;
 
 typedef struct _GstMatroskaTrackAudioContext {

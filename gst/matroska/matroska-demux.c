@@ -464,6 +464,110 @@ gst_matroska_demux_add_stream_headers_to_caps (GstMatroskaDemux * demux,
 }
 
 static GstFlowReturn
+gst_matroska_demux_parse_mastering_metadata (GstMatroskaDemux * demux,
+    GstEbmlRead * ebml, GstMatroskaTrackVideoContext * video_context)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstVideoMasteringDisplayInfo minfo;
+  guint32 id;
+  gdouble num;
+  /* Precision defined by HEVC specification */
+  const guint chroma_den = 50000;
+  const guint luma_den = 10000;
+
+  gst_video_mastering_display_info_init (&minfo);
+
+  DEBUG_ELEMENT_START (demux, ebml, "MasteringMetadata");
+
+  if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK)
+    goto beach;
+
+  while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
+    if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
+      goto beach;
+
+    /* all sub elements have float type */
+    if ((ret = gst_ebml_read_float (ebml, &id, &num)) != GST_FLOW_OK)
+      goto beach;
+
+    /* chromaticity should be in [0, 1] range */
+    if (id >= GST_MATROSKA_ID_PRIMARYRCHROMATICITYX &&
+        id <= GST_MATROSKA_ID_WHITEPOINTCHROMATICITYY) {
+      if (num < 0 || num > 1.0) {
+        GST_WARNING_OBJECT (demux, "0x%x has invalid value %f", id, num);
+        goto beach;
+      }
+    } else if (id == GST_MATROSKA_ID_LUMINANCEMAX ||
+        id == GST_MATROSKA_ID_LUMINANCEMIN) {
+      /* Note: webM spec said valid range is [0, 999.9999] but
+       * 1000 cd/m^2 is generally used value on HDR. Just check guint range here.
+       * See https://www.webmproject.org/docs/container/#LuminanceMax
+       */
+      if (num < 0 || num > (gdouble) (G_MAXUINT32 / luma_den)) {
+        GST_WARNING_OBJECT (demux, "0x%x has invalid value %f", id, num);
+        goto beach;
+      }
+    }
+
+    switch (id) {
+      case GST_MATROSKA_ID_PRIMARYRCHROMATICITYX:
+        minfo.Rx_n = (guint) round (num * chroma_den);
+        minfo.Rx_d = chroma_den;
+        break;
+      case GST_MATROSKA_ID_PRIMARYRCHROMATICITYY:
+        minfo.Ry_n = (guint) round (num * chroma_den);
+        minfo.Ry_d = chroma_den;
+        break;
+      case GST_MATROSKA_ID_PRIMARYGCHROMATICITYX:
+        minfo.Gx_n = (guint) round (num * chroma_den);
+        minfo.Gx_d = chroma_den;
+        break;
+      case GST_MATROSKA_ID_PRIMARYGCHROMATICITYY:
+        minfo.Gy_n = (guint) round (num * chroma_den);
+        minfo.Gy_d = chroma_den;
+        break;
+      case GST_MATROSKA_ID_PRIMARYBCHROMATICITYX:
+        minfo.Bx_n = (guint) round (num * chroma_den);
+        minfo.Bx_d = chroma_den;
+        break;
+      case GST_MATROSKA_ID_PRIMARYBCHROMATICITYY:
+        minfo.By_n = (guint) round (num * chroma_den);
+        minfo.By_d = chroma_den;
+        break;
+      case GST_MATROSKA_ID_WHITEPOINTCHROMATICITYX:
+        minfo.Wx_n = (guint) round (num * chroma_den);
+        minfo.Wx_d = chroma_den;
+        break;
+      case GST_MATROSKA_ID_WHITEPOINTCHROMATICITYY:
+        minfo.Wy_n = (guint) round (num * chroma_den);
+        minfo.Wy_d = chroma_den;
+        break;
+      case GST_MATROSKA_ID_LUMINANCEMAX:
+        minfo.max_luma_n = (guint) round (num * luma_den);
+        minfo.max_luma_d = luma_den;
+        break;
+      case GST_MATROSKA_ID_LUMINANCEMIN:
+        minfo.min_luma_n = (guint) round (num * luma_den);
+        minfo.min_luma_d = luma_den;
+        break;
+      default:
+        GST_FIXME_OBJECT (demux,
+            "Unsupported subelement 0x%x in MasteringMetadata", id);
+        ret = gst_ebml_read_skip (ebml);
+        break;
+    }
+  }
+
+  video_context->mastering_display_info = minfo;
+  video_context->mastering_display_info_present = TRUE;
+
+beach:
+  DEBUG_ELEMENT_STOP (demux, ebml, "MasteringMetadata", ret);
+
+  return ret;
+}
+
+static GstFlowReturn
 gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
     GstMatroskaTrackVideoContext * video_context)
 {
@@ -627,6 +731,40 @@ gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
             GST_FIXME_OBJECT (demux, "Unsupported color primaries  %"
                 G_GUINT64_FORMAT, num);
             break;
+        }
+        break;
+      }
+
+      case GST_MATROSKA_ID_MASTERINGMETADATA:{
+        if ((ret =
+                gst_matroska_demux_parse_mastering_metadata (demux, ebml,
+                    video_context)) != GST_FLOW_OK)
+          goto beach;
+        break;
+      }
+
+      case GST_MATROSKA_ID_MAXCLL:{
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          goto beach;
+        if (num >= G_MAXUINT32) {
+          GST_WARNING_OBJECT (demux,
+              "Too large maxCLL value %" G_GUINT64_FORMAT, num);
+        } else {
+          video_context->content_light_level.maxCLL_n = num;
+          video_context->content_light_level.maxCLL_d = 1;
+        }
+        break;
+      }
+
+      case GST_MATROSKA_ID_MAXFALL:{
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          goto beach;
+        if (num >= G_MAXUINT32) {
+          GST_WARNING_OBJECT (demux,
+              "Too large maxFALL value %" G_GUINT64_FORMAT, num);
+        } else {
+          video_context->content_light_level.maxFALL_n = num;
+          video_context->content_light_level.maxFALL_d = 1;
         }
         break;
       }
@@ -6427,6 +6565,21 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
           NULL);
       GST_DEBUG ("setting colorimetry to %s", colorimetry);
       g_free (colorimetry);
+    }
+
+    if (videocontext->mastering_display_info_present) {
+      if (!gst_video_mastering_display_info_add_to_caps
+          (&videocontext->mastering_display_info, caps)) {
+        GST_WARNING ("couldn't set mastering display info to caps");
+      }
+    }
+
+    if (videocontext->content_light_level.maxCLL_n &&
+        videocontext->content_light_level.maxFALL_n) {
+      if (!gst_video_content_light_level_add_to_caps
+          (&videocontext->content_light_level, caps)) {
+        GST_WARNING ("couldn't set content light level to caps");
+      }
     }
 
     caps = gst_caps_simplify (caps);
