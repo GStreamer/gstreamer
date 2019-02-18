@@ -1421,8 +1421,12 @@ fill_bytes (GstRTSPConnection * conn, guint8 * buffer, guint size,
       /* try to read more bytes */
       r = fill_raw_bytes (conn, in, sizeof (in), block, err);
       if (r <= 0) {
-        if (out == 0)
+        if (out == 0) {
           out = r;
+        } else {
+          /* we have some data ignore error */
+          g_clear_error (err);
+        }
         break;
       }
 
