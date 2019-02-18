@@ -311,7 +311,7 @@ run_diff (const gchar * expected_file, const gchar * actual_file)
   }
 
   g_object_unref (process);
-  g_free (stdout);
+  g_free (stdout_text);
 }
 
 static const gchar *
