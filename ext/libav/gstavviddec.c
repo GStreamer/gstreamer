@@ -26,6 +26,7 @@
 
 #include <libavcodec/avcodec.h>
 #include <libavutil/stereo3d.h>
+#include <libavutil/mastering_display_metadata.h>
 
 #include "gstav.h"
 #include "gstavcodecmap.h"
@@ -1070,6 +1071,60 @@ stereo_av_to_gst (enum AVStereo3DType type)
 }
 
 static gboolean
+mastering_display_metadata_av_to_gst (AVMasteringDisplayMetadata * av,
+    GstVideoMasteringDisplayInfo * gst)
+{
+  /* Use only complete mastering meta */
+  if (!av->has_primaries || !av->has_luminance)
+    return FALSE;
+
+  gst->Wx_n = av->white_point[0].num;
+  gst->Wx_d = av->white_point[0].den;
+
+  gst->Wy_n = av->white_point[1].num;
+  gst->Wy_d = av->white_point[1].den;
+
+  gst->Rx_n = av->display_primaries[0][0].num;
+  gst->Rx_d = av->display_primaries[0][0].den;
+
+  gst->Ry_n = av->display_primaries[0][1].num;
+  gst->Ry_d = av->display_primaries[0][1].den;
+
+  gst->Gx_n = av->display_primaries[1][0].num;
+  gst->Gx_d = av->display_primaries[1][0].den;
+
+  gst->Gy_n = av->display_primaries[1][1].num;
+  gst->Gy_d = av->display_primaries[1][1].den;
+
+  gst->Bx_n = av->display_primaries[2][0].num;
+  gst->Bx_d = av->display_primaries[2][0].den;
+
+  gst->By_n = av->display_primaries[2][1].num;
+  gst->By_d = av->display_primaries[2][1].den;
+
+  gst->max_luma_n = av->max_luminance.num;
+  gst->max_luma_d = av->max_luminance.den;
+
+  gst->min_luma_n = av->min_luminance.num;
+  gst->min_luma_d = av->min_luminance.den;
+
+  return TRUE;
+}
+
+static gboolean
+content_light_metadata_av_to_gst (AVContentLightMetadata * av,
+    GstVideoContentLightLevel * gst)
+{
+  gst->maxCLL_n = av->MaxCLL;
+  gst->maxCLL_d = 1;
+
+  gst->maxFALL_n = av->MaxFALL;
+  gst->maxFALL_d = 1;
+
+  return TRUE;
+}
+
+static gboolean
 gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
     AVCodecContext * context, AVFrame * picture)
 {
@@ -1269,6 +1324,63 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
 
   GST_VIDEO_INFO_MULTIVIEW_MODE (out_info) = ffmpegdec->cur_multiview_mode;
   GST_VIDEO_INFO_MULTIVIEW_FLAGS (out_info) = ffmpegdec->cur_multiview_flags;
+
+  /* To passing HDR information to caps directly */
+  if (output_state->caps == NULL) {
+    output_state->caps = gst_video_info_to_caps (out_info);
+  } else {
+    output_state->caps = gst_caps_make_writable (output_state->caps);
+  }
+
+  if (!gst_structure_has_field (in_s, "mastering-display-info")) {
+    AVFrameSideData *sd = av_frame_get_side_data (picture,
+        AV_FRAME_DATA_MASTERING_DISPLAY_METADATA);
+    GstVideoMasteringDisplayInfo mastering;
+
+    if (sd
+        && mastering_display_metadata_av_to_gst ((AVMasteringDisplayMetadata *)
+            sd->data, &mastering)) {
+      GST_LOG_OBJECT (ffmpegdec, "update mastering display info");
+      GST_LOG_OBJECT (ffmpegdec, "\tRed  (%u/%u, %u/%u)", mastering.Rx_n,
+          mastering.Rx_d, mastering.Ry_n, mastering.Ry_d);
+      GST_LOG_OBJECT (ffmpegdec, "\tGreen(%u/%u, %u/%u)", mastering.Gx_n,
+          mastering.Gx_d, mastering.Gy_n, mastering.Gy_d);
+      GST_LOG_OBJECT (ffmpegdec, "\tBlue (%u/%u, %u/%u)", mastering.Bx_n,
+          mastering.Bx_d, mastering.By_n, mastering.By_d);
+      GST_LOG_OBJECT (ffmpegdec, "\tWhite(%u/%u, %u/%u)", mastering.Wx_n,
+          mastering.Wx_d, mastering.Wy_n, mastering.Wy_d);
+      GST_LOG_OBJECT (ffmpegdec,
+          "\tmax_luminance:(%u/%u), min_luminance:(%u/%u)",
+          mastering.max_luma_n, mastering.max_luma_d, mastering.min_luma_n,
+          mastering.min_luma_d);
+
+      if (!gst_video_mastering_display_info_add_to_caps (&mastering,
+              output_state->caps)) {
+        GST_WARNING_OBJECT (ffmpegdec,
+            "Couldn't set mastering display info to caps");
+      }
+    }
+  }
+
+  if (!gst_structure_has_field (in_s, "content-light-level")) {
+    AVFrameSideData *sd = av_frame_get_side_data (picture,
+        AV_FRAME_DATA_CONTENT_LIGHT_LEVEL);
+    GstVideoContentLightLevel level;
+
+    if (sd && content_light_metadata_av_to_gst ((AVContentLightMetadata *)
+            sd->data, &level)) {
+      GST_LOG_OBJECT (ffmpegdec, "update content light level");
+      GST_LOG_OBJECT (ffmpegdec,
+          "\tmaxCLL:(%u/%u), maxFALL:(%u/%u)", level.maxCLL_n, level.maxCLL_d,
+          level.maxFALL_n, level.maxFALL_d);
+
+      if (!gst_video_content_light_level_add_to_caps (&level,
+              output_state->caps)) {
+        GST_WARNING_OBJECT (ffmpegdec,
+            "Couldn't set content light level to caps");
+      }
+    }
+  }
 
   if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (ffmpegdec)))
     goto negotiate_failed;
