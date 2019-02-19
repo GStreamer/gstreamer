@@ -2030,7 +2030,9 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * @rtpbin: the object which received the signal
    * @id: the session id
    *
-   * Request the internal RTPStorage object as #GObject in session @id.
+   * Request the internal RTPStorage object as #GObject in session @id. This
+   * is the internal storage used by the RTPStorage element, which is used to
+   * keep a backlog of received RTP packets for the session @id.
    *
    * Since: 1.14
    */
@@ -2045,7 +2047,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * @rtpbin: the object which received the signal
    * @id: the session id
    *
-   * Request the RTPStorage element as #GObject in session @id.
+   * Request the RTPStorage element as #GObject in session @id. This element
+   * is used to keep a backlog of received RTP packets for the session @id.
    *
    * Since: 1.16
    */
