@@ -2472,7 +2472,7 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
     if (cdata->pad == pad) {
       /*
        * observed duration, this will remain GST_CLOCK_TIME_NONE
-       * only if the pad is resetted 
+       * only if the pad is resetted
        */
       GstClockTime collected_duration = GST_CLOCK_TIME_NONE;
 

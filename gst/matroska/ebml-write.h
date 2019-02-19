@@ -96,7 +96,7 @@ void    gst_ebml_write_seek          (GstEbmlWrite *ebml,
                                       guint64       pos);
 
 /*
- * Data writing. 
+ * Data writing.
  */
 void    gst_ebml_write_uint          (GstEbmlWrite *ebml,
                                       guint32       id,

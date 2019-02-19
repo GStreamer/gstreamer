@@ -77,7 +77,7 @@ GstMatroskaPad;
 
 struct _GstMatroskaMux {
   GstElement     element;
-  
+
   /* < private > */
 
   /* pads */
@@ -104,7 +104,7 @@ struct _GstMatroskaMux {
   GstMatroskaIndex *index;
   guint          num_indexes;
   GstClockTimeDiff min_index_interval;
- 
+
   /* timescale in the file */
   guint64        time_scale;
   /* minimum and maximum limit of nanoseconds you can have in a cluster */

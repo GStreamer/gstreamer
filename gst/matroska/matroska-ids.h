@@ -403,7 +403,7 @@
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_ASCII     "S_TEXT/ASCII"
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8      "S_TEXT/UTF8"
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_SSA       "S_TEXT/SSA"
-#define GST_MATROSKA_CODEC_ID_SUBTITLE_ASS       "S_TEXT/ASS" 
+#define GST_MATROSKA_CODEC_ID_SUBTITLE_ASS       "S_TEXT/ASS"
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_USF       "S_TEXT/USF"
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB    "S_VOBSUB"
 #define GST_MATROSKA_CODEC_ID_SUBTITLE_HDMVPGS   "S_HDMV/PGS"
@@ -600,10 +600,10 @@ struct _GstMatroskaTrackContext {
 
   /* any alignment we need our output buffers to have */
   gint          alignment;
-  
+
   /* for compatibility with VFW files, where timestamp represents DTS */
   gboolean      dts_only;
-  
+
   /* indicate that the track is raw (jpeg,raw variants) and so pts=dts */
   gboolean		intra_only;
 };
