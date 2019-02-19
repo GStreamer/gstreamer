@@ -1036,6 +1036,22 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
     }
   }
 
+  if ((s = gst_structure_get_string (structure, "mastering-display-info"))) {
+    if (!gst_video_mastering_display_info_from_string
+        (&videocontext->mastering_display_info, s)) {
+      GST_WARNING_OBJECT (pad, "Could not parse mastering-display-metadata %s",
+          s);
+    } else {
+      videocontext->mastering_display_info_present = TRUE;
+    }
+  }
+
+  if ((s = gst_structure_get_string (structure, "content-light-level"))) {
+    if (!gst_video_content_light_level_from_string
+        (&videocontext->content_light_level, s))
+      GST_WARNING_OBJECT (pad, "Could not parse content-light-level %s", s);
+  }
+
   /* Collect stereoscopic info, if any */
   if ((s = gst_structure_get_string (structure, "multiview-mode")))
     videocontext->multiview_mode =
@@ -2496,6 +2512,55 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
 }
 
 static void
+gst_matroska_mux_write_mastering_metadata (GstMatroskaMux * mux,
+    GstMatroskaTrackVideoContext * videocontext)
+{
+  GstEbmlWrite *ebml = mux->ebml_write;
+  guint64 master;
+  GstVideoMasteringDisplayInfo *minfo = &videocontext->mastering_display_info;
+  gdouble value;
+
+  if (!videocontext->mastering_display_info_present)
+    return;
+
+  master =
+      gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_MASTERINGMETADATA);
+
+  gst_util_fraction_to_double (minfo->Rx_n, minfo->Rx_d, &value);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYRCHROMATICITYX, value);
+
+  gst_util_fraction_to_double (minfo->Ry_n, minfo->Ry_d, &value);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYRCHROMATICITYY, value);
+
+  gst_util_fraction_to_double (minfo->Gx_n, minfo->Gx_d, &value);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYGCHROMATICITYX, value);
+
+  gst_util_fraction_to_double (minfo->Gy_n, minfo->Gy_d, &value);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYGCHROMATICITYY, value);
+
+  gst_util_fraction_to_double (minfo->Bx_n, minfo->Bx_d, &value);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYBCHROMATICITYX, value);
+
+  gst_util_fraction_to_double (minfo->By_n, minfo->By_d, &value);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_PRIMARYBCHROMATICITYY, value);
+
+  gst_util_fraction_to_double (minfo->Wx_n, minfo->Wx_d, &value);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_WHITEPOINTCHROMATICITYX, value);
+
+  gst_util_fraction_to_double (minfo->Wy_n, minfo->Wy_d, &value);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_WHITEPOINTCHROMATICITYY, value);
+
+  gst_util_fraction_to_double (minfo->max_luma_n, minfo->max_luma_d, &value);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_LUMINANCEMAX, value);
+
+  gst_util_fraction_to_double (minfo->min_luma_n, minfo->min_luma_d, &value);
+  gst_ebml_write_float (ebml, GST_MATROSKA_ID_LUMINANCEMIN, value);
+
+  gst_ebml_write_master_finish (ebml, master);
+  return;
+}
+
+static void
 gst_matroska_mux_write_colour (GstMatroskaMux * mux,
     GstMatroskaTrackVideoContext * videocontext)
 {
@@ -2628,6 +2693,19 @@ gst_matroska_mux_write_colour (GstMatroskaMux * mux,
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOTRANSFERCHARACTERISTICS,
       transfer_id);
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOPRIMARIES, primaries_id);
+  if (videocontext->content_light_level.maxCLL_n &&
+      videocontext->content_light_level.maxFALL_n) {
+    gdouble maxCLL = 0, maxFALL = 0;
+
+    gst_util_fraction_to_double (videocontext->content_light_level.maxCLL_n,
+        videocontext->content_light_level.maxCLL_d, &maxCLL);
+    gst_util_fraction_to_double (videocontext->content_light_level.maxFALL_n,
+        videocontext->content_light_level.maxFALL_d, &maxFALL);
+    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_MAXCLL, (guint) maxCLL);
+    gst_ebml_write_uint (ebml, GST_MATROSKA_ID_MAXFALL, (guint) maxFALL);
+  }
+
+  gst_matroska_mux_write_mastering_metadata (mux, videocontext);
   gst_ebml_write_master_finish (ebml, master);
 }
 
