@@ -231,6 +231,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                     scenarios.append(scenario_file)
             tests_definition['extra_data'] = {'scenarios': scenarios, 'config_file': config_file}
             tests_definition['pipeline_data'] = {"config_path": os.path.dirname(json_file)}
+            tests_definition['pipeline_data'].update(extra_data)
             pipelines_descriptions.append(tests_definition)
 
         return GstValidatePipelineTestsGenerator(name, test_manager, pipelines_descriptions=pipelines_descriptions)
