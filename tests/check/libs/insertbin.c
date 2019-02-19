@@ -43,7 +43,7 @@ GstStaticPadTemplate srcpad_template = GST_STATIC_PAD_TEMPLATE ("src",  /* the n
 
 gint cb_count = 0;
 
-GMutex mutex;
+GMutex lock;
 GCond cond;
 
 GThread *push_thread = NULL;
@@ -103,10 +103,10 @@ thread_push_buffer (gpointer data)
 static GstPadProbeReturn
 got_buffer_block (GstPad * pad, GstPadProbeInfo * info, gpointer data)
 {
-  g_mutex_lock (&mutex);
+  g_mutex_lock (&lock);
   is_blocked = TRUE;
   g_cond_broadcast (&cond);
-  g_mutex_unlock (&mutex);
+  g_mutex_unlock (&lock);
 
   return GST_PAD_PROBE_OK;
 }
@@ -122,10 +122,10 @@ got_buffer_block (GstPad * pad, GstPadProbeInfo * info, gpointer data)
       got_buffer_block, NULL, NULL);                                    \
   push_thread = g_thread_new ("push block", thread_push_buffer, srcpad); \
   fail_unless (push_thread != NULL);                                    \
-  g_mutex_lock (&mutex);                                                \
+  g_mutex_lock (&lock);                                                 \
   while (is_blocked == FALSE)                                           \
-    g_cond_wait (&cond, &mutex);                                        \
-  g_mutex_unlock (&mutex);                                              \
+    g_cond_wait (&cond, &lock);                                         \
+  g_mutex_unlock (&lock);                                               \
 }
 
 #define unblock_thread()                                                \
@@ -154,7 +154,7 @@ GST_START_TEST (test_insertbin_simple)
   GstPad *sinkpad;
   GstCaps *caps;
 
-  g_mutex_init (&mutex);
+  g_mutex_init (&lock);
   g_cond_init (&cond);
 
   insertbin = gst_insert_bin_new (NULL);
@@ -359,7 +359,7 @@ GST_START_TEST (test_insertbin_simple)
 
   fail_unless (cb_count == 0);
 
-  g_mutex_clear (&mutex);
+  g_mutex_clear (&lock);
   g_cond_clear (&cond);
 }
 
