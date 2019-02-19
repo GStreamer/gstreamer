@@ -99,6 +99,7 @@ enum
 #define DEFAULT_AVERAGE_PERIOD  0
 #define DEFAULT_MAX_RATE        G_MAXINT
 #define DEFAULT_RATE            1.0
+#define DEFAULT_MAX_DUPLICATION_TIME      0
 
 enum
 {
@@ -113,7 +114,8 @@ enum
   PROP_DROP_ONLY,
   PROP_AVERAGE_PERIOD,
   PROP_MAX_RATE,
-  PROP_RATE
+  PROP_RATE,
+  PROP_MAX_DUPLICATION_TIME
 };
 
 static GstStaticPadTemplate gst_video_rate_src_template =
@@ -274,6 +276,22 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
           "Factor of speed for frame displaying", 0.0, G_MAXDOUBLE,
           DEFAULT_RATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
+
+  /**
+   * GstVideoRate:max-duplication-time:
+   *
+   * Duplicate frames only if the gap between two consecutive frames does not
+   * exceed this duration.
+   *
+   * Since: 1.16
+   */
+  g_object_class_install_property (object_class, PROP_MAX_DUPLICATION_TIME,
+      g_param_spec_uint64 ("max-duplication-time",
+          "Maximum time to duplicate a frame",
+          "Do not duplicate frames if the gap exceeds this period "
+          "(in ns) (0 = disabled)",
+          0, G_MAXUINT64, DEFAULT_MAX_DUPLICATION_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
       "Video rate adjuster", "Filter/Effect/Video",
@@ -615,6 +633,7 @@ gst_video_rate_init (GstVideoRate * videorate)
   videorate->average_period_set = DEFAULT_AVERAGE_PERIOD;
   videorate->max_rate = DEFAULT_MAX_RATE;
   videorate->rate = DEFAULT_RATE;
+  videorate->max_duplication_time = DEFAULT_MAX_DUPLICATION_TIME;
 
   videorate->from_rate_numerator = 0;
   videorate->from_rate_denominator = 0;
@@ -1446,6 +1465,19 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
       goto done;
     }
 
+    if (videorate->max_duplication_time > 0) {
+      /* We already know that intime and prevtime are not out of order, based
+       * on the previous condition. Using ABS in case rate < 0, in which case
+       * the order is reversed. */
+      if (ABS (GST_CLOCK_DIFF (intime,
+                  prevtime)) > videorate->max_duplication_time) {
+        /* The gap between the two buffers is too large. Don't fill it, just
+         * let a discont through */
+        videorate->discont = TRUE;
+        goto done;
+      }
+    }
+
     /* got 2 buffers, see which one is the best */
     do {
       GstClockTime next_ts;
@@ -1645,6 +1677,9 @@ gst_video_rate_set_property (GObject * object,
 
       gst_videorate_update_duration (videorate);
       return;
+    case PROP_MAX_DUPLICATION_TIME:
+      videorate->max_duplication_time = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1703,6 +1738,9 @@ gst_video_rate_get_property (GObject * object,
       break;
     case PROP_RATE:
       g_value_set_double (value, videorate->rate);
+      break;
+    case PROP_MAX_DUPLICATION_TIME:
+      g_value_set_uint64 (value, videorate->max_duplication_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

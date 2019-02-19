@@ -65,6 +65,7 @@ struct _GstVideoRate
   GstClockTimeDiff average;     /* moving average period */
   gboolean force_variable_rate;
   gboolean updating_caps;
+  guint64 max_duplication_time;
 
   /* segment handling */
   GstSegment segment;

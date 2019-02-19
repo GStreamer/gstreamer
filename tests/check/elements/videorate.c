@@ -402,6 +402,107 @@ GST_START_TEST (test_wrong_order_from_zero)
 
 GST_END_TEST;
 
+/* send frames with 0, 1, 2, 5 seconds, max-duplication-time=2sec */
+GST_START_TEST (test_max_duplication_time)
+{
+  GstElement *videorate;
+  GstBuffer *first, *second, *third, *fourth, *outbuffer;
+  GstCaps *caps;
+
+  videorate = setup_videorate ();
+  g_object_set (videorate, "max-duplication-time", 2 * GST_SECOND, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  assert_videorate_stats (videorate, "start", 0, 0, 0, 0);
+
+  /* first buffer */
+  first = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (first) = 0;
+  gst_buffer_memset (first, 0, 0, 4);
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+  gst_buffer_ref (first);
+
+  GST_DEBUG ("pushing first buffer");
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, first) == GST_FLOW_OK);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+  assert_videorate_stats (videorate, "first", 1, 0, 0, 0);
+
+  /* second buffer */
+  second = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (second) = GST_SECOND;
+  gst_buffer_memset (second, 0, 0, 4);
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
+  gst_buffer_ref (second);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
+  /* and it created 13 output buffers as copies of the first frame */
+  fail_unless_equals_int (g_list_length (buffers), 13);
+  assert_videorate_stats (videorate, "second", 2, 13, 0, 12);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+
+  /* third buffer */
+  third = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (third) = 2 * GST_SECOND;
+  gst_buffer_memset (third, 0, 0, 4);
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
+  gst_buffer_ref (third);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, third) == GST_FLOW_OK);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
+
+  /* submitting a frame with 2 seconds triggers output of 25 more frames */
+  fail_unless_equals_int (g_list_length (buffers), 38);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
+  /* three frames submitted; two of them output as is, and 36 duplicated */
+  assert_videorate_stats (videorate, "third", 3, 38, 0, 36);
+
+  /* fourth buffer */
+  fourth = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (fourth) = 5 * GST_SECOND;
+  gst_buffer_memset (fourth, 0, 0, 4);
+  ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
+  gst_buffer_ref (fourth);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, fourth) == GST_FLOW_OK);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (fourth, "fourth", 1);
+
+  fail_unless_equals_int (g_list_length (buffers), 38);
+  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
+  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
+  assert_videorate_stats (videorate, "fourth", 4, 38, 0, 36);
+
+  /* verify last buffer */
+  outbuffer = g_list_last (buffers)->data;
+  fail_unless (GST_IS_BUFFER (outbuffer));
+  fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (outbuffer),
+      GST_SECOND * 37 / 25);
+
+
+  /* cleanup */
+  gst_buffer_unref (first);
+  gst_buffer_unref (second);
+  gst_buffer_unref (third);
+  gst_buffer_unref (fourth);
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
 /* send frames with 0, 1, 2, 0 seconds */
 GST_START_TEST (test_wrong_order)
 {
@@ -1419,6 +1520,7 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_variable_framerate_renegotiation);
   tcase_add_loop_test (tc_chain, test_rate, 0, G_N_ELEMENTS (rate_tests));
   tcase_add_test (tc_chain, test_query_duration);
+  tcase_add_test (tc_chain, test_max_duplication_time);
   tcase_add_loop_test (tc_chain, test_query_position, 0,
       G_N_ELEMENTS (position_tests));
 
