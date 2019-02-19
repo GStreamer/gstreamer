@@ -1238,6 +1238,167 @@ mcast_transport_two_clients (gboolean shared, const gchar * transport1,
   g_object_unref (thread_pool);
 }
 
+/* CASE: media is shared.
+ * client 1: SETUP    --->
+ * client 1: PLAY     --->
+ * client 2: SETUP    --->
+ * client 1: TEARDOWN --->
+ * client 2: PLAY     --->
+ * client 2: TEARDOWN --->
+ */
+static void
+mcast_transport_two_clients_teardown_play (const gchar * transport1,
+    const gchar * expected_transport1, const gchar * transport2,
+    const gchar * expected_transport2, gboolean bind_mcast_address,
+    gboolean is_shared)
+{
+  GstRTSPClient *client1, *client2;
+  GstRTSPMessage request = { 0, };
+  gchar *str;
+  GstRTSPSessionPool *session_pool;
+  GstRTSPContext ctx = { NULL };
+  GstRTSPContext ctx2 = { NULL };
+  GstRTSPMountPoints *mount_points;
+  GstRTSPMediaFactory *factory;
+  GstRTSPAddressPool *address_pool;
+  GstRTSPThreadPool *thread_pool;
+  gchar *session_id1, *session_id2;
+
+  mount_points = gst_rtsp_mount_points_new ();
+  factory = gst_rtsp_media_factory_new ();
+  gst_rtsp_media_factory_set_shared (factory, is_shared);
+  gst_rtsp_media_factory_set_max_mcast_ttl (factory, 5);
+  gst_rtsp_media_factory_set_bind_mcast_address (factory, bind_mcast_address);
+  gst_rtsp_media_factory_set_launch (factory,
+      "audiotestsrc ! audio/x-raw,rate=44100 ! audioconvert ! rtpL16pay name=pay0");
+  address_pool = gst_rtsp_address_pool_new ();
+  if (is_shared)
+    fail_unless (gst_rtsp_address_pool_add_range (address_pool,
+            "233.252.0.1", "233.252.0.1", 5000, 5001, 1));
+  else
+    fail_unless (gst_rtsp_address_pool_add_range (address_pool,
+            "233.252.0.1", "233.252.0.1", 5000, 5003, 1));
+  gst_rtsp_media_factory_set_address_pool (factory, address_pool);
+  gst_rtsp_media_factory_add_role (factory, "user",
+      "media.factory.access", G_TYPE_BOOLEAN, TRUE,
+      "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
+  gst_rtsp_mount_points_add_factory (mount_points, "/test", factory);
+  session_pool = gst_rtsp_session_pool_new ();
+  thread_pool = gst_rtsp_thread_pool_new ();
+
+  /* client 1 configuration */
+  client1 = gst_rtsp_client_new ();
+  gst_rtsp_client_set_session_pool (client1, session_pool);
+  gst_rtsp_client_set_mount_points (client1, mount_points);
+  gst_rtsp_client_set_thread_pool (client1, thread_pool);
+
+  ctx.client = client1;
+  ctx.auth = gst_rtsp_auth_new ();
+  ctx.token =
+      gst_rtsp_token_new (GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS,
+      G_TYPE_BOOLEAN, TRUE, GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+      "user", NULL);
+  gst_rtsp_context_push_current (&ctx);
+
+  expected_transport = expected_transport1;
+
+  /* client 1 sends SETUP request */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
+          "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT, transport1);
+
+  gst_rtsp_client_set_send_func (client1, test_setup_response_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client1,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+  expected_transport = NULL;
+
+
+  /* client 1 sends PLAY request */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_PLAY,
+          "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SESSION, session_id);
+  gst_rtsp_client_set_send_func (client1, test_response_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client1,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  gst_rtsp_context_pop_current (&ctx);
+  session_id1 = g_strdup (session_id);
+
+  /* client 2 configuration */
+  cseq = 0;
+  client2 = gst_rtsp_client_new ();
+  gst_rtsp_client_set_session_pool (client2, session_pool);
+  gst_rtsp_client_set_mount_points (client2, mount_points);
+  gst_rtsp_client_set_thread_pool (client2, thread_pool);
+
+  ctx2.client = client2;
+  ctx2.auth = gst_rtsp_auth_new ();
+  ctx2.token =
+      gst_rtsp_token_new (GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS,
+      G_TYPE_BOOLEAN, TRUE, GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+      "user", NULL);
+  gst_rtsp_context_push_current (&ctx2);
+
+  expected_transport = expected_transport2;
+
+  /* client 2 sends SETUP request */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
+          "rtsp://localhost/test/stream=0") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT, transport2);
+
+  gst_rtsp_client_set_send_func (client2, test_setup_response_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client2,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+  expected_transport = NULL;
+
+  session_id2 = g_strdup (session_id);
+  g_free (session_id);
+  gst_rtsp_context_pop_current (&ctx2);
+
+  /* the first client sends TEARDOWN request */
+  gst_rtsp_context_push_current (&ctx);
+  session_id = session_id1;
+  send_teardown (client1);
+  gst_rtsp_context_pop_current (&ctx);
+  teardown_client (client1);
+
+  /* the second client sends PLAY request */
+  gst_rtsp_context_push_current (&ctx2);
+  session_id = session_id2;
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_PLAY,
+          "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_take_header (&request, GST_RTSP_HDR_CSEQ, str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SESSION, session_id);
+  gst_rtsp_client_set_send_func (client2, test_response_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client2,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  /* client 2 sends TEARDOWN request */
+  send_teardown (client2);
+  gst_rtsp_context_pop_current (&ctx2);
+
+  teardown_client (client2);
+  g_object_unref (ctx.auth);
+  g_object_unref (ctx2.auth);
+  gst_rtsp_token_unref (ctx.token);
+  gst_rtsp_token_unref (ctx2.token);
+  g_object_unref (mount_points);
+  g_object_unref (session_pool);
+  g_object_unref (address_pool);
+  g_object_unref (thread_pool);
+}
+
 /* test if two multicast clients can choose different transport settings
  * CASE: media is shared */
 GST_START_TEST
@@ -1368,6 +1529,48 @@ GST_START_TEST (test_client_multicast_two_clients_shared_media)
   mcast_transport_two_clients (TRUE, transport_client_1,
       expected_transport_1, addr_client_1, transport_client_2,
       expected_transport_2, addr_client_2, FALSE);
+}
+
+GST_END_TEST;
+
+/* test if it's possible to play the shared media, after one of the clients
+ * has terminated its session.
+ */
+GST_START_TEST (test_client_multicast_two_clients_shared_media_teardown_play)
+{
+  const gchar *transport_client_1 = "RTP/AVP;multicast;mode=\"PLAY\"";
+  const gchar *expected_transport_1 =
+      "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=5000-5001;mode=\"PLAY\"";
+
+  const gchar *transport_client_2 = transport_client_1;
+  const gchar *expected_transport_2 = expected_transport_1;
+
+  mcast_transport_two_clients_teardown_play (transport_client_1,
+      expected_transport_1, transport_client_2, expected_transport_2, FALSE,
+      TRUE);
+}
+
+GST_END_TEST;
+
+/* test if it's possible to play the shared media, after one of the clients
+ * has terminated its session.
+ */
+GST_START_TEST
+    (test_client_multicast_two_clients_not_shared_media_teardown_play) {
+  const gchar *transport_client_1 = "RTP/AVP;multicast;mode=\"PLAY\"";
+  const gchar *expected_transport_1 =
+      "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=5000-5001;mode=\"PLAY\"";
+
+  const gchar *transport_client_2 = transport_client_1;
+  const gchar *expected_transport_2 =
+      "RTP/AVP;multicast;destination=233.252.0.1;"
+      "ttl=1;port=5002-5003;mode=\"PLAY\"";
+
+  mcast_transport_two_clients_teardown_play (transport_client_1,
+      expected_transport_1, transport_client_2, expected_transport_2, FALSE,
+      FALSE);
 }
 
 GST_END_TEST;
@@ -1543,6 +1746,10 @@ rtspclient_suite (void)
   tcase_add_test (tc,
       test_client_multicast_transport_specific_two_clients_shared_media_same_transport);
   tcase_add_test (tc, test_client_multicast_two_clients_shared_media);
+  tcase_add_test (tc,
+      test_client_multicast_two_clients_shared_media_teardown_play);
+  tcase_add_test (tc,
+      test_client_multicast_two_clients_not_shared_media_teardown_play);
   tcase_add_test (tc,
       test_client_multicast_two_clients_first_specific_transport_shared_media);
   tcase_add_test (tc,

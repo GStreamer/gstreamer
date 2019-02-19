@@ -4434,8 +4434,10 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
   /* we just activated the first media, do the playing state change */
   if (old_active == 0 && activate)
     do_state = TRUE;
-  /* if we have no more active media, do the downward state changes */
-  else if (priv->n_active == 0)
+  /* if we have no more active media and prepare count is not indicate 
+   * that there are new session/sessions ongoing,
+   * do the downward state changes */
+  else if (priv->n_active == 0 && priv->prepare_count <= 1)
     do_state = TRUE;
   else
     do_state = FALSE;
