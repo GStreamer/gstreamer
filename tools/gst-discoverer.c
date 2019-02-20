@@ -582,12 +582,14 @@ main (int argc, char **argv)
   GError *err = NULL;
   GstDiscoverer *dc;
   gint timeout = 10;
-  gboolean use_cache = FALSE;
+  gboolean use_cache = FALSE, print_cache_dir = FALSE;
   GOptionEntry options[] = {
     {"async", 'a', 0, G_OPTION_ARG_NONE, &async,
         "Run asynchronously", NULL},
     {"use-cache", 'a', 0, G_OPTION_ARG_NONE, &use_cache,
         "Use GstDiscovererInfo from our cache.", NULL},
+    {"print-cache-dir", 0, 0, G_OPTION_ARG_NONE, &print_cache_dir,
+        "Print the directory of the discoverer cache.", NULL},
     {"timeout", 't', 0, G_OPTION_ARG_INT, &timeout,
         "Specify timeout (in seconds, default 10)", "T"},
     /* {"elem", 'e', 0, G_OPTION_ARG_NONE, &elem_seek, */
@@ -620,6 +622,15 @@ main (int argc, char **argv)
   if (argc < 2) {
     g_print ("usage: %s <uris>\n", argv[0]);
     exit (-1);
+  }
+
+  if (print_cache_dir) {
+    gchar *cache_dir =
+        g_build_filename (g_get_user_cache_dir (), "gstreamer-" GST_API_VERSION,
+        "discoverer", NULL);
+    g_print ("\nGstDiscoverer cache directory:\n\n    %s\n\n", cache_dir);
+    g_free (cache_dir);
+    exit (0);
   }
 
   dc = gst_discoverer_new (timeout * GST_SECOND, &err);
