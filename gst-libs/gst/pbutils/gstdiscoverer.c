@@ -211,10 +211,6 @@ static void gst_discoverer_get_property (GObject * object, guint prop_id,
 static gboolean _setup_locked (GstDiscoverer * dc);
 static void handle_current_async (GstDiscoverer * dc);
 static gboolean emit_discovererd_and_next (GstDiscoverer * dc);
-static GVariant *gst_discoverer_info_to_variant_recurse (GstDiscovererStreamInfo
-    * sinfo, GstDiscovererSerializeFlags flags);
-static GstDiscovererStreamInfo *_parse_discovery (GVariant * variant,
-    GstDiscovererInfo * info);
 
 static void
 gst_discoverer_class_init (GstDiscovererClass * klass)
@@ -2059,7 +2055,6 @@ _serialize_common_stream_info (GstDiscovererStreamInfo * sinfo,
     GstDiscovererSerializeFlags flags)
 {
   GVariant *common;
-  GVariant *nextv = NULL;
   gchar *caps_str = NULL, *tags_str = NULL, *misc_str = NULL;
 
   if (sinfo->caps && (flags & GST_DISCOVERER_SERIALIZE_CAPS))
@@ -2071,15 +2066,9 @@ _serialize_common_stream_info (GstDiscovererStreamInfo * sinfo,
   if (sinfo->misc && (flags & GST_DISCOVERER_SERIALIZE_MISC))
     misc_str = gst_structure_to_string (sinfo->misc);
 
-
-  if (sinfo->next)
-    nextv = gst_discoverer_info_to_variant_recurse (sinfo->next, flags);
-  else
-    nextv = g_variant_new ("()");
-
   common =
-      g_variant_new ("(msmsmsmsv)", sinfo->stream_id, caps_str, tags_str,
-      misc_str, nextv);
+      g_variant_new ("(msmsmsms)", sinfo->stream_id, caps_str, tags_str,
+      misc_str);
 
   g_free (caps_str);
   g_free (tags_str);
@@ -2184,16 +2173,6 @@ gst_discoverer_info_to_variant_recurse (GstDiscovererStreamInfo * sinfo,
     stream_variant =
         g_variant_new ("(yvv)", 's', common_stream_variant,
         subtitle_stream_info);
-  } else {
-    GVariant *nextv = NULL;
-    GstDiscovererStreamInfo *ninfo =
-        gst_discoverer_stream_info_get_next (sinfo);
-
-    nextv = gst_discoverer_info_to_variant_recurse (ninfo, flags);
-
-    stream_variant =
-        g_variant_new ("(yvv)", 'n', common_stream_variant,
-        g_variant_new ("v", nextv));
   }
 
   return stream_variant;
@@ -2241,8 +2220,7 @@ _parse_info (GstDiscovererInfo * info, GVariant * info_variant)
 }
 
 static void
-_parse_common_stream_info (GstDiscovererStreamInfo * sinfo, GVariant * common,
-    GstDiscovererInfo * info)
+_parse_common_stream_info (GstDiscovererStreamInfo * sinfo, GVariant * common)
 {
   const gchar *str;
 
@@ -2261,15 +2239,6 @@ _parse_common_stream_info (GstDiscovererStreamInfo * sinfo, GVariant * common,
   str = _maybe_get_string_from_tuple (common, 3);
   if (str)
     sinfo->misc = gst_structure_new_from_string (str);
-
-  if (g_variant_n_children (common) > 4) {
-    GVariant *nextv;
-
-    GET_FROM_TUPLE (common, variant, 4, &nextv);
-    if (g_variant_n_children (nextv) > 0) {
-      sinfo->next = _parse_discovery (nextv, info);
-    }
-  }
 
   g_variant_unref (common);
 }
@@ -2356,16 +2325,12 @@ _parse_discovery (GVariant * variant, GstDiscovererInfo * info)
       _parse_subtitle_stream_info (GST_DISCOVERER_SUBTITLE_INFO (sinfo),
           g_variant_get_child_value (specific, 0));
       break;
-    case 'n':
-      sinfo = g_object_new (GST_TYPE_DISCOVERER_STREAM_INFO, NULL);
-      break;
     default:
       GST_WARNING ("Unexpected discoverer info type %d", type);
       goto out;
   }
 
-  _parse_common_stream_info (sinfo, g_variant_get_child_value (common, 0),
-      info);
+  _parse_common_stream_info (sinfo, g_variant_get_child_value (common, 0));
 
   if (!GST_IS_DISCOVERER_CONTAINER_INFO (sinfo))
     info->stream_list = g_list_append (info->stream_list, sinfo);
@@ -2653,7 +2618,7 @@ gst_discoverer_info_to_variant (GstDiscovererInfo * info,
 {
   /* FIXME: implement TOC support */
   GVariant *stream_variant;
-  GVariant *variant, *info_variant;
+  GVariant *variant;
   GstDiscovererStreamInfo *sinfo;
   GVariant *wrapper;
 
@@ -2663,9 +2628,8 @@ gst_discoverer_info_to_variant (GstDiscovererInfo * info,
 
   sinfo = gst_discoverer_info_get_stream_info (info);
   stream_variant = gst_discoverer_info_to_variant_recurse (sinfo, flags);
-  info_variant = _serialize_info (info, flags);
-
-  variant = g_variant_new ("(vv)", info_variant, stream_variant);
+  variant =
+      g_variant_new ("(vv)", _serialize_info (info, flags), stream_variant);
 
   /* Returning a wrapper implies some small overhead, but simplifies
    * deserializing from bytes */
