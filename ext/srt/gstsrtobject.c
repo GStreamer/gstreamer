@@ -825,6 +825,7 @@ gst_srt_object_connect (GstSRTObject * srtobject,
   gint option_val = -1;
   gint sock_flags = SRT_EPOLL_ERR;
   guint local_port = 0;
+  const gchar *local_address = NULL;
 
   sock = srt_socket (AF_INET, SOCK_DGRAM, 0);
   if (sock == SRT_INVALID_SOCK) {
@@ -866,13 +867,13 @@ gst_srt_object_connect (GstSRTObject * srtobject,
   }
 
   gst_structure_get_uint (srtobject->parameters, "localport", &local_port);
-
+  local_address =
+      gst_structure_get_string (srtobject->parameters, "localaddress");
   /* According to SRT norm, bind local address and port if specified */
-  if (local_port != 0) {
+  if (local_address != NULL && local_port != 0) {
     gpointer bind_sa;
     gsize bind_sa_len;
-    const gchar *local_address =
-        gst_structure_get_string (srtobject->parameters, "localaddress");
+
     GSocketAddress *bind_addr =
         g_inet_socket_address_new_from_string (local_address,
         local_port);
