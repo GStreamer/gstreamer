@@ -878,7 +878,6 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
     ts_data->stream->opus_channel_config_code = opus_channel_config_code;
 
     tsmux_stream_set_buffer_release_func (ts_data->stream, release_buffer_cb);
-    tsmux_program_add_stream (ts_data->prog, ts_data->stream);
 
     ret = GST_FLOW_OK;
   }
@@ -930,6 +929,7 @@ mpegtsmux_create_streams (MpegTsMux * mux)
     GstCollectData *c_data = (GstCollectData *) walk->data;
     MpegTsPadData *ts_data = (MpegTsPadData *) walk->data;
     gchar *name = NULL;
+    gchar *pcr_name;
 
     walk = g_slist_next (walk);
 
@@ -956,6 +956,12 @@ mpegtsmux_create_streams (MpegTsMux * mux)
       }
     }
 
+    if (ts_data->stream == NULL) {
+      ret = mpegtsmux_create_stream (mux, ts_data);
+      if (ret != GST_FLOW_OK)
+        goto no_stream;
+    }
+
     ts_data->prog =
         g_hash_table_lookup (mux->programs, GINT_TO_POINTER (ts_data->prog_id));
     if (ts_data->prog == NULL) {
@@ -974,11 +980,21 @@ mpegtsmux_create_streams (MpegTsMux * mux)
       tsmux_program_set_pcr_stream (ts_data->prog, ts_data->stream);
     }
 
-    if (ts_data->stream == NULL) {
-      ret = mpegtsmux_create_stream (mux, ts_data);
-      if (ret != GST_FLOW_OK)
-        goto no_stream;
+    tsmux_program_add_stream (ts_data->prog, ts_data->stream);
+
+    /* Check for user-specified PCR PID */
+    pcr_name = g_strdup_printf ("PCR_%d", ts_data->prog->pgm_number);
+    if (mux->prog_map && gst_structure_has_field (mux->prog_map, pcr_name)) {
+      const gchar *sink_name =
+          gst_structure_get_string (mux->prog_map, pcr_name);
+
+      if (!g_strcmp0 (name, sink_name)) {
+        GST_DEBUG_OBJECT (mux, "User specified stream (pid=%d) as PCR for "
+            "program (prog_id = %d)", ts_data->pid, ts_data->prog->pgm_number);
+        tsmux_program_set_pcr_stream (ts_data->prog, ts_data->stream);
+      }
     }
+    g_free (pcr_name);
   }
 
   return GST_FLOW_OK;
