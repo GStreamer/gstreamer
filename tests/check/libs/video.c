@@ -2953,6 +2953,51 @@ GST_START_TEST (test_video_format_enum_stability)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_formats_pstrides)
+{
+  GstVideoFormat fmt = GST_VIDEO_FORMAT_I420;
+
+
+  while ((gst_video_format_to_string (fmt) != NULL)) {
+    const GstVideoFormatInfo *vf_info = gst_video_format_get_info (fmt);
+    guint n_comps = GST_VIDEO_FORMAT_INFO_N_COMPONENTS (vf_info);
+
+    GST_LOG ("format: %s (%d), n_comps = %u", vf_info->name, fmt, n_comps);
+
+    if (fmt == GST_VIDEO_FORMAT_v210
+        || fmt == GST_VIDEO_FORMAT_UYVP
+        || fmt == GST_VIDEO_FORMAT_IYU1
+        || fmt == GST_VIDEO_FORMAT_GRAY10_LE32
+        || fmt == GST_VIDEO_FORMAT_NV12_64Z32
+        || fmt == GST_VIDEO_FORMAT_NV12_10LE32
+        || fmt == GST_VIDEO_FORMAT_NV16_10LE32
+        || fmt == GST_VIDEO_FORMAT_NV12_10LE40
+        || fmt == GST_VIDEO_FORMAT_Y410) {
+      fmt++;
+      continue;
+    }
+
+    switch (n_comps) {
+      case 4:
+        fail_unless (GST_VIDEO_FORMAT_INFO_PSTRIDE (vf_info, 3) > 0);
+        /* fall through */
+      case 3:
+        fail_unless (GST_VIDEO_FORMAT_INFO_PSTRIDE (vf_info, 2) > 0);
+        /* fall through */
+      case 2:
+        fail_unless (GST_VIDEO_FORMAT_INFO_PSTRIDE (vf_info, 1) > 0);
+        /* fall through */
+      case 1:
+        fail_unless (GST_VIDEO_FORMAT_INFO_PSTRIDE (vf_info, 0) > 0);
+        break;
+    }
+
+    fmt++;
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -2993,6 +3038,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_center_rect);
   tcase_add_test (tc_chain, test_overlay_composition_over_transparency);
   tcase_add_test (tc_chain, test_video_format_enum_stability);
+  tcase_add_test (tc_chain, test_video_formats_pstrides);
 
   return s;
 }
