@@ -31,16 +31,12 @@ struct _GstDiscovererStreamInfo {
   GstToc                *toc;
   gchar                 *stream_id;
   GstStructure          *misc;
-
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstDiscovererContainerInfo {
   GstDiscovererStreamInfo parent;
 
   GList               *streams;
-
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstDiscovererAudioInfo {
@@ -55,8 +51,6 @@ struct _GstDiscovererAudioInfo {
   guint max_bitrate;
 
   gchar *language;
-
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstDiscovererVideoInfo {
@@ -75,16 +69,12 @@ struct _GstDiscovererVideoInfo {
   guint max_bitrate;
 
   gboolean is_image;
-
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstDiscovererSubtitleInfo {
   GstDiscovererStreamInfo parent;
 
   gchar *language;
-
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstDiscovererInfo {
@@ -108,8 +98,6 @@ struct _GstDiscovererInfo {
 
   gchar *cachefile;
   gpointer from_cache;
-
-  gpointer _gst_reserved[GST_PADDING - 2];
 };
 
 /* missing-plugins.c */
