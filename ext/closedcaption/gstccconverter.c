@@ -467,7 +467,7 @@ convert_cea708_cc_data_cea708_cdp_internal (GstCCConverter * self,
   } else if (self->fps_n == 25 && self->fps_d == 1) {
     gst_byte_writer_put_uint8_unchecked (&bw, 0x3f);
     cc_count = 24;
-  } else if (self->fps_n == 30 && self->fps_d == 1001) {
+  } else if (self->fps_n == 30000 && self->fps_d == 1001) {
     gst_byte_writer_put_uint8_unchecked (&bw, 0x4f);
     cc_count = 20;
   } else if (self->fps_n == 30 && self->fps_d == 1) {
