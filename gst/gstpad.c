@@ -5233,9 +5233,10 @@ store_sticky_event (GstPad * pad, GstEvent * event)
   /* Unset the EOS flag when received STREAM_START event, so pad can
    * store sticky event and then push it later */
   if (type == GST_EVENT_STREAM_START) {
-    GST_LOG_OBJECT (pad, "Removing pending EOS and StreamGroupDone events");
+    GST_LOG_OBJECT (pad, "Removing pending EOS, StreamGroupDone, TAG events");
     remove_event_by_type (pad, GST_EVENT_EOS);
     remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
+    remove_event_by_type (pad, GST_EVENT_TAG);
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
   }
 
@@ -5778,6 +5779,7 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
           GST_LOG_OBJECT (pad, "Removing pending EOS events");
           remove_event_by_type (pad, GST_EVENT_EOS);
           remove_event_by_type (pad, GST_EVENT_STREAM_GROUP_DONE);
+          remove_event_by_type (pad, GST_EVENT_TAG);
           GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
           break;
         default:
