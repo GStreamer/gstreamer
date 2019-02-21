@@ -143,31 +143,43 @@ class TestTrackElements(common.GESTest):
 
     def test_add_to_layer_with_effect_remove_add(self):
         timeline = GES.Timeline.new_audio_video()
-        self.assertEqual(len(timeline.get_tracks()), 2)
+        video_track, audio_track = timeline.get_tracks()
         layer = timeline.append_layer()
 
         test_clip = GES.TestClip()
         self.assertEqual(test_clip.get_children(True), [])
         self.assertTrue(layer.add_clip(test_clip))
         audio_source = test_clip.find_track_element(None, GES.AudioSource)
-        self.assertIsNotNone(audio_source)
+        video_source = test_clip.find_track_element(None, GES.VideoSource)
 
         self.assertTrue(test_clip.set_child_property("volume", 0.0))
         self.assertEqual(audio_source.get_child_property("volume")[1], 0.0)
 
         effect = GES.Effect.new("agingtv")
         test_clip.add(effect)
+        self.assertEqual(audio_source.props.track, audio_track)
+        self.assertEqual(video_source.props.track, video_track)
+        self.assertEqual(effect.props.track, video_track)
 
         children = test_clip.get_children(True)
         layer.remove_clip(test_clip)
         self.assertEqual(test_clip.get_children(True), children)
+        self.assertEqual(audio_source.props.track, None)
+        self.assertEqual(video_source.props.track, None)
+        self.assertEqual(effect.props.track, None)
 
         self.assertTrue(layer.add_clip(test_clip))
         self.assertEqual(test_clip.get_children(True), children)
+        self.assertEqual(audio_source.props.track, audio_track)
+        self.assertEqual(video_source.props.track, video_track)
+        self.assertEqual(effect.props.track, video_track)
 
         audio_source = test_clip.find_track_element(None, GES.AudioSource)
         self.assertFalse(audio_source is None)
         self.assertEqual(audio_source.get_child_property("volume")[1], 0.0)
+        self.assertEqual(audio_source.props.track, audio_track)
+        self.assertEqual(video_source.props.track, video_track)
+        self.assertEqual(effect.props.track, video_track)
 
     def test_effects_priority(self):
         timeline = GES.Timeline.new_audio_video()
