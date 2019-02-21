@@ -1467,8 +1467,14 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
     goto drop;
 #endif
 
-  if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    timestamp -= demux->start_time;
+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    /* start_time should be the ts of the first frame but it may actually be
+     * higher because of rounding when converting to gst ts. */
+    if (demux->start_time >= timestamp)
+      timestamp = 0;
+    else
+      timestamp -= demux->start_time;
+  }
 
   /* check if we ran outside of the segment */
   if (demux->segment.stop != -1 && timestamp > demux->segment.stop)
