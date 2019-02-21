@@ -6,6 +6,7 @@ zvbi_sources = [
   'decoder.c',
   'raw_decoder.c',
   'sampling_par.c',
+  'io-sim.c',
 ]
 
 if pangocairo_dep.found()
