@@ -100,6 +100,8 @@ typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
  *
  * Returns: TRUE if the @timeline was properly stored to the given @uri,
  * else FALSE.
+ *
+ * Deprecated: Use #ges_timeline_save_to_uri
  */
 typedef gboolean (*GESFormatterSaveToURIMethod) (GESFormatter *formatter,
                GESTimeline *timeline, const gchar * uri, gboolean overwrite,
