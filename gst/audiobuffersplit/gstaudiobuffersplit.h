@@ -63,6 +63,7 @@ struct _GstAudioBufferSplit {
 
   gboolean strict_buffer_size;
   gboolean gapless;
+  GstClockTime max_silence_time;
 };
 
 struct _GstAudioBufferSplitClass {

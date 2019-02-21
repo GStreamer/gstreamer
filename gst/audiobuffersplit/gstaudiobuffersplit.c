@@ -47,6 +47,7 @@ enum
   PROP_DISCONT_WAIT,
   PROP_STRICT_BUFFER_SIZE,
   PROP_GAPLESS,
+  PROP_MAX_SILENCE_TIME,
   LAST_PROP
 };
 
@@ -56,6 +57,7 @@ enum
 #define DEFAULT_DISCONT_WAIT (1 * GST_SECOND)
 #define DEFAULT_STRICT_BUFFER_SIZE (FALSE)
 #define DEFAULT_GAPLESS (FALSE)
+#define DEFAULT_MAX_SILENCE_TIME (0)
 
 #define parent_class gst_audio_buffer_split_parent_class
 G_DEFINE_TYPE (GstAudioBufferSplit, gst_audio_buffer_split, GST_TYPE_ELEMENT);
@@ -120,6 +122,15 @@ gst_audio_buffer_split_class_init (GstAudioBufferSplitClass * klass)
       g_param_spec_boolean ("gapless", "Gapless",
           "Insert silence/drop samples instead of creating a discontinuity",
           DEFAULT_GAPLESS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_SILENCE_TIME,
+      g_param_spec_uint64 ("max-silence-time",
+          "Maximum time of silence to insert",
+          "Do not insert silence in gapless mode if the gap exceeds this "
+          "period (in ns) (0 = disabled)",
+          0, G_MAXUINT64, DEFAULT_MAX_SILENCE_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
@@ -253,6 +264,9 @@ gst_audio_buffer_split_set_property (GObject * object, guint property_id,
     case PROP_GAPLESS:
       self->gapless = g_value_get_boolean (value);
       break;
+    case PROP_MAX_SILENCE_TIME:
+      self->max_silence_time = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -287,6 +301,9 @@ gst_audio_buffer_split_get_property (GObject * object, guint property_id,
       break;
     case PROP_GAPLESS:
       g_value_set_boolean (value, self->gapless);
+      break;
+    case PROP_MAX_SILENCE_TIME:
+      g_value_set_uint64 (value, self->max_silence_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -420,6 +437,11 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
 {
   gboolean discont;
   GstFlowReturn ret = GST_FLOW_OK;
+  guint avail = gst_adapter_available (self->adapter);
+  guint avail_samples = avail / bpf;
+  guint64 new_offset;
+  GstClockTime current_timestamp;
+  GstClockTime current_timestamp_end;
 
   GST_OBJECT_LOCK (self);
   discont =
@@ -430,71 +452,77 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
       NULL);
   GST_OBJECT_UNLOCK (self);
 
-  if (discont) {
-    guint avail = gst_adapter_available (self->adapter);
-    guint avail_samples = avail / bpf;
-    guint64 new_offset;
-    GstClockTime current_timestamp;
-    GstClockTime current_timestamp_end;
+  if (!discont)
+    return ret;
 
-    /* Reset */
-    self->drop_samples = 0;
+  /* Reset */
+  self->drop_samples = 0;
 
-    if (self->segment.rate < 0.0) {
-      current_timestamp =
-          self->resync_time - gst_util_uint64_scale (self->current_offset +
-          avail_samples, GST_SECOND, rate);
-      current_timestamp_end =
-          self->resync_time - gst_util_uint64_scale (self->current_offset,
-          GST_SECOND, rate);
+  if (self->segment.rate < 0.0) {
+    current_timestamp =
+        self->resync_time - gst_util_uint64_scale (self->current_offset +
+        avail_samples, GST_SECOND, rate);
+    current_timestamp_end =
+        self->resync_time - gst_util_uint64_scale (self->current_offset,
+        GST_SECOND, rate);
+  } else {
+    current_timestamp =
+        self->resync_time + gst_util_uint64_scale (self->current_offset,
+        GST_SECOND, rate);
+    current_timestamp_end =
+        self->resync_time + gst_util_uint64_scale (self->current_offset +
+        avail_samples, GST_SECOND, rate);
+  }
+
+  if (self->gapless) {
+    if (self->current_offset == -1) {
+      /* We only set resync time on the very first buffer */
+      self->current_offset = 0;
+      self->resync_time = GST_BUFFER_PTS (buffer);
+      discont = FALSE;
     } else {
-      current_timestamp =
-          self->resync_time + gst_util_uint64_scale (self->current_offset,
-          GST_SECOND, rate);
-      current_timestamp_end =
-          self->resync_time + gst_util_uint64_scale (self->current_offset +
-          avail_samples, GST_SECOND, rate);
-    }
+      GST_DEBUG_OBJECT (self,
+          "Got discont in gapless mode: Current timestamp %" GST_TIME_FORMAT
+          ", current end timestamp %" GST_TIME_FORMAT
+          ", timestamp after discont %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (current_timestamp),
+          GST_TIME_ARGS (current_timestamp_end),
+          GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
 
-    if (self->gapless) {
-      if (self->current_offset == -1) {
-        /* We only set resync time on the very first buffer */
-        self->current_offset = 0;
-        self->resync_time = GST_BUFFER_PTS (buffer);
-      } else {
-        GST_DEBUG_OBJECT (self,
-            "Got discont in gapless mode: Current timestamp %" GST_TIME_FORMAT
-            ", current end timestamp %" GST_TIME_FORMAT
-            ", timestamp after discont %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (current_timestamp),
-            GST_TIME_ARGS (current_timestamp_end),
-            GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
+      new_offset =
+          gst_util_uint64_scale (GST_BUFFER_PTS (buffer) - self->resync_time,
+          rate, GST_SECOND);
+      if (GST_BUFFER_PTS (buffer) < self->resync_time) {
+        guint64 drop_samples;
 
         new_offset =
-            gst_util_uint64_scale (GST_BUFFER_PTS (buffer) - self->resync_time,
-            rate, GST_SECOND);
-        if (GST_BUFFER_PTS (buffer) < self->resync_time) {
-          guint64 drop_samples;
+            gst_util_uint64_scale (self->resync_time -
+            GST_BUFFER_PTS (buffer), rate, GST_SECOND);
+        drop_samples = self->current_offset + avail_samples + new_offset;
 
-          new_offset =
-              gst_util_uint64_scale (self->resync_time -
-              GST_BUFFER_PTS (buffer), rate, GST_SECOND);
-          drop_samples = self->current_offset + avail_samples + new_offset;
+        GST_DEBUG_OBJECT (self,
+            "Dropping %" G_GUINT64_FORMAT " samples (%" GST_TIME_FORMAT ")",
+            drop_samples, GST_TIME_ARGS (gst_util_uint64_scale (drop_samples,
+                    GST_SECOND, rate)));
+        discont = FALSE;
+      } else if (new_offset > self->current_offset + avail_samples) {
+        guint64 silence_samples =
+            new_offset - (self->current_offset + avail_samples);
+        const GstAudioFormatInfo *info = gst_audio_format_get_info (format);
+        GstClockTime silence_time =
+            gst_util_uint64_scale (silence_samples, GST_SECOND, rate);
 
+        if (silence_time > self->max_silence_time) {
           GST_DEBUG_OBJECT (self,
-              "Dropping %" G_GUINT64_FORMAT " samples (%" GST_TIME_FORMAT ")",
-              drop_samples, GST_TIME_ARGS (gst_util_uint64_scale (drop_samples,
-                      GST_SECOND, rate)));
-        } else if (new_offset > self->current_offset + avail_samples) {
-          guint64 silence_samples =
-              new_offset - (self->current_offset + avail_samples);
-          const GstAudioFormatInfo *info = gst_audio_format_get_info (format);
-
+              "Not inserting %" G_GUINT64_FORMAT " samples of silence (%"
+              GST_TIME_FORMAT " exceeds maximum %" GST_TIME_FORMAT ")",
+              silence_samples, GST_TIME_ARGS (silence_time),
+              GST_TIME_ARGS (self->max_silence_time));
+        } else {
           GST_DEBUG_OBJECT (self,
               "Inserting %" G_GUINT64_FORMAT " samples of silence (%"
               GST_TIME_FORMAT ")", silence_samples,
-              GST_TIME_ARGS (gst_util_uint64_scale (silence_samples, GST_SECOND,
-                      rate)));
+              GST_TIME_ARGS (silence_time));
 
           /* Insert silence buffers to fill the gap in 1s chunks */
           while (silence_samples > 0) {
@@ -517,39 +545,45 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
 
             silence_samples -= n_samples;
           }
-        } else if (new_offset < self->current_offset + avail_samples) {
-          guint64 drop_samples =
-              self->current_offset + avail_samples - new_offset;
-
-          GST_DEBUG_OBJECT (self,
-              "Dropping %" G_GUINT64_FORMAT " samples (%" GST_TIME_FORMAT ")",
-              drop_samples, GST_TIME_ARGS (gst_util_uint64_scale (drop_samples,
-                      GST_SECOND, rate)));
-          self->drop_samples = drop_samples;
+          discont = FALSE;
         }
-      }
-    } else {
-      GST_DEBUG_OBJECT (self,
-          "Got discont: Current timestamp %" GST_TIME_FORMAT
-          ", current end timestamp %" GST_TIME_FORMAT
-          ", timestamp after discont %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (current_timestamp),
-          GST_TIME_ARGS (current_timestamp_end),
-          GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
+      } else if (new_offset < self->current_offset + avail_samples) {
+        guint64 drop_samples =
+            self->current_offset + avail_samples - new_offset;
 
-      if (self->strict_buffer_size) {
-        gst_adapter_clear (self->adapter);
-        ret = GST_FLOW_OK;
-      } else {
-        ret =
-            gst_audio_buffer_split_output (self, TRUE, rate, bpf,
-            samples_per_buffer);
+        GST_DEBUG_OBJECT (self,
+            "Dropping %" G_GUINT64_FORMAT " samples (%" GST_TIME_FORMAT ")",
+            drop_samples, GST_TIME_ARGS (gst_util_uint64_scale (drop_samples,
+                    GST_SECOND, rate)));
+        self->drop_samples = drop_samples;
+        discont = FALSE;
       }
-
-      self->current_offset = 0;
-      self->accumulated_error = 0;
-      self->resync_time = GST_BUFFER_PTS (buffer);
     }
+  }
+
+  if (discont) {
+    /* We might end up in here also in gapless mode, if the above code decided
+     * that no silence is to be inserted, because e.g. the gap is too big */
+    GST_DEBUG_OBJECT (self,
+        "Got discont: Current timestamp %" GST_TIME_FORMAT
+        ", current end timestamp %" GST_TIME_FORMAT
+        ", timestamp after discont %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (current_timestamp),
+        GST_TIME_ARGS (current_timestamp_end),
+        GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
+
+    if (self->strict_buffer_size) {
+      gst_adapter_clear (self->adapter);
+      ret = GST_FLOW_OK;
+    } else {
+      ret =
+          gst_audio_buffer_split_output (self, TRUE, rate, bpf,
+          samples_per_buffer);
+    }
+
+    self->current_offset = 0;
+    self->accumulated_error = 0;
+    self->resync_time = GST_BUFFER_PTS (buffer);
   }
 
   return ret;
