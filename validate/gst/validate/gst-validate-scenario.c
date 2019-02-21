@@ -108,6 +108,7 @@ static GstValidateActionType *_find_action_type (const gchar * type_name);
 static GstValidateExecuteActionReturn
 _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
     GstStructure * structure, gboolean add_to_lists);
+static gboolean _action_set_done (GstValidateAction * action);
 
 /* GstValidateScenario is not really thread safe and
  * everything should be done from the thread GstValidate
@@ -246,6 +247,7 @@ struct _GstValidateActionPrivate
 
   GWeakRef scenario;
   gboolean needs_playback_parsing;
+  gboolean pending_set_done;
 };
 
 static JsonNode *
@@ -3114,6 +3116,27 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       GstStructure *s;
 
       GST_VALIDATE_SCENARIO_EOS_HANDLING_LOCK (scenario);
+      {
+        /* gst_validate_action_set_done() does not finish the action
+         * immediately. Instead, it posts a task to the main thread to do most
+         * of the work in _action_set_done().
+         *
+         * While the EOS handling lock guarantees that if an action had to call
+         * gst_validate_action_set_done() it has done so, it does not guarantee
+         * that _action_set_done() has been called.
+         *
+         * Is it possible that this handler is run before _action_set_done(), so
+         * we check at this point for actions that have a pending_set_done and
+         * call it before continuing. */
+        GList *actions = g_list_copy (priv->actions);
+        GList *i;
+        for (i = actions; i; i = i->next) {
+          GstValidateAction *action = (GstValidateAction *) i->data;
+          if (action->priv->pending_set_done)
+            _action_set_done (action);
+        }
+        g_list_free (actions);
+      }
 
       if (!is_error) {
         priv->got_eos = TRUE;
@@ -4237,7 +4260,7 @@ _action_set_done (GstValidateAction * action)
   GstClockTime execution_duration;
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
-  if (scenario == NULL)
+  if (scenario == NULL || !action->priv->pending_set_done)
     return G_SOURCE_REMOVE;
 
   execution_duration = gst_util_get_timestamp () - action->priv->execution_time;
@@ -4268,6 +4291,7 @@ _action_set_done (GstValidateAction * action)
   }
   gst_object_unref (scenario);
 
+  action->priv->pending_set_done = FALSE;
   return G_SOURCE_REMOVE;
 }
 
@@ -4297,6 +4321,9 @@ gst_validate_action_set_done (GstValidateAction * action)
     if (item)
       gst_validate_action_unref (action);
   }
+
+  g_assert (!action->priv->pending_set_done);
+  action->priv->pending_set_done = TRUE;
 
   g_main_context_invoke_full (NULL, G_PRIORITY_DEFAULT_IDLE,
       (GSourceFunc) _action_set_done,
