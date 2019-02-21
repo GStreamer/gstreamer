@@ -36,6 +36,7 @@
 #include "gst-validate-override-registry.h"
 #include "gst-validate-runner.h"
 #include "gst-validate-reporter.h"
+#include "gst-validate-mockdecryptor.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_validate_runner_debug);
 #undef GST_CAT_DEFAULT
@@ -447,6 +448,9 @@ gst_validate_runner_init (GstValidateRunner * runner)
 
   gst_tracing_register_hook (GST_TRACER (runner), "element-new",
       G_CALLBACK (do_element_new));
+
+  gst_element_register (NULL, GST_MOCKDECRYPTOR_NAME, GST_RANK_MARGINAL,
+      GST_TYPE_MOCKDECRYPTOR);
 }
 
 /**

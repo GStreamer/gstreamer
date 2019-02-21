@@ -1,6 +1,7 @@
 gstvalidate_sources = [
     'gst-validate-runner.c',
     'gst-validate-reporter.c',
+    'gst-validate-mockdecryptor.c',
     'gst-validate-monitor.c',
     'gst-validate-element-monitor.c',
     'gst-validate-bin-monitor.c',
