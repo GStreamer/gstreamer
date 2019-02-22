@@ -1421,7 +1421,7 @@ do_rtcp_events (GstRtpSession * rtpsession, GstPad * srcpad)
  * well. */
 static GstFlowReturn
 gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
-    GstBuffer * buffer, gboolean eos, gpointer user_data)
+    GstBuffer * buffer, gboolean all_sources_bye, gpointer user_data)
 {
   GstFlowReturn result;
   GstRtpSession *rtpsession;
@@ -1444,8 +1444,11 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
     GST_LOG_OBJECT (rtpsession, "sending RTCP");
     result = gst_pad_push (rtcp_src, buffer);
 
-    /* we have to send EOS after this packet */
-    if (eos) {
+    /* Forward send an EOS on the RTCP sink if we received an EOS on the
+     * send_rtp_sink. We don't need to check the recv_rtp_sink since in this
+     * case the EOS event would already have been sent */
+    if (all_sources_bye && rtpsession->send_rtp_sink &&
+        GST_PAD_IS_EOS (rtpsession->send_rtp_sink)) {
       GstEvent *event;
 
       GST_LOG_OBJECT (rtpsession, "sending EOS");
