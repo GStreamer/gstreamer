@@ -3,13 +3,16 @@ plugin_LTLIBRARIES = libgstclosedcaption.la
 zvbi_sources = \
 	bit_slicer.c \
 	decoder.c \
-        raw_decoder.c \
+	io-sim.c \
+	raw_decoder.c \
 	sampling_par.c
 
 zvbi_headers = \
 	bcd.h \
 	bit_slicer.h \
 	decoder.h \
+	hamm.h \
+	io-sim.h \
 	macros.h \
 	misc.h \
 	raw_decoder.h \
@@ -25,6 +28,7 @@ libgstclosedcaption_la_SOURCES = \
 	gstcea708decoder.c \
 	gstceaccoverlay.c \
 	gstline21dec.c \
+	gstline21enc.c \
 	gstclosedcaption.c
 
 libgstclosedcaption_la_CFLAGS = \
@@ -37,7 +41,8 @@ libgstclosedcaption_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
-	$(PANGO_LIBS)
+	$(PANGO_LIBS) \
+	$(LIBM)
 
 libgstclosedcaption_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
@@ -48,4 +53,5 @@ noinst_HEADERS = \
 	gstcea708decoder.h \
 	gstceaccoverlay.h \
 	gstline21dec.h \
+	gstline21enc.h \
 	$(zvbi_headers)

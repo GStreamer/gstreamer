@@ -41,7 +41,7 @@ check_assrender =
 endif
 
 if USE_PANGO
-check_closedcaption = elements/ccconverter elements/cccombiner elements/ccextractor
+check_closedcaption = elements/ccconverter elements/cccombiner elements/ccextractor elements/line21
 else
 check_closedcaption =
 endif

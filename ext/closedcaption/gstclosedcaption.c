@@ -30,6 +30,7 @@
 #include "gstccextractor.h"
 #include "gstline21dec.h"
 #include "gstceaccoverlay.h"
+#include "gstline21enc.h"
 
 static gboolean
 closedcaption_init (GstPlugin * plugin)
@@ -50,6 +51,9 @@ closedcaption_init (GstPlugin * plugin)
 
   ret &= gst_element_register (plugin, "cc708overlay", GST_RANK_PRIMARY,
       GST_TYPE_CEA_CC_OVERLAY);
+
+  ret &= gst_element_register (plugin, "line21encoder", GST_RANK_NONE,
+      GST_TYPE_LINE21ENCODER);
 
   return ret;
 }
