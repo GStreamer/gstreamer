@@ -409,13 +409,13 @@ play_loop (GstPad * pad)
   /* get offset in samples */
   format = GST_FORMAT_DEFAULT;
   if (gst_siddec_src_convert (siddec->srcpad,
-        GST_FORMAT_BYTES, siddec->total_bytes, &format, &offset))
+          GST_FORMAT_BYTES, siddec->total_bytes, &format, &offset))
     GST_BUFFER_OFFSET (out) = offset;
 
   /* get current timestamp */
   format = GST_FORMAT_TIME;
   if (gst_siddec_src_convert (siddec->srcpad,
-        GST_FORMAT_BYTES, siddec->total_bytes, &format, &time))
+          GST_FORMAT_BYTES, siddec->total_bytes, &format, &time))
     GST_BUFFER_TIMESTAMP (out) = time;
 
   /* update position and get new timestamp to calculate duration */
@@ -424,12 +424,12 @@ play_loop (GstPad * pad)
   /* get offset in samples */
   format = GST_FORMAT_DEFAULT;
   if (gst_siddec_src_convert (siddec->srcpad,
-        GST_FORMAT_BYTES, siddec->total_bytes, &format, &value))
+          GST_FORMAT_BYTES, siddec->total_bytes, &format, &value))
     GST_BUFFER_OFFSET_END (out) = value;
 
   format = GST_FORMAT_TIME;
   if (gst_siddec_src_convert (siddec->srcpad,
-        GST_FORMAT_BYTES, siddec->total_bytes, &format, &value))
+          GST_FORMAT_BYTES, siddec->total_bytes, &format, &value))
     GST_BUFFER_DURATION (out) = value - time;
 
   if ((ret = gst_pad_push (siddec->srcpad, out)) != GST_FLOW_OK)
@@ -452,7 +452,8 @@ pause:
       gst_pad_push_event (pad, gst_event_new_eos ());
     }
 
-    GST_INFO_OBJECT (siddec, "pausing task, reason: %s", gst_flow_get_name (ret));
+    GST_INFO_OBJECT (siddec, "pausing task, reason: %s",
+        gst_flow_get_name (ret));
     gst_pad_pause_task (pad);
     goto done;
   }
