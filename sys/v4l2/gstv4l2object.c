@@ -158,10 +158,10 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {V4L2_PIX_FMT_NV42, TRUE, GST_V4L2_RAW},
 
   /* Bayer formats - see http://www.siliconimaging.com/RGB%20Bayer.htm */
-  {V4L2_PIX_FMT_SBGGR8, TRUE, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_SGBRG8, TRUE, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_SGRBG8, TRUE, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_SRGGB8, TRUE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_SBGGR8, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_SGBRG8, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_SGRBG8, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_SRGGB8, TRUE, GST_V4L2_RAW},
 
   /* compressed formats */
   {V4L2_PIX_FMT_MJPEG, FALSE, GST_V4L2_CODEC},
@@ -1388,6 +1388,10 @@ gst_v4l2_object_v4l2fourcc_is_rgb (guint32 fourcc)
     case V4L2_PIX_FMT_BGR32:
     case V4L2_PIX_FMT_ABGR32:
     case V4L2_PIX_FMT_ARGB32:
+    case V4L2_PIX_FMT_SBGGR8:
+    case V4L2_PIX_FMT_SGBRG8:
+    case V4L2_PIX_FMT_SGRBG8:
+    case V4L2_PIX_FMT_SRGGB8:
       ret = TRUE;
       break;
     default:
