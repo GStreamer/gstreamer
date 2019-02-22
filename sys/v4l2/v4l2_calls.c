@@ -340,7 +340,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       }
       default:
         GST_DEBUG_OBJECT (e,
-            "Control type for '%s' not suppored for extra controls.",
+            "Control type for '%s' not supported for extra controls.",
             control.name);
         break;
     }
