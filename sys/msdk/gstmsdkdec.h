@@ -107,6 +107,10 @@ struct _GstMsdkDecClass
   GstVideoDecoderClass parent_class;
 
   gboolean (*configure) (GstMsdkDec * decoder);
+
+  /* reset mfx parameters per codec, currently it is only used for
+   * the alignment exception for frame width and height */
+  gboolean (*preinit_decoder) (GstMsdkDec * decoder);
 };
 
 struct _MsdkDecTask

@@ -263,6 +263,7 @@ gst_msdkdec_set_context (GstElement * element, GstContext * context)
 static gboolean
 gst_msdkdec_init_decoder (GstMsdkDec * thiz)
 {
+  GstMsdkDecClass *klass = GST_MSDKDEC_GET_CLASS (thiz);
   GstVideoInfo *info;
   mfxSession session;
   mfxStatus status;
@@ -300,13 +301,8 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   g_return_val_if_fail (thiz->param.mfx.FrameInfo.Width
       && thiz->param.mfx.FrameInfo.Height, FALSE);
 
-  /* Force 32 bit rounding to avoid messing up of memory alignment when
-   * dealing with different allocators */
-  /* Fixme: msdk sometimes only requires 16 bit rounding, optimization possible */
-  thiz->param.mfx.FrameInfo.Width =
-      GST_ROUND_UP_16 (thiz->param.mfx.FrameInfo.Width);
-  thiz->param.mfx.FrameInfo.Height =
-      GST_ROUND_UP_32 (thiz->param.mfx.FrameInfo.Height);
+  klass->preinit_decoder (thiz);
+
   /* Set framerate only if provided.
    * If not, framerate will be assumed inside the driver.
    * Also we respect the upstream provided fps values */
@@ -1449,6 +1445,17 @@ gst_msdkdec_finalize (GObject * object)
   g_object_unref (thiz->adapter);
 }
 
+static gboolean
+gst_msdkdec_preinit_decoder (GstMsdkDec * decoder)
+{
+  decoder->param.mfx.FrameInfo.Width =
+      GST_ROUND_UP_16 (decoder->param.mfx.FrameInfo.Width);
+  decoder->param.mfx.FrameInfo.Height =
+      GST_ROUND_UP_32 (decoder->param.mfx.FrameInfo.Height);
+
+  return TRUE;
+}
+
 static void
 gst_msdkdec_class_init (GstMsdkDecClass * klass)
 {
@@ -1476,6 +1483,8 @@ gst_msdkdec_class_init (GstMsdkDecClass * klass)
       GST_DEBUG_FUNCPTR (gst_msdkdec_decide_allocation);
   decoder_class->flush = GST_DEBUG_FUNCPTR (gst_msdkdec_flush);
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_msdkdec_drain);
+
+  klass->preinit_decoder = GST_DEBUG_FUNCPTR (gst_msdkdec_preinit_decoder);
 
   g_object_class_install_property (gobject_class, GST_MSDKDEC_PROP_HARDWARE,
       g_param_spec_boolean ("hardware", "Hardware", "Enable hardware decoders",
