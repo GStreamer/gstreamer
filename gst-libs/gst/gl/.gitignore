@@ -1,2 +1,3 @@
+wayland/xdg-shell-client-protocol.[ch]
 gstglconfig.h
 stamp-gc-h
