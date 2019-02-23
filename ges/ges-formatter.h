@@ -80,6 +80,8 @@ typedef gboolean (*GESFormatterCanLoadURIMethod) (GESFormatter *dummy_instance, 
  *
  * Returns: TRUE if the @timeline was properly loaded from the given @uri,
  * else FALSE.
+ *
+ * Deprecated: 1.16: Use @ges_timeline_load_from_uri
  **/
 typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
                   GESTimeline *timeline,
