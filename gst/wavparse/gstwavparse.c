@@ -102,10 +102,10 @@ enum
 };
 
 static GstStaticPadTemplate sink_template_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-wav")
+    GST_STATIC_CAPS ("audio/x-wav;audio/x-rf64")
     );
 
 #define DEBUG_INIT \
