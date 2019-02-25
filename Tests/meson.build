@@ -1,4 +1,4 @@
-nunit_console = find_program('nunit-console', required: false)
+nunit_console = find_program('nunit-console', 'nunitlite-runner', required: get_option('tests'))
 
 if nunit_console.found()
     nunit_version = '3.10.1'
@@ -11,17 +11,22 @@ if nunit_console.found()
         '--builddir', meson.build_root(),
     )
 
-    if get_nunit_res.returncode() != 0
-        message('Failed to get NUnit: ' + get_nunit_res.stderr())
-    else
-        foreach path: get_nunit_res.stdout().split()
-            testsenv.prepend('MONO_PATH',
-                join_paths(meson.build_root(), path.strip('-r:'), '..'))
-        endforeach
 
-        nunit_dep = declare_dependency(link_args: get_nunit_res.stdout().split(),
-            version: nunit_version)
+    nunit_dep = dependency('mono-nunit')
+    if not nunit_dep.found()
+        if get_nunit_res.returncode() != 0
+            message('Failed to get NUnit: ' + get_nunit_res.stderr())
+        else
+            foreach path: get_nunit_res.stdout().split()
+                testsenv.prepend('MONO_PATH',
+                    join_paths(meson.build_root(), path.strip('-r:'), '..'))
+            endforeach
 
+            nunit_dep = declare_dependency(link_args: get_nunit_res.stdout().split(),
+                version: nunit_version)
+        endif
+    endif
+    if nunit_dep.found()
         foreach test: [
                 # 'PipelineTests',
                 'SdpTests'
