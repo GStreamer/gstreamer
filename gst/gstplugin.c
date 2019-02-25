@@ -88,7 +88,7 @@ static char *_gst_plugin_fault_handler_filename = NULL;
  * QPL: http://www.trolltech.com/licenses/qpl.html
  * MPL: http://www.opensource.org/licenses/mozilla1.1.php
  * MIT/X11: http://www.opensource.org/licenses/mit-license.php
- * 3-clause BSD: http://www.opensource.org/licenses/bsd-license.php
+ * 3-clause BSD: https://opensource.org/licenses/BSD-3-Clause
  */
 static const gchar valid_licenses[] = "LGPL\000"        /* GNU Lesser General Public License */
     "GPL\000"                   /* GNU General Public License */
