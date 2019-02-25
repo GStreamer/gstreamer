@@ -89,6 +89,7 @@ static char *_gst_plugin_fault_handler_filename = NULL;
  * MPL: http://www.opensource.org/licenses/mozilla1.1.php
  * MIT/X11: http://www.opensource.org/licenses/mit-license.php
  * 3-clause BSD: https://opensource.org/licenses/BSD-3-Clause
+ * Zero-Clause BSD: https://opensource.org/licenses/0BSD
  */
 static const gchar valid_licenses[] = "LGPL\000"        /* GNU Lesser General Public License */
     "GPL\000"                   /* GNU General Public License */
@@ -97,10 +98,13 @@ static const gchar valid_licenses[] = "LGPL\000"        /* GNU Lesser General Pu
     "MPL\000"                   /* MPL 1.1 license */
     "BSD\000"                   /* 3-clause BSD license */
     "MIT/X11\000"               /* MIT/X11 license */
+    "0BSD\000"                  /* Zero-Clause BSD */
     "Proprietary\000"           /* Proprietary license */
     GST_LICENSE_UNKNOWN;        /* some other license */
 
-static const guint8 valid_licenses_idx[] = { 0, 5, 9, 13, 21, 25, 29, 37, 49 };
+static const guint8 valid_licenses_idx[] = { 0, 5, 9, 13, 21, 25, 29, 37, 42,
+  54
+};
 
 static GstPlugin *gst_plugin_register_func (GstPlugin * plugin,
     const GstPluginDesc * desc, gpointer user_data);
