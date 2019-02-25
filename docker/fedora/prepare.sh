@@ -42,6 +42,7 @@ dnf install -y \
     ffmpeg-devel \
     flite \
     flite-devel \
+    mono-devel \
     procps-ng \
     patch \
     redhat-rpm-config \
@@ -53,6 +54,7 @@ dnf install -y \
     libunwind-devel \
     neon \
     neon-devel \
+    nunit \
     opencv \
     opencv-devel \
     openjpeg2 \
