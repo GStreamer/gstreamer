@@ -9,7 +9,7 @@ stages:
 
 variables:
   CERBERO_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:bd83865236a1cd5b1694adefee24bc1a6b4f1ec4'
-  FEDORA_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:b16ec7445ff7874d905eb5759ceaee5f93d29e66'
+  FEDORA_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:b8c24cc7f4cfb19813a324cbbb65c5e89b55eebc'
   ANDROID_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/ubuntu:b16ec7445ff7874d905eb5759ceaee5f93d29e66'
   INDENT_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/gst-indent:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
   MANIFEST_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/build-manifest:d19082b72667fb3382bdc3621520c4d26e258b2e'
@@ -111,6 +111,8 @@ build fedora x86_64:
   extends: '.build'
   stage: 'build'
   image: $FEDORA_IMAGE
+  variables:
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled"
 
 build android arm64 api28:
   extends: '.build'
