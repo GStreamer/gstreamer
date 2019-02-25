@@ -47,6 +47,7 @@ struct _GstHlsSink2
   guint playlist_length;
   gint max_files;
   gint target_duration;
+  gboolean send_keyframe_requests;
 
   GstM3U8Playlist *playlist;
   guint index;

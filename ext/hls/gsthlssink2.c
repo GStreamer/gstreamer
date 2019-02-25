@@ -50,6 +50,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_hls_sink2_debug);
 #define DEFAULT_MAX_FILES 10
 #define DEFAULT_TARGET_DURATION 15
 #define DEFAULT_PLAYLIST_LENGTH 5
+#define DEFAULT_SEND_KEYFRAME_REQUESTS TRUE
 
 #define GST_M3U8_PLAYLIST_VERSION 3
 
@@ -61,7 +62,8 @@ enum
   PROP_PLAYLIST_ROOT,
   PROP_MAX_FILES,
   PROP_TARGET_DURATION,
-  PROP_PLAYLIST_LENGTH
+  PROP_PLAYLIST_LENGTH,
+  PROP_SEND_KEYFRAME_REQUESTS,
 };
 
 static GstStaticPadTemplate video_template = GST_STATIC_PAD_TEMPLATE ("video",
@@ -177,6 +179,12 @@ gst_hls_sink2_class_init (GstHlsSink2Class * klass)
           "the playlist will be infinite.",
           0, G_MAXUINT, DEFAULT_PLAYLIST_LENGTH,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SEND_KEYFRAME_REQUESTS,
+      g_param_spec_boolean ("send-keyframe-requests", "Send Keyframe Requests",
+          "Send keyframe requests to ensure correct fragmentation. If this is disabled "
+          "then the input must have keyframes in regular intervals",
+          DEFAULT_SEND_KEYFRAME_REQUESTS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -190,6 +198,7 @@ gst_hls_sink2_init (GstHlsSink2 * sink)
   sink->playlist_length = DEFAULT_PLAYLIST_LENGTH;
   sink->max_files = DEFAULT_MAX_FILES;
   sink->target_duration = DEFAULT_TARGET_DURATION;
+  sink->send_keyframe_requests = DEFAULT_SEND_KEYFRAME_REQUESTS;
   g_queue_init (&sink->old_locations);
 
   sink->splitmuxsink = gst_element_factory_make ("splitmuxsink", NULL);
@@ -433,6 +442,13 @@ gst_hls_sink2_set_property (GObject * object, guint prop_id,
       sink->playlist_length = g_value_get_uint (value);
       sink->playlist->window_size = sink->playlist_length;
       break;
+    case PROP_SEND_KEYFRAME_REQUESTS:
+      sink->send_keyframe_requests = g_value_get_boolean (value);
+      if (sink->splitmuxsink) {
+        g_object_set (sink->splitmuxsink, "send-keyframe-requests",
+            sink->send_keyframe_requests, NULL);
+      }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -463,6 +479,9 @@ gst_hls_sink2_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PLAYLIST_LENGTH:
       g_value_set_uint (value, sink->playlist_length);
+      break;
+    case PROP_SEND_KEYFRAME_REQUESTS:
+      g_value_set_boolean (value, sink->send_keyframe_requests);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
