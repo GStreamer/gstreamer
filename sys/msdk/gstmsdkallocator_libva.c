@@ -448,6 +448,10 @@ gst_msdk_export_dmabuf_to_vasurface (GstMsdkContext * context,
       va_chroma = VA_RT_FORMAT_YUV422;
       va_fourcc = VA_FOURCC_UYVY;
       break;
+    case GST_VIDEO_FORMAT_RGB16:
+      va_chroma = VA_RT_FORMAT_RGB16;
+      va_fourcc = VA_FOURCC_RGB565;
+      break;
     default:
       goto error_unsupported_format;
   }
