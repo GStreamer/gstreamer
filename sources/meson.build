@@ -41,7 +41,7 @@ gst_sharp = shared_library('gstreamer-sharp', gst_generate_files, sources,
 gst_sharp_dep = declare_dependency(dependencies: [glib_sharp_dep, gio_sharp_dep],
         link_with: gst_sharp)
 
-if add_languages('c', required: false) and csc.get_id() == 'mono'
+if add_languages('c', required: get_option('tests')) and csc.get_id() == 'mono'
     c_abi_exe = executable('gst_sharp_c_abi', c_abi,
             c_args: ['-DGST_USE_UNSTABLE_API'],
             dependencies: [gst_deps])
