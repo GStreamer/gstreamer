@@ -29,16 +29,6 @@ namespace Gst {
 			}
 		}
 
-		[GLib.Signal("provider-hidden")]
-		public event Gst.ProviderHiddenHandler ProviderHidden {
-			add {
-				this.AddSignalHandler ("provider-hidden", value, typeof (Gst.ProviderHiddenArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("provider-hidden", value);
-			}
-		}
-
 		[GLib.Signal("provider-unhidden")]
 		public event Gst.ProviderUnhiddenHandler ProviderUnhidden {
 			add {
@@ -46,6 +36,16 @@ namespace Gst {
 			}
 			remove {
 				this.RemoveSignalHandler ("provider-unhidden", value);
+			}
+		}
+
+		[GLib.Signal("provider-hidden")]
+		public event Gst.ProviderHiddenHandler ProviderHidden {
+			add {
+				this.AddSignalHandler ("provider-hidden", value, typeof (Gst.ProviderHiddenArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("provider-hidden", value);
 			}
 		}
 
@@ -366,6 +366,13 @@ namespace Gst {
 
 		public void DeviceAdd(Gst.Device device) {
 			gst_device_provider_device_add(Handle, device == null ? IntPtr.Zero : device.Handle);
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_device_provider_device_changed(IntPtr raw, IntPtr device, IntPtr changed_device);
+
+		public void DeviceChanged(Gst.Device device, Gst.Device changed_device) {
+			gst_device_provider_device_changed(Handle, device == null ? IntPtr.Zero : device.Handle, changed_device == null ? IntPtr.Zero : changed_device.Handle);
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

@@ -100,6 +100,7 @@ protocol sessions.</doc>
       <member name="mikey_map_type_srtp"
               value="0"
               c:identifier="GST_MIKEY_MAP_TYPE_SRTP">
+        <doc xml:space="preserve">SRTP</doc>
       </member>
     </enumeration>
     <record name="MIKEYMessage"
@@ -656,7 +657,7 @@ will be appended to @msg.</doc>
             <type name="guint32" c:type="guint32"/>
           </parameter>
           <parameter name="map_type" transfer-ownership="none">
-            <doc xml:space="preserve">the #GstMIKEYCSIDMapType</doc>
+            <doc xml:space="preserve">the #GstMIKEYMapType</doc>
             <type name="MIKEYMapType" c:type="GstMIKEYMapType"/>
           </parameter>
         </parameters>
@@ -1177,6 +1178,7 @@ payload to the KEMAC.</doc>
         <type name="MIKEYPayload" c:type="GstMIKEYPayload"/>
       </field>
       <field name="key_type" writable="1">
+        <doc xml:space="preserve">the #GstMIKEYKeyDataType of @key_data</doc>
         <type name="MIKEYKeyDataType" c:type="GstMIKEYKeyDataType"/>
       </field>
       <field name="key_len" writable="1">
@@ -1184,6 +1186,7 @@ payload to the KEMAC.</doc>
         <type name="guint16" c:type="guint16"/>
       </field>
       <field name="key_data" writable="1">
+        <doc xml:space="preserve">the key data</doc>
         <type name="guint8" c:type="guint8*"/>
       </field>
       <field name="salt_len" writable="1">
@@ -1264,7 +1267,7 @@ specific security protocol</doc>
         <type name="MIKEYSecProto" c:type="GstMIKEYSecProto"/>
       </field>
       <field name="params" writable="1">
-        <doc xml:space="preserve">array of #GstMIKEYPayloadPSParam</doc>
+        <doc xml:space="preserve">array of #GstMIKEYPayloadSPParam</doc>
         <array name="GLib.Array" c:type="GArray*">
           <type name="gpointer" c:type="gpointer"/>
         </array>
@@ -1353,6 +1356,7 @@ specific security protocol</doc>
       <member name="mikey_sec_proto_srtp"
               value="0"
               c:identifier="GST_MIKEY_SEC_PROTO_SRTP">
+        <doc xml:space="preserve">SRTP</doc>
       </member>
     </enumeration>
     <enumeration name="MIKEYSecSRTP" c:type="GstMIKEYSecSRTP">
@@ -3355,11 +3359,11 @@ When -1 is given as @idx, the zone is inserted at the end.</doc>
             <type name="SDPMessage" c:type="GstSDPMessage*"/>
           </instance-parameter>
           <parameter name="idx" transfer-ownership="none">
-            <doc xml:space="preserve">an index
-@zone a #GstSDPZone</doc>
+            <doc xml:space="preserve">an index</doc>
             <type name="gint" c:type="gint"/>
           </parameter>
           <parameter name="zone" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstSDPZone</doc>
             <type name="SDPZone" c:type="GstSDPZone*"/>
           </parameter>
         </parameters>
@@ -3906,6 +3910,28 @@ stack and initialized with gst_sdp_message_init().</doc>
           </parameter>
         </parameters>
       </function>
+      <function name="new_from_text"
+                c:identifier="gst_sdp_message_new_from_text"
+                version="1.16">
+        <doc xml:space="preserve">Parse @text and create a new SDPMessage from these.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">a #GstSDPResult.</doc>
+          <type name="SDPResult" c:type="GstSDPResult"/>
+        </return-value>
+        <parameters>
+          <parameter name="text" transfer-ownership="none">
+            <doc xml:space="preserve">A dynamically allocated string representing the SDP description</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="msg"
+                     direction="out"
+                     caller-allocates="0"
+                     transfer-ownership="full">
+            <doc xml:space="preserve">pointer to new #GstSDPMessage</doc>
+            <type name="SDPMessage" c:type="GstSDPMessage**"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="parse_buffer"
                 c:identifier="gst_sdp_message_parse_buffer">
         <doc xml:space="preserve">Parse the contents of @size bytes pointed to by @data and store the result in
@@ -4252,6 +4278,29 @@ a=rtcp-fb:(payload) (param1) [param2]...</doc>
         <type name="SDPResult" c:type="GstSDPResult"/>
       </return-value>
       <parameters>
+        <parameter name="msg"
+                   direction="out"
+                   caller-allocates="0"
+                   transfer-ownership="full">
+          <doc xml:space="preserve">pointer to new #GstSDPMessage</doc>
+          <type name="SDPMessage" c:type="GstSDPMessage**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="sdp_message_new_from_text"
+              c:identifier="gst_sdp_message_new_from_text"
+              moved-to="SDPMessage.new_from_text"
+              version="1.16">
+      <doc xml:space="preserve">Parse @text and create a new SDPMessage from these.</doc>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve">a #GstSDPResult.</doc>
+        <type name="SDPResult" c:type="GstSDPResult"/>
+      </return-value>
+      <parameters>
+        <parameter name="text" transfer-ownership="none">
+          <doc xml:space="preserve">A dynamically allocated string representing the SDP description</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
         <parameter name="msg"
                    direction="out"
                    caller-allocates="0"

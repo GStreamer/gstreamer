@@ -36,6 +36,7 @@ namespace Gst.WebRTC {
 
 		public static WebRTCSessionDescription New(Gst.WebRTC.WebRTCSDPType type, Gst.Sdp.SDPMessage sdp)
 		{
+			sdp.Owned = false;
 			WebRTCSessionDescription result = WebRTCSessionDescription.New (gst_webrtc_session_description_new((int) type, sdp == null ? IntPtr.Zero : sdp.Handle));
 			return result;
 		}

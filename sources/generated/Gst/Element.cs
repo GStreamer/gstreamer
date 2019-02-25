@@ -236,16 +236,6 @@ namespace Gst {
 			}
 		}
 
-		[GLib.Signal("pad-added")]
-		public event Gst.PadAddedHandler PadAdded {
-			add {
-				this.AddSignalHandler ("pad-added", value, typeof (Gst.PadAddedArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("pad-added", value);
-			}
-		}
-
 		[GLib.Signal("pad-removed")]
 		public event Gst.PadRemovedHandler PadRemoved {
 			add {
@@ -253,6 +243,16 @@ namespace Gst {
 			}
 			remove {
 				this.RemoveSignalHandler ("pad-removed", value);
+			}
+		}
+
+		[GLib.Signal("pad-added")]
+		public event Gst.PadAddedHandler PadAdded {
+			add {
+				this.AddSignalHandler ("pad-added", value, typeof (Gst.PadAddedArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("pad-added", value);
 			}
 		}
 

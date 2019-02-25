@@ -14,6 +14,7 @@ namespace Gst.Video {
 		Interleaved = 1,
 		Mixed = 2,
 		Fields = 3,
+		Alternate = 4,
 	}
 
 	internal class VideoInterlaceModeGType {

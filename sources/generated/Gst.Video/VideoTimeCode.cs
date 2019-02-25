@@ -55,6 +55,15 @@ namespace Gst.Video {
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_time_code_new_from_date_time_full(uint fps_n, uint fps_d, IntPtr dt, int flags, uint field_count);
+
+		public static VideoTimeCode NewFromDateTimeFull(uint fps_n, uint fps_d, GLib.DateTime dt, Gst.Video.VideoTimeCodeFlags flags, uint field_count)
+		{
+			VideoTimeCode result = VideoTimeCode.New (gst_video_time_code_new_from_date_time_full(fps_n, fps_d, dt == null ? IntPtr.Zero : dt.Handle, (int) flags, field_count));
+			return result;
+		}
+
+		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_time_code_new_from_string(IntPtr tc_str);
 
 		public static VideoTimeCode NewFromString(string tc_str)
@@ -172,6 +181,19 @@ namespace Gst.Video {
 			gst_video_time_code_init_from_date_time(this_as_native, fps_n, fps_d, dt == null ? IntPtr.Zero : dt.Handle, (int) flags, field_count);
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+		}
+
+		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_time_code_init_from_date_time_full(IntPtr raw, uint fps_n, uint fps_d, IntPtr dt, int flags, uint field_count);
+
+		public bool InitFromDateTimeFull(uint fps_n, uint fps_d, GLib.DateTime dt, Gst.Video.VideoTimeCodeFlags flags, uint field_count) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_video_time_code_init_from_date_time_full(this_as_native, fps_n, fps_d, dt == null ? IntPtr.Zero : dt.Handle, (int) flags, field_count);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

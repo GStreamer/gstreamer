@@ -805,7 +805,7 @@ time.</doc>
         </array>
       </field>
       <glib:signal name="value-added" when="first" version="1.6">
-        <doc xml:space="preserve">Emited right after the new value has been added to @self</doc>
+        <doc xml:space="preserve">Emitted right after the new value has been added to @self</doc>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -817,7 +817,7 @@ time.</doc>
         </parameters>
       </glib:signal>
       <glib:signal name="value-changed" when="first" version="1.6">
-        <doc xml:space="preserve">Emited right after the new value has been set on @timed_signals</doc>
+        <doc xml:space="preserve">Emitted right after the new value has been set on @timed_signals</doc>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
@@ -829,7 +829,7 @@ time.</doc>
         </parameters>
       </glib:signal>
       <glib:signal name="value-removed" when="first" version="1.6">
-        <doc xml:space="preserve">Emited when @timed_value is removed from @self</doc>
+        <doc xml:space="preserve">Emitted when @timed_value is removed from @self</doc>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>

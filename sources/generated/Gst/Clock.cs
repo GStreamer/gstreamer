@@ -567,6 +567,15 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_clock_id_get_clock(IntPtr id);
+
+		public static Gst.Clock IdGetClock(IntPtr id) {
+			IntPtr raw_ret = gst_clock_id_get_clock(id);
+			Gst.Clock ret = GLib.Object.GetObject(raw_ret, true) as Gst.Clock;
+			return ret;
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_clock_id_get_time(IntPtr id);
 
 		public static ulong IdGetTime(IntPtr id) {
@@ -596,6 +605,15 @@ namespace Gst {
 
 		public static void IdUnschedule(IntPtr id) {
 			gst_clock_id_unschedule(id);
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_clock_id_uses_clock(IntPtr id, IntPtr clock);
+
+		public static bool IdUsesClock(IntPtr id, Gst.Clock clock) {
+			bool raw_ret = gst_clock_id_uses_clock(id, clock == null ? IntPtr.Zero : clock.Handle);
+			bool ret = raw_ret;
+			return ret;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

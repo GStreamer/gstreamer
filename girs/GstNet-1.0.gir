@@ -794,7 +794,7 @@ parameters if it wasn't called before.</doc>
               version="1.6">
       <doc xml:space="preserve">Check if the GStreamer PTP clock subsystem is initialized.</doc>
       <return-value transfer-ownership="none">
-        <doc xml:space="preserve">%TRUE if the GStreamer PTP clock subsystem is intialized.</doc>
+        <doc xml:space="preserve">%TRUE if the GStreamer PTP clock subsystem is initialized.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </return-value>
     </function>

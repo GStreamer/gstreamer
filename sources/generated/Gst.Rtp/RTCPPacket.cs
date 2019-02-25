@@ -646,6 +646,305 @@ namespace Gst.Rtp {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_first_rb(IntPtr raw);
+
+		public bool XrFirstRb() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_first_rb(this_as_native);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ushort gst_rtcp_packet_xr_get_block_length(IntPtr raw);
+
+		public ushort XrGetBlockLength() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			ushort raw_ret = gst_rtcp_packet_xr_get_block_length(this_as_native);
+			ushort ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_rtcp_packet_xr_get_block_type(IntPtr raw);
+
+		public Gst.Rtp.RTCPXRType XrGetBlockType() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			int raw_ret = gst_rtcp_packet_xr_get_block_type(this_as_native);
+			Gst.Rtp.RTCPXRType ret = (Gst.Rtp.RTCPXRType) raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_dlrr_block(IntPtr raw, uint nth, uint ssrc, uint last_rr, uint delay);
+
+		public bool XrGetDlrrBlock(uint nth, uint ssrc, uint last_rr, uint delay) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_dlrr_block(this_as_native, nth, ssrc, last_rr, delay);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_prt_by_seq(IntPtr raw, ushort seq, uint receipt_time);
+
+		public bool XrGetPrtBySeq(ushort seq, uint receipt_time) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_prt_by_seq(this_as_native, seq, receipt_time);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_prt_info(IntPtr raw, uint ssrc, byte thinning, ushort begin_seq, ushort end_seq);
+
+		public bool XrGetPrtInfo(uint ssrc, byte thinning, ushort begin_seq, ushort end_seq) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_prt_info(this_as_native, ssrc, thinning, begin_seq, end_seq);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_rle_info(IntPtr raw, uint ssrc, byte thinning, ushort begin_seq, ushort end_seq, uint chunk_count);
+
+		public bool XrGetRleInfo(uint ssrc, byte thinning, ushort begin_seq, ushort end_seq, uint chunk_count) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_rle_info(this_as_native, ssrc, thinning, begin_seq, end_seq, chunk_count);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_rle_nth_chunk(IntPtr raw, uint nth, ushort chunk);
+
+		public bool XrGetRleNthChunk(uint nth, ushort chunk) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_rle_nth_chunk(this_as_native, nth, chunk);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_rrt(IntPtr raw, ulong timestamp);
+
+		public bool XrGetRrt(ulong timestamp) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_rrt(this_as_native, timestamp);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_rtcp_packet_xr_get_ssrc(IntPtr raw);
+
+		public uint XrGetSsrc() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			uint raw_ret = gst_rtcp_packet_xr_get_ssrc(this_as_native);
+			uint ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_summary_info(IntPtr raw, uint ssrc, ushort begin_seq, ushort end_seq);
+
+		public bool XrGetSummaryInfo(uint ssrc, ushort begin_seq, ushort end_seq) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_summary_info(this_as_native, ssrc, begin_seq, end_seq);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_summary_jitter(IntPtr raw, uint min_jitter, uint max_jitter, uint mean_jitter, uint dev_jitter);
+
+		public bool XrGetSummaryJitter(uint min_jitter, uint max_jitter, uint mean_jitter, uint dev_jitter) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_summary_jitter(this_as_native, min_jitter, max_jitter, mean_jitter, dev_jitter);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_summary_pkt(IntPtr raw, uint lost_packets, uint dup_packets);
+
+		public bool XrGetSummaryPkt(uint lost_packets, uint dup_packets) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_summary_pkt(this_as_native, lost_packets, dup_packets);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_summary_ttl(IntPtr raw, bool is_ipv4, byte min_ttl, byte max_ttl, byte mean_ttl, byte dev_ttl);
+
+		public bool XrGetSummaryTtl(bool is_ipv4, byte min_ttl, byte max_ttl, byte mean_ttl, byte dev_ttl) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_summary_ttl(this_as_native, is_ipv4, min_ttl, max_ttl, mean_ttl, dev_ttl);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_voip_burst_metrics(IntPtr raw, byte burst_density, byte gap_density, ushort burst_duration, ushort gap_duration);
+
+		public bool XrGetVoipBurstMetrics(byte burst_density, byte gap_density, ushort burst_duration, ushort gap_duration) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_voip_burst_metrics(this_as_native, burst_density, gap_density, burst_duration, gap_duration);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_voip_configuration_params(IntPtr raw, byte gmin, byte rx_config);
+
+		public bool XrGetVoipConfigurationParams(byte gmin, byte rx_config) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_voip_configuration_params(this_as_native, gmin, rx_config);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_voip_delay_metrics(IntPtr raw, ushort roundtrip_delay, ushort end_system_delay);
+
+		public bool XrGetVoipDelayMetrics(ushort roundtrip_delay, ushort end_system_delay) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_voip_delay_metrics(this_as_native, roundtrip_delay, end_system_delay);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_voip_jitter_buffer_params(IntPtr raw, ushort jb_nominal, ushort jb_maximum, ushort jb_abs_max);
+
+		public bool XrGetVoipJitterBufferParams(ushort jb_nominal, ushort jb_maximum, ushort jb_abs_max) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_voip_jitter_buffer_params(this_as_native, jb_nominal, jb_maximum, jb_abs_max);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_voip_metrics_ssrc(IntPtr raw, uint ssrc);
+
+		public bool XrGetVoipMetricsSsrc(uint ssrc) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_voip_metrics_ssrc(this_as_native, ssrc);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_voip_packet_metrics(IntPtr raw, byte loss_rate, byte discard_rate);
+
+		public bool XrGetVoipPacketMetrics(byte loss_rate, byte discard_rate) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_voip_packet_metrics(this_as_native, loss_rate, discard_rate);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_voip_quality_metrics(IntPtr raw, byte r_factor, byte ext_r_factor, byte mos_lq, byte mos_cq);
+
+		public bool XrGetVoipQualityMetrics(byte r_factor, byte ext_r_factor, byte mos_lq, byte mos_cq) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_voip_quality_metrics(this_as_native, r_factor, ext_r_factor, mos_lq, mos_cq);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_get_voip_signal_metrics(IntPtr raw, byte signal_level, byte noise_level, byte rerl, byte gmin);
+
+		public bool XrGetVoipSignalMetrics(byte signal_level, byte noise_level, byte rerl, byte gmin) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_get_voip_signal_metrics(this_as_native, signal_level, noise_level, rerl, gmin);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtcp_packet_xr_next_rb(IntPtr raw);
+
+		public bool XrNextRb() {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			bool raw_ret = gst_rtcp_packet_xr_next_rb(this_as_native);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
 		static void ReadNative (IntPtr native, ref Gst.Rtp.RTCPPacket target)
 		{
 			target = New (native);

@@ -48,6 +48,15 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_rtsp_watch_send_messages(IntPtr raw, Gst.Rtsp.RTSPMessage[] messages, uint n_messages, out uint id);
+
+		public Gst.Rtsp.RTSPResult SendMessages(Gst.Rtsp.RTSPMessage[] messages, out uint id) {
+			int raw_ret = gst_rtsp_watch_send_messages(Handle, messages, (uint) (messages == null ? 0 : messages.Length), out id);
+			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
+			return ret;
+		}
+
+		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtsp_watch_set_flushing(IntPtr raw, bool flushing);
 
 		public bool Flushing { 

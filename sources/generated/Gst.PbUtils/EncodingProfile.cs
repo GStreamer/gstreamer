@@ -74,8 +74,8 @@ namespace Gst.PbUtils {
 			return ret;
 		}
 
-		public static Gst.PbUtils.EncodingProfile Find(string targetname, string profilename) {
-			return Find (targetname, profilename, null);
+		public static Gst.PbUtils.EncodingProfile Find(string targetname) {
+			return Find (targetname, null, null);
 		}
 
 		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

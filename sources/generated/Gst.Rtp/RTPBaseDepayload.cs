@@ -18,6 +18,21 @@ namespace Gst.Rtp {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("source-info")]
+		public bool SourceInfo {
+			get {
+				GLib.Value val = GetProperty ("source-info");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("source-info", val);
+				val.Dispose ();
+			}
+		}
+
 		[GLib.Property ("stats")]
 		public Gst.Structure Stats {
 			get {
@@ -441,6 +456,17 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtp_base_depayload_is_source_info_enabled(IntPtr raw);
+
+		public bool IsSourceInfoEnabled { 
+			get {
+				bool raw_ret = gst_rtp_base_depayload_is_source_info_enabled(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtp_base_depayload_push(IntPtr raw, IntPtr out_buf);
 
 		public Gst.FlowReturn Push(Gst.Buffer out_buf) {
@@ -456,6 +482,15 @@ namespace Gst.Rtp {
 			int raw_ret = gst_rtp_base_depayload_push_list(Handle, out_list == null ? IntPtr.Zero : out_list.Handle);
 			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
 			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_rtp_base_depayload_set_source_info_enabled(IntPtr raw, bool enable);
+
+		public bool SourceInfoEnabled { 
+			set {
+				gst_rtp_base_depayload_set_source_info_enabled(Handle, value);
+			}
 		}
 
 

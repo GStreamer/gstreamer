@@ -16,7 +16,8 @@ namespace Gst.Rtsp {
 		private IntPtr HdrFieldsPtr;
 		private IntPtr _body;
 		private uint body_size;
-		[MarshalAs (UnmanagedType.ByValArray, SizeConst=4)]
+		private IntPtr _body_buffer;
+		[MarshalAs (UnmanagedType.ByValArray, SizeConst=3)]
 		private IntPtr[] _gstGstReserved;
 
 		public static Gst.Rtsp.RTSPMessage Zero = new Gst.Rtsp.RTSPMessage ();
@@ -97,6 +98,21 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_rtsp_message_get_body_buffer(IntPtr raw, out IntPtr buffer);
+
+		public Gst.Rtsp.RTSPResult GetBodyBuffer(out Gst.Buffer buffer) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_buffer;
+			int raw_ret = gst_rtsp_message_get_body_buffer(this_as_native, out native_buffer);
+			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			buffer = native_buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_buffer, typeof (Gst.Buffer), false);
+			return ret;
+		}
+
+		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_get_header(IntPtr raw, int field, out IntPtr value, int indx);
 
 		public Gst.Rtsp.RTSPResult GetHeader(Gst.Rtsp.RTSPHeaderField field, out string value, int indx) {
@@ -137,6 +153,21 @@ namespace Gst.Rtsp {
 				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 				int raw_ret = gst_rtsp_message_get_type(this_as_native);
 				Gst.Rtsp.RTSPMsgType ret = (Gst.Rtsp.RTSPMsgType) raw_ret;
+				ReadNative (this_as_native, ref this);
+				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+				return ret;
+			}
+		}
+
+		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtsp_message_has_body_buffer(IntPtr raw);
+
+		public bool HasBodyBuffer { 
+			get {
+				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+				bool raw_ret = gst_rtsp_message_has_body_buffer(this_as_native);
+				bool ret = raw_ret;
 				ReadNative (this_as_native, ref this);
 				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 				return ret;
@@ -298,12 +329,54 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_rtsp_message_set_body_buffer(IntPtr raw, IntPtr buffer);
+
+		public Gst.Rtsp.RTSPResult SetBodyBuffer(Gst.Buffer buffer) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			int raw_ret = gst_rtsp_message_set_body_buffer(this_as_native, buffer == null ? IntPtr.Zero : buffer.Handle);
+			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_rtsp_message_steal_body_buffer(IntPtr raw, out IntPtr buffer);
+
+		public Gst.Rtsp.RTSPResult StealBodyBuffer(out Gst.Buffer buffer) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_buffer;
+			int raw_ret = gst_rtsp_message_steal_body_buffer(this_as_native, out native_buffer);
+			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			buffer = native_buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_buffer, typeof (Gst.Buffer), true);
+			return ret;
+		}
+
+		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_message_take_body(IntPtr raw, byte[] data, uint size);
 
 		public Gst.Rtsp.RTSPResult TakeBody(byte[] data, uint size) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			int raw_ret = gst_rtsp_message_take_body(this_as_native, data, size);
+			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
+		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_rtsp_message_take_body_buffer(IntPtr raw, IntPtr buffer);
+
+		public Gst.Rtsp.RTSPResult TakeBodyBuffer(Gst.Buffer buffer) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			buffer.Owned = false;
+			int raw_ret = gst_rtsp_message_take_body_buffer(this_as_native, buffer == null ? IntPtr.Zero : buffer.Handle);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
@@ -358,7 +431,7 @@ namespace Gst.Rtsp {
 
 		public bool Equals (RTSPMessage other)
 		{
-			return true && Type.Equals (other.Type) && HdrFieldsPtr.Equals (other.HdrFieldsPtr) && _body.Equals (other._body) && body_size.Equals (other.body_size);
+			return true && Type.Equals (other.Type) && HdrFieldsPtr.Equals (other.HdrFieldsPtr) && _body.Equals (other._body) && body_size.Equals (other.body_size) && _body_buffer.Equals (other._body_buffer);
 		}
 
 		public override bool Equals (object other)
@@ -368,7 +441,7 @@ namespace Gst.Rtsp {
 
 		public override int GetHashCode ()
 		{
-			return this.GetType ().FullName.GetHashCode () ^ Type.GetHashCode () ^ HdrFieldsPtr.GetHashCode () ^ _body.GetHashCode () ^ body_size.GetHashCode ();
+			return this.GetType ().FullName.GetHashCode () ^ Type.GetHashCode () ^ HdrFieldsPtr.GetHashCode () ^ _body.GetHashCode () ^ body_size.GetHashCode () ^ _body_buffer.GetHashCode ();
 		}
 
 		public static explicit operator GLib.Value (Gst.Rtsp.RTSPMessage boxed)

@@ -45,6 +45,17 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_poll_fd_ctl_pri(IntPtr raw, IntPtr fd, bool active);
+
+		public bool FdCtlPri(Gst.PollFD fd, bool active) {
+			IntPtr native_fd = GLib.Marshaller.StructureToPtrAlloc (fd);
+			bool raw_ret = gst_poll_fd_ctl_pri(Handle, native_fd, active);
+			bool ret = raw_ret;
+			Marshal.FreeHGlobal (native_fd);
+			return ret;
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_poll_fd_ctl_read(IntPtr raw, IntPtr fd, bool active);
 
 		public bool FdCtlRead(Gst.PollFD fd, bool active) {
@@ -83,6 +94,17 @@ namespace Gst {
 		public bool FdHasError(Gst.PollFD fd) {
 			IntPtr native_fd = GLib.Marshaller.StructureToPtrAlloc (fd);
 			bool raw_ret = gst_poll_fd_has_error(Handle, native_fd);
+			bool ret = raw_ret;
+			Marshal.FreeHGlobal (native_fd);
+			return ret;
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_poll_fd_has_pri(IntPtr raw, IntPtr fd);
+
+		public bool FdHasPri(Gst.PollFD fd) {
+			IntPtr native_fd = GLib.Marshaller.StructureToPtrAlloc (fd);
+			bool raw_ret = gst_poll_fd_has_pri(Handle, native_fd);
 			bool ret = raw_ret;
 			Marshal.FreeHGlobal (native_fd);
 			return ret;

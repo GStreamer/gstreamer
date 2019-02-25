@@ -41,6 +41,16 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_audio_buffer_truncate(IntPtr buffer, int bpf, UIntPtr trim, UIntPtr samples);
+
+		public static Gst.Buffer AudioBufferTruncate(Gst.Buffer buffer, int bpf, ulong trim, ulong samples) {
+			buffer.Owned = false;
+			IntPtr raw_ret = gst_audio_buffer_truncate(buffer == null ? IntPtr.Zero : buffer.Handle, bpf, new UIntPtr (trim), new UIntPtr (samples));
+			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
+			return ret;
+		}
+
+		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_audio_channel_get_fallback_mask(int channels);
 
 		public static ulong AudioChannelGetFallbackMask(int channels) {
@@ -238,6 +248,24 @@ namespace Gst.Audio {
 		public static bool AudioIec61937Payload(byte[] src, uint src_n, byte[] dst, uint dst_n, Gst.Audio.AudioRingBufferSpec spec, int endianness) {
 			bool raw_ret = gst_audio_iec61937_payload(src, src_n, dst, dst_n, spec == null ? IntPtr.Zero : spec.Handle, endianness);
 			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_audio_meta_api_get_type();
+
+		public static GLib.GType AudioMetaApiGetType() {
+			IntPtr raw_ret = gst_audio_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_audio_meta_get_info();
+
+		public static Gst.MetaInfo AudioMetaGetInfo() {
+			IntPtr raw_ret = gst_audio_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
 			return ret;
 		}
 

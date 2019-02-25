@@ -8,6 +8,7 @@ and/or use gtk-doc annotations.  -->
             xmlns:glib="http://www.gtk.org/introspection/glib/1.0">
   <include name="Gio" version="2.0"/>
   <include name="Gst" version="1.0"/>
+  <include name="GstBase" version="1.0"/>
   <include name="GstSdp" version="1.0"/>
   <package name="gstreamer-rtsp-1.0"/>
   <c:include name="gst/rtsp/rtsp.h"/>
@@ -21,13 +22,17 @@ and/or use gtk-doc annotations.  -->
             glib:type-name="GstRTSPAuthCredential"
             glib:get-type="gst_rtsp_auth_credential_get_type"
             c:symbol-prefix="rtsp_auth_credential">
+      <doc xml:space="preserve">RTSP Authentication credentials</doc>
       <field name="scheme" writable="1">
+        <doc xml:space="preserve">a #GstRTSPAuthMethod</doc>
         <type name="RTSPAuthMethod" c:type="GstRTSPAuthMethod"/>
       </field>
       <field name="params" writable="1">
+        <doc xml:space="preserve">A NULL-terminated array of #GstRTSPAuthParam</doc>
         <type name="RTSPAuthParam" c:type="GstRTSPAuthParam**"/>
       </field>
       <field name="authorization" writable="1">
+        <doc xml:space="preserve">The authorization for the basic schem</doc>
         <type name="utf8" c:type="gchar*"/>
       </field>
     </record>
@@ -60,10 +65,13 @@ and/or use gtk-doc annotations.  -->
             glib:type-name="GstRTSPAuthParam"
             glib:get-type="gst_rtsp_auth_param_get_type"
             c:symbol-prefix="rtsp_auth_param">
+      <doc xml:space="preserve">RTSP Authentication parameter</doc>
       <field name="name" writable="1">
+        <doc xml:space="preserve">The name of the parameter</doc>
         <type name="utf8" c:type="gchar*"/>
       </field>
       <field name="value" writable="1">
+        <doc xml:space="preserve">The value of the parameter</doc>
         <type name="utf8" c:type="gchar*"/>
       </field>
       <method name="copy" c:identifier="gst_rtsp_auth_param_copy">
@@ -538,6 +546,39 @@ This function can be cancelled with gst_rtsp_connection_flush().</doc>
           <parameter name="message" transfer-ownership="none">
             <doc xml:space="preserve">the message to send</doc>
             <type name="RTSPMessage" c:type="GstRTSPMessage*"/>
+          </parameter>
+          <parameter name="timeout" transfer-ownership="none">
+            <doc xml:space="preserve">a timeout value or %NULL</doc>
+            <type name="GLib.TimeVal" c:type="GTimeVal*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="send_messages"
+              c:identifier="gst_rtsp_connection_send_messages"
+              version="1.16">
+        <doc xml:space="preserve">Attempt to send @messages to the connected @conn, blocking up to
+the specified @timeout. @timeout can be %NULL, in which case this function
+might block forever.
+
+This function can be cancelled with gst_rtsp_connection_flush().</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">#GST_RTSP_OK on success.</doc>
+          <type name="RTSPResult" c:type="GstRTSPResult"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="conn" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTSPConnection</doc>
+            <type name="RTSPConnection" c:type="GstRTSPConnection*"/>
+          </instance-parameter>
+          <parameter name="messages" transfer-ownership="none">
+            <doc xml:space="preserve">the messages to send</doc>
+            <array length="1" zero-terminated="0" c:type="GstRTSPMessage*">
+              <type name="RTSPMessage" c:type="GstRTSPMessage"/>
+            </array>
+          </parameter>
+          <parameter name="n_messages" transfer-ownership="none">
+            <doc xml:space="preserve">the number of messages to send</doc>
+            <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="timeout" transfer-ownership="none">
             <doc xml:space="preserve">a timeout value or %NULL</doc>
@@ -1290,6 +1331,7 @@ read from @socket which should be used before starting to read new data.</doc>
     <record name="RTSPExtensionInterface"
             c:type="GstRTSPExtensionInterface"
             glib:is-gtype-struct-for="RTSPExtension">
+      <doc xml:space="preserve">An interface representing RTSP extensions.</doc>
       <field name="parent">
         <type name="GObject.TypeInterface" c:type="GTypeInterface"/>
       </field>
@@ -2023,8 +2065,11 @@ read from @socket which should be used before starting to read new data.</doc>
       <field name="body_size" readable="0" private="1">
         <type name="guint" c:type="guint"/>
       </field>
+      <field name="body_buffer" readable="0" private="1">
+        <type name="Gst.Buffer" c:type="GstBuffer*"/>
+      </field>
       <field name="_gst_reserved" readable="0" private="1">
-        <array zero-terminated="0" c:type="gpointer" fixed-size="4">
+        <array zero-terminated="0" c:type="gpointer" fixed-size="3">
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
@@ -2142,7 +2187,11 @@ for transmission.</doc>
       </method>
       <method name="get_body" c:identifier="gst_rtsp_message_get_body">
         <doc xml:space="preserve">Get the body of @msg. @data remains valid for as long as @msg is valid and
-unchanged.</doc>
+unchanged.
+
+If the message body was set as a #GstBuffer before this will cause the data
+to be copied and stored in the message. The #GstBuffer will no longer be
+kept in the message.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve">#GST_RTSP_OK.</doc>
           <type name="RTSPResult" c:type="GstRTSPResult"/>
@@ -2167,6 +2216,33 @@ unchanged.</doc>
                      transfer-ownership="full">
             <doc xml:space="preserve">location for the size of @data</doc>
             <type name="guint" c:type="guint*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_body_buffer"
+              c:identifier="gst_rtsp_message_get_body_buffer"
+              version="1.16">
+        <doc xml:space="preserve">Get the body of @msg. @buffer remains valid for as long as @msg is valid and
+unchanged.
+
+If body data was set from raw memory instead of a #GstBuffer this function
+will always return %NULL. The caller can check if there is a body buffer by
+calling gst_rtsp_message_has_body_buffer().</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">#GST_RTSP_OK.</doc>
+          <type name="RTSPResult" c:type="GstRTSPResult"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTSPMessage</doc>
+            <type name="RTSPMessage" c:type="const GstRTSPMessage*"/>
+          </instance-parameter>
+          <parameter name="buffer"
+                     direction="out"
+                     caller-allocates="0"
+                     transfer-ownership="none">
+            <doc xml:space="preserve">location for the buffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer**"/>
           </parameter>
         </parameters>
       </method>
@@ -2242,6 +2318,22 @@ was not found.</doc>
           <instance-parameter name="msg" transfer-ownership="none">
             <doc xml:space="preserve">a #GstRTSPMessage</doc>
             <type name="RTSPMessage" c:type="GstRTSPMessage*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="has_body_buffer"
+              c:identifier="gst_rtsp_message_has_body_buffer"
+              version="1.16">
+        <doc xml:space="preserve">Checks if @msg has a body and the body is stored as #GstBuffer.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if @msg has a body and it's stored as #GstBuffer, %FALSE
+otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTSPMessage</doc>
+            <type name="RTSPMessage" c:type="const GstRTSPMessage*"/>
           </instance-parameter>
         </parameters>
       </method>
@@ -2515,7 +2607,8 @@ all matching headers will be removed.</doc>
         </parameters>
       </method>
       <method name="set_body" c:identifier="gst_rtsp_message_set_body">
-        <doc xml:space="preserve">Set the body of @msg to a copy of @data.</doc>
+        <doc xml:space="preserve">Set the body of @msg to a copy of @data. Any existing body or body buffer
+will be replaced by the new body.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve">#GST_RTSP_OK.</doc>
           <type name="RTSPResult" c:type="GstRTSPResult"/>
@@ -2534,6 +2627,26 @@ all matching headers will be removed.</doc>
           <parameter name="size" transfer-ownership="none">
             <doc xml:space="preserve">the size of @data</doc>
             <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_body_buffer"
+              c:identifier="gst_rtsp_message_set_body_buffer"
+              version="1.16">
+        <doc xml:space="preserve">Set the body of @msg to @buffer. Any existing body or body buffer
+will be replaced by the new body.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">#GST_RTSP_OK.</doc>
+          <type name="RTSPResult" c:type="GstRTSPResult"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTSPMessage</doc>
+            <type name="RTSPMessage" c:type="GstRTSPMessage*"/>
+          </instance-parameter>
+          <parameter name="buffer" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
         </parameters>
       </method>
@@ -2567,9 +2680,36 @@ the body and size of @msg will be set to %NULL and 0 respectively.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="steal_body_buffer"
+              c:identifier="gst_rtsp_message_steal_body_buffer"
+              version="1.16">
+        <doc xml:space="preserve">Take the body of @msg and store it in @buffer. After this method,
+the body and size of @msg will be set to %NULL and 0 respectively.
+
+If body data was set from raw memory instead of a #GstBuffer this function
+will always return %NULL. The caller can check if there is a body buffer by
+calling gst_rtsp_message_has_body_buffer().</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">#GST_RTSP_OK.</doc>
+          <type name="RTSPResult" c:type="GstRTSPResult"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTSPMessage</doc>
+            <type name="RTSPMessage" c:type="GstRTSPMessage*"/>
+          </instance-parameter>
+          <parameter name="buffer"
+                     direction="out"
+                     caller-allocates="0"
+                     transfer-ownership="full">
+            <doc xml:space="preserve">location for the buffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer**"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="take_body" c:identifier="gst_rtsp_message_take_body">
         <doc xml:space="preserve">Set the body of @msg to @data and @size. This method takes ownership of
-@data.</doc>
+@data. Any existing body or body buffer will be replaced by the new body.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve">#GST_RTSP_OK.</doc>
           <type name="RTSPResult" c:type="GstRTSPResult"/>
@@ -2588,6 +2728,26 @@ the body and size of @msg will be set to %NULL and 0 respectively.</doc>
           <parameter name="size" transfer-ownership="none">
             <doc xml:space="preserve">the size of @data</doc>
             <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="take_body_buffer"
+              c:identifier="gst_rtsp_message_take_body_buffer"
+              version="1.16">
+        <doc xml:space="preserve">Set the body of @msg to @buffer. This method takes ownership of @buffer.
+Any existing body or body buffer will be replaced by the new body.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">#GST_RTSP_OK.</doc>
+          <type name="RTSPResult" c:type="GstRTSPResult"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTSPMessage</doc>
+            <type name="RTSPMessage" c:type="GstRTSPMessage*"/>
+          </instance-parameter>
+          <parameter name="buffer" transfer-ownership="full">
+            <doc xml:space="preserve">a #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
         </parameters>
       </method>
@@ -4011,6 +4171,46 @@ callback.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="send_messages"
+              c:identifier="gst_rtsp_watch_send_messages"
+              version="1.16">
+        <doc xml:space="preserve">Sends @messages using the connection of the @watch. If they cannot be sent
+immediately, they will be queued for transmission in @watch. The contents of
+@messages will then be serialized and transmitted when the connection of the
+@watch becomes writable. In case the @messages are queued, the ID returned in
+@id will be non-zero and used as the ID argument in the message_sent
+callback once the last message is sent. The callback will only be called
+once for the last message.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">#GST_RTSP_OK on success.</doc>
+          <type name="RTSPResult" c:type="GstRTSPResult"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="watch" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTSPWatch</doc>
+            <type name="RTSPWatch" c:type="GstRTSPWatch*"/>
+          </instance-parameter>
+          <parameter name="messages" transfer-ownership="none">
+            <doc xml:space="preserve">the messages to send</doc>
+            <array length="1" zero-terminated="0" c:type="GstRTSPMessage*">
+              <type name="RTSPMessage" c:type="GstRTSPMessage"/>
+            </array>
+          </parameter>
+          <parameter name="n_messages" transfer-ownership="none">
+            <doc xml:space="preserve">the number of messages to send</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="id"
+                     direction="out"
+                     caller-allocates="0"
+                     transfer-ownership="full"
+                     optional="1"
+                     allow-none="1">
+            <doc xml:space="preserve">location for a message ID or %NULL</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="set_flushing"
               c:identifier="gst_rtsp_watch_set_flushing"
               version="1.4">
@@ -4561,6 +4761,46 @@ Currently only supported algorithm "md5".</doc>
         </parameter>
         <parameter name="password" transfer-ownership="none">
           <doc xml:space="preserve">Password</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="uri" transfer-ownership="none">
+          <doc xml:space="preserve">Original request URI</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="nonce" transfer-ownership="none">
+          <doc xml:space="preserve">Nonce</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="rtsp_generate_digest_auth_response_from_md5"
+              c:identifier="gst_rtsp_generate_digest_auth_response_from_md5"
+              version="1.16">
+      <doc xml:space="preserve">Calculates the digest auth response from the values given by the server and
+the md5sum. See RFC2069 for details.
+
+This function is useful when the passwords are not stored in clear text,
+but instead in the same format as the .htdigest file.
+
+Currently only supported algorithm "md5".</doc>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve">Authentication response or %NULL if unsupported</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="algorithm"
+                   transfer-ownership="none"
+                   nullable="1"
+                   allow-none="1">
+          <doc xml:space="preserve">Hash algorithm to use, or %NULL for MD5</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="method" transfer-ownership="none">
+          <doc xml:space="preserve">Request method, e.g. PLAY</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="md5" transfer-ownership="none">
+          <doc xml:space="preserve">The md5 sum of username:realm:password</doc>
           <type name="utf8" c:type="const gchar*"/>
         </parameter>
         <parameter name="uri" transfer-ownership="none">

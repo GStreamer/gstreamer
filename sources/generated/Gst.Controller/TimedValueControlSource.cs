@@ -55,16 +55,6 @@ namespace Gst.Controller {
 			}
 		}
 
-		[GLib.Signal("value-changed")]
-		public event Gst.Controller.ValueChangedHandler ValueChanged {
-			add {
-				this.AddSignalHandler ("value-changed", value, typeof (Gst.Controller.ValueChangedArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("value-changed", value);
-			}
-		}
-
 		[GLib.Signal("value-added")]
 		public event Gst.Controller.ValueAddedHandler ValueAdded {
 			add {
@@ -72,6 +62,16 @@ namespace Gst.Controller {
 			}
 			remove {
 				this.RemoveSignalHandler ("value-added", value);
+			}
+		}
+
+		[GLib.Signal("value-changed")]
+		public event Gst.Controller.ValueChangedHandler ValueChanged {
+			add {
+				this.AddSignalHandler ("value-changed", value, typeof (Gst.Controller.ValueChangedArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("value-changed", value);
 			}
 		}
 

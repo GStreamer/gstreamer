@@ -281,6 +281,15 @@ namespace Gst.Video {
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_info_set_interlaced_format(IntPtr raw, int format, int mode, uint width, uint height);
+
+		public bool SetInterlacedFormat(Gst.Video.VideoFormat format, Gst.Video.VideoInterlaceMode mode, uint width, uint height) {
+			bool raw_ret = gst_video_info_set_interlaced_format(Handle, (int) format, (int) mode, width, height);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_info_to_caps(IntPtr raw);
 
 		public Gst.Caps ToCaps() {

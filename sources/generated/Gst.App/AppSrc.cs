@@ -228,23 +228,13 @@ namespace Gst.App {
 			}
 		}
 
-		[GLib.Signal("end-of-stream")]
-		public event Gst.App.EndOfStreamEventHandler EndOfStreamEvent {
+		[GLib.Signal("seek-data")]
+		public event Gst.App.SeekDataHandler SeekData {
 			add {
-				this.AddSignalHandler ("end-of-stream", value, typeof (Gst.App.EndOfStreamEventArgs));
+				this.AddSignalHandler ("seek-data", value, typeof (Gst.App.SeekDataArgs));
 			}
 			remove {
-				this.RemoveSignalHandler ("end-of-stream", value);
-			}
-		}
-
-		[GLib.Signal("push-buffer")]
-		public event Gst.App.PushBufferEventHandler PushBufferEvent {
-			add {
-				this.AddSignalHandler ("push-buffer", value, typeof (Gst.App.PushBufferEventArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("push-buffer", value);
+				this.RemoveSignalHandler ("seek-data", value);
 			}
 		}
 
@@ -278,6 +268,26 @@ namespace Gst.App {
 			}
 		}
 
+		[GLib.Signal("end-of-stream")]
+		public event Gst.App.EndOfStreamEventHandler EndOfStreamEvent {
+			add {
+				this.AddSignalHandler ("end-of-stream", value, typeof (Gst.App.EndOfStreamEventArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("end-of-stream", value);
+			}
+		}
+
+		[GLib.Signal("push-buffer")]
+		public event Gst.App.PushBufferEventHandler PushBufferEvent {
+			add {
+				this.AddSignalHandler ("push-buffer", value, typeof (Gst.App.PushBufferEventArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("push-buffer", value);
+			}
+		}
+
 		[GLib.Signal("push-buffer-list")]
 		public event Gst.App.PushBufferListEventHandler PushBufferListEvent {
 			add {
@@ -285,16 +295,6 @@ namespace Gst.App {
 			}
 			remove {
 				this.RemoveSignalHandler ("push-buffer-list", value);
-			}
-		}
-
-		[GLib.Signal("seek-data")]
-		public event Gst.App.SeekDataHandler SeekData {
-			add {
-				this.AddSignalHandler ("seek-data", value, typeof (Gst.App.SeekDataArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("seek-data", value);
 			}
 		}
 

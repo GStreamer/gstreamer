@@ -113,6 +113,29 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_rtsp_generate_digest_auth_response_from_md5(IntPtr algorithm, IntPtr method, IntPtr md5, IntPtr uri, IntPtr nonce);
+
+		public static string RtspGenerateDigestAuthResponseFromMd5(string algorithm, string method, string md5, string uri, string nonce) {
+			IntPtr native_algorithm = GLib.Marshaller.StringToPtrGStrdup (algorithm);
+			IntPtr native_method = GLib.Marshaller.StringToPtrGStrdup (method);
+			IntPtr native_md5 = GLib.Marshaller.StringToPtrGStrdup (md5);
+			IntPtr native_uri = GLib.Marshaller.StringToPtrGStrdup (uri);
+			IntPtr native_nonce = GLib.Marshaller.StringToPtrGStrdup (nonce);
+			IntPtr raw_ret = gst_rtsp_generate_digest_auth_response_from_md5(native_algorithm, native_method, native_md5, native_uri, native_nonce);
+			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			GLib.Marshaller.Free (native_algorithm);
+			GLib.Marshaller.Free (native_method);
+			GLib.Marshaller.Free (native_md5);
+			GLib.Marshaller.Free (native_uri);
+			GLib.Marshaller.Free (native_nonce);
+			return ret;
+		}
+
+		public static string RtspGenerateDigestAuthResponseFromMd5(string method, string md5, string uri, string nonce) {
+			return RtspGenerateDigestAuthResponseFromMd5 (null, method, md5, uri, nonce);
+		}
+
+		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtsp_header_allow_multiple(int field);
 
 		public static bool RtspHeaderAllowMultiple(Gst.Rtsp.RTSPHeaderField field) {

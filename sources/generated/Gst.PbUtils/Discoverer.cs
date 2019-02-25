@@ -44,6 +44,31 @@ namespace Gst.PbUtils {
 			}
 		}
 
+		[GLib.Property ("use-cache")]
+		public bool UseCache {
+			get {
+				GLib.Value val = GetProperty ("use-cache");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("use-cache", val);
+				val.Dispose ();
+			}
+		}
+
+		[GLib.Signal("discovered")]
+		public event Gst.PbUtils.DiscoveredHandler Discovered {
+			add {
+				this.AddSignalHandler ("discovered", value, typeof (Gst.PbUtils.DiscoveredArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("discovered", value);
+			}
+		}
+
 		[GLib.Signal("starting")]
 		public event System.EventHandler Starting {
 			add {
@@ -61,16 +86,6 @@ namespace Gst.PbUtils {
 			}
 			remove {
 				this.RemoveSignalHandler ("finished", value);
-			}
-		}
-
-		[GLib.Signal("discovered")]
-		public event Gst.PbUtils.DiscoveredHandler Discovered {
-			add {
-				this.AddSignalHandler ("discovered", value, typeof (Gst.PbUtils.DiscoveredArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("discovered", value);
 			}
 		}
 

@@ -36,6 +36,23 @@ namespace Gst.Base {
 		}
 
 		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_type_find_helper_for_buffer_with_extension(IntPtr obj, IntPtr buf, IntPtr extension, out int prob);
+
+		public static Gst.Caps TypeFindHelperForBufferWithExtension(Gst.Object obj, Gst.Buffer buf, string extension, out Gst.TypeFindProbability prob) {
+			IntPtr native_extension = GLib.Marshaller.StringToPtrGStrdup (extension);
+			int native_prob;
+			IntPtr raw_ret = gst_type_find_helper_for_buffer_with_extension(obj == null ? IntPtr.Zero : obj.Handle, buf == null ? IntPtr.Zero : buf.Handle, native_extension, out native_prob);
+			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
+			GLib.Marshaller.Free (native_extension);
+			prob = (Gst.TypeFindProbability) native_prob;
+			return ret;
+		}
+
+		public static Gst.Caps TypeFindHelperForBufferWithExtension(Gst.Buffer buf, out Gst.TypeFindProbability prob) {
+			return TypeFindHelperForBufferWithExtension (null, buf, null, out prob);
+		}
+
+		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_type_find_helper_for_data(IntPtr obj, byte[] data, UIntPtr size, out int prob);
 
 		public static Gst.Caps TypeFindHelperForData(Gst.Object obj, byte[] data, ulong size, out Gst.TypeFindProbability prob) {
@@ -48,6 +65,23 @@ namespace Gst.Base {
 
 		public static Gst.Caps TypeFindHelperForData(byte[] data, ulong size, out Gst.TypeFindProbability prob) {
 			return TypeFindHelperForData (null, data, size, out prob);
+		}
+
+		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_type_find_helper_for_data_with_extension(IntPtr obj, byte[] data, UIntPtr size, IntPtr extension, out int prob);
+
+		public static Gst.Caps TypeFindHelperForDataWithExtension(Gst.Object obj, byte[] data, ulong size, string extension, out Gst.TypeFindProbability prob) {
+			IntPtr native_extension = GLib.Marshaller.StringToPtrGStrdup (extension);
+			int native_prob;
+			IntPtr raw_ret = gst_type_find_helper_for_data_with_extension(obj == null ? IntPtr.Zero : obj.Handle, data, new UIntPtr (size), native_extension, out native_prob);
+			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
+			GLib.Marshaller.Free (native_extension);
+			prob = (Gst.TypeFindProbability) native_prob;
+			return ret;
+		}
+
+		public static Gst.Caps TypeFindHelperForDataWithExtension(byte[] data, ulong size, out Gst.TypeFindProbability prob) {
+			return TypeFindHelperForDataWithExtension (null, data, size, null, out prob);
 		}
 
 		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -79,8 +113,28 @@ namespace Gst.Base {
 			return ret;
 		}
 
-		public static Gst.Caps TypeFindHelperGetRange(Gst.Object obj, Gst.Base.TypeFindHelperGetRangeFunction func, ulong size, string extension, out Gst.TypeFindProbability prob) {
-			return TypeFindHelperGetRange (obj, null, func, size, extension, out prob);
+		public static Gst.Caps TypeFindHelperGetRange(Gst.Object obj, Gst.Base.TypeFindHelperGetRangeFunction func, ulong size, out Gst.TypeFindProbability prob) {
+			return TypeFindHelperGetRange (obj, null, func, size, null, out prob);
+		}
+
+		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_type_find_helper_get_range_full(IntPtr obj, IntPtr parent, Gst.BaseSharp.TypeFindHelperGetRangeFunctionNative func, ulong size, IntPtr extension, out IntPtr caps, out int prob);
+
+		public static Gst.FlowReturn TypeFindHelperGetRangeFull(Gst.Object obj, Gst.Object parent, Gst.Base.TypeFindHelperGetRangeFunction func, ulong size, string extension, out Gst.Caps caps, out Gst.TypeFindProbability prob) {
+			Gst.BaseSharp.TypeFindHelperGetRangeFunctionWrapper func_wrapper = new Gst.BaseSharp.TypeFindHelperGetRangeFunctionWrapper (func);
+			IntPtr native_extension = GLib.Marshaller.StringToPtrGStrdup (extension);
+			IntPtr native_caps;
+			int native_prob;
+			int raw_ret = gst_type_find_helper_get_range_full(obj == null ? IntPtr.Zero : obj.Handle, parent == null ? IntPtr.Zero : parent.Handle, func_wrapper.NativeDelegate, size, native_extension, out native_caps, out native_prob);
+			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+			GLib.Marshaller.Free (native_extension);
+			caps = native_caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (native_caps, typeof (Gst.Caps), true);
+			prob = (Gst.TypeFindProbability) native_prob;
+			return ret;
+		}
+
+		public static Gst.FlowReturn TypeFindHelperGetRangeFull(Gst.Object obj, Gst.Base.TypeFindHelperGetRangeFunction func, ulong size, out Gst.Caps caps, out Gst.TypeFindProbability prob) {
+			return TypeFindHelperGetRangeFull (obj, null, func, size, null, out caps, out prob);
 		}
 
 #endregion

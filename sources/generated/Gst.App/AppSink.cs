@@ -134,6 +134,16 @@ namespace Gst.App {
 			}
 		}
 
+		[GLib.Signal("try-pull-sample")]
+		public event Gst.App.TryPullSampleEventHandler TryPullSampleEvent {
+			add {
+				this.AddSignalHandler ("try-pull-sample", value, typeof (Gst.App.TryPullSampleEventArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("try-pull-sample", value);
+			}
+		}
+
 		[GLib.Signal("eos")]
 		public event System.EventHandler Eos {
 			add {
@@ -154,13 +164,13 @@ namespace Gst.App {
 			}
 		}
 
-		[GLib.Signal("try-pull-sample")]
-		public event Gst.App.TryPullSampleEventHandler TryPullSampleEvent {
+		[GLib.Signal("new-preroll")]
+		public event Gst.App.NewPrerollHandler NewPreroll {
 			add {
-				this.AddSignalHandler ("try-pull-sample", value, typeof (Gst.App.TryPullSampleEventArgs));
+				this.AddSignalHandler ("new-preroll", value, typeof (Gst.App.NewPrerollArgs));
 			}
 			remove {
-				this.RemoveSignalHandler ("try-pull-sample", value);
+				this.RemoveSignalHandler ("new-preroll", value);
 			}
 		}
 
@@ -171,16 +181,6 @@ namespace Gst.App {
 			}
 			remove {
 				this.RemoveSignalHandler ("new-sample", value);
-			}
-		}
-
-		[GLib.Signal("new-preroll")]
-		public event Gst.App.NewPrerollHandler NewPreroll {
-			add {
-				this.AddSignalHandler ("new-preroll", value, typeof (Gst.App.NewPrerollArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("new-preroll", value);
 			}
 		}
 

@@ -15,6 +15,37 @@ and/or use gtk-doc annotations.  -->
              shared-library="libgstwebrtc-1.0.so.0"
              c:identifier-prefixes="Gst"
              c:symbol-prefixes="gst">
+    <enumeration name="WebRTCBundlePolicy"
+                 glib:type-name="GstWebRTCBundlePolicy"
+                 glib:get-type="gst_webrtc_bundle_policy_get_type"
+                 c:type="GstWebRTCBundlePolicy">
+      <doc xml:space="preserve">GST_WEBRTC_BUNDLE_POLICY_NONE: none
+GST_WEBRTC_BUNDLE_POLICY_BALANCED: balanced
+GST_WEBRTC_BUNDLE_POLICY_MAX_COMPAT: max-compat
+GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE: max-bundle
+See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
+for more information.</doc>
+      <member name="none"
+              value="0"
+              c:identifier="GST_WEBRTC_BUNDLE_POLICY_NONE"
+              glib:nick="none">
+      </member>
+      <member name="balanced"
+              value="1"
+              c:identifier="GST_WEBRTC_BUNDLE_POLICY_BALANCED"
+              glib:nick="balanced">
+      </member>
+      <member name="max_compat"
+              value="2"
+              c:identifier="GST_WEBRTC_BUNDLE_POLICY_MAX_COMPAT"
+              glib:nick="max-compat">
+      </member>
+      <member name="max_bundle"
+              value="3"
+              c:identifier="GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE"
+              glib:nick="max-bundle">
+      </member>
+    </enumeration>
     <enumeration name="WebRTCDTLSSetup"
                  glib:type-name="GstWebRTCDTLSSetup"
                  glib:get-type="gst_webrtc_dtls_setup_get_type"
@@ -140,7 +171,7 @@ GST_WEBRTC_DTLS_SETUP_PASSIVE: recvonly</doc>
             c:type="GstWebRTCDTLSTransportClass"
             glib:is-gtype-struct-for="WebRTCDTLSTransport">
       <field name="parent_class">
-        <type name="Gst.BinClass" c:type="GstBinClass"/>
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
       <field name="_padding">
         <array zero-terminated="0" c:type="gpointer" fixed-size="4">
@@ -181,6 +212,42 @@ GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTED: connected</doc>
               value="4"
               c:identifier="GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTED"
               glib:nick="connected">
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCDataChannelState"
+                 glib:type-name="GstWebRTCDataChannelState"
+                 glib:get-type="gst_webrtc_data_channel_state_get_type"
+                 c:type="GstWebRTCDataChannelState">
+      <doc xml:space="preserve">GST_WEBRTC_DATA_CHANNEL_STATE_NEW: new
+GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING: connection
+GST_WEBRTC_DATA_CHANNEL_STATE_OPEN: open
+GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING: closing
+GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED: closed
+See &lt;ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate"&gt;http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate&lt;/ulink&gt;</doc>
+      <member name="new"
+              value="0"
+              c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_NEW"
+              glib:nick="new">
+      </member>
+      <member name="connecting"
+              value="1"
+              c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING"
+              glib:nick="connecting">
+      </member>
+      <member name="open"
+              value="2"
+              c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_OPEN"
+              glib:nick="open">
+      </member>
+      <member name="closing"
+              value="3"
+              c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING"
+              glib:nick="closing">
+      </member>
+      <member name="closed"
+              value="4"
+              c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED"
+              glib:nick="closed">
       </member>
     </enumeration>
     <enumeration name="WebRTCFECType"
@@ -445,7 +512,7 @@ GST_WEBRTC_ICE_ROLE_CONTROLLING: controlling</doc>
             c:type="GstWebRTCICETransportClass"
             glib:is-gtype-struct-for="WebRTCICETransport">
       <field name="parent_class">
-        <type name="Gst.BinClass" c:type="GstBinClass"/>
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
       <field name="gather_candidates">
         <callback name="gather_candidates">
@@ -465,6 +532,25 @@ GST_WEBRTC_ICE_ROLE_CONTROLLING: controlling</doc>
         </array>
       </field>
     </record>
+    <enumeration name="WebRTCICETransportPolicy"
+                 glib:type-name="GstWebRTCICETransportPolicy"
+                 glib:get-type="gst_webrtc_ice_transport_policy_get_type"
+                 c:type="GstWebRTCICETransportPolicy">
+      <doc xml:space="preserve">GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL: all
+GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY: relay
+See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
+for more information.</doc>
+      <member name="all"
+              value="0"
+              c:identifier="GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL"
+              glib:nick="all">
+      </member>
+      <member name="relay"
+              value="1"
+              c:identifier="GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY"
+              glib:nick="relay">
+      </member>
+    </enumeration>
     <enumeration name="WebRTCPeerConnectionState"
                  glib:type-name="GstWebRTCPeerConnectionState"
                  glib:get-type="gst_webrtc_peer_connection_state_get_type"
@@ -505,6 +591,36 @@ See &lt;ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectionstate"&g
               value="5"
               c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_CLOSED"
               glib:nick="closed">
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCPriorityType"
+                 glib:type-name="GstWebRTCPriorityType"
+                 glib:get-type="gst_webrtc_priority_type_get_type"
+                 c:type="GstWebRTCPriorityType">
+      <doc xml:space="preserve">GST_WEBRTC_PRIORITY_TYPE_VERY_LOW: very-low
+GST_WEBRTC_PRIORITY_TYPE_LOW: low
+GST_WEBRTC_PRIORITY_TYPE_MEDIUM: medium
+GST_WEBRTC_PRIORITY_TYPE_HIGH: high
+See &lt;ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype"&gt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&lt;/ulink&gt;</doc>
+      <member name="very_low"
+              value="1"
+              c:identifier="GST_WEBRTC_PRIORITY_TYPE_VERY_LOW"
+              glib:nick="very-low">
+      </member>
+      <member name="low"
+              value="2"
+              c:identifier="GST_WEBRTC_PRIORITY_TYPE_LOW"
+              glib:nick="low">
+      </member>
+      <member name="medium"
+              value="3"
+              c:identifier="GST_WEBRTC_PRIORITY_TYPE_MEDIUM"
+              glib:nick="medium">
+      </member>
+      <member name="high"
+              value="4"
+              c:identifier="GST_WEBRTC_PRIORITY_TYPE_HIGH"
+              glib:nick="high">
       </member>
     </enumeration>
     <class name="WebRTCRTPReceiver"
@@ -749,6 +865,36 @@ See &lt;ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectionstate"&g
               glib:nick="sendrecv">
       </member>
     </enumeration>
+    <enumeration name="WebRTCSCTPTransportState"
+                 glib:type-name="GstWebRTCSCTPTransportState"
+                 glib:get-type="gst_webrtc_sctp_transport_state_get_type"
+                 c:type="GstWebRTCSCTPTransportState">
+      <doc xml:space="preserve">GST_WEBRTC_SCTP_TRANSPORT_STATE_NEW: new
+GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTING: connecting
+GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED: connected
+GST_WEBRTC_SCTP_TRANSPORT_STATE_CLOSED: closed
+See &lt;ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate"&gt;http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate&lt;/ulink&gt;</doc>
+      <member name="new"
+              value="0"
+              c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_NEW"
+              glib:nick="new">
+      </member>
+      <member name="connecting"
+              value="1"
+              c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTING"
+              glib:nick="connecting">
+      </member>
+      <member name="connected"
+              value="2"
+              c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED"
+              glib:nick="connected">
+      </member>
+      <member name="closed"
+              value="3"
+              c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_CLOSED"
+              glib:nick="closed">
+      </member>
+    </enumeration>
     <enumeration name="WebRTCSDPType"
                  glib:type-name="GstWebRTCSDPType"
                  glib:get-type="gst_webrtc_sdp_type_get_type"
@@ -819,7 +965,7 @@ See &lt;ulink url="http://w3c.github.io/webrtc-pc/#rtcsdptype"&gt;http://w3c.git
             <doc xml:space="preserve">a #GstWebRTCSDPType</doc>
             <type name="WebRTCSDPType" c:type="GstWebRTCSDPType"/>
           </parameter>
-          <parameter name="sdp" transfer-ownership="none">
+          <parameter name="sdp" transfer-ownership="full">
             <doc xml:space="preserve">a #GstSDPMessage</doc>
             <type name="GstSdp.SDPMessage" c:type="GstSDPMessage*"/>
           </parameter>

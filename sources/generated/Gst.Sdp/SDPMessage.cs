@@ -763,6 +763,19 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_sdp_message_new_from_text(IntPtr text, out IntPtr msg);
+
+		public static Gst.Sdp.SDPResult NewFromText(string text, out Gst.Sdp.SDPMessage msg) {
+			IntPtr native_text = GLib.Marshaller.StringToPtrGStrdup (text);
+			IntPtr native_msg;
+			int raw_ret = gst_sdp_message_new_from_text(native_text, out native_msg);
+			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
+			GLib.Marshaller.Free (native_text);
+			msg = native_msg == IntPtr.Zero ? null : (Gst.Sdp.SDPMessage) GLib.Opaque.GetOpaque (native_msg, typeof (Gst.Sdp.SDPMessage), true);
+			return ret;
+		}
+
+		[DllImport("libgstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_message_parse_buffer(byte[] data, uint size, IntPtr msg);
 
 		public static Gst.Sdp.SDPResult ParseBuffer(byte[] data, uint size, Gst.Sdp.SDPMessage msg) {

@@ -280,6 +280,15 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_rtsp_connection_send_messages(IntPtr raw, Gst.Rtsp.RTSPMessage[] messages, uint n_messages, IntPtr timeout);
+
+		public Gst.Rtsp.RTSPResult SendMessages(Gst.Rtsp.RTSPMessage[] messages, IntPtr timeout) {
+			int raw_ret = gst_rtsp_connection_send_messages(Handle, messages, (uint) (messages == null ? 0 : messages.Length), timeout);
+			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
+			return ret;
+		}
+
+		[DllImport("libgstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtsp_connection_set_accept_certificate_func(IntPtr raw, Gst.RtspSharp.RTSPConnectionAcceptCertificateFuncNative func, IntPtr user_data, GLib.DestroyNotify destroy_notify);
 
 		public Gst.Rtsp.RTSPConnectionAcceptCertificateFunc AcceptCertificateFunc { 

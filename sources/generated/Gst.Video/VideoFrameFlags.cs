@@ -16,6 +16,8 @@ namespace Gst.Video {
 		Tff = 2,
 		Rff = 4,
 		Onefield = 8,
+		BottomField = 8,
+		TopField = 10,
 		MultipleView = 16,
 		FirstInBundle = 32,
 	}

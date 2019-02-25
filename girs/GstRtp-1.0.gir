@@ -1465,6 +1465,560 @@ Note: Not implemented.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="xr_first_rb"
+              c:identifier="gst_rtcp_packet_xr_first_rb"
+              version="1.16">
+        <doc xml:space="preserve">Move to the first extended report block in XR @packet.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">TRUE if there was a first extended report block.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_block_length"
+              c:identifier="gst_rtcp_packet_xr_get_block_length"
+              version="1.16">
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">The number of 32-bit words containing type-specific block
+         data from @packet.</doc>
+          <type name="guint16" c:type="guint16"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_block_type"
+              c:identifier="gst_rtcp_packet_xr_get_block_type"
+              version="1.16">
+        <doc xml:space="preserve">Get the extended report block type of the XR @packet.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">The extended report block type.</doc>
+          <type name="RTCPXRType" c:type="GstRTCPXRType"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_dlrr_block"
+              c:identifier="gst_rtcp_packet_xr_get_dlrr_block"
+              version="1.16">
+        <doc xml:space="preserve">Parse the extended report block for DLRR report block type.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has DLRR Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="nth" transfer-ownership="none">
+            <doc xml:space="preserve">the index of sub-block to retrieve.</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="ssrc" transfer-ownership="none">
+            <doc xml:space="preserve">the SSRC of the receiver.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+          <parameter name="last_rr" transfer-ownership="none">
+            <doc xml:space="preserve">the last receiver reference timestamp of @ssrc.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+          <parameter name="delay" transfer-ownership="none">
+            <doc xml:space="preserve">the delay since @last_rr.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_prt_by_seq"
+              c:identifier="gst_rtcp_packet_xr_get_prt_by_seq"
+              version="1.16">
+        <doc xml:space="preserve">Retrieve the packet receipt time of @seq which ranges in [begin_seq, end_seq).</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block returns the receipt time correctly.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has the Packet Recept Times Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="seq" transfer-ownership="none">
+            <doc xml:space="preserve">the sequence to retrieve the time.</doc>
+            <type name="guint16" c:type="guint16"/>
+          </parameter>
+          <parameter name="receipt_time" transfer-ownership="none">
+            <doc xml:space="preserve">the packet receipt time of @seq.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_prt_info"
+              c:identifier="gst_rtcp_packet_xr_get_prt_info"
+              version="1.16">
+        <doc xml:space="preserve">Parse the Packet Recept Times Report Block from a XR @packet</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has a Packet Receipt Times Report Block</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="ssrc" transfer-ownership="none">
+            <doc xml:space="preserve">the SSRC of the RTP data packet source being reported upon by this report block.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+          <parameter name="thinning" transfer-ownership="none">
+            <doc xml:space="preserve">the amount of thinning performed on the sequence number space.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="begin_seq" transfer-ownership="none">
+            <doc xml:space="preserve">the first sequence number that this block reports on.</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+          <parameter name="end_seq" transfer-ownership="none">
+            <doc xml:space="preserve">the last sequence number that this block reports on plus one.</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_rle_info"
+              c:identifier="gst_rtcp_packet_xr_get_rle_info"
+              version="1.16">
+        <doc xml:space="preserve">Parse the extended report block for Loss RLE and Duplicated LRE block type.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which is Loss RLE or Duplicate RLE report.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="ssrc" transfer-ownership="none">
+            <doc xml:space="preserve">the SSRC of the RTP data packet source being reported upon by this report block.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+          <parameter name="thinning" transfer-ownership="none">
+            <doc xml:space="preserve">the amount of thinning performed on the sequence number space.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="begin_seq" transfer-ownership="none">
+            <doc xml:space="preserve">the first sequence number that this block reports on.</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+          <parameter name="end_seq" transfer-ownership="none">
+            <doc xml:space="preserve">the last sequence number that this block reports on plus one.</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+          <parameter name="chunk_count" transfer-ownership="none">
+            <doc xml:space="preserve">the number of chunks calculated by block length.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_rle_nth_chunk"
+              c:identifier="gst_rtcp_packet_xr_get_rle_nth_chunk"
+              version="1.16">
+        <doc xml:space="preserve">Retrieve actual chunk data.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block returns chunk correctly.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which is Loss RLE or Duplicate RLE report.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="nth" transfer-ownership="none">
+            <doc xml:space="preserve">the index of chunk to retrieve.</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="chunk" transfer-ownership="none">
+            <doc xml:space="preserve">the @nth chunk.</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_rrt"
+              c:identifier="gst_rtcp_packet_xr_get_rrt"
+              version="1.16">
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block returns the reference time correctly.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has the Receiver Reference Time.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="timestamp" transfer-ownership="none">
+            <doc xml:space="preserve">NTP timestamp</doc>
+            <type name="guint64" c:type="guint64*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_ssrc"
+              c:identifier="gst_rtcp_packet_xr_get_ssrc"
+              version="1.16">
+        <doc xml:space="preserve">Get the ssrc field of the XR @packet.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">the ssrc.</doc>
+          <type name="guint32" c:type="guint32"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_summary_info"
+              c:identifier="gst_rtcp_packet_xr_get_summary_info"
+              version="1.16">
+        <doc xml:space="preserve">Extract a basic information from static summary report block of XR @packet.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has Statics Summary Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="ssrc" transfer-ownership="none">
+            <doc xml:space="preserve">the SSRC of the source.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+          <parameter name="begin_seq" transfer-ownership="none">
+            <doc xml:space="preserve">the first sequence number that this block reports on.</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+          <parameter name="end_seq" transfer-ownership="none">
+            <doc xml:space="preserve">the last sequence number that this block reports on plus one.</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_summary_jitter"
+              c:identifier="gst_rtcp_packet_xr_get_summary_jitter"
+              version="1.16">
+        <doc xml:space="preserve">Extract jitter information from the statistics summary. If the jitter flag in
+a block header is set as zero, all of jitters will be zero.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has Statics Summary Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="min_jitter" transfer-ownership="none">
+            <doc xml:space="preserve">the minimum relative transit time between two sequences.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+          <parameter name="max_jitter" transfer-ownership="none">
+            <doc xml:space="preserve">the maximum relative transit time between two sequences.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+          <parameter name="mean_jitter" transfer-ownership="none">
+            <doc xml:space="preserve">the mean relative transit time between two sequences.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+          <parameter name="dev_jitter" transfer-ownership="none">
+            <doc xml:space="preserve">the standard deviation of the relative transit time between two sequences.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_summary_pkt"
+              c:identifier="gst_rtcp_packet_xr_get_summary_pkt"
+              version="1.16">
+        <doc xml:space="preserve">Get the number of lost or duplicate packets. If the flag in a block header
+is set as zero, @lost_packets or @dup_packets will be zero.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has Statics Summary Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="lost_packets" transfer-ownership="none">
+            <doc xml:space="preserve">the number of lost packets between begin_seq and end_seq.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+          <parameter name="dup_packets" transfer-ownership="none">
+            <doc xml:space="preserve">the number of duplicate packets between begin_seq and end_seq.</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_summary_ttl"
+              c:identifier="gst_rtcp_packet_xr_get_summary_ttl"
+              version="1.16">
+        <doc xml:space="preserve">Extract the value of ttl for ipv4, or hop limit for ipv6.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has Statics Summary Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="is_ipv4" transfer-ownership="none">
+            <doc xml:space="preserve">the flag to indicate that the return values are ipv4 ttl or ipv6 hop limits.</doc>
+            <type name="gboolean" c:type="gboolean*"/>
+          </parameter>
+          <parameter name="min_ttl" transfer-ownership="none">
+            <doc xml:space="preserve">the minimum TTL or Hop Limit value of data packets between two sequences.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="max_ttl" transfer-ownership="none">
+            <doc xml:space="preserve">the maximum TTL or Hop Limit value of data packets between two sequences.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="mean_ttl" transfer-ownership="none">
+            <doc xml:space="preserve">the mean TTL or Hop Limit value of data packets between two sequences.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="dev_ttl" transfer-ownership="none">
+            <doc xml:space="preserve">the standard deviation of the TTL or Hop Limit value of data packets between two sequences.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_voip_burst_metrics"
+              c:identifier="gst_rtcp_packet_xr_get_voip_burst_metrics"
+              version="1.16">
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="burst_density" transfer-ownership="none">
+            <doc xml:space="preserve">the fraction of RTP data packets within burst periods.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="gap_density" transfer-ownership="none">
+            <doc xml:space="preserve">the fraction of RTP data packets within inter-burst gaps.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="burst_duration" transfer-ownership="none">
+            <doc xml:space="preserve">the mean duration(ms) of the burst periods.</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+          <parameter name="gap_duration" transfer-ownership="none">
+            <doc xml:space="preserve">the mean duration(ms) of the gap periods.</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_voip_configuration_params"
+              c:identifier="gst_rtcp_packet_xr_get_voip_configuration_params"
+              version="1.16">
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="gmin" transfer-ownership="none">
+            <doc xml:space="preserve">the gap threshold.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="rx_config" transfer-ownership="none">
+            <doc xml:space="preserve">the receiver configuration byte.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_voip_delay_metrics"
+              c:identifier="gst_rtcp_packet_xr_get_voip_delay_metrics"
+              version="1.16">
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="roundtrip_delay" transfer-ownership="none">
+            <doc xml:space="preserve">the most recently calculated round trip time between RTP interfaces(ms)</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+          <parameter name="end_system_delay" transfer-ownership="none">
+            <doc xml:space="preserve">the most recently estimated end system delay(ms)</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_voip_jitter_buffer_params"
+              c:identifier="gst_rtcp_packet_xr_get_voip_jitter_buffer_params"
+              version="1.16">
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="jb_nominal" transfer-ownership="none">
+            <doc xml:space="preserve">the current nominal jitter buffer delay(ms)</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+          <parameter name="jb_maximum" transfer-ownership="none">
+            <doc xml:space="preserve">the current maximum jitter buffer delay(ms)</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+          <parameter name="jb_abs_max" transfer-ownership="none">
+            <doc xml:space="preserve">the absolute maximum delay(ms)</doc>
+            <type name="guint16" c:type="guint16*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_voip_metrics_ssrc"
+              c:identifier="gst_rtcp_packet_xr_get_voip_metrics_ssrc"
+              version="1.16">
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="ssrc" transfer-ownership="none">
+            <doc xml:space="preserve">the SSRC of source</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_voip_packet_metrics"
+              c:identifier="gst_rtcp_packet_xr_get_voip_packet_metrics"
+              version="1.16">
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="loss_rate" transfer-ownership="none">
+            <doc xml:space="preserve">the fraction of RTP data packets from the source lost.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="discard_rate" transfer-ownership="none">
+            <doc xml:space="preserve">the fraction of RTP data packets from the source that have been discarded.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_voip_quality_metrics"
+              c:identifier="gst_rtcp_packet_xr_get_voip_quality_metrics"
+              version="1.16">
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="r_factor" transfer-ownership="none">
+            <doc xml:space="preserve">the R factor is a voice quality metric describing the segment of the call.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="ext_r_factor" transfer-ownership="none">
+            <doc xml:space="preserve">the external R factor is a voice quality metric.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="mos_lq" transfer-ownership="none">
+            <doc xml:space="preserve">the estimated mean opinion score for listening quality.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="mos_cq" transfer-ownership="none">
+            <doc xml:space="preserve">the estimated mean opinion score for conversational quality.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_get_voip_signal_metrics"
+              c:identifier="gst_rtcp_packet_xr_get_voip_signal_metrics"
+              version="1.16">
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if the report block is correctly parsed.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket which has VoIP Metrics Report Block.</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+          <parameter name="signal_level" transfer-ownership="none">
+            <doc xml:space="preserve">the ratio of the signal level to a 0 dBm reference.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="noise_level" transfer-ownership="none">
+            <doc xml:space="preserve">the ratio of the silent period background noise level to a 0 dBm reference.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="rerl" transfer-ownership="none">
+            <doc xml:space="preserve">the residual echo return loss value.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+          <parameter name="gmin" transfer-ownership="none">
+            <doc xml:space="preserve">the gap threshold.</doc>
+            <type name="guint8" c:type="guint8*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="xr_next_rb"
+              c:identifier="gst_rtcp_packet_xr_next_rb"
+              version="1.16">
+        <doc xml:space="preserve">Move to the next extended report block in XR @packet.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">TRUE if there was a next extended report block.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="packet" transfer-ownership="none">
+            <doc xml:space="preserve">a valid XR #GstRTCPPacket</doc>
+            <type name="RTCPPacket" c:type="GstRTCPPacket*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
     </record>
     <enumeration name="RTCPSDESType"
                  glib:type-name="GstRTCPSDESType"
@@ -1590,6 +2144,62 @@ Note: Not implemented.</doc>
               c:identifier="GST_RTCP_TYPE_XR"
               glib:nick="xr">
         <doc xml:space="preserve">Extended report.</doc>
+      </member>
+    </enumeration>
+    <enumeration name="RTCPXRType"
+                 version="1.16"
+                 glib:type-name="GstRTCPXRType"
+                 glib:get-type="gst_rtcpxr_type_get_type"
+                 c:type="GstRTCPXRType">
+      <doc xml:space="preserve">Types of RTCP Extended Reports, those are defined in RFC 3611 and other RFCs
+according to the [IANA registry](https://www.iana.org/assignments/rtcp-xr-block-types/rtcp-xr-block-types.xhtml).</doc>
+      <member name="invalid"
+              value="-1"
+              c:identifier="GST_RTCP_XR_TYPE_INVALID"
+              glib:nick="invalid">
+        <doc xml:space="preserve">Invalid XR Report Block</doc>
+      </member>
+      <member name="lrle"
+              value="1"
+              c:identifier="GST_RTCP_XR_TYPE_LRLE"
+              glib:nick="lrle">
+        <doc xml:space="preserve">Loss RLE Report Block</doc>
+      </member>
+      <member name="drle"
+              value="2"
+              c:identifier="GST_RTCP_XR_TYPE_DRLE"
+              glib:nick="drle">
+        <doc xml:space="preserve">Duplicate RLE Report Block</doc>
+      </member>
+      <member name="prt"
+              value="3"
+              c:identifier="GST_RTCP_XR_TYPE_PRT"
+              glib:nick="prt">
+        <doc xml:space="preserve">Packet Receipt Times Report Block</doc>
+      </member>
+      <member name="rrt"
+              value="4"
+              c:identifier="GST_RTCP_XR_TYPE_RRT"
+              glib:nick="rrt">
+        <doc xml:space="preserve">Receiver Reference Time Report Block</doc>
+      </member>
+      <member name="dlrr"
+              value="5"
+              c:identifier="GST_RTCP_XR_TYPE_DLRR"
+              glib:nick="dlrr">
+        <doc xml:space="preserve">Delay since the last Receiver Report</doc>
+      </member>
+      <member name="ssumm"
+              value="6"
+              c:identifier="GST_RTCP_XR_TYPE_SSUMM"
+              glib:nick="ssumm">
+        <doc xml:space="preserve">Statistics Summary Report Block</doc>
+      </member>
+      <member name="voip_metrics"
+              value="7"
+              c:identifier="GST_RTCP_XR_TYPE_VOIP_METRICS"
+              glib:nick="voip-metrics">
+        <doc xml:space="preserve">VoIP Metrics Report Block</doc>
       </member>
     </enumeration>
     <constant name="RTCP_MAX_BYE_SSRC_COUNT"
@@ -1953,6 +2563,21 @@ audio codec</doc>
           </parameter>
         </parameters>
       </virtual-method>
+      <method name="is_source_info_enabled"
+              c:identifier="gst_rtp_base_depayload_is_source_info_enabled"
+              version="1.16">
+        <doc xml:space="preserve">Queries whether #GstRTPSourceMeta will be added to depayloaded buffers.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if source-info is enabled.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="depayload" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTPBaseDepayload</doc>
+            <type name="RTPBaseDepayload" c:type="GstRTPBaseDepayload*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="push" c:identifier="gst_rtp_base_depayload_push">
         <doc xml:space="preserve">Push @out_buf to the peer of @filter. This function takes ownership of
 @out_buf.
@@ -1992,6 +2617,31 @@ the outgoing buffer when it didn't have a timestamp already.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_source_info_enabled"
+              c:identifier="gst_rtp_base_depayload_set_source_info_enabled"
+              version="1.16">
+        <doc xml:space="preserve">Enable or disable adding #GstRTPSourceMeta to depayloaded buffers.</doc>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="depayload" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTPBaseDepayload</doc>
+            <type name="RTPBaseDepayload" c:type="GstRTPBaseDepayload*"/>
+          </instance-parameter>
+          <parameter name="enable" transfer-ownership="none">
+            <doc xml:space="preserve">whether to add meta about RTP sources to buffer</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <property name="source-info"
+                version="1.16"
+                writable="1"
+                transfer-ownership="none">
+        <doc xml:space="preserve">Add RTP source information found in RTP header as meta to output buffer.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
       <property name="stats" transfer-ownership="none">
         <doc xml:space="preserve">Various depayloader statistics retrieved atomically (and are therefore
 synchroized with each other). This property return a GstStructure named
@@ -2225,6 +2875,58 @@ the last processed buffer and current state of the stream being depayloaded:
           </parameter>
         </parameters>
       </virtual-method>
+      <method name="allocate_output_buffer"
+              c:identifier="gst_rtp_base_payload_allocate_output_buffer"
+              version="1.16">
+        <doc xml:space="preserve">Allocate a new #GstBuffer with enough data to hold an RTP packet with
+minimum @csrc_count CSRCs, a payload length of @payload_len and padding of
+@pad_len. If @payload has #GstRTPBasePayload:source-info %TRUE additional
+CSRCs may be allocated and filled with RTP source information.</doc>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve">A newly allocated buffer that can hold an RTP packet with given
+parameters.</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="payload" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTPBasePayload</doc>
+            <type name="RTPBasePayload" c:type="GstRTPBasePayload*"/>
+          </instance-parameter>
+          <parameter name="payload_len" transfer-ownership="none">
+            <doc xml:space="preserve">the length of the payload</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="pad_len" transfer-ownership="none">
+            <doc xml:space="preserve">the amount of padding</doc>
+            <type name="guint8" c:type="guint8"/>
+          </parameter>
+          <parameter name="csrc_count" transfer-ownership="none">
+            <doc xml:space="preserve">the minimum number of CSRC entries</doc>
+            <type name="guint8" c:type="guint8"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_source_count"
+              c:identifier="gst_rtp_base_payload_get_source_count"
+              version="1.16">
+        <doc xml:space="preserve">Count the total number of RTP sources found in the meta of @buffer, which
+will be automically added by gst_rtp_base_payload_allocate_output_buffer().
+If #GstRTPBasePayload:source-info is %FALSE the count will be 0.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">The number of sources.</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="payload" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTPBasePayload</doc>
+            <type name="RTPBasePayload" c:type="GstRTPBasePayload*"/>
+          </instance-parameter>
+          <parameter name="buffer" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstBuffer, typically the buffer to payload</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="is_filled" c:identifier="gst_rtp_base_payload_is_filled">
         <doc xml:space="preserve">Check if the packet with @size and @duration would exceed the configured
 maximum size.</doc>
@@ -2246,6 +2948,22 @@ configured MTU or max_ptime.</doc>
             <doc xml:space="preserve">the duration of the packet</doc>
             <type name="Gst.ClockTime" c:type="GstClockTime"/>
           </parameter>
+        </parameters>
+      </method>
+      <method name="is_source_info_enabled"
+              c:identifier="gst_rtp_base_payload_is_source_info_enabled"
+              version="1.16">
+        <doc xml:space="preserve">Queries whether the payloader will add contributing sources (CSRCs) to the
+RTP header from #GstRTPSourceMeta.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if source-info is enabled.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="payload" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTPBasePayload</doc>
+            <type name="RTPBasePayload" c:type="GstRTPBasePayload*"/>
+          </instance-parameter>
         </parameters>
       </method>
       <method name="push" c:identifier="gst_rtp_base_payload_push">
@@ -2345,6 +3063,25 @@ Variable arguments should be in the form field name, field type
           </parameter>
         </parameters>
       </method>
+      <method name="set_source_info_enabled"
+              c:identifier="gst_rtp_base_payload_set_source_info_enabled"
+              version="1.16">
+        <doc xml:space="preserve">Enable or disable adding contributing sources to RTP packets from
+#GstRTPSourceMeta.</doc>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="payload" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTPBasePayload</doc>
+            <type name="RTPBasePayload" c:type="GstRTPBasePayload*"/>
+          </instance-parameter>
+          <parameter name="enable" transfer-ownership="none">
+            <doc xml:space="preserve">whether to add contributing sources to RTP packets</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
       <property name="max-ptime" writable="1" transfer-ownership="none">
         <type name="gint64" c:type="gint64"/>
       </property>
@@ -2385,6 +3122,14 @@ timestamps for audio streams.</doc>
       </property>
       <property name="seqnum-offset" writable="1" transfer-ownership="none">
         <type name="gint" c:type="gint"/>
+      </property>
+      <property name="source-info"
+                version="1.16"
+                writable="1"
+                transfer-ownership="none">
+        <doc xml:space="preserve">Enable writing the CSRC field in allocated RTP header based on RTP source
+information found in the input buffer's #GstRTPSourceMeta.</doc>
+        <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="ssrc" writable="1" transfer-ownership="none">
         <type name="guint" c:type="guint"/>
@@ -3952,6 +4697,96 @@ types specified with @payload_type.</doc>
         <doc xml:space="preserve">the secure Audio/Visual profile with feedback (RFC 5124)</doc>
       </member>
     </enumeration>
+    <record name="RTPSourceMeta" c:type="GstRTPSourceMeta" version="1.16">
+      <doc xml:space="preserve">Meta describing the source(s) of the buffer.</doc>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve">parent #GstMeta</doc>
+        <type name="Gst.Meta" c:type="GstMeta"/>
+      </field>
+      <field name="ssrc" writable="1">
+        <doc xml:space="preserve">the SSRC</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="ssrc_valid" writable="1">
+        <doc xml:space="preserve">whether @ssrc is set and valid</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="csrc" writable="1">
+        <doc xml:space="preserve">pointer to the CSRCs</doc>
+        <array zero-terminated="0" c:type="guint32" fixed-size="15">
+          <type name="guint32" c:type="guint32"/>
+        </array>
+      </field>
+      <field name="csrc_count" writable="1">
+        <doc xml:space="preserve">number of elements in @csrc</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <method name="append_csrc"
+              c:identifier="gst_rtp_source_meta_append_csrc"
+              version="1.16">
+        <doc xml:space="preserve">Appends @csrc to the list of contributing sources in @meta.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE if all elements in @csrc was added, %FALSE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTPSourceMeta</doc>
+            <type name="RTPSourceMeta" c:type="GstRTPSourceMeta*"/>
+          </instance-parameter>
+          <parameter name="csrc" transfer-ownership="none">
+            <doc xml:space="preserve">the csrcs to append</doc>
+            <type name="guint32" c:type="const guint32*"/>
+          </parameter>
+          <parameter name="csrc_count" transfer-ownership="none">
+            <doc xml:space="preserve">number of elements in @csrc</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_source_count"
+              c:identifier="gst_rtp_source_meta_get_source_count"
+              version="1.16">
+        <doc xml:space="preserve">Count the total number of RTP sources found in @meta, both SSRC and CSRC.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">The number of RTP sources</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTPSourceMeta</doc>
+            <type name="RTPSourceMeta" c:type="const GstRTPSourceMeta*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_ssrc"
+              c:identifier="gst_rtp_source_meta_set_ssrc"
+              version="1.16">
+        <doc xml:space="preserve">Sets @ssrc in @meta. If @ssrc is %NULL the ssrc of @meta will be unset.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve">%TRUE on success, %FALSE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve">a #GstRTPSourceMeta</doc>
+            <type name="RTPSourceMeta" c:type="GstRTPSourceMeta*"/>
+          </instance-parameter>
+          <parameter name="ssrc"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
+            <doc xml:space="preserve">pointer to the SSRC</doc>
+            <type name="guint32" c:type="guint32*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="get_info" c:identifier="gst_rtp_source_meta_get_info">
+        <return-value transfer-ownership="none">
+          <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+        </return-value>
+      </function>
+    </record>
     <constant name="RTP_HDREXT_BASE"
               value="urn:ietf:params:rtp-hdrext:"
               c:type="GST_RTP_HDREXT_BASE">
@@ -4148,10 +4983,64 @@ types specified with @payload_type.</doc>
               c:type="GST_RTP_PAYLOAD_TS48_STRING">
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <constant name="RTP_SOURCE_META_MAX_CSRC_COUNT"
+              value="15"
+              c:type="GST_RTP_SOURCE_META_MAX_CSRC_COUNT">
+      <type name="gint" c:type="gint"/>
+    </constant>
     <constant name="RTP_VERSION" value="2" c:type="GST_RTP_VERSION">
       <doc xml:space="preserve">The supported RTP version 2.</doc>
       <type name="gint" c:type="gint"/>
     </constant>
+    <function name="buffer_add_rtp_source_meta"
+              c:identifier="gst_buffer_add_rtp_source_meta"
+              version="1.16">
+      <doc xml:space="preserve">Attaches RTP source information to @buffer.</doc>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve">the #GstRTPSourceMeta on @buffer.</doc>
+        <type name="RTPSourceMeta" c:type="GstRTPSourceMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="ssrc"
+                   transfer-ownership="none"
+                   nullable="1"
+                   allow-none="1">
+          <doc xml:space="preserve">pointer to the SSRC</doc>
+          <type name="guint32" c:type="const guint32*"/>
+        </parameter>
+        <parameter name="csrc"
+                   transfer-ownership="none"
+                   nullable="1"
+                   allow-none="1">
+          <doc xml:space="preserve">pointer to the CSRCs</doc>
+          <type name="guint32" c:type="const guint32*"/>
+        </parameter>
+        <parameter name="csrc_count" transfer-ownership="none">
+          <doc xml:space="preserve">number of elements in @csrc</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_get_rtp_source_meta"
+              c:identifier="gst_buffer_get_rtp_source_meta"
+              version="1.16">
+      <doc xml:space="preserve">Find the #GstRTPSourceMeta on @buffer.</doc>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve">the #GstRTPSourceMeta or %NULL when there
+is no such metadata on @buffer.</doc>
+        <type name="RTPSourceMeta" c:type="GstRTPSourceMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="rtcp_buffer_map"
               c:identifier="gst_rtcp_buffer_map"
               moved-to="RTCPBuffer.map">
@@ -4819,6 +5708,19 @@ types specified with @payload_type.</doc>
           <type name="guint8" c:type="guint8"/>
         </parameter>
       </parameters>
+    </function>
+    <function name="rtp_source_meta_api_get_type"
+              c:identifier="gst_rtp_source_meta_api_get_type">
+      <return-value transfer-ownership="none">
+        <type name="GType" c:type="GType"/>
+      </return-value>
+    </function>
+    <function name="rtp_source_meta_get_info"
+              c:identifier="gst_rtp_source_meta_get_info"
+              moved-to="RTPSourceMeta.get_info">
+      <return-value transfer-ownership="none">
+        <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+      </return-value>
     </function>
   </namespace>
 </repository>

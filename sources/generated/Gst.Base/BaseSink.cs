@@ -114,6 +114,24 @@ namespace Gst.Base {
 			}
 		}
 
+		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_base_sink_get_processing_deadline(IntPtr raw);
+
+		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_base_sink_set_processing_deadline(IntPtr raw, ulong processing_deadline);
+
+		[GLib.Property ("processing-deadline")]
+		public ulong ProcessingDeadline {
+			get  {
+				ulong raw_ret = gst_base_sink_get_processing_deadline(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+			set  {
+				gst_base_sink_set_processing_deadline(Handle, value);
+			}
+		}
+
 		[GLib.Property ("qos")]
 		public bool Qos {
 			get {

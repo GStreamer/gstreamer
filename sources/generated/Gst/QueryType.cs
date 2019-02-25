@@ -29,6 +29,7 @@ namespace Gst {
 		Caps = 43523,
 		Drain = 46086,
 		Context = 48643,
+		Bitrate = 51202,
 	}
 
 	internal class QueryTypeGType {

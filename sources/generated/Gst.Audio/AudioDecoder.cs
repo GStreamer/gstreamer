@@ -1533,6 +1533,15 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_audio_decoder_set_output_caps(IntPtr raw, IntPtr caps);
+
+		public bool SetOutputCaps(Gst.Caps caps) {
+			bool raw_ret = gst_audio_decoder_set_output_caps(Handle, caps == null ? IntPtr.Zero : caps.Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_audio_decoder_set_output_format(IntPtr raw, IntPtr info);
 
 		public bool SetOutputFormat(Gst.Audio.AudioInfo info) {

@@ -12,6 +12,28 @@ namespace Gst.Rtp {
 	public partial class Global {
 
 		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_rtp_source_meta(IntPtr buffer, uint ssrc, uint csrc, uint csrc_count);
+
+		public static Gst.Rtp.RTPSourceMeta BufferAddRtpSourceMeta(Gst.Buffer buffer, uint ssrc, uint csrc, uint csrc_count) {
+			IntPtr raw_ret = gst_buffer_add_rtp_source_meta(buffer == null ? IntPtr.Zero : buffer.Handle, ssrc, csrc, csrc_count);
+			Gst.Rtp.RTPSourceMeta ret = Gst.Rtp.RTPSourceMeta.New (raw_ret);
+			return ret;
+		}
+
+		public static Gst.Rtp.RTPSourceMeta BufferAddRtpSourceMeta(Gst.Buffer buffer, uint csrc_count) {
+			return BufferAddRtpSourceMeta (buffer, 0, 0, csrc_count);
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_get_rtp_source_meta(IntPtr buffer);
+
+		public static Gst.Rtp.RTPSourceMeta BufferGetRtpSourceMeta(Gst.Buffer buffer) {
+			IntPtr raw_ret = gst_buffer_get_rtp_source_meta(buffer == null ? IntPtr.Zero : buffer.Handle);
+			Gst.Rtp.RTPSourceMeta ret = Gst.Rtp.RTPSourceMeta.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtcp_buffer_map(IntPtr buffer, int flags, IntPtr rtcp);
 
 		public static bool RtcpBufferMap(Gst.Buffer buffer, Gst.MapFlags flags, Gst.Rtp.RTCPBuffer rtcp) {
@@ -287,6 +309,24 @@ namespace Gst.Rtp {
 		public static Gst.Rtp.RTPPayloadInfo RtpPayloadInfoForPt(byte payload_type) {
 			IntPtr raw_ret = gst_rtp_payload_info_for_pt(payload_type);
 			Gst.Rtp.RTPPayloadInfo ret = Gst.Rtp.RTPPayloadInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_rtp_source_meta_api_get_type();
+
+		public static GLib.GType RtpSourceMetaApiGetType() {
+			IntPtr raw_ret = gst_rtp_source_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("libgstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_rtp_source_meta_get_info();
+
+		public static Gst.MetaInfo RtpSourceMetaGetInfo() {
+			IntPtr raw_ret = gst_rtp_source_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
 			return ret;
 		}
 

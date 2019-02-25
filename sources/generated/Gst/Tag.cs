@@ -118,42 +118,6 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_tag_register(IntPtr name, int flag, IntPtr type, IntPtr nick, IntPtr blurb, GstSharp.TagMergeFuncNative func);
-
-		public static void Register(string name, Gst.TagFlag flag, GLib.GType type, string nick, string blurb, Gst.TagMergeFunc func) {
-			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
-			IntPtr native_nick = GLib.Marshaller.StringToPtrGStrdup (nick);
-			IntPtr native_blurb = GLib.Marshaller.StringToPtrGStrdup (blurb);
-			GstSharp.TagMergeFuncWrapper func_wrapper = new GstSharp.TagMergeFuncWrapper (func);
-			gst_tag_register(native_name, (int) flag, type.Val, native_nick, native_blurb, func_wrapper.NativeDelegate);
-			GLib.Marshaller.Free (native_name);
-			GLib.Marshaller.Free (native_nick);
-			GLib.Marshaller.Free (native_blurb);
-		}
-
-		public static void Register(string name, Gst.TagFlag flag, GLib.GType type, string nick, string blurb) {
-			Register (name, flag, type, nick, blurb, null);
-		}
-
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_tag_register_static(IntPtr name, int flag, IntPtr type, IntPtr nick, IntPtr blurb, GstSharp.TagMergeFuncNative func);
-
-		public static void RegisterStatic(string name, Gst.TagFlag flag, GLib.GType type, string nick, string blurb, Gst.TagMergeFunc func) {
-			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
-			IntPtr native_nick = GLib.Marshaller.StringToPtrGStrdup (nick);
-			IntPtr native_blurb = GLib.Marshaller.StringToPtrGStrdup (blurb);
-			GstSharp.TagMergeFuncWrapper func_wrapper = new GstSharp.TagMergeFuncWrapper (func);
-			gst_tag_register_static(native_name, (int) flag, type.Val, native_nick, native_blurb, func_wrapper.NativeDelegate);
-			GLib.Marshaller.Free (native_name);
-			GLib.Marshaller.Free (native_nick);
-			GLib.Marshaller.Free (native_blurb);
-		}
-
-		public static void RegisterStatic(string name, Gst.TagFlag flag, GLib.GType type, string nick, string blurb) {
-			RegisterStatic (name, flag, type, nick, blurb, null);
-		}
-
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_tag_check_language_code(IntPtr lang_code);
 
 		public static bool CheckLanguageCode(string lang_code) {
@@ -571,6 +535,15 @@ namespace Gst {
 			IntPtr raw_ret = gst_tag_to_vorbis_tag(native_gst_tag);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
 			GLib.Marshaller.Free (native_gst_tag);
+			return ret;
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_tag_xmp_list_schemas();
+
+		public static string[] XmpListSchemas() {
+			IntPtr raw_ret = gst_tag_xmp_list_schemas();
+			string[] ret = GLib.Marshaller.NullTermPtrToStringArray (raw_ret, false);
 			return ret;
 		}
 

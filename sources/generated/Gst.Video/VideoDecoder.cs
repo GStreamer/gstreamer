@@ -1671,6 +1671,21 @@ namespace Gst.Video {
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_decoder_set_interlaced_output_state(IntPtr raw, int fmt, int mode, uint width, uint height, IntPtr reference);
+
+		public Gst.Video.VideoCodecState SetInterlacedOutputState(Gst.Video.VideoFormat fmt, Gst.Video.VideoInterlaceMode mode, uint width, uint height, Gst.Video.VideoCodecState reference) {
+			IntPtr native_reference = GLib.Marshaller.StructureToPtrAlloc (reference);
+			IntPtr raw_ret = gst_video_decoder_set_interlaced_output_state(Handle, (int) fmt, (int) mode, width, height, native_reference);
+			Gst.Video.VideoCodecState ret = Gst.Video.VideoCodecState.New (raw_ret);
+			Marshal.FreeHGlobal (native_reference);
+			return ret;
+		}
+
+		public Gst.Video.VideoCodecState SetInterlacedOutputState(Gst.Video.VideoFormat fmt, Gst.Video.VideoInterlaceMode mode, uint width, uint height) {
+			return SetInterlacedOutputState (fmt, mode, width, height, Gst.Video.VideoCodecState.Zero);
+		}
+
+		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_decoder_set_latency(IntPtr raw, ulong min_latency, ulong max_latency);
 
 		public void SetLatency(ulong min_latency, ulong max_latency) {

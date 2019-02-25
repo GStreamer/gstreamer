@@ -202,6 +202,17 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_message_parse_device_changed(IntPtr raw, out IntPtr device, out IntPtr changed_device);
+
+		public void ParseDeviceChanged(out Gst.Device device, out Gst.Device changed_device) {
+			IntPtr native_device;
+			IntPtr native_changed_device;
+			gst_message_parse_device_changed(Handle, out native_device, out native_changed_device);
+			device = GLib.Object.GetObject(native_device, true) as Gst.Device;
+			changed_device = GLib.Object.GetObject(native_changed_device, true) as Gst.Device;
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_message_parse_device_removed(IntPtr raw, out IntPtr device);
 
 		public Gst.Device ParseDeviceRemoved() {
@@ -629,6 +640,15 @@ namespace Gst {
 		public static Message NewDeviceAdded(Gst.Object src, Gst.Device device)
 		{
 			Message result = new Message (gst_message_new_device_added(src == null ? IntPtr.Zero : src.Handle, device == null ? IntPtr.Zero : device.Handle));
+			return result;
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_message_new_device_changed(IntPtr src, IntPtr device, IntPtr changed_device);
+
+		public static Message NewDeviceChanged(Gst.Object src, Gst.Device device, Gst.Device changed_device)
+		{
+			Message result = new Message (gst_message_new_device_changed(src == null ? IntPtr.Zero : src.Handle, device == null ? IntPtr.Zero : device.Handle, changed_device == null ? IntPtr.Zero : changed_device.Handle));
 			return result;
 		}
 

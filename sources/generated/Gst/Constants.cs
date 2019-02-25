@@ -28,6 +28,7 @@ namespace Gst {
 		public const string ELEMENT_FACTORY_KLASS_ENCODER = @"Encoder";
 		public const string ELEMENT_FACTORY_KLASS_ENCRYPTOR = @"Encryptor";
 		public const string ELEMENT_FACTORY_KLASS_FORMATTER = @"Formatter";
+		public const string ELEMENT_FACTORY_KLASS_HARDWARE = @"Hardware";
 		public const string ELEMENT_FACTORY_KLASS_MEDIA_AUDIO = @"Audio";
 		public const string ELEMENT_FACTORY_KLASS_MEDIA_IMAGE = @"Image";
 		public const string ELEMENT_FACTORY_KLASS_MEDIA_METADATA = @"Metadata";
@@ -63,6 +64,7 @@ namespace Gst {
 		public const int PARAM_MUTABLE_READY = 1024;
 		public const int PARAM_USER_SHIFT = 65536;
 		public const string PROTECTION_SYSTEM_ID_CAPS_FIELD = @"protection-system";
+		public const string PROTECTION_UNSPECIFIED_SYSTEM_ID = @"unspecified-system-id";
 		public const string PTR_FORMAT = @"paA";
 		public const int QUERY_NUM_SHIFT = 8;
 		public const int QUERY_TYPE_BOTH = 3;
@@ -163,9 +165,9 @@ namespace Gst {
 		public const int VALUE_LESS_THAN = -1;
 		public const int VALUE_UNORDERED = 2;
 		public const int VERSION_MAJOR = 1;
-		public const int VERSION_MICRO = 0;
+		public const int VERSION_MICRO = 1;
 		public const int VERSION_MINOR = 15;
-		public const int VERSION_NANO = 1;
+		public const int VERSION_NANO = 0;
 #endregion
 	}
 }

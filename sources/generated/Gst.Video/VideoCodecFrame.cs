@@ -15,8 +15,8 @@ namespace Gst.Video {
 		private int ref_count;
 		private uint flags;
 		public uint SystemFrameNumber;
-		public uint DecodeFrameNumber;
-		public uint PresentationFrameNumber;
+		private uint decode_frame_number;
+		private uint presentation_frame_number;
 		public ulong Dts;
 		public ulong Pts;
 		public ulong Duration;
@@ -105,7 +105,7 @@ namespace Gst.Video {
 
 		public bool Equals (VideoCodecFrame other)
 		{
-			return true && ref_count.Equals (other.ref_count) && flags.Equals (other.flags) && SystemFrameNumber.Equals (other.SystemFrameNumber) && DecodeFrameNumber.Equals (other.DecodeFrameNumber) && PresentationFrameNumber.Equals (other.PresentationFrameNumber) && Dts.Equals (other.Dts) && Pts.Equals (other.Pts) && Duration.Equals (other.Duration) && DistanceFromSync.Equals (other.DistanceFromSync) && InputBuffer.Equals (other.InputBuffer) && OutputBuffer.Equals (other.OutputBuffer) && Deadline.Equals (other.Deadline) && _events.Equals (other._events) && _user_data.Equals (other._user_data) && user_data_destroy_notify.Equals (other.user_data_destroy_notify);
+			return true && ref_count.Equals (other.ref_count) && flags.Equals (other.flags) && SystemFrameNumber.Equals (other.SystemFrameNumber) && decode_frame_number.Equals (other.decode_frame_number) && presentation_frame_number.Equals (other.presentation_frame_number) && Dts.Equals (other.Dts) && Pts.Equals (other.Pts) && Duration.Equals (other.Duration) && DistanceFromSync.Equals (other.DistanceFromSync) && InputBuffer.Equals (other.InputBuffer) && OutputBuffer.Equals (other.OutputBuffer) && Deadline.Equals (other.Deadline) && _events.Equals (other._events) && _user_data.Equals (other._user_data) && user_data_destroy_notify.Equals (other.user_data_destroy_notify);
 		}
 
 		public override bool Equals (object other)
@@ -115,7 +115,7 @@ namespace Gst.Video {
 
 		public override int GetHashCode ()
 		{
-			return this.GetType ().FullName.GetHashCode () ^ ref_count.GetHashCode () ^ flags.GetHashCode () ^ SystemFrameNumber.GetHashCode () ^ DecodeFrameNumber.GetHashCode () ^ PresentationFrameNumber.GetHashCode () ^ Dts.GetHashCode () ^ Pts.GetHashCode () ^ Duration.GetHashCode () ^ DistanceFromSync.GetHashCode () ^ InputBuffer.GetHashCode () ^ OutputBuffer.GetHashCode () ^ Deadline.GetHashCode () ^ _events.GetHashCode () ^ _user_data.GetHashCode () ^ user_data_destroy_notify.GetHashCode ();
+			return this.GetType ().FullName.GetHashCode () ^ ref_count.GetHashCode () ^ flags.GetHashCode () ^ SystemFrameNumber.GetHashCode () ^ decode_frame_number.GetHashCode () ^ presentation_frame_number.GetHashCode () ^ Dts.GetHashCode () ^ Pts.GetHashCode () ^ Duration.GetHashCode () ^ DistanceFromSync.GetHashCode () ^ InputBuffer.GetHashCode () ^ OutputBuffer.GetHashCode () ^ Deadline.GetHashCode () ^ _events.GetHashCode () ^ _user_data.GetHashCode () ^ user_data_destroy_notify.GetHashCode ();
 		}
 
 		public static explicit operator GLib.Value (Gst.Video.VideoCodecFrame boxed)

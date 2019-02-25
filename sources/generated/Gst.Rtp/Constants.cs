@@ -59,6 +59,7 @@ namespace Gst.Rtp {
 		public const string RTP_PAYLOAD_TS41_STRING = @"19";
 		public const int RTP_PAYLOAD_TS48 = 18;
 		public const string RTP_PAYLOAD_TS48_STRING = @"18";
+		public const int RTP_SOURCE_META_MAX_CSRC_COUNT = 15;
 		public const int RTP_VERSION = 2;
 #endregion
 	}

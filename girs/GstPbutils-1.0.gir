@@ -123,7 +123,7 @@ new frame.</doc>
     <record name="AudioVisualizerClass"
             c:type="GstAudioVisualizerClass"
             glib:is-gtype-struct-for="AudioVisualizer">
-      <field name="parent_class">
+      <field name="parent_class" readable="0" private="1">
         <type name="Gst.ElementClass" c:type="GstElementClass"/>
       </field>
       <field name="setup">
@@ -432,6 +432,12 @@ URI will timeout.
 If the discovery of a URI times out, the %GST_DISCOVERER_TIMEOUT will be
 set on the result flags.</doc>
         <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="use-cache"
+                writable="1"
+                construct="1"
+                transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
       </property>
       <field name="parent">
         <type name="GObject.Object" c:type="GObject"/>
@@ -1684,8 +1690,11 @@ information like name, description, format and preset.</doc>
             <doc xml:space="preserve">The name of the target</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
-          <parameter name="profilename" transfer-ownership="none">
-            <doc xml:space="preserve">(allow-none): The name of the profile, if %NULL
+          <parameter name="profilename"
+                     transfer-ownership="none"
+                     nullable="1"
+                     allow-none="1">
+            <doc xml:space="preserve">The name of the profile, if %NULL
 provided, it will default to the encoding profile called `default`.</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
@@ -2744,13 +2753,13 @@ in debugging.</doc>
       <type name="gint" c:type="gint"/>
     </constant>
     <constant name="PLUGINS_BASE_VERSION_MICRO"
-              value="0"
+              value="1"
               c:type="GST_PLUGINS_BASE_VERSION_MICRO">
       <doc xml:space="preserve">The micro version of GStreamer's gst-plugins-base libraries at compile time.</doc>
       <type name="gint" c:type="gint"/>
     </constant>
     <constant name="PLUGINS_BASE_VERSION_MINOR"
-              value="14"
+              value="15"
               c:type="GST_PLUGINS_BASE_VERSION_MINOR">
       <doc xml:space="preserve">The minor version of GStreamer's gst-plugins-base libraries at compile time.</doc>
       <type name="gint" c:type="gint"/>
@@ -2840,13 +2849,12 @@ Main, LTP, SSR and others, the Main profile is used.
 The @audio_config parameter follows the following format, starting from the
 most significant bit of the first byte:
 
-  * Bit 0:4 contains the AudioObjectType
+  * Bit 0:4 contains the AudioObjectType (if this is 0x5, then the
+    real AudioObjectType is carried after the rate and channel data)
   * Bit 5:8 contains the sample frequency index (if this is 0xf, then the
     next 24 bits define the actual sample frequency, and subsequent
     fields are appropriately shifted).
-  * Bit 9:12 contains the channel configuration
-
-&gt; HE-AAC support has not yet been implemented.</doc>
+  * Bit 9:12 contains the channel configuration</doc>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve">The level as a const string and %NULL if the level could not be
 determined.</doc>
@@ -2870,10 +2878,8 @@ determined.</doc>
     <function name="codec_utils_aac_get_profile"
               c:identifier="gst_codec_utils_aac_get_profile">
       <doc xml:space="preserve">Returns the profile of the given AAC stream as a string. The profile is
-determined using the AudioObjectType field which is in the first 5 bits of
-@audio_config.
-
-&gt; HE-AAC support has not yet been implemented.</doc>
+normally determined using the AudioObjectType field which is in the first
+5 bits of @audio_config</doc>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve">The profile as a const string and %NULL if the profile could not be
 determined.</doc>

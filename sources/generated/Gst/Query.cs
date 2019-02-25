@@ -211,6 +211,15 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_query_parse_bitrate(IntPtr raw, out uint nominal_bitrate);
+
+		public uint ParseBitrate() {
+			uint nominal_bitrate;
+			gst_query_parse_bitrate(Handle, out nominal_bitrate);
+			return nominal_bitrate;
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_parse_buffering_percent(IntPtr raw, out bool busy, out int percent);
 
 		public void ParseBufferingPercent(out bool busy, out int percent) {
@@ -475,6 +484,15 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_query_set_bitrate(IntPtr raw, uint nominal_bitrate);
+
+		public uint Bitrate { 
+			set {
+				gst_query_set_bitrate(Handle, value);
+			}
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_query_set_buffering_percent(IntPtr raw, bool busy, int percent);
 
 		public void SetBufferingPercent(bool busy, int percent) {
@@ -660,6 +678,14 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_query_new_bitrate();
+
+		public Query () 
+		{
+			Raw = gst_query_new_bitrate();
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_buffering(int format);
 
 		public Query (Gst.Format format) 
@@ -706,9 +732,10 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_query_new_drain();
 
-		public Query () 
+		public static Query NewDrain()
 		{
-			Raw = gst_query_new_drain();
+			Query result = new Query (gst_query_new_drain());
+			return result;
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

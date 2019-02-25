@@ -11,13 +11,13 @@ namespace Gst {
 	[GLib.GType (typeof (Gst.DebugGraphDetailsGType))]
 	public enum DebugGraphDetails {
 
-		Verbose = -1,
 		MediaType = 1,
 		CapsDetails = 2,
 		NonDefaultParams = 4,
 		States = 8,
 		All = 15,
 		FullParams = 16,
+		Verbose = -1,
 	}
 
 	internal class DebugGraphDetailsGType {

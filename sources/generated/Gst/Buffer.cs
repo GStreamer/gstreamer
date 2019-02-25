@@ -589,6 +589,14 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_new_wrapped_bytes(IntPtr bytes);
+
+		public Buffer (GLib.Bytes bytes) 
+		{
+			Raw = gst_buffer_new_wrapped_bytes(bytes == null ? IntPtr.Zero : bytes.Handle);
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_new_wrapped_full(int flags, byte[] data, UIntPtr maxsize, UIntPtr offset, UIntPtr size, IntPtr user_data, GLib.DestroyNotify notify);
 
 		public Buffer (Gst.MemoryFlags flags, byte[] data, ulong maxsize, ulong offset, ulong size, IntPtr user_data, GLib.DestroyNotify notify) 

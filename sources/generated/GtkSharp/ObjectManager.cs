@@ -64,6 +64,9 @@ namespace GtkSharp.GstreamerSharp {
 			GLib.GType.Register (Gst.Tags.TagDemux.GType, typeof (Gst.Tags.TagDemux));
 			GLib.GType.Register (Gst.Tags.TagMux.GType, typeof (Gst.Tags.TagMux));
 			GLib.GType.Register (Gst.Video.ColorBalanceChannel.GType, typeof (Gst.Video.ColorBalanceChannel));
+			GLib.GType.Register (Gst.Video.VideoAggregator.GType, typeof (Gst.Video.VideoAggregator));
+			GLib.GType.Register (Gst.Video.VideoAggregatorConvertPad.GType, typeof (Gst.Video.VideoAggregatorConvertPad));
+			GLib.GType.Register (Gst.Video.VideoAggregatorPad.GType, typeof (Gst.Video.VideoAggregatorPad));
 			GLib.GType.Register (Gst.Video.VideoBufferPool.GType, typeof (Gst.Video.VideoBufferPool));
 			GLib.GType.Register (Gst.Video.VideoDecoder.GType, typeof (Gst.Video.VideoDecoder));
 			GLib.GType.Register (Gst.Video.VideoEncoder.GType, typeof (Gst.Video.VideoEncoder));

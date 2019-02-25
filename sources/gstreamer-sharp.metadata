@@ -150,6 +150,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<add-node path="/api/namespace[@name='Gst']">
 		<class name="Debug" cname="GstDebug" disable_void_ctor="1"/>
 	</add-node>
+	<attr path="/api/namespace/enum[@cname='GstDebugGraphDetails']/member[@cname='GST_DEBUG_GRAPH_SHOW_VERBOSE']" name="value">-1</attr>
 	<move-node path="/api/namespace//object[@name='Global']//method[starts-with(@cname, 'gst_debug')]">/api/namespace/class[@cname='GstDebug']</move-node>
 
 	<add-node path="/api/namespace[@name='Gst']">
@@ -196,7 +197,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/object[@cname='GstVideoEncoder']/field[@cname='padding']" name="type">gpointer</attr>
 	<attr path="/api/namespace/struct[@cname='GstByteReader']" name="opaque">1</attr>
 	<attr path="/api/namespace/struct[@cname='GstAudioRingBufferSpec']" name="opaque">true</attr>
+	<remove-node path="/api/namespace/enum[@cname='GstVideoBufferFlags']/member[@cname='GST_VIDEO_BUFFER_FLAG_ONEFIELD']"/>
+	<remove-node path="/api/namespace/enum[@cname='GstVideoFrameFlags']/member[@cname='GST_VIDEO_FRAME_FLAG_ONEFIELD']"/>
 	<remove-node path="/api/namespace//struct[@cname='GstByteReader']//method"/>
+	<remove-node path="/api/namespace//method[@cname='gst_buffer_add_video_meta_full']"/>
 	<attr path="//struct[@name='VideoGLTextureUploadMeta']//field[@cname='user_data_copy' or @cname='user_data_free']" name="hidden">true</attr>
 	<attr path="//interface[@cname='GstVideoOverlay']//parameter[@type='guintptr']" name="type">gpointer</attr>
 	<attr path="//method[@cname='gst_video_scaler_2d']" name="name">TwoD</attr>
@@ -214,6 +218,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace//struct[@cname='GstAudioDownmixMeta']/field[@cname='to_position']" name="type">GstAudioChannelPosition*</attr>
 	<attr path="/api/namespace/boxed/method[@cname='gst_audio_converter_convert']" name="hidden">true</attr>
 	<attr path="/api/namespace/object/method[@cname='gst_audio_ring_buffer_prepare_read']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstAudioBuffer']/field[@cname='priv_planes_arr']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstAudioBuffer']/field[@cname='priv_map_infos_arr']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstAudioMeta']/field[@cname='priv_offsets_arr']" name="hidden">true</attr>
 	<remove-attr path="/api/namespace/boxed/method[@cname='gst_audio_info_set_format']/parameters/parameter[@name='position']" name="array_len"/>
 
 	<!-- FIXME Make GstAudioAggregator working  -->

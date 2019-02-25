@@ -97,6 +97,21 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_audio_converter_is_passthrough(IntPtr raw);
+
+		public bool IsPassthrough { 
+			get {
+				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+				bool raw_ret = gst_audio_converter_is_passthrough(this_as_native);
+				bool ret = raw_ret;
+				ReadNative (this_as_native, ref this);
+				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+				return ret;
+			}
+		}
+
+		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_converter_reset(IntPtr raw);
 
 		public void Reset() {

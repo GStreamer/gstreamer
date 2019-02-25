@@ -62,6 +62,15 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_caps_copy(IntPtr raw);
+
+		public Gst.Caps Copy() {
+			IntPtr raw_ret = gst_caps_copy(Handle);
+			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
+			return ret;
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_copy_nth(IntPtr raw, uint nth);
 
 		public Gst.Caps CopyNth(uint nth) {
@@ -319,6 +328,17 @@ namespace Gst {
 
 		public void SetFeatures(uint index) {
 			SetFeatures (index, Gst.CapsFeatures.Zero);
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_caps_set_features_simple(IntPtr raw, IntPtr value);
+
+		public Gst.CapsFeatures FeaturesSimple { 
+			set {
+				IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+				gst_caps_set_features_simple(Handle, native_value);
+				Marshal.FreeHGlobal (native_value);
+			}
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

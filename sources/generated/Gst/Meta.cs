@@ -28,6 +28,36 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_meta_compare_seqnum(IntPtr raw, IntPtr meta2);
+
+		public int CompareSeqnum(Gst.Meta meta2) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_meta2 = GLib.Marshaller.StructureToPtrAlloc (meta2);
+			int raw_ret = gst_meta_compare_seqnum(this_as_native, native_meta2);
+			int ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			Marshal.FreeHGlobal (native_meta2);
+			return ret;
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_meta_get_seqnum(IntPtr raw);
+
+		public ulong Seqnum { 
+			get {
+				IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+				System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+				ulong raw_ret = gst_meta_get_seqnum(this_as_native);
+				ulong ret = raw_ret;
+				ReadNative (this_as_native, ref this);
+				System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+				return ret;
+			}
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_meta_api_type_get_tags(IntPtr api);
 
 		public static string[] ApiTypeGetTags(GLib.GType api) {
@@ -46,15 +76,22 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_meta_api_type_register(IntPtr api, IntPtr tags);
+		static extern IntPtr gst_meta_api_type_register(IntPtr api, IntPtr[] tags);
 
-		public static GLib.GType ApiTypeRegister(string api, string tags) {
+		public static GLib.GType ApiTypeRegister(string api, string[] tags) {
 			IntPtr native_api = GLib.Marshaller.StringToPtrGStrdup (api);
-			IntPtr native_tags = GLib.Marshaller.StringToPtrGStrdup (tags);
+			int cnt_tags = tags == null ? 0 : tags.Length;
+			IntPtr[] native_tags = new IntPtr [cnt_tags + 1];
+			for (int i = 0; i < cnt_tags; i++)
+				native_tags [i] = GLib.Marshaller.StringToPtrGStrdup (tags[i]);
+			native_tags [cnt_tags] = IntPtr.Zero;
 			IntPtr raw_ret = gst_meta_api_type_register(native_api, native_tags);
 			GLib.GType ret = new GLib.GType(raw_ret);
 			GLib.Marshaller.Free (native_api);
-			GLib.Marshaller.Free (native_tags);
+			for (int i = 0; i < native_tags.Length - 1; i++) {
+				tags [i] = GLib.Marshaller.Utf8PtrToString (native_tags[i]);
+				GLib.Marshaller.Free (native_tags[i]);
+			}
 			return ret;
 		}
 
@@ -84,6 +121,11 @@ namespace Gst {
 			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
 			GLib.Marshaller.Free (native_impl);
 			return ret;
+		}
+
+		static void ReadNative (IntPtr native, ref Gst.Meta target)
+		{
+			target = New (native);
 		}
 
 		public bool Equals (Meta other)

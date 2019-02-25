@@ -25,16 +25,6 @@ namespace Gst {
 			Raw = gst_bus_new();
 		}
 
-		[GLib.Signal("sync-message")]
-		public event Gst.SyncMessageHandler SyncMessage {
-			add {
-				this.AddSignalHandler ("sync-message", value, typeof (Gst.SyncMessageArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("sync-message", value);
-			}
-		}
-
 		[GLib.Signal("message")]
 		public event Gst.MessageHandler Message {
 			add {
@@ -42,6 +32,16 @@ namespace Gst {
 			}
 			remove {
 				this.RemoveSignalHandler ("message", value);
+			}
+		}
+
+		[GLib.Signal("sync-message")]
+		public event Gst.SyncMessageHandler SyncMessage {
+			add {
+				this.AddSignalHandler ("sync-message", value, typeof (Gst.SyncMessageArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("sync-message", value);
 			}
 		}
 

@@ -21,6 +21,15 @@ namespace Gst.Video {
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_video_caption_meta(IntPtr buffer, int caption_type, byte[] data, UIntPtr size);
+
+		public static Gst.Video.VideoCaptionMeta BufferAddVideoCaptionMeta(Gst.Buffer buffer, Gst.Video.VideoCaptionType caption_type, byte[] data, ulong size) {
+			IntPtr raw_ret = gst_buffer_add_video_caption_meta(buffer == null ? IntPtr.Zero : buffer.Handle, (int) caption_type, data, new UIntPtr (size));
+			Gst.Video.VideoCaptionMeta ret = Gst.Video.VideoCaptionMeta.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_add_video_gl_texture_upload_meta(IntPtr buffer, int texture_orientation, uint n_textures, int texture_type, Gst.VideoSharp.VideoGLTextureUploadNative upload, IntPtr user_data, IntPtr user_data_copy, IntPtr user_data_free);
 
 		public static Gst.Video.VideoGLTextureUploadMeta BufferAddVideoGlTextureUploadMeta(Gst.Buffer buffer, Gst.Video.VideoGLTextureOrientation texture_orientation, uint n_textures, Gst.Video.VideoGLTextureType texture_type, Gst.Video.VideoGLTextureUpload upload, IntPtr user_data_copy, IntPtr user_data_free) {
@@ -35,15 +44,6 @@ namespace Gst.Video {
 
 		public static Gst.Video.VideoMeta BufferAddVideoMeta(Gst.Buffer buffer, Gst.Video.VideoFrameFlags flags, Gst.Video.VideoFormat format, uint width, uint height) {
 			IntPtr raw_ret = gst_buffer_add_video_meta(buffer == null ? IntPtr.Zero : buffer.Handle, (int) flags, (int) format, width, height);
-			Gst.Video.VideoMeta ret = Gst.Video.VideoMeta.New (raw_ret);
-			return ret;
-		}
-
-		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_add_video_meta_full(IntPtr buffer, int flags, int format, uint width, uint height, uint n_planes, UIntPtr offset, int stride);
-
-		public static Gst.Video.VideoMeta BufferAddVideoMetaFull(Gst.Buffer buffer, Gst.Video.VideoFrameFlags flags, Gst.Video.VideoFormat format, uint width, uint height, uint n_planes, ulong offset, int stride) {
-			IntPtr raw_ret = gst_buffer_add_video_meta_full(buffer == null ? IntPtr.Zero : buffer.Handle, (int) flags, (int) format, width, height, n_planes, new UIntPtr (offset), stride);
 			Gst.Video.VideoMeta ret = Gst.Video.VideoMeta.New (raw_ret);
 			return ret;
 		}
@@ -404,6 +404,42 @@ namespace Gst.Video {
 		public static bool VideoCalculateDisplayRatio(out uint dar_n, out uint dar_d, uint video_width, uint video_height, uint video_par_n, uint video_par_d, uint display_par_n, uint display_par_d) {
 			bool raw_ret = gst_video_calculate_display_ratio(out dar_n, out dar_d, video_width, video_height, video_par_n, video_par_d, display_par_n, display_par_d);
 			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_caption_meta_api_get_type();
+
+		public static GLib.GType VideoCaptionMetaApiGetType() {
+			IntPtr raw_ret = gst_video_caption_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_caption_meta_get_info();
+
+		public static Gst.MetaInfo VideoCaptionMetaGetInfo() {
+			IntPtr raw_ret = gst_video_caption_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_caption_type_from_caps(IntPtr caps);
+
+		public static Gst.Video.VideoCaptionType VideoCaptionTypeFromCaps(Gst.Caps caps) {
+			int raw_ret = gst_video_caption_type_from_caps(caps == null ? IntPtr.Zero : caps.Handle);
+			Gst.Video.VideoCaptionType ret = (Gst.Video.VideoCaptionType) raw_ret;
+			return ret;
+		}
+
+		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_caption_type_to_caps(int type);
+
+		public static Gst.Caps VideoCaptionTypeToCaps(Gst.Video.VideoCaptionType type) {
+			IntPtr raw_ret = gst_video_caption_type_to_caps((int) type);
+			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
 			return ret;
 		}
 

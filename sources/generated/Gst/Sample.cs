@@ -25,11 +25,17 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_sample_get_buffer(IntPtr raw);
 
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_sample_set_buffer(IntPtr raw, IntPtr buffer);
+
 		public Gst.Buffer Buffer { 
 			get {
 				IntPtr raw_ret = gst_sample_get_buffer(Handle);
 				Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), false);
 				return ret;
+			}
+			set {
+				gst_sample_set_buffer(Handle, value == null ? IntPtr.Zero : value.Handle);
 			}
 		}
 
@@ -53,11 +59,17 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_sample_get_caps(IntPtr raw);
 
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_sample_set_caps(IntPtr raw, IntPtr caps);
+
 		public Gst.Caps Caps { 
 			get {
 				IntPtr raw_ret = gst_sample_get_caps(Handle);
 				Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), false);
 				return ret;
+			}
+			set {
+				gst_sample_set_caps(Handle, value == null ? IntPtr.Zero : value.Handle);
 			}
 		}
 
@@ -75,12 +87,30 @@ namespace Gst {
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_sample_get_segment(IntPtr raw);
 
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_sample_set_segment(IntPtr raw, IntPtr value);
+
 		public Gst.Segment Segment { 
 			get {
 				IntPtr raw_ret = gst_sample_get_segment(Handle);
 				Gst.Segment ret = Gst.Segment.New (raw_ret);
 				return ret;
 			}
+			set {
+				IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+				gst_sample_set_segment(Handle, native_value);
+				Marshal.FreeHGlobal (native_value);
+			}
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_sample_set_info(IntPtr raw, IntPtr info);
+
+		public bool SetInfo(Gst.Structure info) {
+			info.Owned = false;
+			bool raw_ret = gst_sample_set_info(Handle, info == null ? IntPtr.Zero : info.Handle);
+			bool ret = raw_ret;
+			return ret;
 		}
 
 		public Sample(IntPtr raw) : base(raw) {}

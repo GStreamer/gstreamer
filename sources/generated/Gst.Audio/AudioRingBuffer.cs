@@ -63,15 +63,6 @@ namespace Gst.Audio {
 			}
 		}
 
-		public ulong Timestamps {
-			get {
-				unsafe {
-					ulong* raw_ptr = (ulong*)(((byte*)Handle) + abi_info.GetFieldOffset("timestamps"));
-					return (*raw_ptr);
-				}
-			}
-		}
-
 		public Gst.Audio.AudioRingBufferSpec Spec {
 			get {
 				unsafe {
