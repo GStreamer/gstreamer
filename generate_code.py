@@ -90,4 +90,10 @@ if __name__ == "__main__":
                              for m in not_generated]))
         rcode = 1
 
+    if rcode == 1:
+        generated = sorted(list(generated))
+        print("List of files to use in `meson.build`:\n    %s" %
+              '\n    '.join(["'%s/%s'," % (m.split(os.path.sep)[-2], m.split(os.path.sep)[-1])
+                             for m in generated]))
+
     exit(rcode)
