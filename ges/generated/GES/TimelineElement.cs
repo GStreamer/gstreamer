@@ -21,9 +21,6 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong ges_timeline_element_get_duration(IntPtr raw);
 
-		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
-		static extern void ges_timeline_element_set_duration(IntPtr raw, ulong duration);
-
 		[GLib.Property ("duration")]
 		public ulong Duration {
 			get  {
@@ -31,8 +28,10 @@ namespace GES {
 				ulong ret = raw_ret;
 				return ret;
 			}
-			set  {
-				ges_timeline_element_set_duration(Handle, value);
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("duration", val);
+				val.Dispose ();
 			}
 		}
 
@@ -54,9 +53,6 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong ges_timeline_element_get_max_duration(IntPtr raw);
 
-		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
-		static extern void ges_timeline_element_set_max_duration(IntPtr raw, ulong maxduration);
-
 		[GLib.Property ("max-duration")]
 		public ulong MaxDuration {
 			get  {
@@ -64,8 +60,10 @@ namespace GES {
 				ulong ret = raw_ret;
 				return ret;
 			}
-			set  {
-				ges_timeline_element_set_max_duration(Handle, value);
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("max-duration", val);
+				val.Dispose ();
 			}
 		}
 
@@ -106,10 +104,6 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint ges_timeline_element_get_priority(IntPtr raw);
 
-		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
-		static extern void ges_timeline_element_set_priority(IntPtr raw, uint priority);
-
-		[Obsolete]
 		[GLib.Property ("priority")]
 		public uint Priority {
 			get  {
@@ -117,8 +111,10 @@ namespace GES {
 				uint ret = raw_ret;
 				return ret;
 			}
-			set  {
-				ges_timeline_element_set_priority(Handle, value);
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("priority", val);
+				val.Dispose ();
 			}
 		}
 
@@ -140,9 +136,6 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong ges_timeline_element_get_start(IntPtr raw);
 
-		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
-		static extern void ges_timeline_element_set_start(IntPtr raw, ulong start);
-
 		[GLib.Property ("start")]
 		public ulong Start {
 			get  {
@@ -150,8 +143,10 @@ namespace GES {
 				ulong ret = raw_ret;
 				return ret;
 			}
-			set  {
-				ges_timeline_element_set_start(Handle, value);
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("start", val);
+				val.Dispose ();
 			}
 		}
 
@@ -184,17 +179,11 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong ges_timeline_element_get_inpoint(IntPtr raw);
 
-		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
-		static extern void ges_timeline_element_set_inpoint(IntPtr raw, ulong inpoint);
-
 		public ulong Inpoint {
 			get  {
 				ulong raw_ret = ges_timeline_element_get_inpoint(Handle);
 				ulong ret = raw_ret;
 				return ret;
-			}
-			set  {
-				ges_timeline_element_set_inpoint(Handle, value);
 			}
 		}
 
@@ -1119,6 +1108,61 @@ namespace GES {
 			return (GES.TrackType) __result;
 		}
 
+		static SetChildPropertyNativeDelegate SetChildProperty_cb_delegate;
+		static SetChildPropertyNativeDelegate SetChildPropertyVMCallback {
+			get {
+				if (SetChildProperty_cb_delegate == null)
+					SetChildProperty_cb_delegate = new SetChildPropertyNativeDelegate (SetChildProperty_cb);
+				return SetChildProperty_cb_delegate;
+			}
+		}
+
+		static void OverrideSetChildProperty (GLib.GType gtype)
+		{
+			OverrideSetChildProperty (gtype, SetChildPropertyVMCallback);
+		}
+
+		static void OverrideSetChildProperty (GLib.GType gtype, SetChildPropertyNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("set_child_property"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void SetChildPropertyNativeDelegate (IntPtr inst, IntPtr child, IntPtr pspec, IntPtr value);
+
+		static void SetChildProperty_cb (IntPtr inst, IntPtr child, IntPtr pspec, IntPtr value)
+		{
+			try {
+				TimelineElement __obj = GLib.Object.GetObject (inst, false) as TimelineElement;
+				__obj.OnSetChildProperty (GLib.Object.GetObject (child), pspec, (GLib.Value) Marshal.PtrToStructure (value, typeof (GLib.Value)));
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.TimelineElement), ConnectionMethod="OverrideSetChildProperty")]
+		protected virtual void OnSetChildProperty (GLib.Object child, IntPtr pspec, GLib.Value value)
+		{
+			InternalSetChildProperty (child, pspec, value);
+		}
+
+		private void InternalSetChildProperty (GLib.Object child, IntPtr pspec, GLib.Value value)
+		{
+			SetChildPropertyNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("set_child_property"));
+				unmanaged = (SetChildPropertyNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(SetChildPropertyNativeDelegate));
+			}
+			if (unmanaged == null) return;
+
+			IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);
+			unmanaged (this.Handle, child == null ? IntPtr.Zero : child.Handle, pspec, native_value);
+			Marshal.FreeHGlobal (native_value);
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -1250,14 +1294,22 @@ namespace GES {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // get_track_types
 							, "lookup_child"
+							, "set_child_property"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("set_child_property"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // set_child_property
+							, "get_track_types"
 							, "_ges_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_ges_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 18 // _ges_reserved
-							, "get_track_types"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 17 // _ges_reserved
+							, "set_child_property"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -1438,6 +1490,33 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_timeline_element_set_duration(IntPtr raw, ulong duration);
+
+		public bool SetDuration(ulong duration) {
+			bool raw_ret = ges_timeline_element_set_duration(Handle, duration);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_timeline_element_set_inpoint(IntPtr raw, ulong inpoint);
+
+		public bool SetInpoint(ulong inpoint) {
+			bool raw_ret = ges_timeline_element_set_inpoint(Handle, inpoint);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_timeline_element_set_max_duration(IntPtr raw, ulong maxduration);
+
+		public bool SetMaxDuration(ulong maxduration) {
+			bool raw_ret = ges_timeline_element_set_max_duration(Handle, maxduration);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_timeline_element_set_name(IntPtr raw, IntPtr name);
 
 		public bool SetName(string name) {
@@ -1457,6 +1536,25 @@ namespace GES {
 
 		public bool SetParent(GES.TimelineElement parent) {
 			bool raw_ret = ges_timeline_element_set_parent(Handle, parent == null ? IntPtr.Zero : parent.Handle);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_timeline_element_set_priority(IntPtr raw, uint priority);
+
+		[Obsolete]
+		public bool SetPriority(uint priority) {
+			bool raw_ret = ges_timeline_element_set_priority(Handle, priority);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_timeline_element_set_start(IntPtr raw, ulong start);
+
+		public bool SetStart(ulong start) {
+			bool raw_ret = ges_timeline_element_set_start(Handle, start);
 			bool ret = raw_ret;
 			return ret;
 		}

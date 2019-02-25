@@ -43,16 +43,6 @@ namespace GES {
 			}
 		}
 
-		[GLib.Signal("asset-removed")]
-		public event GES.AssetRemovedHandler AssetRemoved {
-			add {
-				this.AddSignalHandler ("asset-removed", value, typeof (GES.AssetRemovedArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("asset-removed", value);
-			}
-		}
-
 		[GLib.Signal("loaded")]
 		public event GES.LoadedHandler Loaded {
 			add {
@@ -70,6 +60,16 @@ namespace GES {
 			}
 			remove {
 				this.RemoveSignalHandler ("asset-added", value);
+			}
+		}
+
+		[GLib.Signal("asset-removed")]
+		public event GES.AssetRemovedHandler AssetRemoved {
+			add {
+				this.AddSignalHandler ("asset-removed", value, typeof (GES.AssetRemovedArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("asset-removed", value);
 			}
 		}
 
@@ -456,6 +456,15 @@ namespace GES {
 		public GES.Asset[] ListAssets(GLib.GType filter) {
 			IntPtr raw_ret = ges_project_list_assets(Handle, filter.Val);
 			GES.Asset[] ret = (GES.Asset[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(GES.Asset));
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_project_list_encoding_profiles(IntPtr raw);
+
+		public Gst.PbUtils.EncodingProfile[] ListEncodingProfiles() {
+			IntPtr raw_ret = ges_project_list_encoding_profiles(Handle);
+			Gst.PbUtils.EncodingProfile[] ret = (Gst.PbUtils.EncodingProfile[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), false, false, typeof(Gst.PbUtils.EncodingProfile));
 			return ret;
 		}
 

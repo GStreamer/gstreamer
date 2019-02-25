@@ -54,14 +54,22 @@ namespace GES {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // sync_discoverer
 							, "discoverer"
+							, "discovered"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("discovered"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // discovered
+							, "sync_discoverer"
 							, "_ges_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_ges_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _ges_reserved
-							, "sync_discoverer"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 3 // _ges_reserved
+							, "discovered"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -96,6 +104,17 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern unsafe IntPtr ges_uri_clip_asset_finish(IntPtr res, out IntPtr error);
+
+		public static unsafe GES.UriClipAsset Finish(GLib.IAsyncResult res) {
+			IntPtr error = IntPtr.Zero;
+			IntPtr raw_ret = ges_uri_clip_asset_finish(res == null ? IntPtr.Zero : ((res is GLib.Object) ? (res as GLib.Object).Handle : (res as GLib.AsyncResultAdapter).Handle), out error);
+			GES.UriClipAsset ret = GLib.Object.GetObject(raw_ret, true) as GES.UriClipAsset;
+			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern void ges_uri_clip_asset_new(IntPtr uri, IntPtr cancellable, GLibSharp.AsyncReadyCallbackNative cb, IntPtr user_data);
 
 		public static void New(string uri, GLib.Cancellable cancellable, GLib.AsyncReadyCallback cb) {
@@ -117,7 +136,7 @@ namespace GES {
 			IntPtr native_uri = GLib.Marshaller.StringToPtrGStrdup (uri);
 			IntPtr error = IntPtr.Zero;
 			IntPtr raw_ret = ges_uri_clip_asset_request_sync(native_uri, out error);
-			GES.UriClipAsset ret = GLib.Object.GetObject(raw_ret) as GES.UriClipAsset;
+			GES.UriClipAsset ret = GLib.Object.GetObject(raw_ret, true) as GES.UriClipAsset;
 			GLib.Marshaller.Free (native_uri);
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
 			return ret;
@@ -130,6 +149,17 @@ namespace GES {
 			get {
 				IntPtr raw_ret = ges_uri_clip_asset_get_info(Handle);
 				Gst.PbUtils.DiscovererInfo ret = GLib.Object.GetObject(raw_ret) as Gst.PbUtils.DiscovererInfo;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_uri_clip_asset_get_stream_assets(IntPtr raw);
+
+		public GES.UriSourceAsset[] StreamAssets { 
+			get {
+				IntPtr raw_ret = ges_uri_clip_asset_get_stream_assets(Handle);
+				GES.UriSourceAsset[] ret = (GES.UriSourceAsset[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), false, false, typeof(GES.UriSourceAsset));
 				return ret;
 			}
 		}

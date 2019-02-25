@@ -15092,9 +15092,7 @@
         <warning>missing glib:type-name</warning>
       </field>
       <field cname="priv_planes_arr" access="private" writeable="false" readable="false" is_callback="false" name="PrivPlanesArr" type="gpointer" array="true" array_len="8"/>
-      <field cname="priv_map_infos_arr" access="private" writeable="false"
-        readable="false" is_callback="false"
-        name="PrivMapInfosArr" type="GstMapInfo" array="true" array_len="8"/>
+      <field cname="priv_map_infos_arr" access="private" writeable="false" readable="false" is_callback="false" name="PrivMapInfosArr" type="GstMapInfo" array="true" array_len="8"/>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
       <method name="Map" cname="gst_audio_buffer_map" version="1.16">
         <return-type type="gboolean"/>

@@ -130,16 +130,6 @@ namespace GES {
 			}
 		}
 
-		[GLib.Signal("layer-removed")]
-		public event GES.LayerRemovedHandler LayerRemoved {
-			add {
-				this.AddSignalHandler ("layer-removed", value, typeof (GES.LayerRemovedArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("layer-removed", value);
-			}
-		}
-
 		[GLib.Signal("group-added")]
 		public event GES.GroupAddedHandler GroupAdded {
 			add {
@@ -170,13 +160,13 @@ namespace GES {
 			}
 		}
 
-		[GLib.Signal("snapping-ended")]
-		public event GES.SnappingEndedHandler SnappingEnded {
+		[GLib.Signal("layer-removed")]
+		public event GES.LayerRemovedHandler LayerRemoved {
 			add {
-				this.AddSignalHandler ("snapping-ended", value, typeof (GES.SnappingEndedArgs));
+				this.AddSignalHandler ("layer-removed", value, typeof (GES.LayerRemovedArgs));
 			}
 			remove {
-				this.RemoveSignalHandler ("snapping-ended", value);
+				this.RemoveSignalHandler ("layer-removed", value);
 			}
 		}
 
@@ -197,6 +187,16 @@ namespace GES {
 			}
 			remove {
 				this.RemoveSignalHandler ("track-removed", value);
+			}
+		}
+
+		[GLib.Signal("snapping-ended")]
+		public event GES.SnappingEndedHandler SnappingEnded {
+			add {
+				this.AddSignalHandler ("snapping-ended", value, typeof (GES.SnappingEndedArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("snapping-ended", value);
 			}
 		}
 
@@ -268,36 +268,36 @@ namespace GES {
 			OverrideVirtualMethod (gtype, "snapping-ended", callback);
 		}
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void SnappingEndedNativeDelegate (IntPtr inst, IntPtr _object, IntPtr p0, ulong p1);
+		delegate void SnappingEndedNativeDelegate (IntPtr inst, IntPtr obj1, IntPtr obj2, ulong position);
 
-		static void SnappingEnded_cb (IntPtr inst, IntPtr _object, IntPtr p0, ulong p1)
+		static void SnappingEnded_cb (IntPtr inst, IntPtr obj1, IntPtr obj2, ulong position)
 		{
 			try {
 				Timeline __obj = GLib.Object.GetObject (inst, false) as Timeline;
-				__obj.OnSnappingEnded (GLib.Object.GetObject(_object) as GES.TrackElement, GLib.Object.GetObject(p0) as GES.TrackElement, p1);
+				__obj.OnSnappingEnded (GLib.Object.GetObject(obj1) as GES.TrackElement, GLib.Object.GetObject(obj2) as GES.TrackElement, position);
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(GES.Timeline), ConnectionMethod="OverrideSnappingEnded")]
-		protected virtual void OnSnappingEnded (GES.TrackElement _object, GES.TrackElement p0, ulong p1)
+		protected virtual void OnSnappingEnded (GES.TrackElement obj1, GES.TrackElement obj2, ulong position)
 		{
-			InternalSnappingEnded (_object, p0, p1);
+			InternalSnappingEnded (obj1, obj2, position);
 		}
 
-		private void InternalSnappingEnded (GES.TrackElement _object, GES.TrackElement p0, ulong p1)
+		private void InternalSnappingEnded (GES.TrackElement obj1, GES.TrackElement obj2, ulong position)
 		{
 			GLib.Value ret = GLib.Value.Empty;
 			GLib.ValueArray inst_and_params = new GLib.ValueArray (4);
 			GLib.Value[] vals = new GLib.Value [4];
 			vals [0] = new GLib.Value (this);
 			inst_and_params.Append (vals [0]);
-			vals [1] = new GLib.Value (_object);
+			vals [1] = new GLib.Value (obj1);
 			inst_and_params.Append (vals [1]);
-			vals [2] = new GLib.Value (p0);
+			vals [2] = new GLib.Value (obj2);
 			inst_and_params.Append (vals [2]);
-			vals [3] = new GLib.Value (p1);
+			vals [3] = new GLib.Value (position);
 			inst_and_params.Append (vals [3]);
 			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
 			foreach (GLib.Value v in vals)
@@ -323,36 +323,36 @@ namespace GES {
 			OverrideVirtualMethod (gtype, "snapping-started", callback);
 		}
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void SnappingStartedNativeDelegate (IntPtr inst, IntPtr _object, IntPtr p0, ulong p1);
+		delegate void SnappingStartedNativeDelegate (IntPtr inst, IntPtr obj1, IntPtr obj2, ulong position);
 
-		static void SnappingStarted_cb (IntPtr inst, IntPtr _object, IntPtr p0, ulong p1)
+		static void SnappingStarted_cb (IntPtr inst, IntPtr obj1, IntPtr obj2, ulong position)
 		{
 			try {
 				Timeline __obj = GLib.Object.GetObject (inst, false) as Timeline;
-				__obj.OnSnappingStarted (GLib.Object.GetObject(_object) as GES.TrackElement, GLib.Object.GetObject(p0) as GES.TrackElement, p1);
+				__obj.OnSnappingStarted (GLib.Object.GetObject(obj1) as GES.TrackElement, GLib.Object.GetObject(obj2) as GES.TrackElement, position);
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(GES.Timeline), ConnectionMethod="OverrideSnappingStarted")]
-		protected virtual void OnSnappingStarted (GES.TrackElement _object, GES.TrackElement p0, ulong p1)
+		protected virtual void OnSnappingStarted (GES.TrackElement obj1, GES.TrackElement obj2, ulong position)
 		{
-			InternalSnappingStarted (_object, p0, p1);
+			InternalSnappingStarted (obj1, obj2, position);
 		}
 
-		private void InternalSnappingStarted (GES.TrackElement _object, GES.TrackElement p0, ulong p1)
+		private void InternalSnappingStarted (GES.TrackElement obj1, GES.TrackElement obj2, ulong position)
 		{
 			GLib.Value ret = GLib.Value.Empty;
 			GLib.ValueArray inst_and_params = new GLib.ValueArray (4);
 			GLib.Value[] vals = new GLib.Value [4];
 			vals [0] = new GLib.Value (this);
 			inst_and_params.Append (vals [0]);
-			vals [1] = new GLib.Value (_object);
+			vals [1] = new GLib.Value (obj1);
 			inst_and_params.Append (vals [1]);
-			vals [2] = new GLib.Value (p0);
+			vals [2] = new GLib.Value (obj2);
 			inst_and_params.Append (vals [2]);
-			vals [3] = new GLib.Value (p1);
+			vals [3] = new GLib.Value (position);
 			inst_and_params.Append (vals [3]);
 			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
 			foreach (GLib.Value v in vals)
@@ -822,6 +822,15 @@ namespace GES {
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_uri);
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_timeline_move_layer(IntPtr raw, IntPtr layer, uint new_layer_priority);
+
+		public bool MoveLayer(GES.Layer layer, uint new_layer_priority) {
+			bool raw_ret = ges_timeline_move_layer(Handle, layer == null ? IntPtr.Zero : layer.Handle, new_layer_priority);
+			bool ret = raw_ret;
 			return ret;
 		}
 

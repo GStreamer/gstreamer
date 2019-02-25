@@ -173,6 +173,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GESTimelineElementClass.list_children_properties\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, list_children_properties));
 	g_print("\"GESTimelineElementClass.lookup_child\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, lookup_child));
 	g_print("\"GESTimelineElementClass.get_track_types\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, get_track_types));
+	g_print("\"GESTimelineElementClass.set_child_property\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, set_child_property));
 	g_print("\"sizeof(GESTimelineElement)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESTimelineElement));
 	g_print("\"GESTimelineElement.parent\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElement, parent));
 	g_print("\"GESTimelineElement.asset\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElement, asset));
@@ -223,6 +224,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"sizeof(GESUriClipAssetClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESUriClipAssetClass));
 	g_print("\"GESUriClipAssetClass.discoverer\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESUriClipAssetClass, discoverer));
 	g_print("\"GESUriClipAssetClass.sync_discoverer\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESUriClipAssetClass, sync_discoverer));
+	g_print("\"GESUriClipAssetClass.discovered\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESUriClipAssetClass, discovered));
 	g_print("\"sizeof(GESUriClipAsset)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESUriClipAsset));
 	g_print("\"GESUriClipAsset.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESUriClipAsset, priv));
 	g_print("\"sizeof(GESUriSourceAssetClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESUriSourceAssetClass));

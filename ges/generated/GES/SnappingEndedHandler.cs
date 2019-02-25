@@ -8,19 +8,19 @@ namespace GES {
 	public delegate void SnappingEndedHandler(object o, SnappingEndedArgs args);
 
 	public class SnappingEndedArgs : GLib.SignalArgs {
-		public GES.TrackElement Object{
+		public GES.TrackElement Obj1{
 			get {
 				return (GES.TrackElement) Args [0];
 			}
 		}
 
-		public GES.TrackElement P0{
+		public GES.TrackElement Obj2{
 			get {
 				return (GES.TrackElement) Args [1];
 			}
 		}
 
-		public ulong P1{
+		public ulong Position{
 			get {
 				return (ulong) Args [2];
 			}

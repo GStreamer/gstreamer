@@ -188,6 +188,7 @@ namespace AbiTester {
 			Console.WriteLine("\"GESTimelineElementClass.list_children_properties\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("list_children_properties") + "\"");
 			Console.WriteLine("\"GESTimelineElementClass.lookup_child\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("lookup_child") + "\"");
 			Console.WriteLine("\"GESTimelineElementClass.get_track_types\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("get_track_types") + "\"");
+			Console.WriteLine("\"GESTimelineElementClass.set_child_property\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("set_child_property") + "\"");
 			Console.WriteLine("\"sizeof(GESTimelineElement)\": \"" + GES.TimelineElement.abi_info.Size + "\"");
 			Console.WriteLine("\"GESTimelineElement.parent\": \"" + GES.TimelineElement.abi_info.GetFieldOffset("parent") + "\"");
 			Console.WriteLine("\"GESTimelineElement.asset\": \"" + GES.TimelineElement.abi_info.GetFieldOffset("asset") + "\"");
@@ -238,6 +239,7 @@ namespace AbiTester {
 			Console.WriteLine("\"sizeof(GESUriClipAssetClass)\": \"" + GES.UriClipAsset.class_abi.Size + "\"");
 			Console.WriteLine("\"GESUriClipAssetClass.discoverer\": \"" + GES.UriClipAsset.class_abi.GetFieldOffset("discoverer") + "\"");
 			Console.WriteLine("\"GESUriClipAssetClass.sync_discoverer\": \"" + GES.UriClipAsset.class_abi.GetFieldOffset("sync_discoverer") + "\"");
+			Console.WriteLine("\"GESUriClipAssetClass.discovered\": \"" + GES.UriClipAsset.class_abi.GetFieldOffset("discovered") + "\"");
 			Console.WriteLine("\"sizeof(GESUriClipAsset)\": \"" + GES.UriClipAsset.abi_info.Size + "\"");
 			Console.WriteLine("\"GESUriClipAsset.priv\": \"" + GES.UriClipAsset.abi_info.GetFieldOffset("priv") + "\"");
 			Console.WriteLine("\"sizeof(GESUriSourceAssetClass)\": \"" + GES.UriSourceAsset.class_abi.Size + "\"");

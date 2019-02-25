@@ -63,16 +63,6 @@ namespace GES {
 			}
 		}
 
-		[GLib.Signal("control-binding-removed")]
-		public event GES.ControlBindingRemovedHandler ControlBindingRemoved {
-			add {
-				this.AddSignalHandler ("control-binding-removed", value, typeof (GES.ControlBindingRemovedArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("control-binding-removed", value);
-			}
-		}
-
 		[GLib.Signal("control-binding-added")]
 		public event GES.ControlBindingAddedHandler ControlBindingAdded {
 			add {
@@ -80,6 +70,16 @@ namespace GES {
 			}
 			remove {
 				this.RemoveSignalHandler ("control-binding-added", value);
+			}
+		}
+
+		[GLib.Signal("control-binding-removed")]
+		public event GES.ControlBindingRemovedHandler ControlBindingRemoved {
+			add {
+				this.AddSignalHandler ("control-binding-removed", value, typeof (GES.ControlBindingRemovedArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("control-binding-removed", value);
 			}
 		}
 

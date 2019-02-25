@@ -39,6 +39,17 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_is_initialized();
+
+		public static bool IsInitialized { 
+			get {
+				bool raw_ret = ges_is_initialized();
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_list_assets(IntPtr filter);
 
 		public static GES.Asset[] ListAssets(GLib.GType filter) {

@@ -49,6 +49,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern void ges_layer_set_priority(IntPtr raw, uint priority);
 
+		[Obsolete]
 		[GLib.Property ("priority")]
 		public uint Priority {
 			get  {
@@ -96,16 +97,6 @@ namespace GES {
 			}
 		}
 
-		[GLib.Signal("clip-added")]
-		public event GES.ClipAddedHandler ClipAdded {
-			add {
-				this.AddSignalHandler ("clip-added", value, typeof (GES.ClipAddedArgs));
-			}
-			remove {
-				this.RemoveSignalHandler ("clip-added", value);
-			}
-		}
-
 		[GLib.Signal("clip-removed")]
 		public event GES.ClipRemovedHandler ClipRemoved {
 			add {
@@ -113,6 +104,16 @@ namespace GES {
 			}
 			remove {
 				this.RemoveSignalHandler ("clip-removed", value);
+			}
+		}
+
+		[GLib.Signal("clip-added")]
+		public event GES.ClipAddedHandler ClipAdded {
+			add {
+				this.AddSignalHandler ("clip-added", value, typeof (GES.ClipAddedArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("clip-added", value);
 			}
 		}
 

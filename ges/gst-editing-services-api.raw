@@ -1243,7 +1243,7 @@
           <parameter name="element" type="GESTimelineElement*"/>
         </parameters>
       </signal>
-      <signal name="ChildRemoved" cname="child-removed" when="first" field_name="child_removed">
+      <signal name="ChildRemoved" cname="child-removed" when="last" field_name="child_removed">
         <return-type type="void"/>
         <parameters>
           <parameter name="element" type="GESTimelineElement*"/>
@@ -1573,7 +1573,7 @@
           <parameter name="auto_transition" type="gboolean"/>
         </parameters>
       </method>
-      <method name="SetPriority" cname="ges_layer_set_priority">
+      <method name="SetPriority" cname="ges_layer_set_priority" deprecated="true" deprecated-version="1.16.0">
         <return-type type="void"/>
         <parameters>
           <parameter name="priority" type="guint"/>
@@ -1586,7 +1586,7 @@
         </parameters>
       </method>
       <property name="AutoTransition" cname="auto-transition" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
-      <property name="Priority" cname="priority" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Priority" cname="priority" type="guint" readable="true" writeable="true" construct="false" construct-only="false" deprecated="true" deprecated-version="1.16.0"/>
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GInitiallyUnowned*"/>
       <field cname="timeline" access="public" writeable="false" readable="true" is_callback="false" name="Timeline" type="GESTimeline*"/>
       <field cname="min_nle_priority" access="public" writeable="false" readable="true" is_callback="false" name="MinNlePriority" type="guint32"/>
@@ -1968,36 +1968,6 @@
           <parameter name="wrong_asset" type="GESAsset*"/>
         </parameters>
       </signal>
-    </object>
-    <object name="SmartAdder" cname="GESSmartAdder" opaque="false" hidden="false" parent="GstBin">
-      <implements>
-        <interface cname="GstChildProxy"/>
-      </implements>
-      <class_struct cname="GESSmartAdderClass">
-        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstBinClass">
-          <warning>missing glib:type-name</warning>
-        </field>
-        <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4"/>
-      </class_struct>
-      <method name="GetType" cname="ges_smart_adder_get_type" shared="true">
-        <return-type type="GType"/>
-      </method>
-      <constructor cname="ges_smart_adder_new">
-        <parameters>
-          <parameter name="track" type="GESTrack*"/>
-        </parameters>
-      </constructor>
-      <field cname="parent_instance" access="public" writeable="false" readable="true" is_callback="false" name="ParentInstance" type="GstBin*"/>
-      <field cname="pads_infos" access="public" writeable="false" readable="true" is_callback="false" name="PadsInfos" type="GHashTable*" element_type="gpointer"/>
-      <field cname="srcpad" access="public" writeable="false" readable="true" is_callback="false" name="Srcpad" type="GstPad*"/>
-      <field cname="adder" access="public" writeable="false" readable="true" is_callback="false" name="Adder" type="GstElement*"/>
-      <field cname="capsfilter" access="public" writeable="false" readable="true" is_callback="false" name="Capsfilter" type="GstElement*"/>
-      <field cname="lock" access="public" writeable="false" readable="true" is_callback="false" name="Lock" type="GLib.Mutex"/>
-      <field cname="caps" access="public" writeable="false" readable="true" is_callback="false" name="Caps" type="GstCaps*">
-        <warning>missing glib:type-name</warning>
-      </field>
-      <field cname="track" access="public" writeable="false" readable="true" is_callback="false" name="Track" type="GESTrack*"/>
-      <field cname="_ges_reserved" access="public" writeable="false" readable="true" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4"/>
     </object>
     <object name="Source" cname="GESSource" opaque="false" hidden="false" parent="GESTrackElement">
       <implements>
@@ -2409,6 +2379,13 @@
           <parameter name="error" type="GError**"/>
         </parameters>
       </method>
+      <method name="MoveLayer" cname="ges_timeline_move_layer">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="layer" type="GESLayer*"/>
+          <parameter name="new_layer_priority" type="guint"/>
+        </parameters>
+      </method>
       <method name="PasteElement" cname="ges_timeline_paste_element">
         <return-type type="GESTimelineElement*"/>
         <parameters>
@@ -2499,17 +2476,17 @@
       <signal name="SnappingEnded" cname="snapping-ended" when="last">
         <return-type type="void"/>
         <parameters>
-          <parameter name="_object" type="GESTrackElement*"/>
-          <parameter name="p0" type="GESTrackElement*"/>
-          <parameter name="p1" type="guint64"/>
+          <parameter name="obj1" type="GESTrackElement*"/>
+          <parameter name="obj2" type="GESTrackElement*"/>
+          <parameter name="position" type="guint64"/>
         </parameters>
       </signal>
       <signal name="SnappingStarted" cname="snapping-started" when="last">
         <return-type type="void"/>
         <parameters>
-          <parameter name="_object" type="GESTrackElement*"/>
-          <parameter name="p0" type="GESTrackElement*"/>
-          <parameter name="p1" type="guint64"/>
+          <parameter name="obj1" type="GESTrackElement*"/>
+          <parameter name="obj2" type="GESTrackElement*"/>
+          <parameter name="position" type="guint64"/>
         </parameters>
       </signal>
       <signal name="TrackAdded" cname="track-added" when="first" field_name="track_added">
@@ -2550,7 +2527,8 @@
         <method vm="list_children_properties"/>
         <method vm="lookup_child"/>
         <method vm="get_track_types"/>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="18"/>
+        <method vm="set_child_property"/>
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="17"/>
       </class_struct>
       <method name="GetType" cname="ges_timeline_element_get_type" shared="true">
         <return-type type="GType"/>
@@ -2610,6 +2588,16 @@
           <parameter name="start" type="guint64"/>
         </parameters>
       </virtual_method>
+      <virtual_method name="SetChildProperty" cname="set_child_property">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="child" type="GObject*"/>
+          <parameter name="pspec" type="GParamSpec*"/>
+          <parameter name="value" type="GValue*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
       <virtual_method name="SetDuration" cname="set_duration">
         <return-type type="gboolean"/>
         <parameters>
@@ -2634,7 +2622,7 @@
           <parameter name="parent" type="GESTimelineElement*"/>
         </parameters>
       </virtual_method>
-      <virtual_method name="SetPriority" cname="set_priority">
+      <virtual_method name="SetPriority" cname="set_priority" deprecated="true">
         <return-type type="gboolean"/>
         <parameters>
           <parameter name="priority" type="guint32"/>
@@ -2792,19 +2780,19 @@
         </parameters>
       </method>
       <method name="SetDuration" cname="ges_timeline_element_set_duration">
-        <return-type type="void"/>
+        <return-type type="gboolean"/>
         <parameters>
           <parameter name="duration" type="guint64"/>
         </parameters>
       </method>
       <method name="SetInpoint" cname="ges_timeline_element_set_inpoint">
-        <return-type type="void"/>
+        <return-type type="gboolean"/>
         <parameters>
           <parameter name="inpoint" type="guint64"/>
         </parameters>
       </method>
       <method name="SetMaxDuration" cname="ges_timeline_element_set_max_duration">
-        <return-type type="void"/>
+        <return-type type="gboolean"/>
         <parameters>
           <parameter name="maxduration" type="guint64"/>
         </parameters>
@@ -2822,13 +2810,13 @@
         </parameters>
       </method>
       <method name="SetPriority" cname="ges_timeline_element_set_priority" deprecated="true">
-        <return-type type="void"/>
+        <return-type type="gboolean"/>
         <parameters>
           <parameter name="priority" type="guint32"/>
         </parameters>
       </method>
       <method name="SetStart" cname="ges_timeline_element_set_start">
-        <return-type type="void"/>
+        <return-type type="gboolean"/>
         <parameters>
           <parameter name="start" type="guint64"/>
         </parameters>
@@ -3519,8 +3507,18 @@
         </field>
         <field cname="discoverer" access="private" writeable="false" readable="false" is_callback="false" name="Discoverer" type="GstDiscoverer*"/>
         <field cname="sync_discoverer" access="private" writeable="false" readable="false" is_callback="false" name="SyncDiscoverer" type="GstDiscoverer*"/>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="4"/>
+        <method vm="discovered"/>
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="3"/>
       </class_struct>
+      <virtual_method name="Discovered" cname="discovered" shared="true">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="discoverer" type="GstDiscoverer*"/>
+          <parameter name="info" type="GstDiscovererInfo*"/>
+          <parameter name="err" type="GLib.Error"/>
+          <parameter closure="3" allow-none="1" name="user_data" type="gpointer"/>
+        </parameters>
+      </virtual_method>
       <method name="SetTimeout" cname="ges_uri_clip_asset_class_set_timeout" shared="true">
         <return-type type="void"/>
         <parameters>
@@ -3529,6 +3527,13 @@
       </method>
       <method name="GetType" cname="ges_uri_clip_asset_get_type" shared="true">
         <return-type type="GType"/>
+      </method>
+      <method name="Finish" cname="ges_uri_clip_asset_finish" shared="true">
+        <return-type type="GESUriClipAsset*" owned="true"/>
+        <parameters throws="1">
+          <parameter name="res" type="GAsyncResult*"/>
+          <parameter name="error" type="GError**"/>
+        </parameters>
       </method>
       <method name="New" cname="ges_uri_clip_asset_new" shared="true">
         <return-type type="void"/>
@@ -3540,7 +3545,7 @@
         </parameters>
       </method>
       <method name="RequestSync" cname="ges_uri_clip_asset_request_sync" shared="true">
-        <return-type type="GESUriClipAsset*"/>
+        <return-type type="GESUriClipAsset*" owned="true"/>
         <parameters throws="1">
           <parameter name="uri" type="const-gchar*"/>
           <parameter name="error" type="GError**"/>
@@ -3846,6 +3851,9 @@
           <parameter allow-none="1" name="argv" type="char***" owned="true" pass_as="ref" array="true" array_length_param_index="0"/>
           <parameter name="error" type="GError**"/>
         </parameters>
+      </method>
+      <method name="IsInitialized" cname="ges_is_initialized" shared="true">
+        <return-type type="gboolean"/>
       </method>
       <method name="ListAssets" cname="ges_list_assets" shared="true">
         <return-type type="GList*" element_type="GESAsset*" elements_owned="true"/>
