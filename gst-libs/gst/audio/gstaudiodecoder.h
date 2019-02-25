@@ -333,6 +333,10 @@ GST_AUDIO_API
 gboolean          gst_audio_decoder_negotiate (GstAudioDecoder * dec);
 
 GST_AUDIO_API
+GstFlowReturn     gst_audio_decoder_finish_subframe (GstAudioDecoder * dec,
+                                                     GstBuffer       * buf);
+
+GST_AUDIO_API
 GstFlowReturn     gst_audio_decoder_finish_frame (GstAudioDecoder * dec,
                                                   GstBuffer * buf, gint frames);
 

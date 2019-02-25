@@ -217,6 +217,8 @@ struct _GstAudioDecoderPrivate
   /* expecting the buffer with DISCONT flag */
   gboolean expecting_discont_buf;
 
+  /* number of samples pushed out via _finish_subframe(), resets on _finish_frame() */
+  guint subframe_samples;
 
   /* input bps estimatation */
   /* global in bytes seen */
@@ -310,6 +312,10 @@ static gboolean gst_audio_decoder_src_query_default (GstAudioDecoder * dec,
 
 static gboolean gst_audio_decoder_transform_meta_default (GstAudioDecoder *
     decoder, GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
+
+static GstFlowReturn
+gst_audio_decoder_finish_frame_or_subframe (GstAudioDecoder * dec,
+    GstBuffer * buf, gint frames);
 
 static GstElementClass *parent_class = NULL;
 static gint private_offset = 0;
@@ -1226,6 +1232,40 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
 }
 
 /**
+ * gst_audio_decoder_finish_subframe:
+ * @dec: a #GstAudioDecoder
+ * @buf: decoded data
+ *
+ * Collects decoded data and pushes it downstream. This function may be called
+ * multiple times for a given input frame.
+ *
+ * @buf may be NULL in which case it is assumed that the current input frame is
+ * finished. This is equivalent to calling gst_audio_decoder_finish_subframe()
+ * with a NULL buffer and frames=1 after having pushed out all decoded audio
+ * subframes using this function.
+ *
+ * When called with valid data in @buf the source pad caps must have been set
+ * already.
+ *
+ * Note that a frame received in #GstAudioDecoderClass.handle_frame() may be
+ * invalidated by a call to this function.
+ *
+ * Returns: a #GstFlowReturn that should be escalated to caller (of caller)
+ *
+ * Since: 1.16
+ */
+GstFlowReturn
+gst_audio_decoder_finish_subframe (GstAudioDecoder * dec, GstBuffer * buf)
+{
+  g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), GST_FLOW_ERROR);
+
+  if (buf == NULL)
+    return gst_audio_decoder_finish_frame_or_subframe (dec, NULL, 1);
+  else
+    return gst_audio_decoder_finish_frame_or_subframe (dec, buf, 0);
+}
+
+/**
  * gst_audio_decoder_finish_frame:
  * @dec: a #GstAudioDecoder
  * @buf: decoded data
@@ -1248,6 +1288,20 @@ GstFlowReturn
 gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
     gint frames)
 {
+  g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), GST_FLOW_ERROR);
+
+  /* no dummy calls please */
+  g_return_val_if_fail (frames != 0, GST_FLOW_ERROR);
+
+  return gst_audio_decoder_finish_frame_or_subframe (dec, buf, frames);
+}
+
+/* frames == 0 indicates that this is a sub-frame and further sub-frames may
+ * follow for the current input frame. */
+static GstFlowReturn
+gst_audio_decoder_finish_frame_or_subframe (GstAudioDecoder * dec,
+    GstBuffer * buf, gint frames)
+{
   GstAudioDecoderPrivate *priv;
   GstAudioDecoderContext *ctx;
   GstAudioDecoderClass *klass = GST_AUDIO_DECODER_GET_CLASS (dec);
@@ -1256,12 +1310,15 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   gsize size, samples = 0;
   GstFlowReturn ret = GST_FLOW_OK;
   GQueue inbufs = G_QUEUE_INIT;
+  gboolean is_subframe = (frames == 0);
+  gboolean do_check_resync;
 
   /* subclass should not hand us no data */
   g_return_val_if_fail (buf == NULL || gst_buffer_get_size (buf) > 0,
       GST_FLOW_ERROR);
-  /* no dummy calls please */
-  g_return_val_if_fail (frames != 0, GST_FLOW_ERROR);
+
+  /* if it's a subframe (frames == 0) we must have a valid buffer */
+  g_assert (!is_subframe || buf != NULL);
 
   priv = dec->priv;
   ctx = &dec->priv->ctx;
@@ -1279,7 +1336,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
-  if (buf) {
+  if (buf != NULL && priv->subframe_samples == 0) {
     ret = check_pending_reconfigure (dec);
     if (ret == GST_FLOW_FLUSHING || ret == GST_FLOW_NOT_NEGOTIATED) {
       gst_buffer_unref (buf);
@@ -1333,6 +1390,10 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   GST_DEBUG_OBJECT (dec, "leading frame ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ts));
 
+  if (is_subframe && priv->frames.length == 0)
+    goto subframe_without_pending_input_frame;
+
+  /* this will be skipped in the is_subframe case because frames will be 0 */
   while (priv->frames.length && frames) {
     g_queue_push_tail (&inbufs, g_queue_pop_head (&priv->frames));
     dec->priv->ctx.delay = dec->priv->frames.length;
@@ -1354,8 +1415,11 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
     priv->base_ts = dec->output_segment.start;
   }
 
-  /* slightly convoluted approach caters for perfect ts if subclass desires */
-  if (GST_CLOCK_TIME_IS_VALID (ts)) {
+  /* only check for resync at the beginning of an input/output frame */
+  do_check_resync = !is_subframe || priv->subframe_samples == 0;
+
+  /* slightly convoluted approach caters for perfect ts if subclass desires. */
+  if (do_check_resync && GST_CLOCK_TIME_IS_VALID (ts)) {
     if (dec->priv->tolerance > 0) {
       GstClockTimeDiff diff;
 
@@ -1420,6 +1484,16 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
         data.outbuf = buf;
         gst_buffer_foreach_meta (l->data, foreach_metadata, &data);
       }
+    } else if (is_subframe) {
+      CopyMetaData data;
+      GstBuffer *in_buf;
+
+      /* For subframes we assume a 1:N relationship for now, so we just take
+       * metas from the first pending input buf */
+      in_buf = g_queue_peek_head (&priv->frames);
+      data.decoder = dec;
+      data.outbuf = buf;
+      gst_buffer_foreach_meta (in_buf, foreach_metadata, &data);
     } else {
       GST_WARNING_OBJECT (dec,
           "Can't copy metadata because input buffers disappeared");
@@ -1441,6 +1515,11 @@ exit:
   g_queue_foreach (&inbufs, (GFunc) gst_buffer_unref, NULL);
   g_queue_clear (&inbufs);
 
+  if (is_subframe)
+    dec->priv->subframe_samples += samples;
+  else
+    dec->priv->subframe_samples = 0;
+
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
   return ret;
@@ -1448,6 +1527,7 @@ exit:
   /* ERRORS */
 wrong_buffer:
   {
+    /* arguably more of a programming error? */
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
         ("buffer size %" G_GSIZE_FORMAT " not a multiple of %d", size,
             ctx->info.bpf));
@@ -1457,10 +1537,20 @@ wrong_buffer:
   }
 wrong_samples:
   {
+    /* arguably more of a programming error? */
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
         ("GstAudioMeta samples (%" G_GSIZE_FORMAT ") are inconsistent with "
             "the buffer size and layout (size/bpf = %" G_GSIZE_FORMAT ")",
             meta->samples, size / ctx->info.bpf));
+    gst_buffer_unref (buf);
+    ret = GST_FLOW_ERROR;
+    goto exit;
+  }
+subframe_without_pending_input_frame:
+  {
+    /* arguably more of a programming error? */
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
+        ("Received decoded subframe, but no pending frame"));
     gst_buffer_unref (buf);
     ret = GST_FLOW_ERROR;
     goto exit;
