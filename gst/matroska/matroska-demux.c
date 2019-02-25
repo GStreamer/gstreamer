@@ -6274,9 +6274,7 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
       gst_buffer_unref (priv);
     } else {
-      GST_WARNING ("No codec data found, assuming output is byte-stream");
-      gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "byte-stream",
-          NULL);
+      GST_WARNING ("No AV1 codec data found!");
     }
     *codec_name = g_strdup_printf ("AOM AV1");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_PRORES)) {
