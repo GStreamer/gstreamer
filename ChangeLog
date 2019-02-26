@@ -1,3 +1,408 @@
+=== release 1.15.2 ===
+
+2019-02-26 11:59:49 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.15.2
+
+2019-02-20 22:11:54 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/python/keyframes.py:
+	  examples: Add an example about using keyframes in python
+
+2019-02-11 18:26:04 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-meta-container.c:
+	  ges-meta-container: Fix g-i annotation
+	  ges-meta-container.c:516: Warning: GES: invalid "allow-none" annotation:
+	  only valid for pointer types and out parameters
+
+2019-02-06 00:30:35 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* plugins/ges/gesdemux.c:
+	  misc: Fix warnings on Cerbero's ancient MinGW
+	  gesdemux.c:297:3: error: value computed is not used [-Werror=unused-value]
+
+2019-01-23 09:07:58 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-group.c:
+	  Fix segfault when adding clips to group outside a timeline
+	  Making sure that objects are inside a timeline before adding/removing them from it
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/35
+
+2019-01-30 15:58:33 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/python/test_timeline.py:
+	  tests: Fix usage of undefined class
+
+2019-01-28 19:09:03 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tools/ges-launcher.c:
+	  launcher: Add options to set tracks restriction caps
+
+2019-01-28 00:55:27 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* tests/check/ges/transition.c:
+	* tests/check/ges/uriclip.c:
+	  tests: ges: Fix various leak
+
+2019-01-26 19:50:48 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* ges/ges-layer.c:
+	  layer: Fix asset leak
+
+2019-01-26 16:44:09 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* ges/ges-effect.c:
+	  effect: Fix string leak
+
+2019-01-29 11:52:43 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* ges/ges-uri-asset.c:
+	  uri-asset: Implement dispose vmethod for GESUriSourceAsset
+	  ... and fix DiscovererStreamInfo leak
+
+2019-01-26 16:27:27 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* ges/ges-uri-asset.c:
+	  uri-asset: Don't forget to unref DiscovererInfo on dispose
+	  Dispose() must unref DiscovererInfo ownership
+	  taken by ges_uri_clip_asset_set_info().
+
+2019-01-25 18:21:43 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* ges/ges-video-transition.c:
+	  video-transition: Fix GstPad leak
+	  Returned Gstpad by link_element_to_mixer_with_smpte()
+	  has increased refcount in ges_smart_mixer_get_mixer_pad().
+
+2018-11-27 04:55:17 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_timeline.py:
+	  timeline: Better handle loading inconsistent timelines
+	  Auto transition when having 3 overlapping clips in a same point in the
+	  timeline is not supported as we can't handle it in a nice way. Before we
+	  to avoid creating 2 overlapping transitions (which is plain broken in
+	  NLE) were completely disabling `auto-transition` and removing all
+	  auto-transitions in the timeline but this is pretty weird for the end
+	  user. This commit changes and now makes sure 2 transitions are not
+	  created in the same place.
+	  Also cleanup previous test case.
+
+2019-01-18 17:25:11 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-project.c:
+	* ges/ges-transition-clip.c:
+	* ges/ges-xml-formatter.c:
+	  s/accured/occurred/g
+
+2019-01-18 17:12:42 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Minor debug enhancement
+
+2019-01-18 09:52:47 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/ges/gesdemux.c:
+	* plugins/ges/gesdemux.h:
+	* plugins/ges/gesplugin.c:
+	  plugins: Add an a gesdemux element to 'demux' serialized timelines
+
+2015-03-14 20:52:47 +0000  Thibault Saunier <tsaunier@gnome.org>
+
+	* examples/c/gessrc.c:
+	* examples/c/meson.build:
+	* examples/python/gst-player.py:
+	* plugins/ges/gesplugin.c:
+	* plugins/ges/gessrc.c:
+	* plugins/ges/gessrc.h:
+	* plugins/ges/meson.build:
+	* plugins/meson.build:
+	  plugins: implement a gessrc element useable from playbin
+	  This is a new simple GstBin that can handle the ges:// uris
+	  and will directly expose the srcppads of the tracks present in the
+	  timeline.
+
+2019-01-18 15:45:39 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-internal.h:
+	* ges/ges-project.c:
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-asset.h:
+	* ges/ges.c:
+	* tests/check/python/test_assets.py:
+	  uri-asset: Use the same code path for sync discovery as the async one
+	  And start handling relocated assets.
+	  Also expose the discoverer callback as a vmethod so that we can
+	  overridde the discoverer when necessary (to handle discovering of
+	  timeline through gesdemux for example)
+
+2019-01-17 15:12:42 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	* plugins/nle/nlecomposition.c:
+	* tests/check/nle/nlecomposition.c:
+	  nlecomposition: Get overall pipeline position by recursing up
+	  And handle NLEComposition inside NLEComposition
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/39
+
+2018-09-30 17:22:13 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-smart-video-mixer.c:
+	  videomixer: Drop allocation query after the compositor
+	  Working around https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/310
+
+2019-01-28 18:59:40 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-layer.c:
+	* tests/check/python/test_timeline.py:
+	  layer: Resort clips before syncing priorities
+	  We set the priorities making the assumption that `start_clips` is properly
+	  ordered by start!
+	  Fixes https://gitlab.gnome.org/GNOME/pitivi/issues/2254
+
+2019-01-28 12:58:06 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* tests/check/ges/asset.c:
+	  tests: asset: Add test async asset request with custom GMainContext
+	  ... and test call ges_{init/deinit} multiple times in a unit test.
+
+2019-01-28 17:22:10 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges.c:
+	  Revert "ges: Add missing type unref on deinit"
+	  This reverts commit e939cfebaf4deeabf21ba799ddc3eeaa87e7cf9a.
+	  Class might not be initialized if they were already registered
+	  when ges_init() was called, but were not created until ges_deinit() called.
+
+2019-01-28 17:12:54 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-internal.h:
+	* ges/ges-uri-asset.c:
+	* ges/ges.c:
+	  ges: Add check sync/async discoverer
+	  To support ges_{init/deinit} multiple times in a process,
+	  there should be a method for setting up internal object/table of
+	  GESUriClipAssetClass. because *_class_init() will be called
+	  only once in process lifecycle.
+
+2019-01-28 17:15:19 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-uri-asset.c:
+	  uri-asset: Add missing GHashTable cleanup
+	  ... and use g_object_unref() for GFile object, it's not a GstObject.
+
+2019-01-28 16:34:15 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges.c:
+	  ges: Print initialize error reasons
+
+2019-01-28 12:19:30 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* tests/check/ges/asset.c:
+	  tests: asset: Remove out-of-date comment
+
+2019-01-28 12:17:00 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* tests/check/ges/asset.c:
+	  tests: asset: Remove pointless gst_init()
+	  It's done by GST_CHECK_MAIN() already
+
+2019-01-28 11:24:29 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* tests/check/ges/asset.c:
+	* tests/check/ges/backgroundsource.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/effects.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/mixers.c:
+	* tests/check/ges/overlays.c:
+	* tests/check/ges/project.c:
+	* tests/check/ges/tempochange.c:
+	* tests/check/ges/timelineedition.c:
+	* tests/check/ges/titles.c:
+	* tests/check/ges/track.c:
+	* tests/check/ges/transition.c:
+	* tests/check/ges/uriclip.c:
+	* tests/check/nle/complex.c:
+	* tests/check/nle/nlecomposition.c:
+	* tests/check/nle/nleoperation.c:
+	* tests/check/nle/simple.c:
+	  tests: init/deinit per test case
+	  ... in order to verify init/deinit pair.
+
+2019-01-28 11:07:36 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges.c:
+	  ges: Simplify init/deinit flag
+	  In theory, GES can be init/deinit multiple times in a process.
+	  To simplify that use-case, let's trace only "ges_initialized" flag.
+
+2019-01-21 11:53:44 +0100  Corentin Noël <corentin.noel@collabora.com>
+
+	* ges/ges-uri-asset.c:
+	* ges/ges-uri-asset.h:
+	  uri-asset: Add ges_uri_clip_asset_finish to get better introspection
+	  Vala requires a matching _finish function to correctly bind the method with the right finish method.
+
+2019-01-21 14:14:06 +0100  Corentin Noël <corentin.noel@collabora.com>
+
+	* ges/ges-timeline.c:
+	  timeline: fix two issues in the documentation
+
+2019-01-15 09:59:59 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Do not forget to serialize clips metadata
+
+2019-01-15 09:38:14 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-internal.h:
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Serialize groups metadatas
+
+2019-01-15 00:15:28 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-uri-asset.c:
+	  uri-asset: Don't leak GstDiscovererInfo
+
+2019-01-15 00:13:24 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-uri-asset.c:
+	  uri-asset: Impl. dispose vfunc
+	  ... and fix GList/GESAsset leak
+
+2019-01-14 23:38:19 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-transition-clip.c:
+	  transition-clip: Don't leak GESAsset
+	  Returned GESAsset from ges_asset_request should be freed since
+	  ges_extractable_set_asset doesn't take ownership
+
+2019-01-14 22:14:18 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/gstframepositioner.c:
+	  framepositioner: Fix invalid memory access
+	  The GstFramePositioner might be finalized before the notify callback
+	  Without this commit,
+	  gst-editing-services / ges_basic / test_ges_timeline_remove_track
+	  can reproduce the case.
+
+2019-01-14 15:06:26 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* plugins/nle/nleoperation.c:
+	  nleoperation: Fix GstPad leak
+	  Returned GstPad by nle_object_remove_ghost_pad() has increased
+	  refcount.
+
+2019-01-14 14:10:32 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* plugins/nle/nlecomposition.c:
+	* plugins/nle/nleghostpad.c:
+	  nleghostpad: Fix GstEvent leak
+
+2019-01-14 12:52:47 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Don't leak GNode
+	  Clear the last node before update
+
+2019-01-14 13:22:13 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* tests/check/nle/complex.c:
+	* tests/check/nle/nlecomposition.c:
+	* tests/check/nle/tempochange.c:
+	  tests: nle: Fix various leak
+	  Don't leak GError and GstPad object
+
+2019-01-14 11:34:20 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* tests/check/nle/common.c:
+	* tests/check/nle/common.h:
+	* tests/check/nle/complex.c:
+	* tests/check/nle/nleoperation.c:
+	* tests/check/nle/simple.c:
+	* tests/check/nle/tempochange.c:
+	  tests: nle: Fix GList leak
+
+2019-01-13 00:12:42 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* tests/check/ges/asset.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/layer.c:
+	  tests: ges: Fix various leak
+
+2019-01-12 22:24:55 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-asset.c:
+	  asset: Fix various leak
+
+2019-01-12 21:59:20 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-enums.c:
+	  enums: Add missing unref
+
+2019-01-12 21:52:16 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Clear all members before chaining up to parent on finalize
+
+2019-01-12 21:51:36 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-structure-parser.c:
+	  structure-parser: Add missig chain up code
+
+2019-01-12 20:53:38 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges.c:
+	  ges: Add missing type unref on deinit
+
+2019-01-12 20:23:50 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-internal.h:
+	* ges/ges.c:
+	  ges: Cleanup internal hash table on deinit
+	  System-wide once allocated but it makes tracing leak hard
+
+2019-01-12 19:57:37 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges.c:
+	  ges: Make init/deinit thread safe
+	  Although it might be uncommon use case, init/deinit could be called
+	  in non-main thread.
+
+2019-01-12 19:23:25 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-asset.c:
+	  asset: Use static lock
+	  The mutex life cycle follows processs.
+
+2019-01-14 10:16:18 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* tests/check/meson.build:
+	  tests: Increase timeout value to 360 sec
+	  Use consistent timeout value with core and other plugins.
+	  Otherwise, valgrind sometimes timed out with default timeout 30sec.
+
+2019-01-14 12:45:29 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Don't try dump null stack
+	  Fixes following assertion
+	  Unexpected critical/warning: g_node_traverse: assertion 'root != NULL' failed
+
 === release 1.15.1 ===
 
 2019-01-17 02:30:06 +0000  Tim-Philipp Müller <tim@centricular.com>
