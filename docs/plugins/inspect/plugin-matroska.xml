@@ -3,7 +3,7 @@
   <description>Matroska and WebM stream handling</description>
   <filename>../../gst/matroska/.libs/libgstmatroska.so</filename>
   <basename>libgstmatroska.so</basename>
-  <version>1.15.1</version>
+  <version>1.15.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -119,7 +119,7 @@
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/x-vp8, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-vp9, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-av1, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-vp8, width=(int)[ 16, 2147483647 ], height=(int)[ 16, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-vp9, width=(int)[ 16, 2147483647 ], height=(int)[ 16, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-av1, width=(int)[ 16, 2147483647 ], height=(int)[ 16, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>
