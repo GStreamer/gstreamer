@@ -231,7 +231,7 @@ fn handle_media_stream(
     sink.sync_state_with_parent()?;
 
     let qpad = q.get_static_pad("sink").unwrap();
-    pad.link(&qpad).into_result()?;
+    pad.link(&qpad)?;
 
     Ok(())
 }
@@ -462,7 +462,7 @@ impl AppControl {
             on_incoming_stream(&app_control_clone, values, &pipe_clone)
         })?;
 
-        pipe.set_state(gst::State::Playing).into_result()?;
+        pipe.set_state(gst::State::Playing)?;
 
         self.0.lock().unwrap().webrtc = Some(webrtc);
 
@@ -614,7 +614,7 @@ impl AppControl {
             (app_control.pipeline.clone(), app_control.main_loop.clone())
         };
 
-        pipeline.set_state(gst::State::Null).into_result().unwrap();
+        pipeline.set_state(gst::State::Null).unwrap();
 
         main_loop.quit();
     }
