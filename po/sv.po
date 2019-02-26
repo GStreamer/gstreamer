@@ -1,15 +1,15 @@
 # Swedish translation for gst-plugins-bad.
-# Copyright © 2007, 2008, 2009, 2014, 2015, 2016, 2017 Free Software Foundation, Inc.
+# Copyright © 2007, 2008, 2009, 2014, 2015, 2016, 2017, 2019 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2017.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2017, 2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.12.0\n"
+"Project-Id-Version: gst-plugins-bad 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 02:16+0000\n"
-"PO-Revision-Date: 2017-05-21 19:05+0800\n"
+"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"PO-Revision-Date: 2019-02-05 18:24+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -17,10 +17,10 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 1.8.11\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Ingen URL inställd."
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV misslyckades med att läsa in mallbild"
@@ -30,7 +30,7 @@ msgstr "Kunde inte läsa titelinformation för dvd."
 
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Misslyckades med att öppna dvd-enheten \"%s\"."
+msgstr "Misslyckades med att öppna dvd-enheten ”%s”."
 
 msgid "Failed to set PGC based seeking."
 msgstr "Misslyckades med att ställa in PGC-baserad spolning."
@@ -56,7 +56,7 @@ msgstr "Den genererade filen har en längre förrullningstid än dess strömlän
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Saknar element \"%s\" - kontrollera din GStreamer-installation."
+msgstr "Saknar element ”%s” - kontrollera din GStreamer-installation."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
@@ -79,23 +79,23 @@ msgstr "Internt fel i dataström."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Enheten \"%s\" finns inte."
+msgstr "Enheten ”%s” finns inte."
 
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Kunde inte öppna framändsenheten \"%s\"."
+msgstr "Kunde inte öppna framändsenheten ”%s”."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Kunde inte få inställningar från framändsenheten \"%s\"."
+msgstr "Kunde inte få inställningar från framändsenheten ”%s”."
 
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Kan ej lista leveranssystem från framändsenheten \"%s\"."
+msgstr "Kan ej lista leveranssystem från framändsenheten ”%s”."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Kunde inte öppna filen \"%s\" för läsning."
+msgstr "Kunde inte öppna filen ”%s” för läsning."
 
 msgid "Couldn't find channel configuration file"
 msgstr "Kunde ej hitta konfigurationsfil för kanal"

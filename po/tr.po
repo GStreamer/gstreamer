@@ -2,13 +2,13 @@
 # This file is put in the public domain.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Server Acim <serveracim@gmail.com>, 2009, 2015.
-# Mehmet Kececi <mkececi@mehmetkececi.com>, 2017.
+# Mehmet Kececi <mkececi@mehmetkececi.com>, 2017, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.12.0\n"
+"Project-Id-Version: gst-plugins-bad-1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 02:16+0000\n"
-"PO-Revision-Date: 2017-05-05 11:07+0300\n"
+"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"PO-Revision-Date: 2019-01-25 12:21+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
@@ -21,7 +21,7 @@ msgstr ""
 "X-Project-Style: gnome\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Hiç bir URL ayarlanmamış."
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV şablon görüntüsü yüklenemedi"

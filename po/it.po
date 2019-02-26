@@ -1,29 +1,31 @@
 # Italian translation for gst-plugins-bad package of GStreamer project.
-# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009 GStreamer core team
+# Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2017, 2019 GStreamer core team
 # This file is distributed under the same license as the gst-plugins-bad package.
 #
 # Luca Ferretti <elle.uca@infinito.it>, 2007, 2008, 2009.
 # Sebastiano Pistore <sebastianopistore.info@protonmail.ch>, 2017
+# Milo Casagrande <milo@milo.name>, 2019
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.12.0\n"
+"Project-Id-Version: gst-plugins-bad-1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 02:16+0000\n"
-"PO-Revision-Date: 2017-09-15 09:49+0200\n"
-"Last-Translator: Sebastiano Pistore <sebastianopistore.info@protonmail.ch>\n"
+"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"PO-Revision-Date: 2019-01-25 11:57+0100\n"
+"Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.0.3\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Nessun URL impostato."
 
 msgid "OpenCV failed to load template image"
-msgstr "OpenCV non è riuscito a caricare l'immagine del template"
+msgstr "Apertura del modello dell'immagine tramite OpenCV non riuscita"
 
 msgid "Could not read title information for DVD."
 msgstr "Impossibile leggere le informazioni del titolo per il DVD."
@@ -40,17 +42,16 @@ msgid ""
 "decryption library is not installed."
 msgstr ""
 "Impossibile leggere il DVD. Questo potrebbe essere dovuto al fatto che il "
-"DVD è crittografato ed all'assenza nel sistema di una libreria di decodifica "
-"DVD."
+"DVD è cifrato e all'assenza nel sistema di una libreria di decodifica DVD."
 
 msgid "Could not read DVD."
 msgstr "Impossibile leggere il DVD."
 
 msgid "This file contains no playable streams."
-msgstr "Questo file non contiene flussi visualizzabili a schermo."
+msgstr "Questo file non contiene flussi riproducibili."
 
 msgid "Could not open sndfile stream for reading."
-msgstr "È impossibile aprire il flusso sndfile in lettura."
+msgstr "Impossibile aprire il flusso sndfile in lettura."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
@@ -58,17 +59,17 @@ msgstr ""
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Manca l'elemento «%s» - verificare l'installazione di GStreamer."
+msgstr "Elemento «%s» mancante, verificare l'installazione di GStreamer."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
 "Posizione del file impostata su NULL, è necessario un nome di file valido"
 
 msgid "Digitalzoom element couldn't be created"
-msgstr ""
+msgstr "Impossibile creare l'elemento digitalzoom"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "Il formato subpicture non è stato configurato prima del flusso di dati"
 
 msgid "Failed to get fragment URL."
 msgstr "Impossibile ottenere l'URL del frammento."
@@ -85,27 +86,29 @@ msgstr "Il dispositivo «%s» non esiste."
 
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Impossibile accedere al frontend del dispositivo «%s»."
+msgstr "Impossibile accedere al dispositivo di visualizzazione «%s»."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr ""
-"Impossibile ottenere le impostazioni dal frontend del dispositivo «%s»."
+"Impossibile ottenere le impostazioni dal dispositivo di visualizzazione «%s»."
 
 #, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
 msgstr ""
+"Impossibile elencare i sistemi di trasporto dal dispositivo di "
+"visualizzazione «%s»"
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossibile aprire il file «%s» in lettura."
 
 msgid "Couldn't find channel configuration file"
-msgstr "Impossibile trovare file di configurazione canale"
+msgstr "Impossibile trovare il file di configurazione del canale"
 
 #, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "Impossibile caricare file di configurazione canale: «%s»"
+msgstr "Impossibile caricare il file di configurazione del canale: «%s»"
 
 #, c-format
 msgid "Couldn't find details for channel '%s'"
@@ -121,7 +124,7 @@ msgstr "Impossibile impostare le proprietà del canale «%s»"
 
 #, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Impossibile trovare file di configurazione canale: «%s»"
+msgstr "Impossibile trovare il file di configurazione del canale: «%s»"
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Il file di configurazione del canale non contiene alcun canale"

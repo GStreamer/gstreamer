@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-bad.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2016.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.10.0\n"
+"Project-Id-Version: gst-plugins-bad 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 02:16+0000\n"
-"PO-Revision-Date: 2016-11-01 20:53+0100\n"
+"POT-Creation-Date: 2019-02-26 11:53+0000\n"
+"PO-Revision-Date: 2019-01-25 05:41+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -17,7 +17,7 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Nie ustawiono URL-a."
 
 msgid "OpenCV failed to load template image"
 msgstr "Odczyt obrazu wzorca przez OpenCV nie powiódł się"
@@ -121,36 +121,3 @@ msgstr "Nie udało się odnaleźć pliku konfiguracyjnego kanałów: '%s'"
 
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "Plik konfiguracyjny kanałów nie zawiera żadnych kanałów"
-
-#~ msgid "failed to draw pattern"
-#~ msgstr "nie udało się narysować wzoru"
-
-#~ msgid "A GL error occured"
-#~ msgstr "Wystąpił błąd GL"
-
-#~ msgid "format wasn't negotiated before get function"
-#~ msgstr "format nie został wynegocjowany przed funkcją pobrania"
-
-#~ msgid "Could not establish connection to sndio"
-#~ msgstr "Nie udało się ustanowić połączenia z sndio"
-
-#~ msgid "Failed to query sndio capabilities"
-#~ msgstr "Nie udało się odpytać o możliwości sndio"
-
-#~ msgid "Could not configure sndio"
-#~ msgstr "Nie udało się skonfigurować sndio"
-
-#~ msgid "Could not start sndio"
-#~ msgstr "Nie udało się uruchomić sndio"
-
-#~ msgid "No file name specified for writing."
-#~ msgstr "Nie określono nazwy pliku do zapisu."
-
-#~ msgid ""
-#~ "Given file name \"%s\" can't be converted to local file name encoding."
-#~ msgstr ""
-#~ "Podanej nazwy pliku \"%s\" nie można przekształcić do lokalnego kodowania "
-#~ "nazw plików."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Nie udało się otworzyć pliku \"%s\" do zapisu."
