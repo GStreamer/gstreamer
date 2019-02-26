@@ -2,15 +2,19 @@ EXPORTS
 	gst_validate_action_get_clocktime
 	gst_validate_action_get_scenario
 	gst_validate_action_get_type
+	gst_validate_action_new
+	gst_validate_action_ref
 	gst_validate_action_return_get_type
 	gst_validate_action_set_done
 	gst_validate_action_type_flags_get_type
 	gst_validate_action_type_get_type
+	gst_validate_action_unref
 	gst_validate_bin_monitor_get_type
 	gst_validate_bin_monitor_new
 	gst_validate_debug_flags_get_type
 	gst_validate_deinit
 	gst_validate_element_has_klass
+	gst_validate_element_matches_target
 	gst_validate_element_monitor_get_type
 	gst_validate_element_monitor_new
 	gst_validate_execute_action
