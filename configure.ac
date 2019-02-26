@@ -424,6 +424,7 @@ pkgconfig/Makefile
 pkgconfig/gst-editing-services.pc
 pkgconfig/gst-editing-services-uninstalled.pc
 plugins/Makefile
+plugins/ges/Makefile
 plugins/nle/Makefile
 bindings/Makefile
 bindings/python/Makefile
