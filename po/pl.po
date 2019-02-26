@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2016.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.10.0\n"
+"Project-Id-Version: gst-plugins-base 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:50+0000\n"
-"PO-Revision-Date: 2016-11-01 20:50+0100\n"
+"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"PO-Revision-Date: 2019-01-25 05:30+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -83,13 +83,13 @@ msgid "Could not read CD."
 msgstr "Nie udał się odczyt CD."
 
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "nie udało się narysować wzoru"
 
 msgid "A GL error occurred"
-msgstr ""
+msgstr "Wystąpił błąd GL"
 
 msgid "format wasn't negotiated before get function"
-msgstr ""
+msgstr "format nie został wynegocjowany przed funkcją pobierającą"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
@@ -104,9 +104,8 @@ msgstr "To wygląda na plik tekstowy"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nie udało się utworzyć elementu \"uridecodebin\"."
 
-#, fuzzy
 msgid "Could not create \"uridecodebin3\" element."
-msgstr "Nie udało się utworzyć elementu \"uridecodebin\"."
+msgstr "Nie udało się utworzyć elementu \"uridecodebin3\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -239,10 +238,10 @@ msgid "TMPlayer subtitle format"
 msgstr "Format podpisów TMPlayer"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "Podpisy CEA 608"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "Podpisy CEA 708"
 
 msgid "Kate subtitle format"
 msgstr "Format podpisów Kate"
@@ -681,10 +680,10 @@ msgid "Do not print any output (apart from errors)"
 msgstr "Bez wypisywania żadnego wyjścia (poza błędami)"
 
 msgid "Use playbin3 pipeline"
-msgstr ""
+msgstr "Użycie potoku playbin3"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
-msgstr ""
+msgstr "(wartość domyślna zależy od zmiennej środowiskowej 'USE_PLAYBIN')"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -695,9 +694,3 @@ msgstr "Trzeba podać przynajmniej jedną nazwę pliku lub URI do odtworzenia."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Klawisz 'k' wyświetla listę skrótów klawiatury.\n"
-
-#~ msgid "Could not create \"decodebin3\" element."
-#~ msgstr "Nie udało się utworzyć elementu \"decodebin3\"."
-
-#~ msgid "Could not create \"urisourcebin\" element."
-#~ msgstr "Nie udało się utworzyć elementu \"urisourcebin\"."

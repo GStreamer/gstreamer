@@ -1,16 +1,16 @@
 # Swedish messages for gst-plugins-base.
-# Copyright © 2004, 2005, 2007, 2008, 2009, 2014, 2015, 2016, 2017 Free Software Foundation, Inc.
+# Copyright © 2004, 2005, 2007, 2008, 2009, 2014, 2015, 2016, 2017, 2019 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.10.0\n"
+"Project-Id-Version: gst-plugins-base 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:50+0000\n"
-"PO-Revision-Date: 2017-05-21 18:55+0800\n"
+"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"PO-Revision-Date: 2019-02-05 18:23+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 1.8.11\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunde inte öppna enheten för uppspelning i monoläge."
@@ -76,17 +76,17 @@ msgid "Could not read CD."
 msgstr "Kunde inte läsa cd-skivan."
 
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "misslyckades med att rita mönster"
 
 msgid "A GL error occurred"
-msgstr ""
+msgstr "Ett GL-fel uppstod"
 
 msgid "format wasn't negotiated before get function"
-msgstr ""
+msgstr "formatet förhandlades inte fram innan hämtfunktionen"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Saknar elementet \"%s\" - kontrollera din GStreamer-installation."
+msgstr "Saknar elementet ”%s” - kontrollera din GStreamer-installation."
 
 msgid "Could not determine type of stream"
 msgstr "Kunde inte fastställa typ av ström"
@@ -95,11 +95,10 @@ msgid "This appears to be a text file"
 msgstr "Den här ser ut att vara en textfil"
 
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Kunde inte skapa \"uridecodebin\"-element."
+msgstr "Kunde inte skapa ”uridecodebin”-element."
 
-#, fuzzy
 msgid "Could not create \"uridecodebin3\" element."
-msgstr "Kunde inte skapa \"uridecodebin\"-element."
+msgstr "Kunde inte skapa ”uridecodebin3”-element."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -148,28 +147,28 @@ msgstr "Kan inte spela upp en textfil utan video eller visualiseringar."
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Ingen avkodare finns tillgänglig för typen \"%s\"."
+msgstr "Ingen avkodare finns tillgänglig för typen ”%s”."
 
 msgid "No URI specified to play from."
 msgstr "Ingen uri angiven att spela upp från."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "Ogiltig uri \"%s\"."
+msgstr "Ogiltig uri ”%s”."
 
 msgid "This stream type cannot be played yet."
 msgstr "Den här strömtypen kan inte spelas upp än."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Ingen URI-hanterare implementerad för \"%s\"."
+msgstr "Ingen URI-hanterare implementerad för ”%s”."
 
 msgid "Source element is invalid."
 msgstr "Källelementet är ogiltigt."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr "Fel vid sändning av data till \"%s:%d\"."
+msgstr "Fel vid sändning av data till ”%s:%d”."
 
 msgid "Can't record audio fast enough"
 msgstr "Kan inte spela in ljud tillräckligt snabbt"
@@ -232,10 +231,10 @@ msgid "TMPlayer subtitle format"
 msgstr "Undertextformatet TMPlayer"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "CEA 608-undertexter"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "CEA 708-undertexter"
 
 msgid "Kate subtitle format"
 msgstr "Undertextformatet Kate"
@@ -672,10 +671,10 @@ msgid "Do not print any output (apart from errors)"
 msgstr "Mata inte ut någonting (bortsett från fel)"
 
 msgid "Use playbin3 pipeline"
-msgstr ""
+msgstr "Använd playbin3-rörledning"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
-msgstr ""
+msgstr "(standardvärdet beror på miljövariabeln ”USE_PLAYBIN”)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

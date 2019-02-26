@@ -3,13 +3,13 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.10.0\n"
+"Project-Id-Version: gst-plugins-base 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:50+0000\n"
-"PO-Revision-Date: 2016-11-02 21:17+0300\n"
+"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"PO-Revision-Date: 2019-01-25 19:47+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 1.5\n"
+"X-Generator: Lokalize 2.0\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
@@ -78,13 +78,13 @@ msgid "Could not read CD."
 msgstr "Не удалось прочитать CD."
 
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "ошибка при рисовании шаблона"
 
 msgid "A GL error occurred"
-msgstr ""
+msgstr "Произошла ошибка GL"
 
 msgid "format wasn't negotiated before get function"
-msgstr ""
+msgstr "перед функцией получения не был согласован формат"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
@@ -99,9 +99,8 @@ msgstr "Этот файл является текстовым"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Не удалось создать элемент «uridecodebin»."
 
-#, fuzzy
 msgid "Could not create \"uridecodebin3\" element."
-msgstr "Не удалось создать элемент «uridecodebin»."
+msgstr "Не удалось создать элемент «uridecodebin3»."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -235,10 +234,10 @@ msgid "TMPlayer subtitle format"
 msgstr "Формат субтитров TMPlayer"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "Скрытые субтитры CEA 608"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "Скрытые субтитры CEA 708"
 
 msgid "Kate subtitle format"
 msgstr "Формат субтитров Kate"
@@ -677,10 +676,10 @@ msgid "Do not print any output (apart from errors)"
 msgstr "Не выводить ничего в поток стандартного вывода (кроме ошибок)"
 
 msgid "Use playbin3 pipeline"
-msgstr ""
+msgstr "Использовать конвейер playbin3"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
-msgstr ""
+msgstr "(значение по умолчанию зависит от переменной окружения «USE_PLAYBIN»)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

@@ -4,13 +4,13 @@
 # Server Acim <serveracim@gmail.com>, 2010.
 # Server Acim <serveracim@gmail.com>, 2013, 2015.
 # Emin Tufan Çetin <etcetin@gmail.com>, 2017.
-# Mehmet Kececi <mkececi@mehmetkececi.com>, 2017.
+# Mehmet Kececi <mkececi@mehmetkececi.com>, 2017, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.10.0\n"
+"Project-Id-Version: gst-plugins-base 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:50+0000\n"
-"PO-Revision-Date: 2017-07-05 01:40+0300\n"
+"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"PO-Revision-Date: 2019-01-25 12:06+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
@@ -78,13 +78,13 @@ msgid "Could not read CD."
 msgstr "CD okunamıyor."
 
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "desen çizilemedi"
 
 msgid "A GL error occurred"
-msgstr ""
+msgstr "Bir GL hatası oluştu"
 
 msgid "format wasn't negotiated before get function"
-msgstr ""
+msgstr "İşlev alınmadan önce biçim anlaşması yapılmadı"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
@@ -99,9 +99,8 @@ msgstr "Bu bir metin dosyasına benziyor"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "\"uridecodebin\" ögesi oluşturulamıyor."
 
-#, fuzzy
 msgid "Could not create \"uridecodebin3\" element."
-msgstr "\"uridecodebin\" ögesi oluşturulamıyor."
+msgstr "\"uridecodebin3\" ögesi oluşturulamıyor."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -234,10 +233,10 @@ msgid "TMPlayer subtitle format"
 msgstr "TMPlayer alt yazı kipi"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "CEA 608 Kapalı Başlık"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "CEA 708 Kapalı Başlık"
 
 msgid "Kate subtitle format"
 msgstr "Kate alt yazı kipi"
@@ -673,10 +672,10 @@ msgid "Do not print any output (apart from errors)"
 msgstr "Herhangi bir çıktı yazdırma (hatalar dışında)"
 
 msgid "Use playbin3 pipeline"
-msgstr ""
+msgstr "playbin3 ardaşık düzenini kullan"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
-msgstr ""
+msgstr "(varsayılan 'USE_PLAYBIN' env değişkenine bağlı olarak değişir)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

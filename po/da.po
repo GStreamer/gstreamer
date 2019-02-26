@@ -1,11 +1,12 @@
 # Danish translation of gst-plugins-base.
-# Copyright (C) 2016 gst, Mogens Jaeger, Joe Hansen.
+# Copyright (C) 2019 gst, Mogens Jaeger, Joe Hansen.
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
-# Joe Hansen <joedalton2@yahoo.dk>, 2009, 2010, 2011, 2013, 2014, 2015, 2016.
+# Joe Hansen <joedalton2@yahoo.dk>, 2009, 2010, 2011, 2013, 2014, 2015, 2016, 2019.
 #
 # capture -> optage
+# closed caption -> undertekster (ordet closed caption bruges kun i USA/Canada)
 # gain -> forstærkning
 # shutter -> lukketid
 #
@@ -31,10 +32,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.10.0\n"
+"Project-Id-Version: gst-plugins-base 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:50+0000\n"
-"PO-Revision-Date: 2016-11-03 16:38+0100\n"
+"POT-Creation-Date: 2019-02-26 11:43+0000\n"
+"PO-Revision-Date: 2019-02-14 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -98,13 +99,13 @@ msgid "Could not read CD."
 msgstr "Kunne ikke læse cd."
 
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "kunne ikke tegne mønster"
 
 msgid "A GL error occurred"
-msgstr ""
+msgstr "Der opstod en GL-fejl"
 
 msgid "format wasn't negotiated before get function"
-msgstr ""
+msgstr "format blev ikke forhandlet før get-funktion"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
@@ -119,9 +120,8 @@ msgstr "Denne fremstår som en tekstfil"
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Kunne ikke oprette elementet »uridecodebin«."
 
-#, fuzzy
 msgid "Could not create \"uridecodebin3\" element."
-msgstr "Kunne ikke oprette elementet »uridecodebin«."
+msgstr "Kunne ikke oprette elementet »uridecodebin3«."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -255,10 +255,10 @@ msgid "TMPlayer subtitle format"
 msgstr "TMPlayer-undertekstformat"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "CEA 608-undertekster"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "CEA 708-undertekster"
 
 msgid "Kate subtitle format"
 msgstr "Kate-undertekstformat"
@@ -713,10 +713,10 @@ msgid "Do not print any output (apart from errors)"
 msgstr "Udskriv ikke noget (undtagen fejl)"
 
 msgid "Use playbin3 pipeline"
-msgstr ""
+msgstr "Brug playbin3-datakanal"
 
 msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
-msgstr ""
+msgstr "(standard varierer afhængig af miljøvariablen »USE_PLAYBIN«"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
