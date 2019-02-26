@@ -1,3 +1,104 @@
+=== release 1.15.2 ===
+
+2019-02-26 11:58:53 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.15.2
+
+2019-02-19 09:45:08 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/client.c:
+	  rtsp-media: Fix multicast use case with common media
+	  Use case
+	  client 1: SETUP
+	  client 1: PLAY
+	  client 2: SETUP
+	  client 1: TEARDOWN
+	  client 2: PLAY
+	  client 2: TEARDOWN
+
+2019-01-16 12:59:11 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-server/rtsp-stream.h:
+	  rtsp-server: remove recursive behavior
+	  Introduce a threadpool to send rtp and rtcp to avoid recursive behavior.
+
+2019-01-25 14:22:42 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Only allow to set either a send_func or send_messages_func but not both
+	  And route all messages through the send_func if no send_messages_func
+	  was provided.
+	  We otherwise break backwards compatibility.
+
+2018-09-17 22:18:46 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-client: Add support for sending buffer lists directly
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/29
+
+2018-06-27 12:17:07 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/libs/gst-rtsp-server-sections.txt:
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream-transport.h:
+	* gst/rtsp-server/rtsp-stream.c:
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtsp-server: Add support for buffer lists
+	  This adds new functions for passing buffer lists through the different
+	  layers without breaking API/ABI, and enables the appsink to actually
+	  provide buffer lists.
+	  This should already reduce CPU usage and potentially context switches a
+	  bit by passing a whole buffer list from the appsink instead of
+	  individual buffers. As a next step it would be necessary to
+	  a) Add support for a vector of data for the GstRTSPMessage body
+	  b) Add support for sending multiple messages at once to the
+	  GstRTSPWatch and let it be handled internally
+	  c) Adding API to GOutputStream that works like writev()
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/29
+
+2018-12-04 14:12:04 +0100  Benjamin Berg <bberg@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: Fix crash in close handler
+	  The close handler could trigger a crash because it invalidated the
+	  watch_context while still leaving a source attached to it which would be
+	  cleaned up at a later point.
+
+2019-01-29 14:42:35 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Use cached address when allocating sockets
+	  If an address/port was previously decided upon (ex: multicast in the
+	  SDP), then use that instead of re-creating another one
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/57
+
+2018-12-27 11:28:17 +0100  Lars Wiréen <larswi@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Fix race codition in finish_unprepare
+	  The previous fix for race condition around finish_unprepare where the
+	  function could be called twice assumed that the status wouldn't change
+	  during execution of the function. This assumption is incorrect as the
+	  state may change, for example if an error message arrives from the
+	  pipeline bus.
+	  Instead a flag keeping track on whether the finish_unprepare function
+	  is currently executing is introduced and checked.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/59
+
 === release 1.15.1 ===
 
 2019-01-17 02:26:48 +0000  Tim-Philipp Müller <tim@centricular.com>
