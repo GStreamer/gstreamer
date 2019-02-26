@@ -471,6 +471,8 @@ struct _GstRtpBinStream
   /* mapping to local RTP and NTP time */
   gint64 rt_delta;
   gint64 rtp_delta;
+  gint64 avg_ts_offset;
+  gboolean is_initialized;
   /* base rtptime in gst time */
   gint64 clock_base;
 };
@@ -1032,6 +1034,8 @@ gst_rtp_bin_reset_sync (GstRtpBin * rtpbin)
        * lip-sync */
       stream->have_sync = FALSE;
       stream->rt_delta = 0;
+      stream->avg_ts_offset = 0;
+      stream->is_initialized = FALSE;
       stream->rtp_delta = 0;
       stream->clock_base = -100 * GST_SECOND;
     }
@@ -1343,17 +1347,25 @@ stream_set_ts_offset (GstRtpBin * bin, GstRtpBinStream * stream,
     return;
   }
 
+  if (!stream->is_initialized) {
+    stream->avg_ts_offset = ts_offset;
+    stream->is_initialized = TRUE;
+  } else {
+    stream->avg_ts_offset = (9 * stream->avg_ts_offset + ts_offset) / 10;
+  }
+
   g_object_get (stream->buffer, "ts-offset", &prev_ts_offset, NULL);
 
   /* delta changed, see how much */
-  if (prev_ts_offset != ts_offset) {
+  if (prev_ts_offset != stream->avg_ts_offset) {
     gint64 diff;
 
-    diff = prev_ts_offset - ts_offset;
+    diff = prev_ts_offset - stream->avg_ts_offset;
 
     GST_DEBUG_OBJECT (bin,
         "ts-offset %" G_GINT64_FORMAT ", prev %" G_GINT64_FORMAT
-        ", diff: %" G_GINT64_FORMAT, ts_offset, prev_ts_offset, diff);
+        ", diff: %" G_GINT64_FORMAT, stream->avg_ts_offset, prev_ts_offset,
+        diff);
 
     /* ignore minor offsets */
     if (ABS (diff) < min_ts_offset) {
@@ -1363,21 +1375,21 @@ stream_set_ts_offset (GstRtpBin * bin, GstRtpBinStream * stream,
 
     /* sanity check offset */
     if (max_ts_offset > 0) {
-      if (ts_offset > 0 && !allow_positive_ts_offset) {
+      if (stream->avg_ts_offset > 0 && !allow_positive_ts_offset) {
         GST_DEBUG_OBJECT (bin,
             "offset is positive (clocks are out of sync), ignoring");
         return;
       }
-      if (ABS (ts_offset) > max_ts_offset) {
+      if (ABS (stream->avg_ts_offset) > max_ts_offset) {
         GST_DEBUG_OBJECT (bin, "offset too large, ignoring");
         return;
       }
     }
 
-    g_object_set (stream->buffer, "ts-offset", ts_offset, NULL);
+    g_object_set (stream->buffer, "ts-offset", stream->avg_ts_offset, NULL);
   }
   GST_DEBUG_OBJECT (bin, "stream SSRC %08x, delta %" G_GINT64_FORMAT,
-      stream->ssrc, ts_offset);
+      stream->ssrc, stream->avg_ts_offset);
 }
 
 static void
@@ -1825,6 +1837,8 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
 
   stream->have_sync = FALSE;
   stream->rt_delta = 0;
+  stream->avg_ts_offset = 0;
+  stream->is_initialized = FALSE;
   stream->rtp_delta = 0;
   stream->percent = 100;
   stream->clock_base = -100 * GST_SECOND;
