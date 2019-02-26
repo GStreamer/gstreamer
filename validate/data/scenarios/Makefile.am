@@ -24,8 +24,12 @@ scenarios_DATA = simple_seeks.scenario \
                  change_state_intensive.scenario\
                  play_15s.scenario \
                  switch_audio_track.scenario \
-                 trick_mode_seeks.scenario \
-                 includes/default-seek-flags.scenario \
-                 rtsp_overrides/includes/default-seek-flags.scenario
+                 trick_mode_seeks.scenario
 
-EXTRA_DIST = ${scenarios_DATA}
+scenariosincsdir=${datadir}/gstreamer-$(GST_API_VERSION)/validate/scenarios/includes
+scenariosincs_DATA = includes/default-seek-flags.scenario
+
+rtsp_overrides_scenariosincsdir=${datadir}/gstreamer-$(GST_API_VERSION)/validate/scenarios/rtsp_overrides/includes
+rtsp_overrides_scenariosincs_DATA = rtsp_overrides/includes/default-seek-flags.scenario
+
+EXTRA_DIST = ${scenarios_DATA} ${scenariosincs_DATA} ${rtsp_overrides_scenariosincs_DATA}
