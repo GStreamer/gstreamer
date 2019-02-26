@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.12.0\n"
+"Project-Id-Version: gst-plugins-good 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:59+0000\n"
-"PO-Revision-Date: 2017-05-04 22:20+0300\n"
+"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"PO-Revision-Date: 2019-01-24 22:05+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 1.5\n"
+"X-Generator: Lokalize 2.0\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "Jack server not found"
@@ -29,12 +29,16 @@ msgstr "Помилка при декодуванні зображення JPEG"
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Помилка при налаштовуванні кодера LAME для звукових даних у форматі MP3. "
+"Перевірте параметри кодування."
 
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Запитана бітова швидкість %d кбіт/с для властивості «%s» є неприпустимою. "
+"Бітову швидкість змінено на %d кбіт/с."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -70,6 +74,8 @@ msgstr "Сервером не підтримується позиціюванн�
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Помилка при налаштовуванні кодувальника TwoLAME. Перевірте параметри "
+"кодування."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
@@ -191,15 +197,13 @@ msgstr ""
 "Драйвер пристрою «%s» не підтримує жоден відомий метод введення-виведення "
 "даних."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr ""
-"Засіб кодування на пристрої %s не може отримувати дані у підтримуваному "
-"форматі"
+msgstr "Пристрій «%s» не має підтримуваного формату"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "Помилка пристрою «%s» під час ініціалізації"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -218,13 +222,13 @@ msgid "Device '%s' does support non-contiguous planes"
 msgstr ""
 "У пристрої «%s» не передбачено можливості використання розривних площин"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Пристрій «%s» не може захоплювати відеодані"
+msgstr "На пристрої «%s» не передбачено підтримки черезрядковості %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Пристрій «%s» не може захоплювати відеодані"
+msgstr "На пристрої «%s» не передбачено підтримки колориметрії %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -299,16 +303,17 @@ msgstr ""
 "Засіб перетворення на пристрої %s не може виводити дані у підтримуваному "
 "форматі"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
 msgstr ""
-"Засіб кодування на пристрої %s не може отримувати дані у підтримуваному "
+"Засіб декодування на пристрої %s не може отримувати дані у підтримуваному "
 "форматі"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
 msgstr ""
-"Засіб кодування на пристрої %s не може виводити дані у підтримуваному форматі"
+"Засіб декодування на пристрої %s не може виводити дані у підтримуваному "
+"форматі"
 
 msgid "Failed to start decoding thread."
 msgstr "Не вдалося започаткувати потік декодування."
@@ -327,9 +332,8 @@ msgstr ""
 "Засіб кодування на пристрої %s не може отримувати дані у підтримуваному "
 "форматі"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Не вдалося започаткувати потік декодування."
+msgstr "Не вдалося започаткувати потік кодування."
 
 #, c-format
 msgid ""
@@ -430,464 +434,3 @@ msgstr "Зміна роздільної здатності при відтвор
 
 msgid "Cannot operate without a clock"
 msgstr "Робота без годинника неможлива"
-
-#~ msgid "This file contains too many streams. Only playing first %d"
-#~ msgstr "Файл містить надто багато потоків. Відтворюються лише перші %d"
-
-#~ msgid "Record Source"
-#~ msgstr "Запис джерела"
-
-#~ msgid "Microphone"
-#~ msgstr "Мікрофон"
-
-#~ msgid "Line In"
-#~ msgstr "Лінійний вхід"
-
-#~ msgid "Internal CD"
-#~ msgstr "Вбудований КД"
-
-#~ msgid "SPDIF In"
-#~ msgstr "Вхід SPDIF"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "Вхід AUX 1"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "Вхід AUX 2"
-
-#~ msgid "Codec Loopback"
-#~ msgstr "Петля кодека"
-
-#~ msgid "SunVTS Loopback"
-#~ msgstr "Петля SunVTS"
-
-#~ msgid "Volume"
-#~ msgstr "Гучність"
-
-#~ msgid "Gain"
-#~ msgstr "Підсилення"
-
-#~ msgid "Monitor"
-#~ msgstr "Монітор"
-
-#~ msgid "Built-in Speaker"
-#~ msgstr "Вбудований динамік"
-
-#~ msgid "Headphone"
-#~ msgstr "Навушники"
-
-#~ msgid "Line Out"
-#~ msgstr "Лінійний вихід"
-
-#~ msgid "SPDIF Out"
-#~ msgstr "Вихід SPDIF"
-
-#~ msgid "AUX 1 Out"
-#~ msgstr "Вихід AUX 1"
-
-#~ msgid "AUX 2 Out"
-#~ msgstr "Вихід AUX 2"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Внутрішня помилка потоку даних."
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Помилка внутрішнього перенесення даних."
-
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Не вдалося встановити з'єднання із звуковим сервером."
-
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Помилка при запиті можливостей звукового сервера"
-
-#~ msgid "Bass"
-#~ msgstr "Низькі"
-
-#~ msgid "Treble"
-#~ msgstr "Високі"
-
-#~ msgid "Synth"
-#~ msgstr "Синтезатор"
-
-#~ msgid "PCM"
-#~ msgstr "КІМ"
-
-#~ msgid "Speaker"
-#~ msgstr "Динамік"
-
-#~ msgid "Line-in"
-#~ msgstr "Лінійний вхід"
-
-#~ msgid "CD"
-#~ msgstr "КД"
-
-#~ msgid "Mixer"
-#~ msgstr "Мікшер"
-
-#~ msgid "PCM-2"
-#~ msgstr "КІМ-2"
-
-#~ msgid "Record"
-#~ msgstr "Запис"
-
-#~ msgid "In-gain"
-#~ msgstr "Вх.підсилення"
-
-#~ msgid "Out-gain"
-#~ msgstr "Вих.підсилення"
-
-#~ msgid "Line-1"
-#~ msgstr "Лінійний-1"
-
-#~ msgid "Line-2"
-#~ msgstr "Лінійний-2"
-
-#~ msgid "Line-3"
-#~ msgstr "Лінійний-3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Цифровий-1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Цифровий-2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Цифровий-3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Вх.телефон"
-
-#~ msgid "Phone-out"
-#~ msgstr "Вих.телефон"
-
-#~ msgid "Video"
-#~ msgstr "Відео"
-
-#~ msgid "Radio"
-#~ msgstr "Радіо"
-
-#~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Не вдалося відкрити пристрій для керування регуляторами мікшера."
-
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Не вдалося відкрити пристрій для керування регуляторами мікшера. Ця "
-#~ "версія Open Sound System не підтримується цим елементом."
-
-#~ msgid "Master"
-#~ msgstr "Основний"
-
-#~ msgid "Front"
-#~ msgstr "Передній"
-
-#~ msgid "Rear"
-#~ msgstr "Задній"
-
-#~ msgid "Headphones"
-#~ msgstr "Навушники"
-
-#~ msgid "Center"
-#~ msgstr "Центральний"
-
-#~ msgid "LFE"
-#~ msgstr "LFE"
-
-#~ msgid "Surround"
-#~ msgstr "Об'ємний"
-
-#~ msgid "Side"
-#~ msgstr "Боковий"
-
-#~ msgid "AUX Out"
-#~ msgstr "Вихід AUX"
-
-#~ msgid "3D Depth"
-#~ msgstr "Просторова глибина"
-
-#~ msgid "3D Center"
-#~ msgstr "Просторовий центр"
-
-#~ msgid "3D Enhance"
-#~ msgstr "Просторове покращення"
-
-#~ msgid "Telephone"
-#~ msgstr "Телефон"
-
-#~ msgid "Video In"
-#~ msgstr "Відеовхід"
-
-#~ msgid "AUX In"
-#~ msgstr "Вхід AUX"
-
-#~ msgid "Record Gain"
-#~ msgstr "Підсилення запису"
-
-#~ msgid "Output Gain"
-#~ msgstr "Підсилення виходу"
-
-#~ msgid "Microphone Boost"
-#~ msgstr "Підсилення мікрофона"
-
-#~ msgid "Diagnostic"
-#~ msgstr "Діагностика"
-
-#~ msgid "Bass Boost"
-#~ msgstr "Підсилення басів"
-
-#~ msgid "Playback Ports"
-#~ msgstr "Порти відтворення"
-
-#~ msgid "Input"
-#~ msgstr "Вхід"
-
-#~ msgid "Monitor Source"
-#~ msgstr "Спостереження за джерелом"
-
-#~ msgid "Keyboard Beep"
-#~ msgstr "Гудок клавіатури"
-
-#~ msgid "Simulate Stereo"
-#~ msgstr "Імітація стерео"
-
-#~ msgid "Stereo"
-#~ msgstr "Стерео"
-
-#~ msgid "Surround Sound"
-#~ msgstr "Об'ємний звук"
-
-#~ msgid "Microphone Gain"
-#~ msgstr "Підсилення мікрофона"
-
-#~ msgid "Speaker Source"
-#~ msgstr "Основний динамік"
-
-#~ msgid "Microphone Source"
-#~ msgstr "Основний мікрофон"
-
-#~ msgid "Jack"
-#~ msgstr "Jack"
-
-#~ msgid "Center / LFE"
-#~ msgstr "Центральний/LFE"
-
-#~ msgid "Stereo Mix"
-#~ msgstr "Стереомікшер"
-
-#~ msgid "Mono Mix"
-#~ msgstr "Мономікшер"
-
-#~ msgid "Input Mix"
-#~ msgstr "Мікшер вх. даних"
-
-#~ msgid "Microphone 1"
-#~ msgstr "Мікрофон 1"
-
-#~ msgid "Microphone 2"
-#~ msgstr "Мікрофон 2"
-
-#~ msgid "Digital Out"
-#~ msgstr "Цифровий вихід"
-
-#~ msgid "Digital In"
-#~ msgstr "Цифровий вхід"
-
-#~ msgid "HDMI"
-#~ msgstr "HDMI"
-
-#~ msgid "Modem"
-#~ msgstr "Модем"
-
-#~ msgid "Handset"
-#~ msgstr "Гарнітура"
-
-#~ msgid "Other"
-#~ msgstr "Інше"
-
-#~ msgid "None"
-#~ msgstr "Немає"
-
-#~ msgid "On"
-#~ msgstr "Увімкн."
-
-#~ msgid "Off"
-#~ msgstr "Вимкн."
-
-#~ msgid "Mute"
-#~ msgstr "Вимкнути звук"
-
-#~ msgid "Fast"
-#~ msgstr "Швидко"
-
-#~ msgid "Very Low"
-#~ msgstr "Дуже низька"
-
-#~ msgid "Low"
-#~ msgstr "Низька"
-
-#~ msgid "Medium"
-#~ msgstr "Середня"
-
-#~ msgid "High"
-#~ msgstr "Висока"
-
-#~ msgid "Very High"
-#~ msgstr "Дуже висока"
-
-#~ msgid "Production"
-#~ msgstr "Промислова"
-
-#~ msgid "Front Panel Microphone"
-#~ msgstr "Мікрофон передньої панелі"
-
-#~ msgid "Front Panel Line In"
-#~ msgstr "Лінійний вхід передньої панелі"
-
-#~ msgid "Front Panel Headphones"
-#~ msgstr "Вихід навушників передньої панелі"
-
-#~ msgid "Front Panel Line Out"
-#~ msgstr "Лінійний вихід передньої панелі"
-
-#~ msgid "Green Connector"
-#~ msgstr "Зелений рознім"
-
-#~ msgid "Pink Connector"
-#~ msgstr "Рожевий рознім"
-
-#~ msgid "Blue Connector"
-#~ msgstr "Синій рознім"
-
-#~ msgid "White Connector"
-#~ msgstr "Білий рознім"
-
-#~ msgid "Black Connector"
-#~ msgstr "Чорний рознім"
-
-#~ msgid "Gray Connector"
-#~ msgstr "Сірий рознім"
-
-#~ msgid "Orange Connector"
-#~ msgstr "Помаранчевий рознім"
-
-#~ msgid "Red Connector"
-#~ msgstr "Червоний рознім"
-
-#~ msgid "Yellow Connector"
-#~ msgstr "Жовтий рознім"
-
-#~ msgid "Green Front Panel Connector"
-#~ msgstr "Зелений рознім передньої панелі"
-
-#~ msgid "Pink Front Panel Connector"
-#~ msgstr "Рожевий рознім передньої панелі"
-
-#~ msgid "Blue Front Panel Connector"
-#~ msgstr "Синій рознім передньої панелі"
-
-#~ msgid "White Front Panel Connector"
-#~ msgstr "Білий рознім передньої панелі"
-
-#~ msgid "Black Front Panel Connector"
-#~ msgstr "Чорний рознім передньої панелі"
-
-#~ msgid "Gray Front Panel Connector"
-#~ msgstr "Сірий рознім передньої панелі"
-
-#~ msgid "Orange Front Panel Connector"
-#~ msgstr "Помаранчевий рознім передньої панелі"
-
-#~ msgid "Red Front Panel Connector"
-#~ msgstr "Червоний рознім передньої панелі"
-
-#~ msgid "Yellow Front Panel Connector"
-#~ msgstr "Жовтий рознім передньої панелі"
-
-#~ msgid "Spread Output"
-#~ msgstr "Розгорнути вихід"
-
-#~ msgid "Downmix"
-#~ msgstr "Об’єднання каналів"
-
-#~ msgid "Virtual Mixer Input"
-#~ msgstr "Вхід віртуального мікшера"
-
-#~ msgid "Virtual Mixer Output"
-#~ msgstr "Вихід віртуального мікшера"
-
-#~ msgid "Virtual Mixer Channels"
-#~ msgstr "Канали віртуального мікшера"
-
-#~ msgid "%s %d Function"
-#~ msgstr "%s, функція %d"
-
-#~ msgid "%s Function"
-#~ msgstr "Функція %s"
-
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Отримано неочікуваний розмір блоку %u замість %u."
-
-#~ msgid "Error reading %d bytes on device '%s'."
-#~ msgstr "Помилка під час спроби читання %d байтів на пристрої «%s»."
-
-#~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "Не вдалося опитати буфери від пристрою «%s»."
-
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Не вдалося отримати відеокадри з пристрою «%s»."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Помилка після %d спроб. Пристрій %s. Системна помилка: %s"
-
-#~ msgid "Could not read from CD."
-#~ msgstr "Не вдається прочитати з компакт-диску."
-
-#~ msgid "Disc is not an Audio CD."
-#~ msgstr "Диск не є аудіо компакт-диском."
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Файл зашифрований та не може бути відтворений."
-
-#~ msgid "Failed getting controls attributes on device '%s.'"
-#~ msgstr "Не вдається отримати атрибути органів керування пристрою \"%s\"."
-
-#~ msgid ""
-#~ "The buffer type is not supported, or the index is out of bounds, or no "
-#~ "buffers have been allocated yet, or the userptr or length are invalid. "
-#~ "device %s"
-#~ msgstr ""
-#~ "Буфер цього типу не підтримується, або індекс поза межами діапазону, або "
-#~ "буфери ще не були виділені, або неправильні параметри userptr чи довжина. "
-#~ "Пристрій %s"
-
-#~ msgid ""
-#~ "Failed trying to get video frames from device '%s'. Not enough memory."
-#~ msgstr ""
-#~ "Не вдається отримати відеокадри з пристрою \"%s\". Недостатньо пам'яті."
-
-#~ msgid "insufficient memory to enqueue a user pointer buffer. device %s."
-#~ msgstr ""
-#~ "Недостатньо пам'яті для вставляння у чергу вказівника на буфер "
-#~ "користувача. Пристрій %s."
-
-#~ msgid "Could not exchange data with device '%s'."
-#~ msgstr "Помилка при обміні даними з пристроєм \"%s\"."
-
-#~ msgid "Could not set parameters on device '%s'"
-#~ msgstr "Не вдається встановити параметри пристрою \"%s\"."
-
-#~ msgid "Device '%s' cannot capture at %d/%d frames per second"
-#~ msgstr "Пристрій \"%s\" не здатний захоплювати %d/%d кадрів за секунду"
-
-#~ msgid "Could not get buffers from device '%s'."
-#~ msgstr "Не вдається отримати буфери від пристрою \"%s\"."
-
-#~ msgid "Could not get enough buffers from device '%s'."
-#~ msgstr "Не вдається отримати достатньо буферів від пристрою \"%s\"."
-
-#~ msgid "Error starting streaming capture from device '%s'."
-#~ msgstr "Не вдається розпочати захоплення кадрів з пристрою \"%s\"."
-
-#~ msgid "Error stopping streaming capture from device '%s'."
-#~ msgstr "Помилка при зупиненні захоплення кадрів з пристрою \"%s\"."

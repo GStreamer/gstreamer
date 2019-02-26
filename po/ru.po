@@ -3,14 +3,14 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012, 2013, 2014, 2015, 2016, 2017.
+# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019.
 # Pavel Maryanov <acid@jack.kiev.ua>, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.12.0\n"
+"Project-Id-Version: gst-plugins-good 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:59+0000\n"
-"PO-Revision-Date: 2017-05-05 19:23+0300\n"
+"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"PO-Revision-Date: 2019-01-25 19:51+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -31,12 +31,16 @@ msgstr "Не удалось декодировать JPEG-изображение
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Не удалось настроить аудио-кодировщик mp3 LAME. Проверьте параметры "
+"кодирования."
 
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Запрошенный битрейт в %d кбит/с для свойства «%s» недопустим. Битрейт был "
+"изменён на %d кбит/с."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -70,6 +74,7 @@ msgstr "Сервер не поддерживает поиск."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Не удалось настроить кодировщик TwoLAME. Проверьте параметры кодирования."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
@@ -190,13 +195,13 @@ msgstr ""
 "Драйвер устройства «%s» не поддерживает ни один из известных методов ввода-"
 "вывода."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Кодировщик на устройстве %s не поддерживает входной формат"
+msgstr "Устройство «%s» не поддерживает формат"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "Ошибка инициализации устройства «%s»"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -215,13 +220,13 @@ msgid "Device '%s' does support non-contiguous planes"
 msgstr ""
 "Устройство «%s» поддерживает прерывистые матрицы (non-contiguous planes)"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Устройство «%s» не поддерживает захват видео"
+msgstr "Устройство «%s» не поддерживает черезстрочность %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Устройство «%s» не поддерживает захват видео"
+msgstr "Устройство «%s» не поддерживает колориметрию %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -289,13 +294,13 @@ msgstr "Преобразователь на устройстве %s не под�
 msgid "Converter on device %s has no supported output format"
 msgstr "Преобразователь на устройстве %s не поддерживает выходной формат"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Кодировщик на устройстве %s не поддерживает входной формат"
+msgstr "Раскодировщик на устройстве %s не поддерживает входной формат"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Кодировщик на устройстве %s не поддерживает выходной формат"
+msgstr "Раскодировщик на устройстве %s не поддерживает выходной формат"
 
 msgid "Failed to start decoding thread."
 msgstr "Не удалось запустить нить декодирования."
@@ -311,9 +316,8 @@ msgstr "Кодировщик на устройстве %s не поддержи�
 msgid "Encoder on device %s has no supported input format"
 msgstr "Кодировщик на устройстве %s не поддерживает входной формат"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Не удалось запустить нить декодирования."
+msgstr "Не удалось запустить нить кодирования."
 
 #, c-format
 msgid ""

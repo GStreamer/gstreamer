@@ -4,13 +4,13 @@
 # Server Acim <serveracim@gmail.com>, 2010.
 # Server Acim <serveracim@gmail.com>, 2011.
 # Server Acim <serveracim@gmail.com>, 2013, 2015.
-# Mehmet Kececi <mkececi@mehmetkececi.com>, 2017.
+# Mehmet Kececi <mkececi@mehmetkececi.com>, 2017, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.12.0\n"
+"Project-Id-Version: gst-plugins-good 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:59+0000\n"
-"PO-Revision-Date: 2017-05-05 10:55+0300\n"
+"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"PO-Revision-Date: 2019-01-25 12:40+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
@@ -31,6 +31,8 @@ msgstr "JPEG görüntüsünü çözümlenemedi"
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"LAME mp3 ses kodlayıcı yapılandırılması başarısız oldu. Kodlama "
+"parametrelerinizi kontrol edin."
 
 #, c-format
 msgid ""
@@ -71,6 +73,7 @@ msgstr "Sunucu aramayı desteklemiyor."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"TwoLAME kodlayıcı yapılandırılamadı. Kodlama parametrelerini kontrol edin."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geçerli bir ses girişi bulunamadı. AVI akışı kesilecek."
@@ -181,13 +184,13 @@ msgstr ""
 "Bu aygıtın sürücüsü '%s' bilinen IO yöntemlerinden herhangi birisini "
 "desteklemiyor."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Aygıt %s üzerindeki kodlayıcı girdi biçimini deskteklemiyor"
+msgstr "Aygıt '%s' üzerindeki kodlayıcı girdi biçimini deskteklemiyor"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "'%s' aygıtı başlatma sırasında başarısız oldu"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -205,13 +208,13 @@ msgstr "Aygıt '%s' belirtilen kipte görüntü yakalayamadı"
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "Aygıt '%s' bitişik olmayan düzlemleri desteklemiyor"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Aygıt '%s' video yakalamayı desteklemiyor"
+msgstr "Aygıt '%s' görüntü atlama %s desteklenmiyor"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Aygıt '%s' video yakalamayı desteklemiyor"
+msgstr "Aygıt '%s' kolorimetre %s desteklenmiyor"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -279,13 +282,13 @@ msgstr "Aygıt %s üzerindeki dönüştürücü girdi biçimini desteklemiyor"
 msgid "Converter on device %s has no supported output format"
 msgstr "Aygıt %s üzerindeki dönüştürücü çıktı biçimini desteklemiyor"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Aygıt %s üzerindeki kodlayıcı girdi biçimini deskteklemiyor"
+msgstr "%s aygıtındaki kod çözücü, desteklenen bir giriş biçimine sahip değil"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Aygıt %s üzerindeki kodlayıcı çıktı biçimini deskteklemiyor"
+msgstr "%s aygıtındaki kod çözücü, desteklenen bir çıkış biçimine sahip değil"
 
 msgid "Failed to start decoding thread."
 msgstr "Çözme işi başlaması başarısız."
@@ -301,9 +304,8 @@ msgstr "Aygıt %s üzerindeki kodlayıcı çıktı biçimini deskteklemiyor"
 msgid "Encoder on device %s has no supported input format"
 msgstr "Aygıt %s üzerindeki kodlayıcı girdi biçimini deskteklemiyor"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Çözme işi başlaması başarısız."
+msgstr "Kod çözme iş parçacığı başlatılamadı."
 
 #, c-format
 msgid ""

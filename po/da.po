@@ -1,18 +1,18 @@
 # Danish translation of gst-plugins-good.
-# Copyright (C) 2017 gst.
+# Copyright (C) 2019 gst.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
-# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017.
+# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019.
 #
 # gain -> forhøjelse
 # boost -> øgning?
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.12.0\n"
+"Project-Id-Version: gst-plugins-good-1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:59+0000\n"
-"PO-Revision-Date: 2017-05-21 23:54+0200\n"
+"POT-Creation-Date: 2019-02-26 11:47+0000\n"
+"PO-Revision-Date: 2019-02-17 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -30,12 +30,16 @@ msgstr "Mislykkedes i at afkode JPEG-billede"
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Kunne ikke konfigurere LAME mp3-lydafkoderen. Kontroller dine "
+"kodningsparametre."
 
 #, c-format
 msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Den anmodte bithastighed %d kbit/s for egenskab »%s« er ikke tilladt. "
+"Bithastigheden blev ændret til %d kbit/s."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -70,6 +74,7 @@ msgstr "Server understøtter ikke søgning."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Kunne ikke konfigurere TwoLAME-koderen. Kontroller dine kodningsparametre."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Ingen eller defekt inddatalyd, AVI-sekvens vil blive ødelagt."
@@ -184,13 +189,13 @@ msgstr "Driveren til enhed »%s« understøtter ikke IO-metoden %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Driveren til enhed »%s« understøtter ingen kendt IO-metode."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Koder på enhed %s har ikke et understøttet inddataformat"
+msgstr "Enheden %s har intet understøttet format"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "Enheden »%s« fejlede under initialisering"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -208,13 +213,14 @@ msgstr "Enheden »%s« kan ikke optage i det angivne format"
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "Enheden »%s« understøtter ikke planer, der ikke hænger sammen"
 
-#, fuzzy, c-format
+# http://en.wikipedia.org/wiki/Interlaced_video
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Server understøtter ikke søgning."
+msgstr "Enheden »%s« understøtter ikke %s-interlacemetoden"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Enheden »%s« understøtter ikke planer, der ikke hænger sammen"
+msgstr "Enheden »%s« understøtter ikke %s-kolorimetri"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -284,13 +290,13 @@ msgstr ""
 msgid "Converter on device %s has no supported output format"
 msgstr "Konverteringsprogram på enhed %s har ikke et understøttet uddataformat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Koder på enhed %s har ikke et understøttet inddataformat"
+msgstr "Afkoderen på enheden %s har ikke et understøttet inddataformat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Koder på enhed %s har ikke et understøttet uddataformat"
+msgstr "Afkoderen på enheden %s har ikke et understøttet uddataformat"
 
 msgid "Failed to start decoding thread."
 msgstr "Kunne ikke starte afkodning af tråd."
@@ -306,9 +312,8 @@ msgstr "Koder på enhed %s har ikke et understøttet uddataformat"
 msgid "Encoder on device %s has no supported input format"
 msgstr "Koder på enhed %s har ikke et understøttet inddataformat"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Kunne ikke starte afkodning af tråd."
+msgstr "Kunne ikke starte kodningstråd."
 
 #, c-format
 msgid ""
