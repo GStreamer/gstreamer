@@ -1,3 +1,36 @@
+=== release 1.15.2 ===
+
+2019-02-26 12:00:58 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.15.2
+
+2019-01-30 15:45:21 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/GstPbutils.py:
+	  Gst.init() has to be called before GstPbutils is imported
+	  This makes sure that we do not try to use GstPbutils before Gst is init
+	  and in case GstPbutils is imported while Gst is not imported, use the
+	  `GstPbutils.pb_utils_init()` function to have the oportunity to
+	  initialize the overrides.
+	  Not that we also introduce a `GstPbutils.init()` variant because
+	  `GstPbutils.pb_utils_init()` is an ugly name.
+
+2019-01-22 16:59:02 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: Re add workarounds to detect libpython path
+	  This was removed all together in af4ade37435fcc31c8489f4d7c7496fef5f74b05
+	  "meson: use new python module".
+	  And add `-Dlibpython-dir` option for the cases the logic fails.
+
 === release 1.15.1 ===
 
 2019-01-17 02:33:52 +0000  Tim-Philipp Müller <tim@centricular.com>
