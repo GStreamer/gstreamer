@@ -1839,6 +1839,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstVideoRate::max-duplication-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum time to duplicate a frame</NICK>
+<BLURB>Do not duplicate frames if the gap exceeds this period (in ns) (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioConvert::dithering</NAME>
 <TYPE>GstAudioDitherMethod</TYPE>
 <RANGE></RANGE>
