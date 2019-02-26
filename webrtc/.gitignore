@@ -42,6 +42,13 @@
 *.idb
 *.pdb
 
+# Java build files
+.idea/
+*.iml
+.gradle/
+build/
+out/
+
 # Our stuff
 *.pem
 webrtc-sendrecv

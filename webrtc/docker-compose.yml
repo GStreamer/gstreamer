@@ -5,8 +5,10 @@ services:
   #
   # sendrecv-gst:
   #   build: ./sendrecv/gst
-  sendrecv-gst-rust:
-    build: ./sendrecv/gst-rust
+  sendrecv-gst-java:
+    build: ./sendrecv/gst-java
+  #sendrecv-gst-rust:
+  #  build: ./sendrecv/gst-rust
   sendrecv-js:
     build: ./sendrecv/js
     ports:

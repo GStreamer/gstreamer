@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    // GStreamer
+    compile "net.java.dev.jna:jna:5.2.0"
+    compile "org.freedesktop.gstreamer:gst1-java-core:0.9.4"
+
+    // Websockets
+    compile 'org.asynchttpclient:async-http-client:2.7.0'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+
+    // Logging
+    compile 'org.slf4j:slf4j-simple:1.8.0-beta2'
+}
+
+
+// Build a "fat" executable jar file
+jar {
+    manifest {
+        attributes 'Main-Class': 'WebrtcSendRecv'
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
