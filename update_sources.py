@@ -25,18 +25,23 @@ if __name__ == "__main__":
     print("Building all code")
     subprocess.check_call([ninja, "-C", buildroot])
 
+    if 'gstreamer-sharp' in os.environ['MESON_SUBDIR']:
+        subproject_prefix = 'gstreamer-sharp@@'
+    else:
+        subproject_prefix = ''
+
     if bindinate:
         print("Bindinate GStreamer")
-        subprocess.check_call([ninja, "-C", buildroot, "bindinate_gstreamer"])
+        subprocess.check_call([ninja, "-C", buildroot, subproject_prefix + "bindinate_gstreamer"])
 
     print("Update GStreamer bindings")
-    subprocess.check_call([ninja, "-C", buildroot, "update_gstreamer_code"])
+    subprocess.check_call([ninja, "-C", buildroot, subproject_prefix + "update_gstreamer_code"])
 
     if bindinate:
         print("Bindinate GES")
-        subprocess.check_call([ninja, "-C", buildroot, "bindinate_ges"])
+        subprocess.check_call([ninja, "-C", buildroot, subproject_prefix + "bindinate_ges"])
     print("Update GES bindings")
-    subprocess.check_call([ninja, "-C", buildroot, "update_ges_code"])
+    subprocess.check_call([ninja, "-C", buildroot, subproject_prefix + "update_ges_code"])
 
     print("Building all code")
     subprocess.check_call([ninja, "-C", buildroot])
