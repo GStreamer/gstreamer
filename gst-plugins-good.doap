@@ -34,6 +34,16 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
 
  <release>
   <Version>
+   <revision>1.15.2</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2019-02-26</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-1.15.2.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.15.1</revision>
    <branch>master</branch>
    <name></name>
