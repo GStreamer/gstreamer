@@ -1,14 +1,16 @@
-# Translation of gst-plugins-ugly to Croatian.
+# Translation of gst-plugins-ugly messages to Croatian.
 # This file is put in the public domain.
+# Copyright (C) 2004-2010, 2019 GStreamer core team.
+# This file is distributed under the same license as the gst-plugins-ugly package.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly-1.10.0\n"
+"Project-Id-Version: gst-plugins-ugly-1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 02:02+0000\n"
-"PO-Revision-Date: 2018-04-12 16:24-0800\n"
+"POT-Creation-Date: 2019-02-26 11:48+0000\n"
+"PO-Revision-Date: 2019-02-03 13:14-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -18,10 +20,10 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Lokalize 2.0\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "Could not read from CD."
-msgstr "CD nije moguće čitati."
+msgstr "Nije moguće čitati CD."
 
 msgid "Could not open CD device for reading."
 msgstr "CD uređaj nije moguće otvoriti za čitanje."
@@ -34,11 +36,11 @@ msgstr "DVD nije moguće otvoriti"
 
 #, c-format
 msgid "Could not open DVD title %d"
-msgstr "DVD naslov %d nije moguće otvoriti"
+msgstr "Nije moguće otvoriti DVD naslov %d"
 
 #, c-format
 msgid "Failed to go to chapter %d of DVD title %d"
-msgstr "Greška pri otvaranju poglavlja %d od DVD naslova %d"
+msgstr "Nije uspjelo otvoriti poglavlje %d DVD naslova %d"
 
 #, c-format
 msgid ""
@@ -52,14 +54,15 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
-"DVD nije moguće pročitati. DVD je možda šifrirani, a biblioteka za "
-"dešifriranje DVD-a nije instalirana."
+"DVD nije moguće čitati. DVD je možda je šifriran a biblioteka za "
+"dešifriranje\n"
+"nije instalirana."
 
 msgid "Could not read DVD."
 msgstr "DVD nije moguće čitati."
 
 msgid "This stream contains no data."
-msgstr "Ovo strujanje ne sadrži podatke."
+msgstr "Ovaj protok ne sadrži podatke."
 
 #~ msgid ""
 #~ "Failed to configure LAME mp3 audio encoder. Check your encoding "
