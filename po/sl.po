@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2014-04-09 22:38+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -1099,22 +1099,6 @@ msgstr[1] "%d zmožnost"
 msgstr[2] "%d zmožnosti"
 msgstr[3] "%d zmožnosti"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Napaka med zapiranjem datoteke \"%s\"."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Napaka med zapiranjem datoteke \"%s\"."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Napaka med pisanjem v datoteko \"%s\"."
-
 msgid "Print all elements"
 msgstr "Izpiši vse predmete"
 
@@ -1364,6 +1348,18 @@ msgstr "Nastavljanje cevovoda na NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Sproščanje cevovoda ...\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Napaka med zapiranjem datoteke \"%s\"."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Napaka med zapiranjem datoteke \"%s\"."
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Napaka med pisanjem v datoteko \"%s\"."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Notranja napaka pretoka podatkov."

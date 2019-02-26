@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -1112,22 +1112,6 @@ msgid_plural "%d features"
 msgstr[0] "karakteristika"
 msgstr[1] "karakteristikat"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Gabim gjatë ngarkimit të %s\n"
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Gabim gjatë ngarkimit të %s\n"
-
-#, fuzzy, c-format
-msgid "Error reading from console: %s\n"
-msgstr "Gabim gjatë ngarkimit të %s\n"
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Gabim gjatë shkrimit tek file \"%s\"."
-
 msgid "Print all elements"
 msgstr "Printo të gjithë elementët"
 
@@ -1372,6 +1356,22 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "DUKE ZBATUAR pipeline ...\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Gabim gjatë ngarkimit të %s\n"
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Gabim gjatë ngarkimit të %s\n"
+
+#, fuzzy
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Gabim gjatë ngarkimit të %s\n"
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Gabim gjatë shkrimit tek file \"%s\"."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Mos jep informacionin e gjendjes së LLOJIT"

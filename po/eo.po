@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2011-06-04 21:11+0100\n"
 "Last-Translator: Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -1039,22 +1039,6 @@ msgid_plural "%d features"
 msgstr[0] "%d trajto"
 msgstr[1] "%d trajtoj"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Eraro dum fermado de la dosiero \"%s\"."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Eraro dum fermado de la dosiero \"%s\"."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Eraro dum skribo al la dosiero \"%s\"."
-
 msgid "Print all elements"
 msgstr "Eligi ĉiujn elementojn"
 
@@ -1297,6 +1281,18 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Eraro dum fermado de la dosiero \"%s\"."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Eraro dum fermado de la dosiero \"%s\"."
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Eraro dum skribo al la dosiero \"%s\"."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interna datumflu-eraro."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2010-06-07 22:01+0100\n"
 "Last-Translator: astur <maacub@gmail.com>\n"
 "Language-Team: Asturian <ubuntu-l10n-ast@lists.ubuntu.com>\n"
@@ -1098,22 +1098,6 @@ msgid_plural "%d features"
 msgstr[0] "%d característica"
 msgstr[1] "%d carauterístiques"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Fallu al zarrar el ficheru \"%s\"."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Fallu al zarrar el ficheru \"%s\"."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Fallu al escribir al ficheru \"%s\"."
-
 msgid "Print all elements"
 msgstr "Imprentar tolos elementos"
 
@@ -1365,6 +1349,18 @@ msgstr "Afitando pipeline a NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Lliberando la tubería…\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Fallu al zarrar el ficheru \"%s\"."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Fallu al zarrar el ficheru \"%s\"."
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Fallu al escribir al ficheru \"%s\"."
 
 #~ msgid "link without source element"
 #~ msgstr "enllaz ensin elementos de fonte"

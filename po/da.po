@@ -1,17 +1,17 @@
 # translation of gstreamer to Danish
-# Copyright (C) 2017 Free Software Foundation, Inc.
+# Copyright (C) 2019 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Mogens Jaeger <mogensjaeger@gmail.com>, 2007, 2010, 2013, 2014.
-# Joe Hansen <joedalton2@yahoo.dk>, 2015, 2016, 2017.
+# Joe Hansen <joedalton2@yahoo.dk>, 2015, 2016, 2017, 2019.
 #
 # conductor -> dirigent (https://lists.freedesktop.org/archives/gstreamer-commits/2016-February/092542.html)
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.12.0\n"
+"Project-Id-Version: gstreamer 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
-"PO-Revision-Date: 2017-05-21 13:26+0200\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"PO-Revision-Date: 2019-02-14 13:26+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -934,7 +934,7 @@ msgid "empty pipeline not allowed"
 msgstr "tom rørledning ikke tilladt"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Datakanalkonstruktion er ugyldig, tilføj venligst køer."
 
 msgid "A lot of buffers are being dropped."
 msgstr "En masse af bufferens indhold smides væk."
@@ -1022,7 +1022,7 @@ msgid "Failed after iterations as requested."
 msgstr "Fejlede efter iterationer som forespurgt."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "eos-after og error-after kan ikke begge være defineret."
 
 msgid "caps"
 msgstr "kapabiliteter"
@@ -1046,9 +1046,9 @@ msgstr "Strøm indeholder ikke nok data."
 msgid "Stream contains no data."
 msgstr "Mediestrøm indeholder ingen data."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Implementerede grænseflader:\n"
+msgstr "%sImplementerede grænseflader%s:\n"
 
 msgid "readable"
 msgstr "læselig"
@@ -1074,9 +1074,9 @@ msgstr "kan kun ændres i tilstandene NULL eller READY"
 msgid "Blacklisted files:"
 msgstr "Sortlistede filer:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Total optælling: "
+msgstr "%sSamlet antal%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1101,22 +1101,6 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d egenskab"
 msgstr[1] "%d egenskaber"
-
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Fejl ved lukning af filen \"%s\"."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Fejl ved lukning af filen \"%s\"."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Fejl under skrivning til filen \"%s\"."
 
 msgid "Print all elements"
 msgstr "Udskriv alle elementer"
@@ -1165,6 +1149,8 @@ msgid ""
 "Disable colors in output. You can also achieve the same by "
 "setting'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Deaktiver farver i resultatet. Du kan også opnå det samme ved at give "
+"miljøvariablen GST_INSPECT_NO_COLORS en værdi."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1376,6 +1362,18 @@ msgstr "Rørledning sættes til NUL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Rørledning frigøres ...\n"
+
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Fejl ved oprettelse af datakanal: %s\n"
+
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Fejl ved forgrening: %s\n"
+
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Der opstod en fejl ved læsning fra konsollen: %s\n"
+
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Der opstod en fejl under skrivning til konsollen: %s\n"
 
 #~ msgid "bin"
 #~ msgstr "lager"

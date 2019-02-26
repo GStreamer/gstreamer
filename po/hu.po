@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2017-05-05 20:17+0200\n"
 "Last-Translator: Balázs Úr <urbalazs@gmail.com>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -1093,22 +1093,6 @@ msgid_plural "%d features"
 msgstr[0] "%d szolgáltatás"
 msgstr[1] "%d szolgáltatás"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Hiba a(z) „%s” fájl bezárása közben."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Hiba a(z) „%s” fájl bezárása közben."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Hiba a(z) „%s” fájl írása közben."
-
 msgid "Print all elements"
 msgstr "Az összes elem kiírása"
 
@@ -1360,3 +1344,15 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Hiba a(z) „%s” fájl bezárása közben."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Hiba a(z) „%s” fájl bezárása közben."
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Hiba a(z) „%s” fájl írása közben."

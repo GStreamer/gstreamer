@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2017-05-25 16:25+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -1123,22 +1123,6 @@ msgid_plural "%d features"
 msgstr[0] "%d Merkmal"
 msgstr[1] "%d Merkmale"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Fehler beim Schließen der Datei »%s«."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Fehler beim Schließen der Datei »%s«."
-
-#, fuzzy, c-format
-msgid "Error reading from console: %s\n"
-msgstr "Fehler beim erneuten Einlesen der Registry %s : %s"
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Fehler beim Schreiben der Daten »%s«."
-
 msgid "Print all elements"
 msgstr "Alle Elemente ausgeben"
 
@@ -1396,6 +1380,22 @@ msgstr "Leitung wird auf NULL gesetzt ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Leitung wird geleert ...\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Fehler beim Schließen der Datei »%s«."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Fehler beim Schließen der Datei »%s«."
+
+#, fuzzy
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Fehler beim erneuten Einlesen der Registry %s : %s"
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Fehler beim Schreiben der Daten »%s«."
 
 #~ msgid "bin"
 #~ msgstr "Behälter"

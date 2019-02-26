@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2017-05-05 22:33+0200\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -1101,22 +1101,6 @@ msgid_plural "%d features"
 msgstr[0] "%d fonctionnalité"
 msgstr[1] "%d fonctionnalités"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Erreur lors de la fermeture du fichier « %s »."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Erreur lors de la fermeture du fichier « %s »."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Erreur d’écriture dans le fichier « %s »."
-
 msgid "Print all elements"
 msgstr "Affiche tous les éléments"
 
@@ -1371,6 +1355,18 @@ msgstr "Définition du pipeline à NULL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Libération du pipeline…\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Erreur lors de la fermeture du fichier « %s »."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Erreur lors de la fermeture du fichier « %s »."
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Erreur d’écriture dans le fichier « %s »."
 
 #~ msgid "bin"
 #~ msgstr "bin"

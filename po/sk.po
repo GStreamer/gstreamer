@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.7.90\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2016-05-20 11:32+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -1094,22 +1094,6 @@ msgstr[0] "%d funkcia"
 msgstr[1] "%d funkcie"
 msgstr[2] "%d funkcií"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Chyba pri zatváraní súboru \"%s\"."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Chyba pri zatváraní súboru \"%s\"."
-
-#, fuzzy, c-format
-msgid "Error reading from console: %s\n"
-msgstr "Chyba pri opätovnom skenovaní registrov %s: %s"
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Chyba pri zápise do súboru \"%s\"."
-
 msgid "Print all elements"
 msgstr "Vypísať všetky prvky"
 
@@ -1364,6 +1348,22 @@ msgstr "Nastavujem rúru na NULOVÚ ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Uvoľňujem rúru ...\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Chyba pri zatváraní súboru \"%s\"."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Chyba pri zatváraní súboru \"%s\"."
+
+#, fuzzy
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Chyba pri opätovnom skenovaní registrov %s: %s"
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Chyba pri zápise do súboru \"%s\"."
 
 #~ msgid "bin"
 #~ msgstr "zásobník"

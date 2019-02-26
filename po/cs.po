@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2017-09-13 15:04+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -1097,22 +1097,6 @@ msgstr[0] "%d funkce"
 msgstr[1] "%d funkce"
 msgstr[2] "%d funkcí"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Chyba při zavírání souboru „%s“."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Chyba při zavírání souboru „%s“."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Chyba při zápisu do souboru „%s“."
-
 msgid "Print all elements"
 msgstr "Vypsat všechny elementy"
 
@@ -1379,3 +1363,15 @@ msgstr "Nastavuje se roura na PRÁZDNÁ…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Uvolňuje se roura…\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Chyba při zavírání souboru „%s“."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Chyba při zavírání souboru „%s“."
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Chyba při zápisu do souboru „%s“."

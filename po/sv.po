@@ -1,16 +1,16 @@
 # Swedish messages for gstreamer.
-# Copyright © 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2014, 2015, 2016, 2017 Free Software Foundation, Inc.
+# Copyright © 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2014, 2015, 2016, 2017, 2019 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010, 2011.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.12.0\n"
+"Project-Id-Version: gstreamer 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
-"PO-Revision-Date: 2017-05-21 18:45+0800\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"PO-Revision-Date: 2019-02-05 18:22+0100\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.8.11\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "Print the GStreamer version"
 msgstr "Skriv ut GStreamer-versionen"
@@ -840,7 +840,7 @@ msgstr "Ingen uri-hanterare hittades för %s-protokollet"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr "Uri-schema \"%s\" saknar stöd"
+msgstr "Uri-schema ”%s” saknar stöd"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -864,11 +864,11 @@ msgstr "länk har ingen utgång [källa=%s@%p]"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr "ingen \"%s\"-egenskap i elementet \"%s\""
+msgstr "ingen ”%s”-egenskap i elementet ”%s”"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "kunde inte ställa in egenskapen \"%s\" i elementet \"%s\" till \"%s\""
+msgstr "kunde inte ställa in egenskapen ”%s” i elementet ”%s” till ”%s”"
 
 msgid "Delayed linking failed."
 msgstr "Fördröjd länkning misslyckades."
@@ -892,44 +892,44 @@ msgstr "kunde inte länka %s med %s"
 
 #, c-format
 msgid "no element \"%s\""
-msgstr "inget \"%s\"-element"
+msgstr "inget ”%s”-element"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr "oväntad referens \"%s\" - ignorerar"
+msgstr "oväntad referens ”%s” - ignorerar"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr "oväntad kontakt-referens \"%s\" - ignorerar"
+msgstr "oväntad kontakt-referens ”%s” - ignorerar"
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "kunde inte tolka förmågorna \"%s\""
+msgstr "kunde inte tolka förmågorna ”%s”"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "inget utgångselement för URI:n \"%s\""
+msgstr "inget utgångselement för URI:n ”%s”"
 
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr "inget källelement för URI:n \"%s\""
+msgstr "inget källelement för URI:n ”%s”"
 
 msgid "syntax error"
 msgstr "syntaxfel"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr "angav tom korg \"%s\", inte tillåtet"
+msgstr "angav tom korg ”%s”, inte tillåtet"
 
 #, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "ingen korg \"%s\", packar upp element"
+msgstr "ingen korg ”%s”, packar upp element"
 
 msgid "empty pipeline not allowed"
 msgstr "tom rörledning är inte tillåtet"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Rörledningskonstruktion ogiltig, lägg till köer."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Förkastar en stor mängd buffertar."
@@ -967,11 +967,11 @@ msgstr "Ingen temporärkatalog angiven."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Kunde inte skapa temporärfilen \"%s\"."
+msgstr "Kunde inte skapa temporärfilen ”%s”."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Kunde inte öppna filen \"%s\" för läsning."
+msgstr "Kunde inte öppna filen ”%s” för läsning."
 
 msgid "Error while writing to download file."
 msgstr "Fel vid skrivning till hämtningsfilen."
@@ -981,40 +981,40 @@ msgstr "Inget filnamn angivet för skrivning."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Kunde inte öppna filen \"%s\" för skrivning."
+msgstr "Kunde inte öppna filen ”%s” för skrivning."
 
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr "Fel vid stängning av filen \"%s\"."
+msgstr "Fel vid stängning av filen ”%s”."
 
 #, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "Fel vid sökning i filen \"%s\"."
+msgstr "Fel vid sökning i filen ”%s”."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Fel vid skrivning till filen \"%s\"."
+msgstr "Fel vid skrivning till filen ”%s”."
 
 msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
 #, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "Kunde inte få information om \"%s\"."
+msgstr "Kunde inte få information om ”%s”."
 
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr "\"%s\" är en katalog."
+msgstr "”%s” är en katalog."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Filen \"%s\" är ett uttag."
+msgstr "Filen ”%s” är ett uttag."
 
 msgid "Failed after iterations as requested."
 msgstr "Misslyckades efter iterationer som begärt."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "eos-after och error-after kan inte båda definieras."
 
 msgid "caps"
 msgstr "förmågor"
@@ -1037,9 +1037,9 @@ msgstr "Strömmen innehåller inte tillräckligt med data."
 msgid "Stream contains no data."
 msgstr "Strömmen innehåller inget data."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Implementerade gränssnitt:\n"
+msgstr "%sImplementerade gränssnitt%s:\n"
 
 msgid "readable"
 msgstr "läsbar"
@@ -1065,9 +1065,9 @@ msgstr "ändringsbart endast i tillstånden NULL eller READY"
 msgid "Blacklisted files:"
 msgstr "Svartlistade filer:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Totalt antal: "
+msgstr "%sTotalt antal%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1092,22 +1092,6 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d funktion"
 msgstr[1] "%d funktioner"
-
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Fel vid stängning av filen \"%s\"."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Fel vid stängning av filen \"%s\"."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Fel vid skrivning till filen \"%s\"."
 
 msgid "Print all elements"
 msgstr "Skriv ut alla element"
@@ -1157,6 +1141,8 @@ msgid ""
 "Disable colors in output. You can also achieve the same by "
 "setting'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Inaktivera färger i utdata. Du kan också åstadkomma detsamma genom att sätta "
+"miljövariabeln ”GST_INSPECT_NO_COLORS” till vilket värde som helst."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1164,22 +1150,22 @@ msgstr "Kunde inte läsa in fil för insticksmodul: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "Inget sådant element eller insticksmodul \"%s\"\n"
+msgstr "Inget sådant element eller insticksmodul ”%s”\n"
 
 msgid "Index statistics"
 msgstr "Indexstatistik"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Fick meddelande #%u från elementet \"%s\" (%s): "
+msgstr "Fick meddelande #%u från elementet ”%s” (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Fick meddelande #%u från kontakten (pad) \"%s:%s\" (%s): "
+msgstr "Fick meddelande #%u från kontakten (pad) ”%s:%s” (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Fick meddelande #%u från objektet \"%s\" (%s): "
+msgstr "Fick meddelande #%u från objektet ”%s” (%s): "
 
 #, c-format
 msgid "Got message #%u (%s): "
@@ -1187,30 +1173,30 @@ msgstr "Fick meddelande #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "Fick EOS från element \"%s\".\n"
+msgstr "Fick EOS från element ”%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
+msgstr "HITTADE TAGG   : hittat av elementet ”%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "HITTADE TAGG   : hittat av kontakten \"%s:%s\".\n"
+msgstr "HITTADE TAGG   : hittat av kontakten ”%s:%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "HITTADE TAGG   : hittat av objektet \"%s\".\n"
+msgstr "HITTADE TAGG   : hittat av objektet ”%s”.\n"
 
 msgid "FOUND TAG\n"
 msgstr "HITTADE TAGG\n"
 
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "HITTADE INNEHÅLL : hittat av elementet \"%s\".\n"
+msgstr "HITTADE INNEHÅLL : hittat av elementet ”%s”.\n"
 
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "HITTADE INNEHÅLL : hittat av objektet \"%s\".\n"
+msgstr "HITTADE INNEHÅLL : hittat av objektet ”%s”.\n"
 
 msgid "FOUND TOC\n"
 msgstr "HITTADE INNEHÅLL\n"
@@ -1262,7 +1248,7 @@ msgstr "Element saknas: %s\n"
 
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Fick kontext från elementet \"%s\": %s=%s\n"
+msgstr "Fick kontext från elementet ”%s”: %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Mata ut taggar (även känt som metadata)"
@@ -1310,7 +1296,7 @@ msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VARNING: felaktig rörledning: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "FEL: \"pipeline\"-elementet hittades inte.\n"
+msgstr "FEL: ”pipeline”-elementet hittades inte.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Ställer in rörledningen till PAUSED...\n"
@@ -1365,6 +1351,18 @@ msgstr "Ställer in rörledningen till NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Frigör rörledning ...\n"
+
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Fel vid stängning av rörledning: %s\n"
+
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Fel vid processgrening: %s\n"
+
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Fel vid läsning från konsol: %s\n"
+
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Fel vid skrivning till konsol: %s\n"
 
 #~ msgid "bin"
 #~ msgstr "korg"

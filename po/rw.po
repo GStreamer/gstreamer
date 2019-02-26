@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -1271,22 +1271,6 @@ msgid_plural "%d features"
 msgstr[0] ""
 msgstr[1] ""
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Itangira..."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Itangira..."
-
-#, fuzzy, c-format
-msgid "Error reading from console: %s\n"
-msgstr "Itangira..."
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Kuri IDOSIYE"
-
 #, fuzzy
 msgid "Print all elements"
 msgstr "Byose Ibintu"
@@ -1537,6 +1521,22 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Itangira..."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Itangira..."
+
+#, fuzzy
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Itangira..."
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Kuri IDOSIYE"
 
 #, fuzzy
 #~ msgid "Do not output status information of TYPE"

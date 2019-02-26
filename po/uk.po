@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gstreamer package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.12.0\n"
+"Project-Id-Version: gstreamer 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
-"PO-Revision-Date: 2017-05-04 22:17+0300\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"PO-Revision-Date: 2019-01-24 21:55+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -19,7 +19,7 @@ msgstr ""
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Lokalize 1.5\n"
+"X-Generator: Lokalize 2.0\n"
 
 msgid "Print the GStreamer version"
 msgstr "Показати дані щодо версії GStreamer"
@@ -927,7 +927,7 @@ msgid "empty pipeline not allowed"
 msgstr "не можна використовувати порожній канал"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Некоректна конструкція конвеєра, будь ласка, додайте черги."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Викинуто багато буферів."
@@ -1012,7 +1012,7 @@ msgid "Failed after iterations as requested."
 msgstr "Помилка після ітерацій у запитаному порядку."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "Не можна одночасно визначати eos-after і error-after."
 
 msgid "caps"
 msgstr "можливості"
@@ -1035,9 +1035,9 @@ msgstr "У потоці міститься недостатньо даних."
 msgid "Stream contains no data."
 msgstr "Потік не містить даних."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Реалізовані інтерфейси:\n"
+msgstr "%sРеалізовані інтерфейси%s:\n"
 
 msgid "readable"
 msgstr "читання"
@@ -1063,9 +1063,9 @@ msgstr "можна змінювати лише у станах NULL і READY"
 msgid "Blacklisted files:"
 msgstr "Заблоковані файли:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Загальна кількість:"
+msgstr "%sЗагальна кількість%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1094,22 +1094,6 @@ msgid_plural "%d features"
 msgstr[0] "%d функція"
 msgstr[1] "%d функції"
 msgstr[2] "%d функцій"
-
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Помилка закривання файла «%s»."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Помилка закривання файла «%s»."
-
-#, fuzzy, c-format
-msgid "Error reading from console: %s\n"
-msgstr "Помилка при повторному скануванні реєстру модулів %s: %s"
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Помилка при записуванні до файла «%s»."
 
 msgid "Print all elements"
 msgstr "Вивести усі елементи"
@@ -1155,6 +1139,8 @@ msgid ""
 "Disable colors in output. You can also achieve the same by "
 "setting'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Вимкнути кольори у виведених даних. Ви також можете досягти встановленням "
+"для змінної середовища GST_INSPECT_NO_COLORS будь-якого значення."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1369,6 +1355,18 @@ msgstr "Канал переводиться у стан NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Спорожнення каналу...\n"
+
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Помилка під час створення конвеєра: %s\n"
+
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Помилка відгалуження: %s\n"
+
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Помилка під час читання з консолі: %s\n"
+
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Помилка під час запису до консолі: %s\n"
 
 #~ msgid "bin"
 #~ msgstr "фрагмент"

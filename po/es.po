@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2011-10-02 15:45+0200\n"
 "Last-Translator: Jorge González González <aloriel@gmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -1106,22 +1106,6 @@ msgid_plural "%d features"
 msgstr[0] "%d característica"
 msgstr[1] "%d características"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Error al cerrar el archivo «%s»."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Error al cerrar el archivo «%s»."
-
-#, fuzzy, c-format
-msgid "Error reading from console: %s\n"
-msgstr "Error al volver a escanear el registro %s: %s"
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Error al escribir al archivo «%s»."
-
 msgid "Print all elements"
 msgstr "Imprimir todos los elementos"
 
@@ -1375,6 +1359,22 @@ msgstr "Estableciendo el conducto a NULL …\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando la tubería…\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Error al cerrar el archivo «%s»."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Error al cerrar el archivo «%s»."
+
+#, fuzzy
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Error al volver a escanear el registro %s: %s"
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Error al escribir al archivo «%s»."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Error interno de flujo de datos."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.10.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2017-03-19 15:41+0100\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
@@ -1067,22 +1067,6 @@ msgid_plural "%d features"
 msgstr[0] "%d funzionalitât"
 msgstr[1] "%d funzionalitâts"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Erôr tal sierâ il file \"%s\"."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Erôr tal sierâ il file \"%s\"."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Erôr tal scrivi sul file \"%s\"."
-
 msgid "Print all elements"
 msgstr "Stampe ducj i elements"
 
@@ -1323,3 +1307,15 @@ msgstr ""
 
 msgid "Freeing pipeline ...\n"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Erôr tal sierâ il file \"%s\"."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Erôr tal sierâ il file \"%s\"."
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Erôr tal scrivi sul file \"%s\"."

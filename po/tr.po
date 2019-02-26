@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Baris Cicek <baris@teamforce.name.tr>, 2004, 2015.
-# Mehmet Kececi <mkececi@mehmetkececi.com>, 2017.
+# Mehmet Kececi <mkececi@mehmetkececi.com>, 2017, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.12.0\n"
+"Project-Id-Version: gstreamer 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
-"PO-Revision-Date: 2017-05-05 11:51+0300\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"PO-Revision-Date: 2019-01-25 11:54+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.0.1\n"
+"X-Generator: Virtaal 0.7.1\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Project-Style: gnome\n"
 
@@ -917,7 +917,7 @@ msgid "empty pipeline not allowed"
 msgstr "boş boruhattına izin verilmiyor"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Ardışık düzen yapısı geçersiz, lütfen sıralar ekleyin."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Tampon belleklerin bir çoğu bırakılıyor."
@@ -1002,7 +1002,7 @@ msgid "Failed after iterations as requested."
 msgstr "İstenildiği gibi tekrarlama başarısız oldu."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "eos-sonra ve hata-sonra her ikisi de tanımlanamaz."
 
 msgid "caps"
 msgstr "kabiliyetler"
@@ -1025,9 +1025,9 @@ msgstr "Akışı yeterli veri içermiyor."
 msgid "Stream contains no data."
 msgstr "Akış hiçbir veri içermiyor."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Gerçeklenmiş Arayüzler:\n"
+msgstr "%serçeklenmiş Arayüzler%s:\n"
 
 msgid "readable"
 msgstr "okunabilir"
@@ -1053,9 +1053,9 @@ msgstr "sadece NULL ya da READY olarak değiştirilebilir"
 msgid "Blacklisted files:"
 msgstr "Kara listeye alınan dosyalar:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Toplam sayı: "
+msgstr "%sToplam sayı%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1080,22 +1080,6 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d özelliği"
 msgstr[1] "%d özelliği"
-
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "\"%s\" kapatılırken hata."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "\"%s\" kapatılırken hata."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "\"%s\" dosyası yazılırken hata."
 
 msgid "Print all elements"
 msgstr "Bütün ögeleri yazdır"
@@ -1141,6 +1125,9 @@ msgid ""
 "Disable colors in output. You can also achieve the same by "
 "setting'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Çıktıda renkleri devre dışı bırakın. Aynı zamanda 'GST_INSPECT_NO_COLORS' "
+"ortam değişkenini herhangi bir değere ayarlayarak da aynı şekilde elde "
+"edebilirsiniz."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1351,6 +1338,18 @@ msgstr "Boru hattı NULL olarak ayarlanıyor ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Boru hattı boşaltılıyor ...\n"
+
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Pipe oluşturma hatası: %s\n"
+
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Çatallama hatası: %s\n"
+
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Uçbirimden okuma hatası: %s\n"
+
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Uçbirime yazma hatası: %s\n"
 
 #~ msgid "bin"
 #~ msgstr "bin"

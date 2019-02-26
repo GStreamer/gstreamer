@@ -1,13 +1,13 @@
 # Polish translation for gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2017.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.12.0\n"
+"Project-Id-Version: gstreamer 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
-"PO-Revision-Date: 2017-05-08 18:54+0200\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"PO-Revision-Date: 2019-01-24 21:45+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -931,7 +931,7 @@ msgid "empty pipeline not allowed"
 msgstr "pusty potok nie jest dozwolony"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Konstrukcja potoku błędna, proszę dodać kolejki."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Wiele buforów zostało zgubionych."
@@ -1016,7 +1016,7 @@ msgid "Failed after iterations as requested."
 msgstr "Niepowodzenie po iteracjach jak żądano."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "eos-after i error-after nie mogą być jednocześnie zdefiniowane."
 
 msgid "caps"
 msgstr "możliwości"
@@ -1039,9 +1039,9 @@ msgstr "Strumień nie zawiera wystarczająco dużo danych."
 msgid "Stream contains no data."
 msgstr "Strumień nie zawiera danych."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Zaimplementowane interfejsy:\n"
+msgstr "%sZaimplementowane interfejsy%s:\n"
 
 msgid "readable"
 msgstr "odczyt"
@@ -1067,9 +1067,9 @@ msgstr "możliwa zmiana tylko w stanie NULL lub GOTOWOŚĆ"
 msgid "Blacklisted files:"
 msgstr "Pliki wykluczone:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Całkowita liczba: "
+msgstr "%sCałkowita liczba%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1098,22 +1098,6 @@ msgid_plural "%d features"
 msgstr[0] "%d cecha"
 msgstr[1] "%d cechy"
 msgstr[2] "%d cech"
-
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Błąd podczas zamykania pliku \"%s\"."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Błąd podczas zamykania pliku \"%s\"."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Błąd podczas zapisu do pliku \"%s\"."
 
 msgid "Print all elements"
 msgstr "Wypisanie wszystkich elementów"
@@ -1160,6 +1144,8 @@ msgid ""
 "Disable colors in output. You can also achieve the same by "
 "setting'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Wyłączenie kolorów na wyjściu. Można to samo osiągnąć ustawiając na dowolną "
+"wartość zmienną środowiskową 'GST_INSPECT_NO_COLORS'."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1368,3 +1354,15 @@ msgstr "Ustawianie potoku na NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Zwalnianie potoku...\n"
+
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Błąd tworzenia potoku: %s\n"
+
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Błąd odgałęziania procesu: %s\n"
+
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Błąd odczytu z konsoli: %s\n"
+
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Błąd zapisu na konsolę: %s\n"

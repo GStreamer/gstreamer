@@ -4,13 +4,13 @@
 # Peter Astakhov <astakhovp@mail.ru>, 2005.
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.12.0\n"
+"Project-Id-Version: gstreamer 1.15.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
-"PO-Revision-Date: 2017-05-05 05:48+0300\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
+"PO-Revision-Date: 2019-01-25 19:43+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -930,7 +930,7 @@ msgid "empty pipeline not allowed"
 msgstr "пустой конвейер недопустим"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Некорректно собранный конвейер, добавьте очереди."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Многое из буфера было отброшено."
@@ -1015,7 +1015,7 @@ msgid "Failed after iterations as requested."
 msgstr "Сбой после итераций, согласно запросу."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "Нельзя указывать eos-after и error-after одновременно."
 
 msgid "caps"
 msgstr "возможности"
@@ -1038,9 +1038,9 @@ msgstr "Поток содержит недостаточно данных."
 msgid "Stream contains no data."
 msgstr "Поток не содержит данных."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Реализованные интерфейсы:\n"
+msgstr "%sРеализованные интерфейсы%s:\n"
 
 msgid "readable"
 msgstr "считываемый"
@@ -1066,9 +1066,9 @@ msgstr "может быть равно только состоянию NULL ил
 msgid "Blacklisted files:"
 msgstr "Файлы из чёрного списка:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Общее количество: "
+msgstr "%sОбщее количество%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1097,22 +1097,6 @@ msgid_plural "%d features"
 msgstr[0] "%d функция"
 msgstr[1] "%d функции"
 msgstr[2] "%d функций"
-
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Ошибка загрузки %s\n"
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Ошибка загрузки %s\n"
-
-#, fuzzy, c-format
-msgid "Error reading from console: %s\n"
-msgstr "Ошибка повторного сканирования реестра %s: %s"
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Ошибка записи в файл «%s»."
 
 msgid "Print all elements"
 msgstr "Вывести все элементы"
@@ -1157,6 +1141,8 @@ msgid ""
 "Disable colors in output. You can also achieve the same by "
 "setting'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Отключить цветность в выводе. Также это можно сделать задав переменной "
+"окружения «GST_INSPECT_NO_COLORS» любое значение."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1365,6 +1351,18 @@ msgstr "Установка конвейера в состояние NULL…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Освобождение конвейера…\n"
+
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Ошибка создания канала: %s\n"
+
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Ошибка создания дочернего процесса: %s\n"
+
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Ошибка чтения из консоли: %s\n"
+
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Ошибка записи в консоль: %s»\n"
 
 #~ msgid "bin"
 #~ msgstr "контейнер"

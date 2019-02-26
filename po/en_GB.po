@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -1106,22 +1106,6 @@ msgid_plural "%d features"
 msgstr[0] ""
 msgstr[1] ""
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Error closing file \"%s\"."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Error closing file \"%s\"."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Error while writing to file \"%s\"."
-
 #, fuzzy
 msgid "Print all elements"
 msgstr "no element \"%s\""
@@ -1367,6 +1351,18 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "RUNNING pipeline ...\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Error closing file \"%s\"."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Error closing file \"%s\"."
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Error while writing to file \"%s\"."
 
 #~ msgid "Do not output status information of TYPE"
 #~ msgstr "Do not output status information of TYPE"

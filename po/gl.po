@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2012-12-15 03:29+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -1094,22 +1094,6 @@ msgid_plural "%d features"
 msgstr[0] "%d característica"
 msgstr[1] "%d características"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Produciuse un erro ao pechar o ficheiro «%s»."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Produciuse un erro ao pechar o ficheiro «%s»."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Produciuse un erro ao escribir no ficheiro «%s»."
-
 msgid "Print all elements"
 msgstr "Imprimir todos os elementos"
 
@@ -1361,6 +1345,18 @@ msgstr "Estabelecendo a tubería a NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a tubería...\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Produciuse un erro ao pechar o ficheiro «%s»."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Produciuse un erro ao pechar o ficheiro «%s»."
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Produciuse un erro ao escribir no ficheiro «%s»."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Produciuse un erro no fluxo interno de datos."

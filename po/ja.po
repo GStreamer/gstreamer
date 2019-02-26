@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2013-08-20 14:56+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -1056,22 +1056,6 @@ msgid_plural "%d features"
 msgstr[0] ""
 msgstr[1] ""
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "ファイル \"%s\" のクローズ時にエラーが発生しました"
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "ファイル \"%s\" のクローズ時にエラーが発生しました"
-
-#, fuzzy, c-format
-msgid "Error reading from console: %s\n"
-msgstr "レジストリ %s の再スキャン中にエラーが発生しました: %s"
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "ファイル \"%s\" の書き込み中にエラーが発生しました"
-
 msgid "Print all elements"
 msgstr "すべてのエレメントを表示する"
 
@@ -1320,6 +1304,22 @@ msgstr ""
 #, fuzzy
 msgid "Freeing pipeline ...\n"
 msgstr "パイプラインを解放 (FREEING) しています...\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "ファイル \"%s\" のクローズ時にエラーが発生しました"
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "ファイル \"%s\" のクローズ時にエラーが発生しました"
+
+#, fuzzy
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "レジストリ %s の再スキャン中にエラーが発生しました: %s"
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "ファイル \"%s\" の書き込み中にエラーが発生しました"
 
 #~ msgid "Internal data stream error."
 #~ msgstr "内部データストリームエラー"

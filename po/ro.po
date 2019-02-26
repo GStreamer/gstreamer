@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 01:38+0000\n"
+"POT-Creation-Date: 2019-02-26 11:37+0000\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -1120,22 +1120,6 @@ msgstr[0] "%d caracteristică"
 msgstr[1] "%d caracteristici"
 msgstr[2] "%d de caracteristici"
 
-#, fuzzy, c-format
-msgid "Error creating pipe: %s\n"
-msgstr "Eroare la închiderea fișierului „%s”."
-
-#, fuzzy, c-format
-msgid "Error forking: %s\n"
-msgstr "Eroare la închiderea fișierului „%s”."
-
-#, c-format
-msgid "Error reading from console: %s\n"
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Error writing to console: %s\n"
-msgstr "Eroare la scrierea fișierului „%s\"."
-
 msgid "Print all elements"
 msgstr "Tipărește toate elementele"
 
@@ -1387,6 +1371,18 @@ msgstr "Se setează linia de asamblare pe NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Se eliberează linia de asamblare...\n"
+
+#, fuzzy
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Eroare la închiderea fișierului „%s”."
+
+#, fuzzy
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Eroare la închiderea fișierului „%s”."
+
+#, fuzzy
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Eroare la scrierea fișierului „%s\"."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Eroare internă a fluxului de date."
