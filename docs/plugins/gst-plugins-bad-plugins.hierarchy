@@ -116,7 +116,6 @@ GObject
             GstSRTSrc
             GstShmSrc
             GstToneGenerateSrc
-            GstVCDSrc
         GstBaseTransform
           GstAudioFilter
             GstAccurip

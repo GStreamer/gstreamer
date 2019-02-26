@@ -3,7 +3,7 @@
   <description>Blackmagic Decklink plugin</description>
   <filename>../../sys/decklink/.libs/libgstdecklink.so</filename>
   <basename>libgstdecklink.so</basename>
-  <version>1.15.1</version>
+  <version>1.15.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>
@@ -12,7 +12,7 @@
     <element>
       <name>decklinkaudiosink</name>
       <longname>Decklink Audio Sink</longname>
-      <class>Audio/Sink</class>
+      <class>Audio/Sink/Hardware</class>
       <description>Decklink Sink</description>
       <author>David Schleef &lt;ds@entropywave.com&gt;, Sebastian Dröge &lt;sebastian@centricular.com&gt;</author>
       <pads>
@@ -27,7 +27,7 @@
     <element>
       <name>decklinkaudiosrc</name>
       <longname>Decklink Audio Source</longname>
-      <class>Audio/Src</class>
+      <class>Audio/Source/Hardware</class>
       <description>Decklink Source</description>
       <author>David Schleef &lt;ds@entropywave.com&gt;, Sebastian Dröge &lt;sebastian@centricular.com&gt;</author>
       <pads>
@@ -42,7 +42,7 @@
     <element>
       <name>decklinkvideosink</name>
       <longname>Decklink Video Sink</longname>
-      <class>Video/Sink</class>
+      <class>Video/Sink/Hardware</class>
       <description>Decklink Sink</description>
       <author>David Schleef &lt;ds@entropywave.com&gt;, Sebastian Dröge &lt;sebastian@centricular.com&gt;</author>
       <pads>
@@ -57,7 +57,7 @@
     <element>
       <name>decklinkvideosrc</name>
       <longname>Decklink Video Source</longname>
-      <class>Video/Src</class>
+      <class>Video/Source/Hardware</class>
       <description>Decklink Source</description>
       <author>David Schleef &lt;ds@entropywave.com&gt;, Sebastian Dröge &lt;sebastian@centricular.com&gt;</author>
       <pads>

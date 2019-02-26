@@ -72441,6 +72441,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstAudioBufferSplit::max-silence-time</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum time of silence to insert</NICK>
+<BLURB>Do not insert silence in gapless mode if the gap exceeds this period (in ns) (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioMixMatrix::channel-mask</NAME>
 <TYPE>guint64</TYPE>
 <RANGE></RANGE>
@@ -72937,7 +72947,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>URI of resource requested.</BLURB>
-<DEFAULT>"GStreamer curlhttpsrc libcurl/7.62.0"</DEFAULT>
+<DEFAULT>"GStreamer curlhttpsrc libcurl/<curl-version>"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -73218,6 +73228,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Bundle Policy</NICK>
 <BLURB>The policy to apply for bundling.</BLURB>
 <DEFAULT>GST_WEBRTC_BUNDLE_POLICY_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebRTCBin::ice-transport-policy</NAME>
+<TYPE>GstWebRTCICETransportPolicy</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ICE Transport Policy</NICK>
+<BLURB>The policy to apply for ICE transport.</BLURB>
+<DEFAULT>GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -73594,12 +73614,12 @@ this will override closed caption stream specified font style/pen size.</BLURB>
 
 <ARG>
 <NAME>GstSRTSrc::pbkeylen</NAME>
-<TYPE>GstSRTKeyLengthBits</TYPE>
+<TYPE>GstSRTKeyLength</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Crypto key length</NICK>
-<BLURB>Crypto key length in bits.</BLURB>
-<DEFAULT>GST_SRT_KEY_LENGTH_BITS_128</DEFAULT>
+<BLURB>Crypto key length in bytes.</BLURB>
+<DEFAULT>GST_SRT_KEY_LENGTH_NO_KEY</DEFAULT>
 </ARG>
 
 <ARG>
@@ -73694,12 +73714,12 @@ this will override closed caption stream specified font style/pen size.</BLURB>
 
 <ARG>
 <NAME>GstSRTSink::pbkeylen</NAME>
-<TYPE>GstSRTKeyLengthBits</TYPE>
+<TYPE>GstSRTKeyLength</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Crypto key length</NICK>
-<BLURB>Crypto key length in bits.</BLURB>
-<DEFAULT>GST_SRT_KEY_LENGTH_BITS_128</DEFAULT>
+<BLURB>Crypto key length in bytes.</BLURB>
+<DEFAULT>GST_SRT_KEY_LENGTH_NO_KEY</DEFAULT>
 </ARG>
 
 <ARG>
