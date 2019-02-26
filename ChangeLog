@@ -1,3 +1,65 @@
+=== release 1.15.2 ===
+
+2019-02-26 12:02:23 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.15.2
+
+2019-02-14 23:57:09 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  meson: add options to disable examples, tests and tools and bump meson requirement
+
+2019-01-04 10:11:38 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideo.c:
+	* omx/gstomxvideo.h:
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideoenc.c:
+	  omxvideo: use GST_VIDEO_CAPS_MAKE() for template caps
+	  Simplify the code and so we advertise the formats actually supported by
+	  gst-omx.
+
+2018-06-04 12:20:03 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: validate cpb-size and initial-delay
+	  cpb-size cannot be smaller than initial-delay.
+
+2018-10-02 10:47:06 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: Remove duplicated QoS code
+	  The 'finish' function do the exact same check / drop, there is no
+	  need to duplicate this here.
+
+2018-09-20 14:44:09 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	* omx/gstomxvideodec.h:
+	  omxvideodec: Remove dead code
+	  The omxvideodec base class have a totally unused prepare_frame() vritual
+	  function, remove it.
+
+2018-07-11 17:38:22 -0700  Varunkumar Allagadapa <varunkum@xilinx.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: add adaptive gop-mode option
+	  Added adaptive gop-mode option to ZYNQ_USCALE_PLUS encoder properties
+
+2018-02-13 18:25:51 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* omx/gstomxvideoenc.c:
+	  omxvideoenc: Add dynamic framerate support
+	  Instead of going through a full reset, try and change the framerate
+	  config on the encoder when only the framerate have change.
+
 === release 1.15.1 ===
 
 2019-01-17 02:38:28 +0000  Tim-Philipp Müller <tim@centricular.com>
