@@ -188,7 +188,6 @@ gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec, gboolean reset)
   GST_LOG_OBJECT (ffmpegdec, "closing libav codec");
 
   gst_caps_replace (&ffmpegdec->last_caps, NULL);
-  gst_buffer_replace (&ffmpegdec->outbuf, NULL);
 
   gst_ffmpeg_avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
@@ -576,12 +575,10 @@ gst_ffmpegauddec_frame (GstFFMpegAudDec * ffmpegdec, GstFlowReturn * ret)
       gst_ffmpegauddec_audio_frame (ffmpegdec, oclass->in_plugin, &outbuf, ret);
 
   if (outbuf) {
-    GST_LOG_OBJECT (ffmpegdec, "Decoded data, now storing buffer %p", outbuf);
-
-    if (ffmpegdec->outbuf)
-      ffmpegdec->outbuf = gst_buffer_append (ffmpegdec->outbuf, outbuf);
-    else
-      ffmpegdec->outbuf = outbuf;
+    GST_LOG_OBJECT (ffmpegdec, "Decoded data, buffer %" GST_PTR_FORMAT, outbuf);
+    *ret =
+        gst_audio_decoder_finish_subframe (GST_AUDIO_DECODER_CAST (ffmpegdec),
+        outbuf);
   } else {
     GST_DEBUG_OBJECT (ffmpegdec, "We didn't get a decoded buffer");
   }
@@ -601,6 +598,7 @@ static void
 gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
 {
   GstFFMpegAudDecClass *oclass;
+  gboolean got_any_frames = FALSE;
 
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
@@ -617,14 +615,14 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
       GstFlowReturn ret;
 
       got_frame = gst_ffmpegauddec_frame (ffmpegdec, &ret);
+      if (got_frame)
+        got_any_frames = TRUE;
     } while (got_frame);
     avcodec_flush_buffers (ffmpegdec->context);
   }
 
-  if (ffmpegdec->outbuf)
-    gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec),
-        ffmpegdec->outbuf, 1);
-  ffmpegdec->outbuf = NULL;
+  if (got_any_frames)
+    gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
 
 send_packet_failed:
   GST_WARNING_OBJECT (ffmpegdec, "send packet failed, could not drain decoder");
@@ -648,6 +646,7 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
   guint8 *data;
   GstMapInfo map;
   gint size;
+  gboolean got_any_frames = FALSE;
   gboolean got_frame;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean is_header;
@@ -719,6 +718,9 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     /* decode a frame of audio now */
     got_frame = gst_ffmpegauddec_frame (ffmpegdec, &ret);
 
+    if (got_frame)
+      got_any_frames = TRUE;
+
     if (ret != GST_FLOW_OK) {
       GST_LOG_OBJECT (ffmpegdec, "breaking because of flow ret %s",
           gst_flow_get_name (ret));
@@ -730,14 +732,10 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
   gst_buffer_unmap (inbuf, &map);
   gst_buffer_unref (inbuf);
 
-  if (ffmpegdec->outbuf)
-    ret =
-        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec),
-        ffmpegdec->outbuf, 1);
-  else if (is_header)
+  if (is_header || got_any_frames) {
     ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
-  ffmpegdec->outbuf = NULL;
+  }
 
 done:
   return ret;
