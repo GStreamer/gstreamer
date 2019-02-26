@@ -1,3 +1,141 @@
+=== release 1.15.2 ===
+
+2019-02-26 12:01:53 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.15.2
+
+2019-02-26 12:01:53 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2019-02-05 16:59:40 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  vaapivideomemory: Prefer same format for surface and image
+	  We prefer to use the same format between image and surface for gst
+	  vaapi allocator. The old way may choose different formats between
+	  image and surface. For example, the RGBA image may have a NV12 surface.
+	  So we need to do format conversion when we put/get image to surface.
+	  Some drivers such as iHD can not support such conversion and always
+	  cause a data flow error. There may also have some performance cost
+	  for format conversion when put/get images.
+	  So we prefer to use the same format for image and surface in the
+	  allocator. If the surface can not support that format, we then
+	  fallback to find a best one as the surface format.
+	  Co-authored-by: Víctor Jáquez <vjaquez@igalia.com>
+
+2019-02-15 15:19:51 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/video-format.c:
+	  libs: Delete the duplicated ARGB video format.
+	  Two ARGB formats with the same format information.
+	  Should be verbose and delete one.
+	  Signed-off-by: He Junyan <junyan.he@hotmail.com>
+
+2019-02-13 10:39:59 -0500  Adam Jackson <ajax@redhat.com>
+
+	* common:
+	* gst-libs/gst/vaapi/gstvaapiutils_glx.c:
+	  glx: Stop specifying GLX_DEPTH_SIZE
+	  This code is just confused. It's asking for at least as many bits of
+	  (z-axis) depth as the root window has bits of (color) depth. For rgb565
+	  or rgb888 this is harmless, but at 10 bits per channel this demands a
+	  30-bit or deeper Z buffer. While some hardware could in principle do a
+	  32-bit Z buffer, Mesa does not expose such fbconfigs (at least on Intel
+	  and AMD).
+	  We're not actually using the Z buffer, so just stop asking for one.
+
+2019-01-14 11:30:48 +0100  Niels De Graef <niels.degraef@barco.com>
+
+	* configure.ac:
+	* gst-libs/gst/vaapi/Makefile.am:
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	* gst-libs/gst/vaapi/meson.build:
+	* gst/vaapi/gstvaapisink.c:
+	* meson.build:
+	  libs: wayland: add support for XDG-shell protocol
+	  [wl_shell] is officially [deprecated], so provide support for the
+	  XDG-shell protocol should be provided by all desktop-like compositors.
+	  (In case they don't, we can of course fall back to wl_shell).
+	  Note that the XML file is directly provided by the `wayland-protocols`
+	  dependency and generates the protocol marshalling code.
+	  [wl_shell]: https://people.freedesktop.org/~whot/wayland-doxygen/wayland/Client/group__iface__wl__shell.html
+	  [deprecated]: https://github.com/wayland-project/wayland/commit/698dde195837f3d0844b2725ba4ea8ce9ee7518c
+
+2019-02-16 19:09:50 +0100  Niels De Graef <nielsdegraef@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: window: wayland: Prefix wl_shell_surface field with `wl_`
+	  It will help us to distinguish from other Wayland shell surface
+	  (such as XDG-shell) later on.
+
+2019-01-14 09:58:19 +0100  Niels De Graef <nielsdegraef@gmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_wayland_priv.h:
+	* gst-libs/gst/vaapi/gstvaapiwindow_wayland.c:
+	  libs: wayland: Prefix wl_shell field with `wl_`
+	  It will help us to distinguish from other Wayland shells (such as
+	  XDG-shell) later on.
+
+2019-02-08 09:21:28 +0300  Denis Nagorny <denis.nagorny@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  libs: display: lock ensure_profile()
+	  Thread safety patch for ensure_profile() function
+	  Fixes #133
+
+2019-02-08 16:35:39 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* meson.build:
+	  meson: bump the minimum wayland version requirement to 1.11.0
+	  This was missed on commit 77bb3424
+
+2019-01-24 21:08:07 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow_x11.c:
+	* gst/vaapi/gstvaapisink.c:
+	  vaapisink: x11: trap WM_DELETE_WINDOW message
+	  Register the WM_DELETE_WINDOW message from window manager and
+	  trap it to stop the pipeline cleanly.
+	  Fixes: https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/issues/130
+
+2019-01-21 19:22:58 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow.c:
+	  libs: window: remove native-id property
+	  native-id property is problematic since the variable that stores it is
+	  gsize, which is platform specific, and in some is bigger than unsigned
+	  long, and there are not way to handle gsize properties.
+	  Also, GST_VAAPI_ID_INVALID is defined in gsize terms, and we would
+	  like to keep using it for this scope.
+	  This patch removes the native-id property and set it manually in
+	  gst_vaapi_window_new_internal().
+
+2019-01-18 10:33:37 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiwindow.c:
+	  libs: window: use G_GSIZE_MODIFIER for window id
+	  gsize type is not equal in all platforms, then the 'l' print modifier
+	  shall not be used always.
+	  This issue was found in Debian builds.
+
+2019-01-17 10:27:13 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  encoder: h264/h265: set SPS cbr_flag with correct value.
+	  The flag only set as 1 when the rate-control mode is CBR.
+
 === release 1.15.1 ===
 
 2019-01-17 02:36:52 +0000  Tim-Philipp Müller <tim@centricular.com>
