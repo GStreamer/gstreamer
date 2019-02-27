@@ -293,7 +293,7 @@ rtp_source_reset (RTPSource * src)
 static void
 rtp_source_init (RTPSource * src)
 {
-  /* sources are initialy on probation until we receive enough valid RTP
+  /* sources are initially on probation until we receive enough valid RTP
    * packets or a valid RTCP packet */
   src->validated = FALSE;
   src->internal = FALSE;
