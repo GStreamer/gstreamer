@@ -2,6 +2,7 @@
  *
  * Unit test for gstrtpbin sending rtp packets using GstBufferList.
  * Copyright (C) 2009 Branko Subasic <branko dot subasic at axis dot com>
+ * Copyright 2019, Collabora Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,8 +24,6 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
-
-#if 0
 
 /* This test makes sure that RTP packets sent as buffer lists are sent through
  * the rtpbin as they are supposed to, and not corrupted in any way.
@@ -56,9 +55,6 @@ static const guint rtp_header_len[] = {
   sizeof rtp_header[0],
   sizeof rtp_header[1]
 };
-
-static GstBuffer *header_buffer[2] = { NULL, NULL };
-
 
 /* Some payload.
  */
@@ -94,200 +90,188 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 
 static GstBuffer *
-_create_original_buffer (void)
+create_original_buffer (void)
 {
-  GstCaps *caps;
-
   if (original_buffer != NULL)
     return original_buffer;
 
-  original_buffer = gst_buffer_new ();
+  original_buffer =
+      gst_buffer_new_wrapped ((guint8 *) payload, strlen (payload));
   fail_unless (original_buffer != NULL);
 
-  gst_buffer_set_data (original_buffer, (guint8 *) payload, strlen (payload));
   GST_BUFFER_TIMESTAMP (original_buffer) =
       gst_clock_get_internal_time (gst_system_clock_obtain ());
-
-  caps = gst_caps_from_string (TEST_CAPS);
-  fail_unless (caps != NULL);
-  gst_buffer_set_caps (original_buffer, caps);
-  gst_caps_unref (caps);
 
   return original_buffer;
 }
 
 static GstBufferList *
-_create_buffer_list (void)
+create_buffer_list (void)
 {
   GstBufferList *list;
-  GstBufferListIterator *it;
   GstBuffer *orig_buffer;
   GstBuffer *buffer;
+  GstBuffer *sub_buffer;
 
-  orig_buffer = _create_original_buffer ();
+  orig_buffer = create_original_buffer ();
   fail_if (orig_buffer == NULL);
 
   list = gst_buffer_list_new ();
   fail_if (list == NULL);
 
-  it = gst_buffer_list_iterate (list);
-  fail_if (it == NULL);
+  /*** First packet. **/
 
-  /*** First group, i.e. first packet. **/
-  gst_buffer_list_iterator_add_group (it);
+  /* Create buffer with RTP header. */
+  buffer = gst_buffer_new_allocate (NULL, rtp_header_len[0], NULL);
+  gst_buffer_fill (buffer, 0, &rtp_header[0], rtp_header_len[0]);
+  gst_buffer_copy_into (buffer, orig_buffer, GST_BUFFER_COPY_METADATA, 0, -1);
 
-  /* Create buffer with RTP header and add it to the 1st group */
-  buffer = gst_buffer_new ();
-  GST_BUFFER_MALLOCDATA (buffer) = g_memdup (&rtp_header[0], rtp_header_len[0]);
-  GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
-  GST_BUFFER_SIZE (buffer) = rtp_header_len[0];
-  gst_buffer_copy_metadata (buffer, orig_buffer, GST_BUFFER_COPY_ALL);
-  header_buffer[0] = buffer;
-  gst_buffer_list_iterator_add (it, buffer);
+  /* Create the payload buffer and add it to the current buffer. */
+  sub_buffer =
+      gst_buffer_copy_region (orig_buffer, GST_BUFFER_COPY_MEMORY,
+      payload_offset[0], payload_len[0]);
 
-  /* Create the payload buffer and add it to the 1st group
-   */
-  buffer =
-      gst_buffer_create_sub (orig_buffer, payload_offset[0], payload_len[0]);
+  buffer = gst_buffer_append (buffer, sub_buffer);
   fail_if (buffer == NULL);
-  gst_buffer_list_iterator_add (it, buffer);
+  gst_buffer_list_add (list, buffer);
 
+  /***  Second packet. ***/
 
-  /***  Second group, i.e. second packet. ***/
+  /* Create buffer with RTP header. */
+  buffer = gst_buffer_new_allocate (NULL, rtp_header_len[1], NULL);
+  gst_buffer_fill (buffer, 0, &rtp_header[1], rtp_header_len[1]);
+  gst_buffer_copy_into (buffer, orig_buffer, GST_BUFFER_COPY_METADATA, 0, -1);
 
-  /* Create a new group to hold the rtp header and the payload */
-  gst_buffer_list_iterator_add_group (it);
+  /* Create the payload buffer and add it to the current buffer. */
+  sub_buffer =
+      gst_buffer_copy_region (orig_buffer, GST_BUFFER_COPY_MEMORY,
+      payload_offset[1], payload_len[1]);
 
-  /* Create buffer with RTP header and add it to the 2nd group */
-  buffer = gst_buffer_new ();
-  GST_BUFFER_MALLOCDATA (buffer) = g_memdup (&rtp_header[1], rtp_header_len[1]);
-  GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
-  GST_BUFFER_SIZE (buffer) = rtp_header_len[1];
-  gst_buffer_copy_metadata (buffer, orig_buffer, GST_BUFFER_COPY_ALL);
-  header_buffer[1] = buffer;
-
-  /* Add the rtp header to the buffer list */
-  gst_buffer_list_iterator_add (it, buffer);
-
-  /* Create the payload buffer and add it to the 2d group
-   */
-  buffer =
-      gst_buffer_create_sub (orig_buffer, payload_offset[1], payload_len[1]);
+  buffer = gst_buffer_append (buffer, sub_buffer);
   fail_if (buffer == NULL);
-  gst_buffer_list_iterator_add (it, buffer);
-
-  gst_buffer_list_iterator_free (it);
+  gst_buffer_list_add (list, buffer);
 
   return list;
 }
 
-
 static void
-_check_header (GstBuffer * buffer, guint index)
+check_header (GstBuffer * buffer, guint index)
 {
-  guint8 *data;
+  GstMemory *memory;
+  GstMapInfo info;
+  gboolean ret;
 
   fail_if (buffer == NULL);
   fail_unless (index < 2);
 
-  fail_unless (GST_BUFFER_SIZE (buffer) == rtp_header_len[index]);
+  memory = gst_buffer_get_memory (buffer, 0);
+  ret = gst_memory_map (memory, &info, GST_MAP_READ);
+  fail_if (ret == FALSE);
+
+  fail_unless (info.size == rtp_header_len[index]);
 
   /* Can't do a memcmp() on the whole header, cause the SSRC (bytes 8-11) will
    * most likely be changed in gstrtpbin.
    */
-  fail_unless ((data = GST_BUFFER_DATA (buffer)) != NULL);
-  fail_unless_equals_uint64 (*(guint64 *) data, *(guint64 *) rtp_header[index]);
-  fail_unless (*(guint16 *) (data + 12) ==
+  fail_unless (info.data != NULL);
+  fail_unless_equals_uint64 (*(guint64 *) info.data,
+      *(guint64 *) rtp_header[index]);
+  fail_unless (*(guint16 *) (info.data + 12) ==
       *(guint16 *) (rtp_header[index] + 12));
+
+  gst_memory_unmap (memory, &info);
+  gst_memory_unref (memory);
 }
 
-
 static void
-_check_payload (GstBuffer * buffer, guint index)
+check_payload (GstBuffer * buffer, guint index)
 {
+  GstMemory *memory;
+  GstMapInfo info;
+  gboolean ret;
+
   fail_if (buffer == NULL);
   fail_unless (index < 2);
 
-  fail_unless (GST_BUFFER_SIZE (buffer) == payload_len[index]);
-  fail_if (GST_BUFFER_DATA (buffer) !=
-      (gpointer) (payload + payload_offset[index]));
-  fail_if (memcmp (GST_BUFFER_DATA (buffer), payload + payload_offset[index],
+  memory = gst_buffer_get_memory (buffer, 1);
+  ret = gst_memory_map (memory, &info, GST_MAP_READ);
+  fail_if (ret == FALSE);
+
+  fail_unless (info.size == payload_len[index]);
+  fail_if (info.data != (gpointer) (payload + payload_offset[index]));
+  fail_if (memcmp (info.data, payload + payload_offset[index],
           payload_len[index]));
+
+  gst_memory_unmap (memory, &info);
+  gst_memory_unref (memory);
 }
 
-
 static void
-_check_group (GstBufferListIterator * it, guint index, GstCaps * caps)
+check_packet (GstBufferList * list, guint index)
 {
   GstBuffer *buffer;
 
-  fail_unless (it != NULL);
-  fail_unless (gst_buffer_list_iterator_n_buffers (it) == 2);
-  fail_unless (caps != NULL);
+  fail_unless (list != NULL);
 
-  fail_unless ((buffer = gst_buffer_list_iterator_next (it)) != NULL);
+  fail_unless ((buffer = gst_buffer_list_get (list, index)) != NULL);
+  fail_unless (gst_buffer_n_memory (buffer) == 2);
 
   fail_unless (GST_BUFFER_TIMESTAMP (buffer) ==
       GST_BUFFER_TIMESTAMP (original_buffer));
 
-  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (original_buffer),
-          GST_BUFFER_CAPS (buffer)));
-
-  _check_header (buffer, index);
-
-  fail_unless ((buffer = gst_buffer_list_iterator_next (it)) != NULL);
-  _check_payload (buffer, index);
+  check_header (buffer, index);
+  check_payload (buffer, index);
 }
 
-
 static GstFlowReturn
-_sink_chain_list (GstPad * pad, GstBufferList * list)
+sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
 {
+  GstCaps *current_caps;
   GstCaps *caps;
-  GstBufferListIterator *it;
+
+  current_caps = gst_pad_get_current_caps (pad);
+  fail_unless (current_caps != NULL);
 
   caps = gst_caps_from_string (TEST_CAPS);
   fail_unless (caps != NULL);
 
-  fail_unless (GST_IS_BUFFER_LIST (list));
-  fail_unless (gst_buffer_list_n_groups (list) == 2);
-
-  it = gst_buffer_list_iterate (list);
-  fail_if (it == NULL);
-
-  fail_unless (gst_buffer_list_iterator_next_group (it));
-  _check_group (it, 0, caps);
-
-  fail_unless (gst_buffer_list_iterator_next_group (it));
-  _check_group (it, 1, caps);
-
+  fail_unless (gst_caps_is_equal (caps, current_caps));
   gst_caps_unref (caps);
-  gst_buffer_list_iterator_free (it);
+  gst_caps_unref (current_caps);
+
+  fail_unless (GST_IS_BUFFER_LIST (list));
+  fail_unless (gst_buffer_list_length (list) == 2);
+
+  fail_unless (gst_buffer_list_get (list, 0));
+  check_packet (list, 0);
+
+  fail_unless (gst_buffer_list_get (list, 1));
+  check_packet (list, 1);
 
   gst_buffer_list_unref (list);
 
   return GST_FLOW_OK;
 }
 
-
 static void
-_set_chain_functions (GstPad * pad)
+set_chain_function (GstPad * pad)
 {
-  gst_pad_set_chain_list_function (pad, _sink_chain_list);
+  gst_pad_set_chain_list_function (pad, GST_DEBUG_FUNCPTR (sink_chain_list));
 }
 
 
 GST_START_TEST (test_bufferlist)
 {
   GstElement *rtpbin;
-  GstPad *sinkpad;
   GstPad *srcpad;
+  GstPad *sinkpad;
+  GstCaps *caps;
   GstBufferList *list;
 
-  list = _create_buffer_list ();
+  list = create_buffer_list ();
   fail_unless (list != NULL);
 
-  rtpbin = gst_check_setup_element ("gstrtpbin");
+  rtpbin = gst_check_setup_element ("rtpbin");
 
   srcpad =
       gst_check_setup_src_pad_by_name (rtpbin, &srctemplate, "send_rtp_sink_0");
@@ -297,12 +281,20 @@ GST_START_TEST (test_bufferlist)
       "send_rtp_src_0");
   fail_if (sinkpad == NULL);
 
-  _set_chain_functions (sinkpad);
+  set_chain_function (sinkpad);
 
+  gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
+
+  caps = gst_caps_from_string (TEST_CAPS);
+  gst_check_setup_events (srcpad, rtpbin, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
   gst_element_set_state (rtpbin, GST_STATE_PLAYING);
   fail_unless (gst_pad_push_list (srcpad, list) == GST_FLOW_OK);
+
   gst_pad_set_active (sinkpad, FALSE);
+  gst_pad_set_active (srcpad, FALSE);
 
   gst_check_teardown_pad_by_name (rtpbin, "send_rtp_src_0");
   gst_check_teardown_pad_by_name (rtpbin, "send_rtp_sink_0");
@@ -310,9 +302,6 @@ GST_START_TEST (test_bufferlist)
 }
 
 GST_END_TEST;
-
-#endif
-
 
 static Suite *
 bufferlist_suite (void)
@@ -325,9 +314,7 @@ bufferlist_suite (void)
   tcase_set_timeout (tc_chain, 10);
 
   suite_add_tcase (s, tc_chain);
-#if 0
   tcase_add_test (tc_chain, test_bufferlist);
-#endif
 
   return s;
 }
