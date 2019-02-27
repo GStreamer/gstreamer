@@ -638,21 +638,31 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstCaps * allowed_caps,
 {
   GstVaapiCapsFeature feature = GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED;
   guint i, j, num_structures;
-  GstCaps *out_caps, *caps = NULL;
+  GstCaps *peer_caps, *out_caps = NULL, *caps = NULL;
   static const guint feature_list[] = { GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE,
     GST_VAAPI_CAPS_FEATURE_DMABUF,
     GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META,
     GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY,
   };
 
-  out_caps = gst_pad_peer_query_caps (pad, allowed_caps);
-  if (!out_caps)
+  /* query with no filter */
+  peer_caps = gst_pad_peer_query_caps (pad, NULL);
+  if (!peer_caps)
+    goto cleanup;
+  if (gst_caps_is_empty (peer_caps))
     goto cleanup;
 
-  if (gst_caps_is_any (out_caps) || gst_caps_is_empty (out_caps))
-    goto cleanup;
+  /* filter against our allowed caps */
+  out_caps = gst_caps_intersect_full (allowed_caps, peer_caps,
+      GST_CAPS_INTERSECT_FIRST);
 
+  /* default feature */
   feature = GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY;
+
+  /* if downstream requests caps ANY, system memory is preferred */
+  if (gst_caps_is_any (peer_caps))
+    goto find_format;
+
   num_structures = gst_caps_get_size (out_caps);
   for (i = 0; i < num_structures; i++) {
     GstCapsFeatures *const features = gst_caps_get_features (out_caps, i);
@@ -685,13 +695,14 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstCaps * allowed_caps,
   if (!caps)
     goto cleanup;
 
+find_format:
   if (out_format_ptr) {
     GstVideoFormat out_format;
     GstStructure *structure;
     const GValue *format_list;
 
     /* if the best feature is SystemMemory, we should use the first
-     * caps in the peer caps set, which is the preferred by
+     * caps in the filtered peer caps set, which is the preferred by
      * downstream. */
     if (feature == GST_VAAPI_CAPS_FEATURE_SYSTEM_MEMORY)
       gst_caps_replace (&caps, out_caps);
@@ -713,6 +724,7 @@ gst_vaapi_find_preferred_caps_feature (GstPad * pad, GstCaps * allowed_caps,
 cleanup:
   gst_caps_replace (&caps, NULL);
   gst_caps_replace (&out_caps, NULL);
+  gst_caps_replace (&peer_caps, NULL);
   return feature;
 }
 
