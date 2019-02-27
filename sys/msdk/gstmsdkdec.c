@@ -1001,12 +1001,24 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     /* media-sdk requires complete reset since the surface is inadaquate to
      * do further decoding */
     if (status == MFX_ERR_INCOMPATIBLE_VIDEO_PARAM) {
+      /* MFX_ERR_INCOMPATIBLE_VIDEO_PARAM means the current mfx surface is not
+       * suitable for the current frame, call MFXVideoDECODE_DecodeHeader to get
+       * the current frame size then do memory re-allocation, otherwise
+       * MFXVideoDECODE_DecodeFrameAsync still will fail for next call */
+      status = MFXVideoDECODE_DecodeHeader (session, &bitstream, &thiz->param);
+      if (status == MFX_ERR_MORE_DATA) {
+        flow = GST_FLOW_OK;
+        goto done;
+      }
+
       /* Requires memory re-allocation, do a hard reset */
       if (!gst_msdkdec_negotiate (thiz, TRUE))
         goto error;
-      status =
-          MFXVideoDECODE_DecodeFrameAsync (session, &bitstream,
-          surface->surface, &task->surface, &task->sync_point);
+
+      /* The current surface is freed when doing a hard reset, a new surface is
+       * required for the new resolution */
+      surface = NULL;
+      continue;
     }
 
     if (G_LIKELY (status == MFX_ERR_NONE)
