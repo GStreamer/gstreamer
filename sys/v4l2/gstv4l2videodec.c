@@ -1034,7 +1034,7 @@ gst_v4l2_video_dec_subclass_init (gpointer g_class, gpointer data)
           cdata->src_caps));
 
   gst_element_class_set_static_metadata (element_class, cdata->longname,
-      "Codec/Decoder/Video", cdata->description,
+      "Codec/Decoder/Video/Hardware", cdata->description,
       "Nicolas Dufresne <nicolas.dufresne@collabora.com>");
 
   gst_caps_unref (cdata->sink_caps);
