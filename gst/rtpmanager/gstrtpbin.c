@@ -4174,8 +4174,9 @@ create_error:
   }
 existing_session:
   {
-    g_warning ("rtpbin: session %u is already a sender", sessid);
-    return FALSE;
+    GST_DEBUG_OBJECT (rtpbin,
+        "skipping src_%i setup, since it is already configured.", sessid);
+    return TRUE;
   }
 pad_failed:
   {
