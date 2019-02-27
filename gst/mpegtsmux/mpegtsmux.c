@@ -878,6 +878,7 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
     ts_data->stream->opus_channel_config_code = opus_channel_config_code;
 
     tsmux_stream_set_buffer_release_func (ts_data->stream, release_buffer_cb);
+    tsmux_program_add_stream (ts_data->prog, ts_data->stream);
 
     ret = GST_FLOW_OK;
   }
@@ -956,12 +957,6 @@ mpegtsmux_create_streams (MpegTsMux * mux)
       }
     }
 
-    if (ts_data->stream == NULL) {
-      ret = mpegtsmux_create_stream (mux, ts_data);
-      if (ret != GST_FLOW_OK)
-        goto no_stream;
-    }
-
     ts_data->prog =
         g_hash_table_lookup (mux->programs, GINT_TO_POINTER (ts_data->prog_id));
     if (ts_data->prog == NULL) {
@@ -980,7 +975,11 @@ mpegtsmux_create_streams (MpegTsMux * mux)
       tsmux_program_set_pcr_stream (ts_data->prog, ts_data->stream);
     }
 
-    tsmux_program_add_stream (ts_data->prog, ts_data->stream);
+    if (ts_data->stream == NULL) {
+      ret = mpegtsmux_create_stream (mux, ts_data);
+      if (ret != GST_FLOW_OK)
+        goto no_stream;
+    }
 
     /* Check for user-specified PCR PID */
     pcr_name = g_strdup_printf ("PCR_%d", ts_data->prog->pgm_number);
