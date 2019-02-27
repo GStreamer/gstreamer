@@ -370,6 +370,54 @@ GST_START_TEST (test_bufferlist)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_bufferlist_recv)
+{
+  GstElement *rtpbin;
+  GstPad *srcpad;
+  GstPad *sinkpad;
+  GstCaps *caps;
+  GstBufferList *list;
+
+  list = create_buffer_list ();
+  fail_unless (list != NULL);
+
+  rtpbin = gst_check_setup_element ("rtpsession");
+
+  srcpad =
+      gst_check_setup_src_pad_by_name (rtpbin, &srctemplate, "recv_rtp_sink");
+  fail_if (srcpad == NULL);
+
+  sinkpad =
+      gst_check_setup_sink_pad_by_name (rtpbin, &sinktemplate, "recv_rtp_src");
+  fail_if (sinkpad == NULL);
+
+  gst_pad_set_chain_list_function (sinkpad,
+      GST_DEBUG_FUNCPTR (sink_chain_list));
+
+  gst_pad_set_active (srcpad, TRUE);
+  gst_pad_set_active (sinkpad, TRUE);
+
+  caps = gst_caps_from_string (TEST_CAPS);
+  gst_check_setup_events (srcpad, rtpbin, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  gst_element_set_state (rtpbin, GST_STATE_PLAYING);
+
+  chain_list_func_called = FALSE;
+  fail_unless (gst_pad_push_list (srcpad, list) == GST_FLOW_OK);
+  fail_if (chain_list_func_called == FALSE);
+
+  gst_pad_set_active (sinkpad, FALSE);
+  gst_pad_set_active (srcpad, FALSE);
+
+  gst_check_teardown_pad_by_name (rtpbin, "recv_rtp_src");
+  gst_check_teardown_pad_by_name (rtpbin, "recv_rtp_sink");
+  gst_check_teardown_element (rtpbin);
+}
+
+GST_END_TEST;
+
 static Suite *
 bufferlist_suite (void)
 {
@@ -382,6 +430,7 @@ bufferlist_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_bufferlist);
+  tcase_add_test (tc_chain, test_bufferlist_recv);
 
   return s;
 }
