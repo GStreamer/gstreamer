@@ -2266,7 +2266,7 @@ gst_rtp_session_setcaps_send_rtp (GstPad * pad, GstRtpSession * rtpsession,
   return TRUE;
 }
 
-/* Recieve an RTP packet or a list of packets to be send to the receivers,
+/* Receive an RTP packet or a list of packets to be sent to the receivers,
  * send to RTP session manager and forward to send_rtp_src.
  */
 static GstFlowReturn
@@ -2286,7 +2286,7 @@ gst_rtp_session_chain_send_rtp_common (GstRtpSession * rtpsession,
   if (is_list) {
     GstBuffer *buffer = NULL;
 
-    /* All groups in an list have the same timestamp.
+    /* All groups in a list have the same timestamp.
      * So, just take it from the first group. */
     buffer = gst_buffer_list_get (GST_BUFFER_LIST_CAST (data), 0);
     if (buffer)

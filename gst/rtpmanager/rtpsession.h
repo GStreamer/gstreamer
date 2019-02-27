@@ -56,11 +56,11 @@ typedef GstFlowReturn (*RTPSessionProcessRTP) (RTPSession *sess, RTPSource *src,
  * RTPSessionSendRTP:
  * @sess: an #RTPSession
  * @src: the #RTPSource
- * @buffer: the RTP buffer ready for sending
+ * @data: the RTP buffer or buffer list ready for sending
  * @user_data: user data specified when registering
  *
- * This callback will be called when @sess has @buffer ready for sending to
- * all listening participants in this session.
+ * This callback will be called when @sess has @data (a buffer or buffer list)
+ * ready for sending to all listening participants in this session.
  *
  * Returns: a #GstFlowReturn.
  */

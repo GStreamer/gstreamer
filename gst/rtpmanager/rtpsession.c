@@ -3053,8 +3053,8 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
  * @current_time: the current system time
  * @running_time: the running time of @data
  *
- * Send the RTP buffer in the session manager. This function takes ownership of
- * @buffer.
+ * Send the RTP data (a buffer or buffer list) in the session manager. This
+ * function takes ownership of @data.
  *
  * Returns: a #GstFlowReturn.
  */
