@@ -573,8 +573,14 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
 
       /* arranged for a fallback sps.id, so use that one and only warn */
       if (pres != GST_H265_PARSER_OK) {
-        GST_WARNING_OBJECT (h265parse, "failed to parse SPS:");
-        return FALSE;
+        /* try to not parse VUI */
+        pres = gst_h265_parser_parse_sps (nalparser, nalu, &sps, FALSE);
+        if (pres != GST_H265_PARSER_OK) {
+          GST_WARNING_OBJECT (h265parse, "failed to parse SPS:");
+          return FALSE;
+        }
+        GST_WARNING_OBJECT (h265parse,
+            "failed to parse VUI of SPS, ignore VUI");
       }
 
       GST_DEBUG_OBJECT (h265parse, "triggering src caps check");
