@@ -73,6 +73,7 @@ gst_cc_combiner_finalize (GObject * object)
 
   g_array_unref (self->current_frame_captions);
   self->current_frame_captions = NULL;
+  gst_caps_replace (&self->video_caps, NULL);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -353,7 +354,7 @@ gst_cc_combiner_sink_event (GstAggregator * aggregator,
                 &self->video_fps_d))
           self->video_fps_n = self->video_fps_d = 0;
 
-        gst_aggregator_set_src_caps (aggregator, caps);
+        self->video_caps = gst_caps_ref (caps);
       }
 
       break;
@@ -375,6 +376,7 @@ gst_cc_combiner_stop (GstAggregator * aggregator)
   self->current_video_running_time = self->current_video_running_time_end =
       GST_CLOCK_TIME_NONE;
   gst_buffer_replace (&self->current_video_buffer, NULL);
+  gst_caps_replace (&self->video_caps, NULL);
 
   g_array_set_size (self->current_frame_captions, 0);
   self->current_caption_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
@@ -421,6 +423,21 @@ gst_cc_combiner_create_new_pad (GstAggregator * aggregator,
   return agg_pad;
 }
 
+static GstFlowReturn
+gst_cc_combiner_update_src_caps (GstAggregator * agg,
+    GstCaps * caps, GstCaps ** ret)
+{
+  GstFlowReturn res = GST_AGGREGATOR_FLOW_NEED_DATA;
+  GstCCCombiner *self = GST_CCCOMBINER (agg);
+
+  if (self->video_caps) {
+    *ret = gst_caps_intersect (caps, self->video_caps);
+    res = GST_FLOW_OK;
+  }
+
+  return res;
+}
+
 static void
 gst_cc_combiner_class_init (GstCCCombinerClass * klass)
 {
@@ -452,6 +469,7 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
   aggregator_class->flush = gst_cc_combiner_flush;
   aggregator_class->create_new_pad = gst_cc_combiner_create_new_pad;
   aggregator_class->sink_event = gst_cc_combiner_sink_event;
+  aggregator_class->update_src_caps = gst_cc_combiner_update_src_caps;
 
   GST_DEBUG_CATEGORY_INIT (gst_cc_combiner_debug, "cccombiner",
       0, "Closed Caption combiner");
