@@ -762,10 +762,22 @@ gst_gl_transformation_gl_start (GstGLBaseFilter * base_filter)
     return FALSE;
 
   if (gst_gl_context_get_gl_api (base_filter->context)) {
+    gchar *frag_str;
+    gboolean ret;
+
+    frag_str =
+        gst_gl_shader_string_fragment_get_default (base_filter->context,
+        GST_GLSL_VERSION_NONE,
+        GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+
     /* blocking call, wait until the opengl thread has compiled the shader */
-    return gst_gl_context_gen_shader (base_filter->context,
+    ret = gst_gl_context_gen_shader (base_filter->context,
         gst_gl_shader_string_vertex_mat4_vertex_transform,
-        gst_gl_shader_string_fragment_default, &transformation->shader);
+        frag_str, &transformation->shader);
+
+    g_free (frag_str);
+
+    return ret;
   }
   return TRUE;
 }

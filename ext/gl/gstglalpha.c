@@ -104,9 +104,6 @@ enum
 
 /* *INDENT-OFF* */
 static const gchar *alpha_frag =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;\n"
   "uniform sampler2D tex;\n"
   "uniform float alpha;\n"
@@ -117,9 +114,6 @@ static const gchar *alpha_frag =
   "}\n";
 
 static const gchar *chroma_key_frag =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;\n"
   "uniform sampler2D tex;\n"
   "uniform float cb;\n"
@@ -344,17 +338,24 @@ _create_shader (GstGLAlpha * alpha)
   GstGLBaseFilter *base_filter = GST_GL_BASE_FILTER (alpha);
   GstGLFilter *filter = GST_GL_FILTER (alpha);
   GError *error = NULL;
+  const gchar *frags[2];
 
   if (alpha->alpha_shader)
     gst_object_unref (alpha->alpha_shader);
 
+  frags[0] =
+      gst_gl_shader_string_get_highest_precision (base_filter->context,
+      GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+  frags[1] = alpha_frag;
+
   if (!(alpha->alpha_shader =
           gst_gl_shader_new_link_with_stages (base_filter->context, &error,
               gst_glsl_stage_new_default_vertex (base_filter->context),
-              gst_glsl_stage_new_with_string (base_filter->context,
+              gst_glsl_stage_new_with_strings (base_filter->context,
                   GL_FRAGMENT_SHADER, GST_GLSL_VERSION_NONE,
-                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-                  alpha_frag), NULL))) {
+                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+                  frags), NULL))) {
     GST_ELEMENT_ERROR (alpha, RESOURCE, NOT_FOUND, ("%s",
             "Failed to initialize alpha shader"), ("%s",
             error ? error->message : "Unknown error"));
@@ -364,13 +365,15 @@ _create_shader (GstGLAlpha * alpha)
   if (alpha->chroma_key_shader)
     gst_object_unref (alpha->chroma_key_shader);
 
+  frags[1] = chroma_key_frag;
+
   if (!(alpha->chroma_key_shader =
           gst_gl_shader_new_link_with_stages (base_filter->context, &error,
               gst_glsl_stage_new_default_vertex (base_filter->context),
-              gst_glsl_stage_new_with_string (base_filter->context,
+              gst_glsl_stage_new_with_strings (base_filter->context,
                   GL_FRAGMENT_SHADER, GST_GLSL_VERSION_NONE,
-                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-                  chroma_key_frag), NULL))) {
+                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+                  frags), NULL))) {
     GST_ELEMENT_ERROR (alpha, RESOURCE, NOT_FOUND, ("%s",
             "Failed to initialize chroma key shader"), ("%s",
             error ? error->message : "Unknown error"));

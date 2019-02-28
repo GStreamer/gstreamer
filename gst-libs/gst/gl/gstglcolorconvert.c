@@ -126,9 +126,6 @@ static const gfloat from_rgb_bt709_vcoeff[] = {0.440654f, -0.400285f, -0.040370f
     "const vec2 compose_weight = vec2(0.996109, 0.003891);\n"
 
 #define DEFAULT_UNIFORMS         \
-    "#ifdef GL_ES\n"             \
-    "precision mediump float;\n" \
-    "#endif\n"                   \
     "uniform vec2 tex_scale0;\n" \
     "uniform vec2 tex_scale1;\n" \
     "uniform vec2 tex_scale2;\n" \
@@ -525,6 +522,8 @@ gst_gl_color_convert_finalize (GObject * object)
     gst_object_unref (convert->context);
     convert->context = NULL;
   }
+
+  GST_ERROR_OBJECT (convert, "finalize");
 
   G_OBJECT_CLASS (gst_gl_color_convert_parent_class)->finalize (object);
 }
@@ -1877,7 +1876,7 @@ _create_shader (GstGLColorConvert * convert)
   GstGLSLVersion version;
   GstGLSLProfile profile;
   gchar *version_str, *tmp, *tmp1;
-  const gchar *strings[2];
+  const gchar *strings[3];
   GError *error = NULL;
   int i;
 
@@ -1997,9 +1996,12 @@ _create_shader (GstGLColorConvert * convert)
       &version, &profile);
   g_free (tmp);
 
-  strings[1] = info->frag_prog;
+  strings[1] =
+      gst_gl_shader_string_get_highest_precision (convert->context, version,
+      profile);
+  strings[2] = info->frag_prog;
   if (!(stage = gst_glsl_stage_new_with_strings (convert->context,
-              GL_FRAGMENT_SHADER, version, profile, 2, strings))) {
+              GL_FRAGMENT_SHADER, version, profile, 3, strings))) {
     GST_ERROR_OBJECT (convert, "Failed to create fragment stage");
     g_free (info->frag_prog);
     info->frag_prog = NULL;

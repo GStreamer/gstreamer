@@ -76,9 +76,6 @@ static gboolean gst_gl_deinterlace_greedyh_callback (GstGLFilter * filter,
 
 /* *INDENT-OFF* */
 static const gchar *greedyh_fragment_source =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "uniform sampler2D tex;\n"
   "uniform sampler2D tex_prev;\n"
   "uniform float max_comb;\n"
@@ -157,9 +154,6 @@ static const gchar *greedyh_fragment_source =
   "}\n";
 
 const gchar *vfir_fragment_source =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "uniform sampler2D tex;\n"
   "uniform float width;\n"
   "uniform float height;\n"
@@ -422,18 +416,25 @@ gst_gl_deinterlace_get_fragment_shader (GstGLFilter * filter,
   GstGLShader *shader = NULL;
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (filter);
   GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
+  const gchar *frags[2];
 
   shader = g_hash_table_lookup (deinterlace_filter->shaderstable, shader_name);
+
+  frags[0] =
+      gst_gl_shader_string_get_highest_precision (context,
+      GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+  frags[1] = shader_source;
 
   if (!shader) {
     GError *error = NULL;
 
     if (!(shader = gst_gl_shader_new_link_with_stages (context, &error,
                 gst_glsl_stage_new_default_vertex (context),
-                gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+                gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
                     GST_GLSL_VERSION_NONE,
-                    GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-                    shader_source), NULL))) {
+                    GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+                    frags), NULL))) {
       GST_ELEMENT_ERROR (deinterlace_filter, RESOURCE, NOT_FOUND,
           ("Failed to initialize %s shader", shader_name), (NULL));
     }

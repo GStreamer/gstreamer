@@ -78,9 +78,6 @@ const gchar *mirror_fragment_source_opengl =
   "}";
 
 const gchar *mirror_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
@@ -92,9 +89,6 @@ const gchar *mirror_fragment_source_gles2 =
   "}";
 
 const gchar *squeeze_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
@@ -109,9 +103,6 @@ const gchar *squeeze_fragment_source_gles2 =
   "}";
 
 const gchar *stretch_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
@@ -125,9 +116,6 @@ const gchar *stretch_fragment_source_gles2 =
   "}";
 
 const gchar *tunnel_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
@@ -144,9 +132,6 @@ const gchar *tunnel_fragment_source_gles2 =
   "}";
 
 const gchar *fisheye_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
@@ -160,11 +145,8 @@ const gchar *fisheye_fragment_source_gles2 =
   "}";
 
 const gchar *twirl_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
-	"uniform sampler2D tex;"
+  "uniform sampler2D tex;"
   "void main () {"
   "  vec2 texturecoord = v_texcoord.xy;"
   "  vec2 normcoord;"
@@ -183,9 +165,6 @@ const gchar *twirl_fragment_source_gles2 =
   "}";
 
 const gchar *bulge_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
@@ -199,9 +178,6 @@ const gchar *bulge_fragment_source_gles2 =
   "}";
 
 const gchar *square_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
@@ -216,9 +192,6 @@ const gchar *square_fragment_source_gles2 =
   "}";
 
 const gchar *luma_threshold_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
@@ -229,9 +202,6 @@ const gchar *luma_threshold_fragment_source_gles2 =
   "}";
 
 const gchar *sep_sobel_length_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "uniform bool invert;"
@@ -246,9 +216,6 @@ const gchar *sep_sobel_length_fragment_source_gles2 =
   "}";
 
 const gchar *desaturate_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
@@ -258,9 +225,6 @@ const gchar *desaturate_fragment_source_gles2 =
   "}";
 
 const gchar *sep_sobel_hconv3_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "uniform float width;"
@@ -289,9 +253,6 @@ const gchar *sep_sobel_hconv3_fragment_source_gles2 =
   "}";
 
 const gchar *sep_sobel_vconv3_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "uniform float height;"
@@ -320,9 +281,6 @@ const gchar *sep_sobel_vconv3_fragment_source_gles2 =
   "}";
 
 const gchar *hconv7_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "uniform float kernel[7];"
@@ -348,9 +306,6 @@ const gchar *hconv7_fragment_source_gles2 =
 
 /* vertical convolution 7x7 */
 const gchar *vconv7_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "uniform float kernel[7];"
@@ -376,9 +331,6 @@ const gchar *vconv7_fragment_source_gles2 =
 
 /* TODO: support several blend modes */
 const gchar *sum_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D base;"
   "uniform sampler2D blend;"
@@ -391,9 +343,6 @@ const gchar *sum_fragment_source_gles2 =
   "}";
 
 const gchar *multiply_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D base;"
   "uniform sampler2D blend;"
@@ -406,9 +355,6 @@ const gchar *multiply_fragment_source_gles2 =
 
 /* lut operations, map luma to tex1d, see orange book (chapter 19) */
 const gchar *luma_to_curve_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "uniform sampler2D curve;"
@@ -422,9 +368,6 @@ const gchar *luma_to_curve_fragment_source_gles2 =
 
 /* lut operations, map rgb to tex1d, see orange book (chapter 19) */
 const gchar *rgb_to_curve_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "uniform sampler2D curve;"
@@ -439,9 +382,6 @@ const gchar *rgb_to_curve_fragment_source_gles2 =
   "}";
 
 const gchar *sin_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "void main () {"
@@ -468,9 +408,6 @@ const gchar *sin_fragment_source_gles2 =
   "}";
 
 const gchar *interpolate_fragment_source =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D base;"
   "uniform sampler2D blend;"
@@ -482,9 +419,6 @@ const gchar *interpolate_fragment_source =
   "}";
 
 const gchar *texture_interp_fragment_source =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D base;"
   "uniform sampler2D blend;"
@@ -497,9 +431,6 @@ const gchar *texture_interp_fragment_source =
   "}";
 
 const gchar *difference_fragment_source =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D saved;"
   "uniform sampler2D current;"
@@ -515,9 +446,6 @@ const gchar *difference_fragment_source =
    kernel into the shader and remove unneeded zero multiplications in
    the convolution */
 const gchar *conv9_fragment_source_gles2 =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;"
   "uniform sampler2D tex;"
   "uniform float kernel[9];"

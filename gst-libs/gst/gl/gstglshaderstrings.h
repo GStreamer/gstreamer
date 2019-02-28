@@ -23,20 +23,40 @@
 
 #include <gst/gst.h>
 #include <gst/gl/gl-prelude.h>
+#include <gst/gl/gl.h>
 
 G_BEGIN_DECLS
 
 GST_GL_API
-const gchar *gst_gl_shader_string_vertex_default;
+const gchar *gst_gl_shader_string_fragment_highp_precision;
 GST_GL_API
+const gchar *gst_gl_shader_string_fragment_mediump_precision;
+
+GST_GL_API
+const gchar *gst_gl_shader_string_vertex_default;
+GST_GL_API G_DEPRECATED_FOR(gst_gl_shader_string_fragment_get_default)
 const gchar *gst_gl_shader_string_fragment_default;
 
 GST_GL_API
 const gchar *gst_gl_shader_string_vertex_mat4_texture_transform;
 GST_GL_API
 const gchar *gst_gl_shader_string_vertex_mat4_vertex_transform;
-GST_GL_API
+GST_GL_API G_DEPRECATED_FOR(gst_gl_shader_string_fragment_external_oes_get_default)
 const gchar *gst_gl_shader_string_fragment_external_oes_default;
+
+GST_GL_API
+const gchar * gst_gl_shader_string_get_highest_precision        (GstGLContext * context,
+                                                                 GstGLSLVersion version,
+                                                                 GstGLSLProfile profile);
+
+GST_GL_API
+gchar * gst_gl_shader_string_fragment_get_default               (GstGLContext * context,
+                                                                 GstGLSLVersion version,
+                                                                 GstGLSLProfile profile);
+GST_GL_API
+gchar * gst_gl_shader_string_fragment_external_oes_get_default  (GstGLContext * context,
+                                                                 GstGLSLVersion version,
+                                                                 GstGLSLProfile profile);
 
 G_END_DECLS
 

@@ -116,9 +116,6 @@ static const gchar *cube_v_src =
 
 /* fragment source */
 static const gchar *cube_f_src =
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
     "varying vec2 v_texcoord;                            \n"
     "uniform sampler2D s_texture;                        \n"
     "void main()                                         \n"
@@ -310,10 +307,22 @@ static gboolean
 gst_gl_filter_cube_gl_start (GstGLBaseFilter * filter)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
+  GstGLContext *context = GST_GL_BASE_FILTER (filter)->context;
+  gchar *frag_str;
+  gboolean ret;
+
+  frag_str =
+      g_strdup_printf ("%s%s",
+      gst_gl_shader_string_get_highest_precision (context,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY), cube_f_src);
 
   /* blocking call, wait the opengl thread has compiled the shader */
-  return gst_gl_context_gen_shader (GST_GL_BASE_FILTER (filter)->context,
-      cube_v_src, cube_f_src, &cube_filter->shader);
+  ret = gst_gl_context_gen_shader (context, cube_v_src, frag_str,
+      &cube_filter->shader);
+  g_free (frag_str);
+
+  return ret;
 }
 
 static gboolean

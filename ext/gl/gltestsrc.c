@@ -265,9 +265,6 @@ static const gchar *smpte_vertex_src =
     "}";
 
 static const gchar *smpte_fragment_src =
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
     "varying vec4 color;\n"
     "void main()\n"
     "{\n"
@@ -284,9 +281,6 @@ static const gchar *snow_vertex_src =
     "}";
 
 static const gchar *snow_fragment_src = 
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
     "uniform float time;\n"
     "varying vec2 out_uv;\n"
     "\n"
@@ -327,6 +321,7 @@ _src_smpte_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
   gushort *plane_indices;
   GError *error = NULL;
   int color_idx = 0;
+  const gchar *frags[2];
   int i;
 
   src->base.base.context = context;
@@ -447,19 +442,28 @@ _src_smpte_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
 
   if (src->color_shader)
     gst_object_unref (src->color_shader);
+
+  frags[0] =
+      gst_gl_shader_string_get_highest_precision (context,
+      GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+  frags[1] = smpte_fragment_src;
+
   src->color_shader = gst_gl_shader_new_link_with_stages (context, &error,
       gst_glsl_stage_new_with_string (context, GL_VERTEX_SHADER,
           GST_GLSL_VERSION_NONE,
           GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
           smpte_vertex_src),
-      gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+      gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
           GST_GLSL_VERSION_NONE,
-          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-          smpte_fragment_src), NULL);
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+          frags), NULL);
   if (!src->color_shader) {
     GST_ERROR_OBJECT (src->base.base.src, "%s", error->message);
     return FALSE;
   }
+
+  frags[1] = snow_fragment_src;
 
   if (src->snow_shader)
     gst_object_unref (src->snow_shader);
@@ -468,10 +472,10 @@ _src_smpte_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
           GST_GLSL_VERSION_NONE,
           GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
           snow_vertex_src),
-      gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+      gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
           GST_GLSL_VERSION_NONE,
-          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-          snow_fragment_src), NULL);
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+          frags), NULL);
   if (!src->snow_shader) {
     GST_ERROR_OBJECT (src->base.base.src, "%s", error->message);
     return FALSE;
@@ -684,9 +688,6 @@ static const gchar *checkers_vertex_src = "attribute vec4 position;\n"
     "}";
 
 static const gchar *checkers_fragment_src =
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
     "uniform float checker_width;\n"
     "uniform float width;\n"
     "uniform float height;\n"
@@ -714,8 +715,15 @@ _src_checkers_init (gpointer impl, GstGLContext * context,
 {
   struct SrcCheckers *src = impl;
   GError *error = NULL;
+  const gchar *frags[2];
 
   src->base.base.context = context;
+
+  frags[0] =
+      gst_gl_shader_string_get_highest_precision (context,
+      GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+  frags[1] = checkers_fragment_src;
 
   if (src->base.shader)
     gst_object_unref (src->base.shader);
@@ -724,10 +732,10 @@ _src_checkers_init (gpointer impl, GstGLContext * context,
           GST_GLSL_VERSION_NONE,
           GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
           checkers_vertex_src),
-      gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+      gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
           GST_GLSL_VERSION_NONE,
-          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-          checkers_fragment_src), NULL);
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+          frags), NULL);
   if (!src->base.shader) {
     GST_ERROR_OBJECT (src->base.base.src, "%s", error->message);
     return FALSE;
@@ -808,8 +816,15 @@ _src_snow_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
 {
   struct SrcShader *src = impl;
   GError *error = NULL;
+  const gchar *frags[2];
 
   src->base.context = context;
+
+  frags[0] =
+      gst_gl_shader_string_get_highest_precision (context,
+      GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+  frags[1] = snow_fragment_src;
 
   if (src->shader)
     gst_object_unref (src->shader);
@@ -818,10 +833,10 @@ _src_snow_init (gpointer impl, GstGLContext * context, GstVideoInfo * v_info)
           GST_GLSL_VERSION_NONE,
           GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
           snow_vertex_src),
-      gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+      gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
           GST_GLSL_VERSION_NONE,
-          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-          snow_fragment_src), NULL);
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+          frags), NULL);
   if (!src->shader) {
     GST_ERROR_OBJECT (src->base.src, "%s", error->message);
     return FALSE;
@@ -902,9 +917,6 @@ static const gchar *mandelbrot_vertex_src = "attribute vec4 position;\n"
     "}";
 
 static const gchar *mandelbrot_fragment_src = 
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
     "uniform float time;\n"
     "varying vec2 fractal_position;\n"
     "const vec4 K = vec4(1.0, 0.66, 0.33, 3.0);\n"
@@ -942,8 +954,15 @@ _src_mandelbrot_init (gpointer impl, GstGLContext * context,
 {
   struct SrcShader *src = impl;
   GError *error = NULL;
+  const gchar *frags[2];
 
   src->base.context = context;
+
+  frags[0] =
+      gst_gl_shader_string_get_highest_precision (context,
+      GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+  frags[1] = mandelbrot_fragment_src;
 
   if (src->shader)
     gst_object_unref (src->shader);
@@ -952,10 +971,10 @@ _src_mandelbrot_init (gpointer impl, GstGLContext * context,
           GST_GLSL_VERSION_NONE,
           GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
           mandelbrot_vertex_src),
-      gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+      gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
           GST_GLSL_VERSION_NONE,
-          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-          mandelbrot_fragment_src), NULL);
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+          frags), NULL);
   if (!src->shader) {
     GST_ERROR_OBJECT (src->base.src, "%s", error->message);
     return FALSE;
@@ -1041,9 +1060,6 @@ static const gchar *circular_vertex_src =
     "}";
 
 static const gchar *circular_fragment_src =
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
     "uniform float aspect_ratio;\n"
     "varying vec2 uv;\n"
     "#define PI 3.14159265\n"
@@ -1065,8 +1081,15 @@ _src_circular_init (gpointer impl, GstGLContext * context,
 {
   struct SrcShader *src = impl;
   GError *error = NULL;
+  const gchar *frags[2];
 
   src->base.context = context;
+
+  frags[0] =
+      gst_gl_shader_string_get_highest_precision (context,
+      GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+  frags[1] = circular_fragment_src;
 
   if (src->shader)
     gst_object_unref (src->shader);
@@ -1075,10 +1098,10 @@ _src_circular_init (gpointer impl, GstGLContext * context,
           GST_GLSL_VERSION_NONE,
           GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
           circular_vertex_src),
-      gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+      gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
           GST_GLSL_VERSION_NONE,
-          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-          circular_fragment_src), NULL);
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+          frags), NULL);
   if (!src->shader) {
     GST_ERROR_OBJECT (src->base.src, "%s", error->message);
     return FALSE;

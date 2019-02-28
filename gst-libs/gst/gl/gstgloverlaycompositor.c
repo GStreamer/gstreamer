@@ -33,11 +33,8 @@
 
 #include "gstgloverlaycompositor.h"
 
-#include "gstglcontext.h"
-#include "gstglfuncs.h"
-#include "gstglmemory.h"
-#include "gstglshader.h"
-#include "gstglslstage.h"
+#include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_overlay_compositor_debug);
 #define GST_CAT_DEFAULT gst_gl_overlay_compositor_debug
@@ -58,9 +55,6 @@ static GType gst_gl_composition_overlay_get_type (void);
 
 /* *INDENT-OFF* */
 const gchar *fragment_shader =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "varying vec2 v_texcoord;\n"
   "uniform sampler2D tex;\n"
   "void main(void)\n"
@@ -463,7 +457,8 @@ enum
 #define DEFAULT_YINVERT                 FALSE
 
 G_DEFINE_TYPE_WITH_CODE (GstGLOverlayCompositor, gst_gl_overlay_compositor,
-    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstGLOverlayCompositor); DEBUG_INIT);
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstGLOverlayCompositor);
+    DEBUG_INIT);
 
 static void gst_gl_overlay_compositor_finalize (GObject * object);
 static void gst_gl_overlay_compositor_set_property (GObject * object,
@@ -545,14 +540,21 @@ gst_gl_overlay_compositor_init_gl (GstGLContext * context,
   GstGLOverlayCompositor *compositor =
       (GstGLOverlayCompositor *) compositor_pointer;
   GError *error = NULL;
+  const gchar *frag_strs[2];
+
+  frag_strs[0] =
+      gst_gl_shader_string_get_highest_precision (context,
+      GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+  frag_strs[1] = fragment_shader;
 
   if (!(compositor->shader =
           gst_gl_shader_new_link_with_stages (context, &error,
               gst_glsl_stage_new_default_vertex (context),
-              gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+              gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
                   GST_GLSL_VERSION_NONE,
-                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-                  fragment_shader), NULL))) {
+                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+                  frag_strs), NULL))) {
     GST_ERROR_OBJECT (compositor, "could not initialize shader: %s",
         error->message);
     return;

@@ -86,6 +86,7 @@ gst_gl_differencematte_gl_start (GstGLBaseFilter * base_filter)
   GstGLBaseMemoryAllocator *tex_alloc;
   GstGLAllocationParams *params;
   GError *error = NULL;
+  const gchar *frags[2];
   gint i;
 
   if (!GST_GL_BASE_FILTER_CLASS (parent_class)->gl_start (base_filter))
@@ -110,49 +111,58 @@ gst_gl_differencematte_gl_start (GstGLBaseFilter * base_filter)
     return FALSE;
   }
 
+  frags[0] =
+      gst_gl_shader_string_get_highest_precision (context,
+      GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+
+  frags[1] = difference_fragment_source;
   if (!(differencematte->shader[0] =
           gst_gl_shader_new_link_with_stages (context, &error,
               gst_glsl_stage_new_default_vertex (context),
-              gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+              gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
                   GST_GLSL_VERSION_NONE,
-                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-                  difference_fragment_source), NULL))) {
+                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+                  frags), NULL))) {
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
             "Failed to compile difference shader"), ("%s", error->message));
     return FALSE;
   }
 
+  frags[1] = hconv7_fragment_source_gles2;
   if (!(differencematte->shader[1] =
           gst_gl_shader_new_link_with_stages (context, &error,
               gst_glsl_stage_new_default_vertex (context),
-              gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+              gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
                   GST_GLSL_VERSION_NONE,
-                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-                  hconv7_fragment_source_gles2), NULL))) {
+                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+                  frags), NULL))) {
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
             "Failed to compile convolution shader"), ("%s", error->message));
     return FALSE;
   }
 
+  frags[1] = vconv7_fragment_source_gles2;
   if (!(differencematte->shader[2] =
           gst_gl_shader_new_link_with_stages (context, &error,
               gst_glsl_stage_new_default_vertex (context),
-              gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+              gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
                   GST_GLSL_VERSION_NONE,
-                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-                  vconv7_fragment_source_gles2), NULL))) {
+                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+                  frags), NULL))) {
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
             "Failed to compile convolution shader"), ("%s", error->message));
     return FALSE;
   }
 
+  frags[1] = texture_interp_fragment_source;
   if (!(differencematte->shader[3] =
           gst_gl_shader_new_link_with_stages (context, &error,
               gst_glsl_stage_new_default_vertex (context),
-              gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+              gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
                   GST_GLSL_VERSION_NONE,
-                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-                  texture_interp_fragment_source), NULL))) {
+                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+                  frags), NULL))) {
     GST_ELEMENT_ERROR (differencematte, RESOURCE, NOT_FOUND, ("%s",
             "Failed to compile interpolation shader"), ("%s", error->message));
     return FALSE;

@@ -64,8 +64,8 @@ GST_GL_EXT_BEGIN (gles2_only_api,
                   GST_GL_API_GLES2,
                   255, 255,
                   2, 0,
-                  "\0",
-                  "\0")
+                  "ARB:\0",
+                  "ES2_compatibility\0")
 GST_GL_EXT_FUNCTION (void, ReleaseShaderCompiler, (void))
 GST_GL_EXT_FUNCTION (void, GetShaderPrecisionFormat,
                      (GLenum shadertype,

@@ -141,9 +141,6 @@ static gfloat identity_matrix[] = {
 
 /* *INDENT-OFF* */
 static const gchar *fragment_header =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
   "uniform sampler2D tex_l;\n"
   "uniform sampler2D tex_r;\n"
   "uniform float width;\n"
@@ -1516,6 +1513,9 @@ _get_shader_string (GstGLViewConvert * viewconvert, GstGLShader * shader,
   if (viewconvert->from_texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
     g_string_append (str, glsl_OES_extension_string);
 
+  g_string_append (str,
+      gst_gl_shader_string_get_highest_precision (viewconvert->context, version,
+          profile));
   g_string_append (str, fragment_header);
 
   /* GL 3.3+ and GL ES 3.x */

@@ -72,8 +72,7 @@ struct _GstGLSLStagePrivate
 G_DEFINE_TYPE_WITH_CODE (GstGLSLStage, gst_glsl_stage, GST_TYPE_OBJECT,
     G_ADD_PRIVATE (GstGLSLStage)
     GST_DEBUG_CATEGORY_INIT (gst_glsl_stage_debug, "glslstage", 0,
-        "GLSL Stage");
-    );
+        "GLSL Stage"););
 
 static void
 gst_glsl_stage_finalize (GObject * object)
@@ -289,10 +288,20 @@ gst_glsl_stage_new_default_vertex (GstGLContext * context)
 GstGLSLStage *
 gst_glsl_stage_new_default_fragment (GstGLContext * context)
 {
-  return gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
-      GST_GLSL_VERSION_NONE,
-      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-      gst_gl_shader_string_fragment_default);
+  GstGLSLProfile profile = GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY;
+  GstGLSLVersion version = GST_GLSL_VERSION_NONE;
+  gchar *frag_str;
+  GstGLSLStage *stage;
+
+  frag_str =
+      gst_gl_shader_string_fragment_get_default (context, version, profile);
+
+  stage = gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+      version, profile, frag_str);
+
+  g_free (frag_str);
+
+  return stage;
 }
 
 /**

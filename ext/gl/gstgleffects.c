@@ -557,13 +557,20 @@ gst_gl_effects_get_fragment_shader (GstGLEffects * effects,
 
   if (!shader) {
     GError *error = NULL;
+    const gchar *frag_strs[2];
+
+    frag_strs[0] =
+        gst_gl_shader_string_get_highest_precision (context,
+        GST_GLSL_VERSION_NONE,
+        GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+    frag_strs[1] = shader_source_gles2;
 
     if (!(shader = gst_gl_shader_new_link_with_stages (context, &error,
                 gst_glsl_stage_new_default_vertex (context),
-                gst_glsl_stage_new_with_string (context, GL_FRAGMENT_SHADER,
+                gst_glsl_stage_new_with_strings (context, GL_FRAGMENT_SHADER,
                     GST_GLSL_VERSION_NONE,
-                    GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-                    shader_source_gles2), NULL))) {
+                    GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, 2,
+                    frag_strs), NULL))) {
       GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
           ("Failed to initialize %s shader", shader_name), (NULL));
     }

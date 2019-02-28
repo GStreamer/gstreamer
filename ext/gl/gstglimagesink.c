@@ -2014,10 +2014,17 @@ gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
       GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
       gst_gl_shader_string_vertex_mat4_vertex_transform);
   if (gl_sink->texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES) {
+    gchar *frag_str;
+    frag_str =
+        gst_gl_shader_string_fragment_external_oes_get_default
+        (gl_sink->context, GST_GLSL_VERSION_NONE,
+        GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+
     frag_stage = gst_glsl_stage_new_with_string (gl_sink->context,
         GL_FRAGMENT_SHADER, GST_GLSL_VERSION_NONE,
-        GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-        gst_gl_shader_string_fragment_external_oes_default);
+        GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, frag_str);
+
+    g_free (frag_str);
   } else {
     frag_stage = gst_glsl_stage_new_default_fragment (gl_sink->context);
   }

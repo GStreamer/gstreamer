@@ -929,3 +929,59 @@ _gst_glsl_mangle_shader (const gchar * str, guint shader_type,
   }
   return tmp;
 }
+
+/**
+ * gst_gl_context_supports_precision:
+ * @context: a #GstGLContext
+ * @version: a #GstGLSLVersion
+ * @profile: a #GstGLSLProfile
+ *
+ * Returns: whether @context supports the 'precision' specifier in GLSL shaders
+ */
+gboolean
+gst_gl_context_supports_precision (GstGLContext * context,
+    GstGLSLVersion version, GstGLSLProfile profile)
+{
+  gboolean es2 = FALSE;
+
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
+
+  if ((profile & GST_GLSL_PROFILE_ES) == 0)
+    return FALSE;
+
+  es2 = gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0)
+      || gst_gl_context_check_feature (context, "GL_ARB_ES2_compatibility");
+
+  return es2 && context->gl_vtable->GetShaderPrecisionFormat;
+}
+
+/**
+ * gst_gl_context_supports_precision_highp:
+ * @context: a #GstGLContext
+ * @version: a #GstGLSLVersion
+ * @profile: a #GstGLSLProfile
+ *
+ * Returns: whether @context supports the 'precision highp' specifier in GLSL shaders
+ */
+gboolean
+gst_gl_context_supports_precision_highp (GstGLContext * context,
+    GstGLSLVersion version, GstGLSLProfile profile)
+{
+  gint v_range[2] = { 0, }
+  , v_precision = 0;
+  gint f_range[2] = { 0, }
+  , f_precision = 0;
+
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (context), FALSE);
+
+  if (!gst_gl_context_supports_precision (context, version, profile))
+    return FALSE;
+
+  context->gl_vtable->GetShaderPrecisionFormat (GL_VERTEX_SHADER, GL_HIGH_FLOAT,
+      v_range, &v_precision);
+  context->gl_vtable->GetShaderPrecisionFormat (GL_FRAGMENT_SHADER,
+      GL_HIGH_FLOAT, f_range, &f_precision);
+
+  return v_range[0] != 0 && v_range[1] != 0 && v_precision != 0 &&
+      f_range[0] != 0 && f_range[1] != 0 && f_precision != 0;
+}

@@ -484,9 +484,6 @@ static gboolean gst_gl_video_mixer_callback (gpointer stuff);
 
 /* fragment source */
 static const gchar *video_mixer_f_src =
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
     "uniform sampler2D texture;                     \n"
     "uniform float alpha;\n"
     "varying vec2 v_texcoord;                            \n"
@@ -506,9 +503,6 @@ static const gchar *checker_v_src =
 
 /* checker fragment source */
 static const gchar *checker_f_src =
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
     "const float blocksize = 8.0;\n"
     "void main ()\n"
     "{\n"
@@ -1212,6 +1206,8 @@ static gboolean
 gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mixer);
+  gchar *frag_str;
+  gboolean ret;
 
   if (video_mixer->shader)
     gst_object_unref (video_mixer->shader);
@@ -1219,9 +1215,18 @@ gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
   /* need reconfigure output geometry */
   video_mixer->output_geo_change = TRUE;
 
-  return gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
+  frag_str =
+      g_strdup_printf ("%s%s",
+      gst_gl_shader_string_get_highest_precision (GST_GL_BASE_MIXER
+          (mixer)->context, GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY),
+      video_mixer_f_src);
+
+  ret = gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
       gst_gl_shader_string_vertex_mat4_vertex_transform,
-      video_mixer_f_src, &video_mixer->shader);
+      frag_str, &video_mixer->shader);
+  g_free (frag_str);
+  return ret;
 }
 
 static void
@@ -1279,9 +1284,21 @@ _draw_checker_background (GstGLVideoMixer * video_mixer)
   /* *INDENT-ON* */
 
   if (!video_mixer->checker) {
+    gchar *frag_str;
+
+    frag_str =
+        g_strdup_printf ("%s%s",
+        gst_gl_shader_string_get_highest_precision (GST_GL_BASE_MIXER
+            (mixer)->context, GST_GLSL_VERSION_NONE,
+            GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY),
+        checker_f_src);
+
     if (!gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
-            checker_v_src, checker_f_src, &video_mixer->checker))
+            checker_v_src, frag_str, &video_mixer->checker)) {
+      g_free (frag_str);
       return FALSE;
+    }
+    g_free (frag_str);
   }
 
   gst_gl_shader_use (video_mixer->checker);

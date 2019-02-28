@@ -109,9 +109,6 @@ static const gchar *overlay_v_src =
 
 /* fragment source */
 static const gchar *overlay_f_src =
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
     "uniform sampler2D texture;\n"
     "uniform float alpha;\n"
     "varying vec2 v_texcoord;\n"
@@ -127,12 +124,24 @@ static gboolean
 gst_gl_overlay_gl_start (GstGLBaseFilter * base_filter)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (base_filter);
+  gchar *frag_str;
+  gboolean ret;
 
   if (!GST_GL_BASE_FILTER_CLASS (parent_class)->gl_start (base_filter))
     return FALSE;
 
-  return gst_gl_context_gen_shader (base_filter->context, overlay_v_src,
-      overlay_f_src, &overlay->shader);
+  frag_str =
+      g_strdup_printf ("%s%s",
+      gst_gl_shader_string_get_highest_precision (base_filter->context,
+          GST_GLSL_VERSION_NONE,
+          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY), overlay_f_src);
+
+  /* blocking call, wait the opengl thread has compiled the shader */
+  ret = gst_gl_context_gen_shader (base_filter->context, overlay_v_src,
+      frag_str, &overlay->shader);
+  g_free (frag_str);
+
+  return ret;
 }
 
 /* free resources that need a gl context */

@@ -83,21 +83,16 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_GL_COLOR_BALANCE_VIDEO_CAPS));
 
 /* *INDENT-OFF* */
-static const gchar color_balance_frag_OES_preamble[] =
-    "#extension GL_OES_EGL_image_external : require\n"
-    "#ifdef GL_ES\n"
-    "precision mediump float;\n"
-    "#endif\n"
+static const gchar glsl_external_image_extension[] =
+    "#extension GL_OES_EGL_image_external : require\n";
+
+static const gchar glsl_external_image_sampler[] =
     "uniform samplerExternalOES tex;\n";
 
-static const gchar color_balance_frag_2D_preamble[] =
-  "#ifdef GL_ES\n"
-  "precision mediump float;\n"
-  "#endif\n"
+static const gchar glsl_2D_image_sampler[] =
   "uniform sampler2D tex;\n";
 
 static const gchar color_balance_frag_templ[] =
-  "%s\n" // Preamble
   "uniform float brightness;\n"
   "uniform float contrast;\n"
   "uniform float saturation;\n"
@@ -229,35 +224,48 @@ _create_shader (GstGLColorBalance * balance)
   GstGLBaseFilter *base_filter = GST_GL_BASE_FILTER (balance);
   GstGLFilter *filter = GST_GL_FILTER (balance);
   GError *error = NULL;
-  gchar *frag_str;
+  gchar *frag_body;
+  const gchar *frags[4];
+  guint frag_i = 0;
 
   if (balance->shader)
     gst_object_unref (balance->shader);
 
+  if (filter->in_texture_target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+    frags[frag_i++] = glsl_external_image_extension;
+
+  frags[frag_i++] =
+      gst_gl_shader_string_get_highest_precision (base_filter->context,
+      GST_GLSL_VERSION_NONE,
+      GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY);
+
   /* Can support rectangle textures in the future if needed */
-  if (filter->in_texture_target == GST_GL_TEXTURE_TARGET_2D)
-    frag_str =
-        g_strdup_printf (color_balance_frag_templ,
-        color_balance_frag_2D_preamble, "texture2D");
-  else
-    frag_str =
-        g_strdup_printf (color_balance_frag_templ,
-        color_balance_frag_OES_preamble, "texture2D");
+  if (filter->in_texture_target == GST_GL_TEXTURE_TARGET_2D) {
+    frags[frag_i++] = glsl_2D_image_sampler;
+    frags[frag_i++] = frag_body =
+        g_strdup_printf (color_balance_frag_templ, "texture2D");
+  } else {
+    frags[frag_i++] = glsl_external_image_sampler;
+    frags[frag_i++] = frag_body =
+        g_strdup_printf (color_balance_frag_templ, "texture2D");
+  }
+
+  g_assert (frag_i <= G_N_ELEMENTS (frags));
 
   if (!(balance->shader =
           gst_gl_shader_new_link_with_stages (base_filter->context, &error,
               gst_glsl_stage_new_default_vertex (base_filter->context),
-              gst_glsl_stage_new_with_string (base_filter->context,
+              gst_glsl_stage_new_with_strings (base_filter->context,
                   GL_FRAGMENT_SHADER, GST_GLSL_VERSION_NONE,
-                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY,
-                  frag_str), NULL))) {
-    g_free (frag_str);
+                  GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY, frag_i,
+                  frags), NULL))) {
+    g_free (frag_body);
     GST_ELEMENT_ERROR (balance, RESOURCE, NOT_FOUND, ("%s",
             "Failed to initialize colorbalance shader"), ("%s",
             error ? error->message : "Unknown error"));
     return FALSE;
   }
-  g_free (frag_str);
+  g_free (frag_body);
 
   filter->draw_attr_position_loc =
       gst_gl_shader_get_attribute_location (balance->shader, "a_position");

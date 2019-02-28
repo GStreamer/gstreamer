@@ -155,6 +155,15 @@ gboolean       gst_gl_context_supports_glsl_profile_version (GstGLContext * cont
                                                              GstGLSLVersion version,
                                                              GstGLSLProfile profile);
 
+GST_GL_API
+gboolean       gst_gl_context_supports_precision        (GstGLContext * context,
+                                                         GstGLSLVersion version,
+                                                         GstGLSLProfile profile);
+GST_GL_API
+gboolean       gst_gl_context_supports_precision_highp  (GstGLContext * context,
+                                                         GstGLSLVersion version,
+                                                         GstGLSLProfile profile);
+
 G_END_DECLS
 
 #endif /* __GST_GLSL_H__ */
