@@ -26,6 +26,9 @@ G_BEGIN_DECLS
 
 G_GNUC_INTERNAL extern GstDebugCategory *gst_gl_context_debug;
 
+G_GNUC_INTERNAL
+gboolean            _gst_gl_context_debug_is_enabled            (GstGLContext * context);
+
 G_END_DECLS
 
 #endif /* __GST_GL_CONTEXT_PRIVATE_H__ */

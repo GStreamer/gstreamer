@@ -45,6 +45,7 @@
 #include "gstglframebuffer.h"
 
 #include "gstglcontext.h"
+#include "gstglcontext_private.h"
 #include "gstglfuncs.h"
 #include "gstglmemory.h"
 #include "gstglrenderbuffer.h"
@@ -522,6 +523,10 @@ gst_gl_context_check_framebuffer_status (GstGLContext * context,
     GST_ERROR_OBJECT (context, "fbo target is invalid");
     return FALSE;
   }
+
+  /* Don't do expensive framebuffer checks when debugging is disabled */
+  if (!_gst_gl_context_debug_is_enabled (context))
+    return TRUE;
 
   switch (context->gl_vtable->CheckFramebufferStatus (fbo_target)) {
     case GL_FRAMEBUFFER_COMPLETE:

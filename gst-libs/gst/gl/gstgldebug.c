@@ -340,16 +340,13 @@ _gst_gl_debug_enable (GstGLContext * context)
     return;
   }
 
-  level = gst_debug_category_get_threshold (gst_gl_debug);
-
-  if (level < GST_LEVEL_ERROR) {
-    GST_CAT_INFO_OBJECT (gst_gl_context_debug, context,
-        "Disabling GL context debugging (gldebug category debug level < error)");
+  if (!_gst_gl_context_debug_is_enabled (context))
     return;
-  }
 
   GST_CAT_INFO_OBJECT (gst_gl_context_debug, context,
       "Enabling GL context debugging");
+
+  level = gst_debug_category_get_threshold (gst_gl_debug);
 
   gl->DebugMessageCallback (_gst_gl_debug_callback, context);
   if (level >= GST_LEVEL_DEBUG) {
