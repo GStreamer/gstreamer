@@ -412,6 +412,9 @@ typedef enum {
     GES_EDGE_NONE
 } GESEdge;
 
+GES_API
+const gchar * ges_edge_name (GESEdge edge);
+
 #define GES_TYPE_EDGE ges_edge_get_type()
 
 GES_API

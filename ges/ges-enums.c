@@ -152,6 +152,19 @@ register_ges_edge (GType * id)
   *id = g_enum_register_static ("GESEdge", edges);
 }
 
+const gchar *
+ges_edge_name (GESEdge edge)
+{
+  switch (edge) {
+    case GES_EDGE_START:
+      return "start";
+    case GES_EDGE_END:
+      return "end";
+    default:
+      return "none";
+  }
+}
+
 GType
 ges_edge_get_type (void)
 {
