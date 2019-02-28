@@ -312,12 +312,14 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         data->B = data->R + 2;
         data->A = data->R + 3;
         break;
+#if (MFX_VERSION >= 1028)
       case VA_FOURCC_RGB565:
         data->Pitch = mem_id->image.pitches[0];
         data->R = buf + mem_id->image.offsets[0];
         data->G = data->R;
         data->B = data->R;
         break;
+#endif
       default:
         g_assert_not_reached ();
         break;
@@ -454,10 +456,12 @@ gst_msdk_export_dmabuf_to_vasurface (GstMsdkContext * context,
       va_chroma = VA_RT_FORMAT_YUV422;
       va_fourcc = VA_FOURCC_UYVY;
       break;
+#if (MFX_VERSION >= 1028)
     case GST_VIDEO_FORMAT_RGB16:
       va_chroma = VA_RT_FORMAT_RGB16;
       va_fourcc = VA_FOURCC_RGB565;
       break;
+#endif
     default:
       goto error_unsupported_format;
   }

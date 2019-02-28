@@ -113,12 +113,14 @@ ensure_data (GstMsdkSystemMemory * mem)
       mem->surface->Data.B = mem->surface->Data.R + 2;
       mem->surface->Data.Pitch = mem->destination_pitches[0];
       break;
+#if (MFX_VERSION >= 1028)
     case GST_VIDEO_FORMAT_RGB16:
       mem->surface->Data.R = mem->cached_data[0];
       mem->surface->Data.G = mem->surface->Data.R;
       mem->surface->Data.B = mem->surface->Data.R;
       mem->surface->Data.Pitch = mem->destination_pitches[0];
       break;
+#endif
     default:
       g_assert_not_reached ();
       break;

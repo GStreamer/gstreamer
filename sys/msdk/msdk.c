@@ -58,7 +58,9 @@ static const struct map gst_msdk_video_format_to_mfx_map[] = {
   GST_VIDEO_INFO_TO_MFX_MAP (UYVY, YUV422, UYVY),
   GST_VIDEO_INFO_TO_MFX_MAP (BGRA, YUV444, RGB4),
   GST_VIDEO_INFO_TO_MFX_MAP (BGRx, YUV444, RGB4),
+#if (MFX_VERSION >= 1028)
   GST_VIDEO_INFO_TO_MFX_MAP (RGB16, YUV444, RGB565),
+#endif
   {0, 0, 0}
 };
 
