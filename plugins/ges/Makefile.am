@@ -6,11 +6,13 @@ libgstges_la_SOURCES = \
 	gesdemux.c
 
 libgstges_la_CFLAGS = -I$(top_srcdir) \
+	$(GST_PBUTILS_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 
 libgstges_la_LIBADD = \
 	$(top_builddir)/ges/libges-@GST_API_VERSION@.la \
+	$(GST_PBUTILS_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 
