@@ -1271,12 +1271,10 @@ rtp_source_mark_bye (RTPSource * src, const gchar * reason)
 /**
  * rtp_source_send_rtp:
  * @src: an #RTPSource
- * @data: an RTP buffer or a list of RTP buffers
- * @is_list: if @data is a buffer or list
- * @running_time: the running time of @data
+ * @pinfo: an #RTPPacketInfo
  *
- * Send @data (an RTP buffer or list of buffers) originating from @src.
- * This will make @src a sender. This function takes ownership of @data and
+ * Send data (an RTP buffer or buffer list from @pinfo) originating from @src.
+ * This will make @src a sender. This function takes ownership of the data and
  * modifies the SSRC in the RTP packet to that of @src when needed.
  *
  * Returns: a #GstFlowReturn.
