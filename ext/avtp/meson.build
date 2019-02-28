@@ -2,6 +2,7 @@ avtp_sources = [
   'gstavtp.c',
   'gstavtpaafdepay.c',
   'gstavtpaafpay.c',
+  'gstavtpcvfpay.c',
   'gstavtpbasedepayload.c',
   'gstavtpbasepayload.c',
   'gstavtpsink.c',
@@ -15,7 +16,7 @@ if avtp_dep.found()
     avtp_sources,
     c_args : gst_plugins_bad_args,
     include_directories : [configinc],
-    dependencies : [gstaudio_dep, avtp_dep],
+    dependencies : [gstaudio_dep, gstvideo_dep, avtp_dep],
     install : true,
     install_dir : plugins_install_dir,
   )

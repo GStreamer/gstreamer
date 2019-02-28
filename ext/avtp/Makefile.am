@@ -6,6 +6,7 @@ libgstavtp_la_SOURCES = \
 	gstavtpaafpay.c \
 	gstavtpbasedepayload.c \
 	gstavtpbasepayload.c \
+	gstavtpcvfpay.c \
 	gstavtpsink.c \
 	gstavtpsrc.c
 
@@ -28,5 +29,6 @@ noinst_HEADERS = \
 	gstavtpaafpay.h \
 	gstavtpbasedepayload.h \
 	gstavtpbasepayload.h \
+	gstavtpcvfpay.h \
 	gstavtpsink.h \
 	gstavtpsrc.h
