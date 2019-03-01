@@ -36,14 +36,14 @@ G_DEFINE_TYPE (GstWlWindow, gst_wl_window, G_TYPE_OBJECT);
 static void gst_wl_window_finalize (GObject * gobject);
 
 static void
-handle_ping (void *data, struct wl_shell_surface *shell_surface,
+handle_ping (void *data, struct wl_shell_surface *wl_shell_surface,
     uint32_t serial)
 {
-  wl_shell_surface_pong (shell_surface, serial);
+  wl_shell_surface_pong (wl_shell_surface, serial);
 }
 
 static void
-handle_configure (void *data, struct wl_shell_surface *shell_surface,
+handle_configure (void *data, struct wl_shell_surface *wl_shell_surface,
     uint32_t edges, int32_t width, int32_t height)
 {
   GstWlWindow *window = data;
@@ -58,12 +58,12 @@ handle_configure (void *data, struct wl_shell_surface *shell_surface,
 }
 
 static void
-handle_popup_done (void *data, struct wl_shell_surface *shell_surface)
+handle_popup_done (void *data, struct wl_shell_surface *wl_shell_surface)
 {
   GST_DEBUG ("Window popup done.");
 }
 
-static const struct wl_shell_surface_listener shell_surface_listener = {
+static const struct wl_shell_surface_listener wl_shell_surface_listener = {
   handle_ping,
   handle_configure,
   handle_popup_done
@@ -86,8 +86,8 @@ gst_wl_window_finalize (GObject * gobject)
 {
   GstWlWindow *self = GST_WL_WINDOW (gobject);
 
-  if (self->shell_surface)
-    wl_shell_surface_destroy (self->shell_surface);
+  if (self->wl_shell_surface)
+    wl_shell_surface_destroy (self->wl_shell_surface);
 
   if (self->video_viewport)
     wp_viewport_destroy (self->video_viewport);
@@ -158,10 +158,10 @@ gst_wl_window_ensure_fullscreen (GstWlWindow * window, gboolean fullscreen)
     return;
 
   if (fullscreen)
-    wl_shell_surface_set_fullscreen (window->shell_surface,
+    wl_shell_surface_set_fullscreen (window->wl_shell_surface,
         WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, NULL);
   else
-    wl_shell_surface_set_toplevel (window->shell_surface);
+    wl_shell_surface_set_toplevel (window->wl_shell_surface);
 }
 
 GstWlWindow *
@@ -173,14 +173,14 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
 
   window = gst_wl_window_new_internal (display, render_lock);
 
-  if (display->shell) {
+  if (display->wl_shell) {
     /* go toplevel */
-    window->shell_surface = wl_shell_get_shell_surface (display->shell,
+    window->wl_shell_surface = wl_shell_get_shell_surface (display->wl_shell,
         window->area_surface);
 
-    if (window->shell_surface) {
-      wl_shell_surface_add_listener (window->shell_surface,
-          &shell_surface_listener, window);
+    if (window->wl_shell_surface) {
+      wl_shell_surface_add_listener (window->wl_shell_surface,
+          &wl_shell_surface_listener, window);
       gst_wl_window_ensure_fullscreen (window, fullscreen);
     } else {
       GST_ERROR ("Unable to get wl_shell_surface");
@@ -242,7 +242,7 @@ gst_wl_window_is_toplevel (GstWlWindow * window)
 {
   g_return_val_if_fail (window != NULL, FALSE);
 
-  return (window->shell_surface != NULL);
+  return (window->wl_shell_surface != NULL);
 }
 
 static void

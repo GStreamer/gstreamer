@@ -87,8 +87,8 @@ gst_wl_display_finalize (GObject * gobject)
   if (self->dmabuf)
     zwp_linux_dmabuf_v1_destroy (self->dmabuf);
 
-  if (self->shell)
-    wl_shell_destroy (self->shell);
+  if (self->wl_shell)
+    wl_shell_destroy (self->wl_shell);
 
   if (self->fullscreen_shell)
     zwp_fullscreen_shell_v1_release (self->fullscreen_shell);
@@ -199,7 +199,7 @@ registry_handle_global (void *data, struct wl_registry *registry,
     self->subcompositor =
         wl_registry_bind (registry, id, &wl_subcompositor_interface, 1);
   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
-    self->shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
+    self->wl_shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
   } else if (g_strcmp0 (interface, "zwp_fullscreen_shell_v1") == 0) {
     self->fullscreen_shell = wl_registry_bind (registry, id,
         &zwp_fullscreen_shell_v1_interface, 1);
@@ -331,7 +331,7 @@ gst_wl_display_new_existing (struct wl_display * display,
     g_warning ("Could not bind to zwp_linux_dmabuf_v1");
   }
 
-  if (!self->shell && !self->fullscreen_shell) {
+  if (!self->wl_shell && !self->fullscreen_shell) {
     /* If wl_surface and wl_display are passed via GstContext
      * wl_shell, zwp_fullscreen_shell are not used.
      * In this case is correct to continue.
