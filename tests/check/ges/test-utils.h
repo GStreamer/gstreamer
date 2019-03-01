@@ -108,4 +108,6 @@ G_STMT_START {                                          \
     GST_TIME_ARGS(GES_TIMELINE_ELEMENT_INPOINT(element)), \
     GST_TIME_ARGS(GES_TIMELINE_ELEMENT_DURATION(element))
 
+void print_timeline(GESTimeline *timeline);
+
 #endif /* _GES_TEST_UTILS */

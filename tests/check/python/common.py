@@ -152,6 +152,25 @@ class GESSimpleTimelineTest(GESTest):
         self.track_types = [GES.TrackType.AUDIO, GES.TrackType.VIDEO]
         super(GESSimpleTimelineTest, self).__init__(*args)
 
+    def timeline_as_str(self):
+        res = "====== %s =======\n" % self.timeline
+        for layer in self.timeline.get_layers():
+            res += "Layer %04d: " % layer.get_priority()
+            for clip in layer.get_clips():
+                res += "{ %s }" % clip
+            res += '\n------------------------\n'
+
+        for group in self.timeline.get_groups():
+            res += "GROUP %s :" % group
+            for clip in group.get_children(False):
+                res += " { %s }" % clip.props.name
+            res += '\n'
+        res += "================================\n"
+        return res
+
+    def print_timeline(self):
+        print(self.timeline_as_str())
+
     def setUp(self):
         self.timeline = GES.Timeline.new()
         for track_type in self.track_types:
