@@ -69,6 +69,7 @@ libgstapplemedia_la_LDFLAGS =			\
 noinst_HEADERS =				\
 	avfvideosrc.h				\
 	avsamplevideosink.h			\
+	avfdeviceprovider.h			\
 	vtenc.h					\
 	vtdec.h					\
 	vtutil.h				\
