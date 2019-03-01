@@ -145,6 +145,7 @@ GType _gst_buffer_type = 0;
 #define GST_BUFFER_MEM_PTR(b,i)    (((GstBufferImpl *)(b))->mem[i])
 #define GST_BUFFER_BUFMEM(b)       (((GstBufferImpl *)(b))->bufmem)
 #define GST_BUFFER_META(b)         (((GstBufferImpl *)(b))->item)
+#define GST_BUFFER_TAIL_META(b)    (((GstBufferImpl *)(b))->tail_item)
 
 typedef struct
 {
@@ -162,6 +163,7 @@ typedef struct
   /* FIXME, make metadata allocation more efficient by using part of the
    * GstBufferImpl */
   GstMetaItem *item;
+  GstMetaItem *tail_item;
 } GstBufferImpl;
 
 static gint64 meta_seq;         /* 0 *//* ATOMIC */
@@ -2284,10 +2286,15 @@ gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
       goto init_failed;
 
   item->seq_num = gst_atomic_int64_inc (&meta_seq);
+  item->next = NULL;
 
-  /* and add to the list of metadata */
-  item->next = GST_BUFFER_META (buffer);
-  GST_BUFFER_META (buffer) = item;
+  if (!GST_BUFFER_META (buffer)) {
+    GST_BUFFER_META (buffer) = item;
+    GST_BUFFER_TAIL_META (buffer) = item;
+  } else {
+    GST_BUFFER_TAIL_META (buffer)->next = item;
+    GST_BUFFER_TAIL_META (buffer) = item;
+  }
 
   return result;
 
@@ -2327,10 +2334,18 @@ gst_buffer_remove_meta (GstBuffer * buffer, GstMeta * meta)
       const GstMetaInfo *info = meta->info;
 
       /* remove from list */
+      if (GST_BUFFER_TAIL_META (buffer) == walk) {
+        if (prev != walk)
+          GST_BUFFER_TAIL_META (buffer) = prev;
+        else
+          GST_BUFFER_TAIL_META (buffer) = NULL;
+      }
+
       if (GST_BUFFER_META (buffer) == walk)
         GST_BUFFER_META (buffer) = walk->next;
       else
         prev->next = walk->next;
+
       /* call free_func if any */
       if (info->free_func)
         info->free_func (m, buffer);
@@ -2465,6 +2480,13 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
       g_return_val_if_fail (gst_buffer_is_writable (buffer), FALSE);
       g_return_val_if_fail (!GST_META_FLAG_IS_SET (m, GST_META_FLAG_LOCKED),
           FALSE);
+
+      if (GST_BUFFER_TAIL_META (buffer) == walk) {
+        if (prev != walk)
+          GST_BUFFER_TAIL_META (buffer) = prev;
+        else
+          GST_BUFFER_TAIL_META (buffer) = NULL;
+      }
 
       /* remove from list */
       if (GST_BUFFER_META (buffer) == walk)

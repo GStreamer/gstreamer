@@ -383,8 +383,8 @@ GST_START_TEST (test_meta_foreach_remove_head_of_three)
 
   gst_buffer_foreach_meta (buffer, foreach_meta_remove_one, meta3);
 
-  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta2);
   fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta1);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta2);
   fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
 
   /* clean up */
@@ -414,8 +414,8 @@ GST_START_TEST (test_meta_foreach_remove_middle_of_three)
 
   gst_buffer_foreach_meta (buffer, foreach_meta_remove_one, meta2);
 
-  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta3);
   fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta1);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta3);
   fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
 
   /* clean up */
@@ -445,8 +445,8 @@ GST_START_TEST (test_meta_foreach_remove_tail_of_three)
 
   gst_buffer_foreach_meta (buffer, foreach_meta_remove_one, meta1);
 
-  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta3);
   fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta2);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta3);
   fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
 
   /* clean up */
@@ -525,8 +525,8 @@ GST_START_TEST (test_meta_foreach_remove_several)
 
   gst_buffer_foreach_meta (buffer, foreach_meta_remove_unpooled, NULL);
 
-  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta5);
   fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta2);
+  fail_unless (gst_buffer_iterate_meta (buffer, &state) == (GstMeta *) meta5);
   fail_unless (gst_buffer_iterate_meta (buffer, &state) == NULL);
 
   /* clean up */
