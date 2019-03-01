@@ -227,6 +227,9 @@ GST_START_TEST (test_uri_clip_change_asset)
   asset1 = GES_ASSET (ges_uri_clip_asset_request_sync (uri1, NULL));
   fail_unless_equals_int (g_list_length (GES_CONTAINER_CHILDREN (extractable)),
       2);
+  fail_if (ges_extractable_set_asset (extractable, asset1));
+  ges_timeline_element_set_duration (GES_TIMELINE_ELEMENT (extractable),
+      ges_uri_clip_asset_get_duration (GES_URI_CLIP_ASSET (asset1)));
   fail_unless (ges_extractable_set_asset (extractable, asset1));
   fail_unless_equals_int (g_list_length (GES_CONTAINER_CHILDREN (extractable)),
       1);

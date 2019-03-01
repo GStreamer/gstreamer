@@ -30,6 +30,7 @@
 
 #include "ges-asset.h"
 #include "ges-base-xml-formatter.h"
+#include "ges-timeline-tree.h"
 
 G_BEGIN_DECLS
 
@@ -50,7 +51,9 @@ GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define _DURATION(obj) GES_TIMELINE_ELEMENT_DURATION (obj)
 #define _MAXDURATION(obj) GES_TIMELINE_ELEMENT_MAX_DURATION (obj)
 #define _PRIORITY(obj) GES_TIMELINE_ELEMENT_PRIORITY (obj)
+#ifndef _END
 #define _END(obj) (_START (obj) + _DURATION (obj))
+#endif
 #define _set_start0 ges_timeline_element_set_start
 #define _set_inpoint0 ges_timeline_element_set_inpoint
 #define _set_duration0 ges_timeline_element_set_duration
@@ -60,44 +63,50 @@ GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
     "s<%p>" \
     " [ %" GST_TIME_FORMAT \
     " (%" GST_TIME_FORMAT \
-    ") - %" GST_TIME_FORMAT "]"
+    ") - %" GST_TIME_FORMAT "(%" GST_TIME_FORMAT") layer: %" G_GINT32_FORMAT "] "
 
 #define GES_TIMELINE_ELEMENT_ARGS(element) \
     GES_TIMELINE_ELEMENT_NAME(element), element, \
     GST_TIME_ARGS(GES_TIMELINE_ELEMENT_START(element)), \
     GST_TIME_ARGS(GES_TIMELINE_ELEMENT_INPOINT(element)), \
-    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_DURATION(element))
+    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_DURATION(element)), \
+    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_MAX_DURATION(element)), \
+    GES_TIMELINE_ELEMENT_LAYER_PRIORITY(element)
+
+#define GES_FORMAT GES_TIMELINE_ELEMENT_FORMAT
+#define GES_ARGS GES_TIMELINE_ELEMENT_ARGS
 
 G_GNUC_INTERNAL gboolean
-timeline_ripple_object         (GESTimeline *timeline, GESTrackElement *obj,
-                                    GList * layers, GESEdge edge,
-                                    guint64 position);
+timeline_ripple_object         (GESTimeline *timeline, GESTimelineElement *obj,
+                                gint new_layer_priority,
+                                GList * layers, GESEdge edge,
+                                guint64 position);
 
 G_GNUC_INTERNAL gboolean
 timeline_slide_object          (GESTimeline *timeline, GESTrackElement *obj,
                                     GList * layers, GESEdge edge, guint64 position);
 
 G_GNUC_INTERNAL gboolean
-timeline_roll_object           (GESTimeline *timeline, GESTrackElement *obj,
-                                    GList * layers, GESEdge edge, guint64 position);
+timeline_roll_object           (GESTimeline *timeline, GESTimelineElement *obj,
+                                GList * layers, GESEdge edge, guint64 position);
 
 G_GNUC_INTERNAL gboolean
-timeline_trim_object           (GESTimeline *timeline, GESTrackElement * object,
-                                    GList * layers, GESEdge edge, guint64 position);
+timeline_trim_object           (GESTimeline *timeline, GESTimelineElement * object,
+                                guint32 new_layer_priority, GList * layers, GESEdge edge,
+                                guint64 position);
 G_GNUC_INTERNAL gboolean
 ges_timeline_trim_object_simple (GESTimeline * timeline, GESTimelineElement * obj,
-                                 GList * layers, GESEdge edge, guint64 position, gboolean snapping);
+                                 guint32 new_layer_priority, GList * layers, GESEdge edge,
+                                 guint64 position, gboolean snapping);
 
 G_GNUC_INTERNAL gboolean
 ges_timeline_move_object_simple (GESTimeline * timeline, GESTimelineElement * object,
                                  GList * layers, GESEdge edge, guint64 position);
 
 G_GNUC_INTERNAL gboolean
-timeline_move_object           (GESTimeline *timeline, GESTrackElement * object,
-                                    GList * layers, GESEdge edge, guint64 position);
-
-G_GNUC_INTERNAL gboolean
-timeline_context_to_layer      (GESTimeline *timeline, gint offset);
+timeline_move_object           (GESTimeline *timeline, GESTimelineElement * object,
+                                guint32 new_layer_priority, GList * layers, GESEdge edge,
+                                guint64 position);
 
 G_GNUC_INTERNAL void
 timeline_add_group             (GESTimeline *timeline,
@@ -120,6 +129,14 @@ G_GNUC_INTERNAL
 gboolean
 timeline_remove_element       (GESTimeline *timeline,
                                GESTimelineElement *element);
+
+G_GNUC_INTERNAL
+GNode *
+timeline_get_tree           (GESTimeline *timeline);
+
+G_GNUC_INTERNAL
+void
+timeline_update_transition (GESTimeline *timeline);
 
 G_GNUC_INTERNAL
 void
@@ -396,18 +413,14 @@ G_GNUC_INTERNAL GESVideoTestSource * ges_video_test_source_new (void);
  ****************************************************/
 typedef enum
 {
-  GES_CLIP_IS_SPLITTING = (1 << 0),
-  GES_CLIP_IS_MOVING = (1 << 1),
-  GES_TIMELINE_ELEMENT_SET_SIMPLE = (1 << 2),
+  GES_CLIP_IS_MOVING = (1 << 0),
+  GES_TIMELINE_ELEMENT_SET_SIMPLE = (1 << 1),
 } GESTimelineElementFlags;
 
 G_GNUC_INTERNAL gdouble ges_timeline_element_get_media_duration_factor(GESTimelineElement *self);
 G_GNUC_INTERNAL GESTimelineElement * ges_timeline_element_get_copied_from (GESTimelineElement *self);
 G_GNUC_INTERNAL GESTimelineElementFlags ges_timeline_element_flags (GESTimelineElement *self);
 G_GNUC_INTERNAL void                ges_timeline_element_set_flags (GESTimelineElement *self, GESTimelineElementFlags flags);
-
-/* FIXME: Provide a clean way to get layer prio generically */
-G_GNUC_INTERNAL gint32 _layer_priority (GESTimelineElement * element);
 
 #define ELEMENT_FLAGS(obj)             (ges_timeline_element_flags (GES_TIMELINE_ELEMENT(obj)))
 #define ELEMENT_SET_FLAG(obj,flag)     (ges_timeline_element_set_flags(GES_TIMELINE_ELEMENT(obj), (ELEMENT_FLAGS(obj) | (flag))))

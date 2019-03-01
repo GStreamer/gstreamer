@@ -276,6 +276,24 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
   g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (asset), FALSE);
 
   uri_clip_asset = GES_URI_CLIP_ASSET (asset);
+  if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT_DURATION (self)) &&
+      ges_uri_clip_asset_get_duration (uri_clip_asset) <
+      GES_TIMELINE_ELEMENT_INPOINT (self) +
+      GES_TIMELINE_ELEMENT_DURATION (self)) {
+    GST_INFO_OBJECT (self,
+        "Can not set asset to %p as its duration is %" GST_TIME_FORMAT
+        " < to inpoint %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT " = %"
+        GST_TIME_FORMAT, asset,
+        GST_TIME_ARGS (ges_uri_clip_asset_get_duration (uri_clip_asset)),
+        GST_TIME_ARGS (GES_TIMELINE_ELEMENT_INPOINT (self)),
+        GST_TIME_ARGS (GES_TIMELINE_ELEMENT_DURATION (self)),
+        GST_TIME_ARGS (GES_TIMELINE_ELEMENT_INPOINT (self) +
+            GES_TIMELINE_ELEMENT_DURATION (self)));
+
+
+    return FALSE;
+  }
+
   if (GST_CLOCK_TIME_IS_VALID (GES_TIMELINE_ELEMENT_DURATION (clip)) == FALSE)
     _set_duration0 (GES_TIMELINE_ELEMENT (uriclip),
         ges_uri_clip_asset_get_duration (uri_clip_asset));

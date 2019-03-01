@@ -194,7 +194,16 @@ class GESSimpleTimelineTest(GESTest):
 
         return clip
 
-    def assertTimelineTopology(self, topology):
+    def append_clip(self, layer=0):
+        layer = self.timeline.get_layers()[layer]
+        clip = GES.TestClip()
+        clip.props.start = layer.get_duration()
+        clip.props.duration = 10
+        self.assertTrue(layer.add_clip(clip))
+
+        return clip
+
+    def assertTimelineTopology(self, topology, groups=[]):
         res = []
         for layer in self.timeline.get_layers():
             layer_timings = []
@@ -203,6 +212,14 @@ class GESSimpleTimelineTest(GESTest):
                     (type(clip), clip.props.start, clip.props.duration))
 
             res.append(layer_timings)
+        if topology != res:
+            Gst.error(self.timeline_as_str())
+            self.assertEqual(topology, res)
 
-        self.assertEqual(topology, res)
+        timeline_groups = self.timeline.get_groups()
+        if groups and timeline_groups:
+            for i, group in enumerate(groups):
+                self.assertEqual(set(group), set(timeline_groups[i].get_children(False)))
+            self.assertEqual(len(timeline_groups), i + 1)
+
         return res

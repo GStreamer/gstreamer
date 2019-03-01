@@ -35,7 +35,7 @@ Gst.init(None)
 GES.init()
 
 
-class TestTimeline(unittest.TestCase):
+class TestTimeline(common.GESSimpleTimelineTest):
 
     def test_signals_not_emitted_when_loading(self):
         mainloop = common.create_main_loop()
@@ -63,13 +63,31 @@ class TestTimeline(unittest.TestCase):
         self.assertTrue(loaded_called)
         handle.assert_not_called()
 
+    def test_timeline_duration(self):
+        self.append_clip()
+        self.append_clip()
+        clips = self.layer.get_clips()
 
-class TestSplitting(common.GESSimpleTimelineTest):
-    def setUp(self):
-        self.track_types = [GES.TrackType.AUDIO]
-        super(TestSplitting, self).setUp()
+        self.assertEqual(self.timeline.props.duration, 20)
+        self.layer.remove_clip(clips[1])
+        self.assertEqual(self.timeline.props.duration, 10)
+
+        self.append_clip()
+        self.append_clip()
+        clips = self.layer.get_clips()
+        self.assertEqual(self.timeline.props.duration, 30)
+
+        group = GES.Container.group(clips[1:])
+        self.assertEqual(self.timeline.props.duration, 30)
+
+        group1 = GES.Container.group([])
+        group1.add(group)
+        self.assertEqual(self.timeline.props.duration, 30)
 
     def test_spliting_with_auto_transition_on_the_left(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super().setUp()
+
         self.timeline.props.auto_transition = True
         clip1 = self.add_clip(0, 0, 100)
         clip2 = self.add_clip(50, 0, 100)
@@ -117,6 +135,102 @@ class TestEditing(common.GESSimpleTimelineTest):
         self.assertEqual(len(self.layer.get_clips()), 1)
         self.assertEqual(len(layer2.get_clips()), 1)
 
+    def activate_snapping(self):
+        self.timeline.set_snapping_distance(5)
+        self.snapped_at = []
+
+        def _snapped_cb(timeline, elem1, elem2, position):
+            self.snapped_at.append(position)
+            Gst.error('%s' % position)
+
+        def _snapped_end_cb(timeline, elem1, elem2, position):
+            if self.snapped_at:  # Ignoring first snap end.
+                self.snapped_at.append(Gst.CLOCK_TIME_NONE)
+                Gst.error('%s' % position)
+
+        self.timeline.connect("snapping-started", _snapped_cb)
+        self.timeline.connect("snapping-ended", _snapped_end_cb)
+
+    def test_snap_start_snap_end(self):
+        clip = self.append_clip()
+        self.append_clip()
+
+        self.activate_snapping()
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+        clip.props.start = 18
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 10, 10),
+                (GES.TestClip, 20, 10),
+            ]
+        ])
+        self.assertEqual(self.snapped_at, [20])
+
+        clip.props.start = 30
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 10, 10),
+                (GES.TestClip, 30, 10),
+            ]
+        ])
+        self.assertEqual(self.snapped_at, [20, Gst.CLOCK_TIME_NONE])
+
+        clip.props.start = 18
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 10, 10),
+                (GES.TestClip, 20, 10),
+            ]
+        ])
+        self.assertEqual(self.snapped_at, [20, Gst.CLOCK_TIME_NONE,
+            Gst.CLOCK_TIME_NONE, 20])
+        clip.props.start = 19
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 10, 10),
+                (GES.TestClip, 20, 10),
+            ]
+        ])
+        self.assertEqual(self.snapped_at, [20, Gst.CLOCK_TIME_NONE,
+            Gst.CLOCK_TIME_NONE, 20])
+
+    def test_rippling_snaps(self):
+        self.timeline.props.auto_transition = True
+        self.append_clip()
+        clip = self.append_clip()
+
+        self.activate_snapping()
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+        clip.edit([], 0, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 15)
+        self.assertEqual(self.snapped_at, [10])
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+        clip.edit([], 0, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 20)
+        self.assertEqual(self.snapped_at, [10, Gst.CLOCK_TIME_NONE])
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 20, 10),
+            ]
+        ])
+
     def test_transition_moves_when_rippling_to_another_layer(self):
         self.timeline.props.auto_transition = True
         clip1 = self.add_clip(0, 0, 100)
@@ -160,6 +274,451 @@ class TestEditing(common.GESSimpleTimelineTest):
                    GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 35 * Gst.SECOND)
         self.assertEqual(len(self.layer.get_clips()), 4)
 
+    def test_trim_transition(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super().setUp()
+
+        self.timeline.props.auto_transition = True
+        self.add_clip(0, 0, 10)
+        self.add_clip(5, 0, 10)
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TransitionClip, 5, 5),
+                (GES.TestClip, 5, 10),
+            ]
+        ])
+        transition = self.layer.get_clips()[1]
+        self.assertTrue(transition.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 7))
+
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TransitionClip, 7, 3),
+                (GES.TestClip, 7, 8),
+            ]
+        ])
+
+    def test_trim_start(self):
+        clip = self.append_clip()
+        self.assertTrue(clip.edit([], -1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 10))
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+        self.assertFalse(clip.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_NONE, 0))
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+    def test_ripple_end(self):
+        clip = self.append_clip()
+        clip.set_max_duration(20)
+        self.append_clip().set_max_duration(10)
+        self.append_clip().set_max_duration(10)
+        self.print_timeline()
+        self.assertTrue(clip.edit([], -1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_END, 20))
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 20),
+                (GES.TestClip, 20, 10),
+                (GES.TestClip, 30, 10),
+            ]
+        ])
+
+        self.assertTrue(clip.edit([], -1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_END, 15))
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 15),
+                (GES.TestClip, 15, 10),
+                (GES.TestClip, 25, 10),
+            ]
+        ])
+
+    def test_move_group_full_overlap(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super().setUp()
+
+        for _ in range(4):
+            self.append_clip()
+        clips = self.layer.get_clips()
+
+        self.assertTrue(clips[0].ripple(20))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 20, 10),
+                (GES.TestClip, 30, 10),
+                (GES.TestClip, 40, 10),
+                (GES.TestClip, 50, 10),
+            ]
+        ])
+        group = GES.Container.group(clips[1:])
+        self.print_timeline()
+        self.assertFalse(group.edit([], -1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 0))
+        self.print_timeline()
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 20, 10),
+                (GES.TestClip, 30, 10),
+                (GES.TestClip, 40, 10),
+                (GES.TestClip, 50, 10),
+            ]
+        ])
+
+        self.assertFalse(clips[1].edit([], -1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 0))
+        self.print_timeline()
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 20, 10),
+                (GES.TestClip, 30, 10),
+                (GES.TestClip, 40, 10),
+                (GES.TestClip, 50, 10),
+            ]
+        ])
+
+    def test_trim_inside_group(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super().setUp()
+
+        for _ in range(2):
+            self.append_clip()
+        clips = self.layer.get_clips()
+        group = GES.Container.group(clips)
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+        self.assertEqual(group.props.start, 0)
+        self.assertEqual(group.props.duration, 20)
+
+        clips[0].trim(5)
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 5, 5),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+        self.assertEqual(group.props.start, 5)
+        self.assertEqual(group.props.duration, 15)
+
+    def test_trim_end_past_max_duration(self):
+        clip = self.append_clip()
+        max_duration = clip.props.duration
+        clip.set_max_duration(max_duration)
+        self.assertTrue(clip.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 5))
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 5, 5),
+            ]
+        ])
+
+        self.assertFalse(clip.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, 15))
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 5, 5),
+            ]
+        ])
+
+
+class TestInvalidOverlaps(common.GESSimpleTimelineTest):
+
+    def test_adding_or_moving(self):
+        clip1 = self.add_clip(start=10, in_point=0, duration=3)
+        self.assertIsNotNone(clip1)
+
+        def check_add_move_clip(start, duration):
+            self.timeline.props.auto_transition = True
+            self.layer.props.auto_transition = True
+            clip2 = GES.TestClip()
+            clip2.props.start = start
+            clip2.props.duration = duration
+            self.assertFalse(self.layer.add_clip(clip2))
+            self.assertEqual(len(self.layer.get_clips()), 1)
+
+            # Add the clip at a different position.
+            clip2.props.start = 25
+            self.assertTrue(self.layer.add_clip(clip2))
+            self.assertEqual(clip2.props.start, 25)
+
+            # Try to move the second clip by editing it.
+            self.assertFalse(clip2.edit([], -1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, start))
+            self.assertEqual(clip2.props.start, 25)
+
+            # Try to put it in a group and move the group.
+            clip3 = GES.TestClip()
+            clip3.props.start = 20
+            clip3.props.duration = 1
+            self.assertTrue(self.layer.add_clip(clip3))
+            group = GES.Container.group([clip3, clip2])
+            self.assertTrue(group.props.start, 20)
+            self.assertFalse(group.edit([], -1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, start - 5))
+            self.assertEqual(group.props.start, 20)
+            self.assertEqual(clip3.props.start, 20)
+            self.assertEqual(clip2.props.start, 25)
+
+            for clip in group.ungroup(False):
+                self.assertTrue(self.layer.remove_clip(clip))
+
+        # clip1 contains...
+        check_add_move_clip(start=10, duration=1)
+        check_add_move_clip(start=11, duration=1)
+        check_add_move_clip(start=12, duration=1)
+
+    def test_splitting(self):
+        clip1 = self.add_clip(start=9, in_point=0, duration=3)
+        clip2 = self.add_clip(start=10, in_point=0, duration=4)
+        clip3 = self.add_clip(start=12, in_point=0, duration=3)
+
+        self.assertIsNone(clip1.split(13))
+        self.assertIsNone(clip1.split(8))
+
+        self.assertIsNone(clip3.split(12))
+        self.assertIsNone(clip3.split(15))
+
+    def test_changing_duration(self):
+        clip1 = self.add_clip(start=9, in_point=0, duration=2)
+        clip2 = self.add_clip(start=10, in_point=0, duration=2)
+
+        self.assertFalse(clip1.set_start(10))
+        self.assertFalse(clip1.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, clip2.props.start + clip2.props.duration))
+        self.assertFalse(clip1.ripple_end(clip2.props.start + clip2.props.duration))
+        self.assertFalse(clip1.roll_end(clip2.props.start + clip2.props.duration))
+
+        # clip2's end edge to the left, to decrease its duration.
+        self.assertFalse(clip2.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_END, clip1.props.start + clip1.props.duration))
+        self.assertFalse(clip2.ripple_end(clip1.props.start + clip1.props.duration))
+        self.assertFalse(clip2.roll_end(clip1.props.start + clip1.props.duration))
+
+        # clip2's start edge to the left, to increase its duration.
+        self.assertFalse(clip2.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, clip1.props.start))
+        self.assertFalse(clip2.trim(clip1.props.start))
+
+        # clip1's start edge to the right, to decrease its duration.
+        self.assertFalse(clip1.edit([], -1, GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, clip2.props.start))
+        self.assertFalse(clip1.trim(clip2.props.start))
+
+    def test_rippling_backward(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super().setUp()
+        self.maxDiff = None
+        for i in range(4):
+            self.append_clip()
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+                (GES.TestClip, 20, 10),
+                (GES.TestClip, 30, 10),
+            ]
+        ])
+
+        clip = self.layer.get_clips()[2]
+        self.assertFalse(clip.edit([], -1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, clip.props.start - 20))
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+                (GES.TestClip, 20, 10),
+                (GES.TestClip, 30, 10),
+            ]
+        ])
+        self.assertTrue(clip.edit([], -1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, clip.props.start + 10))
+
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+                (GES.TestClip, 30, 10),
+                (GES.TestClip, 40, 10),
+            ]
+        ])
+
+        self.assertFalse(clip.edit([], -1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, clip.props.start -20))
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+                (GES.TestClip, 30, 10),
+                (GES.TestClip, 40, 10),
+            ]
+        ])
+
+    def test_rolling(self):
+        clip1 = self.add_clip(start=9, in_point=0, duration=2)
+        clip2 = self.add_clip(start=10, in_point=0, duration=2)
+        clip3 = self.add_clip(start=11, in_point=0, duration=2)
+
+        # Rolling clip1's end -1 would lead to clip3 to overlap 100% with clip2.
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 9, 2),
+                (GES.TestClip, 10, 2),
+                (GES.TestClip, 11, 2)
+            ]
+        ])
+        self.assertFalse(clip1.edit([], -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_END, clip1.props.start + clip1.props.duration - 1))
+        self.assertFalse(clip1.roll_end(13))
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 9, 2),
+                (GES.TestClip, 10, 2),
+                (GES.TestClip, 11, 2)
+            ]
+        ])
+
+        # Rolling clip3's start +1 would lead to clip1 to overlap 100% with clip2.
+        self.assertFalse(clip3.edit([], -1, GES.EditMode.EDIT_ROLL, GES.Edge.EDGE_START, 12))
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 9, 2),
+                (GES.TestClip, 10, 2),
+                (GES.TestClip, 11, 2)
+            ]
+        ])
+
+    def test_layers(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super().setUp()
+        self.maxDiff = None
+        self.timeline.append_layer()
+
+        for i in range(2):
+            self.append_clip()
+            self.append_clip(1)
+
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ],
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+        clip = self.layer.get_clips()[0]
+        self.assertFalse(clip.edit([], 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 0))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ],
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+    def test_rippling(self):
+        self.timeline.remove_track(self.timeline.get_tracks()[0])
+        clip1 = self.add_clip(start=9, in_point=0, duration=2)
+        clip2 = self.add_clip(start=10, in_point=0, duration=2)
+        clip3 = self.add_clip(start=11, in_point=0, duration=2)
+
+        # Rippling clip2's start -2 would bring clip3 exactly on top of clip1.
+        self.assertFalse(clip2.edit([], -1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_NONE, 8))
+        self.assertFalse(clip2.ripple(8))
+
+        # Rippling clip1's end -1 would bring clip3 exactly on top of clip2.
+        self.assertFalse(clip1.edit([], -1, GES.EditMode.EDIT_RIPPLE, GES.Edge.EDGE_END, 8))
+        self.assertFalse(clip1.ripple_end(8))
+
+    def test_move_group_to_layer(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super().setUp()
+        self.append_clip()
+        self.append_clip()
+        self.append_clip()
+
+        clips = self.layer.get_clips()
+
+        clips[1].props.start += 2
+        group = GES.Container.group(clips[1:])
+        self.assertTrue(clips[1].edit([], 1, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE,
+            group.props.start))
+
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+            ],
+            [
+                (GES.TestClip, 12, 10),
+                (GES.TestClip, 20, 10),
+            ]
+        ])
+
+        clips[0].props.start = 15
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 15, 10),
+            ],
+            [
+                (GES.TestClip, 12, 10),
+                (GES.TestClip, 20, 10),
+            ]
+        ])
+
+        self.assertFalse(clips[1].edit([], 0, GES.EditMode.EDIT_NORMAL,
+            GES.Edge.EDGE_NONE, group.props.start))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 15, 10),
+            ],
+            [
+                (GES.TestClip, 12, 10),
+                (GES.TestClip, 20, 10),
+            ]
+        ])
+
+    def test_move_group_with_overlaping_clips(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super().setUp()
+        self.append_clip()
+        self.append_clip()
+        self.append_clip()
+
+        self.timeline.props.auto_transition = True
+        clips = self.layer.get_clips()
+
+        clips[1].props.start += 5
+        group = GES.Container.group(clips[1:])
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 15, 10),
+                (GES.TransitionClip, 20, 5),
+                (GES.TestClip, 20, 10),
+            ]
+        ])
+
+        clips[0].props.start = 30
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 15, 10),
+                (GES.TransitionClip, 20, 5),
+                (GES.TestClip, 20, 10),
+                (GES.TestClip, 30, 10),
+            ]
+        ])
+
+        # the 3 clips would overlap
+        self.assertFalse(clips[1].edit([], 0, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 25))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 15, 10),
+                (GES.TransitionClip, 20, 5),
+                (GES.TestClip, 20, 10),
+                (GES.TestClip, 30, 10),
+            ]
+        ])
+
 
 class TestSnapping(common.GESSimpleTimelineTest):
 
@@ -180,14 +739,77 @@ class TestSnapping(common.GESSimpleTimelineTest):
                    clip2.props.start - 1)
         self.assertEqual(clip2.props.start, split_position)
 
+    def test_trim_snapps_inside_group(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super().setUp()
+
+        self.timeline.props.auto_transition = True
+        self.timeline.set_snapping_distance(5)
+
+        snaps = []
+        def snapping_started_cb(timeline, element1, element2, dist, self):
+            snaps.append(set([element1, element2]))
+
+        self.timeline.connect('snapping-started', snapping_started_cb, self)
+        clip = self.append_clip()
+        clip1 = self.append_clip()
+
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+
+        clip1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 15)
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 10, 10),
+            ]
+        ])
+        self.assertEqual(snaps[0], set([clip.get_children(False)[0], clip1.get_children(False)[0]]))
+
+        clip1.edit([], self.layer.get_priority(), GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 16)
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 16, 4),
+            ]
+        ])
+
+    def test_trim_no_snapping_on_same_clip(self):
+        self.timeline.props.auto_transition = True
+        self.timeline.set_snapping_distance(1)
+
+        not_called = []
+        def snapping_started_cb(timeline, element1, element2, dist, self):
+            not_called.append("No snapping should happen")
+
+        self.timeline.connect('snapping-started', snapping_started_cb, self)
+        clip = self.append_clip()
+        clip.edit([], self.layer.get_priority(), GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 5)
+        self.assertEqual(not_called, [])
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 5, 5),
+            ]
+        ])
+
+        clip.edit([], self.layer.get_priority(), GES.EditMode.EDIT_TRIM, GES.Edge.EDGE_START, 4)
+        self.assertEqual(not_called, [])
+        self.assertTimelineTopology([
+            [  # Unique layer
+                (GES.TestClip, 4, 6),
+            ]
+        ])
+
     def test_no_snapping_on_split(self):
         self.timeline.props.auto_transition = True
         self.timeline.set_snapping_distance(1)
 
         not_called = []
         def snapping_started_cb(timeline, element1, element2, dist, self):
-            Gst.error("Here %s %s" % (Gst.TIME_ARGS(element1.props.start + element1.props.duration),
-                Gst.TIME_ARGS(element2.props.start)))
             not_called.append("No snapping should happen")
 
         self.timeline.connect('snapping-started', snapping_started_cb, self)
@@ -296,9 +918,9 @@ class TestTransitions(common.GESSimpleTimelineTest):
             self.assertLess(clip1.props.start + clip1.props.duration, clip2.props.start + clip2.props.duration)
             self.assertEqual(len(clips), 3)
 
-            # Even though 3 clips overlap 1 transition will be created
+            # 3 clips would be overlapping, 1 of them wasn't added!
             clips = layers[1].get_clips()
-            self.assertEqual(len(clips), 4)
+            self.assertEqual(len(clips), 3)
 
 
 class TestPriorities(common.GESSimpleTimelineTest):

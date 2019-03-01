@@ -365,7 +365,7 @@ GST_START_TEST (test_split_object)
   /* 1 ref for the Clip, 1 ref for the Track and 2 ref for the timeline
    * (1 for the "all_element" hashtable, another for the sequence of TrackElement*/
   ASSERT_OBJECT_REFCOUNT (splittrackelement,
-      "1 ref for the Clip, 1 ref for the Track and 2 ref for the timeline", 4);
+      "1 ref for the Clip, 1 ref for the Track and 1 ref for the timeline", 3);
 
   check_destroyed (G_OBJECT (timeline), G_OBJECT (splitclip), clip,
       splittrackelement, NULL);
@@ -429,7 +429,7 @@ GST_START_TEST (test_clip_group_ungroup)
   tmp = ges_track_get_elements (audio_track);
   assert_equals_int (g_list_length (tmp), 1);
   ASSERT_OBJECT_REFCOUNT (tmp->data, "1 for the track + 1 for the container "
-      "+ 2 for the timeline + 1 in tmp list", 5);
+      "+ 1 for the timeline + 1 in tmp list", 4);
   assert_equals_int (ges_track_element_get_track_type (tmp->data),
       GES_TRACK_TYPE_AUDIO);
   assert_equals_int (ges_clip_get_supported_formats (GES_CLIP
@@ -438,7 +438,7 @@ GST_START_TEST (test_clip_group_ungroup)
   tmp = ges_track_get_elements (video_track);
   assert_equals_int (g_list_length (tmp), 1);
   ASSERT_OBJECT_REFCOUNT (tmp->data, "1 for the track + 1 for the container "
-      "+ 2 for the timeline + 1 in tmp list", 5);
+      "+ 1 for the timeline + 1 in tmp list", 4);
   assert_equals_int (ges_track_element_get_track_type (tmp->data),
       GES_TRACK_TYPE_VIDEO);
   assert_equals_int (ges_clip_get_supported_formats (GES_CLIP
@@ -489,7 +489,7 @@ GST_START_TEST (test_clip_group_ungroup)
   tmp = ges_track_get_elements (video_track);
   assert_equals_int (g_list_length (tmp), 1);
   ASSERT_OBJECT_REFCOUNT (tmp->data, "1 for the track + 1 for the container "
-      "+ 2 for the timeline + 1 in tmp list", 5);
+      "+ 1 for the timeline + 1 in tmp list", 4);
   assert_equals_int (ges_track_element_get_track_type (tmp->data),
       GES_TRACK_TYPE_VIDEO);
   fail_unless (GES_CONTAINER (ges_timeline_element_get_parent (tmp->data)) ==

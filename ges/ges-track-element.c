@@ -1364,16 +1364,21 @@ ges_track_element_edit (GESTrackElement * object,
 
   switch (mode) {
     case GES_EDIT_MODE_NORMAL:
-      return timeline_move_object (timeline, object, layers, edge, position);
+      return timeline_move_object (timeline, GES_TIMELINE_ELEMENT (object), -1,
+          layers, edge, position);
       break;
     case GES_EDIT_MODE_TRIM:
-      return timeline_trim_object (timeline, object, layers, edge, position);
+      return timeline_trim_object (timeline, GES_TIMELINE_ELEMENT (object), -1,
+          layers, edge, position);
       break;
     case GES_EDIT_MODE_RIPPLE:
-      return timeline_ripple_object (timeline, object, layers, edge, position);
+      return timeline_ripple_object (timeline, GES_TIMELINE_ELEMENT (object),
+          GES_TIMELINE_ELEMENT_PRIORITY (object) / LAYER_HEIGHT,
+          layers, edge, position);
       break;
     case GES_EDIT_MODE_ROLL:
-      return timeline_roll_object (timeline, object, layers, edge, position);
+      return timeline_roll_object (timeline, GES_TIMELINE_ELEMENT (object),
+          layers, edge, position);
       break;
     case GES_EDIT_MODE_SLIDE:
       return timeline_slide_object (timeline, object, layers, edge, position);

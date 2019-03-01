@@ -51,6 +51,7 @@ ges_sources = [
     'ges-command-line-formatter.c',
     'ges-auto-transition.c',
     'ges-timeline-element.c',
+    'ges-timeline-tree.c',
     'ges-container.c',
     'ges-effect-asset.c',
     'ges-smart-adder.c',

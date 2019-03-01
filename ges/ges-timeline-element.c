@@ -694,6 +694,9 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
 
   g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
 
+  if (self->start == start)
+    return TRUE;
+
   klass = GES_TIMELINE_ELEMENT_GET_CLASS (self);
 
   GST_DEBUG_OBJECT (self, "current start: %" GST_TIME_FORMAT

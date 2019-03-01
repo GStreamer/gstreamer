@@ -255,11 +255,7 @@ _child_group_priority_changed (GESTimelineElement * child,
 static gboolean
 _trim (GESTimelineElement * group, GstClockTime start)
 {
-  GList *tmp;
-  GstClockTime last_child_end = 0, oldstart = _START (group);
-  GESContainer *container = GES_CONTAINER (group);
   GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (group);
-  gboolean ret = TRUE, expending = (start < _START (group));
 
   if (timeline == NULL) {
     GST_DEBUG ("Not in a timeline yet");
@@ -267,40 +263,9 @@ _trim (GESTimelineElement * group, GstClockTime start)
     return FALSE;
   }
 
-  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
-  for (tmp = GES_CONTAINER_CHILDREN (group); tmp; tmp = tmp->next) {
-    GESTimelineElement *child = tmp->data;
-
-    if (expending) {
-      /* If the start is bigger, we do not touch it (in case we are expending) */
-      if (_START (child) > oldstart) {
-        GST_DEBUG_OBJECT (child, "Skipping as not at begining of the group");
-        continue;
-      }
-
-      ret &= ges_timeline_element_trim (child, start);
-    } else {
-      if (start > _END (child))
-        ret &= ges_timeline_element_trim (child, _END (child));
-      else if (_START (child) < start && _DURATION (child))
-        ret &= ges_timeline_element_trim (child, start);
-
-    }
-  }
-
-  for (tmp = GES_CONTAINER_CHILDREN (group); tmp; tmp = tmp->next) {
-    if (_DURATION (tmp->data))
-      last_child_end =
-          MAX (GES_TIMELINE_ELEMENT_END (tmp->data), last_child_end);
-  }
-
-  GES_GROUP (group)->priv->setting_value = TRUE;
-  _set_start0 (group, start);
-  _set_duration0 (group, last_child_end - start);
-  GES_GROUP (group)->priv->setting_value = FALSE;
-  container->children_control_mode = GES_CHILDREN_UPDATE;
-
-  return ret;
+  return timeline_tree_trim (timeline_get_tree (timeline), group,
+      0, GST_CLOCK_DIFF (start, _START (group)), GES_EDGE_START,
+      ges_timeline_get_snapping_distance (timeline));
 }
 
 static gboolean
@@ -309,38 +274,44 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   GList *tmp, *layers;
   gint diff = priority - _PRIORITY (element);
   GESContainer *container = GES_CONTAINER (element);
+  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (element);
 
   if (GES_GROUP (element)->priv->setting_value == TRUE)
     return TRUE;
 
   container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
+
   layers = GES_TIMELINE_ELEMENT_TIMELINE (element) ?
       GES_TIMELINE_ELEMENT_TIMELINE (element)->layers : NULL;
-
   if (layers == NULL) {
     GST_WARNING_OBJECT (element, "Not any layer in the timeline, not doing"
         "anything, timeline: %" GST_PTR_FORMAT,
         GES_TIMELINE_ELEMENT_TIMELINE (element));
 
     return FALSE;
-  } else if (priority + GES_CONTAINER_HEIGHT (container) - 1 >
-      g_list_length (layers)) {
-    GST_WARNING_OBJECT (container, "Trying to move to a layer outside of"
-        "the timeline layers");
-    return FALSE;
   }
 
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
 
-    if (child != container->initiated_move) {
+    if (child != container->initiated_move
+        || ELEMENT_FLAG_IS_SET (container, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
       if (GES_IS_CLIP (child)) {
         guint32 layer_prio = GES_TIMELINE_ELEMENT_LAYER_PRIORITY (child) + diff;
+        GESLayer *layer =
+            g_list_nth_data (GES_TIMELINE_GET_LAYERS (timeline), layer_prio);
 
-        GST_DEBUG_OBJECT (child, "moving from layer: %i to %i",
-            GES_TIMELINE_ELEMENT_LAYER_PRIORITY (child), layer_prio);
-        ges_clip_move_to_layer (GES_CLIP (child),
-            g_list_nth_data (layers, layer_prio));
+        if (layer == NULL) {
+          do {
+            layer = ges_timeline_append_layer (timeline);
+          } while (ges_layer_get_priority (layer) < layer_prio);
+        }
+
+        GST_DEBUG ("%" GES_FORMAT "moving from layer: %i to %i",
+            GES_ARGS (child), GES_TIMELINE_ELEMENT_LAYER_PRIORITY (child),
+            layer_prio);
+        ges_clip_move_to_layer (GES_CLIP (child), g_list_nth_data (layers,
+                layer_prio));
       } else if (GES_IS_GROUP (child)) {
         GST_DEBUG_OBJECT (child, "moving from %i to %i",
             _PRIORITY (child), diff + _PRIORITY (child));
@@ -358,24 +329,31 @@ _set_start (GESTimelineElement * element, GstClockTime start)
 {
   GList *tmp;
   gint64 diff = start - _START (element);
+  GESTimeline *timeline;
   GESContainer *container = GES_CONTAINER (element);
+  GESTimelineElement *toplevel =
+      ges_timeline_element_get_toplevel_parent (element);;
 
+  gst_object_unref (toplevel);
   if (GES_GROUP (element)->priv->setting_value == TRUE)
     /* Let GESContainer update itself */
     return GES_TIMELINE_ELEMENT_CLASS (parent_class)->set_start (element,
         start);
 
+  if (ELEMENT_FLAG_IS_SET (element, GES_TIMELINE_ELEMENT_SET_SIMPLE) ||
+      ELEMENT_FLAG_IS_SET (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+    container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
+    for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next)
+      _set_start0 (tmp->data, _START (tmp->data) + diff);
+    container->children_control_mode = GES_CHILDREN_UPDATE;
 
-  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
-  for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
-    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
-
-    if (child != container->initiated_move &&
-        (_END (child) > _START (element) || _END (child) > start)) {
-      _set_start0 (child, _START (child) + diff);
-    }
+    return TRUE;
   }
-  container->children_control_mode = GES_CHILDREN_UPDATE;
+
+  timeline = GES_TIMELINE_ELEMENT_TIMELINE (element);
+  if (timeline)
+    return ges_timeline_move_object_simple (timeline, element, NULL,
+        GES_EDGE_NONE, start);
 
   return TRUE;
 }
@@ -398,6 +376,12 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
     /* Let GESContainer update itself */
     return GES_TIMELINE_ELEMENT_CLASS (parent_class)->set_duration (element,
         duration);
+
+  if (element->timeline
+      && !timeline_tree_can_move_element (timeline_get_tree (element->timeline),
+          element, _PRIORITY (element), element->start, duration, NULL)) {
+    return FALSE;
+  }
 
   if (container->initiated_move == NULL) {
     gboolean expending = (_DURATION (element) < duration);
@@ -471,6 +455,7 @@ _child_added (GESContainer * group, GESTimelineElement * child)
   }
 
   priv->setting_value = TRUE;
+  ELEMENT_SET_FLAG (group, GES_TIMELINE_ELEMENT_SET_SIMPLE);
   if (first_child_start != GES_TIMELINE_ELEMENT_START (group)) {
     group->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
     _set_start0 (GES_TIMELINE_ELEMENT (group), first_child_start);
@@ -480,6 +465,7 @@ _child_added (GESContainer * group, GESTimelineElement * child)
     _set_duration0 (GES_TIMELINE_ELEMENT (group),
         last_child_end - first_child_start);
   }
+  ELEMENT_UNSET_FLAG (group, GES_TIMELINE_ELEMENT_SET_SIMPLE);
   priv->setting_value = FALSE;
 
   group->children_control_mode = GES_CHILDREN_UPDATE;
@@ -561,12 +547,14 @@ _child_removed (GESContainer * group, GESTimelineElement * child)
   }
 
   priv->setting_value = TRUE;
+  ELEMENT_SET_FLAG (group, GES_TIMELINE_ELEMENT_SET_SIMPLE);
   first_child_start = GES_TIMELINE_ELEMENT_START (children->data);
   if (first_child_start > GES_TIMELINE_ELEMENT_START (group)) {
     group->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
     _set_start0 (GES_TIMELINE_ELEMENT (group), first_child_start);
     group->children_control_mode = GES_CHILDREN_UPDATE;
   }
+  ELEMENT_UNSET_FLAG (group, GES_TIMELINE_ELEMENT_SET_SIMPLE);
   priv->setting_value = FALSE;
 }
 

@@ -175,7 +175,6 @@ static gboolean
 _set_duration (GESTimelineElement * element, GstClockTime duration)
 {
   GList *tmp;
-  GESTimeline *timeline;
 
   GESContainer *container = GES_CONTAINER (element);
 
@@ -183,16 +182,8 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
   for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
     GESTimelineElement *child = (GESTimelineElement *) tmp->data;
 
-    if (child != container->initiated_move) {
-      /* Make the snapping happen if in a timeline */
-      timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
-      if (timeline == NULL
-          || ELEMENT_FLAG_IS_SET (element, GES_CLIP_IS_SPLITTING)
-          || (ges_timeline_trim_object_simple (timeline, child, NULL,
-                  GES_EDGE_END, _START (child) + duration, TRUE) == FALSE)) {
-        _set_duration0 (GES_TIMELINE_ELEMENT (child), duration);
-      }
-    }
+    if (child != container->initiated_move)
+      _set_duration0 (GES_TIMELINE_ELEMENT (child), duration);
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
 
@@ -628,9 +619,8 @@ static gboolean
 _edit (GESContainer * container, GList * layers,
     gint new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position)
 {
-  GList *tmp;
-  gboolean ret = TRUE;
-  GESLayer *layer;
+  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (container);
+  GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
 
   if (!G_UNLIKELY (GES_CONTAINER_CHILDREN (container))) {
     GST_WARNING_OBJECT (container, "Trying to edit, but not containing"
@@ -638,31 +628,35 @@ _edit (GESContainer * container, GList * layers,
     return FALSE;
   }
 
-  for (tmp = GES_CONTAINER_CHILDREN (container); tmp; tmp = g_list_next (tmp)) {
-    if (GES_IS_SOURCE (tmp->data) || GES_IS_TRANSITION (tmp->data)) {
-      ret &= ges_track_element_edit (tmp->data, layers, mode, edge, position);
-      break;
-    }
+  if (!timeline) {
+    GST_WARNING_OBJECT (container, "Trying to edit, but not in any"
+        "timeline.");
+    return FALSE;
   }
 
-  /* Moving to layer */
-  if (new_layer_priority == -1) {
-    GST_DEBUG_OBJECT (container, "Not moving new prio %d", new_layer_priority);
-  } else {
-    gint priority_offset;
-
-    layer = GES_CLIP (container)->priv->layer;
-    if (layer == NULL) {
-      GST_WARNING_OBJECT (container, "Not in any layer yet, not moving");
-
+  switch (mode) {
+    case GES_EDIT_MODE_RIPPLE:
+      return timeline_ripple_object (timeline, element,
+          new_layer_priority <
+          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (container) :
+          new_layer_priority, layers, edge, position);
+    case GES_EDIT_MODE_TRIM:
+      return timeline_trim_object (timeline, element,
+          new_layer_priority <
+          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (container) :
+          new_layer_priority, layers, edge, position);
+    case GES_EDIT_MODE_NORMAL:
+      return timeline_move_object (timeline, element,
+          new_layer_priority <
+          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (container) :
+          new_layer_priority, layers, edge, position);
+    case GES_EDIT_MODE_ROLL:
+      return timeline_roll_object (timeline, element, layers, edge, position);
+    case GES_EDIT_MODE_SLIDE:
+      GST_ERROR ("Sliding not implemented.");
       return FALSE;
-    }
-    priority_offset = new_layer_priority - ges_layer_get_priority (layer);
-
-    ret &= timeline_context_to_layer (layer->timeline, priority_offset);
   }
-
-  return ret;
+  return FALSE;
 }
 
 static void
@@ -1013,23 +1007,6 @@ ges_clip_set_layer (GESClip * clip, GESLayer * layer)
 }
 
 /**
- * ges_clip_get_layer_priority:
- * @clip: The clip to get the layer priority from
- *
- * Returns: The priority of the layer @clip is in, -1 if not in a layer.
- */
-guint32
-ges_clip_get_layer_priority (GESClip * clip)
-{
-  g_return_val_if_fail (GES_IS_CLIP (clip), -1);
-
-  if (clip->priv->layer == NULL)
-    return -1;
-
-  return ges_layer_get_priority (clip->priv->layer);
-}
-
-/**
  * ges_clip_set_moving_from_layer:
  * @clip: a #GESClip
  * @is_moving: %TRUE if you want to start moving @clip to another layer
@@ -1088,6 +1065,19 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
   g_return_val_if_fail (GES_IS_LAYER (layer), FALSE);
 
+  ELEMENT_SET_FLAG (clip, GES_CLIP_IS_MOVING);
+  if (layer->timeline
+      && !timeline_tree_can_move_element (timeline_get_tree (layer->timeline),
+          GES_TIMELINE_ELEMENT (clip),
+          ges_layer_get_priority (layer),
+          GES_TIMELINE_ELEMENT_START (clip),
+          GES_TIMELINE_ELEMENT_DURATION (clip), NULL)) {
+    GST_INFO_OBJECT (layer, "Clip %" GES_FORMAT " can't move to layer %d",
+        GES_ARGS (clip), ges_layer_get_priority (layer));
+    ELEMENT_UNSET_FLAG (clip, GES_CLIP_IS_MOVING);
+    return FALSE;
+  }
+
   current_layer = clip->priv->layer;
 
   if (current_layer == NULL) {
@@ -1099,11 +1089,11 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
   GST_DEBUG_OBJECT (clip, "moving to layer %p, priority: %d", layer,
       ges_layer_get_priority (layer));
 
-  ELEMENT_SET_FLAG (clip, GES_CLIP_IS_MOVING);
   gst_object_ref (clip);
   ret = ges_layer_remove_clip (current_layer, clip);
 
   if (!ret) {
+    ELEMENT_UNSET_FLAG (clip, GES_CLIP_IS_MOVING);
     gst_object_unref (clip);
     return FALSE;
   }
@@ -1418,16 +1408,9 @@ ges_clip_split (GESClip * clip, guint64 position)
         position - start + inpoint);
   }
 
-  ELEMENT_SET_FLAG (clip, GES_CLIP_IS_SPLITTING);
+  ELEMENT_SET_FLAG (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
   _set_duration0 (GES_TIMELINE_ELEMENT (clip), old_duration);
-  ELEMENT_UNSET_FLAG (clip, GES_CLIP_IS_SPLITTING);
-
-  if (GES_TIMELINE_ELEMENT_TIMELINE (clip)) {
-    for (tmp = GES_CONTAINER_CHILDREN (new_object); tmp; tmp = tmp->next) {
-      timeline_create_transitions (GES_TIMELINE_ELEMENT_TIMELINE (tmp->data),
-          tmp->data);
-    }
-  }
+  ELEMENT_UNSET_FLAG (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
 
   return new_object;
 }
@@ -1466,134 +1449,40 @@ ges_clip_get_supported_formats (GESClip * clip)
 gboolean
 _ripple (GESTimelineElement * element, GstClockTime start)
 {
-  gboolean ret = TRUE;
-  GESTimeline *timeline;
-  GESClip *clip = GES_CLIP (element);
-
-  timeline = ges_layer_get_timeline (clip->priv->layer);
-
-  if (timeline == NULL) {
-    GST_DEBUG ("Not in a timeline yet");
-    return FALSE;
-  }
-
-  if (start > _END (element))
-    start = _END (element);
-
-  if (GES_CONTAINER_CHILDREN (element)) {
-    GESTrackElement *track_element =
-        GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
-
-    ret = timeline_ripple_object (timeline, track_element, NULL, GES_EDGE_NONE,
-        start);
-  }
-
-  return ret;
+  return ges_container_edit (GES_CONTAINER (element), NULL,
+      ges_timeline_element_get_layer_priority (element),
+      GES_EDIT_MODE_RIPPLE, GES_EDGE_NONE, start);
 }
 
 static gboolean
 _ripple_end (GESTimelineElement * element, GstClockTime end)
 {
-  gboolean ret = TRUE;
-  GESTimeline *timeline;
-  GESClip *clip = GES_CLIP (element);
-
-  timeline = ges_layer_get_timeline (clip->priv->layer);
-
-  if (timeline == NULL) {
-    GST_DEBUG ("Not in a timeline yet");
-    return FALSE;
-  }
-
-  if (GES_CONTAINER_CHILDREN (element)) {
-    GESTrackElement *track_element =
-        GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
-
-    ret = timeline_ripple_object (timeline, track_element, NULL, GES_EDGE_END,
-        end);
-  }
-
-  return ret;
+  return ges_container_edit (GES_CONTAINER (element), NULL,
+      ges_timeline_element_get_layer_priority (element),
+      GES_EDIT_MODE_RIPPLE, GES_EDGE_END, end);
 }
 
 gboolean
 _roll_start (GESTimelineElement * element, GstClockTime start)
 {
-  gboolean ret = TRUE;
-  GESTimeline *timeline;
-
-  GESClip *clip = GES_CLIP (element);
-
-  timeline = ges_layer_get_timeline (clip->priv->layer);
-
-  if (timeline == NULL) {
-    GST_DEBUG ("Not in a timeline yet");
-    return FALSE;
-  }
-
-  if (GES_CONTAINER_CHILDREN (element)) {
-    GESTrackElement *track_element =
-        GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
-
-    ret = timeline_roll_object (timeline, track_element, NULL, GES_EDGE_START,
-        start);
-  }
-
-  return ret;
+  return ges_container_edit (GES_CONTAINER (element), NULL,
+      ges_timeline_element_get_layer_priority (element),
+      GES_EDIT_MODE_ROLL, GES_EDGE_START, start);
 }
 
 gboolean
 _roll_end (GESTimelineElement * element, GstClockTime end)
 {
-  gboolean ret = TRUE;
-  GESTimeline *timeline;
-
-  GESClip *clip = GES_CLIP (element);
-
-  timeline = ges_layer_get_timeline (clip->priv->layer);
-  if (timeline == NULL) {
-    GST_DEBUG ("Not in a timeline yet");
-    return FALSE;
-  }
-
-
-  if (GES_CONTAINER_CHILDREN (element)) {
-    GESTrackElement *track_element =
-        GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
-
-    ret = timeline_roll_object (timeline, track_element,
-        NULL, GES_EDGE_END, end);
-  }
-
-  return ret;
+  return ges_container_edit (GES_CONTAINER (element), NULL,
+      ges_timeline_element_get_layer_priority (element),
+      GES_EDIT_MODE_ROLL, GES_EDGE_END, end);
 }
 
 gboolean
 _trim (GESTimelineElement * element, GstClockTime start)
 {
-  gboolean ret = TRUE;
-  GESTimeline *timeline;
-
-  GESClip *clip = GES_CLIP (element);
-
-  timeline = ges_layer_get_timeline (clip->priv->layer);
-
-  if (timeline == NULL) {
-    GST_DEBUG ("Not in a timeline yet");
-    return FALSE;
-  }
-
-  if (GES_CONTAINER_CHILDREN (element)) {
-    GESTrackElement *track_element =
-        GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
-
-    GST_DEBUG_OBJECT (element, "Trimming child: %" GST_PTR_FORMAT,
-        track_element);
-    ret = timeline_trim_object (timeline, track_element, NULL, GES_EDGE_START,
-        start);
-  }
-
-  return ret;
+  return ges_container_edit (GES_CONTAINER (element), NULL, -1,
+      GES_EDIT_MODE_TRIM, GES_EDGE_START, start);
 }
 
 /**

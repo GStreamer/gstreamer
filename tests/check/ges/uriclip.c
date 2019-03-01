@@ -263,7 +263,7 @@ GST_START_TEST (test_filesource_images)
   fail_unless (GES_IS_IMAGE_SOURCE (track_element));
 
   ASSERT_OBJECT_REFCOUNT (track_element, "1 in track, 1 in clip 2 in timeline",
-      4);
+      3);
 
   gst_object_unref (asset);
   gst_object_unref (timeline);

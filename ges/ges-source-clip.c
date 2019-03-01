@@ -49,43 +49,41 @@ G_DEFINE_TYPE_WITH_PRIVATE (GESSourceClip, ges_source_clip, GES_TYPE_CLIP);
 static gboolean
 _set_start (GESTimelineElement * element, GstClockTime start)
 {
-  GList *tmp;
-  GESTimeline *timeline;
-  GESContainer *container = GES_CONTAINER (element);
-  GstClockTime rollback_start = GES_TIMELINE_ELEMENT_START (element);
+  GESTimelineElement *toplevel =
+      ges_timeline_element_get_toplevel_parent (element);
 
-  GST_DEBUG_OBJECT (element, "Setting children start, (initiated_move: %"
-      GST_PTR_FORMAT ")", container->initiated_move);
-
-  element->start = start;
-  g_object_notify (G_OBJECT (element), "start");
-  container->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
-  for (tmp = container->children; tmp; tmp = g_list_next (tmp)) {
-    GESTimelineElement *child = (GESTimelineElement *) tmp->data;
-
-    if (child != container->initiated_move) {
-      /* Make the snapping happen if in a timeline */
-      timeline = GES_TIMELINE_ELEMENT_TIMELINE (child);
-      if (timeline && !container->initiated_move) {
-        if (!ges_timeline_move_object_simple (timeline, child, NULL,
-                GES_EDGE_NONE, start)) {
-          for (tmp = container->children; tmp; tmp = g_list_next (tmp))
-            ges_timeline_element_set_start (tmp->data, rollback_start);
-
-          element->start = rollback_start;
-          g_object_notify (G_OBJECT (element), "start");
-          container->children_control_mode = GES_CHILDREN_UPDATE;
-          return FALSE;
-        }
-      }
-
-      _set_start0 (GES_TIMELINE_ELEMENT (child), start);
-    }
+  gst_object_unref (toplevel);
+  if (element->timeline
+      && !ELEMENT_FLAG_IS_SET (element, GES_TIMELINE_ELEMENT_SET_SIMPLE)
+      && !ELEMENT_FLAG_IS_SET (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+    ges_timeline_move_object_simple (element->timeline, element, NULL,
+        GES_EDGE_NONE, start);
+    return FALSE;
   }
 
-  container->children_control_mode = GES_CHILDREN_UPDATE;
+  return
+      GES_TIMELINE_ELEMENT_CLASS (ges_source_clip_parent_class)->set_start
+      (element, start);
+}
 
-  return FALSE;
+static gboolean
+_set_duration (GESTimelineElement * element, GstClockTime duration)
+{
+  GESTimelineElement *toplevel =
+      ges_timeline_element_get_toplevel_parent (element);
+
+  gst_object_unref (toplevel);
+  if (element->timeline
+      && !ELEMENT_FLAG_IS_SET (element, GES_TIMELINE_ELEMENT_SET_SIMPLE)
+      && !ELEMENT_FLAG_IS_SET (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+    return !timeline_trim_object (element->timeline, element,
+        GES_TIMELINE_ELEMENT_LAYER_PRIORITY (element), NULL, GES_EDGE_END,
+        element->start + duration);
+  }
+
+  return
+      GES_TIMELINE_ELEMENT_CLASS (ges_source_clip_parent_class)->set_duration
+      (element, duration);
 }
 
 static void
@@ -125,6 +123,7 @@ ges_source_clip_class_init (GESSourceClipClass * klass)
   object_class->finalize = ges_source_clip_finalize;
 
   element_class->set_start = _set_start;
+  element_class->set_duration = _set_duration;
 }
 
 static void

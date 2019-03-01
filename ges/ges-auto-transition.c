@@ -46,6 +46,10 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
   GESTimelineElement *parent =
       ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT (clip));
 
+  if (ELEMENT_FLAG_IS_SET (parent, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+    return;
+  }
+
   if (parent) {
     GESTimelineElement *prev_topparent =
         ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT
@@ -53,6 +57,11 @@ neighbour_changed_cb (GESClip * clip, GParamSpec * arg G_GNUC_UNUSED,
     GESTimelineElement *next_topparent =
         ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT
         (self->previous_source));
+
+    if (ELEMENT_FLAG_IS_SET (prev_topparent, GES_TIMELINE_ELEMENT_SET_SIMPLE) ||
+        ELEMENT_FLAG_IS_SET (next_topparent, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
+      return;
+    }
 
     if (parent == prev_topparent && parent == next_topparent) {
       GST_DEBUG_OBJECT (self,
@@ -191,4 +200,12 @@ ges_auto_transition_new (GESTrackElement * transition,
       self->next_source);
 
   return self;
+}
+
+void
+ges_auto_transition_update (GESAutoTransition * self)
+{
+  GST_INFO ("Updating info %s",
+      GES_TIMELINE_ELEMENT_NAME (self->transition_clip));
+  neighbour_changed_cb (self->previous_clip, NULL, self);
 }

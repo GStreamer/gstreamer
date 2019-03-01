@@ -71,6 +71,7 @@ struct _GESAutoTransition
 
 G_GNUC_INTERNAL GType ges_auto_transition_get_type (void) G_GNUC_CONST;
 
+G_GNUC_INTERNAL void ges_auto_transition_update (GESAutoTransition *self);
 G_GNUC_INTERNAL GESAutoTransition * ges_auto_transition_new (GESTrackElement * transition,
                                              GESTrackElement * previous_source,
                                              GESTrackElement * next_source);

@@ -83,30 +83,37 @@ G_STMT_START {                                          \
 #define _DURATION(obj) GES_TIMELINE_ELEMENT_DURATION (obj)
 #define _INPOINT(obj) GES_TIMELINE_ELEMENT_INPOINT (obj)
 #define _PRIORITY(obj) GES_TIMELINE_ELEMENT_PRIORITY (obj)
+#ifndef _END
+#define _END(obj) (_START(obj) + _DURATION(obj))
+#endif
 
 #define CHECK_OBJECT_PROPS(obj, start, inpoint, duration) {\
-  assert_equals_uint64 (_START (obj), start);\
-  assert_equals_uint64 (_INPOINT (obj), inpoint);\
-  assert_equals_uint64 (_DURATION (obj), duration);\
+  fail_unless (_START (obj) == start, "%s start is %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT, GES_TIMELINE_ELEMENT_NAME(obj), GST_TIME_ARGS (_START(obj)), GST_TIME_ARGS (start));\
+  fail_unless (_INPOINT (obj) == inpoint, "%s inpoint is %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT, GES_TIMELINE_ELEMENT_NAME(obj), GST_TIME_ARGS (_INPOINT(obj)), GST_TIME_ARGS (inpoint));\
+  fail_unless (_DURATION (obj) == duration, "%s duration is %" GST_TIME_FORMAT " != %" GST_TIME_FORMAT, GES_TIMELINE_ELEMENT_NAME(obj), GST_TIME_ARGS (_DURATION(obj)), GST_TIME_ARGS (duration));\
 }
 
-#define check_layer(clip, layer_prio) {                                        \
-  GESLayer *tmplayer = ges_clip_get_layer ((clip));                            \
-  assert_equals_int (ges_layer_get_priority (tmplayer),  (layer_prio));        \
-  gst_object_unref (tmplayer);                                                 \
+#define check_layer(clip, layer_prio) {                                      \
+  fail_unless (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip) ==  (layer_prio),  \
+    "%s in layer %d instead of %d", GES_TIMELINE_ELEMENT_NAME (clip),        \
+    GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip), layer_prio);                 \
 }
 
 #define GES_TIMELINE_ELEMENT_FORMAT \
     "s<%p>" \
     " [ %" GST_TIME_FORMAT \
     " (%" GST_TIME_FORMAT \
-    ") - %" GST_TIME_FORMAT "]"
+    ") - %" GST_TIME_FORMAT "(%" GST_TIME_FORMAT") layer: %" G_GINT32_FORMAT "] "
 
 #define GES_TIMELINE_ELEMENT_ARGS(element) \
     GES_TIMELINE_ELEMENT_NAME(element), element, \
     GST_TIME_ARGS(GES_TIMELINE_ELEMENT_START(element)), \
     GST_TIME_ARGS(GES_TIMELINE_ELEMENT_INPOINT(element)), \
-    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_DURATION(element))
+    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_DURATION(element)), \
+    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_MAX_DURATION(element)), \
+    GES_TIMELINE_ELEMENT_LAYER_PRIORITY(element)
+#define GES_ARGS GES_TIMELINE_ELEMENT_ARGS
+#define GES_FORMAT GES_TIMELINE_ELEMENT_FORMAT
 
 void print_timeline(GESTimeline *timeline);
 
