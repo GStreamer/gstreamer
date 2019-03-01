@@ -85,6 +85,21 @@ typedef struct _GESTimelineElementPrivate GESTimelineElementPrivate;
 #define GES_TIMELINE_ELEMENT_PRIORITY(obj) (((GESTimelineElement*)obj)->priority)
 
 /**
+ * GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY:
+ *
+ * Layer priority when the element is not in a layer
+ */
+#define GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY ((guint32) -1)
+
+/**
+ * GES_TIMELINE_ELEMENT_LAYER_PRIORITY:
+ * @obj: The object to retrieve the layer priority from
+ *
+ * See #ges_timeline_element_get_layer_priority
+ */
+#define GES_TIMELINE_ELEMENT_LAYER_PRIORITY(obj) (ges_timeline_element_get_layer_priority(((GESTimelineElement*)obj)))
+
+/**
  * GES_TIMELINE_ELEMENT_PARENT:
  * @obj: a #GESTimelineElement
  *
@@ -198,9 +213,11 @@ struct _GESTimelineElementClass
   void         (*set_child_property)       (GESTimelineElement * self, GObject *child,
                                             GParamSpec *pspec, GValue *value);
 
+  guint32      (*get_layer_priority)       (GESTimelineElement *self);
+
   /*< private > */
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING_LARGE - 3];
+  gpointer _ges_reserved[GES_PADDING_LARGE - 4];
 };
 
 GES_API
@@ -318,6 +335,9 @@ GESTimelineElement * ges_timeline_element_paste    (GESTimelineElement * self,
 
 GES_API
 GESTrackType ges_timeline_element_get_track_types  (GESTimelineElement * self);
+
+GES_API
+guint32 ges_timeline_element_get_layer_priority    (GESTimelineElement * self);
 
 G_END_DECLS
 

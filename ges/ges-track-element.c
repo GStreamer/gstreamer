@@ -122,6 +122,15 @@ strv_find_str (const gchar ** strv, const char *str)
   return FALSE;
 }
 
+static guint32
+_get_layer_priority (GESTimelineElement * element)
+{
+  if (!element->parent)
+    return GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY;
+
+  return ges_timeline_element_get_layer_priority (element->parent);
+}
+
 static void
 ges_track_element_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -310,6 +319,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   element_class->set_priority = _set_priority;
   element_class->get_track_types = _get_track_types;
   element_class->deep_copy = ges_track_element_copy_properties;
+  element_class->get_layer_priority = _get_layer_priority;
 
   klass->create_gnl_object = ges_track_element_create_gnl_object_func;
   klass->list_children_properties = default_list_children_properties;

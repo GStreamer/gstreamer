@@ -1853,6 +1853,26 @@ ges_timeline_element_paste (GESTimelineElement * self,
   return g_object_ref (res);
 }
 
+/**
+ * ges_timeline_element_get_layer_priority:
+ * @self: A #GESTimelineElement
+ *
+ * Returns: The priority of the first layer the element is in (note that only
+ * groups can span over several layers). %GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY
+ * means that the element is not in a layer.
+ */
+guint32
+ges_timeline_element_get_layer_priority (GESTimelineElement * self)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self),
+      GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY);
+
+  if (!GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_layer_priority)
+    return self->priority;
+
+  return GES_TIMELINE_ELEMENT_GET_CLASS (self)->get_layer_priority (self);
+}
+
 /* Internal */
 gdouble
 ges_timeline_element_get_media_duration_factor (GESTimelineElement * self)
@@ -1910,18 +1930,6 @@ GESTimelineElementFlags
 ges_timeline_element_flags (GESTimelineElement * self)
 {
   return self->priv->flags;
-}
-
-gint32
-_layer_priority (GESTimelineElement * element)
-{
-  if (GES_IS_CLIP (element))
-    return ges_clip_get_layer_priority (GES_CLIP (element));
-
-  if (GES_IS_TRACK_ELEMENT (element))
-    return element->priority / LAYER_HEIGHT;
-
-  return element->priority;
 }
 
 void

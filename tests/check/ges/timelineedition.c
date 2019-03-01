@@ -738,9 +738,7 @@ GST_START_TEST (test_timeline_edition_mode)
   CHECK_OBJECT_PROPS (trackelement, 32, 5, 3);
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
   CHECK_OBJECT_PROPS (trackelement2, 35, 0, 60);
-  layer = ges_clip_get_layer (GES_CLIP (clip));
-  assert_equals_int (ges_layer_get_priority (layer), 2);
-  gst_object_unref (layer);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip), 2);
 
   /* Roll end clip to 50
    * New timeline:
@@ -802,10 +800,8 @@ GST_START_TEST (test_timeline_edition_mode)
           GES_EDGE_END, 52) == TRUE);
   CHECK_OBJECT_PROPS (trackelement, 32, 5, 20);
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 10);
-  CHECK_OBJECT_PROPS (trackelement2, 52, 0, 60)
-      layer = ges_clip_get_layer (GES_CLIP (clip));
-  assert_equals_int (ges_layer_get_priority (layer), 2);
-  gst_object_unref (layer);
+  CHECK_OBJECT_PROPS (trackelement2, 52, 0, 60);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip), 2);
 
 
   /* Little check that we have 4 layers in the timeline */

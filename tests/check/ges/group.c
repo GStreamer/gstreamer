@@ -565,15 +565,15 @@ GST_START_TEST (test_group_in_group_layer_moving)
   CHECK_OBJECT_PROPS (c, 10, 0, 10);
   CHECK_OBJECT_PROPS (c1, 20, 0, 10);
   CHECK_OBJECT_PROPS (group, 10, 0, 20);
-  assert_equals_int (ges_clip_get_layer_priority (c), 0);
-  assert_equals_int (ges_clip_get_layer_priority (c1), 1);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c), 0);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c1), 1);
 
   ges_layer_set_priority (layer2, 0);
   ges_layer_set_priority (layer, 1);
   ges_layer_set_priority (layer1, 2);
 
-  assert_equals_int (ges_clip_get_layer_priority (c), 1);
-  assert_equals_int (ges_clip_get_layer_priority (c1), 2);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c), 1);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c1), 2);
 
   /* Our timeline
    *
@@ -595,8 +595,8 @@ GST_START_TEST (test_group_in_group_layer_moving)
   CHECK_OBJECT_PROPS (c, 10, 0, 10);
   CHECK_OBJECT_PROPS (c1, 20, 0, 10);
   CHECK_OBJECT_PROPS (group, 10, 0, 20);
-  assert_equals_int (ges_clip_get_layer_priority (c), 0);
-  assert_equals_int (ges_clip_get_layer_priority (c1), 1);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c), 0);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c1), 1);
 
   /* Our timeline
    *
@@ -617,8 +617,8 @@ GST_START_TEST (test_group_in_group_layer_moving)
   CHECK_OBJECT_PROPS (c, 10, 0, 10);
   CHECK_OBJECT_PROPS (c1, 20, 0, 10);
   CHECK_OBJECT_PROPS (group, 10, 0, 20);
-  assert_equals_int (ges_clip_get_layer_priority (c), 1);
-  assert_equals_int (ges_clip_get_layer_priority (c1), 2);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c), 1);
+  assert_equals_int (GES_TIMELINE_ELEMENT_LAYER_PRIORITY (c1), 2);
 
   gst_object_unref (timeline);
   gst_object_unref (asset);

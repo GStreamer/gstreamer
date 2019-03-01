@@ -257,6 +257,17 @@ _set_priority (GESTimelineElement * element, guint32 priority)
   return TRUE;
 }
 
+static guint32
+_get_layer_priority (GESTimelineElement * element)
+{
+  GESClip *clip = GES_CLIP (element);
+
+  if (clip->priv->layer == NULL)
+    return GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY;
+
+  return ges_layer_get_priority (clip->priv->layer);
+}
+
 /****************************************************
  *                                                  *
  *  GESContainer virtual methods implementation     *
@@ -833,6 +844,7 @@ ges_clip_class_init (GESClipClass * klass)
   element_class->paste = _paste;
   element_class->deep_copy = _deep_copy;
   element_class->lookup_child = _lookup_child;
+  element_class->get_layer_priority = _get_layer_priority;
 
   container_class->add_child = _add_child;
   container_class->remove_child = _remove_child;

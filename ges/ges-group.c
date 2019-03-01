@@ -118,7 +118,7 @@ _update_our_values (GESGroup * group)
     for (tmp = GES_CONTAINER_CHILDREN (group); tmp; tmp = tmp->next) {
       GESTimelineElement *child = tmp->data;
       guint32 child_prio = GES_IS_CLIP (child) ?
-          ges_clip_get_layer_priority (GES_CLIP (child)) : _PRIORITY (child);
+          GES_TIMELINE_ELEMENT_LAYER_PRIORITY (child) : _PRIORITY (child);
 
       _ges_container_set_priority_offset (container,
           child, min_layer_prio - child_prio);
@@ -159,7 +159,7 @@ _child_clip_changed_layer_cb (GESTimelineElement * clip,
   ChildSignalIds *sigids;
   gchar *signals_ids_key;
   GESLayer *old_layer, *new_layer;
-  gint offset, layer_prio = ges_clip_get_layer_priority (GES_CLIP (clip));
+  gint offset, layer_prio = GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip);
   GESContainer *container = GES_CONTAINER (group);
 
   offset = _ges_container_get_priority_offset (container, clip);
@@ -335,11 +335,10 @@ _set_priority (GESTimelineElement * element, guint32 priority)
 
     if (child != container->initiated_move) {
       if (GES_IS_CLIP (child)) {
-        guint32 layer_prio =
-            ges_clip_get_layer_priority (GES_CLIP (child)) + diff;
+        guint32 layer_prio = GES_TIMELINE_ELEMENT_LAYER_PRIORITY (child) + diff;
 
         GST_DEBUG_OBJECT (child, "moving from layer: %i to %i",
-            ges_clip_get_layer_priority (GES_CLIP (child)), layer_prio);
+            GES_TIMELINE_ELEMENT_LAYER_PRIORITY (child), layer_prio);
         ges_clip_move_to_layer (GES_CLIP (child),
             g_list_nth_data (layers, layer_prio));
       } else if (GES_IS_GROUP (child)) {
