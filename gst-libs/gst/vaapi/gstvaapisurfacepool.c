@@ -177,7 +177,7 @@ error:
  * @height: the desired height, in pixels
  *
  * Creates a new #GstVaapiVideoPool of #GstVaapiSurface with the specified
- * chroam type and dimensions. The underlying format of the surfaces is
+ * chroma type and dimensions. The underlying format of the surfaces is
  * implementation (driver) defined.
  *
  * Return value: the newly allocated #GstVaapiVideoPool
