@@ -991,8 +991,10 @@ gst_v4l2_transform_sink_event (GstBaseTransform * trans, GstEvent * event)
       GST_DEBUG_OBJECT (self, "flush stop");
       gst_v4l2_object_unlock_stop (self->v4l2capture);
       gst_v4l2_object_unlock_stop (self->v4l2output);
-      gst_v4l2_buffer_pool_flush (self->v4l2output->pool);
-      gst_v4l2_buffer_pool_flush (self->v4l2capture->pool);
+      if (self->v4l2output->pool)
+        gst_v4l2_buffer_pool_flush (self->v4l2output->pool);
+      if (self->v4l2capture->pool)
+        gst_v4l2_buffer_pool_flush (self->v4l2capture->pool);
       break;
     default:
       break;
