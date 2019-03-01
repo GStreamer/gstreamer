@@ -1319,7 +1319,7 @@ dnl **** Wayland ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_WAYLAND, true)
 AC_PATH_PROG([wayland_scanner], [wayland-scanner])
 AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
-  PKG_CHECK_MODULES(WAYLAND, wayland-client >= 1.11.0 libdrm >= 2.4.55 wayland-protocols >= 1.4, [
+  PKG_CHECK_MODULES(WAYLAND, wayland-client >= 1.11.0 libdrm >= 2.4.55 wayland-protocols >= 1.15, [
     if test "x$wayland_scanner" != "x"; then
       HAVE_WAYLAND="yes"
       AC_SUBST(WAYLAND_PROTOCOLS_DATADIR, `$PKG_CONFIG --variable=pkgdatadir wayland-protocols`)

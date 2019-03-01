@@ -659,6 +659,16 @@ render_last_buffer (GstWaylandSink * sink, gboolean redraw)
   gst_wl_window_render (sink->window, wlbuffer, info);
 }
 
+static void
+on_window_closed (GstWlWindow * window, gpointer user_data)
+{
+  GstWaylandSink *sink = GST_WAYLAND_SINK (user_data);
+
+  /* Handle window closure by posting an error on the bus */
+  GST_ELEMENT_ERROR (sink, RESOURCE, NOT_FOUND,
+      ("Output window was closed"), (NULL));
+}
+
 static GstFlowReturn
 gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 {
@@ -688,6 +698,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       /* if we were not provided a window, create one ourselves */
       sink->window = gst_wl_window_new_toplevel (sink->display,
           &sink->video_info, sink->fullscreen, &sink->render_lock);
+      g_signal_connect_object (sink->window, "closed",
+          G_CALLBACK (on_window_closed), sink, 0);
     }
   }
 

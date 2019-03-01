@@ -90,6 +90,9 @@ gst_wl_display_finalize (GObject * gobject)
   if (self->wl_shell)
     wl_shell_destroy (self->wl_shell);
 
+  if (self->xdg_wm_base)
+    xdg_wm_base_destroy (self->xdg_wm_base);
+
   if (self->fullscreen_shell)
     zwp_fullscreen_shell_v1_release (self->fullscreen_shell);
 
@@ -187,6 +190,17 @@ gst_wl_display_check_format_for_dmabuf (GstWlDisplay * display,
 }
 
 static void
+handle_xdg_wm_base_ping (void *user_data, struct xdg_wm_base *xdg_wm_base,
+    uint32_t serial)
+{
+  xdg_wm_base_pong (xdg_wm_base, serial);
+}
+
+static const struct xdg_wm_base_listener xdg_wm_base_listener = {
+  handle_xdg_wm_base_ping
+};
+
+static void
 registry_handle_global (void *data, struct wl_registry *registry,
     uint32_t id, const char *interface, uint32_t version)
 {
@@ -200,6 +214,10 @@ registry_handle_global (void *data, struct wl_registry *registry,
         wl_registry_bind (registry, id, &wl_subcompositor_interface, 1);
   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
     self->wl_shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
+  } else if (g_strcmp0 (interface, "xdg_wm_base") == 0) {
+    self->xdg_wm_base =
+        wl_registry_bind (registry, id, &xdg_wm_base_interface, 1);
+    xdg_wm_base_add_listener (self->xdg_wm_base, &xdg_wm_base_listener, self);
   } else if (g_strcmp0 (interface, "zwp_fullscreen_shell_v1") == 0) {
     self->fullscreen_shell = wl_registry_bind (registry, id,
         &zwp_fullscreen_shell_v1_interface, 1);
@@ -331,13 +349,13 @@ gst_wl_display_new_existing (struct wl_display * display,
     g_warning ("Could not bind to zwp_linux_dmabuf_v1");
   }
 
-  if (!self->wl_shell && !self->fullscreen_shell) {
+  if (!self->wl_shell && !self->xdg_wm_base && !self->fullscreen_shell) {
     /* If wl_surface and wl_display are passed via GstContext
-     * wl_shell, zwp_fullscreen_shell are not used.
+     * wl_shell, xdg_shell and zwp_fullscreen_shell are not used.
      * In this case is correct to continue.
      */
-    g_warning ("Could not bind to wl_shell or zwp_fullscreen_shell, video "
-        "display may not work properly.");
+    g_warning ("Could not bind to either wl_shell, xdg_wm_base or "
+        "zwp_fullscreen_shell, video display may not work properly.");
   }
 
   self->thread = g_thread_try_new ("GstWlDisplay", gst_wl_display_thread_run,

@@ -53,6 +53,8 @@ struct _GstWlWindow
   struct wl_subsurface *video_subsurface;
   struct wp_viewport *video_viewport;
   struct wl_shell_surface *wl_shell_surface;
+  struct xdg_surface *xdg_surface;
+  struct xdg_toplevel *xdg_toplevel;
 
   /* the size and position of the area_(sub)surface */
   GstVideoRectangle render_rectangle;
