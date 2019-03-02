@@ -96,8 +96,14 @@ ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element, ...)
 
   while ((element = va_arg (argp, GstElement *)) != NULL) {
     gst_bin_add (GST_BIN (bin), element);
-    if (prev)
-      gst_element_link (prev, element);
+    if (prev) {
+      if (!gst_element_link_pads_full (prev, "src", element, "sink",
+              GST_PAD_LINK_CHECK_NOTHING)) {
+        g_error ("Could not link %s and %s",
+            GST_OBJECT_NAME (prev), GST_OBJECT_NAME (element));
+      }
+
+    }
     prev = element;
     if (first == NULL)
       first = element;
@@ -117,7 +123,7 @@ ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element, ...)
 
     sinkpad = gst_element_get_static_pad (first, "sink");
     if (sub_srcpad)
-      gst_pad_link (sub_srcpad, sinkpad);
+      gst_pad_link_full (sub_srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
     else
       g_signal_connect (sub_element, "pad-added", G_CALLBACK (_pad_added_cb),
           sinkpad);
