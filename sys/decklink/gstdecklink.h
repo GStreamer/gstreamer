@@ -145,6 +145,13 @@ typedef enum {
 GType gst_decklink_video_format_get_type (void);
 
 typedef enum {
+  GST_DECKLINK_DUPLEX_MODE_HALF, /* bmdDuplexModeHalf */
+  GST_DECKLINK_DUPLEX_MODE_FULL, /* bmdDuplexModeFull */
+} GstDecklinkDuplexMode;
+#define GST_TYPE_DECKLINK_DUPLEX_MODE (gst_decklink_duplex_mode_get_type ())
+GType gst_decklink_duplex_mode_get_type (void);
+
+typedef enum {
   GST_DECKLINK_TIMECODE_FORMAT_RP188VITC1, /*bmdTimecodeRP188VITC1 */
   GST_DECKLINK_TIMECODE_FORMAT_RP188VITC2, /*bmdTimecodeRP188VITC2 */
   GST_DECKLINK_TIMECODE_FORMAT_RP188LTC, /*bmdTimecodeRP188LTC */
@@ -181,6 +188,8 @@ const GstDecklinkVideoFormat gst_decklink_type_from_video_format (GstVideoFormat
 GstVideoFormat gst_decklink_video_format_from_type (BMDPixelFormat pf);
 const BMDTimecodeFormat gst_decklink_timecode_format_from_enum (GstDecklinkTimecodeFormat f);
 const GstDecklinkTimecodeFormat gst_decklink_timecode_format_to_enum (BMDTimecodeFormat f);
+const BMDDuplexMode gst_decklink_duplex_mode_from_enum (GstDecklinkDuplexMode m);
+const GstDecklinkDuplexMode gst_decklink_duplex_mode_to_enum (BMDDuplexMode m);
 const BMDKeyerMode gst_decklink_keyer_mode_from_enum (GstDecklinkKeyerMode m);
 const GstDecklinkKeyerMode gst_decklink_keyer_mode_to_enum (BMDKeyerMode m);
 

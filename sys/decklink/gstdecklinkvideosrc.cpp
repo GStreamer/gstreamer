@@ -49,6 +49,7 @@ enum
   PROP_DEVICE_NUMBER,
   PROP_BUFFER_SIZE,
   PROP_VIDEO_FORMAT,
+  PROP_DUPLEX_MODE,
   PROP_TIMECODE_FORMAT,
   PROP_OUTPUT_STREAM_TIME,
   PROP_SKIP_FIRST_TIME,
@@ -187,6 +188,20 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  g_object_class_install_property (gobject_class, PROP_DUPLEX_MODE,
+      g_param_spec_enum ("duplex-mode", "Duplex mode",
+          "Certain DeckLink devices such as the DeckLink Quad 2 and the "
+          "DeckLink Duo 2 support configuration of the duplex mode of "
+          "individual sub-devices."
+          "A sub-device configured as full-duplex will use two connectors, "
+          "which allows simultaneous capture and playback, internal keying, "
+          "and fill & key scenarios."
+          "A half-duplex sub-device will use a single connector as an "
+          "individual capture or playback channel.",
+          GST_TYPE_DECKLINK_DUPLEX_MODE, GST_DECKLINK_DUPLEX_MODE_HALF,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   g_object_class_install_property (gobject_class, PROP_TIMECODE_FORMAT,
       g_param_spec_enum ("timecode-format", "Timecode format",
           "Timecode format type to use for input",
@@ -253,6 +268,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   self->device_number = 0;
   self->buffer_size = DEFAULT_BUFFER_SIZE;
   self->video_format = GST_DECKLINK_VIDEO_FORMAT_AUTO;
+  self->duplex_mode = bmdDuplexModeHalf;
   self->timecode_format = bmdTimecodeRP188Any;
   self->no_signal = FALSE;
   self->output_stream_time = DEFAULT_OUTPUT_STREAM_TIME;
@@ -319,6 +335,10 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
               ("Format %d not supported", self->video_format), (NULL));
           break;
       }
+    case PROP_DUPLEX_MODE:
+      self->duplex_mode =
+          gst_decklink_duplex_mode_from_enum ((GstDecklinkDuplexMode)
+          g_value_get_enum (value));
       break;
     case PROP_TIMECODE_FORMAT:
       self->timecode_format =
@@ -364,6 +384,10 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       break;
     case PROP_VIDEO_FORMAT:
       g_value_set_enum (value, self->video_format);
+      break;
+    case PROP_DUPLEX_MODE:
+      g_value_set_enum (value,
+          gst_decklink_duplex_mode_to_enum (self->duplex_mode));
       break;
     case PROP_TIMECODE_FORMAT:
       g_value_set_enum (value,
