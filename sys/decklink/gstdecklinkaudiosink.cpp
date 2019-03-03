@@ -17,6 +17,23 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Suite 500,
  * Boston, MA 02110-1335, USA.
  */
+/**
+ * SECTION:element-decklinkaudiosink
+ * @short_description: Outputs Audio to a BlackMagic DeckLink Device
+ * @see_also: decklinkvideosink
+ *
+ * Playout Video and Audio to a BlackMagic DeckLink Device. Can only be used
+ * in conjunction with decklinkvideosink.
+ *
+ * ## Sample pipeline
+ * |[
+ * gst-launch-1.0 \
+ *   videotestsrc ! decklinkvideosink device-number=0 mode=1080p25 \
+ *   audiotestsrc ! decklinkaudiosink device-number=0
+ * ]|
+ * Playout a 1080p25 test-video with a test-audio signal to the SDI-Out of Card 0.
+ * Devices are numbered starting with 0.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

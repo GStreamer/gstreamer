@@ -18,6 +18,118 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Suite 500,
  * Boston, MA 02110-1335, USA.
  */
+/**
+ * SECTION:element-decklinkvideosrc
+ * @short_description: Inputs Video from a BlackMagic DeckLink Device
+ *
+ * Capture Video from a BlackMagic DeckLink Device.
+ *
+ * ## Sample pipeline
+ * |[
+ * gst-launch-1.0 \
+ *   decklinkvideosrc device-number=0 connection=sdi mode=1080p25 ! \
+ *   autovideosink
+ * ]|
+ * Capturing 1080p25 video from the SDI-In of Card 0. Devices are numbered
+ * starting with 0.
+ *
+ * # Duplex-Mode:
+ * Certain DechLink Cards like the Duo2 or the Quad2 contain two or four
+ * independant SDI units with two connectors each. These units can operate either
+ * in half- or in full-duplex mode.
+ *
+ * The Duplex-Mode of a Card can be configured using the `duplex-mode`-Property.
+ * Cards that to not support Duplex-Modes are not influenced by the property.
+ *
+ * ## Half-Duplex-Mode (default):
+ * By default decklinkvideosrc will configure them into half-duplex mode, so that
+ * each connector acts as if it were an independant DeckLink Card which can either
+ * be used as an Input or as an Output. In this mode the Duo2 can be used as as 4 SDI
+ * In-/Outputs and the Quad2 as 8 SDI In-/Outputs.
+ *
+ * |[
+ * gst-launch-1.0 \
+ *  decklinkvideosrc device-number=0 mode=1080p25 ! c. \
+ *  decklinkvideosrc device-number=1 mode=1080p25 ! c. \
+ *  decklinkvideosrc device-number=2 mode=1080p25 ! c. \
+ *  decklinkvideosrc device-number=3 mode=1080p25 ! c. \
+ *  compositor name=c \
+ *    sink_0::xpos=0   sink_0::ypos=0   sink_0::width=960 sink_0::height=540 \
+ *    sink_1::xpos=960 sink_1::ypos=0   sink_1::width=960 sink_1::height=540 \
+ *    sink_2::xpos=0   sink_2::ypos=540 sink_2::width=960 sink_2::height=540 \
+ *    sink_3::xpos=960 sink_3::ypos=540 sink_3::width=960 sink_3::height=540 ! \
+ *    video/x-raw,width=1920,height=1080 ! \
+ *    autovideosink
+ * ]|
+ * Capture 1080p25 from the first 4 units in the System (ie. the 4 Connectors of
+ * a Duo2 Card) and compose them into a 2x2 grid.
+ *
+ * |[
+ *  gst-launch-1.0 \
+ *    videotestsrc foreground-color=0x0000ff00 ! decklinkvideosink device-number=0 mode=1080p25 \
+ *    decklinkvideosrc device-number=1 mode=1080p25 ! autovideosink \
+ *    decklinkvideosrc device-number=2 mode=1080p25 ! autovideosink \
+ *    videotestsrc foreground-color=0x00ff0000 ! decklinkvideosink device-number=3 mode=1080p25
+ * ]|
+ * Capture 1080p25 from the second and third unit in the System,
+ * Playout a Test-Screen with colored Snow on the first and fourth unit
+ * (ie. the Connectors 1-4 of a Duo2 unit).
+ *
+ * ## Device-Number-Mapping in Half-Duplex-Mode
+ * The device-number to connector-mapping in half-duplex-mode is as follows for the Duo2
+ * - `device-number=0` SDI1
+ * - `device-number=1` SDI3
+ * - `device-number=2` SDI2
+ * - `device-number=3` SDI4
+ *
+ * And for the Quad2
+ * - `device-number=0` SDI1
+ * - `device-number=1` SDI3
+ * - `device-number=2` SDI5
+ * - `device-number=3` SDI7
+ * - `device-number=4` SDI2
+ * - `device-number=5` SDI4
+ * - `device-number=6` SDI6
+ * - `device-number=7` SDI8
+ *
+ * ## Full-Duplex-Mode:
+ * When operating in full-duplex mode, two connectors of a unit are combined to
+ * a single device, performing extra processing with the second connection.
+ *
+ * This mode is most useful for Playout. See @decklinkvideosink.
+ * For Capturing the options are as follows:
+ *
+ * When capturing from a duplex-unit, the secondary port outputs the captured image
+ * unchanged.
+ * |[
+ * gst-launch-1.0 \
+ *   decklinkvideosrc device-number=0 mode=1080p25 duplex-mode=full ! \
+ *   autovideosink
+ * ]|
+ *
+ * When simultaneously capturing and playing out onto the same device, the
+ * secondary port outputs the played out video. Note, that this can also be
+ * achieved using half-duplex mode.
+ * |[
+ * gst-launch-1.0 \
+ *   decklinkvideosrc device-number=0 mode=1080p25 duplex-mode=full ! \
+ *   videoflip video-direction=vert ! \
+ *   decklinkvideosink device-number=0 mode=1080p25 duplex-mode=full
+ * ]|
+ * Capturing Video on the primary port of device 0, output flipped version of the
+ * video on secondary port of the same device.
+ *
+ * ## Device-Number-Mapping in Full-Duplex-Mode
+ * The device-number to connector-mapping in full-duplex-mode is as follows for the Duo2
+ * - `device-number=0` SDI1 primary, SDI2 secondary
+ * - `device-number=1` SDI3 primaty, SDI4 secondary
+ *
+ * And for the Quad2
+ * - `device-number=0` SDI1 primary, SDI2 secondary
+ * - `device-number=1` SDI3 primaty, SDI4 secondary
+ * - `device-number=2` SDI5 primary, SDI6 secondary
+ * - `device-number=3` SDI7 primary, SDI8 secondary
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
