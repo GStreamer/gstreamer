@@ -2,4 +2,4 @@
 directory=gl-headers
 url=https://gitlab.freedesktop.org/gstreamer/meson-ports/gl-headers.git
 push-url=git@gitlab.freedesktop.org:gstreamer/meson-ports/gl-headers.git
-revision=master
+revision=1f8083d8f23de174552fe8a7bf9fbe513f76696b
