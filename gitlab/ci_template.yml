@@ -290,6 +290,9 @@ check fedora:
     - $CERBERO bootstrap --offline --build-tools-only
     - $CERBERO package --offline -t -o ${CI_PROJECT_DIR} gstreamer-1.0
     - ccache -s
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "gst-build"
   cache:
     key: "${CI_JOB_NAME}"
     paths:
