@@ -200,7 +200,7 @@ struct _GESTimelinePrivate
   GESClip *ignore_track_element_added;
   GList *groups;
 
-  guint group_id;
+  guint stream_start_group_id;
 
   GHashTable *all_elements;
 
@@ -696,7 +696,7 @@ ges_timeline_init (GESTimeline * self)
   priv->all_elements =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, gst_object_unref);
 
-  priv->group_id = -1;
+  priv->stream_start_group_id = -1;
 
   g_signal_connect_after (self, "select-tracks-for-object",
       G_CALLBACK (select_tracks_for_object_default), NULL);
@@ -2742,14 +2742,15 @@ _pad_probe_cb (GstPad * mixer_pad, GstPadProbeInfo * info,
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
   if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START) {
     LOCK_DYN (timeline);
-    if (timeline->priv->group_id == -1) {
-      if (!gst_event_parse_group_id (event, &timeline->priv->group_id))
-        timeline->priv->group_id = gst_util_group_id_next ();
+    if (timeline->priv->stream_start_group_id == -1) {
+      if (!gst_event_parse_group_id (event,
+              &timeline->priv->stream_start_group_id))
+        timeline->priv->stream_start_group_id = gst_util_group_id_next ();
     }
 
     info->data = gst_event_make_writable (event);
     gst_event_set_group_id (GST_PAD_PROBE_INFO_EVENT (info),
-        timeline->priv->group_id);
+        timeline->priv->stream_start_group_id);
     UNLOCK_DYN (timeline);
 
     return GST_PAD_PROBE_REMOVE;
