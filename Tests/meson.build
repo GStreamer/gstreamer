@@ -12,7 +12,7 @@ if nunit_console.found()
     )
 
 
-    nunit_dep = dependency('mono-nunit', required: false)
+    nunit_dep = dependency('mono-nunit', required: false, version: ['>=2.6', '< 2.7'])
     if not nunit_dep.found()
         if get_nunit_res.returncode() != 0
             message('Failed to get NUnit: ' + get_nunit_res.stderr())
