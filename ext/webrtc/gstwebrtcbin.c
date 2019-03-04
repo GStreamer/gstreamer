@@ -3318,13 +3318,24 @@ _clear_ice_candidate_item (IceCandidateItem ** item)
 }
 
 static void
-_add_ice_candidate (GstWebRTCBin * webrtc, IceCandidateItem * item)
+_add_ice_candidate (GstWebRTCBin * webrtc, IceCandidateItem * item,
+    gboolean drop_invalid)
 {
   GstWebRTCICEStream *stream;
 
   stream = _find_ice_stream_for_session (webrtc, item->mlineindex);
   if (stream == NULL) {
-    GST_WARNING_OBJECT (webrtc, "Unknown mline %u, ignoring", item->mlineindex);
+    if (drop_invalid) {
+      GST_WARNING_OBJECT (webrtc, "Unknown mline %u, dropping",
+          item->mlineindex);
+    } else {
+      IceCandidateItem *new = g_new0 (IceCandidateItem, 1);
+      new->mlineindex = item->mlineindex;
+      new->candidate = g_strdup (item->candidate);
+
+      g_array_append_val (webrtc->priv->pending_ice_candidates, new);
+      GST_INFO_OBJECT (webrtc, "Unknown mline %u, deferring", item->mlineindex);
+    }
     return;
   }
 
@@ -4177,7 +4188,7 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
           g_array_index (webrtc->priv->pending_ice_candidates,
           IceCandidateItem *, i);
 
-      _add_ice_candidate (webrtc, item);
+      _add_ice_candidate (webrtc, item, TRUE);
     }
     g_array_set_size (webrtc->priv->pending_ice_candidates, 0);
   }
@@ -4268,7 +4279,7 @@ _add_ice_candidate_task (GstWebRTCBin * webrtc, IceCandidateItem * item)
 
     g_array_append_val (webrtc->priv->pending_ice_candidates, new);
   } else {
-    _add_ice_candidate (webrtc, item);
+    _add_ice_candidate (webrtc, item, FALSE);
   }
 }
 
