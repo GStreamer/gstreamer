@@ -223,11 +223,22 @@ check_packet (GstBufferList * list, guint index)
   check_payload (buffer, index);
 }
 
+/*
+ * Used to verify that the chain_list function is actually implemented by the
+ * element and called when executing the pipeline. This is needed because pads
+ * always have a default chain_list handler which handle buffers in a buffer
+ * list individually, and pushing a list to a pad can succeed even if no
+ * chain_list handler has been set.
+ */
+static gboolean chain_list_func_called;
+
 static GstFlowReturn
 sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
 {
   GstCaps *current_caps;
   GstCaps *caps;
+
+  chain_list_func_called = TRUE;
 
   current_caps = gst_pad_get_current_caps (pad);
   fail_unless (current_caps != NULL);
@@ -291,7 +302,10 @@ GST_START_TEST (test_bufferlist)
   gst_caps_unref (caps);
 
   gst_element_set_state (rtpbin, GST_STATE_PLAYING);
+
+  chain_list_func_called = FALSE;
   fail_unless (gst_pad_push_list (srcpad, list) == GST_FLOW_OK);
+  fail_if (chain_list_func_called == FALSE);
 
   gst_pad_set_active (sinkpad, FALSE);
   gst_pad_set_active (srcpad, FALSE);
