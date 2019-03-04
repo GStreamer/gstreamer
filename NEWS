@@ -4,7 +4,7 @@ GSTREAMER 1.16 RELEASE NOTES
 
 
 GStreamer 1.16 has not been released yet. It is scheduled for release in
-January/February 2019.
+March 2019.
 
 1.15.x is the unstable development version that is being developed in
 the git master branch and which will eventually result in 1.16.
@@ -15,7 +15,7 @@ the git master branch and which will eventually result in 1.16.
 See https://gstreamer.freedesktop.org/releases/1.16/ for the latest
 version of this document.
 
-_Last updated: Monday 25 January 2019, 15:00 UTC (log)_
+_Last updated: Wednesday 27 January 2019, 00:30 UTC (log)_
 
 
 Introduction
@@ -1234,7 +1234,7 @@ the git 1.16 branch, which is a stable branch.
 
 1.16.0
 
-1.16.0 is scheduled to be released around January/February 2019.
+1.16.0 is scheduled to be released in March 2019.
 
 
 Known Issues
@@ -1269,6 +1269,6 @@ August/September.
 ------------------------------------------------------------------------
 
 _These release notes have been prepared by Tim-Philipp Müller with_
-_contributions from Sebastian Dröge._
+_contributions from Sebastian Dröge and Guillaume Desmottes._
 
 _License: CC BY-SA 4.0_
