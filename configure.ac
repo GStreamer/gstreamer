@@ -2,7 +2,7 @@
 m4_define([gst_vaapi_major_version], [1])
 m4_define([gst_vaapi_minor_version], [15])
 m4_define([gst_vaapi_micro_version], [2])
-m4_define([gst_vaapi_nano_version], [0])
+m4_define([gst_vaapi_nano_version], [1])
 m4_define([gst_vaapi_version],
           [gst_vaapi_major_version.gst_vaapi_minor_version.gst_vaapi_micro_version])
 m4_if(gst_vaapi_nano_version, [0], [],
@@ -24,9 +24,9 @@ m4_define([gst_vaapi_lt_age],           [1502])
 m4_define([glib_version], [2.40])
 
 # gstreamer version number
-m4_define([gst_version],                [1.15.2])
-m4_define([gst_plugins_base_version],   [1.15.2])
-m4_define([gst_plugins_bad_version],    [1.15.2])
+m4_define([gst_version],                [1.15.2.1])
+m4_define([gst_plugins_base_version],   [1.15.2.1])
+m4_define([gst_plugins_bad_version],    [1.15.2.1])
 
 # Wayland minimum version number
 m4_define([wayland_api_version], [1.11.0])
