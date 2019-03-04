@@ -23,6 +23,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/gst.h>
 #include "../../gst/validate/validate.h"
 #include "../../gst/validate/gst-validate-utils.h"
@@ -32,10 +36,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 #define VALIDATE_FLOW_MISMATCH g_quark_from_static_string ("validateflow::mismatch")
 

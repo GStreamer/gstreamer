@@ -23,15 +23,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "formatting.h"
 
 #include <gst/gst.h>
 #include <string.h>
 #include <stdio.h>
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 typedef void (*Uint64Formatter) (gchar * dest, guint64 time);
 
