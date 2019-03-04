@@ -3,10 +3,10 @@
   <description>TTML subtitle handling</description>
   <filename>../../ext/ttml/.libs/libgstttmlsubs.so</filename>
   <basename>libgstttmlsubs.so</basename>
-  <version>1.15.2</version>
+  <version>1.15.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

@@ -73071,6 +73071,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstHlsSink2::send-keyframe-requests</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Send Keyframe Requests</NICK>
+<BLURB>Send keyframe requests to ensure correct fragmentation. If this is disabled then the input must have keyframes in regular intervals.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstLcms::dest-profile</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>

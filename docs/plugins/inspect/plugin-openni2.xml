@@ -3,10 +3,10 @@
   <description>GStreamer Openni2 Plugins</description>
   <filename>../../ext/openni2/.libs/libgstopenni2.so</filename>
   <basename>libgstopenni2.so</basename>
-  <version>1.15.2</version>
+  <version>1.15.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
