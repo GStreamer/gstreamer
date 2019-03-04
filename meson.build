@@ -1,5 +1,5 @@
 project('gst-devtools', 'c',
-  version : '1.15.2',
+  version : '1.15.2.1',
   meson_version : '>= 0.47',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',

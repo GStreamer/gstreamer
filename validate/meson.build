@@ -1,4 +1,4 @@
-# version: '1.15.2' - we're putting this in here to trick the dist-hook check
+# version: '1.15.2.1' - we're putting this in here to trick the dist-hook check
 # in release.mak in the common submodule without having to update it
 inc_dirs = include_directories('.')
 
