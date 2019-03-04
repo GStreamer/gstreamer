@@ -1,6 +1,7 @@
 /* GStreamer GES plugin
  *
- * Copyright (C) 2019 Thibault Saunier <tsaunier@igalia.com>
+ * Copyright (C) 2019 Igalia S.L
+ *     Author: 2019 Thibault Saunier <tsaunier@igalia.com>
  *
  * gesdemux.c
  *
@@ -18,9 +19,9 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
- *
+ */
 
- **
+ /**
  * SECTION:gstdemux
  * @short_description: A GstBin subclasses use to use GESTimeline
  * as demux inside any GstPipeline.
