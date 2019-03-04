@@ -192,7 +192,7 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
 
     if (gst_v4l2_is_video_dec (sink_caps, src_caps)) {
       gst_v4l2_video_dec_register (plugin, basename, it->device_path,
-          sink_caps, src_caps);
+          video_fd, sink_caps, src_caps);
     } else if (gst_v4l2_is_video_enc (sink_caps, src_caps, NULL)) {
       if (gst_v4l2_is_fwht_enc (sink_caps, src_caps))
         gst_v4l2_fwht_enc_register (plugin, basename, it->device_path,
@@ -200,15 +200,15 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
 
       if (gst_v4l2_is_h264_enc (sink_caps, src_caps))
         gst_v4l2_h264_enc_register (plugin, basename, it->device_path,
-            sink_caps, src_caps);
+            video_fd, sink_caps, src_caps);
 
       if (gst_v4l2_is_h265_enc (sink_caps, src_caps))
         gst_v4l2_h265_enc_register (plugin, basename, it->device_path,
-            sink_caps, src_caps);
+            video_fd, sink_caps, src_caps);
 
       if (gst_v4l2_is_mpeg4_enc (sink_caps, src_caps))
         gst_v4l2_mpeg4_enc_register (plugin, basename, it->device_path,
-            sink_caps, src_caps);
+            video_fd, sink_caps, src_caps);
 
       if (gst_v4l2_is_h263_enc (sink_caps, src_caps))
         gst_v4l2_h263_enc_register (plugin, basename, it->device_path,
@@ -220,11 +220,11 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
 
       if (gst_v4l2_is_vp8_enc (sink_caps, src_caps))
         gst_v4l2_vp8_enc_register (plugin, basename, it->device_path,
-            sink_caps, src_caps);
+            video_fd, sink_caps, src_caps);
 
       if (gst_v4l2_is_vp9_enc (sink_caps, src_caps))
         gst_v4l2_vp9_enc_register (plugin, basename, it->device_path,
-            sink_caps, src_caps);
+            video_fd, sink_caps, src_caps);
     } else if (gst_v4l2_is_transform (sink_caps, src_caps)) {
       gst_v4l2_transform_register (plugin, basename, it->device_path,
           sink_caps, src_caps);

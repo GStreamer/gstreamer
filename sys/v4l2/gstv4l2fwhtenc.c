@@ -114,6 +114,6 @@ gst_v4l2_fwht_enc_register (GstPlugin * plugin, const gchar * basename,
     const gchar * device_path, GstCaps * sink_caps, GstCaps * src_caps)
 {
   gst_v4l2_video_enc_register (plugin, GST_TYPE_V4L2_FWHT_ENC,
-      "fwht", basename, device_path, sink_caps,
+      "fwht", basename, device_path, NULL, -1, sink_caps,
       gst_static_caps_get (&src_template_caps), src_caps);
 }

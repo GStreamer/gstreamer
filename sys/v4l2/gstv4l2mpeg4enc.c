@@ -31,6 +31,7 @@
 
 #include "gstv4l2object.h"
 #include "gstv4l2mpeg4enc.h"
+#include "gstv4l2mpeg4codec.h"
 
 #include <string.h>
 #include <gst/gst-i18n-plugin.h>
@@ -63,104 +64,6 @@ gst_v4l2_mpeg4_enc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
   /* TODO */
-}
-
-static gint
-v4l2_profile_from_string (const gchar * profile)
-{
-  gint v4l2_profile = -1;
-
-  if (g_str_equal (profile, "simple"))
-    v4l2_profile = V4L2_MPEG_VIDEO_MPEG4_PROFILE_SIMPLE;
-  else if (g_str_equal (profile, "advanced-simple"))
-    v4l2_profile = V4L2_MPEG_VIDEO_MPEG4_PROFILE_ADVANCED_SIMPLE;
-  else if (g_str_equal (profile, "core"))
-    v4l2_profile = V4L2_MPEG_VIDEO_MPEG4_PROFILE_CORE;
-  else if (g_str_equal (profile, "simple-scalable"))
-    v4l2_profile = V4L2_MPEG_VIDEO_MPEG4_PROFILE_SIMPLE_SCALABLE;
-  else if (g_str_equal (profile, "advanced-coding-efficiency"))
-    v4l2_profile = V4L2_MPEG_VIDEO_MPEG4_PROFILE_ADVANCED_CODING_EFFICIENCY;
-  else
-    GST_WARNING ("Unsupported profile string '%s'", profile);
-
-  return v4l2_profile;
-}
-
-static const gchar *
-v4l2_profile_to_string (gint v4l2_profile)
-{
-  switch (v4l2_profile) {
-    case V4L2_MPEG_VIDEO_MPEG4_PROFILE_SIMPLE:
-      return "simple";
-    case V4L2_MPEG_VIDEO_MPEG4_PROFILE_ADVANCED_SIMPLE:
-      return "advanced-simple";
-    case V4L2_MPEG_VIDEO_MPEG4_PROFILE_CORE:
-      return "core";
-    case V4L2_MPEG_VIDEO_MPEG4_PROFILE_SIMPLE_SCALABLE:
-      return "simple-scalable";
-    case V4L2_MPEG_VIDEO_MPEG4_PROFILE_ADVANCED_CODING_EFFICIENCY:
-      return "advanced-coding-efficiency";
-    default:
-      GST_WARNING ("Unsupported V4L2 profile %i", v4l2_profile);
-      break;
-  }
-
-  return NULL;
-}
-
-static gint
-v4l2_level_from_string (const gchar * level)
-{
-  gint v4l2_level = -1;
-
-  if (g_str_equal (level, "0"))
-    v4l2_level = V4L2_MPEG_VIDEO_MPEG4_LEVEL_0;
-  else if (g_str_equal (level, "0b"))
-    v4l2_level = V4L2_MPEG_VIDEO_MPEG4_LEVEL_0B;
-  else if (g_str_equal (level, "1"))
-    v4l2_level = V4L2_MPEG_VIDEO_MPEG4_LEVEL_1;
-  else if (g_str_equal (level, "2"))
-    v4l2_level = V4L2_MPEG_VIDEO_MPEG4_LEVEL_2;
-  else if (g_str_equal (level, "3"))
-    v4l2_level = V4L2_MPEG_VIDEO_MPEG4_LEVEL_3;
-  else if (g_str_equal (level, "3b"))
-    v4l2_level = V4L2_MPEG_VIDEO_MPEG4_LEVEL_3B;
-  else if (g_str_equal (level, "4"))
-    v4l2_level = V4L2_MPEG_VIDEO_MPEG4_LEVEL_4;
-  else if (g_str_equal (level, "5"))
-    v4l2_level = V4L2_MPEG_VIDEO_MPEG4_LEVEL_5;
-  else
-    GST_WARNING ("Unsupported level '%s'", level);
-
-  return v4l2_level;
-}
-
-static const gchar *
-v4l2_level_to_string (gint v4l2_level)
-{
-  switch (v4l2_level) {
-    case V4L2_MPEG_VIDEO_MPEG4_LEVEL_0:
-      return "0";
-    case V4L2_MPEG_VIDEO_MPEG4_LEVEL_0B:
-      return "0b";
-    case V4L2_MPEG_VIDEO_MPEG4_LEVEL_1:
-      return "1";
-    case V4L2_MPEG_VIDEO_MPEG4_LEVEL_2:
-      return "2";
-    case V4L2_MPEG_VIDEO_MPEG4_LEVEL_3:
-      return "3";
-    case V4L2_MPEG_VIDEO_MPEG4_LEVEL_3B:
-      return "3b";
-    case V4L2_MPEG_VIDEO_MPEG4_LEVEL_4:
-      return "4";
-    case V4L2_MPEG_VIDEO_MPEG4_LEVEL_5:
-      return "5";
-    default:
-      GST_WARNING ("Unsupported V4L2 level %i", v4l2_level);
-      break;
-  }
-
-  return NULL;
 }
 
 static void
@@ -196,12 +99,6 @@ gst_v4l2_mpeg4_enc_class_init (GstV4l2Mpeg4EncClass * klass)
       GST_DEBUG_FUNCPTR (gst_v4l2_mpeg4_enc_get_property);
 
   baseclass->codec_name = "MPEG4";
-  baseclass->profile_cid = V4L2_CID_MPEG_VIDEO_MPEG4_PROFILE;
-  baseclass->profile_to_string = v4l2_profile_to_string;
-  baseclass->profile_from_string = v4l2_profile_from_string;
-  baseclass->level_cid = V4L2_CID_MPEG_VIDEO_MPEG4_LEVEL;
-  baseclass->level_to_string = v4l2_level_to_string;
-  baseclass->level_from_string = v4l2_level_from_string;
 }
 
 /* Probing functions */
@@ -214,9 +111,11 @@ gst_v4l2_is_mpeg4_enc (GstCaps * sink_caps, GstCaps * src_caps)
 
 void
 gst_v4l2_mpeg4_enc_register (GstPlugin * plugin, const gchar * basename,
-    const gchar * device_path, GstCaps * sink_caps, GstCaps * src_caps)
+    const gchar * device_path, gint video_fd, GstCaps * sink_caps,
+    GstCaps * src_caps)
 {
+  const GstV4l2Codec *codec = gst_v4l2_mpeg4_get_codec ();
   gst_v4l2_video_enc_register (plugin, GST_TYPE_V4L2_MPEG4_ENC,
-      "mpeg4", basename, device_path, sink_caps,
+      "mpeg4", basename, device_path, codec, video_fd, sink_caps,
       gst_static_caps_get (&src_template_caps), src_caps);
 }

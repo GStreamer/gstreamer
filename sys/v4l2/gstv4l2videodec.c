@@ -32,6 +32,12 @@
 #include "gstv4l2object.h"
 #include "gstv4l2videodec.h"
 
+#include "gstv4l2h264codec.h"
+#include "gstv4l2h265codec.h"
+#include "gstv4l2mpeg4codec.h"
+#include "gstv4l2vp8codec.h"
+#include "gstv4l2vp9codec.h"
+
 #include <string.h>
 #include <gst/gst-i18n-plugin.h>
 
@@ -45,6 +51,7 @@ typedef struct
   GstCaps *src_caps;
   const gchar *longname;
   const gchar *description;
+  const GstV4l2Codec *codec;
 } GstV4l2VideoDecCData;
 
 enum
@@ -1081,6 +1088,7 @@ G_STMT_START { \
       SET_META ("MPEG2");
     } else {
       SET_META ("MPEG4");
+      cdata->codec = gst_v4l2_mpeg4_get_codec ();
     }
   } else if (gst_structure_has_name (s, "video/x-h263")) {
     SET_META ("H263");
@@ -1088,14 +1096,18 @@ G_STMT_START { \
     SET_META ("FWHT");
   } else if (gst_structure_has_name (s, "video/x-h264")) {
     SET_META ("H264");
+    cdata->codec = gst_v4l2_h264_get_codec ();
   } else if (gst_structure_has_name (s, "video/x-h265")) {
     SET_META ("H265");
+    cdata->codec = gst_v4l2_h265_get_codec ();
   } else if (gst_structure_has_name (s, "video/x-wmv")) {
     SET_META ("VC1");
   } else if (gst_structure_has_name (s, "video/x-vp8")) {
     SET_META ("VP8");
+    cdata->codec = gst_v4l2_vp8_get_codec ();
   } else if (gst_structure_has_name (s, "video/x-vp9")) {
     SET_META ("VP9");
+    cdata->codec = gst_v4l2_vp9_get_codec ();
   } else if (gst_structure_has_name (s, "video/x-bayer")) {
     SET_META ("BAYER");
   } else if (gst_structure_has_name (s, "video/x-sonix")) {
@@ -1130,7 +1142,8 @@ G_STMT_START { \
 
 void
 gst_v4l2_video_dec_register (GstPlugin * plugin, const gchar * basename,
-    const gchar * device_path, GstCaps * sink_caps, GstCaps * src_caps)
+    const gchar * device_path, gint video_fd, GstCaps * sink_caps,
+    GstCaps * src_caps)
 {
   gint i;
 
@@ -1155,6 +1168,20 @@ gst_v4l2_video_dec_register (GstPlugin * plugin, const gchar * basename,
     if (!type_name) {
       g_free (cdata);
       continue;
+    }
+
+    if (cdata->codec != NULL) {
+      GValue *value = gst_v4l2_codec_probe_levels (cdata->codec, video_fd);
+      if (value != NULL) {
+        gst_caps_set_value (cdata->sink_caps, "level", value);
+        g_value_unset (value);
+      }
+
+      value = gst_v4l2_codec_probe_profiles (cdata->codec, video_fd);
+      if (value != NULL) {
+        gst_caps_set_value (cdata->sink_caps, "profile", value);
+        g_value_unset (value);
+      }
     }
 
     type = gst_v4l2_video_dec_get_type ();

@@ -54,7 +54,7 @@ GType gst_v4l2_vp8_enc_get_type (void);
 gboolean gst_v4l2_is_vp8_enc (GstCaps * sink_caps, GstCaps * src_caps);
 
 void gst_v4l2_vp8_enc_register (GstPlugin * plugin, const gchar * basename,
-    const gchar * device_path, GstCaps * sink_caps, GstCaps * src_caps);
+    const gchar * device_path, gint video_fd, GstCaps * sink_caps, GstCaps * src_caps);
 
 G_END_DECLS
 #endif /* __GST_V4L2_VP8_ENC_H__ */

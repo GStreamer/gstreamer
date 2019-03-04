@@ -31,6 +31,7 @@
 
 #include "gstv4l2object.h"
 #include "gstv4l2h265enc.h"
+#include "gstv4l2h265codec.h"
 
 #include <string.h>
 #include <gst/gst-i18n-plugin.h>
@@ -66,116 +67,6 @@ gst_v4l2_h265_enc_get_property (GObject * object,
   /* TODO */
 }
 
-static gint
-v4l2_profile_from_string (const gchar * profile)
-{
-  gint v4l2_profile = -1;
-
-  if (g_str_equal (profile, "main")) {
-    v4l2_profile = V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN;
-  } else if (g_str_equal (profile, "mainstillpicture")) {
-    v4l2_profile = V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN_STILL_PICTURE;
-  } else if (g_str_equal (profile, "main10")) {
-    v4l2_profile = V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN_10;
-  } else {
-    GST_WARNING ("Unsupported profile string '%s'", profile);
-  }
-
-  return v4l2_profile;
-}
-
-static const gchar *
-v4l2_profile_to_string (gint v4l2_profile)
-{
-  switch (v4l2_profile) {
-    case V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN:
-      return "main";
-    case V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN_STILL_PICTURE:
-      return "mainstillpicture";
-    case V4L2_MPEG_VIDEO_HEVC_PROFILE_MAIN_10:
-      return "main10";
-    default:
-      GST_WARNING ("Unsupported V4L2 profile %i", v4l2_profile);
-      break;
-  }
-  return NULL;
-}
-
-static gint
-v4l2_level_from_string (const gchar * level)
-{
-  gint v4l2_level = -1;
-
-  if (g_str_equal (level, "1"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_1;
-  else if (g_str_equal (level, "2"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_2;
-  else if (g_str_equal (level, "2.1"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_2_1;
-  else if (g_str_equal (level, "3"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_3;
-  else if (g_str_equal (level, "3.1"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_3_1;
-  else if (g_str_equal (level, "4"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_4;
-  else if (g_str_equal (level, "4.1"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_4_1;
-  else if (g_str_equal (level, "5"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_5;
-  else if (g_str_equal (level, "5.1"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_5_1;
-  else if (g_str_equal (level, "5.2"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_5_2;
-  else if (g_str_equal (level, "6"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_6;
-  else if (g_str_equal (level, "6.1"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_6_1;
-  else if (g_str_equal (level, "6.2"))
-    v4l2_level = V4L2_MPEG_VIDEO_HEVC_LEVEL_6_2;
-  else
-    GST_WARNING ("Unsupported level '%s'", level);
-
-  return v4l2_level;
-}
-
-static const gchar *
-v4l2_level_to_string (gint v4l2_level)
-{
-  switch (v4l2_level) {
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_1:
-      return "1";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_2:
-      return "2";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_2_1:
-      return "2.1";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_3:
-      return "3";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_3_1:
-      return "3.1";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_4:
-      return "4";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_4_1:
-      return "4.1";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_5:
-      return "5";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_5_1:
-      return "5.1";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_5_2:
-      return "5.2";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_6:
-      return "6";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_6_1:
-      return "6.1";
-    case V4L2_MPEG_VIDEO_HEVC_LEVEL_6_2:
-      return "6.2";
-    default:
-      GST_WARNING ("Unsupported V4L2 level %i", v4l2_level);
-      break;
-  }
-
-  return NULL;
-}
-
 static void
 gst_v4l2_h265_enc_init (GstV4l2H265Enc * self)
 {
@@ -209,12 +100,6 @@ gst_v4l2_h265_enc_class_init (GstV4l2H265EncClass * klass)
       GST_DEBUG_FUNCPTR (gst_v4l2_h265_enc_get_property);
 
   baseclass->codec_name = "H265";
-  baseclass->profile_cid = V4L2_CID_MPEG_VIDEO_HEVC_PROFILE;
-  baseclass->profile_to_string = v4l2_profile_to_string;
-  baseclass->profile_from_string = v4l2_profile_from_string;
-  baseclass->level_cid = V4L2_CID_MPEG_VIDEO_HEVC_LEVEL;
-  baseclass->level_to_string = v4l2_level_to_string;
-  baseclass->level_from_string = v4l2_level_from_string;
 }
 
 /* Probing functions */
@@ -227,9 +112,11 @@ gst_v4l2_is_h265_enc (GstCaps * sink_caps, GstCaps * src_caps)
 
 void
 gst_v4l2_h265_enc_register (GstPlugin * plugin, const gchar * basename,
-    const gchar * device_path, GstCaps * sink_caps, GstCaps * src_caps)
+    const gchar * device_path, gint video_fd, GstCaps * sink_caps,
+    GstCaps * src_caps)
 {
+  const GstV4l2Codec *codec = gst_v4l2_h265_get_codec ();
   gst_v4l2_video_enc_register (plugin, GST_TYPE_V4L2_H265_ENC,
-      "h265", basename, device_path, sink_caps,
+      "h265", basename, device_path, codec, video_fd, sink_caps,
       gst_static_caps_get (&src_template_caps), src_caps);
 }

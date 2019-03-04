@@ -45,6 +45,7 @@ typedef struct
   gchar *device;
   GstCaps *sink_caps;
   GstCaps *src_caps;
+  const GstV4l2Codec *codec;
 } GstV4l2VideoEncCData;
 
 enum
@@ -419,8 +420,9 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
   GQueue profiles = G_QUEUE_INIT;
   GQueue levels = G_QUEUE_INIT;
   gboolean failed = FALSE;
+  const GstV4l2Codec *codec = klass->codec;
 
-  if (klass->profile_cid && get_string_list (s, "profile", &profiles)) {
+  if (codec->profile_cid && get_string_list (s, "profile", &profiles)) {
     GList *l;
 
     for (l = profiles.head; l; l = l->next) {
@@ -430,8 +432,9 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
 
       GST_TRACE_OBJECT (ctx->self, "Trying profile %s", profile);
 
-      control.id = klass->profile_cid;
-      control.value = v4l2_profile = klass->profile_from_string (profile);
+      control.id = codec->profile_cid;
+
+      control.value = v4l2_profile = codec->profile_from_string (profile);
 
       if (control.value < 0)
         continue;
@@ -442,7 +445,7 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
         break;
       }
 
-      profile = klass->profile_to_string (control.value);
+      profile = codec->profile_to_string (control.value);
 
       if (control.value == v4l2_profile) {
         ctx->profile = profile;
@@ -462,7 +465,7 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
     g_queue_clear (&profiles);
   }
 
-  if (!failed && klass->level_cid && get_string_list (s, "level", &levels)) {
+  if (!failed && codec->level_cid && get_string_list (s, "level", &levels)) {
     GList *l;
 
     for (l = levels.head; l; l = l->next) {
@@ -472,8 +475,8 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
 
       GST_TRACE_OBJECT (ctx->self, "Trying level %s", level);
 
-      control.id = klass->level_cid;
-      control.value = v4l2_level = klass->level_from_string (level);
+      control.id = codec->level_cid;
+      control.value = v4l2_level = codec->level_from_string (level);
 
       if (control.value < 0)
         continue;
@@ -484,7 +487,7 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
         break;
       }
 
-      level = klass->level_to_string (control.value);
+      level = codec->level_to_string (control.value);
 
       if (control.value == v4l2_level) {
         ctx->level = level;
@@ -518,6 +521,7 @@ gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
   struct ProfileLevelCtx ctx = { self, NULL, NULL };
   GstVideoCodecState *state;
   GstStructure *s;
+  const GstV4l2Codec *codec = klass->codec;
 
   GST_DEBUG_OBJECT (self, "Negotiating %s profile and level.",
       klass->codec_name);
@@ -543,26 +547,26 @@ gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
     }
   }
 
-  if (klass->profile_cid && !ctx.profile) {
+  if (codec->profile_cid && !ctx.profile) {
     struct v4l2_control control = { 0, };
 
-    control.id = klass->profile_cid;
+    control.id = codec->profile_cid;
 
     if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_CTRL, &control) < 0)
       goto g_ctrl_failed;
 
-    ctx.profile = klass->profile_to_string (control.value);
+    ctx.profile = codec->profile_to_string (control.value);
   }
 
-  if (klass->level_cid && !ctx.level) {
+  if (codec->level_cid && !ctx.level) {
     struct v4l2_control control = { 0, };
 
-    control.id = klass->level_cid;
+    control.id = codec->level_cid;
 
     if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_G_CTRL, &control) < 0)
       goto g_ctrl_failed;
 
-    ctx.level = klass->level_to_string (control.value);
+    ctx.level = codec->level_to_string (control.value);
   }
 
   GST_DEBUG_OBJECT (self, "Selected %s profile %s at level %s",
@@ -571,10 +575,10 @@ gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
   state = gst_video_encoder_get_output_state (encoder);
   s = gst_caps_get_structure (state->caps, 0);
 
-  if (klass->profile_cid)
+  if (codec->profile_cid)
     gst_structure_set (s, "profile", G_TYPE_STRING, ctx.profile, NULL);
 
-  if (klass->level_cid)
+  if (codec->level_cid)
     gst_structure_set (s, "level", G_TYPE_STRING, ctx.level, NULL);
 
   if (!GST_VIDEO_ENCODER_CLASS (parent_class)->negotiate (encoder))
@@ -1122,6 +1126,7 @@ gst_v4l2_video_enc_subclass_init (gpointer g_class, gpointer data)
   GstV4l2VideoEncCData *cdata = data;
 
   klass->default_device = cdata->device;
+  klass->codec = cdata->codec;
 
   /* Note: gst_pad_template_new() take the floating ref from the caps */
   gst_element_class_add_pad_template (element_class,
@@ -1160,8 +1165,9 @@ gst_v4l2_is_video_enc (GstCaps * sink_caps, GstCaps * src_caps,
 
 void
 gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
-    const char *codec, const gchar * basename, const gchar * device_path,
-    GstCaps * sink_caps, GstCaps * codec_caps, GstCaps * src_caps)
+    const char *codec_name, const gchar * basename, const gchar * device_path,
+    const GstV4l2Codec * codec, gint video_fd, GstCaps * sink_caps,
+    GstCaps * codec_caps, GstCaps * src_caps)
 {
   GstCaps *filtered_caps;
   GTypeQuery type_query;
@@ -1170,12 +1176,27 @@ gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
   gchar *type_name;
   GstV4l2VideoEncCData *cdata;
 
+  if (codec != NULL && video_fd != -1) {
+    GValue *value = gst_v4l2_codec_probe_levels (codec, video_fd);
+    if (value != NULL) {
+      gst_caps_set_value (src_caps, "level", value);
+      g_value_unset (value);
+    }
+
+    value = gst_v4l2_codec_probe_profiles (codec, video_fd);
+    if (value != NULL) {
+      gst_caps_set_value (src_caps, "profile", value);
+      g_value_unset (value);
+    }
+  }
+
   filtered_caps = gst_caps_intersect (src_caps, codec_caps);
 
   cdata = g_new0 (GstV4l2VideoEncCData, 1);
   cdata->device = g_strdup (device_path);
   cdata->sink_caps = gst_caps_ref (sink_caps);
   cdata->src_caps = gst_caps_ref (filtered_caps);
+  cdata->codec = codec;
 
   g_type_query (type, &type_query);
   memset (&type_info, 0, sizeof (type_info));
@@ -1189,11 +1210,11 @@ gst_v4l2_video_enc_register (GstPlugin * plugin, GType type,
    * v4l2h264enc, for any additional encoders, we create unique names. Encoder
    * names may change between boots, so this should help gain stable names for
    * the most common use cases. */
-  type_name = g_strdup_printf ("v4l2%senc", codec);
+  type_name = g_strdup_printf ("v4l2%senc", codec_name);
 
   if (g_type_from_name (type_name) != 0) {
     g_free (type_name);
-    type_name = g_strdup_printf ("v4l2%s%senc", basename, codec);
+    type_name = g_strdup_printf ("v4l2%s%senc", basename, codec_name);
   }
 
   subtype = g_type_register_static (type, type_name, &type_info, 0);

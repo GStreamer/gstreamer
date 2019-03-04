@@ -5,6 +5,7 @@ include $(top_srcdir)/common/gst-glib-gen.mak
 libgstvideo4linux2_la_SOURCES = gstv4l2.c \
 				gstv4l2allocator.c \
 				gstv4l2colorbalance.c \
+				gstv4l2codec.c \
 				gstv4l2deviceprovider.c \
 				gstv4l2object.c \
 				gstv4l2bufferpool.c \
@@ -18,11 +19,16 @@ libgstvideo4linux2_la_SOURCES = gstv4l2.c \
 				gstv4l2fwhtenc.c \
 				gstv4l2h263enc.c \
 				gstv4l2h264enc.c \
+				gstv4l2h264codec.c \
+				gstv4l2h265codec.c \
 				gstv4l2h265enc.c \
 				gstv4l2jpegenc.c \
 				gstv4l2mpeg4enc.c \
+				gstv4l2mpeg4codec.c \
 				gstv4l2vidorient.c \
+				gstv4l2vp8codec.c \
 				gstv4l2vp8enc.c \
+				gstv4l2vp9codec.c \
 				gstv4l2vp9enc.c \
 				v4l2_calls.c \
 				v4l2-utils.c \
@@ -64,14 +70,20 @@ noinst_HEADERS = \
 	gstv4l2transform.h \
 	gstv4l2videodec.h \
 	gstv4l2videoenc.h \
+	gstv4l2codec.h \
 	gstv4l2fwhtenc.h \
+	gstv4l2h264codec.h \
 	gstv4l2h263enc.h \
 	gstv4l2h264enc.h \
+	gstv4l2h265codec.h \
 	gstv4l2h265enc.h \
 	gstv4l2jpegenc.h \
 	gstv4l2mpeg4enc.h \
+	gstv4l2mpeg4codec.h \
 	gstv4l2vidorient.h \
+	gstv4l2vp8codec.h \
 	gstv4l2vp8enc.h \
+	gstv4l2vp9codec.h \
 	gstv4l2vp9enc.h \
 	v4l2-utils.h \
 	tuner.h \
