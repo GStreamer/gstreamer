@@ -379,7 +379,7 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           goto error;
         }
 
-        uri = gst_uri_construct ("file", filename);
+        uri = gst_filename_to_uri (filename, NULL);
         data.uri = uri;
 
         g_main_context_invoke (main_context,
