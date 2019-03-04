@@ -189,7 +189,7 @@ do_perfect_stream_test (guint rate, const gchar * format,
   gint width;
 
   fmt = gst_audio_format_from_string (format);
-  g_assert (format != GST_AUDIO_FORMAT_UNKNOWN);
+  fail_unless (fmt != GST_AUDIO_FORMAT_UNKNOWN);
 
   finfo = gst_audio_format_get_info (fmt);
   width = GST_AUDIO_FORMAT_INFO_WIDTH (finfo);
