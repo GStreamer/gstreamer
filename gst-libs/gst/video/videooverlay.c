@@ -534,7 +534,7 @@ gst_video_overlay_install_properties (GObjectClass * oclass, gint last_prop_id)
       gst_param_spec_array ("render-rectangle", "Render Rectangle",
           "The render rectangle ('<x, y, width, height>')",
           g_param_spec_int ("rect-value", "Rectangle Value",
-              "One of x, y, width or height value.", -1, G_MAXINT, -1,
+              "One of x, y, width or height value.", G_MININT, G_MAXINT, -1,
               G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS),
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 }
