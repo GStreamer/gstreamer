@@ -128,7 +128,7 @@ gst_v4l2_vp8_enc_class_init (GstV4l2Vp8EncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "V4L2 VP8 Encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       "Encode VP8 video streams via V4L2 API",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com");
 

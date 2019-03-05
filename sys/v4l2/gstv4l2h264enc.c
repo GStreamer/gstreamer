@@ -290,7 +290,7 @@ gst_v4l2_h264_enc_class_init (GstV4l2H264EncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "V4L2 H.264 Encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       "Encode H.264 video streams via V4L2 API", "ayaka <ayaka@soulik.info>");
 
   gobject_class->set_property =

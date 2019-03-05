@@ -199,7 +199,7 @@ gst_v4l2_h265_enc_class_init (GstV4l2H265EncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "V4L2 H.265 Encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       "Encode H.265 video streams via V4L2 API",
       "Amit Pandya <apandya@nvidia.com>");
 

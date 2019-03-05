@@ -89,7 +89,7 @@ gst_v4l2_jpeg_enc_class_init (GstV4l2JPEGEncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "V4L2 JPEG Encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       "Encode JPEG video streams via V4L2 API",
       "Ezequiel Garcia <ezequiel@collabora.com");
 

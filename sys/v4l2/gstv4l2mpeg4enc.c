@@ -186,7 +186,7 @@ gst_v4l2_mpeg4_enc_class_init (GstV4l2Mpeg4EncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "V4L2 MPEG4 Encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       "Encode MPEG4 video streams via V4L2 API",
       "Nicolas Dufresne <nicolas.dufresne@collabora.com");
 
