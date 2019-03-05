@@ -175,8 +175,8 @@ gst_gl_composition_overlay_free_vertex_buffer (GstGLContext * context,
   }
 
   if (overlay->texcoord_buffer) {
-    gl->DeleteBuffers (1, &overlay->position_buffer);
-    overlay->position_buffer = 0;
+    gl->DeleteBuffers (1, &overlay->texcoord_buffer);
+    overlay->texcoord_buffer = 0;
   }
 
   if (overlay->index_buffer) {
