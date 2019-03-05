@@ -156,15 +156,21 @@ gst_gtk_gl_sink_start (GstBaseSink * bsink)
       gtk_sink);
   _size_changed_cb (GTK_WIDGET (gst_widget), NULL, gtk_sink);
 
-  if (!gtk_gst_gl_widget_init_winsys (gst_widget))
+  if (!gtk_gst_gl_widget_init_winsys (gst_widget)) {
+    GST_ELEMENT_ERROR (bsink, RESOURCE, NOT_FOUND, ("%s",
+            "Failed to initialize OpenGL with Gtk"), (NULL));
     return FALSE;
+  }
 
   gtk_sink->display = gtk_gst_gl_widget_get_display (gst_widget);
   gtk_sink->context = gtk_gst_gl_widget_get_context (gst_widget);
   gtk_sink->gtk_context = gtk_gst_gl_widget_get_gtk_context (gst_widget);
 
-  if (!gtk_sink->display || !gtk_sink->context || !gtk_sink->gtk_context)
+  if (!gtk_sink->display || !gtk_sink->context || !gtk_sink->gtk_context) {
+    GST_ELEMENT_ERROR (bsink, RESOURCE, NOT_FOUND, ("%s",
+            "Failed to retrieve OpenGL context from Gtk"), (NULL));
     return FALSE;
+  }
 
   gst_gl_element_propagate_display_context (GST_ELEMENT (bsink),
       gtk_sink->display);

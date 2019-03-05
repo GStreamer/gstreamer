@@ -29,12 +29,12 @@
 #include <gst/gl/gstglfuncs.h>
 #include <gst/video/video.h>
 
-#if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (GDK_WINDOWING_X11)
+#if GST_GL_HAVE_WINDOW_X11 && defined (GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
 #include <gst/gl/x11/gstgldisplay_x11.h>
 #endif
 
-#if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (GDK_WINDOWING_WAYLAND)
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined (GDK_WINDOWING_WAYLAND)
 #include <gdk/gdkwayland.h>
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
 #endif
@@ -78,7 +78,8 @@ static const GLfloat vertices[] = {
 G_DEFINE_TYPE_WITH_CODE (GtkGstGLWidget, gtk_gst_gl_widget, GTK_TYPE_GL_AREA,
     G_ADD_PRIVATE (GtkGstGLWidget)
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "gtkgstglwidget", 0,
-        "Gtk Gst GL Widget"););
+        "Gtk Gst GL Widget");
+    );
 
 static void
 gtk_gst_gl_widget_bind_buffer (GtkGstGLWidget * gst_widget)
@@ -383,13 +384,14 @@ gtk_gst_gl_widget_init (GtkGstGLWidget * gst_widget)
 
   display = gdk_display_get_default ();
 
-#if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (GDK_WINDOWING_X11)
-  if (GDK_IS_X11_DISPLAY (display))
+#if GST_GL_HAVE_WINDOW_X11 && defined (GDK_WINDOWING_X11)
+  if (GDK_IS_X11_DISPLAY (display)) {
     priv->display = (GstGLDisplay *)
         gst_gl_display_x11_new_with_display (gdk_x11_display_get_xdisplay
         (display));
+  }
 #endif
-#if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (GDK_WINDOWING_WAYLAND)
+#if GST_GL_HAVE_WINDOW_WAYLAND && defined (GDK_WINDOWING_WAYLAND)
   if (GDK_IS_WAYLAND_DISPLAY (display)) {
     struct wl_display *wayland_display =
         gdk_wayland_display_get_wl_display (display);
@@ -403,6 +405,8 @@ gtk_gst_gl_widget_init (GtkGstGLWidget * gst_widget)
   if (!priv->display)
     priv->display = gst_gl_display_new ();
 
+  GST_INFO ("Created %" GST_PTR_FORMAT, priv->display);
+
   gtk_gl_area_set_has_alpha (GTK_GL_AREA (gst_widget),
       !base_widget->ignore_alpha);
 }
@@ -411,9 +415,9 @@ static void
 _get_gl_context (GtkGstGLWidget * gst_widget)
 {
   GtkGstGLWidgetPrivate *priv = gst_widget->priv;
-  GstGLPlatform platform;
-  GstGLAPI gl_api;
-  guintptr gl_handle;
+  GstGLPlatform platform = GST_GL_PLATFORM_NONE;
+  GstGLAPI gl_api = GST_GL_API_NONE;
+  guintptr gl_handle = 0;
 
   gtk_widget_realize (GTK_WIDGET (gst_widget));
 
@@ -438,15 +442,28 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
 
   gdk_gl_context_make_current (priv->gdk_context);
 
-#if GST_GL_HAVE_WINDOW_X11 && GST_GL_HAVE_PLATFORM_GLX && defined (GDK_WINDOWING_X11)
+#if GST_GL_HAVE_WINDOW_X11 && defined (GDK_WINDOWING_X11)
   if (GST_IS_GL_DISPLAY_X11 (priv->display)) {
-    platform = GST_GL_PLATFORM_GLX;
-    gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
-    gl_handle = gst_gl_context_get_current_gl_context (platform);
-    if (gl_handle)
+#if GST_GL_HAVE_PLATFORM_GLX
+    if (!gl_handle) {
+      platform = GST_GL_PLATFORM_GLX;
+      gl_handle = gst_gl_context_get_current_gl_context (platform);
+    }
+#endif
+
+#if GST_GL_HAVE_PLATFORM_EGL
+    if (!gl_handle) {
+      platform = GST_GL_PLATFORM_EGL;
+      gl_handle = gst_gl_context_get_current_gl_context (platform);
+    }
+#endif
+
+    if (gl_handle) {
+      gl_api = gst_gl_context_get_current_gl_api (platform, NULL, NULL);
       priv->other_context =
           gst_gl_context_new_wrapped (priv->display, gl_handle,
           platform, gl_api);
+    }
   }
 #endif
 #if GST_GL_HAVE_WINDOW_WAYLAND && GST_GL_HAVE_PLATFORM_EGL && defined (GDK_WINDOWING_WAYLAND)
@@ -468,6 +485,8 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
   if (priv->other_context) {
     GError *error = NULL;
 
+    GST_INFO ("Retrieved Gdk OpenGL context %" GST_PTR_FORMAT,
+        priv->other_context);
     gst_gl_context_activate (priv->other_context, TRUE);
     if (!gst_gl_context_fill_info (priv->other_context, &error)) {
       GST_ERROR ("failed to retrieve gdk context info: %s", error->message);
@@ -477,6 +496,8 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
     } else {
       gst_gl_context_activate (priv->other_context, FALSE);
     }
+  } else {
+    GST_WARNING ("Could not retrieve Gdk OpenGL context");
   }
 }
 
@@ -498,6 +519,7 @@ gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * gst_widget)
   GTK_GST_BASE_WIDGET_LOCK (gst_widget);
 
   if (priv->display && priv->gdk_context && priv->other_context) {
+    GST_TRACE ("have already initialized contexts");
     GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
     return TRUE;
   }
@@ -509,6 +531,7 @@ gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * gst_widget)
   }
 
   if (!GST_IS_GL_CONTEXT (priv->other_context)) {
+    GST_FIXME ("Could not retrieve Gdk OpenGL context");
     GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
     return FALSE;
   }
@@ -516,6 +539,8 @@ gtk_gst_gl_widget_init_winsys (GtkGstGLWidget * gst_widget)
   GST_OBJECT_LOCK (priv->display);
   if (!gst_gl_display_create_context (priv->display, priv->other_context,
           &priv->context, &error)) {
+    GST_WARNING ("Could not create OpenGL context: %s",
+        error ? error->message : "Unknown");
     g_clear_error (&error);
     GST_OBJECT_UNLOCK (priv->display);
     GTK_GST_BASE_WIDGET_UNLOCK (gst_widget);
