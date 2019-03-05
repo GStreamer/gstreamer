@@ -1178,7 +1178,7 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo,
 
   src->stats.octets_received += pinfo->payload_len;
   src->stats.bytes_received += pinfo->bytes;
-  src->stats.packets_received++;
+  src->stats.packets_received += pinfo->packets;
   /* for the bitrate estimation */
   src->bytes_received += pinfo->payload_len;
 
