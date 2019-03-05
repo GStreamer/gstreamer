@@ -158,6 +158,7 @@ static const GstRTPPayloadInfo info[] = {
   {G_MAXUINT8, "application", "MPEG4-GENERIC", 0, NULL, 0},
 
   {G_MAXUINT8, "video", "H264", 90000, NULL, 0},
+  {G_MAXUINT8, "video", "H265", 90000, NULL, 0},
   {G_MAXUINT8, "video", "MPEG4-GENERIC", 90000, NULL, 0},
   {G_MAXUINT8, "video", "THEORA", 0, NULL, 0},
   {G_MAXUINT8, "video", "VORBIS", 0, NULL, 0},
