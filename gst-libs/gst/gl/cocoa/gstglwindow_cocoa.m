@@ -81,6 +81,8 @@ static void gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 static gboolean gst_gl_window_cocoa_set_render_rectangle (GstGLWindow * window,
     gint x, gint y, gint width, gint height);
+static gboolean gst_gl_window_cocoa_controls_viewport (GstGLWindow * window);
+
 
 struct _GstGLWindowCocoaPrivate
 {
@@ -125,6 +127,8 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_send_message_async);
   window_class->set_render_rectangle =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_render_rectangle);
+  window_class->controls_viewport =
+      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_controls_viewport);
 
   gobject_class->finalize = gst_gl_window_cocoa_finalize;
 }
@@ -387,9 +391,11 @@ gst_gl_cocoa_draw_cb (GstGLWindowCocoa *window_cocoa)
   GstGLNSWindow *internal_win_id = (__bridge GstGLNSWindow *)priv->internal_win_id;
 
   if (internal_win_id && ![internal_win_id isClosed]) {
-   GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
+    GstGLWindow *window = GST_GL_WINDOW (window_cocoa);
 
     /* draw opengl scene in the back buffer */
+    /* We do not need to change viewports like in other window implementations
+     * as the caopengllayer will take care of that for us. */
     if (window->draw)
       window->draw (window->draw_data);
   }
@@ -409,6 +415,7 @@ gst_gl_cocoa_resize_cb (GstGLNSView * view, guint width, guint height)
     NSRect bounds = [view bounds];
     NSRect visibleRect = [view visibleRect];
     gint viewport_dim[4];
+    GstVideoRectangle viewport;
 
     gl = context->gl_vtable;
 
@@ -417,19 +424,30 @@ gst_gl_cocoa_resize_cb (GstGLNSView * view, guint width, guint height)
     visibleRect = [view convertRectToBacking:visibleRect];
 #endif
 
+    /* don't use the default gst_gl_window_resize() as that will marshal through
+     * the GL thread.  We are being called from the main thread by the
+     * caopengllayer */
+    if (window->resize)
+      window->resize (window->resize_data, width, height);
+
+    gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
+
     GST_DEBUG_OBJECT (window, "Window resized: bounds %lf %lf %lf %lf "
-                      "visibleRect %lf %lf %lf %lf",
+                      "visibleRect %lf %lf %lf %lf, "
+                      "viewport dimensions %i %i %i %i",
                       bounds.origin.x, bounds.origin.y,
                       bounds.size.width, bounds.size.height,
                       visibleRect.origin.x, visibleRect.origin.y,
-                      visibleRect.size.width, visibleRect.size.height);
+                      visibleRect.size.width, visibleRect.size.height,
+                      viewport_dim[0], viewport_dim[1], viewport_dim[2],
+                      viewport_dim[3]);
 
-    gst_gl_window_resize (window, width, height);
-    gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
+    viewport.x = viewport_dim[0] - visibleRect.origin.x;
+    viewport.x = viewport_dim[1] - visibleRect.origin.y;
+    viewport.w = viewport_dim[2];
+    viewport.h = viewport_dim[3];
 
-    gl->Viewport (viewport_dim[0] - visibleRect.origin.x,
-                  viewport_dim[1] - visibleRect.origin.y,
-                  viewport_dim[2], viewport_dim[3]);
+    gl->Viewport (viewport.x, viewport.y, viewport.w, viewport.h);
   }
 
   gst_object_unref (context);
@@ -530,6 +548,12 @@ gst_gl_window_cocoa_set_render_rectangle (GstGLWindow * window, gint x, gint y, 
                   (GDestroyNotify) _free_set_render_rectangle);
 
  return TRUE;
+}
+
+static gboolean
+gst_gl_window_cocoa_controls_viewport (GstGLWindow * window)
+{
+  return TRUE;
 }
 
 /* =============================================================*/

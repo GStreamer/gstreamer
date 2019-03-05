@@ -975,6 +975,20 @@ gst_gl_window_resize (GstGLWindow * window, guint width, guint height)
   window->queue_resize = FALSE;
 }
 
+gboolean
+gst_gl_window_controls_viewport (GstGLWindow * window)
+{
+  GstGLWindowClass *window_class;
+
+  g_return_val_if_fail (GST_IS_GL_WINDOW (window), FALSE);
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+
+  if (!window_class->controls_viewport)
+    return FALSE;
+
+  return window_class->controls_viewport (window);
+}
+
 static GType gst_gl_dummy_window_get_type (void);
 
 G_DEFINE_TYPE (GstGLDummyWindow, gst_gl_dummy_window, GST_TYPE_GL_WINDOW);

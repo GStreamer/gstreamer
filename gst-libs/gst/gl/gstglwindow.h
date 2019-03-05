@@ -148,6 +148,8 @@ struct _GstGLWindow {
  * @show: request that the window be shown to the user
  * @set_render_rectangle: request a rectangle to render into.  See #GstVideoOverlay
  * @queue_resize: request a resize to occur when possible
+ * @controls_viewport: Whether the window takes care of glViewport setup.
+ *                     and the user does not need to deal with viewports
  */
 struct _GstGLWindowClass {
   GstObjectClass parent_class;
@@ -168,9 +170,10 @@ struct _GstGLWindowClass {
   void     (*show)               (GstGLWindow *window);
   gboolean (*set_render_rectangle)(GstGLWindow *window, gint x, gint y, gint width, gint height);
   void     (*queue_resize)       (GstGLWindow *window);
+  gboolean (*controls_viewport)  (GstGLWindow *window);
 
   /*< private >*/
-  gpointer _reserved[GST_PADDING];
+  gpointer _reserved[GST_PADDING-1];
 };
 
 GST_GL_API
@@ -250,6 +253,8 @@ gboolean gst_gl_window_set_render_rectangle   (GstGLWindow * window,
                                                gint y,
                                                gint width,
                                                gint height);
+GST_GL_API
+gboolean gst_gl_window_controls_viewport      (GstGLWindow * window);
 
 /* subclass usage only */
 GST_GL_API

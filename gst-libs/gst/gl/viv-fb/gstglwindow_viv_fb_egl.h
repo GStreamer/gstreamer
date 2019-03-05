@@ -47,6 +47,7 @@ struct _GstGLWindowVivFBEGL {
   gint window_width, window_height;
 
   GstVideoRectangle render_rectangle;
+  GstVideoRectangle viewport;
 };
 
 struct _GstGLWindowVivFBEGLClass {

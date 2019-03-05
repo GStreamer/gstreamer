@@ -2187,6 +2187,16 @@ gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
     GST_DEBUG_OBJECT (gl_sink, "GL output area now %u,%u %ux%u",
         gl_sink->display_rect.x, gl_sink->display_rect.y,
         gl_sink->display_rect.w, gl_sink->display_rect.h);
+  } else {
+    gint viewport_dims[4];
+
+    /* save the viewport for use later */
+    gl->GetIntegerv (GL_VIEWPORT, viewport_dims);
+
+    gl_sink->display_rect.x = viewport_dims[0];
+    gl_sink->display_rect.y = viewport_dims[1];
+    gl_sink->display_rect.w = viewport_dims[2];
+    gl_sink->display_rect.h = viewport_dims[3];
   }
   GST_GLIMAGE_SINK_UNLOCK (gl_sink);
 }
@@ -2233,6 +2243,10 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
   /* make sure that the environnement is clean */
   gst_gl_context_clear_shader (gl_sink->context);
   gl->BindTexture (gl_target, 0);
+
+  if (!gst_gl_window_controls_viewport (window))
+    gl->Viewport (gl_sink->display_rect.x, gl_sink->display_rect.y,
+        gl_sink->display_rect.w, gl_sink->display_rect.h);
 
   sample = gst_sample_new (gl_sink->stored_buffer[0],
       gl_sink->out_caps, &GST_BASE_SINK (gl_sink)->segment, NULL);

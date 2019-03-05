@@ -46,6 +46,8 @@ static void gst_gl_window_viv_fb_egl_draw (GstGLWindow * window);
 static gboolean
 gst_gl_window_viv_fb_egl_set_render_rectangle (GstGLWindow * window,
     gint x, gint y, gint width, gint height);
+static gboolean gst_gl_window_viv_fb_egl_controls_viewport (GstGLWindow *
+    window);
 
 static void
 gst_gl_window_viv_fb_egl_class_init (GstGLWindowVivFBEGLClass * klass)
@@ -63,6 +65,8 @@ gst_gl_window_viv_fb_egl_class_init (GstGLWindowVivFBEGLClass * klass)
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_viv_fb_egl_draw);
   window_class->set_render_rectangle =
       GST_DEBUG_FUNCPTR (gst_gl_window_viv_fb_egl_set_render_rectangle);
+  window_class->controls_viewport =
+      GST_DEBUG_FUNCPTR (gst_gl_window_viv_fb_egl_controls_viewport);
 }
 
 static void
@@ -179,11 +183,14 @@ draw_cb (gpointer data)
     gst_gl_window_resize (window, width, height);
 
     gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
-    viewport_dim[0] += window_egl->render_rectangle.x;
-    viewport_dim[1] += window_egl->render_rectangle.y;
-    gl->Viewport (viewport_dim[0],
-        viewport_dim[1], viewport_dim[2], viewport_dim[3]);
+    window_egl->viewport.x = viewport_dim[0] + window_egl->render_rectangle.x;
+    window_egl->viewport.y = viewport_dim[1] + window_egl->render_rectangle.y;
+    window_egl->viewport.w = viewport_dim[2];
+    window_egl->viewport.h = viewport_dim[2];
   }
+
+  gl->Viewport (window_egl->viewport.x, window_egl->viewport.y,
+      window_egl->viewport.w, window_egl->viewport.h);
 
   if (window->draw)
     window->draw (window->draw_data);
@@ -261,5 +268,11 @@ gst_gl_window_viv_fb_egl_set_render_rectangle (GstGLWindow * window,
       (GstGLWindowCB) _set_render_rectangle, render,
       (GDestroyNotify) _free_set_render_rectangle);
 
+  return TRUE;
+}
+
+static gboolean
+gst_gl_window_viv_fb_egl_controls_viewport (GstGLWindow * window)
+{
   return TRUE;
 }

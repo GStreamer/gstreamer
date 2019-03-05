@@ -206,15 +206,21 @@ _context_ready (gpointer data)
    * the CA viewport set up on entry to this function */
   gl->GetIntegerv (GL_VIEWPORT, ca_viewport);
 
+  GST_TRACE ("retrieved viewport from CA %u,%u %ux%u", self->expected_dims[0],
+      self->expected_dims[1], self->expected_dims[2], self->expected_dims[3]);
   gst_gl_context_activate (self->draw_context, TRUE);
   if (self->queue_resize || self->last_bounds.size.width != self.bounds.size.width
       || self->last_bounds.size.height != self.bounds.size.height) {
     if (self->resize_cb) {
-      self->resize_cb (self->resize_data, 
+      self->resize_cb (self->resize_data,
           self.bounds.size.width*self.contentsScale,
           self.bounds.size.height*self.contentsScale);
 
       gl->GetIntegerv (GL_VIEWPORT, self->expected_dims);
+
+      GST_LOG ("resize callback wants viewport %u,%u %ux%u",
+          self->expected_dims[0], self->expected_dims[1],
+          self->expected_dims[2], self->expected_dims[3]);
     } else {
       /* default to whatever ca gives us */
       self->expected_dims[0] = ca_viewport[0];
@@ -239,6 +245,8 @@ _context_ready (gpointer data)
 
   gst_video_sink_center_rect (src, dst, &result, TRUE);
 
+  GST_TRACE ("Using viewport %u,%u %ux%u", result.x, result.y, result.w,
+      result.h);
   gl->Viewport (result.x, result.y, result.w, result.h);
 
   if (self->draw_cb)
