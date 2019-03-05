@@ -147,6 +147,9 @@ _get_supported_profiles (GstNvH265Enc * nvenc)
   GValue val = G_VALUE_INIT;
   guint i, n, n_profiles;
 
+  if (nvenc->supported_profiles)
+    return TRUE;
+
   nv_ret =
       NvEncGetEncodeProfileGUIDCount (GST_NV_BASE_ENC (nvenc)->encoder,
       NV_ENC_CODEC_HEVC_GUID, &n);
@@ -178,8 +181,8 @@ _get_supported_profiles (GstNvH265Enc * nvenc)
     return FALSE;
 
   GST_OBJECT_LOCK (nvenc);
-  g_free (nvenc->supported_profiles);
-  nvenc->supported_profiles = g_memdup (&list, sizeof (GValue));
+  nvenc->supported_profiles = g_new0 (GValue, 1);
+  *nvenc->supported_profiles = list;
   GST_OBJECT_UNLOCK (nvenc);
 
   return TRUE;
@@ -228,6 +231,8 @@ gst_nv_h265_enc_close (GstVideoEncoder * enc)
   GstNvH265Enc *nvenc = GST_NV_H265_ENC (enc);
 
   GST_OBJECT_LOCK (nvenc);
+  if (nvenc->supported_profiles)
+    g_value_unset (nvenc->supported_profiles);
   g_free (nvenc->supported_profiles);
   nvenc->supported_profiles = NULL;
   GST_OBJECT_UNLOCK (nvenc);
