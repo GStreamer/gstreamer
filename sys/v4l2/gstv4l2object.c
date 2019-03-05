@@ -1991,7 +1991,7 @@ gst_v4l2_object_get_colorspace (struct v4l2_format *fmt,
       cinfo->transfer = GST_VIDEO_TRANSFER_SRGB;
       cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
       break;
-    case V4L2_COLORSPACE_ADOBERGB:
+    case V4L2_COLORSPACE_OPRGB:
       cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
       cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
       cinfo->transfer = GST_VIDEO_TRANSFER_ADOBERGB;
@@ -2110,7 +2110,7 @@ gst_v4l2_object_get_colorspace (struct v4l2_format *fmt,
     case V4L2_XFER_FUNC_SRGB:
       cinfo->transfer = GST_VIDEO_TRANSFER_SRGB;
       break;
-    case V4L2_XFER_FUNC_ADOBERGB:
+    case V4L2_XFER_FUNC_OPRGB:
       cinfo->transfer = GST_VIDEO_TRANSFER_ADOBERGB;
       break;
     case V4L2_XFER_FUNC_SMPTE240M:
