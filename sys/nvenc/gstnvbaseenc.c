@@ -307,8 +307,10 @@ _get_supported_input_formats (GstNvBaseEnc * nvenc)
   guint64 format_mask = 0;
   uint32_t i, num = 0;
   NV_ENC_BUFFER_FORMAT formats[64];
-  GValue list = G_VALUE_INIT;
   GValue val = G_VALUE_INIT;
+
+  if (nvenc->input_formats)
+    return TRUE;
 
   NvEncGetInputFormats (nvenc->encoder, nvenc_class->codec_id, formats,
       G_N_ELEMENTS (formats), &num);
@@ -376,30 +378,30 @@ _get_supported_input_formats (GstNvBaseEnc * nvenc)
   if (format_mask == 0)
     return FALSE;
 
+  GST_OBJECT_LOCK (nvenc);
+  nvenc->input_formats = g_new0 (GValue, 1);
+
   /* process a second time so we can add formats in the order we want */
-  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (nvenc->input_formats, GST_TYPE_LIST);
   g_value_init (&val, G_TYPE_STRING);
   if ((format_mask & (1 << GST_VIDEO_FORMAT_NV12))) {
     g_value_set_static_string (&val, "NV12");
-    gst_value_list_append_value (&list, &val);
+    gst_value_list_append_value (nvenc->input_formats, &val);
   }
   if ((format_mask & (1 << GST_VIDEO_FORMAT_YV12))) {
     g_value_set_static_string (&val, "YV12");
-    gst_value_list_append_value (&list, &val);
+    gst_value_list_append_value (nvenc->input_formats, &val);
   }
   if ((format_mask & (1 << GST_VIDEO_FORMAT_I420))) {
     g_value_set_static_string (&val, "I420");
-    gst_value_list_append_value (&list, &val);
+    gst_value_list_append_value (nvenc->input_formats, &val);
   }
   if ((format_mask & (1 << GST_VIDEO_FORMAT_Y444))) {
     g_value_set_static_string (&val, "Y444");
-    gst_value_list_append_value (&list, &val);
+    gst_value_list_append_value (nvenc->input_formats, &val);
   }
   g_value_unset (&val);
 
-  GST_OBJECT_LOCK (nvenc);
-  g_free (nvenc->input_formats);
-  nvenc->input_formats = g_memdup (&list, sizeof (GValue));
   GST_OBJECT_UNLOCK (nvenc);
 
   return TRUE;
@@ -573,7 +575,7 @@ _get_interlace_modes (GstNvBaseEnc * nvenc)
     g_value_set_static_string (&val, "interleaved");
     gst_value_list_append_value (list, &val);
     g_value_set_static_string (&val, "mixed");
-    gst_value_list_append_value (list, &val);
+    gst_value_list_append_and_take_value (list, &val);
   }
   /* TODO: figure out what nvenc frame based interlacing means in gst terms */
 
@@ -598,6 +600,7 @@ gst_nv_base_enc_getcaps (GstVideoEncoder * enc, GstCaps * filter)
 
     val = _get_interlace_modes (nvenc);
     gst_caps_set_value (supported_incaps, "interlace-mode", val);
+    g_value_unset (val);
     g_free (val);
 
     GST_LOG_OBJECT (enc, "codec input caps %" GST_PTR_FORMAT, supported_incaps);
@@ -639,6 +642,8 @@ gst_nv_base_enc_close (GstVideoEncoder * enc)
   }
 
   GST_OBJECT_LOCK (nvenc);
+  if (nvenc->input_formats)
+    g_value_unset (nvenc->input_formats);
   g_free (nvenc->input_formats);
   nvenc->input_formats = NULL;
   GST_OBJECT_UNLOCK (nvenc);
