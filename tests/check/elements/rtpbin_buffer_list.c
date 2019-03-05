@@ -105,13 +105,36 @@ create_original_buffer (void)
   return original_buffer;
 }
 
+static GstBuffer *
+create_rtp_packet_buffer (gconstpointer header, gint header_size,
+    GstBuffer * payload_buffer, gint payload_offset, gint payload_size)
+{
+  GstBuffer *buffer;
+  GstBuffer *sub_buffer;
+
+  /* Create buffer with RTP header. */
+  buffer = gst_buffer_new_allocate (NULL, header_size, NULL);
+  gst_buffer_fill (buffer, 0, header, header_size);
+  gst_buffer_copy_into (buffer, payload_buffer, GST_BUFFER_COPY_METADATA, 0,
+      -1);
+
+  /* Create the payload buffer and add it to the current buffer. */
+  sub_buffer =
+      gst_buffer_copy_region (payload_buffer, GST_BUFFER_COPY_MEMORY,
+      payload_offset, payload_size);
+
+  buffer = gst_buffer_append (buffer, sub_buffer);
+  fail_if (buffer == NULL);
+
+  return buffer;
+}
+
 static GstBufferList *
 create_buffer_list (void)
 {
   GstBufferList *list;
   GstBuffer *orig_buffer;
   GstBuffer *buffer;
-  GstBuffer *sub_buffer;
 
   orig_buffer = create_original_buffer ();
   fail_if (orig_buffer == NULL);
@@ -120,35 +143,15 @@ create_buffer_list (void)
   fail_if (list == NULL);
 
   /*** First packet. **/
-
-  /* Create buffer with RTP header. */
-  buffer = gst_buffer_new_allocate (NULL, rtp_header_len[0], NULL);
-  gst_buffer_fill (buffer, 0, &rtp_header[0], rtp_header_len[0]);
-  gst_buffer_copy_into (buffer, orig_buffer, GST_BUFFER_COPY_METADATA, 0, -1);
-
-  /* Create the payload buffer and add it to the current buffer. */
-  sub_buffer =
-      gst_buffer_copy_region (orig_buffer, GST_BUFFER_COPY_MEMORY,
+  buffer =
+      create_rtp_packet_buffer (&rtp_header[0], rtp_header_len[0], orig_buffer,
       payload_offset[0], payload_len[0]);
-
-  buffer = gst_buffer_append (buffer, sub_buffer);
-  fail_if (buffer == NULL);
   gst_buffer_list_add (list, buffer);
 
   /***  Second packet. ***/
-
-  /* Create buffer with RTP header. */
-  buffer = gst_buffer_new_allocate (NULL, rtp_header_len[1], NULL);
-  gst_buffer_fill (buffer, 0, &rtp_header[1], rtp_header_len[1]);
-  gst_buffer_copy_into (buffer, orig_buffer, GST_BUFFER_COPY_METADATA, 0, -1);
-
-  /* Create the payload buffer and add it to the current buffer. */
-  sub_buffer =
-      gst_buffer_copy_region (orig_buffer, GST_BUFFER_COPY_MEMORY,
+  buffer =
+      create_rtp_packet_buffer (&rtp_header[1], rtp_header_len[1], orig_buffer,
       payload_offset[1], payload_len[1]);
-
-  buffer = gst_buffer_append (buffer, sub_buffer);
-  fail_if (buffer == NULL);
   gst_buffer_list_add (list, buffer);
 
   return list;
