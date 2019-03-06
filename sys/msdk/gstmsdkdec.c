@@ -853,7 +853,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   mfxSession session;
   mfxStatus status;
   GstMapInfo map_info;
-  guint i;
+  guint i, retry_err_incompatible = 0;
   gsize data_size;
   gboolean hard_reset = FALSE;
 
@@ -1000,7 +1000,8 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
     /* media-sdk requires complete reset since the surface is inadaquate to
      * do further decoding */
-    if (status == MFX_ERR_INCOMPATIBLE_VIDEO_PARAM) {
+    if (status == MFX_ERR_INCOMPATIBLE_VIDEO_PARAM &&
+        retry_err_incompatible++ < 1) {
       /* MFX_ERR_INCOMPATIBLE_VIDEO_PARAM means the current mfx surface is not
        * suitable for the current frame, call MFXVideoDECODE_DecodeHeader to get
        * the current frame size then do memory re-allocation, otherwise
@@ -1020,6 +1021,8 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       surface = NULL;
       continue;
     }
+
+    retry_err_incompatible = 0;
 
     if (G_LIKELY (status == MFX_ERR_NONE)
         || (status == MFX_WRN_VIDEO_PARAM_CHANGED)) {
