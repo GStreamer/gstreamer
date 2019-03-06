@@ -1809,6 +1809,7 @@ GST_START_TEST (test_layout_conv_fixate_caps)
   assert_equals_string (gst_structure_get_string (s, "format"), "F32LE");
   assert_equals_string (gst_structure_get_string (s, "layout"),
       "non-interleaved");
+  gst_clear_caps (&caps);
 
   fail_unless (gst_element_set_state (audioconvert,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
