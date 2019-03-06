@@ -398,7 +398,7 @@ gst_message_new_eos (GstObject * src)
  * @src: (transfer none) (allow-none): The object originating the message.
  * @error: (transfer none): The GError for this message.
  * @debug: A debugging string.
- * @details: (transfer full): (allow-none): A GstStructure with details
+ * @details: (transfer full) (allow-none): A GstStructure with details
  *
  * Create a new error message. The message will copy @error and
  * @debug. This message is posted by element when a fatal event
@@ -492,7 +492,7 @@ gst_message_parse_error_details (GstMessage * message,
  * @src: (transfer none) (allow-none): The object originating the message.
  * @error: (transfer none): The GError for this message.
  * @debug: A debugging string.
- * @details: (transfer full): (allow-none): A GstStructure with details
+ * @details: (transfer full) (allow-none): A GstStructure with details
  *
  * Create a new warning message. The message will make copies of @error and
  * @debug.
@@ -582,7 +582,7 @@ gst_message_parse_warning_details (GstMessage * message,
  * @src: (transfer none) (allow-none): The object originating the message.
  * @error: (transfer none): The GError for this message.
  * @debug: A debugging string.
- * @details: (transfer full): (allow-none): A GstStructure with details
+ * @details: (transfer full) (allow-none): A GstStructure with details
  *
  * Create a new info message. The message will make copies of @error and
  * @debug.
