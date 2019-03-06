@@ -99,6 +99,9 @@ cleanup_vorbisdec (GstElement * vorbisdec)
   gst_check_teardown_src_pad (vorbisdec);
   gst_check_teardown_sink_pad (vorbisdec);
   gst_check_teardown_element (vorbisdec);
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
 }
 
 /* FIXME: also tests comment header */
