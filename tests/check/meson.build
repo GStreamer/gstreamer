@@ -158,8 +158,8 @@ endif
 #
 # need a way to figure out value for the device property
 state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
- autovideosink cacasink cairotextoverlay jackaudiosrc jackaudiosink
- osssrc osssink osxaudiosink osxaudiosrc osxvideosrc osxvideosink
+ autovideosink cacasink cairotextoverlay gtkglsink gtksink jackaudiosrc
+ jackaudiosink osssrc osssink osxaudiosink osxaudiosrc osxvideosrc osxvideosink
  pulsesink pulsesrc pulsemixer v4l2src'''
 
 # FIXME: check, also + PTHREAD_CFLAGS
