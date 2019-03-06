@@ -571,6 +571,7 @@ GST_START_TEST (videoencoder_qos)
   buffer = create_test_buffer (0);
   ts = GST_BUFFER_PTS (buffer);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  buffer = NULL;
 
   /* pretend this buffer was late in the sink */
   rt = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, ts);
@@ -581,6 +582,7 @@ GST_START_TEST (videoencoder_qos)
   /* push a second buffer which will be dropped as it's already late */
   buffer = create_test_buffer (1);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  buffer = NULL;
 
   /* A QoS message was sent by the encoder */
   msg = gst_bus_pop_filtered (bus, GST_MESSAGE_QOS);
@@ -591,6 +593,10 @@ GST_START_TEST (videoencoder_qos)
 
   gst_bus_set_flushing (bus, TRUE);
   gst_object_unref (bus);
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
   cleanup_videoencodertest ();
 }
 
