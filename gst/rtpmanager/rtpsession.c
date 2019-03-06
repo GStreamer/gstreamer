@@ -2068,7 +2068,7 @@ invalid_packet:
 /* update the RTPPacketInfo structure with the current time and other bits
  * about the current buffer we are handling.
  * This function is typically called when a validated packet is received.
- * This function should be called with the SESSION_LOCK
+ * This function should be called with the RTP_SESSION_LOCK
  */
 static gboolean
 update_packet_info (RTPSession * sess, RTPPacketInfo * pinfo,
