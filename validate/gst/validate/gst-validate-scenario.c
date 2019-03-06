@@ -2395,7 +2395,7 @@ _get_target_element (GstValidateScenario * scenario, GstValidateAction * action)
     return NULL;
   }
 
-  if (strcmp (GST_OBJECT_NAME (pipeline), name) == 0) {
+  if (g_strcmp0 (GST_OBJECT_NAME (pipeline), name) == 0) {
     target = gst_object_ref (pipeline);
   } else {
     target = gst_bin_get_by_name (GST_BIN (pipeline), name);

@@ -925,7 +925,7 @@ gst_validate_element_matches_target (GstElement * element, GstStructure * s)
   const gchar *tmp;
 
   tmp = gst_structure_get_string (s, "target-element-name");
-  if (tmp != NULL && !strcmp (tmp, GST_ELEMENT_NAME (element)))
+  if (tmp != NULL && !g_strcmp0 (tmp, GST_ELEMENT_NAME (element)))
     return TRUE;
 
   tmp = gst_structure_get_string (s, "target-element-klass");

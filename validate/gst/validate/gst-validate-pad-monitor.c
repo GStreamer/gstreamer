@@ -532,7 +532,7 @@ _structure_is_video (GstStructure * structure)
   const gchar *name = gst_structure_get_name (structure);
 
   return g_strstr_len (name, 6, "video/")
-      && strcmp (name, "video/quicktime") != 0;
+      && g_strcmp0 (name, "video/quicktime") != 0;
 }
 
 static gboolean
