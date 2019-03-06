@@ -27,6 +27,7 @@
 #include "gstglcolorconvertelement.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_color_convert_element_debug);
+#define gst_gl_color_convert_element_parent_class parent_class
 #define GST_CAT_DEFAULT gst_gl_color_convert_element_debug
 
 G_DEFINE_TYPE_WITH_CODE (GstGLColorConvertElement, gst_gl_color_convert_element,
@@ -53,6 +54,9 @@ static GstFlowReturn gst_gl_color_convert_element_transform (GstBaseTransform *
     bt, GstBuffer * inbuf, GstBuffer * outbuf);
 static GstCaps *gst_gl_color_convert_element_fixate_caps (GstBaseTransform *
     bt, GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+static GstStateChangeReturn
+gst_gl_color_convert_element_change_state (GstElement * element,
+    GstStateChange transition);
 
 static GstStaticPadTemplate gst_gl_color_convert_element_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -76,9 +80,7 @@ gst_gl_color_convert_element_stop (GstBaseTransform * bt)
     convert->convert = NULL;
   }
 
-  return
-      GST_BASE_TRANSFORM_CLASS (gst_gl_color_convert_element_parent_class)->stop
-      (bt);
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->stop (bt);
 }
 
 static void
@@ -99,6 +101,8 @@ gst_gl_color_convert_element_class_init (GstGLColorConvertElementClass * klass)
   bt_class->fixate_caps = gst_gl_color_convert_element_fixate_caps;
 
   bt_class->passthrough_on_same_caps = TRUE;
+
+  element_class->change_state = gst_gl_color_convert_element_change_state;
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_gl_color_convert_element_src_pad_template);
@@ -178,8 +182,7 @@ gst_gl_color_convert_element_decide_allocation (GstBaseTransform * trans,
   GstGLColorConvertElement *convert = GST_GL_COLOR_CONVERT_ELEMENT (trans);
 
   /* get gl context */
-  if (!GST_BASE_TRANSFORM_CLASS
-      (gst_gl_color_convert_element_parent_class)->decide_allocation (trans,
+  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
           query))
     return FALSE;
 
@@ -236,4 +239,33 @@ gst_gl_color_convert_element_fixate_caps (GstBaseTransform *
   GstGLContext *context = GST_GL_BASE_FILTER (bt)->context;
 
   return gst_gl_color_convert_fixate_caps (context, direction, caps, othercaps);
+}
+
+static GstStateChangeReturn
+gst_gl_color_convert_element_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstGLColorConvertElement *convert = GST_GL_COLOR_CONVERT_ELEMENT (element);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  GST_DEBUG_OBJECT (convert, "changing state: %s => %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (convert->convert) {
+        gst_object_unref (convert->convert);
+        convert->convert = NULL;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }

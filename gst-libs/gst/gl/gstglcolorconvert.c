@@ -523,8 +523,6 @@ gst_gl_color_convert_finalize (GObject * object)
     convert->context = NULL;
   }
 
-  GST_ERROR_OBJECT (convert, "finalize");
-
   G_OBJECT_CLASS (gst_gl_color_convert_parent_class)->finalize (object);
 }
 
