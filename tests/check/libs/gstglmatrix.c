@@ -333,6 +333,8 @@ GST_START_TEST (test_matrix_vertex_y_invert)
         "value %f at index %u does not match " "expected value %f", res[i], i,
         expected[i]);
   }
+
+  gst_buffer_unref (buffer);
 }
 
 GST_END_TEST;
