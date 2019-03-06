@@ -2247,8 +2247,8 @@ gst_uri_set_port (GstUri * uri, guint port)
  *
  * Extract the path string from the URI object.
  *
- * Returns: (transfer full): (nullable): The path from the URI. Once finished
- *                                       with the string should be g_free()'d.
+ * Returns: (transfer full) (nullable): The path from the URI. Once finished
+ *                                      with the string should be g_free()'d.
  *
  * Since: 1.6
  */
