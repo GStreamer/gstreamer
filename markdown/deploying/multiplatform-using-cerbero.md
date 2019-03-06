@@ -9,7 +9,7 @@ Windows or OS X installers or Linux packages.
 
 To use Cerbero to build and package your application, you just need to
 add a recipe explaining how to build you application and make it depend
-on the `gstreamer-sdk` project. Then Cerbero can take care of building
+on the needed recipes. Then Cerbero can take care of building
 your application and its dependencies and package them all together.
 
 Read [](installing/building-from-source-using-cerbero.md) to learn how

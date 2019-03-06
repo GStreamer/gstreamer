@@ -104,8 +104,6 @@ are running and will use default build options such as the default build
 directory. The default options should work fine on the supported
 distributions.
 
-An example configuration file with detailed comments can be found [here]
-
 To fire up the bootstrapping process, go to the directory where you
 cloned/unpacked Cerbero and type:
 
@@ -243,5 +241,4 @@ To cross compile for iOS from OS X, use the configuration file
   [Yasm]: http://yasm.tortall.net/Download.html
   [WiX 3.11.1]: https://github.com/wixtoolset/wix3/releases/tag/wix3111rtm
   [XCode]: https://developer.apple.com/devcenter/ios/index.action#downloads
-  [here]: http://www.freedesktop.org/software/gstreamer-sdk/cerbero.cbc.template
   [Installing GStreamer]: installing/index.md
