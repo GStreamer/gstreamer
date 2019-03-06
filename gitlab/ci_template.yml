@@ -166,6 +166,7 @@ build android arm64 api28:
     # camerabin.test_single_video_recording: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/864#note_101558
     # camerabin.test_multiple_video_recordings: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/864#note_101646
     # audiomixer.test_flush_start_flush_stop: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/555
+    # check.gstreamer-sharp.SdpTests: https://gitlab.freedesktop.org/gstreamer/gstreamer-sharp/issues/17
     #
     # TO FURTHER INVESTIGATE:
     # check.gst-plugins-base.libs_gstglcolorconvert.test_reorder_buffer
@@ -213,6 +214,7 @@ build android arm64 api28:
       -b check.gst-rtsp-server.gst_rtspclientsink.test_record
       -b check.gst-rtsp-server.gst_rtspserver.test_shared_udp
       -b check.gst-plugins-base.elements_audiomixer.test_flush_start_flush_stop
+      -b check.gstreamer-sharp.SdpTests
   script:
     - cd gst-build/
     - >
