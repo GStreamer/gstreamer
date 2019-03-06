@@ -433,7 +433,6 @@ testSeekOnStateChanged (GstBus * bus, GstMessage * msg, gpointer user_data)
         TEST_TASK_STATE_WAITING_FOR_TESTSRC_STATE_CHANGE) {
       GST_DEBUG ("changing test_task_state");
       testData->test_task_state = TEST_TASK_STATE_EXITING;
-      gst_bus_remove_signal_watch (bus);
       g_cond_signal (&testData->test_task_state_cond);
     }
     g_mutex_unlock (&testData->test_task_state_lock);
@@ -464,6 +463,7 @@ static void
 testSeekPostTestCallback (GstAdaptiveDemuxTestEngine * engine,
     gpointer user_data)
 {
+  GstBus *bus;
   GList *walk;
 
   GstAdaptiveDemuxTestCase *testData = GST_ADAPTIVE_DEMUX_TEST_CASE (user_data);
@@ -472,6 +472,10 @@ testSeekPostTestCallback (GstAdaptiveDemuxTestEngine * engine,
 
     fail_if (td->segment_verification_needed);
   }
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (engine->pipeline));
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
 }
 
 /* function to check total size of data received by AppSink
