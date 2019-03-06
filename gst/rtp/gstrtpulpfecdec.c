@@ -434,8 +434,12 @@ gst_rtp_ulpfec_dec_handle_packet_loss (GstRtpUlpFecDec * self, guint16 seqnum,
         break;
       }
 
-      rtp_storage_put_recovered_packet (self->storage,
-          recovered_buffer, recovered_pt, self->caps_ssrc, recovered_seq);
+      if (!self->lost_packet_from_storage) {
+        rtp_storage_put_recovered_packet (self->storage,
+            recovered_buffer, recovered_pt, self->caps_ssrc, recovered_seq);
+      } else {
+        gst_buffer_unref (recovered_buffer);
+      }
     }
 
     gst_rtp_ulpfec_dec_stop (self);
