@@ -100,11 +100,11 @@ typedef struct {
 
 /**
  * RTPSourceStats:
- * @packetsreceived: number of received packets in total
- * @prevpacketsreceived: number of packets received in previous reporting
+ * @packets_received: number of received packets in total
+ * @prev_received: number of packets received in previous reporting
  *                       interval
- * @octetsreceived: number of payload bytes received
- * @bytesreceived: number of total bytes received including headers and lower
+ * @octets_received: number of payload bytes received
+ * @bytes_received: number of total bytes received including headers and lower
  *                 protocol level overhead
  * @max_seqnr: highest sequence number received
  * @transit: previous transit time used for calculating @jitter
