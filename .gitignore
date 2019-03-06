@@ -46,6 +46,7 @@ Makefile
 tmp-orc.c
 gst*orc.h
 
+/ext/srt/gstsrt-enumtypes.[ch]
 /gst-libs/gst/*/*-enumtypes.[ch]
 
 /tests/check/orc
@@ -70,6 +71,7 @@ gst*orc.h
 /tests/examples/opencv/gstfacedetect_test
 /tests/examples/playout
 /tests/examples/waylandsink/gtkwaylandsink
+/tests/examples/waylandsink/wayland_threads
 /tests/examples/webrtc/webrtc
 /tests/examples/webrtc/webrtcbidirectional
 /tests/examples/webrtc/webrtcswap

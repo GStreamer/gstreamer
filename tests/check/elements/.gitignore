@@ -12,6 +12,7 @@ ccextractor
 curlfilesink
 curlftpsink
 curlhttpsink
+curlhttpsrc
 curlsftpsink
 curlsmtpsink
 dash_demux
@@ -29,6 +30,7 @@ id3mux
 jifmux
 jpegparse
 kate
+line21
 mpeg2enc
 mpeg2enc
 mpeg4videoparse
