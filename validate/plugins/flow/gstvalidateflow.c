@@ -384,7 +384,7 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
       flow->expectations_file_path, flow->actual_results_file_path);
 
   for (i = 0; lines_expected[i] && lines_actual[i]; i++) {
-    if (strcmp (lines_expected[i], lines_actual[i])) {
+    if (g_strcmp0 (lines_expected[i], lines_actual[i])) {
       show_mismatch_error (flow, lines_expected, lines_actual, i);
       goto stop;
     }
