@@ -83,6 +83,7 @@ GST_START_TEST (basic)
     fail_unless (out_cc_meta->data[i] == full_data[i]);
 
   gst_buffer_unref (outbuf);
+  gst_harness_teardown (h);
 }
 
 GST_END_TEST;

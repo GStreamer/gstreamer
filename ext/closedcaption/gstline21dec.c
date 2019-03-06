@@ -53,6 +53,7 @@ G_DEFINE_TYPE (GstLine21Decoder, gst_line_21_decoder, GST_TYPE_VIDEO_FILTER);
 #define parent_class gst_line_21_decoder_parent_class
 
 static void gst_line_21_decoder_finalize (GObject * self);
+static gboolean gst_line_21_decoder_stop (GstBaseTransform * btrans);
 static gboolean gst_line_21_decoder_set_info (GstVideoFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info,
     GstCaps * outcaps, GstVideoInfo * out_info);
@@ -85,6 +86,7 @@ gst_line_21_decoder_class_init (GstLine21DecoderClass * klass)
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
+  transform_class->stop = gst_line_21_decoder_stop;
   transform_class->prepare_output_buffer =
       gst_line_21_decoder_prepare_output_buffer;
 
@@ -202,7 +204,10 @@ gst_line_21_decoder_set_info (GstVideoFilter * filter,
       self->info = gst_video_info_copy (in_info);
 
     /* initialize the decoder */
-    vbi_raw_decoder_init (&self->zvbi_decoder);
+    if (self->zvbi_decoder.pattern != NULL)
+      vbi_raw_decoder_reset (&self->zvbi_decoder);
+    else
+      vbi_raw_decoder_init (&self->zvbi_decoder);
     /*
      * Set up blank / black / white levels fit for NTSC, no actual relation
      * with the height of the video
@@ -413,6 +418,16 @@ gst_line_21_decoder_transform_ip (GstVideoFilter * filter,
 
   gst_line_21_decoder_scan (self, frame);
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_line_21_decoder_stop (GstBaseTransform * btrans)
+{
+  GstLine21Decoder *self = (GstLine21Decoder *) btrans;
+
+  vbi_raw_decoder_destroy (&self->zvbi_decoder);
+
+  return TRUE;
 }
 
 static void
