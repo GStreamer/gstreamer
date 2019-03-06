@@ -210,20 +210,20 @@ check_payload (GstBuffer * buffer, guint index)
 }
 
 static void
-check_packet (GstBufferList * list, guint index)
+check_packet (GstBufferList * list, guint list_index, guint packet_index)
 {
   GstBuffer *buffer;
 
   fail_unless (list != NULL);
 
-  fail_unless ((buffer = gst_buffer_list_get (list, index)) != NULL);
+  fail_unless ((buffer = gst_buffer_list_get (list, list_index)) != NULL);
   fail_unless (gst_buffer_n_memory (buffer) == 2);
 
   fail_unless (GST_BUFFER_TIMESTAMP (buffer) ==
       GST_BUFFER_TIMESTAMP (original_buffer));
 
-  check_header (buffer, index);
-  check_payload (buffer, index);
+  check_header (buffer, packet_index);
+  check_payload (buffer, packet_index);
 }
 
 /*
@@ -257,10 +257,10 @@ sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
   fail_unless (gst_buffer_list_length (list) == 2);
 
   fail_unless (gst_buffer_list_get (list, 0));
-  check_packet (list, 0);
+  check_packet (list, 0, 0);
 
   fail_unless (gst_buffer_list_get (list, 1));
-  check_packet (list, 1);
+  check_packet (list, 1, 1);
 
   gst_buffer_list_unref (list);
 
