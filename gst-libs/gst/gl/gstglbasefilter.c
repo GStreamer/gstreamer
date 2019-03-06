@@ -398,6 +398,11 @@ gst_gl_base_filter_change_state (GstElement * element,
         gst_object_unref (filter->display);
         filter->display = NULL;
       }
+
+      if (filter->context) {
+        gst_object_unref (filter->context);
+        filter->context = NULL;
+      }
       break;
     default:
       break;

@@ -54,6 +54,10 @@ gst_gl_upload_element_prepare_output_buffer (GstBaseTransform * bt,
 static GstFlowReturn gst_gl_upload_element_transform (GstBaseTransform * bt,
     GstBuffer * buffer, GstBuffer * outbuf);
 static gboolean gst_gl_upload_element_stop (GstBaseTransform * bt);
+static GstStateChangeReturn
+gst_gl_upload_element_change_state (GstElement * element,
+    GstStateChange transition);
+
 
 static GstStaticPadTemplate gst_gl_upload_element_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -92,6 +96,8 @@ gst_gl_upload_element_class_init (GstGLUploadElementClass * klass)
   bt_class->stop = gst_gl_upload_element_stop;
 
   bt_class->passthrough_on_same_caps = TRUE;
+
+  element_class->change_state = gst_gl_upload_element_change_state;
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_gl_upload_element_src_pad_template);
@@ -272,4 +278,33 @@ gst_gl_upload_element_transform (GstBaseTransform * bt, GstBuffer * buffer,
     GstBuffer * outbuf)
 {
   return GST_FLOW_OK;
+}
+
+static GstStateChangeReturn
+gst_gl_upload_element_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstGLUploadElement *upload = GST_GL_UPLOAD_ELEMENT (element);
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  GST_DEBUG_OBJECT (upload, "changing state: %s => %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (upload->upload) {
+        gst_object_unref (upload->upload);
+        upload->upload = NULL;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
