@@ -469,6 +469,7 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
     res = gst_rtp_h264_depay_set_output_caps (rtph264depay, srccaps);
   }
 
+  gst_clear_caps (&old_caps);
   gst_caps_unref (srccaps);
 
   /* Insert SPS and PPS into the stream on next opportunity (if bytestream) */
