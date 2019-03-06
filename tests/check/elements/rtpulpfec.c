@@ -122,7 +122,7 @@ lose_and_recover_test (GstHarness * h, guint16 lost_seq,
   gst_rtp_buffer_unmap (&rtpout);
   fail_unless (!GST_BUFFER_FLAG_IS_SET (bufout, GST_RTP_BUFFER_FLAG_REDUNDANT));
   gst_buffer_unref (bufout);
-  g_free (reccopy);
+  gst_buffer_unref (wrap);
 
   /* Pushing the next buffer with discont flag set */
   bufout = gst_rtp_buffer_new_allocate (0, 0, 0);
