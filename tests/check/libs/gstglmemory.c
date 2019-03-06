@@ -433,6 +433,8 @@ GST_START_TEST (test_transfer_state)
           GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD));
   fail_unless (GST_MEMORY_FLAG_IS_SET (mem,
           GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD));
+
+  gst_memory_unref (mem);
 }
 
 GST_END_TEST;
