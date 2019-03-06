@@ -34,8 +34,6 @@ typedef GstElement *(*CreateElement) (GstElement * src, gpointer unused);
 
 #define CREATE_ELEMENT(e,c,d) \
     g_signal_connect (e, "create-element", G_CALLBACK (c), d)
-#define SET_ELEMENT(e,p,c,d) \
-    g_object_set (e, p, c (e, d), NULL)
 
 static GstElement *
 _create_element_floating_cb (GstElement * src, const gchar * name)
@@ -58,14 +56,16 @@ struct src_data
 static void
 _set_element_floating (GstElement * e, struct src_data *d /* static */ )
 {
-  SET_ELEMENT (e, d->prop, _create_element_floating_cb,
-      (gchar *) d->element_name);
+  g_object_set (e, d->prop, _create_element_floating_cb (e, d->element_name),
+      NULL);
 }
 
 static void
 _set_element_full (GstElement * e, struct src_data *d /* static */ )
 {
-  SET_ELEMENT (e, d->prop, _create_element_full_cb, (gchar *) d->element_name);
+  GstElement *element = _create_element_full_cb (e, d->element_name);
+  g_object_set (e, d->prop, element, NULL);
+  gst_object_unref (element);
 }
 
 static void
