@@ -301,6 +301,9 @@ gst_cea_cc_overlay_finalize (GObject * object)
     overlay->next_composition = NULL;
   }
 
+  gst_cea708dec_free (overlay->decoder);
+  overlay->decoder = NULL;
+
   g_mutex_clear (&overlay->lock);
   g_cond_clear (&overlay->cond);
 

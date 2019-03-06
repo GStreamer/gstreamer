@@ -473,6 +473,9 @@ struct _Cea708Dec
 };
 
 Cea708Dec *gst_cea708dec_create (PangoContext * pango_context);
+
+void       gst_cea708dec_free (Cea708Dec *dec);
+
 void
 gst_cea708dec_set_service_number (Cea708Dec * decoder, gint8 desired_service);
 gboolean

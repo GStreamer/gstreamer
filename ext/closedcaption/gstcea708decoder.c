@@ -123,6 +123,7 @@ gst_cea708dec_clear_window_text (Cea708Dec * decoder, guint window_id);
 static void
 gst_cea708dec_scroll_window_up (Cea708Dec * decoder, guint window_id);
 static void gst_cea708dec_init_window (Cea708Dec * decoder, guint window_id);
+static void gst_cea708dec_clear_window (Cea708Dec * decoder, cea708Window * w);
 static void
 gst_cea708dec_set_pen_attributes (Cea708Dec * decoder,
     guint8 * dtvcc_buffer, int index);
@@ -172,6 +173,20 @@ gst_cea708dec_create (PangoContext * pango_context)
   decoder->use_ARGB = FALSE;
   decoder->pango_context = pango_context;
   return decoder;
+}
+
+void
+gst_cea708dec_free (Cea708Dec * dec)
+{
+  int i;
+
+  for (i = 0; i < MAX_708_WINDOWS; i++) {
+    cea708Window *window = dec->cc_windows[i];
+    gst_cea708dec_clear_window (dec, window);
+    g_free (window);
+  }
+  memset (dec, 0, sizeof (Cea708Dec));
+  g_free (dec);
 }
 
 void
@@ -1296,6 +1311,13 @@ gst_cea708dec_scroll_window_up (Cea708Dec * decoder, guint window_id)
     window->text[row][col].pen_attributes = window->pen_attributes;
     window->text[row][col].pen_color = window->pen_color;
   }
+}
+
+static void
+gst_cea708dec_clear_window (Cea708Dec * decoder, cea708Window * window)
+{
+  g_free (window->text_image);
+  memset (window, 0, sizeof (cea708Window));
 }
 
 static void
