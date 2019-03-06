@@ -219,6 +219,12 @@ set_crypto_policy_cipher_auth (GstSrtpCipherType cipher,
     case GST_SRTP_CIPHER_AES_256_ICM:
       policy->cipher_type = SRTP_AES_ICM_256;
       break;
+    case GST_SRTP_CIPHER_AES_128_GCM:
+      policy->cipher_type = SRTP_AES_GCM_128;
+      break;
+    case GST_SRTP_CIPHER_AES_256_GCM:
+      policy->cipher_type = SRTP_AES_GCM_256;
+      break;
     case GST_SRTP_CIPHER_NULL:
       policy->cipher_type = SRTP_NULL_CIPHER;
       break;
@@ -242,7 +248,12 @@ set_crypto_policy_cipher_auth (GstSrtpCipherType cipher,
     case GST_SRTP_AUTH_NULL:
       policy->auth_type = SRTP_NULL_AUTH;
       policy->auth_key_len = 0;
-      policy->auth_tag_len = 0;
+      if (cipher == GST_SRTP_CIPHER_AES_128_GCM
+          || cipher == GST_SRTP_CIPHER_AES_256_GCM) {
+        policy->auth_tag_len = 16;
+      } else {
+        policy->auth_tag_len = 0;
+      }
       break;
   }
 
@@ -268,8 +279,13 @@ cipher_key_size (GstSrtpCipherType cipher)
     case GST_SRTP_CIPHER_AES_256_ICM:
       size = SRTP_AES_ICM_256_KEY_LEN_WSALT;
       break;
+    case GST_SRTP_CIPHER_AES_128_GCM:
+      size = SRTP_AES_GCM_128_KEY_LEN_WSALT;
+      break;
+    case GST_SRTP_CIPHER_AES_256_GCM:
+      size = SRTP_AES_GCM_256_KEY_LEN_WSALT;
+      break;
     case GST_SRTP_CIPHER_NULL:
-      size = 0;
       break;
     default:
       g_assert_not_reached ();

@@ -583,8 +583,13 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
     goto error;
   }
 
-  if (stream->rtcp_cipher != SRTP_NULL_CIPHER &&
-      stream->rtcp_auth == SRTP_NULL_AUTH) {
+  /* RFC 3711 says in "3. SRTP Framework" that SRTCP message authentication
+   * is MANDATORY. In case of GCM let the pipeline handle any errors.
+   */
+  if (stream->rtcp_cipher != GST_SRTP_CIPHER_AES_128_GCM
+      && stream->rtcp_cipher != GST_SRTP_CIPHER_AES_256_GCM
+      && stream->rtcp_cipher != GST_SRTP_CIPHER_NULL
+      && stream->rtcp_auth == GST_SRTP_AUTH_NULL) {
     GST_WARNING_OBJECT (filter,
         "Cannot have SRTP NULL authentication with a not-NULL encryption"
         " cipher.");
@@ -930,6 +935,7 @@ update_session_stream_from_caps (GstSrtpDec * filter, guint32 ssrc,
     err = init_session_stream (filter, ssrc, stream);
 
     if (err != srtp_err_status_ok) {
+      GST_WARNING_OBJECT (filter, "Failed to create the stream (err: %d)", err);
       if (stream->key)
         gst_buffer_unref (stream->key);
       g_slice_free (GstSrtpDecSsrcStream, stream);
