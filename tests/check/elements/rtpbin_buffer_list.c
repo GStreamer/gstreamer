@@ -267,12 +267,6 @@ sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
   return GST_FLOW_OK;
 }
 
-static void
-set_chain_function (GstPad * pad)
-{
-  gst_pad_set_chain_list_function (pad, GST_DEBUG_FUNCPTR (sink_chain_list));
-}
-
 
 GST_START_TEST (test_bufferlist)
 {
@@ -295,7 +289,8 @@ GST_START_TEST (test_bufferlist)
       "send_rtp_src_0");
   fail_if (sinkpad == NULL);
 
-  set_chain_function (sinkpad);
+  gst_pad_set_chain_list_function (sinkpad,
+      GST_DEBUG_FUNCPTR (sink_chain_list));
 
   gst_pad_set_active (srcpad, TRUE);
   gst_pad_set_active (sinkpad, TRUE);
