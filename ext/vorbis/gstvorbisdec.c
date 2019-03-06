@@ -358,6 +358,7 @@ header_read_error:
   }
 }
 
+/* Does not take ownership of buffer */
 static GstFlowReturn
 vorbis_dec_handle_header_buffer (GstVorbisDec * vd, GstBuffer * buffer)
 {
@@ -615,17 +616,20 @@ check_pending_headers (GstVorbisDec * vd)
   /* All good, let's reset ourselves and process the headers */
   vorbis_dec_reset ((GstAudioDecoder *) vd);
   result = vorbis_dec_handle_header_buffer (vd, buffer1);
+  gst_buffer_unref (buffer1);
   if (result != GST_FLOW_OK) {
     gst_buffer_unref (buffer3);
     gst_buffer_unref (buffer5);
     return result;
   }
   result = vorbis_dec_handle_header_buffer (vd, buffer3);
+  gst_buffer_unref (buffer3);
   if (result != GST_FLOW_OK) {
     gst_buffer_unref (buffer5);
     return result;
   }
   result = vorbis_dec_handle_header_buffer (vd, buffer5);
+  gst_buffer_unref (buffer5);
 
   return result;
 
