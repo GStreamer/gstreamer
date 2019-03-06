@@ -233,6 +233,7 @@ build_disable_debug fedora x86_64:
       -M "${CI_PROJECT_DIR}/validate-output/"
       --xunit-file "${CI_PROJECT_DIR}/validate-output/logs/xunit.xml"
       ${BLACKLIST}
+      ${EXTRA_VALIDATE_ARGS}
   artifacts:
     expire_in: '14 days'
     when: always
@@ -257,6 +258,159 @@ check fedora:
   extends: '.test fedora x86_64'
   variables:
     TEST_SUITE: "check.gst*"
+
+# Valgrind
+.valgrind fedora x86_64:
+  extends: '.test fedora x86_64'
+  stage: test
+  when: manual
+  variables:
+    SUPPRESSION_FILES: >
+      gst-build/subprojects/gstreamer/tests/check/gstreamer.supp
+      gst-build/subprojects/gst-plugins-base/tests/check/gst-plugins-base.supp
+      gst-build/subprojects/gst-plugins-good/tests/check/gst-plugins-good.supp
+      gst-build/subprojects/gst-plugins-bad/tests/check/gst-plugins-bad.supp
+      gst-build/subprojects/gst-plugins-ugly/tests/check/gst-plugins-ugly.supp
+      gst-build/subprojects/gst-libav/tests/check/gst-libav.supp
+      gst-build/subprojects/gst-devtools/validate/data/gstvalidate.supp
+      gst-build/subprojects/libnice/tests/libnice.supp
+      gst-build/subprojects/libsoup/tests/libsoup.supp
+      gst-build/subprojects/glib/glib.supp
+    # These tests take very long compared to what they add, so let's skip them.
+    # - check.*.generic_states.* - enough to run one of the sequences
+    # - check.gstreamer.gst_gstelement.test_foreach_pad - 48s
+    # - check.gstreamer.gst_gstinfo.info_post_gst_init_category_registration - 21s
+    # - check.gstreamer.gst_gstsystemclock.test_resolution - 60s
+    # - check.gstreamer.libs_aggregator.test_infinite_seek - 20s
+    # - check.gstreamer.libs_aggregator.test_infinite_seek_50_src - 20s
+    # - check.gstreamer.libs_gstharness.test_harness_element_ref - 20s
+    # - check.gstreamer.pipelines_simple_launch_lines.test_2_elements - 58s
+    # - check.gstreamer.pipelines_stress.test_stress - 54s
+    # - check.gstreamer.pipelines_stress.test_stress_preroll - 27s
+    # - check.gst-plugins-base.elements_appsrc.test_appsrc_block_deadlock - 265.595s
+    # - check.gst-plugins-base.elements_audioresample.test_fft - 91.247s
+    # - check.gst-plugins-base.elements_audioresample.test_timestamp_drift - 141.784s
+    # - check.gst-plugins-base.elements-videoscale - superlong
+    # - check.gst-plugins-base.libs_video.test_overlay_blend - 74.096s
+    # - check.gst-plugins-base.libs_video.test_video_color_convert - 345.271s
+    # - check.gst-plugins-base.libs_video.test_video_formats - 70.987s
+    # - check.gst-plugins-base.libs_video.test_video_size_convert - 56.387s
+    # - check.gst-plugins-base.elements_audiointerleave.test_audiointerleave_2ch_pipeline_ - 5 * 51.069s
+    # - check.gst-plugins-base.elements_multifdsink.test_client_kick - 46.909s
+    # - check.gst-plugins-base.elements_videotestsrc.test_all_patterns
+    # - check.gst-plugins-base.elements_videotestsrc.test_patterns_are_deterministic
+    # - check.gst-plugins-good.elements_shapewipe.test_general - 325s
+    # - check.gst-plugins-good.elements_videocrop.test_cropping - 245s
+    # - check.gst-plugins-good.elements_videomixer - 30s (also deprecated)
+    # - check.gst-plugins-good.elements_rtp_payloading.rtp_jpeg_packet_loss - 109s
+    # - check.gst-plugins-good.elements_videomixer.test_play_twice_then_add_and_play_again - 55s
+    # - check.gst-plugins-good.pipelines_effectv.test_quarktv - 53s
+    # - check.gst-plugins-good.elements_deinterlace.test_mode_disabled_passthrough - 52s
+    # - check.gst-plugins-good.elements_deinterlace.test_mode_auto_deinterlaced_passthrough - 28s
+    # - check.gst-plugins-good.elements_deinterleave.test_2_channels_caps_change - 30s
+    # - check.gst-plugins-good.elements_deinterleave.test_2_channels - 22s
+    # - check.gst-plugins-good.elements_rtpjitterbuffer.test_fill_queue - 22s
+    # - check.gst-plugins-good.elements_splitmux.test_splitmuxsink_async - 20s
+    # - check.gst-plugins-good.elements_videomixer.test_play_twice - 22s
+    VALGRIND_SKIPLIST: >
+      -b check.[a-z-]*.generic_states.test_state_changes_down_seq
+      -b check.[a-z-]*.generic_states.test_state_changes_up_seq
+      -b check.gstreamer.gst_gstelement.test_foreach_pad
+      -b check.gstreamer.gst_gstinfo.info_post_gst_init_category_registration
+      -b check.gstreamer.gst_gstsystemclock.test_resolution
+      -b check.gstreamer.libs_aggregator.test_infinite_seek
+      -b check.gstreamer.libs_aggregator.test_infinite_seek_50_src
+      -b check.gstreamer.libs_gstharness.test_harness_element_ref
+      -b check.gstreamer.pipelines_simple_launch_lines.test_2_elements
+      -b check.gstreamer.pipelines_stress.test_stress
+      -b check.gstreamer.pipelines_stress.test_stress_preroll
+      -b check.gst-plugins-base.elements_appsrc.test_appsrc_block_deadlock
+      -b check.gst-plugins-base.elements_audioresample.test_fft
+      -b check.gst-plugins-base.elements_audioresample.test_timestamp_drift
+      -b check.gst-plugins-base.elements-videoscale
+      -b check.gst-plugins-base.libs_video.test_overlay_blend
+      -b check.gst-plugins-base.libs_video.test_video_color_convert
+      -b check.gst-plugins-base.libs_video.test_video_formats
+      -b check.gst-plugins-base.libs_video.test_video_size_convert
+      -b check.gst-plugins-base.elements_audiointerleave.test_audiointerleave_2ch_pipeline_
+      -b check.gst-plugins-base.elements_multifdsink.test_client_kick
+      -b check.gst-plugins-base.elements_videotestsrc.test_all_patterns
+      -b check.gst-plugins-base.elements_videotestsrc.test_patterns_are_deterministic
+      -b check.gst-plugins-good.elements_shapewipe.test_general
+      -b check.gst-plugins-good.elements_videocrop.test_cropping
+      -b check.gst-plugins-good.elements_videomixer
+      -b check.gst-plugins-good.elements_rtp_payloading.rtp_jpeg_packet_loss
+      -b check.gst-plugins-good.elements_videomixer.test_play_twice_then_add_and_play_again
+      -b check.gst-plugins-good.pipelines_effectv.test_quarktv
+      -b check.gst-plugins-good.elements_deinterlace.test_mode_disabled_passthrough
+      -b check.gst-plugins-good.elements_deinterlace.test_mode_auto_deinterlaced_passthrough
+      -b check.gst-plugins-good.elements_deinterleave.test_2_channels_caps_change
+      -b check.gst-plugins-good.elements_deinterleave.test_2_channels
+      -b check.gst-plugins-good.elements_rtpjitterbuffer.test_fill_queue
+      -b check.gst-plugins-good.elements_splitmux.test_splitmuxsink_async
+      -b check.gst-plugins-good.elements_videomixer.test_play_twice
+    # - check.gst-plugins-good.elements_rtpjitterbuffer.test_push_* - flaky in valgrind
+    # - check.gst-plugins-base.pipelines_gl_launch_lines - driver leaks / memory access
+    # - check.gst-plugins-base.libs_gstgl - driver leaks / memory access
+    # - check.gst-plugins-base.elements_gl - driver leaks / memory access
+    # - check.gst-plugins-base.elements_libvisual - uninitialized memory access
+    # - check.gst-plugins-base.generic_states - need to add gl elements to ignore list but only if using valgrind
+    VALGRIND_BLACKLIST: >
+      -b check.gstreamer.gst_gstsystemclock.test_stress_cleanup_unschedule
+      -b check.gstreamer.gst_gstsystemclock.test_stress_reschedule
+      -b check.gstreamer.tools_gstinspect
+      -b check.gst-plugins-base.elements_videoscale
+      -b check.gst-plugins-base.pipelines_gl_launch_lines
+      -b check.gst-plugins-base.libs_gstgl
+      -b check.gst-plugins-base.elements_gl
+      -b check.gst-plugins-base.elements_libvisual
+      -b check.gst-plugins-base.generic_states
+      -b check.gst-plugins-good.elements_rtpjitterbuffer.test_push_backward_seq
+      -b check.gst-plugins-good.elements_rtpjitterbuffer.test_push_unordered
+      -b check.gst-plugins-bad.elements_assrender
+      -b check.gst-plugins-bad.elements_camerabin
+      -b check.gst-plugins-bad.elements_line21
+      -b check.gst-plugins-bad.elements_mpeg2enc
+      -b check.gst-plugins-bad.elements_mplex
+      -b check.gst-plugins-bad.elements_mxfmux
+      -b check.gst-plugins-bad.elements_x265enc
+      -b check.gst-plugins-bad.elements_zbar
+      -b check.gst-libav.generic_plugin_test
+      -b check.gst-libav.generic_libavcodec_locking
+      -b check.gst-libav.elements_avdemux_ape
+    VALGRIND_OPTS: "--suppressions=/tmp/gstreamer-ci.supp"
+    EXTRA_VALIDATE_ARGS: "--valgrind ${VALGRIND_BLACKLIST} ${VALGRIND_SKIPLIST}"
+    ORC_CODE: "backup"
+  # Some suppression files are missing a newline at the end which messes things
+  # up when concatenating them. awk will add missing newlines (unlike cat)
+  before_script:
+  - awk '{print}' ${SUPPRESSION_FILES} > /tmp/gstreamer-ci.supp
+
+valgrind core:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gstreamer\\..*"
+
+valgrind base:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst-plugins-base\\..*"
+
+valgrind good:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst-plugins-good\\..*"
+
+valgrind ugly:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst-plugins-ugly\\..*"
+
+valgrind bad:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst-plugins-bad\\..*"
+
 
 # Template for Cerbero GStreamer Build
 #
