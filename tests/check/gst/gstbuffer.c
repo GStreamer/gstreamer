@@ -918,6 +918,7 @@ GST_START_TEST (test_wrapped_bytes)
   fail_unless (GST_MEMORY_IS_READONLY (mem));
 
   gst_buffer_unref (buf);
+  g_bytes_unref (bytes);
 }
 
 GST_END_TEST;
