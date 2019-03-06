@@ -134,7 +134,7 @@ gst_rtp_ulpfec_dec_start (GstRtpUlpFecDec * self, GstBufferList * buflist,
       GST_LOG_RTP_PACKET (self, "rtp header (incoming)", &info->rtp);
 
       if (lost_seq == gst_rtp_buffer_get_seq (&info->rtp)) {
-        GST_DEBUG_OBJECT (self, "Received lost packet from from the storage");
+        GST_DEBUG_OBJECT (self, "Received lost packet from the storage");
         g_list_free (self->info_media);
         self->info_media = NULL;
         self->lost_packet_from_storage = TRUE;
@@ -420,6 +420,9 @@ gst_rtp_ulpfec_dec_handle_packet_loss (GstRtpUlpFecDec * self, guint16 seqnum,
             self->caps_ssrc, seqnum, recovered_buffer);
 
         sent_buffer = gst_buffer_copy_deep (recovered_buffer);
+
+        if (self->lost_packet_from_storage)
+          gst_buffer_unref (recovered_buffer);
 
         gst_rtp_buffer_map (sent_buffer, GST_MAP_WRITE, &rtp);
         gst_rtp_buffer_set_seq (&rtp, self->next_seqnum++);
