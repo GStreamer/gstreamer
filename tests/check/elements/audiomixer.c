@@ -1836,6 +1836,7 @@ GST_START_TEST (test_change_output_caps)
     }
   }
   gst_buffer_unmap (handoff_buffer, &outmap);
+  gst_clear_buffer (&handoff_buffer);
 
   gst_element_release_request_pad (audiomixer, sinkpad);
   gst_object_unref (sinkpad);
@@ -1973,6 +1974,7 @@ GST_START_TEST (test_change_output_caps_mid_output_buffer)
   }
 
   gst_buffer_unmap (handoff_buffer, &outmap);
+  gst_clear_buffer (&handoff_buffer);
 
   gst_element_release_request_pad (audiomixer, sinkpad);
   gst_object_unref (sinkpad);
