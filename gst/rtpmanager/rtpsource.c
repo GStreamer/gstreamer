@@ -1133,7 +1133,14 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo,
           goto done;
         }
       } else {
-        /* unexpected seqnum in probation */
+        /* unexpected seqnum in probation
+         *
+         * There is no need to clean the queue at this point because the
+         * invalid packets in the queue are not going to be pushed as we are
+         * still in probation, and some cleanup will be performed at future
+         * probation attempts anyway if there are too many old packets in the
+         * queue.
+         */
         goto probation_seqnum;
       }
     } else if (delta >= 0 && delta < max_dropout) {
