@@ -38,6 +38,7 @@ if get_option('built_subprojects') != ''
         endif
     endforeach
 endif
+deps += [dependency('gstreamer-' + apiversion, fallback: ['gstreamer', 'gst_dep'])]
 
 if get_option('use_portal_index')
   index = 'markdown/index.md'
