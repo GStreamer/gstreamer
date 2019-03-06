@@ -311,7 +311,7 @@ eos_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
     g_cond_signal (&check_cond);
     g_mutex_unlock (&check_mutex);
   }
-
+  gst_event_unref (event);
   return TRUE;
 }
 
@@ -319,7 +319,6 @@ GST_START_TEST (test_push_eos)
 {
   GstElement *jitterbuffer;
   const guint num_buffers = 5;
-  GstBuffer *buffer;
   GList *node;
   GstStructure *stats;
   guint64 pushed, lost, late, duplicates;
@@ -337,12 +336,18 @@ GST_START_TEST (test_push_eos)
 
   /* push buffers: 0,1,2, */
   for (node = inbuffers; node; node = g_list_next (node)) {
+    GstBuffer *buffer;
+
+    /* steal buffer from list */
+    buffer = node->data;
+    node->data = NULL;
+
     n++;
     /* Skip 1 */
     if (n == 2) {
+      gst_buffer_unref (buffer);
       continue;
     }
-    buffer = (GstBuffer *) node->data;
     fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   }
 
