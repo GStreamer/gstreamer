@@ -1396,6 +1396,7 @@ GST_START_TEST (test_audio_buffer_and_audio_meta)
     }
 
     gst_audio_buffer_unmap (&buffer);
+    gst_buffer_unref (buf);
   }
 }
 
