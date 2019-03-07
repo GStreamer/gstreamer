@@ -114,25 +114,26 @@ G_DEFINE_TYPE (GstFluidDec, gst_fluid_dec, GST_TYPE_ELEMENT);
 
 /* fluid_synth log handler */
 static void
-gst_fluid_synth_error_log_function (int level, char *message, void *data)
+gst_fluid_synth_error_log_function (int level, const char *message, void *data)
 {
   GST_ERROR ("%s", message);
 }
 
 static void
-gst_fluid_synth_warning_log_function (int level, char *message, void *data)
+gst_fluid_synth_warning_log_function (int level, const char *message,
+    void *data)
 {
   GST_WARNING ("%s", message);
 }
 
 static void
-gst_fluid_synth_info_log_function (int level, char *message, void *data)
+gst_fluid_synth_info_log_function (int level, const char *message, void *data)
 {
   GST_INFO ("%s", message);
 }
 
 static void
-gst_fluid_synth_debug_log_function (int level, char *message, void *data)
+gst_fluid_synth_debug_log_function (int level, const char *message, void *data)
 {
   GST_DEBUG ("%s", message);
 }
@@ -187,14 +188,16 @@ gst_fluid_dec_class_init (GstFluidDecClass * klass)
   gstelement_class->change_state = gst_fluid_dec_change_state;
 
 #ifndef GST_DISABLE_GST_DEBUG
-  fluid_set_log_function (FLUID_PANIC, gst_fluid_synth_error_log_function,
-      NULL);
-  fluid_set_log_function (FLUID_ERR, gst_fluid_synth_warning_log_function,
-      NULL);
-  fluid_set_log_function (FLUID_WARN, gst_fluid_synth_warning_log_function,
-      NULL);
-  fluid_set_log_function (FLUID_INFO, gst_fluid_synth_info_log_function, NULL);
-  fluid_set_log_function (FLUID_DBG, gst_fluid_synth_debug_log_function, NULL);
+  fluid_set_log_function (FLUID_PANIC,
+      (fluid_log_function_t) gst_fluid_synth_error_log_function, NULL);
+  fluid_set_log_function (FLUID_ERR,
+      (fluid_log_function_t) gst_fluid_synth_warning_log_function, NULL);
+  fluid_set_log_function (FLUID_WARN,
+      (fluid_log_function_t) gst_fluid_synth_warning_log_function, NULL);
+  fluid_set_log_function (FLUID_INFO,
+      (fluid_log_function_t) gst_fluid_synth_info_log_function, NULL);
+  fluid_set_log_function (FLUID_DBG,
+      (fluid_log_function_t) gst_fluid_synth_debug_log_function, NULL);
 #else
   fluid_set_log_function (FLUID_PANIC, NULL, NULL);
   fluid_set_log_function (FLUID_ERR, NULL, NULL);
