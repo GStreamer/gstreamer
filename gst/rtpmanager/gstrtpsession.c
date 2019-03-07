@@ -2305,8 +2305,8 @@ gst_rtp_session_chain_send_rtp_common (GstRtpSession * rtpsession,
   if (is_list) {
     GstBuffer *buffer = NULL;
 
-    /* All groups in a list have the same timestamp.
-     * So, just take it from the first group. */
+    /* All buffers in a list have the same timestamp.
+     * So, just take it from the first buffer. */
     buffer = gst_buffer_list_get (GST_BUFFER_LIST_CAST (data), 0);
     if (buffer)
       timestamp = GST_BUFFER_PTS (buffer);
