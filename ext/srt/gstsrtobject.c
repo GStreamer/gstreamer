@@ -217,6 +217,8 @@ gst_srt_object_destroy (GstSRTObject * srtobject)
     GST_DEBUG_OBJECT (srtobject->element, "Cleaning up SRT");
   }
 
+  g_clear_pointer (&srtobject->uri, gst_uri_unref);
+
   g_free (srtobject);
 }
 
@@ -226,9 +228,8 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
 {
   switch (prop_id) {
     case PROP_URI:{
-      gchar *uri = g_value_dup_string (value);
+      const gchar *uri = g_value_get_string (value);
       gst_srt_object_set_uri (srtobject, uri, NULL);
-      g_free (uri);
       break;
     }
     case PROP_MODE:
@@ -268,7 +269,7 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
 {
   switch (prop_id) {
     case PROP_URI:
-      g_value_set_string (value, gst_uri_to_string (srtobject->uri));
+      g_value_take_string (value, gst_uri_to_string (srtobject->uri));
       break;
     case PROP_MODE:{
       GstSRTConnectionMode v;
