@@ -287,6 +287,8 @@ gst_teletextdec_finalize (GObject * object)
 
   g_mutex_clear (&teletext->queue_lock);
 
+  g_free (teletext->font_description);
+  g_free (teletext->subtitles_template);
   g_free (teletext->frame);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -359,9 +361,11 @@ gst_teletextdec_set_property (GObject * object, guint prop_id,
       teletext->subtitles_mode = g_value_get_boolean (value);
       break;
     case PROP_SUBS_TEMPLATE:
+      g_free (teletext->subtitles_template);
       teletext->subtitles_template = g_value_dup_string (value);
       break;
     case PROP_FONT_DESCRIPTION:
+      g_free (teletext->font_description);
       teletext->font_description = g_value_dup_string (value);
       break;
     default:
