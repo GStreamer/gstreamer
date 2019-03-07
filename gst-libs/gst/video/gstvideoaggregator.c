@@ -163,7 +163,7 @@ gst_video_aggregator_pad_skip_buffer (GstAggregatorPad * aggpad,
   if (agg_segment->position != GST_CLOCK_TIME_NONE
       && GST_BUFFER_DURATION (buffer) != GST_CLOCK_TIME_NONE) {
     GstClockTime start_time =
-        gst_segment_to_running_time (agg_segment, GST_FORMAT_TIME,
+        gst_segment_to_running_time (&aggpad->segment, GST_FORMAT_TIME,
         GST_BUFFER_PTS (buffer));
     GstClockTime end_time = start_time + GST_BUFFER_DURATION (buffer);
     GstClockTime output_start_running_time =
