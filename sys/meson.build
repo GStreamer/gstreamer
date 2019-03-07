@@ -60,6 +60,7 @@ if host_machine.system() == 'windows'
   endif
 else
   cuda_versions = [
+    '10.1',
     '10.0',
     '9.2',
     '9.1',
