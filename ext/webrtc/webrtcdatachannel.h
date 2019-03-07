@@ -75,8 +75,9 @@ struct _GstWebRTCDataChannelClass
 };
 
 void    gst_webrtc_data_channel_start_negotiation   (GstWebRTCDataChannel       *channel);
-void    gst_webrtc_data_channel_set_sctp_transport  (GstWebRTCDataChannel       *channel,
-                                                     GstWebRTCSCTPTransport     *sctp);
+G_GNUC_INTERNAL
+void    gst_webrtc_data_channel_link_to_sctp (GstWebRTCDataChannel              *channel,
+                                              GstWebRTCSCTPTransport            *sctp_transport);
 
 G_END_DECLS
 

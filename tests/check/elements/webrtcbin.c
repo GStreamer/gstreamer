@@ -1899,8 +1899,9 @@ _on_ready_state_notify (GObject * channel, GParamSpec * pspec,
   g_object_get (channel, "ready-state", &ready_state, NULL);
 
   if (ready_state == GST_WEBRTC_DATA_CHANNEL_STATE_OPEN) {
-    if (++(*n_ready) >= 2)
+    if (g_atomic_int_add (n_ready, 1) >= 1) {
       test_webrtc_signal_state (t, STATE_CUSTOM);
+    }
   }
 }
 
