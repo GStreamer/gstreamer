@@ -1588,23 +1588,11 @@ gst_video_aggregator_fill_queues (GstVideoAggregator * vagg,
 static gboolean
 sync_pad_values (GstElement * vagg, GstPad * pad, gpointer user_data)
 {
-  GstVideoAggregatorPad *vpad = GST_VIDEO_AGGREGATOR_PAD (pad);
-  GstAggregatorPad *bpad = GST_AGGREGATOR_PAD_CAST (pad);
-  GstClockTime timestamp;
-  gint64 stream_time;
-
-  if (vpad->priv->buffer == NULL)
-    return TRUE;
-
-  timestamp = GST_BUFFER_TIMESTAMP (vpad->priv->buffer);
-  GST_OBJECT_LOCK (bpad);
-  stream_time = gst_segment_to_stream_time (&bpad->segment, GST_FORMAT_TIME,
-      timestamp);
-  GST_OBJECT_UNLOCK (bpad);
+  gint64 *out_stream_time = user_data;
 
   /* sync object properties on stream time */
-  if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (GST_OBJECT_CAST (pad), stream_time);
+  if (GST_CLOCK_TIME_IS_VALID (*out_stream_time))
+    gst_object_sync_values (GST_OBJECT_CAST (pad), *out_stream_time);
 
   return TRUE;
 }
@@ -1646,9 +1634,11 @@ gst_video_aggregator_do_aggregate (GstVideoAggregator * vagg,
     GstClockTime output_start_time, GstClockTime output_end_time,
     GstBuffer ** outbuf)
 {
+  GstAggregator *agg = GST_AGGREGATOR (vagg);
   GstFlowReturn ret = GST_FLOW_OK;
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (vagg);
   GstVideoAggregatorClass *vagg_klass = (GstVideoAggregatorClass *) klass;
+  GstClockTime out_stream_time;
 
   g_assert (vagg_klass->aggregate_frames != NULL);
   g_assert (vagg_klass->create_output_buffer != NULL);
@@ -1666,8 +1656,15 @@ gst_video_aggregator_do_aggregate (GstVideoAggregator * vagg,
   GST_BUFFER_TIMESTAMP (*outbuf) = output_start_time;
   GST_BUFFER_DURATION (*outbuf) = output_end_time - output_start_time;
 
+  GST_OBJECT_LOCK (agg->srcpad);
+  out_stream_time =
+      gst_segment_to_stream_time (&GST_AGGREGATOR_PAD (agg->srcpad)->segment,
+      GST_FORMAT_TIME, output_start_time);
+  GST_OBJECT_UNLOCK (agg->srcpad);
+
   /* Sync pad properties to the stream time */
-  gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg), sync_pad_values, NULL);
+  gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg), sync_pad_values,
+      &out_stream_time);
 
   /* Convert all the frames the subclass has before aggregating */
   gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg), prepare_frames, NULL);
