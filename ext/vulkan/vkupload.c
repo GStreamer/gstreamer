@@ -522,6 +522,8 @@ gst_vulkan_upload_finalize (GObject * object)
   for (i = 0; i < G_N_ELEMENTS (upload_methods); i++) {
     upload_methods[i]->free (vk_upload->upload_impls[i]);
   }
+  g_free (vk_upload->upload_impls);
+  vk_upload->upload_impls = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

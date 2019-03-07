@@ -247,6 +247,8 @@ gst_vulkan_ensure_element_data (gpointer element,
     if (!gst_vulkan_instance_open (*instance_ptr, &error)) {
       GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
           ("Failed to create vulkan instance"), ("%s", error->message));
+      gst_object_unref (*instance_ptr);
+      *instance_ptr = NULL;
       g_clear_error (&error);
       return FALSE;
     }
