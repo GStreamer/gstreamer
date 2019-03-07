@@ -457,9 +457,9 @@ _get_stats_from_transport_channel (GstWebRTCBin * webrtc,
 }
 
 /* https://www.w3.org/TR/webrtc-stats/#codec-dict* */
-static gchar *
+static void
 _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
-    GstStructure * s)
+    GstStructure * s, gchar ** out_id)
 {
   GstStructure *stats;
   GstCaps *caps;
@@ -492,25 +492,32 @@ _get_codec_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad,
   gst_structure_set (s, id, GST_TYPE_STRUCTURE, stats, NULL);
   gst_structure_free (stats);
 
-  return id;
+  if (out_id)
+    *out_id = id;
+  else
+    g_free (id);
 }
 
 static gboolean
 _get_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad, GstStructure * s)
 {
   GstWebRTCBinPad *wpad = GST_WEBRTC_BIN_PAD (pad);
+  TransportStream *stream;
   gchar *codec_id;
 
-  codec_id = _get_codec_stats_from_pad (webrtc, pad, s);
-  if (wpad->trans) {
-    WebRTCTransceiver *trans;
-    trans = WEBRTC_TRANSCEIVER (wpad->trans);
-    if (trans->stream)
-      _get_stats_from_transport_channel (webrtc, trans->stream, codec_id, s);
-  }
+  _get_codec_stats_from_pad (webrtc, pad, s, &codec_id);
 
+  if (!wpad->trans)
+    goto out;
+
+  stream = WEBRTC_TRANSCEIVER (wpad->trans)->stream;
+  if (!stream)
+    goto out;
+
+  _get_stats_from_transport_channel (webrtc, stream, codec_id, s);
+
+out:
   g_free (codec_id);
-
   return TRUE;
 }
 
