@@ -48,7 +48,9 @@ typedef enum
   STATE_NEW,
   STATE_NEGOTIATION_NEEDED,
   STATE_OFFER_CREATED,
+  STATE_OFFER_SET,
   STATE_ANSWER_CREATED,
+  STATE_ANSWER_SET,
   STATE_EOS,
   STATE_ERROR,
   STATE_CUSTOM,
@@ -86,24 +88,40 @@ struct test_webrtc
                                          gpointer user_data);
   gpointer ice_candidate_data;
   GDestroyNotify ice_candidate_notify;
-  GstWebRTCSessionDescription * (*on_offer_created)     (struct test_webrtc * t,
-                                                         GstElement * element,
-                                                         GstPromise * promise,
-                                                         gpointer user_data);
+  void      (*on_offer_created)         (struct test_webrtc * t,
+                                         GstElement * element,
+                                         GstPromise * promise,
+                                         gpointer user_data);
+  GstWebRTCSessionDescription *offer_desc;
+  guint offer_set_count;
   gpointer offer_data;
   GDestroyNotify offer_notify;
-  GstWebRTCSessionDescription * (*on_answer_created)    (struct test_webrtc * t,
-                                                         GstElement * element,
-                                                         GstPromise * promise,
-                                                         gpointer user_data);
-  gpointer data_channel_data;
-  GDestroyNotify data_channel_notify;
-  void       (*on_data_channel)                         (struct test_webrtc * t,
-                                                         GstElement * element,
-                                                         GObject *data_channel,
-                                                         gpointer user_data);
+  void      (*on_offer_set)             (struct test_webrtc * t,
+                                         GstElement * element,
+                                         GstPromise * promise,
+                                         gpointer user_data);
+  gpointer offer_set_data;
+  GDestroyNotify offer_set_notify;
+  void      (*on_answer_created)        (struct test_webrtc * t,
+                                         GstElement * element,
+                                         GstPromise * promise,
+                                         gpointer user_data);
+  GstWebRTCSessionDescription *answer_desc;
+  guint answer_set_count;
   gpointer answer_data;
   GDestroyNotify answer_notify;
+  void      (*on_answer_set)            (struct test_webrtc * t,
+                                         GstElement * element,
+                                         GstPromise * promise,
+                                         gpointer user_data);
+  gpointer answer_set_data;
+  GDestroyNotify answer_set_notify;
+  void      (*on_data_channel)          (struct test_webrtc * t,
+                                         GstElement * element,
+                                         GObject *data_channel,
+                                         gpointer user_data);
+  gpointer data_channel_data;
+  GDestroyNotify data_channel_notify;
   void      (*on_pad_added)             (struct test_webrtc * t,
                                          GstElement * element,
                                          GstPad * pad,
@@ -118,6 +136,38 @@ struct test_webrtc
   GDestroyNotify bus_notify;
 /* *INDENT-ON* */
 };
+
+static void
+test_webrtc_signal_state_unlocked (struct test_webrtc *t, TestState state)
+{
+  t->state = state;
+  g_cond_broadcast (&t->cond);
+}
+
+static void
+test_webrtc_signal_state (struct test_webrtc *t, TestState state)
+{
+  g_mutex_lock (&t->lock);
+  test_webrtc_signal_state_unlocked (t, state);
+  g_mutex_unlock (&t->lock);
+}
+
+static void
+_on_answer_set (GstPromise * promise, gpointer user_data)
+{
+  struct test_webrtc *t = user_data;
+  GstElement *answerer = TEST_GET_ANSWERER (t);
+
+  g_mutex_lock (&t->lock);
+  if (++t->answer_set_count >= 2 && t->on_answer_set) {
+    t->on_answer_set (t, answerer, promise, t->answer_set_data);
+  }
+  if (t->state == STATE_ANSWER_CREATED)
+    t->state = STATE_ANSWER_SET;
+  g_cond_broadcast (&t->cond);
+  gst_promise_unref (promise);
+  g_mutex_unlock (&t->lock);
+}
 
 static void
 _on_answer_received (GstPromise * promise, gpointer user_data)
@@ -137,20 +187,41 @@ _on_answer_received (GstPromise * promise, gpointer user_data)
   g_free (desc);
 
   g_mutex_lock (&t->lock);
+
+  g_assert (t->answer_desc == NULL);
+  t->answer_desc = answer;
+
   if (t->on_answer_created) {
-    gst_webrtc_session_description_free (answer);
-    answer = t->on_answer_created (t, answerer, promise, t->answer_data);
+    t->on_answer_created (t, answerer, promise, t->answer_data);
   }
   gst_promise_unref (promise);
 
-  g_signal_emit_by_name (answerer, "set-local-description", answer, NULL);
-  g_signal_emit_by_name (offeror, "set-remote-description", answer, NULL);
+  promise = gst_promise_new_with_change_func (_on_answer_set, t, NULL);
+  g_signal_emit_by_name (answerer, "set-local-description", t->answer_desc,
+      promise);
+  promise = gst_promise_new_with_change_func (_on_answer_set, t, NULL);
+  g_signal_emit_by_name (offeror, "set-remote-description", t->answer_desc,
+      promise);
 
-  t->state = STATE_ANSWER_CREATED;
-  g_cond_broadcast (&t->cond);
+  test_webrtc_signal_state_unlocked (t, STATE_ANSWER_CREATED);
   g_mutex_unlock (&t->lock);
+}
 
-  gst_webrtc_session_description_free (answer);
+static void
+_on_offer_set (GstPromise * promise, gpointer user_data)
+{
+  struct test_webrtc *t = user_data;
+  GstElement *offeror = TEST_GET_OFFEROR (t);
+
+  g_mutex_lock (&t->lock);
+  if (++t->offer_set_count >= 2 && t->on_offer_set) {
+    t->on_offer_set (t, offeror, promise, t->offer_set_data);
+  }
+  if (t->state == STATE_OFFER_CREATED)
+    t->state = STATE_OFFER_SET;
+  g_cond_broadcast (&t->cond);
+  gst_promise_unref (promise);
+  g_mutex_unlock (&t->lock);
 }
 
 static void
@@ -171,23 +242,27 @@ _on_offer_received (GstPromise * promise, gpointer user_data)
   g_free (desc);
 
   g_mutex_lock (&t->lock);
+
+  g_assert (t->offer_desc == NULL);
+  t->offer_desc = offer;
+
   if (t->on_offer_created) {
-    gst_webrtc_session_description_free (offer);
-    offer = t->on_offer_created (t, offeror, promise, t->offer_data);
+    t->on_offer_created (t, offeror, promise, t->offer_data);
   }
   gst_promise_unref (promise);
 
-  g_signal_emit_by_name (offeror, "set-local-description", offer, NULL);
-  g_signal_emit_by_name (answerer, "set-remote-description", offer, NULL);
+  promise = gst_promise_new_with_change_func (_on_offer_set, t, NULL);
+  g_signal_emit_by_name (offeror, "set-local-description", t->offer_desc,
+      promise);
+  promise = gst_promise_new_with_change_func (_on_offer_set, t, NULL);
+  g_signal_emit_by_name (answerer, "set-remote-description", t->offer_desc,
+      promise);
 
   promise = gst_promise_new_with_change_func (_on_answer_received, t, NULL);
   g_signal_emit_by_name (answerer, "create-answer", NULL, promise);
 
-  t->state = STATE_OFFER_CREATED;
-  g_cond_broadcast (&t->cond);
+  test_webrtc_signal_state_unlocked (t, STATE_OFFER_CREATED);
   g_mutex_unlock (&t->lock);
-
-  gst_webrtc_session_description_free (offer);
 }
 
 static gboolean
@@ -236,8 +311,7 @@ _bus_watch (GstBus * bus, GstMessage * msg, struct test_webrtc *t)
       GST_WARNING ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
       g_error_free (err);
       g_free (dbg_info);
-      t->state = STATE_ERROR;
-      g_cond_broadcast (&t->cond);
+      test_webrtc_signal_state_unlocked (t, STATE_ERROR);
       break;
     }
     case GST_MESSAGE_EOS:{
@@ -253,8 +327,7 @@ _bus_watch (GstBus * bus, GstMessage * msg, struct test_webrtc *t)
         g_free (dump_name);
       }
       GST_INFO ("EOS received\n");
-      t->state = STATE_EOS;
-      g_cond_broadcast (&t->cond);
+      test_webrtc_signal_state_unlocked (t, STATE_EOS);
       break;
     }
     default:
@@ -351,7 +424,7 @@ _bus_no_errors (struct test_webrtc *t, GstBus * bus, GstMessage * msg,
   }
 }
 
-static GstWebRTCSessionDescription *
+static void
 _offer_answer_not_reached (struct test_webrtc *t, GstElement * element,
     GstPromise * promise, gpointer user_data)
 {
@@ -475,6 +548,21 @@ test_webrtc_new (void)
 }
 
 static void
+test_webrtc_reset_negotiation (struct test_webrtc *t)
+{
+  if (t->offer_desc)
+    gst_webrtc_session_description_free (t->offer_desc);
+  t->offer_desc = NULL;
+  t->offer_set_count = 0;
+  if (t->answer_desc)
+    gst_webrtc_session_description_free (t->answer_desc);
+  t->answer_desc = NULL;
+  t->answer_set_count = 0;
+
+  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+}
+
+static void
 test_webrtc_free (struct test_webrtc *t)
 {
   /* Otherwise while one webrtcbin is being destroyed, the other could
@@ -509,8 +597,12 @@ test_webrtc_free (struct test_webrtc *t)
     t->ice_candidate_notify (t->ice_candidate_data);
   if (t->offer_notify)
     t->offer_notify (t->offer_data);
+  if (t->offer_set_notify)
+    t->offer_set_notify (t->offer_set_data);
   if (t->answer_notify)
     t->answer_notify (t->answer_data);
+  if (t->answer_set_notify)
+    t->answer_set_notify (t->answer_set_data);
   if (t->pad_added_notify)
     t->pad_added_notify (t->pad_added_data);
   if (t->data_channel_notify)
@@ -520,6 +612,8 @@ test_webrtc_free (struct test_webrtc *t)
       gst_element_set_state (t->webrtc1, GST_STATE_NULL));
   fail_unless_equals_int (GST_STATE_CHANGE_SUCCESS,
       gst_element_set_state (t->webrtc2, GST_STATE_NULL));
+
+  test_webrtc_reset_negotiation (t);
 
   gst_object_unref (t->webrtc1);
   gst_object_unref (t->webrtc2);
@@ -556,25 +650,10 @@ static void
 test_webrtc_wait_for_answer_error_eos (struct test_webrtc *t)
 {
   TestState states = 0;
-  states |= (1 << STATE_ANSWER_CREATED);
+  states |= (1 << STATE_ANSWER_SET);
   states |= (1 << STATE_EOS);
   states |= (1 << STATE_ERROR);
   test_webrtc_wait_for_state_mask (t, states);
-}
-
-static void
-test_webrtc_signal_state_unlocked (struct test_webrtc *t, TestState state)
-{
-  t->state = state;
-  g_cond_broadcast (&t->cond);
-}
-
-static void
-test_webrtc_signal_state (struct test_webrtc *t, TestState state)
-{
-  g_mutex_lock (&t->lock);
-  test_webrtc_signal_state_unlocked (t, state);
-  g_mutex_unlock (&t->lock);
 }
 
 #if 0
@@ -650,32 +729,28 @@ struct validate_sdp
 #define VAL_SDP_INIT(name,func,data,next) \
     struct validate_sdp name = { func, data, next }
 
-static GstWebRTCSessionDescription *
+static void
 _check_validate_sdp (struct test_webrtc *t, GstElement * element,
     GstPromise * promise, gpointer user_data)
 {
   struct validate_sdp *validate = user_data;
-  GstWebRTCSessionDescription *offer = NULL;
-  const GstStructure *reply;
-  const gchar *field;
+  GstWebRTCSessionDescription *desc = NULL;
 
-  field = t->offerror == 1 && t->webrtc1 == element ? "offer" : "answer";
-
-  reply = gst_promise_get_reply (promise);
-  gst_structure_get (reply, field,
-      GST_TYPE_WEBRTC_SESSION_DESCRIPTION, &offer, NULL);
+  if (t->offerror == 1 && t->webrtc1 == element)
+    desc = t->offer_desc;
+  else
+    desc = t->answer_desc;
 
   while (validate) {
-    validate->validate (t, element, offer, validate->user_data);
+    validate->validate (t, element, desc, validate->user_data);
     validate = validate->next;
   }
-
-  return offer;
 }
 
 static void
-test_validate_sdp (struct test_webrtc *t, struct validate_sdp *offer,
-    struct validate_sdp *answer)
+test_validate_sdp_full (struct test_webrtc *t, struct validate_sdp *offer,
+    struct validate_sdp *answer, TestState wait_mask,
+    gboolean perform_state_change)
 {
   if (offer) {
     t->offer_data = offer;
@@ -692,15 +767,28 @@ test_validate_sdp (struct test_webrtc *t, struct validate_sdp *offer,
     t->on_answer_created = NULL;
   }
 
-  fail_if (gst_element_set_state (t->webrtc1,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
-  fail_if (gst_element_set_state (t->webrtc2,
-          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  if (perform_state_change) {
+    fail_if (gst_element_set_state (t->webrtc1,
+            GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+    fail_if (gst_element_set_state (t->webrtc2,
+            GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  }
 
   test_webrtc_create_offer (t, t->webrtc1);
 
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless (t->state == STATE_ANSWER_CREATED);
+  if (wait_mask == 0) {
+    test_webrtc_wait_for_answer_error_eos (t);
+    fail_unless (t->state == STATE_ANSWER_SET);
+  } else {
+    test_webrtc_wait_for_state_mask (t, wait_mask);
+  }
+}
+
+static void
+test_validate_sdp (struct test_webrtc *t, struct validate_sdp *offer,
+    struct validate_sdp *answer)
+{
+  test_validate_sdp_full (t, offer, answer, 0, TRUE);
 }
 
 static void
@@ -1508,10 +1596,6 @@ GST_START_TEST (test_data_channel_remote_notify)
   VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel;
 
@@ -1532,9 +1616,7 @@ GST_START_TEST (test_data_channel_remote_notify)
   fail_if (gst_element_set_state (t->webrtc2,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+  test_validate_sdp_full (t, &offer, &answer, 1 << STATE_CUSTOM, FALSE);
 
   g_object_unref (channel);
   test_webrtc_free (t);
@@ -1583,10 +1665,6 @@ GST_START_TEST (test_data_channel_transfer_string)
   VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_transfer_string;
 
@@ -1607,9 +1685,7 @@ GST_START_TEST (test_data_channel_transfer_string)
   fail_if (gst_element_set_state (t->webrtc2,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+  test_validate_sdp_full (t, &offer, &answer, 1 << STATE_CUSTOM, FALSE);
 
   g_object_unref (channel);
   test_webrtc_free (t);
@@ -1665,10 +1741,6 @@ GST_START_TEST (test_data_channel_transfer_data)
   VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_transfer_data;
 
@@ -1689,9 +1761,7 @@ GST_START_TEST (test_data_channel_transfer_data)
   fail_if (gst_element_set_state (t->webrtc2,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+  test_validate_sdp_full (t, &offer, &answer, 1 << STATE_CUSTOM, FALSE);
 
   g_object_unref (channel);
   test_webrtc_free (t);
@@ -1723,10 +1793,6 @@ GST_START_TEST (test_data_channel_create_after_negotiate)
   VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_create_data_channel;
 
@@ -1747,9 +1813,7 @@ GST_START_TEST (test_data_channel_create_after_negotiate)
   fail_if (gst_element_set_state (t->webrtc2,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+  test_validate_sdp_full (t, &offer, &answer, 1 << STATE_CUSTOM, FALSE);
 
   g_object_unref (channel);
   test_webrtc_free (t);
@@ -1784,10 +1848,6 @@ GST_START_TEST (test_data_channel_low_threshold)
   VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_check_low_threshold_emitted;
 
@@ -1808,9 +1868,7 @@ GST_START_TEST (test_data_channel_low_threshold)
   fail_if (gst_element_set_state (t->webrtc2,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+  test_validate_sdp_full (t, &offer, &answer, 1 << STATE_CUSTOM, FALSE);
 
   g_object_unref (channel);
   test_webrtc_free (t);
@@ -1857,10 +1915,6 @@ GST_START_TEST (test_data_channel_max_message_size)
   VAL_SDP_INIT (answer, on_sdp_has_datachannel, NULL, NULL);
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
   t->on_data_channel = have_data_channel_transfer_large_data;
 
@@ -1879,9 +1933,7 @@ GST_START_TEST (test_data_channel_max_message_size)
   fail_if (gst_element_set_state (t->webrtc2,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
-  test_webrtc_create_offer (t, t->webrtc1);
-
-  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+  test_validate_sdp_full (t, &offer, &answer, 1 << STATE_CUSTOM, FALSE);
 
   g_object_unref (channel);
   test_webrtc_free (t);
@@ -1915,10 +1967,6 @@ GST_START_TEST (test_data_channel_pre_negotiated)
   gint n_ready = 0;
 
   t->on_negotiation_needed = NULL;
-  t->offer_data = &offer;
-  t->on_offer_created = _check_validate_sdp;
-  t->answer_data = &answer;
-  t->on_answer_created = _check_validate_sdp;
   t->on_ice_candidate = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -1941,9 +1989,7 @@ GST_START_TEST (test_data_channel_pre_negotiated)
   fail_if (gst_element_set_state (t->webrtc2,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
 
-  test_webrtc_create_offer (t, t->webrtc1);
-  test_webrtc_wait_for_answer_error_eos (t);
-  fail_unless (t->state == STATE_ANSWER_CREATED);
+  test_validate_sdp_full (t, &offer, &answer, 0, FALSE);
 
   t->data_channel_data = &n_ready;
 
@@ -2214,7 +2260,7 @@ GST_START_TEST (test_duplicate_nego)
   test_validate_sdp (t, &offer, &answer);
   fail_unless_equals_int (negotiation_flag, 1);
 
-  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_webrtc_reset_negotiation (t);
   test_validate_sdp (t, &offer, &answer);
 
   test_webrtc_free (t);
@@ -2417,7 +2463,7 @@ GST_START_TEST (test_renego_add_stream)
   answer.next = &renego_fingerprint;
 
   /* renegotiate! */
-  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_webrtc_reset_negotiation (t);
   test_validate_sdp (t, &offer, &answer);
 
   test_webrtc_free (t);
@@ -2458,7 +2504,7 @@ GST_START_TEST (test_renego_stream_add_data_channel)
   answer.next = &renego_fingerprint;
 
   /* renegotiate! */
-  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_webrtc_reset_negotiation (t);
   test_validate_sdp (t, &offer, &answer);
 
   g_object_unref (channel);
@@ -2498,7 +2544,7 @@ GST_START_TEST (test_renego_data_channel_add_stream)
   g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
       &channel);
 
-  test_validate_sdp (t, &offer, &answer);
+  test_validate_sdp_full (t, &offer, &answer, 0, FALSE);
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
   add_fake_audio_src_harness (h, 97);
@@ -2508,8 +2554,8 @@ GST_START_TEST (test_renego_data_channel_add_stream)
   answer.next = &renego_fingerprint;
 
   /* renegotiate! */
-  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
-  test_validate_sdp (t, &offer, &answer);
+  test_webrtc_reset_negotiation (t);
+  test_validate_sdp_full (t, &offer, &answer, 0, FALSE);
 
   g_object_unref (channel);
   test_webrtc_free (t);
@@ -2577,7 +2623,7 @@ GST_START_TEST (test_bundle_renego_add_stream)
   answer.next = &answer_bundle_only_sdp;
 
   /* renegotiate! */
-  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_webrtc_reset_negotiation (t);
   test_validate_sdp (t, &offer, &answer);
 
   test_webrtc_free (t);
@@ -2640,7 +2686,7 @@ GST_START_TEST (test_bundle_max_compat_max_bundle_renego_add_stream)
   answer.next = &bundle_sdp;
 
   /* renegotiate! */
-  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_webrtc_reset_negotiation (t);
   test_validate_sdp (t, &offer, &answer);
 
   test_webrtc_free (t);
@@ -2677,7 +2723,7 @@ GST_START_TEST (test_renego_transceiver_set_direction)
 
   /* TODO: also validate EOS events from the inactive change */
 
-  test_webrtc_signal_state (t, STATE_NEGOTIATION_NEEDED);
+  test_webrtc_reset_negotiation (t);
   test_validate_sdp (t, &offer, &answer);
 
   gst_object_unref (pad);
