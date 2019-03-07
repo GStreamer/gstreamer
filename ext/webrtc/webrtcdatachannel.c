@@ -916,30 +916,6 @@ _on_sctp_notify_state (GObject * sctp_transport, GParamSpec * pspec,
   GST_OBJECT_UNLOCK (channel);
 }
 
-void
-gst_webrtc_data_channel_set_sctp_transport (GstWebRTCDataChannel * channel,
-    GstWebRTCSCTPTransport * sctp)
-{
-  g_return_if_fail (GST_IS_WEBRTC_DATA_CHANNEL (channel));
-  g_return_if_fail (GST_IS_WEBRTC_SCTP_TRANSPORT (sctp));
-
-  GST_OBJECT_LOCK (channel);
-  if (channel->sctp_transport)
-    g_signal_handlers_disconnect_by_data (channel->sctp_transport, channel);
-
-  gst_object_replace ((GstObject **) & channel->sctp_transport,
-      GST_OBJECT (sctp));
-
-  if (sctp) {
-    g_signal_connect (sctp, "stream-reset", G_CALLBACK (_on_sctp_reset_stream),
-        channel);
-    g_signal_connect (sctp, "notify::state", G_CALLBACK (_on_sctp_notify_state),
-        channel);
-    _on_sctp_notify_state_unlocked (G_OBJECT (sctp), channel);
-  }
-  GST_OBJECT_UNLOCK (channel);
-}
-
 static void
 gst_webrtc_data_channel_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1320,4 +1296,50 @@ gst_webrtc_data_channel_class_init (GstWebRTCDataChannelClass * klass)
 static void
 gst_webrtc_data_channel_init (GstWebRTCDataChannel * channel)
 {
+}
+
+static void
+_data_channel_set_sctp_transport (GstWebRTCDataChannel * channel,
+    GstWebRTCSCTPTransport * sctp)
+{
+  g_return_if_fail (GST_IS_WEBRTC_DATA_CHANNEL (channel));
+  g_return_if_fail (GST_IS_WEBRTC_SCTP_TRANSPORT (sctp));
+
+  GST_OBJECT_LOCK (channel);
+  if (channel->sctp_transport)
+    g_signal_handlers_disconnect_by_data (channel->sctp_transport, channel);
+
+  gst_object_replace ((GstObject **) & channel->sctp_transport,
+      GST_OBJECT (sctp));
+
+  if (sctp) {
+    g_signal_connect (sctp, "stream-reset", G_CALLBACK (_on_sctp_reset_stream),
+        channel);
+    g_signal_connect (sctp, "notify::state", G_CALLBACK (_on_sctp_notify_state),
+        channel);
+    _on_sctp_notify_state_unlocked (G_OBJECT (sctp), channel);
+  }
+  GST_OBJECT_UNLOCK (channel);
+}
+
+void
+gst_webrtc_data_channel_link_to_sctp (GstWebRTCDataChannel * channel,
+    GstWebRTCSCTPTransport * sctp_transport)
+{
+  if (sctp_transport && !channel->sctp_transport) {
+    gint id;
+
+    g_object_get (channel, "id", &id, NULL);
+
+    if (sctp_transport->association_established && id != -1) {
+      gchar *pad_name;
+
+      _data_channel_set_sctp_transport (channel, sctp_transport);
+      pad_name = g_strdup_printf ("sink_%u", id);
+      if (!gst_element_link_pads (channel->appsrc, "src",
+              channel->sctp_transport->sctpenc, pad_name))
+        g_warn_if_reached ();
+      g_free (pad_name);
+    }
+  }
 }

@@ -1640,29 +1640,6 @@ _on_data_channel_ready_state (GstWebRTCDataChannel * channel,
 }
 
 static void
-_link_data_channel_to_sctp (GstWebRTCBin * webrtc,
-    GstWebRTCDataChannel * channel)
-{
-  if (webrtc->priv->sctp_transport && !channel->sctp_transport) {
-    gint id;
-
-    g_object_get (channel, "id", &id, NULL);
-
-    if (webrtc->priv->sctp_transport->association_established && id != -1) {
-      gchar *pad_name;
-
-      gst_webrtc_data_channel_set_sctp_transport (channel,
-          webrtc->priv->sctp_transport);
-      pad_name = g_strdup_printf ("sink_%u", id);
-      if (!gst_element_link_pads (channel->appsrc, "src",
-              channel->sctp_transport->sctpenc, pad_name))
-        g_warn_if_reached ();
-      g_free (pad_name);
-    }
-  }
-}
-
-static void
 _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
     GstWebRTCBin * webrtc)
 {
@@ -1686,7 +1663,8 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
     gst_element_sync_state_with_parent (channel->appsrc);
     gst_element_sync_state_with_parent (channel->appsink);
 
-    _link_data_channel_to_sctp (webrtc, channel);
+    gst_webrtc_data_channel_link_to_sctp (channel,
+        webrtc->priv->sctp_transport);
 
     g_array_append_val (webrtc->priv->pending_data_channels, channel);
   }
@@ -1723,7 +1701,8 @@ _on_sctp_state_notify (GstWebRTCSCTPTransport * sctp, GParamSpec * pspec,
           g_array_index (webrtc->priv->data_channels, GstWebRTCDataChannel *,
           i);
 
-      _link_data_channel_to_sctp (webrtc, channel);
+      gst_webrtc_data_channel_link_to_sctp (channel,
+          webrtc->priv->sctp_transport);
 
       if (!channel->negotiated && !channel->opened)
         gst_webrtc_data_channel_start_negotiation (channel);
@@ -1783,7 +1762,8 @@ _get_or_create_data_channel_transports (GstWebRTCBin * webrtc, guint session_id)
           g_array_index (webrtc->priv->data_channels, GstWebRTCDataChannel *,
           i);
 
-      _link_data_channel_to_sctp (webrtc, channel);
+      gst_webrtc_data_channel_link_to_sctp (channel,
+          webrtc->priv->sctp_transport);
     }
 
     gst_element_sync_state_with_parent (GST_ELEMENT (stream->send_bin));
@@ -3741,7 +3721,8 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
 
     if (webrtc->priv->sctp_transport->association_established
         && !channel->negotiated && !channel->opened) {
-      _link_data_channel_to_sctp (webrtc, channel);
+      gst_webrtc_data_channel_link_to_sctp (channel,
+          webrtc->priv->sctp_transport);
       gst_webrtc_data_channel_start_negotiation (channel);
     }
   }
@@ -4607,7 +4588,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
     ret = gst_object_ref (ret);
     ret->webrtcbin = webrtc;
     g_array_append_val (webrtc->priv->data_channels, ret);
-    _link_data_channel_to_sctp (webrtc, ret);
+    gst_webrtc_data_channel_link_to_sctp (ret, webrtc->priv->sctp_transport);
     if (webrtc->priv->sctp_transport &&
         webrtc->priv->sctp_transport->association_established
         && !ret->negotiated) {
