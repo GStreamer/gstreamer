@@ -67,7 +67,7 @@
  * If the #GstUDPSrc:timeout property is set to a value bigger than 0, udpsrc
  * will generate an element message named
  * <classname>&quot;GstUDPSrcTimeout&quot;</classname>
- * if no data was recieved in the given timeout.
+ * if no data was received in the given timeout.
  * The message's structure contains one field:
  * <itemizedlist>
  * <listitem>

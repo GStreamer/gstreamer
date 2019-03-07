@@ -705,7 +705,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   /**
    * GstRTSPSrc:port-range:
    *
-   * Configure the client port numbers that can be used to recieve RTP and
+   * Configure the client port numbers that can be used to receive RTP and
    * RTCP.
    */
   g_object_class_install_property (gobject_class, PROP_PORT_RANGE,

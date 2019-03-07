@@ -77,7 +77,7 @@
  *
  * For its part, GStreamer is concerned with accuracy and preservation of
  * information. This element outputs the 720x576 or 720x480 video that it
- * recieves, noting the proper aspect ratio. This should not be a problem for
+ * receives, noting the proper aspect ratio. This should not be a problem for
  * windowed applications, which can change size to fit the video. Applications
  * with fixed size requirements should decide whether to crop or pad which
  * an element such as videobox can do.
