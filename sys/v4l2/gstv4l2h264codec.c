@@ -185,7 +185,7 @@ v4l2_level_to_string (gint v4l2_level)
     case V4L2_MPEG_VIDEO_H264_LEVEL_2_2:
       return "2.2";
     case V4L2_MPEG_VIDEO_H264_LEVEL_3_0:
-      return "3.0";
+      return "3";
     case V4L2_MPEG_VIDEO_H264_LEVEL_3_1:
       return "3.1";
     case V4L2_MPEG_VIDEO_H264_LEVEL_3_2:
