@@ -358,10 +358,10 @@ gst_ass_render_pop_text (GstAssRender * render)
 {
   while (render->subtitle_pending) {
     GST_DEBUG_OBJECT (render, "releasing text buffer %p",
-        render->subtitle_pending);
+        render->subtitle_pending->data);
     gst_buffer_unref (render->subtitle_pending->data);
     render->subtitle_pending =
-        g_slist_remove_link (render->subtitle_pending,
+        g_slist_delete_link (render->subtitle_pending,
         render->subtitle_pending);
   }
 
@@ -1263,9 +1263,9 @@ wait_for_text_buf:
           GST_WARNING_OBJECT (render,
               "Got text buffer with invalid timestamp or duration");
           gst_buffer_unref (bad->data);
-          subtitle_pending = bad->next;
+          bad = subtitle_pending->next;
           render->subtitle_pending =
-              g_slist_remove_link (render->subtitle_pending, bad);
+              g_slist_delete_link (render->subtitle_pending, bad);
           GST_ASS_RENDER_BROADCAST (render);
           continue;
         }
@@ -1295,7 +1295,7 @@ wait_for_text_buf:
           gst_buffer_unref (old->data);
           subtitle_pending = old->next;
           render->subtitle_pending =
-              g_slist_remove_link (render->subtitle_pending, old);
+              g_slist_delete_link (render->subtitle_pending, old);
           GST_ASS_RENDER_BROADCAST (render);
           continue;
         }
@@ -1356,7 +1356,7 @@ wait_for_text_buf:
           gst_buffer_unref (old->data);
           subtitle_pending = old->next;
           render->subtitle_pending =
-              g_slist_remove_link (render->subtitle_pending, old);
+              g_slist_delete_link (render->subtitle_pending, old);
           GST_ASS_RENDER_BROADCAST (render);
           GST_ASS_RENDER_UNLOCK (render);
           render->need_process = TRUE;
