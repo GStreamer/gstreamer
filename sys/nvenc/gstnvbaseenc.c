@@ -513,6 +513,11 @@ gst_nv_base_enc_stop (GstVideoEncoder * enc)
 
   gst_nv_base_enc_free_buffers (nvenc);
 
+  if (nvenc->input_state) {
+    gst_video_codec_state_unref (nvenc->input_state);
+    nvenc->input_state = NULL;
+  }
+
   if (nvenc->bitstream_pool) {
     g_async_queue_unref (nvenc->bitstream_pool);
     nvenc->bitstream_pool = NULL;
