@@ -688,12 +688,17 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
   if (self->priv->copied_layer)
     nclip->priv->copied_layer = g_object_ref (self->priv->copied_layer);
 
-  ges_clip_set_moving_from_layer (nclip, TRUE);
-  if (self->priv->copied_layer)
-    ges_layer_add_clip (self->priv->copied_layer, nclip);
-  ges_clip_set_moving_from_layer (nclip, FALSE);
-
   ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (nclip), paste_position);
+  if (self->priv->copied_layer) {
+    if (!ges_layer_add_clip (self->priv->copied_layer, nclip)) {
+      GST_INFO ("%" GES_FORMAT " could not be pasted to %" GST_TIME_FORMAT,
+          GES_ARGS (element), GST_TIME_ARGS (paste_position));
+      gst_object_unref (nclip);
+
+      return NULL;
+    }
+
+  }
 
   for (tmp = self->priv->copied_track_elements; tmp; tmp = tmp->next) {
     GESTrackElement *new_trackelement, *trackelement =
@@ -777,14 +782,17 @@ ges_clip_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_clip_finalize (GObject * object)
+ges_clip_dispose (GObject * object)
 {
   GESClip *self = GES_CLIP (object);
 
   g_list_free_full (self->priv->copied_track_elements, g_object_unref);
+  self->priv->copied_track_elements = NULL;
+  g_clear_object (&self->priv->copied_layer);
 
-  G_OBJECT_CLASS (ges_clip_parent_class)->finalize (object);
+  G_OBJECT_CLASS (ges_clip_parent_class)->dispose (object);
 }
+
 
 static void
 ges_clip_class_init (GESClipClass * klass)
@@ -795,7 +803,7 @@ ges_clip_class_init (GESClipClass * klass)
 
   object_class->get_property = ges_clip_get_property;
   object_class->set_property = ges_clip_set_property;
-  object_class->finalize = ges_clip_finalize;
+  object_class->dispose = ges_clip_dispose;
   klass->create_track_elements = ges_clip_create_track_elements_func;
   klass->create_track_element = NULL;
 
