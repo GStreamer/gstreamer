@@ -147,12 +147,15 @@ gst_gl_window_error_quark (void)
 static gboolean
 gst_gl_window_default_open (GstGLWindow * window, GError ** error)
 {
+  g_main_context_push_thread_default (window->main_context);
+
   return TRUE;
 }
 
 static void
 gst_gl_window_default_close (GstGLWindow * window)
 {
+  g_main_context_pop_thread_default (window->main_context);
 }
 
 static void
@@ -511,11 +514,7 @@ gst_gl_window_default_run (GstGLWindow * window)
 {
   GstGLWindowPrivate *priv = window->priv;
 
-  g_main_context_push_thread_default (window->main_context);
-
   g_main_loop_run (priv->loop);
-
-  g_main_context_pop_thread_default (window->main_context);
 }
 
 /**
@@ -890,10 +889,12 @@ void
 gst_gl_window_get_surface_dimensions (GstGLWindow * window, guint * width,
     guint * height)
 {
+  GST_GL_WINDOW_LOCK (window);
   if (width)
     *width = window->priv->surface_width;
   if (height)
     *height = window->priv->surface_height;
+  GST_GL_WINDOW_UNLOCK (window);
 }
 
 void
@@ -958,6 +959,7 @@ gst_gl_window_set_render_rectangle (GstGLWindow * window, gint x, gint y,
   g_return_val_if_fail (GST_IS_GL_WINDOW (window), FALSE);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
 
+  GST_GL_WINDOW_LOCK (window);
   /* When x/y is smaller then reset the render rectangle */
   if (x < 0 || y < 0) {
     x = y = 0;
@@ -965,11 +967,15 @@ gst_gl_window_set_render_rectangle (GstGLWindow * window, gint x, gint y,
     height = window->priv->surface_height;
   }
 
-  if (x < 0 || y < 0 || width <= 0 || height <= 0)
+  if (x < 0 || y < 0 || width <= 0 || height <= 0) {
+    GST_GL_WINDOW_UNLOCK (window);
     return FALSE;
+  }
 
   if (window_class->set_render_rectangle)
     ret = window_class->set_render_rectangle (window, x, y, width, height);
+
+  GST_GL_WINDOW_UNLOCK (window);
 
   return ret;
 }
@@ -1004,8 +1010,18 @@ _on_resize (gpointer data)
 {
   struct resize_data *resize = data;
 
-  resize->window->resize (resize->window->resize_data, resize->width,
-      resize->height);
+  GST_GL_WINDOW_LOCK (resize->window);
+
+  if (resize->window->resize)
+    resize->window->resize (resize->window->resize_data, resize->width,
+        resize->height);
+
+  resize->window->priv->surface_width = resize->width;
+  resize->window->priv->surface_height = resize->height;
+
+  GST_GL_WINDOW_UNLOCK (resize->window);
+
+  resize->window->queue_resize = FALSE;
 }
 
 /**
@@ -1019,22 +1035,15 @@ _on_resize (gpointer data)
 void
 gst_gl_window_resize (GstGLWindow * window, guint width, guint height)
 {
+  struct resize_data resize = { 0, };
+
   g_return_if_fail (GST_IS_GL_WINDOW (window));
 
-  if (window->resize) {
-    struct resize_data resize = { 0, };
+  resize.window = window;
+  resize.width = width;
+  resize.height = height;
 
-    resize.window = window;
-    resize.width = width;
-    resize.height = height;
-
-    gst_gl_window_send_message (window, (GstGLWindowCB) _on_resize, &resize);
-  }
-
-  window->priv->surface_width = width;
-  window->priv->surface_height = height;
-
-  window->queue_resize = FALSE;
+  gst_gl_window_send_message (window, (GstGLWindowCB) _on_resize, &resize);
 }
 
 /**
