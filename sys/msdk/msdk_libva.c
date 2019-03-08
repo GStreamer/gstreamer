@@ -65,6 +65,7 @@ static const struct fourcc_map gst_msdk_fourcc_mfx_to_va[] = {
 #if (MFX_VERSION >= 1028)
   FOURCC_MFX_TO_VA (RGB565, RGB565),
 #endif
+  FOURCC_MFX_TO_VA (AYUV, AYUV),
   {0, 0}
 };
 
