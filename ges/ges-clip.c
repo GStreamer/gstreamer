@@ -1376,6 +1376,9 @@ ges_clip_split (GESClip * clip, guint64 position)
       inpoint + old_duration * media_duration_factor);
   _set_duration0 (GES_TIMELINE_ELEMENT (new_object), new_duration);
 
+  _DURATION (clip) = old_duration;
+  g_object_notify (G_OBJECT (clip), "duration");
+
   /* We do not want the timeline to create again TrackElement-s */
   ges_clip_set_moving_from_layer (new_object, TRUE);
   ges_layer_add_clip (clip->priv->layer, new_object);
@@ -1409,6 +1412,7 @@ ges_clip_split (GESClip * clip, guint64 position)
   }
 
   ELEMENT_SET_FLAG (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
+  _DURATION (clip) = duration;
   _set_duration0 (GES_TIMELINE_ELEMENT (clip), old_duration);
   ELEMENT_UNSET_FLAG (clip, GES_TIMELINE_ELEMENT_SET_SIMPLE);
 
