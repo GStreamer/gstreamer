@@ -81,15 +81,19 @@ default_prepare (GstTaskPool * pool, GError ** error)
 static void
 default_cleanup (GstTaskPool * pool)
 {
+  GThreadPool *pool_;
+
   GST_OBJECT_LOCK (pool);
-  if (pool->pool) {
+  pool_ = pool->pool;
+  pool->pool = NULL;
+  GST_OBJECT_UNLOCK (pool);
+
+  if (pool_) {
     /* Shut down all the threads, we still process the ones scheduled
      * because the unref happens in the thread function.
      * Also wait for currently running ones to finish. */
-    g_thread_pool_free (pool->pool, FALSE, TRUE);
-    pool->pool = NULL;
+    g_thread_pool_free (pool_, FALSE, TRUE);
   }
-  GST_OBJECT_UNLOCK (pool);
 }
 
 static gpointer
