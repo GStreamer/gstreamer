@@ -14,6 +14,7 @@ import tempfile
 import pathlib
 
 from distutils.sysconfig import get_python_lib
+from distutils.util import strtobool
 
 from common import get_meson
 from common import git
@@ -229,7 +230,7 @@ if __name__ == "__main__":
             args += ['/k', 'prompt [gst-{}] $P$G'.format(gst_version)]
         else:
             args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
-        if "bash" in args[0]:
+        if "bash" in args[0] and not strtobool(os.environ.get("GST_BUILD_DISABLE_PS1_OVERRIDE", r"FALSE")):
             bashrc = os.path.expanduser('~/.bashrc')
             if os.path.exists(bashrc):
                 tmprc = tempfile.NamedTemporaryFile(mode='w')

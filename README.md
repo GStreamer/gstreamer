@@ -136,7 +136,19 @@ built in a `build` directory you can simply run:
 
 ### Bash prompt
 
-We automatically handle `bash` and set `$PS1` accordingly
+We automatically handle `bash` and set `$PS1` accordingly.
+
+If the automatic `$PS1` override is not desired (maybe you have a fancy custom prompt), set the `$GST_BUILD_DISABLE_PS1_OVERRIDE` environment variable to `TRUE` and use `$GST_ENV` when setting the custom prompt, for example with a snippet like the following:
+
+```bash
+...
+if [[ -n "${GST_ENV-}" ]];
+then
+  PS1+="[ ${GST_ENV} ]"
+fi
+...
+
+```
 
 ### Zsh prompt
 
