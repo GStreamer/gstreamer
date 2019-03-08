@@ -320,6 +320,15 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         data->B = data->R;
         break;
 #endif
+      case VA_FOURCC_AYUV:
+        data->PitchHigh = (mfxU16) (mem_id->image.pitches[0] / (1 << 16));
+        data->PitchLow = (mfxU16) (mem_id->image.pitches[0] % (1 << 16));
+        data->V = buf + mem_id->image.offsets[0];
+        data->U = data->V + 1;
+        data->Y = data->V + 2;
+        data->A = data->V + 3;
+        break;
+
       default:
         g_assert_not_reached ();
         break;

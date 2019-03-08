@@ -121,6 +121,17 @@ ensure_data (GstMsdkSystemMemory * mem)
       mem->surface->Data.Pitch = mem->destination_pitches[0];
       break;
 #endif
+    case GST_VIDEO_FORMAT_VUYA:
+      mem->surface->Data.V = mem->cached_data[0];
+      mem->surface->Data.U = mem->surface->Data.V + 1;
+      mem->surface->Data.Y = mem->surface->Data.V + 2;
+      mem->surface->Data.A = mem->surface->Data.V + 3;
+      mem->surface->Data.PitchHigh =
+          (mfxU16) (mem->destination_pitches[0] / (1 << 16));
+      mem->surface->Data.PitchLow =
+          (mfxU16) (mem->destination_pitches[0] % (1 << 16));
+      break;
+
     default:
       g_assert_not_reached ();
       break;
