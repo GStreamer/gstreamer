@@ -5,7 +5,9 @@ subdir('qt')
 subdir('rtp')
 subdir('rtsp')
 subdir('shapewipe')
-subdir('v4l2')
+if have_v4l2
+  subdir('v4l2')
+endif
 
 if gtk_dep.found()
   subdir('equalizer')
