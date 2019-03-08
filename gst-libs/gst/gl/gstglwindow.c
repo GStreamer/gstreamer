@@ -317,6 +317,8 @@ gst_gl_window_finalize (GObject * object)
   GstGLWindow *window = GST_GL_WINDOW (object);
   GstGLWindowPrivate *priv = window->priv;
 
+  gst_gl_display_remove_window (window->display, window);
+
   if (priv->loop)
     g_main_loop_unref (priv->loop);
 
@@ -540,6 +542,7 @@ gst_gl_window_run (GstGLWindow * window)
 static void
 gst_gl_window_default_quit (GstGLWindow * window)
 {
+  gst_gl_display_remove_window (window->display, window);
   g_main_loop_quit (window->priv->loop);
 }
 

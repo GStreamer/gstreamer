@@ -592,8 +592,11 @@ gst_gl_display_create_window (GstGLDisplay * display)
 
   window = klass->create_window (display);
 
-  if (window)
+  if (window) {
     display->windows = g_list_prepend (display->windows, window);
+  }
+  GST_DEBUG_OBJECT (display, "Adding window %" GST_PTR_FORMAT
+      " (%p) to internal list", window, window);
 
   return window;
 }
@@ -625,6 +628,8 @@ gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
     display->windows = g_list_delete_link (display->windows, l);
     ret = TRUE;
   }
+  GST_DEBUG_OBJECT (display, "Removing window %" GST_PTR_FORMAT
+      " (%p) from internal list", window, window);
   GST_OBJECT_UNLOCK (display);
 
   return ret;
