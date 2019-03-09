@@ -610,17 +610,19 @@ GST_START_TEST (audiodecoder_buffer_after_segment)
   guint64 i;
   GstClockTime pos;
 
+#define SEGMENT_STOP (GST_MSECOND * 10)
+
   GstHarness *h = setup_audiodecodertester (NULL, NULL);
 
   /* push a new segment */
   gst_segment_init (&segment, GST_FORMAT_TIME);
-  segment.stop = GST_SECOND;
+  segment.stop = SEGMENT_STOP;
   fail_unless (gst_harness_push_event (h, gst_event_new_segment (&segment)));
 
   /* push buffers, the data is actually a number so we can track them */
   i = 0;
   pos = 0;
-  while (pos < GST_SECOND) {
+  while (pos < SEGMENT_STOP) {
     GstMapInfo map;
     guint64 num;
 
