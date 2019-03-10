@@ -239,12 +239,13 @@ validate_flow_format_buffer (GstBuffer * buffer)
 }
 
 gchar *
-validate_flow_format_event (GstEvent * event, gboolean allow_stream_id,
-    const gchar * const *caps_properties)
+validate_flow_format_event (GstEvent * event,
+    const gchar * const *caps_properties, GstStructure * ignored_event_fields)
 {
   const gchar *event_type;
   gchar *structure_string;
   gchar *event_string;
+  const gchar *ignored_fields;
 
   event_type = gst_event_type_get_name (GST_EVENT_TYPE (event));
 
@@ -262,8 +263,16 @@ validate_flow_format_event (GstEvent * event, gboolean allow_stream_id,
     GstStructure *printable =
         gst_structure_copy (gst_event_get_structure (event));
 
-    if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START && !allow_stream_id)
-      gst_structure_remove_fields (printable, "stream-id", NULL);
+    ignored_fields =
+        gst_structure_get_string (ignored_event_fields, event_type);
+    if (ignored_fields) {
+      gint i = 0;
+      gchar *field, **fields = g_strsplit (ignored_fields, ",", -1);
+
+      for (field = fields[i]; field; field = fields[++i])
+        gst_structure_remove_field (printable, field);
+      g_strfreev (fields);
+    }
 
     structure_string = gst_structure_to_string (printable);
     gst_structure_free (printable);

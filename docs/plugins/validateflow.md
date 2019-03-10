@@ -84,7 +84,7 @@ In order to use the plugin a validate configuration file must be provided, conta
 
  * `pad`: Required. Name of the pad that will be monitored.
  * `record-buffers`: Default: false. Whether buffers will be logged. By default only events are logged.
- * `record-stream-id`: Default: false. `stream-id`'s are often non reproducible (this is the case for basesrc, for instance). For this reason, they are omitted by default when recording a `stream-start` event. This setting allows to override that behavior.
+ * `ignored-event-fields`: Default: `stream-start=stream-id` (as they are often non reproducible). Key with a list of coma (`,`) separated list of fields to not record.
  * `expectations-dir`: Path to the directory where the expectations will be written if they don't exist, relative to the current working directory. By default the current working directory is used, but this setting is usually set automatically as part of the `%(validateflow)s` expansion to a correct path like `~/gst-validate/gst-integration-testsuites/flow-expectations/<test name>`.
  * `actual-results-dir`: Path to the directory where the events will be recorded. The expectation file will be compared to this. By default the current working directory is used, but this setting is usually set automatically as part of the `%(validateflow)s` expansion to the test log directory, i.e. `~/gst-validate/logs/validate/launch_pipeline/<test name>`.
 

@@ -55,7 +55,7 @@ typedef struct _ValidateFlowOverride
   gchar *actual_results_dir;
   gboolean error_writing_file;
   gchar **caps_properties;
-  gboolean record_stream_id;
+  GstStructure *ignored_event_fields;
 
   gchar *expectations_file_path;
   gchar *actual_results_file_path;
@@ -136,8 +136,9 @@ validate_flow_override_event_handler (GstValidateOverride * override,
   if (flow->error_writing_file)
     return;
 
-  event_string = validate_flow_format_event (event, flow->record_stream_id,
-      (const gchar * const *) flow->caps_properties);
+  event_string = validate_flow_format_event (event,
+      (const gchar * const *) flow->caps_properties,
+      flow->ignored_event_fields);
   validate_flow_override_printf (flow, "event %s\n", event_string);
   g_free (event_string);
 }
@@ -188,6 +189,7 @@ validate_flow_override_new (GstStructure * config)
 {
   ValidateFlowOverride *flow;
   GstValidateOverride *override;
+  gchar *ignored_event_fields;
 
   flow = g_object_new (VALIDATE_TYPE_FLOW_OVERRIDE, NULL);
   override = GST_VALIDATE_OVERRIDE (flow);
@@ -208,13 +210,26 @@ validate_flow_override_new (GstStructure * config)
    * only the listed properties will be written to the expectation log. */
   flow->caps_properties = parse_caps_properties_setting (flow, config);
 
-  /* record-stream-id: stream-id's are often non reproducible (this is the case
-   * for basesrc, for instance). For this reason, they are omitted by default
-   * when recording a stream-start event. This setting allows to override that
-   * behavior. */
-  flow->record_stream_id = FALSE;
-  gst_structure_get_boolean (config, "record-stream-id",
-      &flow->record_stream_id);
+  ignored_event_fields =
+      (gchar *) gst_structure_get_string (config, "ignored-event-fields");
+  if (ignored_event_fields) {
+    ignored_event_fields = g_strdup_printf ("ignored,%s", ignored_event_fields);
+    flow->ignored_event_fields =
+        gst_structure_new_from_string (ignored_event_fields);
+    if (!flow->ignored_event_fields)
+      g_error ("Could not parse 'ignored-event-fields' %s in %s",
+          ignored_event_fields, gst_structure_to_string (config));
+    g_free (ignored_event_fields);
+  } else {
+    flow->ignored_event_fields =
+        gst_structure_new_from_string ("ignored,stream-start=stream-id");
+  }
+
+  if (!gst_structure_has_field (flow->ignored_event_fields, "stream-start"))
+    gst_structure_set (flow->ignored_event_fields, "stream-start",
+        G_TYPE_STRING, "stream-id", NULL);
+
+
 
   /* expectations-dir: Path to the directory where the expectations will be
    * written if they don't exist, relative to the current working directory.
@@ -421,6 +436,8 @@ validate_flow_override_finalize (GObject * object)
       g_free (*str_pointer);
     g_free (flow->caps_properties);
   }
+  if (flow->ignored_event_fields)
+    gst_structure_free (flow->ignored_event_fields);
 
   G_OBJECT_CLASS (validate_flow_override_parent_class)->finalize (object);
 }

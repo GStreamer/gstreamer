@@ -33,6 +33,6 @@ gchar* validate_flow_format_caps (const GstCaps* caps, const gchar * const *keys
 
 gchar* validate_flow_format_buffer (GstBuffer *buffer);
 
-gchar* validate_flow_format_event (GstEvent *event, gboolean allow_stream_id, const gchar * const *caps_properties);
+gchar* validate_flow_format_event (GstEvent *event, const gchar * const *caps_properties, GstStructure *ignored_event_fields);
 
 #endif // __GST_VALIDATE_FLOW_FORMATTING_H__
