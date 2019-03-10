@@ -36,7 +36,7 @@ from launcher.baseclasses import GstValidateTest, Test, \
 
 from launcher.utils import path2url, url2path, DEFAULT_TIMEOUT, which, \
     GST_SECOND, Result, Protocols, mkdir, printc, Colors, get_data_file, \
-    kill_subprocess
+    kill_subprocess, format_config_template
 
 #
 # Private global variables     #
@@ -210,7 +210,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                 config_file = os.path.join(test_private_dir,
                                            test_name + '.config')
                 with open(config_file, 'w') as f:
-                    f.write(cls._format_config_template(extra_data,
+                    f.write(format_config_template(extra_data,
                             '\n'.join(defs['config']) + '\n', test_name))
 
             scenarios = []
@@ -235,22 +235,6 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
             pipelines_descriptions.append(tests_definition)
 
         return GstValidatePipelineTestsGenerator(name, test_manager, pipelines_descriptions=pipelines_descriptions)
-
-    @classmethod
-    def _format_config_template(cls, extra_data, config_text, test_name):
-        # Variables available for interpolation inside config blocks.
-
-        extra_vars = extra_data.copy()
-
-        if 'validate-flow-expectations-dir' in extra_vars and \
-                'validate-flow-actual-results-dir' in extra_vars:
-            expectations_dir = os.path.join(extra_vars['validate-flow-expectations-dir'],
-                                            test_name.replace('.', os.sep))
-            actual_results_dir = os.path.join(extra_vars['validate-flow-actual-results-dir'],
-                                              test_name.replace('.', os.sep))
-            extra_vars['validateflow'] = "validateflow, expectations-dir=\"%s\", actual-results-dir=\"%s\"" % (expectations_dir, actual_results_dir)
-
-        return config_text % extra_vars
 
     def get_fname(self, scenario, protocol=None, name=None):
         if name is None:

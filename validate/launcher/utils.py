@@ -531,3 +531,19 @@ def kill_subprocess(owner, process, timeout):
         res = process.poll()
 
     return res
+
+
+def format_config_template(extra_data, config_text, test_name):
+    # Variables available for interpolation inside config blocks.
+
+    extra_vars = extra_data.copy()
+
+    if 'validate-flow-expectations-dir' in extra_vars and \
+            'validate-flow-actual-results-dir' in extra_vars:
+        expectations_dir = os.path.join(extra_vars['validate-flow-expectations-dir'],
+                                        test_name.replace('.', os.sep))
+        actual_results_dir = os.path.join(extra_vars['validate-flow-actual-results-dir'],
+                                          test_name.replace('.', os.sep))
+        extra_vars['validateflow'] = "validateflow, expectations-dir=\"%s\", actual-results-dir=\"%s\"" % (expectations_dir, actual_results_dir)
+
+    return config_text % extra_vars
