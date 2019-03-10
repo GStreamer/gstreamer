@@ -125,6 +125,13 @@ print_position (GstValidateMonitor * monitor)
     goto done;
   }
 
+  if (position > duration) {
+    GST_VALIDATE_REPORT (monitor,
+        QUERY_POSITION_SUPERIOR_DURATION,
+        "Reported position %" GST_TIME_FORMAT " > reported duration %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
+  }
+
   query = gst_query_new_segment (GST_FORMAT_DEFAULT);
   if (gst_element_query (pipeline, query))
     gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
@@ -531,6 +538,9 @@ _bus_handler (GstBus * bus, GstMessage * message,
     g_string_free (str, TRUE);
   }
   switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_EOS:
+      print_position (GST_VALIDATE_MONITOR (monitor));
+      break;
     case GST_MESSAGE_ERROR:
       gst_message_parse_error (message, &err, &debug);
       gst_message_parse_error_details (message, &details);
