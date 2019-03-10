@@ -2952,10 +2952,8 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
           type->parameters[i].name, &tmp);
   }
 
-  if (action->repeat > 0) {
-    GST_ERROR ("Repeat already set!");
+  if (action->repeat > 0)
     return TRUE;
-  }
 
   if (!gst_structure_has_field (action->structure, "repeat"))
     return TRUE;
