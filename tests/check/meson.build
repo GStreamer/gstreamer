@@ -81,7 +81,8 @@ core_tests = [
   [ 'elements/concat.c', not gst_registry ],
   [ 'elements/dataurisrc.c', not gst_registry ],
   [ 'elements/fakesrc.c', not gst_registry ],
-  [ 'elements/fdsrc.c', not gst_registry ],
+  # FIXME: blocked forever on Windows due to missing fcntl (.. O_NONBLOCK)
+  [ 'elements/fdsrc.c', not gst_registry or host_system == 'windows' ],
   [ 'elements/filesink.c', not gst_registry ],
   [ 'elements/filesrc.c', not gst_registry ],
   [ 'elements/funnel.c', not gst_registry ],
