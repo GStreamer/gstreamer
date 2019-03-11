@@ -25,6 +25,9 @@
 #  include "config.h"
 #endif
 
+#ifdef _MSC_VER
+#define _USE_MATH_DEFINES       /* Needed for M_PI and M_LN2 */
+#endif
 #include <math.h>               /* sin(), log() */
 #include <errno.h>
 #include <ctype.h>              /* isspace() */
