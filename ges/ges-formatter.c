@@ -100,6 +100,11 @@ _register_metas (GESExtractableInterface * iface, GObjectClass * class,
   ges_meta_container_register_meta_string (container, GES_META_READ_WRITE,
       GES_META_FORMAT_VERSION, NULL);
 
+  g_clear_pointer (&fclass->name, g_free);
+  g_clear_pointer (&fclass->description, g_free);
+  g_clear_pointer (&fclass->extension, g_free);
+  g_clear_pointer (&fclass->mimetype, g_free);
+
   return TRUE;
 }
 
@@ -124,11 +129,11 @@ ges_formatter_class_init (GESFormatterClass * klass)
   klass->save_to_uri = NULL;
 
   /* We set dummy  metas */
-  klass->name = "base-formatter";
-  klass->extension = "noextension";
-  klass->description = "Formatter base class, you should give"
-      " a name to your formatter";
-  klass->mimetype = "No mimetype";
+  klass->name = g_strdup ("base-formatter");
+  klass->extension = g_strdup ("noextension");
+  klass->description = g_strdup ("Formatter base class, you should give"
+      " a name to your formatter");
+  klass->mimetype = g_strdup ("No mimetype");
   klass->version = 0.0;
   klass->rank = GST_RANK_NONE;
 }
@@ -440,13 +445,13 @@ ges_formatter_get_default (void)
 
 void
 ges_formatter_class_register_metas (GESFormatterClass * class,
-    const gchar * name, const gchar * description, const gchar * extension,
+    const gchar * name, const gchar * description, const gchar * extensions,
     const gchar * mimetype, gdouble version, GstRank rank)
 {
-  class->name = name;
-  class->description = description;
-  class->extension = extension;
-  class->mimetype = mimetype;
+  class->name = g_strdup (name);
+  class->description = g_strdup (description);
+  class->extension = g_strdup (extensions);
+  class->mimetype = g_strdup (mimetype);
   class->version = version;
   class->rank = rank;
 

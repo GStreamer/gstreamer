@@ -130,10 +130,10 @@ struct _GESFormatterClass {
   GESFormatterSaveToURIMethod save_to_uri;
 
   /* < private > */
-  const gchar *name;
-  const gchar *description;
-  const gchar *extension;
-  const gchar *mimetype;
+  gchar *name;
+  gchar *description;
+  gchar *extension;
+  gchar *mimetype;
   gdouble version;
   GstRank rank;
 
@@ -149,7 +149,7 @@ GES_API
 void ges_formatter_class_register_metas (GESFormatterClass * klass,
                                          const gchar *name,
                                          const gchar *description,
-                                         const gchar *extension,
+                                         const gchar *extensions,
                                          const gchar *mimetype,
                                          gdouble version,
                                          GstRank rank);
