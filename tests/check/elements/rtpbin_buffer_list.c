@@ -131,6 +131,38 @@ create_rtp_packet_buffer (gconstpointer header, gint header_size,
   return buffer;
 }
 
+static GstBuffer *
+create_rtp_buffer_fields (gconstpointer header, gint header_size,
+    GstBuffer * payload_buffer, gint payload_offset, gint payload_size,
+    guint16 seqnum, guint32 timestamp)
+{
+  GstBuffer *buffer;
+  GstMemory *memory;
+  GstMapInfo info;
+  gboolean ret;
+  guint32 *tmp;
+
+  buffer =
+      create_rtp_packet_buffer (header, header_size, payload_buffer,
+      payload_offset, payload_size);
+  fail_if (buffer == NULL);
+
+  memory = gst_buffer_get_memory (buffer, 0);
+  ret = gst_memory_map (memory, &info, GST_MAP_READ);
+  fail_if (ret == FALSE);
+
+  info.data[2] = (seqnum >> 8) & 0xff;
+  info.data[3] = seqnum & 0xff;
+
+  tmp = (guint32 *) & (info.data[4]);
+  *tmp = g_htonl (timestamp);
+
+  gst_memory_unmap (memory, &info);
+  gst_memory_unref (memory);
+
+  return buffer;
+}
+
 static void
 check_seqnum (GstBuffer * buffer, guint16 seqnum)
 {
@@ -296,6 +328,44 @@ sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
 
   return GST_FLOW_OK;
 }
+
+
+/* Non-consecutive seqnums makes probation fail. */
+static GstBufferList *
+create_buffer_list_fail_probation (void)
+{
+  GstBufferList *list;
+  GstBuffer *orig_buffer;
+  GstBuffer *buffer;
+
+  guint16 seqnums[] = { 1, 3, 5 };
+  guint i;
+
+  orig_buffer = create_original_buffer ();
+  fail_if (orig_buffer == NULL);
+
+  list = gst_buffer_list_new ();
+  fail_if (list == NULL);
+
+  for (i = 0; i < sizeof (seqnums) / sizeof (seqnums[0]); i++) {
+    buffer =
+        create_rtp_buffer_fields (&rtp_header[0], rtp_header_len[0],
+        orig_buffer, payload_offset[0], payload_len[0], seqnums[i], 0);
+    gst_buffer_list_add (list, buffer);
+  }
+
+  return list;
+}
+
+/* When probation fails this function shouldn't be called. */
+static GstFlowReturn
+sink_chain_list_probation_failed (GstPad * pad, GstObject * parent,
+    GstBufferList * list)
+{
+  chain_list_func_called = TRUE;
+  return GST_FLOW_OK;
+}
+
 
 /* Get the stats of the **first** source of the given type (get_sender) */
 static void
@@ -472,6 +542,57 @@ GST_START_TEST (test_bufferlist_recv)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_bufferlist_recv_probation_failed)
+{
+  GstElement *rtpbin;
+  GstPad *srcpad;
+  GstPad *sinkpad;
+  GstCaps *caps;
+  GstBufferList *list;
+
+  list = create_buffer_list_fail_probation ();
+  fail_unless (list != NULL);
+
+  rtpbin = gst_check_setup_element ("rtpsession");
+
+  srcpad =
+      gst_check_setup_src_pad_by_name (rtpbin, &srctemplate, "recv_rtp_sink");
+  fail_if (srcpad == NULL);
+
+  sinkpad =
+      gst_check_setup_sink_pad_by_name (rtpbin, &sinktemplate, "recv_rtp_src");
+  fail_if (sinkpad == NULL);
+
+  gst_pad_set_chain_list_function (sinkpad,
+      GST_DEBUG_FUNCPTR (sink_chain_list_probation_failed));
+
+  gst_pad_set_active (srcpad, TRUE);
+  gst_pad_set_active (sinkpad, TRUE);
+
+  caps = gst_caps_from_string (TEST_CAPS);
+  gst_check_setup_events (srcpad, rtpbin, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  gst_element_set_state (rtpbin, GST_STATE_PLAYING);
+
+  chain_list_func_called = FALSE;
+  fail_unless (gst_pad_push_list (srcpad, list) == GST_FLOW_OK);
+  /* when probation fails the list should not be pushed at all, and the
+   * chain_list functions should not be called, fail if it has been. */
+  fail_if (chain_list_func_called == TRUE);
+
+  gst_pad_set_active (sinkpad, FALSE);
+  gst_pad_set_active (srcpad, FALSE);
+
+  gst_check_teardown_pad_by_name (rtpbin, "recv_rtp_src");
+  gst_check_teardown_pad_by_name (rtpbin, "recv_rtp_sink");
+  gst_check_teardown_element (rtpbin);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 bufferlist_suite (void)
 {
@@ -485,6 +606,7 @@ bufferlist_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_bufferlist);
   tcase_add_test (tc_chain, test_bufferlist_recv);
+  tcase_add_test (tc_chain, test_bufferlist_recv_probation_failed);
 
   return s;
 }
