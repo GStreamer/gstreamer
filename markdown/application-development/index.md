@@ -61,7 +61,7 @@ Especially,
 
 To help you navigate through this guide, it is divided into several
 large parts. Each part addresses a particular broad topic concerning
-GStreamer appliction development. The parts of this guide are laid out
+GStreamer application development. The parts of this guide are laid out
 in the following order:
 
 [About GStreamer][about] gives you an overview of GStreamer, its design
