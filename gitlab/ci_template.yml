@@ -27,6 +27,9 @@ variables:
     -Dvaapi=enabled
     -Dsharp=disabled
 
+  DEFAULT_CERBERO_ARGS: >
+     --variants werror
+
 manifest:
   image: $MANIFEST_IMAGE
   stage: 'preparation'
@@ -272,7 +275,8 @@ check fedora:
     CERBERO_HOME: "${CI_PROJECT_DIR}/cerbero-build"
     CERBERO_SOURCES: "${CI_PROJECT_DIR}/cerbero-sources"
     CERBERO_DEPS: "cerbero-deps.tar.gz"
-    CERBERO: ./cerbero-uninstalled -c config/${CONFIG} -c localconf.cbc -m manifest.xml
+    CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS}"
+    CERBERO: "./cerbero-uninstalled -c config/${CONFIG} -c localconf.cbc -m manifest.xml"
   before_script:
     # FIXME Wrong namespace
     # Workaround build-tools having hardcoded internal path
@@ -285,12 +289,12 @@ check fedora:
     - ./cerbero-uninstalled --self-update manifest.xml
     - ccache -z
   script:
-    - $CERBERO show-config
-    - $CERBERO fetch-bootstrap --build-tools-only
-    - $CERBERO fetch-package --deps gstreamer-1.0
-    - $CERBERO fetch-cache
-    - $CERBERO bootstrap --offline --build-tools-only
-    - $CERBERO package --offline -t -o ${CI_PROJECT_DIR} gstreamer-1.0
+    - $CERBERO $CERBERO_ARGS show-config
+    - $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
+    - $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
+    - $CERBERO $CERBERO_ARGS fetch-cache
+    - $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
+    - $CERBERO $CERBERO_ARGS package --offline -t -o ${CI_PROJECT_DIR} gstreamer-1.0
     - ccache -s
   except:
     variables:
@@ -325,15 +329,15 @@ check fedora:
   extends: .cerbero
   stage: "build"
   script:
-    - $CERBERO show-config
-    - $CERBERO fetch-bootstrap --build-tools-only
-    - $CERBERO fetch-package --deps gstreamer-1.0
-    - $CERBERO bootstrap --offline --build-tools-only
-    - $CERBERO build-deps --offline
+    - $CERBERO $CERBERO_ARGS show-config
+    - $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
+    - $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
+    - $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
+    - $CERBERO $CERBERO_ARGS build-deps --offline
           gstreamer-1.0 gst-plugins-base-1.0 gst-plugins-good-1.0
           gst-plugins-bad-1.0 gst-plugins-ugly-1.0 gst-rtsp-server-1.0
           gst-libav-1.0 gst-validate gst-editing-services-1.0 libnice
-    - $CERBERO fetch-cache --skip-fetch --job-id=${CI_JOB_ID}
+    - $CERBERO $CERBERO_ARGS fetch-cache --skip-fetch --job-id=${CI_JOB_ID}
     - tar -C ${CERBERO_HOME} -czf $CERBERO_DEPS
               build-tools build-tools.cache
               dist/${ARCH} ${ARCH}.cache
