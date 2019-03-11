@@ -3,13 +3,14 @@ nvdec_sources = [
   'plugin.c'
 ]
 
+nvcuvid_dep_found = false
+nvcuvid_incdirs = []
+
 nvdec_option = get_option('nvdec')
 if nvdec_option.disabled()
   subdir_done()
 endif
 
-nvcuvid_dep_found = false
-nvcuvid_incdirs = []
 if host_machine.system() == 'windows'
   cuda_libdirs = [cuda_libdir]
   # NOTE: Newer CUDA toolkit versions do not ship with the nvcuvid library, and

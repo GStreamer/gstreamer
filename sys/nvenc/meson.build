@@ -5,13 +5,13 @@ nvenc_sources = [
   'gstnvh265enc.c',
 ]
 
+use_nvenc_gl = false
+extra_c_args = []
+
 nvenc_option = get_option('nvenc')
 if nvenc_option.disabled()
   subdir_done()
 endif
-
-use_nvenc_gl = false
-extra_c_args = []
 
 if host_machine.system() == 'windows'
   if cc.has_header('cuda_gl_interop.h', args: '-I' + cuda_incdir)
