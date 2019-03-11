@@ -71,6 +71,7 @@ dnf install -y \
     python3-gobject \
     python3-cairo \
     python3-cairo-devel \
+    valgrind \
     vulkan \
     vulkan-devel \
     mesa-omx-drivers \
