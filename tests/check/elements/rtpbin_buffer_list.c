@@ -129,34 +129,6 @@ create_rtp_packet_buffer (gconstpointer header, gint header_size,
   return buffer;
 }
 
-static GstBufferList *
-create_buffer_list (void)
-{
-  GstBufferList *list;
-  GstBuffer *orig_buffer;
-  GstBuffer *buffer;
-
-  orig_buffer = create_original_buffer ();
-  fail_if (orig_buffer == NULL);
-
-  list = gst_buffer_list_new ();
-  fail_if (list == NULL);
-
-  /*** First packet. **/
-  buffer =
-      create_rtp_packet_buffer (&rtp_header[0], rtp_header_len[0], orig_buffer,
-      payload_offset[0], payload_len[0]);
-  gst_buffer_list_add (list, buffer);
-
-  /***  Second packet. ***/
-  buffer =
-      create_rtp_packet_buffer (&rtp_header[1], rtp_header_len[1], orig_buffer,
-      payload_offset[1], payload_len[1]);
-  gst_buffer_list_add (list, buffer);
-
-  return list;
-}
-
 static void
 check_header (GstBuffer * buffer, guint index)
 {
@@ -235,6 +207,36 @@ check_packet (GstBufferList * list, guint list_index, guint packet_index)
  */
 static gboolean chain_list_func_called;
 
+/* Create two packets with different payloads. */
+static GstBufferList *
+create_buffer_list (void)
+{
+  GstBufferList *list;
+  GstBuffer *orig_buffer;
+  GstBuffer *buffer;
+
+  orig_buffer = create_original_buffer ();
+  fail_if (orig_buffer == NULL);
+
+  list = gst_buffer_list_new ();
+  fail_if (list == NULL);
+
+  /*** First packet. **/
+  buffer =
+      create_rtp_packet_buffer (&rtp_header[0], rtp_header_len[0], orig_buffer,
+      payload_offset[0], payload_len[0]);
+  gst_buffer_list_add (list, buffer);
+
+  /***  Second packet. ***/
+  buffer =
+      create_rtp_packet_buffer (&rtp_header[1], rtp_header_len[1], orig_buffer,
+      payload_offset[1], payload_len[1]);
+  gst_buffer_list_add (list, buffer);
+
+  return list;
+}
+
+/* Check that the correct packets have been pushed out of the element. */
 static GstFlowReturn
 sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
 {
