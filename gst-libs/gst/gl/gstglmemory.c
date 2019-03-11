@@ -27,6 +27,7 @@
 #include "gstglmemory.h"
 
 #include "gl.h"
+#include "gstglcontext_private.h"
 #include "gstglfuncs.h"
 
 /**
@@ -263,6 +264,27 @@ _gl_tex_create (GstGLMemory * gl_mem, GError ** error)
   return TRUE;
 }
 
+static void
+_gst_gl_memory_start_log (GstGLMemory * gl_mem, const gchar * func_name)
+{
+  /* debugging is disabled */
+  if (!GST_GL_BASE_MEMORY_CAST (gl_mem)->query)
+    return;
+
+  gst_gl_query_start_log (GST_GL_BASE_MEMORY_CAST (gl_mem)->query,
+      GST_CAT_GL_MEMORY, GST_LEVEL_LOG, NULL, "%s took", func_name);
+}
+
+static void
+_gst_gl_memory_end_log (GstGLMemory * gl_mem)
+{
+  /* debugging is disabled */
+  if (!GST_GL_BASE_MEMORY_CAST (gl_mem)->query)
+    return;
+
+  gst_gl_query_end (GST_GL_BASE_MEMORY_CAST (gl_mem)->query);
+}
+
 /**
  * gst_gl_memory_init:
  * @mem: the #GstGLBaseMemory to initialize
@@ -395,11 +417,10 @@ gst_gl_memory_read_pixels (GstGLMemory * gl_mem, gpointer read_pointer)
     }
   }
 
-  gst_gl_query_start_log (GST_GL_BASE_MEMORY_CAST (gl_mem)->query,
-      GST_CAT_GL_MEMORY, GST_LEVEL_LOG, NULL, "%s", "glReadPixels took");
+  _gst_gl_memory_start_log (gl_mem, "glReadPixels");
   gl->ReadPixels (0, 0, gl_mem->tex_width, GL_MEM_HEIGHT (gl_mem), format,
       type, read_pointer);
-  gst_gl_query_end (GST_GL_BASE_MEMORY_CAST (gl_mem)->query);
+  _gst_gl_memory_end_log (gl_mem);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
   gl->DeleteFramebuffers (1, &fbo);
@@ -440,10 +461,9 @@ _gl_tex_download_get_tex_image (GstGLMemory * gl_mem, GstMapInfo * info,
 
     target = gst_gl_texture_target_to_gl (gl_mem->tex_target);
     gl->BindTexture (target, gl_mem->tex_id);
-    gst_gl_query_start_log (GST_GL_BASE_MEMORY_CAST (gl_mem)->query,
-        GST_CAT_GL_MEMORY, GST_LEVEL_LOG, NULL, "%s", "glGetTexImage took");
+    _gst_gl_memory_start_log (gl_mem, "glGetTexImage");
     gl->GetTexImage (target, 0, format, type, gl_mem->mem.data);
-    gst_gl_query_end (GST_GL_BASE_MEMORY_CAST (gl_mem)->query);
+    _gst_gl_memory_end_log (gl_mem);
     gl->BindTexture (target, 0);
   }
 
@@ -540,11 +560,10 @@ gst_gl_memory_texsubimage (GstGLMemory * gl_mem, gpointer read_pointer)
   data = (gpointer) ((gintptr) plane_start + (gintptr) read_pointer);
 
   gl->BindTexture (gl_target, gl_mem->tex_id);
-  gst_gl_query_start_log (GST_GL_BASE_MEMORY_CAST (gl_mem)->query,
-      GST_CAT_GL_MEMORY, GST_LEVEL_LOG, NULL, "%s", "glTexSubImage took");
+  _gst_gl_memory_start_log (gl_mem, "glTexSubImage");
   gl->TexSubImage2D (gl_target, 0, 0, 0, gl_mem->tex_width,
       GL_MEM_HEIGHT (gl_mem), gl_format, gl_type, data);
-  gst_gl_query_end (GST_GL_BASE_MEMORY_CAST (gl_mem)->query);
+  _gst_gl_memory_end_log (gl_mem);
 
   /* Reset to default values */
   if (USING_OPENGL (context) || USING_GLES3 (context)
@@ -680,11 +699,10 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
       goto fbo_error;
 
     gl->BindTexture (out_tex_target, tex_id);
-    gst_gl_query_start_log (GST_GL_BASE_MEMORY_CAST (src)->query,
-        GST_CAT_GL_MEMORY, GST_LEVEL_LOG, NULL, "%s", "CopyTexImage2D took");
+    _gst_gl_memory_start_log (src, "CopyTexImage2D");
     gl->CopyTexImage2D (out_tex_target, 0, out_tex_format, 0, 0, out_width,
         out_height, 0);
-    gst_gl_query_end (GST_GL_BASE_MEMORY_CAST (src)->query);
+    _gst_gl_memory_end_log (src);
 
     gl->BindTexture (out_tex_target, 0);
     gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
@@ -719,8 +737,7 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
       goto fbo_error;
 
     gl->BindTexture (out_tex_target, tex_id);
-    gst_gl_query_start_log (GST_GL_BASE_MEMORY_CAST (src)->query,
-        GST_CAT_GL_MEMORY, GST_LEVEL_LOG, NULL, "%s", "BlitFramebuffer took");
+    _gst_gl_memory_start_log (src, "BlitFramebuffer");
     gl->ReadBuffer (GL_COLOR_ATTACHMENT0);
     if (gl->DrawBuffers)
       gl->DrawBuffers (1, multipleRT);
@@ -728,7 +745,7 @@ gst_gl_memory_copy_teximage (GstGLMemory * src, guint tex_id,
       gl->DrawBuffer (GL_COLOR_ATTACHMENT0);
     gl->BlitFramebuffer (0, 0, out_width, out_height,
         0, 0, out_width, out_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
-    gst_gl_query_end (GST_GL_BASE_MEMORY_CAST (src)->query);
+    _gst_gl_memory_end_log (src);
 
     gl->BindTexture (out_tex_target, 0);
     gl->BindFramebuffer (GL_DRAW_FRAMEBUFFER, 0);
