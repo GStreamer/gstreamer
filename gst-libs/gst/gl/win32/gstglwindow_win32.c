@@ -61,6 +61,8 @@ static void gst_gl_window_win32_draw (GstGLWindow * window);
 gboolean gst_gl_window_win32_open (GstGLWindow * window, GError ** error);
 void gst_gl_window_win32_close (GstGLWindow * window);
 static void release_parent_win_id (GstGLWindowWin32 * window_win32);
+static void gst_gl_window_win32_send_message (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data);
 
 static void
 gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
@@ -77,6 +79,8 @@ gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
   window_class->show = GST_DEBUG_FUNCPTR (gst_gl_window_win32_show);
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_win32_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_win32_close);
+  window_class->send_message =
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_send_message);
 }
 
 static void
@@ -499,4 +503,38 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   }
 
   return CallWindowProc (window_parent_proc, hWnd, uMsg, wParam, lParam);
+}
+
+typedef struct _GstGLWin32SyncMessage
+{
+  GstGLWindowCB callback;
+  gpointer data;
+
+  HANDLE *event;
+} GstGLWin32SyncMessage;
+
+static void
+_run_message_sync (GstGLWin32SyncMessage * message)
+{
+  if (message->callback)
+    message->callback (message->data);
+
+  SetEvent (message->event);
+}
+
+void
+gst_gl_window_win32_send_message (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data)
+{
+  GstGLWin32SyncMessage message;
+
+  message.callback = callback;
+  message.data = data;
+  message.event = CreateEvent (NULL, FALSE, FALSE, NULL);
+
+  gst_gl_window_send_message_async (window, (GstGLWindowCB) _run_message_sync,
+      &message, NULL);
+
+  WaitForSingleObject (message.event, INFINITE);
+  CloseHandle (message.event);
 }
