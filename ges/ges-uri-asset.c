@@ -568,6 +568,9 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
   GError *lerror = NULL;
   GESUriClipAsset *asset;
   RequestSyncData data = { 0, };
+  GESUriClipAssetClass *klass = g_type_class_peek (GES_TYPE_URI_CLIP_ASSET);
+  GstClockTime timeout;
+  GstDiscoverer *previous_discoverer = klass->discoverer;
 
   asset = GES_URI_CLIP_ASSET (ges_asset_request (GES_TYPE_URI_CLIP, uri,
           &lerror));
@@ -576,10 +579,24 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
     return asset;
 
   data.ml = g_main_loop_new (NULL, TRUE);
+  g_object_get (previous_discoverer, "timeout", &timeout, NULL);
+  klass->discoverer = gst_discoverer_new (timeout, error);
+  if (!klass->discoverer) {
+    klass->discoverer = previous_discoverer;
+
+    return NULL;
+  }
+
+  g_signal_connect (klass->discoverer, "discovered",
+      G_CALLBACK (klass->discovered), NULL);
+  gst_discoverer_start (klass->discoverer);
   ges_asset_request_async (GES_TYPE_URI_CLIP, uri, NULL,
       (GAsyncReadyCallback) asset_ready_cb, &data);
   g_main_loop_run (data.ml);
   g_main_loop_unref (data.ml);
+
+  gst_object_unref (klass->discoverer);
+  klass->discoverer = previous_discoverer;
 
   if (data.error) {
     GST_ERROR ("Got an error requesting asset: %s", data.error->message);
