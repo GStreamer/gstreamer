@@ -23,6 +23,7 @@
 #include <gst/check/gstcheck.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/gstrtcpbuffer.h>
 
 /* UDP/IP is assumed for bandwidth calculation */
 #define UDP_IP_HEADER_OVERHEAD 28
@@ -79,6 +80,16 @@ static const guint payload_len[] = {
 
 
 static GstBuffer *original_buffer = NULL;
+
+static GstStaticPadTemplate sinktemplate_rtcp = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtcp"));
+
+static GstStaticPadTemplate srctemplate_rtcp = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtcp"));
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -773,6 +784,110 @@ sink_chain_list_different_frames (GstPad * pad, GstObject * parent,
 }
 
 
+/*
+ * RTP and RTCP can be multiplexed in the same channel and end up in the same
+ * buffer list.
+ */
+static GstBufferList *
+create_buffer_list_muxed_rtcp (void)
+{
+  GstBufferList *list;
+  GstBuffer *orig_buffer;
+  GstBuffer *buffer;
+  GstRTCPBuffer rtcpbuf = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket rtcppacket;
+
+  guint seqnum = 0;
+
+  orig_buffer = create_original_buffer ();
+  fail_if (orig_buffer == NULL);
+
+  list = gst_buffer_list_new ();
+  fail_if (list == NULL);
+
+  buffer =
+      create_rtp_buffer_fields (&rtp_header[0], rtp_header_len[0],
+      orig_buffer, payload_offset[0], payload_len[0], seqnum, 0);
+  gst_buffer_list_add (list, buffer);
+
+  seqnum++;
+
+  buffer =
+      create_rtp_buffer_fields (&rtp_header[0], rtp_header_len[0],
+      orig_buffer, payload_offset[0], payload_len[0], seqnum, 0);
+  gst_buffer_list_add (list, buffer);
+
+  seqnum++;
+
+  buffer = gst_rtcp_buffer_new (1500);
+  gst_rtcp_buffer_map (buffer, GST_MAP_READWRITE, &rtcpbuf);
+  gst_rtcp_buffer_add_packet (&rtcpbuf, GST_RTCP_TYPE_SR, &rtcppacket);
+  gst_rtcp_packet_sr_set_sender_info (&rtcppacket, 0, 0, 0, 0, 0);
+  gst_rtcp_buffer_add_packet (&rtcpbuf, GST_RTCP_TYPE_RR, &rtcppacket);
+  gst_rtcp_packet_rr_set_ssrc (&rtcppacket, 1);
+  gst_rtcp_packet_add_rb (&rtcppacket, 0, 0, 0, 0, 0, 0, 0);
+  gst_rtcp_buffer_add_packet (&rtcpbuf, GST_RTCP_TYPE_SDES, &rtcppacket);
+  gst_rtcp_packet_sdes_add_item (&rtcppacket, 1);
+  gst_rtcp_packet_sdes_add_entry (&rtcppacket, GST_RTCP_SDES_CNAME, 3,
+      (guint8 *) "a@a");
+  gst_rtcp_packet_sdes_add_entry (&rtcppacket, GST_RTCP_SDES_NAME, 2,
+      (guint8 *) "aa");
+  gst_rtcp_packet_sdes_add_entry (&rtcppacket, GST_RTCP_SDES_END, 0,
+      (guint8 *) "");
+  gst_rtcp_buffer_unmap (&rtcpbuf);
+
+  gst_buffer_list_add (list, buffer);
+
+  buffer =
+      create_rtp_buffer_fields (&rtp_header[0], rtp_header_len[0],
+      orig_buffer, payload_offset[0], payload_len[0], seqnum, 0);
+  gst_buffer_list_add (list, buffer);
+
+  return list;
+}
+
+/*
+ * All RTP buffers should have been pushed to recv_rtp_src, the RTCP packet
+ * should have been pushed to sync_src.
+ */
+static GstFlowReturn
+sink_chain_list_muxed_rtcp (GstPad * pad, GstObject * parent,
+    GstBufferList * list)
+{
+  GstBuffer *buffer;
+
+  chain_list_func_called = TRUE;
+
+  fail_unless (GST_IS_BUFFER_LIST (list));
+  fail_unless (gst_buffer_list_length (list) == 3);
+
+  /* Verify seqnums of RTP packets. */
+  buffer = gst_buffer_list_get (list, 0);
+  check_seqnum (buffer, 0);
+
+  buffer = gst_buffer_list_get (list, 1);
+  check_seqnum (buffer, 1);
+
+  buffer = gst_buffer_list_get (list, 2);
+  check_seqnum (buffer, 2);
+
+  gst_buffer_list_unref (list);
+
+  return GST_FLOW_OK;
+}
+
+/* count multiplexed rtcp packets */
+static guint rtcp_packets;
+
+static GstFlowReturn
+sink_chain_muxed_rtcp (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  rtcp_packets++;
+  gst_buffer_unref (buffer);
+  return GST_FLOW_OK;
+}
+
+
 /* Get the stats of the **first** source of the given type (get_sender) */
 static void
 get_source_stats (GstElement * rtpsession,
@@ -1286,6 +1401,81 @@ GST_START_TEST (test_bufferlist_recv_different_frames)
 GST_END_TEST;
 
 
+GST_START_TEST (test_bufferlist_recv_muxed_rtcp)
+{
+  GstElement *rtpbin;
+  GstPad *srcpad;
+  GstPad *sinkpad;
+  GstPad *srcpad_rtcp;
+  GstPad *sinkpad_rtcp;
+  GstCaps *caps;
+  GstBufferList *list;
+
+  list = create_buffer_list_muxed_rtcp ();
+  fail_unless (list != NULL);
+
+  rtpbin = gst_check_setup_element ("rtpsession");
+
+  srcpad =
+      gst_check_setup_src_pad_by_name (rtpbin, &srctemplate, "recv_rtp_sink");
+  fail_if (srcpad == NULL);
+
+  sinkpad =
+      gst_check_setup_sink_pad_by_name (rtpbin, &sinktemplate, "recv_rtp_src");
+  fail_if (sinkpad == NULL);
+
+  gst_pad_set_chain_list_function (sinkpad,
+      GST_DEBUG_FUNCPTR (sink_chain_list_muxed_rtcp));
+
+  gst_pad_set_active (srcpad, TRUE);
+  gst_pad_set_active (sinkpad, TRUE);
+
+  caps = gst_caps_from_string (TEST_CAPS);
+  gst_check_setup_events (srcpad, rtpbin, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  /*
+   * Create supplementary pads after gst_check_setup_events() to avoid
+   * a failure in gst_pad_create_stream_id().
+   */
+  srcpad_rtcp =
+      gst_check_setup_src_pad_by_name (rtpbin, &srctemplate_rtcp,
+      "recv_rtcp_sink");
+  fail_if (srcpad_rtcp == NULL);
+
+  sinkpad_rtcp =
+      gst_check_setup_sink_pad_by_name (rtpbin, &sinktemplate_rtcp, "sync_src");
+  fail_if (sinkpad_rtcp == NULL);
+
+  gst_pad_set_chain_function (sinkpad_rtcp,
+      GST_DEBUG_FUNCPTR (sink_chain_muxed_rtcp));
+
+  gst_pad_set_active (srcpad_rtcp, TRUE);
+  gst_pad_set_active (sinkpad_rtcp, TRUE);
+
+  gst_element_set_state (rtpbin, GST_STATE_PLAYING);
+
+  chain_list_func_called = FALSE;
+  rtcp_packets = 0;
+  fail_unless (gst_pad_push_list (srcpad, list) == GST_FLOW_OK);
+  fail_if (chain_list_func_called == FALSE);
+  fail_unless (rtcp_packets == 1);
+
+  gst_pad_set_active (sinkpad_rtcp, FALSE);
+  gst_pad_set_active (srcpad_rtcp, FALSE);
+  gst_pad_set_active (sinkpad, FALSE);
+  gst_pad_set_active (srcpad, FALSE);
+
+  gst_check_teardown_pad_by_name (rtpbin, "sync_src");
+  gst_check_teardown_pad_by_name (rtpbin, "recv_rtcp_sink");
+  gst_check_teardown_pad_by_name (rtpbin, "recv_rtp_src");
+  gst_check_teardown_pad_by_name (rtpbin, "recv_rtp_sink");
+  gst_check_teardown_element (rtpbin);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 bufferlist_suite (void)
 {
@@ -1306,6 +1496,7 @@ bufferlist_suite (void)
   tcase_add_test (tc_chain, test_bufferlist_recv_large_jump_recovery);
   tcase_add_test (tc_chain, test_bufferlist_recv_reordered_packets);
   tcase_add_test (tc_chain, test_bufferlist_recv_different_frames);
+  tcase_add_test (tc_chain, test_bufferlist_recv_muxed_rtcp);
 
   return s;
 }
