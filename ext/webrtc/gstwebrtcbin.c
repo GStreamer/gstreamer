@@ -273,7 +273,8 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
 G_DEFINE_TYPE_WITH_CODE (GstWebRTCBin, gst_webrtc_bin, GST_TYPE_BIN,
     G_ADD_PRIVATE (GstWebRTCBin)
     GST_DEBUG_CATEGORY_INIT (gst_webrtc_bin_debug, "webrtcbin", 0,
-        "webrtcbin element"););
+        "webrtcbin element");
+    );
 
 static GstPad *_connect_input_stream (GstWebRTCBin * webrtc,
     GstWebRTCBinPad * pad);
@@ -301,6 +302,7 @@ enum
   ON_NEW_TRANSCEIVER_SIGNAL,
   GET_STATS_SIGNAL,
   ADD_TRANSCEIVER_SIGNAL,
+  GET_TRANSCEIVER_SIGNAL,
   GET_TRANSCEIVERS_SIGNAL,
   ADD_TURN_SERVER_SIGNAL,
   CREATE_DATA_CHANNEL_SIGNAL,
@@ -4009,6 +4011,25 @@ gst_webrtc_bin_get_transceivers (GstWebRTCBin * webrtc)
   return arr;
 }
 
+static GstWebRTCRTPTransceiver *
+gst_webrtc_bin_get_transceiver (GstWebRTCBin * webrtc, guint idx)
+{
+  GstWebRTCRTPTransceiver *trans = NULL;
+
+  if (idx >= webrtc->priv->transceivers->len) {
+    GST_ERROR_OBJECT (webrtc, "No transceiver for idx %d", idx);
+    goto done;
+  }
+
+  trans =
+      g_array_index (webrtc->priv->transceivers, GstWebRTCRTPTransceiver *,
+      idx);
+  gst_object_ref (trans);
+
+done:
+  return trans;
+}
+
 static gboolean
 gst_webrtc_bin_add_turn_server (GstWebRTCBin * webrtc, const gchar * uri)
 {
@@ -5193,6 +5214,21 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_webrtc_bin_get_transceivers), NULL, NULL,
       g_cclosure_marshal_generic, G_TYPE_ARRAY, 0);
+
+  /**
+   * GstWebRTCBin::get-transceiver:
+   * @object: the #GstWebRtcBin
+   * @idx: The index of the transceiver
+   *
+   * Returns: the #GstWebRTCRTPTransceiver, or %NULL
+   * Since: 1.16
+   */
+  gst_webrtc_bin_signals[GET_TRANSCEIVER_SIGNAL] =
+      g_signal_new_class_handler ("get-transceiver", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_CALLBACK (gst_webrtc_bin_get_transceiver), NULL, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_WEBRTC_RTP_TRANSCEIVER, 1,
+      G_TYPE_INT);
 
   /**
    * GstWebRTCBin::add-turn-server:
