@@ -2608,6 +2608,18 @@ gst_matroska_mux_write_colour (GstMatroskaMux * mux,
     case GST_VIDEO_COLOR_PRIMARIES_BT2020:
       primaries_id = 9;
       break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTEST428:
+      primaries_id = 10;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTERP431:
+      primaries_id = 11;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTEEG432:
+      primaries_id = 12;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_EBU3213:
+      primaries_id = 22;
+      break;
   }
 
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEORANGE, range_id);
