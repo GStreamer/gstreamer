@@ -26,12 +26,12 @@
 #endif
 
 #include <GL/gl.h>
-#include "SDL/SDL.h"
-#include "SDL/SDL_opengl.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 
 #ifndef WIN32
 #include <GL/glx.h>
-#include "SDL/SDL_syswm.h"
+#include <SDL2/SDL_syswm.h>
 #include <gst/gl/x11/gstgldisplay_x11.h>
 #endif
 
@@ -41,9 +41,12 @@
 static GstGLContext *sdl_context;
 static GstGLDisplay *sdl_gl_display;
 
-static GAsyncQueue *queue_input_buf = NULL;
-static GAsyncQueue *queue_output_buf = NULL;
-static GMainLoop *loop = NULL;
+static SDL_Window *sdl_window;
+static SDL_GLContext sdl_gl_context;
+
+static GAsyncQueue *queue_input_buf;
+static GAsyncQueue *queue_output_buf;
+static GMainLoop *loop;
 
 /* rotation angle for the triangle. */
 float rtri = 0.0f;
@@ -132,7 +135,7 @@ DrawGLScene (GstBuffer * buf)
   rquad -= 1.0f;                // Decrease The Rotation Variable For The Quad 
 
   // swap buffers to display, since we're double buffered.
-  SDL_GL_SwapBuffers ();
+  SDL_GL_SwapWindow (sdl_window);
 
   gst_video_frame_unmap (&v_frame);
 }
@@ -154,7 +157,9 @@ update_sdl_scene (gpointer data)
     }
   }
 
+  SDL_GL_MakeCurrent (sdl_window, sdl_gl_context);
   DrawGLScene (buf);
+  SDL_GL_MakeCurrent (sdl_window, NULL);
 
   /* push buffer so it can be unref later */
   g_async_queue_push (queue_output_buf, buf);
@@ -266,13 +271,12 @@ main (int argc, char **argv)
 {
 
 #ifdef WIN32
-  HGLRC sdl_gl_context = 0;
+  HGLRC gl_context = 0;
   HDC sdl_dc = 0;
 #else
   SDL_SysWMinfo info;
   Display *sdl_display = NULL;
-  Window sdl_win = 0;
-  GLXContext sdl_gl_context = NULL;
+  GLXContext gl_context = NULL;
 #endif
 
   GstPipeline *pipeline = NULL;
@@ -287,47 +291,44 @@ main (int argc, char **argv)
     return -1;
   }
 
-  /* Create a 640x480 OpenGL screen */
-  if (SDL_SetVideoMode (640, 480, 0, SDL_OPENGL) == NULL) {
+  /* Create a 640x480 OpenGL window */
+  sdl_window =
+      SDL_CreateWindow ("SDL and gst-plugins-gl", SDL_WINDOWPOS_UNDEFINED,
+      SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_OPENGL);
+  if (sdl_window == NULL) {
     fprintf (stderr, "Unable to create OpenGL screen: %s\n", SDL_GetError ());
     SDL_Quit ();
     return -1;
   }
 
-  /* Set the title bar in environments that support it */
-  SDL_WM_SetCaption ("SDL and gst-plugins-gl", NULL);
-
-
-  /* Loop, drawing and checking events */
-  InitGL (640, 480);
+  sdl_gl_context = SDL_GL_CreateContext (sdl_window);
 
   gst_init (&argc, &argv);
   loop = g_main_loop_new (NULL, FALSE);
 
-  /* retrieve and turn off sdl opengl context */
+  SDL_GL_MakeCurrent (sdl_window, sdl_gl_context);
+
+  /* Loop, drawing and checking events */
+  InitGL (640, 480);
+
 #ifdef WIN32
-  sdl_gl_context = wglGetCurrentContext ();
+  gl_context = wglGetCurrentContext ();
   sdl_dc = wglGetCurrentDC ();
-  wglMakeCurrent (0, 0);
   platform = "wgl";
   sdl_gl_display = gst_gl_display_new ();
 #else
   SDL_VERSION (&info.version);
-  SDL_GetWMInfo (&info);
-  /* FIXME: This display is different to the one that SDL uses to create the
-   * GL context inside SDL_SetVideoMode() above which fails on Intel hardware
-   */
-  sdl_display = info.info.x11.gfxdisplay;
-  sdl_win = info.info.x11.window;
-  sdl_gl_context = glXGetCurrentContext ();
-  glXMakeCurrent (sdl_display, None, 0);
+  SDL_GetWindowWMInfo (sdl_window, &info);
+  sdl_display = info.info.x11.display;
+  gl_context = glXGetCurrentContext ();
   platform = "glx";
   sdl_gl_display =
       (GstGLDisplay *) gst_gl_display_x11_new_with_display (sdl_display);
 #endif
+  SDL_GL_MakeCurrent (sdl_window, NULL);
 
   sdl_context =
-      gst_gl_context_new_wrapped (sdl_gl_display, (guintptr) sdl_gl_context,
+      gst_gl_context_new_wrapped (sdl_gl_display, (guintptr) gl_context,
       gst_gl_platform_from_string (platform), GST_GL_API_OPENGL);
 
   pipeline =
@@ -355,13 +356,6 @@ main (int argc, char **argv)
     return -1;
   }
 
-  /* turn on back sdl opengl context */
-#ifdef WIN32
-  wglMakeCurrent (sdl_dc, sdl_gl_context);
-#else
-  glXMakeCurrent (sdl_display, sdl_win, sdl_gl_context);
-#endif
-
   queue_input_buf = g_async_queue_new ();
   queue_output_buf = g_async_queue_new ();
 
@@ -374,15 +368,6 @@ main (int argc, char **argv)
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
   g_main_loop_run (loop);
-
-  /* before to deinitialize the gst-gl-opengl context,
-   * no shared context (here the sdl one) must be current
-   */
-#ifdef WIN32
-  wglMakeCurrent (0, 0);
-#else
-  glXMakeCurrent (sdl_display, sdl_win, sdl_gl_context);
-#endif
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
@@ -406,12 +391,9 @@ main (int argc, char **argv)
     gst_buffer_unref (buf);
   }
 
-  /* turn on back sdl opengl context */
-#ifdef WIN32
-  wglMakeCurrent (sdl_dc, sdl_gl_context);
-#else
-  glXMakeCurrent (sdl_display, None, 0);
-#endif
+  SDL_GL_DeleteContext (gl_context);
+
+  SDL_DestroyWindow (sdl_window);
 
   SDL_Quit ();
 

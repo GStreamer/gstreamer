@@ -1,4 +1,4 @@
-sdl_dep = dependency('sdl', version : '>=1.2.0', required : get_option('examples'))
+sdl_dep = dependency('sdl2', version : '>=2.0', required : get_option('examples'))
 have_sdl_gl = build_gstgl and (
     enabled_gl_apis.contains('gl') and
     (enabled_gl_platforms.contains('glx') or enabled_gl_platforms.contains('wgl')) and

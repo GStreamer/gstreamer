@@ -1134,7 +1134,7 @@ AC_DEFUN([AG_GST_GL_EXAMPLES_CHECKS],
 dnl sdl is optional and used in examples
 HAVE_SDL=NO
 if test "x$BUILD_EXAMPLES" = "xyes"; then
-  PKG_CHECK_MODULES(SDL, sdl >= 1.2.0, HAVE_SDL=yes, HAVE_SDL=no)
+  PKG_CHECK_MODULES(SDL, sdl2, HAVE_SDL=yes, HAVE_SDL=no)
   AC_SUBST(SDL_LIBS)
   AC_SUBST(SDL_CFLAGS)
 fi
