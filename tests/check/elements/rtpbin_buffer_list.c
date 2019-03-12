@@ -185,6 +185,27 @@ check_seqnum (GstBuffer * buffer, guint16 seqnum)
 }
 
 static void
+check_timestamp (GstBuffer * buffer, guint32 timestamp)
+{
+  GstMemory *memory;
+  GstMapInfo info;
+  gboolean ret;
+  guint32 current_timestamp;
+
+  fail_if (buffer == NULL);
+
+  memory = gst_buffer_get_memory (buffer, 0);
+  ret = gst_memory_map (memory, &info, GST_MAP_READ);
+  fail_if (ret == FALSE);
+
+  current_timestamp = g_ntohl (*((guint32 *) & (info.data[4])));
+  fail_unless (current_timestamp == timestamp);
+
+  gst_memory_unmap (memory, &info);
+  gst_memory_unref (memory);
+}
+
+static void
 check_header (GstBuffer * buffer, guint index)
 {
   GstMemory *memory;
