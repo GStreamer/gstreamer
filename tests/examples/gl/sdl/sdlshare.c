@@ -159,25 +159,37 @@ update_sdl_scene (gpointer data)
   /* push buffer so it can be unref later */
   g_async_queue_push (queue_output_buf, buf);
 
-  return FALSE;
+  return G_SOURCE_REMOVE;
 }
 
-/* fakesink handoff callback */
-static void
-on_gst_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
-    gpointer data)
+/* appsink new-sample callback */
+static GstFlowReturn
+on_new_sample (GstElement * appsink, gpointer data)
 {
+  GstSample *sample = NULL;
+  GstBuffer *buf;
+
+  g_signal_emit_by_name (appsink, "pull-sample", &sample, NULL);
+  if (!sample)
+    return GST_FLOW_FLUSHING;
+
+  buf = gst_sample_get_buffer (sample);
   /* ref then push buffer to use it in sdl */
   gst_buffer_ref (buf);
+
+  gst_sample_unref (sample);
+
   g_async_queue_push (queue_input_buf, buf);
   if (g_async_queue_length (queue_input_buf) > 3)
-    g_idle_add (update_sdl_scene, (gpointer) fakesink);
+    g_idle_add (update_sdl_scene, (gpointer) appsink);
 
   /* pop then unref buffer we have finished to use in sdl */
   if (g_async_queue_length (queue_output_buf) > 3) {
     GstBuffer *buf_old = (GstBuffer *) g_async_queue_pop (queue_output_buf);
     gst_buffer_unref (buf_old);
   }
+
+  return GST_FLOW_OK;
 }
 
 /* gst bus signal watch callback */
@@ -265,7 +277,7 @@ main (int argc, char **argv)
 
   GstPipeline *pipeline = NULL;
   GstBus *bus = NULL;
-  GstElement *fakesink = NULL;
+  GstElement *appsink = NULL;
   GstState state;
   const gchar *platform;
 
@@ -320,8 +332,10 @@ main (int argc, char **argv)
 
   pipeline =
       GST_PIPELINE (gst_parse_launch
-      ("videotestsrc ! video/x-raw, width=320, height=240, framerate=(fraction)30/1 ! "
-          "glupload ! gleffects effect=5 ! fakesink sync=1", NULL));
+      ("videotestsrc ! glupload ! gleffects effect=5 ! "
+          "appsink name=sink sync=true "
+          "caps=video/x-raw(memory:GLMemory),format=RGBA,width=320,height=240,framerate=(fraction)30/1,texture-target=2D",
+          NULL));
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_add_signal_watch (bus);
@@ -347,15 +361,15 @@ main (int argc, char **argv)
 #else
   glXMakeCurrent (sdl_display, sdl_win, sdl_gl_context);
 #endif
- 
+
   queue_input_buf = g_async_queue_new ();
   queue_output_buf = g_async_queue_new ();
 
   /* append a gst-gl texture to this queue when you do not need it no more */
-  fakesink = gst_bin_get_by_name (GST_BIN (pipeline), "fakesink0");
-  g_object_set (G_OBJECT (fakesink), "signal-handoffs", TRUE, NULL);
-  g_signal_connect (fakesink, "handoff", G_CALLBACK (on_gst_buffer), NULL);
-  gst_object_unref (fakesink);
+  appsink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
+  g_object_set (appsink, "emit-signals", TRUE, NULL);
+  g_signal_connect (appsink, "new-sample", G_CALLBACK (on_new_sample), NULL);
+  gst_object_unref (appsink);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
