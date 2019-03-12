@@ -92,15 +92,6 @@ fedora amd64 docker:
     DOCKERFILE: "docker/fedora/Dockerfile"
   extends: .base
 
-ubuntu amd64 docker:
-  stage: "build docker"
-  variables:
-    ARCH: "amd64"
-    TAG: "ubuntu"
-    CONTEXT_DIR: "docker/ubuntu/"
-    DOCKERFILE: "docker/ubuntu/Dockerfile"
-  extends: .base
-
 cerbero fedora amd64 docker:
   stage: "build docker"
   variables:
@@ -121,18 +112,6 @@ build fedora x86_64 local:
   extends: '.build local'
   stage: 'build'
   image: "${CI_REGISTRY_IMAGE}/amd64/fedora:latest"
-  except:
-    refs:
-      - "master@gstreamer/gst-ci"
-
-build android 28 local:
-  extends: '.build local'
-  variables:
-    MESON_ARGS: >
-      -Dbad=enabled
-      -Dbad:androidmedia=enabled
-      --cross-file cross-files/android_arm64_api28.txt
-  image: "${CI_REGISTRY_IMAGE}/amd64/ubuntu:latest"
   except:
     refs:
       - "master@gstreamer/gst-ci"
