@@ -93,6 +93,63 @@ dnf install -y \
     xorg-x11-server-utils \
     xorg-x11-server-Xvfb
 
+# Install common debug symbols
+dnf debuginfo-install -y gtk3 \
+    glib2 \
+    glibc \
+    freetype \
+    openjpeg \
+    gobject-introspection \
+    python3 \
+    python3-gobject \
+    libjpeg-turbo \
+    glib-networking \
+    libcurl \
+    libsoup \
+    nss \
+    nss-softokn \
+    nss-softokn-freebl \
+    nss-sysinit \
+    nss-util \
+    openssl \
+    openssl-libs \
+    openssl-pkcs11 \
+    brotli \
+    bzip2-libs \
+    gpm-libs \
+    harfbuzz \
+    harfbuzz-icu \
+    json-c \
+    json-glib \
+    libbabeltrace \
+    libffi \
+    libsrtp \
+    libunwind \
+    mpg123-libs \
+    neon \
+    orc-compiler \
+    orc \
+    pixman \
+    pulseaudio-libs \
+    pulseaudio-libs-glib2 \
+    wavpack \
+    webrtc-audio-processing \
+    ffmpeg \
+    ffmpeg-libs \
+    faad2-libs \
+    libavdevice \
+    libmpeg2 \
+    faac \
+    fdk-aac \
+    x264 \
+    x264-libs \
+    x265 \
+    x265-libs \
+    xz \
+    xz-libs \
+    zip \
+    zlib
+
 pip3 install meson
 # Add the pip3 installation to the path
 export PATH="$PATH:/usr/local/lib/python3.7/site-packages"
