@@ -41,12 +41,12 @@
 static GstGLContext *sdl_context;
 static GstGLDisplay *sdl_gl_display;
 
+static guint32 sdl_message_event = -1;
 static SDL_Window *sdl_window;
 static SDL_GLContext sdl_gl_context;
 
 static GAsyncQueue *queue_input_buf;
 static GAsyncQueue *queue_output_buf;
-static GMainLoop *loop;
 
 /* rotation angle for the triangle. */
 float rtri = 0.0f;
@@ -140,33 +140,6 @@ DrawGLScene (GstBuffer * buf)
   gst_video_frame_unmap (&v_frame);
 }
 
-static gboolean
-update_sdl_scene (gpointer data)
-{
-  GstBuffer *buf = (GstBuffer *) g_async_queue_pop (queue_input_buf);
-
-  SDL_Event event;
-  while (SDL_PollEvent (&event)) {
-    if (event.type == SDL_QUIT) {
-      g_main_loop_quit (loop);
-    }
-    if (event.type == SDL_KEYDOWN) {
-      if (event.key.keysym.sym == SDLK_ESCAPE) {
-        g_main_loop_quit (loop);
-      }
-    }
-  }
-
-  SDL_GL_MakeCurrent (sdl_window, sdl_gl_context);
-  DrawGLScene (buf);
-  SDL_GL_MakeCurrent (sdl_window, NULL);
-
-  /* push buffer so it can be unref later */
-  g_async_queue_push (queue_output_buf, buf);
-
-  return G_SOURCE_REMOVE;
-}
-
 /* appsink new-sample callback */
 static GstFlowReturn
 on_new_sample (GstElement * appsink, gpointer data)
@@ -185,8 +158,6 @@ on_new_sample (GstElement * appsink, gpointer data)
   gst_sample_unref (sample);
 
   g_async_queue_push (queue_input_buf, buf);
-  if (g_async_queue_length (queue_input_buf) > 3)
-    g_idle_add (update_sdl_scene, (gpointer) appsink);
 
   /* pop then unref buffer we have finished to use in sdl */
   if (g_async_queue_length (queue_output_buf) > 3) {
@@ -195,43 +166,6 @@ on_new_sample (GstElement * appsink, gpointer data)
   }
 
   return GST_FLOW_OK;
-}
-
-/* gst bus signal watch callback */
-static void
-end_stream_cb (GstBus * bus, GstMessage * msg, GMainLoop * loop)
-{
-  switch (GST_MESSAGE_TYPE (msg)) {
-
-    case GST_MESSAGE_EOS:
-      g_print ("End-of-stream\n");
-      g_print
-          ("For more information, try to run: GST_DEBUG=gl*:3 ./sdlshare\n");
-      break;
-
-    case GST_MESSAGE_ERROR:
-    {
-      gchar *debug = NULL;
-      GError *err = NULL;
-
-      gst_message_parse_error (msg, &err, &debug);
-
-      g_print ("Error: %s\n", err->message);
-      g_error_free (err);
-
-      if (debug) {
-        g_print ("Debug deails: %s\n", debug);
-        g_free (debug);
-      }
-
-      break;
-    }
-
-    default:
-      break;
-  }
-
-  g_main_loop_quit (loop);
 }
 
 static void
@@ -262,8 +196,94 @@ sync_bus_call (GstBus * bus, GstMessage * msg, gpointer data)
       break;
     }
     default:
+    {
+      SDL_Event event = { 0, };
+
+      event.type = sdl_message_event;
+      SDL_PushEvent (&event);
+
       break;
+    }
   }
+}
+
+static void
+sdl_event_loop (GstBus * bus)
+{
+  GstBuffer *buf = NULL;
+  gboolean quit = FALSE;
+
+  SDL_GL_MakeCurrent (sdl_window, sdl_gl_context);
+  SDL_GL_SetSwapInterval (1);
+
+  while (!quit) {
+    SDL_Event event;
+
+    while (SDL_PollEvent (&event)) {
+      if (event.type == SDL_QUIT) {
+        quit = TRUE;
+      }
+      if (event.type == SDL_KEYDOWN) {
+        if (event.key.keysym.sym == SDLK_ESCAPE) {
+          quit = TRUE;
+        }
+      }
+
+      if (event.type == sdl_message_event) {
+        GstMessage *msg;
+
+        while ((msg = gst_bus_pop (bus))) {
+          switch (GST_MESSAGE_TYPE (msg)) {
+
+            case GST_MESSAGE_EOS:
+              g_print ("End-of-stream\n");
+              g_print
+                  ("For more information, try to run: GST_DEBUG=gl*:3 ./sdlshare\n");
+              quit = TRUE;
+              break;
+
+            case GST_MESSAGE_ERROR:
+            {
+              gchar *debug = NULL;
+              GError *err = NULL;
+
+              gst_message_parse_error (msg, &err, &debug);
+
+              g_print ("Error: %s\n", err->message);
+              g_error_free (err);
+
+              if (debug) {
+                g_print ("Debug deails: %s\n", debug);
+                g_free (debug);
+              }
+
+              quit = TRUE;
+              break;
+            }
+
+            default:
+              break;
+          }
+
+          gst_message_unref (msg);
+        }
+      }
+    }
+
+    while (g_async_queue_length (queue_input_buf) > 3) {
+      if (buf)
+        g_async_queue_push (queue_output_buf, buf);
+      buf = (GstBuffer *) g_async_queue_pop (queue_input_buf);
+    }
+
+    if (buf)
+      DrawGLScene (buf);
+  }
+
+  SDL_GL_MakeCurrent (sdl_window, NULL);
+
+  if (buf)
+    g_async_queue_push (queue_output_buf, buf);
 }
 
 int
@@ -291,6 +311,9 @@ main (int argc, char **argv)
     return -1;
   }
 
+  sdl_message_event = SDL_RegisterEvents (1);
+  g_assert (sdl_message_event != -1);
+
   /* Create a 640x480 OpenGL window */
   sdl_window =
       SDL_CreateWindow ("SDL and gst-plugins-gl", SDL_WINDOWPOS_UNDEFINED,
@@ -304,7 +327,6 @@ main (int argc, char **argv)
   sdl_gl_context = SDL_GL_CreateContext (sdl_window);
 
   gst_init (&argc, &argv);
-  loop = g_main_loop_new (NULL, FALSE);
 
   SDL_GL_MakeCurrent (sdl_window, sdl_gl_context);
 
@@ -339,10 +361,6 @@ main (int argc, char **argv)
           NULL));
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  gst_bus_add_signal_watch (bus);
-  g_signal_connect (bus, "message::error", G_CALLBACK (end_stream_cb), loop);
-  g_signal_connect (bus, "message::warning", G_CALLBACK (end_stream_cb), loop);
-  g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), loop);
   gst_bus_enable_sync_message_emission (bus);
   g_signal_connect (bus, "sync-message", G_CALLBACK (sync_bus_call), NULL);
 
@@ -367,12 +385,11 @@ main (int argc, char **argv)
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  g_main_loop_run (loop);
+  sdl_event_loop (bus);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
 
-  gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
 
   gst_object_unref (sdl_context);
