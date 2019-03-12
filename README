@@ -234,7 +234,7 @@ to easily create an uninstalled setup from scratch.
 PLUG-IN DEPENDENCIES AND LICENSES
 ---------------------------------
 
-GStreamer is developed under the terms of the LGPL (see LICENSE file for
+GStreamer is developed under the terms of the LGPL (see  COPYING file for
 details). Some of our plug-ins however rely on libraries which are available
 under other licenses. This means that if you are distributing an application
 which has a non-GPL compatible license (for instance a closed-source
