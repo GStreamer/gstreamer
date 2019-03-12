@@ -8,8 +8,8 @@ stages:
   - 'full tests'
 
 variables:
-  CERBERO_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:fb5e6c259536f2733ac2901f04fffffb35c510b5'
-  FEDORA_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:b8c24cc7f4cfb19813a324cbbb65c5e89b55eebc'
+  CERBERO_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:fb91ee18309ab981289aa818ab2a7824ef0567a1'
+  FEDORA_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:fb91ee18309ab981289aa818ab2a7824ef0567a1'
   INDENT_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/gst-indent:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
   MANIFEST_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/build-manifest:d19082b72667fb3382bdc3621520c4d26e258b2e'
 
