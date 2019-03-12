@@ -2,6 +2,7 @@ avtp_sources = [
   'gstavtp.c',
   'gstavtpaafdepay.c',
   'gstavtpaafpay.c',
+  'gstavtpcvfdepay.c',
   'gstavtpcvfpay.c',
   'gstavtpbasedepayload.c',
   'gstavtpbasepayload.c',

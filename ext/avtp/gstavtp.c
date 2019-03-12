@@ -52,6 +52,7 @@
 
 #include "gstavtpaafdepay.h"
 #include "gstavtpaafpay.h"
+#include "gstavtpcvfdepay.h"
 #include "gstavtpcvfpay.h"
 #include "gstavtpsink.h"
 #include "gstavtpsrc.h"
@@ -68,6 +69,8 @@ plugin_init (GstPlugin * plugin)
   if (!gst_avtp_src_plugin_init (plugin))
     return FALSE;
   if (!gst_avtp_cvf_pay_plugin_init (plugin))
+    return FALSE;
+  if (!gst_avtp_cvf_depay_plugin_init (plugin))
     return FALSE;
 
   return TRUE;
