@@ -269,6 +269,8 @@ gst_video_colorimetry_is_equal (const GstVideoColorimetry * cinfo,
 
 #define WP_C    0.31006, 0.31616
 #define WP_D65  0.31271, 0.32902
+#define WP_CENTRE (1/3), (1/3)
+#define WP_WHITE 0.314, 0.351
 
 static const GstVideoColorPrimariesInfo color_primaries[] = {
   {GST_VIDEO_COLOR_PRIMARIES_UNKNOWN, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
@@ -285,7 +287,15 @@ static const GstVideoColorPrimariesInfo color_primaries[] = {
   {GST_VIDEO_COLOR_PRIMARIES_BT2020, WP_D65, 0.708, 0.292, 0.170, 0.797, 0.131,
       0.046},
   {GST_VIDEO_COLOR_PRIMARIES_ADOBERGB, WP_D65, 0.64, 0.33, 0.21, 0.71, 0.15,
-      0.06}
+      0.06},
+  {GST_VIDEO_COLOR_PRIMARIES_SMPTEST428, WP_CENTRE, 1.0, 0.0, 0.0, 1.0, 0.0,
+      0.0},
+  {GST_VIDEO_COLOR_PRIMARIES_SMPTERP431, WP_WHITE, 0.68, 0.32, 0.265, 0.69,
+      0.15, 0.06},
+  {GST_VIDEO_COLOR_PRIMARIES_SMPTEEG432, WP_D65, 0.68, 0.32, 0.265, 0.69, 0.15,
+      0.06},
+  {GST_VIDEO_COLOR_PRIMARIES_EBU3213, WP_D65, 0.63, 0.34, 0.295, 0.605, 0.155,
+      0.077},
 };
 
 /**
