@@ -249,7 +249,7 @@ end_stream_cb (GstBus * bus, GstMessage * msg, GMainLoop * loop)
   g_main_loop_quit (loop);
 }
 
-static gboolean
+static void
 sync_bus_call (GstBus * bus, GstMessage * msg, gpointer data)
 {
   switch (GST_MESSAGE_TYPE (msg)) {
@@ -266,7 +266,6 @@ sync_bus_call (GstBus * bus, GstMessage * msg, gpointer data)
         gst_context_set_gl_display (display_context, sdl_gl_display);
         gst_element_set_context (GST_ELEMENT (msg->src), display_context);
         gst_context_unref (display_context);
-        return TRUE;
       } else if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
         GstContext *app_context = gst_context_new ("gst.gl.app_context", TRUE);
         GstStructure *s = gst_context_writable_structure (app_context);
@@ -274,14 +273,12 @@ sync_bus_call (GstBus * bus, GstMessage * msg, gpointer data)
             NULL);
         gst_element_set_context (GST_ELEMENT (msg->src), app_context);
         gst_context_unref (app_context);
-        return TRUE;
       }
       break;
     }
     default:
       break;
   }
-  return FALSE;
 }
 
 int
