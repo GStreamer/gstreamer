@@ -247,6 +247,7 @@ sync_bus_call (GstBus * bus, GstMessage * msg, gpointer data)
             gst_context_new (GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
         gst_context_set_gl_display (display_context, sdl_gl_display);
         gst_element_set_context (GST_ELEMENT (msg->src), display_context);
+        gst_context_unref (display_context);
         return TRUE;
       } else if (g_strcmp0 (context_type, "gst.gl.app_context") == 0) {
         GstContext *app_context = gst_context_new ("gst.gl.app_context", TRUE);
@@ -254,6 +255,7 @@ sync_bus_call (GstBus * bus, GstMessage * msg, gpointer data)
         gst_structure_set (s, "context", GST_TYPE_GL_CONTEXT, sdl_context,
             NULL);
         gst_element_set_context (GST_ELEMENT (msg->src), app_context);
+        gst_context_unref (app_context);
         return TRUE;
       }
       break;
@@ -348,7 +350,6 @@ main (int argc, char **argv)
   g_signal_connect (bus, "message::eos", G_CALLBACK (end_stream_cb), loop);
   gst_bus_enable_sync_message_emission (bus);
   g_signal_connect (bus, "sync-message", G_CALLBACK (sync_bus_call), NULL);
-  gst_object_unref (bus);
 
   /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
    * shared with the sdl one */
@@ -393,6 +394,12 @@ main (int argc, char **argv)
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
+
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+
+  gst_object_unref (sdl_context);
+  gst_object_unref (sdl_gl_display);
 
   /* make sure there is no pending gst gl buffer in the communication queues 
    * between sdl and gst-gl
