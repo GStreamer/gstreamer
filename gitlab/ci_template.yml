@@ -390,12 +390,14 @@ build cerbero fedora x86_64:
 cerbero deps android universal:
   extends: '.cerbero deps'
   variables:
+    CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS} -v nowerror"
     CONFIG: "cross-android-universal.cbc"
     ARCH: "android_universal"
 
 .cerbero android universal:
   extends: '.cerbero'
   variables:
+    CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS} -v nowerror"
     CONFIG: "cross-android-universal.cbc"
 
 cerbero android universal:
