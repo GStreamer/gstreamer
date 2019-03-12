@@ -132,6 +132,27 @@ create_rtp_packet_buffer (gconstpointer header, gint header_size,
 }
 
 static void
+check_seqnum (GstBuffer * buffer, guint16 seqnum)
+{
+  GstMemory *memory;
+  GstMapInfo info;
+  gboolean ret;
+  guint16 current_seqnum;
+
+  fail_if (buffer == NULL);
+
+  memory = gst_buffer_get_memory (buffer, 0);
+  ret = gst_memory_map (memory, &info, GST_MAP_READ);
+  fail_if (ret == FALSE);
+
+  current_seqnum = info.data[2] << 8 | info.data[3];
+  fail_unless (current_seqnum == seqnum);
+
+  gst_memory_unmap (memory, &info);
+  gst_memory_unref (memory);
+}
+
+static void
 check_header (GstBuffer * buffer, guint index)
 {
   GstMemory *memory;
