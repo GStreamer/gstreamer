@@ -41,6 +41,10 @@
 static GstGLContext *sdl_context;
 static GstGLDisplay *sdl_gl_display;
 
+static GAsyncQueue *queue_input_buf = NULL;
+static GAsyncQueue *queue_output_buf = NULL;
+static GMainLoop *loop = NULL;
+
 /* rotation angle for the triangle. */
 float rtri = 0.0f;
 
@@ -134,17 +138,8 @@ DrawGLScene (GstBuffer * buf)
 }
 
 static gboolean
-update_sdl_scene (void *fk)
+update_sdl_scene (gpointer data)
 {
-  GstElement *fakesink = (GstElement *) fk;
-  GMainLoop *loop =
-      (GMainLoop *) g_object_get_data (G_OBJECT (fakesink), "loop");
-  GAsyncQueue *queue_input_buf =
-      (GAsyncQueue *) g_object_get_data (G_OBJECT (fakesink),
-      "queue_input_buf");
-  GAsyncQueue *queue_output_buf =
-      (GAsyncQueue *) g_object_get_data (G_OBJECT (fakesink),
-      "queue_output_buf");
   GstBuffer *buf = (GstBuffer *) g_async_queue_pop (queue_input_buf);
 
   SDL_Event event;
@@ -172,22 +167,13 @@ static void
 on_gst_buffer (GstElement * fakesink, GstBuffer * buf, GstPad * pad,
     gpointer data)
 {
-  GAsyncQueue *queue_input_buf = NULL;
-  GAsyncQueue *queue_output_buf = NULL;
-
   /* ref then push buffer to use it in sdl */
   gst_buffer_ref (buf);
-  queue_input_buf =
-      (GAsyncQueue *) g_object_get_data (G_OBJECT (fakesink),
-      "queue_input_buf");
   g_async_queue_push (queue_input_buf, buf);
   if (g_async_queue_length (queue_input_buf) > 3)
     g_idle_add (update_sdl_scene, (gpointer) fakesink);
 
   /* pop then unref buffer we have finished to use in sdl */
-  queue_output_buf =
-      (GAsyncQueue *) g_object_get_data (G_OBJECT (fakesink),
-      "queue_output_buf");
   if (g_async_queue_length (queue_output_buf) > 3) {
     GstBuffer *buf_old = (GstBuffer *) g_async_queue_pop (queue_output_buf);
     gst_buffer_unref (buf_old);
@@ -277,13 +263,10 @@ main (int argc, char **argv)
   GLXContext sdl_gl_context = NULL;
 #endif
 
-  GMainLoop *loop = NULL;
   GstPipeline *pipeline = NULL;
   GstBus *bus = NULL;
   GstElement *fakesink = NULL;
   GstState state;
-  GAsyncQueue *queue_input_buf = NULL;
-  GAsyncQueue *queue_output_buf = NULL;
   const gchar *platform;
 
   /* Initialize SDL for video output */
@@ -364,16 +347,14 @@ main (int argc, char **argv)
 #else
   glXMakeCurrent (sdl_display, sdl_win, sdl_gl_context);
 #endif
+ 
+  queue_input_buf = g_async_queue_new ();
+  queue_output_buf = g_async_queue_new ();
 
   /* append a gst-gl texture to this queue when you do not need it no more */
   fakesink = gst_bin_get_by_name (GST_BIN (pipeline), "fakesink0");
   g_object_set (G_OBJECT (fakesink), "signal-handoffs", TRUE, NULL);
   g_signal_connect (fakesink, "handoff", G_CALLBACK (on_gst_buffer), NULL);
-  queue_input_buf = g_async_queue_new ();
-  queue_output_buf = g_async_queue_new ();
-  g_object_set_data (G_OBJECT (fakesink), "queue_input_buf", queue_input_buf);
-  g_object_set_data (G_OBJECT (fakesink), "queue_output_buf", queue_output_buf);
-  g_object_set_data (G_OBJECT (fakesink), "loop", loop);
   gst_object_unref (fakesink);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
