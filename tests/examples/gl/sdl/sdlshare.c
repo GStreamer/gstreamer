@@ -311,6 +311,8 @@ main (int argc, char **argv)
     return -1;
   }
 
+  gst_init (&argc, &argv);
+
   SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
   SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
@@ -328,8 +330,6 @@ main (int argc, char **argv)
   }
 
   sdl_gl_context = SDL_GL_CreateContext (sdl_window);
-
-  gst_init (&argc, &argv);
 
   SDL_GL_MakeCurrent (sdl_window, sdl_gl_context);
 
