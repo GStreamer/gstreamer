@@ -311,6 +311,9 @@ main (int argc, char **argv)
     return -1;
   }
 
+  SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
   sdl_message_event = SDL_RegisterEvents (1);
   g_assert (sdl_message_event != -1);
 

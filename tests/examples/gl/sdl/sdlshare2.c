@@ -311,6 +311,9 @@ main (int argc, char **argv)
     return -1;
   }
 
+  SDL_GL_SetAttribute (SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+  SDL_GL_SetAttribute (SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
   /* Create a 640x480 OpenGL screen */
   sdl_window =
       SDL_CreateWindow ("SDL and gst-plugins-gl", SDL_WINDOWPOS_UNDEFINED,
