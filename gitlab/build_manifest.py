@@ -27,6 +27,7 @@ GSTREAMER_MODULES: List[str] = [
     'gst-python',
     'gst-rtsp-server',
     'gstreamer-vaapi',
+    'gst-integration-testsuites',
 ]
 
 MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
