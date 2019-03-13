@@ -304,6 +304,7 @@ main (int argc, char **argv)
   GstBus *bus = NULL;
   GstElement *glimagesink = NULL;
   const gchar *platform;
+  GError *err = NULL;
 
   /* Initialize SDL for video output */
   if (SDL_Init (SDL_INIT_VIDEO) < 0) {
@@ -353,11 +354,20 @@ main (int argc, char **argv)
   sdl_gl_display =
       (GstGLDisplay *) gst_gl_display_x11_new_with_display (sdl_display);
 #endif
-  SDL_GL_MakeCurrent (sdl_window, NULL);
 
   sdl_context =
       gst_gl_context_new_wrapped (sdl_gl_display, (guintptr) gl_context,
       gst_gl_platform_from_string (platform), GST_GL_API_OPENGL);
+
+  gst_gl_context_activate (sdl_context, TRUE);
+
+  if (!gst_gl_context_fill_info (sdl_context, &err)) {
+    fprintf (stderr, "Failed to fill in wrapped GStreamer context: %s\n",
+        err->message);
+    g_clear_error (&err);
+    SDL_Quit ();
+    return -1;
+  }
 
   pipeline =
       GST_PIPELINE (gst_parse_launch
@@ -393,6 +403,7 @@ main (int argc, char **argv)
   gst_bus_remove_signal_watch (bus);
   gst_object_unref (bus);
 
+  gst_gl_context_activate (sdl_context, FALSE);
   gst_object_unref (sdl_context);
   gst_object_unref (sdl_gl_display);
 

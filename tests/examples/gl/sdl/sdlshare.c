@@ -302,8 +302,8 @@ main (int argc, char **argv)
   GstPipeline *pipeline = NULL;
   GstBus *bus = NULL;
   GstElement *appsink = NULL;
-  GstState state;
   const gchar *platform;
+  GError *err = NULL;
 
   /* Initialize SDL for video output */
   if (SDL_Init (SDL_INIT_VIDEO) < 0) {
@@ -350,11 +350,21 @@ main (int argc, char **argv)
   sdl_gl_display =
       (GstGLDisplay *) gst_gl_display_x11_new_with_display (sdl_display);
 #endif
-  SDL_GL_MakeCurrent (sdl_window, NULL);
 
   sdl_context =
       gst_gl_context_new_wrapped (sdl_gl_display, (guintptr) gl_context,
       gst_gl_platform_from_string (platform), GST_GL_API_OPENGL);
+
+  gst_gl_context_activate (sdl_context, TRUE);
+
+  if (!gst_gl_context_fill_info (sdl_context, &err)) {
+    fprintf (stderr, "Failed to fill in wrapped GStreamer context: %s\n",
+        err->message);
+    g_clear_error (&err);
+    SDL_Quit ();
+    return -1;
+  }
+  SDL_GL_MakeCurrent (sdl_window, NULL);
 
   pipeline =
       GST_PIPELINE (gst_parse_launch
@@ -366,16 +376,6 @@ main (int argc, char **argv)
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_enable_sync_message_emission (bus);
   g_signal_connect (bus, "sync-message", G_CALLBACK (sync_bus_call), NULL);
-
-  /* NULL to PAUSED state pipeline to make sure the gst opengl context is created and
-   * shared with the sdl one */
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
-  state = GST_STATE_PAUSED;
-  if (gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL,
-          GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
-    g_debug ("failed to pause pipeline\n");
-    return -1;
-  }
 
   queue_input_buf = g_async_queue_new ();
   queue_output_buf = g_async_queue_new ();
@@ -395,6 +395,7 @@ main (int argc, char **argv)
 
   gst_object_unref (bus);
 
+  gst_gl_context_activate (sdl_context, FALSE);
   gst_object_unref (sdl_context);
   gst_object_unref (sdl_gl_display);
 
