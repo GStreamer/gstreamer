@@ -497,6 +497,92 @@ GST_START_TEST (test_imagefreeze_25_1_220ms_380ms)
 
 GST_END_TEST;
 
+static void
+sink_handoff_cb_count_buffers (GstElement * object, GstBuffer * buffer,
+    GstPad * pad, gpointer user_data)
+{
+  guint *n_buffers = (guint *) user_data;
+
+  if (*n_buffers == G_MAXUINT)
+    return;
+
+  *n_buffers = *n_buffers + 1;
+}
+
+GST_START_TEST (test_imagefreeze_num_buffers)
+{
+  GstElement *pipeline;
+  GstElement *imagefreeze;
+  GstCaps *caps1, *caps2;
+  GstBus *bus;
+  GMainLoop *loop;
+  guint n_buffers = G_MAXUINT;
+  guint bus_watch = 0;
+  GstVideoInfo i1, i2;
+
+  gst_video_info_init (&i1);
+  gst_video_info_set_format (&i1, GST_VIDEO_FORMAT_xRGB, 640, 480);
+  i1.fps_n = 25;
+  i1.fps_d = 1;
+  caps1 = gst_video_info_to_caps (&i1);
+
+  gst_video_info_init (&i2);
+  gst_video_info_set_format (&i2, GST_VIDEO_FORMAT_xRGB, 640, 480);
+  i2.fps_n = 25;
+  i2.fps_d = 1;
+  caps2 = gst_video_info_to_caps (&i2);
+
+  pipeline =
+      setup_imagefreeze (caps1, caps2,
+      G_CALLBACK (sink_handoff_cb_count_buffers), &n_buffers);
+
+  imagefreeze = gst_bin_get_by_name (GST_BIN (pipeline), "freeze");
+  fail_unless (imagefreeze != NULL);
+
+  loop = g_main_loop_new (NULL, TRUE);
+  fail_unless (loop != NULL);
+
+  bus = gst_element_get_bus (pipeline);
+  fail_unless (bus != NULL);
+  bus_watch = gst_bus_add_watch (bus, bus_handler, loop);
+  gst_object_unref (bus);
+
+  /* Check that 0 buffers have been pushed */
+  g_object_set (imagefreeze, "num-buffers", 0, NULL);
+  n_buffers = 0;
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  g_main_loop_run (loop);
+
+  fail_unless_equals_int (n_buffers, 0);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  /* Check that the exact number of buffers have been pushed */
+  g_object_set (imagefreeze, "num-buffers", 100, NULL);
+  n_buffers = 0;
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  g_main_loop_run (loop);
+
+  fail_unless_equals_int (n_buffers, 100);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (imagefreeze);
+  gst_object_unref (pipeline);
+  g_main_loop_unref (loop);
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+  g_source_remove (bus_watch);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_imagefreeze_eos)
 {
   GstElement *pipeline;
@@ -578,6 +664,7 @@ imagefreeze_suite (void)
   tcase_add_test (tc_chain, test_imagefreeze_25_1_400ms_0ms);
   tcase_add_test (tc_chain, test_imagefreeze_25_1_220ms_380ms);
 
+  tcase_add_test (tc_chain, test_imagefreeze_num_buffers);
   tcase_add_test (tc_chain, test_imagefreeze_eos);
 
   return s;
