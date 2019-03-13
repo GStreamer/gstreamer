@@ -509,6 +509,8 @@ const gchar *
 gst_element_factory_get_metadata (GstElementFactory * factory,
     const gchar * key)
 {
+  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), NULL);
+
   return gst_structure_get_string ((GstStructure *) factory->metadata, key);
 }
 
