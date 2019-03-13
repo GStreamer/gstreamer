@@ -358,48 +358,81 @@ check fedora:
 #
 # Cerbero Linux X86_64 build
 #
-.build cerbero fedora x86_64:
-  extends: '.cerbero'
-  variables:
-    CONFIG: "linux.config"
-
-.cerbero deps fedora x86_64:
+cerbero deps fedora x86_64:
   extends: '.cerbero deps'
   variables:
     CONFIG: "linux.config"
     ARCH: "linux_x86_64"
 
-# This indirection allow overriding the image without passing again CONFIG
+.cerbero fedora x86_64:
+  extends: '.cerbero'
+  variables:
+    CONFIG: "linux.config"
+
+cerbero fedora x86_64:
+  extends: '.cerbero fedora x86_64'
+  dependencies:
+    - "cerbero deps fedora x86_64"
+  only:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+
 build cerbero fedora x86_64:
-  extends: '.build cerbero fedora x86_64'
+  extends: '.cerbero fedora x86_64'
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+
 
 #
 # Cerbero Cross Windows builds
 #
-.build cerbero cross win32:
-  extends: '.cerbero'
-  variables:
-    CONFIG: "cross-win32.cbc"
-
-.cerbero deps cross win32:
+cerbero deps windows x86:
   extends: '.cerbero deps'
   variables:
     CONFIG: "cross-win32.cbc"
     ARCH: "windows_x86"
 
-build cerbero cross win32:
-  extends: '.build cerbero cross win32'
-
-.build cerbero cross win64:
+.cerbero cross win32:
   extends: '.cerbero'
   variables:
-    CONFIG: "cross-win64.cbc"
+    CONFIG: "cross-win32.cbc"
 
-.cerbero deps cross win64:
+cerbero cross win32:
+  extends: '.cerbero cross win32'
+  dependencies:
+    - "cerbero deps windows x86"
+  only:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+
+build cerbero cross win32:
+  extends: '.cerbero cross win32'
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+
+cerbero deps windows x86_64:
   extends: '.cerbero deps'
   variables:
     CONFIG: "cross-win64.cbc"
     ARCH: "windows_x86_64"
 
+.cerbero cross win64:
+  extends: '.cerbero'
+  variables:
+    CONFIG: "cross-win64.cbc"
+
+cerbero cross win64:
+  extends: '.cerbero cross win64'
+  dependencies:
+    - "cerbero deps windows x86_64"
+  only:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+
 build cerbero cross win64:
-  extends: '.build cerbero cross win64'
+  extends: '.cerbero cross win64'
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
