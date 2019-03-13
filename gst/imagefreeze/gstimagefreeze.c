@@ -45,6 +45,14 @@
 
 #include "gstimagefreeze.h"
 
+#define DEFAULT_NUM_BUFFERS     -1
+
+enum
+{
+  PROP_0,
+  PROP_NUM_BUFFERS
+};
+
 static void gst_image_freeze_finalize (GObject * object);
 
 static void gst_image_freeze_reset (GstImageFreeze * self);
@@ -52,6 +60,10 @@ static void gst_image_freeze_reset (GstImageFreeze * self);
 static GstStateChangeReturn gst_image_freeze_change_state (GstElement * element,
     GstStateChange transition);
 
+static void gst_image_freeze_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_image_freeze_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 static GstFlowReturn gst_image_freeze_sink_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
 static gboolean gst_image_freeze_sink_event (GstPad * pad, GstObject * parent,
@@ -91,6 +103,14 @@ gst_image_freeze_class_init (GstImageFreezeClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   gobject_class->finalize = gst_image_freeze_finalize;
+  gobject_class->set_property = gst_image_freeze_set_property;
+  gobject_class->get_property = gst_image_freeze_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_NUM_BUFFERS,
+      g_param_spec_int ("num-buffers", "num-buffers",
+          "Number of buffers to output before sending EOS (-1 = unlimited)",
+          -1, G_MAXINT, DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_image_freeze_change_state);
@@ -130,6 +150,8 @@ gst_image_freeze_init (GstImageFreeze * self)
 
   g_mutex_init (&self->lock);
 
+  self->num_buffers = DEFAULT_NUM_BUFFERS;
+
   gst_image_freeze_reset (self);
 }
 
@@ -137,6 +159,8 @@ static void
 gst_image_freeze_finalize (GObject * object)
 {
   GstImageFreeze *self = GST_IMAGE_FREEZE (object);
+
+  self->num_buffers = DEFAULT_NUM_BUFFERS;
 
   gst_image_freeze_reset (self);
 
@@ -152,6 +176,7 @@ gst_image_freeze_reset (GstImageFreeze * self)
 
   g_mutex_lock (&self->lock);
   gst_buffer_replace (&self->buffer, NULL);
+  self->num_buffers_left = self->num_buffers;
 
   gst_segment_init (&self->segment, GST_FORMAT_TIME);
   self->need_segment = TRUE;
@@ -670,6 +695,42 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return ret;
 }
 
+static void
+gst_image_freeze_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstImageFreeze *self;
+
+  self = GST_IMAGE_FREEZE (object);
+
+  switch (prop_id) {
+    case PROP_NUM_BUFFERS:
+      self->num_buffers = g_value_get_int (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_image_freeze_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstImageFreeze *self;
+
+  self = GST_IMAGE_FREEZE (object);
+
+  switch (prop_id) {
+    case PROP_NUM_BUFFERS:
+      g_value_set_int (value, self->num_buffers);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static GstFlowReturn
 gst_image_freeze_sink_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -716,6 +777,18 @@ gst_image_freeze_src_loop (GstPad * pad)
     flow_ret = GST_FLOW_ERROR;
     g_mutex_unlock (&self->lock);
     goto pause_task;
+  }
+
+  /* normally we don't count buffers */
+  if (G_UNLIKELY (self->num_buffers_left >= 0)) {
+    GST_DEBUG_OBJECT (pad, "Buffers left %d", self->num_buffers_left);
+    if (self->num_buffers_left == 0) {
+      flow_ret = GST_FLOW_EOS;
+      g_mutex_unlock (&self->lock);
+      goto pause_task;
+    } else {
+      self->num_buffers_left--;
+    }
   }
   buffer = gst_buffer_copy (self->buffer);
 

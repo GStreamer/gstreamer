@@ -55,6 +55,9 @@ struct _GstImageFreeze
   gboolean need_segment;
   guint seqnum;
 
+  gint num_buffers;
+  gint num_buffers_left;
+
   guint64 offset;
 
   /* TRUE if currently doing a flushing seek, protected
