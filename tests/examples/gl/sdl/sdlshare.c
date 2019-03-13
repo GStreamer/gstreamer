@@ -216,6 +216,8 @@ sdl_event_loop (GstBus * bus)
   SDL_GL_MakeCurrent (sdl_window, sdl_gl_context);
   SDL_GL_SetSwapInterval (1);
 
+  InitGL (640, 480);
+
   while (!quit) {
     SDL_Event event;
 
@@ -270,9 +272,14 @@ sdl_event_loop (GstBus * bus)
       }
     }
 
+    if (buf) {
+      g_async_queue_push (queue_output_buf, buf);
+      buf = NULL;
+    }
+
     while (g_async_queue_length (queue_input_buf) > 3) {
       if (buf)
-        g_async_queue_push (queue_output_buf, buf);
+        gst_buffer_unref (buf);
       buf = (GstBuffer *) g_async_queue_pop (queue_input_buf);
     }
 
@@ -329,12 +336,10 @@ main (int argc, char **argv)
     return -1;
   }
 
+  /* Create GL context and a wrapped GStreamer context around it */
   sdl_gl_context = SDL_GL_CreateContext (sdl_window);
 
   SDL_GL_MakeCurrent (sdl_window, sdl_gl_context);
-
-  /* Loop, drawing and checking events */
-  InitGL (640, 480);
 
 #ifdef WIN32
   gl_context = wglGetCurrentContext ();
