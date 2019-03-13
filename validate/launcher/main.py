@@ -141,8 +141,6 @@ if "--help" not in sys.argv:
 QA_ASSETS = "gst-integration-testsuites"
 MEDIAS_FOLDER = "medias"
 DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.freedesktop.org/gstreamer/gst-integration-testsuites.git"
-DEFAULT_TESTSUITES_DIRS = [os.path.join(
-    DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")]
 
 
 def download_assets(options):
@@ -210,7 +208,7 @@ class LauncherConfig(Loggable):
         # paths passed with --media-path, and not defined by a testsuite
         self.user_paths = []
         self.paths = []
-        self.testsuites_dirs = DEFAULT_TESTSUITES_DIRS
+        self.testsuites_dirs = utils.DEFAULT_TESTSUITES_DIRS
 
         self.clone_dir = None
 
@@ -286,7 +284,10 @@ class LauncherConfig(Loggable):
         if self.no_color:
             utils.desactivate_colors()
         if self.clone_dir is None:
-            self.clone_dir = os.path.join(self.main_dir, QA_ASSETS)
+            if not utils.USING_SUBPROJECT:
+                self.clone_dir = os.path.join(self.main_dir, QA_ASSETS)
+            else:
+                self.clone_dir = self.main_dir
 
         if not isinstance(self.paths, list):
             self.paths = [self.paths]
@@ -299,14 +300,15 @@ class LauncherConfig(Loggable):
         if self.generate_info_full is True:
             self.generate_info = True
 
-        if self.sync_all is True or self.force_sync is True:
-            self.sync = True
+        if not utils.USING_SUBPROJECT:
+            if self.sync_all is True or self.force_sync is True:
+                self.sync = True
 
-        if not self.sync and not os.path.exists(self.clone_dir) and \
-                self.clone_dir == os.path.join(self.clone_dir, MEDIAS_FOLDER):
-            printc("Media path (%s) does not exists. Forgot to run --sync ?"
-                   % self.clone_dir, Colors.FAIL, True)
-            return False
+            if not self.sync and not os.path.exists(self.clone_dir) and \
+                    self.clone_dir == os.path.join(self.clone_dir, MEDIAS_FOLDER):
+                printc("Media path (%s) does not exists. Forgot to run --sync ?"
+                    % self.clone_dir, Colors.FAIL, True)
+                return False
 
         if (self.main_dir != DEFAULT_MAIN_DIR or self.clone_dir != QA_ASSETS):
             local_clone_dir = os.path.join(
@@ -481,7 +483,7 @@ class LauncherConfig(Loggable):
                                " Default is %s" % DEFAULT_MAIN_DIR)
         dir_group.add_argument("--testsuites-dir", dest="testsuites_dirs", action='append',
                                help="Directory where to look for testsuites. Default is %s"
-                               % DEFAULT_TESTSUITES_DIRS)
+                               % utils.DEFAULT_TESTSUITES_DIRS)
         dir_group.add_argument("-o", "--output-dir", dest="output_dir",
                                help="Directory where to store logs and rendered files. Default is MAIN_DIR")
         dir_group.add_argument("-l", "--logs-dir", dest="logsdir",
@@ -579,7 +581,7 @@ def main(libsdir):
     global LIBSDIR
     LIBSDIR = libsdir
 
-    DEFAULT_TESTSUITES_DIRS.append(os.path.join(LIBSDIR, "testsuites"))
+    utils.DEFAULT_TESTSUITES_DIRS.append(os.path.join(LIBSDIR, "testsuites"))
     os.environ["GST_VALIDATE_APPS_DIR"] = os.path.join(
         LIBSDIR, "apps") + os.pathsep + os.environ.get("GST_VALIDATE_APPS_DIR", "")
 

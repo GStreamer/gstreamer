@@ -44,9 +44,18 @@ from xml.etree import ElementTree
 
 GST_SECOND = int(1000000000)
 DEFAULT_TIMEOUT = 30
-DEFAULT_MAIN_DIR = os.environ.get('GST_VALIDATE_LAUNCHER_MAIN_DIR', os.path.join(os.path.expanduser("~"), "gst-validate"))
-DEFAULT_GST_QA_ASSETS = os.path.join(
-    DEFAULT_MAIN_DIR, "gst-integration-testsuites")
+
+DEFAULT_MAIN_DIR = os.path.join(config.BUILDDIR, "subprojects", "gst-integration-testsuites")
+DEFAULT_GST_QA_ASSETS = os.path.join(config.SRCDIR, "subprojects", "gst-integration-testsuites")
+USING_SUBPROJECT = os.path.exists(os.path.join(config.BUILDDIR, "subprojects", "gst-integration-testsuites"))
+if not USING_SUBPROJECT:
+    DEFAULT_MAIN_DIR = os.path.join(os.path.expanduser("~"), "gst-validate")
+    DEFAULT_GST_QA_ASSETS = os.path.join(DEFAULT_MAIN_DIR, "gst-integration-testsuites")
+
+DEFAULT_MAIN_DIR = os.environ.get('GST_VALIDATE_LAUNCHER_MAIN_DIR', DEFAULT_MAIN_DIR)
+DEFAULT_TESTSUITES_DIRS = [os.path.join(DEFAULT_GST_QA_ASSETS, "testsuites")]
+
+
 DISCOVERER_COMMAND = "gst-discoverer-1.0"
 # Use to set the duration from which a test is considered as being 'long'
 LONG_TEST = 40

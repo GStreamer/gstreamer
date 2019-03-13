@@ -1486,7 +1486,7 @@ class _TestsLauncher(Loggable):
     def _load_testsuites(self):
         testsuites = set()
         for testsuite in self.options.testsuites:
-            if os.path.exists(testsuite):
+            if testsuite.endswith('.py') and os.path.exists(testsuite):
                 testsuite = os.path.abspath(os.path.expanduser(testsuite))
                 loaded_module = self._load_testsuite([testsuite])
             else:
