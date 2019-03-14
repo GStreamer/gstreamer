@@ -1,6 +1,6 @@
 set -eu
 
-dnf install -y git meson ninja-build dnf-plugins-core
+dnf install -y git-core meson ninja-build dnf-plugins-core
 
 # Configure git for various usage
 git config --global user.email "gst-build@gstreamer.net"
