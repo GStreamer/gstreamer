@@ -1,4 +1,4 @@
-FROM fedora
+FROM registry.fedoraproject.org/fedora:29
 
 RUN dnf install -y \
     python3-pytest \

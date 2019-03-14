@@ -1,4 +1,4 @@
-FROM fedora:29
+FROM registry.fedoraproject.org/fedora:29
 
 COPY prepare.sh cleanup.sh /root/
 

@@ -1,4 +1,4 @@
-FROM fedora:29
+FROM registry.fedoraproject.org/fedora:29
 
 # System setup
 RUN echo "fastestmirror=true" >>  /etc/dnf/dnf.conf && \
