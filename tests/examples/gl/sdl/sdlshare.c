@@ -38,7 +38,14 @@
 #include <gst/gst.h>
 #include <gst/gl/gl.h>
 
+static GstStaticCaps render_caps =
+    GST_STATIC_CAPS
+    ("video/x-raw(memory:GLMemory),format=RGBA,width=320,height=240,framerate=(fraction)30/1,texture-target=2D");
+static GstVideoInfo render_video_info;
+static GstPipeline *pipeline = NULL;
+
 static GstGLContext *sdl_context;
+static GstGLContext *gst_context;
 static GstGLDisplay *sdl_gl_display;
 
 static guint32 sdl_message_event = -1;
@@ -73,20 +80,11 @@ InitGL (int Width, int Height)  // We call this right after our OpenGL window is
 
 /* The main drawing function. */
 static void
-DrawGLScene (GstBuffer * buf)
+DrawGLScene (GstVideoFrame * vframe)
 {
-  GstVideoFrame v_frame;
-  GstVideoInfo v_info;
   guint texture;
 
-  gst_video_info_set_format (&v_info, GST_VIDEO_FORMAT_RGBA, 320, 240);
-
-  if (!gst_video_frame_map (&v_frame, &v_info, buf, GST_MAP_READ | GST_MAP_GL)) {
-    g_warning ("Failed to map the video buffer");
-    return;
-  }
-
-  texture = *(guint *) v_frame.data[0];
+  texture = *(guint *) vframe->data[0];
 
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clear The Screen And The Depth Buffer
   glLoadIdentity ();            // Reset The View
@@ -136,8 +134,6 @@ DrawGLScene (GstBuffer * buf)
 
   // swap buffers to display, since we're double buffered.
   SDL_GL_SwapWindow (sdl_window);
-
-  gst_video_frame_unmap (&v_frame);
 }
 
 /* appsink new-sample callback */
@@ -146,23 +142,45 @@ on_new_sample (GstElement * appsink, gpointer data)
 {
   GstSample *sample = NULL;
   GstBuffer *buf;
+  GstVideoFrame *vframe;
+  GstGLSyncMeta *sync_meta;
 
   g_signal_emit_by_name (appsink, "pull-sample", &sample, NULL);
   if (!sample)
     return GST_FLOW_FLUSHING;
 
-  buf = gst_sample_get_buffer (sample);
-  /* ref then push buffer to use it in sdl */
-  gst_buffer_ref (buf);
-
+  buf = gst_buffer_ref (gst_sample_get_buffer (sample));
   gst_sample_unref (sample);
 
-  g_async_queue_push (queue_input_buf, buf);
+  if (!gst_context) {
+    GstMemory *mem = gst_buffer_peek_memory (buf, 0);
+    gst_context = gst_object_ref (((GstGLBaseMemory *) mem)->context);
+  }
+
+  sync_meta = gst_buffer_get_gl_sync_meta (buf);
+  if (!sync_meta) {
+    buf = gst_buffer_make_writable (buf);
+    sync_meta = gst_buffer_add_gl_sync_meta (gst_context, buf);
+  }
+  gst_gl_sync_meta_set_sync_point (sync_meta, gst_context);
+
+  vframe = g_new0 (GstVideoFrame, 1);
+  if (!gst_video_frame_map (vframe, &render_video_info, buf,
+          GST_MAP_READ | GST_MAP_GL)) {
+    g_warning ("Failed to map the video buffer");
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
+  // Another reference is owned by the video frame now and we can
+  // get rid of our own
+  gst_buffer_unref (buf);
+  g_async_queue_push (queue_input_buf, vframe);
 
   /* pop then unref buffer we have finished to use in sdl */
   if (g_async_queue_length (queue_output_buf) > 3) {
-    GstBuffer *buf_old = (GstBuffer *) g_async_queue_pop (queue_output_buf);
-    gst_buffer_unref (buf_old);
+    vframe = (GstVideoFrame *) g_async_queue_pop (queue_output_buf);
+    gst_video_frame_unmap (vframe);
+    g_free (vframe);
   }
 
   return GST_FLOW_OK;
@@ -210,7 +228,7 @@ sync_bus_call (GstBus * bus, GstMessage * msg, gpointer data)
 static void
 sdl_event_loop (GstBus * bus)
 {
-  GstBuffer *buf = NULL;
+  GstVideoFrame *vframe = NULL;
   gboolean quit = FALSE;
 
   SDL_GL_MakeCurrent (sdl_window, sdl_gl_context);
@@ -272,25 +290,35 @@ sdl_event_loop (GstBus * bus)
       }
     }
 
-    if (buf) {
-      g_async_queue_push (queue_output_buf, buf);
-      buf = NULL;
+    if (g_async_queue_length (queue_input_buf) > 3) {
+      GstGLSyncMeta *sync_meta;
+
+      if (vframe) {
+        g_async_queue_push (queue_output_buf, vframe);
+        vframe = NULL;
+      }
+
+      while (g_async_queue_length (queue_input_buf) > 3) {
+        if (vframe) {
+          gst_video_frame_unmap (vframe);
+          g_free (vframe);
+        }
+        vframe = (GstVideoFrame *) g_async_queue_pop (queue_input_buf);
+      }
+
+      sync_meta = gst_buffer_get_gl_sync_meta (vframe->buffer);
+      if (sync_meta)
+        gst_gl_sync_meta_wait (sync_meta, sdl_context);
     }
 
-    while (g_async_queue_length (queue_input_buf) > 3) {
-      if (buf)
-        gst_buffer_unref (buf);
-      buf = (GstBuffer *) g_async_queue_pop (queue_input_buf);
-    }
-
-    if (buf)
-      DrawGLScene (buf);
+    if (vframe)
+      DrawGLScene (vframe);
   }
 
   SDL_GL_MakeCurrent (sdl_window, NULL);
 
-  if (buf)
-    g_async_queue_push (queue_output_buf, buf);
+  if (vframe)
+    g_async_queue_push (queue_output_buf, vframe);
 }
 
 int
@@ -306,9 +334,9 @@ main (int argc, char **argv)
   GLXContext gl_context = NULL;
 #endif
 
-  GstPipeline *pipeline = NULL;
   GstBus *bus = NULL;
-  GstElement *appsink = NULL;
+  GstCaps *caps;
+  GstElement *appsink;
   const gchar *platform;
   GError *err = NULL;
 
@@ -373,10 +401,8 @@ main (int argc, char **argv)
 
   pipeline =
       GST_PIPELINE (gst_parse_launch
-      ("videotestsrc ! glupload ! gleffects effect=5 ! "
-          "appsink name=sink sync=true "
-          "caps=video/x-raw(memory:GLMemory),format=RGBA,width=320,height=240,framerate=(fraction)30/1,texture-target=2D",
-          NULL));
+      ("videotestsrc ! glupload name=upload ! gleffects effect=5 ! "
+          "appsink name=sink", NULL));
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_enable_sync_message_emission (bus);
@@ -387,9 +413,16 @@ main (int argc, char **argv)
 
   /* append a gst-gl texture to this queue when you do not need it no more */
   appsink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
-  g_object_set (appsink, "emit-signals", TRUE, NULL);
+
+  caps = gst_static_caps_get (&render_caps);
+  if (!gst_video_info_from_caps (&render_video_info, caps))
+    g_assert_not_reached ();
+
+  g_object_set (appsink, "emit-signals", TRUE, "sync", TRUE, "caps", caps,
+      NULL);
   g_signal_connect (appsink, "new-sample", G_CALLBACK (on_new_sample), NULL);
   gst_object_unref (appsink);
+  gst_caps_unref (caps);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
@@ -403,18 +436,24 @@ main (int argc, char **argv)
   gst_gl_context_activate (sdl_context, FALSE);
   gst_object_unref (sdl_context);
   gst_object_unref (sdl_gl_display);
+  if (gst_context)
+    gst_object_unref (gst_context);
 
   /* make sure there is no pending gst gl buffer in the communication queues 
    * between sdl and gst-gl
    */
   while (g_async_queue_length (queue_input_buf) > 0) {
-    GstBuffer *buf = (GstBuffer *) g_async_queue_pop (queue_input_buf);
-    gst_buffer_unref (buf);
+    GstVideoFrame *vframe =
+        (GstVideoFrame *) g_async_queue_pop (queue_input_buf);
+    gst_video_frame_unmap (vframe);
+    g_free (vframe);
   }
 
   while (g_async_queue_length (queue_output_buf) > 0) {
-    GstBuffer *buf = (GstBuffer *) g_async_queue_pop (queue_output_buf);
-    gst_buffer_unref (buf);
+    GstVideoFrame *vframe =
+        (GstVideoFrame *) g_async_queue_pop (queue_output_buf);
+    gst_video_frame_unmap (vframe);
+    g_free (vframe);
   }
 
   SDL_GL_DeleteContext (gl_context);
