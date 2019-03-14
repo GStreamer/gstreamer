@@ -1,4 +1,4 @@
-shared_library('gstvalidate-default-overrides-1.0',
+library('gstvalidate-default-overrides-1.0',
     sources: 'gst-validate-default-overrides.c',
     version : libversion,
     soversion : soversion,
