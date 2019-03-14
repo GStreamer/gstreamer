@@ -4057,6 +4057,13 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
   priv = media->priv;
 
   g_rec_mutex_lock (&priv->state_lock);
+
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING
+      && gst_rtsp_media_is_shared (media)) {
+    g_rec_mutex_unlock (&priv->state_lock);
+    gst_rtsp_media_get_status (media);
+    g_rec_mutex_lock (&priv->state_lock);
+  }
   if (priv->status == GST_RTSP_MEDIA_STATUS_ERROR)
     goto error_status;
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED &&
