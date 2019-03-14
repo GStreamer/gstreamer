@@ -2461,7 +2461,7 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
           maxlen = sizeof (conn->session_id) - 1;
           /* the sessionid can have attributes marked with ;
            * Make sure we strip them */
-          for (i = 0; session_id[i] != '\0'; i++) {
+          for (i = 0; i < maxlen && session_id[i] != '\0'; i++) {
             if (session_id[i] == ';') {
               maxlen = i;
               /* parse timeout */
