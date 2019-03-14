@@ -171,4 +171,6 @@ dnf remove -y "gstreamer1*devel"
 
 # get gst-build and make all subprojects available
 git clone git://anongit.freedesktop.org/gstreamer/gst-build /gst-build/
-cd /gst-build && meson build/ && rm -rf build/
+cd /gst-build
+meson subprojects download
+
