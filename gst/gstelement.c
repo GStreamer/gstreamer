@@ -3226,8 +3226,8 @@ was_ok:
  *
  * Retrieves the factory that was used to create this element.
  *
- * Returns: (transfer none): the #GstElementFactory used for creating this
- *     element. no refcounting is needed.
+ * Returns: (transfer none) (nullable): the #GstElementFactory used for creating this
+ *     element or %NULL if element has not been registered (static element). no refcounting is needed.
  */
 GstElementFactory *
 gst_element_get_factory (GstElement * element)
