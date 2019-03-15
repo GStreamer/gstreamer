@@ -35,6 +35,7 @@
 #include "gst-validate-monitor-factory.h"
 #include "gst-validate-override-registry.h"
 #include "gst-validate-runner.h"
+#include "gst-validate-reporter.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_validate_runner_debug);
 #undef GST_CAT_DEFAULT
@@ -471,6 +472,20 @@ gst_validate_runner_new (void)
   } else {
     runner = g_object_new (GST_TYPE_VALIDATE_RUNNER, NULL);
     runner->priv->user_created = TRUE;
+  }
+
+  {
+    GstValidateOverrideRegistry *registry =
+        gst_validate_override_registry_get ();
+    GList *all_overrides =
+        gst_validate_override_registry_get_override_list (registry);
+    GList *i;
+    for (i = all_overrides; i; i = i->next) {
+      GstValidateOverride *override = (GstValidateOverride *) i->data;
+      gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (override),
+          runner);
+    }
+    g_list_free (all_overrides);
   }
 
   return runner;

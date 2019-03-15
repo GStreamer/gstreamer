@@ -461,6 +461,37 @@ GList *gst_validate_override_registry_get_override_for_names
   return ret;
 }
 
+GList *
+gst_validate_override_registry_get_override_list (GstValidateOverrideRegistry *
+    registry)
+{
+  GList *all_overrides = NULL;
+  GList *i;
+
+  GST_VALIDATE_OVERRIDE_REGISTRY_LOCK (registry);
+  for (i = registry->name_overrides.head; i; i = i->next) {
+    GstValidateOverrideRegistryNameEntry *entry =
+        (GstValidateOverrideRegistryNameEntry *) i->data;
+    if (!g_list_find (all_overrides, entry->override))
+      all_overrides = g_list_append (all_overrides, entry->override);
+  }
+  for (i = registry->klass_overrides.head; i; i = i->next) {
+    GstValidateOverrideRegistryNameEntry *entry =
+        (GstValidateOverrideRegistryNameEntry *) i->data;
+    if (!g_list_find (all_overrides, entry->override))
+      all_overrides = g_list_append (all_overrides, entry->override);
+  }
+  for (i = registry->name_overrides.head; i; i = i->next) {
+    GstValidateOverrideRegistryGTypeEntry *entry =
+        (GstValidateOverrideRegistryGTypeEntry *) i->data;
+    if (!g_list_find (all_overrides, entry->override))
+      all_overrides = g_list_append (all_overrides, entry->override);
+  }
+  GST_VALIDATE_OVERRIDE_REGISTRY_UNLOCK (registry);
+
+  return all_overrides;
+}
+
 void
 _priv_validate_override_registry_deinit (void)
 {

@@ -38,6 +38,7 @@
 #include <stdio.h>
 
 #define VALIDATE_FLOW_MISMATCH g_quark_from_static_string ("validateflow::mismatch")
+#define VALIDATE_FLOW_NOT_ATTACHED g_quark_from_static_string ("validateflow::not-attached")
 
 typedef enum _ValidateFlowMode
 {
@@ -60,6 +61,7 @@ typedef struct _ValidateFlowOverride
   gchar *expectations_file_path;
   gchar *actual_results_file_path;
   ValidateFlowMode mode;
+  gboolean was_attached;
 
   /* output_file will refer to the expectations file if it did not exist,
    * or to the actual results file otherwise. */
@@ -72,6 +74,7 @@ typedef struct _ValidateFlowOverride
 GList *all_overrides = NULL;
 
 static void validate_flow_override_finalize (GObject * object);
+static void validate_flow_override_attached (GstValidateOverride * override);
 static void _runner_set (GObject * object, GParamSpec * pspec,
     gpointer user_data);
 static void runner_stopping (GstValidateRunner * runner,
@@ -92,7 +95,11 @@ void
 validate_flow_override_class_init (ValidateFlowOverrideClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstValidateOverrideClass *override_class =
+      GST_VALIDATE_OVERRIDE_CLASS (klass);
+
   object_class->finalize = validate_flow_override_finalize;
+  override_class->attached = validate_flow_override_attached;
 
   g_assert (gst_validate_is_initialized ());
 
@@ -100,6 +107,12 @@ validate_flow_override_class_init (ValidateFlowOverrideClass * klass)
       (VALIDATE_FLOW_MISMATCH,
           "The recorded log does not match the expectation file.",
           "The recorded log does not match the expectation file.",
+          GST_VALIDATE_REPORT_LEVEL_CRITICAL));
+
+  gst_validate_issue_register (gst_validate_issue_new
+      (VALIDATE_FLOW_NOT_ATTACHED,
+          "The pad to monitor was never attached.",
+          "The pad to monitor was never attached.",
           GST_VALIDATE_REPORT_LEVEL_CRITICAL));
 }
 
@@ -284,6 +297,8 @@ validate_flow_override_new (GstStructure * config)
   if (!flow->output_file)
     g_error ("Could not open for writing: %s", flow->output_file_path);
 
+  flow->was_attached = FALSE;
+
   gst_validate_override_register_by_name (flow->pad_name, override);
 
   override->buffer_handler = validate_flow_override_buffer_handler;
@@ -304,6 +319,13 @@ _runner_set (GObject * object, GParamSpec * pspec, gpointer user_data)
 
   g_signal_connect (runner, "stopping", G_CALLBACK (runner_stopping), flow);
   gst_object_unref (runner);
+}
+
+static void
+validate_flow_override_attached (GstValidateOverride * override)
+{
+  ValidateFlowOverride *flow = VALIDATE_FLOW_OVERRIDE (override);
+  flow->was_attached = TRUE;
 }
 
 static void
@@ -369,6 +391,14 @@ runner_stopping (GstValidateRunner * runner, ValidateFlowOverride * flow)
 
   fclose (flow->output_file);
   flow->output_file = NULL;
+
+  if (!flow->was_attached) {
+    GST_VALIDATE_REPORT (flow, VALIDATE_FLOW_NOT_ATTACHED,
+        "The test ended without the pad ever being attached: %s",
+        flow->pad_name);
+    return;
+  }
+
   if (flow->mode == VALIDATE_FLOW_MODE_WRITING_EXPECTATIONS)
     return;
 
