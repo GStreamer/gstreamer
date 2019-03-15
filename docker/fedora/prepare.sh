@@ -151,7 +151,7 @@ dnf debuginfo-install -y gtk3 \
     zip \
     zlib
 
-pip3 install meson
+pip3 install meson==0.49.2
 # Add the pip3 installation to the path
 export PATH="$PATH:/usr/local/lib/python3.7/site-packages"
 
