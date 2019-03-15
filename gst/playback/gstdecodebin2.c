@@ -121,6 +121,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_decode_bin_debug);
 
 typedef struct _GstPendingPad GstPendingPad;
 typedef struct _GstDecodeElement GstDecodeElement;
+typedef struct _GstDemuxerPad GstDemuxerPad;
 typedef struct _GstDecodeChain GstDecodeChain;
 typedef struct _GstDecodeGroup GstDecodeGroup;
 typedef struct _GstDecodePad GstDecodePad;
@@ -416,6 +417,14 @@ struct _GstDecodeElement
   gulong no_more_pads_id;
 };
 
+struct _GstDemuxerPad
+{
+  GWeakRef weakPad;
+  gulong event_probe_id;
+  gulong query_probe_id;
+};
+
+
 /* GstDecodeGroup
  *
  * Streams belonging to the same group/chain of a media file
@@ -437,6 +446,7 @@ struct _GstDecodeGroup
   gboolean drained;             /* TRUE if the all children are drained */
 
   GList *children;              /* List of GstDecodeChains in this group */
+  GArray *demuxer_pad_probe_ids;
 
   GList *reqpads;               /* List of RequestPads for multiqueue, there is
                                  * exactly one RequestPad per child chain */
@@ -3561,10 +3571,27 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
 static void
 gst_decode_group_free_internal (GstDecodeGroup * group, gboolean hide)
 {
+  gint i;
   GList *l;
 
   GST_DEBUG_OBJECT (group->dbin, "%s group %p", (hide ? "Hiding" : "Freeing"),
       group);
+
+  if (!hide) {
+    for (i = 0; i < group->demuxer_pad_probe_ids->len; i++) {
+      GstDemuxerPad *demuxer_pad =
+          &g_array_index (group->demuxer_pad_probe_ids, GstDemuxerPad, i);
+      GstPad *sinkpad = g_weak_ref_get (&demuxer_pad->weakPad);
+
+      if (!sinkpad)
+        continue;
+
+      gst_pad_remove_probe (sinkpad, demuxer_pad->event_probe_id);
+      gst_pad_remove_probe (sinkpad, demuxer_pad->query_probe_id);
+    }
+    g_array_unref (group->demuxer_pad_probe_ids);
+  }
+
   for (l = group->children; l; l = l->next) {
     GstDecodeChain *chain = (GstDecodeChain *) l->data;
 
@@ -3816,6 +3843,8 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
 
   group->overrunsig = g_signal_connect (mq, "overrun",
       G_CALLBACK (multi_queue_overrun_cb), group);
+  group->demuxer_pad_probe_ids =
+      g_array_new (FALSE, TRUE, sizeof (GstDemuxerPad));
 
   gst_element_set_state (mq, GST_STATE_PAUSED);
   gst_bin_add (GST_BIN (dbin), gst_object_ref (mq));
@@ -3845,6 +3874,7 @@ static GstPad *
 gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
 {
   GstDecodeBin *dbin;
+  GstDemuxerPad *demuxer_pad;
   GstPad *srcpad, *sinkpad;
   GstIterator *it = NULL;
   GValue item = { 0, };
@@ -3878,12 +3908,21 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
         sinkpad);
     goto error;
   }
-  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
-      sink_pad_event_probe, group, NULL);
-  gst_pad_add_probe (sinkpad, GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
-      sink_pad_query_probe, group, NULL);
 
   CHAIN_MUTEX_LOCK (group->parent);
+  g_array_set_size (group->demuxer_pad_probe_ids,
+      group->demuxer_pad_probe_ids->len + 1);
+  demuxer_pad =
+      &g_array_index (group->demuxer_pad_probe_ids, GstDemuxerPad,
+      group->demuxer_pad_probe_ids->len - 1);
+
+  demuxer_pad->event_probe_id = gst_pad_add_probe (sinkpad,
+      GST_PAD_PROBE_TYPE_EVENT_UPSTREAM, sink_pad_event_probe, group, NULL);
+  demuxer_pad->query_probe_id = gst_pad_add_probe (sinkpad,
+      GST_PAD_PROBE_TYPE_QUERY_UPSTREAM, sink_pad_query_probe, group, NULL);
+
+  g_weak_ref_set (&demuxer_pad->weakPad, sinkpad);
+
   group->reqpads = g_list_prepend (group->reqpads, gst_object_ref (sinkpad));
   CHAIN_MUTEX_UNLOCK (group->parent);
 
