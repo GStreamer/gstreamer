@@ -431,10 +431,10 @@ nle_source_send_event (GstElement * element, GstEvent * event)
   return res;
 }
 
-static gpointer
-ghost_seek_pad (NleSource * source)
+static void
+ghost_seek_pad (GstElement * source, gpointer user_data)
 {
-  NleSourcePrivate *priv = source->priv;
+  NleSourcePrivate *priv = NLE_SOURCE (source)->priv;
 
   g_mutex_lock (&priv->seek_lock);
   if (priv->seek_event) {
@@ -455,22 +455,18 @@ ghost_seek_pad (NleSource * source)
     priv->probeid = 0;
   }
   GST_OBJECT_UNLOCK (source);
-
-  return NULL;
 }
 
 static GstPadProbeReturn
 pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, NleSource * source)
 {
-  GThread *lthread;
-
+  GST_OBJECT_LOCK (source);
   if (!source->priv->areblocked) {
     GST_INFO_OBJECT (pad, "Blocked now, launching seek");
+    gst_element_call_async (GST_ELEMENT (source), ghost_seek_pad, NULL, NULL);
     source->priv->areblocked = TRUE;
-    lthread =
-        g_thread_new ("gnlsourceseek", (GThreadFunc) ghost_seek_pad, source);
-    g_thread_unref (lthread);
   }
+  GST_OBJECT_UNLOCK (source);
 
   return GST_PAD_PROBE_OK;
 }
