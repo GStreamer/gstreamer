@@ -379,7 +379,8 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   if (!encode->encoder)
     return TRUE;
 
-  out_caps = gst_caps_from_string (GST_VAAPI_MAKE_SURFACE_CAPS);
+  out_caps = gst_caps_from_string (GST_VAAPI_MAKE_SURFACE_CAPS ";"
+      GST_VAAPI_MAKE_DMABUF_CAPS);
   if (!out_caps)
     goto failed_create_va_caps;
 
