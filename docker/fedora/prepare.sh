@@ -1,6 +1,6 @@
 set -eu
 
-dnf install -y git-core meson ninja-build dnf-plugins-core
+dnf install -y git-core ninja-build dnf-plugins-core
 
 # Configure git for various usage
 git config --global user.email "gst-build@gstreamer.net"
@@ -151,6 +151,10 @@ dnf debuginfo-install -y gtk3 \
     zip \
     zlib
 
+pip3 install meson
+# Add the pip3 installation to the path
+export PATH="$PATH:/usr/local/lib/python3.7/site-packages"
+
 # Install the dependencies of gstreamer
 dnf builddep -y gstreamer1 \
     gstreamer1-plugins-base \
@@ -165,7 +169,8 @@ dnf builddep -y gstreamer1 \
     gstreamer1-libav \
     gstreamer1-rtsp-server  \
     gstreamer1-vaapi \
-    python3-gstreamer1
+    python3-gstreamer1 \
+    -x meson
 
 # Remove gst-devel packages installed by builddep above
 dnf remove -y "gstreamer1*devel"
