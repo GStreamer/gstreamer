@@ -1254,9 +1254,11 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
   priv->next_seqnum = data.seqnum;
   payload->timestamp = data.rtptime;
 
-  GST_LOG_OBJECT (payload, "Preparing to push packet with size %"
+  GST_LOG_OBJECT (payload, "Preparing to push %s with size %"
       G_GSIZE_FORMAT ", seq=%d, rtptime=%u, pts %" GST_TIME_FORMAT,
-      (is_list) ? -1 : gst_buffer_get_size (GST_BUFFER (obj)),
+      (is_list) ? "list" : "packet",
+      (is_list) ? gst_buffer_list_length (GST_BUFFER_LIST_CAST (obj)) :
+      gst_buffer_get_size (GST_BUFFER (obj)),
       payload->seqnum, data.rtptime, GST_TIME_ARGS (data.pts));
 
   if (g_atomic_int_compare_and_exchange (&payload->
