@@ -1172,8 +1172,8 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
    */
   if (dts < mux->last_dts) {
     GST_WARNING_OBJECT (pad, "Got backwards dts! (%" GST_TIME_FORMAT
-        " < %" GST_TIME_FORMAT ")", GST_TIME_ARGS (dts),
-        GST_TIME_ARGS (mux->last_dts));
+        " < %" GST_TIME_FORMAT ")", GST_TIME_ARGS (dts * GST_MSECOND),
+        GST_TIME_ARGS (mux->last_dts * GST_MSECOND));
     dts = mux->last_dts;
   }
   mux->last_dts = dts;
