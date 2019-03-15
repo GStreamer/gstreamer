@@ -2003,7 +2003,9 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
   for (i = 0; i < 2; i++) {
     if (stream->udpsrc[i]) {
       gst_element_set_state (stream->udpsrc[i], GST_STATE_NULL);
-      gst_bin_remove (GST_BIN_CAST (src), stream->udpsrc[i]);
+      if (gst_object_has_as_parent (GST_OBJECT (stream->udpsrc[i]),
+              GST_OBJECT (src)))
+        gst_bin_remove (GST_BIN_CAST (src), stream->udpsrc[i]);
       gst_object_unref (stream->udpsrc[i]);
     }
     if (stream->channelpad[i])
@@ -2011,7 +2013,9 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
 
     if (stream->udpsink[i]) {
       gst_element_set_state (stream->udpsink[i], GST_STATE_NULL);
-      gst_bin_remove (GST_BIN_CAST (src), stream->udpsink[i]);
+      if (gst_object_has_as_parent (GST_OBJECT (stream->udpsink[i]),
+              GST_OBJECT (src)))
+        gst_bin_remove (GST_BIN_CAST (src), stream->udpsink[i]);
       gst_object_unref (stream->udpsink[i]);
     }
   }
