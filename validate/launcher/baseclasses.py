@@ -140,14 +140,14 @@ class Test(Loggable):
         if self.result != Result.NOT_RUN:
             string += ": " + self.result
             if self.result in [Result.FAILED, Result.TIMEOUT]:
-                string += " '%s'\n" \
-                          "       You can reproduce with: %s\n" \
-                    % (self.message, self.get_command_repr())
-
-                if not self.options.redirect_logs and \
-                        self.result == Result.PASSED or \
-                        not self.options.dump_on_failure:
-                    string += self.get_logfile_repr()
+                string += " '%s'" % self.message
+                if not self.options.dump_on_failure:
+                    string += "\n       You can reproduce with: %s\n" % \
+                        self.get_command_repr()
+                    if not self.options.redirect_logs and self.result != Result.PASSED:
+                        string += self.get_logfile_repr()
+                else:
+                    string = "\n==> %s" % string
 
         return string
 
@@ -522,11 +522,10 @@ class Test(Loggable):
             self.command = self.use_valgrind(self.command, self.proc_env)
 
         if not self.options.redirect_logs:
-            self.out.write("=================\n"
-                           "Test name: %s\n"
+            self.out.write("Test name: %s\n"
                            "Command: '%s'\n"
-                           "=================\n\n"
-                           % (self.classname, self.get_command_repr()))
+                           "%s\n"
+                           % (self.classname, self.get_command_repr(), '-' * 80))
             self.out.flush()
         else:
             message = "Launching: %s%s\n" \
@@ -542,14 +541,14 @@ class Test(Loggable):
         self.start_ts = time.time()
 
     def _dump_log_file(self, logfile):
-        message = "Dumping contents of %s\n" % logfile
-        printc(message, Colors.FAIL)
+        message = "> Dumping %s\n>" % logfile
+        printc(message)
 
         with open(logfile, 'r') as fin:
-            print(fin.read())
+            for line in fin.readlines():
+                print('> ' + line, end='')
 
     def _dump_log_files(self):
-        printc("Dumping log files on failure\n", Colors.FAIL)
         self._dump_log_file(self.logfile)
         for logfile in self.extra_logfiles:
             self._dump_log_file(logfile)
