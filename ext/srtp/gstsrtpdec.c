@@ -1387,23 +1387,28 @@ unprotect:
     case srtp_err_status_ok:
       /* success! */
       break;
-    case srtp_err_status_key_expired:
-      /* Update stream */
-      if (find_stream_by_ssrc (filter, ssrc)) {
-        GST_OBJECT_UNLOCK (filter);
-        if (request_key_with_signal (filter, ssrc, SIGNAL_HARD_LIMIT)) {
-          GST_OBJECT_LOCK (filter);
-          goto unprotect;
-        } else {
-          GST_OBJECT_LOCK (filter);
-          GST_WARNING_OBJECT (filter, "Hard limit reached, no new key, "
-              "dropping");
-        }
-      } else {
-        GST_WARNING_OBJECT (filter, "Could not find matching stream, "
-            "dropping");
+    case srtp_err_status_key_expired:{
+      GstSrtpDecSsrcStream *stream;
+
+      /* Check we have an existing stream to rekey */
+      stream = find_stream_by_ssrc (filter, ssrc);
+      if (stream == NULL) {
+        GST_WARNING_OBJECT (filter, "Could not find matching stream, dropping");
+        goto err;
       }
-      goto err;
+
+      GST_OBJECT_UNLOCK (filter);
+      stream = request_key_with_signal (filter, ssrc, SIGNAL_HARD_LIMIT);
+      GST_OBJECT_LOCK (filter);
+
+      /* Check we have a new stream for the key request */
+      if (stream == NULL) {
+        GST_WARNING_OBJECT (filter, "Hard limit reached, no new key, dropping");
+        goto err;
+      }
+
+      goto unprotect;
+    }
     case srtp_err_status_auth_fail:
       GST_WARNING_OBJECT (filter, "Error authentication packet, dropping");
       goto err;
