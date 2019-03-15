@@ -64,7 +64,7 @@
  * unless the user has set the relevant properties first. It also uses
  * a master key that MUST be set by property (key) at the beginning. The
  * master key must be of a maximum length of 46 characters (14 characters
- * for the salt plus the key). The encryption and authentication mecanisms
+ * for the salt plus the key). The encryption and authentication mechanisms
  * available are :
  *
  * Encryption (properties rtp-cipher and rtcp-cipher)

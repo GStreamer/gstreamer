@@ -58,12 +58,12 @@
  * For each packet received, it checks if the internal SSRC is in the list
  * of streams already in use. If this is not the case, it sends a signal to
  * the user to get the needed parameters to create a new stream : master
- * key, encryption and authentication mecanisms for both RTP and RTCP. If
+ * key, encryption and authentication mechanisms for both RTP and RTCP. If
  * the user can't provide those parameters, the buffer is dropped and a
  * warning is emitted.
  *
  * This element uses libsrtp library. The encryption and authentication
- * mecanisms available are :
+ * mechanisms available are :
  *
  * Encryption
  * - AES_ICM 256 bits (maximum security)
