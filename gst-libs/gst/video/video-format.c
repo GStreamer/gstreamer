@@ -5209,6 +5209,32 @@ pack_NV12_10LE40 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+#define PACK_VUYA GST_VIDEO_FORMAT_AYUV, unpack_VUYA, 1, pack_VUYA
+static void
+unpack_VUYA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  const guint8 *restrict s = GET_LINE (y);
+  guint8 *restrict d = dest;
+
+  s += x * 4;
+
+  video_orc_unpack_VUYA (d, s, width);
+}
+
+static void
+pack_VUYA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  const guint8 *restrict s = src;
+  guint8 *restrict d = GET_LINE (y);
+
+  video_orc_pack_VUYA (d, s, width);
+}
+
 typedef struct
 {
   guint32 fourcc;
@@ -5536,6 +5562,8 @@ static const VideoFormat formats[] = {
       DPTH10_10_10, PSTR488, PLANE0, OFFS0, SUB422, PACK_Y210),
   MAKE_YUV_FORMAT (Y410, "raw video", GST_MAKE_FOURCC ('Y', '4', '1', '0'),
       DPTH10_10_10_2, PSTR0, PLANE0, OFFS0, SUB4444, PACK_Y410),
+  MAKE_YUVA_PACK_FORMAT (VUYA, "raw video", GST_MAKE_FOURCC ('V', 'U', 'Y',
+          'A'), DPTH8888, PSTR4444, PLANE0, OFFS2103, SUB4444, PACK_VUYA),
 };
 
 static GstVideoFormat
@@ -5780,6 +5808,8 @@ gst_video_format_from_fourcc (guint32 fourcc)
       return GST_VIDEO_FORMAT_NV12_10LE40;
     case GST_MAKE_FOURCC ('Y', '4', '1', '0'):
       return GST_VIDEO_FORMAT_Y410;
+    case GST_MAKE_FOURCC ('V', 'U', 'Y', 'A'):
+      return GST_VIDEO_FORMAT_VUYA;
 
     default:
       return GST_VIDEO_FORMAT_UNKNOWN;
