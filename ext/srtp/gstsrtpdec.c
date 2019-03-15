@@ -1387,6 +1387,10 @@ unprotect:
     case srtp_err_status_ok:
       /* success! */
       break;
+    case srtp_err_status_replay_fail:
+      GST_INFO_OBJECT (filter,
+          "Dropping replayed packet, probably retransmission");
+      goto err;
     case srtp_err_status_key_expired:{
       GstSrtpDecSsrcStream *stream;
 
@@ -1401,7 +1405,7 @@ unprotect:
       stream = request_key_with_signal (filter, ssrc, SIGNAL_HARD_LIMIT);
       GST_OBJECT_LOCK (filter);
 
-      /* Check we have a new stream for the key request */
+      /* Check the key request created a new stream */
       if (stream == NULL) {
         GST_WARNING_OBJECT (filter, "Hard limit reached, no new key, dropping");
         goto err;
