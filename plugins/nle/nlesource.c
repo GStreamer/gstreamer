@@ -58,6 +58,7 @@ struct _NleSourcePrivate
   GstPad *ghostedpad;           /* Pad (to be) ghosted */
   GstPad *staticpad;            /* The only pad. We keep an extra ref */
 
+  GMutex seek_lock;
   GstEvent *seek_event;
   gulong probeid;
 };
@@ -75,6 +76,8 @@ static void nle_source_dispose (GObject * object);
 
 static gboolean
 nle_source_control_element_func (NleSource * source, GstElement * element);
+static GstStateChangeReturn nle_source_change_state (GstElement * element,
+    GstStateChange transition);
 
 static void
 nle_source_class_init (NleSourceClass * klass)
@@ -95,6 +98,7 @@ nle_source_class_init (NleSourceClass * klass)
       "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <bilboed@bilboed.com>");
 
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (nle_source_send_event);
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (nle_source_change_state);
 
   parent_class = g_type_class_ref (NLE_TYPE_OBJECT);
 
@@ -119,6 +123,7 @@ nle_source_init (NleSource * source)
   GST_OBJECT_FLAG_SET (source, NLE_OBJECT_SOURCE);
   source->element = NULL;
   source->priv = nle_source_get_instance_private (source);
+  g_mutex_init (&source->priv->seek_lock);
 
   GST_DEBUG_OBJECT (source, "Setting GstBin async-handling to TRUE");
   g_object_set (G_OBJECT (source), "async-handling", TRUE, NULL);
@@ -160,10 +165,12 @@ nle_source_dispose (GObject * object)
     priv->staticpad = NULL;
   }
 
+  g_mutex_lock (&priv->seek_lock);
   if (priv->seek_event) {
     gst_event_unref (priv->seek_event);
     priv->seek_event = NULL;
   }
+  g_mutex_unlock (&priv->seek_lock);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -412,7 +419,9 @@ nle_source_send_event (GstElement * element, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
+      g_mutex_lock (&source->priv->seek_lock);
       source->priv->seek_event = event;
+      g_mutex_unlock (&source->priv->seek_lock);
       break;
     default:
       res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
@@ -427,6 +436,7 @@ ghost_seek_pad (NleSource * source)
 {
   NleSourcePrivate *priv = source->priv;
 
+  g_mutex_lock (&priv->seek_lock);
   if (priv->seek_event) {
     GstEvent *seek_event = priv->seek_event;
     priv->seek_event = NULL;
@@ -435,6 +445,7 @@ ghost_seek_pad (NleSource * source)
       GST_ELEMENT_ERROR (source, RESOURCE, SEEK,
           (NULL), ("Sending initial seek to upstream element failed"));
   }
+  g_mutex_unlock (&priv->seek_lock);
 
   GST_OBJECT_LOCK (source);
   if (priv->probeid) {
@@ -510,4 +521,22 @@ nle_source_prepare (NleObject * object)
   gst_object_unref (parent);
 
   return TRUE;
+}
+
+static GstStateChangeReturn
+nle_source_change_state (GstElement * element, GstStateChange transition)
+{
+  NleSourcePrivate *priv = NLE_SOURCE (element)->priv;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_mutex_lock (&priv->seek_lock);
+      gst_clear_event (&priv->seek_event);
+      g_mutex_unlock (&priv->seek_lock);
+      break;
+    default:
+      break;
+  }
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
