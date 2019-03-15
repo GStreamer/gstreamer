@@ -82,6 +82,7 @@
 #endif
 
 #include <gst/pbutils/missing-plugins.h>
+#include <gst/video/video.h>
 
 #include "ges-internal.h"
 #include "ges/ges-meta-container.h"
@@ -135,8 +136,8 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   GstElement *queue = gst_element_factory_make ("queue", NULL);
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_GET_CLASS (trksrc);
   GESVideoSource *self;
-  GstElement *positioner, *videoscale, *videorate, *capsfilter, *videoconvert,
-      *deinterlace;
+  GstElement *positioner, *videoflip, *videoscale, *videorate, *capsfilter,
+      *videoconvert, *deinterlace;
   const gchar *positioner_props[] =
       { "alpha", "posx", "posy", "width", "height", NULL };
   const gchar *deinterlace_props[] = { "mode", "fields", "tff", NULL };
@@ -153,6 +154,11 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   positioner = gst_element_factory_make ("framepositioner", "frame_tagger");
   g_object_set (positioner, "zorder",
       G_MAXUINT - GES_TIMELINE_ELEMENT_PRIORITY (self), NULL);
+
+  /* If there's image-orientation tag, make sure the image is correctly oriented
+   * before we scale it. */
+  videoflip = gst_element_factory_make ("videoflip", "track-element-videoflip");
+  g_object_set (videoflip, "video-direction", GST_VIDEO_ORIENTATION_AUTO, NULL);
 
   videoscale =
       gst_element_factory_make ("videoscale", "track-element-videoscale");
@@ -177,13 +183,14 @@ ges_video_source_create_element (GESTrackElement * trksrc)
             "deinterlace"), ("deinterlacing won't work"));
     topbin =
         ges_source_create_topbin ("videosrcbin", sub_element, queue,
-        videoconvert, positioner, videoscale, videorate, capsfilter, NULL);
+        videoconvert, positioner, videoflip, videoscale, videorate, capsfilter,
+        NULL);
   } else {
     ges_track_element_add_children_props (trksrc, deinterlace, NULL, NULL,
         deinterlace_props);
     topbin =
         ges_source_create_topbin ("videosrcbin", sub_element, queue,
-        videoconvert, deinterlace, positioner, videoscale, videorate,
+        videoconvert, deinterlace, positioner, videoflip, videoscale, videorate,
         capsfilter, NULL);
   }
 
