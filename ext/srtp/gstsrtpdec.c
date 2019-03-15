@@ -1382,8 +1382,6 @@ unprotect:
 #endif
   }
 
-  GST_OBJECT_UNLOCK (filter);
-
   if (err != srtp_err_status_ok) {
     GST_WARNING_OBJECT (pad,
         "Unable to unprotect buffer (unprotect failed code %d)", err);
@@ -1391,7 +1389,6 @@ unprotect:
     /* Signal user depending on type of error */
     switch (err) {
       case srtp_err_status_key_expired:
-        GST_OBJECT_LOCK (filter);
 
         /* Update stream */
         if (find_stream_by_ssrc (filter, ssrc)) {
@@ -1400,6 +1397,7 @@ unprotect:
             GST_OBJECT_LOCK (filter);
             goto unprotect;
           } else {
+            GST_OBJECT_LOCK (filter);
             GST_WARNING_OBJECT (filter, "Hard limit reached, no new key, "
                 "dropping");
           }
@@ -1420,16 +1418,11 @@ unprotect:
     }
 
     gst_buffer_unmap (buf, &map);
-
-    GST_OBJECT_LOCK (filter);
     return FALSE;
   }
 
   gst_buffer_unmap (buf, &map);
-
   gst_buffer_set_size (buf, size);
-
-  GST_OBJECT_LOCK (filter);
   return TRUE;
 }
 
