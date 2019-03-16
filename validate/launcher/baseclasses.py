@@ -122,6 +122,9 @@ class Test(Loggable):
 
         self.clean()
 
+    def generate_known_issues(self):
+        return None
+
     def clean(self):
         self.kill_subprocess()
         self.message = ""
@@ -576,7 +579,8 @@ class Test(Loggable):
                 message = None
 
         if message is not None:
-            printc(message, color=utils.get_color_for_result(self.result), end=end)
+            printc(message, color=utils.get_color_for_result(
+                self.result), end=end)
         self.close_logfile()
 
         if self.options.dump_on_failure:
@@ -688,6 +692,7 @@ class GstValidateTest(Test):
         self.actions_infos = []
         self.media_descriptor = media_descriptor
         self.server = None
+        self.criticals = []
 
         override_path = self.get_override_file(media_descriptor)
         if override_path:
@@ -848,12 +853,12 @@ class GstValidateTest(Test):
             if found is not None:
                 expected_failures.remove(found)
                 if report['level'] == 'critical':
-                    if found.get('sometimes') and isinstance(expected_retcode, list):
+                    if found.get('sometimes', True) and isinstance(expected_retcode, list):
                         expected_retcode.append(18)
                     else:
                         expected_retcode = [18]
             elif report['level'] == 'critical':
-                ret.append(report['summary'])
+                ret.append(report)
 
         if not ret:
             return None, expected_failures, expected_retcode
@@ -902,7 +907,7 @@ class GstValidateTest(Test):
 
         self.debug("%s returncode: %s", self, self.process.returncode)
 
-        criticals, not_found_expected_failures, expected_returncode = self.check_reported_issues()
+        self.criticals, not_found_expected_failures, expected_returncode = self.check_reported_issues()
 
         expected_timeout = None
         for i, f in enumerate(not_found_expected_failures):
@@ -946,13 +951,14 @@ class GstValidateTest(Test):
                 msg += "(expected %s) " % expected_returncode
             result = Result.FAILED
 
-        if criticals:
-            msg += "(critical errors: [%s]) " % ', '.join(criticals)
+        if self.criticals:
+            msg += "(critical errors: [%s]) " % ', '.join([c['summary']
+                                                           for c in self.criticals])
             result = Result.FAILED
 
         if not_found_expected_failures:
             mandatory_failures = [f for f in not_found_expected_failures
-                                  if not f.get('sometimes')]
+                                  if not f.get('sometimes', True)]
 
             if mandatory_failures:
                 msg += "(Expected errors not found: %s) " % mandatory_failures
@@ -963,6 +969,33 @@ class GstValidateTest(Test):
                                                           Colors.ENDC)
 
         self.set_result(result, msg.strip())
+
+    def generate_known_issues(self):
+        if not self.criticals and self.result != Result.TIMEOUT:
+            return None
+        res = '%s"%s": [' % (" " * 4, self.classname)
+        if self.result == Result.TIMEOUT:
+            res += """        {
+            'bug': 'FIXME - REPORT A BUG in https://gitlab.freedesktop.org/gstreamer/ ? (or remove this line)',
+            'timeout': True,
+            'sometimes': True,
+        },"""
+
+        for report in self.criticals:
+            res += "\n%s{" % (" " * 8)
+
+            res += '\n%s"bug": "FIXME - REPORT A BUG in https://gitlab.freedesktop.org/gstreamer/ ? (or remove this line)",' % (
+                " " * 12,)
+            for key, value in report.items():
+                if key == "type":
+                    continue
+                res += '\n%s%s"%s": "%s",' % (" " * 12, "# " if key ==
+                                              "details" else "", key, value.replace('\n', '\\n'))
+
+            res += "\n%s}," % (" " * 8)
+
+        res += "\n%s],\n" % (" " * 4)
+        return res
 
     def get_valgrind_suppressions(self):
         result = super(GstValidateTest, self).get_valgrind_suppressions()
@@ -1842,6 +1875,16 @@ class _TestsLauncher(Loggable):
             else:
                 return self._run_tests()
         finally:
+            all_known_issues = ""
+            for test in self.tests:
+                if test.result != Result.PASSED:
+                    known_issues = test.generate_known_issues()
+                    if known_issues:
+                        all_known_issues += known_issues
+            if all_known_issues:
+                printc("\nSome tests failed, you might want to add the following"
+                       " known issues to the testsuites and REPORT BUGS:\n", color=Colors.HEADER)
+                print(all_known_issues)
             if self.httpsrv:
                 self.httpsrv.stop()
             if self.vfb_server:
