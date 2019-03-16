@@ -158,6 +158,7 @@ struct _GstValidateScenarioPrivate
   gboolean got_eos;
   gboolean changing_state;
   gboolean needs_async_done;
+  gboolean ignore_eos;
   GstState target_state;
 
   GList *overrides;
@@ -3135,6 +3136,11 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       GstValidateActionType *stop_action_type;
       GstStructure *s;
 
+      if (!is_error && scenario->priv->ignore_eos) {
+        GST_INFO_OBJECT (scenario, "Got EOS but ignoring it!");
+        goto done;
+      }
+
       GST_VALIDATE_SCENARIO_EOS_HANDLING_LOCK (scenario);
       {
         /* gst_validate_action_set_done() does not finish the action
@@ -3376,6 +3382,7 @@ _load_scenario_file (GstValidateScenario * scenario,
       gst_structure_get_boolean (structure, "is-config", is_config);
       gst_structure_get_boolean (structure, "handles-states",
           &priv->handles_state);
+      gst_structure_get_boolean (structure, "ignore-eos", &priv->ignore_eos);
 
       if (!priv->handles_state)
         priv->target_state = GST_STATE_PLAYING;
@@ -4732,6 +4739,15 @@ init_scenarios (void)
         .types = "int",
         .possible_variables = NULL,
         .def = "infinite (-1)"
+      },
+      {
+        .name = "ignore-eos",
+        .description = "Ignore EOS and keep executing the scenario when it happens.\n By default "
+          "a 'stop' action is generated one EOS",
+        .mandatory = FALSE,
+        .types = "boolean",
+        .possible_variables = NULL,
+        .def = "false"
       },
       {NULL}
       }),
