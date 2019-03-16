@@ -755,12 +755,13 @@ class GstValidateTest(Test):
         if self.scenario:
             if self._sent_eos_time is not None:
                 t = time.time()
-                if ((t - self._sent_eos_time)) > 30:
+                if ((t - self._sent_eos_time)) > self.timeout:
                     if self.media_descriptor is not None and self.media_descriptor.get_protocol() == Protocols.HLS:
                         self.set_result(Result.PASSED,
-                                        """Got no EOS 30 seconds after sending EOS,
+                                        """Got no EOS %s seconds after sending EOS,
                                         in HLS known and tolerated issue:
-                                        https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
+                                        https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/132"""
+                                        % self.timeout)
                         return Result.KNOWN_ERROR
 
                     self.set_result(
