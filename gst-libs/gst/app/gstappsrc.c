@@ -373,7 +373,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstAppSrc::empty-percent:
+   * GstAppSrc::min-percent:
    *
    * Make appsrc emit the "need-data" signal when the amount of bytes in the
    * queue drops below this percentage of max-bytes.
@@ -1243,7 +1243,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
       if ((priv->wait_status & APP_WAITING))
         g_cond_broadcast (&priv->cond);
 
-      /* see if we go lower than the empty-percent */
+      /* see if we go lower than the min-percent */
       if (priv->min_percent && priv->max_bytes) {
         if (priv->queued_bytes * 100 / priv->max_bytes <= priv->min_percent)
           /* ignore flushing state, we got a buffer and we will return it now.
