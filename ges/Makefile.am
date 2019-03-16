@@ -68,6 +68,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-command-line-formatter.c \
 	ges-auto-transition.c \
 	ges-timeline-element.c \
+	ges-timeline-tree.c \
 	ges-container.c \
 	ges-effect-asset.c \
 	ges-smart-adder.c \
@@ -150,6 +151,7 @@ noinst_HEADERS = \
 	ges-structure-parser.h \
 	ges-smart-video-mixer.h \
 	ges-smart-adder.h \
+	ges-timeline-tree.h \
 	gstframepositioner.h
 
 libges_@GST_API_VERSION@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) \
