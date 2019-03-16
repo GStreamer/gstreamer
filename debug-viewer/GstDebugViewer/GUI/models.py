@@ -409,7 +409,7 @@ class SubRange (object):
             raise ValueError(
                 "need start <= stop (got %r, %r)" % (start, stop,))
 
-        if type(size) == type(self):
+        if isinstance(size, type(self)):
             # Another SubRange, don't stack:
             start += size.start
             stop += size.start

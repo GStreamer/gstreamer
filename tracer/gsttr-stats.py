@@ -50,29 +50,28 @@ class Stats(Analyzer):
     def handle_tracer_class(self, event):
         s = Structure(event[Parser.F_MESSAGE])
         # TODO only for debugging
-        #print("tracer class:", repr(s))
+        # print("tracer class:", repr(s))
         name = s.name[:-len('.class')]
         record = {
             'class': s,
-            'scope' : {},
-            'value' : {},
+            'scope': {},
+            'value': {},
         }
         self.records[name] = record
-        for k,v in s.values.items():
+        for k, v in s.values.items():
             if v.name == 'scope':
                 # TODO only for debugging
-                #print("scope: [%s]=%s" % (k, v))
+                # print("scope: [%s]=%s" % (k, v))
                 record['scope'][k] = v
             elif v.name == 'value':
                 # skip non numeric and those without min/max
-                if (v.values['type'] in _NUMERIC_TYPES and
-                      'min' in v.values and 'max' in v.values):
+                if v.values['type'] in _NUMERIC_TYPES and 'min' in v.values and 'max' in v.values:
                     # TODO only for debugging
-                    #print("value: [%s]=%s" % (k, v))
+                    # print("value: [%s]=%s" % (k, v))
                     record['value'][k] = v
-                #else:
+                # else:
                     # TODO only for debugging
-                    #print("skipping value: [%s]=%s" % (k, v))
+                    # print("skipping value: [%s]=%s" % (k, v))
 
     def handle_tracer_entry(self, event):
         # use first field in message (structure-id) if none
@@ -100,17 +99,16 @@ class Stats(Analyzer):
             return
 
         # aggregate event based on class
-        for sk,sv in record['scope'].items():
+        for sk, sv in record['scope'].items():
             # look up bin by scope (or create new)
-            key = (_SCOPE_RELATED_TO[sv.values['related-to']] +
-                ":" + str(s.values[sk]))
+            key = (_SCOPE_RELATED_TO[sv.values['related-to']] + ":" + str(s.values[sk]))
             scope = self.data.get(key)
             if not scope:
                 scope = {}
                 self.data[key] = scope
-            for vk,vv in record['value'].items():
+            for vk, vv in record['value'].items():
                 # skip optional fields
-                if not vk in s.values:
+                if vk not in s.values:
                     continue
                 if not s.values.get('have-' + vk, True):
                     continue
@@ -118,8 +116,8 @@ class Stats(Analyzer):
                 key = entry_name + "/" + vk
                 data = scope.get(key)
                 if not data:
-                    data = { 'num': 0 }
-                    if not '_FLAGS_AGGREGATED' in vv.values.get('flags', ''):
+                    data = {'num': 0}
+                    if '_FLAGS_AGGREGATED' not in vv.values.get('flags', ''):
                         data['sum'] = 0
                         if 'max' in vv.values and 'min' in vv.values:
                             data['min'] = int(vv.values['max'])
@@ -144,15 +142,15 @@ class Stats(Analyzer):
     def report(self):
         # headline
         print("%-45s: %30s: %16s/%16s/%16s" % (
-            'scope', 'value', 'min','avg','max'))
+            'scope', 'value', 'min', 'avg', 'max'))
         # iterate scopes
-        for sk,sv in self.data.items():
+        for sk, sv in self.data.items():
             # iterate tracers
-            for tk,tv in sv.items():
+            for tk, tv in sv.items():
                 mi = tv.get('min', '-')
                 ma = tv.get('max', '-')
                 if 'sum' in tv:
-                    avg = tv['sum']/tv['num']
+                    avg = tv['sum'] / tv['num']
                 else:
                     avg = '-'
                 if mi == ma:
@@ -190,8 +188,8 @@ def format_ts(ts):
 
 def is_time_field(f):
     # TODO: need proper units
-    return (f.endswith('/time') or f.endswith('-dts') or f.endswith('-pts') or
-        f.endswith('-duration'))
+    return (f.endswith('/time') or f.endswith('-dts') or f.endswith('-pts')
+        or f.endswith('-duration'))
 
 
 if __name__ == '__main__':

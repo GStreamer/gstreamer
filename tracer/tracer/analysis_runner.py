@@ -1,7 +1,8 @@
 try:
     from tracer.parser import Parser
-except:
+except BaseException:
     from parser import Parser
+
 
 class AnalysisRunner(object):
     """
@@ -26,9 +27,9 @@ class AnalysisRunner(object):
             analyzer.handle_tracer_entry(event)
 
     def is_tracer_class(self, event):
-        return (event[Parser.F_FILENAME] == 'gsttracerrecord.c' and
-                event[Parser.F_CATEGORY] == 'GST_TRACER' and
-                '.class' in event[Parser.F_MESSAGE])
+        return (event[Parser.F_FILENAME] == 'gsttracerrecord.c'
+                and event[Parser.F_CATEGORY] == 'GST_TRACER'
+                and '.class' in event[Parser.F_MESSAGE])
 
     def is_tracer_entry(self, event):
         return (not event[Parser.F_LINE] and not event[Parser.F_FILENAME])
@@ -41,7 +42,7 @@ class AnalysisRunner(object):
                     self.handle_tracer_entry(event)
                 elif self.is_tracer_class(event):
                     self.handle_tracer_class(event)
-                #else:
+                # else:
                 #    print("unhandled:", repr(event))
         except StopIteration:
             pass

@@ -21,12 +21,14 @@ import os
 import sys
 import xml.etree.cElementTree
 
+
 def extract_info(xmlfile):
     e = xml.etree.cElementTree.parse(xmlfile).getroot()
     r = {}
     for i in e:
         r[(i.get("classname"), i.get("name"))] = i
     return r
+
 
 if "__main__" == __name__:
     if len(sys.argv) < 2:
@@ -58,12 +60,12 @@ if "__main__" == __name__:
 
     if oldfile:
         # tests that weren't present in old run
-        newtests = [x for x in newfile.keys() if not oldfile.has_key(x)]
+        newtests = [x for x in newfile.keys() if x not in oldfile]
         # tests that are no longer present in new run
-        gonetests = [x for x in oldfile.keys() if not newfile.has_key(x)]
+        gonetests = [x for x in oldfile.keys() if x not in newfile]
 
     # go over new tests
-    for k,v in newfile.iteritems():
+    for k, v in newfile.iteritems():
         tn, fn = k
         if not fn in allfiles:
             allfiles.append(fn)
@@ -75,10 +77,10 @@ if "__main__" == __name__:
                 rs = r.split('[')[1].split(']')[0].split(',')
                 for la in rs:
                     la = la.strip()
-                    if not reasons.has_key(la):
+                    if la not in reasons:
                         reasons[la] = []
                     reasons[la].append(k)
-            if not failedfiles.has_key(fn):
+            if fn not in failedfiles:
                 failedfiles[fn] = []
             failedfiles[fn].append((tn, r))
 
@@ -101,7 +103,6 @@ if "__main__" == __name__:
                     failchange.append(k)
                 elif a.get("message") != b.get("message"):
                     failchange.append(k)
-
 
     if newfail:
         print("New failures", len(newfail))
@@ -132,23 +133,21 @@ if "__main__" == __name__:
             print "       New message      :", newfile[i].find("error").get("message")
         print
 
-    for k,v in reasons.iteritems():
+    for k, v in reasons.iteritems():
         print "Failure type : ", k, len(v)
         v.sort()
         for i in v:
             print "   %s : %s" % (i[0], i[1])
         print
 
-    nofailfiles = [fn for fn in allfiles if not failedfiles.has_key(fn)]
-    nofailfiles.sort()
+    nofailfiles = sorted([fn for fn in allfiles if fn not in failedfiles])
     if nofailfiles:
         print "Files without failures", len(nofailfiles)
         for f in nofailfiles:
             print "    ", f
         print
 
-    for k,v in failedfiles.iteritems():
+    for k, v in failedfiles.iteritems():
         print "Failed File :", k
         for i in v:
             print "    %s : %s" % (i[0], i[1])
-

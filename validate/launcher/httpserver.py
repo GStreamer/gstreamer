@@ -22,7 +22,9 @@ import time
 from . import loggable
 import subprocess
 import sys
-import urllib.request, urllib.error, urllib.parse
+import urllib.request
+import urllib.error
+import urllib.parse
 
 logcat = "httpserver"
 

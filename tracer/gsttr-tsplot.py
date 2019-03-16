@@ -37,7 +37,7 @@ logger = logging.getLogger('gsttr-tsplot')
 
 _HANDLED_CLASSES = ('buffer', 'event', 'new-pad', 'new-element')
 
-_GST_BUFFER_FLAG_DISCONT = (1<<6)
+_GST_BUFFER_FLAG_DISCONT = (1 << 6)
 
 _PLOT_SCRIPT_HEAD = Template(
     '''
@@ -82,6 +82,7 @@ _PLOT_SCRIPT_BODY = Template(
     unset multiplot
     ''')
 
+
 class TsPlot(Analyzer):
     '''Generate a timestamp plots from a tracer log.
 
@@ -123,18 +124,18 @@ class TsPlot(Analyzer):
         data = self.ev_data.get(ix)
         if not data:
             return
-        l = self.ev_labels[ix]
+        line = self.ev_labels[ix]
         ct = data['ct']
         x1 = data['first-ts']
         # TODO: scale 'y' according to max-y of buf or do a multiplot
         y = (1 + data['ypos']) * -10
         if ct == 1:
-            pad_file.write('%f %f %f %f "%s"\n' % (x1, x1, 0.0, y, l))
+            pad_file.write('%f %f %f %f "%s"\n' % (x1, x1, 0.0, y, line))
         else:
             x2 = data['last-ts']
             xd = (x2 - x1)
             xm = x1 + xd / 2
-            pad_file.write('%f %f %f %f "%s (%d)"\n' % (x1, xm, xd, y, l, ct))
+            pad_file.write('%f %f %f %f "%s (%d)"\n' % (x1, xm, xd, y, line, ct))
 
     def _log_event(self, s):
         # build a [ts, event-name] data file
@@ -146,8 +147,8 @@ class TsPlot(Analyzer):
         x = int(s.values['ts']) / 1e9
         # some events fire often, labeling each would be unreadable
         # so we aggregate a series of events of the same type
-        l = s.values['name']
-        if l == self.ev_labels.get(ix):
+        line = s.values['name']
+        if line == self.ev_labels.get(ix):
             # count lines and track last ts
             data = self.ev_data[ix]
             data['ct'] += 1
@@ -155,17 +156,17 @@ class TsPlot(Analyzer):
         else:
             self._log_event_data(pad_file, ix)
             # start new data, assign a -y coord by event type
-            if not ix in self.ev_ypos:
+            if ix not in self.ev_ypos:
                 ypos = {}
                 self.ev_ypos[ix] = ypos
             else:
                 ypos = self.ev_ypos[ix]
-            if l in ypos:
-                y = ypos[l]
+            if line in ypos:
+                y = ypos[line]
             else:
                 y = len(ypos)
-                ypos[l] = y
-            self.ev_labels[ix] = l
+                ypos[line] = y
+            self.ev_labels[ix] = line
             self.ev_data[ix] = {
                 'ct': 1,
                 'first-ts': x,
@@ -187,7 +188,7 @@ class TsPlot(Analyzer):
         cts = int(s.values['ts']) / 1e9
         pts = int(s.values['buffer-pts']) / 1e9
         dur = int(s.values['buffer-duration']) / 1e9
-        if not ix in self.buf_cts:
+        if ix not in self.buf_cts:
             dcts = 0
         else:
             dcts = cts - self.buf_cts[ix]

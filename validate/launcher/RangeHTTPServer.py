@@ -49,8 +49,10 @@ import time
 
 _bandwidth = 0
 
+
 class ThreadingSimpleServer(ThreadingMixIn, http.server.HTTPServer):
     pass
+
 
 class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
@@ -70,7 +72,7 @@ class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         """Serve a GET request."""
         f, start_range, end_range = self.send_head()
-        print ("Got values of {} and {}".format(start_range, end_range))
+        print("Got values of {} and {}".format(start_range, end_range))
         if f:
             f.seek(start_range, 0)
             chunk = 0x1000
@@ -85,7 +87,7 @@ class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
                 try:
                     self.wfile.write(f.read(chunk))
-                except:
+                except Exception:
                     break
                 total += chunk
                 start_range += chunk
@@ -136,8 +138,8 @@ class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             return (None, 0, 0)
 
         if "Range" in self.headers:
-            self.send_response(206) #partial content response
-        else :
+            self.send_response(206)  # partial content response
+        else:
             self.send_response(200)
 
         self.send_header("Content-type", ctype)
@@ -148,7 +150,7 @@ class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
 
         self.send_header("Accept-Ranges", "bytes")
         if "Range" in self.headers:
-            s, e = self.headers['range'][6:].split('-', 1) #bytes:%d-%d
+            s, e = self.headers['range'][6:].split('-', 1)  # bytes:%d-%d
             sl = len(s)
             el = len(e)
 
@@ -163,7 +165,7 @@ class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-Length", end_range - start_range)
         self.end_headers()
 
-        print ("Sending bytes {} to {}...".format(start_range, end_range))
+        print("Sending bytes {} to {}...".format(start_range, end_range))
         return (f, start_range, end_range)
 
     def list_directory(self, path):
@@ -180,7 +182,7 @@ class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
             self.send_error(404, "Access Forbidden")
             return None
 
-        lst.sort(key=lambda file_name : file_name.lower())
+        lst.sort(key=lambda file_name: file_name.lower())
         html_text = []
 
         displaypath = html.escape(urllib.parse.unquote(self.path))
@@ -226,7 +228,7 @@ class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         probably be diagnosed.)
 
         """
-        #abandon query parameters
+        # abandon query parameters
         path = path.split("?", 1)[0]
         path = path.split("#", 1)[0]
         path = posixpath.normpath(urllib.parse.unquote(path))
@@ -237,10 +239,10 @@ class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         for word in words:
             drive, word = os.path.splitdrive(word)
             head, word = os.path.split(word)
-            if word in (os.curdir, os.pardir): continue
+            if word in (os.curdir, os.pardir):
+                continue
             path = os.path.join(path, word)
         return path
-
 
     def guess_type(self, path):
         """Guess the type of a file.
@@ -266,22 +268,23 @@ class RangeHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
         else:
             return self.extension_map['']
 
-    if not  mimetypes.inited:
+    if not mimetypes.inited:
         mimetypes.init()
     extension_map = mimetypes.types_map.copy()
     extension_map.update({
-            '': 'application/octet-stream', # Default
+        '': 'application/octet-stream',  # Default
             '.py': 'text/plain',
             '.c': 'text/plain',
             '.h': 'text/plain',
             '.mp4': 'video/mp4',
             '.ogg': 'video/ogg',
-            '.java' : 'text/plain',
-        })
+            '.java': 'text/plain',
+    })
 
 
-def test(handler_class = RangeHTTPRequestHandler,server_class = http.server.HTTPServer):
+def test(handler_class=RangeHTTPRequestHandler, server_class=http.server.HTTPServer):
     http.server.test(handler_class, server_class)
+
 
 if __name__ == "__main__":
     httpd = ThreadingSimpleServer(("0.0.0.0", int(sys.argv[1])), RangeHTTPRequestHandler)

@@ -58,7 +58,7 @@ def handle_exception(default_return):
         def wrapped_func(*args, **kargs):
             try:
                 return func(*args, **kargs)
-            except:
+            except BaseException:
                 # Use excepthook directly to avoid any printing to the screen
                 # if someone installed an except hook.
                 sys.excepthook(*sys.exc_info())

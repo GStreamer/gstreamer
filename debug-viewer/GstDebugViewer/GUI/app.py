@@ -137,7 +137,7 @@ class App (object):
 
         try:
             Common.Main.MainLoopWrapper(Gtk.main, Gtk.main_quit).run()
-        except:
+        except BaseException:
             raise
         else:
             self.detach()

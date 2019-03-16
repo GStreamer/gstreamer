@@ -51,7 +51,7 @@ def gi_get_value():
 
 def perf(method, n, flavor):
     t = timeit.timeit(method + '()', 'from __main__ import ' + method, number=n)
-    print("%6s: %lf s, (%lf calls/s)" % (flavor, t, (n/t)))
+    print("%6s: %lf s, (%lf calls/s)" % (flavor, t, (n / t)))
 
 
 if __name__ == '__main__':

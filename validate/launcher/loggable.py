@@ -164,7 +164,7 @@ class TerminalController:
         # terminal has no capabilities.
         try:
             curses.setupterm()
-        except:
+        except BaseException:
             return
 
         # Look up numeric capabilities.
@@ -258,15 +258,15 @@ class ProgressBar:
             self.cleared = 0
         n = int((self.width - 10) * percent)
         sys.stdout.write(
-            self.term.BOL + self.term.UP + self.term.CLEAR_EOL +
-            (self.bar % (100 * percent, '=' * n, '-' * (self.width - 10 - n))) +
-            self.term.CLEAR_EOL + message.center(self.width))
+            self.term.BOL + self.term.UP + self.term.CLEAR_EOL
+            + (self.bar % (100 * percent, '=' * n, '-' * (self.width - 10 - n)))
+            + self.term.CLEAR_EOL + message.center(self.width))
 
     def clear(self):
         if not self.cleared:
-            sys.stdout.write(self.term.BOL + self.term.CLEAR_EOL +
-                             self.term.UP + self.term.CLEAR_EOL +
-                             self.term.UP + self.term.CLEAR_EOL)
+            sys.stdout.write(self.term.BOL + self.term.CLEAR_EOL
+                             + self.term.UP + self.term.CLEAR_EOL
+                             + self.term.UP + self.term.CLEAR_EOL)
             self.cleared = 1
 
 
@@ -648,7 +648,7 @@ def _preformatLevels(enableColorOutput):
     terminal_controller = TerminalController()
     for level in ERROR, WARN, FIXME, INFO, DEBUG, LOG:
         if enableColorOutput:
-            if type(terminal_controller.BOLD) == bytes:
+            if isinstance(terminal_controller.BOLD, bytes):
                 formatter = ''.join(
                     (terminal_controller.BOLD.decode(),
                      getattr(terminal_controller, COLORS[level]).decode(),

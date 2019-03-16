@@ -30,16 +30,16 @@ class Structure(object):
     @staticmethod
     def _find_eos(s):
         # find next '"' without preceeding '\'
-        l = 0
-        #logger.debug("find_eos: '%s'", s)
-        while 1:  # faster than regexp for '[^\\]\"'
+        i = 0
+        # logger.debug("find_eos: '%s'", s)
+        while True:  # faster than regexp for '[^\\]\"'
             p = s.index('"')
-            l += p + 1
+            i += p + 1
             if s[p - 1] != '\\':
-                #logger.debug("... ok  : '%s'", s[p:])
-                return l
+                # logger.debug("... ok  : '%s'", s[p:])
+                return i
             s = s[(p + 1):]
-            #logger.debug("...     : '%s'", s)
+            # logger.debug("...     : '%s'", s)
         return -1
 
     @staticmethod
@@ -47,7 +47,7 @@ class Structure(object):
         types = {}
         values = {}
         scan = True
-        #logger.debug("===: '%s'", s)
+        # logger.debug("===: '%s'", s)
         # parse id
         p = s.find(',')
         if p == -1:
@@ -57,7 +57,7 @@ class Structure(object):
         # parse fields
         while scan:
             s = s[(p + 2):]  # skip 'name, ' / 'value, '
-            #logger.debug("...: '%s'", s)
+            # logger.debug("...: '%s'", s)
             p = s.index('=')
             k = s[:p]
             if not s[p + 1] == '(':

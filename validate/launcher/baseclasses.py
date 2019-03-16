@@ -989,8 +989,9 @@ class GstValidateTest(Test):
             for key, value in report.items():
                 if key == "type":
                     continue
-                res += '\n%s%s"%s": "%s",' % (" " * 12, "# " if key ==
-                                              "details" else "", key, value.replace('\n', '\\n'))
+                res += '\n%s%s"%s": "%s",' % (
+                    " " * 12, "# " if key == "details" else "",
+                    key, value.replace('\n', '\\n'))
 
             res += "\n%s}," % (" " * 8)
 
