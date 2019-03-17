@@ -69,6 +69,7 @@ EXITING_SIGNALS = dict([(-getattr(signal, s), s) for s in [
     'SIGQUIT', 'SIGILL', 'SIGABRT', 'SIGFPE', 'SIGSEGV', 'SIGBUS', 'SIGSYS',
     'SIGTRAP', 'SIGXCPU', 'SIGXFSZ', 'SIGIOT'] if hasattr(signal, s)])
 EXITING_SIGNALS.update({139: "SIGSEGV"})
+EXITING_SIGNALS.update({(v, k) for k, v in EXITING_SIGNALS.items()})
 
 
 class Test(Loggable):
@@ -123,8 +124,25 @@ class Test(Loggable):
 
         self.clean()
 
+    def _generate_known_issues(self):
+        return ''
+
     def generate_known_issues(self):
-        return None
+        res = '%s"%s": [' % (" " * 4, self.classname)
+
+        retcode = self.process.returncode if self.process else 0
+        if retcode != 0:
+            signame = EXITING_SIGNALS.get(retcode)
+            val = "'" + signame + "'" if signame else retcode
+            res += """\n        {
+            'bug': 'FIXME - REPORT A BUG in https://gitlab.freedesktop.org/gstreamer/ ? (or remove this line)',
+            '%s': %s,
+            'sometimes': True,
+        },""" % ("signame" if signame else "returncode", val)
+        res += self._generate_known_issues()
+        res += "\n%s],\n" % (" " * 4)
+
+        return res
 
     def clean(self):
         self.kill_subprocess()
@@ -872,17 +890,9 @@ class GstValidateTest(Test):
 
         return ret, expected_failures, expected_retcode
 
-    def check_expected_timeout(self, expected_timeout):
-        msg = "Expected timeout happened. "
-        result = Result.PASSED
-        message = expected_timeout.get('message')
-        if message:
-            if not re.findall(message, self.message):
-                result = Result.FAILED
-                msg = "Expected timeout message: %s got %s " % (
-                    message, self.message)
-
-        expected_symbols = expected_timeout.get('stacktrace_symbols')
+    def check_expected_traceback(self, expected_failure):
+        msg = None
+        expected_symbols = expected_failure.get('stacktrace_symbols')
         if expected_symbols:
             trace_gatherer = BackTraceGenerator.get_default()
             stack_trace = trace_gatherer.get_trace(self)
@@ -894,11 +904,29 @@ class GstValidateTest(Test):
                 not_found_symbols = [s for s in expected_symbols
                                      if s not in stack_trace]
                 if not_found_symbols:
-                    result = Result.TIMEOUT
-                    msg = "Expected symbols '%s' not found in stack trace " % (
+                    msg = " Expected symbols '%s' not found in stack trace " % (
                         not_found_symbols)
+
+                    return msg, False
             else:
-                msg += "No stack trace available, could not verify symbols "
+                msg += " No stack trace available, could not verify symbols "
+
+        return msg, True
+
+    def check_expected_timeout(self, expected_timeout):
+        msg = "Expected timeout happened. "
+        result = Result.PASSED
+        message = expected_timeout.get('message')
+        if message:
+            if not re.findall(message, self.message):
+                result = Result.FAILED
+                msg = "Expected timeout message: %s got %s " % (
+                    message, self.message)
+
+        stack_msg, stack_res = self.check_expected_traceback(expected_timeout)
+        if not stack_res:
+            result = Result.TIMEOUT
+            msg += stack_msg
 
         return result, msg
 
@@ -915,20 +943,30 @@ class GstValidateTest(Test):
         self.debug("%s returncode: %s", self, self.process.returncode)
 
         self.criticals, not_found_expected_failures, expected_returncode = self.check_reported_issues()
-
         expected_timeout = None
+        expected_signal = None
         for i, f in enumerate(not_found_expected_failures):
-            if len(f) == 1 and f.get("returncode"):
-                returncode = f['returncode']
-                if not isinstance(expected_returncode, list):
-                    returncode = [expected_returncode]
+            returncode = f.get('returncode', [])
+            if not isinstance(returncode, list):
+                returncode = [returncode]
+
+            if f.get('signame'):
+                signames = f['signame']
+                if not isinstance(signames, list):
+                    signames = [signames]
+
+                returncode = [EXITING_SIGNALS[signame] for signame in signames]
+
+            if returncode:
                 if 'sometimes' in f:
                     returncode.append(0)
+                expected_returncode = returncode
+                expected_signal = f
             elif f.get("timeout"):
                 expected_timeout = f
 
         not_found_expected_failures = [f for f in not_found_expected_failures
-                                       if not f.get('returncode')]
+                                       if not f.get('returncode') and not f.get('signame')]
 
         msg = ""
         result = Result.PASSED
@@ -944,10 +982,15 @@ class GstValidateTest(Test):
                 else:
                     return
         elif self.process.returncode in EXITING_SIGNALS:
-            result = Result.FAILED
-            msg = "Application exited with signal %s" % (
-                EXITING_SIGNALS[self.process.returncode]
-            )
+            msg = "Application exited with signal %s" % (EXITING_SIGNALS[self.process.returncode])
+            if self.process.returncode not in expected_returncode:
+                result = Result.FAILED
+            else:
+                if expected_signal:
+                    stack_msg, stack_res = self.check_expected_traceback(expected_signal)
+                    if not stack_res:
+                        msg += stack_msg
+                        result = Result.FAILED
             self.add_stack_trace_to_logfile()
         elif self.process.returncode == VALGRIND_ERROR_CODE:
             msg = "Valgrind reported errors "
@@ -968,19 +1011,18 @@ class GstValidateTest(Test):
                                   if not f.get('sometimes', True)]
 
             if mandatory_failures:
-                msg += "(Expected errors not found: %s) " % mandatory_failures
+                msg += " (Expected errors not found: %s) " % mandatory_failures
                 result = Result.FAILED
         elif self.expected_failures:
-            msg += '%s(Expected errors occured: %s)%s' % (Colors.OKBLUE,
+            msg += ' %s(Expected errors occured: %s)%s' % (Colors.OKBLUE,
                                                           self.expected_failures,
                                                           Colors.ENDC)
 
         self.set_result(result, msg.strip())
 
-    def generate_known_issues(self):
-        if not self.criticals and self.result != Result.TIMEOUT:
-            return None
-        res = '%s"%s": [' % (" " * 4, self.classname)
+    def _generate_known_issues(self):
+        res = ""
+        self.criticals = self.criticals or []
         if self.result == Result.TIMEOUT:
             res += """        {
             'bug': 'FIXME - REPORT A BUG in https://gitlab.freedesktop.org/gstreamer/ ? (or remove this line)',
@@ -996,13 +1038,14 @@ class GstValidateTest(Test):
             for key, value in report.items():
                 if key == "type":
                     continue
+                if value is None:
+                    continue
                 res += '\n%s%s"%s": "%s",' % (
                     " " * 12, "# " if key == "details" else "",
                     key, value.replace('\n', '\\n'))
 
             res += "\n%s}," % (" " * 8)
 
-        res += "\n%s],\n" % (" " * 4)
         return res
 
     def get_valgrind_suppressions(self):
@@ -1857,21 +1900,24 @@ class _TestsLauncher(Loggable):
             if self.options.forever:
                 r = 1
                 while True:
-                    printc("Running iteration %d" % r, title=True)
+                    printc("-> Iteration %d" % r, end='')
 
                     if not self._run_tests():
                         break
                     r += 1
                     self.clean_tests()
+                    printc("OK", Colors.OKGREEN)
 
                 return False
             elif self.options.n_runs:
                 res = True
                 for r in range(self.options.n_runs):
-                    t = "Running iteration %d" % r
-                    print("%s\n%s\n%s\n" % ("=" * len(t), t, "=" * len(t)))
+                    printc("-> Iteration %d" % r)
                     if not self._run_tests():
                         res = False
+                        printc("ERROR", Colors.FAIL)
+                    else:
+                        printc("OK", Colors.OKGREEN)
                     self.clean_tests()
 
                 return res
@@ -1880,7 +1926,7 @@ class _TestsLauncher(Loggable):
         finally:
             all_known_issues = ""
             for test in self.tests:
-                if test.result != Result.PASSED:
+                if test.result not in [Result.PASSED, Result.NOT_RUN]:
                     known_issues = test.generate_known_issues()
                     if known_issues:
                         all_known_issues += known_issues
