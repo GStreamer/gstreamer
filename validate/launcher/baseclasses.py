@@ -247,7 +247,7 @@ class Test(Loggable):
         if not stack_trace:
             return
 
-        info = "\n\n== Stack trace: == \n%s" % stack_trace
+        info = "\n\n**Stack trace**:\n\n```\n%s\n```" % stack_trace
         if self.options.redirect_logs:
             print(info)
             return
@@ -259,6 +259,11 @@ class Test(Loggable):
             f.write(info)
 
     def set_result(self, result, message="", error=""):
+
+        if not self.options.redirect_logs:
+            self.out.write("\n```\n")
+            self.out.flush()
+
         self.debug("Setting result: %s (message: %s, error: %s)" % (result,
                                                                     message, error))
 
@@ -526,10 +531,10 @@ class Test(Loggable):
             self.command = self.use_valgrind(self.command, self.proc_env)
 
         if not self.options.redirect_logs:
-            self.out.write("Test name: %s\n"
-                           "Command: '%s'\n"
-                           "%s\n"
-                           % (self.classname, self.get_command_repr(), '-' * 80))
+            self.out.write("**Test name**: `%s`\n\n"
+                           "**Command**:\n\n``` bash\n%s\n```\n\n" % (
+                               self.classname, self.get_command_repr()))
+            self.out.write("**%s logs**:\n\n``` log\n\n" % self.command[0])
             self.out.flush()
         else:
             message = "Launching: %s%s\n" \
@@ -1115,19 +1120,14 @@ class GstValidateEncodingTestInterface(object):
 
         command = [GstValidateBaseTestManager.COMMAND] + \
             shlex.split(pipeline_desc)
+        msg = "**Running IQA tests on results of**: " \
+            + "%s\n**Command**: \n```\n%s\n```\n" % (
+                self.classname, ' '.join(command))
         if not self.options.redirect_logs:
-            self.out.write(
-                "=================\n"
-                "Running IQA tests on results of: %s\n"
-                "Command: '%s'\n"
-                "=================\n\n" % (
-                    self.classname, ' '.join(command)))
+            self.out.write(msg)
             self.out.flush()
         else:
-            message = "Running IQA tests on results of:%s %s\n" \
-                "    Command: %s\n" % (
-                    Colors.ENDC, self.classname, ' '.join(command))
-            printc(message, Colors.OKBLUE)
+            printc(msg, Colors.OKBLUE)
 
         self.process = subprocess.Popen(command,
                                         stderr=self.out,

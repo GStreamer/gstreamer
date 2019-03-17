@@ -813,10 +813,10 @@ gst_validate_runner_printf (GstValidateRunner * runner)
 
   if (criticals) {
     GList *iter;
-    g_printerr ("\n\n==== Got criticals. Return value set to 18 ====\n");
+    g_printerr ("\n\n**Got criticals. Return value set to 18**:\n");
     ret = 18;
     for (iter = criticals; iter; iter = iter->next) {
-      g_printerr ("     Critical error %s\n",
+      g_printerr ("  * critical error %s\n",
           ((GstValidateReport *) (iter->data))->message);
     }
     g_printerr ("\n");

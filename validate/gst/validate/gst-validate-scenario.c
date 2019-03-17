@@ -3925,9 +3925,7 @@ gst_validate_scenario_factory_create (GstValidateRunner *
   }
 
   gst_validate_printf (NULL,
-      "\n=========================================\n"
-      "Running scenario %s on pipeline %s"
-      "\n=========================================\n", scenario_name,
+      "\n**-> Running scenario %s on pipeline %s**\n\n", scenario_name,
       GST_OBJECT_NAME (pipeline));
 
   scenario->priv->overrides =
