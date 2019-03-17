@@ -23,6 +23,7 @@ try:
 except ImportError:
     from . import config
 
+import json
 import os
 import platform
 import re
@@ -40,6 +41,7 @@ import urllib.parse
 from .loggable import Loggable
 from operator import itemgetter
 from xml.etree import ElementTree
+from collections import defaultdict
 
 
 GST_SECOND = int(1000000000)
@@ -439,8 +441,13 @@ class BackTraceGenerator(Loggable):
         return None
 
 
+ALL_GITLAB_ISSUES = defaultdict(list)
+
+
 def check_bugs_resolution(bugs_definitions):
     bugz = {}
+    gitlab_issues = defaultdict(list)
+
     regexes = {}
     for regex, bugs in bugs_definitions:
         if isinstance(bugs, str):
@@ -449,15 +456,29 @@ def check_bugs_resolution(bugs_definitions):
         for bug in bugs:
             url = urllib.parse.urlparse(bug)
 
+            if "gitlab" in url.netloc:
+                components = [c for c in url.path.split('/') if c]
+                if len(components) != 4:
+                    printc("\n  + %s \n   --> bug: %s\n   --> Status: Not a proper gitlab report" % (regex, bug),
+                        Colors.WARNING)
+                    continue
+                project_id = components[0] + '%2F' + components[1]
+                issue_id = components[3]
+
+                gitlab_url: str = "https://%s/api/v4/projects/%s/issues/%s" % (url.hostname, project_id, issue_id)
+                if gitlab_url in ALL_GITLAB_ISSUES:
+                    continue
+                gitlab_issues[gitlab_url].append(regex)
+                ALL_GITLAB_ISSUES[gitlab_url].append(regex)
+                continue
+
             if "bugzilla" not in url.netloc:
-                printc("  + %s \n   --> bug: %s\n   --> Status: Not a bugzilla report\n" % (regex, bug),
-                       Colors.WARNING)
                 continue
 
             query = urllib.parse.parse_qs(url.query)
             _id = query.get('id')
             if not _id:
-                printc("  + '%s' -- Can't check bug '%s'\n" %
+                printc("\n  + '%s' -- Can't check bug '%s'" %
                        (regex, bug), Colors.WARNING)
                 continue
 
@@ -471,6 +492,20 @@ def check_bugs_resolution(bugs_definitions):
             bugz[url_parts] = ids
 
     res = True
+    for gitlab_url, regexe in gitlab_issues.items():
+        try:
+            issue = json.load(urllib.request.urlopen(gitlab_url))
+        except Exception as e:
+            printc("\n  + Could not properly check bugs status for: %s (%s)"
+                   % (gitlab_url, e), Colors.FAIL)
+            continue
+
+        if issue['state'] in ['closed']:
+            printc("\n  + %s \n   --> %s: '%s'\n   ==> Bug CLOSED already (status: %s)" % (
+                regexe, issue['web_url'], issue['title'], issue['state']), Colors.FAIL)
+
+            res = False
+
     for url_parts, ids in bugz.items():
         url_parts = list(url_parts)
         query = {'id': ','.join(ids)}
@@ -479,7 +514,7 @@ def check_bugs_resolution(bugs_definitions):
         try:
             res = urllib.request.urlopen(urllib.parse.urlunparse(url_parts))
         except Exception as e:
-            printc("  + Could not properly check bugs status for: %s (%s)\n"
+            printc("\n  + Could not properly check bugs status for: %s (%s)"
                    % (urllib.parse.urlunparse(url_parts), e), Colors.FAIL)
             continue
 
@@ -487,7 +522,7 @@ def check_bugs_resolution(bugs_definitions):
         bugs = root.findall('./bug')
 
         if len(bugs) != len(ids):
-            printc("  + Could not properly check bugs status on server %s\n" %
+            printc("\n  + Could not properly check bugs status on server %s" %
                    urllib.parse.urlunparse(url_parts), Colors.FAIL)
             continue
 
@@ -498,18 +533,21 @@ def check_bugs_resolution(bugs_definitions):
             desc = bugelem.findtext('./short_desc')
 
             if not status:
-                printc("  + %s \n   --> bug: %s\n   --> Status: UNKNOWN\n" % (regex, bug),
+                printc("\n  + %s \n   --> bug: %s\n   --> Status: UNKNOWN" % (regex, bug),
                        Colors.WARNING)
                 continue
 
             if not status.lower() in ['new', 'verified']:
-                printc("  + %s \n   --> bug: #%s: '%s'\n   ==> Bug CLOSED already (status: %s)\n" % (
+                printc("\n  + %s \n   --> bug: #%s: '%s'\n   ==> Bug CLOSED already (status: %s)" % (
                        regex, bugid, desc, status), Colors.WARNING)
 
                 res = False
 
-            printc("  + %s \n   --> bug: #%s: '%s'\n   --> Status: %s\n" % (
+            printc("\n  + %s \n   --> bug: #%s: '%s'\n   --> Status: %s" % (
                    regex, bugid, desc, status), Colors.OKGREEN)
+
+    if not res:
+        printc("\n==> Some bugs marked as known issues have been closed!", Colors.FAIL)
 
     return res
 

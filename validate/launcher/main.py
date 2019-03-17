@@ -417,8 +417,7 @@ class LauncherConfig(Loggable):
         parser.add_argument("--check-bugs", dest="check_bugs_status",
                             action="store_true",
                             help="Check if the bug linked to blacklisted tests has"
-                            " been marked as resolved. (only work with bugzilla "
-                            "for the time being).")
+                            " been marked as resolved. (works with gitlab and bugzilla)")
         parser.add_argument("-L", "--list-tests",
                             dest="list_tests",
                             action="store_true",

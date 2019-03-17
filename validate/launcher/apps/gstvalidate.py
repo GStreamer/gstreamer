@@ -626,7 +626,7 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
                         self.set_result(Result.PASSED,
                                         """Got no EOS 30 seconds after sending EOS,
                                         in HLS known and tolerated issue:
-                                        https://bugzilla.gnome.org/show_bug.cgi?id=723868""")
+                                        https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/132""")
                         return Result.KNOWN_ERROR
 
                     self.set_result(
@@ -1081,10 +1081,6 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
     def register_default_blacklist(self):
         self.set_default_blacklist([
-            # hls known issues
-            # ("hls.playback.seek_with_stop.*",
-            #  "https://bugzilla.gnome.org/show_bug.cgi?id=753689"),
-
             # testbin known issues
             ("testbin.media_check.*",
              "Not supported by GstDiscoverer."),
@@ -1095,9 +1091,9 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
             # Matroska/WEBM known issues:
             ("*.reverse_playback.*webm$",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
+             "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/65"),
             ("*.reverse_playback.*mkv$",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=679250"),
+             "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/65"),
             ("http.playback.seek_with_stop.*webm",
              "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
             ("http.playback.seek_with_stop.*mkv",
@@ -1105,7 +1101,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
             # MPEG TS known issues:
             ('(?i)*playback.reverse_playback.*(?:_|.)(?:|m)ts$',
-             "https://bugzilla.gnome.org/show_bug.cgi?id=702595"),
+             "https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/97"),
 
             # Fragmented MP4 disabled tests:
             ('*.playback..*seek.*.fragmented_nonseekable_sink_mp4',
@@ -1133,14 +1129,14 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
 
             # ogg known issues
             ("http.playback.seek.*vorbis_theora_1_ogg",
-             "https://bugzilla.gnome.org/show_bug.cgi?id=769545"),
+             "https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/281"),
             # RTSP known issues
             ('rtsp.*playback.reverse.*',
-             'https://bugzilla.gnome.org/show_bug.cgi?id=626811'),
+             'https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/32'),
             ('rtsp.*playback.seek_with_stop.*',
-             'https://bugzilla.gnome.org/show_bug.cgi?id=784298'),
+             'https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/386'),
             ('rtsp.*playback.fast_*',
-             'https://bugzilla.gnome.org/show_bug.cgi?id=754575'),
+             'https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/14'),
         ])
 
     def register_default_test_generators(self):

@@ -45,6 +45,7 @@ from . import reporters
 from . import loggable
 from .loggable import Loggable
 
+from collections import defaultdict
 try:
     from lxml import etree as ET
 except ImportError:
@@ -1320,16 +1321,10 @@ class TestsManager(Loggable):
         if not self.expected_failures or not self.options.check_bugs_status:
             return True
 
-        if self.expected_failures:
-            printc("\nCurrently known failures in the %s testsuite:"
-                   % self.name, Colors.WARNING, title_char='-')
-
-        bugs_definitions = {}
+        bugs_definitions = defaultdict(list)
         for regex, failures in list(self.expected_failures.items()):
             for failure in failures:
                 bugs = failure.get('bug')
-                if not bugs:
-                    bugs = failure.get('bugs')
                 if not bugs:
                     printc('+ %s:\n  --> no bug reported associated with %s\n' % (
                         regex.pattern, failure), Colors.WARNING)
@@ -1339,7 +1334,7 @@ class TestsManager(Loggable):
                     bugs = [bugs]
                 cbugs = bugs_definitions.get(regex.pattern, [])
                 bugs.extend([b for b in bugs if b not in cbugs])
-                bugs_definitions[regex.pattern] = bugs
+                bugs_definitions[regex.pattern].extend(bugs)
 
         return check_bugs_resolution(bugs_definitions.items())
 
@@ -1630,12 +1625,18 @@ class _TestsLauncher(Loggable):
             if self._setup_testsuites() is False:
                 return False
 
+        if self.options.check_bugs_status:
+            printc("-> Checking bugs resolution... ", end='')
+
         for tester in self.testers:
             if not tester.set_blacklists():
                 return False
 
             if not tester.check_expected_failures():
                 return False
+
+        if self.options.check_bugs_status:
+            printc("OK", Colors.OKGREEN)
 
         if self.needs_http_server() or options.httponly is True:
             self.httpsrv = HTTPServer(options)
