@@ -26,6 +26,8 @@ import urllib.request
 import urllib.error
 import urllib.parse
 
+from .utils import printc, Colors
+
 logcat = "httpserver"
 
 
@@ -63,7 +65,7 @@ class HTTPServer(loggable.Loggable):
             if self._check_is_up(timeout=2):
                 return True
 
-            print("Starting Server")
+            printc("-> Starting HTTP server... ", end='')
             try:
                 self.debug("Launching http server")
                 cmd = "%s %s %d %s" % (sys.executable, os.path.join(os.path.dirname(__file__),
@@ -87,14 +89,14 @@ class HTTPServer(loggable.Loggable):
                 time.sleep(1)
 
                 if self._check_is_up():
-                    print("Started")
+                    printc("OK", Colors.OKGREEN)
                     return True
                 else:
-                    print("Failed starting server")
+                    printc("FAILURE", Colors.FAIL)
                     self._process.terminate()
                     self._process = None
             except OSError as ex:
-                print("Failed starting server")
+                printc("FAILURE", Colors.FAIL)
                 self.warning(logcat, "Could not launch server %s" % ex)
 
         return False

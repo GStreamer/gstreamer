@@ -1026,10 +1026,12 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             * Blacklisted tests
             * Test generators
         """
+        printc("-> Registering default 'validate' tests... ", end='')
         self.register_default_scenarios()
         self.register_default_encoding_formats()
         self.register_default_blacklist()
         self.register_default_test_generators()
+        printc("OK", Colors.OKGREEN)
 
     def register_default_scenarios(self):
         """

@@ -19,6 +19,7 @@
 
 import os
 import time
+from .utils import printc, Colors
 from . import loggable
 import subprocess
 
@@ -54,7 +55,6 @@ class Xvfb(VirtualFrameBufferServer):
                 os.environ["DISPLAY"] = self.display_id
                 subprocess.check_output(["xset", "q"],
                                         stderr=self._logsfile)
-                print(("DISPLAY set to %s" % self.display_id))
                 return True
             except subprocess.CalledProcessError:
                 pass
@@ -76,10 +76,10 @@ class Xvfb(VirtualFrameBufferServer):
         self._logsfile = open(os.path.join(self.options.logsdir,
                                            "xvfb.logs"), 'w+')
         if self._check_is_up(assume_true=False):
-            print("xvfb already running")
+            self.info("xvfb already running")
             return (True, None)
 
-        print("Starting xvfb")
+        printc("-> Starting xvfb... ", end="")
         try:
             self.debug("Launching xvfb: %s (logs in %s)", self._command, self._logsfile)
             self._process = subprocess.Popen(self._command.split(" "),
@@ -92,10 +92,10 @@ class Xvfb(VirtualFrameBufferServer):
             time.sleep(1)
 
             if self._check_is_up():
-                print("Xvfb tarted")
+                printc("OK", Colors.OKGREEN)
                 return (True, None)
             else:
-                print("Failed starting xvfb")
+                printc("ERROR", Colors.FAIL)
                 self._process.terminate()
                 self._process = None
         except Exception as ex:
