@@ -3558,32 +3558,22 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
     /* connect to the  signal so it can be forwarded. */
     stream->demux_ptchange_sig = g_signal_connect (stream->demux,
         "payload-type-change", (GCallback) payload_type_change, session);
+
+    GST_RTP_SESSION_UNLOCK (session);
+    GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
   } else {
     /* add rtpjitterbuffer src pad to pads */
-    GstElementClass *klass;
-    GstPadTemplate *templ;
-    gchar *padname;
-    GstPad *gpad, *pad;
+    GstPad *pad;
 
     pad = gst_element_get_static_pad (stream->buffer, "src");
 
-    /* ghost the pad to the parent */
-    klass = GST_ELEMENT_GET_CLASS (rtpbin);
-    templ = gst_element_class_get_pad_template (klass, "recv_rtp_src_%u_%u_%u");
-    padname = g_strdup_printf ("recv_rtp_src_%u_%u_%u",
-        stream->session->id, stream->ssrc, 255);
-    gpad = gst_ghost_pad_new_from_template (padname, pad, templ);
-    g_free (padname);
+    GST_RTP_SESSION_UNLOCK (session);
+    GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
 
-    gst_pad_set_active (gpad, TRUE);
-    gst_pad_sticky_events_foreach (pad, copy_sticky_events, gpad);
-    gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), gpad);
+    expose_recv_src_pad (rtpbin, pad, stream, 255);
 
     gst_object_unref (pad);
   }
-
-  GST_RTP_SESSION_UNLOCK (session);
-  GST_RTP_BIN_SHUTDOWN_UNLOCK (rtpbin);
 
   return;
 
