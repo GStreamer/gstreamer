@@ -72,6 +72,9 @@ EXITING_SIGNALS.update({139: "SIGSEGV"})
 EXITING_SIGNALS.update({(v, k) for k, v in EXITING_SIGNALS.items()})
 
 
+CI_ARTIFACTS_URL = os.environ.get('CI_ARTIFACTS_URL')
+
+
 class Test(Loggable):
 
     """ A class representing a particular test. """
@@ -203,7 +206,7 @@ class Test(Loggable):
             return
 
         path = os.path.join(self.options.logsdir,
-                            self.classname.replace(".", os.sep))
+                            self.classname.replace(".", os.sep) + '.md')
         mkdir(os.path.dirname(path))
         self.logfile = path
 
@@ -510,6 +513,8 @@ class Test(Loggable):
             logfiles.insert(0, self.logfile)
 
         for log in logfiles:
+            if CI_ARTIFACTS_URL:
+                log = CI_ARTIFACTS_URL + os.path.relpath(log, self.options.logsdir)
             message += "         - %s\n" % log
 
         return message
