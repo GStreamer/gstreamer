@@ -29,13 +29,13 @@ def get_pipelines(test_manager):
              "audiotestsrc ! audio/x-raw,channels=2,channel-mask='(bitmask)0x67' "
              "! audioconvert ! capsfilter caps=audio/x-raw,channels=6,channel-mask='(bitmask)0x32' "
              " name=capsfilter ! fakesink",
-             {"expected-failures": [
+             {"expected-issues": [
                  {'returncode': 18},
                  {'level': 'critical', 'summary': 'a NOT NEGOTIATED message has been posted on the bus.',
                   'details': r'.*Caps negotiation failed at pad.*capsfilter:sink.*as it refused caps:.*'}]}),
             ("not_negotiated.caps_query_failure",
              "\( \( audiotestsrc \) ! input-selector name=i \) ! capsfilter name=capsfilter caps=video/x-raw ! fakesink",
-             {"expected-failures": [
+             {"expected-issues": [
                  {'returncode': 18},
                  {'level': 'critical', 'summary': 'a NOT NEGOTIATED message has been posted on the bus.',
                   'details': 'Caps negotiation failed starting from pad \'capsfilter:sink\' as the '

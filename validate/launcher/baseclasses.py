@@ -82,7 +82,7 @@ class Test(Loggable):
     def __init__(self, application_name, classname, options,
                  reporter, duration=0, timeout=DEFAULT_TIMEOUT,
                  hard_timeout=None, extra_env_variables=None,
-                 expected_failures=None, is_parallel=True,
+                 expected_issues=None, is_parallel=True,
                  workdir=None):
         """
         @timeout: The timeout during which the value return by get_current_value
@@ -109,12 +109,12 @@ class Test(Loggable):
         self.duration = duration
         self.stack_trace = None
         self._uuid = None
-        if expected_failures is None:
-            self.expected_failures = []
-        elif not isinstance(expected_failures, list):
-            self.expected_failures = [expected_failures]
+        if expected_issues is None:
+            self.expected_issues = []
+        elif not isinstance(expected_issues, list):
+            self.expected_issues = [expected_issues]
         else:
-            self.expected_failures = expected_failures
+            self.expected_issues = expected_issues
 
         extra_env_variables = extra_env_variables or {}
         self.extra_env_variables = extra_env_variables
@@ -127,23 +127,30 @@ class Test(Loggable):
 
         self.clean()
 
-    def _generate_known_issues(self):
+    def _generate_expected_issues(self):
         return ''
 
-    def generate_known_issues(self):
-        res = '%s"%s": [' % (" " * 4, self.classname)
+    def generate_expected_issues(self):
+        res = '%s"FIXME \'%s\' issues [REPORT A BUG ' % (" " * 4, self.classname) \
+            + 'in https://gitlab.freedesktop.org/gstreamer/ '\
+            + 'or use a proper bug description]": {'
+        res += """
+        "tests": [
+            "%s"
+        ],
+        "issues": [""" % (self.classname)
 
         retcode = self.process.returncode if self.process else 0
         if retcode != 0:
             signame = EXITING_SIGNALS.get(retcode)
             val = "'" + signame + "'" if signame else retcode
-            res += """\n        {
-            'bug': 'FIXME - REPORT A BUG in https://gitlab.freedesktop.org/gstreamer/ ? (or remove this line)',
-            '%s': %s,
-            'sometimes': True,
-        },""" % ("signame" if signame else "returncode", val)
-        res += self._generate_known_issues()
-        res += "\n%s],\n" % (" " * 4)
+            res += """\n            {
+                '%s': %s,
+                'sometimes': True,
+            },""" % ("signame" if signame else "returncode", val)
+
+        res += self._generate_expected_issues()
+        res += "\n%s],\n%s},\n" % (" " * 8, " " * 4)
 
         return res
 
@@ -694,7 +701,7 @@ class GstValidateTest(Test):
                  options, reporter, duration=0,
                  timeout=DEFAULT_TIMEOUT, scenario=None, hard_timeout=None,
                  media_descriptor=None, extra_env_variables=None,
-                 expected_failures=None, workdir=None):
+                 expected_issues=None, workdir=None):
 
         extra_env_variables = extra_env_variables or {}
 
@@ -738,7 +745,7 @@ class GstValidateTest(Test):
                                               timeout=timeout,
                                               hard_timeout=hard_timeout,
                                               extra_env_variables=extra_env_variables,
-                                              expected_failures=expected_failures,
+                                              expected_issues=expected_issues,
                                               workdir=workdir)
 
         # defines how much the process can be outside of the configured
@@ -856,32 +863,32 @@ class GstValidateTest(Test):
 
         return value
 
-    def report_matches_expected_failure(self, report, expected_failure):
+    def report_matches_expected_issues(self, report, expected_issues):
         for key in ['bug', 'bugs', 'sometimes']:
-            if key in expected_failure:
-                del expected_failure[key]
+            if key in expected_issues:
+                del expected_issues[key]
         for key, value in list(report.items()):
-            if key in expected_failure:
-                if not re.findall(expected_failure[key], str(value)):
+            if key in expected_issues:
+                if not re.findall(expected_issues[key], str(value)):
                     return False
-                expected_failure.pop(key)
+                expected_issues.pop(key)
 
-        return not bool(expected_failure)
+        return not bool(expected_issues)
 
     def check_reported_issues(self):
         ret = []
-        expected_failures = copy.deepcopy(self.expected_failures)
+        expected_issues = copy.deepcopy(self.expected_issues)
         expected_retcode = [0]
         for report in self.reports:
             found = None
-            for expected_failure in expected_failures:
-                if self.report_matches_expected_failure(report,
-                                                        expected_failure.copy()):
-                    found = expected_failure
+            for expected_issue in expected_issues:
+                if self.report_matches_expected_issues(report,
+                                                       expected_issue.copy()):
+                    found = expected_issue
                     break
 
             if found is not None:
-                expected_failures.remove(found)
+                expected_issues.remove(found)
                 if report['level'] == 'critical':
                     if found.get('sometimes', True) and isinstance(expected_retcode, list):
                         expected_retcode.append(18)
@@ -891,13 +898,13 @@ class GstValidateTest(Test):
                 ret.append(report)
 
         if not ret:
-            return None, expected_failures, expected_retcode
+            return None, expected_issues, expected_retcode
 
-        return ret, expected_failures, expected_retcode
+        return ret, expected_issues, expected_retcode
 
-    def check_expected_traceback(self, expected_failure):
+    def check_expected_traceback(self, expected_issues):
         msg = None
-        expected_symbols = expected_failure.get('stacktrace_symbols')
+        expected_symbols = expected_issues.get('stacktrace_symbols')
         if expected_symbols:
             trace_gatherer = BackTraceGenerator.get_default()
             stack_trace = trace_gatherer.get_trace(self)
@@ -947,10 +954,10 @@ class GstValidateTest(Test):
 
         self.debug("%s returncode: %s", self, self.process.returncode)
 
-        self.criticals, not_found_expected_failures, expected_returncode = self.check_reported_issues()
+        self.criticals, not_found_expected_issues, expected_returncode = self.check_reported_issues()
         expected_timeout = None
         expected_signal = None
-        for i, f in enumerate(not_found_expected_failures):
+        for i, f in enumerate(not_found_expected_issues):
             returncode = f.get('returncode', [])
             if not isinstance(returncode, list):
                 returncode = [returncode]
@@ -970,8 +977,8 @@ class GstValidateTest(Test):
             elif f.get("timeout"):
                 expected_timeout = f
 
-        not_found_expected_failures = [f for f in not_found_expected_failures
-                                       if not f.get('returncode') and not f.get('signame')]
+        not_found_expected_issues = [f for f in not_found_expected_issues
+                                     if not f.get('returncode') and not f.get('signame')]
 
         msg = ""
         result = Result.PASSED
@@ -982,17 +989,19 @@ class GstValidateTest(Test):
                     result = Result.FAILED
                     msg = signal_fault_info[0]
                 elif expected_timeout:
-                    not_found_expected_failures.remove(expected_timeout)
+                    not_found_expected_issues.remove(expected_timeout)
                     result, msg = self.check_expected_timeout(expected_timeout)
                 else:
                     return
         elif self.process.returncode in EXITING_SIGNALS:
-            msg = "Application exited with signal %s" % (EXITING_SIGNALS[self.process.returncode])
+            msg = "Application exited with signal %s" % (
+                EXITING_SIGNALS[self.process.returncode])
             if self.process.returncode not in expected_returncode:
                 result = Result.FAILED
             else:
                 if expected_signal:
-                    stack_msg, stack_res = self.check_expected_traceback(expected_signal)
+                    stack_msg, stack_res = self.check_expected_traceback(
+                        expected_signal)
                     if not stack_res:
                         msg += stack_msg
                         result = Result.FAILED
@@ -1011,45 +1020,42 @@ class GstValidateTest(Test):
                                                            for c in self.criticals])
             result = Result.FAILED
 
-        if not_found_expected_failures:
-            mandatory_failures = [f for f in not_found_expected_failures
+        if not_found_expected_issues:
+            mandatory_failures = [f for f in not_found_expected_issues
                                   if not f.get('sometimes', True)]
 
             if mandatory_failures:
                 msg += " (Expected errors not found: %s) " % mandatory_failures
                 result = Result.FAILED
-        elif self.expected_failures:
+        elif self.expected_issues:
             msg += ' %s(Expected errors occured: %s)%s' % (Colors.OKBLUE,
-                                                          self.expected_failures,
-                                                          Colors.ENDC)
+                                                           self.expected_issues,
+                                                           Colors.ENDC)
 
         self.set_result(result, msg.strip())
 
-    def _generate_known_issues(self):
+    def _generate_expected_issues(self):
         res = ""
         self.criticals = self.criticals or []
         if self.result == Result.TIMEOUT:
-            res += """        {
-            'bug': 'FIXME - REPORT A BUG in https://gitlab.freedesktop.org/gstreamer/ ? (or remove this line)',
-            'timeout': True,
-            'sometimes': True,
-        },"""
+            res += """            {
+                'timeout': True,
+                'sometimes': True,
+            },"""
 
         for report in self.criticals:
-            res += "\n%s{" % (" " * 8)
+            res += "\n%s{" % (" " * 12)
 
-            res += '\n%s"bug": "FIXME - REPORT A BUG in https://gitlab.freedesktop.org/gstreamer/ ? (or remove this line)",' % (
-                " " * 12,)
             for key, value in report.items():
                 if key == "type":
                     continue
                 if value is None:
                     continue
                 res += '\n%s%s"%s": "%s",' % (
-                    " " * 12, "# " if key == "details" else "",
+                    " " * 16, "# " if key == "details" else "",
                     key, value.replace('\n', '\\n'))
 
-            res += "\n%s}," % (" " * 8)
+            res += "\n%s}," % (" " * 12)
 
         return res
 
@@ -1252,7 +1258,7 @@ class TestsManager(Loggable):
         self._generators = []
         self.check_testslist = True
         self.all_tests = None
-        self.expected_failures = {}
+        self.expected_issues = {}
         self.blacklisted_tests = []
 
     def init(self):
@@ -1265,23 +1271,31 @@ class TestsManager(Loggable):
         regex = re.compile(classname)
         return [test for test in self.list_tests() if regex.findall(test.classname)]
 
-    def add_expected_issues(self, expected_failures):
-        expected_failures_re = {}
-        for test_name_regex, failures in list(expected_failures.items()):
-            regex = re.compile(test_name_regex)
-            expected_failures_re[regex] = failures
-            for test in self.tests:
-                if regex.findall(test.classname):
-                    test.expected_failures.extend(failures)
+    def add_expected_issues(self, expected_issues):
+        for bugid, failure_def in list(expected_issues.items()):
+            tests_regexes = []
+            for test_name_regex in failure_def['tests']:
+                regex = re.compile(test_name_regex)
+                tests_regexes.append(regex)
+                for test in self.tests:
+                    if regex.findall(test.classname):
+                        test.expected_issues.extend(failure_def['issues'])
+                        self.debug("%s added expected issues from %s" % (
+                            test.classname, bugid))
+            failure_def['tests'] = tests_regexes
 
-        self.expected_failures.update(expected_failures_re)
+        self.expected_issues.update(expected_issues)
 
     def add_test(self, test):
         if test.generator is None:
             test.classname = self.loading_testsuite + '.' + test.classname
-        for regex, failures in list(self.expected_failures.items()):
-            if regex.findall(test.classname):
-                test.expected_failures.extend(failures)
+
+        for bugid, failure_def in list(self.expected_issues.items()):
+            for regex in failure_def['tests']:
+                if regex.findall(test.classname):
+                    test.expected_issues.extend(failure_def['issues'])
+                    self.debug("%s added expected issues from %s" % (
+                        test.classname, bugid))
 
         if self._is_test_wanted(test):
             if test not in self.tests:
@@ -1365,24 +1379,15 @@ class TestsManager(Loggable):
 
         return True
 
-    def check_expected_failures(self):
-        if not self.expected_failures or not self.options.check_bugs_status:
+    def check_expected_issues(self):
+        if not self.expected_issues or not self.options.check_bugs_status:
             return True
 
         bugs_definitions = defaultdict(list)
-        for regex, failures in list(self.expected_failures.items()):
-            for failure in failures:
-                bugs = failure.get('bug')
-                if not bugs:
-                    printc('+ %s:\n  --> no bug reported associated with %s\n' % (
-                        regex.pattern, failure), Colors.WARNING)
-                    continue
-
-                if not isinstance(bugs, list):
-                    bugs = [bugs]
-                cbugs = bugs_definitions.get(regex.pattern, [])
-                bugs.extend([b for b in bugs if b not in cbugs])
-                bugs_definitions[regex.pattern].extend(bugs)
+        for bug, failure_def in list(self.expected_issues.items()):
+            tests_names = '|'.join(
+                [regex.pattern for regex in failure_def['tests']])
+            bugs_definitions[tests_names].extend([bug])
 
         return check_bugs_resolution(bugs_definitions.items())
 
@@ -1680,7 +1685,7 @@ class _TestsLauncher(Loggable):
             if not tester.set_blacklists():
                 return False
 
-            if not tester.check_expected_failures():
+            if not tester.check_expected_issues():
                 return False
 
         if self.options.check_bugs_status:
@@ -1932,7 +1937,7 @@ class _TestsLauncher(Loggable):
             all_known_issues = ""
             for test in self.tests:
                 if test.result not in [Result.PASSED, Result.NOT_RUN]:
-                    known_issues = test.generate_known_issues()
+                    known_issues = test.generate_expected_issues()
                     if known_issues:
                         all_known_issues += known_issues
             if all_known_issues:
