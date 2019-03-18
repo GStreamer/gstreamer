@@ -211,7 +211,7 @@ typedef struct
   GstBuffer *buf;
 } PushBufferCtx;
 
-G_INLINE_FUNC PushBufferCtx *
+static inline PushBufferCtx *
 push_buffer_ctx_new (GstPad * pad, GstBuffer * buf)
 {
   PushBufferCtx *ctx = g_slice_new (PushBufferCtx);
@@ -220,7 +220,7 @@ push_buffer_ctx_new (GstPad * pad, GstBuffer * buf)
   return ctx;
 }
 
-G_INLINE_FUNC void
+static inline void
 push_buffer_ctx_free (PushBufferCtx * ctx)
 {
   if (G_LIKELY (ctx != NULL)) {
