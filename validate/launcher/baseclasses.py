@@ -2376,7 +2376,7 @@ class GstValidateMediaDescriptor(MediaDescriptor):
                 media_xml = ET.parse(descriptor_path).getroot()
 
                 include_frames = bool(int(media_xml.attrib["frame-detection"]))
-                if bool(int(media_xml.attrib.get("skip-parsers"))):
+                if bool(int(media_xml.attrib.get("skip-parsers", 0))):
                     args.append("--skip-parsers")
             except FileNotFoundError:
                 pass
