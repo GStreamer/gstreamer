@@ -3272,23 +3272,16 @@ copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
   return TRUE;
 }
 
-/* a new pad (SSRC) was created in @session. This signal is emitted from the
- * payload demuxer. */
 static void
-new_payload_found (GstElement * element, guint pt, GstPad * pad,
-    GstRtpBinStream * stream)
+expose_recv_src_pad (GstRtpBin * rtpbin, GstPad * pad, GstRtpBinStream * stream,
+    guint8 pt)
 {
-  GstRtpBin *rtpbin;
   GstElementClass *klass;
   GstPadTemplate *templ;
   gchar *padname;
   GstPad *gpad;
 
-  rtpbin = stream->bin;
-
-  GST_DEBUG_OBJECT (rtpbin, "new payload pad %u", pt);
-
-  pad = gst_object_ref (pad);
+  gst_object_ref (pad);
 
   if (stream->session->storage) {
     GstElement *fec_decoder =
@@ -3365,6 +3358,21 @@ fec_decoder_link_failed:
         stream->session->id);
     goto done;
   }
+}
+
+/* a new pad (SSRC) was created in @session. This signal is emited from the
+ * payload demuxer. */
+static void
+new_payload_found (GstElement * element, guint pt, GstPad * pad,
+    GstRtpBinStream * stream)
+{
+  GstRtpBin *rtpbin;
+
+  rtpbin = stream->bin;
+
+  GST_DEBUG_OBJECT (rtpbin, "new payload pad %u", pt);
+
+  expose_recv_src_pad (rtpbin, pad, stream, pt);
 }
 
 static void
