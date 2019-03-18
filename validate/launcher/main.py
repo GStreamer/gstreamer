@@ -186,7 +186,8 @@ class LauncherConfig(Loggable):
         self.wanted_tests = []
         self.blacklisted_tests = []
         self.list_tests = False
-        self.mute = False
+        self.mute = True
+        self.unmute = not self.mute
         self.no_color = False
         self.generate_info = False
         self.update_media_info = False
@@ -238,6 +239,7 @@ class LauncherConfig(Loggable):
         else:
             self.output_dir = os.path.abspath(self.output_dir)
 
+        self.mute = not self.unmute
         if self.gdb_non_stop:
             self.gdb = True
 
@@ -422,6 +424,10 @@ class LauncherConfig(Loggable):
                             dest="list_tests",
                             action="store_true",
                             help="List tests and exit")
+        parser.add_argument("--unmute", dest="unmute",
+                            action="store_true",
+                            help="Unmute playback output, which means that we use "
+                            "'real' sinks")
         parser.add_argument("-m", "--mute", dest="mute",
                             action="store_true",
                             help="Mute playback output, which means that we use "
