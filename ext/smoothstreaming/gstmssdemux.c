@@ -489,7 +489,7 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
 
     if (protected) {
       GstBuffer *protection_buffer =
-          gst_buffer_new_wrapped ((gpointer) protection_data,
+          gst_buffer_new_wrapped (g_strdup (protection_data),
           strlen (protection_data));
       GstEvent *event =
           gst_event_new_protection (protection_system_id, protection_buffer,
