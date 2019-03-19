@@ -73,6 +73,11 @@
  *  <entry role="property_name"><link linkend="GESVideoSource--deinterlace-tff">deinterlace-tff</link></entry>
  *  <entry>Deinterlace top field first</entry>
  * </row>
+ * <row>
+ *  <entry role="property_type"><link linkend="GstVideoOrientationMethod"><type>GstVideoOrientationMethod</type></link></entry>
+ *  <entry role="property_name"><link linkend="GESVideoSource--video-direction">video-direction</link></entry>
+ *  <entry>The desired video rotation and flipping.</entry>
+ * </row>
  * </tbody>
  * </tgroup>
  * </informaltable>
@@ -141,6 +146,7 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   const gchar *positioner_props[] =
       { "alpha", "posx", "posy", "width", "height", NULL };
   const gchar *deinterlace_props[] = { "mode", "fields", "tff", NULL };
+  const gchar *videoflip_props[] = { "video-direction", NULL };
 
   if (!source_class->create_source)
     return NULL;
@@ -174,6 +180,8 @@ ges_video_source_create_element (GESTrackElement * trksrc)
 
   ges_track_element_add_children_props (trksrc, positioner, NULL, NULL,
       positioner_props);
+  ges_track_element_add_children_props (trksrc, videoflip, NULL, NULL,
+      videoflip_props);
 
   if (deinterlace == NULL) {
     post_missing_element_message (sub_element, "deinterlace");
