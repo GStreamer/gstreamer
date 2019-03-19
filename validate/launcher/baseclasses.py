@@ -286,6 +286,18 @@ class Test(Loggable):
         with open(self.logfile, 'a') as f:
             f.write(info)
 
+    def add_known_issue_information(self):
+        info = "\n\n**You can mark the issues as 'known' by adding the " \
+               + " following lines to the list of known issues**\n" \
+               + "\n\n``` python\n%s\n```" % (self.generate_expected_issues())
+
+        if self.options.redirect_logs:
+            print(info)
+            return
+
+        with open(self.logfile, 'a') as f:
+            f.write(info)
+
     def set_result(self, result, message="", error=""):
 
         if not self.options.redirect_logs:
@@ -313,6 +325,9 @@ class Test(Loggable):
         self.result = result
         self.message = message
         self.error_str = error
+
+        if result not in [Result.PASSED, Result.NOT_RUN]:
+            self.add_known_issue_information()
 
     def check_results(self):
         if self.result is Result.FAILED or self.result is Result.TIMEOUT:
@@ -1934,16 +1949,6 @@ class _TestsLauncher(Loggable):
             else:
                 return self._run_tests()
         finally:
-            all_known_issues = ""
-            for test in self.tests:
-                if test.result not in [Result.PASSED, Result.NOT_RUN]:
-                    known_issues = test.generate_expected_issues()
-                    if known_issues:
-                        all_known_issues += known_issues
-            if all_known_issues:
-                printc("\nSome tests failed, you might want to add the following"
-                       " known issues to the testsuites and REPORT BUGS:\n", color=Colors.HEADER)
-                print(all_known_issues)
             if self.httpsrv:
                 self.httpsrv.stop()
             if self.vfb_server:
