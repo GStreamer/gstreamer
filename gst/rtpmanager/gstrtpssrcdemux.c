@@ -408,6 +408,9 @@ gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_ssrc_demux_debug,
       "rtpssrcdemux", 0, "RTP SSRC demuxer");
+
+  GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_ssrc_demux_chain);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_ssrc_demux_rtcp_chain);
 }
 
 static void

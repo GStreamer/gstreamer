@@ -281,6 +281,8 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_pt_demux_debug,
       "rtpptdemux", 0, "RTP codec demuxer");
+
+  GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_pt_demux_chain);
 }
 
 static void

@@ -306,6 +306,14 @@ static void gst_rtp_session_notify_nack (RTPSession * sess,
 static void gst_rtp_session_reconfigure (RTPSession * sess, gpointer user_data);
 static void gst_rtp_session_notify_early_rtcp (RTPSession * sess,
     gpointer user_data);
+static GstFlowReturn gst_rtp_session_chain_recv_rtp (GstPad * pad,
+    GstObject * parent, GstBuffer * buffer);
+static GstFlowReturn gst_rtp_session_chain_recv_rtcp (GstPad * pad,
+    GstObject * parent, GstBuffer * buffer);
+static GstFlowReturn gst_rtp_session_chain_send_rtp (GstPad * pad,
+    GstObject * parent, GstBuffer * buffer);
+static GstFlowReturn gst_rtp_session_chain_send_rtp_list (GstPad * pad,
+    GstObject * parent, GstBufferList * list);
 
 static RTPSessionCallbacks callbacks = {
   gst_rtp_session_process_rtp,
@@ -800,6 +808,12 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_session_debug,
       "rtpsession", 0, "RTP Session");
+
+  GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_session_chain_recv_rtp);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_session_chain_recv_rtcp);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_session_chain_send_rtp);
+  GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_session_chain_send_rtp_list);
+
 }
 
 static void
