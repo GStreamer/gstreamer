@@ -89,6 +89,8 @@ class Protocols(object):
 
 
 def supports_ansi_colors():
+    if 'GST_VALIDATE_LAUNCHER_FORCE_COLORS' in os.environ:
+        return True
     platform = sys.platform
     supported_platform = platform != 'win32' or 'ANSICON' in os.environ
     # isatty is not always implemented, #6223.
