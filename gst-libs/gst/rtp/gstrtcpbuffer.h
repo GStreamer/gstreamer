@@ -96,6 +96,9 @@ typedef enum
   GST_RTCP_RTPFB_TYPE_TMMBN       = 4,
   /* RTPFB types assigned in RFC 6051 */
   GST_RTCP_RTPFB_TYPE_RTCP_SR_REQ = 5,
+  /* draft-holmer-rmcat-transport-wide-cc-extensions-01 */
+  GST_RTCP_RTPFB_TYPE_TWCC         = 15,
+
   /* PSFB types */
   GST_RTCP_PSFB_TYPE_PLI          = 1,
   GST_RTCP_PSFB_TYPE_SLI          = 2,
