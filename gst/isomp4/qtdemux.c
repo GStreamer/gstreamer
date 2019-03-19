@@ -8522,8 +8522,9 @@ gst_qtdemux_guess_framerate (GstQTDemux * qtdemux, QtDemuxStream * stream)
           GST_TIME_FORMAT, duration, first_duration,
           n_samples - 1, GST_TIME_ARGS (avg_duration));
 
-      gst_video_guess_framerate (avg_duration, &CUR_STREAM (stream)->fps_n,
-          &CUR_STREAM (stream)->fps_d);
+      fps_available =
+          gst_video_guess_framerate (avg_duration,
+          &CUR_STREAM (stream)->fps_n, &CUR_STREAM (stream)->fps_d);
 
       GST_DEBUG_OBJECT (qtdemux,
           "Calculating framerate, timescale %u gave fps_n %d fps_d %d",
