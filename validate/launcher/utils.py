@@ -93,6 +93,9 @@ def is_tty():
 
 
 def supports_ansi_colors():
+    if 'GST_VALIDATE_LAUNCHER_FORCE_COLORS' in os.environ:
+        return True
+
     platform = sys.platform
     supported_platform = platform != 'win32' or 'ANSICON' in os.environ
     if not supported_platform or not is_tty():
