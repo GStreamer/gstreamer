@@ -3232,6 +3232,9 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         }
         g_free (actions);
       }
+      /* Make sure that if there is an ASYNC_DONE in the message queue, we do not
+         take it into account */
+      gst_event_replace (&priv->last_seek, NULL);
       SCENARIO_UNLOCK (scenario);
 
       GST_DEBUG_OBJECT (scenario, "Got EOS; generate 'stop' action");
