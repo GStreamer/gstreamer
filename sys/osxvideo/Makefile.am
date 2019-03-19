@@ -5,6 +5,7 @@ libgstosxvideo_la_SOURCES = osxvideosink.m cocoawindow.m
 libgstosxvideo_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS)
 libgstosxvideo_la_OBJCFLAGS = $(GST_OBJCFLAGS) $(GST_BASE_CFLAGS) \
+	-Wno-deprecated-declarations \
 	$(GST_PLUGINS_BASE_CFLAGS)
 libgstosxvideo_la_LIBADD =  \
 	$(GST_LIBS) \
