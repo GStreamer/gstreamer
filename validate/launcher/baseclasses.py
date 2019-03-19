@@ -55,7 +55,7 @@ from .vfb_server import get_virual_frame_buffer_server
 from .httpserver import HTTPServer
 from .utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
     Protocols, look_for_file_in_source_dir, get_data_file, BackTraceGenerator, \
-    check_bugs_resolution
+    check_bugs_resolution, is_tty
 
 # The factor by which we increase the hard timeout when running inside
 # Valgrind
@@ -622,11 +622,7 @@ class Test(Loggable):
             message = "%s %s: %s%s" % (self.number, self.classname, self.result,
                                        " (" + self.message + ")" if self.message else "")
             end = "\r"
-            if sys.stdout.isatty():
-                term_width = shutil.get_terminal_size((80, 20))[0]
-                if len(message) > term_width:
-                    message = message[0:term_width - 2] + '…'
-            else:
+            if not is_tty():
                 message = None
 
         if message is not None:
@@ -1869,7 +1865,7 @@ class _TestsLauncher(Loggable):
         if not self.all_tests:
             self.all_tests = self.list_tests()
         self.total_num_tests = len(self.all_tests)
-        if not sys.stdout.isatty():
+        if not is_tty():
             printc("\nRunning %d tests..." % self.total_num_tests, color=Colors.HEADER)
 
         self.reporter.init_timer()
@@ -1925,24 +1921,25 @@ class _TestsLauncher(Loggable):
             if self.options.forever:
                 r = 1
                 while True:
-                    printc("-> Iteration %d" % r, end='')
+                    printc("-> Iteration %d" % r, end='\r')
 
                     if not self._run_tests():
                         break
                     r += 1
                     self.clean_tests()
-                    printc("OK", Colors.OKGREEN)
+                    msg = "-> Iteration %d... %sOK%s" % (r, Colors.OKGREEN, Colors.ENDC)
+                    printc(msg, end="\r")
 
                 return False
             elif self.options.n_runs:
                 res = True
                 for r in range(self.options.n_runs):
-                    printc("-> Iteration %d" % r)
+                    printc("-> Iteration %d" % r, end='\r')
                     if not self._run_tests():
                         res = False
-                        printc("ERROR", Colors.FAIL)
+                        printc("ERROR", Colors.FAIL, end="\r")
                     else:
-                        printc("OK", Colors.OKGREEN)
+                        printc("OK", Colors.OKGREEN, end="\r")
                     self.clean_tests()
 
                 return res

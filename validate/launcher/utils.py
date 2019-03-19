@@ -88,14 +88,14 @@ class Protocols(object):
         return False
 
 
+def is_tty():
+    return hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()
+
+
 def supports_ansi_colors():
-    if 'GST_VALIDATE_LAUNCHER_FORCE_COLORS' in os.environ:
-        return True
     platform = sys.platform
     supported_platform = platform != 'win32' or 'ANSICON' in os.environ
-    # isatty is not always implemented, #6223.
-    is_a_tty = hasattr(sys.stdout, 'isatty') and sys.stdout.isatty()
-    if not supported_platform or not is_a_tty:
+    if not supported_platform or not is_tty():
         return False
     return True
 
@@ -185,12 +185,18 @@ def printc(message, color="", title=False, title_char='', end="\n"):
     if hasattr(message, "result") and color == '':
         color = get_color_for_result(message.result)
 
-    if not sys.stdout.isatty():
+    if not is_tty():
         end = "\n"
 
     message = str(message)
     message += ' ' * max(0, last_carriage_return_len - len(message))
-    last_carriage_return_len = len(message) if end == "\r" else 0
+    if end == '\r':
+        term_width = shutil.get_terminal_size((80, 20))[0]
+        if len(message) > term_width:
+            message = message[0:term_width - 2] + '…'
+        last_carriage_return_len = len(message)
+    else:
+        last_carriage_return_len = 0
     sys.stdout.write(color + str(message) + Colors.ENDC + end)
     sys.stdout.flush()
 
