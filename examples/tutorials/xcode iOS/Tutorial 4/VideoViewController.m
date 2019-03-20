@@ -69,6 +69,10 @@
     uri = @"https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.ogv";
 
     gst_backend = [[GStreamerBackend alloc] init:self videoView:video_view];
+    
+    time_slider.value = 0;
+    time_slider.minimumValue = 0;
+    time_slider.maximumValue = 0;
 }
 
 - (void)viewDidDisappear:(BOOL)animated
@@ -143,8 +147,6 @@
         video_width_constraint.constant = correct_width;
         video_height_constraint.constant = view_height;
     }
-
-    time_slider.frame = CGRectMake(time_slider.frame.origin.x, time_slider.frame.origin.y, toolbar.frame.size.width - time_slider.frame.origin.x - 8, time_slider.frame.size.height);
 }
 
 /*

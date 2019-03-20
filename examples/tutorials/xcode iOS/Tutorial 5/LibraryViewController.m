@@ -2,6 +2,8 @@
 #import "VideoViewController.h"
 #import <AssetsLibrary/AssetsLibrary.h>
 
+#define ENABLE_IOS_LIBRARY false
+
 @interface LibraryViewController ()
 
 @end
@@ -95,10 +97,14 @@ static NSString *CellIdentifier = @"CellIdentifier";
 
 - (void)refreshMediaItems {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSAllDomainsMask, YES);
+
     NSString *docsPath = [paths objectAtIndex:0];
+    NSMutableArray *entries;
+
+#if ENABLE_IOS_LIBRARY
 
     /* Entries from the Photo Library */
-    NSMutableArray *entries = [[NSMutableArray alloc] init];
+    entries = [[NSMutableArray alloc] init];
     ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
     [library enumerateGroupsWithTypes:ALAssetsGroupAll
         usingBlock:^(ALAssetsGroup *group, BOOL *stop)
@@ -122,7 +128,7 @@ static NSString *CellIdentifier = @"CellIdentifier";
         }
      ];
     self->libraryEntries = entries;
-
+#endif
     /* Retrieve entries from iTunes file sharing */
     entries = [[NSMutableArray alloc] init];
     for (NSString *e in [[NSFileManager defaultManager] contentsOfDirectoryAtPath:docsPath error:nil])
