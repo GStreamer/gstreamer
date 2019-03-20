@@ -5,5 +5,4 @@ seek, name=Fast-forward-seek, playback-time="min(10.0, $(duration) * 0.0625)", r
 seek, name=Fast-forward-seek, playback-time="min(20.0, $(duration) * 0.125)", rate=8.0,  start=0.0, flags="$(default_flags)"
 seek, name=Fast-forward-seek, playback-time="min(40.0, $(duration) * 0.25)", rate=16.0, start=0.0, flags="$(default_flags)"
 seek, name=Fast-forward-seek, playback-time="min(80.0, $(duration) * 0.50)", rate=32.0, start=0.0, flags="$(default_flags)"
-wait, message-type=eos
-stop
+stop, playback-time="min($(duration) - 0.3, 160.0)", on-message="eos"

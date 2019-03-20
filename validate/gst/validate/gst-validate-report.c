@@ -929,6 +929,19 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
         .def = "0.0"
       };
 
+      GstValidateActionParameter on_message_param = {
+        .name = "on-message",
+        .description =
+            "Specify on what message type the action will be executed.\n"
+            " If both 'playback-time' and 'on-message' is specified, the action will be executed\n"
+            " on whatever happens first.",
+        .mandatory = FALSE,
+        .types = "string",
+        .possible_variables = NULL,
+        .def = NULL
+      };
+
+
       GstValidateActionType *type = GST_VALIDATE_ACTION_TYPE (source);
 
       g_string_assign (string, "\nAction type:");
@@ -947,12 +960,16 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
       g_string_append_printf (string, "\n\n  Description: \n    %s", desc);
       g_free (desc);
 
-      if (!IS_CONFIG_ACTION_TYPE (type->flags))
+      if (!IS_CONFIG_ACTION_TYPE (type->flags)) {
+        g_string_append_printf (string, "\n\n  Parameters:");
         print_action_parameter (string, type, &playback_time_param);
+        print_action_parameter (string, type, &on_message_param);
+      }
 
       if (type->parameters) {
+        if (IS_CONFIG_ACTION_TYPE (type->flags))
+          g_string_append_printf (string, "\n\n  Parameters:");
         has_parameters = TRUE;
-        g_string_append_printf (string, "\n\n  Parameters:");
         for (i = 0; type->parameters[i].name; i++) {
           print_action_parameter (string, type, &type->parameters[i]);
         }

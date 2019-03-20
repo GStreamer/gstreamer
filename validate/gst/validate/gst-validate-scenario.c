@@ -1682,6 +1682,15 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
 }
 
 static gboolean
+_check_message_type (GstValidateScenario * scenario, GstValidateAction * act,
+    GstMessage * message)
+{
+  return act && message
+      && !g_strcmp0 (gst_structure_get_string (act->structure, "on-message"),
+      gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+}
+
+static gboolean
 _should_execute_action (GstValidateScenario * scenario, GstValidateAction * act,
     GstClockTime position, gdouble rate)
 {
@@ -2029,7 +2038,7 @@ done:
  * synchronously
  */
 static gboolean
-execute_next_action (GstValidateScenario * scenario)
+execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
 {
   GList *tmp;
   gdouble rate = 1.0;
@@ -2104,8 +2113,12 @@ execute_next_action (GstValidateScenario * scenario)
     }
   }
 
-  if (!_check_position (scenario, act, &position, &rate))
+  if (message) {
+    if (!_check_message_type (scenario, act, message))
+      return G_SOURCE_CONTINUE;
+  } else if (!_check_position (scenario, act, &position, &rate)) {
     return G_SOURCE_CONTINUE;
+  }
 
   if (!_should_execute_action (scenario, act, position, rate)) {
     _add_execute_actions_gsource (scenario);
@@ -2118,6 +2131,11 @@ execute_next_action (GstValidateScenario * scenario)
   GST_DEBUG_OBJECT (scenario, "Executing %" GST_PTR_FORMAT
       " at %" GST_TIME_FORMAT, act->structure, GST_TIME_ARGS (position));
   priv->seeked_in_pause = FALSE;
+
+  if (message)
+    gst_structure_remove_field (act->structure, "playback-time");
+  else
+    gst_structure_remove_field (act->structure, "on-message");
 
   act->priv->state = gst_validate_execute_action (type, act);
   if (act->priv->state == GST_VALIDATE_EXECUTE_ACTION_ERROR) {
@@ -2185,6 +2203,12 @@ execute_next_action (GstValidateScenario * scenario)
   }
 
   return G_SOURCE_CONTINUE;
+}
+
+static gboolean
+execute_next_action (GstValidateScenario * scenario)
+{
+  return execute_next_action_full (scenario, NULL);
 }
 
 static gboolean
@@ -3337,6 +3361,8 @@ done:
   /* Check if we got the message expected by a wait action */
   if (priv->message_type)
     _check_waiting_for_message (scenario, message);
+
+  execute_next_action_full (scenario, message);
 
   return TRUE;
 }
