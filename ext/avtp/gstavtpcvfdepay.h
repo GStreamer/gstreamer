@@ -47,6 +47,7 @@ struct _GstAvtpCvfDepay
 
   guint8 seqnum;
   GstBuffer *out_buffer;
+  GstBuffer *fragments;
 };
 
 struct _GstAvtpCvfDepayClass
