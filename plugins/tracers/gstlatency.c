@@ -123,22 +123,23 @@ log_latency (const GstStructure * data, GstPad * sink_pad, guint64 sink_ts)
 }
 
 static void
-log_element_latency (const GstStructure * data, GstElement * element,
-    guint64 sink_ts)
+log_element_latency (const GstStructure * data, GstPad * pad, guint64 sink_ts)
 {
   guint64 src_ts;
-  const gchar *element_name;
+  gchar *pad_name;
   const GValue *value;
 
-  element_name = GST_ELEMENT_NAME (element);
+  pad_name = g_strdup_printf ("%s_%s", GST_DEBUG_PAD_NAME (pad));
 
   /* TODO filtering */
 
   value = gst_structure_id_get_value (data, latency_probe_ts);
   src_ts = g_value_get_uint64 (value);
 
-  gst_tracer_record_log (tr_element_latency, element_name,
+  gst_tracer_record_log (tr_element_latency, pad_name,
       GST_CLOCK_DIFF (src_ts, sink_ts), sink_ts);
+
+  g_free (pad_name);
 }
 
 static void
@@ -206,7 +207,7 @@ calculate_latency (GstElement * parent, GstPad * pad, guint64 ts)
     ev = g_object_get_qdata ((GObject *) pad, sub_latency_probe_id);
     if (ev) {
       g_object_set_qdata ((GObject *) pad, sub_latency_probe_id, NULL);
-      log_element_latency (gst_event_get_structure (ev), parent, ts);
+      log_element_latency (gst_event_get_structure (ev), pad, ts);
       gst_event_unref (ev);
     }
   }
@@ -410,9 +411,9 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
       NULL);
 
   tr_element_latency = gst_tracer_record_new ("element-latency.class",
-      "element", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+      "src", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
           "type", G_TYPE_GTYPE, G_TYPE_STRING,
-          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_ELEMENT,
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PAD,
           NULL),
       "time", GST_TYPE_STRUCTURE, gst_structure_new ("value",
           "type", G_TYPE_GTYPE, G_TYPE_UINT64,
