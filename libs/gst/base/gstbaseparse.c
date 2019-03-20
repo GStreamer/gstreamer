@@ -621,6 +621,7 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   parse->priv->upstream_tags = NULL;
   parse->priv->parser_tags = NULL;
   parse->priv->parser_tags_merge_mode = GST_TAG_MERGE_APPEND;
+  parse->priv->disable_passthrough = DEFAULT_DISABLE_PASSTHROUGH;
 }
 
 static void
@@ -797,7 +798,6 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->next_pts = GST_CLOCK_TIME_NONE;
   parse->priv->next_dts = 0;
   parse->priv->syncable = TRUE;
-  parse->priv->disable_passthrough = DEFAULT_DISABLE_PASSTHROUGH;
   parse->priv->passthrough = FALSE;
   parse->priv->pts_interpolate = TRUE;
   parse->priv->infer_ts = TRUE;
