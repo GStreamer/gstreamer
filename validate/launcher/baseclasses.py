@@ -772,10 +772,6 @@ class GstValidateTest(Test):
                                               expected_issues=expected_issues,
                                               workdir=workdir)
 
-        # defines how much the process can be outside of the configured
-        # segment / seek
-        self._sent_eos_time = None
-
         if scenario is None or scenario.name.lower() == "none":
             self.scenario = None
         else:
@@ -794,8 +790,6 @@ class GstValidateTest(Test):
             self.speed = speed
 
     def add_action_execution(self, action_infos):
-        if action_infos['action-type'] == 'eos':
-            self._sent_eos_time = time.time()
         self.actions_infos.append(action_infos)
 
     def get_override_file(self, media_descriptor):
@@ -812,23 +806,6 @@ class GstValidateTest(Test):
         return self.position
 
     def get_current_value(self):
-        if self.scenario:
-            if self._sent_eos_time is not None:
-                t = time.time()
-                if ((t - self._sent_eos_time)) > self.timeout:
-                    if self.media_descriptor is not None and self.media_descriptor.get_protocol() == Protocols.HLS:
-                        self.set_result(Result.PASSED,
-                                        """Got no EOS %s seconds after sending EOS,
-                                        in HLS known and tolerated issue:
-                                        https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/132"""
-                                        % self.timeout)
-                        return Result.KNOWN_ERROR
-
-                    self.set_result(
-                        Result.FAILED, "Pipeline did not stop 30 Seconds after sending EOS")
-
-                    return Result.FAILED
-
         return self.position
 
     def get_subproc_env(self):
@@ -863,7 +840,6 @@ class GstValidateTest(Test):
 
     def clean(self):
         Test.clean(self)
-        self._sent_eos_time = None
         self.reports = []
         self.position = -1
         self.media_duration = -1
