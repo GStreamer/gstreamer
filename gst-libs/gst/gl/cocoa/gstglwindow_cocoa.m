@@ -240,14 +240,22 @@ gst_gl_window_cocoa_open (GstGLWindow *window, GError **err)
 }
 
 static void
-gst_gl_window_cocoa_close (GstGLWindow *window)
+_close_window (gpointer * data)
 {
-  GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (window);
-  GstGLNSWindow *internal_win_id = (__bridge GstGLNSWindow *)window_cocoa->priv->internal_win_id;
+  GstGLWindowCocoa *window_cocoa = GST_GL_WINDOW_COCOA (data);
+  GstGLNSWindow *internal_win_id =
+      (__bridge GstGLNSWindow *) window_cocoa->priv->internal_win_id;
 
   [[internal_win_id contentView] removeFromSuperview];
-  CFBridgingRelease(window_cocoa->priv->internal_win_id);
+  CFBridgingRelease (window_cocoa->priv->internal_win_id);
   window_cocoa->priv->internal_win_id = NULL;
+}
+
+static void
+gst_gl_window_cocoa_close (GstGLWindow * window)
+{
+  _invoke_on_main ((GstGLWindowCB) _close_window, gst_object_ref (window),
+      (GDestroyNotify) gst_object_unref);
 }
 
 static guintptr
