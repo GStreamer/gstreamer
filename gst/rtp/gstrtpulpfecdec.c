@@ -30,10 +30,10 @@
  * element and attempt to recover packets declared lost through custom
  * 'GstRTPPacketLost' events, usually emitted by #GstRtpJitterBuffer.
  *
- * As such, this element cannot be usefully used from the command line,
- * because a reference to the upstream storage object needs to be
- * provided to it through its #GstRtpUlpFecDec:storage property, example
- * programs are available at
+ * If no storage is provided using the #GstRtpUlpFecDec:storage
+ * property, it will try to get it from an element upstream.
+ *
+ * Example programs are available at
  * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs>
  * and
  * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>.
@@ -472,7 +472,26 @@ gst_rtp_ulpfec_dec_handle_sink_event (GstPad * pad, GstObject * parent,
     s = gst_event_writable_structure (event);
 
     g_assert (self->have_caps_ssrc);
-    g_assert (self->storage);
+
+    if (self->storage == NULL) {
+      GstQuery *q = gst_query_new_custom (GST_QUERY_CUSTOM,
+          gst_structure_new_empty ("GstRtpStorage"));
+
+      if (gst_pad_peer_query (self->sinkpad, q)) {
+        const GstStructure *s = gst_query_get_structure (q);
+
+        if (gst_structure_has_field_typed (s, "storage", G_TYPE_OBJECT)) {
+          gst_structure_get (s, "storage", G_TYPE_OBJECT, &self->storage, NULL);
+        }
+      }
+      gst_query_unref (q);
+    }
+
+    if (self->storage == NULL) {
+      GST_ELEMENT_WARNING (self, STREAM, FAILED, ("Internal storage not found"),
+          ("You need to add rtpstorage element upstream from rtpulpfecdec."));
+      return FALSE;
+    }
 
     if (!gst_structure_get (s,
             "seqnum", G_TYPE_UINT, &seqnum,

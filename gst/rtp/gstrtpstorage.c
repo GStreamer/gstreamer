@@ -132,6 +132,23 @@ gst_rtp_storage_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+gst_rtp_storage_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstRtpStorage *self = GST_RTP_STORAGE (parent);
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_CUSTOM) {
+    GstStructure *s = gst_query_writable_structure (query);
+
+    if (gst_structure_has_name (s, "GstRtpStorage")) {
+      gst_structure_set (s, "storage", G_TYPE_OBJECT, self->storage, NULL);
+      return TRUE;
+    }
+  }
+
+  return gst_pad_query_default (pad, parent, query);
+}
+
 static void
 gst_rtp_storage_init (GstRtpStorage * self)
 {
@@ -140,6 +157,8 @@ gst_rtp_storage_init (GstRtpStorage * self)
   GST_PAD_SET_PROXY_CAPS (self->sinkpad);
   GST_PAD_SET_PROXY_ALLOCATION (self->sinkpad);
   gst_pad_set_chain_function (self->sinkpad, gst_rtp_storage_chain);
+
+  gst_pad_set_query_function (self->srcpad, gst_rtp_storage_src_query);
 
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
