@@ -864,11 +864,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ENABLE_BITCODE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
-				VALID_ARCHS = "armv7 i386 arm64";
+				VALID_ARCHS = "armv7 arm64 i386 x86_64";
 			};
 			name = Debug;
 		};
@@ -876,11 +876,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ENABLE_BITCODE = NO;
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 2;
-				VALID_ARCHS = "armv7 i386 arm64";
+				VALID_ARCHS = "armv7 arm64 i386 x86_64";
 			};
 			name = Release;
 		};
@@ -900,8 +900,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -917,13 +918,12 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 1/Tutorial 1-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
@@ -971,8 +971,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -981,13 +982,12 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 1/Tutorial 1-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
@@ -1036,8 +1036,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1053,13 +1054,12 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 2/Tutorial 2-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
@@ -1109,8 +1109,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1119,13 +1120,12 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 2/Tutorial 2-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
@@ -1176,8 +1176,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1193,13 +1194,13 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 5/Tutorial 5-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
+					"-lc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
@@ -1224,6 +1225,8 @@
 					AssetsLibrary,
 					"-weak_framework",
 					VideoToolBox,
+					"-framework",
+					CoreText,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-5";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1249,8 +1252,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1259,13 +1263,13 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 5/Tutorial 5-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
+					"-lc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
@@ -1290,6 +1294,8 @@
 					AssetsLibrary,
 					"-weak_framework",
 					VideoToolBox,
+					"-framework",
+					CoreText,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-5";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1316,8 +1322,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1333,13 +1340,13 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 3/Tutorial 3-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
+					"-lc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
@@ -1389,8 +1396,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1399,13 +1407,13 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 3/Tutorial 3-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
+					"-lc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
@@ -1456,8 +1464,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1473,13 +1482,13 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 4/Tutorial 4-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
+					"-lc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
@@ -1504,6 +1513,8 @@
 					AssetsLibrary,
 					"-weak_framework",
 					VideoToolBox,
+					"-framework",
+					CoreText,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-4";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1529,8 +1540,9 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				FRAMEWORK_SEARCH_PATHS = (
-					"\"~/Library/Developer/GStreamer/iPhone.sdk\"",
+					"\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk\"",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Library/Frameworks\"",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1539,13 +1551,13 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "\"~/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 4/Tutorial 4-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = (
 					"-lresolv",
-					"-lstdc++",
+					"-lc++",
 					"-framework",
 					CoreFoundation,
 					"-framework",
@@ -1570,6 +1582,8 @@
 					AssetsLibrary,
 					"-weak_framework",
 					VideoToolBox,
+					"-framework",
+					CoreText,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "gst-docs.Tutorial-4";
 				PRODUCT_NAME = "$(TARGET_NAME)";
