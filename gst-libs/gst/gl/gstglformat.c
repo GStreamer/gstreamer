@@ -159,6 +159,7 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_VUYA:
       n_plane_components = 4;
       break;
     case GST_VIDEO_FORMAT_ARGB64:

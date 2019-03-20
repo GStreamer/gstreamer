@@ -52,7 +52,7 @@ GType gst_gl_memory_allocator_get_type(void);
  */
 #define GST_GL_MEMORY_VIDEO_FORMATS_STR \
     "{ RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, " \
-    "AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, " \
+    "AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, " \
     "GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }"
 
 /**

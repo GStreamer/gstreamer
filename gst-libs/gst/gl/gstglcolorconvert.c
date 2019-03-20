@@ -228,6 +228,34 @@ static const struct shader_templ templ_RGB_to_AYUV =
     GST_GL_TEXTURE_TARGET_2D
   };
 
+static const gchar templ_VUYA_to_RGB_BODY[] =
+    "vec4 texel, rgba;\n"
+    "texel = texture2D(tex, texcoord * tex_scale0);\n"
+    "rgba.rgb = yuv_to_rgb (texel.zyx, offset, coeff1, coeff2, coeff3);\n"
+    "rgba.a = texel.w;\n"
+    "gl_FragColor=vec4(rgba.%c,rgba.%c,rgba.%c,rgba.%c);\n";
+
+static const struct shader_templ templ_VUYA_to_RGB =
+  { NULL,
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n",
+    { glsl_func_yuv_to_rgb, NULL, },
+    GST_GL_TEXTURE_TARGET_2D
+  };
+
+static const gchar templ_RGB_to_VUYA_BODY[] =
+    "vec4 texel, ayuv;\n"
+    "texel = texture2D(tex, texcoord).%c%c%c%c;\n"
+    "ayuv.zyx = rgb_to_yuv (texel.rgb, offset, coeff1, coeff2, coeff3);\n"
+    "ayuv.w = %s;\n"
+    "gl_FragColor = ayuv;\n";
+
+static const struct shader_templ templ_RGB_to_VUYA =
+  { NULL,
+    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n",
+    { glsl_func_rgb_to_yuv, NULL, },
+    GST_GL_TEXTURE_TARGET_2D
+  };
+
 /* YUV to RGB conversion */
 static const gchar templ_PLANAR_YUV_to_RGB_BODY[] =
     "vec4 texel, rgba;\n"
@@ -906,7 +934,7 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   /* Always supported input and output formats */
   _init_value_string_list (supported_formats, "RGBA", "RGB", "RGBx", "BGR",
       "BGRx", "BGRA", "xRGB", "xBGR", "ARGB", "ABGR", "GRAY8", "GRAY16_LE",
-      "GRAY16_BE", "AYUV", "YUY2", "UYVY", NULL);
+      "GRAY16_BE", "AYUV", "VUYA", "YUY2", "UYVY", NULL);
 
   /* Always supported input formats or output with multiple draw buffers */
   if (!output || (!context || context->gl_vtable->DrawBuffers))
@@ -1482,6 +1510,7 @@ _get_n_textures (GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
     case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_VUYA:
     case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_GRAY16_BE:
@@ -1577,6 +1606,12 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       case GST_VIDEO_FORMAT_AYUV:
         info->templ = &templ_AYUV_to_RGB;
         info->frag_body = g_strdup_printf (templ_AYUV_to_RGB_BODY,
+            pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
+        info->shader_tex_names[0] = "tex";
+        break;
+      case GST_VIDEO_FORMAT_VUYA:
+        info->templ = &templ_VUYA_to_RGB;
+        info->frag_body = g_strdup_printf (templ_VUYA_to_RGB_BODY,
             pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
         info->shader_tex_names[0] = "tex";
         break;
@@ -1686,6 +1721,13 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       alpha = _is_RGBx (in_format) ? "1.0" : "texel.a";
       info->templ = &templ_RGB_to_AYUV;
       info->frag_body = g_strdup_printf (templ_RGB_to_AYUV_BODY, pixel_order[0],
+          pixel_order[1], pixel_order[2], pixel_order[3], alpha);
+      info->out_n_textures = 1;
+      break;
+    case GST_VIDEO_FORMAT_VUYA:
+      alpha = _is_RGBx (in_format) ? "1.0" : "texel.a";
+      info->templ = &templ_RGB_to_VUYA;
+      info->frag_body = g_strdup_printf (templ_RGB_to_VUYA_BODY, pixel_order[0],
           pixel_order[1], pixel_order[2], pixel_order[3], alpha);
       info->out_n_textures = 1;
       break;
