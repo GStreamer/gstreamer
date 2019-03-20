@@ -651,21 +651,34 @@ class GstValidateTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
 
-class GstValidateListener(socketserver.BaseRequestHandler):
+class GstValidateListener(socketserver.BaseRequestHandler, Loggable):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        Loggable.__init__(self, "GstValidateListener")
 
     def handle(self):
         """Implements BaseRequestHandler handle method"""
         test = None
+        self.logCategory = "GstValidateListener"
         while True:
             raw_len = self.request.recv(4)
             if raw_len == b'':
                 return
             msglen = struct.unpack('>I', raw_len)[0]
-            msg = self.request.recv(msglen).decode()
+            try:
+                msg = self.request.recv(msglen).decode('utf-8', 'ignore')
+            except UnicodeDecodeError as e:
+                self.error("Could not decode message: %s - %s" % (msg, e))
+                continue
             if msg == '':
                 return
 
-            obj = json.loads(msg)
+            try:
+                obj = json.loads(msg)
+            except json.decoder.JSONDecodeError:
+                self.error("Could not deserialize: %s - %s" % (msg, e))
+                continue
 
             if test is None:
                 # First message must contain the uuid
