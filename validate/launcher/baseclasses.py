@@ -886,9 +886,8 @@ class GstValidateTest(Test):
 
         return not bool(expected_issues)
 
-    def check_reported_issues(self):
+    def check_reported_issues(self, expected_issues):
         ret = []
-        expected_issues = copy.deepcopy(self.expected_issues)
         expected_retcode = [0]
         for report in self.reports:
             found = None
@@ -913,9 +912,10 @@ class GstValidateTest(Test):
 
         return ret, expected_issues, expected_retcode
 
-    def check_expected_traceback(self, expected_issues):
-        msg = None
-        expected_symbols = expected_issues.get('stacktrace_symbols')
+    def check_expected_issue(self, expected_issue):
+        res = True
+        msg = ''
+        expected_symbols = expected_issue.get('stacktrace_symbols')
         if expected_symbols:
             trace_gatherer = BackTraceGenerator.get_default()
             stack_trace = trace_gatherer.get_trace(self)
@@ -929,12 +929,19 @@ class GstValidateTest(Test):
                 if not_found_symbols:
                     msg = " Expected symbols '%s' not found in stack trace " % (
                         not_found_symbols)
-
-                    return msg, False
+                    res = False
             else:
                 msg += " No stack trace available, could not verify symbols "
 
-        return msg, True
+        _, not_found_expected_issues, _ = self.check_reported_issues(expected_issue.get('issues', []))
+        if not_found_expected_issues:
+            mandatory_failures = [f for f in not_found_expected_issues
+                                  if not f.get('sometimes', True)]
+            if mandatory_failures:
+                msg = " (Expected issues not found: %s) " % mandatory_failures
+                res = False
+
+        return msg, res
 
     def check_expected_timeout(self, expected_timeout):
         msg = "Expected timeout happened. "
@@ -946,7 +953,7 @@ class GstValidateTest(Test):
                 msg = "Expected timeout message: %s got %s " % (
                     message, self.message)
 
-        stack_msg, stack_res = self.check_expected_traceback(expected_timeout)
+        stack_msg, stack_res = self.check_expected_issue(expected_timeout)
         if not stack_res:
             result = Result.TIMEOUT
             msg += stack_msg
@@ -965,7 +972,8 @@ class GstValidateTest(Test):
 
         self.debug("%s returncode: %s", self, self.process.returncode)
 
-        self.criticals, not_found_expected_issues, expected_returncode = self.check_reported_issues()
+        expected_issues = copy.deepcopy(self.expected_issues)
+        self.criticals, not_found_expected_issues, expected_returncode = self.check_reported_issues(expected_issues)
         expected_timeout = None
         expected_signal = None
         for i, f in enumerate(not_found_expected_issues):
@@ -1011,7 +1019,7 @@ class GstValidateTest(Test):
                 result = Result.FAILED
             else:
                 if expected_signal:
-                    stack_msg, stack_res = self.check_expected_traceback(
+                    stack_msg, stack_res = self.check_expected_issue(
                         expected_signal)
                     if not stack_res:
                         msg += stack_msg
