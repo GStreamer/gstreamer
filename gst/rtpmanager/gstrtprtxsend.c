@@ -494,6 +494,26 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             GST_LOG_OBJECT (rtx, "found %u", item->seqnum);
             rtx_buf = gst_rtp_rtx_buffer_new (rtx, item->buffer);
           }
+#ifndef GST_DISABLE_DEBUG
+          else {
+            BufferQueueItem *item = NULL;
+
+            iter = g_sequence_get_begin_iter (data->queue);
+            if (!g_sequence_iter_is_end (iter))
+              item = g_sequence_get (iter);
+
+            if (item && seqnum < item->seqnum) {
+              GST_DEBUG_OBJECT (rtx, "requested seqnum %u has already been "
+                  "removed from the rtx queue; the first available is %u",
+                  seqnum, item->seqnum);
+            } else {
+              GST_WARNING_OBJECT (rtx, "requested seqnum %u has not been "
+                  "transmitted yet in the original stream; either the remote end "
+                  "is not configured correctly, or the source is too slow",
+                  seqnum);
+            }
+          }
+#endif
         }
         GST_OBJECT_UNLOCK (rtx);
 
