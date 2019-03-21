@@ -131,7 +131,13 @@ ensure_data (GstMsdkSystemMemory * mem)
       mem->surface->Data.PitchLow =
           (mfxU16) (mem->destination_pitches[0] % (1 << 16));
       break;
-
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+      mem->surface->Data.R = mem->cached_data[0];
+      mem->surface->Data.G = mem->surface->Data.R;
+      mem->surface->Data.B = mem->surface->Data.R;
+      mem->surface->Data.A = mem->surface->Data.R;
+      mem->surface->Data.Pitch = mem->destination_pitches[0];
+      break;
     default:
       g_assert_not_reached ();
       break;
