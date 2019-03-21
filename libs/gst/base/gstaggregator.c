@@ -1449,7 +1449,6 @@ gst_aggregator_default_sink_event (GstAggregator * self,
       GstBuffer *gapbuf;
 
       gst_event_parse_gap (event, &pts, &duration);
-      gapbuf = gst_buffer_new ();
 
       if (GST_CLOCK_TIME_IS_VALID (duration))
         endpts = pts + duration;
@@ -1471,6 +1470,7 @@ gst_aggregator_default_sink_event (GstAggregator * self,
       else
         duration = GST_CLOCK_TIME_NONE;
 
+      gapbuf = gst_buffer_new ();
       GST_BUFFER_PTS (gapbuf) = pts;
       GST_BUFFER_DURATION (gapbuf) = duration;
       GST_BUFFER_FLAG_SET (gapbuf, GST_BUFFER_FLAG_GAP);
