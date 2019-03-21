@@ -140,7 +140,10 @@ if get_option('default_library') == 'shared'
 endif
 
 i18n = import('i18n')
-python3 = import('python3')
+
+python_mod = import('python')
+python3 = python_mod.find_installation()
+
 if get_option('validate')
   subdir('validate')
 endif
@@ -149,4 +152,4 @@ if get_option('debug_viewer')
   subdir('debug-viewer')
 endif
 
-run_command(python3.find_python(), '-c', 'import shutil; shutil.copy("hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")')
+run_command(python3, '-c', 'import shutil; shutil.copy("hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")')

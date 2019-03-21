@@ -1,6 +1,7 @@
-install_subdir('GstDebugViewer', install_dir: python3.sysconfig_path('purelib'),
+py_purelib_path = python3.get_path('purelib')
+install_subdir('GstDebugViewer', install_dir: py_purelib_path,
     exclude_files: ['__init__.py'])
-message('Installing in ' + python3.sysconfig_path('purelib'))
+message('Installing in ' + py_purelib_path)
 
 if find_program('msgfmt', required : get_option('nls')).found()
   # Desktop launcher and description file.
@@ -43,7 +44,7 @@ configure_file(input: 'gst-debug-viewer',
 configure_file(input: 'GstDebugViewer/__init__.py',
                output: '__init__.py',
                configuration: cdata,
-               install_dir: join_paths(python3.sysconfig_path('purelib'), 'GstDebugViewer'))
+               install_dir: join_paths(py_purelib_path, 'GstDebugViewer'))
 
 pkgdatadir = join_paths(get_option('datadir'), meson.project_name())
 icondir = join_paths(get_option('datadir'), 'icons/hicolor')
@@ -51,8 +52,8 @@ icondir = join_paths(get_option('datadir'), 'icons/hicolor')
 subdir('data')
 
 
-if run_command(python3.find_python(),
+if run_command(python3,
     '-c', 'import gi; gi.require_version("Gtk", "3.0")').returncode() == 0
-  test('gst-debug-viewer', python3.find_python(), args: ['-m', 'unittest'],
+  test('gst-debug-viewer', python3, args: ['-m', 'unittest'],
       workdir: meson.current_source_dir())
 endif
