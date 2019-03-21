@@ -887,7 +887,8 @@ class GstValidateTest(Test):
                     break
 
             if found is not None:
-                expected_issues.remove(found)
+                if not found.get('can-happen-several-times', False):
+                    expected_issues.remove(found)
                 if report['level'] == 'critical':
                     if found.get('sometimes', True) and isinstance(expected_retcode, list):
                         expected_retcode.append(18)
