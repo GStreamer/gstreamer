@@ -152,8 +152,6 @@ dnf debuginfo-install -y gtk3 \
     zlib
 
 pip3 install meson==0.49.2
-# Add the pip3 installation to the path
-export PATH="$PATH:/usr/local/lib/python3.7/site-packages"
 
 # Install the dependencies of gstreamer
 dnf builddep -y gstreamer1 \
