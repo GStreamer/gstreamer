@@ -262,8 +262,7 @@ check fedora:
 # Valgrind
 .valgrind fedora x86_64:
   extends: '.test fedora x86_64'
-  stage: test
-  when: manual
+  stage: 'full tests'
   variables:
     SUPPRESSION_FILES: >
       gst-build/subprojects/gstreamer/tests/check/gstreamer.supp
@@ -390,26 +389,41 @@ valgrind core:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gstreamer\\..*"
+  only:
+    variables:
+      - $CI_PROJECT_NAME == "gstreamer"
 
 valgrind base:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-base\\..*"
+  only:
+    variables:
+      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base)$/
 
 valgrind good:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-good\\..*"
+  only:
+    variables:
+      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good)$/
 
 valgrind ugly:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-ugly\\..*"
+  only:
+    variables:
+      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-ugly)$/
 
 valgrind bad:
   extends: '.valgrind fedora x86_64'
   variables:
     TEST_SUITE: "check.gst-plugins-bad\\..*"
+  only:
+    variables:
+      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-plugins-bad)$/
 
 
 # Template for Cerbero GStreamer Build
