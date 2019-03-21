@@ -159,6 +159,7 @@ ugly_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
 libsinc = include_directories('gst-libs')
 
+# Disable compiler warnings for unused variables and args if gst debug system is disabled
 if gst_dep.type_name() == 'internal'
   gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
 else
@@ -167,8 +168,16 @@ else
   gst_debug_disabled = cc.has_header_symbol('gst/gstconfig.h', 'GST_DISABLE_GST_DEBUG', dependencies: gst_dep)
 endif
 
-if gst_debug_disabled and cc.has_argument('-Wno-unused')
-  add_project_arguments('-Wno-unused', language: 'c')
+if gst_debug_disabled
+  message('GStreamer debug system is disabled')
+  if cc.has_argument('-Wno-unused')
+    add_project_arguments('-Wno-unused', language: 'c')
+  endif
+  if have_cxx and cxx.has_argument ('-Wno-unused')
+    add_project_arguments('-Wno-unused', language: 'cpp')
+  endif
+else
+  message('GStreamer debug system is enabled')
 endif
 
 warning_flags = [
