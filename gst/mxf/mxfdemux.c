@@ -1658,10 +1658,12 @@ gst_mxf_demux_pad_set_component (GstMXFDemux * demux, GstMXFDemuxPad * pad,
   pad->current_essence_track_position = pad->current_component_start;
 
   pad_caps = gst_pad_get_current_caps (GST_PAD_CAST (pad));
-  if (!gst_caps_is_equal (pad_caps, pad->current_essence_track->caps)) {
+  if (!pad_caps
+      || !gst_caps_is_equal (pad_caps, pad->current_essence_track->caps)) {
     gst_pad_set_caps (GST_PAD_CAST (pad), pad->current_essence_track->caps);
   }
-  gst_caps_unref (pad_caps);
+  if (pad_caps)
+    gst_caps_unref (pad_caps);
 
   if (update) {
     if (pad->tags) {
