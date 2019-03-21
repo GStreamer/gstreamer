@@ -570,6 +570,9 @@ def kill_subprocess(owner, process, timeout):
     stime = time.time()
     res = process.poll()
     waittime = 0.05
+    killsig = None
+    if not is_windows():
+        killsig = signal.SIGINT
     while res is None:
         try:
             owner.debug("Subprocess is still alive, sending KILL signal")
@@ -577,15 +580,19 @@ def kill_subprocess(owner, process, timeout):
                 subprocess.call(
                     ['taskkill', '/F', '/T', '/PID', str(process.pid)])
             else:
-                process.send_signal(signal.SIGKILL)
+                process.send_signal(killsig)
             time.sleep(waittime)
             waittime *= 2
         except OSError:
             pass
-        if time.time() - stime > DEFAULT_TIMEOUT:
-            raise RuntimeError("Could not kill subprocess after %s second"
-                               " Something is really wrong, => EXITING"
-                               % DEFAULT_TIMEOUT)
+        if not is_windows() and time.time() - stime > timeout / 4:
+            killsig = signal.SIGKILL
+        if time.time() - stime > timeout:
+            printc("Could not kill %s subprocess after %s second"
+                   " Something is really wrong, => EXITING"
+                   % (owner, timeout), Colors.FAIL)
+
+            return
         res = process.poll()
 
     return res
