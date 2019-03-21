@@ -80,6 +80,13 @@ rtp_storage_get_packets_for_recovery (RtpStorage * self, gint fec_pt,
   GstBufferList *ret = NULL;
   RtpStorageStream *stream;
 
+  if (0 == self->size_time) {
+    GST_WARNING_OBJECT (self, "Received request for recovery RTP packets"
+        " around lost_seqnum=%u fec_pt=%u for ssrc=%08x, but size is 0",
+        lost_seq, fec_pt, ssrc);
+    return NULL;
+  }
+
   STORAGE_LOCK (self);
   stream = g_hash_table_lookup (self->streams, GUINT_TO_POINTER (ssrc));
   STORAGE_UNLOCK (self);
@@ -109,6 +116,12 @@ rtp_storage_get_redundant_packet (RtpStorage * self, guint32 ssrc,
 {
   GstBuffer *ret = NULL;
   RtpStorageStream *stream;
+
+  if (0 == self->size_time) {
+    GST_WARNING_OBJECT (self, "Received request for redundant RTP packet with"
+        " seq=%u for ssrc=%08x, but size is 0", lost_seq, ssrc);
+    return NULL;
+  }
 
   STORAGE_LOCK (self);
   stream = g_hash_table_lookup (self->streams, GUINT_TO_POINTER (ssrc));
