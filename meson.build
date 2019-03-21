@@ -156,6 +156,22 @@ if host_machine.system() != 'windows'
     fallback : ['gstreamer', 'gst_check_dep'])
 endif
 
+# Disable compiler warnings for unused variables and args if gst debug system is disabled
+if gst_dep.type_name() == 'internal'
+  gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
+else
+  # We can't check that in the case of subprojects as we won't
+  # be able to build against an internal dependency (which is not built yet)
+  gst_debug_disabled = cc.has_header_symbol('gst/gstconfig.h', 'GST_DISABLE_GST_DEBUG', dependencies: gst_dep)
+endif
+
+if gst_debug_disabled
+  message('GStreamer debug system is disabled')
+  add_project_arguments(cc.get_supported_arguments(['-Wno-unused']), language: 'c')
+else
+  message('GStreamer debug system is enabled')
+endif
+
 gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
 build_gir = gir.found() and not meson.is_cross_build()
