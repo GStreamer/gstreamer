@@ -146,5 +146,5 @@ if not get_option('examples').disabled()
   subdir('tests')
 endif
 
-python3 = import('python3').find_python()
+python3 = import('python').find_installation()
 run_command(python3, '-c', 'import shutil; shutil.copy("hooks/pre-commit.hook", ".git/hooks/pre-commit")')
