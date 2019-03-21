@@ -84,11 +84,55 @@ rtp_storage_stream_resize (RtpStorageStream * stream, GstClockTime size_time)
   }
 }
 
+/* This algorithm corresponds to rtp_jitter_buffer_get_seqnum_diff(),
+ * we want to keep the same number of packets in the worse case.
+ */
+
+static guint16
+rtp_storage_stream_get_seqnum_diff (RtpStorageStream * stream)
+{
+  guint32 high_seqnum, low_seqnum;
+  RtpStorageItem *high_item, *low_item;
+  guint16 result;
+
+
+  high_item = (RtpStorageItem *) g_queue_peek_head (&stream->queue);
+  low_item = (RtpStorageItem *) g_queue_peek_tail (&stream->queue);
+
+  if (!high_item || !low_item || high_item == low_item)
+    return 0;
+
+  high_seqnum = high_item->seq;
+  low_seqnum = low_item->seq;
+
+  /* it needs to work if seqnum wraps */
+  if (high_seqnum >= low_seqnum) {
+    result = (guint32) (high_seqnum - low_seqnum);
+  } else {
+    result = (guint32) (high_seqnum + G_MAXUINT16 + 1 - low_seqnum);
+  }
+  return result;
+}
+
 void
 rtp_storage_stream_resize_and_add_item (RtpStorageStream * stream,
     GstClockTime size_time, GstBuffer * buffer, guint8 pt, guint16 seq)
 {
   GstClockTime arrival_time = GST_BUFFER_DTS_OR_PTS (buffer);
+
+  /* These limits match those of the jittebuffer, we keep a couple more
+   * packets to avoid races as it can be queried after the output of the
+   * jitterbuffer.
+   */
+  if (rtp_storage_stream_get_seqnum_diff (stream) >= 32765 ||
+      stream->queue.length > 10100) {
+    RtpStorageItem *item = g_queue_pop_tail (&stream->queue);
+
+    GST_WARNING ("Queue too big, removing pt=%d seq=%d for ssrc=%08x",
+        item->pt, item->seq, stream->ssrc);
+
+    rtp_storage_item_free (item);
+  }
 
   if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (arrival_time))) {
     if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (stream->max_arrival_time)))
