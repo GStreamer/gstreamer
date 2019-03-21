@@ -1499,8 +1499,10 @@ gst_aggregator_default_sink_event (GstAggregator * self,
       GST_BUFFER_FLAG_SET (gapbuf, GST_BUFFER_FLAG_DROPPABLE);
 
       /* Remove GAP event so we can replace it with the buffer */
+      PAD_LOCK (aggpad);
       if (g_queue_peek_tail (&aggpad->priv->data) == event)
         gst_event_unref (g_queue_pop_tail (&aggpad->priv->data));
+      PAD_UNLOCK (aggpad);
 
       if (gst_aggregator_pad_chain_internal (self, aggpad, gapbuf, FALSE) !=
           GST_FLOW_OK) {
