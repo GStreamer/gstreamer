@@ -1798,7 +1798,7 @@ _serialized_info_get_path (GstDiscoverer * dc, gchar * uri)
   }
 
   tmp = g_strdup_printf ("%s-%" G_GSIZE_FORMAT "-%" G_GINT64_FORMAT,
-      location, file_status.st_size, file_status.st_mtime);
+      location, (gsize) file_status.st_size, (gint64) file_status.st_mtime);
   cs = g_checksum_new (G_CHECKSUM_SHA1);
   g_checksum_update (cs, (const guchar *) tmp, strlen (tmp));
   checksum = g_checksum_get_string (cs);
