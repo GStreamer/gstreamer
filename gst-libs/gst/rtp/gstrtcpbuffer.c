@@ -505,7 +505,7 @@ gst_rtcp_packet_move_to_next (GstRTCPPacket * packet)
   g_return_val_if_fail (packet->rtcp != NULL, FALSE);
   g_return_val_if_fail (packet->rtcp->map.flags & GST_MAP_READ, FALSE);
 
-  /* if we have a padding or invalid packet, it must be the last, 
+  /* if we have a padding or invalid packet, it must be the last,
    * return FALSE */
   if (packet->type == GST_RTCP_TYPE_INVALID || packet->padding)
     goto end;
@@ -564,7 +564,7 @@ gst_rtcp_buffer_add_packet (GstRTCPBuffer * rtcp, GstRTCPType type,
    * start a compount packet. Next we figure out if we have enough free space in
    * the buffer to continue. */
   len = rtcp_packet_min_length (type);
-  if (type == -1)
+  if (len == -1)
     goto unknown_type;
   if (packet->offset + len >= maxsize)
     goto no_space;
