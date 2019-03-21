@@ -52,6 +52,24 @@ gstcodecparsers_dep = dependency('gstreamer-codecparsers-1.0', version : gst_req
     fallback : ['gst-plugins-bad', 'gstcodecparsers_dep'])
 gstgl_dep = dependency('gstreamer-gl-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'gstgl_dep'], required: false)
+
+# Disable compiler warnings for unused variables and args if gst debug system is disabled
+if gst_dep.type_name() == 'internal'
+  gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
+else
+  # We can't check that in the case of subprojects as we won't
+  # be able to build against an internal dependency (which is not built yet)
+  gst_debug_disabled = cc.has_header_symbol('gst/gstconfig.h', 'GST_DISABLE_GST_DEBUG', dependencies: gst_dep)
+endif
+
+if gst_debug_disabled
+  message('GStreamer debug system is disabled')
+  add_project_arguments(cc.get_supported_arguments(['-Wno-unused']), language: 'c')
+else
+  message('GStreamer debug system is enabled')
+endif
+
+# Other deps
 gmodule_dep = dependency('gmodule-2.0', required: false)
 libva_dep = dependency('libva', version: libva_req)
 
