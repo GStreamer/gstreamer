@@ -38,6 +38,13 @@
  * When using #GstRtpBin, this element should be inserted through the
  * #GstRtpBin::request-fec-encoder signal.
  *
+ * <refsect2>
+ * <title>Example pipeline</title>
+ * |[
+ * gst-launch-1.0 videotestsrc ! x264enc ! video/x-h264, profile=baseline ! rtph264pay pt=96 ! rtpulpfecenc percentage=100 pt=122 ! rtpredenc pt=122 distance=2 ! identity drop-probability=0.05 ! udpsink port=8888
+ * ]| This example will send a stream with RED and ULP FEC.
+ * </refsect2>
+ *
  * See also: #GstRtpRedDec, #GstWebRTCBin, #GstRtpBin
  * Since: 1.14
  */
