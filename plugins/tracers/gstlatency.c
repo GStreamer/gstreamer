@@ -55,6 +55,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_latency_debug);
 G_DEFINE_TYPE_WITH_CODE (GstLatencyTracer, gst_latency_tracer, GST_TYPE_TRACER,
     _do_init);
 
+static void latency_query_stack_destroy (gpointer data);
+
 static GQuark latency_probe_id;
 static GQuark sub_latency_probe_id;
 static GQuark latency_probe_pad;
@@ -63,6 +65,18 @@ static GQuark drop_sub_latency_quark;
 
 static GstTracerRecord *tr_latency;
 static GstTracerRecord *tr_element_latency;
+static GstTracerRecord *tr_element_reported_latency;
+
+/* The private stack for each thread */
+static GPrivate latency_query_stack =
+G_PRIVATE_INIT (latency_query_stack_destroy);
+
+struct LatencyQueryTableValue
+{
+  GstElement *peer_element;
+  guint64 min;
+  guint64 max;
+};
 
 /* data helpers */
 
@@ -97,6 +111,56 @@ get_real_pad_parent (GstPad * pad)
     parent = GST_OBJECT_PARENT (pad);
   }
   return GST_ELEMENT_CAST (parent);
+}
+
+static void
+latency_query_table_value_destroy (gpointer data)
+{
+  struct LatencyQueryTableValue *v = data;
+
+  /* Unref the element */
+  if (v->peer_element) {
+    gst_object_unref (v->peer_element);
+    v->peer_element = NULL;
+  }
+
+  /* Destroy the structure */
+  g_free (v);
+}
+
+static void
+latency_query_stack_destroy (gpointer data)
+{
+  GQueue *queue = data;
+  g_queue_free_full (queue, latency_query_table_value_destroy);
+}
+
+static GQueue *
+local_latency_query_stack_get (void)
+{
+  /* Make sure the stack exists */
+  GQueue *stack = g_private_get (&latency_query_stack);
+  if (!stack) {
+    g_private_set (&latency_query_stack, g_queue_new ());
+    stack = g_private_get (&latency_query_stack);
+  }
+
+  g_assert (stack);
+  return stack;
+}
+
+static struct LatencyQueryTableValue *
+local_latency_query_stack_pop (void)
+{
+  GQueue *stack = local_latency_query_stack_get ();
+  return g_queue_pop_tail (stack);
+}
+
+static void
+local_latency_query_stack_push (struct LatencyQueryTableValue *value)
+{
+  GQueue *stack = local_latency_query_stack_get ();
+  g_queue_push_tail (stack, value);
 }
 
 /* hooks */
@@ -326,6 +390,50 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
   }
 }
 
+static void
+do_query_post (GstLatencyTracer * tracer, GstClockTime ts, GstPad * pad,
+    GstQuery * query, gboolean res)
+{
+  /* Only check for latency queries if flag is enabled */
+  if ((tracer->flags & GST_LATENCY_TRACER_FLAG_REPORTED_ELEMENT) &&
+      (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY)) {
+    gboolean live;
+    guint64 min = 0, max = 0, min_prev = 0, max_prev = 0;
+    gchar *element_name;
+    struct LatencyQueryTableValue *value;
+    GstElement *element = get_real_pad_parent (pad);
+    GstElement *peer_element = get_real_pad_parent (GST_PAD_PEER (pad));
+
+    /* Parse the query */
+    gst_query_parse_latency (query, &live, &min, &max);
+
+    /* Pop from stack */
+    value = local_latency_query_stack_pop ();
+    while (value && value->peer_element == element) {
+      min_prev = MAX (value->min, min_prev);
+      max_prev = MAX (value->max, max_prev);
+      value = local_latency_query_stack_pop ();
+    }
+
+    /* Push to stack */
+    value = g_new0 (struct LatencyQueryTableValue, 1);
+    value->peer_element = gst_object_ref (peer_element);
+    value->min = min;
+    value->max = max;
+    local_latency_query_stack_push (value);
+
+    /* Get the pad name */
+    element_name = gst_element_get_name (element);
+
+    /* Log reported latency */
+    gst_tracer_record_log (tr_element_reported_latency, element_name, live,
+        GST_CLOCK_DIFF (min_prev, min), GST_CLOCK_DIFF (max_prev, max), ts);
+
+    /* Clean up */
+    g_free (element_name);
+  }
+}
+
 /* tracer class */
 
 static void
@@ -359,6 +467,8 @@ gst_latency_tracer_constructed (GObject * object)
           self->flags |= GST_LATENCY_TRACER_FLAG_PIPELINE;
         else if (g_str_equal (split[i], "element"))
           self->flags |= GST_LATENCY_TRACER_FLAG_ELEMENT;
+        else if (g_str_equal (split[i], "reported"))
+          self->flags |= GST_LATENCY_TRACER_FLAG_REPORTED_ELEMENT;
         else
           GST_WARNING ("Invalid latency tracer flags %s", split[i]);
       }
@@ -429,6 +539,40 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
           "max", G_TYPE_UINT64, G_MAXUINT64,
           NULL),
       NULL);
+
+
+  tr_element_reported_latency = gst_tracer_record_new (
+      "element-reported-latency.class",
+      "element", GST_TYPE_STRUCTURE, gst_structure_new ("scope",
+          "type", G_TYPE_GTYPE, G_TYPE_STRING,
+          "related-to", GST_TYPE_TRACER_VALUE_SCOPE,
+          GST_TRACER_VALUE_SCOPE_ELEMENT,
+          NULL),
+      "live", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_BOOLEAN,
+          "description", G_TYPE_STRING,
+              "wether the it is a live stream or not",
+          NULL),
+      "min", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING,
+              "the minimum reported latency",
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      "max", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING, "the maximum reported latency",
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value",
+          "type", G_TYPE_GTYPE, G_TYPE_UINT64,
+          "description", G_TYPE_STRING, "ts when the latency has been reported",
+          "min", G_TYPE_UINT64, G_GUINT64_CONSTANT (0),
+          "max", G_TYPE_UINT64, G_MAXUINT64,
+          NULL),
+      NULL);
   /* *INDENT-ON* */
 }
 
@@ -459,4 +603,8 @@ gst_latency_tracer_init (GstLatencyTracer * self)
 
   gst_tracing_register_hook (tracer, "pad-push-event-pre",
       G_CALLBACK (do_push_event_pre));
+
+  /* Add pad query post hook to get the reported per-element latency */
+  gst_tracing_register_hook (tracer, "pad-query-post",
+      G_CALLBACK (do_query_post));
 }
