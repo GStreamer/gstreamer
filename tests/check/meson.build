@@ -72,7 +72,9 @@ good_tests = [
   [ 'elements/rtpmux' ],
   [ 'elements/rtprtx' ],
   [ 'elements/rtpsession' ],
-  [ 'elements/rtpstorage' ],
+  [ 'elements/rtpstorage', false, [],  ['../../gst/rtp/gstrtpstorage.c',
+					'../../gst/rtp/rtpstorage.c',
+					'../../gst/rtp/rtpstoragestream.c']],
   [ 'elements/rtpred' ],
   [ 'elements/rtpulpfec' ],
   [ 'elements/rtpssrcdemux' ],
@@ -171,15 +173,9 @@ test_deps = [gst_dep, gstbase_dep, gstnet_dep, gstcheck_dep, gstaudio_dep,
 foreach t : good_tests
   fname = '@0@.c'.format(t.get(0))
   test_name = t.get(0).underscorify()
-  extra_deps = [ ]
-  if t.length() == 3
-    extra_deps = t.get(2)
-    skip_test = t.get(1)
-  elif t.length() == 2
-    skip_test = t.get(1)
-  else
-    skip_test = false
-  endif
+  extra_sources = t.get(3, [ ])
+  extra_deps = t.get(2, [ ])
+  skip_test = t.get(1, false)
   if not skip_test
     env = environment()
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
@@ -191,7 +187,7 @@ foreach t : good_tests
     env.set('GSETTINGS_BACKEND', 'memory')
 
     env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
-    exe = executable(test_name, fname,
+    exe = executable(test_name, fname, extra_sources,
       include_directories : [configinc],
       c_args : ['-DHAVE_CONFIG_H=1' ] + test_defines,
       dependencies : [libm] + test_deps + extra_deps,

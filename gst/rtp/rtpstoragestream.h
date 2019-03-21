@@ -23,6 +23,8 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
+GST_DEBUG_CATEGORY_EXTERN (gst_rtp_storage_debug);
+
 typedef struct {
   GstBuffer *buffer;
   guint16 seq;

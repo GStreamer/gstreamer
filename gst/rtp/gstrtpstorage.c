@@ -79,7 +79,7 @@ static GParamSpec *klass_properties[N_PROPERTIES] = { NULL, };
 
 #define DEFAULT_SIZE_TIME (0)
 
-GST_DEBUG_CATEGORY_STATIC (gst_rtp_storage_debug);
+GST_DEBUG_CATEGORY (gst_rtp_storage_debug);
 #define GST_CAT_DEFAULT (gst_rtp_storage_debug)
 
 G_DEFINE_TYPE (GstRtpStorage, gst_rtp_storage, GST_TYPE_ELEMENT);

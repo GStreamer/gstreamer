@@ -618,6 +618,12 @@ elements_rtpfunnel_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VERSION) 
 elements_rtpcollision_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_rtpcollision_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_NET_LIBS) -lgstrtp-$(GST_API_VERSION) $(GIO_LIBS) $(LDADD)
 
+elements_rtpstorage_SOURCES = \
+	elements/rtpstorage.c \
+	../../gst/rtp/gstrtpstorage.c \
+	../../gst/rtp/rtpstorage.c \
+	../../gst/rtp/rtpstoragestream.c
+
 elements_rtpstorage_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_rtpstorage_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_NET_LIBS) -lgstrtp-$(GST_API_VERSION) $(GIO_LIBS) $(LDADD)
 

@@ -20,6 +20,8 @@
 
 #include "rtpstoragestream.h"
 
+#define GST_CAT_DEFAULT (gst_rtp_storage_debug)
+
 static RtpStorageItem *
 rtp_storage_item_new (GstBuffer * buffer, guint8 pt, guint16 seq)
 {

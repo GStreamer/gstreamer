@@ -23,6 +23,8 @@
 #include "rtpstorage.h"
 #include "rtpstoragestream.h"
 
+#define GST_CAT_DEFAULT (gst_rtp_storage_debug)
+
 enum
 {
   SIGNAL_PACKET_RECOVERED,

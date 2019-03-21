@@ -22,9 +22,8 @@
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
 
+#include "../../../gst/rtp/gstrtpstorage.h"
 #include "../../../gst/rtp/rtpstorage.h"
-#include "../../../gst/rtp/rtpstoragestream.c"
-#include "../../../gst/rtp/rtpstorage.c"
 
 #define RTP_CLOCK_RATE (90000)
 #define RTP_FRAME_DUR (RTP_CLOCK_RATE / 30)
@@ -62,7 +61,7 @@ put_recovered_packet (GstHarness * h, GstBuffer * buffer, guint8 pt,
 
   g_object_get (h->element, "internal-storage", &internal_storage, NULL);
 
-  rtp_storage_do_put_recovered_packet (internal_storage, buffer, pt, ssrc, seq);
+  rtp_storage_put_recovered_packet (internal_storage, buffer, pt, ssrc, seq);
 
   g_object_unref (internal_storage);
 }
@@ -522,6 +521,9 @@ rtpstorage_suite (void)
 {
   Suite *s = suite_create ("rtpstorage");
   TCase *tc_chain = tcase_create ("general");
+
+  gst_element_register (NULL, "rtpstorage", GST_RANK_NONE,
+      GST_TYPE_RTP_STORAGE);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, rtpstorage_up_and_down);
