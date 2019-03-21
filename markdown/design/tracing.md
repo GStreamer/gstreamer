@@ -240,9 +240,9 @@ Frontends can:
 
 ## latency
 
-- register to buffer and event flow
+- register to buffer, event and query flow
 - send custom event on buffer flow at source elements
-- catch events on event transfer at sink elements
+- catch events on event transfer at sink pads
 
 ## meminfo (not yet implemented)
 
@@ -444,6 +444,31 @@ GST_DEBUG_FILE=trace.log /usr/bin/gst-play-1.0 $HOME/Videos/movie.mp4 &&
 GST_DEBUG="GST_TRACER:7" GST_TRACERS=latency gst-launch-1.0 \
 audiotestsrc num-buffers=10 ! audioconvert ! volume volume=0.7 ! \
 autoaudiosink
+```
+
+### print processing latencies for each element
+
+```
+GST_DEBUG="GST_TRACER:7" GST_TRACERS=latency(flags=element) gst-launch-1.0 \
+audiotestsrc num-buffers=10 ! audioconvert ! volume volume=0.7 ! \
+autoaudiosink
+```
+
+### print reported latencies for each element
+
+```
+GST_DEBUG="GST_TRACER:7" GST_TRACERS=latency(flags=reported) gst-launch-1.0 \
+audiotestsrc num-buffers=10 ! audioconvert ! volume volume=0.7 ! \
+autoaudiosink
+```
+
+### print all type of latencies for a pipeline
+
+```
+GST_DEBUG="GST_TRACER:7" \
+GST_TRACERS=latency(flags=pipeline+element+reported) gst-launch-1.0 \
+alsasrc num-buffers=20 ! flacenc ! identity ! \
+fakesink
 ```
 
 ### Raise a warning if a leak is detected
