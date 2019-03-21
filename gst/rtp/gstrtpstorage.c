@@ -161,6 +161,7 @@ gst_rtp_storage_class_init (GstRtpStorageClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_storage_debug,
       "rtpstorage", 0, "RTP Storage");
+  GST_DEBUG_REGISTER_FUNCPTR (gst_rtp_storage_chain);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
