@@ -334,28 +334,25 @@ else
   cdata.set('DISABLE_ORC', 1)
 endif
 
+# Disable compiler warnings for unused variables and args if gst debug system is disabled
 if gst_dep.type_name() == 'internal'
-    gst_proj = subproject('gstreamer')
-
-    if not gst_proj.get_variable('gst_debug')
-        message('GStreamer debug system is disabled')
-        add_project_arguments('-Wno-unused', language: 'c')
-    else
-        message('GStreamer debug system is enabled')
-    endif
+  gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
 else
-    # We can't check that in the case of subprojects as we won't
-    # be able to build against an internal dependency (which is not built yet)
-    if not cc.compiles('''
-#include <gst/gstconfig.h>
-#ifdef GST_DISABLE_GST_DEBUG
-#error "debugging disabled, make compiler fail"
-#endif''' , dependencies: gst_dep)
-        message('GStreamer debug system is disabled')
-        add_project_arguments('-Wno-unused', language: 'c')
-    else
-        message('GStreamer debug system is enabled')
-    endif
+  # We can't check that in the case of subprojects as we won't
+  # be able to build against an internal dependency (which is not built yet)
+  gst_debug_disabled = cc.has_header_symbol('gst/gstconfig.h', 'GST_DISABLE_GST_DEBUG', dependencies: gst_dep)
+endif
+
+if gst_debug_disabled
+  message('GStreamer debug system is disabled')
+  if cc.has_argument('-Wno-unused')
+    add_project_arguments('-Wno-unused', language: 'c')
+  endif
+  if have_cxx and cxx.has_argument ('-Wno-unused')
+    add_project_arguments('-Wno-unused', language: 'cpp')
+  endif
+else
+  message('GStreamer debug system is enabled')
 endif
 
 presetdir = join_paths(get_option('datadir'), 'gstreamer-' + api_version, 'presets')
