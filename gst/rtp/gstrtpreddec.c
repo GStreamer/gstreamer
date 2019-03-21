@@ -34,7 +34,7 @@
  * types of the RED packets.
  *
  * When using #GstRtpBin, this element should be inserted through the
- * #GstRtpBin::request-fec-decoder signal.
+ * #GstRtpBin::request-aux-receiver signal.
  *
  * See also: #GstRtpRedEnc, #GstWebRTCBin, #GstRtpBin
  * Since: 1.14

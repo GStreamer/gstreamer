@@ -26,6 +26,15 @@
  * Generic Forward Error Correction (FEC) encoder using Uneven Level
  * Protection (ULP) as described in RFC 5109.
  *
+ * It differs from the RFC in one important way, it multiplexes the
+ * FEC packets in the same sequence number as media packets. This is to be
+ * compatible with libwebrtc as using in Google Chrome and with Microsoft
+ * Lync / Skype for Business.
+ *
+ * Be warned that after using this element, it is no longer possible to know if
+ * there is a gap in the media stream based on the sequence numbers as the FEC
+ * packets become interleaved with the media packets.
+ *
  * This element will insert protection packets in any RTP stream, which
  * can then be used on the receiving side to recover lost packets.
  *
@@ -60,10 +69,18 @@
  * When using #GstRtpBin, this element should be inserted through the
  * #GstRtpBin::request-fec-encoder signal.
  *
+ *
+ * <refsect2>
+ * <title>Example pipeline</title>
+ * |[
+ * gst-launch-1.0 videotestsrc ! x264enc ! video/x-h264, profile=baseline ! rtph264pay pt=96 ! rtpulpfecenc percentage=100 pt=122 ! udpsink port=8888
+ * ]| This example will receive a stream with FEC and try to reconstruct the packets.
+ *
  * Example programs using this element can be found at
  * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs>
  * and
  * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>.
+ * </refsect2>
  *
  * See also: #GstRtpUlpFecDec, #GstRtpBin
  * Since: 1.14

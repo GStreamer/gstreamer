@@ -26,6 +26,11 @@
  * Generic Forward Error Correction (FEC) decoder for Uneven Level
  * Protection (ULP) as described in RFC 5109.
  *
+ * It differs from the RFC in one important way, it multiplexes the
+ * FEC packets in the same sequence number as media packets. This is to be
+ * compatible with libwebrtc as using in Google Chrome and with Microsoft
+ * Lync / Skype for Business.
+ *
  * This element will work in combination with an upstream #GstRtpStorage
  * element and attempt to recover packets declared lost through custom
  * 'GstRTPPacketLost' events, usually emitted by #GstRtpJitterBuffer.
@@ -33,16 +38,24 @@
  * If no storage is provided using the #GstRtpUlpFecDec:storage
  * property, it will try to get it from an element upstream.
  *
- * Example programs are available at
- * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs>
- * and
- * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>.
- *
  * Additionally, the payload types of the protection packets *must* be
  * provided to this element via its #GstRtpUlpFecDec:pt property.
  *
  * When using #GstRtpBin, this element should be inserted through the
  * #GstRtpBin::request-fec-decoder signal.
+ *
+ * <refsect2>
+ * <title>Example pipeline</title>
+ * |[
+ * gst-launch-1.0 udpsrc port=8888 caps="application/x-rtp, payload=96, clock-rate=90000" ! rtpstorage size-time=220000000 ! rtpssrcdemux ! application/x-rtp, payload=96, clock-rate=90000, media=video, encoding-name=H264 ! rtpjitterbuffer do-lost=1 latency=200 !  rtpulpfecdec pt=122 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink
+ * ]| This example will receive a stream with FEC and try to reconstruct the packets.
+ *
+ * Example programs are available at
+ * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs>
+ * and
+ * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>.
+ *
+ * </refsect2>
  *
  * See also: #GstRtpUlpFecEnc, #GstRtpBin, #GstRtpStorage
  * Since: 1.14
