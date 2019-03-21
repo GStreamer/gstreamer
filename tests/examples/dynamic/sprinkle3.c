@@ -24,7 +24,7 @@
  * Produces a sweeping sprinkle of tones by dynamically adding and removing
  * elements to adder.
  *
- * gcc `pkg-config --cflags --libs gstreamer-0.10` sprinkle3.c -osprinkle3
+ * gcc `pkg-config --cflags --libs gstreamer-1.0` sprinkle3.c -osprinkle3
  */
 
 #ifdef HAVE_CONFIG_H

@@ -157,11 +157,10 @@
  *     libraries to use the same mechanism for their automatic plugin
  *     installation needs, or for the format to be changed should it turn
  *     out to be insufficient.
- * -   plugin system version, e.g. "0.10"
- *     This is required so that when there is a GStreamer-0.12 or
- *     GStreamer-1.0 at some point in future, the different major versions
- *     can still co-exist and use the same plugin install mechanism in the
- *     same way.
+ * -   plugin system version, e.g. "1.0"
+ *     This is required so that when there is GStreamer-2.0 at some point
+ *     in future, the different major versions can still co-exist and use
+ *     the same plugin install mechanism in the same way.
  * -   application identifier, e.g. "totem"
  *     This may also be in the form of "pid/12345" if the program name
  *     can't be obtained for some reason.
@@ -184,7 +183,7 @@
  * -   optional further fields not yet specified
  *
  * An entire ID string might then look like this, for example: `
- * gstreamer|0.10|totem|Vorbis audio decoder|decoder-audio/x-vorbis`
+ * gstreamer|1.0|totem|Vorbis audio decoder|decoder-audio/x-vorbis`
  *
  * Plugin installers parsing this ID string should expect further fields
  * also separated by '|' symbols and either ignore them, warn the user, or
