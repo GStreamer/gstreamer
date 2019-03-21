@@ -102,6 +102,8 @@ gst_rtp_storage_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SIZE_TIME:
+      GST_DEBUG_OBJECT (self, "RTP storage size set to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (g_value_get_uint64 (value)));
       rtp_storage_set_size (self->storage, g_value_get_uint64 (value));
       break;
     default:
