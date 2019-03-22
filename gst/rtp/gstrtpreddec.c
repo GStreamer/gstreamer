@@ -318,11 +318,18 @@ gst_rtp_red_create_from_redundant_block (GstRtpRedDec * self,
   guint16 lost_seq = 0;
   if (gst_red_history_lost_seq_num_for_timestamp (self, lost_timestamp,
           &lost_seq)) {
+    GST_LOG_OBJECT (self, "Recovering from RED packet pt=%u ts=%u seq=%u"
+        " len=%u present", rtp_red_block_get_payload_type (red_hdr),
+        lost_timestamp, lost_seq, rtp_red_block_get_payload_length (red_hdr));
     ret =
         gst_rtp_red_create_packet (self, red_rtp, FALSE,
         rtp_red_block_get_payload_type (red_hdr), lost_seq, lost_timestamp,
         *red_payload_offset, rtp_red_block_get_payload_length (red_hdr));
     GST_BUFFER_FLAG_SET (ret, GST_RTP_BUFFER_FLAG_REDUNDANT);
+  } else {
+    GST_LOG_OBJECT (self, "Ignore RED packet pt=%u ts=%u len=%u because already"
+        " present", rtp_red_block_get_payload_type (red_hdr), lost_timestamp,
+        rtp_red_block_get_payload_length (red_hdr));
   }
 
   *red_hdr_offset += rtp_red_block_header_get_length (TRUE);
@@ -342,6 +349,11 @@ gst_rtp_red_create_from_main_block (GstRtpRedDec * self,
       gst_rtp_buffer_get_timestamp (red_rtp),
       *red_payload_offset, -1);
   *red_payload_offset = gst_rtp_buffer_get_payload_len (red_rtp);
+  GST_LOG_OBJECT (self, "Extracting main payload from RED pt=%u seq=%u ts=%u"
+      " marker=%u", rtp_red_block_get_payload_type (payload + red_hdr_offset),
+      gst_rtp_buffer_get_seq (red_rtp), gst_rtp_buffer_get_timestamp (red_rtp),
+      gst_rtp_buffer_get_marker (red_rtp));
+
   return ret;
 }
 
