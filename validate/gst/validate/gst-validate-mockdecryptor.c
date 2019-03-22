@@ -97,6 +97,7 @@ gst_mockdecryptor_transform_caps (GstBaseTransform * base,
   GstCaps *transformed_caps = NULL;
   guint incoming_caps_size, size;
   gint duplicate;
+  guint i;
 
   if (direction == GST_PAD_UNKNOWN)
     return NULL;
@@ -108,9 +109,10 @@ gst_mockdecryptor_transform_caps (GstBaseTransform * base,
   transformed_caps = gst_caps_new_empty ();
 
   incoming_caps_size = gst_caps_get_size (caps);
-  for (guint i = 0; i < incoming_caps_size; ++i) {
+  for (i = 0; i < incoming_caps_size; ++i) {
     GstStructure *incoming_structure = gst_caps_get_structure (caps, i);
     GstStructure *outgoing_structure = NULL;
+    guint index;
 
     if (direction == GST_PAD_SINK) {
       if (!gst_structure_has_field (incoming_structure, "original-media-type"))
@@ -145,7 +147,7 @@ gst_mockdecryptor_transform_caps (GstBaseTransform * base,
     duplicate = FALSE;
     size = gst_caps_get_size (transformed_caps);
 
-    for (guint index = 0; !duplicate && index < size; ++index) {
+    for (index = 0; !duplicate && index < size; ++index) {
       GstStructure *structure =
           gst_caps_get_structure (transformed_caps, index);
       if (gst_structure_is_equal (structure, outgoing_structure))
