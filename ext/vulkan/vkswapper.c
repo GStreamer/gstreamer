@@ -616,7 +616,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
    * and is fastest (though it tears).  If not, fall back to FIFO which is
    * always available. */
   present_mode = VK_PRESENT_MODE_FIFO_KHR;
-  for (gsize i = 0; i < swapper->n_surf_present_modes; i++) {
+  for (i = 0; i < swapper->n_surf_present_modes; i++) {
     if (swapper->surf_present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
       present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
       break;
