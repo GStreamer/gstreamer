@@ -1819,15 +1819,12 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstObject * parent,
                 all_headers, count))
           forward = FALSE;
       } else if (gst_structure_has_name (s, "GstRTPRetransmissionRequest")) {
-        GstClockTime running_time;
         guint seqnum, delay, deadline, max_delay, avg_rtt;
 
         GST_RTP_SESSION_LOCK (rtpsession);
         rtpsession->priv->recv_rtx_req_count++;
         GST_RTP_SESSION_UNLOCK (rtpsession);
 
-        if (!gst_structure_get_clock_time (s, "running-time", &running_time))
-          running_time = -1;
         if (!gst_structure_get_uint (s, "ssrc", &ssrc))
           ssrc = -1;
         if (!gst_structure_get_uint (s, "seqnum", &seqnum))
