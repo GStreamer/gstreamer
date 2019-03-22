@@ -841,6 +841,26 @@ done:
   return duration;
 }
 
+static gint64
+gst_flac_enc_get_latency (GstFlacEnc * flacenc)
+{
+  /* The FLAC specification states that the data is processed in blocks,
+   * regardless of the number of channels. Thus, The latency can be calculated
+   * using the blocksize and rate. For example a 1 second block sampled at
+   * 44.1KHz has a blocksize of 44100 */
+
+  /* Get the blocksize */
+  const guint blocksize = FLAC__stream_encoder_get_blocksize (flacenc->encoder);
+
+  /* Get the sample rate in KHz */
+  const guint rate = FLAC__stream_encoder_get_sample_rate (flacenc->encoder);
+  if (!rate)
+    return 0;
+
+  /* Calculate the latecy */
+  return (blocksize * GST_SECOND) / rate;
+}
+
 static gboolean
 gst_flac_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 {
@@ -887,7 +907,9 @@ gst_flac_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   if (init_status != FLAC__STREAM_ENCODER_INIT_STATUS_OK)
     goto failed_to_initialize;
 
-  /* no special feedback to base class; should provide all available samples */
+  /* feedback to base class */
+  gst_audio_encoder_set_latency (enc,
+      gst_flac_enc_get_latency (flacenc), gst_flac_enc_get_latency (flacenc));
 
   return TRUE;
 
@@ -1440,6 +1462,8 @@ gst_flac_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstFlacEnc *this = GST_FLAC_ENC (object);
+  GstAudioEncoder *enc = GST_AUDIO_ENCODER (object);
+  guint64 curr_latency = 0, old_latency = gst_flac_enc_get_latency (this);
 
   GST_OBJECT_LOCK (this);
 
@@ -1507,6 +1531,11 @@ gst_flac_enc_set_property (GObject * object, guint prop_id,
   }
 
   GST_OBJECT_UNLOCK (this);
+
+  /* Update latency if it has changed */
+  curr_latency = gst_flac_enc_get_latency (this);
+  if (old_latency != curr_latency)
+    gst_audio_encoder_set_latency (enc, curr_latency, curr_latency);
 }
 
 static void
