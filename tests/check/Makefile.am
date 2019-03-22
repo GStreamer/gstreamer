@@ -39,6 +39,12 @@ else
 check_assrender =
 endif
 
+if USE_AVTP
+check_avtp = elements/avtpaafpay
+else
+check_avtp =
+endif
+
 if USE_PANGO
 check_closedcaption = elements/ccconverter elements/cccombiner elements/ccextractor elements/line21
 else
@@ -252,6 +258,7 @@ noinst_PROGRAMS = \
 check_PROGRAMS = \
 	generic/states \
 	$(check_assrender) \
+	$(check_avtp) \
 	$(check_closedcaption) \
 	$(check_dash) \
 	$(check_dtls) \
@@ -496,6 +503,9 @@ elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
 elements_assrender_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_assrender_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) -lgstapp-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)
+
+elements_avtpaafpay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS) $(AVTP_CFLAGS)
+elements_avtpaafpay_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(LDADD) $(AVTP_LIBS)
 
 elements_mpegtsmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_mpegtsmux_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) $(LDADD)
