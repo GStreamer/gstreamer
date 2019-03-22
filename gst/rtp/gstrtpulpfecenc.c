@@ -76,10 +76,10 @@
  * gst-launch-1.0 videotestsrc ! x264enc ! video/x-h264, profile=baseline ! rtph264pay pt=96 ! rtpulpfecenc percentage=100 pt=122 ! udpsink port=8888
  * ]| This example will receive a stream with FEC and try to reconstruct the packets.
  *
- * Example programs using this element can be found at
- * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs>
+ * Example programs are available at
+ * <https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs>
  * and
- * <https://github.com/sdroege/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>.
+ * <https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>
  * </refsect2>
  *
  * See also: #GstRtpUlpFecDec, #GstRtpBin
