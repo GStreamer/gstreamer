@@ -104,4 +104,5 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   g_main_loop_run (loop);
+  return 0;
 }
