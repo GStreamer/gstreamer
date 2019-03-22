@@ -1,5 +1,6 @@
 omx_sources = [
   'gstomx.c',
+  'gstomxallocator.c',
   'gstomxbufferpool.c',
   'gstomxvideo.c',
   'gstomxvideodec.c',

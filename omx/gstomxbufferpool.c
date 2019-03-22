@@ -1,8 +1,9 @@
 /*
  * Copyright (C) 2011, Hewlett-Packard Development Company, L.P.
  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
- * Copyright (C) 2013, Collabora Ltd.
+ * Copyright (C) 2013-2019, Collabora Ltd.
  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ *           George Kiagiadakis <george.kiagiadakis@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,10 +32,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_omx_buffer_pool_debug_category);
 #define GST_CAT_DEFAULT gst_omx_buffer_pool_debug_category
 
-typedef struct _GstOMXMemory GstOMXMemory;
-typedef struct _GstOMXMemoryAllocator GstOMXMemoryAllocator;
-typedef struct _GstOMXMemoryAllocatorClass GstOMXMemoryAllocatorClass;
-
 enum
 {
   SIG_ALLOCATE,
@@ -42,135 +39,6 @@ enum
 };
 
 static guint signals[LAST_SIGNAL] = { 0 };
-
-struct _GstOMXMemory
-{
-  GstMemory mem;
-
-  GstOMXBuffer *buf;
-};
-
-struct _GstOMXMemoryAllocator
-{
-  GstAllocator parent;
-};
-
-struct _GstOMXMemoryAllocatorClass
-{
-  GstAllocatorClass parent_class;
-};
-
-#define GST_OMX_MEMORY_TYPE "openmax"
-
-static GstMemory *
-gst_omx_memory_allocator_alloc_dummy (GstAllocator * allocator, gsize size,
-    GstAllocationParams * params)
-{
-  g_assert_not_reached ();
-  return NULL;
-}
-
-static void
-gst_omx_memory_allocator_free (GstAllocator * allocator, GstMemory * mem)
-{
-  GstOMXMemory *omem = (GstOMXMemory *) mem;
-
-  /* TODO: We need to remember which memories are still used
-   * so we can wait until everything is released before allocating
-   * new memory
-   */
-
-  g_slice_free (GstOMXMemory, omem);
-}
-
-static gpointer
-gst_omx_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
-{
-  GstOMXMemory *omem = (GstOMXMemory *) mem;
-
-  return omem->buf->omx_buf->pBuffer;
-}
-
-static void
-gst_omx_memory_unmap (GstMemory * mem)
-{
-}
-
-static GstMemory *
-gst_omx_memory_share (GstMemory * mem, gssize offset, gssize size)
-{
-  g_assert_not_reached ();
-  return NULL;
-}
-
-GType gst_omx_memory_allocator_get_type (void);
-G_DEFINE_TYPE (GstOMXMemoryAllocator, gst_omx_memory_allocator,
-    GST_TYPE_ALLOCATOR);
-
-#define GST_TYPE_OMX_MEMORY_ALLOCATOR   (gst_omx_memory_allocator_get_type())
-#define GST_IS_OMX_MEMORY_ALLOCATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OMX_MEMORY_ALLOCATOR))
-
-static void
-gst_omx_memory_allocator_class_init (GstOMXMemoryAllocatorClass * klass)
-{
-  GstAllocatorClass *allocator_class;
-
-  allocator_class = (GstAllocatorClass *) klass;
-
-  allocator_class->alloc = gst_omx_memory_allocator_alloc_dummy;
-  allocator_class->free = gst_omx_memory_allocator_free;
-}
-
-static void
-gst_omx_memory_allocator_init (GstOMXMemoryAllocator * allocator)
-{
-  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
-
-  alloc->mem_type = GST_OMX_MEMORY_TYPE;
-  alloc->mem_map = gst_omx_memory_map;
-  alloc->mem_unmap = gst_omx_memory_unmap;
-  alloc->mem_share = gst_omx_memory_share;
-
-  /* default copy & is_span */
-
-  GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
-}
-
-static GstMemory *
-gst_omx_memory_allocator_alloc (GstAllocator * allocator, GstMemoryFlags flags,
-    GstOMXBuffer * buf)
-{
-  GstOMXMemory *mem;
-  gint align;
-
-  /* FIXME: We don't allow sharing because we need to know
-   * when the memory becomes unused and can only then put
-   * it back to the pool. Which is done in the pool's release
-   * function
-   */
-  flags |= GST_MEMORY_FLAG_NO_SHARE;
-
-  /* GStreamer uses a bitmask for the alignment while
-   * OMX uses the alignment itself. So we have to convert
-   * here */
-  align = buf->port->port_def.nBufferAlignment;
-  if (align > 0)
-    align -= 1;
-  if (((align + 1) & align) != 0) {
-    GST_WARNING ("Invalid alignment that is not a power of two: %u",
-        (guint) buf->port->port_def.nBufferAlignment);
-    align = 0;
-  }
-
-  mem = g_slice_new (GstOMXMemory);
-  /* the shared memory is always readonly */
-  gst_memory_init (GST_MEMORY_CAST (mem), flags, allocator, NULL,
-      buf->omx_buf->nAllocLen, align, 0, buf->omx_buf->nAllocLen);
-
-  mem->buf = buf;
-
-  return GST_MEMORY_CAST (mem);
-}
 
 /* Buffer pool for the buffers of an OpenMAX port.
  *
@@ -211,6 +79,23 @@ gst_omx_memory_allocator_alloc (GstAllocator * allocator, GstMemoryFlags flags,
  *
  * For buffers provided to downstream, the buffer will be returned
  * back to the component (OMX_FillThisBuffer()) when it is released.
+ *
+ * This pool uses a special allocator object, GstOMXAllocator. The main purpose
+ * of this allocator is to track GstMemory objects in the same way that a
+ * GstBufferPool tracks buffers. When a buffer is inserted into this pool
+ * (either because it was just allocated or because it was released back to
+ * the pool), its memory is ripped off and is tracked separately by the
+ * allocator. When a buffer is then acquired, we acquire the corresponding
+ * GstMemory from the allocator and put it back in the buffer.
+ *
+ * This allocator mechanism allows us to track memory that has been shared
+ * with buffers that are not part of this pool. When a memory is shared, then
+ * its ref count is > 1, which means it will not be released to the allocator
+ * until the sub-memory is destroyed.
+ *
+ * When a memory returns to the allocator, the allocator fires the
+ * omxbuf-released signal, which is handled by the buffer pool to return the
+ * omx buffer to the port or the queue.
  */
 
 #define DEBUG_INIT \
@@ -230,6 +115,7 @@ gst_omx_buffer_pool_start (GstBufferPool * bpool)
   gboolean has_buffers;
   GstStructure *config;
   guint min, max;
+  GstOMXAllocatorForeignMemMode mode;
 
   /* Only allow to start the pool if we still are attached
    * to a component and port */
@@ -271,6 +157,19 @@ gst_omx_buffer_pool_start (GstBufferPool * bpool)
 
   g_assert (pool->port->buffers);
 
+  if (pool->output_mode == GST_OMX_BUFFER_MODE_DMABUF)
+    mode = GST_OMX_ALLOCATOR_FOREIGN_MEM_DMABUF;
+  else if (pool->other_pool)
+    mode = GST_OMX_ALLOCATOR_FOREIGN_MEM_OTHER_POOL;
+  else
+    mode = GST_OMX_ALLOCATOR_FOREIGN_MEM_NONE;
+
+  if (!gst_omx_allocator_configure (pool->allocator, min, mode))
+    return FALSE;
+
+  if (!gst_omx_allocator_set_active (pool->allocator, TRUE))
+    return FALSE;
+
   return
       GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->start (bpool);
 }
@@ -279,22 +178,17 @@ static gboolean
 gst_omx_buffer_pool_stop (GstBufferPool * bpool)
 {
   GstOMXBufferPool *pool = GST_OMX_BUFFER_POOL (bpool);
-  gint i = 0;
-
-  if (pool->buffers) {
-    /* When not using the default GstBufferPool::GstAtomicQueue then
-     * GstBufferPool::free_buffer is not called while stopping the pool
-     * (because the queue is empty) */
-    for (i = 0; i < pool->buffers->len; i++)
-      GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->release_buffer
-          (bpool, g_ptr_array_index (pool->buffers, i));
-
-    /* Remove any buffers that are there */
-    g_ptr_array_set_size (pool->buffers, 0);
-  }
 
   /* Remove any buffers that are there */
   g_ptr_array_set_size (pool->buffers, 0);
+
+  GST_DEBUG_OBJECT (pool, "deactivating OMX allocator");
+  gst_omx_allocator_set_active (pool->allocator, FALSE);
+
+  /* ensure all memories have been deallocated;
+   * this may take a while if some memories are being shared
+   * and therefore are in use somewhere else in the pipeline */
+  gst_omx_allocator_wait_inactive (pool->allocator);
 
   GST_DEBUG_OBJECT (pool, "deallocate OMX buffers");
   gst_omx_port_deallocate_buffers (pool->port);
@@ -336,6 +230,8 @@ gst_omx_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   GstOMXBufferPool *pool = GST_OMX_BUFFER_POOL (bpool);
   GstCaps *caps;
   guint size, min;
+  GstStructure *fake_config;
+  gboolean ret;
 
   GST_OBJECT_LOCK (pool);
 
@@ -371,8 +267,17 @@ gst_omx_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
 
   GST_OBJECT_UNLOCK (pool);
 
-  return GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->set_config
-      (bpool, config);
+  /* give a fake config to the parent default_set_config() with size == 0
+   * this prevents default_release_buffer() from free'ing the buffers, since
+   * we release them with no memory */
+  fake_config = gst_structure_copy (config);
+  gst_buffer_pool_config_set_params (fake_config, caps, 0, min, min);
+
+  ret = GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->set_config
+      (bpool, fake_config);
+  gst_structure_free (fake_config);
+
+  return ret;
 
   /* ERRORS */
 wrong_config:
@@ -402,29 +307,23 @@ gst_omx_buffer_pool_alloc_buffer (GstBufferPool * bpool,
 {
   GstOMXBufferPool *pool = GST_OMX_BUFFER_POOL (bpool);
   GstBuffer *buf;
-  GstOMXBuffer *omx_buf;
-
-  omx_buf = g_ptr_array_index (pool->port->buffers, pool->current_buffer_index);
-  g_return_val_if_fail (omx_buf != NULL, GST_FLOW_ERROR);
+  GstMemory *mem;
+  GstMemory *foreign_mem = NULL;
 
   if (pool->other_pool) {
-    guint i, n;
+    guint n;
 
     buf = g_ptr_array_index (pool->buffers, pool->current_buffer_index);
     g_assert (pool->other_pool == buf->pool);
     gst_object_replace ((GstObject **) & buf->pool, NULL);
 
     n = gst_buffer_n_memory (buf);
-    for (i = 0; i < n; i++) {
-      GstMemory *mem = gst_buffer_peek_memory (buf, i);
+    g_return_val_if_fail (n == 1, GST_FLOW_ERROR);
 
-      /* FIXME: We don't allow sharing because we need to know
-       * when the memory becomes unused and can only then put
-       * it back to the pool. Which is done in the pool's release
-       * function
-       */
-      GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_NO_SHARE);
-    }
+    /* rip the memory out of the buffer;
+     * we like to keep them separate in this pool */
+    foreign_mem = gst_buffer_get_memory (buf, 0);
+    gst_buffer_remove_all_memory (buf);
 
     if (pool->add_videometa) {
       GstVideoMeta *meta;
@@ -440,41 +339,12 @@ gst_omx_buffer_pool_alloc_buffer (GstBufferPool * bpool,
 
     pool->need_copy = FALSE;
   } else {
-    GstMemory *mem;
     const guint nstride = pool->port->port_def.format.video.nStride;
     const guint nslice = pool->port->port_def.format.video.nSliceHeight;
     gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
     gint stride[GST_VIDEO_MAX_PLANES] = { nstride, 0, };
 
-    if (pool->output_mode == GST_OMX_BUFFER_MODE_DMABUF) {
-      gint fd;
-      GstMapInfo map;
-
-      fd = GPOINTER_TO_INT (omx_buf->omx_buf->pBuffer);
-
-      mem =
-          gst_dmabuf_allocator_alloc (pool->allocator, fd,
-          omx_buf->omx_buf->nAllocLen);
-
-      if (!gst_caps_features_contains (gst_caps_get_features (pool->caps, 0),
-              GST_CAPS_FEATURE_MEMORY_DMABUF)) {
-        /* Check if the memory is actually mappable */
-        if (!gst_memory_map (mem, &map, GST_MAP_READWRITE)) {
-          GST_ERROR_OBJECT (pool,
-              "dmabuf memory is not mappable but caps does not have the 'memory:DMABuf' feature");
-          gst_memory_unref (mem);
-          return GST_FLOW_ERROR;
-        }
-
-        gst_memory_unmap (mem, &map);
-      }
-    } else {
-      mem = gst_omx_memory_allocator_alloc (pool->allocator, 0, omx_buf);
-    }
-
     buf = gst_buffer_new ();
-    gst_buffer_append_memory (buf, mem);
-    g_ptr_array_add (pool->buffers, buf);
 
     switch (GST_VIDEO_INFO_FORMAT (&pool->video_info)) {
       case GST_VIDEO_FORMAT_ABGR:
@@ -545,13 +415,51 @@ gst_omx_buffer_pool_alloc_buffer (GstBufferPool * bpool,
     }
   }
 
-  gst_omx_buffer_set_omx_buf (buf, omx_buf);
+  mem = gst_omx_allocator_allocate (pool->allocator, pool->current_buffer_index,
+      foreign_mem);
+  if (!mem)
+    return GST_FLOW_ERROR;
+
+  if (pool->output_mode == GST_OMX_BUFFER_MODE_DMABUF) {
+    GstMapInfo map;
+
+    if (!gst_caps_features_contains (gst_caps_get_features (pool->caps, 0),
+            GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+      /* Check if the memory is actually mappable */
+      if (!gst_memory_map (mem, &map, GST_MAP_READWRITE)) {
+        GST_ERROR_OBJECT (pool,
+            "dmabuf memory is not mappable but caps does not have the 'memory:DMABuf' feature");
+        gst_memory_unref (mem);
+        return GST_FLOW_ERROR;
+      }
+
+      gst_memory_unmap (mem, &map);
+    }
+  }
+
+  /* mem still belongs to the allocator; do not add it in the buffer just yet */
 
   *buffer = buf;
 
   pool->current_buffer_index++;
 
   return GST_FLOW_OK;
+}
+
+/* called by the allocator when we are using other_pool in order
+ * to restore the foreign GstMemory back to its original GstBuffer */
+static void
+on_allocator_foreign_mem_released (GstOMXAllocator * allocator,
+    gint index, GstMemory * mem, GstOMXBufferPool * pool)
+{
+  GstBuffer *buf;
+
+  buf = g_ptr_array_index (pool->buffers, index);
+  gst_buffer_append_memory (buf, mem);
+
+  /* the buffer consumed the passed reference.
+   * we still need one more reference for the allocator */
+  gst_memory_ref (mem);
 }
 
 static void
@@ -567,25 +475,8 @@ gst_omx_buffer_pool_free_buffer (GstBufferPool * bpool, GstBuffer * buffer)
   }
   GST_OBJECT_UNLOCK (pool);
 
-  gst_omx_buffer_set_omx_buf (buffer, NULL);
-
   GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->free_buffer (bpool,
       buffer);
-}
-
-static GstBuffer *
-find_buffer_from_omx_buffer (GstOMXBufferPool * pool, GstOMXBuffer * omx_buf)
-{
-  guint i;
-
-  for (i = 0; i < pool->buffers->len; i++) {
-    GstBuffer *buf = g_ptr_array_index (pool->buffers, i);
-
-    if (gst_omx_buffer_get_omx_buf (buf) == omx_buf)
-      return buf;
-  }
-
-  return NULL;
 }
 
 static GstFlowReturn
@@ -594,32 +485,19 @@ gst_omx_buffer_pool_acquire_buffer (GstBufferPool * bpool,
 {
   GstFlowReturn ret;
   GstOMXBufferPool *pool = GST_OMX_BUFFER_POOL (bpool);
+  GstMemory *mem;
 
   if (pool->port->port_def.eDir == OMX_DirOutput) {
-    GstBuffer *buf;
-
     g_return_val_if_fail (pool->current_buffer_index != -1, GST_FLOW_ERROR);
 
-    buf = g_ptr_array_index (pool->buffers, pool->current_buffer_index);
-    g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
-    *buffer = buf;
-    ret = GST_FLOW_OK;
+    ret = gst_omx_allocator_acquire (pool->allocator, &mem,
+        pool->current_buffer_index, NULL);
+    if (ret != GST_FLOW_OK)
+      return ret;
 
     /* If it's our own memory we have to set the sizes */
     if (!pool->other_pool) {
-      GstMemory *mem = gst_buffer_peek_memory (*buffer, 0);
-      GstOMXBuffer *omx_buf;
-
-      if (pool->output_mode == GST_OMX_BUFFER_MODE_DMABUF) {
-        omx_buf = gst_omx_buffer_get_omx_buf (buf);
-      } else {
-        g_assert (mem
-            && g_strcmp0 (mem->allocator->mem_type, GST_OMX_MEMORY_TYPE) == 0);
-        /* We already have a pointer to the GstOMXBuffer, no need to retrieve it
-         * from the qdata */
-        omx_buf = ((GstOMXMemory *) mem)->buf;
-      }
-
+      GstOMXBuffer *omx_buf = gst_omx_memory_get_omx_buf (mem);
       mem->size = omx_buf->omx_buf->nFilledLen;
       mem->offset = omx_buf->omx_buf->nOffset;
     }
@@ -634,9 +512,9 @@ gst_omx_buffer_pool_acquire_buffer (GstBufferPool * bpool,
 
     r = gst_omx_port_acquire_buffer (pool->port, &omx_buf, wait);
     if (r == GST_OMX_ACQUIRE_BUFFER_OK) {
-      *buffer = find_buffer_from_omx_buffer (pool, omx_buf);
-      g_return_val_if_fail (*buffer, GST_FLOW_ERROR);
-      return GST_FLOW_OK;
+      ret = gst_omx_allocator_acquire (pool->allocator, &mem, -1, omx_buf);
+      if (ret != GST_FLOW_OK)
+        return ret;
     } else if (r == GST_OMX_ACQUIRE_BUFFER_FLUSHING) {
       return GST_FLOW_FLUSHING;
     } else {
@@ -644,32 +522,65 @@ gst_omx_buffer_pool_acquire_buffer (GstBufferPool * bpool,
     }
   }
 
+  /* get some GstBuffer available in this pool */
+  ret = GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->acquire_buffer
+      (bpool, buffer, params);
+
+  if (ret == GST_FLOW_OK) {
+    /* attach the acquired memory on it */
+    gst_buffer_append_memory (*buffer, mem);
+  } else {
+    gst_memory_unref (mem);
+  }
+
   return ret;
 }
 
 static void
-gst_omx_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
+gst_omx_buffer_pool_reset_buffer (GstBufferPool * bpool, GstBuffer * buffer)
 {
   GstOMXBufferPool *pool = GST_OMX_BUFFER_POOL (bpool);
+  guint n;
+
+  n = gst_buffer_n_memory (buffer);
+  if (G_UNLIKELY (n != 1)) {
+    GST_ERROR_OBJECT (pool, "Released buffer does not have 1 memory... "
+        "(n = %u) something went terribly wrong", n);
+  }
+
+  /* rip the memory out of the buffer;
+   * we like to keep them separate in this pool.
+   * if this was the last ref count of the memory, it will be returned
+   * to the allocator, otherwise it will be returned later */
+  gst_buffer_remove_all_memory (buffer);
+
+  /* reset before removing the TAG_MEMORY flag so that the parent impl
+   * doesn't try to restore the original buffer size */
+  GST_BUFFER_POOL_CLASS (gst_omx_buffer_pool_parent_class)->reset_buffer
+      (bpool, buffer);
+
+  /* pretend nothing happened to the memory to avoid discarding the buffer */
+  GST_MINI_OBJECT_FLAG_UNSET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
+}
+
+static void
+on_allocator_omxbuf_released (GstOMXAllocator * allocator,
+    GstOMXBuffer * omx_buf, GstOMXBufferPool * pool)
+{
   OMX_ERRORTYPE err;
-  GstOMXBuffer *omx_buf;
 
-  g_assert (pool->component && pool->port);
+  if (pool->port->port_def.eDir == OMX_DirOutput && !omx_buf->used &&
+      !pool->deactivated) {
+    /* Release back to the port, can be filled again */
+    err = gst_omx_port_release_buffer (pool->port, omx_buf);
 
-  if (gst_buffer_pool_is_active (bpool)) {
-    omx_buf = gst_omx_buffer_get_omx_buf (buffer);
-    if (pool->port->port_def.eDir == OMX_DirOutput && !omx_buf->used &&
-        !pool->deactivated) {
-      /* Release back to the port, can be filled again */
-      err = gst_omx_port_release_buffer (pool->port, omx_buf);
-      if (err != OMX_ErrorNone) {
-        GST_ELEMENT_ERROR (pool->element, LIBRARY, SETTINGS, (NULL),
-            ("Failed to relase output buffer to component: %s (0x%08x)",
-                gst_omx_error_to_string (err), err));
-      }
-    } else if (pool->port->port_def.eDir == OMX_DirInput) {
-      gst_omx_port_requeue_buffer (pool->port, omx_buf);
+    if (err != OMX_ErrorNone) {
+      GST_ELEMENT_ERROR (pool->element, LIBRARY, SETTINGS, (NULL),
+          ("Failed to relase output buffer to component: %s (0x%08x)",
+              gst_omx_error_to_string (err), err));
     }
+  } else if (pool->port->port_def.eDir == OMX_DirInput) {
+    gst_omx_port_requeue_buffer (pool->port, omx_buf);
   }
 }
 
@@ -717,7 +628,7 @@ gst_omx_buffer_pool_class_init (GstOMXBufferPoolClass * klass)
   gstbufferpool_class->alloc_buffer = gst_omx_buffer_pool_alloc_buffer;
   gstbufferpool_class->free_buffer = gst_omx_buffer_pool_free_buffer;
   gstbufferpool_class->acquire_buffer = gst_omx_buffer_pool_acquire_buffer;
-  gstbufferpool_class->release_buffer = gst_omx_buffer_pool_release_buffer;
+  gstbufferpool_class->reset_buffer = gst_omx_buffer_pool_reset_buffer;
 
   signals[SIG_ALLOCATE] = g_signal_new ("allocate",
       G_TYPE_FROM_CLASS (gobject_class), G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
@@ -741,18 +652,12 @@ gst_omx_buffer_pool_new (GstElement * element, GstOMXComponent * component,
   pool->component = gst_omx_component_ref (component);
   pool->port = port;
   pool->output_mode = output_mode;
+  pool->allocator = gst_omx_allocator_new (component, port);
 
-  switch (output_mode) {
-    case GST_OMX_BUFFER_MODE_DMABUF:
-      pool->allocator = gst_dmabuf_allocator_new ();
-      break;
-    case GST_OMX_BUFFER_MODE_SYSTEM_MEMORY:
-      pool->allocator =
-          g_object_new (gst_omx_memory_allocator_get_type (), NULL);
-      break;
-    default:
-      g_assert_not_reached ();
-  }
+  g_signal_connect_object (pool->allocator, "omxbuf-released",
+      (GCallback) on_allocator_omxbuf_released, pool, 0);
+  g_signal_connect_object (pool->allocator, "foreign-mem-released",
+      (GCallback) on_allocator_foreign_mem_released, pool, 0);
 
   return GST_BUFFER_POOL (pool);
 }

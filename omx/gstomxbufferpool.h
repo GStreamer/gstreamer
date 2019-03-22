@@ -30,6 +30,7 @@
 #include <gst/video/gstvideopool.h>
 
 #include "gstomx.h"
+#include "gstomxallocator.h"
 
 G_BEGIN_DECLS
 
@@ -65,7 +66,7 @@ struct _GstOMXBufferPool
   GstOMXPort *port;
 
   /* For handling OpenMAX allocated memory */
-  GstAllocator *allocator;
+  GstOMXAllocator *allocator;
 
   /* Set from outside this pool */
   /* TRUE if the pool is not used anymore */

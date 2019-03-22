@@ -2040,6 +2040,15 @@ gst_omx_video_enc_set_to_idle (GstOMXVideoEnc * self)
   return TRUE;
 }
 
+static GstOMXBuffer *
+get_omx_buf (GstBuffer * buffer)
+{
+  GstMemory *mem;
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  return gst_omx_memory_get_omx_buf (mem);
+}
+
 static gboolean
 buffer_is_from_input_pool (GstOMXVideoEnc * self, GstBuffer * buffer)
 {
@@ -2047,7 +2056,7 @@ buffer_is_from_input_pool (GstOMXVideoEnc * self, GstBuffer * buffer)
    * with our input port. */
   GstOMXBuffer *buf;
 
-  buf = gst_omx_buffer_get_omx_buf (buffer);
+  buf = get_omx_buf (buffer);
   if (!buf)
     return FALSE;
 
@@ -2761,7 +2770,7 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
 
     if (buffer_is_from_input_pool (self, frame->input_buffer)) {
       /* Receiving a buffer from our input pool */
-      buf = gst_omx_buffer_get_omx_buf (frame->input_buffer);
+      buf = get_omx_buf (frame->input_buffer);
 
       GST_LOG_OBJECT (self,
           "Input buffer %p already has a OMX buffer associated: %p",
