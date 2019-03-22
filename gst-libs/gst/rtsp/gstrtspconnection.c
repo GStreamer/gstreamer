@@ -3919,44 +3919,42 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
       for (i = 0, drop_messages = 0; i < n_messages; i++) {
         msg = gst_queue_array_peek_nth_struct (watch->messages, i);
 
-        if (bytes_written >= 0) {
-          if (bytes_written >= msg->data_size - msg->data_offset) {
-            guint body_size;
+        if (bytes_written >= msg->data_size - msg->data_offset) {
+          guint body_size;
 
-            /* all data of this message is sent, check body and otherwise
-             * skip the whole message for next time */
-            bytes_written -= (msg->data_size - msg->data_offset);
-            msg->data_offset = msg->data_size;
+          /* all data of this message is sent, check body and otherwise
+           * skip the whole message for next time */
+          bytes_written -= (msg->data_size - msg->data_offset);
+          msg->data_offset = msg->data_size;
 
-            if (msg->body_data) {
-              body_size = msg->body_data_size;
-            } else if (msg->body_buffer) {
-              body_size = gst_buffer_get_size (msg->body_buffer);
-            } else {
-              body_size = 0;
-            }
-
-            if (bytes_written + msg->body_offset >= body_size) {
-              /* body written, drop this message */
-              bytes_written -= body_size - msg->body_offset;
-              msg->body_offset = body_size;
-              drop_messages++;
-
-              if (msg->id) {
-                ids[l] = msg->id;
-                l++;
-              }
-
-              gst_rtsp_serialized_message_clear (msg);
-            } else {
-              msg->body_offset += bytes_written;
-              bytes_written = 0;
-            }
+          if (msg->body_data) {
+            body_size = msg->body_data_size;
+          } else if (msg->body_buffer) {
+            body_size = gst_buffer_get_size (msg->body_buffer);
           } else {
-            /* Need to continue sending from the data of this message */
-            msg->data_offset = bytes_written;
+            body_size = 0;
+          }
+
+          if (bytes_written + msg->body_offset >= body_size) {
+            /* body written, drop this message */
+            bytes_written -= body_size - msg->body_offset;
+            msg->body_offset = body_size;
+            drop_messages++;
+
+            if (msg->id) {
+              ids[l] = msg->id;
+              l++;
+            }
+
+            gst_rtsp_serialized_message_clear (msg);
+          } else {
+            msg->body_offset += bytes_written;
             bytes_written = 0;
           }
+        } else {
+          /* Need to continue sending from the data of this message */
+          msg->data_offset = bytes_written;
+          bytes_written = 0;
         }
       }
 
@@ -4354,40 +4352,38 @@ gst_rtsp_watch_write_serialized_messages (GstRTSPWatch * watch,
 
     /* not done, let's skip all messages that were sent already and free them */
     for (i = 0, k = 0, drop_messages = 0; i < n_messages; i++) {
-      if (bytes_written >= 0) {
-        if (bytes_written >= messages[i].data_size) {
-          guint body_size;
+      if (bytes_written >= messages[i].data_size) {
+        guint body_size;
 
-          /* all data of this message is sent, check body and otherwise
-           * skip the whole message for next time */
-          messages[i].data_offset = messages[i].data_size;
-          bytes_written -= messages[i].data_size;
+        /* all data of this message is sent, check body and otherwise
+         * skip the whole message for next time */
+        messages[i].data_offset = messages[i].data_size;
+        bytes_written -= messages[i].data_size;
 
-          if (messages[i].body_data) {
-            body_size = messages[i].body_data_size;
+        if (messages[i].body_data) {
+          body_size = messages[i].body_data_size;
 
-          } else if (messages[i].body_buffer) {
-            body_size = gst_buffer_get_size (messages[i].body_buffer);
-          } else {
-            body_size = 0;
-          }
-
-          if (bytes_written >= body_size) {
-            /* body written, drop this message */
-            messages[i].body_offset = body_size;
-            bytes_written -= body_size;
-            drop_messages++;
-
-            gst_rtsp_serialized_message_clear (&messages[i]);
-          } else {
-            messages[i].body_offset = bytes_written;
-            bytes_written = 0;
-          }
+        } else if (messages[i].body_buffer) {
+          body_size = gst_buffer_get_size (messages[i].body_buffer);
         } else {
-          /* Need to continue sending from the data of this message */
-          messages[i].data_offset = bytes_written;
+          body_size = 0;
+        }
+
+        if (bytes_written >= body_size) {
+          /* body written, drop this message */
+          messages[i].body_offset = body_size;
+          bytes_written -= body_size;
+          drop_messages++;
+
+          gst_rtsp_serialized_message_clear (&messages[i]);
+        } else {
+          messages[i].body_offset = bytes_written;
           bytes_written = 0;
         }
+      } else {
+        /* Need to continue sending from the data of this message */
+        messages[i].data_offset = bytes_written;
+        bytes_written = 0;
       }
     }
 
