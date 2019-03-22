@@ -517,6 +517,25 @@ stereo_gst_to_av (GstVideoMultiviewMode mview_mode)
   return AV_STEREO3D_2D;
 }
 
+static void
+gst_ffmpegvidenc_add_cc (GstBuffer * buffer, AVFrame * picture)
+{
+  GstVideoCaptionMeta *cc_meta;
+  gpointer iter = NULL;
+
+  while ((cc_meta =
+          (GstVideoCaptionMeta *) gst_buffer_iterate_meta_filtered (buffer,
+              &iter, GST_VIDEO_CAPTION_META_API_TYPE))) {
+    AVFrameSideData *sd;
+
+    if (cc_meta->caption_type != GST_VIDEO_CAPTION_TYPE_CEA708_RAW)
+      continue;
+
+    sd = av_frame_new_side_data (picture, AV_FRAME_DATA_A53_CC, cc_meta->size);
+    memcpy (sd->data, cc_meta->data, cc_meta->size);
+  }
+}
+
 static GstFlowReturn
 gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
     GstVideoCodecFrame * frame)
@@ -532,6 +551,8 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
     goto send_frame;
 
   picture = ffmpegenc->picture;
+
+  gst_ffmpegvidenc_add_cc (frame->input_buffer, picture);
 
   if (ffmpegenc->context->flags & (AV_CODEC_FLAG_INTERLACED_DCT |
           AV_CODEC_FLAG_INTERLACED_ME)) {
