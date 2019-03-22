@@ -173,6 +173,10 @@ dnf builddep -y gstreamer1 \
 # Remove gst-devel packages installed by builddep above
 dnf remove -y "gstreamer1*devel"
 
+# Remove Qt5 devel packages as we haven't tested building it and
+# it leads to build issues in examples.
+dnf remove -y "qt5-qtbase-devel"
+
 # get gst-build and make all subprojects available
 git clone git://anongit.freedesktop.org/gstreamer/gst-build /gst-build/
 cd /gst-build
