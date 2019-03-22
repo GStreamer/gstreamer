@@ -569,7 +569,7 @@ convert_cea708_cdp_cea708_cc_data_internal (GstCCConverter * self,
   guint8 u8;
   guint8 flags;
   gint fps_n, fps_d;
-  guint len;
+  guint len = 0;
 
   memset (tc, 0, sizeof (*tc));
 
