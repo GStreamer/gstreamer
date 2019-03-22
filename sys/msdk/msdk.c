@@ -62,6 +62,7 @@ static const struct map gst_msdk_video_format_to_mfx_map[] = {
   GST_VIDEO_INFO_TO_MFX_MAP (RGB16, YUV444, RGB565),
 #endif
   GST_VIDEO_INFO_TO_MFX_MAP (VUYA, YUV444, AYUV),
+  GST_VIDEO_INFO_TO_MFX_MAP (BGR10A2_LE, YUV444, A2RGB10),
   {0, 0, 0}
 };
 
