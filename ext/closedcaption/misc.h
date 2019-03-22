@@ -15,8 +15,8 @@
  *  Library General Public License for more details.
  *
  *  You should have received a copy of the GNU Library General Public
- *  License along with this library; if not, write to the 
- *  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ *  License along with this library; if not, write to the
+ *  Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA  02110-1301  USA.
  */
 
@@ -498,6 +498,7 @@ _vbi_time_max			(void)
 #  define __va_copy(ap1, ap2) do { ap1 = ap2; } while (0)
 #endif
 
+#if 0
 /* Use this instead of strncpy(). strlcpy() is a BSD extension. */
 #ifndef HAVE_STRLCPY
 #  define strlcpy _vbi_strlcpy
@@ -510,6 +511,7 @@ _vbi_strlcpy			(char *			dst,
 				 const char *		src,
 				 size_t			size)
   _vbi_nonnull ((1, 2));
+#endif
 
 /* /\* strndup() is a BSD/GNU extension. *\/ */
 /* #ifndef HAVE_STRNDUP */
