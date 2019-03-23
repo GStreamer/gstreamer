@@ -397,7 +397,6 @@ warning_flags = [
   '-Waddress',
   '-Waggregate-return',
   '-Wno-multichar',
-  '-Wnested-externs',
   '-Wdeclaration-after-statement',
   '-Wvla',
   '-Wpointer-arith',
