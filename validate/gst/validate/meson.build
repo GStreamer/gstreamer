@@ -77,14 +77,6 @@ gstvalidatetracer = library('gstvalidatetracer',
 validate_gen_sources = []
 if build_gir
     gst_validate_gir_extra_args = gir_init_section + [ '--c-include=gst/validate/validate.h' ]
-    if meson.is_subproject()
-      # FIXME: There must be a better way to do this
-      # Need to pass the include path to find gst/gst.h and gst/gstenumtypes.h (built)
-      gst_validate_gir_extra_args += ['--cflags-begin',
-      '-I' + meson.current_source_dir() + '/../../',
-      '-I' + meson.current_build_dir() + '/../../',
-      '--cflags-end']
-    endif
     validate_gen_sources = [gnome.generate_gir(gstvalidate,
             sources : gstvalidate_sources + gstvalidate_headers + gst_validate_enums,
             nsversion : '1.0',
@@ -100,6 +92,7 @@ if build_gir
                         'GstPbutils-' + apiversion],
             install : true,
             dependencies : [gst_dep, glib_dep, gio_dep, gst_pbutils_dep],
+            extra_args : gst_validate_gir_extra_args,
     )]
 endif
 
