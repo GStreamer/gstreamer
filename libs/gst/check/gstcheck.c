@@ -125,7 +125,7 @@ gst_check_free_log_filter (GstCheckLogFilter * filter)
 
 
 /**
- * gst_check_add_log_filter:
+ * gst_check_add_log_filter: (skip)
  * @log_domain: the log domain of the message
  * @log_level: the log level of the message
  * @regex: (transfer full): a #GRegex to match the message
@@ -1046,6 +1046,14 @@ gst_check_abi_list (GstCheckABIStruct list[], gboolean have_abi_sizes)
   }
 }
 
+/**
+ * gst_check_run_suite: (skip)
+ * @suite: the check test suite
+ * @name: name
+ * @fname: file name
+ *
+ * Returns: number of failed tests
+ */
 gint
 gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
 {
