@@ -46,7 +46,7 @@ GST_VALIDATE_API GList *
 gst_validate_override_registry_get_override_for_names (GstValidateOverrideRegistry *reg,
         const gchar *name, ...);
 GST_VALIDATE_API GList *
-gst_validate_override_registry_get_override_list (GstValidateOverrideRegistry *reg);
+gst_validate_override_registry_get_override_list (GstValidateOverrideRegistry *registry);
 GST_VALIDATE_API
 void gst_validate_override_register_by_name (const gchar * name, GstValidateOverride * override);
 GST_VALIDATE_API

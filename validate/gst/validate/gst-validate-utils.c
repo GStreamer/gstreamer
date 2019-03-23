@@ -911,7 +911,7 @@ gst_validate_spin_on_fault_signals (void)
 /**
  * gst_validate_element_matches_target:
  * @element: a #GstElement to check
- * @structure: a #GstStructure to use for matching
+ * @s: a #GstStructure to use for matching
  *
  * Check if @element matches one of the 'target-element-name',
  * 'target-element-klass' or 'target-element-factory-name' defined in @s.

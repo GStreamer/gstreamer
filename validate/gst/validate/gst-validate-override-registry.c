@@ -461,6 +461,12 @@ GList *gst_validate_override_registry_get_override_for_names
   return ret;
 }
 
+/**
+ * gst_validate_override_registry_get_override_list:
+ * @registry: the override registry
+ *
+ * Returns: (transfer full) (element-type GstValidateOverride): a list of #GstValidateOverride
+ */
 GList *
 gst_validate_override_registry_get_override_list (GstValidateOverrideRegistry *
     registry)
