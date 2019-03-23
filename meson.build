@@ -189,7 +189,6 @@ warning_c_flags = [
   '-Wmissing-prototypes',
   '-Wdeclaration-after-statement',
   '-Wold-style-definition',
-  '-Wnested-externs',
 ]
 
 warning_cxx_flags = [
