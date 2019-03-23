@@ -35,6 +35,8 @@ gl_sources = [
   'gstglwindow.c',
 ]
 
+gl_priv_sources = []
+
 gir_gl_headers = [
   'gl.h',
   'gl-prelude.h',
@@ -551,6 +553,8 @@ if need_win_wayland != 'no'
         'wayland/gstgldisplay_wayland.c',
         'wayland/gstglwindow_wayland_egl.c',
         'wayland/wayland_event_source.c',
+      ]
+      gl_priv_sources += [
         xdg_shell_header,
         xdg_shell_code,
       ]
@@ -908,7 +912,7 @@ if build_gstgl
   gen_sources = [gl_enumtypes_h]
 
   gstgl = library('gstgl-' + api_version,
-    gl_sources, gl_enumtypes_c, gl_enumtypes_h,
+    gl_sources, gl_priv_sources, gl_enumtypes_c, gl_enumtypes_h,
     c_args : gst_plugins_base_args + gl_cpp_args + ['-DBUILDING_GST_GL'],
     objc_args : gst_plugins_base_args + gl_cpp_args + gl_objc_args + ['-DBUILDING_GST_GL'],
     include_directories : [configinc, libsinc, gl_includes],
