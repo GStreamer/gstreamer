@@ -126,7 +126,7 @@ gir_init_section = [ '--add-init-section=' + \
     'g_setenv("GST_PLUGIN_SYSTEM_PATH_1_0", "", TRUE);' + \
     'g_setenv("GST_DEBUG", "0", TRUE);' + \
     'gst_init(NULL,NULL);' + \
-    'ges_init();' ]
+    'ges_init();', '--quiet']
 
 ges_c_args = ['-DHAVE_CONFIG_H', '-DG_LOG_DOMAIN="GES"']
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
