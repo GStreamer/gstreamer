@@ -379,7 +379,7 @@ gst_audio_meta_transform (GstBuffer * dest, GstMeta * meta,
  * out-of-bounds memory access on @buffer. This is also checked, which means
  * that you must add enough memory on the @buffer before adding this meta.
  *
- * Returns: the #GstAudioMeta that was attached on the @buffer
+ * Returns: (transfer none): the #GstAudioMeta that was attached on the @buffer
  *
  * Since: 1.16
  */
