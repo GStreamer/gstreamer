@@ -2387,20 +2387,39 @@ GST_START_TEST (test_video_scaler)
 
 GST_END_TEST;
 
+typedef enum
+{
+  RGB,
+  YUV,
+  OTHER
+} ColorType;
+
 #define WIDTH 320
 #define HEIGHT 240
-#define TIME 0.01
 
-GST_START_TEST (test_video_color_convert)
+static gboolean
+check_video_format_is_type (GstVideoFormat fmt, ColorType fmt_type)
+{
+  const GstVideoFormatInfo *info = gst_video_format_get_info (fmt);
+  gboolean is_rgb = GST_VIDEO_FORMAT_INFO_IS_RGB (info);
+  gboolean is_yuv = GST_VIDEO_FORMAT_INFO_IS_YUV (info);
+
+  switch (fmt_type) {
+    case RGB:
+      return is_rgb;
+    case YUV:
+      return is_yuv;
+    case OTHER:
+      break;
+  }
+  return !is_rgb && !is_yuv;
+}
+
+static void
+run_video_color_convert (ColorType in_type, ColorType out_type)
 {
   GstVideoFormat infmt, outfmt;
-  GTimer *timer;
-  gint num_formats, i;
-  GArray *array;
-
-  array = g_array_new (FALSE, FALSE, sizeof (ConvertResult));
-
-  timer = g_timer_new ();
+  gint num_formats;
 
   num_formats = get_num_formats ();
 
@@ -2408,6 +2427,9 @@ GST_START_TEST (test_video_color_convert)
     GstVideoInfo ininfo;
     GstVideoFrame inframe;
     GstBuffer *inbuffer;
+
+    if (!check_video_format_is_type (infmt, in_type))
+      continue;
 
     fail_unless (gst_video_info_set_format (&ininfo, infmt, WIDTH, HEIGHT));
     inbuffer = gst_buffer_new_and_alloc (ininfo.size);
@@ -2419,38 +2441,20 @@ GST_START_TEST (test_video_color_convert)
       GstVideoFrame outframe;
       GstBuffer *outbuffer;
       GstVideoConverter *convert;
-      gdouble elapsed;
-      gint count;
-      ConvertResult res;
+
+      if (!check_video_format_is_type (outfmt, out_type))
+        continue;
+
+      GST_LOG ("%s -> %s @ %ux%u", gst_video_format_to_string (infmt),
+          gst_video_format_to_string (outfmt), WIDTH, HEIGHT);
 
       fail_unless (gst_video_info_set_format (&outinfo, outfmt, WIDTH, HEIGHT));
       outbuffer = gst_buffer_new_and_alloc (outinfo.size);
       gst_video_frame_map (&outframe, &outinfo, outbuffer, GST_MAP_WRITE);
 
       convert = gst_video_converter_new (&ininfo, &outinfo, NULL);
-      /* warmup */
+
       gst_video_converter_frame (convert, &inframe, &outframe);
-
-      count = 0;
-      g_timer_start (timer);
-      while (TRUE) {
-        gst_video_converter_frame (convert, &inframe, &outframe);
-
-        count++;
-        elapsed = g_timer_elapsed (timer, NULL);
-        if (elapsed >= TIME)
-          break;
-      }
-
-      res.infmt = infmt;
-      res.outfmt = outfmt;
-      res.convert_sec = count / elapsed;
-
-      GST_DEBUG ("%f conversions/sec %s->%s, %d/%f", res.convert_sec,
-          gst_video_format_to_string (infmt),
-          gst_video_format_to_string (outfmt), count, elapsed);
-
-      g_array_append_val (array, res);
 
       gst_video_converter_free (convert);
 
@@ -2460,20 +2464,43 @@ GST_START_TEST (test_video_color_convert)
     gst_video_frame_unmap (&inframe);
     gst_buffer_unref (inbuffer);
   }
+}
 
-  g_array_sort (array, compare_result);
+GST_START_TEST (test_video_color_convert_rgb_rgb)
+{
+  run_video_color_convert (RGB, RGB);
+}
 
-  for (i = 0; i < array->len; i++) {
-    ConvertResult *res = &g_array_index (array, ConvertResult, i);
+GST_END_TEST;
 
-    GST_DEBUG ("%f conversions/sec %s->%s", res->convert_sec,
-        gst_video_format_to_string (res->infmt),
-        gst_video_format_to_string (res->outfmt));
-  }
+GST_START_TEST (test_video_color_convert_rgb_yuv)
+{
+  run_video_color_convert (RGB, YUV);
+}
 
-  g_array_free (array, TRUE);
+GST_END_TEST;
 
-  g_timer_destroy (timer);
+GST_START_TEST (test_video_color_convert_yuv_yuv)
+{
+  run_video_color_convert (YUV, YUV);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_color_convert_yuv_rgb)
+{
+  run_video_color_convert (YUV, RGB);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_color_convert_other)
+{
+  run_video_color_convert (OTHER, RGB);
+  run_video_color_convert (RGB, OTHER);
+  run_video_color_convert (OTHER, YUV);
+  run_video_color_convert (YUV, OTHER);
+  run_video_color_convert (OTHER, OTHER);
 }
 
 GST_END_TEST;
@@ -3030,7 +3057,11 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_pack_unpack2);
   tcase_add_test (tc_chain, test_video_chroma);
   tcase_add_test (tc_chain, test_video_scaler);
-  tcase_add_test (tc_chain, test_video_color_convert);
+  tcase_add_test (tc_chain, test_video_color_convert_rgb_rgb);
+  tcase_add_test (tc_chain, test_video_color_convert_rgb_yuv);
+  tcase_add_test (tc_chain, test_video_color_convert_yuv_yuv);
+  tcase_add_test (tc_chain, test_video_color_convert_yuv_rgb);
+  tcase_add_test (tc_chain, test_video_color_convert_other);
   tcase_add_test (tc_chain, test_video_size_convert);
   tcase_add_test (tc_chain, test_video_convert);
   tcase_add_test (tc_chain, test_video_transfer);
