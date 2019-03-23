@@ -1424,7 +1424,7 @@ gst_gl_video_allocation_params_copy_data (GstGLVideoAllocationParams * src_vid,
 }
 
 /**
- * gst_gl_memory_setup_buffer:
+ * gst_gl_memory_setup_buffer: (skip)
  * @allocator: the @GstGLMemoryAllocator to allocate from
  * @buffer: a #GstBuffer to setup
  * @params: the #GstGLVideoAllocationParams to allocate with

@@ -36,8 +36,10 @@
 #endif
 #endif
 
+#ifndef __GI_SCANNER__
 #ifndef EGL_EGLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES 1
+#endif
 #endif
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
