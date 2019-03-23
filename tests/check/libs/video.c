@@ -555,10 +555,10 @@ GST_START_TEST (test_video_formats)
         off1 = GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 1);
         off2 = GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 2);
 
-        GST_INFO ("size %d <> %d", size, GPOINTER_TO_INT (paintinfo.endptr));
-        GST_INFO ("off0 %d <> %d", off0, GPOINTER_TO_INT (paintinfo.yp));
-        GST_INFO ("off1 %d <> %d", off1, GPOINTER_TO_INT (paintinfo.up));
-        GST_INFO ("off2 %d <> %d", off2, GPOINTER_TO_INT (paintinfo.vp));
+        GST_TRACE ("size %d <> %d", size, GPOINTER_TO_INT (paintinfo.endptr));
+        GST_TRACE ("off0 %d <> %d", off0, GPOINTER_TO_INT (paintinfo.yp));
+        GST_TRACE ("off1 %d <> %d", off1, GPOINTER_TO_INT (paintinfo.up));
+        GST_TRACE ("off2 %d <> %d", off2, GPOINTER_TO_INT (paintinfo.vp));
 
         fail_unless_equals_int (size, GPOINTER_TO_INT (paintinfo.endptr));
         fail_unless_equals_int (off0, GPOINTER_TO_INT (paintinfo.yp));
