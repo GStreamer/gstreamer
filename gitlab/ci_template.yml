@@ -165,6 +165,7 @@ build_disable_debug fedora x86_64:
     # camerabin.test_image_video_cycle: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/864
     # camerabin.test_single_video_recording: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/864#note_101558
     # camerabin.test_multiple_video_recordings: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/864#note_101646
+    # curlhttpsrc.test_multiple_http_requests: https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/932
     # audiomixer.test_flush_start_flush_stop: https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/555
     # check.gstreamer-sharp.SdpTests: https://gitlab.freedesktop.org/gstreamer/gstreamer-sharp/issues/17
     #
@@ -200,6 +201,7 @@ build_disable_debug fedora x86_64:
       -b check.gst-plugins-bad.elements_camerabin.test_image_video_cycle
       -b check.gst-plugins-bad.elements_camerabin.test_single_video_recording
       -b check.gst-plugins-bad.elements_camerabin.test_multiple_video_recordings
+      -b check.gst-plugins-bad.elements_curlhttpsrc.test_multiple_http_requests
       -b check.gst-plugins-good.elements_rtpsession.test_multiple_senders_roundrobin_rbs
       -b check.gst-plugins-bad.elements_shm.test_shm_live
       -b check.gst-plugins-good.elements_splitmux.test_splitmuxsink_async
