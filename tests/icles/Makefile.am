@@ -17,6 +17,13 @@ benchmark_appsrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/app/libgstapp-$(GST_API_VERSION).la \
 	$(GST_LIBS)
 
+benchmark_video_conversion_SOURCES = benchmark-video-conversion.c
+benchmark_video_conversion_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
+benchmark_video_conversion_LDADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la \
+	$(GST_LIBS) $(LIBM)
+
 if USE_X
 X_TESTS = stress-videooverlay
 
@@ -119,4 +126,4 @@ test_reverseplay_LDADD = $(GST_LIBS) $(LIBM)
 noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS) \
 	audio-trickplay playbin-text position-formats stress-playbin \
 	test-scale test-box test-effect-switch test-overlay-blending test-reverseplay \
-	test-resample benchmark-appsink benchmark-appsrc
+	test-resample benchmark-appsink benchmark-appsrc benchmark-video-conversion

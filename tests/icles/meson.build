@@ -1,6 +1,7 @@
 base_icles = [
   [ 'benchmark-appsink.c', false, [gst_base_dep, app_dep], true ],
   [ 'benchmark-appsrc.c', false, [gst_base_dep, app_dep], true ],
+  [ 'benchmark-video-conversion.c', false, [gst_base_dep, video_dep], true ],
   [ 'audio-trickplay.c', false, [gst_controller_dep] ],
   [ 'playbin-text.c' ],
   [ 'stress-playbin.c' ],

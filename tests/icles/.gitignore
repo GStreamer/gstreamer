@@ -1,6 +1,7 @@
 audio-trickplay
 benchmark-appsink
 benchmark-appsrc
+benchmark-video-conversion
 input-selector-test
 output-selector-test
 playbin-text
