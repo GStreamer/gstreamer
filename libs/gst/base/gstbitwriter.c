@@ -38,7 +38,7 @@
  */
 
 /**
- * gst_bit_writer_new:
+ * gst_bit_writer_new: (skip)
  *
  * Creates a new, empty #GstBitWriter instance.
  *
@@ -57,7 +57,7 @@ gst_bit_writer_new (void)
 }
 
 /**
- * gst_bit_writer_new_size:
+ * gst_bit_writer_new_with_size: (skip)
  * @size: Initial size of data in bytes
  * @fixed: If %TRUE the data can't be reallocated
  *
@@ -77,7 +77,7 @@ gst_bit_writer_new_with_size (guint size, gboolean fixed)
 }
 
 /**
- * gst_bit_writer_new_with_data:
+ * gst_bit_writer_new_with_data: (skip)
  * @data: Memory area for writing
  * @size: Size of @data in bytes
  * @initialized: if %TRUE the complete data can be read from the beginning
@@ -101,7 +101,7 @@ gst_bit_writer_new_with_data (guint8 * data, guint size, gboolean initialized)
 }
 
 /**
- * gst_bit_writer_init:
+ * gst_bit_writer_init: (skip)
  * @bitwriter: #GstBitWriter instance
  *
  * Initializes @bitwriter to an empty instance.
@@ -117,7 +117,7 @@ gst_bit_writer_init (GstBitWriter * bitwriter)
 }
 
 /**
- * gst_bit_writer_init_with_size:
+ * gst_bit_writer_init_with_size: (skip)
  * @bitwriter: #GstBitWriter instance
  * @size: the size on bytes to allocate for data
  * @fixed: If %TRUE the data can't be reallocated
@@ -139,7 +139,7 @@ gst_bit_writer_init_with_size (GstBitWriter * bitwriter, guint size,
 }
 
 /**
- * gst_bit_writer_init_with_data:
+ * gst_bit_writer_init_with_data: (skip)
  * @bitwriter: #GstBitWriter instance
  * @data: (array length=size) (transfer none): Memory area for writing
  * @size: Size of @data in bytes
