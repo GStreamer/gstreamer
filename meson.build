@@ -118,7 +118,6 @@ warning_flags = [
   '-Wformat-security',
   '-Wold-style-definition',
   '-Waggregate-return',
-  '-Wnested-externs',
   '-Winit-self',
   '-Wmissing-include-dirs',
   '-Waddress',
