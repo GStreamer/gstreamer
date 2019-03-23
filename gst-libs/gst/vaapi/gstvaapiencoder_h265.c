@@ -44,7 +44,8 @@
 
 /* Supported set of tuning options, within this implementation */
 #define SUPPORTED_TUNE_OPTIONS                          \
-  (GST_VAAPI_ENCODER_TUNE_MASK (NONE))
+  (GST_VAAPI_ENCODER_TUNE_MASK (NONE) |                 \
+   GST_VAAPI_ENCODER_TUNE_MASK (LOW_POWER))
 
 /* Supported set of VA packed headers, within this implementation */
 #define SUPPORTED_PACKED_HEADERS                \
@@ -92,6 +93,7 @@ struct _GstVaapiEncoderH265
   GstVaapiProfile profile;
   GstVaapiTierH265 tier;
   GstVaapiLevelH265 level;
+  GstVaapiEntrypoint entrypoint;
   guint8 profile_idc;
   guint8 max_profile_idc;
   guint8 hw_max_profile_idc;
@@ -918,7 +920,7 @@ static gboolean
 ensure_hw_profile (GstVaapiEncoderH265 * encoder)
 {
   GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
-  GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  GstVaapiEntrypoint entrypoint = encoder->entrypoint;
   GstVaapiProfile profile, profiles[4];
   guint i, num_profiles = 0;
 
@@ -1069,6 +1071,10 @@ ensure_tuning (GstVaapiEncoderH265 * encoder)
   switch (GST_VAAPI_ENCODER_TUNE (encoder)) {
     case GST_VAAPI_ENCODER_TUNE_HIGH_COMPRESSION:
       success = ensure_tuning_high_compression (encoder);
+      break;
+    case GST_VAAPI_ENCODER_TUNE_LOW_POWER:
+      encoder->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP;
+      success = TRUE;
       break;
     default:
       success = TRUE;
@@ -1525,9 +1531,12 @@ fill_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncSequence * sequence)
   seq_param->seq_fields.bits.sps_temporal_mvp_enabled_flag =
       encoder->sps_temporal_mvp_enabled_flag = TRUE;
 
-  /* Based on 32x32 CTU */
+  /* Based on 32x32 CTU (64x64 when using lowpower mode for hardware limitation) */
   seq_param->log2_min_luma_coding_block_size_minus3 = 0;
-  seq_param->log2_diff_max_min_luma_coding_block_size = 2;
+  if (GST_VAAPI_ENCODER_TUNE (encoder) == GST_VAAPI_ENCODER_TUNE_LOW_POWER)
+    seq_param->log2_diff_max_min_luma_coding_block_size = 3;
+  else
+    seq_param->log2_diff_max_min_luma_coding_block_size = 2;
   seq_param->log2_min_transform_block_size_minus2 = 0;
   seq_param->log2_diff_max_min_transform_block_size = 3;
   seq_param->max_transform_hierarchy_depth_inter = 3;
@@ -1622,9 +1631,10 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
   pic_param->pic_fields.bits.sign_data_hiding_enabled_flag = FALSE;
   pic_param->pic_fields.bits.transform_skip_enabled_flag = TRUE;
   /* it seems driver requires enablement of cu_qp_delta_enabled_flag
-   * to modifiy QP values in CBR mode encoding */
-  pic_param->pic_fields.bits.cu_qp_delta_enabled_flag =
-      GST_VAAPI_ENCODER_RATE_CONTROL (encoder) != GST_VAAPI_RATECONTROL_CQP;
+   * to modifiy QP values in CBR mode or low power encoding */
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) != GST_VAAPI_RATECONTROL_CQP
+      || GST_VAAPI_ENCODER_TUNE (encoder) == GST_VAAPI_ENCODER_TUNE_LOW_POWER)
+    pic_param->pic_fields.bits.cu_qp_delta_enabled_flag = 1;
 
   pic_param->pic_fields.bits.pps_loop_filter_across_slices_enabled_flag = TRUE;
 
@@ -2048,11 +2058,10 @@ reset_properties (GstVaapiEncoderH265 * encoder)
 
   ctu_size = encoder->ctu_width * encoder->ctu_height;
   g_assert (gst_vaapi_encoder_ensure_num_slices (base_encoder, encoder->profile,
-          GST_VAAPI_ENTRYPOINT_SLICE_ENCODE, (ctu_size + 1) / 2,
-          &encoder->num_slices));
+          encoder->entrypoint, (ctu_size + 1) / 2, &encoder->num_slices));
 
   gst_vaapi_encoder_ensure_max_num_ref_frames (base_encoder, encoder->profile,
-      GST_VAAPI_ENTRYPOINT_SLICE_ENCODE);
+      encoder->entrypoint);
 
   if (base_encoder->max_num_ref_frames_1 < 1 && encoder->num_bframes > 0) {
     GST_WARNING ("Disabling b-frame since the driver doesn't support it");
@@ -2505,6 +2514,8 @@ set_context_info (GstVaapiEncoder * base_encoder)
   base_encoder->codedbuf_size += GST_ROUND_UP_16 (vip->width) *
       GST_ROUND_UP_16 (vip->height) * 3 / 2;
 
+  base_encoder->context_info.entrypoint = encoder->entrypoint;
+
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
@@ -2523,10 +2534,14 @@ gst_vaapi_encoder_h265_reconfigure (GstVaapiEncoder * base_encoder)
         GST_VAAPI_ENCODER_HEIGHT (encoder));
     encoder->luma_width = GST_ROUND_UP_16 (luma_width);
     encoder->luma_height = GST_ROUND_UP_16 (luma_height);
-    encoder->ctu_width = (encoder->luma_width + 31) / 32;
-    encoder->ctu_height = (encoder->luma_height + 31) / 32;
+    if (GST_VAAPI_ENCODER_TUNE (encoder) == GST_VAAPI_ENCODER_TUNE_LOW_POWER) {
+      encoder->ctu_width = (encoder->luma_width + 63) / 64;
+      encoder->ctu_height = (encoder->luma_height + 63) / 64;
+    } else {
+      encoder->ctu_width = (encoder->luma_width + 31) / 32;
+      encoder->ctu_height = (encoder->luma_height + 31) / 32;
+    }
     encoder->config_changed = TRUE;
-
     /* Frame Cropping */
     if ((GST_VAAPI_ENCODER_WIDTH (encoder) & 15) ||
         (GST_VAAPI_ENCODER_HEIGHT (encoder) & 15)) {
@@ -2559,6 +2574,9 @@ gst_vaapi_encoder_h265_init (GstVaapiEncoder * base_encoder)
   GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
   GstVaapiH265ReorderPool *reorder_pool;
   GstVaapiH265RefPool *ref_pool;
+
+  /* Default encoding entrypoint */
+  encoder->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
 
   encoder->conformance_window_flag = 0;
   encoder->num_slices = 1;
