@@ -101,6 +101,15 @@ cerbero fedora amd64 docker:
     DOCKERFILE: "docker/cerbero/Dockerfile-fedora"
   extends: .base
 
+android docker:
+  stage: "build docker"
+  variables:
+    ARCH: "amd64"
+    TAG: "android"
+    CONTEXT_DIR: "docker/android/"
+    DOCKERFILE: "docker/android/Dockerfile"
+  extends: .base
+
 include: "gitlab/ci_template.yml"
 
 .build local:
