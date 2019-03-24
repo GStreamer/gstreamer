@@ -7,6 +7,8 @@ stages:
   # Run multiple builds and tests, multi-distro, multi-arch
   - "full builds"
   - "full tests"
+  # build some apps to check that cross-platform binaries are usable
+  - "apps"
 
 test manifest:
   variables:
@@ -172,3 +174,13 @@ check fedora local:
   extends: '.test fedora x86_64 local'
   variables:
     TEST_SUITE: 'check.gst*'
+
+android universal examples local:
+  extends: '.android universal examples'
+  image: "${CI_REGISTRY_IMAGE}/amd64/android:latest"
+  dependencies:
+    - "build cerbero android universal local"
+  when: 'manual'
+  except:
+    refs:
+      - "master@gstreamer/gst-ci"

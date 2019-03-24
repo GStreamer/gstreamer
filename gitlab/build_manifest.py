@@ -28,6 +28,7 @@ GSTREAMER_MODULES: List[str] = [
     'gst-rtsp-server',
     'gstreamer-vaapi',
     'gst-integration-testsuites',
+    'gst-examples',
 ]
 
 MANIFEST_TEMPLATE: str = """<?xml version="1.0" encoding="UTF-8"?>
