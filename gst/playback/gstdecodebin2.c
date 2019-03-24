@@ -446,7 +446,7 @@ struct _GstDecodeGroup
   gboolean drained;             /* TRUE if the all children are drained */
 
   GList *children;              /* List of GstDecodeChains in this group */
-  GArray *demuxer_pad_probe_ids;
+  GList *demuxer_pad_probe_ids;
 
   GList *reqpads;               /* List of RequestPads for multiqueue, there is
                                  * exactly one RequestPad per child chain */
@@ -3571,25 +3571,26 @@ multi_queue_overrun_cb (GstElement * queue, GstDecodeGroup * group)
 static void
 gst_decode_group_free_internal (GstDecodeGroup * group, gboolean hide)
 {
-  gint i;
   GList *l;
 
   GST_DEBUG_OBJECT (group->dbin, "%s group %p", (hide ? "Hiding" : "Freeing"),
       group);
 
   if (!hide) {
-    for (i = 0; i < group->demuxer_pad_probe_ids->len; i++) {
-      GstDemuxerPad *demuxer_pad =
-          &g_array_index (group->demuxer_pad_probe_ids, GstDemuxerPad, i);
+    for (l = group->demuxer_pad_probe_ids; l != NULL; l = l->next) {
+      GstDemuxerPad *demuxer_pad = l->data;
       GstPad *sinkpad = g_weak_ref_get (&demuxer_pad->weakPad);
 
-      if (!sinkpad)
-        continue;
-
-      gst_pad_remove_probe (sinkpad, demuxer_pad->event_probe_id);
-      gst_pad_remove_probe (sinkpad, demuxer_pad->query_probe_id);
+      if (sinkpad != NULL) {
+        gst_pad_remove_probe (sinkpad, demuxer_pad->event_probe_id);
+        gst_pad_remove_probe (sinkpad, demuxer_pad->query_probe_id);
+        g_weak_ref_clear (&demuxer_pad->weakPad);
+        gst_object_unref (sinkpad);
+      }
+      g_free (demuxer_pad);
     }
-    g_array_unref (group->demuxer_pad_probe_ids);
+    g_list_free (group->demuxer_pad_probe_ids);
+    group->demuxer_pad_probe_ids = NULL;
   }
 
   for (l = group->children; l; l = l->next) {
@@ -3843,8 +3844,7 @@ gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
 
   group->overrunsig = g_signal_connect (mq, "overrun",
       G_CALLBACK (multi_queue_overrun_cb), group);
-  group->demuxer_pad_probe_ids =
-      g_array_new (FALSE, TRUE, sizeof (GstDemuxerPad));
+  group->demuxer_pad_probe_ids = NULL;
 
   gst_element_set_state (mq, GST_STATE_PAUSED);
   gst_bin_add (GST_BIN (dbin), gst_object_ref (mq));
@@ -3910,18 +3910,18 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
   }
 
   CHAIN_MUTEX_LOCK (group->parent);
-  g_array_set_size (group->demuxer_pad_probe_ids,
-      group->demuxer_pad_probe_ids->len + 1);
-  demuxer_pad =
-      &g_array_index (group->demuxer_pad_probe_ids, GstDemuxerPad,
-      group->demuxer_pad_probe_ids->len - 1);
 
+  /* Note: GWeakRefs can't be moved in memory once they're in use, so do a
+   * dedicated alloc for the GstDemuxerPad struct that contains it */
+  demuxer_pad = g_new0 (GstDemuxerPad, 1);
   demuxer_pad->event_probe_id = gst_pad_add_probe (sinkpad,
       GST_PAD_PROBE_TYPE_EVENT_UPSTREAM, sink_pad_event_probe, group, NULL);
   demuxer_pad->query_probe_id = gst_pad_add_probe (sinkpad,
       GST_PAD_PROBE_TYPE_QUERY_UPSTREAM, sink_pad_query_probe, group, NULL);
 
   g_weak_ref_set (&demuxer_pad->weakPad, sinkpad);
+  group->demuxer_pad_probe_ids =
+      g_list_prepend (group->demuxer_pad_probe_ids, demuxer_pad);
 
   group->reqpads = g_list_prepend (group->reqpads, gst_object_ref (sinkpad));
   CHAIN_MUTEX_UNLOCK (group->parent);
