@@ -23,10 +23,10 @@ GStreamer provides support for the following use cases:
     typical web streaming case where you access content from a streaming
     server using HTTP.
 
-  - Capture from live source and and playback to live source with
-    configurable latency. This is used when, for example, capture from a
-    camera, apply an effect and display the result. It is also used when
-    streaming low latency content over a network with UDP.
+  - Capture from live source and playback with configurable latency. This
+    is used, for example, when capturing from a camera, applying an
+    effect and displaying the result. It is also used when streaming
+    low latency content over a network with UDP.
 
   - Simultaneous live capture and playback from prerecorded content.
     This is used in audio recording cases where you play a previously
@@ -72,7 +72,7 @@ clock.
 ## Buffer running-time
 
 To calculate a buffer running-time, we need a buffer timestamp and the
-`SEGMENT` event that preceeded the buffer. First we can convert the
+`SEGMENT` event that preceded the buffer. First we can convert the
 `SEGMENT` event into a `GstSegment` object and then we can use the
 `gst_segment_to_running_time ()` function to perform the calculation of
 the buffer running-time.
@@ -132,9 +132,9 @@ state. It is allowed to pause the clock while the element is `PAUSED`.
 
 Clock providers exist because they play back media at some rate, and
 this rate is not necessarily the same as the system clock rate. For
-example, a soundcard may playback at 44,1 kHz, but that doesn't mean
+example, a soundcard may play back at 44.1 kHz, but that doesn't mean
 that after *exactly* 1 second *according to the system clock*, the
-soundcard has played back 44.100 samples. This is only true by
+soundcard has played back 44100 samples. This is only true by
 approximation. In fact, the audio device has an internal clock based on
 the number of samples played that we can expose.
 
@@ -190,7 +190,7 @@ pipeline and configures this with a `LATENCY` event.
 
 All sink elements will delay playback by the value in the `LATENCY` event.
 Since all sinks delay with the same amount of time, they will be
-relative in sync.
+relatively in sync.
 
 ### Dynamic Latency
 
