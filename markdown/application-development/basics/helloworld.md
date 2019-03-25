@@ -242,7 +242,7 @@ This concludes our first example. As you see, setting up a pipeline is
 very low-level but powerful. You will see later in this manual how you
 can create a more powerful media player with even less effort using
 higher-level interfaces. We will discuss all that in [Higher-level
-interfaces for GStreamer applications][advanced]. We will
+interfaces for GStreamer applications][highlevel]. We will
 first, however, go more in-depth into more advanced GStreamer internals.
 
 It should be clear from the example that we can very easily replace the
