@@ -198,6 +198,7 @@ struct _RTPSource {
 
   gboolean     send_nack;
   GArray      *nacks;
+  GArray      *nack_deadlines;
 
   gboolean      pt_set;
   guint8        pt;
@@ -301,8 +302,10 @@ gboolean        rtp_source_has_retained        (RTPSource * src,
                                                 gconstpointer data);
 
 void            rtp_source_register_nack       (RTPSource * src,
-                                                guint16 seqnum);
-guint32 *       rtp_source_get_nacks           (RTPSource * src, guint *n_nacks);
-void            rtp_source_clear_nacks         (RTPSource * src);
+                                                guint16 seqnum,
+                                                GstClockTime deadline);
+guint16 *       rtp_source_get_nacks           (RTPSource * src, guint *n_nacks);
+GstClockTime *  rtp_source_get_nack_deadlines  (RTPSource * src, guint *n_nacks);
+void            rtp_source_clear_nacks         (RTPSource * src, guint n_nacks);
 
 #endif /* __RTP_SOURCE_H__ */
