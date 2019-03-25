@@ -899,6 +899,8 @@ unpack_Y410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint32 AVYU;
   guint16 A, Y, U, V;
 
+  s += x * 4;
+
   for (i = 0; i < width; i++) {
     AVYU = GST_READ_UINT32_LE (s + 4 * i);
 
