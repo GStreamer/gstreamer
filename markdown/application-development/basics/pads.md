@@ -27,7 +27,7 @@ right. \[1\]
 Pad directions are very simple compared to pad availability. A pad can
 have any of three availabilities: always, sometimes and on request. The
 meaning of those three types is exactly as it says: always pads always
-exist, sometimes pad exist only in certain cases (and can disappear
+exist, sometimes pads exist only in certain cases (and can disappear
 randomly), and on-request pads appear only if explicitly requested by
 applications.
 
