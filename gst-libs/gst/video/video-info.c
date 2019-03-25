@@ -185,12 +185,19 @@ validate_colorimetry (GstVideoInfo * info)
   const GstVideoFormatInfo *finfo = info->finfo;
 
   if (!GST_VIDEO_FORMAT_INFO_IS_RGB (finfo) &&
-      info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB)
+      info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
+    GST_WARNING
+        ("color matrix RGB is only supported with RGB format, %s is not",
+        finfo->name);
     return FALSE;
+  }
 
   if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo) &&
-      info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN)
+      info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN) {
+    GST_WARNING ("Need to specify a color matrix when using YUV format (%s)",
+        finfo->name);
     return FALSE;
+  }
 
   return TRUE;
 }
