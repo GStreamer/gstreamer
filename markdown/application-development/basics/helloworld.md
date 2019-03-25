@@ -255,3 +255,5 @@ you can instead use a filesink to write audio files to disk instead of
 playing them back. By using an audio card source, you can even do audio
 capture instead of playback. All this shows the reusability of GStreamer
 elements, which is its greatest advantage.
+
+[highlevel]: application-development/highlevel/index.md
