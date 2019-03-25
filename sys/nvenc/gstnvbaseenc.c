@@ -925,10 +925,15 @@ gst_nv_base_enc_stop_bitstream_thread (GstNvBaseEnc * nvenc, gboolean force)
     g_async_queue_push (nvenc->bitstream_queue, SHUTDOWN_COOKIE);
   }
 
-  /* temporary unlock, so other thread can find and push frame */
-  GST_VIDEO_ENCODER_STREAM_UNLOCK (nvenc);
+  if (!force) {
+    /* temporary unlock during finish, so other thread can find and push frame */
+    GST_VIDEO_ENCODER_STREAM_UNLOCK (nvenc);
+  }
+
   g_thread_join (nvenc->bitstream_thread);
-  GST_VIDEO_ENCODER_STREAM_LOCK (nvenc);
+
+  if (!force)
+    GST_VIDEO_ENCODER_STREAM_LOCK (nvenc);
 
   nvenc->bitstream_thread = NULL;
   return TRUE;
