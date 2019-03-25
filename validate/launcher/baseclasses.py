@@ -836,6 +836,16 @@ class GstValidateTest(Test):
             except KeyError:
                 pass
 
+        if not subproc_env.get('GST_DEBUG_DUMP_DOT_DIR'):
+            dotfilesdir = os.path.join(self.options.logsdir,
+                                self.classname.replace(".", os.sep) + '.pipelines_dot_files')
+            mkdir(dotfilesdir)
+            subproc_env['GST_DEBUG_DUMP_DOT_DIR'] = dotfilesdir
+            if CI_ARTIFACTS_URL:
+                dotfilesurl = CI_ARTIFACTS_URL + os.path.relpath(dotfilesdir,
+                                                                 self.options.logsdir)
+                subproc_env['GST_VALIDATE_DEBUG_DUMP_DOT_URL'] = dotfilesurl
+
         return subproc_env
 
     def clean(self):

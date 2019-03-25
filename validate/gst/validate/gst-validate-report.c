@@ -1115,11 +1115,15 @@ static void
 gst_validate_report_print_dotfile (GstValidateReport * report)
 {
   const gchar *dotdir = g_getenv ("GST_DEBUG_DUMP_DOT_DIR");
+  const gchar *doturl = g_getenv ("GST_VALIDATE_DEBUG_DUMP_DOT_URL");
 
   if (!report->dotfile_name)
     return;
 
-  if (dotdir)
+  if (doturl)
+    gst_validate_printf (NULL, "%*s dotfile : %s%s%s.dot\n", 12, "",
+        doturl, G_DIR_SEPARATOR_S, report->dotfile_name);
+  else if (dotdir)
     gst_validate_printf (NULL, "%*s dotfile : %s%s%s.dot\n", 12, "",
         dotdir, G_DIR_SEPARATOR_S, report->dotfile_name);
   else
