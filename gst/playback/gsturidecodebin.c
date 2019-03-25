@@ -2076,8 +2076,10 @@ remove_source (GstURIDecodeBin * bin)
       g_signal_handler_disconnect (source, bin->src_nmp_sig_id);
       bin->src_nmp_sig_id = 0;
     }
-    gst_bin_remove (GST_BIN_CAST (bin), source);
+    GST_OBJECT_LOCK (bin);
     bin->source = NULL;
+    GST_OBJECT_UNLOCK (bin);
+    gst_bin_remove (GST_BIN_CAST (bin), source);
   }
   if (bin->queue) {
     GST_DEBUG_OBJECT (bin, "removing old queue element");
@@ -2180,6 +2182,7 @@ static gboolean
 setup_source (GstURIDecodeBin * decoder)
 {
   gboolean is_raw, have_out, is_dynamic;
+  GstElement *source;
 
   GST_DEBUG_OBJECT (decoder, "setup source");
 
@@ -2189,8 +2192,14 @@ setup_source (GstURIDecodeBin * decoder)
   decoder->pending = 0;
 
   /* create and configure an element that can handle the uri */
-  if (!(decoder->source = gen_source_element (decoder)))
+  source = gen_source_element (decoder);
+  GST_OBJECT_LOCK (decoder);
+  if (!(decoder->source = source)) {
+    GST_OBJECT_UNLOCK (decoder);
+
     goto no_source;
+  }
+  GST_OBJECT_UNLOCK (decoder);
 
   /* state will be merged later - if file is not found, error will be
    * handled by the application right after. */
