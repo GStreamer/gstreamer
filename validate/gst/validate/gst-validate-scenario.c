@@ -346,10 +346,10 @@ gst_validate_action_init (GstValidateAction * action)
   g_weak_ref_init (&action->priv->scenario, NULL);
 }
 
-void
+GstValidateAction *
 gst_validate_action_ref (GstValidateAction * action)
 {
-  gst_mini_object_ref (GST_MINI_OBJECT (action));
+  return (GstValidateAction *) gst_mini_object_ref (GST_MINI_OBJECT (action));
 }
 
 void
