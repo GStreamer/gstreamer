@@ -13,7 +13,7 @@ complicated. For more complex use cases, GStreamer uses interfaces based on the
 type.
 
 This text is meant to be introductory and does not include source code examples.
-Please take a look a the API reference for additional details.
+Please take a look at the API reference for additional details.
 
 [element-object]: application-development/basics/elements.md#using-an-element-as-a-gobject
 
@@ -49,7 +49,7 @@ You can convert filenames to and from URIs using GLib's
 ## The Color Balance interface
 
 The `GstColorBalance` interface is a way to control video-related properties
-on an element, such as brightness, contrast and so on. It's sole reason
+on an element, such as brightness, contrast and so on. Its sole reason
 for existence is that, as far as its authors know, there's no way to
 dynamically register properties using `GObject`.
 
