@@ -321,6 +321,66 @@ endif
 omx_conf_dir = join_paths (get_option ('prefix'), get_option ('sysconfdir'), 'xdg')
 cdata.set_quoted('GST_OMX_CONFIG_DIR', omx_conf_dir)
 
+warning_flags = [
+  '-Wmissing-declarations',
+  '-Wredundant-decls',
+  '-Wwrite-strings',
+  '-Winit-self',
+  '-Wmissing-include-dirs',
+  '-Wno-multichar',
+  '-Wvla',
+  '-Wpointer-arith',
+]
+
+warning_c_flags = [
+  '-Wmissing-prototypes',
+  '-Wdeclaration-after-statement',
+  '-Wold-style-definition',
+  '-Waggregate-return',
+]
+
+have_cxx = add_languages('cpp', required : false)
+
+if have_cxx
+  cxx = meson.get_compiler('cpp')
+endif
+
+foreach extra_arg : warning_flags
+  if cc.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'c')
+  endif
+  if have_cxx and cxx.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'cpp')
+  endif
+endforeach
+
+foreach extra_arg : warning_c_flags
+  if cc.has_argument (extra_arg)
+    add_project_arguments([extra_arg], language: 'c')
+  endif
+endforeach
+
+# Disable compiler warnings for unused variables and args if gst debug system is disabled
+if gst_dep.type_name() == 'internal'
+  gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
+else
+  # We can't check that in the case of subprojects as we won't
+  # be able to build against an internal dependency (which is not built yet)
+  gst_debug_disabled = cc.has_header_symbol('gst/gstconfig.h', 'GST_DISABLE_GST_DEBUG', dependencies: gst_dep)
+endif
+
+if gst_debug_disabled
+  message('GStreamer debug system is disabled')
+  if cc.has_argument('-Wno-unused')
+    add_project_arguments('-Wno-unused', language: 'c')
+  endif
+  if have_cxx and cxx.has_argument ('-Wno-unused')
+    add_project_arguments('-Wno-unused', language: 'cpp')
+  endif
+else
+  message('GStreamer debug system is enabled')
+endif
+
 configure_file(output : 'config.h', configuration : cdata)
 
 subdir('config')
