@@ -4144,8 +4144,8 @@ done:
   return res;
 }
 
-static GstValidateExecuteActionReturn
-_check_last_sample_checksum (GstValidateScenario * scenario,
+static GstValidateActionReturn
+check_last_sample_internal (GstValidateScenario * scenario,
     GstValidateAction * action, GstElement * sink)
 {
   GstSample *sample;
@@ -4155,7 +4155,6 @@ _check_last_sample_checksum (GstValidateScenario * scenario,
   const gchar *target_sum;
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
 
-  target_sum = gst_structure_get_string (action->structure, "checksum");
   g_object_get (sink, "last-sample", &sample, NULL);
   if (sample == NULL) {
     GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
@@ -4163,8 +4162,8 @@ _check_last_sample_checksum (GstValidateScenario * scenario,
         " 'last-sample' property is NULL"
         ". MAKE SURE THE 'enable-last-sample' PROPERTY IS SET TO 'TRUE'!",
         sink);
-    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-    goto done;
+
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
 
   buffer = gst_sample_get_buffer (sample);
@@ -4177,6 +4176,7 @@ _check_last_sample_checksum (GstValidateScenario * scenario,
   sum = g_compute_checksum_for_data (G_CHECKSUM_SHA1, map.data, map.size);
   gst_buffer_unmap (buffer, &map);
 
+  target_sum = gst_structure_get_string (action->structure, "checksum");
   if (g_strcmp0 (sum, target_sum)) {
     GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
         "Last buffer checksum '%s' is different than the expected one: '%s'",
@@ -4188,6 +4188,52 @@ _check_last_sample_checksum (GstValidateScenario * scenario,
 
 done:
   return res;
+}
+
+static void
+sink_last_sample_notify_cb (GstElement * sink, GParamSpec * arg G_GNUC_UNUSED,
+    GstValidateAction * action)
+{
+  GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
+
+  if (!scenario) {
+    GST_VALIDATE_REPORT (scenario,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "No pipeline anymore, can't check last sample");
+    goto done;
+  }
+
+  check_last_sample_internal (scenario, action, sink);
+  gst_object_unref (scenario);
+
+done:
+  g_signal_handlers_disconnect_by_func (sink, sink_last_sample_notify_cb,
+      action);
+  gst_validate_action_set_done (action);
+  gst_validate_action_unref (action);
+}
+
+static GstValidateExecuteActionReturn
+_check_last_sample_checksum (GstValidateScenario * scenario,
+    GstValidateAction * action, GstElement * sink)
+{
+  GstSample *sample;
+
+  /* Connect before checking last sample to avoid a race where
+   * the sample is set between the time we connect and the time
+   * the time we get it */
+  g_signal_connect (sink, "notify::last-sample",
+      G_CALLBACK (sink_last_sample_notify_cb),
+      gst_validate_action_ref (action));
+
+  g_object_get (sink, "last-sample", &sample, NULL);
+  if (sample == NULL)
+    return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+
+  g_signal_handlers_disconnect_by_func (sink, sink_last_sample_notify_cb,
+      action);
+
+  return check_last_sample_internal (scenario, action, sink);
 }
 
 static gboolean
