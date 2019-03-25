@@ -18,6 +18,7 @@ vulkan_sources = [
   'vkwindow.c',
 ]
 
+vulkan_objc_args = []
 vulkan_defines = []
 optional_deps = []
 if get_option('vulkan').disabled()
@@ -61,6 +62,32 @@ if vulkan_dep.found() and has_vulkan_header
     vkconf.set10('GST_VULKAN_HAVE_WINDOW_WAYLAND', 1)
   endif
 
+  if ['darwin', 'ios'].contains(host_system)
+    objc = meson.get_compiler('objc')
+    if not objc.has_argument('-fobjc-arc')
+      error('ARC is required for building')
+    endif
+
+    vulkan_objc_args += ['-fobjc-arc']
+  endif
+
+  if host_system == 'darwin'
+    foundation_dep = dependency('appleframeworks', modules : ['Foundation'], required : get_option('vulkan'))
+    quartzcore_dep = dependency('appleframeworks', modules : ['QuartzCore'], required : get_option('vulkan'))
+    corefoundation_dep = dependency('appleframeworks', modules : ['CoreFoundation'], required : get_option('vulkan'))
+    cocoa_dep = dependency('appleframeworks', modules : ['Cocoa'], required : get_option('vulkan'))
+
+    if foundation_dep.found() and quartzcore_dep.found() and corefoundation_dep.found() and cocoa_dep.found()
+      vulkan_sources += [
+        'cocoa/vkdisplay_cocoa.m',
+        'cocoa/vkwindow_cocoa.m',
+      ]
+      optional_deps += [foundation_dep, corefoundation_dep, quartzcore_dep, cocoa_dep]
+      have_vulkan_windowing = true
+      vkconf.set10('GST_VULKAN_HAVE_WINDOW_COCOA', 1)
+    endif
+  endif
+
   if have_vulkan_windowing
     configure_file(input : 'vkconfig.h.meson',
       output : 'vkconfig.h',
@@ -69,6 +96,7 @@ if vulkan_dep.found() and has_vulkan_header
     gstvulkan = library('gstvulkan',
       vulkan_sources,
       c_args : gst_plugins_bad_args + vulkan_defines,
+      objc_args : gst_plugins_bad_args + vulkan_defines + vulkan_objc_args,
       link_args : noseh_link_args,
       include_directories : [configinc],
       dependencies : [vulkan_dep, gstvideo_dep, gstbase_dep] + optional_deps,

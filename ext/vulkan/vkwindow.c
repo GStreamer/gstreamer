@@ -46,6 +46,9 @@
 #if GST_VULKAN_HAVE_WINDOW_WAYLAND
 #include "wayland/vkwindow_wayland.h"
 #endif
+#if GST_VULKAN_HAVE_WINDOW_COCOA
+#include "cocoa/vkwindow_cocoa.h"
+#endif
 
 #define GST_CAT_DEFAULT gst_vulkan_window_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
@@ -183,6 +186,10 @@ gst_vulkan_window_new (GstVulkanDisplay * display)
 #if GST_VULKAN_HAVE_WINDOW_WAYLAND
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
     window = GST_VULKAN_WINDOW (gst_vulkan_window_wayland_new (display));
+#endif
+#if GST_VULKAN_HAVE_WINDOW_COCOA
+  if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
+    window = GST_VULKAN_WINDOW (gst_vulkan_window_cocoa_new (display));
 #endif
   if (!window) {
     /* subclass returned a NULL window */
