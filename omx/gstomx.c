@@ -612,6 +612,7 @@ static void
 log_omx_api_trace_event (GstOMXComponent * comp, OMX_EVENTTYPE event,
     guint32 data1, guint32 data2, gpointer event_data)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstStructure *s;
 
   /* Don't bother creating useless structs if not needed */
@@ -629,6 +630,7 @@ log_omx_api_trace_event (GstOMXComponent * comp, OMX_EVENTTYPE event,
   GST_CAT_DEBUG_OBJECT (OMX_API_TRACE, comp->parent, "%" GST_PTR_FORMAT, s);
 
   gst_structure_free (s);
+#endif /* GST_DISABLE_GST_DEBUG */
 }
 
 static OMX_ERRORTYPE
@@ -801,6 +803,7 @@ static void
 log_omx_api_trace_buffer (GstOMXComponent * comp, const gchar * event,
     GstOMXBuffer * buf)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstStructure *s;
 
   /* Don't bother creating useless structs if not needed */
@@ -838,6 +841,7 @@ log_omx_api_trace_buffer (GstOMXComponent * comp, const gchar * event,
   GST_CAT_TRACE_OBJECT (OMX_API_TRACE, comp->parent, "%" GST_PTR_FORMAT, s);
 
   gst_structure_free (s);
+#endif /* GST_DISABLE_GST_DEBUG */
 }
 
 static OMX_ERRORTYPE
@@ -1107,6 +1111,7 @@ static void
 log_omx_api_trace_send_command (GstOMXComponent * comp, OMX_COMMANDTYPE cmd,
     guint32 param, gpointer cmd_data)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstStructure *s;
 
   /* Don't bother creating useless structs if not needed */
@@ -1123,6 +1128,7 @@ log_omx_api_trace_send_command (GstOMXComponent * comp, OMX_COMMANDTYPE cmd,
   GST_CAT_DEBUG_OBJECT (OMX_API_TRACE, comp->parent, "%" GST_PTR_FORMAT, s);
 
   gst_structure_free (s);
+#endif /* GST_DISABLE_GST_DEBUG */
 }
 
 static OMX_ERRORTYPE
