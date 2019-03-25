@@ -27,7 +27,8 @@ variables:
     -Dsharp=disabled
 
   DEFAULT_CERBERO_ARGS: >
-     --variants werror
+    --variants werror
+    --timestamps
 
 manifest:
   image: $MANIFEST_IMAGE

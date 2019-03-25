@@ -16,18 +16,18 @@ RUN git clone https://gitlab.freedesktop.org/gstreamer/cerbero.git && \
     cd cerbero && \
       echo "local_sources=\"/cerbero/cerbero-sources\"" >> localconf.cbc && \
       echo "home_dir=\"/cerbero/cerbero-build\"" >> localconf.cbc && \
-      ./cerbero-uninstalled -c localconf.cbc bootstrap -y --system-only && \
-      ./cerbero-uninstalled -c localconf.cbc fetch-bootstrap && \
-      ./cerbero-uninstalled -c localconf.cbc fetch-package gstreamer-1.0 && \
-      ./cerbero-uninstalled -c localconf.cbc -c config/cross-win32.cbc fetch-bootstrap && \
-      ./cerbero-uninstalled -c localconf.cbc -c config/cross-win32.cbc fetch-package gstreamer-1.0 && \
-      ./cerbero-uninstalled -c localconf.cbc -c config/cross-win32.cbc bootstrap -y --system-only && \
-      ./cerbero-uninstalled -c localconf.cbc -c config/cross-win64.cbc fetch-bootstrap && \
-      ./cerbero-uninstalled -c localconf.cbc -c config/cross-win64.cbc fetch-package gstreamer-1.0 && \
-      ./cerbero-uninstalled -c localconf.cbc -c config/cross-win64.cbc bootstrap -y --system-only && \
-      ./cerbero-uninstalled -c localconf.cbc -c config/cross-android-universal.cbc fetch-bootstrap && \
-      ./cerbero-uninstalled -c localconf.cbc -c config/cross-android-universal.cbc fetch-package gstreamer-1.0 && \
-      ./cerbero-uninstalled -c localconf.cbc -c config/cross-android-universal.cbc bootstrap -y --system-only && \
+      ./cerbero-uninstalled -t -c localconf.cbc bootstrap -y --system-only && \
+      ./cerbero-uninstalled -t -c localconf.cbc fetch-bootstrap && \
+      ./cerbero-uninstalled -t -c localconf.cbc fetch-package gstreamer-1.0 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc fetch-bootstrap && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc fetch-package gstreamer-1.0 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win32.cbc bootstrap -y --system-only && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc fetch-bootstrap && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc fetch-package gstreamer-1.0 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-win64.cbc bootstrap -y --system-only && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc fetch-bootstrap && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc fetch-package gstreamer-1.0 && \
+      ./cerbero-uninstalled -t -c localconf.cbc -c config/cross-android-universal.cbc bootstrap -y --system-only && \
       cd .. && \
     rm /cerbero/cerbero-sources/android-ndk-*.zip && \
     rm /cerbero/cerbero-sources/mingw-w*.tar.xz && \
