@@ -65,6 +65,7 @@ gst indent:
     variables:
       # No point on trying to format C files in those repositories
       - $CI_PROJECT_NAME == "gstreamer-sharp"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "cerbero"
 
 .build:
