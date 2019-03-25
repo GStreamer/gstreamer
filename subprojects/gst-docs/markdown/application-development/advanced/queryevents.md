@@ -84,12 +84,19 @@ contains a playback rate, a seek offset format (which is the unit of the
 offsets to follow, e.g. time, audio samples, video frames or bytes),
 optionally a set of seeking-related flags (e.g. whether internal buffers
 should be flushed), a seek method (which indicates relative to what the
-offset was given), and seek offsets. The first offset (cur) is the new
-position to seek to, while the second offset (stop) is optional and
-specifies a position where streaming is supposed to stop. Usually it is
-fine to just specify GST\_SEEK\_TYPE\_NONE and -1 as end\_method and end
-offset. The behaviour of a seek is also wrapped in the `gst_element_seek
-()`.
+offset was given), and seek offsets.
+
+The first offset (`start`) is the new position to seek to, while the second
+offset (`stop`) is optional and specifies a position where streaming is
+supposed to stop. Usually it is fine to just specify `GST_SEEK_TYPE_NONE`
+as `stop_type` and `GST_CLOCK_TIME_NONE` as `stop` offset.
+
+In case of reverse playback (`rate` < 0) the meaning of `start` and `stop` is
+reversed and `stop` is the position to seek to.
+
+The behaviour of a seek is also wrapped in the `gst_element_seek()` and
+`gst_element_seek_simple()` and you would usually use those functions to
+initiate a seek on a pipeline.
 
 ``` c
 static void
