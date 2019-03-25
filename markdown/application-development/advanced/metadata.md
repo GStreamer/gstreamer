@@ -169,8 +169,8 @@ pipeline.
 In order to see if any of the elements in your pipeline supports tag writing,
 you can use the function `gst_bin_iterate_all_by_interface (pipeline, GST_TYPE_TAG_SETTER)`.
 On the resulting element, usually an encoder or muxer, you can use
-`gst_tag_setter_merge ()` with a taglist or `gst_tag_setter_add ()` with
-individual tags, to set tags on it.
+`gst_tag_setter_merge_tags ()` with a taglist or `gst_tag_setter_add_tags ()`
+with individual tags, to set tags on it.
 
 A nice extra feature in GStreamer's tag support is that tags are preserved
 in pipelines. This means that if you transcode one file containing tags
