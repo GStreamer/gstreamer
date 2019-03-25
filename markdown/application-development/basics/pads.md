@@ -159,9 +159,9 @@ negotiated already.
 ### Dissecting capabilities
 
 A pad's capabilities are described in a `GstCaps` object. Internally, a
-[`GstCaps`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/gstreamer-GstCaps.html)
+[`GstCaps`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstCaps.html)
 will contain one or more
-[`GstStructure`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/gstreamer-GstStructure.html)
+[`GstStructure`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstStructure.html)
 that will describe one media type. A negotiated pad will have
 capabilities set that contain exactly *one* structure. Also, this
 structure will contain only *fixed* values. These constraints are not
@@ -432,9 +432,9 @@ link_elements_with_filter (GstElement *element1, GstElement *element2)
 ```
 
 See the API references for the full API of
-[`GstStructure`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/gstreamer-GstStructure.html)
+[`GstStructure`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstStructure.html)
 and
-[`GstCaps`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/gstreamer-GstCaps.html).
+[`GstCaps`](http://gstreamer.freedesktop.org/data/doc/gstreamer/stable/gstreamer/html/GstCaps.html).
 
 ## Ghost pads
 
