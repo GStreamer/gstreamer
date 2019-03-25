@@ -36,7 +36,7 @@ application's source file as needed:
 
 Beyond including the proper headers, your application should link to the
 `gstreamer-controller` shared library. To get the required compiler and
-liker flags, you can use:
+linker flags, you can use:
 
 ```
 pkg-config --libs --cflags gstreamer-controller-1.0
@@ -45,7 +45,7 @@ pkg-config --libs --cflags gstreamer-controller-1.0
 ## Setting up parameter control
 
 If we have our pipeline set up and want to control some parameters, we
-first need to create a `GstControlSource`. Lets use an interpolation
+first need to create a `GstControlSource`. Let's use an interpolation
 `GstControlSource`:
 
 ``` c
@@ -90,7 +90,7 @@ the above `GstControlSource` is attached to this property the volume will ramp
 up to 400%\!
 
 One final note: the controller subsystem has a built-in live-mode. Even
-though a property has a `GstControlSource` assigned one can set the
+though a property has a `GstControlSource` assigned, one can set the
 `GObject` property with `g_object_set()`. This is highly useful when binding
 the `GObject` properties to GUI widgets. When the user adjusts the value with
 the widget, one can set the `GObject` property and this remains active until
