@@ -3,7 +3,7 @@ FROM registry.fedoraproject.org/fedora:29
 # System setup
 RUN echo "fastestmirror=true" >>  /etc/dnf/dnf.conf && \
     dnf upgrade -y && \
-    dnf install -y sudo git rsync
+    dnf install -y sudo git lbzip2 rsync
 
 # Configure git for various usage
 RUN git config --global user.email "cerbero@gstreamer.freedesktop.org" && \
