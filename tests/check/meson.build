@@ -73,6 +73,7 @@ if host_machine.system() != 'windows'
     [['elements/avtpaafpay.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpaafdepay.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpcvfpay.c'], not avtp_dep.found(), [avtp_dep]],
+    [['elements/avtpcvfdepay.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpsink.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/avtpsrc.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/ccconverter.c']],
