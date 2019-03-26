@@ -177,6 +177,7 @@ build_disable_debug fedora x86_64:
     # check.gstreamer.libs_baseparse.parser_pull_short_read
     # check.gstreamer.pipelines_seek.test_loopback_2
     # check.gst-plugins-base.elements_appsrc.test_appsrc_blocked_on_caps
+    # check.gst-devtools.validate.launcher_tests.test_validate.launch_pipeline.not_negotiated.caps_query_failure.play_15s
     BLACKLIST: >
       -b check.gstreamer.pipelines_parse_launch.delayed_link
       -b check.gstreamer.gst_gstsystemclock.test_async_sync_interaction
@@ -219,6 +220,7 @@ build_disable_debug fedora x86_64:
       -b check.gst-rtsp-server.gst_rtspserver.test_shared_udp
       -b check.gst-plugins-base.elements_audiomixer.test_flush_start_flush_stop
       -b check.gstreamer-sharp.SdpTests
+      -b check.gst-devtools.validate.launcher_tests.test_validate.launch_pipeline.not_negotiated.caps_query_failure.play_15s
   script:
     - cd gst-build/
     - >
