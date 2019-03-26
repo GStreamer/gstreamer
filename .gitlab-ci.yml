@@ -25,18 +25,15 @@ test manifest:
         - "junit.xml"
 
 .base:
-  image: "docker:stable"
+  image: 'registry.fedoraproject.org/fedora:31'
   extends:
     - '.global_ci_policy'
   rules:
     - when: 'manual'
       allow_failure: true
-  services:
-    - docker:dind
   variables:
-    # When using dind, it's wise to use the overlayfs driver for
-    # improved performance.
-    DOCKER_DRIVER: "overlay2"
+    STORAGE_DRIVER: 'vfs'
+    BUILDAH_FORMAT: 'docker'
     GIT_STRATEGY: fetch
   script:
     - export DATE=$(date +"%Y-%m-%d")
@@ -44,24 +41,29 @@ test manifest:
     - export _UID="${IMAGE}:${DATE}-${CI_JOB_ID}"
     - export LATEST="${IMAGE}:latest"
 
-    - docker build --pull --build-arg DEFAULT_BRANCH=${GST_UPSTREAM_BRANCH} -f ${DOCKERFILE} -t ${LATEST} ${CONTEXT_DIR}
+    - dnf install -y buildah runc
+    # Newer versions of podman/buildah try to set overlayfs mount options when
+    # using the vfs driver, and this causes errors.
+    - sed -i '/^mountopt =.*/d' /etc/containers/storage.conf
+
+    - buildah bud --build-arg DEFAULT_BRANCH=${GST_UPSTREAM_BRANCH} -f ${DOCKERFILE} -t ${LATEST} ${CONTEXT_DIR}
 
     # If we are in a fork, push the image to the reigstry regardless the branch
     - |
       if [ "$CI_PROJECT_NAMESPACE" != "gstreamer" ]; then
-        docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-        docker push ${LATEST}
+        buildah login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+        buildah push ${LATEST}
       fi
 
     # Push the images to the upstream registry
     - |
       if [ "$CI_PROJECT_NAMESPACE" = "gstreamer" ]; then
         # Tag the image with the git ref
-        docker image tag ${LATEST} ${_UID}-${CI_COMMIT_REF_NAME}
+        buildah image tag ${LATEST} ${_UID}-${CI_COMMIT_REF_NAME}
         # Push the tags
-        docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
-        docker push ${_UID}-${CI_COMMIT_REF_NAME}
-        docker push ${LATEST}
+        buildah login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+        buildah push ${_UID}-${CI_COMMIT_REF_NAME}
+        buildah push ${LATEST}
       fi
 
 alpine amd64 manifest builder docker:
