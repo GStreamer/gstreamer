@@ -169,7 +169,7 @@ gst_omx_h265_enc_class_init (GstOMXH265EncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX H.265 Video Encoder",
-      "Codec/Encoder/Video",
+      "Codec/Encoder/Video/Hardware",
       "Encode H.265 video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 

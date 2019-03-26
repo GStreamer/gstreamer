@@ -67,7 +67,7 @@ gst_omx_mpeg2_video_dec_class_init (GstOMXMPEG2VideoDecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX MPEG2 Video Decoder",
-      "Codec/Decoder/Video",
+      "Codec/Decoder/Video/Hardware",
       "Decode MPEG2 video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 

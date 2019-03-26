@@ -64,7 +64,7 @@ gst_omx_mjpeg_dec_class_init (GstOMXMJPEGDecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX MJPEG Video Decoder",
-      "Codec/Decoder/Video",
+      "Codec/Decoder/Video/Hardware",
       "Decode MJPEG video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 

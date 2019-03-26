@@ -89,7 +89,7 @@ gst_omx_mp3_enc_class_init (GstOMXMP3EncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX MP3 Audio Encoder",
-      "Codec/Encoder/Audio",
+      "Codec/Encoder/Audio/Hardware",
       "Encode AAC audio streams", "Julien Isorce <julien.isorce@gmail.com>");
 
   gst_omx_set_default_role (&audioenc_class->cdata, "audio_encoder.mp3");

@@ -72,7 +72,7 @@ gst_omx_theora_dec_class_init (GstOMXTheoraDecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX Theora Video Decoder",
-      "Codec/Decoder/Video",
+      "Codec/Decoder/Video/Hardware",
       "Decode Theora video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 

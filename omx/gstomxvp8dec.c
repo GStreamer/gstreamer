@@ -64,7 +64,7 @@ gst_omx_vp8_dec_class_init (GstOMXVP8DecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX VP8 Video Decoder",
-      "Codec/Decoder/Video",
+      "Codec/Decoder/Video/Hardware",
       "Decode VP8 video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 

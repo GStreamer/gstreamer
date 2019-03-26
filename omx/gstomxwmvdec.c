@@ -64,7 +64,7 @@ gst_omx_wmv_dec_class_init (GstOMXWMVDecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX WMV Video Decoder",
-      "Codec/Decoder/Video",
+      "Codec/Decoder/Video/Hardware",
       "Decode WMV video streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 

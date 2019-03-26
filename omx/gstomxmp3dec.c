@@ -71,7 +71,7 @@ gst_omx_mp3_dec_class_init (GstOMXMP3DecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX MP3 Audio Decoder",
-      "Codec/Decoder/Audio",
+      "Codec/Decoder/Audio/Hardware",
       "Decode MP3 audio streams",
       "Sebastian Dröge <sebastian@centricular.com>");
 

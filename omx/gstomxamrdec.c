@@ -68,7 +68,7 @@ gst_omx_amr_dec_class_init (GstOMXAMRDecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX AMR Audio Decoder",
-      "Codec/Decoder/Audio",
+      "Codec/Decoder/Audio/Hardware",
       "Decode AMR audio streams",
       "Sebastian Dröge <sebastian@centricular.com>");
 

@@ -69,7 +69,7 @@ gst_omx_aac_dec_class_init (GstOMXAACDecClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX AAC Audio Decoder",
-      "Codec/Decoder/Audio",
+      "Codec/Decoder/Audio/Hardware",
       "Decode AAC audio streams",
       "Sebastian Dröge <sebastian@centricular.com>");
 

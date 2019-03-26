@@ -150,7 +150,7 @@ gst_omx_aac_enc_class_init (GstOMXAACEncClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "OpenMAX AAC Audio Encoder",
-      "Codec/Encoder/Audio",
+      "Codec/Encoder/Audio/Hardware",
       "Encode AAC audio streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
