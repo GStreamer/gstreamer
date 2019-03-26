@@ -1338,6 +1338,7 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
   gboolean done;
   GstPad *otherpad;
   GstPad *peerpad;
+  GstState state, pending;
   GstValidatePadMonitor *othermonitor;
   GstFlowReturn aggregated = GST_FLOW_NOT_LINKED;
   gboolean found_a_pad = FALSE;
@@ -1384,8 +1385,17 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
     /* no peer pad found, nothing to do */
     goto done;
   }
-  if (aggregated == GST_FLOW_OK || aggregated == GST_FLOW_EOS) {
-    GstState state, pending;
+
+  if (aggregated == GST_FLOW_FLUSHING) {
+    gst_element_get_state (GST_ELEMENT (parent), &state, &pending, 0);
+    if (state < GST_STATE_PAUSED || pending < GST_STATE_PAUSED) {
+      /* Aggregated is flushing, we might have been aggregating a combination
+       * of pads that are not what was present on the element during the actual
+       * data flow combination (pads might have been removed meanwhile) */
+
+      goto done;
+    }
+  } else if (aggregated == GST_FLOW_OK || aggregated == GST_FLOW_EOS) {
 
     /* those are acceptable situations */
     if (GST_PAD_IS_FLUSHING (pad) && ret == GST_FLOW_FLUSHING) {

@@ -378,9 +378,9 @@ GST_START_TEST(flow_aggregation_##name) { \
 
 FLOW_TEST (ok_ok_error_ok, OK, OK, ERROR, OK, TRUE);
 FLOW_TEST (eos_eos_eos_ok, EOS, EOS, EOS, OK, TRUE);
-FLOW_TEST (flushing_ok_ok_ok, FLUSHING, OK, OK, OK, TRUE);
 FLOW_TEST (not_neg_ok_ok_ok, NOT_NEGOTIATED, OK, OK, OK, TRUE);
 /*[> Passing cases: <]*/
+FLOW_TEST (flushing_ok_ok_ok, FLUSHING, OK, OK, OK, FALSE);
 FLOW_TEST (eos_eos_eos_eos, EOS, EOS, EOS, EOS, FALSE);
 FLOW_TEST (eos_eos_ok_ok, EOS, EOS, OK, OK, FALSE);
 FLOW_TEST (ok_ok_ok_eos, OK, OK, OK, EOS, FALSE);
