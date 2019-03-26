@@ -203,7 +203,7 @@ class LauncherConfig(Loggable):
         self.logsdir = None
         self.privatedir = None
         self.redirect_logs = False
-        self.num_jobs = multiprocessing.cpu_count()
+        self.num_jobs = int(multiprocessing.cpu_count() / 2)
         self.dest = None
         self._using_default_paths = False
         # paths passed with --media-path, and not defined by a testsuite
