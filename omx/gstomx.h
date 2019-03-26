@@ -483,9 +483,6 @@ gboolean          gst_omx_buffer_import_fd (GstOMXBuffer * buffer, GstBuffer * i
 
 void              gst_omx_set_default_role (GstOMXClassData *class_data, const gchar *default_role);
 
-void              gst_omx_buffer_set_omx_buf (GstBuffer * buffer, GstOMXBuffer * omx_buf);
-GstOMXBuffer *    gst_omx_buffer_get_omx_buf (GstBuffer * buffer);
-
 /* refered by plugin_init */
 GST_DEBUG_CATEGORY_EXTERN (gst_omx_video_debug_category);
 

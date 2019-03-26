@@ -70,8 +70,6 @@ static GHashTable *core_handles;
 G_LOCK_DEFINE_STATIC (buffer_flags_str);
 static GHashTable *buffer_flags_str;
 
-static GQuark gst_omx_buffer_data_quark = 0;
-
 GstOMXCore *
 gst_omx_core_acquire (const gchar * filename)
 {
@@ -3739,20 +3737,6 @@ gst_omx_set_default_role (GstOMXClassData * class_data,
     class_data->component_role = default_role;
 }
 
-void
-gst_omx_buffer_set_omx_buf (GstBuffer * buffer, GstOMXBuffer * omx_buf)
-{
-  gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (buffer),
-      gst_omx_buffer_data_quark, omx_buf, NULL);
-}
-
-GstOMXBuffer *
-gst_omx_buffer_get_omx_buf (GstBuffer * buffer)
-{
-  return gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (buffer),
-      gst_omx_buffer_data_quark);
-}
-
 static void
 _class_init (gpointer g_class, gpointer data)
 {
@@ -3922,8 +3906,6 @@ plugin_init (GstPlugin * plugin)
       "gst-omx-video");
   GST_DEBUG_CATEGORY_INIT (OMX_API_TRACE, "OMX_API_TRACE", 0,
       "gst-omx performace");
-
-  gst_omx_buffer_data_quark = g_quark_from_static_string ("GstOMXBufferData");
 
   /* Read configuration file gstomx.conf from the preferred
    * configuration directories */
