@@ -903,12 +903,12 @@ done:
 
 invalid_name:
   {
-    GST_ERROR ("Invalid name for encoding target : '%s'", name);
+    GST_INFO ("Invalid name for encoding target : '%s'", name);
     goto done;
   }
 invalid_category:
   {
-    GST_ERROR ("Invalid name for encoding category : '%s'", category);
+    GST_INFO ("Invalid name for encoding category : '%s'", category);
     goto done;
   }
 }
