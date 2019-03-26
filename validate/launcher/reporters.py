@@ -137,22 +137,24 @@ class XunitReporter(Reporter):
         self.report()
         return super(XunitReporter, self).final_report()
 
-    def _get_captured(self, test):
-        captured = ""
+    def _get_all_logs_data(self, test):
         if not self.options.redirect_logs:
-            value = test.get_log_content()
-            if value:
-                captured += '<system-out><![CDATA[%s' % \
-                    escape_cdata(value)
-            for extralog in test.extra_logfiles:
-                captured += "\n\n===== %s =====\n\n" % escape_cdata(
-                    os.path.basename(extralog))
-                value = test.get_extra_log_content(extralog)
-                captured += escape_cdata(value)
+            return ""
 
-            captured += "]]></system-out>"
+        captured = ""
+        value = test.get_log_content()
+        if value:
+            captured += escape_cdata(value)
+        for extralog in test.extra_logfiles:
+            captured += "\n\n===== %s =====\n\n" % escape_cdata(
+                os.path.basename(extralog))
+            value = test.get_extra_log_content(extralog)
+            captured += escape_cdata(value)
 
         return captured
+
+    def _get_captured(self, test):
+        return '<system-out><![CDATA[%s]]></system-out>' % self._get_all_logs_data(test)
 
     def _quoteattr(self, attr):
         """Escape an XML attribute. Value can be unicode."""
@@ -172,8 +174,8 @@ class XunitReporter(Reporter):
                                self.encoding, 'replace')
 
         self.stats['encoding'] = self.encoding
-        self.stats['total'] = (self.stats['timeout'] + self.stats['failures'] +
-                               self.stats['passed'] + self.stats['skipped'])
+        self.stats['total'] = (self.stats['timeout'] + self.stats['failures']
+                               + self.stats['passed'] + self.stats['skipped'])
 
         xml_file.write('<?xml version="1.0" encoding="%(encoding)s"?>'
                        '<testsuite name="gst-validate-launcher" tests="%(total)d" '
@@ -202,21 +204,17 @@ class XunitReporter(Reporter):
         """
         super().set_failed(test)
 
-        stack_trace = ''
-        if test.stack_trace:
-            stack_trace = '<![CDATA[%s]]>' % (escape_cdata(test.stack_trace))
         xml_file = codecs.open(self.tmp_xml_file.name, 'a',
                                self.encoding, 'replace')
         xml_file.write(self._forceUnicode(
             '<testcase name=%(name)s time="%(taken).3f">'
-            '<failure type=%(errtype)s message=%(message)s>%(stacktrace)s'
-            '</failure>%(systemout)s</testcase>' %
+            '<failure type=%(errtype)s message=%(message)s>%(logs)s'
+            '</failure></testcase>' %
             {'name': self._quoteattr(test.get_classname() + '.' + test.get_name()),
              'taken': test.time_taken,
-             'stacktrace': stack_trace,
+             'logs': self._get_all_logs_data(test),
              'errtype': self._quoteattr(test.result),
              'message': self._quoteattr(test.message),
-             'systemout': self._get_captured(test),
              }))
         xml_file.close()
 
