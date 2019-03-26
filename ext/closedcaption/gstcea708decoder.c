@@ -1402,9 +1402,9 @@ gst_cea708dec_set_pen_attributes (Cea708Dec * decoder,
      tt3 tt2 tt1 tt0 o1 o0 s1 s0
      i u et2 et1 et0 fs2 fs1 fs0 */
   window->pen_attributes.pen_size = dtvcc_buffer[index] & 0x3;
-  window->pen_attributes.font_style = dtvcc_buffer[index + 1] & 0x3;
   window->pen_attributes.text_tag = (dtvcc_buffer[index] & 0xF0) >> 4;
   window->pen_attributes.offset = (dtvcc_buffer[index] & 0xC0) >> 2;
+  window->pen_attributes.font_style = dtvcc_buffer[index + 1] & 0x7;
   window->pen_attributes.italics =
       ((dtvcc_buffer[index + 1] & 0x80) >> 7) ? TRUE : FALSE;
   window->pen_attributes.underline =
