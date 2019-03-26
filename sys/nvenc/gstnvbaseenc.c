@@ -998,6 +998,12 @@ gst_nv_base_enc_free_buffers (GstNvBaseEnc * nvenc)
         GST_ERROR_OBJECT (nvenc, "Failed to unregister resource %p, ret %d",
             in_gl_resource, nv_ret);
 
+      nv_ret = cuMemFree ((CUdeviceptr) in_gl_resource->cuda_pointer);
+      if (nv_ret != NV_ENC_SUCCESS) {
+        GST_ERROR_OBJECT (nvenc, "Failed to free CUDA device memory, ret %d",
+            nv_ret);
+      }
+
       g_free (in_gl_resource);
       cuCtxPopCurrent (NULL);
     } else
