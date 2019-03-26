@@ -578,7 +578,7 @@ gst_amc_video_enc_open (GstVideoEncoder * encoder)
 
   GST_DEBUG_OBJECT (self, "Opening encoder");
 
-  self->codec = gst_amc_codec_new (klass->codec_info->name, &err);
+  self->codec = gst_amc_codec_new (klass->codec_info->name, TRUE, &err);
   if (!self->codec) {
     GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     return FALSE;
@@ -1317,7 +1317,7 @@ gst_amc_video_enc_set_format (GstVideoEncoder * encoder,
       GST_STR_NULL (format_string));
   g_free (format_string);
 
-  if (!gst_amc_codec_configure (self->codec, format, NULL, 1, &err)) {
+  if (!gst_amc_codec_configure (self->codec, format, NULL, &err)) {
     GST_ERROR_OBJECT (self, "Failed to configure codec");
     GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     goto quit;

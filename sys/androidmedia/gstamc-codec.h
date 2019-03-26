@@ -50,10 +50,10 @@ void gst_amc_buffer_free (GstAmcBuffer * buffer);
 gboolean gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer, GError ** err,
     gint position, gint limit);
 
-GstAmcCodec * gst_amc_codec_new (const gchar *name, GError **err);
+GstAmcCodec * gst_amc_codec_new (const gchar *name, gboolean is_encoder, GError **err);
 void gst_amc_codec_free (GstAmcCodec * codec);
 
-gboolean gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, GstAmcSurfaceTexture * surface_texture, gint flags, GError **err);
+gboolean gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, GstAmcSurfaceTexture * surface_texture, GError **err);
 GstAmcFormat * gst_amc_codec_get_output_format (GstAmcCodec * codec, GError **err);
 
 gboolean gst_amc_codec_start (GstAmcCodec * codec, GError **err);

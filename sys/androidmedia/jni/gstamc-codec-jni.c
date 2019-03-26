@@ -37,6 +37,7 @@ struct _GstAmcCodec
   RealBuffer *input_buffers, *output_buffers;
   gsize n_input_buffers, n_output_buffers;
   GstAmcSurface *surface;
+  gboolean is_encoder;
 };
 
 static struct
@@ -440,7 +441,7 @@ gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer_, GError ** err,
 }
 
 GstAmcCodec *
-gst_amc_codec_new (const gchar * name, GError ** err)
+gst_amc_codec_new (const gchar * name, gboolean is_encoder, GError ** err)
 {
   JNIEnv *env;
   GstAmcCodec *codec = NULL;
@@ -457,6 +458,7 @@ gst_amc_codec_new (const gchar * name, GError ** err)
   }
 
   codec = g_slice_new0 (GstAmcCodec);
+  codec->is_encoder = is_encoder;
 
   if (!gst_amc_jni_call_static_object_method (env, err, media_codec.klass,
           media_codec.create_by_codec_name, &object, name_str))
@@ -514,9 +516,10 @@ gst_amc_codec_free (GstAmcCodec * codec)
 
 gboolean
 gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format,
-    GstAmcSurfaceTexture * surface, gint flags, GError ** err)
+    GstAmcSurfaceTexture * surface, GError ** err)
 {
   JNIEnv *env;
+  gint flags = 0;
 
   g_return_val_if_fail (codec != NULL, FALSE);
   g_return_val_if_fail (format != NULL, FALSE);
@@ -531,6 +534,9 @@ gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format,
     if (!codec->surface)
       return FALSE;
   }
+
+  if (codec->is_encoder)
+    flags = 1;
 
   return gst_amc_jni_call_void_method (env, err, codec->object,
       media_codec.configure, format->object, codec->surface, NULL, flags);

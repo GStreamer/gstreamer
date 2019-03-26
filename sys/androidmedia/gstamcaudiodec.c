@@ -244,7 +244,7 @@ gst_amc_audio_dec_open (GstAudioDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Opening decoder");
 
-  self->codec = gst_amc_codec_new (klass->codec_info->name, &err);
+  self->codec = gst_amc_codec_new (klass->codec_info->name, FALSE, &err);
   if (!self->codec) {
     GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     return FALSE;
@@ -964,7 +964,7 @@ gst_amc_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
       GST_STR_NULL (format_string));
   g_free (format_string);
 
-  if (!gst_amc_codec_configure (self->codec, format, NULL, 0, &err)) {
+  if (!gst_amc_codec_configure (self->codec, format, NULL, &err)) {
     GST_ERROR_OBJECT (self, "Failed to configure codec");
     GST_ELEMENT_ERROR_FROM_ERROR (self, err);
     return FALSE;
