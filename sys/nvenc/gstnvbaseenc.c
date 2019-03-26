@@ -179,6 +179,10 @@ struct gl_input_resource
   gsize cuda_num_bytes;
   NV_ENC_REGISTER_RESOURCE nv_resource;
   NV_ENC_MAP_INPUT_RESOURCE nv_mapped_resource;
+
+  /* whether nv_mapped_resource was mapped via NvEncMapInputResource()
+   * and therefore should unmap via NvEncUnmapInputResource or not */
+  gboolean mapped;
 };
 #endif
 
@@ -837,6 +841,8 @@ gst_nv_base_enc_bitstream_thread (gpointer user_data)
         nv_ret =
             NvEncUnmapInputResource (nvenc->encoder,
             in_gl_resource->nv_mapped_resource.mappedResource);
+        in_gl_resource->mapped = FALSE;
+
         if (nv_ret != NV_ENC_SUCCESS) {
           GST_ERROR_OBJECT (nvenc, "Failed to unmap input resource %p, ret %d",
               in_gl_resource, nv_ret);
@@ -971,6 +977,20 @@ gst_nv_base_enc_free_buffers (GstNvBaseEnc * nvenc)
       struct gl_input_resource *in_gl_resource = nvenc->input_bufs[i];
 
       cuCtxPushCurrent (nvenc->cuda_ctx);
+
+      if (in_gl_resource->mapped) {
+        GST_LOG_OBJECT (nvenc, "Unmap resource %p", in_gl_resource);
+
+        nv_ret =
+            NvEncUnmapInputResource (nvenc->encoder,
+            in_gl_resource->nv_mapped_resource.mappedResource);
+
+        if (nv_ret != NV_ENC_SUCCESS) {
+          GST_ERROR_OBJECT (nvenc, "Failed to unmap input resource %p, ret %d",
+              in_gl_resource, nv_ret);
+        }
+      }
+
       nv_ret =
           NvEncUnregisterResource (nvenc->encoder,
           in_gl_resource->nv_resource.registeredResource);
@@ -1733,6 +1753,8 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
           in_gl_resource, nv_ret);
       goto error;
     }
+
+    in_gl_resource->mapped = TRUE;
 
     out_buf = g_async_queue_try_pop (nvenc->bitstream_pool);
     if (out_buf == NULL) {
