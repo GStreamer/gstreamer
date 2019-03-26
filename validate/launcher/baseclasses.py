@@ -316,9 +316,9 @@ class Test(Loggable):
                     self.process.communicate()
                 else:
                     pname = self.command[0]
-                    input("%sTimeout happened you can attach gdb doing: $gdb %s %d%s\n"
-                          "Press enter to continue" % (Colors.FAIL, pname, self.process.pid,
-                                                       Colors.ENDC))
+                    input("%sTimeout happened  on %s you can attach gdb doing:\n $gdb %s %d%s\n"
+                          "Press enter to continue" % (Colors.FAIL, self.classname,
+                          pname, self.process.pid, Colors.ENDC))
             else:
                 self.add_stack_trace_to_logfile()
 
