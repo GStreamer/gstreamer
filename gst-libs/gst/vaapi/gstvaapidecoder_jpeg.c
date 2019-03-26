@@ -70,6 +70,7 @@ struct _GstVaapiDecoderJpegPrivate
   guint decoder_state;
   guint is_opened:1;
   guint profile_changed:1;
+  guint size_changed:1;
 };
 
 /**
@@ -123,6 +124,7 @@ gst_vaapi_decoder_jpeg_close (GstVaapiDecoderJpeg * decoder)
   priv->height = 0;
   priv->is_opened = FALSE;
   priv->profile_changed = TRUE;
+  priv->size_changed = TRUE;
 }
 
 static gboolean
@@ -155,6 +157,7 @@ gst_vaapi_decoder_jpeg_create (GstVaapiDecoder * base_decoder)
 
   priv->profile = GST_VAAPI_PROFILE_JPEG_BASELINE;
   priv->profile_changed = TRUE;
+  priv->size_changed = TRUE;
   return TRUE;
 }
 
@@ -192,6 +195,12 @@ ensure_context (GstVaapiDecoderJpeg * decoder)
     if (i == n_profiles)
       return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
     priv->profile = profiles[i];
+  }
+
+  if (priv->size_changed) {
+    GST_DEBUG ("size changed");
+    priv->size_changed = FALSE;
+    reset_context = TRUE;
   }
 
   if (reset_context) {
@@ -439,6 +448,10 @@ decode_picture (GstVaapiDecoderJpeg * decoder, GstJpegSegment * seg)
     GST_ERROR ("failed to parse image");
     return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
   }
+
+  if (priv->height != frame_hdr->height || priv->width != frame_hdr->width)
+    priv->size_changed = TRUE;
+
   priv->height = frame_hdr->height;
   priv->width = frame_hdr->width;
 
