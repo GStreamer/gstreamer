@@ -559,7 +559,8 @@ _bus_handler (GstBus * bus, GstMessage * message,
         g_free (report);
       } else {
         GST_VALIDATE_REPORT (monitor, ERROR_ON_BUS,
-            "Got error: %s -- Debug message: %s", err->message, debug);
+            "Got error: %s -- Debug message: %s (%" GST_PTR_FORMAT ")",
+            err->message, debug, details);
       }
 
       GST_VALIDATE_MONITOR_LOCK (monitor);
