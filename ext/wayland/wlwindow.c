@@ -87,7 +87,13 @@ static void
 handle_xdg_surface_configure (void *data, struct xdg_surface *xdg_surface,
     uint32_t serial)
 {
+  GstWlWindow *window = data;
   xdg_surface_ack_configure (xdg_surface, serial);
+
+  g_mutex_lock (&window->configure_mutex);
+  window->configured = TRUE;
+  g_cond_signal (&window->configure_cond);
+  g_mutex_unlock (&window->configure_mutex);
 }
 
 static const struct xdg_surface_listener xdg_surface_listener = {
@@ -141,6 +147,9 @@ gst_wl_window_class_init (GstWlWindowClass * klass)
 static void
 gst_wl_window_init (GstWlWindow * self)
 {
+  self->configured = TRUE;
+  g_cond_init (&self->configure_cond);
+  g_mutex_init (&self->configure_mutex);
 }
 
 static void
@@ -185,6 +194,7 @@ gst_wl_window_new_internal (GstWlDisplay * display, GMutex * render_lock)
   window = g_object_new (GST_TYPE_WL_WINDOW, NULL);
   window->display = g_object_ref (display);
   window->render_lock = render_lock;
+  g_cond_init (&window->configure_cond);
 
   window->area_surface = wl_compositor_create_surface (display->compositor);
   window->video_surface = wl_compositor_create_surface (display->compositor);
@@ -268,10 +278,17 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
     xdg_toplevel_add_listener (window->xdg_toplevel,
         &xdg_toplevel_listener, window);
 
-    /* Finally, commit the xdg_surface state as toplevel */
-    wl_surface_commit (window->area_surface);
-
     gst_wl_window_ensure_fullscreen (window, fullscreen);
+
+    /* Finally, commit the xdg_surface state as toplevel */
+    window->configured = FALSE;
+    wl_surface_commit (window->video_surface);
+    wl_display_flush (display->display);
+
+    g_mutex_lock (&window->configure_mutex);
+    while (!window->configured)
+      g_cond_wait (&window->configure_cond, &window->configure_mutex);
+    g_mutex_unlock (&window->configure_mutex);
   } else if (display->wl_shell) {
     /* go toplevel */
     window->wl_shell_surface = wl_shell_get_shell_surface (display->wl_shell,
