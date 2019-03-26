@@ -409,10 +409,10 @@ play_current_uri (GtkPlay * play, GList * uri, const gchar * ext_suburi)
 {
   /* reset the button/widget state to default */
   g_signal_handlers_block_by_func (play->seekbar,
-    seekbar_value_changed_cb, play);
+      seekbar_value_changed_cb, play);
   gtk_range_set_range (GTK_RANGE (play->seekbar), 0, 0);
   g_signal_handlers_unblock_by_func (play->seekbar,
-    seekbar_value_changed_cb, play);
+      seekbar_value_changed_cb, play);
   gtk_widget_set_sensitive (play->prev_button, g_list_previous (uri) != NULL);
   gtk_widget_set_sensitive (play->next_button, g_list_next (uri) != NULL);
   gtk_label_set_label (play->rate_label, NULL);

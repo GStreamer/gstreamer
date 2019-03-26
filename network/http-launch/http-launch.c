@@ -108,7 +108,7 @@ send_response_200_ok (Client * client)
 {
   gchar *response;
   response = g_strdup_printf ("%s 200 OK\r\n%s\r\n", client->http_version,
-        content_type);
+      content_type);
   write_bytes (client, response, strlen (response));
   g_free (response);
 }
@@ -242,10 +242,10 @@ on_read_bytes (GPollableInputStream * stream, Client * client)
         client_message (client, (gchar *) client->current_message->data, len);
         g_byte_array_remove_range (client->current_message, 0, len);
         tmp = client->current_message->data;
-	tmp_len = client->current_message->len;
+        tmp_len = client->current_message->len;
       } else {
         tmp++;
-	tmp_len--;
+        tmp_len--;
       }
     }
 
@@ -372,8 +372,8 @@ on_client_socket_removed (GstElement * element, GSocket * socket,
     remove_client (client);
 }
 
-static void on_stream_caps_changed (GObject *obj, GParamSpec *pspec,
-    gpointer user_data)
+static void
+on_stream_caps_changed (GObject * obj, GParamSpec * pspec, gpointer user_data)
 {
   GstPad *src_pad;
   GstCaps *src_caps;
@@ -389,27 +389,22 @@ static void on_stream_caps_changed (GObject *obj, GParamSpec *pspec,
    * type is OK in HTTP. Required for MJPEG streams.
    */
   int i = 0;
-  const gchar *mimetype = gst_structure_get_name(gstrc);
-  while (known_mimetypes[i] != NULL)
-  {
-    if (strcmp(mimetype, known_mimetypes[i]) == 0)
-    {
+  const gchar *mimetype = gst_structure_get_name (gstrc);
+  while (known_mimetypes[i] != NULL) {
+    if (strcmp (mimetype, known_mimetypes[i]) == 0) {
       if (content_type)
-        g_free(content_type);
+        g_free (content_type);
 
       /* Handle the (maybe not so) especial case of multipart to add boundary */
-      if (strcmp(mimetype, "multipart/x-mixed-replace") == 0 &&
-          gst_structure_has_field_typed(gstrc, "boundary", G_TYPE_STRING))
-      {
-        const gchar *boundary = gst_structure_get_string(gstrc, "boundary");
+      if (strcmp (mimetype, "multipart/x-mixed-replace") == 0 &&
+          gst_structure_has_field_typed (gstrc, "boundary", G_TYPE_STRING)) {
+        const gchar *boundary = gst_structure_get_string (gstrc, "boundary");
         content_type = g_strdup_printf ("Content-Type: "
-	          "multipart/x-mixed-replace;boundary=--%s\r\n", boundary);
-      }
-      else
-      {
+            "multipart/x-mixed-replace;boundary=--%s\r\n", boundary);
+      } else {
         content_type = g_strdup_printf ("Content-Type: %s\r\n", mimetype);
       }
-      g_print("%s", content_type);
+      g_print ("%s", content_type);
       break;
     }
     i++;
@@ -455,7 +450,7 @@ main (gint argc, gchar ** argv)
   }
 
   const gchar *port_str = argv[1];
-  const int port = (int) g_ascii_strtoll(port_str, NULL, 10);
+  const int port = (int) g_ascii_strtoll (port_str, NULL, 10);
 
   bin = gst_parse_launchv ((const gchar **) argv + 2, &err);
   if (!bin) {
@@ -481,8 +476,7 @@ main (gint argc, gchar ** argv)
 
   content_type = g_strdup ("");
   g_signal_connect (srcpad, "notify::caps",
-                  G_CALLBACK (on_stream_caps_changed),
-                  NULL);
+      G_CALLBACK (on_stream_caps_changed), NULL);
 
   ghostpad = gst_ghost_pad_new ("src", srcpad);
   gst_element_add_pad (GST_ELEMENT (bin), ghostpad);
