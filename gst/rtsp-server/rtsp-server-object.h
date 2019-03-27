@@ -133,6 +133,12 @@ GST_RTSP_SERVER_API
 GstRTSPMountPoints *  gst_rtsp_server_get_mount_points     (GstRTSPServer *server);
 
 GST_RTSP_SERVER_API
+void                  gst_rtsp_server_set_content_length_limit (GstRTSPServer * server, guint limit);
+
+GST_RTSP_SERVER_API
+guint                 gst_rtsp_server_get_content_length_limit (GstRTSPServer * server);
+
+GST_RTSP_SERVER_API
 void                  gst_rtsp_server_set_auth             (GstRTSPServer *server, GstRTSPAuth *auth);
 
 GST_RTSP_SERVER_API

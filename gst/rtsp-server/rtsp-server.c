@@ -84,6 +84,9 @@ struct _GstRTSPServerPrivate
   /* mount points for this server */
   GstRTSPMountPoints *mount_points;
 
+  /* request size limit */
+  guint content_length_limit;
+
   /* authentication manager */
   GstRTSPAuth *auth;
 
@@ -116,6 +119,7 @@ enum
 
   PROP_SESSION_POOL,
   PROP_MOUNT_POINTS,
+  PROP_CONTENT_LENGTH_LIMIT,
   PROP_LAST
 };
 
@@ -223,6 +227,19 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
           GST_TYPE_RTSP_MOUNT_POINTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * RTSPServer::content-length-limit:
+   *
+   * Define an appropriate request size limit and reject requests exceeding the
+   * limit.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_CONTENT_LENGTH_LIMIT,
+      g_param_spec_uint ("content-length-limit", "Limitation of Content-Length",
+          "Limitation of Content-Length",
+          0, G_MAXUINT, G_MAXUINT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_server_signals[SIGNAL_CLIENT_CONNECTED] =
       g_signal_new ("client-connected", G_TYPE_FROM_CLASS (gobject_class),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPServerClass, client_connected),
@@ -248,6 +265,7 @@ gst_rtsp_server_init (GstRTSPServer * server)
   priv->backlog = DEFAULT_BACKLOG;
   priv->session_pool = gst_rtsp_session_pool_new ();
   priv->mount_points = gst_rtsp_mount_points_new ();
+  priv->content_length_limit = G_MAXUINT;
   priv->thread_pool = gst_rtsp_thread_pool_new ();
 }
 
@@ -601,6 +619,57 @@ gst_rtsp_server_get_mount_points (GstRTSPServer * server)
 }
 
 /**
+ * gst_rtsp_server_set_content_length_limit
+ * @server: a #GstRTSPServer
+ * Configure @server to use the specified Content-Length limit.
+ *
+ * Define an appropriate request size limit and reject requests exceeding the
+ * limit.
+ *
+ * Since: 1.18
+ */
+void
+gst_rtsp_server_set_content_length_limit (GstRTSPServer * server, guint limit)
+{
+  GstRTSPServerPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_SERVER (server));
+
+  priv = server->priv;
+
+  GST_RTSP_SERVER_LOCK (server);
+  priv->content_length_limit = limit;
+  GST_RTSP_SERVER_UNLOCK (server);
+}
+
+/**
+ * gst_rtsp_server_get_content_length_limit:
+ * @server: a #GstRTSPServer
+ *
+ * Get the Content-Length limit of @server.
+ *
+ * Returns: the Content-Length limit.
+ *
+ * Since: 1.18
+ */
+guint
+gst_rtsp_server_get_content_length_limit (GstRTSPServer * server)
+{
+  GstRTSPServerPrivate *priv;
+  guint result;
+
+  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), G_MAXUINT);
+
+  priv = server->priv;
+
+  GST_RTSP_SERVER_LOCK (server);
+  result = priv->content_length_limit;
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  return result;
+}
+
+/**
  * gst_rtsp_server_set_auth:
  * @server: a #GstRTSPServer
  * @auth: (transfer none) (nullable): a #GstRTSPAuth
@@ -739,6 +808,10 @@ gst_rtsp_server_get_property (GObject * object, guint propid,
     case PROP_MOUNT_POINTS:
       g_value_take_object (value, gst_rtsp_server_get_mount_points (server));
       break;
+    case PROP_CONTENT_LENGTH_LIMIT:
+      g_value_set_uint (value,
+          gst_rtsp_server_get_content_length_limit (server));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -765,6 +838,10 @@ gst_rtsp_server_set_property (GObject * object, guint propid,
       break;
     case PROP_MOUNT_POINTS:
       gst_rtsp_server_set_mount_points (server, g_value_get_object (value));
+      break;
+    case PROP_CONTENT_LENGTH_LIMIT:
+      gst_rtsp_server_set_content_length_limit (server,
+          g_value_get_uint (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1073,6 +1150,9 @@ default_create_client (GstRTSPServer * server)
   gst_rtsp_client_set_session_pool (client, priv->session_pool);
   /* set the mount points that this client should use */
   gst_rtsp_client_set_mount_points (client, priv->mount_points);
+  /* Set content-length limit */
+  gst_rtsp_client_set_content_length_limit (GST_RTSP_CLIENT (client),
+      priv->content_length_limit);
   /* set authentication manager */
   gst_rtsp_client_set_auth (client, priv->auth);
   /* set threadpool */

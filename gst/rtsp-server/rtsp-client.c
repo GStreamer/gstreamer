@@ -103,6 +103,8 @@ struct _GstRTSPClientPrivate
 
   gboolean drop_backlog;
 
+  guint content_length_limit;
+
   guint rtsp_ctrl_timeout_id;
   guint rtsp_ctrl_timeout_cnt;
 
@@ -609,6 +611,7 @@ gst_rtsp_client_init (GstRTSPClient * client)
   priv->pipelined_requests = g_hash_table_new_full (g_str_hash,
       g_str_equal, g_free, g_free);
   priv->tstate = TUNNEL_STATE_UNKNOWN;
+  priv->content_length_limit = G_MAXUINT;
 }
 
 static GstRTSPFilterResult
@@ -3984,6 +3987,57 @@ gst_rtsp_client_get_mount_points (GstRTSPClient * client)
 }
 
 /**
+ * gst_rtsp_client_set_content_length_limit:
+ * @client: a #GstRTSPClient
+ * @limit: Content-Length limit
+ *
+ * Configure @client to use the specified Content-Length limit.
+ *
+ * Define an appropriate request size limit and reject requests exceeding the
+ * limit with response status 413 Request Entity Too Large
+ *
+ * Since: 1.18
+ */
+void
+gst_rtsp_client_set_content_length_limit (GstRTSPClient * client, guint limit)
+{
+  GstRTSPClientPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_CLIENT (client));
+
+  priv = client->priv;
+  g_mutex_lock (&priv->lock);
+  priv->content_length_limit = limit;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_client_get_content_length_limit:
+ * @client: a #GstRTSPClient
+ *
+ * Get the Content-Length limit of @client.
+ *
+ * Returns: the Content-Length limit.
+ *
+ * Since: 1.18
+ */
+guint
+gst_rtsp_client_get_content_length_limit (GstRTSPClient * client)
+{
+  GstRTSPClientPrivate *priv;
+  glong content_length_limit;
+
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), -1);
+  priv = client->priv;
+
+  g_mutex_lock (&priv->lock);
+  content_length_limit = priv->content_length_limit;
+  g_mutex_unlock (&priv->lock);
+
+  return content_length_limit;
+}
+
+/**
  * gst_rtsp_client_set_auth:
  * @client: a #GstRTSPClient
  * @auth: (transfer none) (nullable): a #GstRTSPAuth
@@ -4122,6 +4176,8 @@ gst_rtsp_client_set_connection (GstRTSPClient * client,
 
   priv = client->priv;
 
+  gst_rtsp_connection_set_content_length_limit (conn,
+      priv->content_length_limit);
   read_socket = gst_rtsp_connection_get_read_socket (conn);
 
   if (!(address = g_socket_get_local_address (read_socket, &error)))
@@ -4492,7 +4548,39 @@ error_full (GstRTSPWatch * watch, GstRTSPResult result,
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
   gchar *str;
+  GstRTSPContext sctx = { NULL }, *ctx;
+  GstRTSPClientPrivate *priv;
+  GstRTSPMessage response = { 0 };
+  priv = client->priv;
 
+  if (!(ctx = gst_rtsp_context_get_current ())) {
+    ctx = &sctx;
+    ctx->auth = priv->auth;
+    gst_rtsp_context_push_current (ctx);
+  }
+
+  ctx->conn = priv->connection;
+  ctx->client = client;
+  ctx->request = message;
+  ctx->method = GST_RTSP_INVALID;
+  ctx->response = &response;
+
+  /* only return error response if it is a request */
+  if (!message || message->type != GST_RTSP_MESSAGE_REQUEST)
+    goto done;
+
+  if (result == GST_RTSP_ENOMEM) {
+    send_generic_response (client, GST_RTSP_STS_REQUEST_ENTITY_TOO_LARGE, ctx);
+    goto done;
+  }
+  if (result == GST_RTSP_EPARSE) {
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    goto done;
+  }
+
+done:
+  if (ctx == &sctx)
+    gst_rtsp_context_pop_current (ctx);
   str = gst_rtsp_strresult (result);
   GST_INFO
       ("client %p: error when handling message %p with id %d: %s",
