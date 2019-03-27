@@ -121,7 +121,7 @@ build fedora x86_64:
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled"
 
-build_disable_debug fedora x86_64:
+build nodebug fedora x86_64:
   extends: '.build'
   stage: 'build'
   image: $FEDORA_IMAGE
