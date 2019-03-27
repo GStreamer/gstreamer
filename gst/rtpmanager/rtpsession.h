@@ -330,6 +330,8 @@ struct _RTPSessionClass {
   void (*on_receiving_rtcp) (RTPSession *sess, GstBuffer *buffer);
   void (*on_new_sender_ssrc)     (RTPSession *sess, RTPSource *source);
   void (*on_sender_ssrc_active)  (RTPSession *sess, RTPSource *source);
+  guint (*on_sending_nacks) (RTPSession *sess, guint sender_ssrc,
+      guint media_ssrc, GArray *nacks, GstBuffer *buffer);
 };
 
 GType rtp_session_get_type (void);

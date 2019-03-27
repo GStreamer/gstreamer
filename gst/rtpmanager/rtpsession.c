@@ -54,6 +54,7 @@ enum
   SIGNAL_ON_RECEIVING_RTCP,
   SIGNAL_ON_NEW_SENDER_SSRC,
   SIGNAL_ON_SENDER_SSRC_ACTIVE,
+  SIGNAL_ON_SENDING_NACKS,
   LAST_SIGNAL
 };
 
@@ -421,6 +422,39 @@ rtp_session_class_init (RTPSessionClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass,
           on_sender_ssrc_active), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
+
+  /**
+   * RTPSession::on-sending-nack
+   * @session: the object which received the signal
+   * @sender_ssrc: the sender ssrc
+   * @media_ssrc: the media ssrc
+   * @nacks: (element-type guint16): the list of seqnum to be nacked
+   * @buffer: the #GstBuffer containing the RTCP packet about to be sent
+   *
+   * This signal is emitted before NACK packets are added into the RTCP
+   * packet. This signal can be used to override the conversion of the NACK
+   * seqnum array into packets. This can be used if your protocol uses
+   * different type of NACK (e.g. based on RTCP APP).
+   *
+   * The handler should transform the seqnum from @nacks array into packets.
+   * @nacks seqnum must be consumed from the start. The remaining will be
+   * rescheduled for later base on bandwidth. Only one handler will be
+   * signalled.
+   *
+   * A handler may return 0 to signal that generic NACKs should be created
+   * for this set. This can be useful if the signal is used for other purpose
+   * or if the other type of NACK would use more space.
+   *
+   * Returns: the number of NACK seqnum that was consumed from @nacks.
+   *
+   * Since: 1.16
+   */
+  rtp_session_signals[SIGNAL_ON_SENDING_NACKS] =
+      g_signal_new ("on-sending-nacks", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sending_nacks),
+      g_signal_accumulator_first_wins, NULL, g_cclosure_marshal_generic,
+      G_TYPE_UINT, 4, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_ARRAY,
+      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SSRC,
       g_param_spec_uint ("internal-ssrc", "Internal SSRC",
@@ -3607,6 +3641,7 @@ session_pli (const gchar * key, RTPSource * source, ReportData * data)
 static void
 session_nack (const gchar * key, RTPSource * source, ReportData * data)
 {
+  RTPSession *sess = data->sess;
   GstRTCPBuffer *rtcp = &data->rtcpbuf;
   GstRTCPPacket *packet = &data->packet;
   guint16 *nacks;
@@ -3637,6 +3672,23 @@ session_nack (const gchar * key, RTPSource * source, ReportData * data)
     n_nacks -= i;
     if (n_nacks == 0)
       return;
+  }
+
+  /* allow overriding NACK to packet conversion */
+  if (g_signal_has_handler_pending (sess,
+          rtp_session_signals[SIGNAL_ON_SENDING_NACKS], 0, TRUE)) {
+    /* this is needed as it will actually resize the buffer */
+    gst_rtcp_buffer_unmap (rtcp);
+
+    g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SENDING_NACKS], 0,
+        data->source->ssrc, source->ssrc, source->nacks, data->rtcp,
+        &nacked_seqnums);
+
+    /* and now remap for the remaining work */
+    gst_rtcp_buffer_map (data->rtcp, GST_MAP_READWRITE, rtcp);
+
+    if (nacked_seqnums > 0)
+      goto done;
   }
 
   if (!gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_RTPFB, packet))
@@ -3682,12 +3734,13 @@ session_nack (const gchar * key, RTPSource * source, ReportData * data)
     fci_data += 4;
   }
 
+  GST_DEBUG ("Sent %u seqnums into %u FB NACKs", nacked_seqnums, n_fb_nacks);
+  source->stats.sent_nack_count += n_fb_nacks;
+
+done:
   data->nacked_seqnums += nacked_seqnums;
   rtp_source_clear_nacks (source, nacked_seqnums);
   data->may_suppress = FALSE;
-  source->stats.sent_nack_count += n_fb_nacks;
-
-  GST_DEBUG ("Sent %u seqnums into %u FB NACKs", nacked_seqnums, n_fb_nacks);
 }
 
 /* perform cleanup of sources that timed out */
