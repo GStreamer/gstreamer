@@ -252,7 +252,7 @@ GST_STATIC_PAD_TEMPLATE (
 
 Those pad templates are registered during the `_class_init ()` function
 with the `gst_element_class_add_pad_template ()`. For this function you
-need a handle the `GstPadTemplate` which you can create from the static
+need a handle to the `GstPadTemplate` which you can create from the static
 pad template with `gst_static_pad_template_get ()`. See below for more
 details on this.
 
