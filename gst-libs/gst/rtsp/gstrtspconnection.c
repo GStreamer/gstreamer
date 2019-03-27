@@ -198,6 +198,8 @@ struct _GstRTSPConnection
   gchar *passwd;
   GHashTable *auth_params;
 
+  guint content_length_limit;
+
   /* TLS */
   GTlsDatabase *tls_database;
   GTlsInteraction *tls_interaction;
@@ -240,7 +242,7 @@ typedef struct
 
   guint line;
   guint8 *body_data;
-  glong body_len;
+  guint body_len;
 } GstRTSPBuilder;
 
 /* function prototypes */
@@ -369,6 +371,8 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
   newconn->passwd = NULL;
   newconn->auth_params = NULL;
   newconn->version = 0;
+
+  newconn->content_length_limit = G_MAXUINT;
 
   *conn = newconn;
 
@@ -2417,6 +2421,7 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
         /* we have a regular response */
         if (builder->buffer[0] == '\0') {
           gchar *hdrval;
+          gint64 content_length_parsed = 0;
 
           /* empty line, end of message header */
           /* see if there is a Content-Length header, but ignore it if this
@@ -2428,13 +2433,23 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
                   gst_rtsp_message_get_header (message,
                       GST_RTSP_HDR_X_SESSIONCOOKIE, NULL, 0) != GST_RTSP_OK)) {
             /* there is, prepare to read the body */
-            builder->body_len = atol (hdrval);
+            errno = 0;
+            content_length_parsed = g_ascii_strtoll (hdrval, NULL, 10);
+            if (errno != 0 || content_length_parsed < 0) {
+              res = GST_RTSP_EPARSE;
+              goto invalid_body_len;
+            } else if (content_length_parsed > conn->content_length_limit) {
+              res = GST_RTSP_ENOMEM;
+              goto invalid_body_len;
+            }
+            builder->body_len = content_length_parsed;
             builder->body_data = g_try_malloc (builder->body_len + 1);
             /* we can't do much here, we need the length to know how many bytes
-             * we need to read next and when allocation fails, something is
-             * probably wrong with the length. */
-            if (builder->body_data == NULL)
+             * we need to read next and when allocation fails, we can't read the payload. */
+            if (builder->body_data == NULL) {
+              res = GST_RTSP_ENOMEM;
               goto invalid_body_len;
+            }
 
             builder->body_data[builder->body_len] = '\0';
             builder->offset = 0;
@@ -2549,7 +2564,7 @@ invalid_body_len:
   {
     conn->may_cancel = TRUE;
     GST_DEBUG ("could not allocate body");
-    return GST_RTSP_ERROR;
+    return res;
   }
 invalid_format:
   {
@@ -3237,6 +3252,25 @@ gst_rtsp_connection_set_qos_dscp (GstRTSPConnection * conn, guint qos_dscp)
   return res;
 }
 
+/**
+ * gst_rtsp_connection_set_content_length_limit:
+ * @conn: a #GstRTSPConnection
+ * @limit: Content-Length limit
+ *
+ * Configure @conn to use the specified Content-Length limit.
+ * Both requests and responses are validated. If content-length is
+ * exceeded, ENOMEM error will be returned.
+ *
+ * Since: 1.18
+ */
+void
+gst_rtsp_connection_set_content_length_limit (GstRTSPConnection * conn,
+    guint limit)
+{
+  g_return_if_fail (conn != NULL);
+
+  conn->content_length_limit = limit;
+}
 
 /**
  * gst_rtsp_connection_get_url:

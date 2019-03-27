@@ -189,6 +189,11 @@ GST_RTSP_API
 GstRTSPResult      gst_rtsp_connection_set_qos_dscp   (GstRTSPConnection *conn,
                                                        guint qos_dscp);
 
+/* Content-Length limit */
+GST_RTSP_API
+void               gst_rtsp_connection_set_content_length_limit (GstRTSPConnection *conn,
+                                                                 guint limit);
+
 /* accessors */
 
 GST_RTSP_API
