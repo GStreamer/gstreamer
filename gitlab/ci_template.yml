@@ -265,6 +265,9 @@ check fedora:
   extends: '.test fedora x86_64'
   variables:
     TEST_SUITE: "check.gst*"
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
@@ -696,6 +699,9 @@ build cerbero cross win64:
     paths:
       - "manifest.xml"
       - "${EXAMPLES_HOME}/outputs"
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 android universal examples:
   extends: ".android universal examples"
