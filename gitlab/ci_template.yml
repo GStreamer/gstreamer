@@ -252,6 +252,7 @@ build_disable_debug fedora x86_64:
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-examples"
 
 .test fedora x86_64:
   image: $FEDORA_IMAGE
