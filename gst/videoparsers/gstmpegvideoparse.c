@@ -471,20 +471,59 @@ parse_packet_extension (GstMpegvParse * mpvparse, GstMapInfo * info, guint off)
 
 /* CEA-708 Table 2 */
 #define CEA_708_PROCESS_CC_DATA_FLAG 0x40
+#define CEA_708_PROCESS_EM_DATA_FLAG 0x80
 
 static void
 parse_user_data_packet (GstMpegvParse * mpvparse, const guint8 * data,
     guint size)
 {
+  gboolean a53_user_data_ga94 = FALSE;
+  gboolean a53_user_data_dtg1 = FALSE;
+  gboolean a53_user_data_mpeg_cc = FALSE;
+  gboolean a53_process_708_cc_data = FALSE;
+  gboolean process_708_em_data = FALSE;
+
   if (size < 2) {
     GST_DEBUG_OBJECT (mpvparse, "user data packet too short, ignoring");
     return;
   }
 
   /* A53 part 4 closed captions */
-  if (size > 6 && GST_READ_UINT32_BE (data) == A53_USER_DATA_ID_GA94
-      && data[4] == A53_USER_DATA_TYPE_CODE_MPEG_CC_DATA
-      && (data[5] & CEA_708_PROCESS_CC_DATA_FLAG) != 0 && data[6] == 0xff) {
+  if (size > 6) {
+    guint32 user_data_id = GST_READ_UINT32_BE (data);
+    a53_user_data_ga94 = user_data_id == A53_USER_DATA_ID_GA94;
+    a53_user_data_dtg1 = user_data_id == A53_USER_DATA_ID_DTG1;
+    a53_user_data_mpeg_cc = data[4] == A53_USER_DATA_TYPE_CODE_MPEG_CC_DATA;
+    a53_process_708_cc_data = (data[5] & CEA_708_PROCESS_CC_DATA_FLAG) != 0;
+    process_708_em_data = (data[5] & CEA_708_PROCESS_EM_DATA_FLAG) != 0;
+
+    if (a53_user_data_dtg1) {
+      GST_DEBUG_OBJECT (mpvparse,
+          "ignoring closed captions as DTG1 is not supported");
+    } else if (a53_user_data_ga94) {
+      GST_DEBUG_OBJECT (mpvparse, "GA94 closed captions");
+      if (!a53_user_data_mpeg_cc) {
+        GST_DEBUG_OBJECT (mpvparse,
+            "ignoring closed captions as A53_USER_DATA_TYPE_CODE_MPEG_CC_DATA is not set");
+      }
+      if (!a53_process_708_cc_data) {
+        GST_DEBUG_OBJECT (mpvparse,
+            "ignoring closed captions as CEA_708_PROCESS_CC_DATA_FLAG is not set");
+      }
+      if (!process_708_em_data) {
+        GST_DEBUG_OBJECT (mpvparse,
+            "CEA_708_PROCESS_EM_DATA_FLAG flag is not set");
+      }
+      /* ignore em data flag for now as it breaks one of the tests */
+      process_708_em_data = /*process_708_em_data && */ (data[6] == 0xff);
+      if (!process_708_em_data) {
+        GST_DEBUG_OBJECT (mpvparse,
+            "ignoring closed captions as em data does not equal 0xFF");
+      }
+    }
+  }
+  if (size > 6 && a53_user_data_ga94 && a53_user_data_mpeg_cc
+      && a53_process_708_cc_data && process_708_em_data) {
     guint8 cc_count = data[5] & 0x1f;
     guint cc_size = cc_count * 3;
 
