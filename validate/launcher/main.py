@@ -223,6 +223,7 @@ class LauncherConfig(Loggable):
         self.force_sync = False
         self.sync_all = False
         self.check_bugs_status = False
+        self.retry_on_failures = False
 
     def cleanup(self):
         """
@@ -480,6 +481,8 @@ class LauncherConfig(Loggable):
                             help="Runs the test in a random order. Can help speed up the overall"
                             " test time by running synchronized and unsynchronized tests"
                             " at the same time")
+        parser.add_argument('--retry-on-failures', dest="retry_on_failures", action="store_true",
+                            help="Re-try tests that produce unexpected results")
         dir_group = parser.add_argument_group(
             "Directories and files to be used by the launcher")
         dir_group.add_argument("-M", "--main-dir", dest="main_dir",

@@ -124,6 +124,7 @@ class Test(Loggable):
         # String representation of the test number in the testsuite
         self.number = ""
         self.workdir = workdir
+        self.allow_flakiness = False
 
         self.clean()
 
@@ -227,6 +228,7 @@ class Test(Loggable):
 
     def close_logfile(self):
         if not self.options.redirect_logs:
+            self.out.flush()
             self.out.close()
 
         self.out = None
@@ -612,7 +614,17 @@ class Test(Loggable):
         for logfile in self.extra_logfiles:
             self._dump_log_file(logfile)
 
-    def test_end(self):
+    def copy_logfiles(self, extra_folder="flaky_tests"):
+        path = os.path.dirname(os.path.join(self.options.logsdir, extra_folder,
+                            self.classname.replace(".", os.sep)))
+        mkdir(path)
+        self.logfile = shutil.copy(self.logfile, path)
+        extra_logs = []
+        for logfile in self.extra_logfiles:
+            extra_logs.append(shutil.copy(logfile, path))
+        self.extra_logfiles = extra_logs
+
+    def test_end(self, retry_on_failure=False):
         self.kill_subprocess()
         self.thread.join()
         self.time_taken = time.time() - self._starting_time
@@ -620,15 +632,17 @@ class Test(Loggable):
         if self.options.gdb:
             signal.signal(signal.SIGINT, self.previous_sigint_handler)
 
+        message = None
+        end = "\n"
         if self.result != Result.PASSED:
-            message = str(self)
-            end = "\n"
+            if not retry_on_failure:
+                message = str(self)
+                end = "\n"
         else:
-            message = "%s %s: %s%s" % (self.number, self.classname, self.result,
-                                       " (" + self.message + ")" if self.message else "")
-            end = "\r"
-            if not is_tty():
-                message = None
+            if is_tty():
+                message = "%s %s: %s%s" % (self.number, self.classname, self.result,
+                                        " (" + self.message + ")" if self.message else "")
+                end = "\r"
 
         if message is not None:
             printc(message, color=utils.get_color_for_result(
@@ -1303,9 +1317,13 @@ class TestsManager(Loggable):
                 tests_regexes.append(regex)
                 for test in self.tests:
                     if regex.findall(test.classname):
-                        test.expected_issues.extend(failure_def['issues'])
-                        self.debug("%s added expected issues from %s" % (
-                            test.classname, bugid))
+                        if failure_def.get('allow_flakiness'):
+                            test.allow_flakiness = True
+                            self.debug("%s allow flakyness" % (test.classname))
+                        else:
+                            test.expected_issues.extend(failure_def['issues'])
+                            self.debug("%s added expected issues from %s" % (
+                                test.classname, bugid))
             failure_def['tests'] = tests_regexes
 
         self.expected_issues.update(expected_issues)
@@ -1317,9 +1335,13 @@ class TestsManager(Loggable):
         for bugid, failure_def in list(self.expected_issues.items()):
             for regex in failure_def['tests']:
                 if regex.findall(test.classname):
-                    test.expected_issues.extend(failure_def['issues'])
-                    self.debug("%s added expected issues from %s" % (
-                        test.classname, bugid))
+                    if failure_def.get('allow_flakiness'):
+                        test.allow_flakiness = True
+                        self.debug("%s allow flakyness" % (test.classname))
+                    else:
+                        test.expected_issues.extend(failure_def['issues'])
+                        self.debug("%s added expected issues from %s" % (
+                            test.classname, bugid))
 
         if self._is_test_wanted(test):
             if test not in self.tests:
@@ -1874,9 +1896,13 @@ class _TestsLauncher(Loggable):
 
         return True
 
-    def _run_tests(self):
+    def _run_tests(self, running_tests=None, all_alone=False, retry_on_failures=False):
         if not self.all_tests:
             self.all_tests = self.list_tests()
+
+        if not running_tests:
+            running_tests = self.tests
+
         self.total_num_tests = len(self.all_tests)
         if not is_tty():
             printc("\nRunning %d tests..." % self.total_num_tests, color=Colors.HEADER)
@@ -1884,8 +1910,8 @@ class _TestsLauncher(Loggable):
         self.reporter.init_timer()
         alone_tests = []
         tests = []
-        for test in self.tests:
-            if test.is_parallel:
+        for test in running_tests:
+            if test.is_parallel and not all_alone:
                 tests.append(test)
             else:
                 alone_tests.append(test)
@@ -1900,6 +1926,7 @@ class _TestsLauncher(Loggable):
             random.shuffle(alone_tests)
 
         current_test_num = 1
+        to_retry = []
         for num_jobs, tests in [(max_num_jobs, tests), (1, alone_tests)]:
             tests_left = list(tests)
             for i in range(num_jobs):
@@ -1913,13 +1940,32 @@ class _TestsLauncher(Loggable):
                 test.number = "[%d / %d] " % (current_test_num,
                                               self.total_num_tests)
                 current_test_num += 1
-                res = test.test_end()
-                self.reporter.after_test(test)
-                if res != Result.PASSED and (self.options.forever
-                                             or self.options.fatal_error):
-                    return False
+                res = test.test_end(retry_on_failure=retry_on_failures)
+                to_report = True
+                if res != Result.PASSED:
+                    if self.options.forever or self.options.fatal_error:
+                        return False
+
+                    if retry_on_failures:
+                        if not self.options.redirect_logs:
+                            test.copy_logfiles()
+                        printc(test)
+                        test.clean()
+                        to_retry.append(test)
+
+                        # Not adding to final report if flakiness is tolerated
+                        to_report = not test.allow_flakiness
+                if to_report:
+                    self.reporter.after_test(test)
                 if self.start_new_job(tests_left):
                     jobs_running += 1
+
+        if to_retry:
+            printc("--> Rerunning the following tests to see if they are flaky:", Colors.WARNING)
+            for test in to_retry:
+                printc('  * %s' % test.classname)
+            printc('')
+            return self._run_tests(to_retry, all_alone=True, retry_on_failures=False)
 
         return True
 
@@ -1957,7 +2003,7 @@ class _TestsLauncher(Loggable):
 
                 return res
             else:
-                return self._run_tests()
+                return self._run_tests(retry_on_failures=self.options.retry_on_failures)
         finally:
             if self.httpsrv:
                 self.httpsrv.stop()
