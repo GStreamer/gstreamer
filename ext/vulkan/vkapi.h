@@ -46,6 +46,12 @@
 #endif
 #endif
 
+#if GST_VULKAN_HAVE_WINDOW_IOS
+#ifndef VK_USE_PLATFORM_IOS_MVK
+#define VK_USE_PLATFORM_IOS_MVK
+#endif
+#endif
+
 #include <vulkan/vulkan.h>
 
 #endif /* _VK_H_ */

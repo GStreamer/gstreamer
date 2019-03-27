@@ -87,6 +87,8 @@ struct _GstVulkanWindowClass {
   gboolean      (*get_presentation_support)     (GstVulkanWindow *window,
                                                  GstVulkanDevice *device,
                                                  guint32 queue_family_idx);
+  void          (*set_window_handle)            (GstVulkanWindow *window,
+                                                 guintptr handle);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
@@ -100,6 +102,8 @@ VkSurfaceKHR       gst_vulkan_window_get_surface                    (GstVulkanWi
 gboolean           gst_vulkan_window_get_presentation_support       (GstVulkanWindow *window,
                                                                      GstVulkanDevice *device,
                                                                      guint32 queue_family_idx);
+void               gst_vulkan_window_set_window_handle              (GstVulkanWindow *window,
+                                                                     guintptr handle);
 
 gboolean           gst_vulkan_window_open                           (GstVulkanWindow *window,
                                                                      GError ** error);

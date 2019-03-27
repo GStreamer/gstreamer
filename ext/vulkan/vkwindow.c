@@ -49,6 +49,9 @@
 #if GST_VULKAN_HAVE_WINDOW_COCOA
 #include "cocoa/vkwindow_cocoa.h"
 #endif
+#if GST_VULKAN_HAVE_WINDOW_IOS
+#include "ios/vkwindow_ios.h"
+#endif
 
 #define GST_CAT_DEFAULT gst_vulkan_window_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
@@ -191,6 +194,10 @@ gst_vulkan_window_new (GstVulkanDisplay * display)
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
     window = GST_VULKAN_WINDOW (gst_vulkan_window_cocoa_new (display));
 #endif
+#if GST_VULKAN_HAVE_WINDOW_IOS
+  if (!window && (!user_choice || g_strstr_len (user_choice, 3, "ios")))
+    window = GST_VULKAN_WINDOW (gst_vulkan_window_ios_new (display));
+#endif
   if (!window) {
     /* subclass returned a NULL window */
     GST_WARNING ("Could not create window. user specified %s, creating dummy"
@@ -292,6 +299,24 @@ gst_vulkan_window_redraw (GstVulkanWindow * window)
   g_return_if_fail (GST_IS_VULKAN_WINDOW (window));
 
   g_signal_emit (window, gst_vulkan_window_signals[SIGNAL_DRAW], 0);
+}
+
+void
+gst_vulkan_window_set_window_handle (GstVulkanWindow * window, guintptr handle)
+{
+  GstVulkanWindowClass *klass;
+
+  g_return_if_fail (GST_IS_VULKAN_WINDOW (window));
+  klass = GST_VULKAN_WINDOW_GET_CLASS (window);
+
+  if (!klass->set_window_handle) {
+    if (handle)
+      g_warning ("%s does not implement the set_window_handle vfunc. "
+          "Output will not be embedded into the specified surface.",
+          GST_OBJECT_NAME (window));
+  } else {
+    klass->set_window_handle (window, handle);
+  }
 }
 
 GType gst_vulkan_dummy_window_get_type (void);

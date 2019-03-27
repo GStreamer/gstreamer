@@ -56,6 +56,9 @@ struct _GstVulkanSink
 
   /* stream configuration */
   GstVideoInfo v_info;
+
+  /* the currently set window handle */
+  guintptr set_window_handle;
 };
 
 struct _GstVulkanSinkClass
