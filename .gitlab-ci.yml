@@ -184,3 +184,12 @@ android universal examples local:
   except:
     refs:
       - "master@gstreamer/gst-ci"
+
+integration testsuites fedora local:
+  extends: '.test fedora x86_64 local'
+  before_script:
+    - rm -f gst-build/build/subprojects/gstreamer-vaapi/gst/vaapi/libgstvaapi.so
+  variables:
+    EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures"
+    TEST_SUITE: "validate ges"
+

@@ -81,7 +81,6 @@ gst indent:
     CXX: "ccache g++"
     CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
     CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
-    MAIN_DIR: "${CI_PROJECT_DIR}/validate-output/"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
 
   script:
@@ -131,9 +130,10 @@ build nodebug fedora x86_64:
 .test:
   stage: 'test'
   variables:
-    MAIN_DIR: "${CI_PROJECT_DIR}/validate-output/"
     # Disable colored output to avoid weird rendering issues
-    GST_DEBUG_COLOR: 'no'
+    GST_DEBUG_NO_COLOR: "true"
+    CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/validate-logs/"
+    GST_VALIDATE_LAUNCHER_FORCE_COLORS: "true"
 
     # note the -b at the start of each line
     # Can't comment inline sadly
@@ -226,6 +226,7 @@ build nodebug fedora x86_64:
       -b check.gst-devtools.validate.launcher_tests.test_validate.launch_pipeline.not_negotiated.caps_query_failure.play_15s
   script:
     - cd gst-build/
+    - echo "-> Running ${TEST_SUITE} testsuite."
     - >
       ./gst-uninstalled.py
       gst-validate-launcher ${TEST_SUITE}
@@ -233,10 +234,10 @@ build nodebug fedora x86_64:
       --mute
       --shuffle
       --no-display
-      --dump-on-failure
       --meson-no-rebuild
-      -M "${CI_PROJECT_DIR}/validate-output/"
-      --xunit-file "${CI_PROJECT_DIR}/validate-output/logs/xunit.xml"
+      --fail-on-testlist-change
+      -l "${CI_PROJECT_DIR}/validate-logs/"
+      --xunit-file "${CI_PROJECT_DIR}/validate-logs/xunit.xml"
       ${BLACKLIST}
       ${EXTRA_VALIDATE_ARGS}
   artifacts:
@@ -244,10 +245,10 @@ build nodebug fedora x86_64:
     when: always
     paths:
       - 'gst-build/build/meson-logs/'
-      - 'validate-output/logs'
+      - 'validate-logs'
     reports:
       junit:
-        - "validate-output/logs/*.xml"
+        - "validate-logs/*.xml"
   # We disable the .build above, which this job usually depends upon for cerbero
   except:
     variables:
@@ -264,6 +265,14 @@ check fedora:
   extends: '.test fedora x86_64'
   variables:
     TEST_SUITE: "check.gst*"
+
+integration testsuites fedora:
+  extends: '.test fedora x86_64'
+  before_script:
+    - rm -f gst-build/build/subprojects/gstreamer-vaapi/gst/vaapi/libgstvaapi.so
+  variables:
+    EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures"
+    TEST_SUITE: "validate ges"
 
 # Valgrind
 .valgrind fedora x86_64:
