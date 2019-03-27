@@ -213,6 +213,8 @@ Types](plugin-development/advanced/media-types.md#list-of-defined-types).
 <td>The sample rate of the data, in samples (per channel) per second.</td>
 </tr>
 <tr class="even">
+<td></td>
+<td></td>
 <td>channels</td>
 <td>integer</td>
 <td>greater than 0</td>
@@ -235,18 +237,24 @@ Types](plugin-development/advanced/media-types.md#list-of-defined-types).
 <td>The MPEG-version used for encoding the data. The value 1 refers to MPEG-1, -2 and -2.5 layer 1, 2 or 3. The values 2 and 4 refer to the MPEG-AAC audio encoding schemes.</td>
 </tr>
 <tr class="odd">
+<td></td>
+<td></td>
 <td>framed</td>
 <td>boolean</td>
 <td>0 or 1</td>
 <td>A true value indicates that each buffer contains exactly one frame. A false value indicates that frames and buffers do not necessarily match up.</td>
 </tr>
 <tr class="even">
+<td></td>
+<td></td>
 <td>layer</td>
 <td>integer</td>
 <td>1, 2, or 3</td>
 <td>The compression scheme layer used to compress the data <em>(only if mpegversion=1)</em>.</td>
 </tr>
 <tr class="odd">
+<td></td>
+<td></td>
 <td>bitrate</td>
 <td>integer</td>
 <td>greater than 0</td>
