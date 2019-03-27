@@ -387,7 +387,7 @@ gst_rtsp_session_pool_create (GstRTSPSessionPool * pool)
     } else {
       /* not found, create session and insert it in the pool */
       if (klass->create_session)
-        result = create_session (pool, id);
+        result = klass->create_session (pool, id);
       if (result == NULL)
         goto too_many_sessions;
       /* take additional ref for the pool */
