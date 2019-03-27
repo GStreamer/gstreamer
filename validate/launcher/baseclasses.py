@@ -166,6 +166,7 @@ class Test(Loggable):
         self.extra_logfiles = []
         self.__env_variable = []
         self.kill_subprocess()
+        self.process = None
 
     def __str__(self):
         string = self.classname
