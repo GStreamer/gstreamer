@@ -42,7 +42,7 @@ stream types.
 The plugin mechanism is used everywhere in GStreamer, even if only the
 standard packages are being used. A few very basic functions reside in
 the core library, and all others are implemented in plugins. A plugin
-registry is used to store the details of the plugins in an binary
+registry is used to store the details of the plugins in a binary
 registry file. This way, a program using GStreamer does not have to load
 all plugins to determine which are needed. Plugins are only loaded when
 their provided elements are requested.
