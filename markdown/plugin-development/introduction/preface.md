@@ -166,7 +166,7 @@ the following order:
     The last chapter, [Events: Seeking, Navigation and More][events], will
     discuss the concept of events in GStreamer. Events are another way of
     doing application-element interaction. They take care of seeking, for
-    example. They are also yet another a way in which elements
+    example. They are also yet another way in which elements
     interact with each other, such as letting each other know about
     media stream discontinuities, forwarding tags inside a pipeline and
     so on.
@@ -199,7 +199,7 @@ and [Media types and Properties][intro-mediatypes]. If you are already
 familiar with this information, you can use this short overview to
 refresh your memory, or you can skip to [Building a Plugin][building].
 
-As you can see, there a lot to learn, so let's get started\!
+As you can see, there's a lot to learn, so let's get started\!
 
   - Creating compound and complex elements by extending from a GstBin.
     This will allow you to create plugins that have other plugins
