@@ -674,6 +674,7 @@ GST_START_TEST (test_group_serialization)
 
 
   g_free (tmpuri);
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }

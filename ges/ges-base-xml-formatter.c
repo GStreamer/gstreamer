@@ -146,6 +146,16 @@ _free_layer_entry (LayerEntry * entry)
   g_slice_free (LayerEntry, entry);
 }
 
+static void
+_free_pending_group (PendingGroup * pgroup)
+{
+  if (pgroup->group)
+    g_object_unref (pgroup->group);
+  g_list_free (pgroup->pending_children);
+  g_slice_free (PendingGroup, pgroup);
+}
+
+
 /*
 enum
 {
@@ -368,6 +378,9 @@ _finalize (GObject * object)
   if (priv->parsecontext != NULL)
     g_markup_parse_context_free (priv->parsecontext);
 
+  g_list_free_full (priv->groups, (GDestroyNotify) _free_pending_group);
+  priv->groups = NULL;
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -464,7 +477,11 @@ _add_all_groups (GESFormatter * self)
           GES_TIMELINE_ELEMENT_NAME (child));
       ges_container_add (GES_CONTAINER (pgroup->group), child);
     }
+    pgroup->group = NULL;
   }
+
+  g_list_free_full (priv->groups, (GDestroyNotify) _free_pending_group);
+  priv->groups = NULL;
 }
 
 static void
