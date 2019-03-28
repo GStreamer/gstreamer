@@ -1127,6 +1127,7 @@ ges_asset_request_async (GType extractable_type,
   gchar *real_id;
   GESAsset *asset;
   GError *error = NULL;
+  GTask *task = NULL;
 
   g_return_if_fail (g_type_is_a (extractable_type, G_TYPE_OBJECT));
   g_return_if_fail (g_type_is_a (extractable_type, GES_TYPE_EXTRACTABLE));
@@ -1144,7 +1145,7 @@ ges_asset_request_async (GType extractable_type,
   /* Check if we already have an asset for this ID */
   asset = ges_asset_cache_lookup (extractable_type, real_id);
   if (asset) {
-    GTask *task = g_task_new (asset, NULL, callback, user_data);
+    task = g_task_new (asset, NULL, callback, user_data);
 
     /* In the case of proxied asset, we will loop until we find the
      * last asset of the chain of proxied asset */
@@ -1164,6 +1165,7 @@ ges_asset_request_async (GType extractable_type,
           GST_DEBUG_OBJECT (asset, "Asset in cache and but not "
               "initialized, setting a new callback");
           ges_asset_cache_append_task (extractable_type, real_id, task);
+          task = NULL;
 
           goto done;
         case ASSET_PROXIED:{
@@ -1201,6 +1203,8 @@ ges_asset_request_async (GType extractable_type,
       (extractable_type), G_PRIORITY_DEFAULT, cancellable, callback, user_data,
       "id", real_id, "extractable-type", extractable_type, NULL);
 done:
+  if (task)
+    gst_object_unref (task);
   if (real_id)
     g_free (real_id);
 }
