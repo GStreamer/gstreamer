@@ -395,6 +395,7 @@ _finalize (GObject * object)
 
   if (priv->uri)
     g_free (priv->uri);
+  g_list_free_full (priv->encoding_profiles, g_object_unref);
 
   G_OBJECT_CLASS (ges_project_parent_class)->finalize (object);
 }
