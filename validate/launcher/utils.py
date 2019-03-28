@@ -330,6 +330,31 @@ def get_scenarios():
                                                       ))
 
 
+def get_gst_build_valgrind_suppressions():
+    if hasattr(get_gst_build_valgrind_suppressions, "data"):
+        return get_gst_build_valgrind_suppressions.data
+
+    get_gst_build_valgrind_suppressions.data = []
+    if not os.path.exists(os.path.join(config.SRCDIR, "subprojects")):
+        return get_gst_build_valgrind_suppressions.data
+
+    for suppression_path in ["gstreamer/tests/check/gstreamer.supp",
+            "gst-plugins-base/tests/check/gst-plugins-base.supp",
+            "gst-plugins-good/tests/check/gst-plugins-good.supp",
+            "gst-plugins-bad/tests/check/gst-plugins-bad.supp",
+            "gst-plugins-ugly/tests/check/gst-plugins-ugly.supp",
+            "gst-libav/tests/check/gst-libav.supp",
+            "gst-devtools/validate/data/gstvalidate.supp",
+            "libnice/tests/libnice.supp",
+            "libsoup/tests/libsoup.supp",
+            "glib/glib.supp"]:
+        suppression = os.path.join(config.SRCDIR, "subprojects", suppression_path)
+        if os.path.exists(suppression):
+            get_gst_build_valgrind_suppressions.data.append(suppression)
+
+    return get_gst_build_valgrind_suppressions.data
+
+
 class BackTraceGenerator(Loggable):
     __instance = None
     _command_line_regex = re.compile(r'Command Line: (.*)\n')

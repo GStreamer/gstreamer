@@ -30,7 +30,7 @@ import concurrent.futures as conc
 
 
 from launcher import config
-from launcher.utils import printc, Colors
+from launcher.utils import printc, Colors, get_gst_build_valgrind_suppressions
 from launcher.main import setup_launcher_from_args
 from launcher.baseclasses import VALGRIND_TIMEOUT_FACTOR
 
@@ -66,6 +66,14 @@ class MesonTest(Test):
                 self.add_env_variable(var, val)
 
         return env
+
+
+class GstCheckTest(MesonTest):
+    def get_valgrind_suppressions(self):
+        result = super().get_valgrind_suppressions()
+        result.extend(get_gst_build_valgrind_suppressions())
+
+        return result
 
 
 class MesonTestsManager(TestsManager):
@@ -337,14 +345,14 @@ class GstCheckTestsManager(MesonTestsManager):
             gst_tests = self.tests_info[test['cmd'][0]][1]
             if not gst_tests:
                 child_env = self.get_child_env(name)
-                self.add_test(MesonTest(name, self.options, self.reporter, test,
-                                        child_env))
+                self.add_test(GstCheckTest(name, self.options, self.reporter, test,
+                                           child_env))
             else:
                 for ltest in gst_tests:
                     name = self.get_test_name(test) + '.' + ltest
                     child_env = self.get_child_env(name, ltest)
-                    self.add_test(MesonTest(name, self.options, self.reporter, test,
-                                            child_env))
+                    self.add_test(GstCheckTest(name, self.options, self.reporter, test,
+                                               child_env))
         self.save_tests_info()
         self._registered = True
         return self.tests
