@@ -2298,7 +2298,7 @@ AG_GST_CHECK_FEATURE(WEBRTC, [WebRTC], webrtc, [
 dnl *** WPE ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_WPE, true)
 AG_GST_CHECK_FEATURE(WPE, [WPE plug-in], wpe, [
-PKG_CHECK_MODULES(WPE, [ wpe-webkit-0.1 >= 2.22 wpebackend-fdo-0.1 egl xkbcommon ], [
+PKG_CHECK_MODULES(WPE, [ wpe-webkit-1.0 >= 2.24 wpebackend-fdo-1.0 egl xkbcommon ], [
     HAVE_WPE="yes" ], [
     HAVE_WPE="no"
   ])
