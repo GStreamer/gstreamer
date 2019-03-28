@@ -59,6 +59,7 @@ struct _GstH264Parse
   gint fps_num, fps_den;
   gint upstream_par_n, upstream_par_d;
   gint parsed_par_n, parsed_par_d;
+  gint parsed_fps_n, parsed_fps_d;
   /* current codec_data in output caps, if any */
   GstBuffer *codec_data;
   /* input codec_data, if any */
@@ -94,6 +95,10 @@ struct _GstH264Parse
   /* collected SPS and PPS NALUs */
   GstBuffer *sps_nals[GST_H264_MAX_SPS_COUNT];
   GstBuffer *pps_nals[GST_H264_MAX_PPS_COUNT];
+
+  /* collected SEI timestamps */
+  guint num_clock_timestamp;
+  GstH264ClockTimestamp clock_timestamp[3];
 
   /* Infos we need to keep track of */
   guint32 sei_cpb_removal_delay;

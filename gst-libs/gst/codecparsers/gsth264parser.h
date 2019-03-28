@@ -307,6 +307,21 @@ typedef enum
   GST_H264_S_SI_SLICE = 9
 } GstH264SliceType;
 
+/**
+ * GstH264CtType
+ *
+ * Mapping of ct_type to source picture scan
+ *
+ * Since: 1.16
+ */
+
+typedef enum
+{
+  GST_H264_CT_TYPE_PROGRESSIVE = 0,
+  GST_H264_CT_TYPE_INTERLACED = 1,
+  GST_H264_CT_TYPE_UNKNOWN = 2,
+} GstCtType;
+
 typedef struct _GstH264NalParser              GstH264NalParser;
 
 typedef struct _GstH264NalUnit                GstH264NalUnit;

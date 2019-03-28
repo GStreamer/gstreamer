@@ -539,14 +539,30 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
     sei = g_array_index (messages, GstH264SEIMessage, i);
     switch (sei.payloadType) {
       case GST_H264_SEI_PIC_TIMING:
+      {
+        guint j;
         h264parse->sei_pic_struct_pres_flag =
             sei.payload.pic_timing.pic_struct_present_flag;
         h264parse->sei_cpb_removal_delay =
             sei.payload.pic_timing.cpb_removal_delay;
-        if (h264parse->sei_pic_struct_pres_flag)
+        if (h264parse->sei_pic_struct_pres_flag) {
           h264parse->sei_pic_struct = sei.payload.pic_timing.pic_struct;
+        }
+
+        h264parse->num_clock_timestamp = 0;
+
+        for (j = 0; j < 3; j++) {
+          if (sei.payload.pic_timing.clock_timestamp_flag[j]) {
+            memcpy (&h264parse->
+                clock_timestamp[h264parse->num_clock_timestamp++],
+                &sei.payload.pic_timing.clock_timestamp[j],
+                sizeof (GstH264ClockTimestamp));
+          }
+        }
+
         GST_LOG_OBJECT (h264parse, "pic timing updated");
         break;
+      }
       case GST_H264_SEI_BUF_PERIOD:
         if (h264parse->ts_trn_nb == GST_CLOCK_TIME_NONE ||
             h264parse->dts == GST_CLOCK_TIME_NONE)
@@ -1894,15 +1910,20 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
           "height", G_TYPE_INT, height, NULL);
 
       /* upstream overrides */
-      if (s && gst_structure_has_field (s, "framerate"))
+      if (s && gst_structure_has_field (s, "framerate")) {
         gst_structure_get_fraction (s, "framerate", &fps_num, &fps_den);
+      }
 
       /* but not necessarily or reliably this */
       if (fps_den > 0) {
+        GstStructure *s2;
         gst_caps_set_simple (caps, "framerate",
             GST_TYPE_FRACTION, fps_num, fps_den, NULL);
-        gst_base_parse_set_frame_rate (GST_BASE_PARSE (h264parse),
-            fps_num, fps_den, 0, 0);
+        s2 = gst_caps_get_structure (caps, 0);
+        gst_structure_get_fraction (s2, "framerate", &h264parse->parsed_fps_n,
+            &h264parse->parsed_fps_d);
+        gst_base_parse_set_frame_rate (GST_BASE_PARSE (h264parse), fps_num,
+            fps_den, 0, 0);
         if (fps_num > 0) {
           latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
           gst_base_parse_set_latency (GST_BASE_PARSE (h264parse), latency,
@@ -2549,6 +2570,68 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   }
 #endif
+
+  {
+    guint i = 0;
+
+    for (i = 0; i < h264parse->num_clock_timestamp; i++) {
+      GstH264ClockTimestamp *tim = &h264parse->clock_timestamp[i];
+      GstVideoTimeCodeFlags flags = 0;
+      gint field_count = -1;
+
+      /* Table D-1 */
+      switch (h264parse->sei_pic_struct) {
+        case GST_H264_SEI_PIC_STRUCT_FRAME:
+        case GST_H264_SEI_PIC_STRUCT_TOP_FIELD:
+        case GST_H264_SEI_PIC_STRUCT_BOTTOM_FIELD:
+          field_count = h264parse->sei_pic_struct;
+          break;
+        case GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM:
+          field_count = i + 1;
+          break;
+        case GST_H264_SEI_PIC_STRUCT_BOTTOM_TOP:
+          field_count = 2 - i;
+          break;
+        case GST_H264_SEI_PIC_STRUCT_TOP_BOTTOM_TOP:
+          field_count = i % 2 ? 2 : 1;
+          break;
+        case GST_H264_SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM:
+          field_count = i % 2 ? 1 : 2;
+          break;
+        case GST_H264_SEI_PIC_STRUCT_FRAME_DOUBLING:
+        case GST_H264_SEI_PIC_STRUCT_FRAME_TRIPLING:
+          field_count = 0;
+          break;
+      }
+
+      if (field_count == -1) {
+        GST_WARNING_OBJECT (parse,
+            "failed to determine field count for timecode");
+        field_count = 0;
+      }
+
+      /* dropping of the two lowest (value 0 and 1) n_frames
+       * counts when seconds_value is equal to 0 and
+       * minutes_value is not an integer multiple of 10 */
+      if (tim->counting_type == 4)
+        flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+
+      if (tim->ct_type == GST_H264_CT_TYPE_INTERLACED)
+        flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
+
+      gst_buffer_add_video_time_code_meta_full (buffer,
+          h264parse->parsed_fps_n,
+          h264parse->parsed_fps_d,
+          NULL,
+          flags,
+          tim->hours_flag ? tim->hours_value : 0,
+          tim->minutes_flag ? tim->minutes_value : 0,
+          tim->seconds_flag ? tim->seconds_value : 0,
+          tim->n_frames, field_count);
+    }
+
+    h264parse->num_clock_timestamp = 0;
+  }
 
   gst_h264_parse_reset_frame (h264parse);
 
