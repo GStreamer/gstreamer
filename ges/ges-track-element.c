@@ -424,6 +424,7 @@ _update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
       if (next->timestamp > inpoint)
         break;
     }
+    g_list_free (values);
 
     value_at_pos =
         interpolate_values_for_position (first, next, inpoint, absolute);
@@ -443,6 +444,7 @@ _update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
         if (prev->timestamp < duration + inpoint)
           break;
       }
+      g_list_free (values);
 
       value_at_pos =
           interpolate_values_for_position (prev, last, duration + inpoint,
@@ -464,6 +466,7 @@ _update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
           && value->timestamp > duration + inpoint)
         gst_timed_value_control_source_unset (source, value->timestamp);
     }
+    g_list_free (values);
   }
 
   g_free (specs);
@@ -1246,6 +1249,7 @@ _split_binding (GESTrackElement * element, GESTrackElement * new_element,
     last_value = value;
 
   }
+  g_list_free (values);
 }
 
 static void
@@ -1264,6 +1268,7 @@ _copy_binding (GESTrackElement * element, GESTrackElement * new_element,
     gst_timed_value_control_source_set (new_source, value->timestamp,
         value->value);
   }
+  g_list_free (values);
 }
 
 /* position == GST_CLOCK_TIME_NONE means that we do a simple copy

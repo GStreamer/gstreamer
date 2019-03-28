@@ -187,6 +187,7 @@ GST_START_TEST (test_split_direct_bindings)
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 5 * GST_SECOND);
   check_layer (clip, 0);
+  gst_object_unref (timeline);
 
   ges_deinit ();
 }
@@ -276,6 +277,7 @@ GST_START_TEST (test_split_direct_absolute_bindings)
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 5 * GST_SECOND);
   check_layer (clip, 0);
 
+  gst_object_unref (timeline);
   ges_deinit ();
 }
 
