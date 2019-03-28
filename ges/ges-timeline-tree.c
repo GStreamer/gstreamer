@@ -556,6 +556,8 @@ timeline_tree_can_move_element (GNode * root,
   GESTimelineElement *toplevel;
   GstClockTimeDiff start_offset, duration_offset;
   gint64 priority_diff;
+  gboolean res;
+  GList *local_moving_track_elements = g_list_copy (moving_track_elements);
 
   toplevel = get_toplevel_container (element);
   if (ELEMENT_FLAG_IS_SET (element, GES_TIMELINE_ELEMENT_SET_SIMPLE) ||
@@ -570,14 +572,17 @@ timeline_tree_can_move_element (GNode * root,
 
   g_node_traverse (find_node (root, toplevel), G_IN_ORDER,
       G_TRAVERSE_LEAVES, -1, (GNodeTraverseFunc) add_element_to_list,
-      &moving_track_elements);
+      &local_moving_track_elements);
 
-  return timeline_tree_can_move_element_internal (root, toplevel,
+  res = timeline_tree_can_move_element_internal (root, toplevel,
       GES_TIMELINE_ELEMENT_LAYER_PRIORITY (toplevel) - priority_diff,
       GST_CLOCK_DIFF (start_offset, toplevel->start),
       toplevel->inpoint,
       GST_CLOCK_DIFF (duration_offset, toplevel->duration),
-      moving_track_elements, GST_CLOCK_TIME_NONE, NULL, GES_EDGE_NONE);
+      local_moving_track_elements, GST_CLOCK_TIME_NONE, NULL, GES_EDGE_NONE);
+
+  g_list_free (local_moving_track_elements);
+  return res;
 }
 
 static void
@@ -910,8 +915,6 @@ timeline_tree_trim (GNode * root, GESTimelineElement * element,
   timeline_update_transition (root->data);
   timeline_update_duration (root->data);
 
-  return TRUE;
-
 done:
   clean_iteration_data (&data);
   return res;
@@ -956,7 +959,7 @@ timeline_tree_move (GNode * root, GESTimelineElement * element,
 
   if (!timeline_tree_can_move_element_from_data (root, &data)) {
     GST_INFO ("Can not move object.");
-    return FALSE;
+    goto error;
   }
 
   if (snapping_distance) {
@@ -1012,10 +1015,13 @@ timeline_tree_move (GNode * root, GESTimelineElement * element,
 
   GST_LOG ("Moved %" GES_FORMAT, GES_ARGS (element));
 
+done:
+  clean_iteration_data (&data);
   return res;
 
 error:
-  return FALSE;
+  res = FALSE;
+  goto done;
 }
 
 static gboolean
