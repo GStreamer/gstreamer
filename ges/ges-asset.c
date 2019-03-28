@@ -1189,7 +1189,9 @@ ges_asset_request_async (GType extractable_type,
           goto done;
         case ASSET_INITIALIZED_WITH_ERROR:
           g_task_return_error (task,
-              error ? error : g_error_copy (asset->priv->error));
+              error ? g_error_copy (error) : g_error_copy (asset->priv->error));
+
+          g_clear_error (&error);
 
           goto done;
         default:
