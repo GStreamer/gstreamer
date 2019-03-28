@@ -37,6 +37,7 @@ source_asset_created (GObject * source, GAsyncResult * res,
   if (GPOINTER_TO_INT (expected_ok)) {
     fail_unless (a != NULL);
     fail_unless (error == NULL);
+    g_object_unref (a);
   } else {
     fail_unless (a == NULL);
     assert_equals_int (error->domain, GST_RESOURCE_ERROR);
