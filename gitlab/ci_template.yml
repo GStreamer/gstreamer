@@ -656,6 +656,7 @@ build cerbero cross win64:
     - curl -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/master/gitlab/clone_manifest_ref.py
     - chmod +x clone_manifest_ref.py
     - ./clone_manifest_ref.py --manifest manifest.xml --project gst-examples --destination ${EXAMPLES_HOME}/gst-examples
+    - ./clone_manifest_ref.py --manifest manifest.xml --project gst-docs --destination ${EXAMPLES_HOME}/gst-docs
     - rm clone_manifest_ref.py
 
     # extract our binaries
@@ -665,6 +666,8 @@ build cerbero cross win64:
 
     - chmod +x ${EXAMPLES_HOME}/gst-examples/playback/player/android/gradlew
     - ${EXAMPLES_HOME}/gst-examples/playback/player/android/gradlew --no-search-upward --no-daemon --project-dir ${EXAMPLES_HOME}/gst-examples/playback/player/android assembleDebug
+    - chmod +x ${EXAMPLES_HOME}/gst-docs/examples/tutorials/android/gradlew
+    - ${EXAMPLES_HOME}/gst-docs/examples/tutorials/android/gradlew --no-search-upward --no-daemon --project-dir ${EXAMPLES_HOME}/gst-docs/examples/tutorials/android assembleDebug
   after_script:
     - rm -rf ${GSTREAMER_ROOT_ANDROID}
     - mv gstreamer-1.0-android-universal-*.tar.bz2 ${EXAMPLES_HOME}/
