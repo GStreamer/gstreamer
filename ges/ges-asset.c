@@ -922,7 +922,7 @@ ges_asset_set_id (GESAsset * asset, const gchar * id)
 }
 
 static GESAsset *
-_unsure_material_for_wrong_id (const gchar * wrong_id, GType extractable_type,
+_ensure_asset_for_wrong_id (const gchar * wrong_id, GType extractable_type,
     GError * error)
 {
   GESAsset *asset;
@@ -994,7 +994,7 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
   if (real_id == NULL) {
     /* We create an asset for that wrong ID so we have a reference that the
      * user requested it */
-    _unsure_material_for_wrong_id (id, extractable_type, lerr);
+    _ensure_asset_for_wrong_id (id, extractable_type, lerr);
     real_id = g_strdup (id);
   }
   if (lerr)
@@ -1138,7 +1138,7 @@ ges_asset_request_async (GType extractable_type,
 
   real_id = _check_and_update_parameters (&extractable_type, id, &error);
   if (error) {
-    _unsure_material_for_wrong_id (id, extractable_type, error);
+    _ensure_asset_for_wrong_id (id, extractable_type, error);
     real_id = g_strdup (id);
   }
 
@@ -1236,7 +1236,7 @@ ges_asset_needs_reload (GType extractable_type, const gchar * id)
 
   real_id = _check_and_update_parameters (&extractable_type, id, &error);
   if (error) {
-    _unsure_material_for_wrong_id (id, extractable_type, error);
+    _ensure_asset_for_wrong_id (id, extractable_type, error);
     real_id = g_strdup (id);
   }
 
