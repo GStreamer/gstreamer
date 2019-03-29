@@ -159,6 +159,17 @@ gst_msdkdec_vc1_get_property (GObject * object, guint prop_id, GValue * value,
   GST_OBJECT_UNLOCK (thiz);
 }
 
+static gboolean
+gst_msdkvc1dec_preinit_decoder (GstMsdkDec * decoder)
+{
+  decoder->param.mfx.FrameInfo.Width =
+      GST_ROUND_UP_16 (decoder->param.mfx.FrameInfo.Width);
+  decoder->param.mfx.FrameInfo.Height =
+      GST_ROUND_UP_32 (decoder->param.mfx.FrameInfo.Height);
+
+  return TRUE;
+}
+
 static void
 gst_msdkvc1dec_class_init (GstMsdkVC1DecClass * klass)
 {
@@ -174,6 +185,8 @@ gst_msdkvc1dec_class_init (GstMsdkVC1DecClass * klass)
   gobject_class->get_property = gst_msdkdec_vc1_get_property;
 
   decoder_class->configure = GST_DEBUG_FUNCPTR (gst_msdkvc1dec_configure);
+  decoder_class->preinit_decoder =
+      GST_DEBUG_FUNCPTR (gst_msdkvc1dec_preinit_decoder);
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK VC1 decoder",
