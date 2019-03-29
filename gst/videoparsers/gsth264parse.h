@@ -141,6 +141,11 @@ struct _GstH264Parse
   /* For insertion of AU Delimiter */
   gboolean aud_needed;
   gboolean aud_insert;
+
+  /* pending closed captions */
+  guint8 closedcaptions[96];
+  guint closedcaptions_size;
+  GstVideoCaptionType closedcaptions_type;
 };
 
 struct _GstH264ParseClass

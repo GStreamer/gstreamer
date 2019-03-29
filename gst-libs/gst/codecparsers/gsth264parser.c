@@ -1009,6 +1009,51 @@ error:
 }
 
 static GstH264ParserResult
+gst_h264_parser_parse_registered_user_data (GstH264NalParser * nalparser,
+    GstH264RegisteredUserData * rud, NalReader * nr, guint payload_size)
+{
+  guint8 *data = NULL;
+  guint i;
+
+  rud->data = NULL;
+  rud->size = 0;
+
+  if (payload_size < 2)
+    return GST_H264_PARSER_ERROR;
+
+  READ_UINT8 (nr, rud->country_code, 8);
+  --payload_size;
+
+  if (rud->country_code == 0xFF) {
+    READ_UINT8 (nr, rud->country_code_extension, 8);
+    --payload_size;
+  } else {
+    rud->country_code_extension = 0;
+  }
+
+  if (payload_size < 8)
+    return GST_H264_PARSER_ERROR;
+
+  data = g_malloc (payload_size);
+  for (i = 0; i < payload_size / 8; ++i) {
+    READ_UINT8 (nr, data[i], 8);
+  }
+
+  GST_MEMDUMP ("SEI user data", data, payload_size / 8);
+
+  rud->data = data;
+  rud->size = payload_size;
+  return GST_H264_PARSER_OK;
+
+error:
+  {
+    GST_WARNING ("error parsing \"Registered User Data\"");
+    g_free (data);
+    return GST_H264_PARSER_ERROR;
+  }
+}
+
+static GstH264ParserResult
 gst_h264_parser_parse_recovery_point (GstH264NalParser * nalparser,
     GstH264RecoveryPoint * rp, NalReader * nr)
 {
@@ -1156,6 +1201,10 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
       /* size not set; might depend on emulation_prevention_three_byte */
       res = gst_h264_parser_parse_pic_timing (nalparser,
           &sei->payload.pic_timing, nr);
+      break;
+    case GST_H264_SEI_REGISTERED_USER_DATA:
+      res = gst_h264_parser_parse_registered_user_data (nalparser,
+          &sei->payload.registered_user_data, nr, payload_size);
       break;
     case GST_H264_SEI_RECOVERY_POINT:
       res = gst_h264_parser_parse_recovery_point (nalparser,
@@ -2276,6 +2325,22 @@ gst_h264_sps_clear (GstH264SPS * sps)
   }
 }
 
+static void
+h264_sei_message_clear (GstH264SEIMessage * sei_msg)
+{
+  switch (sei_msg->payloadType) {
+    case GST_H264_SEI_REGISTERED_USER_DATA:{
+      GstH264RegisteredUserData *rud = &sei_msg->payload.registered_user_data;
+
+      g_free ((guint8 *) rud->data);
+      rud->data = NULL;
+      break;
+    }
+    default:
+      break;
+  }
+}
+
 /**
  * gst_h264_parser_parse_sei:
  * @nalparser: a #GstH264NalParser
@@ -2299,6 +2364,7 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
       nalu->size - nalu->header_bytes);
   *messages = g_array_new (FALSE, FALSE, sizeof (GstH264SEIMessage));
+  g_array_set_clear_func (*messages, (GDestroyNotify) h264_sei_message_clear);
 
   do {
     res = gst_h264_parser_parse_sei_message (nalparser, &nr, &sei);

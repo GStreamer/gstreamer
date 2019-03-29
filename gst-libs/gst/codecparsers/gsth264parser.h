@@ -240,6 +240,7 @@ typedef enum
  * GstH264SEIPayloadType:
  * @GST_H264_SEI_BUF_PERIOD: Buffering Period SEI Message
  * @GST_H264_SEI_PIC_TIMING: Picture Timing SEI Message
+ * @GST_H264_SEI_REGISTERED_USER_DATA: Registered user data (D.2.5)
  * @GST_H264_SEI_RECOVERY_POINT: Recovery Point SEI Message (D.2.7)
  * @GST_H264_SEI_STEREO_VIDEO_INFO: stereo video info SEI message (Since: 1.6)
  * @GST_H264_SEI_FRAME_PACKING: Frame Packing Arrangement (FPA) message that
@@ -252,6 +253,7 @@ typedef enum
 {
   GST_H264_SEI_BUF_PERIOD = 0,
   GST_H264_SEI_PIC_TIMING = 1,
+  GST_H264_SEI_REGISTERED_USER_DATA = 4,
   GST_H264_SEI_RECOVERY_POINT = 6,
   GST_H264_SEI_STEREO_VIDEO_INFO = 21,
   GST_H264_SEI_FRAME_PACKING = 45
@@ -345,6 +347,7 @@ typedef struct _GstH264SliceHdr               GstH264SliceHdr;
 
 typedef struct _GstH264ClockTimestamp         GstH264ClockTimestamp;
 typedef struct _GstH264PicTiming              GstH264PicTiming;
+typedef struct _GstH264RegisteredUserData     GstH264RegisteredUserData;
 typedef struct _GstH264BufferingPeriod        GstH264BufferingPeriod;
 typedef struct _GstH264RecoveryPoint          GstH264RecoveryPoint;
 typedef struct _GstH264StereoVideoInfo        GstH264StereoVideoInfo;
@@ -994,6 +997,14 @@ struct _GstH264PicTiming
   GstH264ClockTimestamp clock_timestamp[3];
 };
 
+struct _GstH264RegisteredUserData
+{
+  guint8 country_code;
+  guint8 country_code_extension;
+  const guint8 *data;
+  guint size;
+};
+
 struct _GstH264BufferingPeriod
 {
   GstH264SPS *sps;
@@ -1022,6 +1033,7 @@ struct _GstH264SEIMessage
   union {
     GstH264BufferingPeriod buffering_period;
     GstH264PicTiming pic_timing;
+    GstH264RegisteredUserData registered_user_data;
     GstH264RecoveryPoint recovery_point;
     GstH264StereoVideoInfo stereo_video_info;
     GstH264FramePacking frame_packing;

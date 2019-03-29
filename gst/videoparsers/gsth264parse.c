@@ -520,6 +520,95 @@ _nal_name (GstH264NalUnitType nal_type)
 #endif
 
 static void
+gst_h264_parse_process_sei_user_data (GstH264Parse * h264parse,
+    GstH264RegisteredUserData * rud)
+{
+  guint16 provider_code;
+  guint32 atsc_user_id;
+  GstByteReader br;
+
+  if (rud->country_code != 0xB5)
+    return;
+
+  if (rud->data == NULL || rud->size < 2)
+    return;
+
+  gst_byte_reader_init (&br, rud->data, rud->size);
+
+  provider_code = gst_byte_reader_get_uint16_be_unchecked (&br);
+
+  /* There is also 0x29 / 47 for DirecTV, but we don't handle that for now.
+   * https://en.wikipedia.org/wiki/CEA-708#Picture_User_Data */
+  if (provider_code != 0x0031)
+    return;
+
+  /* ANSI/SCTE 128-2010a section 8.1.2 */
+  if (!gst_byte_reader_get_uint32_be (&br, &atsc_user_id))
+    return;
+
+  atsc_user_id = GUINT32_FROM_BE (atsc_user_id);
+  switch (atsc_user_id) {
+    case GST_MAKE_FOURCC ('G', 'A', '9', '4'):{
+      guint8 user_data_type_code, m;
+
+      /* 8.2.1 ATSC1_data() Semantics, Table 15 */
+      if (!gst_byte_reader_get_uint8 (&br, &user_data_type_code))
+        return;
+
+      switch (user_data_type_code) {
+        case 0x03:{
+          guint8 process_cc_data_flag;
+          guint8 cc_count, em_data, b;
+          guint i;
+
+          if (!gst_byte_reader_get_uint8 (&br, &b) || (b & 0x20) != 0)
+            break;
+
+          if (!gst_byte_reader_get_uint8 (&br, &em_data) || em_data != 0xff)
+            break;
+
+          process_cc_data_flag = (b & 0x40) != 0;
+          cc_count = b & 0x1f;
+
+          if (cc_count * 3 > gst_byte_reader_get_remaining (&br))
+            break;
+
+          if (!process_cc_data_flag || cc_count == 0) {
+            gst_byte_reader_skip_unchecked (&br, cc_count * 3);
+            break;
+          }
+
+          /* Shouldn't really happen so let's not go out of our way to handle it */
+          if (h264parse->closedcaptions_size > 0) {
+            GST_WARNING_OBJECT (h264parse, "unused pending closed captions!");
+            GST_MEMDUMP_OBJECT (h264parse, "unused captions being dropped",
+                h264parse->closedcaptions, h264parse->closedcaptions_size);
+          }
+
+          for (i = 0; i < cc_count * 3; i++) {
+            h264parse->closedcaptions[i] =
+                gst_byte_reader_get_uint8_unchecked (&br);
+          }
+          h264parse->closedcaptions_size = cc_count * 3;
+          h264parse->closedcaptions_type = GST_VIDEO_CAPTION_TYPE_CEA708_RAW;
+
+          GST_LOG_OBJECT (h264parse, "Extracted closed captions");
+          break;
+        }
+        default:
+          GST_LOG ("Unhandled atsc1 user data type %d", atsc_user_id);
+          break;
+      }
+      if (!gst_byte_reader_get_uint8 (&br, &m) || m != 0xff)
+        GST_WARNING_OBJECT (h264parse, "Marker bits mismatch after ATSC1_data");
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+static void
 gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 {
   GstH264SEIMessage sei;
@@ -563,6 +652,10 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         GST_LOG_OBJECT (h264parse, "pic timing updated");
         break;
       }
+      case GST_H264_SEI_REGISTERED_USER_DATA:
+        gst_h264_parse_process_sei_user_data (h264parse,
+            &sei.payload.registered_user_data);
+        break;
       case GST_H264_SEI_BUF_PERIOD:
         if (h264parse->ts_trn_nb == GST_CLOCK_TIME_NONE ||
             h264parse->dts == GST_CLOCK_TIME_NONE)
@@ -2484,6 +2577,15 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   } else {
     buffer = frame->buffer;
+  }
+
+  if (h264parse->closedcaptions_size > 0) {
+    gst_buffer_add_video_caption_meta (buffer,
+        h264parse->closedcaptions_type, h264parse->closedcaptions,
+        h264parse->closedcaptions_size);
+
+    h264parse->closedcaptions_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
+    h264parse->closedcaptions_size = 0;
   }
 
   if ((event = check_pending_key_unit_event (h264parse->force_key_unit_event,
