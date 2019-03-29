@@ -249,6 +249,7 @@ again:
      * Reconfiguring must be synchronous to avoid dropping the current
      * buffer */
     gst_pad_send_event (sinkpad, gst_event_new_caps (incaps));
+    gst_caps_unref (incaps);
     if (!gst_pad_needs_reconfigure (GST_BASE_TRANSFORM_SRC_PAD (bt))) {
       GST_DEBUG_OBJECT (bt, "Retry uploading with new caps");
       goto again;
