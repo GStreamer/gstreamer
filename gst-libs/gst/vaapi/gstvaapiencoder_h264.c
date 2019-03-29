@@ -3441,40 +3441,40 @@ static void
 set_view_ids (GstVaapiEncoderH264 * const encoder, const GValue * value)
 {
   guint i, j;
-  gboolean use_default = TRUE;
   guint len = gst_value_array_get_size (value);
 
-  /* Try the user set view IDs */
-  if (len > 0) {
-    if (len != encoder->num_views) {
-      GST_WARNING ("The view number is %d, but %d view IDs are provided. Just "
-          "fallback to use default view IDs.", encoder->num_views, len);
-      goto set_default_ids;
-    }
+  if (len == 0)
+    goto set_default_ids;
 
-    for (i = 0; i < len; i++) {
-      const GValue *val = gst_value_array_get_value (value, i);
-      encoder->view_ids[i] = g_value_get_uint (val);
-    }
-
-    /* check whether duplicated ID */
-    for (i = 0; i < len; i++) {
-      for (j = i + 1; j < len; j++) {
-        if (encoder->view_ids[i] == encoder->view_ids[j]) {
-          GST_WARNING ("The view %d and view %d have same view ID %d. Just "
-              "fallback to use default view IDs.", i, j, encoder->view_ids[i]);
-          goto set_default_ids;
-        }
-      }
-    }
-
-    use_default = FALSE;
+  if (len != encoder->num_views) {
+    GST_WARNING ("The view number is %d, but %d view IDs are provided. Just "
+        "fallback to use default view IDs.", encoder->num_views, len);
+    goto set_default_ids;
   }
 
+  for (i = 0; i < len; i++) {
+    const GValue *val = gst_value_array_get_value (value, i);
+    encoder->view_ids[i] = g_value_get_uint (val);
+  }
+
+  /* check whether duplicated ID */
+  for (i = 0; i < len; i++) {
+    for (j = i + 1; j < len; j++) {
+      if (encoder->view_ids[i] == encoder->view_ids[j]) {
+        GST_WARNING ("The view %d and view %d have same view ID %d. Just "
+            "fallback to use default view IDs.", i, j, encoder->view_ids[i]);
+        goto set_default_ids;
+      }
+    }
+  }
+
+  return;
+
 set_default_ids:
-  if (use_default)
+  {
     for (i = 0; i < encoder->num_views; i++)
       encoder->view_ids[i] = i;
+  }
 }
 
 static GstVaapiEncoderStatus
