@@ -178,6 +178,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   uint32_t instance_layer_count = 0;
   uint32_t enabled_layer_count = 0;
   gchar **enabled_layers;
+  gboolean have_debug_extension = FALSE;
   VkResult err;
 
   g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), FALSE);
@@ -265,6 +266,7 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
               instance_extensions[i].extensionName)) {
         extension_names[enabled_extension_count++] =
             (gchar *) VK_EXT_DEBUG_REPORT_EXTENSION_NAME;
+        have_debug_extension = TRUE;
       }
       if (!g_strcmp0 (winsys_ext_name, instance_extensions[i].extensionName)) {
         winsys_ext_found = TRUE;
@@ -342,34 +344,35 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
           "vkEnumeratePhysicalDevices") < 0)
     goto error;
 
-  instance->dbgCreateDebugReportCallback = (PFN_vkCreateDebugReportCallbackEXT)
-      gst_vulkan_instance_get_proc_address (instance,
-      "vkCreateDebugReportCallbackEXT");
-  if (!instance->dbgCreateDebugReportCallback) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Failed to retreive vkCreateDebugReportCallback");
-    goto error;
-  }
-  instance->dbgDestroyDebugReportCallback =
-      (PFN_vkDestroyDebugReportCallbackEXT)
-      gst_vulkan_instance_get_proc_address (instance,
-      "vkDestroyDebugReportCallbackEXT");
-  if (!instance->dbgDestroyDebugReportCallback) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Failed to retreive vkDestroyDebugReportCallback");
-    goto error;
-  }
-  instance->dbgReportMessage = (PFN_vkDebugReportMessageEXT)
-      gst_vulkan_instance_get_proc_address (instance,
-      "vkDebugReportMessageEXT");
-  if (!instance->dbgReportMessage) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "Failed to retreive vkDebugReportMessage");
-    goto error;
-  }
-
-  {
+  if (have_debug_extension) {
     VkDebugReportCallbackCreateInfoEXT info = { 0, };
+
+    instance->dbgCreateDebugReportCallback =
+        (PFN_vkCreateDebugReportCallbackEXT)
+        gst_vulkan_instance_get_proc_address (instance,
+        "vkCreateDebugReportCallbackEXT");
+    if (!instance->dbgCreateDebugReportCallback) {
+      g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
+          "Failed to retreive vkCreateDebugReportCallback");
+      goto error;
+    }
+    instance->dbgDestroyDebugReportCallback =
+        (PFN_vkDestroyDebugReportCallbackEXT)
+        gst_vulkan_instance_get_proc_address (instance,
+        "vkDestroyDebugReportCallbackEXT");
+    if (!instance->dbgDestroyDebugReportCallback) {
+      g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
+          "Failed to retreive vkDestroyDebugReportCallback");
+      goto error;
+    }
+    instance->dbgReportMessage = (PFN_vkDebugReportMessageEXT)
+        gst_vulkan_instance_get_proc_address (instance,
+        "vkDebugReportMessageEXT");
+    if (!instance->dbgReportMessage) {
+      g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
+          "Failed to retreive vkDebugReportMessage");
+      goto error;
+    }
 
     info.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT;
     info.pNext = NULL;
