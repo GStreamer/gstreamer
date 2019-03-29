@@ -43,6 +43,8 @@
 
 #define VOLUME_STEPS 20
 
+static gboolean wait_on_eos = FALSE;
+
 GST_DEBUG_CATEGORY (play_debug);
 #define GST_CAT_DEFAULT play_debug
 
@@ -394,7 +396,7 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       play_timeout (play);
       g_print ("\n");
       /* and switch to next item in list */
-      if (!play_next (play)) {
+      if (!wait_on_eos && !play_next (play)) {
         g_print ("%s\n", _("Reached end of play list."));
         g_main_loop_quit (play->loop);
       }
@@ -1461,6 +1463,11 @@ main (int argc, char **argv)
           N_("Use playbin3 pipeline")
           N_("(default varies depending on 'USE_PLAYBIN' env variable)"),
         NULL},
+    {"wait-on-eos", 0, 0, G_OPTION_ARG_NONE, &wait_on_eos,
+          N_
+          ("Keep showing the last frame on EOS until quit or playlist change command "
+              "(gapless is ignored)"),
+        NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
     {NULL}
   };
@@ -1505,6 +1512,9 @@ main (int argc, char **argv)
 
     return 0;
   }
+
+  if (wait_on_eos)
+    gapless = FALSE;
 
   playlist = g_ptr_array_new ();
 
