@@ -9,12 +9,19 @@ meson and its [subproject](https://github.com/mesonbuild/meson/wiki/Subprojects)
 
 ### Install meson and ninja
 
+Meson 0.48 or newer is required.
+
 You should get meson through your package manager or using:
 
   $ pip3 install --user meson
 
+This will install meson into ~/.local/bin which may or may not be included
+automatically in your PATH by default.
+
 If you are building on Windows, do not use the Meson MSI installer since it is
 experimental and will likely not work.
+
+You can also run meson directly from a meson git checkout if you like.
 
 You should get `ninja` using your package manager or download the [official
 release](https://github.com/ninja-build/ninja/releases) and put it in your PATH.
