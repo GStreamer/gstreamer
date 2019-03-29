@@ -156,6 +156,10 @@ gst_msdkvp9dec_preinit_decoder (GstMsdkDec * decoder)
   decoder->param.mfx.FrameInfo.Height =
       GST_ROUND_UP_16 (decoder->param.mfx.FrameInfo.Height);
 
+  decoder->param.mfx.FrameInfo.PicStruct =
+      decoder->param.mfx.FrameInfo.PicStruct ? decoder->param.mfx.
+      FrameInfo.PicStruct : MFX_PICSTRUCT_PROGRESSIVE;
+
   return TRUE;
 }
 

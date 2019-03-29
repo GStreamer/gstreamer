@@ -319,9 +319,6 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
     thiz->param.mfx.FrameInfo.AspectRatioH = info->par_d;
   }
 
-  thiz->param.mfx.FrameInfo.PicStruct =
-      thiz->param.mfx.FrameInfo.PicStruct ? thiz->param.mfx.
-      FrameInfo.PicStruct : MFX_PICSTRUCT_PROGRESSIVE;
   thiz->param.mfx.FrameInfo.FourCC =
       thiz->param.mfx.FrameInfo.FourCC ? thiz->param.mfx.
       FrameInfo.FourCC : MFX_FOURCC_NV12;
@@ -1467,6 +1464,10 @@ gst_msdkdec_preinit_decoder (GstMsdkDec * decoder)
       GST_ROUND_UP_16 (decoder->param.mfx.FrameInfo.Width);
   decoder->param.mfx.FrameInfo.Height =
       GST_ROUND_UP_32 (decoder->param.mfx.FrameInfo.Height);
+
+  decoder->param.mfx.FrameInfo.PicStruct =
+      decoder->param.mfx.FrameInfo.PicStruct ? decoder->param.mfx.
+      FrameInfo.PicStruct : MFX_PICSTRUCT_PROGRESSIVE;
 
   return TRUE;
 }

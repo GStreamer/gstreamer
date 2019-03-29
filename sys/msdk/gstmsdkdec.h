@@ -108,8 +108,7 @@ struct _GstMsdkDecClass
 
   gboolean (*configure) (GstMsdkDec * decoder);
 
-  /* reset mfx parameters per codec, currently it is only used for
-   * the alignment exception for frame width and height */
+  /* reset mfx parameters per codec */
   gboolean (*preinit_decoder) (GstMsdkDec * decoder);
 };
 
