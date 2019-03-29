@@ -3854,8 +3854,8 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
   else
     data->is_early = FALSE;
 
-  if (data->is_early && sess->next_early_rtcp_time < current_time) {
-    GST_DEBUG ("early feedback %" GST_TIME_FORMAT " < now %"
+  if (data->is_early && sess->next_early_rtcp_time <= current_time) {
+    GST_DEBUG ("early feedback %" GST_TIME_FORMAT " <= now %"
         GST_TIME_FORMAT, GST_TIME_ARGS (sess->next_early_rtcp_time),
         GST_TIME_ARGS (current_time));
   } else if (sess->next_rtcp_check_time == GST_CLOCK_TIME_NONE ||
