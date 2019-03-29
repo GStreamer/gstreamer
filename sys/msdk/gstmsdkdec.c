@@ -338,12 +338,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
         msdk_status_to_string (status));
   }
 
-  /* Force the structure to MFX_PICSTRUCT_PROGRESSIVE if it is unknow to
-   * work-around MSDK issue:
-   * https://github.com/Intel-Media-SDK/MediaSDK/issues/1139
-   */
-  if (thiz->param.mfx.FrameInfo.PicStruct == MFX_PICSTRUCT_UNKNOWN)
-    thiz->param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  klass->postinit_decoder (thiz);
 
   status = MFXVideoDECODE_QueryIOSurf (session, &thiz->param, &request);
   if (status < MFX_ERR_NONE) {
@@ -1472,6 +1467,13 @@ gst_msdkdec_preinit_decoder (GstMsdkDec * decoder)
   return TRUE;
 }
 
+static gboolean
+gst_msdkdec_postinit_decoder (GstMsdkDec * decoder)
+{
+  /* Do nothing */
+  return TRUE;
+}
+
 static void
 gst_msdkdec_class_init (GstMsdkDecClass * klass)
 {
@@ -1501,6 +1503,7 @@ gst_msdkdec_class_init (GstMsdkDecClass * klass)
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_msdkdec_drain);
 
   klass->preinit_decoder = GST_DEBUG_FUNCPTR (gst_msdkdec_preinit_decoder);
+  klass->postinit_decoder = GST_DEBUG_FUNCPTR (gst_msdkdec_postinit_decoder);
 
   g_object_class_install_property (gobject_class, GST_MSDKDEC_PROP_HARDWARE,
       g_param_spec_boolean ("hardware", "Hardware", "Enable hardware decoders",

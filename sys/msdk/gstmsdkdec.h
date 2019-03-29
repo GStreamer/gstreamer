@@ -110,6 +110,8 @@ struct _GstMsdkDecClass
 
   /* reset mfx parameters per codec */
   gboolean (*preinit_decoder) (GstMsdkDec * decoder);
+  /* adjust mfx parameters per codec */
+  gboolean (*postinit_decoder) (GstMsdkDec * decoder);
 };
 
 struct _MsdkDecTask

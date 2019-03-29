@@ -147,6 +147,19 @@ gst_msdkvp8dec_preinit_decoder (GstMsdkDec * decoder)
   return TRUE;
 }
 
+static gboolean
+gst_msdkvp8dec_postinit_decoder (GstMsdkDec * decoder)
+{
+  /* Force the structure to MFX_PICSTRUCT_PROGRESSIVE if it is unknow to
+   * work-around MSDK issue:
+   * https://github.com/Intel-Media-SDK/MediaSDK/issues/1139
+   */
+  if (decoder->param.mfx.FrameInfo.PicStruct == MFX_PICSTRUCT_UNKNOWN)
+    decoder->param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+
+  return TRUE;
+}
+
 static void
 gst_msdkvp8dec_class_init (GstMsdkVP8DecClass * klass)
 {
@@ -164,6 +177,8 @@ gst_msdkvp8dec_class_init (GstMsdkVP8DecClass * klass)
   decoder_class->configure = GST_DEBUG_FUNCPTR (gst_msdkvp8dec_configure);
   decoder_class->preinit_decoder =
       GST_DEBUG_FUNCPTR (gst_msdkvp8dec_preinit_decoder);
+  decoder_class->postinit_decoder =
+      GST_DEBUG_FUNCPTR (gst_msdkvp8dec_postinit_decoder);
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK VP8 decoder",
