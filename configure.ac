@@ -1550,7 +1550,7 @@ AG_GST_CHECK_FEATURE(SRTP, [srtp library], srtp, [
     AC_DEFINE([HAVE_SRTP2], 1, [Define if libsrtp2 is used])
   else
     PKG_CHECK_MODULES(SRTP, libsrtp, HAVE_SRTP="yes",
-      AG_GST_CHECK_LIBHEADER(SRTP, srtp, srtp_init, , srtp/srtp.h, SRTP_LIBS="-lsrtp")
+      AG_GST_CHECK_LIBHEADER(SRTP, srtp, crypto_policy_set_aes_gcm_128_16_auth, , srtp/srtp.h, SRTP_LIBS="-lsrtp")
     )
   fi
   AC_SUBST(SRTP_LIBS)
