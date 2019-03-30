@@ -144,9 +144,9 @@ gst_vaapi_get_display_type_from_gl (GstGLDisplayType gl_display_type,
       if (gl_platform == GST_GL_PLATFORM_GLX)
         return GST_VAAPI_DISPLAY_TYPE_GLX;
 #endif
-#endif
       return GST_VAAPI_DISPLAY_TYPE_X11;
     }
+#endif
 #if USE_WAYLAND
     case GST_GL_DISPLAY_TYPE_WAYLAND:{
       return GST_VAAPI_DISPLAY_TYPE_WAYLAND;
