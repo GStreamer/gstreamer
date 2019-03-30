@@ -1124,6 +1124,64 @@ error:
   return GST_H265_PARSER_ERROR;
 }
 
+static GstH265ParserResult
+gst_h265_parser_parse_time_code (GstH265Parser * parser,
+    GstH265TimeCode * tc, NalReader * nr)
+{
+  guint i;
+
+  GST_DEBUG ("parsing \"Time code\"");
+
+  READ_UINT8 (nr, tc->num_clock_ts, 2);
+
+  for (i = 0; i < tc->num_clock_ts; i++) {
+    READ_UINT8 (nr, tc->clock_timestamp_flag[i], 1);
+    if (tc->clock_timestamp_flag[i]) {
+      READ_UINT8 (nr, tc->units_field_based_flag[i], 1);
+      READ_UINT8 (nr, tc->counting_type[i], 5);
+      READ_UINT8 (nr, tc->full_timestamp_flag[i], 1);
+      READ_UINT8 (nr, tc->discontinuity_flag[i], 1);
+      READ_UINT8 (nr, tc->cnt_dropped_flag[i], 1);
+      READ_UINT16 (nr, tc->n_frames[i], 9);
+
+      if (tc->full_timestamp_flag[i]) {
+        tc->seconds_flag[i] = TRUE;
+        READ_UINT8 (nr, tc->seconds_value[i], 6);
+
+        tc->minutes_flag[i] = TRUE;
+        READ_UINT8 (nr, tc->minutes_value[i], 6);
+
+        tc->hours_flag[i] = TRUE;
+        READ_UINT8 (nr, tc->hours_value[i], 5);
+      } else {
+        READ_UINT8 (nr, tc->seconds_flag[i], 1);
+        if (tc->seconds_flag[i]) {
+          READ_UINT8 (nr, tc->seconds_value[i], 6);
+          READ_UINT8 (nr, tc->minutes_flag[i], 1);
+          if (tc->minutes_flag[i]) {
+            READ_UINT8 (nr, tc->minutes_value[i], 6);
+            READ_UINT8 (nr, tc->hours_flag[i], 1);
+            if (tc->hours_flag[i]) {
+              READ_UINT8 (nr, tc->hours_value[i], 5);
+            }
+          }
+        }
+      }
+    }
+
+    READ_UINT8 (nr, tc->time_offset_length[i], 5);
+
+    if (tc->time_offset_length[i] > 0)
+      READ_UINT32 (nr, tc->time_offset_value[i], tc->time_offset_length[i]);
+  }
+
+  return GST_H265_PARSER_OK;
+
+error:
+  GST_WARNING ("error parsing \"Time code\"");
+  return GST_H265_PARSER_ERROR;
+}
+
 /******** API *************/
 
 /**
@@ -2311,6 +2369,10 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
       case GST_H265_SEI_RECOVERY_POINT:
         res = gst_h265_parser_parse_recovery_point (parser,
             &sei->payload.recovery_point, nr);
+        break;
+      case GST_H265_SEI_TIME_CODE:
+        res = gst_h265_parser_parse_time_code (parser,
+            &sei->payload.time_code, nr);
         break;
       default:
         /* Just consume payloadSize bytes, which does not account for

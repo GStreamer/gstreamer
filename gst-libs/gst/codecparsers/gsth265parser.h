@@ -221,6 +221,7 @@ typedef enum
  * @GST_H265_SEI_BUF_PERIOD: Buffering Period SEI Message
  * @GST_H265_SEI_PIC_TIMING: Picture Timing SEI Message
  * @GST_H265_SEI_RECOVERY_POINT: Recovery Point SEI Message (D.3.8)
+ * @GST_H265_SEI_TIME_CODE: Time code SEI message (D.2.27) (Since 1.16)
  * ...
  *
  * The type of SEI message.
@@ -230,6 +231,7 @@ typedef enum
   GST_H265_SEI_BUF_PERIOD = 0,
   GST_H265_SEI_PIC_TIMING = 1,
   GST_H265_SEI_RECOVERY_POINT = 6,
+  GST_H265_SEI_TIME_CODE = 136,
       /* and more...  */
 } GstH265SEIPayloadType;
 
@@ -316,6 +318,7 @@ typedef struct _GstH265SliceHdr                 GstH265SliceHdr;
 typedef struct _GstH265PicTiming                GstH265PicTiming;
 typedef struct _GstH265BufferingPeriod          GstH265BufferingPeriod;
 typedef struct _GstH265RecoveryPoint            GstH265RecoveryPoint;
+typedef struct _GstH265TimeCode                 GstH265TimeCode;
 typedef struct _GstH265SEIMessage               GstH265SEIMessage;
 
 /**
@@ -1073,6 +1076,36 @@ struct _GstH265RecoveryPoint
   guint8 broken_link_flag;
 };
 
+/**
+ * GstH265TimeCode:
+ * The time code SEI message provides time code information similar to that
+ * defined by SMPTE ST 12-1 (2014) for field(s) or frame(s) of the current
+ * picture.
+ *
+ * D.2.27
+ *
+ * Since: 1.16
+ */
+struct _GstH265TimeCode
+{
+  guint8 num_clock_ts;
+  guint8 clock_timestamp_flag[3];
+  guint8 units_field_based_flag[3];
+  guint8 counting_type[3];
+  guint8 full_timestamp_flag[3];
+  guint8 discontinuity_flag[3];
+  guint8 cnt_dropped_flag[3];
+  guint16 n_frames[3];
+  guint8 seconds_flag[3];
+  guint8 seconds_value[3];
+  guint8 minutes_flag[3];
+  guint8 minutes_value[3];
+  guint8 hours_flag[3];
+  guint8 hours_value[3];
+  guint8 time_offset_length[3];
+  guint32 time_offset_value[3];
+};
+
 struct _GstH265SEIMessage
 {
   GstH265SEIPayloadType payloadType;
@@ -1081,6 +1114,7 @@ struct _GstH265SEIMessage
     GstH265BufferingPeriod buffering_period;
     GstH265PicTiming pic_timing;
     GstH265RecoveryPoint recovery_point;
+    GstH265TimeCode time_code;
     /* ... could implement more */
   } payload;
 };

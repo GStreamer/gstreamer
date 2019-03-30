@@ -544,9 +544,14 @@ gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
             sei.payload.recovery_point.broken_link_flag);
         h265parse->keyframe = TRUE;
         break;
-
-      case GST_H265_SEI_BUF_PERIOD:
+      case GST_H265_SEI_TIME_CODE:
+        memcpy (&h265parse->time_code, &sei.payload.time_code,
+            sizeof (GstH265TimeCode));
+        break;
       case GST_H265_SEI_PIC_TIMING:
+        h265parse->sei_pic_struct = sei.payload.pic_timing.pic_struct;
+        break;
+      case GST_H265_SEI_BUF_PERIOD:
         /* FIXME */
         break;
     }
@@ -1245,8 +1250,8 @@ gst_h265_parse_make_codec_data (GstH265Parse * h265parse)
   }
   data[6] |=
       (pft->progressive_source_flag << 7) | (pft->interlaced_source_flag << 6) |
-      (pft->non_packed_constraint_flag << 5) | (pft->
-      frame_only_constraint_flag << 4);
+      (pft->
+      non_packed_constraint_flag << 5) | (pft->frame_only_constraint_flag << 4);
   data[12] = pft->level_idc;
   /* min_spatial_segmentation_idc */
   GST_WRITE_UINT16_BE (data + 13, min_spatial_segmentation_idc);
@@ -1701,9 +1706,13 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 
       /* but not necessarily or reliably this */
       if (fps_num > 0 && fps_den > 0) {
+        GstStructure *s2;
         GST_INFO_OBJECT (h265parse, "setting framerate in caps");
         gst_caps_set_simple (caps, "framerate",
             GST_TYPE_FRACTION, fps_num, fps_den, NULL);
+        s2 = gst_caps_get_structure (caps, 0);
+        gst_structure_get_fraction (s2, "framerate", &h265parse->parsed_fps_n,
+            &h265parse->parsed_fps_d);
         gst_base_parse_set_frame_rate (GST_BASE_PARSE (h265parse),
             fps_num, fps_den, 0, 0);
         latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
@@ -2210,6 +2219,76 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       h265parse->have_sps = FALSE;
       h265parse->have_pps = FALSE;
       h265parse->state &= GST_H265_PARSE_STATE_VALID_PICTURE_HEADERS;
+    }
+  }
+
+  {
+    guint i = 0;
+
+    for (i = 0; i < h265parse->time_code.num_clock_ts; i++) {
+      GstVideoTimeCodeFlags flags = 0;
+      gint field_count = -1;
+
+      if (!h265parse->time_code.clock_timestamp_flag[i])
+        break;
+
+      h265parse->time_code.clock_timestamp_flag[i] = 0;
+
+      /* Table D.2 */
+      switch (h265parse->sei_pic_struct) {
+        case GST_H265_SEI_PIC_STRUCT_FRAME:
+        case GST_H265_SEI_PIC_STRUCT_TOP_FIELD:
+        case GST_H265_SEI_PIC_STRUCT_BOTTOM_FIELD:
+          field_count = h265parse->sei_pic_struct;
+          break;
+        case GST_H265_SEI_PIC_STRUCT_TOP_BOTTOM:
+        case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_PREVIOUS_BOTTOM:
+        case GST_H265_SEI_PIC_STRUCT_TOP_PAIRED_NEXT_BOTTOM:
+          field_count = i + 1;
+          break;
+        case GST_H265_SEI_PIC_STRUCT_BOTTOM_TOP:
+        case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_PREVIOUS_TOP:
+        case GST_H265_SEI_PIC_STRUCT_BOTTOM_PAIRED_NEXT_TOP:
+          field_count = 2 - i;
+          break;
+        case GST_H265_SEI_PIC_STRUCT_TOP_BOTTOM_TOP:
+          field_count = i % 2 ? 2 : 1;
+          break;
+        case GST_H265_SEI_PIC_STRUCT_BOTTOM_TOP_BOTTOM:
+          field_count = i % 2 ? 1 : 2;
+          break;
+        case GST_H265_SEI_PIC_STRUCT_FRAME_DOUBLING:
+        case GST_H265_SEI_PIC_STRUCT_FRAME_TRIPLING:
+          field_count = 0;
+          break;
+      }
+
+      if (field_count == -1) {
+        GST_WARNING_OBJECT (parse,
+            "failed to determine field count for timecode");
+        field_count = 0;
+      }
+
+      /* Dropping of the two lowest (value 0 and 1) n_frames[ i ] counts when
+       * seconds_value[ i ] is equal to 0 and minutes_value[ i ] is not an integer
+       * multiple of 10 */
+      if (h265parse->time_code.counting_type[i] == 4)
+        flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+
+      if (h265parse->sei_pic_struct != GST_H265_SEI_PIC_STRUCT_FRAME)
+        flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
+
+      gst_buffer_add_video_time_code_meta_full (buffer,
+          h265parse->parsed_fps_n,
+          h265parse->parsed_fps_d,
+          NULL,
+          flags,
+          h265parse->time_code.hours_flag[i] ? h265parse->time_code.
+          hours_value[i] : 0,
+          h265parse->time_code.minutes_flag[i] ? h265parse->time_code.
+          minutes_value[i] : 0,
+          h265parse->time_code.seconds_flag[i] ? h265parse->time_code.
+          seconds_value[i] : 0, h265parse->time_code.n_frames[i], field_count);
     }
   }
 

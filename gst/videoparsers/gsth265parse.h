@@ -52,6 +52,7 @@ struct _GstH265Parse
   gint fps_num, fps_den;
   gint upstream_par_n, upstream_par_d;
   gint parsed_par_n, parsed_par_d;
+  gint parsed_fps_n, parsed_fps_d;
   /* current codec_data in output caps, if any */
   GstBuffer *codec_data;
   /* input codec_data, if any */
@@ -85,6 +86,12 @@ struct _GstH265Parse
   GstBuffer *vps_nals[GST_H265_MAX_VPS_COUNT];
   GstBuffer *sps_nals[GST_H265_MAX_SPS_COUNT];
   GstBuffer *pps_nals[GST_H265_MAX_PPS_COUNT];
+
+  /* Infos we need to keep track of */
+  guint8 sei_pic_struct;
+
+  /* Collected TimeCode SEI */
+  GstH265TimeCode time_code;
 
   gboolean discont;
 
