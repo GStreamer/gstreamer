@@ -37,6 +37,21 @@ Disable control through keyboard interaction in terminal (see below)
 .TP 8
 .B  \-\-gapless
 Enable gapless playback
+.TP 8
+.B  \-v, \-\-flags
+Control playback behaviour setting playbin 'flags' property
+.TP 8
+.B  \-v, \-\-verbose
+Output status information and property notifications
+.TP 8
+.B  \-q, \-\-quiet
+Do not print any output (apart from errors)
+.TP 8
+.B  \-\-use\-playbin3
+Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env variable)
+.TP 8
+.B  \-\-wait\-on\-eos
+Keep showing the last frame on EOS until quit or playlist change command (gapless is ignored)
 
 .SH "INTERACTIVE KEYBOARD CONTROL"
 .l
