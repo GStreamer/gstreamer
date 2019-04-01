@@ -1306,7 +1306,8 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
       GST_QUARK (CUR_TYPE), GST_TYPE_SEEK_TYPE, start_type,
       GST_QUARK (CUR), G_TYPE_INT64, start,
       GST_QUARK (STOP_TYPE), GST_TYPE_SEEK_TYPE, stop_type,
-      GST_QUARK (STOP), G_TYPE_INT64, stop, NULL);
+      GST_QUARK (STOP), G_TYPE_INT64, stop,
+      GST_QUARK (TRICKMODE_INTERVAL), GST_TYPE_CLOCK_TIME, 0, NULL);
   event = gst_event_new_custom (GST_EVENT_SEEK, structure);
 
   return event;
@@ -1364,6 +1365,48 @@ gst_event_parse_seek (GstEvent * event, gdouble * rate,
     *stop =
         g_value_get_int64 (gst_structure_id_get_value (structure,
             GST_QUARK (STOP)));
+}
+
+/**
+ * gst_event_set_seek_trickmode_interval:
+ *
+ * Sets a trickmode interval on a (writable) seek event. Elements
+ * that support TRICKMODE_KEY_UNITS seeks SHOULD use this as the minimal
+ * interval between each frame they may output.
+ *
+ * Since: 1.16
+ */
+void
+gst_event_set_seek_trickmode_interval (GstEvent * event, GstClockTime interval)
+{
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEEK);
+  g_return_if_fail (gst_event_is_writable (event));
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (interval));
+
+  gst_structure_id_set (GST_EVENT_STRUCTURE (event),
+      GST_QUARK (TRICKMODE_INTERVAL), GST_TYPE_CLOCK_TIME, interval, NULL);
+}
+
+/**
+ * gst_event_parse_seek_trickmode_interval:
+ * @interval: (out)
+ *
+ * Retrieve the trickmode interval that may have been set on a
+ * seek event with gst_event_set_seek_trickmode_interval().
+ *
+ * Since: 1.16
+ */
+void
+gst_event_parse_seek_trickmode_interval (GstEvent * event,
+    GstClockTime * interval)
+{
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (interval != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_SEEK);
+
+  gst_structure_id_get (GST_EVENT_STRUCTURE (event),
+      GST_QUARK (TRICKMODE_INTERVAL), GST_TYPE_CLOCK_TIME, interval, NULL);
 }
 
 /**

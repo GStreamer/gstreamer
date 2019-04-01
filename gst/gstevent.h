@@ -676,6 +676,12 @@ void            gst_event_parse_seek            (GstEvent *event, gdouble *rate,
                                                  GstSeekType *start_type, gint64 *start,
                                                  GstSeekType *stop_type, gint64 *stop);
 
+GST_API
+void            gst_event_set_seek_trickmode_interval (GstEvent *event, GstClockTime interval);
+
+GST_API
+void            gst_event_parse_seek_trickmode_interval (GstEvent *event, GstClockTime *interval);
+
 /* navigation event */
 
 GST_API

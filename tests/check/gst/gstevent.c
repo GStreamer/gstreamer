@@ -218,6 +218,7 @@ GST_START_TEST (create_events)
     GstSeekFlags flags;
     GstSeekType start_type, stop_type;
     gint64 start, stop;
+    GstClockTime trickmode_interval;
 
     event = gst_event_new_seek (0.5, GST_FORMAT_BYTES,
         GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
@@ -239,6 +240,22 @@ GST_START_TEST (create_events)
     fail_unless (stop_type == GST_SEEK_TYPE_NONE);
     fail_unless (stop == 0xdeadbeef);
 
+    gst_event_parse_seek_trickmode_interval (event, &trickmode_interval);
+    fail_unless_equals_uint64 (trickmode_interval, 0);
+
+    gst_event_set_seek_trickmode_interval (event, GST_SECOND);
+    gst_event_parse_seek_trickmode_interval (event, &trickmode_interval);
+    fail_unless_equals_uint64 (trickmode_interval, GST_SECOND);
+
+    gst_event_ref (event);
+    ASSERT_CRITICAL (gst_event_set_seek_trickmode_interval (event,
+            2 * GST_SECOND));
+    gst_event_unref (event);
+
+    gst_event_unref (event);
+
+    event = gst_event_new_flush_start ();
+    ASSERT_CRITICAL (gst_event_set_seek_trickmode_interval (event, GST_SECOND));
     gst_event_unref (event);
   }
 

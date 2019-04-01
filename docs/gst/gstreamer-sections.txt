@@ -1216,6 +1216,8 @@ GstSeekType
 GstSeekFlags
 gst_event_new_seek
 gst_event_parse_seek
+gst_event_set_seek_trickmode_interval
+gst_event_parse_seek_trickmode_interval
 
 gst_event_new_navigation
 
