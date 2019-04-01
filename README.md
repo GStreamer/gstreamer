@@ -38,6 +38,17 @@ NOTE: on fedora (and maybe other distributions) replace `ninja` with `ninja-buil
 
 # Development environment
 
+## Building the Qt5 QML plugin
+
+If `qmake` is not in `PATH` and pkgconfig files are not available, you can
+point the `QMAKE` env var to the Qt5 installation of your choosing before
+running `meson` as shown above.
+
+The plugin will be automatically enabled if possible, but you can ensure that
+it is built by passing `-Dgst-plugins-good:qt5=enabled` to `meson`. This will
+cause Meson to error out if the plugin could not be enabled. This also works
+for all plugins in all GStreamer repositories.
+
 ## Uninstalled environment
 
 gst-build also contains a special `uninstalled` target that lets you enter an
