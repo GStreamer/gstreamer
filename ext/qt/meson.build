@@ -20,8 +20,18 @@ if have_cxx and build_gstgl
   qt5qml_dep = dependency('qt5', modules : ['Core', 'Gui', 'Qml', 'Quick'],
                           required: get_option('qt5'), static: host_machine.system() == 'ios')
 
-  # FIXME Add a way to get that information out of the qt5 module
-  moc = find_program('moc-qt5', 'moc', required : get_option('qt5'))
+  # On Linux, distros often have the Qt5 pkg-config files and moc in separate
+  # packages, so the user may not have both installed. Check for moc and ensure
+  # that it's installed.
+  # We don't do this check on other OSes because they need to be able to simply
+  # point the `QMAKE` env var to `qmake` to build against a particular Qt5.
+  if host_system == 'linux'
+    moc = find_program('moc-qt5', 'moc', required : get_option('qt5'))
+  else
+    # We only check if `moc` was found, and then discard it, so we can fake it.
+    # This is also a good unit test of the fact that we *don't* use it.
+    moc = declare_dependency()
+  endif
   if qt5qml_dep.found() and moc.found()
     optional_deps = []
     qt_defines = []
