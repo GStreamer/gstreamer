@@ -276,8 +276,9 @@ valgrind ges:
 #
 # Parameters:
 # CONFIG: The name of the configuration file to use
+# ARCH: The cerbero <os>_<cpu> (used in cache key)
 #
-# Produces runtime and devel tarball packages.
+# Produces runtime and devel tarball packages for linux/android or .pkg for macos
 .cerbero:
   stage: "full builds"
   image: $CERBERO_IMAGE
@@ -287,30 +288,41 @@ valgrind ges:
     CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
     CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
     CCACHE_MAXSIZE: "1.7G"
-    CERBERO_HOME: "${CI_PROJECT_DIR}/cerbero-build"
-    CERBERO_SOURCES: "${CI_PROJECT_DIR}/cerbero-sources"
+    CERBERO_HOME: "cerbero-build"
+    CERBERO_SOURCES: "cerbero-sources"
     CERBERO_DEPS: "cerbero-deps.tar.gz"
     CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS}"
     CERBERO: "./cerbero-uninstalled -c config/${CONFIG} -c localconf.cbc -m manifest.xml"
+    CERBERO_PACKAGE_ARGS: "-t"
+    HAVE_CCACHE: "yes"
+    # used by macos packages as we only ever install to a fixed directory
+    CERBERO_OVERRIDDEN_DIST_DIR: ""
   before_script:
     # FIXME Wrong namespace
     # Workaround build-tools having hardcoded internal path
-    - mkdir -p /builds/gstreamer
-    - ln -sf ${CI_PROJECT_DIR} /builds/gstreamer/cerbero
+    - pwd
+    - mkdir -p ../../gstreamer
+    - ln -sf $(pwd) ../../gstreamer/cerbero
+    - mkdir -p ../../${CI_PROJECT_NAMESPACE}
+    - ln -sf $(pwd) ../../${CI_PROJECT_NAMESPACE}/cerbero
     - rsync -aH /cerbero/ .
     - test -f ${CERBERO_DEPS} && tar -C ${CERBERO_HOME} -xf ${CERBERO_DEPS}
-    - echo "home_dir = \"${CERBERO_HOME}\"" >> localconf.cbc
-    - echo "local_sources = \"${CERBERO_SOURCES}\"" >> localconf.cbc
+    - test "x${CERBERO_OVERRIDDEN_DIST_DIR}" != "x"
+          && test -d ${CERBERO_HOME}/dist/${ARCH}
+          && mkdir -p ${CERBERO_OVERRIDDEN_DIST_DIR}
+          && rsync -aH ${CERBERO_HOME}/dist/${ARCH}/ ${CERBERO_OVERRIDDEN_DIST_DIR}
+    - echo "home_dir = \"$(pwd)/${CERBERO_HOME}\"" >> localconf.cbc
+    - echo "local_sources = \"$(pwd)/${CERBERO_SOURCES}\"" >> localconf.cbc
     - ./cerbero-uninstalled --self-update manifest.xml
-    - ccache -z
   script:
+    - test "x${HAVE_CCACHE}" = "xyes" && ccache -z
     - $CERBERO $CERBERO_ARGS show-config
     - $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
     - $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
     - $CERBERO $CERBERO_ARGS fetch-cache
     - $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
-    - $CERBERO $CERBERO_ARGS package --offline -t -o ${CI_PROJECT_DIR} gstreamer-1.0
-    - ccache -s
+    - $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o $(pwd) gstreamer-1.0
+    - test "x${HAVE_CCACHE}" = "xyes" && ccache -s || true    # eat the return value from the failing test
   except:
     variables:
       - $CI_PROJECT_NAME == "gst-build"
@@ -326,7 +338,7 @@ valgrind ges:
     when: 'always'
     paths:
       - "manifest.xml"
-      - "cerbero-build/logs"
+      - "${CERBERO_HOME}/logs"
       - "*.tar.bz2"
 
 # Template for Cerbero GStreamer Deps
@@ -354,10 +366,12 @@ valgrind ges:
           gst-plugins-bad-1.0 gst-plugins-ugly-1.0 gst-rtsp-server-1.0
           gst-libav-1.0 gst-validate gst-editing-services-1.0 libnice
     - $CERBERO $CERBERO_ARGS fetch-cache --skip-fetch --job-id=${CI_JOB_ID}
+    - test "x${CERBERO_OVERRIDDEN_DIST_DIR}" != "x"
+          && mkdir -p ${CERBERO_HOME}/dist/${ARCH}
+          && rsync -aH ${CERBERO_OVERRIDDEN_DIST_DIR}/ ${CERBERO_HOME}/dist/${ARCH}
     - tar -C ${CERBERO_HOME} -czf $CERBERO_DEPS
               build-tools build-tools.cache
               dist/${ARCH} ${ARCH}.cache
-    - ccache -s
   only:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
@@ -367,8 +381,8 @@ valgrind ges:
     when: 'always'
     paths:
       - "manifest.xml"
-      - "cerbero-build/logs"
-      - "cerbero-build/cerbero-deps.log"
+      - "${CERBERO_HOME}/logs"
+      - "${CERBERO_HOME}/cerbero-deps.log"
       - "${CERBERO_DEPS}"
 
 #
@@ -560,6 +574,62 @@ cerbero android universal examples:
   only:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
+
+#
+# Cerbero macOS X86_64 build
+#
+cerbero deps macos x86_64:
+  extends: '.cerbero deps'
+  stage: "build"
+  variables:
+    ARCH: "darwin_x86_64"
+    CONFIG: "osx-x86-64.cbc"
+    CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS} -v nowerror"
+    HAVE_CCACHE: ""
+    CERBERO_OVERRIDDEN_DIST_DIR: "/Library/Frameworks/GStreamer.framework/Versions/1.0"
+  tags:
+    - gst-macos-10.14
+
+.cerbero macos x86_64:
+  extends: '.cerbero'
+  variables:
+    ARCH: "darwin_x86_64"
+    CONFIG: "osx-x86-64.cbc"
+    CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS} -v nowerror"
+    CERBERO_PACKAGE_ARGS: ""
+    HAVE_CCACHE: ""
+    CERBERO_OVERRIDDEN_DIST_DIR: "/Library/Frameworks/GStreamer.framework/Versions/1.0"
+  tags:
+    - gst-macos-10.14
+  artifacts:
+    name: "${CI_JOB_NAME}_${CI_COMMIT_SHA}"
+    expire_in: '5 days'
+    when: 'always'
+    paths:
+      - "manifest.xml"
+      - "${CERBERO_HOME}/logs"
+      - "gstreamer-1.0-1.*.pkg"
+      - "gstreamer-1.0-devel-1.*.pkg"
+
+cerbero macos x86_64:
+  extends: '.cerbero macos x86_64'
+  dependencies:
+    - "cerbero deps macos x86_64"
+  only:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+
+build cerbero macos x86_64:
+  extends: '.cerbero macos x86_64'
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-build"
+      - $CI_PROJECT_NAME == "gst-integration-testsuite"
+      - $CI_PROJECT_NAME == "gst-omx"
+      - $CI_PROJECT_NAME == "gstreamer-vaapi"
+      - $CI_PROJECT_NAME == "gst-docs"
+      - $CI_PROJECT_NAME == "gst-sharp"
 
 documentation:
   image: $FEDORA30_IMAGE
