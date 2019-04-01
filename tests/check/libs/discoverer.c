@@ -57,7 +57,7 @@ GST_START_TEST (test_disco_serializing)
       g_build_filename (GST_TEST_FILES_PATH, "theora-vorbis.ogg", NULL);
 
   /* high timeout, in case we're running under valgrind */
-  dc = gst_discoverer_new (5 * GST_SECOND, &err);
+  dc = gst_discoverer_new (30 * GST_SECOND, &err);
   fail_unless (dc != NULL);
   fail_unless (err == NULL);
 
@@ -115,7 +115,7 @@ GST_START_TEST (test_disco_sync)
   gchar *uri;
 
   /* high timeout, in case we're running under valgrind */
-  dc = gst_discoverer_new (5 * GST_SECOND, &err);
+  dc = gst_discoverer_new (30 * GST_SECOND, &err);
   fail_unless (dc != NULL);
   fail_unless (err == NULL);
 
@@ -286,7 +286,7 @@ test_disco_async_with_context (GMainContext * context)
   data.loop = g_main_loop_new (context, FALSE);
 
   /* high timeout, in case we're running under valgrind */
-  dc = gst_discoverer_new (5 * GST_SECOND, &err);
+  dc = gst_discoverer_new (30 * GST_SECOND, &err);
   fail_unless (dc != NULL);
   fail_unless (err == NULL);
 
