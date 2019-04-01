@@ -62,8 +62,8 @@ gstvalidate = library('gstvalidate-1.0',
     install: true,
     c_args : [gst_c_args] + ['-D_GNU_SOURCE'],
     vs_module_defs: vs_module_defs_dir + 'libgstvalidate.def',
-    dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
-                    gst_pbutils_dep, mathlib, json_dep])
+    dependencies : [gst_dep, gstbase_dep, glib_dep, gio_dep,
+                    gmodule_dep, gst_pbutils_dep, mathlib, json_dep])
 
 gstvalidatetracer = library('gstvalidatetracer',
     sources: gstvalidate_sources + gst_validate_enums,
@@ -71,7 +71,7 @@ gstvalidatetracer = library('gstvalidatetracer',
     install: true,
     c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE'],
     install_dir : plugins_install_dir,
-    dependencies : [gst_dep, glib_dep, gio_dep, gmodule_dep,
+    dependencies : [gst_dep, gstbase_dep, glib_dep, gio_dep, gmodule_dep,
                     gst_pbutils_dep, mathlib, json_dep])
 
 validate_gen_sources = []
@@ -91,7 +91,7 @@ if build_gir
                         'Gst-' + apiversion,
                         'GstPbutils-' + apiversion],
             install : true,
-            dependencies : [gst_dep, glib_dep, gio_dep, gst_pbutils_dep],
+            dependencies : [gst_dep, gstbase_dep, glib_dep, gio_dep, gst_pbutils_dep],
             extra_args : gst_validate_gir_extra_args,
     )]
 endif

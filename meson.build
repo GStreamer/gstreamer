@@ -61,6 +61,8 @@ endif
 
 gst_dep = dependency('gstreamer-' + apiversion, version : gst_req,
     fallback : ['gstreamer', 'gst_dep'])
+gstbase_dep = dependency('gstreamer-base-' + apiversion, version : gst_req,
+    fallback : ['gstreamer', 'gst_base_dep'])
 gst_pbutils_dep = dependency('gstreamer-pbutils-' + apiversion, version : gst_req,
     fallback : ['gst-plugins-base', 'pbutils_dep'])
 gst_video_dep = dependency('gstreamer-video-' + apiversion, version : gst_req,
