@@ -696,13 +696,13 @@ gst_svtav1enc_encode (GstSvtAv1Enc * svtav1enc, GstVideoCodecFrame * frame)
     return GST_FLOW_ERROR;
   }
 
-  input_picture_buffer->yStride =
+  input_picture_buffer->y_stride =
       GST_VIDEO_FRAME_COMP_STRIDE (&video_frame,
       0) / GST_VIDEO_FRAME_COMP_PSTRIDE (&video_frame, 0);
-  input_picture_buffer->cbStride =
+  input_picture_buffer->cb_stride =
       GST_VIDEO_FRAME_COMP_STRIDE (&video_frame,
       1) / GST_VIDEO_FRAME_COMP_PSTRIDE (&video_frame, 1);
-  input_picture_buffer->crStride =
+  input_picture_buffer->cr_stride =
       GST_VIDEO_FRAME_COMP_STRIDE (&video_frame,
       2) / GST_VIDEO_FRAME_COMP_PSTRIDE (&video_frame, 2);
 
