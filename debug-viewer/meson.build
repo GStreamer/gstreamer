@@ -1,7 +1,32 @@
-py_purelib_path = python3.get_path('purelib')
-install_subdir('GstDebugViewer', install_dir: py_purelib_path,
-    exclude_files: ['__init__.py'])
-message('Installing in ' + py_purelib_path)
+python3.install_sources (
+    'GstDebugViewer/Main.py',
+    'GstDebugViewer/Data.py',
+    subdir: 'GstDebugViewer')
+
+python3.install_sources (
+    'GstDebugViewer/GUI/columns.py',
+    'GstDebugViewer/GUI/__init__.py',
+    'GstDebugViewer/GUI/models.py',
+    'GstDebugViewer/GUI/filters.py',
+    'GstDebugViewer/GUI/colors.py',
+    'GstDebugViewer/GUI/window.py',
+    'GstDebugViewer/GUI/app.py',
+    subdir: 'GstDebugViewer/GUI')
+
+python3.install_sources (
+    'GstDebugViewer/Plugins/__init__.py',
+    'GstDebugViewer/Plugins/FindBar.py',
+    'GstDebugViewer/Plugins/Timeline.py',
+    subdir: 'GstDebugViewer/Plugins')
+
+python3.install_sources (
+    'GstDebugViewer/Common/Main.py',
+    'GstDebugViewer/Common/utils.py',
+    'GstDebugViewer/Common/__init__.py',
+    'GstDebugViewer/Common/generictreemodel.py',
+    'GstDebugViewer/Common/Data.py',
+    'GstDebugViewer/Common/GUI.py',
+    subdir: 'GstDebugViewer/Common')
 
 if find_program('msgfmt', required : get_option('nls')).found()
   # Desktop launcher and description file.
@@ -41,10 +66,11 @@ configure_file(input: 'gst-debug-viewer',
                configuration: cdata,
                install_dir: get_option('bindir'))
 
-configure_file(input: 'GstDebugViewer/__init__.py',
-               output: '__init__.py',
-               configuration: cdata,
-               install_dir: join_paths(py_purelib_path, 'GstDebugViewer'))
+init_file = configure_file(
+    input: 'GstDebugViewer/__init__.py',
+    output: '__init__.py',
+    configuration: cdata)
+python3.install_sources (init_file, subdir: 'GstDebugViewer')
 
 pkgdatadir = join_paths(get_option('datadir'), meson.project_name())
 icondir = join_paths(get_option('datadir'), 'icons/hicolor')
