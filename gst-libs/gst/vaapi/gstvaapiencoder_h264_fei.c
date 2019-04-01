@@ -3414,6 +3414,46 @@ gst_vaapi_encoder_h264_fei_finalize (GstVaapiEncoder * base_encoder)
   }
 }
 
+static void
+set_view_ids (GstVaapiEncoderH264Fei * const encoder, const GValue * value)
+{
+  guint i, j;
+  guint len = gst_value_array_get_size (value);
+
+  if (len == 0)
+    goto set_default_ids;
+
+  if (len != encoder->num_views) {
+    GST_WARNING ("The view number is %d, but %d view IDs are provided. Just "
+        "fallback to use default view IDs.", encoder->num_views, len);
+    goto set_default_ids;
+  }
+
+  for (i = 0; i < len; i++) {
+    const GValue *val = gst_value_array_get_value (value, i);
+    encoder->view_ids[i] = g_value_get_uint (val);
+  }
+
+  /* check whether duplicated ID */
+  for (i = 0; i < len; i++) {
+    for (j = i + 1; j < len; j++) {
+      if (encoder->view_ids[i] == encoder->view_ids[j]) {
+        GST_WARNING ("The view %d and view %d have same view ID %d. Just "
+            "fallback to use default view IDs.", i, j, encoder->view_ids[i]);
+        goto set_default_ids;
+      }
+    }
+  }
+
+  return;
+
+set_default_ids:
+  {
+    for (i = 0; i < encoder->num_views; i++)
+      encoder->view_ids[i] = i;
+  }
+}
+
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_h264_fei_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
@@ -3448,23 +3488,9 @@ gst_vaapi_encoder_h264_fei_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_FEI_PROP_NUM_VIEWS:
       encoder->num_views = g_value_get_uint (value);
       break;
-    case GST_VAAPI_ENCODER_H264_FEI_PROP_VIEW_IDS:{
-      guint i;
-      GValueArray *view_ids = g_value_get_boxed (value);
-
-      if (view_ids == NULL) {
-        for (i = 0; i < encoder->num_views; i++)
-          encoder->view_ids[i] = i;
-      } else {
-        g_assert (view_ids->n_values <= encoder->num_views);
-
-        for (i = 0; i < encoder->num_views; i++) {
-          GValue *val = g_value_array_get_nth (view_ids, i);
-          encoder->view_ids[i] = g_value_get_uint (val);
-        }
-      }
+    case GST_VAAPI_ENCODER_H264_FEI_PROP_VIEW_IDS:
+      set_view_ids (encoder, value);
       break;
-    }
     case GST_VAAPI_ENCODER_H264_PROP_FEI_DISABLE:
       encoder->is_fei_disabled = g_value_get_boolean (value);
       if (!encoder->is_fei_disabled)
@@ -4108,7 +4134,7 @@ gst_vaapi_encoder_h264_fei_get_default_properties (void)
    */
   GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
       GST_VAAPI_ENCODER_H264_FEI_PROP_VIEW_IDS,
-      g_param_spec_value_array ("view-ids",
+      gst_param_spec_array ("view-ids",
           "View IDs", "Set of View Ids used for MVC encoding",
           g_param_spec_uint ("view-id-value", "View id value",
               "view id values used for mvc encoding", 0, MAX_VIEW_ID, 0,
