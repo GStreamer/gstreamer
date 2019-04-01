@@ -85,13 +85,19 @@ def get_subprocess_env(options, gst_version):
                                                         'gst-python', 'plugin'))
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(PREFIX_DIR, 'lib',
                                                         'gstreamer-1.0'))
-    prepend_env_var(env, "PATH", os.path.join(PREFIX_DIR, 'bin'))
-    prepend_env_var(env, lib_path_envvar, os.path.join(PREFIX_DIR, 'lib'))
     prepend_env_var(env, "GST_VALIDATE_SCENARIOS_PATH", os.path.join(
         PREFIX_DIR, 'share', 'gstreamer-1.0', 'validate', 'scenarios'))
     prepend_env_var(env, "GI_TYPELIB_PATH", os.path.join(PREFIX_DIR, 'lib',
                                                          'lib', 'girepository-1.0'))
     prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(PREFIX_DIR, 'lib', 'pkgconfig'))
+
+    # Library and binary search paths
+    prepend_env_var(env, "PATH", os.path.join(PREFIX_DIR, 'bin'))
+    if lib_path_envvar != 'PATH':
+        prepend_env_var(env, lib_path_envvar, os.path.join(PREFIX_DIR, 'lib'))
+    elif 'QMAKE' in os.environ:
+        # There's no RPATH on Windows, so we need to set PATH for the qt5 DLLs
+        prepend_env_var(env, 'PATH', os.path.dirname(os.environ['QMAKE']))
 
     meson = get_meson()
     targets_s = subprocess.check_output(meson + ['introspect', options.builddir, '--targets'])
