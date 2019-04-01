@@ -1790,8 +1790,6 @@ async_timeout_cb (GstDiscoverer * dc)
     dc->priv->processing = FALSE;
     discoverer_collect (dc);
     discoverer_cleanup (dc);
-    g_source_unref (dc->priv->timeout_source);
-    dc->priv->timeout_source = NULL;
   }
   return FALSE;
 }
