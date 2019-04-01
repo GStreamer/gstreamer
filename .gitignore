@@ -49,5 +49,6 @@ subprojects/json-glib/
 subprojects/orc/
 subprojects/libsoup/
 subprojects/FFmpeg/
+subprojects/x264/
 prefix/
 pygobject
