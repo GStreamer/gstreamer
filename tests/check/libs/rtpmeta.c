@@ -26,6 +26,7 @@ GST_START_TEST (test_rtp_source_meta_set_get_sources)
 {
   GstBuffer *buffer;
   GstRTPSourceMeta *meta;
+  gint i;
   guint32 ssrc = 1000, ssrc2 = 2000;
   const guint32 csrc[] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14
@@ -37,7 +38,7 @@ GST_START_TEST (test_rtp_source_meta_set_get_sources)
   fail_unless_equals_int (gst_rtp_source_meta_get_source_count (meta), 12 + 1);
   fail_unless (meta->ssrc_valid);
   fail_unless_equals_int (meta->ssrc, ssrc);
-  for (gint i = 0; i < 12; i++)
+  for (i = 0; i < 12; i++)
     fail_unless_equals_int (meta->csrc[i], csrc[i]);
 
   /* Unset the ssrc */
@@ -54,7 +55,7 @@ GST_START_TEST (test_rtp_source_meta_set_get_sources)
   /* Append multiple csrcs */
   fail_unless (gst_rtp_source_meta_append_csrc (meta, &csrc[12], 2));
   fail_unless_equals_int (gst_rtp_source_meta_get_source_count (meta), 14 + 1);
-  for (gint i = 0; i < 14; i++)
+  for (i = 0; i < 14; i++)
     fail_unless_equals_int (meta->csrc[i], csrc[i]);
 
   gst_buffer_unref (buffer);
