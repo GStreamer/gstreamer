@@ -310,7 +310,7 @@ gst_analyzer_init (GstAnalyzer * analyzer, char *uri)
 
   g_signal_connect (analyzer->sink, "new-frame", (GCallback) new_frame_callback,
       analyzer);
-  if (!strcmp (analyzer->codec_name, "mpeg2"))
+  if (!g_strcmp0 (analyzer->codec_name, "mpeg2"))
     g_object_set (G_OBJECT (analyzer->parser), "drop", FALSE, NULL);
 
   gst_bin_add_many (GST_BIN (analyzer->pipeline), analyzer->src,

@@ -182,7 +182,7 @@ gst_analyzer_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   const gchar *name = gst_structure_get_name (structure);
 
-  if (!strcmp (name, "video/mpeg"))
+  if (!g_strcmp0 (name, "video/mpeg"))
     sink->codec_type = GST_ANALYZER_CODEC_MPEG2_VIDEO;
   else
     return FALSE;

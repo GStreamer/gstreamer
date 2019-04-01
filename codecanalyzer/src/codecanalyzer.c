@@ -221,7 +221,7 @@ populate_notebook (gpointer data, gpointer user_data)
   notebook = (GtkWidget *) user_data;
   header_name = (gchar *) data;
 
-  if (strcmp (header_name, "comment")) {
+  if (g_strcmp0 (header_name, "comment")) {
 
     header = gtk_label_new (header_name);
     gtk_label_set_text (GTK_LABEL (header), header_name);
@@ -304,7 +304,7 @@ callback_button_box_click (GtkWidget * widget, GdkEvent * event,
     header_list = analyzer_get_list_header_strings (xml_name);
 
     while (header_list) {
-      if (strcmp (header_list->data, "comment")) {
+      if (g_strcmp0 (header_list->data, "comment")) {
         if (is_header && !g_str_has_prefix (header_list->data, "slice"))
           hlist = g_list_append (hlist, header_list->data);
         else if (is_slice && g_str_has_prefix (header_list->data, "slice"))
