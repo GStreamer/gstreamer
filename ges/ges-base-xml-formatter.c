@@ -140,6 +140,9 @@ struct _GESBaseXmlFormatterPrivate
 };
 
 static void
+_free_pending_clip (GESBaseXmlFormatterPrivate * priv, PendingClip * pend);
+
+static void
 _free_layer_entry (LayerEntry * entry)
 {
   gst_object_unref (entry->layer);
@@ -151,10 +154,9 @@ _free_pending_group (PendingGroup * pgroup)
 {
   if (pgroup->group)
     g_object_unref (pgroup->group);
-  g_list_free (pgroup->pending_children);
+  g_list_free_full (pgroup->pending_children, g_free);
   g_slice_free (PendingGroup, pgroup);
 }
-
 
 /*
 enum
@@ -360,6 +362,12 @@ static void
 _dispose (GObject * object)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (object);
+  GList *pendings, *pending_clips_lists;
+
+  pending_clips_lists = g_hash_table_get_values (priv->assetid_pendingclips);
+  for (pendings = pending_clips_lists; pendings; pendings = pendings->next)
+    g_list_free_full (pendings, (GDestroyNotify) _free_pending_clip);
+  g_list_free (pending_clips_lists);
 
   g_clear_pointer (&priv->assetid_pendingclips, g_hash_table_unref);
   g_clear_pointer (&priv->containers, g_hash_table_unref);
@@ -736,9 +744,6 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
           error->message);
 
       pendings = g_hash_table_lookup (priv->assetid_pendingclips, id);
-      for (tmp = pendings; tmp; tmp = tmp->next)
-        _free_pending_clip (priv, (PendingClip *) tmp->data);
-
       _free_pending_asset (priv, passet);
       goto done;
     }
@@ -798,7 +803,6 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
       _add_track_element (self, clip, gst_object_ref (peffect->trackelement),
           peffect->track_id, peffect->children_properties, peffect->properties);
     }
-    _free_pending_clip (priv, pend);
   }
 
   /* And now add to the project */
@@ -814,6 +818,8 @@ done:
     g_free (possible_id);
 
   if (pendings) {
+    for (tmp = pendings; tmp; tmp = tmp->next)
+      _free_pending_clip (priv, tmp->data);
     g_hash_table_remove (priv->assetid_pendingclips, id);
     g_list_free (pendings);
   }
