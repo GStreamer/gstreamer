@@ -557,6 +557,7 @@ build cerbero fedora x86_64:
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-build"
 
 
 #
@@ -588,6 +589,7 @@ build cerbero android universal:
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-build"
 
 #
 # Cerbero Cross Windows builds
@@ -616,6 +618,7 @@ build cerbero cross win32:
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-build"
 
 cerbero deps windows x86_64:
   extends: '.cerbero deps'
@@ -641,6 +644,7 @@ build cerbero cross win64:
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-build"
 
 #
 # Build an Android App using the android binaries
@@ -691,6 +695,7 @@ android universal examples:
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-build"
 
 cerbero android universal examples:
   extends: ".android universal examples"
