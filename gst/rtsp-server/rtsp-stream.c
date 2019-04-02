@@ -3836,6 +3836,16 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   if (priv->transports != NULL)
     goto transports_not_removed;
 
+  if (priv->send_pool) {
+    GThreadPool *slask;
+
+    slask = priv->send_pool;
+    priv->send_pool = NULL;
+    g_mutex_unlock (&priv->lock);
+    g_thread_pool_free (slask, TRUE, TRUE);
+    g_mutex_lock (&priv->lock);
+  }
+
   clear_tr_cache (priv, TRUE);
   clear_tr_cache (priv, FALSE);
 
@@ -4426,8 +4436,10 @@ on_message_sent (gpointer user_data)
   if (idx != -1) {
     gint dummy;
 
-    GST_DEBUG_OBJECT (stream, "start thread");
-    g_thread_pool_push (priv->send_pool, &dummy, NULL);
+    if (priv->send_pool) {
+      GST_DEBUG_OBJECT (stream, "start thread");
+      g_thread_pool_push (priv->send_pool, &dummy, NULL);
+    }
   }
 
   g_mutex_unlock (&priv->lock);
