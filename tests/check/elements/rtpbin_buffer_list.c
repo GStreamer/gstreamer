@@ -269,6 +269,45 @@ sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
   return GST_FLOW_OK;
 }
 
+/* Get the stats of the **first** source of the given type (get_sender) */
+static void
+get_session_source_stats (GstElement * rtpbin, guint session,
+    gboolean get_sender, GstStructure ** source_stats)
+{
+  GstElement *rtpsession;
+  GstStructure *stats;
+  GValueArray *stats_arr;
+  guint i;
+
+  g_signal_emit_by_name (rtpbin, "get-session", session, &rtpsession);
+  fail_if (rtpsession == NULL);
+
+  g_object_get (rtpsession, "stats", &stats, NULL);
+  stats_arr =
+      g_value_get_boxed (gst_structure_get_value (stats, "source-stats"));
+  g_assert (stats_arr != NULL);
+  fail_unless (stats_arr->n_values >= 1);
+
+  *source_stats = NULL;
+  for (i = 0; i < stats_arr->n_values; i++) {
+    GstStructure *tmp_source_stats;
+    gboolean is_sender;
+
+    tmp_source_stats = g_value_dup_boxed (&stats_arr->values[i]);
+    gst_structure_get (tmp_source_stats, "is-sender", G_TYPE_BOOLEAN,
+        &is_sender, NULL);
+
+    /* Return the stats of the **first** source of the given type. */
+    if (is_sender == get_sender) {
+      *source_stats = tmp_source_stats;
+      break;
+    }
+    gst_structure_free (tmp_source_stats);
+  }
+
+  gst_structure_free (stats);
+  gst_object_unref (rtpsession);
+}
 
 GST_START_TEST (test_bufferlist)
 {
@@ -277,6 +316,9 @@ GST_START_TEST (test_bufferlist)
   GstPad *sinkpad;
   GstCaps *caps;
   GstBufferList *list;
+  GstStructure *stats;
+  guint64 packets_sent;
+  guint64 packets_received;
 
   list = create_buffer_list ();
   fail_unless (list != NULL);
@@ -306,6 +348,17 @@ GST_START_TEST (test_bufferlist)
   chain_list_func_called = FALSE;
   fail_unless (gst_pad_push_list (srcpad, list) == GST_FLOW_OK);
   fail_if (chain_list_func_called == FALSE);
+
+  /* make sure that stats about the number of sent packets are OK too */
+  get_session_source_stats (rtpbin, 0, TRUE, &stats);
+  fail_if (stats == NULL);
+
+  gst_structure_get (stats,
+      "packets-sent", G_TYPE_UINT64, &packets_sent,
+      "packets-received", G_TYPE_UINT64, &packets_received, NULL);
+  fail_unless (packets_sent == 2);
+  fail_unless (packets_received == 2);
+  gst_structure_free (stats);
 
   gst_pad_set_active (sinkpad, FALSE);
   gst_pad_set_active (srcpad, FALSE);
