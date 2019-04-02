@@ -485,6 +485,77 @@ sink_chain_list_wrapping_seqnums (GstPad * pad, GstObject * parent,
 }
 
 
+/* Large jump, packet discarded. */
+static GstBufferList *
+create_buffer_list_large_jump_discarded (void)
+{
+  GstBufferList *list;
+  GstBuffer *orig_buffer;
+  GstBuffer *buffer;
+
+  /*
+   * Probation succeeds, but then a large jump happens and the bogus packet
+   * gets discarded, receiving continues normally afterwards.
+   */
+  guint16 seqnums[] = { 1, 2, 3, 4, 50000, 5 };
+  guint i;
+
+  orig_buffer = create_original_buffer ();
+  fail_if (orig_buffer == NULL);
+
+  list = gst_buffer_list_new ();
+  fail_if (list == NULL);
+
+  for (i = 0; i < sizeof (seqnums) / sizeof (seqnums[0]); i++) {
+    /*
+     * Make the timestamps proportional to seqnums, to make it easier to predict
+     * the packet rate.
+     */
+    guint32 timestamp = seqnums[i] * 100;
+
+    buffer =
+        create_rtp_buffer_fields (&rtp_header[0], rtp_header_len[0],
+        orig_buffer, payload_offset[0], payload_len[0], seqnums[i], timestamp);
+    gst_buffer_list_add (list, buffer);
+  }
+
+  return list;
+}
+
+/* One buffer has been discarded. */
+static GstFlowReturn
+sink_chain_list_large_jump_discarded (GstPad * pad, GstObject * parent,
+    GstBufferList * list)
+{
+  GstBuffer *buffer;
+
+  chain_list_func_called = TRUE;
+
+  fail_unless (GST_IS_BUFFER_LIST (list));
+  fail_unless (gst_buffer_list_length (list) == 5);
+
+  /* Verify sequence numbers */
+  buffer = gst_buffer_list_get (list, 0);
+  check_seqnum (buffer, 1);
+
+  buffer = gst_buffer_list_get (list, 1);
+  check_seqnum (buffer, 2);
+
+  buffer = gst_buffer_list_get (list, 2);
+  check_seqnum (buffer, 3);
+
+  buffer = gst_buffer_list_get (list, 3);
+  check_seqnum (buffer, 4);
+
+  buffer = gst_buffer_list_get (list, 4);
+  check_seqnum (buffer, 5);
+
+  gst_buffer_list_unref (list);
+
+  return GST_FLOW_OK;
+}
+
+
 /* Get the stats of the **first** source of the given type (get_sender) */
 static void
 get_source_stats (GstElement * rtpsession,
@@ -807,6 +878,54 @@ GST_START_TEST (test_bufferlist_recv_wrapping_seqnums)
 GST_END_TEST;
 
 
+GST_START_TEST (test_bufferlist_recv_large_jump_discarded)
+{
+  GstElement *rtpbin;
+  GstPad *srcpad;
+  GstPad *sinkpad;
+  GstCaps *caps;
+  GstBufferList *list;
+
+  list = create_buffer_list_large_jump_discarded ();
+  fail_unless (list != NULL);
+
+  rtpbin = gst_check_setup_element ("rtpsession");
+
+  srcpad =
+      gst_check_setup_src_pad_by_name (rtpbin, &srctemplate, "recv_rtp_sink");
+  fail_if (srcpad == NULL);
+
+  sinkpad =
+      gst_check_setup_sink_pad_by_name (rtpbin, &sinktemplate, "recv_rtp_src");
+  fail_if (sinkpad == NULL);
+
+  gst_pad_set_chain_list_function (sinkpad,
+      GST_DEBUG_FUNCPTR (sink_chain_list_large_jump_discarded));
+
+  gst_pad_set_active (srcpad, TRUE);
+  gst_pad_set_active (sinkpad, TRUE);
+
+  caps = gst_caps_from_string (TEST_CAPS);
+  gst_check_setup_events (srcpad, rtpbin, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  gst_element_set_state (rtpbin, GST_STATE_PLAYING);
+
+  chain_list_func_called = FALSE;
+  fail_unless (gst_pad_push_list (srcpad, list) == GST_FLOW_OK);
+  fail_if (chain_list_func_called == FALSE);
+
+  gst_pad_set_active (sinkpad, FALSE);
+  gst_pad_set_active (srcpad, FALSE);
+
+  gst_check_teardown_pad_by_name (rtpbin, "recv_rtp_src");
+  gst_check_teardown_pad_by_name (rtpbin, "recv_rtp_sink");
+  gst_check_teardown_element (rtpbin);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 bufferlist_suite (void)
 {
@@ -823,6 +942,7 @@ bufferlist_suite (void)
   tcase_add_test (tc_chain, test_bufferlist_recv_probation_failed);
   tcase_add_test (tc_chain, test_bufferlist_recv_permissible_gap);
   tcase_add_test (tc_chain, test_bufferlist_recv_wrapping_seqnums);
+  tcase_add_test (tc_chain, test_bufferlist_recv_large_jump_discarded);
 
   return s;
 }
