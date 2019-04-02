@@ -2292,6 +2292,43 @@ normalize_line (guint8 * buffer)
   }
 }
 
+static gboolean
+cseq_validation (GstRTSPConnection * conn, GstRTSPMessage * message)
+{
+  gchar *cseq_header;
+  gint64 cseq = 0;
+  GstRTSPResult res;
+
+  if (message->type == GST_RTSP_MESSAGE_RESPONSE ||
+      message->type == GST_RTSP_MESSAGE_REQUEST) {
+    if ((res = gst_rtsp_message_get_header (message, GST_RTSP_HDR_CSEQ,
+                &cseq_header, 0)) != GST_RTSP_OK) {
+      /* rfc2326 This field MUST be present in all RTSP req and resp */
+      goto invalid_format;
+    }
+
+    errno = 0;
+    cseq = g_ascii_strtoll (cseq_header, NULL, 10);
+    if (errno != 0 || cseq < 0) {
+      /* CSeq has no valid value */
+      goto invalid_format;
+    }
+
+    if (message->type == GST_RTSP_MESSAGE_RESPONSE &&
+        (conn->cseq == 0 || conn->cseq < cseq)) {
+      /* Response CSeq can't be higher than the number of outgoing requests
+       * neither is a response valid if no request has been made */
+      goto invalid_format;
+    }
+  }
+  return GST_RTSP_OK;
+
+invalid_format:
+  {
+    return GST_RTSP_EPARSE;
+  }
+}
+
 /* returns:
  *  GST_RTSP_OK when a complete message was read.
  *  GST_RTSP_EEOF: when the read socket is closed
@@ -2424,6 +2461,11 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
           if (res != GST_RTSP_OK)
             builder->status = res;
         }
+        if (builder->status != GST_RTSP_OK) {
+          res = builder->status;
+          goto invalid_format;
+        }
+
         builder->line++;
         builder->offset = 0;
         break;
@@ -2434,6 +2476,11 @@ build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
         gchar *session_id;
 
         conn->may_cancel = TRUE;
+
+        if ((res = cseq_validation (conn, message)) != GST_RTSP_OK) {
+          /* message don't comply with rfc2326 regarding CSeq */
+          goto invalid_format;
+        }
 
         if (message->type == GST_RTSP_MESSAGE_DATA) {
           /* data messages don't have headers */
@@ -2503,6 +2550,12 @@ invalid_body_len:
     conn->may_cancel = TRUE;
     GST_DEBUG ("could not allocate body");
     return GST_RTSP_ERROR;
+  }
+invalid_format:
+  {
+    conn->may_cancel = TRUE;
+    GST_DEBUG ("could not parse");
+    return res;
   }
 }
 
