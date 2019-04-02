@@ -1250,8 +1250,8 @@ gst_h265_parse_make_codec_data (GstH265Parse * h265parse)
   }
   data[6] |=
       (pft->progressive_source_flag << 7) | (pft->interlaced_source_flag << 6) |
-      (pft->
-      non_packed_constraint_flag << 5) | (pft->frame_only_constraint_flag << 4);
+      (pft->non_packed_constraint_flag << 5) | (pft->
+      frame_only_constraint_flag << 4);
   data[12] = pft->level_idc;
   /* min_spatial_segmentation_idc */
   GST_WRITE_UINT16_BE (data + 13, min_spatial_segmentation_idc);
@@ -2228,6 +2228,7 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     for (i = 0; i < h265parse->time_code.num_clock_ts; i++) {
       GstVideoTimeCodeFlags flags = 0;
       gint field_count = -1;
+      guint n_frames;
 
       if (!h265parse->time_code.clock_timestamp_flag[i])
         break;
@@ -2278,17 +2279,21 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       if (h265parse->sei_pic_struct != GST_H265_SEI_PIC_STRUCT_FRAME)
         flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
 
+      n_frames =
+          gst_util_uint64_scale_int (h265parse->time_code.n_frames[i], 1,
+          2 - h265parse->time_code.units_field_based_flag[i]);
+
       gst_buffer_add_video_time_code_meta_full (buffer,
           h265parse->parsed_fps_n,
           h265parse->parsed_fps_d,
           NULL,
           flags,
-          h265parse->time_code.hours_flag[i] ? h265parse->time_code.
-          hours_value[i] : 0,
-          h265parse->time_code.minutes_flag[i] ? h265parse->time_code.
-          minutes_value[i] : 0,
-          h265parse->time_code.seconds_flag[i] ? h265parse->time_code.
-          seconds_value[i] : 0, h265parse->time_code.n_frames[i], field_count);
+          h265parse->time_code.hours_flag[i] ? h265parse->
+          time_code.hours_value[i] : 0,
+          h265parse->time_code.minutes_flag[i] ? h265parse->
+          time_code.minutes_value[i] : 0,
+          h265parse->time_code.seconds_flag[i] ? h265parse->
+          time_code.seconds_value[i] : 0, n_frames, field_count);
     }
   }
 

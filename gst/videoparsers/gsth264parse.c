@@ -553,8 +553,8 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
         for (j = 0; j < 3; j++) {
           if (sei.payload.pic_timing.clock_timestamp_flag[j]) {
-            memcpy (&h264parse->
-                clock_timestamp[h264parse->num_clock_timestamp++],
+            memcpy (&h264parse->clock_timestamp[h264parse->
+                    num_clock_timestamp++],
                 &sei.payload.pic_timing.clock_timestamp[j],
                 sizeof (GstH264ClockTimestamp));
           }
@@ -2578,6 +2578,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       GstH264ClockTimestamp *tim = &h264parse->clock_timestamp[i];
       GstVideoTimeCodeFlags flags = 0;
       gint field_count = -1;
+      guint n_frames;
 
       /* Table D-1 */
       switch (h264parse->sei_pic_struct) {
@@ -2619,6 +2620,10 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       if (tim->ct_type == GST_H264_CT_TYPE_INTERLACED)
         flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
 
+      n_frames =
+          gst_util_uint64_scale_int (tim->n_frames, 1,
+          2 - tim->nuit_field_based_flag);
+
       gst_buffer_add_video_time_code_meta_full (buffer,
           h264parse->parsed_fps_n,
           h264parse->parsed_fps_d,
@@ -2626,8 +2631,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           flags,
           tim->hours_flag ? tim->hours_value : 0,
           tim->minutes_flag ? tim->minutes_value : 0,
-          tim->seconds_flag ? tim->seconds_value : 0,
-          tim->n_frames, field_count);
+          tim->seconds_flag ? tim->seconds_value : 0, n_frames, field_count);
     }
 
     h264parse->num_clock_timestamp = 0;
