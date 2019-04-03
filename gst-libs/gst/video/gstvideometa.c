@@ -1010,14 +1010,17 @@ gst_video_time_code_meta_get_info (void)
  * Attaches #GstVideoTimeCodeMeta metadata to @buffer with the given
  * parameters.
  *
- * Returns: (transfer none): the #GstVideoTimeCodeMeta on @buffer.
+ * Returns: (transfer none): the #GstVideoTimeCodeMeta on @buffer, or
+ * (since 1.16) %NULL if the timecode was invalid.
  *
  * Since: 1.10
  */
 GstVideoTimeCodeMeta *
 gst_buffer_add_video_time_code_meta (GstBuffer * buffer, GstVideoTimeCode * tc)
 {
-  g_return_val_if_fail (gst_video_time_code_is_valid (tc), NULL);
+  if (!gst_video_time_code_is_valid (tc))
+    return NULL;
+
   return gst_buffer_add_video_time_code_meta_full (buffer, tc->config.fps_n,
       tc->config.fps_d, tc->config.latest_daily_jam, tc->config.flags,
       tc->hours, tc->minutes, tc->seconds, tc->frames, tc->field_count);
@@ -1039,7 +1042,8 @@ gst_buffer_add_video_time_code_meta (GstBuffer * buffer, GstVideoTimeCode * tc)
  * Attaches #GstVideoTimeCodeMeta metadata to @buffer with the given
  * parameters.
  *
- * Returns: (transfer none): the #GstVideoTimeCodeMeta on @buffer.
+ * Returns: (transfer none): the #GstVideoTimeCodeMeta on @buffer, or
+ * (since 1.16) %NULL if the timecode was invalid.
  *
  * Since: 1.10
  */
@@ -1059,7 +1063,10 @@ gst_buffer_add_video_time_code_meta_full (GstBuffer * buffer, guint fps_n,
   gst_video_time_code_init (&meta->tc, fps_n, fps_d, latest_daily_jam, flags,
       hours, minutes, seconds, frames, field_count);
 
-  g_return_val_if_fail (gst_video_time_code_is_valid (&meta->tc), NULL);
+  if (!gst_video_time_code_is_valid (&meta->tc)) {
+    gst_buffer_remove_meta (buffer, (GstMeta *) meta);
+    return NULL;
+  }
 
   return meta;
 }
