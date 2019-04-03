@@ -24,6 +24,8 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
+/* UDP/IP is assumed for bandwidth calculation */
+#define UDP_IP_HEADER_OVERHEAD 28
 
 /* This test makes sure that RTP packets sent as buffer lists are sent through
  * the rtpbin as they are supposed to, and not corrupted in any way.
@@ -206,6 +208,7 @@ check_packet (GstBufferList * list, guint list_index, guint packet_index)
  * chain_list handler has been set.
  */
 static gboolean chain_list_func_called;
+static guint chain_list_bytes_received;
 
 /* Create two packets with different payloads. */
 static GstBufferList *
@@ -258,6 +261,10 @@ sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
   fail_unless (GST_IS_BUFFER_LIST (list));
   fail_unless (gst_buffer_list_length (list) == 2);
 
+  /* received bytes include lower level protocol overhead */
+  chain_list_bytes_received = gst_buffer_list_calculate_size (list) +
+      2 * UDP_IP_HEADER_OVERHEAD;
+
   fail_unless (gst_buffer_list_get (list, 0));
   check_packet (list, 0, 0);
 
@@ -271,16 +278,12 @@ sink_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
 
 /* Get the stats of the **first** source of the given type (get_sender) */
 static void
-get_session_source_stats (GstElement * rtpbin, guint session,
+get_source_stats (GstElement * rtpsession,
     gboolean get_sender, GstStructure ** source_stats)
 {
-  GstElement *rtpsession;
   GstStructure *stats;
   GValueArray *stats_arr;
   guint i;
-
-  g_signal_emit_by_name (rtpbin, "get-session", session, &rtpsession);
-  fail_if (rtpsession == NULL);
 
   g_object_get (rtpsession, "stats", &stats, NULL);
   stats_arr =
@@ -306,6 +309,20 @@ get_session_source_stats (GstElement * rtpbin, guint session,
   }
 
   gst_structure_free (stats);
+}
+
+/* Get the source stats given a session and a source type (get_sender) */
+static void
+get_session_source_stats (GstElement * rtpbin, guint session,
+    gboolean get_sender, GstStructure ** source_stats)
+{
+  GstElement *rtpsession;
+
+  g_signal_emit_by_name (rtpbin, "get-session", session, &rtpsession);
+  fail_if (rtpsession == NULL);
+
+  get_source_stats (rtpsession, get_sender, source_stats);
+
   gst_object_unref (rtpsession);
 }
 
@@ -378,6 +395,9 @@ GST_START_TEST (test_bufferlist_recv)
   GstPad *sinkpad;
   GstCaps *caps;
   GstBufferList *list;
+  GstStructure *stats;
+  guint64 bytes_received;
+  guint64 packets_received;
 
   list = create_buffer_list ();
   fail_unless (list != NULL);
@@ -407,6 +427,19 @@ GST_START_TEST (test_bufferlist_recv)
   chain_list_func_called = FALSE;
   fail_unless (gst_pad_push_list (srcpad, list) == GST_FLOW_OK);
   fail_if (chain_list_func_called == FALSE);
+
+  /* make sure that stats about the number of received packets are OK too */
+  /* The source becomes a sender after probation succeeds, pass TRUE here. */
+  get_source_stats (rtpbin, TRUE, &stats);
+  fail_if (stats == NULL);
+
+  gst_structure_get (stats,
+      "bytes-received", G_TYPE_UINT64, &bytes_received,
+      "packets-received", G_TYPE_UINT64, &packets_received, NULL);
+  fail_unless (packets_received == 2);
+  fail_unless (bytes_received == chain_list_bytes_received);
+  gst_structure_free (stats);
+
 
   gst_pad_set_active (sinkpad, FALSE);
   gst_pad_set_active (srcpad, FALSE);
