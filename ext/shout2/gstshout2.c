@@ -522,6 +522,8 @@ set_failed:
   {
     GST_ELEMENT_ERROR (sink, LIBRARY, SETTINGS, (NULL),
         ("Error setting %s: %s", cur_prop, shout_get_error (sink->conn)));
+    shout_free (sink->conn);
+    sink->conn = NULL;
     return FALSE;
   }
 }
