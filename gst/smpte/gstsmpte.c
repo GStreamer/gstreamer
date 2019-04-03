@@ -21,7 +21,7 @@
  * SECTION:element-smpte
  *
  * smpte can accept I420 video streams with the same width, height and
- * framerate. The two incomming buffers are blended together using an effect
+ * framerate. The two incoming buffers are blended together using an effect
  * specific alpha mask. 
  *
  * The #GstSmpte:depth property defines the presision in bits of the mask. A

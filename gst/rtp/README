@@ -186,7 +186,7 @@ Some pipelines to illustrate the process:
   v4l2src puts a GStreamer timestamp on the video frames base on the current
   running_time. The encoder encodes and passed the timestamp on. The payloader
   generates an RTP timestamp using the above formula and puts it in the RTP
-  packet. It also copies the incomming GStreamer timestamp on the output RTP
+  packet. It also copies the incoming GStreamer timestamp on the output RTP
   packet. udpsink synchronizes on the gstreamer timestamp before pushing out the
   packet. 
 
@@ -208,7 +208,7 @@ following pipeline:
       clock-rate=(int)90000, encoding-name=(string)H263-1998" ! rtph263pdepay !
       avdec_h263 ! autovideosink
 
-It is important that the depayloader copies the incomming GStreamer timestamp
+It is important that the depayloader copies the incoming GStreamer timestamp
 directly to the depayloaded output buffer. It should never attempt to perform
 any logic with the RTP timestamp, this task is for the jitterbuffer as we will
 see next.

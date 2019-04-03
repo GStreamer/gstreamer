@@ -47,7 +47,7 @@
  * depayloader or other element to create concealment data or some other logic
  * to gracefully handle the missing packets.
  *
- * The jitterbuffer will use the DTS (or PTS if no DTS is set) of the incomming
+ * The jitterbuffer will use the DTS (or PTS if no DTS is set) of the incoming
  * buffer and the rtptime inside the RTP packet to create a PTS on the outgoing
  * buffer.
  *

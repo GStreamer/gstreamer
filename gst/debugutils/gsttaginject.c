@@ -21,7 +21,7 @@
 /**
  * SECTION:element-taginject
  *
- * Element that injects new metadata tags, but passes incomming data through
+ * Element that injects new metadata tags, but passes incoming data through
  * unmodified.
  *
  * <refsect2>

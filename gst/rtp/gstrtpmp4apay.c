@@ -442,7 +442,7 @@ gst_rtp_mp4a_pay_handle_buffer (GstRTPBasePayload * basepayload,
     offset += payload_len;
     size -= payload_len;
 
-    /* copy incomming timestamp (if any) to outgoing buffers */
+    /* copy incoming timestamp (if any) to outgoing buffers */
     GST_BUFFER_PTS (outbuf) = timestamp;
 
     fragmented = TRUE;

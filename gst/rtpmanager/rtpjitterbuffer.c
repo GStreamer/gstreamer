@@ -1046,7 +1046,7 @@ duplicate:
  * @percent: the buffering percent
  *
  * Pops the oldest buffer from the packet queue of @jbuf. The popped buffer will
- * have its timestamp adjusted with the incomming running_time and the detected
+ * have its timestamp adjusted with the incoming running_time and the detected
  * clock skew.
  *
  * Returns: a #GstBuffer or %NULL when there was no packet in the queue.

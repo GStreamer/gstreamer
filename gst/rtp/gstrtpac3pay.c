@@ -362,7 +362,7 @@ gst_rtp_ac3_pay_handle_buffer (GstRTPBasePayload * basepayload,
     gst_rtp_ac3_pay_reset (rtpac3pay);
   }
 
-  /* count the amount of incomming packets */
+  /* count the amount of incoming packets */
   NF = 0;
   left = map.size;
   p = map.data;

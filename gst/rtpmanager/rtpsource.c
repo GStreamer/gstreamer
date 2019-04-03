@@ -1220,7 +1220,7 @@ probation_seqnum:
  * @src: an #RTPSource
  * @pinfo: an #RTPPacketInfo
  *
- * Let @src handle the incomming RTP packet described in @pinfo.
+ * Let @src handle the incoming RTP packet described in @pinfo.
  *
  * Returns: a #GstFlowReturn.
  */

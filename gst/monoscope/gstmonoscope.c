@@ -477,7 +477,7 @@ gst_monoscope_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_SEGMENT:
     {
       /* the newsegment values are used to clip the input samples
-       * and to convert the incomming timestamps to running time so
+       * and to convert the incoming timestamps to running time so
        * we can do QoS */
       gst_event_copy_segment (event, &monoscope->segment);
 

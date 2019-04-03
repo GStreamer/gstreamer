@@ -450,7 +450,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstRTPBasePayload * basepayload,
     rtpmp4vpay->duration = 0;
   }
 
-  /* depay incomming data and see if we need to start a new RTP
+  /* depay incoming data and see if we need to start a new RTP
    * packet */
   flush =
       gst_rtp_mp4v_pay_depay_data (rtpmp4vpay, map.data, size, &strip, &vopi);
