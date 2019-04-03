@@ -1132,13 +1132,14 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
      * Start playback when the queue is 60% full, leaving a bit more room
      * for upstream to push more without getting bursty */
     g_object_set (queue, "low-percent", 1, "high-percent", 60, NULL);
+
+    g_object_set (queue, "low-watermark", urisrc->low_watermark,
+        "high-watermark", urisrc->high_watermark, NULL);
   }
 
   /* set the necessary limits on the queue-like elements */
   g_object_set (queue, "max-size-bytes", GET_BUFFER_SIZE (urisrc),
-      "max-size-time", (guint64) GET_BUFFER_DURATION (urisrc),
-      "low-watermark", urisrc->low_watermark, "high-watermark",
-      urisrc->high_watermark, NULL);
+      "max-size-time", (guint64) GET_BUFFER_DURATION (urisrc), NULL);
 #if 0
   /* Disabled because this makes initial startup slower for radio streams */
   else {
