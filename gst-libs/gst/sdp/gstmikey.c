@@ -2154,30 +2154,79 @@ parse_error:
 #define HMAC_32_KEY_LEN 4
 #define HMAC_80_KEY_LEN 10
 
-static guint8
-enc_key_length_from_cipher_name (const gchar * cipher)
+static gboolean
+auth_alg_from_cipher_name (const gchar * cipher, guint8 * auth_alg)
 {
   if (g_strcmp0 (cipher, "aes-128-icm") == 0)
-    return AES_128_KEY_LEN;
+    *auth_alg = GST_MIKEY_MAC_HMAC_SHA_1_160;
   else if (g_strcmp0 (cipher, "aes-256-icm") == 0)
-    return AES_256_KEY_LEN;
+    *auth_alg = GST_MIKEY_MAC_HMAC_SHA_1_160;
+  else if (g_strcmp0 (cipher, "aes-128-gcm") == 0)
+    *auth_alg = GST_MIKEY_MAC_NULL;
+  else if (g_strcmp0 (cipher, "aes-256-gcm") == 0)
+    *auth_alg = GST_MIKEY_MAC_NULL;
   else {
     GST_ERROR ("encryption algorithm '%s' not supported", cipher);
-    return 0;
+    return FALSE;
   }
+  return TRUE;
 }
 
-static guint8
-auth_key_length_from_auth_name (const gchar * auth)
+static gboolean
+enc_alg_from_cipher_name (const gchar * cipher, guint8 * enc_alg)
 {
-  if (g_strcmp0 (auth, "hmac-sha1-32") == 0)
-    return HMAC_32_KEY_LEN;
-  else if (g_strcmp0 (auth, "hmac-sha1-80") == 0)
-    return HMAC_80_KEY_LEN;
+  if (g_strcmp0 (cipher, "aes-128-icm") == 0)
+    *enc_alg = GST_MIKEY_ENC_AES_CM_128;
+  else if (g_strcmp0 (cipher, "aes-256-icm") == 0)
+    *enc_alg = GST_MIKEY_ENC_AES_CM_128;
+  else if (g_strcmp0 (cipher, "aes-128-gcm") == 0)
+    *enc_alg = GST_MIKEY_ENC_AES_GCM_128;
+  else if (g_strcmp0 (cipher, "aes-256-gcm") == 0)
+    *enc_alg = GST_MIKEY_ENC_AES_GCM_128;
   else {
-    GST_ERROR ("authentication algorithm '%s' not supported", auth);
-    return 0;
+    GST_ERROR ("encryption algorithm '%s' not supported", cipher);
+    return FALSE;
   }
+  return TRUE;
+}
+
+
+static gboolean
+enc_key_length_from_cipher_name (const gchar * cipher, guint8 * enc_key_length)
+{
+  if (g_strcmp0 (cipher, "aes-128-icm") == 0)
+    *enc_key_length = AES_128_KEY_LEN;
+  else if (g_strcmp0 (cipher, "aes-256-icm") == 0)
+    *enc_key_length = AES_256_KEY_LEN;
+  else if (g_strcmp0 (cipher, "aes-128-gcm") == 0)
+    *enc_key_length = AES_128_KEY_LEN;
+  else if (g_strcmp0 (cipher, "aes-256-gcm") == 0)
+    *enc_key_length = AES_256_KEY_LEN;
+  else {
+    GST_ERROR ("encryption algorithm '%s' not supported", cipher);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static gboolean
+auth_key_length_from_auth_cipher_name (const gchar * auth, const gchar * cipher,
+    guint8 * length)
+{
+  if (g_strcmp0 (cipher, "aes-128-gcm") == 0
+      || g_strcmp0 (cipher, "aes-256-gcm") == 0) {
+    *length = 0;
+  } else {
+    if (g_strcmp0 (auth, "hmac-sha1-32") == 0) {
+      *length = HMAC_32_KEY_LEN;
+    } else if (g_strcmp0 (auth, "hmac-sha1-80") == 0) {
+      *length = HMAC_80_KEY_LEN;
+    } else {
+      GST_ERROR ("authentication algorithm '%s' not supported", auth);
+      return FALSE;
+    }
+  }
+  return TRUE;
 }
 
 /**
@@ -2200,6 +2249,10 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
   GstMIKEYMessage *msg;
   GstMIKEYPayload *payload, *pkd;
   guint8 byte;
+  guint8 enc_alg;
+  guint8 auth_alg;
+  guint8 enc_key_length;
+  guint8 auth_key_length;
   GstStructure *s;
   GstMapInfo info;
   GstBuffer *srtpkey;
@@ -2242,6 +2295,14 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
   if (auth == NULL)
     auth = srtcpauth;
 
+  /* get cipher and auth values */
+  if (!enc_alg_from_cipher_name (cipher, &enc_alg) ||
+      !auth_alg_from_cipher_name (cipher, &auth_alg) ||
+      !enc_key_length_from_cipher_name (cipher, &enc_key_length) ||
+      !auth_key_length_from_auth_cipher_name (auth, cipher, &auth_key_length)) {
+    return NULL;
+  }
+
   msg = gst_mikey_message_new ();
   /* unencrypted MIKEY message, we send this over TLS so this is allowed */
   gst_mikey_message_set_info (msg, GST_MIKEY_VERSION, GST_MIKEY_TYPE_PSK_INIT,
@@ -2256,21 +2317,18 @@ gst_mikey_message_new_from_caps (GstCaps * caps)
   payload = gst_mikey_payload_new (GST_MIKEY_PT_SP);
   gst_mikey_payload_sp_set (payload, 0, GST_MIKEY_SEC_PROTO_SRTP);
 
-  /* only AES-CM is supported */
-  byte = 1;
-  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_ALG, 1, &byte);
+  /* AES-CM or AES-GCM is supported */
+  gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_ALG, 1,
+      &enc_alg);
   /* encryption key length */
-  byte = enc_key_length_from_cipher_name (cipher);
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_ENC_KEY_LEN, 1,
-      &byte);
-  /* only HMAC-SHA1 */
-  byte = 1;
+      &enc_key_length);
+  /* HMAC-SHA1 or NULL in case of GCM */
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_ALG, 1,
-      &byte);
+      &auth_alg);
   /* authentication key length */
-  byte = auth_key_length_from_auth_name (auth);
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_AUTH_KEY_LEN, 1,
-      &byte);
+      &auth_key_length);
   /* we enable encryption on RTP and RTCP */
   byte = 1;
   gst_mikey_payload_sp_add_param (payload, GST_MIKEY_SP_SRTP_SRTP_ENC, 1,
@@ -2330,6 +2388,7 @@ gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
   if ((payload = gst_mikey_message_find_payload (msg, GST_MIKEY_PT_SP, 0))) {
     GstMIKEYPayloadSP *p = (GstMIKEYPayloadSP *) payload;
     guint len, i;
+    guint enc_alg = GST_MIKEY_ENC_NULL;
 
     if (p->proto != GST_MIKEY_SEC_PROTO_SRTP)
       goto done;
@@ -2341,13 +2400,17 @@ gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
 
       switch (param->type) {
         case GST_MIKEY_SP_SRTP_ENC_ALG:
+          enc_alg = param->val[0];
           switch (param->val[0]) {
-            case 0:
+            case GST_MIKEY_ENC_NULL:
               srtp_cipher = "null";
               break;
-            case 2:
-            case 1:
+            case GST_MIKEY_ENC_AES_CM_128:
+            case GST_MIKEY_ENC_AES_KW_128:
               srtp_cipher = "aes-128-icm";
+              break;
+            case GST_MIKEY_ENC_AES_GCM_128:
+              srtp_cipher = "aes-128-gcm";
               break;
             default:
               break;
@@ -2356,10 +2419,20 @@ gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
         case GST_MIKEY_SP_SRTP_ENC_KEY_LEN:
           switch (param->val[0]) {
             case AES_128_KEY_LEN:
-              srtp_cipher = "aes-128-icm";
+              if (enc_alg == GST_MIKEY_ENC_AES_CM_128 ||
+                  enc_alg == GST_MIKEY_ENC_AES_KW_128) {
+                srtp_cipher = "aes-128-icm";
+              } else if (enc_alg == GST_MIKEY_ENC_AES_GCM_128) {
+                srtp_cipher = "aes-128-gcm";
+              }
               break;
             case AES_256_KEY_LEN:
-              srtp_cipher = "aes-256-icm";
+              if (enc_alg == GST_MIKEY_ENC_AES_CM_128 ||
+                  enc_alg == GST_MIKEY_ENC_AES_KW_128) {
+                srtp_cipher = "aes-256-icm";
+              } else if (enc_alg == GST_MIKEY_ENC_AES_GCM_128) {
+                srtp_cipher = "aes-256-gcm";
+              }
               break;
             default:
               break;
@@ -2367,11 +2440,10 @@ gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
           break;
         case GST_MIKEY_SP_SRTP_AUTH_ALG:
           switch (param->val[0]) {
-            case 0:
+            case GST_MIKEY_MAC_NULL:
               srtp_auth = "null";
               break;
-            case 2:
-            case 1:
+            case GST_MIKEY_MAC_HMAC_SHA_1_160:
               srtp_auth = "hmac-sha1-80";
               break;
             default:
