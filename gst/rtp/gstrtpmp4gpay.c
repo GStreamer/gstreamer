@@ -87,9 +87,10 @@ static gboolean gst_rtp_mp4g_pay_sink_event (GstRTPBasePayload * payload,
     GstEvent * event);
 
 #define gst_rtp_mp4g_pay_parent_class parent_class
-G_DEFINE_TYPE (GstRtpMP4GPay, gst_rtp_mp4g_pay, GST_TYPE_RTP_BASE_PAYLOAD)
+G_DEFINE_TYPE (GstRtpMP4GPay, gst_rtp_mp4g_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
-     static void gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass)
+static void
+gst_rtp_mp4g_pay_class_init (GstRtpMP4GPayClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;

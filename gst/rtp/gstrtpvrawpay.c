@@ -84,9 +84,10 @@ static void gst_rtp_vraw_pay_get_property (GObject * object, guint prop_id,
 static void gst_rtp_vraw_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-G_DEFINE_TYPE (GstRtpVRawPay, gst_rtp_vraw_pay, GST_TYPE_RTP_BASE_PAYLOAD)
+G_DEFINE_TYPE (GstRtpVRawPay, gst_rtp_vraw_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
-     static void gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass)
+static void
+gst_rtp_vraw_pay_class_init (GstRtpVRawPayClass * klass)
 {
   GstRTPBasePayloadClass *gstrtpbasepayload_class;
   GstElementClass *gstelement_class;
