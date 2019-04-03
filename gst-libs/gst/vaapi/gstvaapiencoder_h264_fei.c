@@ -2449,6 +2449,10 @@ ensure_misc_params (GstVaapiEncoderH264Fei * encoder,
     rate_control->window_size = encoder->cpb_length;
     rate_control->initial_qp = encoder->init_qp;
     rate_control->min_qp = encoder->min_qp;
+    /* @FIXME: should not set this value, should be ignored if set to zero *
+     * https://github.com/intel/media-driver/issues/587 */
+    if (rate_control->min_qp > 0)
+      rate_control->max_qp = 51;
     rate_control->basic_unit_size = 0;
     gst_vaapi_enc_picture_add_misc_param (picture, misc);
     gst_vaapi_codec_object_replace (&misc, NULL);

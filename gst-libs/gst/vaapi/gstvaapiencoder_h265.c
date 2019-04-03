@@ -1858,6 +1858,10 @@ ensure_control_rate_params (GstVaapiEncoderH265 * encoder)
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).window_size = encoder->cpb_length;
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).initial_qp = encoder->init_qp;
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).min_qp = encoder->min_qp;
+  /* @FIXME: should not set this value, should be ignored if set to zero *
+   * https://github.com/intel/media-driver/issues/587 */
+  if (encoder->min_qp > 0)
+    GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).max_qp = 51;
 
 #if VA_CHECK_VERSION(1,0,0)
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).rc_flags.bits.mb_rate_control =
