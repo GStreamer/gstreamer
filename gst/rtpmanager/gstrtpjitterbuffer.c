@@ -69,7 +69,7 @@
  *
  * - If seqnum N arrived, all seqnum older than
  *     N - #GstRtpJitterBuffer:rtx-delay-reorder are considered late
- *     immediately. This is to request fast feedback for abonormally reorder
+ *     immediately. This is to request fast feedback for abnormally reorder
  *     packets before any of the previous timeouts is triggered.
  *
  * A late packet triggers the GstRTPRetransmissionRequest custom upstream
