@@ -50,6 +50,7 @@ GType gst_gl_display_get_type (void);
  * @GST_GL_DISPLAY_TYPE_EGL: EGL display
  * @GST_GL_DISPLAY_TYPE_VIV_FB: Vivante Framebuffer display
  * @GST_GL_DISPLAY_TYPE_GBM: Mesa3D GBM display
+ * @GST_GL_DISPLAY_TYPE_EGL_DEVICE: EGLDevice display (Since: 1.18)
  * @GST_GL_DISPLAY_TYPE_ANY: any display type
  */
 typedef enum
@@ -63,6 +64,7 @@ typedef enum
   GST_GL_DISPLAY_TYPE_EGL = (1 << 5),
   GST_GL_DISPLAY_TYPE_VIV_FB = (1 << 6),
   GST_GL_DISPLAY_TYPE_GBM = (1 << 7),
+  GST_GL_DISPLAY_TYPE_EGL_DEVICE = (1 << 8),
 
   GST_GL_DISPLAY_TYPE_ANY = G_MAXUINT32
 } GstGLDisplayType;

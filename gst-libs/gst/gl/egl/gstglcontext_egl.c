@@ -409,6 +409,16 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
   EGLint config_attrib[20];
   EGLint egl_api = 0;
   EGLBoolean ret = EGL_FALSE;
+  EGLint surface_type = EGL_WINDOW_BIT;
+  GstGLWindow *window;
+
+  window = gst_gl_context_get_window (GST_GL_CONTEXT (egl));
+
+  if (!window || !gst_gl_window_has_output_surface (window)) {
+    GST_INFO_OBJECT (egl,
+        "gl window has no output surface, use pixel buffer surfaces");
+    surface_type = EGL_PBUFFER_BIT;
+  }
 
   create_context =
       gst_gl_check_extension ("EGL_KHR_create_context", egl->egl_exts);
@@ -432,7 +442,7 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
     egl_api = EGL_OPENGL_BIT;
 
   config_attrib[i++] = EGL_SURFACE_TYPE;
-  config_attrib[i++] = EGL_WINDOW_BIT;
+  config_attrib[i++] = surface_type;
   config_attrib[i++] = EGL_RENDERABLE_TYPE;
   config_attrib[i++] = egl_api;
 #if defined(USE_EGL_RPI) && GST_GL_HAVE_WINDOW_WAYLAND

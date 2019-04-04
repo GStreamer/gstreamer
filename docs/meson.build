@@ -98,6 +98,7 @@ if build_gstgl
       join_paths('../gst-libs/gst', 'gl', 'egl', 'gstegl.[ch]'),
       join_paths('../gst-libs/gst', 'gl', 'egl', 'gsteglimage.[ch]'),
       join_paths('../gst-libs/gst', 'gl', 'egl', 'gstgldisplay_egl.[ch]'),
+      join_paths('../gst-libs/gst', 'gl', 'egl', 'gstgldisplay_egl_device.[ch]'),
       join_paths('../gst-libs/gst', 'gl', 'egl', 'gstglmemoryegl.[ch]'),
       join_paths('../gst-libs/gst', 'gl', 'x11', 'gstgldisplay_x11.[ch]'),
       join_paths('../gst-libs/gst', 'gl', 'wayland', 'gstgldisplay_wayland.[ch]'),

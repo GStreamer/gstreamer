@@ -67,6 +67,7 @@
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL
 #include <gst/gl/egl/gstgldisplay_egl.h>
+#include <gst/gl/egl/gstgldisplay_egl_device.h>
 #include <gst/gl/egl/gsteglimage.h>
 #include <gst/gl/egl/gstglmemoryegl.h>
 #endif
@@ -321,9 +322,14 @@ gst_gl_display_new (void)
   }
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL
+  if (!display && (user_choice && g_strstr_len (user_choice, 10, "egl-device"))) {
+    display = GST_GL_DISPLAY (gst_gl_display_egl_device_new (0));
+  }
+
   if (!display && (!platform_choice
-          || g_strstr_len (platform_choice, 3, "egl")))
+          || g_strstr_len (platform_choice, 3, "egl"))) {
     display = GST_GL_DISPLAY (gst_gl_display_egl_new ());
+  }
 #endif
   if (!display) {
     GST_INFO ("Could not create platform/winsys display. user specified %s "

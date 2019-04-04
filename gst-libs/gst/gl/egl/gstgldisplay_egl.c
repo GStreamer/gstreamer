@@ -56,6 +56,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 #ifndef EGL_PLATFORM_ANDROID
 #define EGL_PLATFORM_ANDROID 0x3141
 #endif
+#ifndef EGL_PLATFORM_DEVICE_EXT
+#define EGL_PLATFORM_DEVICE_EXT 0x313F
+#endif
 
 typedef EGLDisplay (*_gst_eglGetPlatformDisplay_type) (EGLenum platform,
     void *native_display, const EGLint * attrib_list);
@@ -125,6 +128,8 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
   g_return_val_if_fail ((type != GST_GL_DISPLAY_TYPE_ANY && display != 0)
       || (type == GST_GL_DISPLAY_TYPE_ANY && display == 0), EGL_NO_DISPLAY);
 
+  GST_DEBUG_CATEGORY_GET (gst_gl_display_debug, "gldisplay");
+
   /* given an EGLDisplay already */
   if (type == GST_GL_DISPLAY_TYPE_EGL)
     return (gpointer) display;
@@ -175,6 +180,14 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
         NULL);
   }
 #endif
+  if (ret == EGL_NO_DISPLAY && (type & GST_GL_DISPLAY_TYPE_EGL_DEVICE) &&
+      (gst_gl_check_extension ("EGL_EXT_device_base", egl_exts) &&
+          gst_gl_check_extension ("EGL_EXT_platform_device", egl_exts))) {
+    ret =
+        _gst_eglGetPlatformDisplay (EGL_PLATFORM_DEVICE_EXT, (gpointer) display,
+        NULL);
+  }
+
   /* android only has one winsys/display connection */
 
   if (ret != EGL_NO_DISPLAY)

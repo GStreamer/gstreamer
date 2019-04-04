@@ -488,12 +488,14 @@ if need_platform_egl != 'no'
       'egl/gstglcontext_egl.c',
       'egl/gstgldisplay_egl.c',
       'egl/gstglmemoryegl.c',
+      'egl/gstgldisplay_egl_device.c',
     ]
     gl_egl_headers += [
       'egl/gstegl.h',
       'egl/gsteglimage.h',
       'egl/gstgldisplay_egl.h',
       'egl/gstglmemoryegl.h',
+      'egl/gstgldisplay_egl_device.h',
     ]
     gl_platform_deps += egl_dep
     glconf.set10('GST_GL_HAVE_PLATFORM_EGL', 1)
