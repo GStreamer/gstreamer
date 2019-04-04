@@ -1018,6 +1018,28 @@ no_clock_rate:
 }
 
 static void
+update_queued_stats (GstBuffer * buffer, RTPSource * src)
+{
+  GstRTPBuffer rtp = { NULL };
+  guint payload_len;
+  guint64 bytes;
+
+  /* no need to check the return value, a queued packet is a valid RTP one */
+  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+  payload_len = gst_rtp_buffer_get_payload_len (&rtp);
+
+  bytes = gst_buffer_get_size (buffer) + UDP_IP_HEADER_OVERHEAD;
+
+  src->stats.octets_received += payload_len;
+  src->stats.bytes_received += bytes;
+  src->stats.packets_received++;
+  /* for the bitrate estimation consider all lower level headers */
+  src->bytes_received += bytes;
+
+  gst_rtp_buffer_unmap (&rtp);
+}
+
+static void
 init_seq (RTPSource * src, guint16 seq)
 {
   src->stats.base_seq = seq;
@@ -1031,6 +1053,9 @@ init_seq (RTPSource * src, guint16 seq)
   src->stats.prev_expected = 0;
   src->stats.recv_pli_count = 0;
   src->stats.recv_fir_count = 0;
+
+  /* if there are queued packets, consider them too in the stats */
+  g_queue_foreach (src->packets, (GFunc) update_queued_stats, src);
 
   GST_DEBUG ("base_seq %d", seq);
 }
