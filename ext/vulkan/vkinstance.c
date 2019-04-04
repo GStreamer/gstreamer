@@ -29,17 +29,6 @@
 
 #define APP_SHORT_NAME "GStreamer"
 
-static const char *instance_validation_layers[] = {
-  "VK_LAYER_GOOGLE_threading",
-  "VK_LAYER_LUNARG_mem_tracker",
-  "VK_LAYER_LUNARG_object_tracker",
-  "VK_LAYER_LUNARG_draw_state",
-  "VK_LAYER_LUNARG_param_checker",
-  "VK_LAYER_LUNARG_swapchain",
-  "VK_LAYER_LUNARG_device_limits",
-  "VK_LAYER_LUNARG_image",
-};
-
 #define GST_CAT_DEFAULT gst_vulkan_instance_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GST_DEBUG_CATEGORY (GST_VULKAN_DEBUG_CAT);
@@ -176,8 +165,6 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   uint32_t instance_extension_count = 0;
   uint32_t enabled_extension_count = 0;
   uint32_t instance_layer_count = 0;
-  uint32_t enabled_layer_count = 0;
-  gchar **enabled_layers;
   gboolean have_debug_extension = FALSE;
   VkResult err;
 
@@ -205,11 +192,6 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     goto error;
   }
 
-  /* TODO: allow outside selection */
-  _check_for_all_layers (G_N_ELEMENTS (instance_validation_layers),
-      instance_validation_layers, instance_layer_count, instance_layers,
-      &enabled_layer_count, &enabled_layers);
-
   g_free (instance_layers);
 
   err =
@@ -217,7 +199,6 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateInstanceExtensionProperties") < 0) {
-    g_strfreev (enabled_layers);
     goto error;
   }
   GST_DEBUG_OBJECT (instance, "Found %u extensions", instance_extension_count);
@@ -230,7 +211,6 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       instance_extensions);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateInstanceExtensionProperties") < 0) {
-    g_strfreev (enabled_layers);
     g_free (instance_extensions);
     goto error;
   }
@@ -278,7 +258,6 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
           "vkEnumerateInstanceExtensionProperties failed to find the required "
           "\"" VK_KHR_SURFACE_EXTENSION_NAME "\" extension");
-      g_strfreev (enabled_layers);
       g_free (instance_extensions);
       goto error;
     }
@@ -286,7 +265,6 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
           "vkEnumerateInstanceExtensionProperties failed to find the required "
           "\"%s\" window system extension", winsys_ext_name);
-      g_strfreev (enabled_layers);
       g_free (instance_extensions);
       goto error;
     }
@@ -307,26 +285,19 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     inst_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     inst_info.pNext = NULL;
     inst_info.pApplicationInfo = &app;
-#if 0
-    inst_info.enabledLayerCount = enabled_layer_count;
-    inst_info.ppEnabledLayerNames = (const char *const *) enabled_layers;
-#else
     inst_info.enabledLayerCount = 0;
     inst_info.ppEnabledLayerNames = NULL;
-#endif
     inst_info.enabledExtensionCount = enabled_extension_count;
     inst_info.ppEnabledExtensionNames = (const char *const *) extension_names;
 
     err = vkCreateInstance (&inst_info, NULL, &instance->instance);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateInstance") < 0) {
-      g_strfreev (enabled_layers);
       g_free (instance_extensions);
       goto error;
     }
   }
 
   g_free (instance_extensions);
-  g_strfreev (enabled_layers);
 
   err =
       vkEnumeratePhysicalDevices (instance->instance,

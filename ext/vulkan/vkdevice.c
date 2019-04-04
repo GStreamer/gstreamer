@@ -27,17 +27,6 @@
 
 #include <string.h>
 
-static const char *device_validation_layers[] = {
-  "VK_LAYER_GOOGLE_threading",
-  "VK_LAYER_LUNARG_mem_tracker",
-  "VK_LAYER_LUNARG_object_tracker",
-  "VK_LAYER_LUNARG_draw_state",
-  "VK_LAYER_LUNARG_param_checker",
-  "VK_LAYER_LUNARG_swapchain",
-  "VK_LAYER_LUNARG_device_limits",
-  "VK_LAYER_LUNARG_image",
-};
-
 #define GST_CAT_DEFAULT gst_vulkan_device_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
@@ -162,8 +151,6 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   uint32_t enabled_extension_count = 0;
   uint32_t device_extension_count = 0;
   VkExtensionProperties *device_extensions = NULL;
-  uint32_t enabled_layer_count = 0;
-  gchar **enabled_layers;
   uint32_t device_layer_count = 0;
   VkLayerProperties *device_layers;
   gboolean have_swapchain_ext;
@@ -201,9 +188,6 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
     goto error;
   }
 
-  _check_for_all_layers (G_N_ELEMENTS (device_validation_layers),
-      device_validation_layers, device_layer_count, device_layers,
-      &enabled_layer_count, &enabled_layers);
   g_free (device_layers);
   device_layers = NULL;
 
@@ -212,7 +196,6 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
       &device_extension_count, NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateDeviceExtensionProperties") < 0) {
-    g_strfreev (enabled_layers);
     goto error;
   }
   GST_DEBUG_OBJECT (device, "Found %u extensions", device_extension_count);
@@ -225,7 +208,6 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
       &device_extension_count, device_extensions);
   if (gst_vulkan_error_to_g_error (err, error,
           "vkEnumerateDeviceExtensionProperties") < 0) {
-    g_strfreev (enabled_layers);
     g_free (device_extensions);
     goto error;
   }
@@ -246,7 +228,6 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
         VK_ERROR_EXTENSION_NOT_PRESENT,
         "Failed to find required extension, \"" VK_KHR_SWAPCHAIN_EXTENSION_NAME
         "\"");
-    g_strfreev (enabled_layers);
     goto error;
   }
   g_free (device_extensions);
@@ -272,7 +253,6 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   if (i >= device->n_queue_families) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Failed to find a compatible queue family");
-    g_strfreev (enabled_layers);
     goto error;
   }
   device->queue_family_id = i;
@@ -293,24 +273,17 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
     device_info.pNext = NULL;
     device_info.queueCreateInfoCount = 1;
     device_info.pQueueCreateInfos = &queue_info;
-#if 0
-    device_info.enabledLayerCount = enabled_layer_count;
-    device_info.ppEnabledLayerNames = (const char *const *) enabled_layers;
-#else
     device_info.enabledLayerCount = 0;
     device_info.ppEnabledLayerNames = NULL;
-#endif
     device_info.enabledExtensionCount = enabled_extension_count;
     device_info.ppEnabledExtensionNames = (const char *const *) extension_names;
     device_info.pEnabledFeatures = NULL;
 
     err = vkCreateDevice (gpu, &device_info, NULL, &device->device);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateDevice") < 0) {
-      g_strfreev (enabled_layers);
       goto error;
     }
   }
-  g_strfreev (enabled_layers);
 
   {
     VkCommandPoolCreateInfo cmd_pool_info = { 0, };

@@ -25,10 +25,6 @@
 
 G_BEGIN_DECLS
 
-gboolean _check_for_all_layers (uint32_t check_count, const char ** check_names,
-    uint32_t layer_count, VkLayerProperties * layers, guint32 * enabled_layer_count,
-    gchar *** enabled_layers);
-
 G_END_DECLS
 
 #endif /*_VK_UTILS_H_ */
