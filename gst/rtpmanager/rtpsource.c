@@ -169,6 +169,7 @@ rtp_source_class_init (RTPSourceClass * klass)
    *
    *  "octets-received"  G_TYPE_UINT64  total number of bytes received
    *  "packets-received" G_TYPE_UINT64  total number of packets received
+   *  "bytes-received"   G_TYPE_UINT64  total number of bytes received including lower level headers overhead
    *
    * Following fields are updated when "is-sender" is TRUE.
    *
@@ -415,6 +416,7 @@ rtp_source_create_stats (RTPSource * src)
       "packets-sent", G_TYPE_UINT64, src->stats.packets_sent,
       "octets-received", G_TYPE_UINT64, src->stats.octets_received,
       "packets-received", G_TYPE_UINT64, src->stats.packets_received,
+      "bytes-received", G_TYPE_UINT64, src->stats.bytes_received,
       "bitrate", G_TYPE_UINT64, src->bitrate,
       "packets-lost", G_TYPE_INT,
       (gint) rtp_stats_get_packets_lost (&src->stats), "jitter", G_TYPE_UINT,
