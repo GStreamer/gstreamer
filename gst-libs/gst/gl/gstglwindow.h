@@ -150,6 +150,7 @@ struct _GstGLWindow {
  * @queue_resize: request a resize to occur when possible
  * @controls_viewport: Whether the window takes care of glViewport setup.
  *                     and the user does not need to deal with viewports
+ * @has_output_surface: Whether the window has output surface or not. (Since: 1.18)
  */
 struct _GstGLWindowClass {
   GstObjectClass parent_class;
@@ -171,9 +172,10 @@ struct _GstGLWindowClass {
   gboolean (*set_render_rectangle)(GstGLWindow *window, gint x, gint y, gint width, gint height);
   void     (*queue_resize)       (GstGLWindow *window);
   gboolean (*controls_viewport)  (GstGLWindow *window);
+  gboolean (*has_output_surface) (GstGLWindow *window);
 
   /*< private >*/
-  gpointer _reserved[GST_PADDING-1];
+  gpointer _reserved[GST_PADDING-2];
 };
 
 GST_GL_API
@@ -264,6 +266,9 @@ GST_GL_API
 GstGLContext * gst_gl_window_get_context    (GstGLWindow *window);
 GST_GL_API
 guintptr       gst_gl_window_get_display    (GstGLWindow *window);
+
+GST_GL_API
+gboolean       gst_gl_window_has_output_surface (GstGLWindow *window);
 
 G_END_DECLS
 

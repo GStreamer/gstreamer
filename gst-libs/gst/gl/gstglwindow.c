@@ -85,6 +85,7 @@ static void gst_gl_window_default_send_message (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
 static void gst_gl_window_default_send_message_async (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
+static gboolean gst_gl_window_default_has_output_surface (GstGLWindow * window);
 
 struct _GstGLWindowPrivate
 {
@@ -192,6 +193,8 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
   klass->send_message = GST_DEBUG_FUNCPTR (gst_gl_window_default_send_message);
   klass->send_message_async =
       GST_DEBUG_FUNCPTR (gst_gl_window_default_send_message_async);
+  klass->has_output_surface =
+      GST_DEBUG_FUNCPTR (gst_gl_window_default_has_output_surface);
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_window_finalize;
 
@@ -666,6 +669,36 @@ gst_gl_window_default_send_message_async (GstGLWindow * window,
       message);
 }
 
+static gboolean
+gst_gl_window_default_has_output_surface (GstGLWindow * window)
+{
+  return TRUE;
+}
+
+/**
+ * gst_gl_window_has_output_surface:
+ * @window: a #GstGLWindow
+ *
+ * Query whether @window has output surface or not
+ *
+ * Returns: %TRUE if @window has useable output surface
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_gl_window_has_output_surface (GstGLWindow * window)
+{
+  GstGLWindowClass *window_class;
+
+  g_return_val_if_fail (GST_IS_GL_WINDOW (window), FALSE);
+
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+
+  g_assert (window_class->has_output_surface);
+
+  return window_class->has_output_surface (window);
+}
+
 /**
  * gst_gl_window_send_message_async:
  * @window: a #GstGLWindow
@@ -1020,6 +1053,12 @@ gst_gl_window_controls_viewport (GstGLWindow * window)
 
 static GType gst_gl_dummy_window_get_type (void);
 
+static gboolean
+gst_gl_dummy_window_has_output_surface (GstGLWindow * window)
+{
+  return FALSE;
+}
+
 G_DEFINE_TYPE (GstGLDummyWindow, gst_gl_dummy_window, GST_TYPE_GL_WINDOW);
 
 static void
@@ -1055,6 +1094,8 @@ gst_gl_dummy_window_class_init (GstGLDummyWindowClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_dummy_window_get_window_handle);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_dummy_window_set_window_handle);
+  window_class->has_output_surface =
+      GST_DEBUG_FUNCPTR (gst_gl_dummy_window_has_output_surface);
 }
 
 static void
