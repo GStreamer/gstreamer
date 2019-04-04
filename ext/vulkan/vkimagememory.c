@@ -204,12 +204,14 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
     goto vk_error;
 
   mem = g_new0 (GstVulkanImageMemory, 1);
+
+  vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
+
   _vk_image_mem_init (mem, allocator, parent, device, usage, &params,
       mem->requirements.size, user_data, notify);
   mem->create_info = image_info;
   mem->image = image;
 
-  vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
   err = vkGetPhysicalDeviceImageFormatProperties (gpu, format, VK_IMAGE_TYPE_2D,
       tiling, usage, 0, &mem->format_properties);
   if (gst_vulkan_error_to_g_error (err, &error,
