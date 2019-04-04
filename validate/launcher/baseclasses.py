@@ -290,9 +290,12 @@ class Test(Loggable):
             f.write(info)
 
     def add_known_issue_information(self):
-        info = "\n\n**Already known issues**:\n\n``` python\n%s\n```\n\n" % (
-            json.dumps(self.expected_issues)
-        )
+        if self.expected_issues:
+            info = "\n\n**Already known issues**:\n\n``` python\n%s\n```\n\n" % (
+                json.dumps(self.expected_issues)
+            )
+        else:
+            info = ""
 
         info += "\n\n**You can mark the issues as 'known' by adding the " \
             + " following lines to the list of known issues**\n" \
