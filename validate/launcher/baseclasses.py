@@ -586,7 +586,7 @@ class Test(Loggable):
             self.out.write("**Test name**: `%s`\n\n"
                            "**Command**:\n\n``` bash\n%s\n```\n\n" % (
                                self.classname, self.get_command_repr()))
-            self.out.write("**%s logs**:\n\n``` log\n\n" % self.command[0])
+            self.out.write("**%s logs**:\n\n``` log\n\n" % self.application)
             self.out.flush()
         else:
             message = "Launching: %s%s\n" \
