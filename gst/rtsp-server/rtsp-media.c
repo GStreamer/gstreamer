@@ -51,7 +51,7 @@
  *
  * The state of the media can be controlled with gst_rtsp_media_set_state ().
  * Seeking can be done with gst_rtsp_media_seek(), or gst_rtsp_media_seek_full()
- * or gst_rtsp_media_seek_full_with_rate() for finer control of the seek.
+ * or gst_rtsp_media_seek_trickmode() for finer control of the seek.
  *
  * With gst_rtsp_media_unprepare() the pipeline is stopped and shut down. When
  * gst_rtsp_media_set_eos_shutdown() an EOS will be sent to the pipeline to
@@ -146,6 +146,7 @@ struct _GstRTSPMediaPrivate
   gboolean do_retransmission;   /* protected by lock */
   guint latency;                /* protected by lock */
   GstClock *clock;              /* protected by lock */
+  gboolean do_rate_control;     /* protected by lock */
   GstRTSPPublishClockMode publish_clock_mode;
 
   /* Dynamic element handling */
@@ -167,6 +168,7 @@ struct _GstRTSPMediaPrivate
 #define DEFAULT_STOP_ON_DISCONNECT TRUE
 #define DEFAULT_MAX_MCAST_TTL   255
 #define DEFAULT_BIND_MCAST_ADDRESS FALSE
+#define DEFAULT_DO_RATE_CONTROL TRUE
 
 #define DEFAULT_DO_RETRANSMISSION FALSE
 
@@ -471,6 +473,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
   priv->bind_mcast_address = DEFAULT_BIND_MCAST_ADDRESS;
+  priv->do_rate_control = DEFAULT_DO_RATE_CONTROL;
 }
 
 static void
@@ -2293,6 +2296,7 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   gst_rtsp_stream_set_retransmission_time (stream, priv->rtx_time);
   gst_rtsp_stream_set_buffer_size (stream, priv->buffer_size);
   gst_rtsp_stream_set_publish_clock_mode (stream, priv->publish_clock_mode);
+  gst_rtsp_stream_set_rate_control (stream, priv->do_rate_control);
 
   g_ptr_array_add (priv->streams, stream);
 
@@ -2662,13 +2666,15 @@ gst_rtsp_media_get_status (GstRTSPMedia * media)
 }
 
 /**
- * gst_rtsp_media_seek_full_with_rate:
+ * gst_rtsp_media_seek_trickmode:
  * @media: a #GstRTSPMedia
  * @range: (transfer none): a #GstRTSPTimeRange
  * @flags: The minimal set of #GstSeekFlags to use
  * @rate: the rate to use in the seek
+ * @trickmode_interval: The trickmode interval to use for KEY_UNITS trick mode
  *
- * Seek the pipeline of @media to @range with the given @flags and @rate.
+ * Seek the pipeline of @media to @range with the given @flags and @rate,
+ * and @trickmode_interval.
  * @media must be prepared with gst_rtsp_media_prepare().
  * In order to perform the seek operation, the pipeline must contain all
  * needed transport parts (transport sinks).
@@ -2678,8 +2684,9 @@ gst_rtsp_media_get_status (GstRTSPMedia * media)
  * Since: 1.18
  */
 gboolean
-gst_rtsp_media_seek_full_with_rate (GstRTSPMedia * media,
-    GstRTSPTimeRange * range, GstSeekFlags flags, gdouble rate)
+gst_rtsp_media_seek_trickmode (GstRTSPMedia * media,
+    GstRTSPTimeRange * range, GstSeekFlags flags, gdouble rate,
+    GstClockTime trickmode_interval)
 {
   GstRTSPMediaClass *klass;
   GstRTSPMediaPrivate *priv;
@@ -2789,6 +2796,8 @@ gst_rtsp_media_seek_full_with_rate (GstRTSPMedia * media,
       GST_DEBUG ("no position change, no flags set by caller, so not seeking");
       res = TRUE;
     } else {
+      GstEvent *seek_event;
+
       gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
 
       if (rate < 0.0) {
@@ -2801,8 +2810,12 @@ gst_rtsp_media_seek_full_with_rate (GstRTSPMedia * media,
         stop_type = temp_type;
       }
 
-      res = gst_element_seek (priv->pipeline, rate, GST_FORMAT_TIME,
-          flags, start_type, start, stop_type, stop);
+      seek_event = gst_event_new_seek (rate, GST_FORMAT_TIME, flags, start_type,
+          start, stop_type, stop);
+
+      gst_event_set_seek_trickmode_interval (seek_event, trickmode_interval);
+
+      res = gst_element_send_event (priv->pipeline, seek_event);
 
       /* and block for the seek to complete */
       GST_INFO ("done seeking %d", res);
@@ -2880,7 +2893,7 @@ gboolean
 gst_rtsp_media_seek_full (GstRTSPMedia * media, GstRTSPTimeRange * range,
     GstSeekFlags flags)
 {
-  return gst_rtsp_media_seek_full_with_rate (media, range, flags, 1.0);
+  return gst_rtsp_media_seek_trickmode (media, range, flags, 1.0, 0);
 }
 
 /**
@@ -2896,8 +2909,8 @@ gst_rtsp_media_seek_full (GstRTSPMedia * media, GstRTSPTimeRange * range,
 gboolean
 gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
 {
-  return gst_rtsp_media_seek_full_with_rate (media, range, GST_SEEK_FLAG_NONE,
-      1.0);
+  return gst_rtsp_media_seek_trickmode (media, range, GST_SEEK_FLAG_NONE,
+      1.0, 0);
 }
 
 static void
@@ -4727,4 +4740,60 @@ gst_rtsp_media_is_receive_only (GstRTSPMedia * media)
   }
 
   return receive_only;
+}
+
+/**
+ * gst_rtsp_media_set_rate_control:
+ *
+ * Define whether @media will follow the Rate-Control=no behaviour as specified
+ * in the ONVIF replay spec.
+ *
+ * Since: 1.18
+ */
+void
+gst_rtsp_media_set_rate_control (GstRTSPMedia * media, gboolean enabled)
+{
+  GstRTSPMediaPrivate *priv;
+  guint i;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  GST_LOG_OBJECT (media, "%s rate control", enabled ? "Enabling" : "Disabling");
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->do_rate_control = enabled;
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+
+    gst_rtsp_stream_set_rate_control (stream, enabled);
+
+  }
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_rate_control:
+ *
+ * Returns: whether @media will follow the Rate-Control=no behaviour as specified
+ * in the ONVIF replay spec.
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_rtsp_media_get_rate_control (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->do_rate_control;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
 }

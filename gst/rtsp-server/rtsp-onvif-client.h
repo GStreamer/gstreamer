@@ -59,4 +59,7 @@ struct GstRTSPOnvifClient
 GST_RTSP_SERVER_API
 GType gst_rtsp_onvif_client_get_type (void);
 
+GST_RTSP_SERVER_API
+GstRTSPClient * gst_rtsp_onvif_client_new (void);
+
 #endif /* __GST_RTSP_ONVIF_CLIENT_H__ */

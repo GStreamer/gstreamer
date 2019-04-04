@@ -131,6 +131,16 @@ gst_rtsp_onvif_media_setup_sdp (GstRTSPMedia * media, GstSDPMessage * sdp,
           if (res) {
             GstSDPMedia *smedia =
                 &g_array_index (sdp->medias, GstSDPMedia, sdp->medias->len - 1);
+            gchar *x_onvif_track, *media_str;
+
+            media_str =
+                g_ascii_strup (gst_structure_get_string (s, "media"), -1);
+            x_onvif_track =
+                g_strdup_printf ("%s%03d", media_str, sdp->medias->len - 1);
+            gst_sdp_media_add_attribute (smedia, "x-onvif-track",
+                x_onvif_track);
+            g_free (x_onvif_track);
+            g_free (media_str);
 
             if (sinkpad) {
               GstRTSPOnvifMedia *onvif_media = GST_RTSP_ONVIF_MEDIA (media);

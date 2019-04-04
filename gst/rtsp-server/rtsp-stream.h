@@ -359,6 +359,12 @@ void               gst_rtsp_stream_set_ulpfec_percentage (GstRTSPStream *stream,
 GST_RTSP_SERVER_API
 guint              gst_rtsp_stream_get_ulpfec_percentage (GstRTSPStream *stream);
 
+GST_RTSP_SERVER_API
+void               gst_rtsp_stream_set_rate_control (GstRTSPStream * stream, gboolean enabled);
+
+GST_RTSP_SERVER_API
+gboolean           gst_rtsp_stream_get_rate_control (GstRTSPStream * stream);
+
 /**
  * GstRTSPStreamTransportFilterFunc:
  * @stream: a #GstRTSPStream object

@@ -75,6 +75,12 @@ GST_RTSP_SERVER_API
 gboolean gst_rtsp_onvif_media_factory_has_backchannel_support (GstRTSPOnvifMediaFactory * factory);
 
 GST_RTSP_SERVER_API
+gboolean gst_rtsp_onvif_media_factory_has_replay_support (GstRTSPOnvifMediaFactory * factory);
+
+GST_RTSP_SERVER_API
+void gst_rtsp_onvif_media_factory_set_replay_support (GstRTSPOnvifMediaFactory * factory, gboolean has_replay_support);
+
+GST_RTSP_SERVER_API
 void gst_rtsp_onvif_media_factory_set_backchannel_bandwidth (GstRTSPOnvifMediaFactory * factory, guint bandwidth);
 GST_RTSP_SERVER_API
 guint gst_rtsp_onvif_media_factory_get_backchannel_bandwidth (GstRTSPOnvifMediaFactory * factory);

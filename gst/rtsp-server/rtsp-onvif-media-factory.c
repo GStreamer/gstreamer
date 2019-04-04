@@ -50,6 +50,7 @@ struct GstRTSPOnvifMediaFactoryPrivate
   GMutex lock;
   gchar *backchannel_launch;
   guint backchannel_bandwidth;
+  gboolean has_replay_support;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GstRTSPOnvifMediaFactory,
@@ -445,6 +446,42 @@ gst_rtsp_onvif_media_factory_has_backchannel_support (GstRTSPOnvifMediaFactory *
     return klass->has_backchannel_support (factory);
 
   return FALSE;
+}
+
+/**
+ * gst_rtsp_onvif_media_factory_has_replay_support:
+ *
+ * Returns: %TRUE if ONVIF replay is supported by the media factory.
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_rtsp_onvif_media_factory_has_replay_support (GstRTSPOnvifMediaFactory *
+    factory)
+{
+  gboolean has_replay_support;
+
+  g_mutex_lock (&factory->priv->lock);
+  has_replay_support = factory->priv->has_replay_support;
+  g_mutex_unlock (&factory->priv->lock);
+
+  return has_replay_support;
+}
+
+/**
+ * gst_rtsp_onvif_media_factory_set_replay_support:
+ *
+ * Set to %TRUE if ONVIF replay is supported by the media factory.
+ *
+ * Since: 1.18
+ */
+void
+gst_rtsp_onvif_media_factory_set_replay_support (GstRTSPOnvifMediaFactory *
+    factory, gboolean has_replay_support)
+{
+  g_mutex_lock (&factory->priv->lock);
+  factory->priv->has_replay_support = has_replay_support;
+  g_mutex_unlock (&factory->priv->lock);
 }
 
 /**

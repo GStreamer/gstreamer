@@ -28,6 +28,7 @@ rtsp_server_tests = [
   'gst/stream',
   'gst/threadpool',
   'gst/token',
+  'gst/onvif',
 ]
 
 if not get_option('rtspclientsink').disabled()

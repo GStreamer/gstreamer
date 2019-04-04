@@ -62,6 +62,7 @@ GST_RTSP_SERVER_API
 GstRTSPServer *gst_rtsp_onvif_server_new (void);
 
 #define GST_RTSP_ONVIF_BACKCHANNEL_REQUIREMENT "www.onvif.org/ver20/backchannel"
+#define GST_RTSP_ONVIF_REPLAY_REQUIREMENT "onvif-replay"
 
 #include "rtsp-onvif-client.h"
 #include "rtsp-onvif-media-factory.h"

@@ -130,6 +130,9 @@ struct _GstRTSPStreamPrivate
   guint rtx_pt;
   GstClockTime rtx_time;
 
+  /* rate control */
+  gboolean do_rate_control;
+
   /* Forward Error Correction with RFC 5109 */
   GstElement *ulpfec_decoder;
   GstElement *ulpfec_encoder;
@@ -190,6 +193,7 @@ struct _GstRTSPStreamPrivate
                                         GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_MAX_MCAST_TTL   255
 #define DEFAULT_BIND_MCAST_ADDRESS FALSE
+#define DEFAULT_DO_RATE_CONTROL TRUE
 
 enum
 {
@@ -291,6 +295,7 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
   priv->publish_clock_mode = GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK;
   priv->max_mcast_ttl = DEFAULT_MAX_MCAST_TTL;
   priv->bind_mcast_address = DEFAULT_BIND_MCAST_ADDRESS;
+  priv->do_rate_control = DEFAULT_DO_RATE_CONTROL;
 
   g_mutex_init (&priv->lock);
 
@@ -3378,6 +3383,11 @@ create_sender_part (GstRTSPStream * stream, const GstRTSPTransport * transport)
     return FALSE;
   }
 
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (priv->payloader),
+          "onvif-no-rate-control"))
+    g_object_set (priv->payloader, "onvif-no-rate-control",
+        !priv->do_rate_control, NULL);
+
   for (i = 0; i < 2; i++) {
     gboolean link_tee = FALSE;
     /* For the sender we create this bit of pipeline for both
@@ -3435,6 +3445,9 @@ create_sender_part (GstRTSPStream * stream, const GstRTSPTransport * transport)
       priv->appsink[i] = gst_element_factory_make ("appsink", NULL);
       g_object_set (priv->appsink[i], "emit-signals", FALSE, "buffer-list",
           TRUE, "max-buffers", 1, NULL);
+
+      if (i == 0)
+        g_object_set (priv->appsink[i], "sync", priv->do_rate_control, NULL);
 
       /* we need to set sync and preroll to FALSE for the sink to avoid
        * deadlock. This is only needed for sink sending RTCP data. */
@@ -3764,6 +3777,9 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
       (GCallback) on_new_sender_ssrc, stream);
   g_signal_connect (priv->session, "on-sender-ssrc-active",
       (GCallback) on_sender_ssrc_active, stream);
+
+  g_object_set (priv->session, "disable-sr-timestamp", !priv->do_rate_control,
+      NULL);
 
   if (priv->srcpad) {
     /* be notified of caps changes */
@@ -5918,4 +5934,54 @@ gst_rtsp_stream_get_ulpfec_percentage (GstRTSPStream * stream)
   g_mutex_unlock (&stream->priv->lock);
 
   return res;
+}
+
+/**
+ * gst_rtsp_stream_set_rate_control:
+ *
+ * Define whether @stream will follow the Rate-Control=no behaviour as specified
+ * in the ONVIF replay spec.
+ *
+ * Since: 1.18
+ */
+void
+gst_rtsp_stream_set_rate_control (GstRTSPStream * stream, gboolean enabled)
+{
+  GST_DEBUG_OBJECT (stream, "%s rate control",
+      enabled ? "Enabling" : "Disabling");
+
+  g_mutex_lock (&stream->priv->lock);
+  stream->priv->do_rate_control = enabled;
+  if (stream->priv->appsink[0])
+    g_object_set (stream->priv->appsink[0], "sync", enabled, NULL);
+  if (stream->priv->payloader
+      && g_object_class_find_property (G_OBJECT_GET_CLASS (stream->priv->
+              payloader), "onvif-no-rate-control"))
+    g_object_set (stream->priv->payloader, "onvif-no-rate-control", !enabled,
+        NULL);
+  if (stream->priv->session) {
+    g_object_set (stream->priv->session, "disable-sr-timestamp", !enabled,
+        NULL);
+  }
+  g_mutex_unlock (&stream->priv->lock);
+}
+
+/**
+ * gst_rtsp_stream_get_rate_control:
+ *
+ * Returns: whether @stream will follow the Rate-Control=no behaviour as specified
+ * in the ONVIF replay spec.
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_rtsp_stream_get_rate_control (GstRTSPStream * stream)
+{
+  gboolean ret;
+
+  g_mutex_lock (&stream->priv->lock);
+  ret = stream->priv->do_rate_control;
+  g_mutex_unlock (&stream->priv->lock);
+
+  return ret;
 }

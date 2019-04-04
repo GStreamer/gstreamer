@@ -1833,6 +1833,8 @@ setup_play_mode (GstRTSPClient * client, GstRTSPContext * ctx,
   GstSeekFlags flags = GST_SEEK_FLAG_NONE;
   GstRTSPClientClass *klass = GST_RTSP_CLIENT_GET_CLASS (client);
   GstRTSPStatusCode rtsp_status_code;
+  GstClockTime trickmode_interval = 0;
+  gboolean enable_rate_control = TRUE;
 
   /* parse the range header if we have one */
   res = gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_RANGE, &str, 0);
@@ -1876,13 +1878,17 @@ setup_play_mode (GstRTSPClient * client, GstRTSPContext * ctx,
   /* give the application a chance to tweak range, flags, or rate */
   if (klass->adjust_play_mode != NULL) {
     rtsp_status_code =
-        klass->adjust_play_mode (client, ctx, &range, &flags, &rate);
+        klass->adjust_play_mode (client, ctx, &range, &flags, &rate,
+        &trickmode_interval, &enable_rate_control);
     if (rtsp_status_code != GST_RTSP_STS_OK)
       goto adjust_play_mode_failed;
   }
 
+  gst_rtsp_media_set_rate_control (ctx->media, enable_rate_control);
+
   /* now do the seek with the seek options */
-  (void) gst_rtsp_media_seek_full_with_rate (ctx->media, range, flags, rate);
+  gst_rtsp_media_seek_trickmode (ctx->media, range, flags, rate,
+      trickmode_interval);
   if (range != NULL)
     gst_rtsp_range_free (range);
 
@@ -2031,6 +2037,12 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
           g_strdup_printf ("%1.3f", rate));
   }
 
+  if (klass->adjust_play_response) {
+    code = klass->adjust_play_response (client, ctx);
+    if (code != GST_RTSP_STS_OK)
+      goto adjust_play_response_failed;
+  }
+
   send_message (client, ctx, ctx->response, FALSE);
 
   /* start playing after sending the response */
@@ -2112,6 +2124,12 @@ get_rates_error:
   {
     GST_ERROR ("client %p: failed obtaining rate and applied_rate", client);
     send_generic_response (client, GST_RTSP_STS_INTERNAL_SERVER_ERROR, ctx);
+    return FALSE;
+  }
+adjust_play_response_failed:
+  {
+    GST_ERROR ("client %p: failed to adjust play response", client);
+    send_generic_response (client, code, ctx);
     return FALSE;
   }
 }
