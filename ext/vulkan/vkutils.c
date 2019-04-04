@@ -184,7 +184,6 @@ gst_vulkan_ensure_element_data (gpointer element,
     GstVulkanDisplay ** display_ptr, GstVulkanInstance ** instance_ptr)
 {
   g_return_val_if_fail (element != NULL, FALSE);
-  g_return_val_if_fail (display_ptr != NULL, FALSE);
   g_return_val_if_fail (instance_ptr != NULL, FALSE);
 
   /*  1) Check if the element already has a context of the specific
@@ -192,21 +191,18 @@ gst_vulkan_ensure_element_data (gpointer element,
    */
   if (!*instance_ptr) {
     GError *error = NULL;
+    GstContext *context = NULL;
 
     gst_vulkan_global_context_query (element,
         GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR);
 
     /* Neighbour found and it updated the display */
     if (!*instance_ptr) {
-      GstContext *context;
-
       /* If no neighboor, or application not interested, use system default */
       *instance_ptr = gst_vulkan_instance_new ();
 
       context = gst_context_new (GST_VULKAN_INSTANCE_CONTEXT_TYPE_STR, TRUE);
       gst_context_set_vulkan_instance (context, *instance_ptr);
-
-      _vk_context_propagate (element, context);
     }
 
     if (!gst_vulkan_instance_open (*instance_ptr, &error)) {
@@ -217,7 +213,14 @@ gst_vulkan_ensure_element_data (gpointer element,
       g_clear_error (&error);
       return FALSE;
     }
+
+    if (context)
+      _vk_context_propagate (element, context);
   }
+
+  /* we don't care about a display */
+  if (!display_ptr)
+    return *instance_ptr != NULL;
 
   if (!*display_ptr) {
     _vk_display_context_query (element, display_ptr);
@@ -250,7 +253,6 @@ gst_vulkan_handle_set_context (GstElement * element, GstContext * context,
   GstVulkanInstance *instance_replacement = NULL;
   const gchar *context_type;
 
-  g_return_val_if_fail (display != NULL, FALSE);
   g_return_val_if_fail (instance != NULL, FALSE);
 
   if (!context)
@@ -258,7 +260,8 @@ gst_vulkan_handle_set_context (GstElement * element, GstContext * context,
 
   context_type = gst_context_get_context_type (context);
 
-  if (g_strcmp0 (context_type, GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR) == 0) {
+  if (display
+      && g_strcmp0 (context_type, GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR) == 0) {
     if (!gst_context_get_vulkan_display (context, &display_replacement)) {
       GST_WARNING_OBJECT (element, "Failed to get display from context");
       return FALSE;
@@ -295,7 +298,8 @@ gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
     GstVulkanDisplay ** display, GstVulkanInstance ** instance,
     GstVulkanDevice ** device)
 {
-  if (gst_vulkan_display_handle_context_query (element, query, display))
+  if (display
+      && gst_vulkan_display_handle_context_query (element, query, display))
     return TRUE;
   if (gst_vulkan_instance_handle_context_query (element, query, instance))
     return TRUE;

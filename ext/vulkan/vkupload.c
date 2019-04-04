@@ -564,7 +564,7 @@ gst_vulkan_upload_query (GstBaseTransform * bt, GstPadDirection direction,
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:{
       res = gst_vulkan_handle_context_query (GST_ELEMENT (vk_upload), query,
-          &vk_upload->display, &vk_upload->instance, &vk_upload->device);
+          NULL, &vk_upload->instance, &vk_upload->device);
 
       if (res)
         return res;
@@ -582,8 +582,7 @@ gst_vulkan_upload_set_context (GstElement * element, GstContext * context)
 {
   GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (element);
 
-  gst_vulkan_handle_set_context (element, context, &vk_upload->display,
-      &vk_upload->instance);
+  gst_vulkan_handle_set_context (element, context, NULL, &vk_upload->instance);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -602,17 +601,23 @@ gst_vulkan_upload_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (!gst_vulkan_ensure_element_data (element, &vk_upload->display,
-              &vk_upload->instance)) {
+      if (!gst_vulkan_ensure_element_data (element, NULL, &vk_upload->instance)) {
         GST_ELEMENT_ERROR (vk_upload, RESOURCE, NOT_FOUND,
-            ("Failed to retreive vulkan instance/display"), (NULL));
+            ("Failed to retreive vulkan instance"), (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
       if (!gst_vulkan_device_run_context_query (GST_ELEMENT (vk_upload),
               &vk_upload->device)) {
-        GST_ELEMENT_ERROR (vk_upload, RESOURCE, NOT_FOUND,
-            ("Failed to retreive vulkan device"), (NULL));
-        return GST_STATE_CHANGE_FAILURE;
+        GError *error = NULL;
+        GST_DEBUG_OBJECT (vk_upload, "No device retrieved from peer elements");
+        if (!(vk_upload->device =
+                gst_vulkan_instance_create_device (vk_upload->instance,
+                    &error))) {
+          GST_ELEMENT_ERROR (vk_upload, RESOURCE, NOT_FOUND,
+              ("Failed to create vulkan device"), ("%s", error->message));
+          g_clear_error (&error);
+          return GST_STATE_CHANGE_FAILURE;
+        }
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -629,9 +634,6 @@ gst_vulkan_upload_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (vk_upload->display)
-        gst_object_unref (vk_upload->display);
-      vk_upload->display = NULL;
       if (vk_upload->device)
         gst_object_unref (vk_upload->device);
       vk_upload->device = NULL;
