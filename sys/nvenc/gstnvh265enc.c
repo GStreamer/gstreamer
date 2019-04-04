@@ -46,7 +46,7 @@ G_DEFINE_TYPE (GstNvH265Enc, gst_nv_h265_enc, GST_TYPE_NV_BASE_ENC);
   ";" \
   "video/x-raw(memory:GLMemory), " \
   "format = (string) { NV12, Y444 }, " \
-  "width = (int) [ 16, 4096 ], height = (int) [ 16, 2160 ], " \
+  "width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ], " \
   "framerate = (fraction) [0, MAX] "
 #else
 #define GL_CAPS_STR ""
@@ -57,7 +57,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, " "format = (string) { NV12, I420 }, "       // TODO: YV12, Y444 support
-        "width = (int) [ 16, 4096 ], height = (int) [ 16, 2160 ], "
+        "width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ], "
         "framerate = (fraction) [0, MAX] "
         GL_CAPS_STR
     ));
@@ -66,7 +66,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h265, "
-        "width = (int) [ 1, 4096 ], height = (int) [ 1, 2160 ], "
+        "width = (int) [ 1, 4096 ], height = (int) [ 1, 4096 ], "
         "framerate = (fraction) [0/1, MAX], "
         "stream-format = (string) byte-stream, "
         "alignment = (string) au, "
