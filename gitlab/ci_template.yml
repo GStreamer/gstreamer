@@ -284,17 +284,6 @@ integration testsuites fedora:
   extends: '.test fedora x86_64'
   stage: 'full tests'
   variables:
-    SUPPRESSION_FILES: >
-      gst-build/subprojects/gstreamer/tests/check/gstreamer.supp
-      gst-build/subprojects/gst-plugins-base/tests/check/gst-plugins-base.supp
-      gst-build/subprojects/gst-plugins-good/tests/check/gst-plugins-good.supp
-      gst-build/subprojects/gst-plugins-bad/tests/check/gst-plugins-bad.supp
-      gst-build/subprojects/gst-plugins-ugly/tests/check/gst-plugins-ugly.supp
-      gst-build/subprojects/gst-libav/tests/check/gst-libav.supp
-      gst-build/subprojects/gst-devtools/validate/data/gstvalidate.supp
-      gst-build/subprojects/libnice/tests/libnice.supp
-      gst-build/subprojects/libsoup/tests/libsoup.supp
-      gst-build/subprojects/glib/glib.supp
     # These tests take very long compared to what they add, so let's skip them.
     # - check.*.generic_states.* - enough to run one of the sequences
     # - check.gstreamer.gst_gstelement.test_foreach_pad - 48s
@@ -397,13 +386,10 @@ integration testsuites fedora:
       -b check.gst-libav.generic_plugin_test
       -b check.gst-libav.generic_libavcodec_locking
       -b check.gst-libav.elements_avdemux_ape
-    VALGRIND_OPTS: "--suppressions=/tmp/gstreamer-ci.supp"
     EXTRA_VALIDATE_ARGS: "--valgrind ${VALGRIND_BLACKLIST} ${VALGRIND_SKIPLIST}"
     ORC_CODE: "backup"
   # Some suppression files are missing a newline at the end which messes things
   # up when concatenating them. awk will add missing newlines (unlike cat)
-  before_script:
-  - awk '{print}' ${SUPPRESSION_FILES} > /tmp/gstreamer-ci.supp
 
 valgrind core:
   extends: '.valgrind fedora x86_64'
