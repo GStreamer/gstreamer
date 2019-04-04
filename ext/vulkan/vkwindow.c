@@ -37,9 +37,6 @@
 
 #include "vkwindow.h"
 
-#if GST_VULKAN_HAVE_WINDOW_X11
-#include "x11/vkwindow_x11.h"
-#endif
 #if GST_VULKAN_HAVE_WINDOW_XCB
 #include "xcb/vkwindow_xcb.h"
 #endif
@@ -178,10 +175,6 @@ gst_vulkan_window_new (GstVulkanDisplay * display)
 
   user_choice = g_getenv ("GST_VULKAN_WINDOW");
   GST_INFO ("creating a window, user choice:%s", user_choice);
-#if GST_VULKAN_HAVE_WINDOW_X11
-  if (!window && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
-    window = GST_VULKAN_WINDOW (gst_vulkan_window_x11_new (display));
-#endif
 #if GST_VULKAN_HAVE_WINDOW_XCB
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "xcb")))
     window = GST_VULKAN_WINDOW (gst_vulkan_window_xcb_new (display));

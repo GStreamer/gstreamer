@@ -27,9 +27,6 @@
 
 #include "vkdisplay.h"
 
-#if GST_VULKAN_HAVE_WINDOW_X11
-#include "x11/vkdisplay_x11.h"
-#endif
 #if GST_VULKAN_HAVE_WINDOW_XCB
 #include "xcb/vkdisplay_xcb.h"
 #endif

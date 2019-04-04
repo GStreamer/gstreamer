@@ -32,22 +32,13 @@
 #include "vksink.h"
 #include "vkupload.h"
 
-#if GST_VULKAN_HAVE_WINDOW_X11
-#include <X11/Xlib.h>
-#endif
-
-#define GST_CAT_DEFAULT gst_gl_gstgl_debug
+#define GST_CAT_DEFAULT gst_vulkan_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_gl_gstgl_debug, "gstvulkan", 0, "gstvulkan");
-
-#if GST_VULKAN_HAVE_WINDOW_X11
-  if (g_getenv ("GST_VULKAN_XINITTHREADS"))
-    XInitThreads ();
-#endif
+  GST_DEBUG_CATEGORY_INIT (gst_vulkan_debug, "vulkan", 0, "vulkan");
 
   if (!gst_element_register (plugin, "vulkansink",
           GST_RANK_NONE, GST_TYPE_VULKAN_SINK)) {
