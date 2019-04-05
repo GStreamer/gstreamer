@@ -691,7 +691,7 @@ class GstValidateBaseRTSPTest:
             self.rtspserver_logs = sys.stdout
         else:
             self.rtspserver_logs = open(self.logfile + '_rtspserver.log', 'w+')
-            self.extra_logfiles.append(self.rtspserver_logs.name)
+            self.extra_logfiles.add(self.rtspserver_logs.name)
 
         server_env = os.environ.copy()
 

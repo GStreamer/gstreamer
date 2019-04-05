@@ -164,7 +164,7 @@ class Test(Loggable):
         self.result = Result.NOT_RUN
         self.logfile = None
         self.out = None
-        self.extra_logfiles = []
+        self.extra_logfiles = set()
         self.__env_variable = []
         self.kill_subprocess()
         self.process = None
@@ -477,8 +477,8 @@ class Test(Loggable):
         return args
 
     def use_valgrind(self, command, subenv):
-        vglogsfile = self.logfile + '.valgrind'
-        self.extra_logfiles.append(vglogsfile)
+        vglogsfile = os.path.splitext(self.logfile)[0] + '.valgrind'
+        self.extra_logfiles.add(vglogsfile)
 
         vg_args = []
 
@@ -496,8 +496,8 @@ class Test(Loggable):
             vg_args.append("--%s=%s" % (o, v))
 
         if not self.options.redirect_logs:
-            vglogsfile = self.logfile + '.valgrind'
-            self.extra_logfiles.append(vglogsfile)
+            vglogsfile = os.path.splitext(self.logfile)[0] + '.valgrind'
+            self.extra_logfiles.add(vglogsfile)
             vg_args.append("--%s=%s" % ('log-file', vglogsfile))
 
         for supp in self.get_valgrind_suppressions():
@@ -836,8 +836,8 @@ class GstValidateTest(Test):
         subproc_env["GST_VALIDATE_UUID"] = self.get_uuid()
 
         if 'GST_DEBUG' in os.environ and not self.options.redirect_logs:
-            gstlogsfile = self.logfile + '.gstdebug'
-            self.extra_logfiles.append(gstlogsfile)
+            gstlogsfile = os.path.splitext(self.logfile)[0] + '.gstdebug'
+            self.extra_logfiles.add(gstlogsfile)
             subproc_env["GST_DEBUG_FILE"] = gstlogsfile
 
         if self.options.no_color:
