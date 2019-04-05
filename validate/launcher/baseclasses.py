@@ -176,8 +176,6 @@ class Test(Loggable):
             if self.result in [Result.FAILED, Result.TIMEOUT]:
                 string += " '%s'" % self.message
                 if not self.options.dump_on_failure:
-                    string += "\n       You can reproduce with: %s\n" % \
-                        self.get_command_repr()
                     if not self.options.redirect_logs and self.result != Result.PASSED:
                         string += self.get_logfile_repr()
                 else:
@@ -226,8 +224,13 @@ class Test(Loggable):
         else:
             self.out = open(path, 'w+')
 
-    def close_logfile(self):
+    def finalize_logfiles(self):
         if not self.options.redirect_logs:
+            self.out.flush()
+            for logfile in self.extra_logfiles:
+                self.out.write('\n\n**%s**:\n\n```\n%s\n```\n' % (
+                    os.path.basename(logfile), self.get_extra_log_content(logfile))
+                )
             self.out.flush()
             self.out.close()
 
@@ -286,8 +289,8 @@ class Test(Loggable):
         if self.options.xunit_file:
             self.stack_trace = stack_trace
 
-        with open(self.logfile, 'a') as f:
-            f.write(info)
+        self.out.write(info)
+        self.out.flush()
 
     def add_known_issue_information(self):
         if self.expected_issues:
@@ -538,18 +541,10 @@ class Test(Loggable):
         return None
 
     def get_logfile_repr(self):
-        message = "    Logs:\n"
-        logfiles = self.extra_logfiles.copy()
-
         if not self.options.redirect_logs:
-            logfiles.insert(0, self.logfile)
+            return "\n    Log: %s" % self.logfile
 
-        for log in logfiles:
-            if CI_ARTIFACTS_URL:
-                log = CI_ARTIFACTS_URL + os.path.relpath(log, self.options.logsdir)
-            message += "         - %s\n" % log
-
-        return message
+        return ""
 
     def get_command_repr(self):
         message = "%s %s" % (self._env_variable, ' '.join(
@@ -614,8 +609,6 @@ class Test(Loggable):
 
     def _dump_log_files(self):
         self._dump_log_file(self.logfile)
-        for logfile in self.extra_logfiles:
-            self._dump_log_file(logfile)
 
     def copy_logfiles(self, extra_folder="flaky_tests"):
         path = os.path.dirname(os.path.join(self.options.logsdir, extra_folder,
@@ -650,7 +643,7 @@ class Test(Loggable):
         if message is not None:
             printc(message, color=utils.get_color_for_result(
                 self.result), end=end)
-        self.close_logfile()
+        self.finalize_logfiles()
 
         if self.options.dump_on_failure:
             if self.result is not Result.PASSED:
@@ -1909,8 +1902,7 @@ class _TestsLauncher(Loggable):
             running_tests = self.tests
 
         self.total_num_tests = len(self.all_tests)
-        if not is_tty():
-            printc("\nRunning %d tests..." % self.total_num_tests, color=Colors.HEADER)
+        printc("\nRunning %d tests..." % self.total_num_tests, color=Colors.HEADER)
 
         self.reporter.init_timer()
         alone_tests = []
