@@ -73842,3 +73842,303 @@ this will override closed caption stream specified font style/pen size.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstRistSrc::address</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Address</NICK>
+<BLURB>Address to receive packets from (can be IPv4 or IPv6).</BLURB>
+<DEFAULT>"0.0.0.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::cname</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CName</NICK>
+<BLURB>Set the CNAME in the SDES block of the receiver report.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::max-rtcp-bandwidth</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,0.05]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Maximum RTCP Bandwidth</NICK>
+<BLURB>The maximum bandwidth used for RTCP in fraction of RTP bandwdith.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::max-rtx-retries</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Maximum Retransmission Retries</NICK>
+<BLURB>The maximum number of retransmission requests for a lost packet.</BLURB>
+<DEFAULT>7</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::min-rtcp-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 100</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Minimum RTCP Intercal</NICK>
+<BLURB>The minimum interval in ms between two successive RTCP packets.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::multicast-iface</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>multicast-iface</NICK>
+<BLURB>The multicast interface to use to send packets.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::multicast-loopback</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Multicast Loopback</NICK>
+<BLURB>When enabled, the packet will be received locally.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::multicast-ttl</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Multicast TTL</NICK>
+<BLURB>The multicast time-to-live parameter.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::port</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[2,65534]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Port</NICK>
+<BLURB>The port to listen for RTP packets, RTCP port is derived from it, this port must be an even number.</BLURB>
+<DEFAULT>5004</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::receiver-buffer</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Receiver Buffer</NICK>
+<BLURB>Buffering duration in ms.</BLURB>
+<DEFAULT>1000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::reorder-section</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Recorder Section</NICK>
+<BLURB>Time to wait before sending retransmission request in ms.</BLURB>
+<DEFAULT>70</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::stats</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Statistics</NICK>
+<BLURB>Statistic in a GstStructure named 'rist/x-receiver-stats'.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSrc::stats-update-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Statistics Update Interval</NICK>
+<BLURB>The interval between 'stats' update notification (0 disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSink::address</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Address</NICK>
+<BLURB>Address to send packets to (can be IPv4 or IPv6).</BLURB>
+<DEFAULT>"0.0.0.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSink::cname</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>CName</NICK>
+<BLURB>Set the CNAME in the SDES block of the sender report.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSink::max-rtcp-bandwidth</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,0.05]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Maximum RTCP Bandwidth</NICK>
+<BLURB>The maximum bandwidth used for RTCP in fraction of RTP bandwdith.</BLURB>
+<DEFAULT>0.05</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSink::min-rtcp-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 100</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Minimum RTCP Intercal</NICK>
+<BLURB>The minimum interval in ms between two regular successive RTCP packets.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSink::multicast-iface</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>multicast-iface</NICK>
+<BLURB>The multicast interface to use to send packets.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSink::multicast-loopback</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Multicast Loopback</NICK>
+<BLURB>When enabled, the packet will be received locally.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSink::multicast-ttl</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,255]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Multicast TTL</NICK>
+<BLURB>The multicast time-to-live parameter.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSink::port</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[2,65534]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Port</NICK>
+<BLURB>The port RTP packets will be sent, RTCP port is derived from it, this port must be an even number.</BLURB>
+<DEFAULT>5004</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSink::sender-buffer</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Sender Buffer</NICK>
+<BLURB>Size of the retransmission queue in ms.</BLURB>
+<DEFAULT>1200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSink::stats</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Statistics</NICK>
+<BLURB>Statistic in a GstStructure named 'rist/x-sender-stats'.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistSink::stats-update-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Statistics Update Interval</NICK>
+<BLURB>The interval between 'stats' update notification (0 disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistRtxSend::max-size-packets</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 32767</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Size Packets</NICK>
+<BLURB>Amount of packets to queue (0 = unlimited).</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistRtxSend::max-size-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Size Time</NICK>
+<BLURB>Amount of ms to queue (0 = unlimited).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistRtxSend::num-rtx-packets</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num RTX Packets</NICK>
+<BLURB> Number of retransmission packets sent.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistRtxSend::num-rtx-requests</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num RTX Requests</NICK>
+<BLURB>Number of retransmission events received.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistRtxReceive::num-rtx-packets</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num RTX Packets</NICK>
+<BLURB> Number of retransmission packets received.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRistRtxReceive::num-rtx-requests</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num RTX Requests</NICK>
+<BLURB>Number of retransmission events received.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+

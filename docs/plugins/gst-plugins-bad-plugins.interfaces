@@ -81,6 +81,8 @@ GstPnmenc GstPreset
 GstProxySrc GstChildProxy
 GstRTMPSink GstURIHandler
 GstRTMPSrc GstURIHandler
+GstRistSink GstChildProxy
+GstRistSrc GstChildProxy GstURIHandler
 GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
 GstSDPDemux GstChildProxy
 GstSRTSink GstURIHandler

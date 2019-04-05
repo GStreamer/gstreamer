@@ -2894,6 +2894,46 @@ gst_rfb_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-ristsink</FILE>
+<TITLE>ristsink</TITLE>
+GstRistSink
+<SUBSECTION Standard>
+GstRistSinkClass
+<SUBSECTION Private>
+gst_rist_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-ristsrc</FILE>
+<TITLE>ristsrc</TITLE>
+GstRistSrc
+<SUBSECTION Standard>
+GstRistSrcClass
+<SUBSECTION Private>
+gst_rist_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-ristrtxreceive</FILE>
+<TITLE>ristrtxreceive</TITLE>
+GstRistRtxReceive
+<SUBSECTION Standard>
+GstRistRtxReceiveClass
+<SUBSECTION Private>
+gst_rist_rtx_receive_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-ristrtxsend</FILE>
+<TITLE>ristrtxsend</TITLE>
+GstRistRtxSend
+<SUBSECTION Standard>
+GstRistRtxSendClass
+<SUBSECTION Private>
+gst_rist_rtx_send_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-rotate</FILE>
 <TITLE>rotate</TITLE>
 GstRotate

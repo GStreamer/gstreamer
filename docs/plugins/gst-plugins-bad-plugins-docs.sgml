@@ -196,6 +196,10 @@
     <xi:include href="xml/element-rfbsrc.xml" />
     <xi:include href="xml/element-rgb2bayer.xml" />
     <xi:include href="xml/element-rotate.xml" />
+    <xi:include href="xml/element-ristrtxreceive.xml" />
+    <xi:include href="xml/element-ristrtxsend.xml" />
+    <xi:include href="xml/element-ristsink.xml" />
+    <xi:include href="xml/element-ristsrc.xml" />
     <xi:include href="xml/element-rsndvdbin.xml" />
     <xi:include href="xml/element-rsvgdec.xml" />
     <xi:include href="xml/element-rsvgoverlay.xml" />
@@ -371,6 +375,7 @@
     <xi:include href="xml/plugin-proxy.xml" />
     <xi:include href="xml/plugin-removesilence.xml" />
     <xi:include href="xml/plugin-resindvd.xml" />
+    <xi:include href="xml/plugin-rist.xml" />
     <xi:include href="xml/plugin-rfbsrc.xml" />
     <xi:include href="xml/plugin-rsvg.xml" />
     <xi:include href="xml/plugin-rtmp.xml" />

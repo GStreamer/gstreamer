@@ -152,6 +152,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/pcapparse/gstpcapparse.h \
 	$(top_srcdir)/gst/rawparse/gstaudioparse.h \
 	$(top_srcdir)/gst/rawparse/gstvideoparse.h \
+	$(top_srcdir)/gst/rist/gstrist.h \
 	$(top_srcdir)/gst/sdp/gstsdpdemux.h \
 	$(top_srcdir)/gst/speed/gstspeed.h \
 	$(top_srcdir)/gst/videosignal/gstvideoanalyse.h \

@@ -235,6 +235,8 @@ GObject
             GstCameraBin
             GstIpcSlavePipeline
           GstProxySrc
+          GstRistSink
+          GstRistSrc
           GstSDPDemux
           GstSdpSrc
           GstTestSrcBin
