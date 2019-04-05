@@ -817,6 +817,8 @@ done:
   if (possible_id)
     g_free (possible_id);
 
+  g_clear_error (&error);
+
   if (pendings) {
     for (tmp = pendings; tmp; tmp = tmp->next)
       _free_pending_clip (priv, tmp->data);

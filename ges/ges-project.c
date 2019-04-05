@@ -636,6 +636,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
 
   if (error) {
     possible_id = ges_project_try_updating_id (project, source, error);
+    g_clear_error (&error);
 
     if (possible_id == NULL)
       return;
@@ -644,7 +645,6 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
         ges_asset_get_extractable_type (source));
 
     g_free (possible_id);
-    g_error_free (error);
     return;
   }
 
