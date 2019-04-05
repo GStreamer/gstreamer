@@ -636,9 +636,11 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
               g_type_name (param->value_type), RESET_COLOR);
           if (param->value_type == GST_TYPE_STRUCTURE) {
             const GstStructure *s = gst_value_get_structure (&value);
-            if (s)
+            if (s) {
+              g_print ("\n");
               gst_structure_foreach (s, print_field,
                   (gpointer) "                           ");
+            }
           }
         } else if (G_IS_PARAM_SPEC_POINTER (param)) {
           if (param->value_type != G_TYPE_POINTER) {
