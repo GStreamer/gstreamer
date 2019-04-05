@@ -35,6 +35,7 @@ subprojects = [
   ['gstreamer', {}],
   ['gst-plugins-base', {}],
   ['gst-plugins-good', {}],
+  ['libnice', { 'option': get_option('libnice'), 'match_gst_version': false}],
   ['gst-plugins-bad', { 'option': get_option('bad') }],
   ['gst-plugins-ugly', { 'option': get_option('ugly') }],
   ['gst-libav', { 'option': get_option('libav') }],
@@ -45,7 +46,7 @@ subprojects = [
   ['gstreamer-vaapi', { 'option': get_option('vaapi') }],
   ['gst-omx', { 'option': get_option('omx'), }],
   ['gstreamer-sharp', { 'option': get_option('sharp') }],
-  ['pygobject', { 'option': get_option('python') }],
+  ['pygobject', { 'option': get_option('python'), 'match_gst_version': false }],
   ['gst-python', { 'option': get_option('python') }],
 ]
 
@@ -69,7 +70,14 @@ foreach sp : subprojects
   project_name = sp[0]
   build_infos = sp[1]
   is_required = build_infos.get('option', true)
-  subproj = subproject(project_name, version: gst_version, required: is_required)
+  match_gst_version = build_infos.get('match_gst_version', true)
+
+  if match_gst_version
+    subproj = subproject(project_name, version: gst_version, required: is_required)
+  else
+    subproj = subproject(project_name, required: is_required)
+  endif
+
   if subproj.found()
     subprojects_names += [project_name]
     cmdres = run_command(python3, '-c', symlink.format(project_name, meson.current_source_dir()))
