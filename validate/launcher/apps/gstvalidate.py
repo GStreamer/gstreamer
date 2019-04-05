@@ -864,8 +864,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
                 self.add_test(test)
 
         if not self.tests and not uris and not self.options.wanted_tests:
-            printc(
-                "No valid uris present in the path. Check if media files and info files exist", Colors.FAIL)
+            self.info("No valid uris present in the path. Check if media files and info files exist")
 
         return self.tests
 
