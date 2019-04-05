@@ -591,6 +591,63 @@ def pairwise(iterable):
     next(b, None)
     return zip(a, b)
 
+class MapInfo:
+    def __init__(self):
+        self.memory = None
+        self.flags = Gst.MapFlags(0)
+        self.size = 0
+        self.maxsize = 0
+        self.data = None
+        self.user_data = None
+        self.__parent__ = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.__parent__.unmap(self)
+
+__all__.append("MapInfo")
+
+class Buffer(Gst.Buffer):
+
+    def map_range(self, idx, length, flags):
+        mapinfo = MapInfo() 
+        if (_gi_gst.buffer_override_map_range(self, mapinfo, idx, length, int(flags))):
+            mapinfo.__parent__ = self
+            return (mapinfo)
+        raise Exception('MappingError','Buffer mapping was not successfull')
+        return None
+
+    def map(self, flags):
+        mapinfo = MapInfo()
+        if (_gi_gst.buffer_override_map(self, mapinfo, int(flags))):
+            mapinfo.__parent__ = self
+            return (mapinfo)
+        raise Exception('MappingError','Buffer mapping was not successfull')
+        return None
+
+    def unmap(self, mapinfo):
+        _gi_gst.buffer_override_unmap(self, mapinfo)
+
+Buffer = override(Buffer)
+__all__.append('Buffer')
+
+class Memory(Gst.Memory):
+
+    def map(self, flags):
+        mapinfo = MapInfo()
+        if (_gi_gst.memory_override_map(self, mapinfo, int(flags))):
+            mapinfo.__parent__ = self
+            return (mapinfo)
+        raise Exception('MappingError','Memory mapping was not successfull')
+        return None
+
+    def unmap(self, mapinfo):
+        _gi_gst.memory_override_unmap(self, mapinfo)
+
+Memory = override(Memory)
+__all__.append('Memory')
 
 def TIME_ARGS(time):
     if time == Gst.CLOCK_TIME_NONE:
