@@ -51,6 +51,11 @@ try:
 except ImportError:
     import xml.etree.cElementTree as ET
 
+try:
+    import mdv
+except ImportError:
+    mdv = None
+
 from .vfb_server import get_virual_frame_buffer_server
 from .httpserver import HTTPServer
 from .utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT, GST_SECOND, \
@@ -229,7 +234,7 @@ class Test(Loggable):
         if not self.options.redirect_logs:
             self.out.flush()
             for logfile in self.extra_logfiles:
-                self.out.write('\n\n**%s**:\n\n```\n%s\n```\n' % (
+                self.out.write('\n\n## %s:\n\n```\n%s\n```\n' % (
                     os.path.basename(logfile), self.get_extra_log_content(logfile))
                 )
             self.out.flush()
@@ -294,7 +299,7 @@ class Test(Loggable):
         if not stack_trace:
             return
 
-        info = "\n\n**Stack trace**:\n\n```\n%s\n```" % stack_trace
+        info = "\n\n## Stack trace\n\n```\n%s\n```" % stack_trace
         if self.options.redirect_logs:
             print(info)
             return
@@ -307,7 +312,7 @@ class Test(Loggable):
 
     def add_known_issue_information(self):
         if self.expected_issues:
-            info = "\n\n**Already known issues**:\n\n``` python\n%s\n```\n\n" % (
+            info = "\n\n## Already known issues\n\n``` python\n%s\n```\n\n" % (
                 json.dumps(self.expected_issues)
             )
         else:
@@ -321,8 +326,7 @@ class Test(Loggable):
             print(info)
             return
 
-        with open(self.logfile, 'a') as f:
-            f.write(info)
+        self.out.write(info)
 
     def set_result(self, result, message="", error=""):
 
@@ -594,10 +598,10 @@ class Test(Loggable):
             self.command = self.use_valgrind(self.command, self.proc_env)
 
         if not self.options.redirect_logs:
-            self.out.write("**Test name**: `%s`\n\n"
-                           "**Command**:\n\n``` bash\n%s\n```\n\n" % (
+            self.out.write("# `%s`\n\n"
+                           "## Command\n\n``` bash\n%s\n```\n\n" % (
                                self.classname, self.get_command_repr()))
-            self.out.write("**%s logs**:\n\n``` log\n\n" % self.application)
+            self.out.write("## %s output\n\n``` \n\n" % os.path.basename(self.application))
             self.out.flush()
         else:
             message = "Launching: %s%s\n" \
@@ -613,12 +617,13 @@ class Test(Loggable):
         self.start_ts = time.time()
 
     def _dump_log_file(self, logfile):
-        message = "> Dumping %s\n>" % logfile
-        printc(message)
-
         with open(logfile, 'r') as fin:
-            for line in fin.readlines():
-                print('> ' + line, end='')
+            printc(self.get_logfile_repr())
+            if mdv and utils.supports_ansi_colors():
+                printc(mdv.main(fin.read()))
+            else:
+                for line in fin.readlines():
+                    print('> ' + line, end='')
 
     def _dump_log_files(self):
         self._dump_log_file(self.logfile)
@@ -1223,8 +1228,8 @@ class GstValidateEncodingTestInterface(object):
 
         command = [GstValidateBaseTestManager.COMMAND] + \
             shlex.split(pipeline_desc)
-        msg = "**Running IQA tests on results of**: " \
-            + "%s\n**Command**: \n```\n%s\n```\n" % (
+        msg = "## Running IQA tests on results of: " \
+            + "%s\n### Command: \n```\n%s\n```\n" % (
                 self.classname, ' '.join(command))
         if not self.options.redirect_logs:
             self.out.write(msg)

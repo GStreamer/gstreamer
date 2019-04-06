@@ -462,7 +462,8 @@ class LauncherConfig(Loggable):
                             " Note that 0 will enable all tests", type=int),
         parser.add_argument("--dump-on-failure", dest="dump_on_failure",
                             action="store_true", default=False,
-                            help="Dump logs to stdout when a test fails")
+                            help="Dump logs to stdout when a test fails."
+                            " Note that mdv is used to enhance output if avalaible, install with `pip install mdv`.")
         parser.add_argument("-c", "--config", dest="config",
                             help="This is DEPRECATED, prefer using the testsuite format"
                             " to configure testsuites")
