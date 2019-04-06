@@ -200,7 +200,6 @@ gst_msdk_context_open (GstMsdkContext * context, gboolean hardware,
 
 failed:
   msdk_close_session (priv->session);
-  gst_object_unref (context);
   return FALSE;
 }
 
