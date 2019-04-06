@@ -1165,6 +1165,7 @@ gst_ass_render_chain_video (GstPad * pad, GstObject * parent,
   gboolean in_seg = FALSE;
   guint64 start, stop, clip_start = 0, clip_stop = 0;
   ASS_Image *ass_image;
+  guint n = 0;
 
   if (gst_pad_check_reconfigure (render->srcpad)) {
     if (!gst_ass_render_negotiate (render, NULL)) {
@@ -1253,7 +1254,15 @@ wait_for_text_buf:
           gst_segment_to_running_time (&render->video_segment, GST_FORMAT_TIME,
           stop);
 
+      GST_LOG_OBJECT (render, "V : %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (vid_running_time),
+          GST_TIME_ARGS (vid_running_time_end));
+
+      if (subtitle_pending == NULL)
+        GST_LOG_OBJECT (render, "T : no pending subtitles");
+
       while (subtitle_pending != NULL) {
+        ++n;
 
         /* if the text buffer isn't stamped right, pop it off the
          * queue and display it for the current video frame only */
@@ -1281,12 +1290,9 @@ wait_for_text_buf:
             gst_segment_to_running_time (&render->subtitle_segment,
             GST_FORMAT_TIME, text_end);
 
-        GST_LOG_OBJECT (render, "T: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (text_running_time),
+        GST_LOG_OBJECT (render, "T%u: %" GST_TIME_FORMAT " - "
+            "%" GST_TIME_FORMAT, n, GST_TIME_ARGS (text_running_time),
             GST_TIME_ARGS (text_running_time_end));
-        GST_LOG_OBJECT (render, "V: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (vid_running_time),
-            GST_TIME_ARGS (vid_running_time_end));
 
         /* Text too old */
         if (text_running_time_end <= vid_running_time) {
