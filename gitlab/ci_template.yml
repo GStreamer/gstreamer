@@ -270,6 +270,7 @@ check fedora:
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-examples"
+      - $CI_PROJECT_NAME == "gst-omx"
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
@@ -278,6 +279,10 @@ integration testsuites fedora:
   variables:
     EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures"
     TEST_SUITE: "validate ges"
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "gst-omx"
+      - $CI_PROJECT_NAME == "gstreamer-vaapi"
 
 # Valgrind
 .valgrind fedora x86_64:
@@ -558,6 +563,7 @@ build cerbero fedora x86_64:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-build"
+      - $CI_PROJECT_NAME == "gst-omx"
 
 
 #
@@ -590,6 +596,7 @@ build cerbero android universal:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-build"
+      - $CI_PROJECT_NAME == "gst-omx"
 
 #
 # Cerbero Cross Windows builds
@@ -619,6 +626,7 @@ build cerbero cross win32:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-build"
+      - $CI_PROJECT_NAME == "gst-omx"
 
 cerbero deps windows x86_64:
   extends: '.cerbero deps'
@@ -645,6 +653,7 @@ build cerbero cross win64:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-build"
+      - $CI_PROJECT_NAME == "gst-omx"
 
 #
 # Build an Android App using the android binaries
@@ -696,6 +705,7 @@ android universal examples:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-build"
+      - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
 
 cerbero android universal examples:
