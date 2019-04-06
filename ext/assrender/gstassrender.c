@@ -1713,7 +1713,6 @@ gst_ass_render_query_video (GstPad * pad, GstObject * parent, GstQuery * query)
 static gboolean
 gst_ass_render_event_text (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  gint i;
   gboolean ret = FALSE;
   GstAssRender *render = GST_ASS_RENDER (parent);
 
@@ -1784,6 +1783,11 @@ gst_ass_render_event_text (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     case GST_EVENT_FLUSH_STOP:
+      g_mutex_lock (&render->ass_mutex);
+      if (render->ass_track) {
+        ass_flush_events (render->ass_track);
+      }
+      g_mutex_unlock (&render->ass_mutex);
       GST_ASS_RENDER_LOCK (render);
       GST_INFO_OBJECT (render, "text flush stop");
       render->subtitle_flushing = FALSE;
@@ -1796,17 +1800,6 @@ gst_ass_render_event_text (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (render, "text flush start");
-      g_mutex_lock (&render->ass_mutex);
-      if (render->ass_track) {
-        /* delete any events on the ass_track */
-        for (i = 0; i < render->ass_track->n_events; i++) {
-          GST_DEBUG_OBJECT (render, "deleted event with eid %i", i);
-          ass_free_event (render->ass_track, i);
-        }
-        render->ass_track->n_events = 0;
-        GST_DEBUG_OBJECT (render, "done flushing");
-      }
-      g_mutex_unlock (&render->ass_mutex);
       GST_ASS_RENDER_LOCK (render);
       render->subtitle_flushing = TRUE;
       GST_ASS_RENDER_BROADCAST (render);
