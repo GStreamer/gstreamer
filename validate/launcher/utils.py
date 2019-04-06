@@ -347,7 +347,10 @@ def get_gst_build_valgrind_suppressions():
             "gst-devtools/validate/data/gstvalidate.supp",
             "libnice/tests/libnice.supp",
             "libsoup/tests/libsoup.supp",
-            "glib/glib.supp"]:
+            "glib/glib.supp",
+            "gst-python/testsuite/gstpython.supp",
+            "gst-python/testsuite/python.supp",
+                             ]:
         suppression = os.path.join(config.SRCDIR, "subprojects", suppression_path)
         if os.path.exists(suppression):
             get_gst_build_valgrind_suppressions.data.append(suppression)
