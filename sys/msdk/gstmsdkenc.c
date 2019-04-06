@@ -1422,9 +1422,9 @@ gst_msdkenc_start (GstVideoEncoder * encoder)
       gst_msdk_context_add_job_type (thiz->context, GST_MSDK_JOB_ENCODER);
     }
   } else {
-    gst_msdk_context_ensure_context (GST_ELEMENT_CAST (thiz), thiz->hardware,
-        GST_MSDK_JOB_ENCODER);
-
+    if (!gst_msdk_context_ensure_context (GST_ELEMENT_CAST (thiz),
+            thiz->hardware, GST_MSDK_JOB_ENCODER))
+      return FALSE;
     GST_INFO_OBJECT (thiz, "Creating new context %" GST_PTR_FORMAT,
         thiz->context);
   }
