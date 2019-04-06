@@ -285,6 +285,10 @@ class GstCheckTestsManager(MesonTestsManager):
 
         if self.options.valgrind:
             child_env['CK_TIMEOUT_MULTIPLIER'] = str(VALGRIND_TIMEOUT_FACTOR)
+
+        if self.options.gdb:
+            child_env['CK_FORK'] = "no"
+
         if self.options.gst_check_leak_trace_testnames:
             if re.findall(self.options.gst_check_leak_trace_testnames, testname):
                 leak_tracer = "leaks"
