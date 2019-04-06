@@ -501,7 +501,7 @@ def check_bugs_resolution(bugs_definitions):
                 project_id = components[0] + '%2F' + components[1]
                 issue_id = components[3]
 
-                gitlab_url: str = "https://%s/api/v4/projects/%s/issues/%s" % (url.hostname, project_id, issue_id)
+                gitlab_url = "https://%s/api/v4/projects/%s/issues/%s" % (url.hostname, project_id, issue_id)
                 if gitlab_url in ALL_GITLAB_ISSUES:
                     continue
                 gitlab_issues[gitlab_url].append(regex)
