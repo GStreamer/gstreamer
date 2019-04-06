@@ -1275,10 +1275,10 @@ wait_for_text_buf:
 
         /* If timestamp and duration are valid */
         text_running_time =
-            gst_segment_to_running_time (&render->video_segment,
+            gst_segment_to_running_time (&render->subtitle_segment,
             GST_FORMAT_TIME, text_start);
         text_running_time_end =
-            gst_segment_to_running_time (&render->video_segment,
+            gst_segment_to_running_time (&render->subtitle_segment,
             GST_FORMAT_TIME, text_end);
 
         GST_LOG_OBJECT (render, "T: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
