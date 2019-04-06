@@ -224,6 +224,7 @@ class LauncherConfig(Loggable):
         self.sync_all = False
         self.check_bugs_status = False
         self.retry_on_failures = False
+        self.html = False
 
     def cleanup(self):
         """
@@ -324,6 +325,14 @@ class LauncherConfig(Loggable):
             except subprocess.CalledProcessError:
                 printc("Want to use valgrind, but not available on the system",
                        Colors.FAIL)
+                return False
+
+        if self.html:
+            try:
+                import commonmark
+            except ImportError:
+                printc("You want to output html logs but commonmark not found. Install it"
+                       " with `pip install commonmark` and try again.", Colors.FAIL)
                 return False
 
         return True
@@ -483,6 +492,8 @@ class LauncherConfig(Loggable):
                             " at the same time")
         parser.add_argument('--retry-on-failures', dest="retry_on_failures", action="store_true",
                             help="Re-try tests that produce unexpected results")
+        parser.add_argument('--html', dest="html", action="store_true",
+                            help="Write logs as html")
         dir_group = parser.add_argument_group(
             "Directories and files to be used by the launcher")
         dir_group.add_argument("-M", "--main-dir", dest="main_dir",

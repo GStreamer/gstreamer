@@ -125,6 +125,7 @@ class Test(Loggable):
         self.number = ""
         self.workdir = workdir
         self.allow_flakiness = False
+        self.html_log = None
 
         self.clean()
 
@@ -233,6 +234,18 @@ class Test(Loggable):
                 )
             self.out.flush()
             self.out.close()
+
+        if self.options.html:
+            self.html_log = os.path.splitext(self.logfile)[0] + '.html'
+            import commonmark
+            parser = commonmark.Parser()
+            with open(self.logfile) as f:
+                ast = parser.parse(f.read())
+
+            renderer = commonmark.HtmlRenderer()
+            html = renderer.render(ast)
+            with open(self.html_log, 'w') as f:
+                f.write(html)
 
         self.out = None
 
@@ -542,7 +555,7 @@ class Test(Loggable):
 
     def get_logfile_repr(self):
         if not self.options.redirect_logs:
-            return "\n    Log: %s" % self.logfile
+            return "\n    Log: %s" % (self.html_log if self.html_log else self.logfile)
 
         return ""
 
@@ -628,6 +641,7 @@ class Test(Loggable):
         if self.options.gdb:
             signal.signal(signal.SIGINT, self.previous_sigint_handler)
 
+        self.finalize_logfiles()
         message = None
         end = "\n"
         if self.result != Result.PASSED:
@@ -643,7 +657,6 @@ class Test(Loggable):
         if message is not None:
             printc(message, color=utils.get_color_for_result(
                 self.result), end=end)
-        self.finalize_logfiles()
 
         if self.options.dump_on_failure:
             if self.result is not Result.PASSED:
