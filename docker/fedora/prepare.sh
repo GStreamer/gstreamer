@@ -151,7 +151,7 @@ dnf debuginfo-install -y gtk3 \
     zip \
     zlib
 
-pip3 install meson==0.49.2
+pip3 install meson==0.49.2 git+https://github.com/axiros/terminal_markdown_viewer
 
 # Install the dependencies of gstreamer
 dnf builddep -y gstreamer1 \
