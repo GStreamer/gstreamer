@@ -96,8 +96,7 @@ typedef enum {
   GST_VIDEO_ANCILLARY_DID16_S334_EIA_608	= 0x6102,
 } GstVideoAncillaryDID16;
 
-/**
- *  Active Format Description (AFD) support
+/* Active Format Description (AFD) support
  *
  * A/53 ATSC Digital Television Standard
  *
@@ -203,12 +202,9 @@ GST_VIDEO_API
 
 
 
-/**
- *  Bar data support
- *
+/* Bar data support
  *
  * A/53 ATSC Digital Television Standard
- *
  *
  * Bar data should be included in video user data
  * whenever the rectangular picture area containing useful information
@@ -224,11 +220,10 @@ GST_VIDEO_API
 
 /**
  * GstVideoBarData
- *
- * @top_bar_flag : flag indicating presence of top bar field
- * @bottom_bar_flag : flag indicating presence of bottom bar field
- * @left_bar_flag : flag indicating presence of left bar field
- * @right_bar_flag :  flag indicating presence of right bar field
+ * @top_bar_flag: flag indicating presence of top bar field
+ * @bottom_bar_flag: flag indicating presence of bottom bar field
+ * @left_bar_flag: flag indicating presence of left bar field
+ * @right_bar_flag:  flag indicating presence of right bar field
  * @top_bar: last line of a horizontal letterbox bar area at top of
  * 			reconstructed frame
  * @bottom_bar: first line of a horizontal letterbox bar area at
