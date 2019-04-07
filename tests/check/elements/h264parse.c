@@ -23,7 +23,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <gst/check/gstcheck.h>
+#include <gst/check/check.h>
+#include <gst/video/video.h>
 #include "parser.h"
 
 #define SRC_CAPS_TMPL   "video/x-h264, parsed=(boolean)false"
@@ -397,7 +398,6 @@ GST_START_TEST (test_sink_caps_reordering)
 
 GST_END_TEST;
 
-
 static Suite *
 h264parse_suite (void)
 {
@@ -516,6 +516,55 @@ h264parse_packetized_suite (void)
   return s;
 }
 
+GST_START_TEST (test_parse_sei_closedcaptions)
+{
+  GstVideoCaptionMeta *cc;
+  GstHarness *h;
+  GstBuffer *buf;
+
+  const guint8 cc_sei_plus_idr[] = {
+    0x00, 0x00, 0x00, 0x4b, 0x06, 0x04, 0x47, 0xb5, 0x00, 0x31, 0x47, 0x41,
+    0x39, 0x34, 0x03, 0xd4,
+    0xff, 0xfc, 0x80, 0x80, 0xfd, 0x80, 0x80, 0xfa, 0x00, 0x00, 0xfa, 0x00,
+    0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0xfa,
+    0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa,
+    0x00, 0x00, 0xfa, 0x00,
+    0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00,
+    0x00, 0xff, 0x80,
+    /* IDR frame (doesn't necessarily match caps) */
+    0x00, 0x00, 0x00, 0x14, 0x65, 0x88, 0x84, 0x00,
+    0x10, 0xff, 0xfe, 0xf6, 0xf0, 0xfe, 0x05, 0x36,
+    0x56, 0x04, 0x50, 0x96, 0x7b, 0x3f, 0x53, 0xe1
+  };
+  const gsize cc_sei_plus_idr_size = sizeof (cc_sei_plus_idr);
+
+  h = gst_harness_new ("h264parse");
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h264, stream-format=(string)avc, alignment=(string)au,"
+      " codec_data=(buffer)014d4015ffe10017674d4015eca4bf2e0220000003002ee6b28001e2c5b2c001000468ebecb2,"
+      " width=(int)32, height=(int)24, framerate=(fraction)30/1,"
+      " pixel-aspect-ratio=(fraction)1/1");
+
+  buf = gst_buffer_new_and_alloc (cc_sei_plus_idr_size);
+  gst_buffer_fill (buf, 0, cc_sei_plus_idr, cc_sei_plus_idr_size);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  buf = gst_harness_pull (h);
+  cc = gst_buffer_get_video_caption_meta (buf);
+  fail_unless (cc != NULL);
+  fail_unless_equals_int (cc->caption_type, GST_VIDEO_CAPTION_TYPE_CEA708_RAW);
+  fail_unless_equals_int (cc->size, 60);
+  fail_unless_equals_int (cc->data[0], 0xfc);
+  fail_unless_equals_int (cc->data[3], 0xfd);
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
 
 /*
  * TODO:
@@ -613,6 +662,15 @@ main (int argc, char **argv)
 
   s = h264parse_packetized_suite ();
   nf += gst_check_run_suite (s, ctx_suite, __FILE__ "_packetized.c");
+
+  {
+    TCase *tc_chain = tcase_create ("general");
+
+    s = suite_create ("h264parse");
+    suite_add_tcase (s, tc_chain);
+    tcase_add_test (tc_chain, test_parse_sei_closedcaptions);
+    nf += gst_check_run_suite (s, "h264parse", __FILE__);
+  }
 
   return nf;
 }

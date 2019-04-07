@@ -350,7 +350,10 @@ elements_mpeg4videoparse_LDADD = libparser.la $(LDADD)
 
 elements_h263parse_LDADD = libparser.la $(LDADD)
 
-elements_h264parse_LDADD = libparser.la $(LDADD)
+elements_h264parse_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+elements_h264parse_LDADD = libparser.la \
+	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(LDADD)
 
 elements_pcapparse_LDADD = libparser.la $(LDADD)
 
