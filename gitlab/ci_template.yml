@@ -283,6 +283,7 @@ integration testsuites fedora:
     variables:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
+      - $CI_PROJECT_NAME == "cerbero"
 
 # Valgrind
 .valgrind fedora x86_64:
