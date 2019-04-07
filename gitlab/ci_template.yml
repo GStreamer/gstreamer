@@ -230,6 +230,7 @@ build nodebug fedora x86_64:
     - >
       ./gst-uninstalled.py
       gst-validate-launcher ${TEST_SUITE}
+      --dump-on-failure
       -fs
       --mute
       --shuffle
