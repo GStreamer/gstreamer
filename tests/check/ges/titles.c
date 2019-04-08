@@ -148,18 +148,11 @@ GST_START_TEST (test_title_source_in_layer)
   track_element =
       ges_clip_find_track_element (GES_CLIP (source), v, GES_TYPE_TITLE_SOURCE);
 
-  /* Check the text is still the same */
-  assert_equals_string (ges_title_source_get_text (GES_TITLE_SOURCE
-          (track_element)), "some text");
-
   /* test the font-desc property */
   g_object_set (source, "font-desc", (gchar *) "sans 72", NULL);
   g_object_get (source, "font-desc", &text, NULL);
   assert_equals_string ("sans 72", text);
   g_free (text);
-
-  assert_equals_string ("sans 72",
-      ges_title_source_get_font_desc (GES_TITLE_SOURCE (track_element)));
 
   /* test halign and valign */
   g_object_set (source, "halignment", (gint)

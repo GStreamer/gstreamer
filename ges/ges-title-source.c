@@ -450,7 +450,10 @@ ges_title_source_set_ypos (GESTitleSource * self, gdouble position)
  *
  * Get the text currently set on the @source.
  *
- * Returns: (transfer none): The text currently set on the @source.
+ * Returns: (transfer full): The text currently set on the @source.
+ * 
+ * Deprecated: 1.16: Use ges_timeline_element_get_child_property instead
+ * (this actually returns a newly allocated string)
  */
 const gchar *
 ges_title_source_get_text (GESTitleSource * source)
@@ -469,8 +472,11 @@ ges_title_source_get_text (GESTitleSource * source)
  *
  * Get the pango font description used by @source.
  *
- * Returns: (transfer none): The pango font description used by this
+ * Returns: (transfer full): The pango font description used by this
  * @source.
+ * 
+ * Deprecated: 1.16: Use ges_timeline_element_get_child_property instead
+ * (this actually returns a newly allocated string)
  */
 const gchar *
 ges_title_source_get_font_desc (GESTitleSource * source)
