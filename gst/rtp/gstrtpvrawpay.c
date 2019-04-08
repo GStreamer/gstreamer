@@ -282,6 +282,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   gboolean use_buffer_lists;
   GstBufferList *list = NULL;
   GstRTPBuffer rtp = { NULL, };
+  gboolean discont;
 
   rtpvrawpay = GST_RTP_VRAW_PAY (payload);
 
@@ -289,6 +290,8 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
+
+  discont = GST_BUFFER_IS_DISCONT (buffer);
 
   GST_LOG_OBJECT (rtpvrawpay, "new frame of %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (buffer));
@@ -351,6 +354,12 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
       /* get the max allowed payload length size, we try to fill the complete MTU */
       left = gst_rtp_buffer_calc_payload_len (mtu, 0, 0);
       out = gst_rtp_buffer_new_allocate (left, 0, 0);
+
+      if (discont) {
+        GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DISCONT);
+        /* Only the first outputted buffer has the DISCONT flag */
+        discont = FALSE;
+      }
 
       if (field == 0) {
         GST_BUFFER_PTS (out) = GST_BUFFER_PTS (buffer);
