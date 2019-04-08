@@ -133,7 +133,12 @@ _vk_buffer_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   mem = g_new0 (GstVulkanBufferMemory, 1);
   vkGetBufferMemoryRequirements (device->device, buffer, &mem->requirements);
 
-  /* XXX: assumes alignment is a power of 2 */
+  if ((mem->requirements.alignment & (mem->requirements.alignment - 1)) != 0) {
+    g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+        "Vulkan implementation requires unsupported non-power-of 2 memory alignment");
+    goto error;
+  }
+
   params.align = mem->requirements.alignment - 1;
   _vk_buffer_mem_init (mem, allocator, parent, device, usage, &params,
       mem->requirements.size, user_data, notify);

@@ -29,6 +29,12 @@ G_BEGIN_DECLS
 #define GST_VULKAN_ERROR (gst_vulkan_error_quark ())
 GQuark gst_vulkan_error_quark (void);
 
+/* custom error values */
+typedef enum
+{
+  GST_VULKAN_FAILED = 0,
+} GstVulkanError;
+
 /* only fills error iff error != NULL and result < 0 */
 VkResult gst_vulkan_error_to_g_error (VkResult result, GError ** error, const char * format, ...) G_GNUC_PRINTF (3, 4);
 
