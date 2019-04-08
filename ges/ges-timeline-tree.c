@@ -1161,6 +1161,7 @@ timeline_tree_roll (GNode * root, GESTimelineElement * element,
 
 done:
   timeline_update_duration (root->data);
+  g_list_free (data.neighbours);
   return res;
 
 error:
