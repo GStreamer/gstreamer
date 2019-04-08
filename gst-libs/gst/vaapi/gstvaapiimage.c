@@ -77,6 +77,7 @@ vaapi_image_is_linear (const VAImage * va_image)
       break;
     case VA_FOURCC ('Y', 'U', 'Y', '2'):
     case VA_FOURCC ('U', 'Y', 'V', 'Y'):
+    case VA_FOURCC ('R', 'G', '1', '6'):
       data_size = 2 * width * height;
       break;
     case VA_FOURCC ('Y', '8', '0', '0'):

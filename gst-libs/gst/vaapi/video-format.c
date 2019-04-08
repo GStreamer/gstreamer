@@ -86,6 +86,8 @@ static const GstVideoFormatMap gst_vaapi_video_formats[] = {
       24, 0x00ff0000, 0x0000ff00, 0x000000ff, 0x00000000),
   DEF_RGB (RGBx, ('R', 'G', 'B', 'X'), 32,
       24, 0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000),
+  DEF_RGB (RGB16, ('R', 'G', '1', '6'), 16,
+      16, 0x0000f800, 0x000007e0, 0x0000001f, 0x00000000),
   {0,}
 };
 /* *INDENT-ON* */
