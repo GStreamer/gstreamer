@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "vkswapper.h"
+#include "vktrash.h"
 
 #define GST_CAT_DEFAULT gst_vulkan_swapper_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);

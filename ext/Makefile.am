@@ -370,12 +370,6 @@ else
 DTLS_DIR=
 endif
 
-if USE_VULKAN
-VULKAN_DIR=vulkan
-else
-VULKAN_DIR=
-endif
-
 if USE_WEBRTCDSP
 WEBRTCDSP_DIR=webrtcdsp
 else
@@ -464,7 +458,6 @@ SUBDIRS=\
 	$(WEBP_DIR) \
 	$(X265_DIR) \
 	$(DTLS_DIR) \
-	$(VULKAN_DIR) \
 	$(WEBRTCDSP_DIR) \
 	$(TTML_DIR) \
 	$(WEBRTC_DIR) \
@@ -531,7 +524,6 @@ DIST_SUBDIRS = \
 	webp \
 	x265 \
 	dtls \
-	vulkan \
 	webrtcdsp \
 	ttml \
 	webrtc \

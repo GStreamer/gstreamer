@@ -37,6 +37,11 @@ pkg_libs = [
 #    pkg_libs += 'wayland'
 #endif
 
+if gstvulkan_dep.found()
+  pkgconf.set('vulkanlibdir', join_paths(meson.build_root(), gstvulkan.outdir()))
+  pkg_libs += 'vulkan'
+endif
+
 foreach p : pkg_libs
   infile = 'gstreamer-@0@.pc.in'.format(p)
   outfile = 'gstreamer-@0@-@1@.pc'.format(p, api_version)

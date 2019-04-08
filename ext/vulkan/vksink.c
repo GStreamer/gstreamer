@@ -33,7 +33,7 @@
 //#include <gst/video/videooverlay.h>
 
 #include "vksink.h"
-#include "vkdevice.h"
+#include "vkswapper.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_sink);
 #define GST_CAT_DEFAULT gst_debug_vulkan_sink

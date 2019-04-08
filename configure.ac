@@ -532,55 +532,6 @@ if test "x$HAVE_WINSOCK2_H" = "xyes"; then
   AC_SUBST(WINSOCK2_LIBS)
 fi
 
-dnl Vulkan
-PKG_CHECK_MODULES(XCB, xcb >= 1.10, GST_VULKAN_HAVE_WINDOW_XCB=1, GST_VULKAN_HAVE_WINDOW_XCB=0)
-AM_CONDITIONAL(USE_XCB, test "x$GST_VULKAN_HAVE_WINDOW_XCB" = "x1")
-
-PKG_CHECK_MODULES(VULKAN_WAYLAND, wayland-client >= 1.4, GST_VULKAN_HAVE_WINDOW_WAYLAND=1, GST_VULKAN_HAVE_WINDOW_WAYLAND=0)
-AM_CONDITIONAL(USE_WAYLAND, test "x$GST_VULKAN_HAVE_WINDOW_WAYLAND" = "x1")
-VULKAN_CONFIG_DEFINES="
-#define GST_VULKAN_HAVE_WINDOW_XCB $GST_VULKAN_HAVE_WINDOW_XCB
-#define GST_VULKAN_HAVE_WINDOW_WAYLAND $GST_VULKAN_HAVE_WINDOW_WAYLAND"
-
-AC_CONFIG_COMMANDS([ext/vulkan/vkconfig.h], [
-	outfile=vkconfig.h-tmp
-	cat > $outfile <<\_______EOF
-/* vkconfig.h
- *
- * This is a generated file.  Please modify `configure.ac'
- */
-
-#ifndef __GST_VULKAN_CONFIG_H__
-#define __GST_VULKAN_CONFIG_H__
-
-#include <gst/gst.h>
-
-G_BEGIN_DECLS
-
-_______EOF
-
-	cat >>$outfile <<_______EOF
-$vulkan_config_defines
-_______EOF
-
-	cat >>$outfile <<_______EOF
-
-G_END_DECLS
-
-#endif  /* __GST_VULKAN_CONFIG_H__ */
-_______EOF
-
-
-	if cmp -s $outfile ext/vulkan/vkconfig.h; then
-          AC_MSG_NOTICE([ext/vulkan/vkconfig.h is unchanged])
-	  rm -f $outfile
-	else
-	  mv $outfile ext/vulkan/vkconfig.h
-	fi
-],[
-vulkan_config_defines='$VULKAN_CONFIG_DEFINES'
-])
-
 dnl *** sys plug-ins ***
 
 dnl DirectSound
@@ -1974,23 +1925,6 @@ AG_GST_CHECK_FEATURE(GL, [gl elements], gl, [
 AM_CONDITIONAL(USE_GL, test "x$HAVE_GL" = "xyes")
 AM_CONDITIONAL(USE_OPENGL, test "x$GST_GL_HAVE_API_GL" = "x1")
 
-dnl *** Vulkan ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_VULKAN, true)
-AG_GST_CHECK_FEATURE(VULKAN, [Vulkan elements], vulkan, [
-  AC_CHECK_HEADER(vulkan/vulkan.h, [
-    AC_CHECK_LIB(vulkan, vkCreateDevice, [
-      VULKAN_LIBS="-lvulkan"
-      AC_SUBST(VULKAN_LIBS)
-      if test "x$GST_VULKAN_HAVE_WINDOW_XCB" = "x1"; then
-        HAVE_VULKAN="yes"
-      fi
-      if test "x$GST_VULKAN_HAVE_WINDOW_WAYLAND" = "x1"; then
-        HAVE_VULKAN="yes"
-      fi
-    ], [])
-  ], [])
-])
-
 dnl *** teletextdec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TELETEXTDEC, true)
 AG_GST_CHECK_FEATURE(TELETEXTDEC, [Teletext decoder], teletextdec, [
@@ -2397,7 +2331,6 @@ AM_CONDITIONAL(USE_WEBRTCDSP, false)
 AM_CONDITIONAL(USE_OPENH264, false)
 AM_CONDITIONAL(USE_X265, false)
 AM_CONDITIONAL(USE_DTLS, false)
-AM_CONDITIONAL(USE_VULKAN, false)
 AM_CONDITIONAL(USE_TTML, false)
 AM_CONDITIONAL(USE_SCTP, false)
 
@@ -2684,9 +2617,6 @@ ext/srtp/Makefile
 ext/teletextdec/Makefile
 ext/gme/Makefile
 ext/wildmidi/Makefile
-ext/vulkan/Makefile
-ext/vulkan/xcb/Makefile
-ext/vulkan/wayland/Makefile
 ext/webp/Makefile
 ext/x265/Makefile
 ext/zbar/Makefile

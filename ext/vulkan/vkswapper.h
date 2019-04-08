@@ -23,7 +23,7 @@
 
 #include <gst/video/video.h>
 
-#include <vk.h>
+#include <gst/vulkan/vulkan.h>
 
 G_BEGIN_DECLS
 
@@ -36,6 +36,10 @@ G_BEGIN_DECLS
 GType gst_vulkan_swapper_get_type       (void);
 
 #define GST_VULKAN_SWAPPER_VIDEO_FORMATS " { RGBA, BGRA, RGB, BGR } "
+
+typedef struct _GstVulkanSwapper GstVulkanSwapper;
+typedef struct _GstVulkanSwapperClass GstVulkanSwapperClass;
+typedef struct _GstVulkanSwapperPrivate GstVulkanSwapperPrivate;
 
 struct _GstVulkanSwapper
 {

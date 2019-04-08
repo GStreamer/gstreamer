@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <vk.h>
+#include <gst/vulkan/vulkan.h>
 
 G_BEGIN_DECLS
 

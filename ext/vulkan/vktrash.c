@@ -23,7 +23,6 @@
 #endif
 
 #include "vktrash.h"
-#include "vkutils_private.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_trash);
 #define GST_CAT_DEFAULT gst_debug_vulkan_trash

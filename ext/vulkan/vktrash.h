@@ -18,14 +18,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _VK_TRASH_H_
-#define _VK_TRASH_H_
+#ifndef __GST_VULKAN_TRASH_H__
+#define __GST_VULKAN_TRASH_H__
 
-#include <vk.h>
+#include <gst/vulkan/vulkan.h>
 
 G_BEGIN_DECLS
 
 typedef void (*GstVulkanTrashNotify) (GstVulkanDevice * device, gpointer user_data);
+
+typedef struct _GstVulkanTrash GstVulkanTrash;
 
 struct _GstVulkanTrash
 {
@@ -50,4 +52,4 @@ gboolean            gst_vulkan_trash_list_wait                  (GList * trash_l
 
 G_END_DECLS
 
-#endif /* _VK_INSTANCE_H_ */
+#endif /* __GST_VULKAN_TRASH_H__ */
