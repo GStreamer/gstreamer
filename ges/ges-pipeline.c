@@ -762,19 +762,17 @@ _link_track (GESPipeline * self, GESTrack * track)
   gboolean reconfigured = FALSE;
 
   pad = ges_timeline_get_pad_for_track (self->priv->timeline, track);
-  caps = gst_pad_query_caps (pad, NULL);
-
-  GST_DEBUG_OBJECT (self, "new pad %s:%s , caps:%" GST_PTR_FORMAT,
-      GST_DEBUG_PAD_NAME (pad), caps);
-
-  gst_caps_unref (caps);
-
   if (G_UNLIKELY (!pad)) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED, (NULL),
         ("Trying to link %" GST_PTR_FORMAT
             " but no pad is exposed for it.", track));
     return;
   }
+
+  caps = gst_pad_query_caps (pad, NULL);
+  GST_DEBUG_OBJECT (self, "new pad %s:%s , caps:%" GST_PTR_FORMAT,
+      GST_DEBUG_PAD_NAME (pad), caps);
+  gst_caps_unref (caps);
 
   /* Don't connect track if it's not going to be used */
   if (track->type == GES_TRACK_TYPE_VIDEO &&
@@ -795,6 +793,7 @@ _link_track (GESPipeline * self, GESTrack * track)
     chain = new_output_chain_for_track (self, track);
 
   if (chain->tee) {
+    gst_object_unref (pad);
     GST_INFO_OBJECT (self, "Chain is already built (%" GST_PTR_FORMAT ")",
         chain->encodebinpad ? chain->encodebinpad : chain->playsinkpad);
 
@@ -802,7 +801,6 @@ _link_track (GESPipeline * self, GESTrack * track)
   }
 
   chain->srcpad = pad;
-  gst_object_unref (pad);
 
   /* Adding tee */
   chain->tee = gst_element_factory_make ("tee", NULL);
@@ -923,10 +921,12 @@ _link_track (GESPipeline * self, GESTrack * track)
     self->priv->chains = g_list_append (self->priv->chains, chain);
 
   GST_DEBUG ("done");
+  gst_object_unref (pad);
   return;
 
 error:
   {
+    gst_object_unref (pad);
     if (chain->tee) {
       gst_element_set_state (chain->tee, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (self), chain->tee);
