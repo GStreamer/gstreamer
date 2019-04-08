@@ -95,6 +95,7 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   gst_caps_replace (&priv->caps, caps);
 
   /* get the size of the buffer to allocate */
+  priv->v_info.size = 0;
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
     GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&priv->v_info);
     GstVulkanImageMemory *img_mem;
@@ -102,8 +103,8 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     VkFormat vk_format;
 
     vk_format = gst_vulkan_format_from_video_format (v_format, i);
-    width = GST_VIDEO_INFO_WIDTH (&priv->v_info);
-    height = GST_VIDEO_INFO_HEIGHT (&priv->v_info);
+    width = GST_VIDEO_INFO_PLANE_STRIDE (&priv->v_info, i);
+    height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i);
 
     img_mem = (GstVulkanImageMemory *)
         gst_vulkan_image_memory_alloc (vk_pool->device, vk_format, width,
@@ -112,6 +113,8 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     priv->alloc_sizes[i] = img_mem->requirements.size;
+    priv->v_info.offset[i] = priv->v_info.size;
+    priv->v_info.size += priv->alloc_sizes[i];
 
     gst_memory_unref (GST_MEMORY_CAST (img_mem));
   }
