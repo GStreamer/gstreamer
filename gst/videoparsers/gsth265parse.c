@@ -727,6 +727,8 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
         pres = gst_h265_parser_parse_sps (nalparser, nalu, &sps, FALSE);
         if (pres != GST_H265_PARSER_OK) {
           GST_WARNING_OBJECT (h265parse, "failed to parse SPS:");
+          h265parse->state |= GST_H265_PARSE_STATE_GOT_SPS;
+          h265parse->header |= TRUE;
           return FALSE;
         }
         GST_WARNING_OBJECT (h265parse,
