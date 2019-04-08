@@ -712,6 +712,7 @@ ges_timeline_create_transition (GESTimeline * timeline,
     transition =
         ges_layer_add_asset (layer, asset, start, 0, duration,
         ges_track_element_get_track_type (next));
+    g_object_unref (asset);
   } else {
     GST_DEBUG_OBJECT (timeline,
         "Reusing already existing transition: %" GST_PTR_FORMAT, transition);
