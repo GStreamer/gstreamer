@@ -1010,7 +1010,7 @@ gst_video_time_code_meta_get_info (void)
  * Attaches #GstVideoTimeCodeMeta metadata to @buffer with the given
  * parameters.
  *
- * Returns: (transfer none): the #GstVideoTimeCodeMeta on @buffer, or
+ * Returns: (transfer none) (nullable): the #GstVideoTimeCodeMeta on @buffer, or
  * (since 1.16) %NULL if the timecode was invalid.
  *
  * Since: 1.10
