@@ -21,6 +21,10 @@
 /**
  * SECTION:element-ccextractor
  * @title: ccextractor
+ * @short_description: Extract GstVideoCaptionMeta from input stream
+ *
+ * Note: This element must be added after a pipeline's decoder, otherwise closed captions may
+ * be extracted out of order.
  *
  */
 
