@@ -360,7 +360,10 @@ gst_wl_window_is_toplevel (GstWlWindow * window)
 {
   g_return_val_if_fail (window != NULL, FALSE);
 
-  return (window->wl_shell_surface != NULL);
+  if (window->display->xdg_wm_base)
+    return (window->xdg_toplevel != NULL);
+  else
+    return (window->wl_shell_surface != NULL);
 }
 
 static void
