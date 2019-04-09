@@ -501,12 +501,17 @@ static void
 do_latency_stats (GstStructure * s)
 {
   gchar *key = NULL;
-  const gchar *src = NULL, *sink = NULL;
+  const gchar *src = NULL, *sink = NULL, *src_element = NULL,
+      *sink_element = NULL, *src_element_id = NULL, *sink_element_id = NULL;
   guint64 ts = 0, time = 0;
 
   /* Get the values from the structure */
   src = gst_structure_get_string (s, "src");
   sink = gst_structure_get_string (s, "sink");
+  src_element = gst_structure_get_string (s, "src-element");
+  sink_element = gst_structure_get_string (s, "sink-element");
+  src_element_id = gst_structure_get_string (s, "src-element-id");
+  sink_element_id = gst_structure_get_string (s, "sink-element-id");
   gst_structure_get (s, "time", G_TYPE_UINT64, &time, NULL);
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts, NULL);
 
@@ -514,7 +519,8 @@ do_latency_stats (GstStructure * s)
   last_ts = MAX (last_ts, ts);
 
   /* Get the key */
-  key = g_strjoin ("|", src, sink, NULL);
+  key = g_strdup_printf ("%s.%s.%s|%s.%s.%s", src_element_id, src_element,
+      src, sink_element_id, sink_element, sink);
 
   /* Update the latency in the table */
   update_latency_table (latencies, key, time);
@@ -528,19 +534,28 @@ do_latency_stats (GstStructure * s)
 static void
 do_element_latency_stats (GstStructure * s)
 {
-  const gchar *src = NULL;
+  gchar *key = NULL;
+  const gchar *src = NULL, *element = NULL, *element_id = NULL;
   guint64 ts = 0, time = 0;
 
   /* Get the values from the structure */
   src = gst_structure_get_string (s, "src");
+  element = gst_structure_get_string (s, "element");
+  element_id = gst_structure_get_string (s, "element-id");
   gst_structure_get (s, "time", G_TYPE_UINT64, &time, NULL);
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts, NULL);
 
   /* Update last_ts */
   last_ts = MAX (last_ts, ts);
 
+  /* Get the key */
+  key = g_strdup_printf ("%s.%s.%s", element_id, element, src);
+
   /* Update the latency in the table */
-  update_latency_table (element_latencies, src, time);
+  update_latency_table (element_latencies, key, time);
+
+  /* Clean up */
+  g_free (key);
 
   have_element_latency = TRUE;
 }
@@ -548,11 +563,12 @@ do_element_latency_stats (GstStructure * s)
 static void
 do_element_reported_latency (GstStructure * s)
 {
-  const gchar *element = NULL;
+  const gchar *element = NULL, *element_id = NULL;
   guint64 ts = 0, min = 0, max = 0;
   GstReportedLatency *rl = NULL;
 
   /* Get the values from the structure */
+  element_id = gst_structure_get_string (s, "element-id");
   element = gst_structure_get_string (s, "element");
   gst_structure_get (s, "min", G_TYPE_UINT64, &min, NULL);
   gst_structure_get (s, "max", G_TYPE_UINT64, &max, NULL);
@@ -563,7 +579,7 @@ do_element_reported_latency (GstStructure * s)
 
   /* Insert/Update the key in the table */
   rl = g_new0 (GstReportedLatency, 1);
-  rl->element = g_strdup (element);
+  rl->element = g_strdup_printf ("%s.%s", element_id, element);
   rl->ts = ts;
   rl->min = min;
   rl->max = max;
