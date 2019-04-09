@@ -298,11 +298,22 @@ install_opts (GObjectClass * gobject_class, const AVClass ** obj, guint prop_id,
         break;
       case AV_OPT_TYPE_DURATION:       /* Fall through */
       case AV_OPT_TYPE_INT64:
-        /* ffmpeg expresses all ranges with doubles, this is sad */
-        pspec = g_param_spec_int64 (name, name, help,
-            (min == (gdouble) INT64_MIN ? INT64_MIN : (gint64) min),
-            (max == (gdouble) INT64_MAX ? INT64_MAX : (gint64) max),
-            opt->default_val.i64, G_PARAM_READWRITE);
+        /* FIXME 2.0: Workaround for worst property related API change. We
+         * continue using a 32 bit integer for the bitrate property as
+         * otherwise too much existing code will fail at runtime.
+         *
+         * See https://gitlab.freedesktop.org/gstreamer/gst-libav/issues/41#note_142808 */
+        if (g_strcmp0 (name, "bitrate") == 0) {
+          pspec = g_param_spec_int (name, name, help,
+              (gint) MAX (min, G_MININT), (gint) MIN (max, G_MAXINT),
+              (gint) opt->default_val.i64, G_PARAM_READWRITE);
+        } else {
+          /* ffmpeg expresses all ranges with doubles, this is sad */
+          pspec = g_param_spec_int64 (name, name, help,
+              (min == (gdouble) INT64_MIN ? INT64_MIN : (gint64) min),
+              (max == (gdouble) INT64_MAX ? INT64_MAX : (gint64) max),
+              opt->default_val.i64, G_PARAM_READWRITE);
+        }
         g_object_class_install_property (gobject_class, prop_id++, pspec);
         break;
       case AV_OPT_TYPE_DOUBLE:
