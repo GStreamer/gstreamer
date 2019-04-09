@@ -115,6 +115,7 @@ GST_START_TEST (test_split_direct_bindings)
   GstTimedValueControlSource *splitsource;
   GESLayer *layer;
   GESAsset *asset;
+  GValue *tmpvalue;
 
   GESTrackElement *element;
 
@@ -129,6 +130,7 @@ GST_START_TEST (test_split_direct_bindings)
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   clip = ges_layer_add_asset (layer, asset, 0, 10 * GST_SECOND, 10 * GST_SECOND,
       GES_TRACK_TYPE_UNKNOWN);
+  g_object_unref (asset);
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 10 * GST_SECOND);
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
@@ -146,10 +148,15 @@ GST_START_TEST (test_split_direct_bindings)
       20 * GST_SECOND, 1.0);
 
   binding = ges_track_element_get_control_binding (element, "alpha");
-  assert_equals_int (g_value_get_double (gst_control_binding_get_value (binding,
-              10 * GST_SECOND)), 0.0);
-  assert_equals_int (g_value_get_double (gst_control_binding_get_value (binding,
-              20 * GST_SECOND)), 1.0);
+  tmpvalue = gst_control_binding_get_value (binding, 10 * GST_SECOND);
+  assert_equals_int (g_value_get_double (tmpvalue), 0.0);
+  g_value_unset (tmpvalue);
+  g_free (tmpvalue);
+
+  tmpvalue = gst_control_binding_get_value (binding, 20 * GST_SECOND);
+  assert_equals_int (g_value_get_double (tmpvalue), 1.0);
+  g_value_unset (tmpvalue);
+  g_free (tmpvalue);
 
   splitclip = ges_clip_split (clip, 5 * GST_SECOND);
   CHECK_OBJECT_PROPS (splitclip, 5 * GST_SECOND, 15 * GST_SECOND,
@@ -172,6 +179,7 @@ GST_START_TEST (test_split_direct_bindings)
   assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
       20 * GST_SECOND);
   assert_equals_float (((GstTimedValue *) values->next->data)->value, 1.0);
+  g_list_free (values);
 
   values =
       gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
@@ -184,6 +192,7 @@ GST_START_TEST (test_split_direct_bindings)
   assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
       15 * GST_SECOND);
   assert_equals_float (((GstTimedValue *) values->next->data)->value, 0.50);
+  g_list_free (values);
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 5 * GST_SECOND);
   check_layer (clip, 0);
@@ -204,6 +213,7 @@ GST_START_TEST (test_split_direct_absolute_bindings)
   GstTimedValueControlSource *splitsource;
   GESLayer *layer;
   GESAsset *asset;
+  GValue *tmpvalue;
 
   GESTrackElement *element;
 
@@ -218,6 +228,7 @@ GST_START_TEST (test_split_direct_absolute_bindings)
   asset = ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL);
   clip = ges_layer_add_asset (layer, asset, 0, 10 * GST_SECOND, 10 * GST_SECOND,
       GES_TRACK_TYPE_UNKNOWN);
+  g_object_unref (asset);
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 10 * GST_SECOND);
   assert_equals_int (g_list_length (GES_CONTAINER_CHILDREN (clip)), 1);
@@ -235,10 +246,15 @@ GST_START_TEST (test_split_direct_absolute_bindings)
       20 * GST_SECOND, 500);
 
   binding = ges_track_element_get_control_binding (element, "posx");
-  assert_equals_int (g_value_get_int (gst_control_binding_get_value (binding,
-              10 * GST_SECOND)), 0);
-  assert_equals_int (g_value_get_int (gst_control_binding_get_value (binding,
-              20 * GST_SECOND)), 500);
+  tmpvalue = gst_control_binding_get_value (binding, 10 * GST_SECOND);
+  assert_equals_int (g_value_get_int (tmpvalue), 0);
+  g_value_unset (tmpvalue);
+  g_free (tmpvalue);
+
+  tmpvalue = gst_control_binding_get_value (binding, 20 * GST_SECOND);
+  assert_equals_int (g_value_get_int (tmpvalue), 500);
+  g_value_unset (tmpvalue);
+  g_free (tmpvalue);
 
   splitclip = ges_clip_split (clip, 5 * GST_SECOND);
   CHECK_OBJECT_PROPS (splitclip, 5 * GST_SECOND, 15 * GST_SECOND,
@@ -261,6 +277,7 @@ GST_START_TEST (test_split_direct_absolute_bindings)
   assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
       20 * GST_SECOND);
   assert_equals_float (((GstTimedValue *) values->next->data)->value, 500.0);
+  g_list_free (values);
 
   values =
       gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
@@ -273,6 +290,7 @@ GST_START_TEST (test_split_direct_absolute_bindings)
   assert_equals_uint64 (((GstTimedValue *) values->next->data)->timestamp,
       15 * GST_SECOND);
   assert_equals_float (((GstTimedValue *) values->next->data)->value, 250.0);
+  g_list_free (values);
 
   CHECK_OBJECT_PROPS (clip, 0 * GST_SECOND, 10 * GST_SECOND, 5 * GST_SECOND);
   check_layer (clip, 0);

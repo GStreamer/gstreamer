@@ -84,6 +84,7 @@ GST_START_TEST (test_basic_timeline_edition)
 
   clip2 = GES_CONTAINER (ges_layer_add_asset (layer, asset, 50, 0, 60,
           GES_TRACK_TYPE_UNKNOWN));
+  g_object_unref (asset);
   trackelement2 = GES_CONTAINER_CHILDREN (clip2)->data;
   fail_unless (GES_IS_TRACK_ELEMENT (trackelement2));
 
@@ -436,7 +437,7 @@ asset_added_cb (GESProject * project, GESAsset * asset, void *mainloop)
 
 GST_START_TEST (test_simple_triming)
 {
-  GList *assets;
+  GList *assets, *tmp;
   GMainLoop *mainloop;
   GESClipAsset *asset;
   GESProject *project;
@@ -472,13 +473,16 @@ GST_START_TEST (test_simple_triming)
 
   ges_layer_add_asset (layer, GES_ASSET (asset), 0, 0, 10,
       ges_clip_asset_get_supported_formats (asset));
+  g_list_free_full (assets, g_object_unref);
 
-  element = ges_layer_get_clips (layer)->data;
+  tmp = ges_layer_get_clips (layer);
+  element = tmp->data;
 
   DEEP_CHECK (element, 0, 0, 10);
   ges_container_edit (GES_CONTAINER (element), NULL, -1, GES_EDIT_MODE_TRIM,
       GES_EDGE_START, 5);
   DEEP_CHECK (element, 5, 5, 5);
+  g_list_free_full (tmp, g_object_unref);
 
   g_main_loop_unref (mainloop);
   gst_object_unref (timeline);
@@ -1229,6 +1233,7 @@ GST_START_TEST (test_scaling)
       ges_layer_add_asset (layer, GES_ASSET (asset1), 0 * GST_SECOND,
       0 * GST_SECOND, 4 * GST_SECOND, GES_TRACK_TYPE_UNKNOWN);
   gst_object_unref (asset1);
+  gst_object_unref (asset2);
   g_object_set (clip, "vpattern", (gint) GES_VIDEO_TEST_PATTERN_SMPTE75, NULL);
 
   /**
@@ -1382,6 +1387,7 @@ GST_START_TEST (test_scaling)
    * are changing the aspect ratio, the video should thus not be rescaled. */
   caps = gst_caps_from_string ("video/x-raw,height=1080,width=1920");
   ges_track_set_restriction_caps (trackv, caps);
+  gst_caps_unref (caps);
   fail_unless (check_frame_positioner_size (clip, 320, 240));
 
   gst_object_unref (timeline);

@@ -51,6 +51,7 @@ GST_START_TEST (simple_smart_adder_test)
       template, NULL, NULL);
   fail_unless (GST_IS_PAD (requested_pad));
 
+  gst_object_unref (requested_pad);
   gst_object_unref (smart_adder);
   gst_object_unref (track);
 
@@ -120,6 +121,7 @@ GST_START_TEST (simple_audio_mixed_with_pipeline)
 
   tmpclip = ges_layer_add_asset (layer1, asset, 0, 0, 2 * GST_SECOND,
       GES_TRACK_TYPE_AUDIO);
+  g_object_unref (asset);
 
   ges_audio_test_source_set_volume (GES_CONTAINER_CHILDREN (tmpclip)->data, 1);
 
@@ -190,6 +192,7 @@ GST_START_TEST (audio_video_mixed_with_pipeline)
   tmpclip =
       ges_layer_add_asset (layer1, asset, 1 * GST_SECOND, 0, 5 * GST_SECOND,
       GES_TRACK_TYPE_UNKNOWN);
+  g_object_unref (asset);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   main_loop = g_main_loop_new (NULL, FALSE);

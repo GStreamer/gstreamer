@@ -582,6 +582,7 @@ GST_START_TEST (test_group_in_self)
           GES_TIMELINE_ELEMENT (group)));
   clips = ges_container_get_children (GES_CONTAINER (group), TRUE);
   assert_equals_int (g_list_length (clips), 6);
+  g_list_free_full (clips, g_object_unref);
 
   gst_object_unref (timeline);
   gst_object_unref (asset);
@@ -666,12 +667,13 @@ GST_START_TEST (test_group_serialization)
   fail_unless (timeline != NULL);
 
   layer = timeline->layers->data;
-  for (tmp = ges_layer_get_clips (layer); tmp; tmp = tmp->next) {
+  clips = ges_layer_get_clips (layer);
+  for (tmp = clips; tmp; tmp = tmp->next) {
     fail_unless (GES_IS_GROUP (GES_TIMELINE_ELEMENT_PARENT (tmp->data)),
         "%s parent is %p, NOT a group", GES_TIMELINE_ELEMENT_NAME (tmp->data),
         GES_TIMELINE_ELEMENT_PARENT (tmp->data));
   }
-
+  g_list_free_full (clips, g_object_unref);
 
   g_free (tmpuri);
   gst_object_unref (timeline);

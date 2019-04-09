@@ -342,9 +342,8 @@ _add_properties (GESTimeline * timeline)
                 (source), 5 * GST_SECOND, 0.);
             gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE
                 (source), 10 * GST_SECOND, 1.);
-          }
-          /* Adding children properties */
-          else if (GES_IS_VIDEO_SOURCE (element)) {
+          } else if (GES_IS_VIDEO_SOURCE (element)) {
+            /* Adding children properties */
             gint64 posx = 42;
             ges_timeline_element_set_child_properties (GES_TIMELINE_ELEMENT
                 (element), "posx", posx, NULL);
@@ -358,6 +357,8 @@ _add_properties (GESTimeline * timeline)
         break;
     }
   }
+
+  g_list_free_full (tracks, g_object_unref);
 }
 
 static void
@@ -418,25 +419,27 @@ _check_properties (GESTimeline * timeline)
             fail_unless_equals_int64 (posx, 42);
           }
         }
+        g_list_free_full (track_elements, g_object_unref);
         break;
       default:
         break;
     }
   }
+
+  g_list_free_full (tracks, g_object_unref);
 }
 
 GST_START_TEST (test_project_add_properties)
 {
   GESProject *project;
   GESTimeline *timeline;
-  GESAsset *formatter_asset;
-  gboolean saved;
   gchar *uri;
 
   ges_init ();
 
   uri = ges_test_file_uri ("test-properties.xges");
   project = ges_project_new (uri);
+  g_free (uri);
   mainloop = g_main_loop_new (NULL, FALSE);
 
   /* Connect the signals */
@@ -451,20 +454,16 @@ GST_START_TEST (test_project_add_properties)
 
   GST_LOG ("Test first loading");
 
-  g_free (uri);
 
   _add_properties (timeline);
 
   uri = ges_test_get_tmp_uri ("test-properties-save.xges");
-  formatter_asset = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
-  saved =
-      ges_project_save (project, timeline, uri, formatter_asset, TRUE, NULL);
-  fail_unless (saved);
-
+  fail_unless (ges_project_save (project, timeline, uri, NULL, TRUE, NULL));
   gst_object_unref (timeline);
   gst_object_unref (project);
 
   project = ges_project_new (uri);
+  g_free (uri);
 
   ASSERT_OBJECT_REFCOUNT (project, "Our + cache", 2);
 
@@ -480,7 +479,6 @@ GST_START_TEST (test_project_add_properties)
 
   gst_object_unref (timeline);
   gst_object_unref (project);
-  g_free (uri);
 
   g_main_loop_unref (mainloop);
   g_signal_handlers_disconnect_by_func (project, (GCallback) project_loaded_cb,
@@ -500,6 +498,7 @@ GST_START_TEST (test_project_load_xges)
   GESTimeline *timeline;
   GESAsset *formatter_asset;
   gchar *uri;
+  GList *tmp;
 
   ges_init ();
 
@@ -523,8 +522,9 @@ GST_START_TEST (test_project_load_xges)
   timeline =
       GES_TIMELINE (ges_asset_extract (GES_ASSET (loaded_project), NULL));
   fail_unless (GES_IS_TIMELINE (timeline));
-  assert_equals_int (g_list_length (ges_project_get_loading_assets
-          (loaded_project)), 1);
+  tmp = ges_project_get_loading_assets (loaded_project);
+  assert_equals_int (g_list_length (tmp), 1);
+  g_list_free_full (tmp, g_object_unref);
 
   g_main_loop_run (mainloop);
   GST_LOG ("Test first loading");
@@ -578,7 +578,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_project_auto_transition)
 {
-  GList *layers;
+  GList *layers, *tmp;
   GESProject *project;
   GESTimeline *timeline;
   GESLayer *layer = NULL;
@@ -606,8 +606,8 @@ GST_START_TEST (test_project_auto_transition)
   /* Check timeline and layers auto-transition, must be FALSE */
   fail_if (ges_timeline_get_auto_transition (timeline));
   layers = ges_timeline_get_layers (timeline);
-  for (; layers; layers = layers->next) {
-    layer = layers->data;
+  for (tmp = layers; tmp; tmp = tmp->next) {
+    layer = tmp->data;
     fail_if (ges_layer_get_auto_transition (layer));
   }
 
@@ -641,8 +641,8 @@ GST_START_TEST (test_project_auto_transition)
   /* Check timeline and layers auto-transition, must be TRUE  */
   fail_unless (ges_timeline_get_auto_transition (timeline));
   layers = ges_timeline_get_layers (timeline);
-  for (; layers; layers = layers->next) {
-    layer = layers->data;
+  for (tmp = layers; tmp; tmp = tmp->next) {
+    layer = tmp->data;
     fail_unless (ges_layer_get_auto_transition (layer));
   }
 

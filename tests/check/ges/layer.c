@@ -1005,6 +1005,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   transition =
       GES_CLIP (ges_layer_add_asset (layer,
           transition_asset, 1000, 0, 500, GES_TRACK_TYPE_VIDEO));
+  g_object_unref (transition_asset);
   fail_unless (GES_IS_TRANSITION_CLIP (transition));
   objects = GES_CONTAINER_CHILDREN (transition);
   assert_equals_int (g_list_length (objects), 1);
