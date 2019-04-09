@@ -51,9 +51,9 @@
  * ]| This example will receive a stream with FEC and try to reconstruct the packets.
  *
  * Example programs are available at
- * <https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs>
+ * <ulink url="https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs">rtpfecserver.rs</ulink>
  * and
- * <https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>
+ * <ulink url="https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs">rtpfecclient.rs</ulink>
  *
  * </refsect2>
  *
