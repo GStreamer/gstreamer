@@ -1570,8 +1570,10 @@ gst_decklink_configure_duplex_mode (Device * device, BMDDuplexMode duplex_mode)
         GST_DEBUG ("Device does not support Half-Duplex-Mode");
         return DUPLEX_MODE_SET_SUCCESS;
       }
-    } else
+    } else {
+      GST_ERROR ("duplex_mode=%d", duplex_mode);
       g_assert_not_reached ();
+    }
   } else {
     GST_DEBUG ("Setting duplex-mode of Device");
     result = input->config->SetInt (bmdDeckLinkConfigDuplexMode, duplex_mode);

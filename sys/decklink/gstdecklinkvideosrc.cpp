@@ -447,6 +447,7 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
               ("Format %d not supported", self->video_format), (NULL));
           break;
       }
+      break;
     case PROP_DUPLEX_MODE:
       self->duplex_mode =
           gst_decklink_duplex_mode_from_enum ((GstDecklinkDuplexMode)
