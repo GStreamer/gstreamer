@@ -998,37 +998,45 @@ ensure_profile (GstVaapiEncoderH265 * encoder)
   return TRUE;
 }
 
-/* Derives the minimum tier from the active coding tools */
+/* Derives the level and tier from the currently set limits */
 static gboolean
-ensure_tier (GstVaapiEncoderH265 * encoder)
+ensure_tier_level (GstVaapiEncoderH265 * encoder)
 {
-
-  encoder->tier = GST_VAAPI_TIER_H265_MAIN;
-  /* FIXME: Derive proper tier based on upstream caps or limits, coding
-   * tools etc */
-
-  return TRUE;
-}
-
-/* Derives the level from the currently set limits */
-static gboolean
-ensure_level (GstVaapiEncoderH265 * encoder)
-{
-  const GstVaapiH265LevelLimits *limits_table;
+  guint bitrate = GST_VAAPI_ENCODER_CAST (encoder)->bitrate;
   guint i, num_limits, PicSizeInSamplesY;
+  guint LumaSr;
+  const GstVaapiH265LevelLimits *limits_table;
 
   PicSizeInSamplesY = encoder->luma_width * encoder->luma_height;
+  LumaSr =
+      gst_util_uint64_scale (PicSizeInSamplesY,
+      GST_VAAPI_ENCODER_FPS_N (encoder), GST_VAAPI_ENCODER_FPS_D (encoder));
 
   limits_table = gst_vaapi_utils_h265_get_level_limits_table (&num_limits);
   for (i = 0; i < num_limits; i++) {
     const GstVaapiH265LevelLimits *const limits = &limits_table[i];
-    if (PicSizeInSamplesY <= limits->MaxLumaPs)
+    /* Choose level by luma picture size and luma sample rate */
+    if (PicSizeInSamplesY <= limits->MaxLumaPs && LumaSr <= limits->MaxLumaSr)
       break;
-    /* FIXME: Add more constraint checking:tier (extracted from caps),
-     * cpb size, bitrate, num_tile_columns and num_tile_rows */
   }
+
   if (i == num_limits)
     goto error_unsupported_level;
+
+  if (bitrate <= limits_table[i].MaxBRTierMain) {
+    encoder->tier = GST_VAAPI_TIER_H265_MAIN;
+  } else {
+    encoder->tier = GST_VAAPI_TIER_H265_HIGH;
+    if (bitrate > limits_table[i].MaxBRTierHigh) {
+      GST_INFO ("The bitrate of the stream is %d kbps, larger than"
+          " %s profile %s level %s tier's max bit rate %d kbps",
+          bitrate,
+          gst_vaapi_utils_h265_get_profile_string (encoder->profile),
+          gst_vaapi_utils_h265_get_level_string (limits_table[i].level),
+          gst_vaapi_utils_h265_get_tier_string (GST_VAAPI_TIER_H265_HIGH),
+          limits_table[i].MaxBRTierHigh);
+    }
+  }
 
   encoder->level = limits_table[i].level;
   encoder->level_idc = limits_table[i].level_idc;
@@ -1042,6 +1050,7 @@ error_unsupported_level:
   }
 }
 
+/* Derives the minimum tier from the active coding tools */
 /* Enable "high-compression" tuning options */
 static gboolean
 ensure_tuning_high_compression (GstVaapiEncoderH265 * encoder)
@@ -2024,14 +2033,10 @@ ensure_profile_tier_level (GstVaapiEncoderH265 * encoder)
   if (encoder->profile_idc > encoder->hw_max_profile_idc)
     return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
 
-  /* ensure tier */
-  if (!ensure_tier (encoder))
-    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
-
   /* Ensure bitrate if not set already and derive the right level to use */
   ensure_bitrate (encoder);
 
-  if (!ensure_level (encoder))
+  if (!ensure_tier_level (encoder))
     return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
 
   if (encoder->profile != profile || encoder->level != level
