@@ -330,6 +330,7 @@ warning_flags = [
   '-Wno-multichar',
   '-Wvla',
   '-Wpointer-arith',
+  '-Wundef',
 ]
 
 warning_c_flags = [
