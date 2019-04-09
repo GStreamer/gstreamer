@@ -161,13 +161,13 @@ rtp_source_class_init (RTPSourceClass * klass)
    * The following fields make sense for internal sources and will only increase
    * when "is-sender" is TRUE.
    *
-   *  "octets-sent"  G_TYPE_UINT64   number of bytes we sent
+   *  "octets-sent"  G_TYPE_UINT64   number of payload bytes we sent
    *  "packets-sent" G_TYPE_UINT64   number of packets we sent
    *
    * The following fields make sense for non-internal sources and will only
    * increase when "is-sender" is TRUE.
    *
-   *  "octets-received"  G_TYPE_UINT64  total number of bytes received
+   *  "octets-received"  G_TYPE_UINT64  total number of payload bytes received
    *  "packets-received" G_TYPE_UINT64  total number of packets received
    *  "bytes-received"   G_TYPE_UINT64  total number of bytes received including lower level headers overhead
    *
