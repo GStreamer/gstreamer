@@ -12,6 +12,7 @@ foreach example : examples
     install: false)
 endforeach
 
+if USE_X11
 if gtk_dep.found()
   executable('test-vaapicontext', 'test-vaapicontext.c',
     c_args : gstreamer_vaapi_args,
@@ -23,4 +24,5 @@ if gtk_dep.found()
                      gtk_dep,
                      libva_x11_dep ],
     install: false)
+endif
 endif
