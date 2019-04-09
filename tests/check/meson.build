@@ -71,6 +71,7 @@ if host_machine.system() != 'windows'
   base_tests += [
     [['elements/assrender.c'], not ass_dep.found(), [ass_dep]],
     [['elements/avtpaafpay.c'], not avtp_dep.found(), [avtp_dep]],
+    [['elements/avtpaafdepay.c'], not avtp_dep.found(), [avtp_dep]],
     [['elements/ccconverter.c']],
     [['elements/cccombiner.c']],
     [['elements/ccextractor.c']],
