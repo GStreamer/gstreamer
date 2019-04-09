@@ -160,6 +160,8 @@ sync_properties_from_track (GstFramePositioner * pos, GESTrack * track)
 
   GST_DEBUG_OBJECT (pos, "syncing framerate from caps : %d/%d", pos->fps_n,
       pos->fps_d);
+  if (caps)
+    gst_caps_unref (caps);
 
   gst_frame_positioner_update_properties (pos, ges_track_get_mixing (track),
       old_track_width, old_track_height);
