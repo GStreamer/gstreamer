@@ -1753,7 +1753,7 @@ gst_hls_demux_stream_decrypt_end (GstHLSDemuxStream * stream)
   /* NOP */
 }
 
-#else
+#elif defined(HAVE_LIBGCRYPT)
 static gboolean
 gst_hls_demux_stream_decrypt_start (GstHLSDemuxStream * stream,
     const guint8 * key_data, const guint8 * iv_data)
@@ -1800,6 +1800,30 @@ gst_hls_demux_stream_decrypt_end (GstHLSDemuxStream * stream)
     gcry_cipher_close (stream->aes_ctx);
     stream->aes_ctx = NULL;
   }
+}
+
+#else
+/* NO crypto available */
+static gboolean
+gst_hls_demux_stream_decrypt_start (GstHLSDemuxStream * stream,
+    const guint8 * key_data, const guint8 * iv_data)
+{
+  GST_ERROR ("No crypto available");
+  return FALSE;
+}
+
+static gboolean
+decrypt_fragment (GstHLSDemuxStream * stream, gsize length,
+    const guint8 * encrypted_data, guint8 * decrypted_data)
+{
+  GST_ERROR ("Cannot decrypt fragment, no crypto available");
+  return FALSE;
+}
+
+static void
+gst_hls_demux_stream_decrypt_end (GstHLSDemuxStream * stream)
+{
+  return;
 }
 #endif
 
