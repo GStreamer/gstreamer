@@ -928,6 +928,8 @@ _serialize_properties (GObject * object, const gchar * fieldname, ...)
       g_object_get (object, spec->name, &caps, NULL);
       caps_str = gst_caps_to_string (caps);
       gst_structure_set (structure, spec->name, G_TYPE_STRING, caps_str, NULL);
+      if (caps)
+        gst_caps_unref (caps);
       g_free (caps_str);
     } else if (_can_serialize_spec (spec)) {
       _init_value_from_spec_for_serialization (&val, spec);
@@ -1228,6 +1230,7 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
               g_type_name (G_OBJECT_TYPE (clip)), priority,
               ges_clip_get_supported_formats (clip), _START (clip),
               _DURATION (clip), _INPOINT (clip), 0, properties, metas));
+      g_free (metas);
 
       if (GES_IS_TRANSITION_CLIP (clip)) {
         _save_children_properties (str, GES_TIMELINE_ELEMENT (clip));
@@ -1250,8 +1253,7 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
         _save_effect (str, priv->nbelements,
             GES_TRACK_ELEMENT (tmpeffect->data), timeline);
       }
-
-
+      g_list_free (effects);
       tracks = ges_timeline_get_tracks (timeline);
 
       for (tmptrackelement = GES_CONTAINER_CHILDREN (clip); tmptrackelement;
