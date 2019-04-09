@@ -2755,7 +2755,7 @@ gst_vaapi_encoder_h265_get_default_properties (void)
   GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
       GST_VAAPI_ENCODER_H265_PROP_INIT_QP,
       g_param_spec_uint ("init-qp",
-          "Initial QP", "Initial quantizer value", 1, 51, 26,
+          "Initial QP", "Initial quantizer value", 0, 51, 26,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -2766,7 +2766,7 @@ gst_vaapi_encoder_h265_get_default_properties (void)
   GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
       GST_VAAPI_ENCODER_H265_PROP_MIN_QP,
       g_param_spec_uint ("min-qp",
-          "Minimum QP", "Minimum quantizer value", 1, 51, 1,
+          "Minimum QP", "Minimum quantizer value", 0, 51, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
