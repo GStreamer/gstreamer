@@ -1,3 +1,108 @@
+=== release 1.15.90 ===
+
+2019-04-11 00:40:52 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.15.90
+
+2019-04-10 00:19:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: add -Wundef as additional warning flag
+
+2019-04-10 00:16:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* omx/gstomxvideoenc.c:
+	  omx: fix autotools build for generic target
+	  gstomxvideoenc.c:2874:7: error: "USE_OMX_TARGET_ZYNQ_USCALE_PLUS" is not defined, evaluates to 0 [-Werror=undef]
+	  #elif USE_OMX_TARGET_ZYNQ_USCALE_PLUS
+	  Works on meson because it doesn't use -Wundef
+
+2018-11-12 12:51:28 +0200  Jordan Petridis <jordan@centricular.com>
+
+	* .gitlab-ci.yml:
+	  Add Gitlab CI configuration
+	  This commit adds a .gitlab-ci.yml file, which uses a feature
+	  to fetch the config from a centralized repository. The intent is
+	  to have all the gstreamer modules use the same configuration.
+	  The configuration is currently hosted at the gst-ci repository
+	  under the gitlab/ci_template.yml path.
+	  Part of https://gitlab.freedesktop.org/gstreamer/gstreamer-project/issues/29
+
+2019-03-25 16:30:11 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomx.c:
+	  omx: disable OMX_API_TRACE code if gst debug is disabled
+	  No need to create debug structs which won't be used as DEBUG macros are
+	  no-op.
+
+2018-10-11 10:55:04 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomx.c:
+	  omx: log Get/SetParameter/Config calls
+	  Extend OMX_API_TRACE by logging component configuration calls.
+
+2019-02-06 14:57:05 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxbufferpool.c:
+	  omxbufferpool: don't use CAT_PERFORMANCE if pool will copy
+	  This was the single place where this category was used in gst-omx so
+	  most users, including me, are generally not turning it and were missing this
+	  important information from logs.
+	  The copying code uses gst_video_frame_copy() which is already logging
+	  with CAT_PERFORMANCE so we can still have this information when using
+	  only this debug category.
+
+2019-02-06 14:50:44 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: add debug if proposed pool can't provide enough buffers
+	  We were silently ignoring the pool which was pretty confusing when
+	  debugging.
+
+2019-03-26 12:17:26 +0000  Charlie Turner <cturner@igalia.com>
+
+	* omx/gstomxaacdec.c:
+	* omx/gstomxaacenc.c:
+	* omx/gstomxamrdec.c:
+	* omx/gstomxh263dec.c:
+	* omx/gstomxh263enc.c:
+	* omx/gstomxh264dec.c:
+	* omx/gstomxh264enc.c:
+	* omx/gstomxh265dec.c:
+	* omx/gstomxh265enc.c:
+	* omx/gstomxmjpegdec.c:
+	* omx/gstomxmp3dec.c:
+	* omx/gstomxmp3enc.c:
+	* omx/gstomxmpeg2videodec.c:
+	* omx/gstomxmpeg4videodec.c:
+	* omx/gstomxmpeg4videoenc.c:
+	* omx/gstomxtheoradec.c:
+	* omx/gstomxvp8dec.c:
+	* omx/gstomxwmvdec.c:
+	  omx: Add hardware classifiers to encoders/decoders
+
+2019-03-25 16:01:48 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* meson.build:
+	  meson: sync warnings flags with -good
+	  Add more warnings flags and disabled unused variable warnings if gst
+	  debug system is disabled.
+	  Copied from gst-plugins-good/meson.build
+
+2019-03-04 09:16:40 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
 === release 1.15.2 ===
 
 2019-02-26 12:02:23 +0000  Tim-Philipp Müller <tim@centricular.com>
