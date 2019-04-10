@@ -1511,9 +1511,7 @@ fill_sequence (GstVaapiEncoderH265 * encoder, GstVaapiEncSequence * sequence)
 
   seq_param->general_profile_idc = encoder->profile_idc;
   seq_param->general_level_idc = encoder->level_idc;
-  seq_param->general_tier_flag = 0;     /* FIXME: use the tier flag
-                                         * extracted from upstream
-                                         * caps or calcuted one */
+  seq_param->general_tier_flag = encoder->tier;
 
   seq_param->intra_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder);
   seq_param->intra_idr_period = encoder->idr_period;
