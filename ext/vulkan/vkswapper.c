@@ -156,17 +156,20 @@ static void
 _add_vk_format_to_list (GValue * list, VkFormat format)
 {
   GstVideoFormat v_format;
-  const gchar *format_str;
 
   v_format = _vk_format_to_video_format (format);
   if (v_format) {
+    const gchar *format_str = gst_video_format_to_string (v_format);
     GValue item = G_VALUE_INIT;
+    GValue new_list = G_VALUE_INIT;
 
     g_value_init (&item, G_TYPE_STRING);
-    format_str = gst_video_format_to_string (v_format);
     g_value_set_string (&item, format_str);
-    gst_value_list_append_value (list, &item);
+    gst_value_list_merge (&new_list, list, &item);
     g_value_unset (&item);
+
+    g_value_unset (list);
+    *list = new_list;
   }
 }
 
