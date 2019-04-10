@@ -1025,7 +1025,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User Agent</NICK>
 <BLURB>The User-Agent string to send to the server.</BLURB>
-<DEFAULT>"GStreamer/1.15.2.1"</DEFAULT>
+<DEFAULT>"GStreamer/1.15.90"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3555,7 +3555,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>Value of the User-Agent HTTP request header field.</BLURB>
-<DEFAULT>"GStreamer souphttpsrc 1.15.2.1 "</DEFAULT>
+<DEFAULT>"GStreamer souphttpsrc 1.15.90 "</DEFAULT>
 </ARG>
 
 <ARG>
@@ -25036,5 +25036,15 @@
 <NICK>Draw on transparent surface</NICK>
 <BLURB>Let the draw signal work on a transparent surface and blend the results with the video at a later time.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstImageFreeze::num-buffers</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>num-buffers</NICK>
+<BLURB>Number of buffers to output before sending EOS (-1 = unlimited).</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 

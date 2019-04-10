@@ -3,10 +3,10 @@
   <description>Gtk+ sink</description>
   <filename>../../ext/gtk/.libs/libgstgtk.so</filename>
   <basename>libgstgtk.so</basename>
-  <version>1.15.2.1</version>
+  <version>1.15.90</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins git</package>
+  <package>GStreamer Good Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
