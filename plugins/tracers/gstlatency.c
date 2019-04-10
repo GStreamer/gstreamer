@@ -405,19 +405,32 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
 
     if (gst_structure_get_name_id (data) == sub_latency_probe_id) {
       const GValue *value;
-      gchar *pad_name = g_strdup_printf ("%s_%s",
-          GST_DEBUG_PAD_NAME (peer_pad));
+      gchar *element_id = g_strdup_printf ("%p", peer_parent);
+      gchar *element_name = gst_element_get_name (peer_parent);
+      gchar *pad_name = gst_pad_get_name (peer_pad);
+      const gchar *value_element_id, *value_element_name, *value_pad_name;
 
+      /* Get the element id, element name and pad name from data */
+      value = gst_structure_id_get_value (data, latency_probe_element_id);
+      value_element_id = g_value_get_string (value);
+      value = gst_structure_id_get_value (data, latency_probe_element);
+      value_element_name = g_value_get_string (value);
       value = gst_structure_id_get_value (data, latency_probe_pad);
+      value_pad_name = g_value_get_string (value);
 
-      if (!g_str_equal (g_value_get_string (value), pad_name)) {
-        GST_DEBUG ("%s: Storing sub-latency event", pad_name);
+      if (!g_str_equal (value_element_id, element_id) ||
+          !g_str_equal (value_element_name, element_name) ||
+          !g_str_equal (value_pad_name, pad_name)) {
+        GST_DEBUG ("%s_%s: Storing latency event", GST_DEBUG_PAD_NAME (pad));
+
         if (!g_object_get_qdata ((GObject *) pad, sub_latency_probe_id))
           g_object_set_qdata ((GObject *) pad, sub_latency_probe_id,
               gst_event_ref (ev));
       }
 
       g_free (pad_name);
+      g_free (element_name);
+      g_free (element_id);
     }
   }
 }
