@@ -48,6 +48,7 @@ struct _GstVulkanSwapper
   GstVulkanDevice *device;
   GstVulkanWindow *window;
   GstVulkanQueue *queue;
+  GstVulkanCommandPool *cmd_pool;
 
   VkSurfaceKHR    surface;
 

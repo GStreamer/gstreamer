@@ -41,6 +41,7 @@ GstVulkanTrash *    gst_vulkan_trash_new                        (GstVulkanFence 
                                                                  GstVulkanTrashNotify notify,
                                                                  gpointer user_data);
 GstVulkanTrash *    gst_vulkan_trash_new_free_command_buffer    (GstVulkanFence * fence,
+                                                                 GstVulkanCommandPool * pool,
                                                                  VkCommandBuffer cmd);
 GstVulkanTrash *    gst_vulkan_trash_new_free_semaphore         (GstVulkanFence * fence,
                                                                  VkSemaphore cmd);

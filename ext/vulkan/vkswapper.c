@@ -285,6 +285,10 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
   if (data.graphics_queue)
     gst_object_unref (data.graphics_queue);
 
+  if (!(swapper->cmd_pool =
+          gst_vulkan_queue_create_command_pool (swapper->queue, error)))
+    return FALSE;
+
   err =
       swapper->GetPhysicalDeviceSurfaceCapabilitiesKHR (gpu, swapper->surface,
       &swapper->surf_props);
@@ -358,6 +362,10 @@ gst_vulkan_swapper_finalize (GObject * object)
     swapper->DestroySwapchainKHR (swapper->device->device, swapper->swap_chain,
         NULL);
   swapper->swap_chain = VK_NULL_HANDLE;
+
+  if (swapper->cmd_pool)
+    gst_object_unref (swapper->cmd_pool);
+  swapper->cmd_pool = NULL;
 
   if (swapper->queue)
     gst_object_unref (swapper->queue);
@@ -505,7 +513,7 @@ _swapper_set_image_layout (GstVulkanSwapper * swapper,
   GstVulkanFence *fence = NULL;
   VkResult err;
 
-  if (!gst_vulkan_device_create_cmd_buffer (swapper->device, &cmd, error))
+  if (!(cmd = gst_vulkan_command_pool_create (swapper->cmd_pool, error)))
     goto error;
 
   fence = gst_vulkan_fence_new (swapper->device, 0, error);
@@ -565,7 +573,7 @@ _swapper_set_image_layout (GstVulkanSwapper * swapper,
   }
 
   swapper->priv->trash_list = g_list_prepend (swapper->priv->trash_list,
-      gst_vulkan_trash_new_free_command_buffer (fence, cmd));
+      gst_vulkan_trash_new_free_command_buffer (fence, swapper->cmd_pool, cmd));
   fence = NULL;
 
   return TRUE;
@@ -641,8 +649,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     n_images_wanted = swapper->surf_props.maxImageCount;
   }
 
-  if (swapper->surf_props.
-      supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
+  if (swapper->
+      surf_props.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
     preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
   } else {
     preTransform = swapper->surf_props.currentTransform;
@@ -673,8 +681,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
-  if ((swapper->
-          surf_props.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+  if ((swapper->surf_props.
+          supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
       != 0) {
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   } else {
@@ -804,7 +812,7 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   g_return_val_if_fail (swap_idx < swapper->n_swap_chain_images, FALSE);
   swap_mem = swapper->swap_chain_images[swap_idx];
 
-  if (!gst_vulkan_device_create_cmd_buffer (swapper->device, &cmd, error))
+  if (!(cmd = gst_vulkan_command_pool_create (swapper->cmd_pool, error)))
     return FALSE;
 
   buf_mem = (GstVulkanBufferMemory *) gst_buffer_peek_memory (buffer, 0);
@@ -967,7 +975,7 @@ reacquire:
 
     swapper->priv->trash_list = g_list_prepend (swapper->priv->trash_list,
         gst_vulkan_trash_new_free_command_buffer (gst_vulkan_fence_ref (fence),
-            cmd));
+            swapper->cmd_pool, cmd));
     swapper->priv->trash_list = g_list_prepend (swapper->priv->trash_list,
         gst_vulkan_trash_new_free_semaphore (fence, acquire_semaphore));
 
@@ -1027,7 +1035,7 @@ error:
     if (present_semaphore)
       vkDestroySemaphore (swapper->device->device, present_semaphore, NULL);
     if (cmd)
-      vkFreeCommandBuffers (swapper->device->device, swapper->device->cmd_pool,
+      vkFreeCommandBuffers (swapper->device->device, swapper->cmd_pool->pool,
           1, &cmd);
     return FALSE;
   }
@@ -1066,6 +1074,7 @@ _on_window_draw (GstVulkanWindow * window, GstVulkanSwapper * swapper)
 
   RENDER_LOCK (swapper);
   if (!swapper->current_buffer) {
+    GST_DEBUG_OBJECT (swapper, "No buffer to render");
     RENDER_UNLOCK (swapper);
     return;
   }

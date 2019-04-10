@@ -38,5 +38,6 @@
 #include <gst/vulkan/gstvkimagememory.h>
 #include <gst/vulkan/gstvkbufferpool.h>
 #include <gst/vulkan/gstvkutils.h>
+#include <gst/vulkan/gstvkcommandpool.h>
 
 #endif /* __GST_VULKAN_H__ */

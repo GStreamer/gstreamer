@@ -58,8 +58,6 @@ struct _GstVulkanDevice
   guint32 queue_family_id;
   guint32 n_queues;
 
-  VkCommandPool cmd_pool;
-
   GstVulkanDevicePrivate *priv;
 };
 

@@ -28,6 +28,7 @@
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
+#define parent_class gst_vulkan_queue_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanQueue, gst_vulkan_queue, GST_TYPE_OBJECT,
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkanqueue", 0,
         "Vulkan Queue");
@@ -56,6 +57,8 @@ gst_vulkan_queue_dispose (GObject * object)
   if (queue->device)
     gst_object_unref (queue->device);
   queue->device = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 GstVulkanDevice *
@@ -64,6 +67,42 @@ gst_vulkan_queue_get_device (GstVulkanQueue * queue)
   g_return_val_if_fail (GST_IS_VULKAN_QUEUE (queue), NULL);
 
   return queue->device ? gst_object_ref (queue->device) : NULL;
+}
+
+GstVulkanCommandPool *
+gst_vulkan_queue_create_command_pool (GstVulkanQueue * queue, GError ** error)
+{
+  GstVulkanCommandPool *pool;
+  VkCommandPoolCreateInfo cmd_pool_info = { 0, };
+  VkCommandPool vk_pool;
+  VkResult err;
+
+  g_return_val_if_fail (GST_IS_VULKAN_QUEUE (queue), NULL);
+
+  cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+  cmd_pool_info.pNext = NULL;
+  cmd_pool_info.queueFamilyIndex = queue->family;
+  cmd_pool_info.flags = 0;
+
+  GST_OBJECT_LOCK (queue->device);
+  err =
+      vkCreateCommandPool (queue->device->device, &cmd_pool_info, NULL,
+      &vk_pool);
+  if (gst_vulkan_error_to_g_error (err, error, "vkCreateCommandPool") < 0) {
+    GST_OBJECT_LOCK (queue->device);
+    goto error;
+  }
+  GST_OBJECT_UNLOCK (queue->device);
+
+  pool = g_object_new (GST_TYPE_VULKAN_COMMAND_POOL, NULL);
+  gst_object_ref_sink (pool);
+  pool->queue = gst_object_ref (queue);
+  pool->pool = vk_pool;
+
+  return pool;
+
+error:
+  return NULL;
 }
 
 /**

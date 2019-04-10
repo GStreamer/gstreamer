@@ -138,26 +138,34 @@ gst_vulkan_trash_list_wait (GList * trash_list, guint64 timeout)
   return err == VK_SUCCESS;
 }
 
-static void
-_free_command_buffer (GstVulkanDevice * device, VkCommandBuffer * cmd)
+struct cmd_buffer_free_info
 {
-  g_assert (cmd);
-  vkFreeCommandBuffers (device->device, device->cmd_pool, 1, cmd);
+  GstVulkanCommandPool *pool;
+  VkCommandBuffer cmd;
+};
 
-  g_free (cmd);
+static void
+_free_command_buffer (GstVulkanDevice * device,
+    struct cmd_buffer_free_info *info)
+{
+  vkFreeCommandBuffers (device->device, info->pool->pool, 1, &info->cmd);
+  gst_object_unref (info->pool);
+
+  g_free (info);
 }
 
 GstVulkanTrash *
 gst_vulkan_trash_new_free_command_buffer (GstVulkanFence * fence,
-    VkCommandBuffer cmd)
+    GstVulkanCommandPool * pool, VkCommandBuffer cmd)
 {
-  VkCommandBuffer *data;
+  struct cmd_buffer_free_info *info;
   GstVulkanTrash *trash;
 
-  data = g_new0 (VkCommandBuffer, 1);
-  *data = cmd;
+  info = g_new0 (struct cmd_buffer_free_info, 1);
+  info->pool = gst_object_ref (pool);
+  info->cmd = cmd;
   trash = gst_vulkan_trash_new (fence,
-      (GstVulkanTrashNotify) _free_command_buffer, data);
+      (GstVulkanTrashNotify) _free_command_buffer, info);
 
   return trash;
 }

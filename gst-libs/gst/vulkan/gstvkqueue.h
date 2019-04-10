@@ -54,6 +54,10 @@ GST_VULKAN_API
 GstVulkanDevice *   gst_vulkan_queue_get_device (GstVulkanQueue * queue);
 
 GST_VULKAN_API
+GstVulkanCommandPool *  gst_vulkan_queue_create_command_pool    (GstVulkanQueue * queue,
+                                                                 GError ** error);
+
+GST_VULKAN_API
 void                gst_context_set_vulkan_queue                (GstContext * context,
                                                                  GstVulkanQueue * queue);
 GST_VULKAN_API

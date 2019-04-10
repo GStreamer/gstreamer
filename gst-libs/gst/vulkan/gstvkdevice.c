@@ -80,10 +80,6 @@ gst_vulkan_device_finalize (GObject * object)
   g_free (device->queue_family_props);
   device->queue_family_props = NULL;
 
-  if (device->cmd_pool)
-    vkDestroyCommandPool (device->device, device->cmd_pool, NULL);
-  device->cmd_pool = VK_NULL_HANDLE;
-
   if (device->device) {
     vkDeviceWaitIdle (device->device);
     vkDestroyDevice (device->device, NULL);
@@ -284,21 +280,6 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
     }
   }
 
-  {
-    VkCommandPoolCreateInfo cmd_pool_info = { 0, };
-
-    cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    cmd_pool_info.pNext = NULL;
-    cmd_pool_info.queueFamilyIndex = device->queue_family_id;
-    cmd_pool_info.flags = 0;
-
-    err =
-        vkCreateCommandPool (device->device, &cmd_pool_info, NULL,
-        &device->cmd_pool);
-    if (gst_vulkan_error_to_g_error (err, error, "vkCreateCommandPool") < 0)
-      goto error;
-  }
-
   GST_OBJECT_UNLOCK (device);
   return TRUE;
 
@@ -385,28 +366,6 @@ gst_vulkan_device_get_physical_device (GstVulkanDevice * device)
     return NULL;
 
   return device->instance->physical_devices[device->device_index];
-}
-
-gboolean
-gst_vulkan_device_create_cmd_buffer (GstVulkanDevice * device,
-    VkCommandBuffer * cmd, GError ** error)
-{
-  VkResult err;
-  VkCommandBufferAllocateInfo cmd_info = { 0, };
-
-  cmd_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  cmd_info.pNext = NULL;
-  cmd_info.commandPool = device->cmd_pool;
-  cmd_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  cmd_info.commandBufferCount = 1;
-
-  err = vkAllocateCommandBuffers (device->device, &cmd_info, cmd);
-  if (gst_vulkan_error_to_g_error (err, error, "vkCreateCommandBuffer") < 0)
-    return FALSE;
-
-  GST_LOG_OBJECT (device, "created cmd buffer %p", cmd);
-
-  return TRUE;
 }
 
 /**
