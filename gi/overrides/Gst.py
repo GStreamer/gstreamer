@@ -26,6 +26,7 @@
 
 import sys
 import inspect
+import itertools
 from ..overrides import override
 from ..module import get_introspection_module
 
@@ -63,6 +64,18 @@ class Bin(Gst.Bin):
         for arg in args:
             if not Gst.Bin.add(self, arg):
                 raise AddError(arg)
+
+    def make_and_add(self, factory_name, instance_name=None):
+        '''
+        @raises: Gst.AddError
+        '''
+        elem = Gst.ElementFactory.make(factory_name, instance_name)
+        if not elem:
+            raise AddError(
+                'No such element: {}'.format(factory_name))
+        self.add(elem)
+        return elem
+
 
 Bin = override(Bin)
 __all__.append('Bin')
@@ -570,6 +583,29 @@ class ValueList(Gst.ValueList):
 
 ValueList = override(ValueList)
 __all__.append('ValueList')
+
+# From https://docs.python.org/3/library/itertools.html
+
+
+def pairwise(iterable):
+    a, b = itertools.tee(iterable)
+    next(b, None)
+    return zip(a, b)
+
+
+class Element(Gst.Element):
+    @staticmethod
+    def link_many(*args):
+        '''
+        @raises: Gst.LinkError
+        '''
+        for pair in pairwise(args):
+            if not pair[0].link(pair[1]):
+                raise LinkError(
+                    'Failed to link {} and {}'.format(pair[0], pair[1]))
+
+Element = override(Element)
+__all__.append('Element')
 
 
 def TIME_ARGS(time):
