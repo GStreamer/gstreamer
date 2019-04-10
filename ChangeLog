@@ -1,3 +1,200 @@
+=== release 1.15.90 ===
+
+2019-04-11 00:40:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.15.90
+
+2019-04-11 00:40:03 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2019-04-09 20:42:04 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: Recognize the correct level and tier.
+	  The current manner can not recognize the correct level and always
+	  set the tier to main. Need to add frame rate check to recognize
+	  levels such as 4.1, 6.2, etc. We also add a logic to check main
+	  and high tier based on bitrate.
+	  Fixes: #145
+
+2019-04-03 14:12:23 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264_fei.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h264,h265: Set max_qp if min_qp is non-zero.
+	  media-driver currently fails to set a correct value of max_qp when
+	  min_qp is different to zero, in CBR and VBR mode, generating full
+	  quality frames, thus unexpected huge output.
+	  This patch sets max_qp to an arbitrary value to avoid this output
+	  temporary.
+	  Fixes: #144
+
+2019-04-09 12:42:56 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264_fei.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h264,h265: initial and minimal QP can be zero
+	  Currently the minimal value for either min_qp and init_qp are 1,
+	  but VA documentation specifiy that zero is also valid and means
+	  to ignore the quantiser.
+	  The default value is not changed though to avoid behaivor changes
+	  to users.
+
+2019-04-09 09:20:23 +0800  Haihao Xiang <haihao.xiang@intel.com>
+
+	* tests/elements/meson.build:
+	  meson: build test-vaapicontext when using X11
+	  x11_dep and libva_x11_dep are optional and meson ignores these
+	  dependencies even if they are added into the dependency list.
+	  This fixes the error below when libva-x11 is not avaiblabe:
+	  cc -Itests/elements/tests@elements@@test-vaapicontext@exe
+	  -Itests/elements -I../../gstreamer-vaapi/tests/elements -I.
+	  -I../../gstreamer-vaapi/ -Igst-libs -I../../gstreamer-vaapi/gst-libs
+	  -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0
+	  -I/usr/lib/x86_64-linux-gnu/glib-2.0/include -I/usr/include/orc-0.4
+	  -I/usr/include/at-spi2-atk/2.0 -I/usr/include/at-spi-2.0
+	  -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include
+	  -I/usr/include/gtk-3.0 -I/usr/include/gio-unix-2.0/
+	  -I/usr/include/libdrm -I/usr/include/harfbuzz -I/usr/include/pango-1.0
+	  -I/usr/include/fribidi -I/usr/include/atk-1.0 -I/usr/include/cairo
+	  -I/usr/include/pixman-1 -I/usr/include/uuid -I/usr/include/freetype2
+	  -I/usr/include/libpng16 -I/usr/include/gdk-pixbuf-2.0
+	  -fdiagnostics-color=always -pipe -D_FILE_OFFSET_BITS=64 -Wall
+	  -Winvalid-pch -O2 -g -fvisibility=hidden -fno-strict-aliasing -pthread
+	  -DHAVE_CONFIG_H  -MD -MQ
+	  'tests/elements/tests@elements@@test-vaapicontext@exe/test-vaapicontext.c.o'
+	  -MF
+	  'tests/elements/tests@elements@@test-vaapicontext@exe/test-vaapicontext.c.o.d'
+	  -o
+	  'tests/elements/tests@elements@@test-vaapicontext@exe/test-vaapicontext.c.o'
+	  -c ../../gstreamer-vaapi/tests/elements/test-vaapicontext.c
+	  ../../gstreamer-vaapi/tests/elements/test-vaapicontext.c:29:10: fatal
+	  error: va/va_x11.h: No such file or directory
+	  #include <va/va_x11.h>
+
+2019-04-01 12:56:28 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264_fei.c:
+	* gst-libs/gst/vaapi/gstvaapifeienc_h264.c:
+	* gst-libs/gst/vaapi/gstvaapifeipak_h264.c:
+	  libs: encoder: h264_fei: Use gst_param_spec_array for view-ids
+	  GValueArray is deprecated. Use GstValueArray instead.
+
+2019-03-30 18:29:31 +0100  Danilo Spinella <danyspin97@protonmail.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  vaapipluginutil: Fix #endif for USE_X11
+
+2019-03-29 18:29:51 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: simplify the view-ids setting
+
+2019-03-26 14:54:47 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	  libs: encoder: h264: Use gst_param_spec_array for view-ids
+	  GValueArray is deprecated. Use GstValueArray instead.
+	  gst_param_spec_array can be deserialized from command line using:
+	  vaapih264enc view-ids="<(uint)40,(uint)100>" num-views=2
+	  While the g_param_spec_value_array() can not, and always get
+	  error: "gst_value_deserialize_g_value_array: unimplemented"
+	  Also fixed an out-of-range bug.
+
+2019-03-29 13:33:41 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_objects.c:
+	  libs: Change the parameter setting order when encode picture.
+	  The order in gst_vaapi_enc_picture_encode when encoding one
+	  picture is not very correct. The misc parameters are set before
+	  the picture parameters. Some of the misc parameters such as
+	  ROI may change the current picture parameters. But the later
+	  setting of picture parameter will re-init all picture related
+	  parameters and clear the previous setting. The right order
+	  should be picture parameter first and then misc parameters.
+	  Signed-off-by: He Junyan <junyan.he@hotmail.com>
+
+2019-03-26 14:20:34 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_jpeg.c:
+	  libs: decoder: jpeg: support dynamic resolution change decode.
+	  Add size_changed flag to watch out resolution. if change, reset
+	  jpeg decoder's context.
+
+2019-03-23 15:34:03 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: add low power mode encode.
+	  By now, this feature only support by media-driver on Ice Lake
+	  platform, more information you can reference:
+	  https://github.com/intel/media-driver
+
+2019-03-15 18:40:21 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode: gobject's prop_id differ from vaapi encoder
+	  The vaapi internal encoder's property id are negative, thus they are
+	  different from GObject's property ids.
+	  gst_vaapi_encoder_set_property() should map to the internal encoder
+	  property id, assigned in gst_vaapiencode_default_set_property().
+
+2019-03-21 16:56:34 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: disable compiler warnings for unused vars and args if gst debug system is disabled
+
+2019-03-21 13:31:57 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: use new 'python' module instead of deprecated 'python3' one
+
+2019-03-11 18:38:36 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* common:
+	  Update common submodule back to 59cb678164719ff59dcf6c8b93df4617a1075d11
+	  It was wrongly changed in 3d9555a86d45565870c684fe00ec8bbb0fed7205
+
+2019-03-04 09:16:17 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	* meson.build:
+	  Back to development
+
+2019-03-01 12:33:26 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapisurfacepool.c:
+	  libs: Fix a typo in comments.
+	  Fix a typo in function description of
+	  gst_vaapi_surface_pool_new_with_chroma_type.
+	  Signed-off-by: He Junyan <junyan.he@hotmail.com>
+
+2019-02-27 13:02:10 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugin: if any caps in downstream, negotiate raw video
+	  When downstream has any caps, vaapi should not shovel vaapi featured
+	  buffers, but rather plain raw video, assuming always the worst case
+	  scenario (downstream cannot handle featured video memory but raw
+	  system memory buffers).
+	  This patch query the peer caps without any filter, to know if
+	  donwstream just ask for any caps, if so jump to the color space
+	  checking, otherwise do the caps intersection and continue with the
+	  feature selection algorithm.
+	  Fixes: #139
+
 === release 1.15.2 ===
 
 2019-02-26 12:01:53 +0000  Tim-Philipp Müller <tim@centricular.com>

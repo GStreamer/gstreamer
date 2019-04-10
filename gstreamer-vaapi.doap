@@ -27,6 +27,16 @@
 
  <release>
   <Version>
+   <revision>1.15.90</revision>
+   <branch>master</branch>
+   <name></name>
+   <created>2019-04-11</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gstreamer-vaapi/gstreamer-vaapi-1.15.90.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.15.2</revision>
    <branch>master</branch>
    <name></name>
