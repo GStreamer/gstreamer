@@ -3622,15 +3622,6 @@ gst_video_vbi_encoder_free
 gst_video_vbi_encoder_add_ancillary
 gst_video_vbi_encoder_write_line
 gst_video_vbi_encoder_copy
-<SUBSECTION bardata>
-GstVideoBarMeta
-gst_buffer_get_video_bar_meta
-gst_buffer_add_video_bar_meta
-<SUBSECTION afd>
-GstVideoAfd
-GstVideoAfdMeta
-gst_buffer_get_video_afd_meta
-gst_buffer_add_video_afd_meta
 <SUBSECTION closedcaption>
 GstVideoCaptionType
 GstVideoCaptionMeta
