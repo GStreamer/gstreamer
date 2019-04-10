@@ -1,3 +1,72 @@
+=== release 1.15.90 ===
+
+2019-04-11 00:34:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.15.90
+
+2019-04-11 00:34:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/gst-libav-plugins.args:
+	* docs/plugins/inspect/plugin-libav.xml:
+	  Update docs
+
+2019-04-09 16:56:20 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  avcfg: Override type of bitrate property from int64 to int
+	  See https://gitlab.freedesktop.org/gstreamer/gst-libav/issues/41#note_142808
+	  The switch to the new ffmpeg property system changed the type of the
+	  bitrate property from int to int64, which potentially breaks many
+	  existing applications at runtime as properties are usually set via
+	  g_object_set().
+	  As such, override the type to int until GStreamer 2.0.
+
+2019-03-28 14:24:42 -0400  Aaron Boxer <aaron.boxer@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: do not add 708 caption meta if already exists
+	  (this is only used for CEA 708 raw data). another element
+	  such as mpegvideoparse may have already added the meta.
+
+2019-03-23 00:24:25 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: pass Closed Caption metadata to libav
+
+2019-02-26 00:00:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavauddec.h:
+	  avauddec: fix decoding of APE and Cook audio
+	  .. and other formats where ffmpeg gives us multiple
+	  subframes per input frame.
+	  Since we now support non-interleaved audio, we can't
+	  just concat buffers any more. Also, audio metas won't
+	  be combined when buffers are merged, so when we push
+	  out the combined buffer we'll look at the meta describing
+	  only the first subframe and think it covers the whole
+	  frame leading to stutter/gaps in the output.
+	  We could fix this by copying the output data into a new
+	  buffer when we merge buffers, but that's suboptimal, so
+	  let's add some API to GstAudioDecoder to push out subframes
+	  and use that instead.
+	  https://gitlab.freedesktop.org/gstreamer/gst-libav/issues/49
+
+2019-03-04 09:12:35 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-libav.xml:
+	* meson.build:
+	  Back to development
+
 === release 1.15.2 ===
 
 2019-02-26 11:57:15 +0000  Tim-Philipp Müller <tim@centricular.com>
