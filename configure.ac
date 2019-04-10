@@ -522,7 +522,10 @@ fi
 dnl VA/X11 API
 if test $USE_X11 -eq 1; then
   PKG_CHECK_MODULES(LIBVA_X11, [libva-x11 >= $VAAPI_REQ],
-    [], [USE_X11=0])
+    [], [
+      USE_X11=0
+      USE_GLX=0
+    ])
 fi
 
 dnl Check for encoding support
