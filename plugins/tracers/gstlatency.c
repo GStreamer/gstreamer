@@ -265,7 +265,7 @@ send_latency_probe (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
       pad_name = gst_pad_get_name (peer_pad);
       latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
           gst_structure_new_id (sub_latency_probe_id,
-              latency_probe_element, G_TYPE_STRING, element_id,
+              latency_probe_element_id, G_TYPE_STRING, element_id,
               latency_probe_element, G_TYPE_STRING, element_name,
               latency_probe_pad, G_TYPE_STRING, pad_name,
               latency_probe_ts, G_TYPE_UINT64, ts, NULL));
