@@ -1,3 +1,378 @@
+=== release 1.15.90 ===
+
+2019-04-11 00:37:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.15.90
+
+2019-03-23 19:21:31 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  g-i: pass --quiet to g-ir-scanner
+	  This suppresses the annoying 'g-ir-scanner: link: cc ..' output
+	  that we get even if everything works just fine.
+	  We still get g-ir-scanner warnings and compiler warnings if
+	  we pass this option.
+
+2019-03-19 16:39:20 +0100  Jakub Adam <jakub.adam@collabora.com>
+
+	* ges/ges-video-source.c:
+	  videosource: Expose video-direction child property
+
+2019-03-15 16:24:16 +0100  Jakub Adam <jakub.adam@collabora.com>
+
+	* ges/ges-video-source.c:
+	  videosource: auto-flip the image according to image-orientation tag
+	  If there's image-orientation tag, make sure the image is correctly
+	  oriented before we scale it.
+
+2019-03-16 15:04:29 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ges/Makefile.am:
+	  Fix autotools build
+
+2019-03-08 17:45:27 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	  clip: Make sure to set the pasted clip start before adding to layer
+	  And handle the fact that adding to a layer can fail.
+	  Also plug some leaks in the dispose method (and use the dispose
+	  vmethod instead of finalize as appropriate).
+
+2019-03-08 12:28:31 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	  clip: Emit signals while splitting in a way the operation is undoable
+	  Basically if we do not emit a "duration" change of the clip being
+	  splitted first when executing the 'reverse' operations would lead
+	  to fully overallaping clips.
+
+2019-03-01 19:32:19 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-auto-transition.c:
+	* ges/ges-auto-transition.h:
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	* ges/ges-container.c:
+	* ges/ges-group.c:
+	* ges/ges-internal.h:
+	* ges/ges-layer.c:
+	* ges/ges-source-clip.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-tree.c:
+	* ges/ges-timeline-tree.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	* ges/ges-uri-clip.c:
+	* ges/meson.build:
+	* tests/check/ges/asset.c:
+	* tests/check/ges/basic.c:
+	* tests/check/ges/clip.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/test-utils.h:
+	* tests/check/ges/timelineedition.c:
+	* tests/check/ges/uriclip.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_group.py:
+	* tests/check/python/test_timeline.py:
+	  Reimplement the timeline editing API
+	  This is implemented on top of a Tree that represents the whole timeline.
+	  SourceClips can not fully overlap anymore and the tests have been
+	  updated to take that into account. Some new tests were added to verify
+	  that behaviour in greater details
+
+2019-03-03 21:18:53 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/c/gessrc.c:
+	* plugins/ges/gesdemux.c:
+	  Some copyright fixing
+
+2019-03-03 20:59:12 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Rename group_id to stream_start_group_id
+
+2019-03-01 19:30:41 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/ges/test-utils.c:
+	* tests/check/ges/test-utils.h:
+	* tests/check/python/common.py:
+	  tests: Add utilities to print the timeline
+	  Making debugging tests simpler
+
+2019-03-01 19:08:39 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-group.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	* ges/ges-track-element.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/timelineedition.c:
+	  timeline-element: Add a method to retrieve layer priority
+	  Each timeline element is in a layer (potentially spanning
+	  over several), it is very often useful to retrieve an element
+	  layer priority (from an app perspective more than the element
+	  priority itself as that is a bit of an implementation detail
+	  in the end).
+	  Port tests to it
+
+2019-02-11 20:30:31 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	  python: Implement TimelineElement.__repr__
+
+2019-02-28 13:56:50 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	  Add API to get the GESEdge names
+
+2019-02-09 18:59:08 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-internal.h:
+	* ges/ges-timeline-element.c:
+	  ges: Move GESClipFlags to GESTimelineElementFlags
+	  Keeping it internal
+	  And add an internal method to get layer priority for GESTimelineElements
+	  (dirty implementation to make it simple for now)
+
+2019-02-08 17:50:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/python/test_timeline.py:
+	  tests:python: assertEquals is deprecated, use assertEqual
+
+2019-02-08 17:48:26 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-layer.c:
+	  layer: factor out a method to remove an object without signaling it
+
+2019-02-08 17:47:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/python/common.py:
+	* tests/check/python/test_timeline.py:
+	  tests: python: Move assertTimelineTopology to the baseclass
+
+2019-02-08 17:46:31 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: No error when moving an object as part of the context
+	  It will just happen from the context
+
+2019-02-08 17:44:40 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Not being able to trim and object is an error
+	  So error out when that happens.
+
+2019-02-08 17:43:34 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Setting duration to the same value is valid
+	  And should not be advertised as if the operation failed.
+
+2019-02-08 17:37:39 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Do not ripple if resulting duration would be 0
+
+2019-02-08 16:44:39 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-auto-transition.c:
+	* ges/ges-clip.c:
+	* ges/ges-clip.h:
+	* ges/ges-internal.h:
+	* ges/ges-timeline.c:
+	* ges/ges-track-element.c:
+	* tests/check/ges/group.c:
+	  clip: Add a method to get the priority of the layer it is in
+	  Just an helper method to get the 'priority of a the clip'
+
+2019-02-08 16:05:18 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-source-clip.c:
+	* tests/check/ges/timelineedition.c:
+	  clip: Rollback moving clips when moving a contained TrackElement fails
+	  And fix unit tests to match the correct behaviour
+
+2019-02-09 00:07:08 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-internal.h:
+	* tests/check/ges/test-utils.h:
+	  Shorten GES_FORMAT output
+
+2019-02-21 17:24:51 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-clip.c:
+	* tests/check/python/test_clip.py:
+	  clip: Make sure to remove and re add effects when adding clips to layer
+	  And make re add them in the same order.
+	  And enhance tests to check that
+
+2019-03-01 22:57:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-source.c:
+	  source: No checks when linking default elements
+
+2019-03-15 18:31:30 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlesource.c:
+	  nlesource: Use gst_element_call_async as appropriate
+
+2019-03-15 17:07:06 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlesource.c:
+	  nlesource: Protect seeks from tear down
+	  Otherwise there is a race where we trigger the seek at the exact
+	  same time the composition is being teared down potentially leading
+	  to basesrc restarting its srcpad task which ends up being leaked.
+	  Fixes ges.playback.scrub_backward_seeking.test_title.audio_video.vorbis_theora_ogg
+	  and probably all its friends timeouting with the following stack trace:
+	  (gdb) t a a bt
+	  Thread 4 (Thread 0x7f5962acd700 (LWP 19997)):
+	  #0  0x00007f5976713efd in syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+	  #1  0x00007f5976a9d3f3 in g_cond_wait (cond=cond@entry=0x7f5938125410, mutex=mutex@entry=0x7f59381253c8) at gthread-posix.c:1402
+	  #2  0x00007f5976c9e26b in gst_task_func (task=0x7f59381253b0 [GstTask]) at ../subprojects/gstreamer/gst/gsttask.c:313
+	  #3  0x00007f5976a7ecb3 in g_thread_pool_thread_proxy (data=<optimized out>) at gthreadpool.c:307
+	  #4  0x00007f5976a7e2aa in g_thread_proxy (data=0x7f5954071d40) at gthread.c:784
+	  #5  0x00007f59767ea58e in start_thread (arg=<optimized out>) at pthread_create.c:486
+	  #6  0x00007f59767196a3 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+	  Thread 3 (Thread 0x7f5963fff700 (LWP 19995)):
+	  #0  0x00007f597670e421 in __GI___poll (fds=0xe32da0, nfds=2, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+	  #1  0x00007f5976a553a6 in g_main_context_poll (priority=<optimized out>, n_fds=2, fds=0xe32da0, timeout=<optimized out>, context=0xe31ff0) at gmain.c:4221
+	  #2  0x00007f5976a553a6 in g_main_context_iterate (context=0xe31ff0, block=block@entry=1, dispatch=dispatch@entry=1, self=<optimized out>) at gmain.c:3915
+	  #3  0x00007f5976a55762 in g_main_loop_run (loop=0xe32130) at gmain.c:4116
+	  #4  0x00007f59768db10a in gdbus_shared_thread_func (user_data=0xe31fc0) at gdbusprivate.c:275
+	  #5  0x00007f5976a7e2aa in g_thread_proxy (data=0xe1b8a0) at gthread.c:784
+	  #6  0x00007f59767ea58e in start_thread (arg=<optimized out>) at pthread_create.c:486
+	  #7  0x00007f59767196a3 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+	  Thread 2 (Thread 0x7f5968dcc700 (LWP 19994)):
+	  #0  0x00007f597670e421 in __GI___poll (fds=0xe1bcc0, nfds=1, timeout=-1) at ../sysdeps/unix/sysv/linux/poll.c:29
+	  #1  0x00007f5976a553a6 in g_main_context_poll (priority=<optimized out>, n_fds=1, fds=0xe1bcc0, timeout=<optimized out>, context=0xe1b350) at gmain.c:4221
+	  #2  0x00007f5976a553a6 in g_main_context_iterate (context=context@entry=0xe1b350, block=block@entry=1, dispatch=dispatch@entry=1, self=<optimized out>) at gmain.c:3915
+	  #3  0x00007f5976a554d0 in g_main_context_iteration (context=0xe1b350, may_block=may_block@entry=1) at gmain.c:3981
+	  #4  0x00007f5976a55521 in glib_worker_main (data=<optimized out>) at gmain.c:5861
+	  #5  0x00007f5976a7e2aa in g_thread_proxy (data=0xe1b800) at gthread.c:784
+	  #6  0x00007f59767ea58e in start_thread (arg=<optimized out>) at pthread_create.c:486
+	  #7  0x00007f59767196a3 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+	  Thread 1 (Thread 0x7f5975df4fc0 (LWP 19993)):
+	  #0  0x00007f5976713efd in syscall () at ../sysdeps/unix/sysv/linux/x86_64/syscall.S:38
+	  #1  0x00007f5976a9d3f3 in g_cond_wait (cond=cond@entry=0xe34020, mutex=0xe39b80) at gthread-posix.c:1402
+	  #2  0x00007f5976a7f41c in g_thread_pool_free (pool=0xe34000, immediate=0, wait_=<optimized out>) at gthreadpool.c:776
+	  #3  0x00007f5976c9f1ca in default_cleanup (pool=0xe256b0 [GstTaskPool]) at ../subprojects/gstreamer/gst/gsttaskpool.c:89
+	  #4  0x00007f5976c9e32d in init_klass_pool (klass=<optimized out>) at ../subprojects/gstreamer/gst/gsttask.c:161
+	  #5  0x00007f5976c9e502 in gst_task_cleanup_all () at ../subprojects/gstreamer/gst/gsttask.c:381
+	  #6  0x00007f5976c214f4 in gst_deinit () at ../subprojects/gstreamer/gst/gst.c:1095
+	  #7  0x000000000040394f in main (argc=6, argv=<optimized out>) at ../subprojects/gst-editing-services/tools/ges-launch.c:94
+
+2019-02-08 18:26:19 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/benchmarks/meson.build:
+	* tests/meson.build:
+	  meson: Build benchmarks
+
+2019-03-11 19:56:09 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-uri-asset.c:
+	  asset-uri: Create a specific discoverer when discovering sync
+	  To allow 'reintrancy'.
+	  This was a 'regression' introduced in bad64296d9b497a13f5f7fe91d568d85ed236265
+	  Fixes https://gitlab.gnome.org/GNOME/pitivi/issues/2278
+
+2019-02-22 17:31:06 -0800  Pat DeSantis <pdesantis3@gmail.com>
+
+	* ges/ges-formatter.h:
+	  Mark ges_timeline_load_from_uri as deprecated
+
+2019-02-20 20:17:55 -0800  Pat DeSantis <pdesantis3@gmail.com>
+
+	* ges/ges-formatter.h:
+	  Update deprecation warning to match GTK style
+
+2019-02-20 17:17:14 -0800  Pat DeSantis <pdesantis3@gmail.com>
+
+	* ges/ges-formatter.h:
+	  Mark ges_formatter_save_to_uri as deprecated
+
+2019-01-29 13:45:49 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/ges/negative.c:
+	* tests/check/meson.build:
+	  tests: Add inconsistent init/deinit test case
+
+2019-01-28 20:45:11 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* ges/ges-asset.c:
+	* ges/ges.c:
+	  ges: Enhance ges_{init/deinit} documentation
+	  Add some init/deinit related comment and make assertion when
+	  ges_deinit() is called from unexpected thread.
+
+2019-02-06 19:49:14 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/python/common.py:
+	  tests:python: Use proper GES.Project constructor
+	  Avoiding a g_critical
+
+2019-02-08 13:54:06 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Suppress error from child during sync state with parent
+	  This commit is to ensure cleanup internal elements on state change failure.
+	  nlecomposition posts its own error message after cleanup child.
+	  If we don't suppress child error, meanwhile, an application
+	  triggered downward state change (resulting from child error message)
+	  might be able to reach nlecomposition before internal cleaning child up.
+	  That eventually results to downward state change failure.
+
+2019-02-05 17:29:00 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* plugins/nle/nlesource.c:
+	  nlesource: Don't leak pending seek event on dispose
+
+2019-02-01 15:37:42 +0900  Seungha Yang <seungha.yang@navercorp.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Don't keep sync state of child on activation failure
+	  This will result in downward state change failure eventually
+	  when user is finalizing top level (i.g., gespipeline) bin.
+
+2019-03-04 11:09:33 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/.gitignore:
+	  examples: add gessrc example binary to .gitignore
+
+2019-03-04 11:07:51 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* plugins/ges/gesdemux.c:
+	  gesdemux: don't use deprecated gst_uri_construct()
+	  Fixes #64
+
+2019-03-04 09:14:25 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
+2019-02-28 13:09:38 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/ges/Makefile.am:
+	  ges: Link ges plugin to libgstpbutils
+	  /usr/bin/ld: .libs/libgstges_la-gesdemux.o: in function `ges_timeline_new_from_uri_from_main_thread':
+	  ./plugins/ges/gesdemux.c:279: undefined reference to `gst_discoverer_new'
+	  /usr/bin/ld: ./plugins/ges/gesdemux.c:288: undefined reference to `gst_discoverer_start'
+
 === release 1.15.2 ===
 
 2019-02-26 11:59:49 +0000  Tim-Philipp Müller <tim@centricular.com>
@@ -9,6 +384,18 @@
 	* gst-editing-services.doap:
 	* meson.build:
 	  Release 1.15.2
+
+2019-02-26 14:12:13 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* examples/c/Makefile.am:
+	  examples: add new gessrc example, so sourcefile gets disted
+
+2019-02-26 13:57:17 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* configure.ac:
+	* plugins/Makefile.am:
+	* plugins/ges/Makefile.am:
+	  plugins: add autotools build for new ges plugin
 
 2019-02-20 22:11:54 -0300  Thibault Saunier <tsaunier@igalia.com>
 
