@@ -172,8 +172,9 @@ gst_control_binding_dispose (GObject * object)
   GstControlBinding *self = GST_CONTROL_BINDING (object);
 
   /* we did not took a reference */
-  g_object_remove_weak_pointer ((GObject *) self->__object,
-      (gpointer *) & self->__object);
+  if (self->__object)
+    g_object_remove_weak_pointer ((GObject *) self->__object,
+        (gpointer *) & self->__object);
   self->__object = NULL;
   g_weak_ref_clear (&self->ABI.abi.priv->object);
 
