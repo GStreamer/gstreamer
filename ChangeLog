@@ -1,3 +1,81 @@
+=== release 1.15.90 ===
+
+2019-04-11 00:35:55 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.15.90
+
+2019-04-10 10:32:53 +0200  Ulf Olsson <ulfo@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Add support for GCM (RFC 7714)
+	  Follow-up to !198
+
+2019-03-28 00:27:37 +0100  Erlend Eriksen <erlend_ne@hotmail.com>
+
+	* gst/rtsp-server/rtsp-session-pool.c:
+	  session pool: fix missing klass-> in klass->create_session
+
+2019-03-23 19:16:17 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  g-i: pass --quiet to g-ir-scanner
+	  This suppresses the annoying 'g-ir-scanner: link: cc ..' output
+	  that we get even if everything works just fine.
+	  We still get g-ir-scanner warnings and compiler warnings if
+	  we pass this option.
+
+2019-03-23 19:15:48 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  g-i: silence 'nested extern' compiler warnings when building scanner binary
+	  We need a nested extern in our init section for the scanner binary
+	  so we can call gst_init to make sure GStreamer types are initialised
+	  (they are not all lazy init via get_type functions, but some are in
+	  exported variables). There doesn't seem to be any other mechanism to
+	  achieve this, so just remove that warning, it's not important at all.
+
+2019-03-21 11:49:10 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: pass -Wno-unused to compiler if gstreamer debug system is disabled
+
+2019-03-14 07:37:26 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/media.c:
+	  rtsp-media: Handle set state when preparing.
+	  Handle the situation when  a call to gst_rtsp_media_set_state is done
+	  when media status is preparing.
+	  Also add unit test for this scenario.
+	  The unit test simulate on a media level when two clients share a (live)
+	  media.
+	  Both clients have done SETUP and got responses. Now client 1 is doing
+	  play and client 2 is just closing the connection.
+	  Then without patch there are a problem when
+	  client1 is calling gst_rtsp_media_unsuspend in handle_play_request.
+	  And client2 is doing closing connection we can end up in a call
+	  to gst_rtsp_media_set_state when
+	  priv->status == GST_RTSP_MEDIA_STATUS_PREPARING and all the logic for
+	  shut down media is jumped over .
+	  With this patch and this scenario we wait until
+	  priv->status == GST_RTSP_MEDIA_STATUS_PREPARED and then continue to
+	  execute after that and now we will execute the logic for
+	  shut down media.
+
+2019-03-04 09:13:30 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* meson.build:
+	  Back to development
+
 === release 1.15.2 ===
 
 2019-02-26 11:58:53 +0000  Tim-Philipp Müller <tim@centricular.com>
