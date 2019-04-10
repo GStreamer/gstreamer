@@ -5424,6 +5424,7 @@ mikey_apply_policy (GstCaps * caps, GstMIKEYMessage * msg, guint8 policy)
   /* now override the defaults with what is in the Security Policy */
   if (sp != NULL) {
     guint len;
+    guint enc_alg = GST_MIKEY_ENC_AES_CM_128;
 
     /* collect all the params and go over them */
     len = gst_mikey_payload_sp_get_n_params (sp);
@@ -5433,13 +5434,17 @@ mikey_apply_policy (GstCaps * caps, GstMIKEYMessage * msg, guint8 policy)
 
       switch (param->type) {
         case GST_MIKEY_SP_SRTP_ENC_ALG:
+          enc_alg = param->val[0];
           switch (param->val[0]) {
-            case 0:
+            case GST_MIKEY_ENC_NULL:
               srtp_cipher = "null";
               break;
-            case 2:
-            case 1:
+            case GST_MIKEY_ENC_AES_CM_128:
+            case GST_MIKEY_ENC_AES_KW_128:
               srtp_cipher = "aes-128-icm";
+              break;
+            case GST_MIKEY_ENC_AES_GCM_128:
+              srtp_cipher = "aes-128-gcm";
               break;
             default:
               break;
@@ -5448,10 +5453,20 @@ mikey_apply_policy (GstCaps * caps, GstMIKEYMessage * msg, guint8 policy)
         case GST_MIKEY_SP_SRTP_ENC_KEY_LEN:
           switch (param->val[0]) {
             case AES_128_KEY_LEN:
-              srtp_cipher = "aes-128-icm";
+              if (enc_alg == GST_MIKEY_ENC_AES_CM_128 ||
+                  enc_alg == GST_MIKEY_ENC_AES_KW_128) {
+                srtp_cipher = "aes-128-icm";
+              } else if (enc_alg == GST_MIKEY_ENC_AES_GCM_128) {
+                srtp_cipher = "aes-128-gcm";
+              }
               break;
             case AES_256_KEY_LEN:
-              srtp_cipher = "aes-256-icm";
+              if (enc_alg == GST_MIKEY_ENC_AES_CM_128 ||
+                  enc_alg == GST_MIKEY_ENC_AES_KW_128) {
+                srtp_cipher = "aes-256-icm";
+              } else if (enc_alg == GST_MIKEY_ENC_AES_GCM_128) {
+                srtp_cipher = "aes-256-gcm";
+              }
               break;
             default:
               break;
@@ -5459,11 +5474,10 @@ mikey_apply_policy (GstCaps * caps, GstMIKEYMessage * msg, guint8 policy)
           break;
         case GST_MIKEY_SP_SRTP_AUTH_ALG:
           switch (param->val[0]) {
-            case 0:
+            case GST_MIKEY_MAC_NULL:
               srtp_auth = "null";
               break;
-            case 2:
-            case 1:
+            case GST_MIKEY_MAC_HMAC_SHA_1_160:
               srtp_auth = "hmac-sha1-80";
               break;
             default:
