@@ -13310,7 +13310,7 @@
 
 <ARG>
 <NAME>avenc_zmbv::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -14170,7 +14170,7 @@
 
 <ARG>
 <NAME>avenc_xwd::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -15030,7 +15030,7 @@
 
 <ARG>
 <NAME>avenc_xbm::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -15890,7 +15890,7 @@
 
 <ARG>
 <NAME>avenc_wmv2::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -16970,7 +16970,7 @@
 
 <ARG>
 <NAME>avenc_wmv1::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -18050,7 +18050,7 @@
 
 <ARG>
 <NAME>avenc_wmav2::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -18310,7 +18310,7 @@
 
 <ARG>
 <NAME>avenc_wmav1::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -18630,7 +18630,7 @@
 
 <ARG>
 <NAME>avenc_utvideo::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -19500,7 +19500,7 @@
 
 <ARG>
 <NAME>avenc_tiff::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -20390,7 +20390,7 @@
 
 <ARG>
 <NAME>avenc_targa::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -21260,7 +21260,7 @@
 
 <ARG>
 <NAME>avenc_svq1::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -22130,7 +22130,7 @@
 
 <ARG>
 <NAME>avenc_sunrast::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -23000,7 +23000,7 @@
 
 <ARG>
 <NAME>avenc_sgi::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -23870,7 +23870,7 @@
 
 <ARG>
 <NAME>avenc_rv20::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -24950,7 +24950,7 @@
 
 <ARG>
 <NAME>avenc_rv10::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -26030,7 +26030,7 @@
 
 <ARG>
 <NAME>avenc_roqvideo::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -26900,7 +26900,7 @@
 
 <ARG>
 <NAME>avenc_roq_dpcm::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -27160,7 +27160,7 @@
 
 <ARG>
 <NAME>avenc_real_144::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -27420,7 +27420,7 @@
 
 <ARG>
 <NAME>avenc_qtrle::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -28280,7 +28280,7 @@
 
 <ARG>
 <NAME>avenc_prores::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -29150,7 +29150,7 @@
 
 <ARG>
 <NAME>avenc_ppm::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -30010,7 +30010,7 @@
 
 <ARG>
 <NAME>avenc_png::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -30900,7 +30900,7 @@
 
 <ARG>
 <NAME>avenc_pgmyuv::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -31760,7 +31760,7 @@
 
 <ARG>
 <NAME>avenc_pgm::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -32620,7 +32620,7 @@
 
 <ARG>
 <NAME>avenc_pcx::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -33480,7 +33480,7 @@
 
 <ARG>
 <NAME>avenc_pbm::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -34340,7 +34340,7 @@
 
 <ARG>
 <NAME>avenc_pam::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -35200,7 +35200,7 @@
 
 <ARG>
 <NAME>avenc_nellymoser::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -35480,7 +35480,7 @@
 
 <ARG>
 <NAME>avenc_msmpeg4v2::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -36900,7 +36900,7 @@
 
 <ARG>
 <NAME>avenc_msmpeg4::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -38320,7 +38320,7 @@
 
 <ARG>
 <NAME>avenc_mpeg4::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -39770,7 +39770,7 @@
 
 <ARG>
 <NAME>avenc_mpeg2video::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -41280,7 +41280,7 @@
 
 <ARG>
 <NAME>avenc_mpeg1video::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -42730,7 +42730,7 @@
 
 <ARG>
 <NAME>avenc_mp2::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -42990,7 +42990,7 @@
 
 <ARG>
 <NAME>avenc_mjpeg::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -44090,7 +44090,7 @@
 
 <ARG>
 <NAME>avenc_ljpeg::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -44960,7 +44960,7 @@
 
 <ARG>
 <NAME>avenc_jpegls::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -45830,7 +45830,7 @@
 
 <ARG>
 <NAME>avenc_huffyuv::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -46740,7 +46740,7 @@
 
 <ARG>
 <NAME>avenc_h263p::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -48210,7 +48210,7 @@
 
 <ARG>
 <NAME>avenc_h263::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -49630,7 +49630,7 @@
 
 <ARG>
 <NAME>avenc_h261::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -50710,7 +50710,7 @@
 
 <ARG>
 <NAME>avenc_g726::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -50980,7 +50980,7 @@
 
 <ARG>
 <NAME>avenc_g722::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -51260,7 +51260,7 @@
 
 <ARG>
 <NAME>avenc_flv::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -52660,7 +52660,7 @@
 
 <ARG>
 <NAME>avenc_flashsv::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -53520,7 +53520,7 @@
 
 <ARG>
 <NAME>avenc_ffvhuff::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -54410,7 +54410,7 @@
 
 <ARG>
 <NAME>avenc_ffv1::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -55290,7 +55290,7 @@
 
 <ARG>
 <NAME>avenc_eac3::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -55730,7 +55730,7 @@
 
 <ARG>
 <NAME>avenc_dvvideo::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -56610,7 +56610,7 @@
 
 <ARG>
 <NAME>avenc_dpx::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -57470,7 +57470,7 @@
 
 <ARG>
 <NAME>avenc_dnxhd::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -58370,7 +58370,7 @@
 
 <ARG>
 <NAME>avenc_comfortnoise::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -58630,7 +58630,7 @@
 
 <ARG>
 <NAME>avenc_cljr::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -59500,7 +59500,7 @@
 
 <ARG>
 <NAME>avenc_bmp::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -60360,7 +60360,7 @@
 
 <ARG>
 <NAME>avenc_asv2::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -61220,7 +61220,7 @@
 
 <ARG>
 <NAME>avenc_asv1::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -62080,7 +62080,7 @@
 
 <ARG>
 <NAME>avenc_alac::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -62340,7 +62340,7 @@
 
 <ARG>
 <NAME>avenc_adpcm_yamaha::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -62600,7 +62600,7 @@
 
 <ARG>
 <NAME>avenc_adpcm_swf::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -62860,7 +62860,7 @@
 
 <ARG>
 <NAME>avenc_adpcm_ms::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -63120,7 +63120,7 @@
 
 <ARG>
 <NAME>avenc_adpcm_ima_wav::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -63380,7 +63380,7 @@
 
 <ARG>
 <NAME>avenc_adpcm_ima_qt::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -63640,7 +63640,7 @@
 
 <ARG>
 <NAME>avenc_adpcm_adx::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -63900,7 +63900,7 @@
 
 <ARG>
 <NAME>avenc_ac3_fixed::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -64360,7 +64360,7 @@
 
 <ARG>
 <NAME>avenc_ac3::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -64820,7 +64820,7 @@
 
 <ARG>
 <NAME>avenc_aac::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -65160,7 +65160,7 @@
 
 <ARG>
 <NAME>avenc_a64multi5::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -66020,7 +66020,7 @@
 
 <ARG>
 <NAME>avenc_a64multi::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -75250,7 +75250,7 @@
 
 <ARG>
 <NAME>avenc_alias_pix::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -77150,7 +77150,7 @@
 
 <ARG>
 <NAME>avenc_xface::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -78010,7 +78010,7 @@
 
 <ARG>
 <NAME>avenc_wavpack::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -78410,7 +78410,7 @@
 
 <ARG>
 <NAME>avenc_tta::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -78670,7 +78670,7 @@
 
 <ARG>
 <NAME>avenc_sonicls::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -78930,7 +78930,7 @@
 
 <ARG>
 <NAME>avenc_sonic::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -79190,7 +79190,7 @@
 
 <ARG>
 <NAME>avenc_snow::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -80100,7 +80100,7 @@
 
 <ARG>
 <NAME>avenc_s302m::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -80360,7 +80360,7 @@
 
 <ARG>
 <NAME>avenc_r10k::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -81220,7 +81220,7 @@
 
 <ARG>
 <NAME>avenc_prores_ks::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -82150,7 +82150,7 @@
 
 <ARG>
 <NAME>avenc_prores_aw::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -83100,7 +83100,7 @@
 
 <ARG>
 <NAME>avenc_msvideo1::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -83960,7 +83960,7 @@
 
 <ARG>
 <NAME>avenc_mp2fixed::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -84220,7 +84220,7 @@
 
 <ARG>
 <NAME>avenc_jpeg2000::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -85110,7 +85110,7 @@
 
 <ARG>
 <NAME>avenc_g723_1::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -85370,7 +85370,7 @@
 
 <ARG>
 <NAME>avenc_flashsv2::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -86230,7 +86230,7 @@
 
 <ARG>
 <NAME>avenc_dca::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -86500,7 +86500,7 @@
 
 <ARG>
 <NAME>avenc_cinepak::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -87470,7 +87470,7 @@
 
 <ARG>
 <NAME>avenc_avui::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -88330,7 +88330,7 @@
 
 <ARG>
 <NAME>avenc_avrp::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -89190,7 +89190,7 @@
 
 <ARG>
 <NAME>avenc_apng::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -90070,7 +90070,7 @@
 
 <ARG>
 <NAME>avenc_amv::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -92690,7 +92690,7 @@
 
 <ARG>
 <NAME>avenc_vc2::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -94200,7 +94200,7 @@
 
 <ARG>
 <NAME>avenc_truehd::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -94460,7 +94460,7 @@
 
 <ARG>
 <NAME>avenc_mlp::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -94740,7 +94740,7 @@
 
 <ARG>
 <NAME>avenc_opus::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -95400,7 +95400,7 @@
 
 <ARG>
 <NAME>avenc_g726le::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -95670,7 +95670,7 @@
 
 <ARG>
 <NAME>avenc_fits::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -96920,7 +96920,7 @@
 
 <ARG>
 <NAME>avenc_sbc::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -97190,7 +97190,7 @@
 
 <ARG>
 <NAME>avenc_pcm_vidc::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -97460,7 +97460,7 @@
 
 <ARG>
 <NAME>avenc_magicyuv::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -98260,7 +98260,7 @@
 
 <ARG>
 <NAME>avenc_aptx_hd::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
@@ -98510,7 +98510,7 @@
 
 <ARG>
 <NAME>avenc_aptx::bitrate</NAME>
-<TYPE>gint64</TYPE>
+<TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>bitrate</NICK>
