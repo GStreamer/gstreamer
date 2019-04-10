@@ -1,3 +1,73 @@
+=== release 1.15.90 ===
+
+2019-04-11 00:28:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* meson.build:
+	  Release 1.15.90
+
+2019-04-11 00:28:18 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	  Update docs
+
+2019-03-27 21:59:45 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* ext/x264/meson.build:
+	  meson: Add a subproject fallback for x264
+
+2019-03-10 19:33:31 +0000  Piotr Drąg <piotrdrag@gmail.com>
+
+	* po/LINGUAS:
+	  Update LINGUAS
+
+2019-03-21 11:23:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  meson: add -Wno-unused also to C++ args when gst debug system is disabled
+
+2019-03-04 09:08:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-sid.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* meson.build:
+	  Back to development
+
+2019-02-28 11:03:31 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: inject CEA708 closed captions
+
 === release 1.15.2 ===
 
 2019-02-26 11:48:50 +0000  Tim-Philipp Müller <tim@centricular.com>
