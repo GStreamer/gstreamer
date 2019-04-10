@@ -3,10 +3,10 @@
   <description>Audio matrix mix</description>
   <filename>../../gst/audiomixmatrix/.libs/libgstaudiomixmatrix.so</filename>
   <basename>libgstaudiomixmatrix.so</basename>
-  <version>1.15.2.1</version>
+  <version>1.15.90</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

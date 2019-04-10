@@ -173,6 +173,7 @@ GObject
               GstSquare
             GstLcms
             GstLine21Decoder
+            GstLine21Encoder
             GstOpencvVideoFilter
               GstCameraCalibrate
               GstCameraUndistort
@@ -286,14 +287,14 @@ GObject
         GstRtpOnvifParse
         GstRtpOnvifTimestamp
         GstSFDec
+        GstSctpDec
+        GstSctpEnc
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
         GstSpanPlc
         GstSpeed
         GstSrtEnc
-        GstSrtpDec
-        GstSrtpEnc
         GstTagMux
           GstId3Mux
         GstTeletextDec

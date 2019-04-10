@@ -102,6 +102,7 @@ GstVideoParse GstChildProxy
 GstViewfinderBin GstChildProxy
 GstVoAacEnc GstPreset
 GstVoAmrWbEnc GstPreset
+GstVulkanSink GstVideoOverlay
 GstWaylandSink GstVideoOverlay GstWaylandVideo
 GstWebRTCBin GstChildProxy
 GstWebpEnc GstPreset

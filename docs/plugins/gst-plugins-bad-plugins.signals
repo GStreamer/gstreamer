@@ -867,6 +867,14 @@ GstWebRTCRTPTransceiver *arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstWebRTCBin::get-transceiver</NAME>
+<RETURNS>GstWebRTCRTPTransceiver*</RETURNS>
+<FLAGS>la</FLAGS>
+GstWebRTCBin *gstwebrtcbin
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstSRTSrc::caller-added</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
@@ -900,5 +908,29 @@ GSocketAddress *arg2
 GstSRTSink *gstsrtsink
 gint  arg1
 GSocketAddress *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSctpEnc::bytes-sent</NAME>
+<RETURNS>guint64</RETURNS>
+<FLAGS>la</FLAGS>
+GstSctpEnc *gstsctpenc
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSctpEnc::sctp-association-established</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSctpEnc *gstsctpenc
+gboolean  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSctpDec::reset-stream</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstSctpDec *gstsctpdec
+guint  arg1
 </SIGNAL>
 

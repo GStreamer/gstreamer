@@ -67221,6 +67221,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstRtpOnvifTimestamp::set-t-bit</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Set 'T' bit</NICK>
+<BLURB>If the element should set the 'T' bit as defined in the ONVIF RTP extension. This increases latency by one packet.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecklinkVideoSrc::buffer-size</NAME>
 <TYPE>guint</TYPE>
 <RANGE>[1,G_MAXINT]</RANGE>
@@ -67341,6 +67351,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 </ARG>
 
 <ARG>
+<NAME>GstDecklinkVideoSrc::duplex-mode</NAME>
+<TYPE>GstDecklinkDuplexMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Duplex mode</NICK>
+<BLURB>Certain DeckLink devices such as the DeckLink Quad 2 and the DeckLink Duo 2 support configuration of the duplex mode of individual sub-devices.A sub-device configured as full-duplex will use two connectors, which allows simultaneous capture and playback, internal keying, and fill & key scenarios.A half-duplex sub-device will use a single connector as an individual capture or playback channel.</BLURB>
+<DEFAULT>Half-Duplex</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecklinkVideoSink::device-number</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -67418,6 +67438,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>CC Line</NICK>
 <BLURB>Line number to use for inserting closed captions (0 = disabled).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkVideoSink::duplex-mode</NAME>
+<TYPE>GstDecklinkDuplexMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Duplex mode</NICK>
+<BLURB>Certain DeckLink devices such as the DeckLink Quad 2 and the DeckLink Duo 2 support configuration of the duplex mode of individual sub-devices.A sub-device configured as full-duplex will use two connectors, which allows simultaneous capture and playback, internal keying, and fill & key scenarios.A half-duplex sub-device will use a single connector as an individual capture or playback channel.</BLURB>
+<DEFAULT>Half-Duplex</DEFAULT>
 </ARG>
 
 <ARG>
@@ -73760,5 +73790,55 @@ this will override closed caption stream specified font style/pen size.</BLURB>
 <NICK>URI</NICK>
 <BLURB>URI in the form of srt://address:port.</BLURB>
 <DEFAULT>"srt://127.0.0.1:7001"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSctpEnc::remote-sctp-port</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 65535</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Remote SCTP port</NICK>
+<BLURB>Sctp remote sctp port for the sctp association. The local port is configured via the GstSctpDec element.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSctpEnc::sctp-association-id</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SCTP Association ID</NICK>
+<BLURB>Every encoder/decoder pair should have the same, unique, sctp-association-id. This value must be set before any pads are requested.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSctpEnc::use-sock-stream</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use sock-stream</NICK>
+<BLURB>When set to TRUE, a sequenced, reliable, connection-based connection is used.When TRUE the partial reliability parameters of the channel are ignored.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSctpDec::local-sctp-port</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 65535</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Local SCTP port</NICK>
+<BLURB>Local sctp port for the sctp association. The remote port is configured via the GstSctpEnc element.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSctpDec::sctp-association-id</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 65535</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SCTP Association ID</NICK>
+<BLURB>Every encoder/decoder pair should have the same, unique, sctp-association-id. This value must be set before any pads are requested.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
