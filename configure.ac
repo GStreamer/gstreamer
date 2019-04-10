@@ -495,7 +495,7 @@ AS_IF([test $USE_GTK -eq 1],
     AC_CHECK_HEADERS([gtk/gtk.h], [], [USE_GTK=0])
     CPPFLAGS="$saved_CPPFLAGS"
   ])
-AM_CONDITIONAL([USE_GTK], [test $USE_GTK -eq 1])
+dnl USE_GTK conditional is delayed after being sure to handle X11
 
 dnl ---------------------------------------------------------------------------
 dnl -- VA-API                                                                --
@@ -527,6 +527,9 @@ if test $USE_X11 -eq 1; then
       USE_GLX=0
     ])
 fi
+
+dnl export USE_GTK after being sure to handle X11
+AM_CONDITIONAL([USE_GTK], [test $USE_X11 -eq 1 -a $USE_GTK -eq 1])
 
 dnl Check for encoding support
 USE_ENCODERS=0
