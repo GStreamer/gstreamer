@@ -76,7 +76,6 @@ struct _GESContainerPrivate
    * properties so we don't end up in infinite property update loops
    */
   GHashTable *mappings;
-  guint nb_effects;
 
   /* List of GESTimelineElement being in the "child-added" signal
    * emission stage */
