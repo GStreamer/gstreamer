@@ -21,7 +21,8 @@
 #ifndef __GST_VULKAN_QUEUE_H__
 #define __GST_VULKAN_QUEUE_H__
 
-#include <gst/vulkan/vulkan.h>
+#include <gst/vulkan/gstvkdevice.h>
+#include <gst/vulkan/gstvkcommandpool.h>
 
 #define GST_TYPE_VULKAN_QUEUE         (gst_vulkan_queue_get_type())
 #define GST_VULKAN_QUEUE(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_VULKAN_QUEUE, GstVulkanQueue))

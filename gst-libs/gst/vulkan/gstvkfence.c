@@ -24,6 +24,15 @@
 
 #include "gstvkfence.h"
 
+/**
+ * SECTION:vkfence
+ * @title: GstVulkanFence
+ * @short_description: Vulkan fences
+ * @see_also: #GstVulkanDevice
+ *
+ * A #GstVulkanFence encapsulates a VkFence
+ */
+
 GST_DEBUG_CATEGORY (gst_debug_vulkan_fence);
 #define GST_CAT_DEFAULT gst_debug_vulkan_fence
 
@@ -54,6 +63,16 @@ gst_vulkan_fence_free (GstVulkanFence * fence)
   g_free (fence);
 }
 
+/**
+ * gst_vulkan_fence_new:
+ * @device: the parent #GstVulkanDevice
+ * @flags: set of flags to create the fence with
+ * @error: a #GError for the failure condition
+ *
+ * Returns: whether a new #GstVulkanFence or %NULL on error
+ *
+ * Since: 1.18
+ */
 GstVulkanFence *
 gst_vulkan_fence_new (GstVulkanDevice * device, VkFenceCreateFlags flags,
     GError ** error)
@@ -86,6 +105,14 @@ gst_vulkan_fence_new (GstVulkanDevice * device, VkFenceCreateFlags flags,
   return fence;
 }
 
+/**
+ * gst_vulkan_fence_is_signaled:
+ * @fence: a #GstVulkanFence
+ *
+ * Returns: whether @fence has been signalled
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_fence_is_signaled (GstVulkanFence * fence)
 {

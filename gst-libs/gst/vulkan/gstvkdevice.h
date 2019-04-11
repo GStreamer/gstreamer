@@ -21,9 +21,8 @@
 #ifndef __GST_VULKAN_DEVICE_H__
 #define __GST_VULKAN_DEVICE_H__
 
-#include <gst/gst.h>
-
-#include <gst/vulkan/vulkan.h>
+#include <gst/vulkan/gstvkinstance.h>
+#include <gst/vulkan/gstvkqueue.h>
 
 G_BEGIN_DECLS
 
@@ -87,10 +86,6 @@ GstVulkanQueue *    gst_vulkan_device_get_queue             (GstVulkanDevice * d
                                                              guint32 queue_i);
 GST_VULKAN_API
 VkPhysicalDevice    gst_vulkan_device_get_physical_device   (GstVulkanDevice * device);
-GST_VULKAN_API
-gboolean            gst_vulkan_device_create_cmd_buffer     (GstVulkanDevice * device,
-                                                             VkCommandBuffer * cmd,
-                                                             GError ** error);
 
 GST_VULKAN_API
 void                gst_context_set_vulkan_device           (GstContext * context,

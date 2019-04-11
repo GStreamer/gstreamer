@@ -40,8 +40,6 @@ typedef struct _GstVulkanCommandPool GstVulkanCommandPool;
 typedef struct _GstVulkanCommandPoolClass GstVulkanCommandPoolClass;
 typedef struct _GstVulkanCommandPoolPrivate GstVulkanCommandPoolPrivate;
 
-typedef enum _GstVulkanDisplayType GstVulkanDisplayType;
-
 typedef struct _GstVulkanDisplay GstVulkanDisplay;
 typedef struct _GstVulkanDisplayClass GstVulkanDisplayClass;
 typedef struct _GstVulkanDisplayPrivate GstVulkanDisplayPrivate;
@@ -59,10 +57,6 @@ typedef struct _GstVulkanMemoryAllocatorClass GstVulkanMemoryAllocatorClass;
 typedef struct _GstVulkanBufferMemory GstVulkanBufferMemory;
 typedef struct _GstVulkanBufferMemoryAllocator GstVulkanBufferMemoryAllocator;
 typedef struct _GstVulkanBufferMemoryAllocatorClass GstVulkanBufferMemoryAllocatorClass;
-
-typedef struct _GstVulkanImageMemory GstVulkanImageMemory;
-typedef struct _GstVulkanImageMemoryAllocator GstVulkanImageMemoryAllocator;
-typedef struct _GstVulkanImageMemoryAllocatorClass GstVulkanImageMemoryAllocatorClass;
 
 typedef struct _GstVulkanBufferPool GstVulkanBufferPool;
 typedef struct _GstVulkanBufferPoolClass GstVulkanBufferPoolClass;

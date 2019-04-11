@@ -183,7 +183,7 @@ if vulkan_dep.found() and has_vulkan_header
 
   if build_gir
     vulkan_gir = gnome.generate_gir(gstvulkan,
-      sources : vulkan_sources + [vulkan_enumtypes_h, vulkan_enumtypes_c],
+      sources : vulkan_sources + vulkan_headers + [vulkan_enumtypes_h, vulkan_enumtypes_c],
       namespace : 'GstVulkan',
       nsversion : api_version,
       identifier_prefix : 'Gst',

@@ -1,7 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
- * Copyright (C) 2012 Matthew Waters <ystreet00@gmail.com>
+ * Copyright (C) 2015 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

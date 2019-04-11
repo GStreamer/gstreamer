@@ -198,9 +198,11 @@ mem_create_failed:
 
 /**
  * gst_vulkan_buffer_pool_new:
- * @context: the #GstGLContext to use
+ * @device: the #GstVulkanDevice to use
  *
- * Returns: a #GstBufferPool that allocates buffers with #GstGLMemory
+ * Returns: (transfer full): a #GstBufferPool that allocates buffers with #GstGLMemory
+ *
+ * Since: 1.18
  */
 GstBufferPool *
 gst_vulkan_buffer_pool_new (GstVulkanDevice * device)

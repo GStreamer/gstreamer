@@ -1,9 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2007 David A. Schleef <ds@schleef.org>
- * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
- * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
- * Copyright (C) 2013 Matthew Waters <ystreet00@gmail.com>
+ * Copyright (C) 2015 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,7 +23,8 @@
 
 #include <gst/gst.h>
 
-#include <gst/vulkan/vulkan.h>
+#include <gst/vulkan/gstvkwindow.h>
+#include <gst/vulkan/gstvkinstance.h>
 
 G_BEGIN_DECLS
 
@@ -42,7 +40,19 @@ GType gst_vulkan_display_get_type (void);
 
 #define GST_VULKAN_DISPLAY_CONTEXT_TYPE_STR "gst.vulkan.display"
 
-enum _GstVulkanDisplayType
+typedef struct _GstVulkanDisplay GstVulkanDisplay;
+typedef struct _GstVulkanDisplayClass GstVulkanDisplayClass;
+typedef struct _GstVulkanDisplayPrivate GstVulkanDisplayPrivate;
+
+/**
+ * GstVulkanDisplayType:
+ * @GST_VULKAN_DISPLAY_TYPE_NONE: no display
+ * @GST_VULKAN_DISPLAY_TYPE_XCB: XCB display
+ * @GST_VULKAN_DISPLAY_TYPE_WAYLAND: wayland display
+ * @GST_VULKAN_DISPLAY_TYPE_COCOA: cocoa display for macOS
+ * @GST_VULKAN_DISPLAY_TYPE_IOS: ios display
+ */
+typedef enum
 {
   GST_VULKAN_DISPLAY_TYPE_NONE = 0,
   GST_VULKAN_DISPLAY_TYPE_XCB = (1 << 0),
@@ -51,7 +61,7 @@ enum _GstVulkanDisplayType
   GST_VULKAN_DISPLAY_TYPE_IOS = (1 << 3),
 
   GST_VULKAN_DISPLAY_TYPE_ANY = G_MAXUINT32
-};
+} GstVulkanDisplayType;
 
 /**
  * GstVulkanDisplay:

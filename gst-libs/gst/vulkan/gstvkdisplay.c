@@ -1,9 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2007 David A. Schleef <ds@schleef.org>
- * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
- * Copyright (C) 2008 Filippo Argiolas <filippo.argiolas@gmail.com>
- * Copyright (C) 2013 Matthew Waters <ystreet00@gmail.com>
+ * Copyright (C) 2015 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -39,6 +36,15 @@
 #if GST_VULKAN_HAVE_WINDOW_IOS
 #include "ios/gstvkdisplay_ios.h"
 #endif
+
+/**
+ * SECTION:vkdisplay
+ * @title: GstVulkanDisplay
+ * @short_description: window system display
+ * @see_also: #GstVulkanInstance, #GstVulkanWindow
+ *
+ * A #GstVulkanDisplay represents a connection to a display server on the platform
+ */
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 #define GST_CAT_DEFAULT gst_vulkan_display_debug
@@ -168,6 +174,16 @@ gst_vulkan_display_finalize (GObject * object)
   G_OBJECT_CLASS (gst_vulkan_display_parent_class)->finalize (object);
 }
 
+/**
+ * gst_vulkan_display_new_with_type:
+ * @instance: a #GstVulkanInstance
+ * @type: the #GstVulkanDisplayType to create
+ *
+ * Returns: (transfer full): a new #GstVulkanDisplay or %NULL if e.g. @type is
+ * unsupported
+ *
+ * Since: 1.18
+ */
 GstVulkanDisplay *
 gst_vulkan_display_new_with_type (GstVulkanInstance * instance,
     GstVulkanDisplayType type)
@@ -198,7 +214,7 @@ gst_vulkan_display_new_with_type (GstVulkanInstance * instance,
  *
  * Returns: (transfer full): a new #GstVulkanDisplay
  *
- * Since: 1.10
+ * Since: 1.18
  */
 GstVulkanDisplay *
 gst_vulkan_display_new (GstVulkanInstance * instance)
@@ -227,7 +243,7 @@ gst_vulkan_display_new (GstVulkanInstance * instance)
  *
  * Returns: the winsys specific handle of @display
  *
- * Since: 1.10
+ * Since: 1.18
  */
 gpointer
 gst_vulkan_display_get_handle (GstVulkanDisplay * display)
@@ -253,7 +269,7 @@ gst_vulkan_display_default_get_handle (GstVulkanDisplay * display)
  *
  * Returns: the #GstVulkanDisplayType of @display
  *
- * Since: 1.10
+ * Since: 1.18
  */
 GstVulkanDisplayType
 gst_vulkan_display_get_handle_type (GstVulkanDisplay * display)
@@ -268,7 +284,9 @@ gst_vulkan_display_get_handle_type (GstVulkanDisplay * display)
  * gst_vulkan_display_create_window:
  * @display: a #GstVulkanDisplay
  *
- * Returns: a new #GstVulkanWindow for @display or %NULL.
+ * Returns: (transfer full): a new #GstVulkanWindow for @display or %NULL.
+ *
+ * Since: 1.18
  */
 GstVulkanWindow *
 gst_vulkan_display_create_window (GstVulkanDisplay * display)
@@ -326,6 +344,15 @@ _find_window_list_item (GstVulkanDisplay * display, GstVulkanWindow * window)
   return l;
 }
 
+/**
+ * gst_vulkan_display_remove_window:
+ * @display: a #GstVUlkanDisplay:
+ * @window: the #GstVulkanWindow to remove
+ *
+ * Returns: whether the window was successfully removed
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_display_remove_window (GstVulkanDisplay * display,
     GstVulkanWindow * window)
@@ -353,7 +380,7 @@ gst_vulkan_display_remove_window (GstVulkanDisplay * display,
  *
  * Sets @display on @context
  *
- * Since: 1.10
+ * Since: 1.18
  */
 void
 gst_context_set_vulkan_display (GstContext * context,
@@ -381,7 +408,7 @@ gst_context_set_vulkan_display (GstContext * context,
  *
  * Returns: Whether @display was in @context
  *
- * Since: 1.10
+ * Since: 1.18
  */
 gboolean
 gst_context_get_vulkan_display (GstContext * context,
@@ -403,6 +430,18 @@ gst_context_get_vulkan_display (GstContext * context,
   return ret;
 }
 
+/**
+ * gst_vulkan_display_choose_type:
+ * @instance: a #GstVulkanInstance
+ *
+ * This function will read the %GST_VULKAN_WINDOW environment variable for
+ * a user choice or choose the first supported implementation.
+ *
+ * Returns: the default #GstVulkanDisplayType #GstVulkanInstance will choose
+ *          on creation
+ *
+ * Since: 1.18
+ */
 GstVulkanDisplayType
 gst_vulkan_display_choose_type (GstVulkanInstance * instance)
 {
@@ -447,6 +486,15 @@ gst_vulkan_display_choose_type (GstVulkanInstance * instance)
   return GST_VULKAN_DISPLAY_TYPE_NONE;
 }
 
+/**
+ * gst_vulkan_display_type_to_extension_string:
+ * @type: a #GstVulkanDisplayType
+ *
+ * Returns: the Vulkan extension string required for creating a VkSurfaceKHR
+ * using a window system handle or %NULL
+ *
+ * Since: 1.18
+ */
 const gchar *
 gst_vulkan_display_type_to_extension_string (GstVulkanDisplayType type)
 {
@@ -474,6 +522,21 @@ gst_vulkan_display_type_to_extension_string (GstVulkanDisplayType type)
   return NULL;
 }
 
+/**
+ * gst_vulkan_display_handle_context_query:
+ * @element: a #GstElement
+ * @query: a #GstQuery of type #GST_QUERY_CONTEXT
+ * @display: the #GstVulkanDisplay
+ *
+ * If a #GstVulkanDisplay is requested in @query, sets @device as the reply.
+ *
+ * Intended for use with element query handlers to respond to #GST_QUERY_CONTEXT
+ * for a #GstVulkanDisplay.
+ *
+ * Returns: whether @query was responded to with @display
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_display_handle_context_query (GstElement * element, GstQuery * query,
     GstVulkanDisplay ** display)
@@ -507,6 +570,18 @@ gst_vulkan_display_handle_context_query (GstElement * element, GstQuery * query,
   return res;
 }
 
+/**
+ * gst_vulkan_display_run_context_query:
+ * @element: a #GstElement
+ * @display: (inout): a #GstVulkanDisplay
+ *
+ * Attempt to retrieve a #GstVulkanDisplay using #GST_QUERY_CONTEXT from the
+ * surrounding elements of @element.
+ *
+ * Returns: whether @display contains a valid #GstVulkanDisplay
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_display_run_context_query (GstElement * element,
     GstVulkanDisplay ** display)

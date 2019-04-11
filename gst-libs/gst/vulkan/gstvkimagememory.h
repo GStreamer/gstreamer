@@ -21,13 +21,9 @@
 #ifndef __GST_VULKAN_IMAGE_MEMORY_H__
 #define __GST_VULKAN_IMAGE_MEMORY_H__
 
-#include <gst/gst.h>
-#include <gst/gstallocator.h>
-#include <gst/gstmemory.h>
+#include <gst/vulkan/gstvkdevice.h>
 
 #include <gst/video/video.h>
-
-#include <gst/vulkan/vulkan.h>
 
 G_BEGIN_DECLS
 
@@ -43,7 +39,11 @@ GType gst_vulkan_image_memory_allocator_get_type(void);
 #define GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_CAST(obj)            ((GstVulkanImageMemoryAllocator *)(obj))
 
 #define GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_NAME "VulkanImage"
-#define GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE "memory:" GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_NAME
+#define GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE "memory:VulkanImage"
+
+typedef struct _GstVulkanImageMemory GstVulkanImageMemory;
+typedef struct _GstVulkanImageMemoryAllocator GstVulkanImageMemoryAllocator;
+typedef struct _GstVulkanImageMemoryAllocatorClass GstVulkanImageMemoryAllocatorClass;
 
 struct _GstVulkanImageMemory
 {
@@ -114,7 +114,7 @@ GstMemory *     gst_vulkan_image_memory_wrapped         (GstVulkanDevice * devic
 
 GST_VULKAN_API
 gboolean        gst_vulkan_image_memory_set_layout      (GstVulkanImageMemory * vk_mem,
-                                                         VkImageLayout,
+                                                         VkImageLayout image_layout,
                                                          VkImageMemoryBarrier * barrier);
 
 GST_VULKAN_API

@@ -26,11 +26,11 @@
 
 /**
  * SECTION:vkbuffermemory
- * @title: vkbuffermemory
+ * @title: GstVulkanBufferMemory
  * @short_description: memory subclass for Vulkan buffer memory
- * @see_also: #GstMemory, #GstAllocator
+ * @see_also: #GstVulkanMemory, #GstMemory, #GstAllocator
  *
- * GstVulkanBufferMemory is a #GstMemory subclass providing support for the
+ * #GstVulkanBufferMemory is a #GstMemory subclass providing support for the
  * mapping of Vulkan device memory.
  */
 
@@ -336,14 +336,18 @@ _vk_buffer_mem_free (GstAllocator * allocator, GstMemory * memory)
 
 /**
  * gst_vulkan_buffer_memory_alloc:
- * @device:a #GstVulkanDevice
- * @memory_type_index: the Vulkan memory type index
- * @params: a #GstAllocationParams
- * @size: the size to allocate
+ * @device: a #GstVulkanDevice
+ * @format: the format for the buffer
+ * @size: size of the new buffer
+ * @usage: buffer usage flags
+ * @mem_prop_flags: memory properties flags for the backing memory
  *
- * Allocated a new #GstVulkanBufferMemory.
+ * Allocate a new #GstVulkanBufferMemory.
  *
- * Returns: a #GstMemory object backed by a vulkan device memory
+ * Returns: (transfer full): a #GstMemory object backed by a vulkan buffer
+ *          backed by vulkan device memory
+ *
+ * Since: 1.18
  */
 GstMemory *
 gst_vulkan_buffer_memory_alloc (GstVulkanDevice * device, VkFormat format,
@@ -357,6 +361,21 @@ gst_vulkan_buffer_memory_alloc (GstVulkanDevice * device, VkFormat format,
   return (GstMemory *) mem;
 }
 
+/**
+ * gst_vulkan_buffer_memory_wrapped:
+ * @device: a #GstVulkanDevice
+ * @buffer: a #VkBuffer
+ * @format: the #VkFormat of @buffer
+ * @usage: usage flags of @buffer
+ * @user_data: (allow-none): user data to call @notify with
+ * @notify: (allow-none): a #GDestroyNotify called when @buffer is no longer in use
+ *
+ * Allocated a new wrapped #GstVulkanBufferMemory with @buffer.
+ *
+ * Returns: (transfer full): a #GstMemory object backed by a vulkan device memory
+ *
+ * Since: 1.18
+ */
 GstMemory *
 gst_vulkan_buffer_memory_wrapped (GstVulkanDevice * device, VkBuffer buffer,
     VkFormat format, VkBufferUsageFlags usage, gpointer user_data,
@@ -402,8 +421,10 @@ gst_vulkan_buffer_memory_allocator_init (GstVulkanBufferMemoryAllocator *
 /**
  * gst_vulkan_buffer_memory_init_once:
  *
- * Initializes the Vulkan memory allocator. It is safe to call this function
+ * Initializes the Vulkan buffer memory allocator. It is safe to call this function
  * multiple times.  This must be called before any other #GstVulkanBufferMemory operation.
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_buffer_memory_init_once (void)
@@ -429,6 +450,8 @@ gst_vulkan_buffer_memory_init_once (void)
  * @mem:a #GstMemory
  *
  * Returns: whether the memory at @mem is a #GstVulkanBufferMemory
+ *
+ * Since: 1.18
  */
 gboolean
 gst_is_vulkan_buffer_memory (GstMemory * mem)

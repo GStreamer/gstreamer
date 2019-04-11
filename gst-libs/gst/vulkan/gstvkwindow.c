@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2012 Matthew Waters <ystreet00@gmail.com>
+ * Copyright (C) 2015 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,9 +20,9 @@
 
 /**
  * SECTION:vkwindow
- * @short_description: window/surface abstraction
  * @title: GstVulkanWindow
- * @see_also: #GstGLContext, #GstGLDisplay
+ * @short_description: window/surface abstraction
+ * @see_also: #GstVulkanDisplay
  *
  * GstVulkanWindow represents a window that elements can render into.  A window can
  * either be a user visible window (onscreen) or hidden (offscreen).
@@ -157,11 +157,11 @@ gst_vulkan_window_class_init (GstVulkanWindowClass * klass)
 
 /**
  * gst_vulkan_window_new:
- * @display: a #GstGLDisplay
+ * @display: a #GstVulkanDisplay
  *
  * Returns: (transfer full): a new #GstVulkanWindow using @display's connection
  *
- * Since: 1.10
+ * Since: 1.18
  */
 GstVulkanWindow *
 gst_vulkan_window_new (GstVulkanDisplay * display)
@@ -214,6 +214,14 @@ gst_vulkan_window_finalize (GObject * object)
   G_OBJECT_CLASS (gst_vulkan_window_parent_class)->finalize (object);
 }
 
+/**
+ * gst_vulkan_window_get_display:
+ * @window: a #GstVulkanWindow
+ *
+ * Returns: (transfer full): the #GstVulkanDisplay for @window
+ *
+ * Since: 1.18
+ */
 GstVulkanDisplay *
 gst_vulkan_window_get_display (GstVulkanWindow * window)
 {
@@ -222,6 +230,15 @@ gst_vulkan_window_get_display (GstVulkanWindow * window)
   return gst_object_ref (window->display);
 }
 
+/**
+ * gst_vulkan_window_get_surface: (skip)
+ * @window: a #GstVulkanWindow
+ * @error: a #GError
+ *
+ * Returns: the VkSurface for displaying into
+ *
+ * Since: 1.18
+ */
 VkSurfaceKHR
 gst_vulkan_window_get_surface (GstVulkanWindow * window, GError ** error)
 {
@@ -234,6 +251,17 @@ gst_vulkan_window_get_surface (GstVulkanWindow * window, GError ** error)
   return klass->get_surface (window, error);
 }
 
+/**
+ * gst_vulkan_window_get_presentation_support:
+ * @window: a #GstVulkanWindow
+ * @device: a #GstVulkanDevice
+ * @queue_family_idx: the queue family
+ *
+ * Returns: whether the given combination of @window, @device and
+ *          @queue_family_idx supports presentation
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_window_get_presentation_support (GstVulkanWindow * window,
     GstVulkanDevice * device, guint32 queue_family_idx)
@@ -247,6 +275,15 @@ gst_vulkan_window_get_presentation_support (GstVulkanWindow * window,
   return klass->get_presentation_support (window, device, queue_family_idx);
 }
 
+/**
+ * gst_vulkan_window_open:
+ * @window: a #GstVulkanWindow
+ * @error: a #GError
+ *
+ * Returns: whether @window could be sucessfully opened
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_window_open (GstVulkanWindow * window, GError ** error)
 {
@@ -259,6 +296,14 @@ gst_vulkan_window_open (GstVulkanWindow * window, GError ** error)
   return klass->open (window, error);
 }
 
+/**
+ * gst_vulkan_window_close:
+ * @window: a #GstVulkanWindow
+ *
+ * Attempt to close the window.
+ *
+ * Since: 1.18
+ */
 void
 gst_vulkan_window_close (GstVulkanWindow * window)
 {
@@ -275,6 +320,18 @@ gst_vulkan_window_close (GstVulkanWindow * window)
     klass->close (window);
 }
 
+/**
+ * gst_vulkan_window_resize:
+ * @window: a #GstVulkanWindow
+ * @width: the new width
+ * @height: the new height
+ *
+ * Resize the output surface.
+ *
+ * Currently intended for subclasses to update internal state.
+ *
+ * Since: 1.18
+ */
 void
 gst_vulkan_window_resize (GstVulkanWindow * window, gint width, gint height)
 {
@@ -286,6 +343,14 @@ gst_vulkan_window_resize (GstVulkanWindow * window, gint width, gint height)
   /* XXX: possibly queue a resize/redraw */
 }
 
+/**
+ * gst_vulkan_window_redraw:
+ * @window: a #GstVulkanWindow
+ *
+ * Ask the @window to redraw its contents
+ *
+ * Since: 1.18
+ */
 void
 gst_vulkan_window_redraw (GstVulkanWindow * window)
 {

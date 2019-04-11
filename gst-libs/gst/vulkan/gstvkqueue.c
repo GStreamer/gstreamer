@@ -24,6 +24,15 @@
 
 #include "gstvkqueue.h"
 
+/**
+ * SECTION:vkqueue
+ * @title: GstVulkanQueue
+ * @short_description: Vulkan command queue
+ * @see_also: #GstVulkanDevice
+ *
+ * GstVulkanQueue encapsulates the vulkan command queue.
+ */
+
 #define GST_CAT_DEFAULT gst_vulkan_queue_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
@@ -61,6 +70,14 @@ gst_vulkan_queue_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+/**
+ * gst_vulkan_queue_get_device
+ * @queue: a #GstVulkanQueue
+ *
+ * Returns: (transfer full): the #GstVulkanDevice for @queue
+ *
+ * Since: 1.18
+ */
 GstVulkanDevice *
 gst_vulkan_queue_get_device (GstVulkanQueue * queue)
 {
@@ -69,6 +86,15 @@ gst_vulkan_queue_get_device (GstVulkanQueue * queue)
   return queue->device ? gst_object_ref (queue->device) : NULL;
 }
 
+/**
+ * gst_vulkan_queue_create_command_pool:
+ * @queue: a #GstVulkanQueue
+ * @error: a #GError
+ *
+ * Returns: (transfer full): a new #GstVUlkanCommandPool or %NULL
+ *
+ * Since: 1.18
+ */
 GstVulkanCommandPool *
 gst_vulkan_queue_create_command_pool (GstVulkanQueue * queue, GError ** error)
 {
@@ -112,7 +138,7 @@ error:
  *
  * Sets @queue on @context
  *
- * Since: 1.10
+ * Since: 1.18
  */
 void
 gst_context_set_vulkan_queue (GstContext * context, GstVulkanQueue * queue)
@@ -139,7 +165,7 @@ gst_context_set_vulkan_queue (GstContext * context, GstVulkanQueue * queue)
  *
  * Returns: Whether @queue was in @context
  *
- * Since: 1.10
+ * Since: 1.18
  */
 gboolean
 gst_context_get_vulkan_queue (GstContext * context, GstVulkanQueue ** queue)
@@ -160,6 +186,21 @@ gst_context_get_vulkan_queue (GstContext * context, GstVulkanQueue ** queue)
   return ret;
 }
 
+/**
+ * gst_vulkan_queue_handle_context_query:
+ * @element: a #GstElement
+ * @query: a #GstQuery of type #GST_QUERY_CONTEXT
+ * @queue: the #GstVulkanQueue
+ *
+ * If a #GstVulkanQueue is requested in @query, sets @queue as the reply.
+ *
+ * Intended for use with element query handlers to respond to #GST_QUERY_CONTEXT
+ * for a #GstVulkanQueue.
+ *
+ * Returns: whether @query was responded to with @queue
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_queue_handle_context_query (GstElement * element, GstQuery * query,
     GstVulkanQueue ** queue)
@@ -193,6 +234,18 @@ gst_vulkan_queue_handle_context_query (GstElement * element, GstQuery * query,
   return res;
 }
 
+/**
+ * gst_vulkan_queue_run_context_query:
+ * @element: a #GstElement
+ * @queue: (inout): a #GstVulkanQueue
+ *
+ * Attempt to retrieve a #GstVulkanQueue using #GST_QUERY_CONTEXT from the
+ * surrounding elements of @element.
+ *
+ * Returns: whether @queue contains a valid #GstVulkanQueue
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_queue_run_context_query (GstElement * element,
     GstVulkanQueue ** queue)

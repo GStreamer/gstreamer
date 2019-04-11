@@ -23,14 +23,14 @@
 
 #include <gst/vulkan/vulkan.h>
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_VULKAN_FENCE (gst_vulkan_fence_get_type ())
 GST_VULKAN_API
 GType gst_vulkan_fence_get_type (void);
 
 #define GST_VULKAN_FENCE_CAST(f) ((GstVulkanFence *) f)
 #define GST_VULKAN_FENCE_FENCE(f) (GST_VULKAN_FENCE_CAST(f)->fence)
-
-G_BEGIN_DECLS
 
 struct _GstVulkanFence
 {
@@ -45,8 +45,6 @@ GST_VULKAN_API
 GstVulkanFence *    gst_vulkan_fence_new            (GstVulkanDevice * device,
                                                      VkFenceCreateFlags flags,
                                                      GError ** error);
-GST_VULKAN_API
-GstVulkanFence *    gst_vulkan_fence_wait           (GstVulkanFence * fence);
 GST_VULKAN_API
 gboolean            gst_vulkan_fence_is_signaled    (GstVulkanFence * fence);
 

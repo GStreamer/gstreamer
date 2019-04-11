@@ -26,6 +26,16 @@
 
 #include <string.h>
 
+/**
+ * SECTION:vkinstance
+ * @title: GstVulkanInstance
+ * @short_description: memory subclass for Vulkan image memory
+ * @see_also: #GstMemory, #GstAllocator
+ *
+ * GstVulkanImageMemory is a #GstMemory subclass providing support for the
+ * mapping of Vulkan device memory.
+ */
+
 #define APP_SHORT_NAME "GStreamer"
 
 #define GST_CAT_DEFAULT gst_vulkan_instance_debug
@@ -89,7 +99,9 @@ gst_vulkan_instance_class_init (GstVulkanInstanceClass * klass)
    * Overrides the #GstVulkanDevice creation mechanism.
    * It can be called from any thread.
    *
-   * Returns: the newly created #GstVulkanDevice.
+   * Returns: (transfer full): the newly created #GstVulkanDevice.
+   *
+   * Since: 1.18
    */
   gst_vulkan_instance_signals[SIGNAL_CREATE_DEVICE] =
       g_signal_new ("create-device", G_TYPE_FROM_CLASS (klass),
@@ -155,6 +167,15 @@ _gst_vk_debug_callback (VkDebugReportFlagsEXT msgFlags,
   return FALSE;
 }
 
+/**
+ * gst_vulkan_instance_open:
+ * @instance: a #GstVulkanInstance
+ * @error: #GError
+ *
+ * Returns: whether the instance vould be created
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
 {
@@ -373,6 +394,17 @@ error:
   }
 }
 
+/**
+ * gst_vulkan_instance_get_proc_address:
+ * @instance: a #GstVulkanInstance
+ * @name: name of the function to retrieve
+ *
+ * Performs vkGetInstanceProcAddr() with @instance and @name
+ *
+ * Returns: the function pointer for @name or %NULL
+ *
+ * Since: 1.18
+ */
 gpointer
 gst_vulkan_instance_get_proc_address (GstVulkanInstance * instance,
     const gchar * name)
@@ -386,6 +418,14 @@ gst_vulkan_instance_get_proc_address (GstVulkanInstance * instance,
   return vkGetInstanceProcAddr (instance->instance, name);
 }
 
+/**
+ * gst_vulkan_instance_create_device:
+ * @instance: a #GstVulkanIncstance
+ *
+ * Returns: (transfer full): a new #GstVulkanDevice
+ *
+ * Since: 1.18
+ */
 GstVulkanDevice *
 gst_vulkan_instance_create_device (GstVulkanInstance * instance,
     GError ** error)
@@ -415,7 +455,7 @@ gst_vulkan_instance_create_device (GstVulkanInstance * instance,
  *
  * Sets @instance on @context
  *
- * Since: 1.10
+ * Since: 1.18
  */
 void
 gst_context_set_vulkan_instance (GstContext * context,
@@ -443,7 +483,7 @@ gst_context_set_vulkan_instance (GstContext * context,
  *
  * Returns: Whether @instance was in @context
  *
- * Since: 1.10
+ * Since: 1.18
  */
 gboolean
 gst_context_get_vulkan_instance (GstContext * context,
@@ -465,6 +505,21 @@ gst_context_get_vulkan_instance (GstContext * context,
   return ret;
 }
 
+/**
+ * gst_vulkan_instance_handle_context_query:
+ * @element: a #GstElement
+ * @query: a #GstQuery of type #GST_QUERY_CONTEXT
+ * @instance: the #GstVulkanInstance
+ *
+ * If a #GstVulkanInstance is requested in @query, sets @instance as the reply.
+ *
+ * Intended for use with element query handlers to respond to #GST_QUERY_CONTEXT
+ * for a #GstVulkanInstance.
+ *
+ * Returns: whether @query was responded to with @instance
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_instance_handle_context_query (GstElement * element,
     GstQuery * query, GstVulkanInstance ** instance)
@@ -498,6 +553,18 @@ gst_vulkan_instance_handle_context_query (GstElement * element,
   return res;
 }
 
+/**
+ * gst_vulkan_instance_run_context_query:
+ * @element: a #GstElement
+ * @instance: (inout): a #GstVulkanInstance
+ *
+ * Attempt to retrieve a #GstVulkanInstance using #GST_QUERY_CONTEXT from the
+ * surrounding elements of @element.
+ *
+ * Returns: whether @instance contains a valid #GstVulkanInstance
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_instance_run_context_query (GstElement * element,
     GstVulkanInstance ** instance)

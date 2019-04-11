@@ -26,7 +26,7 @@
 
 /**
  * SECTION:vkimagememory
- * @title: GstVkImageMemory
+ * @title: GstVulkanImageMemory
  * @short_description: memory subclass for Vulkan image memory
  * @see_also: #GstMemory, #GstAllocator
  *
@@ -39,6 +39,15 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFUALT);
 
 static GstAllocator *_vulkan_image_memory_allocator;
 
+/**
+ * gst_vulkan_format_from_video_format: (skip)
+ * @v_format: the #GstVideoFormat
+ * @plane: the plane
+ *
+ * Returns: the VkFormat to use for @v_format and @plane
+ *
+ * Since: 1.18
+ */
 VkFormat
 gst_vulkan_format_from_video_format (GstVideoFormat v_format, guint plane)
 {
@@ -437,6 +446,16 @@ _access_flags_from_layout (VkImageLayout image_layout)
   return 0;
 }
 
+/**
+ * gst_vulkan_image_memory_set_layout:
+ * @vk_mem: a #GstVulkanImageMemory
+ * @image_layout: the new iamge layout
+ * @barrier: (inout): the barrier to fill
+ *
+ * Returns: wether the layout could be performed
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_image_memory_set_layout (GstVulkanImageMemory * vk_mem,
     VkImageLayout image_layout, VkImageMemoryBarrier * barrier)
@@ -463,10 +482,19 @@ gst_vulkan_image_memory_set_layout (GstVulkanImageMemory * vk_mem,
 
 /**
  * gst_vulkan_image_memory_alloc:
+ * @device: a #GstVulkanDevice
+ * @format: the VkFormat for the new image
+ * @width: width for the new image
+ * @height: height for the new image
+ * @tiling: tiling for the new image
+ * @usage: usage flags for the new image
+ * @mem_prop_flags: VkDeviceMemory property flags for the new image
  *
  * Allocated a new #GstVulkanImageMemory.
  *
  * Returns: a #GstMemory object backed by a vulkan device memory
+ *
+ * Since: 1.18
  */
 GstMemory *
 gst_vulkan_image_memory_alloc (GstVulkanDevice * device, VkFormat format,
@@ -481,6 +509,22 @@ gst_vulkan_image_memory_alloc (GstVulkanDevice * device, VkFormat format,
   return (GstMemory *) mem;
 }
 
+/**
+ * gst_vulkan_image_memory_wrapped:
+ * @device: a #GstVulkanDevice
+ * @image: a VkImage
+ * @format: the VkFormat for @image
+ * @width: width of @image
+ * @height: height of @image
+ * @tiling: tiling of @image
+ * @usage: usage flags of @image
+ * @user_data: (nullable): user data for @notify
+ * @notify: a #DestroyNotify when @image is no longer needed
+ *
+ * Return: a new #GstVulkanImageMemory wrapping @image
+ *
+ * Since: 1.18
+ */
 GstMemory *
 gst_vulkan_image_memory_wrapped (GstVulkanDevice * device, VkImage image,
     VkFormat format, gsize width, gsize height, VkImageTiling tiling,
@@ -494,6 +538,14 @@ gst_vulkan_image_memory_wrapped (GstVulkanDevice * device, VkImage image,
   return (GstMemory *) mem;
 }
 
+/**
+ * gst_vulkan_image_memory_get_width:
+ * @image: a #GstVulkanImageMemory
+ *
+ * Return: the width of @image
+ *
+ * Since: 1.18
+ */
 guint32
 gst_vulkan_image_memory_get_width (GstVulkanImageMemory * image)
 {
@@ -503,6 +555,14 @@ gst_vulkan_image_memory_get_width (GstVulkanImageMemory * image)
   return image->create_info.extent.width;
 }
 
+/**
+ * gst_vulkan_image_memory_get_height:
+ * @image: a #GstVulkanImageMemory
+ *
+ * Return: the height of @image
+ *
+ * Since: 1.18
+ */
 guint32
 gst_vulkan_image_memory_get_height (GstVulkanImageMemory * image)
 {
@@ -542,8 +602,10 @@ gst_vulkan_image_memory_allocator_init (GstVulkanImageMemoryAllocator *
 /**
  * gst_vulkan_image_memory_init_once:
  *
- * Initializes the Vulkan memory allocator. It is safe to call this function
+ * Initializes the Vulkan image memory allocator. It is safe to call this function
  * multiple times.  This must be called before any other #GstVulkanImageMemory operation.
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_image_memory_init_once (void)
@@ -566,9 +628,11 @@ gst_vulkan_image_memory_init_once (void)
 
 /**
  * gst_is_vulkan_image_memory:
- * @mem:a #GstMemory
+ * @mem: a #GstMemory
  *
  * Returns: whether the memory at @mem is a #GstVulkanImageMemory
+ *
+ * Since: 1.18
  */
 gboolean
 gst_is_vulkan_image_memory (GstMemory * mem)

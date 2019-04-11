@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 GST_VULKAN_API
-gboolean                gst_vulkan_ensure_element_data          (gpointer element,
+gboolean                gst_vulkan_ensure_element_data          (GstElement * element,
                                                                  GstVulkanDisplay ** display_ptr,
                                                                  GstVulkanInstance ** instance_ptr);
 GST_VULKAN_API

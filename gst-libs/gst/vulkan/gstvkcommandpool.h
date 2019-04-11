@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2015 Matthew Waters <matthew@centricular.com>
+ * Copyright (C) 2019 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -21,7 +21,7 @@
 #ifndef __GST_VULKAN_COMMAND_POOL_H__
 #define __GST_VULKAN_COMMAND_POOL_H__
 
-#include <gst/vulkan/vulkan.h>
+#include <gst/vulkan/gstvkqueue.h>
 
 #define GST_TYPE_VULKAN_COMMAND_POOL         (gst_vulkan_command_pool_get_type())
 #define GST_VULKAN_COMMAND_POOL(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_VULKAN_COMMAND_POOL, GstVulkanCommandPool))

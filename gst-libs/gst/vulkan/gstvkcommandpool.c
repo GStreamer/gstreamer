@@ -24,6 +24,13 @@
 
 #include "gstvkcommandpool.h"
 
+/**
+ * SECTION:vkcommandpool
+ * @title: GstVulkanCommandPool
+ * @short_description: Vulkan command pool
+ * @see_also: #GstVulkanDevice
+ */
+
 #define GST_CAT_DEFAULT gst_vulkan_command_pool_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
@@ -63,6 +70,14 @@ gst_vulkan_command_pool_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+/**
+ * gst_vulkan_command_pool_get_queue
+ * @pool: a #GstVulkanCommandPool
+ *
+ * Returns: (transfer full): the parent #GstVulkanQueue for this command pool
+ *
+ * Since: 1.18
+ */
 GstVulkanQueue *
 gst_vulkan_command_pool_get_queue (GstVulkanCommandPool * pool)
 {
@@ -71,6 +86,15 @@ gst_vulkan_command_pool_get_queue (GstVulkanCommandPool * pool)
   return pool->queue ? gst_object_ref (pool->queue) : NULL;
 }
 
+/**
+ * gst_vulkan_command_pool_create: (skip)
+ * @pool: a #GstVulkanCommandPool
+ * @error: a #GError
+ *
+ * Returns: a new primary VkCommandBuffer
+ *
+ * Since: 1.18
+ */
 VkCommandBuffer
 gst_vulkan_command_pool_create (GstVulkanCommandPool * pool, GError ** error)
 {

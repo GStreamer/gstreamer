@@ -24,6 +24,15 @@
 
 #include "gstvkutils.h"
 
+/**
+ * SECTION:vkutils
+ * @title: Vulkan Utils
+ * @short_description: Vulkan utilities
+ * @see_also: #GstVulkanInstance, #GstVulkanDevice
+ *
+ * GstVulkanQueue encapsulates the vulkan command queue.
+ */
+
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
 static void
@@ -59,6 +68,16 @@ _vk_pad_query (const GValue * item, GValue * value, gpointer user_data)
   return TRUE;
 }
 
+/**
+ * gst_vulkan_run_query:
+ * @element: a #GstElement
+ * @query: the #GstQuery to perform
+ * @direction: the #GstPadDirection to perform query on
+ *
+ * Returns: whether @query was answered successfully
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_run_query (GstElement * element, GstQuery * query,
     GstPadDirection direction)
@@ -118,6 +137,16 @@ _vulkan_local_context_query (GstElement * element,
   return query;
 }
 
+/**
+ * gst_vulkan_global_context_query:
+ * @element: a #GstElement
+ * @context_type: the context type to query for
+ *
+ * Performs the steps necessary for executing a context query including
+ * posting a message for the application to respond.
+ *
+ * Since: 1.18
+ */
 void
 gst_vulkan_global_context_query (GstElement * element,
     const gchar * context_type)
@@ -148,6 +177,16 @@ gst_vulkan_global_context_query (GstElement * element,
    */
 }
 
+/**
+ * gst_vulkan_local_context_query:
+ * @element: a #GstElement
+ * @context_type: the context type to query for
+ *
+ * Performs the steps necessary for executing a context query between only
+ * other elements in the pipeline
+ *
+ * Since: 1.18
+ */
 GstQuery *
 gst_vulkan_local_context_query (GstElement * element,
     const gchar * context_type)
@@ -185,8 +224,28 @@ _vk_context_propagate (GstElement * element, GstContext * context)
   gst_element_post_message (GST_ELEMENT_CAST (element), msg);
 }
 
+/**
+ * gst_vulkan_ensure_element_data:
+ * @element: a #GstElement
+ * @display_ptr: (inout) (optional): the resulting #GstVulkanDisplay
+ * @instance_ptr: (inout): the resulting #GstVulkanInstance
+ *
+ * Perform the steps necessary for retrieving a #GstVulkanInstance and
+ * (optionally) an #GstVulkanDisplay from the surrounding elements or from
+ * the application using the #GstContext mechanism.
+ *
+ * If the contents of @display_ptr or @instance_ptr are not %NULL, then no
+ * #GstContext query is necessary and no #GstVulkanInstance or #GstVulkanDisplay
+ * retrieval is performed.
+ *
+ * Returns: whether a #GstVulkanInstance exists in @instance_ptr and if
+ *          @display_ptr is not %NULL, whether a #GstVulkanDisplay exists in
+ *          @display_ptr
+ *
+ * Since: 1.18
+ */
 gboolean
-gst_vulkan_ensure_element_data (gpointer element,
+gst_vulkan_ensure_element_data (GstElement * element,
     GstVulkanDisplay ** display_ptr, GstVulkanInstance ** instance_ptr)
 {
   g_return_val_if_fail (element != NULL, FALSE);
@@ -251,6 +310,23 @@ gst_vulkan_ensure_element_data (gpointer element,
   return *display_ptr != NULL && *instance_ptr != NULL;
 }
 
+/**
+ * gst_vulkan_handle_set_context:
+ * @element: a #GstElement
+ * @context: a #GstContext
+ * @display: (inout) (transfer full) (optional): location of a #GstVulkanDisplay
+ * @instance: (inout) (transfer full): location of a #GstVulkanInstance
+ *
+ * Helper function for implementing #GstElementClass.set_context() in
+ * Vulkan capable elements.
+ *
+ * Retrieve's the #GstVulkanDisplay or #GstVulkanInstance in @context and places
+ * the result in @display or @instance respectively.
+ *
+ * Returns: whether the @display or @instance could be set successfully
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_handle_set_context (GstElement * element, GstContext * context,
     GstVulkanDisplay ** display, GstVulkanInstance ** instance)
@@ -299,6 +375,19 @@ gst_vulkan_handle_set_context (GstElement * element, GstContext * context,
   return TRUE;
 }
 
+/**
+ * gst_vulkan_handle_context_query:
+ * @element: a #GstElement
+ * @query: a #GstQuery of type %GST_QUERY_CONTEXT
+ * @display: (transfer none) (nullable): a #GstVulkanDisplay
+ * @instance: (transfer none) (nullable): a #GstVulkanInstance
+ * @device: (transfer none) (nullable): a #GstVulkanInstance
+ *
+ * Returns: Whether the @query was successfully responded to from the passed
+ *          @display, @instance, and @device.
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_handle_context_query (GstElement * element, GstQuery * query,
     GstVulkanDisplay ** display, GstVulkanInstance ** instance,

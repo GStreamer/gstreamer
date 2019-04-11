@@ -26,6 +26,15 @@
 
 #include <string.h>
 
+/**
+ * SECTION:vkdevice
+ * @title: GstVulkanDevice
+ * @short_description: Vulkan device
+ * @see_also: #GstVulkanInstance
+ *
+ * A #GstVulkanDevice encapsulates a VkDevice
+ */
+
 #define GST_CAT_DEFAULT gst_vulkan_device_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
@@ -44,6 +53,14 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanDevice, gst_vulkan_device, GST_TYPE_OBJECT,
         "Vulkan Device");
     GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT"));
 
+/**
+ * gst_vulkan_device_new:
+ * @instance: the parent #GstVulkanInstance
+ *
+ * Returns: (transfer full): a new #GstVulkanDevice
+ *
+ * Since: 1.18
+ */
 GstVulkanDevice *
 gst_vulkan_device_new (GstVulkanInstance * instance)
 {
@@ -139,6 +156,17 @@ _physical_device_info (GstVulkanDevice * device, GError ** error)
   return TRUE;
 }
 
+/**
+ * gst_vulkan_device_open:
+ * @device: a #GstVulkanDevice
+ * @error: a #GError
+ *
+ * Attempts to create the internal #VkDevice object.
+ *
+ * Returns: whether a vulkan device could be created
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
 {
@@ -290,6 +318,16 @@ error:
   }
 }
 
+/**
+ * gst_vulkan_device_get_queue:
+ * @device: a #GstVulkanDevice
+ * @queue_family: a queue family to retrieve
+ * @queue_i: index of the family to retrieve
+ *
+ * Returns: (transfer full): a new #GstVulkanQueue
+ *
+ * Since: 1.18
+ */
 GstVulkanQueue *
 gst_vulkan_device_get_queue (GstVulkanDevice * device, guint32 queue_family,
     guint32 queue_i)
@@ -313,6 +351,16 @@ gst_vulkan_device_get_queue (GstVulkanDevice * device, guint32 queue_family,
   return ret;
 }
 
+/**
+ * gst_vulkan_device_foreach_queue:
+ * @device: a #GstVulkanDevice
+ * @func: (scope call): a #GstVulkanDeviceForEachQueueFunc to run for each #GstVulkanQueue
+ * @user_data: (closure func): user data to pass to each call of @func
+ *
+ * Iterate over each queue family available on #GstVulkanDevice
+ *
+ * Since: 1.18
+ */
 void
 gst_vulkan_device_foreach_queue (GstVulkanDevice * device,
     GstVulkanDeviceForEachQueueFunc func, gpointer user_data)
@@ -334,6 +382,17 @@ gst_vulkan_device_foreach_queue (GstVulkanDevice * device,
   }
 }
 
+/**
+ * gst_vulkan_device_get_proc_address:
+ * @device: a #GstVulkanDevice
+ * @name: name of the function to retrieve
+ *
+ * Performs vkGetDeviceProcAddr() with @device and @name
+ *
+ * Returns: the function pointer for @name or %NULL
+ *
+ * Since: 1.18
+ */
 gpointer
 gst_vulkan_device_get_proc_address (GstVulkanDevice * device,
     const gchar * name)
@@ -347,6 +406,14 @@ gst_vulkan_device_get_proc_address (GstVulkanDevice * device,
   return vkGetDeviceProcAddr (device->device, name);
 }
 
+/**
+ * gst_vulkan_device_get_instance:
+ * @device: a #GstVulkanDevice
+ *
+ * Returns: (transfer full): the #GstVulkanInstance used to create this @device
+ *
+ * Since: 1.18
+ */
 GstVulkanInstance *
 gst_vulkan_device_get_instance (GstVulkanDevice * device)
 {
@@ -355,6 +422,14 @@ gst_vulkan_device_get_instance (GstVulkanDevice * device)
   return device->instance ? gst_object_ref (device->instance) : NULL;
 }
 
+/**
+ * gst_vulkan_device_get_physical_device: (skip)
+ * @device: a #GstVulkanDevice
+ *
+ * Returns: The VkPhysicalDevice used to create @device
+ *
+ * Since: 1.18
+ */
 VkPhysicalDevice
 gst_vulkan_device_get_physical_device (GstVulkanDevice * device)
 {
@@ -375,7 +450,7 @@ gst_vulkan_device_get_physical_device (GstVulkanDevice * device)
  *
  * Sets @device on @context
  *
- * Since: 1.10
+ * Since: 1.18
  */
 void
 gst_context_set_vulkan_device (GstContext * context, GstVulkanDevice * device)
@@ -402,7 +477,7 @@ gst_context_set_vulkan_device (GstContext * context, GstVulkanDevice * device)
  *
  * Returns: Whether @device was in @context
  *
- * Since: 1.10
+ * Since: 1.18
  */
 gboolean
 gst_context_get_vulkan_device (GstContext * context, GstVulkanDevice ** device)
@@ -423,6 +498,21 @@ gst_context_get_vulkan_device (GstContext * context, GstVulkanDevice ** device)
   return ret;
 }
 
+/**
+ * gst_vulkan_device_handle_context_query:
+ * @element: a #GstElement
+ * @query: a #GstQuery of type #GST_QUERY_CONTEXT
+ * @device: the #GstVulkanDevice
+ *
+ * If a #GstVulkanDevice is requested in @query, sets @device as the reply.
+ *
+ * Intended for use with element query handlers to respond to #GST_QUERY_CONTEXT
+ * for a #GstVulkanDevice.
+ *
+ * Returns: whether @query was responded to with @device
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_device_handle_context_query (GstElement * element, GstQuery * query,
     GstVulkanDevice ** device)
@@ -456,6 +546,18 @@ gst_vulkan_device_handle_context_query (GstElement * element, GstQuery * query,
   return res;
 }
 
+/**
+ * gst_vulkan_device_run_context_query:
+ * @element: a #GstElement
+ * @device: (inout): a #GstVulkanDevice
+ *
+ * Attempt to retrieve a #GstVulkanDevice using #GST_QUERY_CONTEXT from the
+ * surrounding elements of @element.
+ *
+ * Returns: whether @device contains a valid #GstVulkanDevice
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_device_run_context_query (GstElement * element,
     GstVulkanDevice ** device)

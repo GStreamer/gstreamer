@@ -28,7 +28,7 @@
 
 /**
  * SECTION:vkmemory
- * @title: GstVkMemory
+ * @title: GstVulkanMemory
  * @short_description: memory subclass for Vulkan device memory
  * @see_also: #GstMemory, #GstAllocator
  *
@@ -250,24 +250,35 @@ _vk_mem_free (GstAllocator * allocator, GstMemory * memory)
   gst_object_unref (mem->device);
 }
 
+/**
+ * gst_vulkan_memory_find_memory_type_index_with_type_properties:
+ * @device: a #GstVulkanDevice
+ * @type_bits: memory type bits to search for
+ * @properties: memory properties to search for
+ * @type_index: resulting index of the memory type
+ *
+ * Returns: whether a valid memory type could be found
+ *
+ * Since: 1.18
+ */
 gboolean
 gst_vulkan_memory_find_memory_type_index_with_type_properties (GstVulkanDevice *
-    device, guint32 typeBits, VkMemoryPropertyFlags properties,
-    guint32 * typeIndex)
+    device, guint32 type_bits, VkMemoryPropertyFlags properties,
+    guint32 * type_index)
 {
   guint32 i;
 
   /* Search memtypes to find first index with those properties */
   for (i = 0; i < 32; i++) {
-    if ((typeBits & 1) == 1) {
+    if ((type_bits & 1) == 1) {
       /* Type is available, does it match user properties? */
       if ((device->memory_properties.memoryTypes[i].
               propertyFlags & properties) == properties) {
-        *typeIndex = i;
+        *type_index = i;
         return TRUE;
       }
     }
-    typeBits >>= 1;
+    type_bits >>= 1;
   }
 
   return FALSE;
@@ -283,6 +294,8 @@ gst_vulkan_memory_find_memory_type_index_with_type_properties (GstVulkanDevice *
  * Allocated a new #GstVulkanMemory.
  *
  * Returns: a #GstMemory object backed by a vulkan device memory
+ *
+ * Since: 1.18
  */
 GstMemory *
 gst_vulkan_memory_alloc (GstVulkanDevice * device, guint32 memory_type_index,
@@ -326,6 +339,8 @@ gst_vulkan_memory_allocator_init (GstVulkanMemoryAllocator * allocator)
  *
  * Initializes the Vulkan memory allocator. It is safe to call this function
  * multiple times.  This must be called before any other #GstVulkanMemory operation.
+ *
+ * Since: 1.18
  */
 void
 gst_vulkan_memory_init_once (void)
@@ -351,6 +366,8 @@ gst_vulkan_memory_init_once (void)
  * @mem:a #GstMemory
  *
  * Returns: whether the memory at @mem is a #GstVulkanMemory
+ *
+ * Since: 1.18
  */
 gboolean
 gst_is_vulkan_memory (GstMemory * mem)

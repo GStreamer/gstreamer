@@ -74,6 +74,20 @@ _vk_result_to_string (VkResult result)
   return "Unknown Error";
 }
 
+/**
+ * gst_vulkan_error_to_g_error: (skip)
+ * @result: a VkResult
+ * @error: (inout) (optional): a #GError to fill
+ * @format: the printf-like format to write into the #GError
+ * @...: arguments for @format
+ *
+ * if @result indicates an error condition, fills out #Gerror with details of
+ * the error
+ *
+ * Returns: @result for easy chaining
+ *
+ * Since: 1.18
+ */
 VkResult
 gst_vulkan_error_to_g_error (VkResult result, GError ** error,
     const char *format, ...)
@@ -87,8 +101,13 @@ gst_vulkan_error_to_g_error (VkResult result, GError ** error,
     return result;
 
   result_str = _vk_result_to_string (result);
-  if (result_str == NULL)
-    return result;
+  if (result_str == NULL) {
+    if (result < 0) {
+      result_str = "Unknown";
+    } else {
+      return result;
+    }
+  }
 
   va_start (args, format);
   g_vasprintf (&string, format, args);
