@@ -41,7 +41,7 @@
 #   include <sys/wait.h>
 #endif
 
-#define DEFAULT_PAGER "less"
+static const gchar DEFAULT_PAGER[] = "less";
 
 /* "R" : support color
  * "X" : do not clear the screen when leaving the pager
@@ -1900,8 +1900,10 @@ redirect_stdout (void)
           NULL, NULL, &child_pid, &stdin_fd,
           /* pass null stdout/stderr to inherit our fds */
           NULL, NULL, &error)) {
-    g_warning ("g_spawn_async_with_pipes() failed: %s\n",
-        GST_STR_NULL (error->message));
+    if (pager != DEFAULT_PAGER) {
+      g_warning ("g_spawn_async_with_pipes() failed: %s\n",
+          GST_STR_NULL (error->message));
+    }
     g_strfreev (argv);
     g_strfreev (envp);
     g_clear_error (&error);
