@@ -71,6 +71,7 @@ BUILT_SOURCES = \
 noinst_HEADERS = 		\
 	gettext.h \
 	gst-validate-i18n-lib.h \
+	gst-validate-mockdecryptor.h \
 	gst-validate-internal.h
 
 # GstValidate library
