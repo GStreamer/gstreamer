@@ -776,6 +776,8 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
 
   if (ges_timeline_element_set_parent (child, GES_TIMELINE_ELEMENT (container))
       == FALSE) {
+    if (class->remove_child)
+      class->remove_child (container, child);
 
     g_hash_table_remove (priv->mappings, child);
     container->children = g_list_remove (container->children, child);
