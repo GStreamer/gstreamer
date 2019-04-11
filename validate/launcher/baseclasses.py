@@ -1990,6 +1990,7 @@ class _TestsLauncher(Loggable):
         self._stop_server()
 
     def run_tests(self):
+        r = 0
         try:
             self._start_server()
             if self.options.forever:
@@ -2020,6 +2021,8 @@ class _TestsLauncher(Loggable):
             else:
                 return self._run_tests(retry_on_failures=self.options.retry_on_failures)
         finally:
+            if self.options.forever:
+                printc("\n-> Ran %d times" % r)
             if self.httpsrv:
                 self.httpsrv.stop()
             if self.vfb_server:
