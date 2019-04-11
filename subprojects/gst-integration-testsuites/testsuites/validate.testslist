@@ -755,7 +755,6 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp2.playback.fast_forward.cm5000_hevc_1080i_colorbars_ts
 ~validate.rtsp2.playback.fast_forward.mp3_h264_0_mp4
 ~validate.rtsp2.playback.fast_forward.mp3_h264_1_mp4
-~validate.rtsp2.playback.fast_forward.opus_1_ogg
 ~validate.rtsp2.playback.fast_forward.raw_h264_0_mp4
 ~validate.rtsp2.playback.fast_forward.raw_h264_1_mp4
 ~validate.rtsp2.playback.fast_forward.rawaudioS32LE_prores_mov
@@ -765,8 +764,6 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp2.playback.fast_forward.samples_multimedia_cx_testsuite_iv31_avi
 ~validate.rtsp2.playback.fast_forward.test5_mkv
 ~validate.rtsp2.playback.fast_forward.tron_en_ge_aac_h264_ts
-~validate.rtsp2.playback.fast_forward.vorbis_theora_0_ogg
-~validate.rtsp2.playback.fast_forward.vorbis_theora_1_ogg
 ~validate.rtsp2.playback.fast_forward.vorbis_vp8_0_webm
 ~validate.rtsp2.playback.fast_forward.vorbis_vp8_1_webm
 ~validate.rtsp2.playback.play_15s.1080p_xavc_audio_conforming_accuracy_mxf
@@ -810,7 +807,6 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp2.playback.reverse_playback.mp3_h264_0_mp4
 ~validate.rtsp2.playback.reverse_playback.mp3_h264_1_mp4
 ~validate.rtsp2.playback.reverse_playback.numerated_frames_blue_ogv
-~validate.rtsp2.playback.reverse_playback.opus_1_ogg
 ~validate.rtsp2.playback.reverse_playback.raw_h264_0_mp4
 ~validate.rtsp2.playback.reverse_playback.raw_h264_1_mp4
 ~validate.rtsp2.playback.reverse_playback.raw_video_avi
@@ -818,8 +814,6 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp2.playback.reverse_playback.rawaudioS32LE_prores_mov
 ~validate.rtsp2.playback.reverse_playback.samples_multimedia_cx_flac_Yesterday_flac
 ~validate.rtsp2.playback.reverse_playback.samples_multimedia_cx_testsuite_iv31_avi
-~validate.rtsp2.playback.reverse_playback.vorbis_theora_0_ogg
-~validate.rtsp2.playback.reverse_playback.vorbis_theora_1_ogg
 ~validate.rtsp2.playback.seek_backward.GH1_00094_1920x1280_MTS
 ~validate.rtsp2.playback.seek_backward.bowlerhatdancer_sleepytom_SGP_mjpeg_avi
 ~validate.rtsp2.playback.seek_backward.cm5000_hevc_1080i_colorbars_ts
@@ -895,10 +889,8 @@ validate.pushfile.media_check.qtdemux-test-frag-basic_zero_dur_no_mehd_mp4
 ~validate.rtsp2.playback.seek_with_stop.cm5000_hevc_1080i_colorbars_ts
 ~validate.rtsp2.playback.seek_with_stop.mp3_h264_0_mp4
 ~validate.rtsp2.playback.seek_with_stop.mp3_h264_1_mp4
-~validate.rtsp2.playback.seek_with_stop.numerated_frames_blue_ogv
 ~validate.rtsp2.playback.seek_with_stop.op1a-mpeg2-wave_hd_mxf
 ~validate.rtsp2.playback.seek_with_stop.op2b-mpeg2-wave_hd_mxf
-~validate.rtsp2.playback.seek_with_stop.opus_1_ogg
 ~validate.rtsp2.playback.seek_with_stop.raw_h264_0_mp4
 ~validate.rtsp2.playback.seek_with_stop.raw_h264_1_mp4
 ~validate.rtsp2.playback.seek_with_stop.raw_video_avi
