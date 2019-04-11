@@ -49,39 +49,6 @@ KNOWN_ISSUES = {
             },
         ]
     },
-    "https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/311": {
-        "tests": [
-            "validate.http.*.ogg$",
-            "validate.http.*.ogv$",
-            "validate.rtsp.*.ogg$",
-            "validate.rtsp.*.ogv$",
-        ],
-        "issues": [
-            {
-                "detected-on": "playbin",
-                "summary": "We got an ERROR message on the bus",
-                "details": ".*No valid frames decoded before end of stream.*",
-                "level": "critical",
-                "sometimes": True,
-            },
-            {
-                "level": "critical",
-                "summary": "We got an ERROR message on the bus",
-                "details": ".*Got error: Could not decode stream.*",
-                "sometimes": True,
-            },
-            {
-                "level": "critical",
-                "summary": "The program stopped before some actions were executed",
-                "sometimes": True,
-            },
-            {
-                "summary": "The program stopped before some actions were executed",
-                "issue-id": "scenario::not-ended",
-                "sometimes": True,
-            },
-        ]
-    },
     "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/563": {
         "tests": [
             "validate.rtsp.playback.seek_backward.bowlerhatdancer_sleepytom_SGP_mjpeg_avi",

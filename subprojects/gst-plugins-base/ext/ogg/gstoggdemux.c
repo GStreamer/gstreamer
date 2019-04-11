@@ -2487,7 +2487,7 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
                  ogg sync object as we already reset the chain */
               GST_DEBUG_OBJECT (ogg, "No chain, just resetting ogg sync");
               ogg_sync_reset (&ogg->sync);
-            } else {
+            } else if (ogg->push_state != PUSH_DURATION) {
               /* reset pad push mode seeking state */
               for (i = 0; i < chain->streams->len; i++) {
                 GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
