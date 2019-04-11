@@ -219,15 +219,10 @@ function websocketServerConnect() {
     ws_conn.addEventListener('close', onServerClose);
 }
 
-function onRemoteStreamAdded(event) {
-    videoTracks = event.stream.getVideoTracks();
-    audioTracks = event.stream.getAudioTracks();
-
-    if (videoTracks.length > 0) {
-        console.log('Incoming stream: ' + videoTracks.length + ' video tracks and ' + audioTracks.length + ' audio tracks');
-        getVideoElement().srcObject = event.stream;
-    } else {
-        handleIncomingError('Stream with unknown tracks added, resetting');
+function onRemoteTrack(event) {
+    if (getVideoElement().srcObject !== event.streams[0]) {
+        console.log('Incoming stream');
+        getVideoElement().srcObject = event.streams[0];
     }
 }
 
@@ -283,7 +278,7 @@ function createCall(msg) {
     send_channel.onerror = handleDataChannelError;
     send_channel.onclose = handleDataChannelClose;
     peer_connection.ondatachannel = onDataChannel;
-    peer_connection.onaddstream = onRemoteStreamAdded;
+    peer_connection.ontrack = onRemoteTrack;
     /* Send our video/audio to the other peer */
     local_stream_promise = getLocalStream().then((stream) => {
         console.log('Adding local stream');
