@@ -513,7 +513,7 @@ _loading_done (GESFormatter * self)
   for (tmp = assets; tmp; tmp = tmp->next) {
     ges_asset_set_proxy (NULL, tmp->data);
   }
-  g_list_free (assets);
+  g_list_free_full (assets, g_object_unref);
 
   g_hash_table_foreach (priv->layers, (GHFunc) _set_auto_transition, NULL);
   ges_project_set_loaded (self->project, self);

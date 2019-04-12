@@ -370,7 +370,6 @@ ges_uri_assets_validate_uri (const gchar * nid)
 static void
 _dispose (GObject * object)
 {
-  GList *tmp;
   GESProjectPrivate *priv = GES_PROJECT (object)->priv;
 
   if (priv->assets)
@@ -382,8 +381,8 @@ _dispose (GObject * object)
   if (priv->formatter_asset)
     gst_object_unref (priv->formatter_asset);
 
-  for (tmp = priv->formatters; tmp; tmp = tmp->next)
-    ges_project_remove_formatter (GES_PROJECT (object), tmp->data);;
+  while (priv->formatters)
+    ges_project_remove_formatter (GES_PROJECT (object), priv->formatters->data);
 
   G_OBJECT_CLASS (ges_project_parent_class)->dispose (object);
 }

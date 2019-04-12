@@ -351,7 +351,9 @@ _add_properties (GESTimeline * timeline)
                 (element), "posx", &posx, NULL);
             fail_unless_equals_int64 (posx, 42);
           }
+
         }
+        g_list_free_full (track_elements, g_object_unref);
         break;
       default:
         break;
