@@ -1989,10 +1989,11 @@ class _TestsLauncher(Loggable):
 
         return True
 
-    def clean_tests(self):
+    def clean_tests(self, stop_server=False):
         for test in self.tests:
             test.clean()
-        self._stop_server()
+        if stop_server:
+            self._stop_server()
 
     def run_tests(self):
         r = 0
@@ -2032,7 +2033,7 @@ class _TestsLauncher(Loggable):
                 self.httpsrv.stop()
             if self.vfb_server:
                 self.vfb_server.stop()
-            self.clean_tests()
+            self.clean_tests(True)
 
     def final_report(self):
         return self.reporter.final_report()
