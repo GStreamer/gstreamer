@@ -14,6 +14,7 @@ libgstsctp_la_CFLAGS = \
     -I$(top_srcdir)/gst-libs
 
 libgstsctp_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(USRSCTP_LIBS) $(top_builddir)/gst-libs/gst/sctp/libgstsctp-1.0.la
+libgstsctp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
     sctpassociation.h \
