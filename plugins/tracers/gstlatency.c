@@ -411,11 +411,9 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
       if (GST_OBJECT_FLAG_IS_SET (peer_parent, GST_ELEMENT_FLAG_SINK)) {
         /* store event so that we can calculate latency when the buffer that
          * follows has been processed */
-        if (!g_object_get_qdata ((GObject *) pad, latency_probe_id)) {
-          GST_DEBUG ("%s_%s: Storing latency event", GST_DEBUG_PAD_NAME (pad));
-          g_object_set_qdata ((GObject *) pad, latency_probe_id,
-              gst_event_ref (ev));
-        }
+        GST_DEBUG ("%s_%s: Storing latency event", GST_DEBUG_PAD_NAME (pad));
+        g_object_set_qdata ((GObject *) pad, latency_probe_id,
+            gst_event_ref (ev));
       }
     }
 
@@ -437,12 +435,10 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
       if (!g_str_equal (value_element_id, element_id) ||
           !g_str_equal (value_element_name, element_name) ||
           !g_str_equal (value_pad_name, pad_name)) {
-        if (!g_object_get_qdata ((GObject *) pad, sub_latency_probe_id)) {
-          GST_DEBUG ("%s_%s: Storing sub-latency event",
-              GST_DEBUG_PAD_NAME (pad));
-          g_object_set_qdata ((GObject *) pad, sub_latency_probe_id,
-              gst_event_ref (ev));
-        }
+        GST_DEBUG ("%s_%s: Storing sub-latency event",
+            GST_DEBUG_PAD_NAME (pad));
+        g_object_set_qdata ((GObject *) pad, sub_latency_probe_id,
+            gst_event_ref (ev));
       }
 
       g_free (pad_name);
