@@ -1307,7 +1307,8 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
       GST_QUARK (CUR), G_TYPE_INT64, start,
       GST_QUARK (STOP_TYPE), GST_TYPE_SEEK_TYPE, stop_type,
       GST_QUARK (STOP), G_TYPE_INT64, stop,
-      GST_QUARK (TRICKMODE_INTERVAL), GST_TYPE_CLOCK_TIME, 0, NULL);
+      GST_QUARK (TRICKMODE_INTERVAL), GST_TYPE_CLOCK_TIME, (GstClockTime) 0,
+      NULL);
   event = gst_event_new_custom (GST_EVENT_SEEK, structure);
 
   return event;
