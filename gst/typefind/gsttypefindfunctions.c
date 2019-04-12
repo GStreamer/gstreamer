@@ -3350,6 +3350,12 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       break;
     }
 
+    if (STRNCMP (&data[4], "ftypmif1", 8) == 0) {
+      tip = GST_TYPE_FIND_MAXIMUM;
+      variant = "heif";
+      break;
+    }
+
     /* box/atom types that are in common with ISO base media file format */
     if (STRNCMP (&data[4], "moov", 4) == 0 ||
         STRNCMP (&data[4], "mdat", 4) == 0 ||
@@ -3394,6 +3400,10 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
             STRNCMP (&data[new_offset], "mp42", 4) == 0) {
           tip = GST_TYPE_FIND_MAXIMUM;
           variant = "iso";
+          goto done;
+        } else if (STRNCMP (&data[new_offset], "mif1", 4) == 0) {
+          tip = GST_TYPE_FIND_MAXIMUM;
+          variant = "heif";
           goto done;
         }
         new_offset += 4;
