@@ -1337,6 +1337,8 @@ class TestsManager(Loggable):
                             test.allow_flakiness = True
                             self.debug("%s allow flakyness" % (test.classname))
                         else:
+                            for issue in failure_def['issues']:
+                                issue['bug'] = bugid
                             test.expected_issues.extend(failure_def['issues'])
                             self.debug("%s added expected issues from %s" % (
                                 test.classname, bugid))
@@ -1349,12 +1351,15 @@ class TestsManager(Loggable):
             test.classname = self.loading_testsuite + '.' + test.classname
 
         for bugid, failure_def in list(self.expected_issues.items()):
+            failure_def['bug'] = bugid
             for regex in failure_def['tests']:
                 if regex.findall(test.classname):
                     if failure_def.get('allow_flakiness'):
                         test.allow_flakiness = True
                         self.debug("%s allow flakyness" % (test.classname))
                     else:
+                        for issue in failure_def['issues']:
+                            issue['bug'] = bugid
                         test.expected_issues.extend(failure_def['issues'])
                         self.debug("%s added expected issues from %s" % (
                             test.classname, bugid))
