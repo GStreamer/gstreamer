@@ -243,7 +243,7 @@ send_latency_probe (GstLatencyTracer * self, GstElement * parent, GstPad * pad,
       element_name = gst_element_get_name (parent);
       pad_name = gst_pad_get_name (pad);
 
-      GST_DEBUG ("%s: Sending latency event", pad_name);
+      GST_DEBUG ("%s_%s: Sending latency event", GST_DEBUG_PAD_NAME (pad));
 
       latency_probe = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
           gst_structure_new_id (latency_probe_id,
@@ -409,13 +409,13 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
 
       /* FIXME unsafe peer access */
       if (GST_OBJECT_FLAG_IS_SET (peer_parent, GST_ELEMENT_FLAG_SINK)) {
-        GST_DEBUG ("%s_%s: Storing latency event", GST_DEBUG_PAD_NAME (pad));
-
         /* store event so that we can calculate latency when the buffer that
          * follows has been processed */
-        if (!g_object_get_qdata ((GObject *) pad, latency_probe_id))
+        if (!g_object_get_qdata ((GObject *) pad, latency_probe_id)) {
+          GST_DEBUG ("%s_%s: Storing latency event", GST_DEBUG_PAD_NAME (pad));
           g_object_set_qdata ((GObject *) pad, latency_probe_id,
               gst_event_ref (ev));
+        }
       }
     }
 
@@ -437,11 +437,12 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
       if (!g_str_equal (value_element_id, element_id) ||
           !g_str_equal (value_element_name, element_name) ||
           !g_str_equal (value_pad_name, pad_name)) {
-        GST_DEBUG ("%s_%s: Storing latency event", GST_DEBUG_PAD_NAME (pad));
-
-        if (!g_object_get_qdata ((GObject *) pad, sub_latency_probe_id))
+        if (!g_object_get_qdata ((GObject *) pad, sub_latency_probe_id)) {
+          GST_DEBUG ("%s_%s: Storing sub-latency event",
+              GST_DEBUG_PAD_NAME (pad));
           g_object_set_qdata ((GObject *) pad, sub_latency_probe_id,
               gst_event_ref (ev));
+        }
       }
 
       g_free (pad_name);
