@@ -226,7 +226,7 @@ build nodebug fedora x86_64:
       -b check.gst-devtools.validate.launcher_tests.test_validate.launch_pipeline.not_negotiated.caps_query_failure.play_15s
   script:
     - cd gst-build/
-    - echo "-> Running ${TEST_SUITE} testsuite."
+    - echo "-> Running ${TEST_SUITE} testsuite with ${BLACKLIST} and ${EXTRA_VALIDATE_ARGS}"
     - >
       ./gst-uninstalled.py
       gst-validate-launcher ${TEST_SUITE}
@@ -327,6 +327,7 @@ integration testsuites fedora:
     # - check.gst-plugins-good.elements_rtpjitterbuffer.test_fill_queue - 22s
     # - check.gst-plugins-good.elements_splitmux.test_splitmuxsink_async - 20s
     # - check.gst-plugins-good.elements_videomixer.test_play_twice - 22s
+    # - check.gst-editing-services.nle_simple.test_one_after_other - 40s
     VALGRIND_SKIPLIST: >
       -b check.[a-z-]*.generic_states.test_state_changes_down_seq
       -b check.[a-z-]*.generic_states.test_state_changes_up_seq
@@ -364,12 +365,14 @@ integration testsuites fedora:
       -b check.gst-plugins-good.elements_rtpjitterbuffer.test_fill_queue
       -b check.gst-plugins-good.elements_splitmux.test_splitmuxsink_async
       -b check.gst-plugins-good.elements_videomixer.test_play_twice
+      -b check.gst-editing-services.nle_simple.test_one_after_other
     # - check.gst-plugins-good.elements_rtpjitterbuffer.test_push_* - flaky in valgrind
     # - check.gst-plugins-base.pipelines_gl_launch_lines - driver leaks / memory access
     # - check.gst-plugins-base.libs_gstgl - driver leaks / memory access
     # - check.gst-plugins-base.elements_gl - driver leaks / memory access
     # - check.gst-plugins-base.elements_libvisual - uninitialized memory access
     # - check.gst-plugins-base.generic_states - need to add gl elements to ignore list but only if using valgrind
+    # - "check.gst-editing-services.pythontests.*" - Need to figure out how to introduce python suppressions
     VALGRIND_BLACKLIST: >
       -b check.gstreamer.gst_gstsystemclock.test_stress_cleanup_unschedule
       -b check.gstreamer.gst_gstsystemclock.test_stress_reschedule
@@ -393,6 +396,7 @@ integration testsuites fedora:
       -b check.gst-libav.generic_plugin_test
       -b check.gst-libav.generic_libavcodec_locking
       -b check.gst-libav.elements_avdemux_ape
+      -b check.gst-editing-services.pythontests
     EXTRA_VALIDATE_ARGS: "--valgrind ${VALGRIND_BLACKLIST} ${VALGRIND_SKIPLIST}"
     ORC_CODE: "backup"
   # Some suppression files are missing a newline at the end which messes things
@@ -438,6 +442,13 @@ valgrind bad:
     variables:
       - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-plugins-bad)$/
 
+valgrind ges:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst-editing-services\\..*"
+  only:
+    variables:
+      - $CI_PROJECT_NAME =~ /^(gstreamer|gst-plugins-base|gst-plugins-good|gst-editing-services)$/
 
 # Template for Cerbero GStreamer Build
 #
