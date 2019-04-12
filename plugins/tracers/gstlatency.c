@@ -348,18 +348,34 @@ do_drop_sub_latency_event (GstPad * pad, GstPadProbeInfo * info,
     const GstStructure *data = gst_event_get_structure (ev);
 
     if (gst_structure_get_name_id (data) == sub_latency_probe_id) {
-      const GValue *value;
       /* FIXME unsafe peer pad usage */
-      gchar *pad_name = g_strdup_printf ("%s_%s",
-          GST_DEBUG_PAD_NAME (GST_PAD_PEER (pad)));
+      GstPad *peer_pad = GST_PAD_PEER (pad);
+      GstElement *peer_parent = get_real_pad_parent (peer_pad);
+      const GValue *value;
+      gchar *element_id = g_strdup_printf ("%p", peer_parent);
+      gchar *element_name = gst_element_get_name (peer_parent);
+      gchar *pad_name = gst_pad_get_name (peer_pad);
+      const gchar *value_element_id, *value_element_name, *value_pad_name;
 
+      /* Get the element id, element name and pad name from data */
+      value = gst_structure_id_get_value (data, latency_probe_element_id);
+      value_element_id = g_value_get_string (value);
+      value = gst_structure_id_get_value (data, latency_probe_element);
+      value_element_name = g_value_get_string (value);
       value = gst_structure_id_get_value (data, latency_probe_pad);
-      if (!g_str_equal (g_value_get_string (value), pad_name)) {
-        GST_DEBUG ("%s: Dropping sub-latency event", pad_name);
+      value_pad_name = g_value_get_string (value);
+
+      if (!g_str_equal (value_element_id, element_id) ||
+          !g_str_equal (value_element_name, element_name) ||
+          !g_str_equal (value_pad_name, pad_name)) {
+        GST_DEBUG ("%s_%s: Dropping sub-latency event",
+            GST_DEBUG_PAD_NAME (pad));
         ret = GST_PAD_PROBE_DROP;
       }
 
       g_free (pad_name);
+      g_free (element_name);
+      g_free (element_id);
     }
   }
 
