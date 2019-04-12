@@ -313,7 +313,7 @@ class Test(Loggable):
     def add_known_issue_information(self):
         if self.expected_issues:
             info = "\n\n## Already known issues\n\n``` python\n%s\n```\n\n" % (
-                json.dumps(self.expected_issues)
+                json.dumps(self.expected_issues, indent=4)
             )
         else:
             info = ""
