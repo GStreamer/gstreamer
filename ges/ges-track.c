@@ -281,14 +281,6 @@ update_field (GQuark field_id, const GValue * value, GstStructure * original)
 
 /* callbacks */
 static void
-sort_track_elements_cb (GESTrackElement * child,
-    GParamSpec * arg G_GNUC_UNUSED, GESTrack * track)
-{
-  g_sequence_sort (track->priv->trackelements_by_start,
-      (GCompareDataFunc) element_start_compare, NULL);
-}
-
-static void
 _ghost_nlecomposition_srcpad (GESTrack * track)
 {
   GstPad *capsfilter_sink;
@@ -379,8 +371,6 @@ remove_object_internal (GESTrack * track, GESTrackElement * object)
       return FALSE;
     }
   }
-
-  g_signal_handlers_disconnect_by_func (object, sort_track_elements_cb, NULL);
 
   ges_track_element_set_track (object, NULL);
   ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object), NULL);
@@ -987,15 +977,6 @@ ges_track_add_element (GESTrack * track, GESTrackElement * object)
   g_signal_emit (track, ges_track_signals[TRACK_ELEMENT_ADDED], 0,
       GES_TRACK_ELEMENT (object));
 
-  g_signal_connect (GES_TRACK_ELEMENT (object), "notify::start",
-      G_CALLBACK (sort_track_elements_cb), track);
-
-  g_signal_connect (GES_TRACK_ELEMENT (object), "notify::duration",
-      G_CALLBACK (sort_track_elements_cb), track);
-
-  g_signal_connect (GES_TRACK_ELEMENT (object), "notify::priority",
-      G_CALLBACK (sort_track_elements_cb), track);
-
   return TRUE;
 }
 
@@ -1052,7 +1033,6 @@ ges_track_remove_element (GESTrack * track, GESTrackElement * object)
 
   it = g_hash_table_lookup (priv->trackelements_iter, object);
   g_sequence_remove (it);
-  track_resort_and_fill_gaps (track);
 
   if (remove_object_internal (track, object) == TRUE) {
     ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (object), NULL);
