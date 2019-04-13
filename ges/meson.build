@@ -14,7 +14,7 @@ ges_sharp_dep = declare_dependency(dependencies: [glib_sharp_dep, gio_sharp_dep,
 configure_file(
     input: pkg + '-sharp.dll.config',
     output: pkg + '-sharp.dll.config',
-    configuration: configuration_data())
+    copy: true)
 
 if add_languages('c', required: get_option('tests')) and csc.get_id() == 'mono'
     c_abi_exe = executable(pkg + '_c_abi', c_abi,

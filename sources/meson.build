@@ -59,4 +59,4 @@ endif
 configure_file(
     input: 'gstreamer-sharp.dll.config',
     output: 'gstreamer-sharp.dll.config',
-    configuration: configuration_data())
+    copy: true)
