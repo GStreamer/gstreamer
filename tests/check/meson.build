@@ -145,7 +145,6 @@ foreach t : base_tests
     )
 
     env = environment()
-    env.set('GST_PLUGIN_PATH_1_0', meson.build_root())
     env.set('GST_PLUGIN_SYSTEM_PATH_1_0', '')
     env.set('CK_DEFAULT_TIMEOUT', '20')
     env.set('GST_STATE_IGNORE_ELEMENTS', '')
