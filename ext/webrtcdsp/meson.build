@@ -19,6 +19,7 @@ if webrtc_dep.found() and gnustl_dep.found()
     dependencies : [gstbase_dep, gstaudio_dep, gstbadaudio_dep, webrtc_dep, gnustl_dep],
     install : true,
     install_dir : plugins_install_dir,
+    override_options : ['cpp_std=c++11'],
   )
   pkgconfig.generate(gstwebrtcdsp, install_dir : plugins_pkgconfig_install_dir)
 endif
