@@ -41,13 +41,7 @@ else
       required: false)
 endif
 
-if host_machine.system() == 'windows'
-    pathsep = ';'
-else
-    pathsep = ':'
-endif
-mono_path = gtk_sharp.get_variable('mono_path') + pathsep
-mono_path += pathsep + join_paths(meson.current_build_dir(), 'sources')
+mono_path = [gtk_sharp.get_variable('mono_path'), join_paths(meson.current_build_dir(), 'sources')]
 
 codegen_dependencies = [gapi_codegen, gapi_fixup, glib_sharp, gio_sharp]
 gapi_fixup = gapi_fixup.full_path()
@@ -95,15 +89,16 @@ if ges_dep.found()
     gst_deps_defs +=  [
         ['gst-editing-services', ['gst-editing-services', 'ges_dep'], 'libges'],
     ]
-    mono_path += pathsep + join_paths(meson.current_build_dir(), 'ges')
+    mono_path += [join_paths(meson.current_build_dir(), 'ges')]
 endif
 
 testsenv = environment()
 testsenv.prepend('MONO_PATH', mono_path)
 i = 0
+testsenv_ld_library_path = []
 foreach dep: gst_deps + [ges_dep]
     if dep.type_name() == 'pkgconfig'
-        testsenv.prepend('LD_LIBRARY_PATH', dep.get_pkgconfig_variable('libdir'))
+        testsenv_ld_library_path += [dep.get_pkgconfig_variable('libdir')]
     else
         depdef = gst_deps_defs[i][1]
         libname = gst_deps_defs[i].get(2, '')
@@ -118,11 +113,13 @@ foreach dep: gst_deps + [ges_dep]
                 endif
                 j += 1
             endforeach
-            testsenv.prepend('LD_LIBRARY_PATH', dirname)
+            testsenv_ld_library_path += [dirname]
         endif
     endif
     i += 1
 endforeach
+# FIXME: port this to macOS and Windows
+testsenv.prepend('LD_LIBRARY_PATH', testsenv_ld_library_path)
 
 subdir('sources')
 if ges_dep.found()
