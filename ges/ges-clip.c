@@ -862,7 +862,6 @@ static void
 ges_clip_init (GESClip * self)
 {
   self->priv = ges_clip_get_instance_private (self);
-  /* FIXME, check why it was done this way _DURATION (self) = GST_SECOND; */
   self->priv->layer = NULL;
   self->priv->nb_effects = 0;
 }
