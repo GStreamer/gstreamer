@@ -1152,8 +1152,6 @@ ges_asset_request_async (GType extractable_type,
     while (TRUE) {
       switch (asset->priv->state) {
         case ASSET_INITIALIZED:
-          gst_object_ref (asset);
-
           GST_DEBUG_OBJECT (asset, "Asset in cache and initialized, "
               "using it");
 
