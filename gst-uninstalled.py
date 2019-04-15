@@ -18,6 +18,7 @@ from distutils.util import strtobool
 
 from common import get_meson
 from common import git
+from common import win32_get_short_path_name
 
 SCRIPTDIR = os.path.dirname(os.path.realpath(__file__))
 PREFIX_DIR = os.path.join(SCRIPTDIR, 'prefix')
@@ -44,6 +45,9 @@ def stringify(o):
     raise AssertionError('Object {!r} must be a string or a list'.format(o))
 
 def prepend_env_var(env, var, value):
+    # Try not to exceed maximum length limits for env vars on Windows
+    if os.name is 'nt':
+        value = win32_get_short_path_name(value)
     env_val = env.get(var, '')
     val = os.pathsep + value + os.pathsep
     # Don't add the same value twice
