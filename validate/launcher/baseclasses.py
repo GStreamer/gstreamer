@@ -559,7 +559,15 @@ class Test(Loggable):
 
     def get_logfile_repr(self):
         if not self.options.redirect_logs:
-            return "\n    Log: %s" % (self.html_log if self.html_log else self.logfile)
+            if self.html_log:
+                log = self.html_log
+            else:
+                log = self.logfile
+
+            if CI_ARTIFACTS_URL:
+                log = CI_ARTIFACTS_URL + os.path.relpath(log, self.options.logsdir)
+
+            return "\n    Log: %s" % (log)
 
         return ""
 
