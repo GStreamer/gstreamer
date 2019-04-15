@@ -220,7 +220,16 @@ ensure_context (GstVaapiDecoderVp9 * decoder)
 
     info.profile = priv->profile;
     info.entrypoint = entrypoint;
-    info.chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+    if (priv->parser->bit_depth == GST_VP9_BIT_DEPTH_8) {
+      info.chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+    } else if (priv->parser->bit_depth == GST_VP9_BIT_DEPTH_10) {
+      info.chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
+    } else {
+      GST_WARNING ("VP9 with depth %d, bigger than 10BPP not supported now",
+          priv->parser->bit_depth);
+      return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
+    }
+
     info.width = priv->width;
     info.height = priv->height;
     info.ref_frames = 8;
