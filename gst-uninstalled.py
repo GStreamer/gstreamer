@@ -44,7 +44,12 @@ def stringify(o):
     raise AssertionError('Object {!r} must be a string or a list'.format(o))
 
 def prepend_env_var(env, var, value):
-    env[var] = os.pathsep + value + os.pathsep + env.get(var, "")
+    env_val = env.get(var, '')
+    val = os.pathsep + value + os.pathsep
+    # Don't add the same value twice
+    if val in env_val or env_val.startswith(value + os.pathsep):
+        return
+    env[var] = val + env_val
     env[var] = env[var].replace(os.pathsep + os.pathsep, os.pathsep).strip(os.pathsep)
 
 
