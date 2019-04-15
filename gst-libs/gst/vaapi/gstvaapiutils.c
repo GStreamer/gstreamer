@@ -34,8 +34,12 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+/* string case an enum */
 #define STRCASEP(p, x)  STRCASE(G_PASTE(p, x))
 #define STRCASE(x)      case x: return G_STRINGIFY(x)
+
+/* string case a macro */
+#define STRCASEM(p, x)  case G_PASTE(p, x): return G_STRINGIFY(x)
 
 #if VA_CHECK_VERSION (0,40,0)
 static gchar *
@@ -294,7 +298,7 @@ string_of_va_chroma_format (guint chroma_format)
 {
   switch (chroma_format) {
 #define MAP(value) \
-        STRCASEP(VA_RT_FORMAT_, value)
+        STRCASEM(VA_RT_FORMAT_, value)
       MAP (YUV420);
       MAP (YUV422);
       MAP (YUV444);
