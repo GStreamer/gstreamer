@@ -1,4 +1,4 @@
 [wrap-git]
 directory=libsoup
 url=https://gitlab.gnome.org/gnome/libsoup.git
-revision=master
+revision=2.66.1
