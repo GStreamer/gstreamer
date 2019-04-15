@@ -34,12 +34,8 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-#define CONCAT(a, b)    CONCAT_(a, b)
-#define CONCAT_(a, b)   a##b
-#define STRINGIFY(x)    STRINGIFY_(x)
-#define STRINGIFY_(x)   #x
-#define STRCASEP(p, x)  STRCASE(CONCAT(p, x))
-#define STRCASE(x)      case x: return STRINGIFY(x)
+#define STRCASEP(p, x)  STRCASE(G_PASTE(p, x))
+#define STRCASE(x)      case x: return G_STRINGIFY(x)
 
 #if VA_CHECK_VERSION (0,40,0)
 static gchar *
