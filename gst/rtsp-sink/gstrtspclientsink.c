@@ -1907,6 +1907,26 @@ gst_rtsp_client_sink_connection_send (GstRTSPClientSink * sink,
 }
 
 static GstRTSPResult
+gst_rtsp_client_sink_connection_send_messages (GstRTSPClientSink * sink,
+    GstRTSPConnInfo * conninfo, GstRTSPMessage * messages, guint n_messages,
+    GTimeVal * timeout)
+{
+  GstRTSPResult ret;
+
+  if (conninfo->connection) {
+    g_mutex_lock (&conninfo->send_lock);
+    ret =
+        gst_rtsp_connection_send_messages (conninfo->connection, messages,
+        n_messages, timeout);
+    g_mutex_unlock (&conninfo->send_lock);
+  } else {
+    ret = GST_RTSP_ERROR;
+  }
+
+  return ret;
+}
+
+static GstRTSPResult
 gst_rtsp_client_sink_connection_receive (GstRTSPClientSink * sink,
     GstRTSPConnInfo * conninfo, GstRTSPMessage * message, GTimeVal * timeout)
 {
@@ -2792,25 +2812,27 @@ no_user_pass:
 
 static GstRTSPResult
 gst_rtsp_client_sink_try_send (GstRTSPClientSink * sink,
-    GstRTSPConnInfo * conninfo, GstRTSPMessage * request,
-    GstRTSPMessage * response, GstRTSPStatusCode * code)
+    GstRTSPConnInfo * conninfo, GstRTSPMessage * requests,
+    guint n_requests, GstRTSPMessage * response, GstRTSPStatusCode * code)
 {
   GstRTSPResult res;
   GstRTSPStatusCode thecode;
   gchar *content_base = NULL;
   gint try = 0;
 
+  g_assert (n_requests == 1 || response == NULL);
+
 again:
   GST_DEBUG_OBJECT (sink, "sending message");
 
-  if (sink->debug)
-    gst_rtsp_message_dump (request);
+  if (sink->debug && n_requests == 1)
+    gst_rtsp_message_dump (&requests[0]);
 
   g_mutex_lock (&sink->send_lock);
 
   res =
-      gst_rtsp_client_sink_connection_send (sink, conninfo, request,
-      sink->ptcp_timeout);
+      gst_rtsp_client_sink_connection_send_messages (sink, conninfo, requests,
+      n_requests, sink->ptcp_timeout);
   if (res < 0) {
     g_mutex_unlock (&sink->send_lock);
     goto send_error;
@@ -2998,7 +3020,7 @@ gst_rtsp_client_sink_send (GstRTSPClientSink * sink, GstRTSPConnInfo * conninfo,
     method = request->type_data.request.method;
 
     if ((res =
-            gst_rtsp_client_sink_try_send (sink, conninfo, request, response,
+            gst_rtsp_client_sink_try_send (sink, conninfo, request, 1, response,
                 &int_code)) < 0)
       goto error;
 
@@ -3826,24 +3848,14 @@ do_send_data (GstBuffer * buffer, guint8 channel,
   GstRTSPClientSink *sink = context->parent;
   GstRTSPMessage message = { 0 };
   GstRTSPResult res = GST_RTSP_OK;
-  GstMapInfo map_info;
-  guint8 *data;
-  guint usize;
 
   gst_rtsp_message_init_data (&message, channel);
 
-  /* FIXME, need some sort of iovec RTSPMessage here */
-  if (!gst_buffer_map (buffer, &map_info, GST_MAP_READ))
-    return FALSE;
-
-  gst_rtsp_message_take_body (&message, map_info.data, map_info.size);
+  gst_rtsp_message_set_body_buffer (&message, buffer);
 
   res =
-      gst_rtsp_client_sink_try_send (sink, &sink->conninfo, &message,
+      gst_rtsp_client_sink_try_send (sink, &sink->conninfo, &message, 1,
       NULL, NULL);
-
-  gst_rtsp_message_steal_body (&message, &data, &usize);
-  gst_buffer_unmap (buffer, &map_info);
 
   gst_rtsp_message_unset (&message);
 
@@ -3856,21 +3868,31 @@ static gboolean
 do_send_data_list (GstBufferList * buffer_list, guint8 channel,
     GstRTSPStreamContext * context)
 {
-  gboolean ret = TRUE;
+  GstRTSPClientSink *sink = context->parent;
+  GstRTSPResult res = GST_RTSP_OK;
   guint i, n = gst_buffer_list_length (buffer_list);
+  GstRTSPMessage *messages = g_newa (GstRTSPMessage, n);
 
-  /* TODO: Needs support for a) queueing up multiple messages on the
-   * GstRTSPWatch in do_send_data() above and b) for one message having a body
-   * consisting of multiple parts here */
+  memset (messages, 0, n * sizeof (GstRTSPMessage));
+
   for (i = 0; i < n; i++) {
     GstBuffer *buffer = gst_buffer_list_get (buffer_list, i);
 
-    ret = do_send_data (buffer, channel, context);
-    if (!ret)
-      break;
+    gst_rtsp_message_init_data (&messages[i], channel);
+
+    gst_rtsp_message_set_body_buffer (&messages[i], buffer);
   }
 
-  return ret;
+  res =
+      gst_rtsp_client_sink_try_send (sink, &sink->conninfo, messages, n,
+      NULL, NULL);
+
+  for (i = 0; i < n; i++) {
+    gst_rtsp_message_unset (&messages[i]);
+    gst_rtsp_stream_transport_message_sent (context->stream_transport);
+  }
+
+  return res == GST_RTSP_OK;
 }
 
 static GstRTSPResult
