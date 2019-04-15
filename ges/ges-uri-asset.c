@@ -773,6 +773,8 @@ ges_uri_source_asset_get_filesource_asset (GESUriSourceAsset * asset)
 void
 _ges_uri_asset_cleanup (void)
 {
+  if (discoverer)
+    gst_discoverer_stop (discoverer);
   g_clear_object (&discoverer);
   if (parent_newparent_table) {
     g_hash_table_destroy (parent_newparent_table);
