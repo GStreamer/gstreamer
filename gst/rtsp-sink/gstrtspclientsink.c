@@ -3847,6 +3847,8 @@ do_send_data (GstBuffer * buffer, guint8 channel,
 
   gst_rtsp_message_unset (&message);
 
+  gst_rtsp_stream_transport_message_sent (context->stream_transport);
+
   return res == GST_RTSP_OK;
 }
 
