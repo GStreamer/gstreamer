@@ -878,6 +878,7 @@ gst_rtsp_client_sink_init (GstRTSPClientSink * sink)
   g_cond_init (&sink->open_conn_cond);
 
   sink->internal_bin = (GstBin *) gst_bin_new ("rtspbin");
+  g_object_set (sink->internal_bin, "async-handling", TRUE, NULL);
   gst_element_set_locked_state (GST_ELEMENT_CAST (sink->internal_bin), TRUE);
   gst_bin_add (GST_BIN (sink), GST_ELEMENT_CAST (sink->internal_bin));
 
