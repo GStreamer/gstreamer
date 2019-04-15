@@ -4701,20 +4701,27 @@ gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
     for (p = 0; p < vmeta->n_planes; p++) {
       if (vmeta->stride[p] < obj->info.stride[p]) {
         GST_DEBUG_OBJECT (obj->dbg_obj,
-            "Not importing as remote stride %i is smaller then %i on plane %u",
+            "Not importing as remote stride %i is smaller than %i on plane %u",
             vmeta->stride[p], obj->info.stride[p], p);
         return FALSE;
       } else if (vmeta->stride[p] > obj->info.stride[p]) {
+        GST_LOG_OBJECT (obj->dbg_obj,
+            "remote stride %i is higher than %i on plane %u",
+            vmeta->stride[p], obj->info.stride[p], p);
         need_fmt_update = TRUE;
       }
 
       if (vmeta->offset[p] < obj->info.offset[p]) {
         GST_DEBUG_OBJECT (obj->dbg_obj,
             "Not importing as offset %" G_GSIZE_FORMAT
-            " is smaller then %" G_GSIZE_FORMAT " on plane %u",
+            " is smaller than %" G_GSIZE_FORMAT " on plane %u",
             vmeta->offset[p], obj->info.offset[p], p);
         return FALSE;
       } else if (vmeta->offset[p] > obj->info.offset[p]) {
+        GST_LOG_OBJECT (obj->dbg_obj,
+            "Remote offset %" G_GSIZE_FORMAT
+            " is higher than %" G_GSIZE_FORMAT " on plane %u",
+            vmeta->offset[p], obj->info.offset[p], p);
         need_fmt_update = TRUE;
       }
     }
