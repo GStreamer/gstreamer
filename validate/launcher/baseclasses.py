@@ -1975,16 +1975,17 @@ class _TestsLauncher(Loggable):
                         return False
 
                     if retry_on_failures:
-                        if not self.options.redirect_logs:
+                        if not self.options.redirect_logs and test.allow_flakiness:
                             test.copy_logfiles()
                         printc(test)
-                        test.clean()
                         to_retry.append(test)
 
                         # Not adding to final report if flakiness is tolerated
                         to_report = not test.allow_flakiness
                 if to_report:
                     self.reporter.after_test(test)
+                if retry_on_failures:
+                    test.clean()
                 if self.start_new_job(tests_left):
                     jobs_running += 1
 
