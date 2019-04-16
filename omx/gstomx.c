@@ -1402,8 +1402,6 @@ omx_index_type_to_str (OMX_INDEXTYPE index)
       return "OMX_IndexAutoPauseAfterCapture";
     case OMX_IndexParamContentURI:
       return "OMX_IndexParamContentURI";
-    case OMX_IndexParamCustomContentPipe:
-      return "OMX_IndexParamCustomContentPipe";
     case OMX_IndexParamDisableResourceConcealment:
       return "OMX_IndexParamDisableResourceConcealment";
     case OMX_IndexConfigMetadataItemCount:
@@ -1660,10 +1658,6 @@ omx_index_type_to_str (OMX_INDEXTYPE index)
       return "OMX_IndexConfigCommonOutputSize";
     case OMX_IndexParamCommonExtraQuantData:
       return "OMX_IndexParamCommonExtraQuantData";
-    case OMX_IndexConfigCommonFocusRegion:
-      return "OMX_IndexConfigCommonFocusRegion";
-    case OMX_IndexConfigCommonFocusStatus:
-      return "OMX_IndexConfigCommonFocusStatus";
     case OMX_IndexConfigCommonTransitionEffect:
       return "OMX_IndexConfigCommonTransitionEffect";
     case OMX_IndexOtherStartUnused:
@@ -1680,16 +1674,10 @@ omx_index_type_to_str (OMX_INDEXTYPE index)
       return "OMX_IndexConfigTimeScale";
     case OMX_IndexConfigTimeClockState:
       return "OMX_IndexConfigTimeClockState";
-    case OMX_IndexConfigTimeActiveRefClock:
-      return "OMX_IndexConfigTimeActiveRefClock";
     case OMX_IndexConfigTimeCurrentMediaTime:
       return "OMX_IndexConfigTimeCurrentMediaTime";
     case OMX_IndexConfigTimeCurrentWallTime:
       return "OMX_IndexConfigTimeCurrentWallTime";
-    case OMX_IndexConfigTimeCurrentAudioReference:
-      return "OMX_IndexConfigTimeCurrentAudioReference";
-    case OMX_IndexConfigTimeCurrentVideoReference:
-      return "OMX_IndexConfigTimeCurrentVideoReference";
     case OMX_IndexConfigTimeMediaTimeRequest:
       return "OMX_IndexConfigTimeMediaTimeRequest";
     case OMX_IndexConfigTimeClientStartTime:
@@ -1707,6 +1695,25 @@ omx_index_type_to_str (OMX_INDEXTYPE index)
     default:
       break;
   }
+
+#if OMX_VERSION_MINOR == 1
+  switch (index) {
+    case OMX_IndexParamCustomContentPipe:
+      return "OMX_IndexParamCustomContentPipe";
+    case OMX_IndexConfigCommonFocusRegion:
+      return "OMX_IndexConfigCommonFocusRegion";
+    case OMX_IndexConfigCommonFocusStatus:
+      return "OMX_IndexConfigCommonFocusStatus";
+    case OMX_IndexConfigTimeActiveRefClock:
+      return "OMX_IndexConfigTimeActiveRefClock";
+    case OMX_IndexConfigTimeCurrentAudioReference:
+      return "OMX_IndexConfigTimeCurrentAudioReference";
+    case OMX_IndexConfigTimeCurrentVideoReference:
+      return "OMX_IndexConfigTimeCurrentVideoReference";
+    default:
+      break;
+  }
+#endif
 
 #ifdef USE_OMX_TARGET_ZYNQ_USCALE_PLUS
   switch ((OMX_ALG_INDEXTYPE) index) {
