@@ -2924,7 +2924,7 @@ gst_aggregator_pad_class_init (GstAggregatorPadClass * klass)
   gobject_class->get_property = gst_aggregator_pad_get_property;
 
   /**
-   * GstAggregatorPad::buffer-consumed:
+   * GstAggregatorPad:buffer-consumed:
    *
    * Signals that a buffer was consumed. As aggregator pads store buffers
    * in an internal queue, there is no direct match between input and output
