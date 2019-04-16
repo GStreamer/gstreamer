@@ -16,6 +16,7 @@ gst-rtsp-server
 gstreamer
 gstreamer-sharp
 gstreamer-vaapi
+libnice
 __pycache__
 meson/
 subprojects/gst-integration-testsuites/
