@@ -68,7 +68,7 @@ GstBus *bus;
 
 [..]
 
-bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline);
+bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 gst_bus_add_signal_watch (bus);
 g_signal_connect (bus, "message::error", G_CALLBACK (cb_message_error), NULL);
 g_signal_connect (bus, "message::eos", G_CALLBACK (cb_message_eos), NULL);
