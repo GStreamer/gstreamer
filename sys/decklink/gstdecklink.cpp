@@ -46,6 +46,12 @@ gst_decklink_mode_get_type (void)
     {GST_DECKLINK_MODE_NTSC_P, "NTSC SD 60p", "ntsc-p"},
     {GST_DECKLINK_MODE_PAL_P, "PAL SD 50p", "pal-p"},
 
+    {GST_DECKLINK_MODE_NTSC_WIDESCREEN, "NTSC SD 60i Widescreen", "ntsc-widescreen"},
+    {GST_DECKLINK_MODE_NTSC2398_WIDESCREEN, "NTSC SD 60i Widescreen (24 fps)", "ntsc2398-widescreen"},
+    {GST_DECKLINK_MODE_PAL_WIDESCREEN, "PAL SD 50i Widescreen", "pal-widescreen"},
+    {GST_DECKLINK_MODE_NTSC_P_WIDESCREEN, "NTSC SD 60p Widescreen", "ntsc-p-widescreen"},
+    {GST_DECKLINK_MODE_PAL_P_WIDESCREEN, "PAL SD 50p Widescreen", "pal-p-widescreen"},
+
     {GST_DECKLINK_MODE_1080p2398, "HD1080 23.98p", "1080p2398"},
     {GST_DECKLINK_MODE_1080p24, "HD1080 24p", "1080p24"},
     {GST_DECKLINK_MODE_1080p25, "HD1080 25p", "1080p25"},
@@ -252,6 +258,8 @@ gst_decklink_audio_channels_get_type (void)
 
 #define NTSC 10, 11, false, "bt601", FALSE
 #define PAL 12, 11, true, "bt601", FALSE
+#define NTSC_WS 40, 33, false, "bt601", FALSE
+#define PAL_WS 16, 11, true, "bt601", FALSE
 #define HD 1, 1, true, "bt709", TRUE
 #define UHD 1, 1, true, "bt2020", TRUE
 
@@ -263,6 +271,12 @@ static const GstDecklinkMode modes[] = {
   {bmdModePAL, 720, 576, 25, 1, true, PAL},
   {bmdModeNTSCp, 720, 486, 30000, 1001, false, NTSC},
   {bmdModePALp, 720, 576, 25, 1, false, PAL},
+
+  {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC_WS},
+  {bmdModeNTSC2398, 720, 486, 24000, 1001, true, NTSC_WS},
+  {bmdModePAL, 720, 576, 25, 1, true, PAL_WS},
+  {bmdModeNTSCp, 720, 486, 30000, 1001, false, NTSC_WS},
+  {bmdModePALp, 720, 576, 25, 1, false, PAL_WS},
 
   {bmdModeHD1080p2398, 1920, 1080, 24000, 1001, false, HD},
   {bmdModeHD1080p24, 1920, 1080, 24, 1, false, HD},
