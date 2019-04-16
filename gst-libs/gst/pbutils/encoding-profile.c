@@ -228,7 +228,7 @@
  *  gst_object_unref (preset);
  *
  *  caps = gst_caps_from_string ("video/x-theora");
- *  v = gst_encoding_video_profile_new (caps, "theorapreset", NULL, 0);
+ *  v = gst_encoding_video_profile_new (caps, "theora_bitrate_preset", NULL, 0);
  *  gst_encoding_container_profile_add_profile (prof, (GstEncodingProfile*) v);
  *  gst_caps_unref (caps);
  *
