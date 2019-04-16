@@ -968,12 +968,13 @@ gst_v4l2_transform_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstV4l2Transform *self = GST_V4L2_TRANSFORM (trans);
   gboolean ret;
+  GstEventType type = GST_EVENT_TYPE (event);
 
   /* Nothing to flush in passthrough */
   if (gst_base_transform_is_passthrough (trans))
     return GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 
-  switch (GST_EVENT_TYPE (event)) {
+  switch (type) {
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (self, "flush start");
       gst_v4l2_object_unlock (self->v4l2output);
@@ -985,7 +986,7 @@ gst_v4l2_transform_sink_event (GstBaseTransform * trans, GstEvent * event)
 
   ret = GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
 
-  switch (GST_EVENT_TYPE (event)) {
+  switch (type) {
     case GST_EVENT_FLUSH_STOP:
       /* Buffer should be back now */
       GST_DEBUG_OBJECT (self, "flush stop");

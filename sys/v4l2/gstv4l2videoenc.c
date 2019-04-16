@@ -973,8 +973,9 @@ gst_v4l2_video_enc_sink_event (GstVideoEncoder * encoder, GstEvent * event)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   gboolean ret;
+  GstEventType type = GST_EVENT_TYPE (event);
 
-  switch (GST_EVENT_TYPE (event)) {
+  switch (type) {
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (self, "flush start");
       gst_v4l2_object_unlock (self->v4l2output);
@@ -986,7 +987,7 @@ gst_v4l2_video_enc_sink_event (GstVideoEncoder * encoder, GstEvent * event)
 
   ret = GST_VIDEO_ENCODER_CLASS (parent_class)->sink_event (encoder, event);
 
-  switch (GST_EVENT_TYPE (event)) {
+  switch (type) {
     case GST_EVENT_FLUSH_START:
       gst_pad_stop_task (encoder->srcpad);
       GST_DEBUG_OBJECT (self, "flush start done");
