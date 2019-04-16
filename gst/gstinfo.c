@@ -2060,7 +2060,7 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr func)
    * the name */
 #ifdef HAVE_DLADDR
   if (dladdr ((gpointer) func, &dl_info) && dl_info.dli_sname) {
-    gchar *name = g_strdup (dl_info.dli_sname);
+    const gchar *name = g_intern_string (dl_info.dli_sname);
 
     _gst_debug_register_funcptr (func, name);
     return name;
@@ -2068,9 +2068,12 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr func)
 #endif
   {
     gchar *name = g_strdup_printf ("%p", (gpointer) func);
+    const gchar *iname = g_intern_string (name);
 
-    _gst_debug_register_funcptr (func, name);
-    return name;
+    g_free (name);
+
+    _gst_debug_register_funcptr (func, iname);
+    return iname;
   }
 }
 
@@ -2083,8 +2086,22 @@ _gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
 
   if (!__gst_function_pointers)
     __gst_function_pointers = g_hash_table_new (g_direct_hash, g_direct_equal);
-  if (!g_hash_table_lookup (__gst_function_pointers, ptr))
+  if (!g_hash_table_lookup (__gst_function_pointers, ptr)) {
     g_hash_table_insert (__gst_function_pointers, ptr, (gpointer) ptrname);
+  }
+
+  g_mutex_unlock (&__dbg_functions_mutex);
+}
+
+void
+_priv_gst_debug_cleanup (void)
+{
+  g_mutex_lock (&__dbg_functions_mutex);
+
+  if (__gst_function_pointers) {
+    g_hash_table_unref (__gst_function_pointers);
+    __gst_function_pointers = NULL;
+  }
 
   g_mutex_unlock (&__dbg_functions_mutex);
 }
@@ -2165,6 +2182,11 @@ const gchar *
 _gst_debug_nameof_funcptr (GstDebugFuncPtr func)
 {
   return "(NULL)";
+}
+
+void
+_priv_gst_debug_cleanup (void)
+{
 }
 
 void

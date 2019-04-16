@@ -1125,6 +1125,7 @@ gst_deinit (void)
 
   _priv_gst_caps_features_cleanup ();
   _priv_gst_caps_cleanup ();
+  _priv_gst_debug_cleanup ();
 
   g_type_class_unref (g_type_class_peek (gst_object_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_pad_get_type ()));
