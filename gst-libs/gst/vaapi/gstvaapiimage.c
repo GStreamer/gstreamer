@@ -99,6 +99,9 @@ vaapi_image_is_linear (const VAImage * va_image)
     case VA_FOURCC ('P', '0', '1', '0'):
       data_size = 2 * (width * height + 2 * width2 * height2);
       break;
+    case VA_FOURCC ('R', 'G', '2', '4'):
+      data_size = 3 * width * height;
+      break;
     default:
       GST_ERROR ("FIXME: incomplete formats %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (va_image->format.fourcc));
