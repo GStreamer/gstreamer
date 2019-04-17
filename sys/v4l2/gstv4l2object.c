@@ -4729,8 +4729,22 @@ gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
     if (need_fmt_update) {
       struct v4l2_format format;
       gint wanted_stride[GST_VIDEO_MAX_PLANES] = { 0, };
+      guint32 padded_height;
+      guint plane_height[GST_VIDEO_MAX_PLANES];
 
       format = obj->format;
+
+      if (gst_video_meta_get_plane_height (vmeta, plane_height)) {
+        padded_height = plane_height[0];
+        GST_DEBUG_OBJECT (obj->dbg_obj, "Padded height %u", padded_height);
+
+        obj->align.padding_bottom =
+            padded_height - GST_VIDEO_INFO_HEIGHT (&obj->info);
+      } else {
+        GST_WARNING_OBJECT (obj->dbg_obj,
+            "Failed to compute padded height; keep the default one");
+        padded_height = format.fmt.pix_mp.height;
+      }
 
       /* update the current format with the stride we want to import from */
       if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
@@ -4746,6 +4760,7 @@ gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
                 GST_VIDEO_FORMAT_INFO_TILE_WS (obj->info.finfo);
 
           format.fmt.pix_mp.plane_fmt[i].bytesperline = stride;
+          format.fmt.pix_mp.height = padded_height;
           wanted_stride[i] = stride;
           GST_DEBUG_OBJECT (obj->dbg_obj, "    [%u] %i", i, wanted_stride[i]);
         }
@@ -4759,6 +4774,7 @@ gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
               GST_VIDEO_FORMAT_INFO_TILE_WS (obj->info.finfo);
 
         format.fmt.pix.bytesperline = stride;
+        format.fmt.pix.height = padded_height;
         wanted_stride[0] = stride;
       }
 
@@ -4784,6 +4800,12 @@ gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
             return FALSE;
           }
         }
+
+        if (format.fmt.pix_mp.height != padded_height) {
+          GST_DEBUG_OBJECT (obj->dbg_obj,
+              "Driver did not accept the padded height (wants %i, got %i)",
+              padded_height, format.fmt.pix_mp.height);
+        }
       } else {
         if (format.fmt.pix.bytesperline != wanted_stride[0]) {
           GST_DEBUG_OBJECT (obj->dbg_obj,
@@ -4791,7 +4813,20 @@ gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
               wanted_stride[0], format.fmt.pix.bytesperline);
           return FALSE;
         }
+
+        if (format.fmt.pix.height != padded_height) {
+          GST_DEBUG_OBJECT (obj->dbg_obj,
+              "Driver did not accept the padded height (wants %i, got %i)",
+              padded_height, format.fmt.pix.height);
+        }
       }
+    }
+
+    if (obj->align.padding_bottom) {
+      /* Crop because of vertical padding */
+      GST_DEBUG_OBJECT (obj->dbg_obj, "crop because of bottom padding of %d",
+          obj->align.padding_bottom);
+      gst_v4l2_object_set_crop (obj);
     }
   }
 
