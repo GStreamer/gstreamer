@@ -156,6 +156,7 @@ if have_cxx and build_gstgl
         link_args : noseh_link_args,
         include_directories: [configinc, libsinc],
         dependencies : [glib_deps, gst_dep, gstvideo_dep, gstgl_dep, qt5qml_dep, optional_deps],
+        override_options : ['cpp_std=c++11'],
         install: true,
         install_dir : plugins_install_dir)
       pkgconfig.generate(gstqmlgl, install_dir : plugins_pkgconfig_install_dir)
