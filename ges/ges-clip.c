@@ -1270,6 +1270,10 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
   g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
 
   track_element = GES_TRACK_ELEMENT (effect);
+  if (G_UNLIKELY (GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (track_element)) !=
+          clip))
+    return FALSE;
+
   current_prio = _PRIORITY (track_element);
 
   _get_priority_range (GES_CONTAINER (clip), &min_prio, &max_prio);
@@ -1278,10 +1282,6 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
   /*  We don't change the priority */
   if (current_prio == newindex)
     return TRUE;
-
-  if (G_UNLIKELY (GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (track_element)) !=
-          clip))
-    return FALSE;
 
   if (newindex > (clip->priv->nb_effects - 1 + min_prio)) {
     GST_DEBUG ("You are trying to make %p not a top effect", effect);
