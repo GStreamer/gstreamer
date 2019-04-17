@@ -4779,8 +4779,8 @@ gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
           if (format.fmt.pix_mp.plane_fmt[i].bytesperline != wanted_stride[i]) {
             GST_DEBUG_OBJECT (obj->dbg_obj,
                 "[%i] Driver did not accept the new stride (wants %i, got %i)",
-                i, format.fmt.pix_mp.plane_fmt[i].bytesperline,
-                wanted_stride[i]);
+                i, wanted_stride[i],
+                format.fmt.pix_mp.plane_fmt[i].bytesperline);
             return FALSE;
           }
         }
@@ -4788,7 +4788,7 @@ gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
         if (format.fmt.pix.bytesperline != wanted_stride[0]) {
           GST_DEBUG_OBJECT (obj->dbg_obj,
               "Driver did not accept the new stride (wants %i, got %i)",
-              format.fmt.pix.bytesperline, wanted_stride[0]);
+              wanted_stride[0], format.fmt.pix.bytesperline);
           return FALSE;
         }
       }
