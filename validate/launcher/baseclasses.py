@@ -509,7 +509,8 @@ class Test(Loggable):
                      # TODO: errors-for-leak-kinds should be set to all instead of definite
                      # and all false positives should be added to suppression
                      # files.
-                     ('errors-for-leak-kinds', 'definite'),
+                     ('errors-for-leak-kinds', 'definite,indirect'),
+                     ('show-leak-kinds', 'definite,indirect'),
                      ('num-callers', '20'),
                      ('error-exitcode', str(VALGRIND_ERROR_CODE)),
                      ('gen-suppressions', 'all')]:
