@@ -1276,9 +1276,11 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
 
   newindex = newindex + min_prio;
   /*  We don't change the priority */
-  if (current_prio == newindex ||
-      (G_UNLIKELY (GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (track_element)) !=
-              clip)))
+  if (current_prio == newindex)
+    return TRUE;
+
+  if (G_UNLIKELY (GES_CLIP (GES_TIMELINE_ELEMENT_PARENT (track_element)) !=
+          clip))
     return FALSE;
 
   if (newindex > (clip->priv->nb_effects - 1 + min_prio)) {
