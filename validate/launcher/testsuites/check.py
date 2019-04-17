@@ -65,6 +65,11 @@ LONG_VALGRIND_TESTS = [
     (r'check.gst-plugins-good.elements_splitmux.test_splitmuxsink_async$', '20s'),
     (r'check.gst-plugins-good.elements_videomixer.test_play_twice$', '22s'),
     (r'check.gst-editing-services.nle_simple.test_one_after_other$', '40s'),
+    (r'check.gst-editing-services.nle_nleoperation.test_pyramid_operations_expandable', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
+    (r'check.gst-editing-services.nle_nleoperation.test_complex_operations', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
+    (r'check.gst-editing-services.nle_nleoperation.test_pyramid_operations', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
+    (r'check.gst-editing-services.nle_nleoperation.test_pyramid_operations2', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67'),
+    (r'check.gst-editing-services.nle_complex.test_one_above_another', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/67')
 ]
 
 VALGRIND_BLACKLIST = [
@@ -136,6 +141,7 @@ BLACKLIST = [
     (r'check.gst-plugins-base.elements_audiomixer.test_flush_start_flush_stop$', 'https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/555'),
     (r'check.gstreamer-sharp.SdpTests$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer-sharp/issues/17'),
     (r'check.gst-devtools.validate.launcher_tests.test_validate.launch_pipeline.not_negotiated.caps_query_failure.play_15s$', '?'),
+    (r'check.gst-editing-services.nle_simple.test_one_bin_after_other$', 'https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/66'),
 ]
 
 
