@@ -44,8 +44,14 @@
 #include "gstmsdkcontextutil.h"
 #include "gstmsdkvpputil.h"
 
+#define EXT_FORMATS     ""
+
 #ifndef _WIN32
 #include "gstmsdkallocator_libva.h"
+#if VA_CHECK_VERSION(1, 4, 1)
+#undef EXT_FORMATS
+#define EXT_FORMATS     ", BGR10A2_LE"
+#endif
 #endif
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
@@ -78,9 +84,10 @@ static GstStaticPadTemplate gst_msdkvpp_src_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_DMABUF,
-            "{ BGRA, YUY2, UYVY, NV12, VUYA, BGRx, P010_10LE, BGR10A2_LE}") ";"
-        GST_VIDEO_CAPS_MAKE
-        ("{ BGRA, NV12, YUY2, UYVY, VUYA, BGRx, P010_10LE, BGR10A2_LE }") ", "
+            "{ BGRA, YUY2, UYVY, NV12, VUYA, BGRx, P010_10LE" EXT_FORMATS "}")
+        ";"
+        GST_VIDEO_CAPS_MAKE ("{ BGRA, NV12, YUY2, UYVY, VUYA, BGRx, P010_10LE"
+            EXT_FORMATS "}") ", "
         "interlace-mode = (string){ progressive, interleaved, mixed }" ";"));
 
 enum
