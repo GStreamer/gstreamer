@@ -1414,6 +1414,7 @@ class TestsManager(Loggable):
             if not test_regex.startswith(self.loading_testsuite + '.'):
                 test_regex = self.loading_testsuite + '.' + test_regex
             self.blacklisted_tests.append((test_regex, reason))
+            self._add_blacklist(test_regex)
 
     def add_options(self, parser):
         """ Add more arguments. """
@@ -1439,21 +1440,21 @@ class TestsManager(Loggable):
             for patterns in options.blacklisted_tests:
                 self._add_blacklist(patterns)
 
-    def set_blacklists(self):
-        if self.blacklisted_tests:
-            self.info("Currently 'hardcoded' %s blacklisted tests:" %
-                      self.name)
-
+    def check_blacklists(self):
         if self.options.check_bugs_status:
             if not check_bugs_resolution(self.blacklisted_tests):
                 return False
 
+        return True
+
+    def log_blacklists(self):
+        if self.blacklisted_tests:
+            self.info("Currently 'hardcoded' %s blacklisted tests:" %
+                      self.name)
+
         for name, bug in self.blacklisted_tests:
-            self._add_blacklist(name)
             if not self.options.check_bugs_status:
                 self.info("  + %s --> bug: %s" % (name, bug))
-
-        return True
 
     def check_expected_issues(self):
         if not self.expected_issues or not self.options.check_bugs_status:
@@ -1758,8 +1759,10 @@ class _TestsLauncher(Loggable):
             printc("-> Checking bugs resolution... ", end='')
 
         for tester in self.testers:
-            if not tester.set_blacklists():
+            if not tester.check_blacklists():
                 return False
+
+            tester.log_blacklists()
 
             if not tester.check_expected_issues():
                 return False
