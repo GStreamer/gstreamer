@@ -511,6 +511,7 @@ class Test(Loggable):
                      # files.
                      ('errors-for-leak-kinds', 'definite,indirect'),
                      ('show-leak-kinds', 'definite,indirect'),
+                     ('show-possibly-lost', 'no'),
                      ('num-callers', '20'),
                      ('error-exitcode', str(VALGRIND_ERROR_CODE)),
                      ('gen-suppressions', 'all')]:
