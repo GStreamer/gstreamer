@@ -2278,6 +2278,577 @@
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
+    "avtp": {
+        "description": "Audio/Video Transport Protocol (AVTP) plugin",
+        "elements": {
+            "avtpaafdepay": {
+                "author": "Andre Guedes <andre.guedes@intel.com>",
+                "description": "Extracts raw audio from AAF AVTPDUs",
+                "hierarchy": [
+                    "GstAvtpAafDepay",
+                    "GstAvtpBaseDepayload",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Depayloader/Network/AVTP",
+                "long-name": "AVTP Audio Format (AAF) depayloader",
+                "pad-templates": {
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: { S16BE, S24BE, S32BE, F32BE }\n           rate: { (int)8000, (int)16000, (int)24000, (int)32000, (int)44100, (int)48000, (int)88200, (int)96000, (int)176400, (int)192000 }\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "streamid": {
+                        "blurb": "Stream ID associated with the AVTPDU",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "12302652060662169600",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "avtpaafpay": {
+                "author": "Andre Guedes <andre.guedes@intel.com>",
+                "description": "Payload-encode Raw audio into AAF AVTPDU (IEEE 1722)",
+                "hierarchy": [
+                    "GstAvtpAafPay",
+                    "GstAvtpBasePayload",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Payloader/Network/AVTP",
+                "long-name": "AVTP Audio Format (AAF) payloader",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: { S16BE, S24BE, S32BE, F32BE }\n           rate: { (int)8000, (int)16000, (int)24000, (int)32000, (int)44100, (int)48000, (int)88200, (int)96000, (int)176400, (int)192000 }\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "mtt": {
+                        "blurb": "Maximum Transit Time (MTT) in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "50000000",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "processing-deadline": {
+                        "blurb": "Maximum amount of time (in ns) the pipeline can take for processing the buffer",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "20000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "streamid": {
+                        "blurb": "Stream ID associated with the AVTPDU",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "12302652060662169600",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "tstamp-mode": {
+                        "blurb": "AAF timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "normal (0)",
+                        "enum": true,
+                        "type-name": "GstAvtpAafTstampMode",
+                        "values": [
+                            {
+                                "desc": "Normal timestamping mode",
+                                "name": "normal",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Sparse timestamping mode",
+                                "name": "sparse",
+                                "value": "1"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "tu": {
+                        "blurb": "Timing Uncertainty (TU) in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1000000",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "avtpcvfdepay": {
+                "author": "Ederson de Souza <ederson.desouza@intel.com>",
+                "description": "Extracts compressed video from CVF AVTPDUs",
+                "hierarchy": [
+                    "GstAvtpCvfDepay",
+                    "GstAvtpBaseDepayload",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Depayloader/Network/AVTP",
+                "long-name": "AVTP Compressed Video Format (CVF) depayloader",
+                "pad-templates": {
+                    "src": {
+                        "caps": "video/x-h264:\n  stream-format: avc\n      alignment: au\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "streamid": {
+                        "blurb": "Stream ID associated with the AVTPDU",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "12302652060662169600",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "avtpcvfpay": {
+                "author": "Ederson de Souza <ederson.desouza@intel.com>",
+                "description": "Payload-encode compressed video into CVF AVTPDU (IEEE 1722)",
+                "hierarchy": [
+                    "GstAvtpCvfPay",
+                    "GstAvtpBasePayload",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Payloader/Network/AVTP",
+                "long-name": "AVTP Compressed Video Format (CVF) payloader",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-h264:\n  stream-format: avc\n      alignment: au\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "mtt": {
+                        "blurb": "Maximum Transit Time (MTT) in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "50000000",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "mtu": {
+                        "blurb": "Maximum Transit Unit (MTU) of underlying network in bytes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1500",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "processing-deadline": {
+                        "blurb": "Maximum amount of time (in ns) the pipeline can take for processing the buffer",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "20000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "streamid": {
+                        "blurb": "Stream ID associated with the AVTPDU",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "12302652060662169600",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "tu": {
+                        "blurb": "Timing Uncertainty (TU) in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1000000",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "avtpsink": {
+                "author": "Andre Guedes <andre.guedes@intel.com>",
+                "description": "Send AVTPDUs over the network",
+                "hierarchy": [
+                    "GstAvtpSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Sink/Network",
+                "long-name": "Audio/Video Transport Protocol (AVTP) Sink",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-avtp:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "address": {
+                        "blurb": "Destination MAC address from Ethernet frames",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "01:AA:AA:AA:AA:AA",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "async": {
+                        "blurb": "Go asynchronously to PAUSED",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "blocksize": {
+                        "blurb": "Size in bytes to pull per buffer (0 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "enable-last-sample": {
+                        "blurb": "Enable the last-sample property",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "ifname": {
+                        "blurb": "Network interface utilized to transmit AVTPDUs",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "eth0",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "last-sample": {
+                        "blurb": "The last sample received in the sink",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstSample",
+                        "writable": false
+                    },
+                    "max-bitrate": {
+                        "blurb": "The maximum bits per second to render (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "max-lateness": {
+                        "blurb": "Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "priority": {
+                        "blurb": "Priority configured into socket (SO_PRIORITY)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "processing-deadline": {
+                        "blurb": "Maximum processing deadline in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "20000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Generate Quality-of-Service events upstream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "render-delay": {
+                        "blurb": "Additional render delay of the sink in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
+                    "sync": {
+                        "blurb": "Sync on the clock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "throttle-time": {
+                        "blurb": "The time to keep between rendered buffers (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "ts-offset": {
+                        "blurb": "Timestamp offset in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "-9223372036854775808",
+                        "type-name": "gint64",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "avtpsrc": {
+                "author": "Andre Guedes <andre.guedes@intel.com>",
+                "description": "Receive AVTPDUs from the network",
+                "hierarchy": [
+                    "GstAvtpSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Src/Network",
+                "long-name": "Audio/Video Transport Protocol (AVTP) Source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "application/x-avtp:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "address": {
+                        "blurb": "Destination MAC address to listen to",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "01:AA:AA:AA:AA:AA",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "blocksize": {
+                        "blurb": "Size in bytes to read per buffer (-1 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "do-timestamp": {
+                        "blurb": "Apply current stream time to buffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "ifname": {
+                        "blurb": "Network interface utilized to receive AVTPDUs",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "eth0",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-buffers": {
+                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "typefind": {
+                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gstavtp",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
     "bayer": {
         "description": "Elements to convert Bayer images",
         "elements": {
