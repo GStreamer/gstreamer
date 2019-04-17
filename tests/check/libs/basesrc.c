@@ -1013,7 +1013,8 @@ GST_START_TEST (basesrc_time_automatic_eos)
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipe));
 
-  gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_EOS);
+  gst_message_unref (gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+          GST_MESSAGE_EOS));
 
   gst_element_set_state (pipe, GST_STATE_NULL);
 
