@@ -1,1 +1,50 @@
 include: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/master/gitlab/ci_template.yml"
+
+# Run valgrind if we changed the check.py testsuite
+local valgrind core:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gstreamer\\..*"
+  only:
+    changes:
+      - validate/launcher/
+
+local valgrind base:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst-plugins-base\\..*"
+  only:
+    changes:
+      - validate/launcher/
+
+local valgrind good:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst-plugins-good\\..*"
+  only:
+    changes:
+      - validate/launcher/
+
+local valgrind ugly:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst-plugins-ugly\\..*"
+  only:
+    changes:
+      - validate/launcher/
+
+local valgrind bad:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst-plugins-bad\\..*"
+  only:
+    changes:
+      - validate/launcher/
+
+local valgrind ges:
+  extends: '.valgrind fedora x86_64'
+  variables:
+    TEST_SUITE: "check.gst-editing-services\\..*"
+  only:
+    changes:
+      - validate/launcher/
