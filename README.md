@@ -7,34 +7,44 @@ meson and its [subproject](https://github.com/mesonbuild/meson/wiki/Subprojects)
 
 ## Getting started
 
+### Install git and python 3.5+
+
+If you're on Linux, you probably already have these. On macOS, you can use the
+[official Python installer](https://www.python.org/downloads/mac-osx/).
+
+You can find [instructions for Windows below](#windows-prerequisites-setup).
+
 ### Install meson and ninja
 
 Meson 0.48 or newer is required.
 
-You should get meson through your package manager or using:
+On Linux and macOS you can get meson through your package manager or using:
 
   $ pip3 install --user meson
 
-This will install meson into ~/.local/bin which may or may not be included
+This will install meson into `~/.local/bin` which may or may not be included
 automatically in your PATH by default.
 
-If you are building on Windows, do not use the Meson MSI installer since it is
-experimental and will likely not work.
-
-You can also run meson directly from a meson git checkout if you like.
-
 You should get `ninja` using your package manager or download the [official
-release](https://github.com/ninja-build/ninja/releases) and put it in your PATH.
+release](https://github.com/ninja-build/ninja/releases) and put the `ninja`
+binary in your PATH.
+
+You can find [instructions for Windows below](#windows-prerequisites-setup).
 
 ### Build GStreamer and its modules
 
 You can get all GStreamer built running:
 
 ```
-mkdir build/ && meson build && ninja -C build/
+meson build/
+ninja -C build/
 ```
 
-NOTE: on fedora (and maybe other distributions) replace `ninja` with `ninja-build`
+This will automatically create the `build` directory and build everything
+inside it.
+
+NOTE: On Windows, you *must* run this from inside the Visual Studio command
+prompt of the appropriate architecture and version.
 
 # Development environment
 
@@ -89,7 +99,7 @@ ninja -C build/ git-update
 
 ## Custom subprojects
 
-We also added a meson option, 'custom_subprojects', that allows the user
+We also added a meson option, `custom_subprojects`, that allows the user
 to provide a comma-separated list of subprojects that should be built
 alongside the default ones.
 
@@ -102,7 +112,6 @@ cd ../build
 rm -rf * && meson .. -Dcustom_subprojects=my_subproject
 ninja
 ```
-
 
 ## Run tests
 
@@ -135,6 +144,21 @@ Run a specific test from a specific test file:
 ```
 GST_CHECKS=test_subbuffer meson test -C build/ --suite gstreamer gst_gstbuffer
 ```
+
+## Optional Installation
+
+`gst-build` has been created primarily for [uninstalled usage](#uninstalled-environment),
+but you can also install everything that is built into a predetermined prefix like so:
+
+```
+meson --prefix=/path/to/install/prefix build/
+ninja -C build/
+meson install -C build/
+```
+
+Note that the installed files have `RPATH` stripped, so you will need to set
+`LD_LIBRARY_PATH`, `DYLD_LIBRARY_PATH`, or `PATH` as appropriate for your
+platform for things to work.
 
 ## Checkout another branch using worktrees
 
@@ -199,3 +223,55 @@ you should add a new environment segment as follow:
   "priority": 50
 },
 ```
+
+## Windows Prerequisites Setup
+
+On Windows, some of the components may require special care.
+
+### Git for Windows
+
+Use the [Git for Windows](https://gitforwindows.org/) installer. It will
+install a `bash` prompt with basic shell utils and up-to-date git binaries.
+
+During installation, when prompted about `PATH`, you should select the
+following option:
+
+![Select "Git from the command line and also from 3rd-party software"](/data/images/git-installer-PATH.png)
+
+### Python 3.5+ on Windows
+
+Use the [official Python installer](https://www.python.org/downloads/windows/).
+You must ensure that Python is installed into `PATH`:
+
+![Enable Add Python to PATH, then click Customize Installation](/data/images/py-installer-page1.png)
+
+You may also want to customize the installation and install it into
+a system-wide location such as `C:\PythonXY`, but this is not required.
+
+### Ninja on Windows
+
+The easiest way to install Ninja on Windows is with `pip3`, which will download
+the compiled binary and place it into the `Scripts` directory inside your
+Python installation:
+
+```
+pip3 install ninja
+```
+
+You can also download the [official release](https://github.com/ninja-build/ninja/releases)
+and place it into `PATH`.
+
+### Meson on Windows
+
+**IMPORTANT**: Do not use the Meson MSI installer since it is experimental and known to not
+work with `gst-build`.
+
+You can use `pip3` to install Meson, same as Ninja above:
+
+```
+pip3 install meson
+```
+
+Note that Meson is written entirely in Python, so you can also run it as-is
+from the [git repository](https://github.com/mesonbuild/meson/) if you want to
+use the latest master branch for some reason.
