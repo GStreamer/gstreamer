@@ -201,7 +201,6 @@ integration testsuites fedora:
   stage: 'full tests'
   variables:
     EXTRA_VALIDATE_ARGS: "--valgrind"
-    ORC_CODE: "backup"
   # Some suppression files are missing a newline at the end which messes things
   # up when concatenating them. awk will add missing newlines (unlike cat)
 
