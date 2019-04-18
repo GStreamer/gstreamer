@@ -1182,6 +1182,7 @@ ges_asset_request_async (GType extractable_type,
         case ASSET_NEEDS_RELOAD:
           GST_DEBUG_OBJECT (asset, "Asset in cache and needs reload");
           ges_asset_cache_append_task (extractable_type, real_id, task);
+          task = NULL;
           GES_ASSET_GET_CLASS (asset)->start_loading (asset, &error);
 
           goto done;
