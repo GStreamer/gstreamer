@@ -1,3 +1,151 @@
+=== release 1.16.0 ===
+
+2019-04-19 00:36:53 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/RELEASE:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	* validate/meson.build:
+	  Release 1.16.0
+
+2019-04-17 17:05:36 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  validate:check: Mare nle test_simple_operation as long
+
+2019-04-17 16:46:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  validate:check: Fix some mistakes translating regex from gitlab-ci.yml
+
+2019-04-17 16:59:32 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* .gitlab-ci.yml:
+	  ci: Run valgrind tests when changing the check testsuite
+
+2019-04-17 11:04:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate:launcher: Set ORC_CODE=backup when running gst unit tests under valgrind
+
+2019-04-17 10:43:09 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  validate:check: Blacklist and mark some GES tests as long under valgrind
+
+2019-04-17 10:30:02 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  validate:testsuites: Add unit tests blacklists
+
+2019-04-17 08:56:46 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Ignore possibly lost for now
+
+2019-04-17 02:31:30 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* validate/launcher/baseclasses.py:
+	  TestsManager: _add_blacklist in set_default_blacklist
+	  Otherwise test suites that want to set_default_blacklist and
+	  add tests in setup_tests were seeing their blacklist ignored.
+	  Split up and rename set_blacklists() to complete the refactoring
+
+2019-04-17 02:29:36 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* validate/launcher/baseclasses.py:
+	  Check indirect leaks
+
+2019-04-15 16:13:48 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Do not copy logs for non flaky tests
+	  That looks weird for users and is incorrect
+
+2019-04-15 11:50:16 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Fix printing debug logs URIs
+
+2019-04-12 12:33:25 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Do not stop tcp server when reiterating tests runs
+
+2019-04-12 10:13:15 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Associate issues with the bug they come from
+	  Making it simpler to follow when print the known issues
+
+2019-04-12 10:12:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Indent known issues printing
+
+2019-04-11 10:31:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Print the number of times the test was run when --forever
+
+2019-04-06 11:40:32 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/utils.py:
+	  validate:launcher: Add python suppression files
+
+2019-04-06 11:10:14 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Use md viewer to dump md logs if avalaible
+	  And enhance the markdown
+	  See https://github.com/axiros/terminal_markdown_viewer
+
+2019-04-06 10:46:52 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstcheck.py:
+	  validate:launcher: Avoid forking when running gstcheck tests in gdb
+
+2019-04-05 23:05:20 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate:launcher: Add an option to output HTML if commonmark is installed
+
+2019-04-05 22:23:29 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/utils.py:
+	  validate:launcher: Do not user python 3.5 features
+
+2019-04-05 10:41:14 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Move all logs to one single log files to be displayed to end user
+
+2019-04-05 10:40:45 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Make extra_logfiles a set and fix their names
+
+2019-04-05 10:40:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Remove spurious print
+
+2019-04-04 17:07:58 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Remove noise about empty known issues in logs
+
+2019-04-04 17:05:14 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Fix printing application name in the logs
+
 === release 1.15.90 ===
 
 2019-04-11 01:27:45 +0100  Tim-Philipp Müller <tim@centricular.com>
