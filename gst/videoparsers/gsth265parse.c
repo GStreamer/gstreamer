@@ -1725,6 +1725,7 @@ ensure_caps_profile (GstH265Parse * h265parse, GstCaps * caps, GstH265SPS * sps)
 static void
 gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 {
+  GstH265VPS *vps;
   GstH265SPS *sps;
   GstCaps *sink_caps, *src_caps;
   gboolean modified = FALSE;
@@ -1752,6 +1753,8 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 
   sps = h265parse->nalparser->last_sps;
   GST_DEBUG_OBJECT (h265parse, "sps: %p", sps);
+  vps = sps->vps;
+  GST_DEBUG_OBJECT (h265parse, "vps: %p", vps);
 
   /* only codec-data for nice-and-clean au aligned packetized hevc format */
   if ((h265parse->format == GST_H265_PARSE_FORMAT_HVC1
@@ -1800,7 +1803,8 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     }
 
     /* 0/1 is set as the default in the codec parser */
-    if (sps->vui_params.timing_info_present_flag &&
+    if ((sps->vui_params.timing_info_present_flag ||
+            (vps && vps->timing_info_present_flag)) &&
         !(sps->fps_num == 0 && sps->fps_den == 1)) {
       if (G_UNLIKELY (h265parse->fps_num != sps->fps_num
               || h265parse->fps_den != sps->fps_den)) {
