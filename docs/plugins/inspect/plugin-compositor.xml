@@ -3,7 +3,7 @@
   <description>Compositor</description>
   <filename>../../gst/compositor/.libs/libgstcompositor.so</filename>
   <basename>libgstcompositor.so</basename>
-  <version>1.15.90</version>
+  <version>1.16.0</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
