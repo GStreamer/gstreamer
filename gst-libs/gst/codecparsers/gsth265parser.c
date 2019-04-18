@@ -1884,8 +1884,12 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
         && !vui->field_seq_flag && !vui->frame_field_info_present_flag) {
       sps->fps_num = vui->time_scale;
       sps->fps_den = vui->num_units_in_tick;
-      GST_LOG ("framerate %d/%d", sps->fps_num, sps->fps_den);
+      GST_LOG ("framerate %d/%d in VUI", sps->fps_num, sps->fps_den);
     }
+  } else if (vps && vps->timing_info_present_flag) {
+    sps->fps_num = vps->time_scale;
+    sps->fps_den = vps->num_units_in_tick;
+    GST_LOG ("framerate %d/%d in VPS", sps->fps_num, sps->fps_den);
   } else {
     GST_LOG ("No VUI, unknown framerate");
   }
