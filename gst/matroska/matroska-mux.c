@@ -72,7 +72,8 @@ enum
   PROP_STREAMABLE,
   PROP_TIMECODESCALE,
   PROP_MIN_CLUSTER_DURATION,
-  PROP_MAX_CLUSTER_DURATION
+  PROP_MAX_CLUSTER_DURATION,
+  PROP_OFFSET_TO_ZERO,
 };
 
 #define  DEFAULT_DOCTYPE_VERSION         2
@@ -82,6 +83,7 @@ enum
 #define  DEFAULT_TIMECODESCALE           GST_MSECOND
 #define  DEFAULT_MIN_CLUSTER_DURATION    500 * GST_MSECOND
 #define  DEFAULT_MAX_CLUSTER_DURATION    65535 * GST_MSECOND
+#define  DEFAULT_OFFSET_TO_ZERO          FALSE
 
 /* WAVEFORMATEX is gst_riff_strf_auds + an extra guint16 extension size */
 #define WAVEFORMATEX_SIZE  (2 + sizeof (gst_riff_strf_auds))
@@ -363,6 +365,10 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
           "0 means no maximum duration.", 0,
           G_MAXINT64, DEFAULT_MAX_CLUSTER_DURATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_OFFSET_TO_ZERO,
+      g_param_spec_boolean ("offset-to-zero", "Offset To Zero",
+          "Offsets all streams so that the " "earliest stream starts at 0.",
+          DEFAULT_OFFSET_TO_ZERO, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_change_state);
@@ -3067,6 +3073,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux, GstMatroskaPad * first_pad,
   GSList *collected;
   int i;
   guint tracknum = 1;
+  GstClockTime earliest_time = GST_CLOCK_TIME_NONE;
   GstClockTime duration = 0;
   guint32 segment_uid[4];
   GTimeVal time = { 0, 0 };
@@ -3226,6 +3233,29 @@ gst_matroska_mux_start (GstMatroskaMux * mux, GstMatroskaPad * first_pad,
     if (collect_pad->track->codec_id == NULL)
       continue;
 
+    /* Find the smallest timestamp so we can offset all streams by this to
+     * start at 0 */
+    if (mux->offset_to_zero) {
+      GstClockTime ts;
+
+      if (collect_pad == first_pad)
+        buf = first_pad_buf ? gst_buffer_ref (first_pad_buf) : NULL;
+      else
+        buf = gst_collect_pads_peek (mux->collect, collected->data);
+
+      if (buf) {
+        ts = gst_matroska_track_get_buffer_timestamp (collect_pad->track, buf);
+
+        if (earliest_time == GST_CLOCK_TIME_NONE)
+          earliest_time = ts;
+        else if (ts != GST_CLOCK_TIME_NONE && ts < earliest_time)
+          earliest_time = ts;
+      }
+
+      if (buf)
+        gst_buffer_unref (buf);
+    }
+
     /* For audio tracks, use the first buffers duration as the default
      * duration if we didn't get any better idea from the caps event already
      */
@@ -3253,6 +3283,8 @@ gst_matroska_mux_start (GstMatroskaMux * mux, GstMatroskaPad * first_pad,
         1, mux->time_scale);
   }
   gst_ebml_write_master_finish (ebml, master);
+
+  mux->earliest_time = earliest_time == GST_CLOCK_TIME_NONE ? 0 : earliest_time;
 
   /* chapters */
   toc = gst_toc_setter_get_toc (GST_TOC_SETTER (mux));
@@ -3910,6 +3942,11 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
 
   buffer_timestamp =
       gst_matroska_track_get_buffer_timestamp (collect_pad->track, buf);
+  if (buffer_timestamp >= mux->earliest_time) {
+    buffer_timestamp -= mux->earliest_time;
+  } else {
+    buffer_timestamp = 0;
+  }
 
   /* hm, invalid timestamp (due to --to be fixed--- element upstream);
    * this would wreak havoc with time stored in matroska file */
@@ -4188,6 +4225,14 @@ gst_matroska_mux_handle_buffer (GstCollectPads * pads, GstCollectData * data,
   g_assert (buf);
 
   buffer_timestamp = gst_matroska_track_get_buffer_timestamp (best->track, buf);
+  if (buffer_timestamp >= mux->earliest_time) {
+    buffer_timestamp -= mux->earliest_time;
+  } else {
+    GST_ERROR_OBJECT (mux,
+        "PTS before first PTS (%" GST_TIME_FORMAT " < %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (buffer_timestamp), GST_TIME_ARGS (mux->earliest_time));
+    buffer_timestamp = 0;
+  }
 
   GST_DEBUG_OBJECT (best->collect.pad, "best pad - buffer ts %"
       GST_TIME_FORMAT " dur %" GST_TIME_FORMAT,
@@ -4304,6 +4349,9 @@ gst_matroska_mux_set_property (GObject * object,
     case PROP_MAX_CLUSTER_DURATION:
       mux->max_cluster_duration = g_value_get_int64 (value);
       break;
+    case PROP_OFFSET_TO_ZERO:
+      mux->offset_to_zero = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -4340,6 +4388,9 @@ gst_matroska_mux_get_property (GObject * object,
       break;
     case PROP_MAX_CLUSTER_DURATION:
       g_value_set_int64 (value, mux->max_cluster_duration);
+      break;
+    case PROP_OFFSET_TO_ZERO:
+      g_value_set_boolean (value, mux->offset_to_zero);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
