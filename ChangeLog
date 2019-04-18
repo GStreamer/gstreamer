@@ -1,3 +1,35 @@
+=== release 1.16.0 ===
+
+2019-04-19 00:34:54 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.16.0
+
+2019-04-15 20:33:01 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: Notify the stream transport about each written message
+	  Otherwise it will never try to send us the next one: it tries to keep
+	  exactly one message in-flight all the time.
+	  In gst-rtsp-server this is done asynchronously via the GstRTSPWatch but
+	  in the client sink we always write data out synchronously.
+
+2019-04-02 08:05:03 +0200  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp_server: Free thread pool before clean transport cache
+	  If not waiting for free thread pool before clean transport caches, there
+	  can be a crash if a thread is executing in transport list loop in
+	  function send_tcp_message.
+	  Also add a check if priv->send_pool in on_message_sent to avoid that a
+	  new thread is pushed during wait of free thread pool. This is possible
+	  since when waiting for free thread pool mutex have to be unlocked.
+
 === release 1.15.90 ===
 
 2019-04-11 00:35:55 +0100  Tim-Philipp Müller <tim@centricular.com>
