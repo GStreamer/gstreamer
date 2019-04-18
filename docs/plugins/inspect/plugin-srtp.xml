@@ -3,7 +3,7 @@
   <description>GStreamer SRTP</description>
   <filename>../../ext/srtp/.libs/libgstsrtp.so</filename>
   <basename>libgstsrtp.so</basename>
-  <version>1.15.90</version>
+  <version>1.16.0</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
