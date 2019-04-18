@@ -1,9 +1,12 @@
-This is GStreamer gst-plugins-ugly 1.15.90.
+This is GStreamer gst-plugins-ugly 1.16.0.
 
-GStreamer 1.15 is the development branch leading up to the next major
-stable version which will be 1.16.
+The GStreamer team is thrilled to announce a new major feature release in the
+stable 1.0 API series of your favourite cross-platform multimedia framework!
 
-The 1.15 development series adds new features on top of the 1.14 series and is
+As always, this release is again packed with new features, bug fixes and
+other improvements.
+
+The 1.16 release series adds new features on top of the 1.14 series and is
 part of the API and ABI-stable 1.x release series of the GStreamer multimedia
 framework.
 
