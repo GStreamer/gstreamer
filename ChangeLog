@@ -1,3 +1,46 @@
+=== release 1.16.0 ===
+
+2019-04-19 00:38:44 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.16.0
+
+2019-04-16 12:23:10 -0700  Julien Isorce <jisorce@oblong.com>
+
+	* omx/gstomx.c:
+	  Fixes build with omx >= 1.2.0
+	  gstomx.c:1405:10: error: ‘OMX_IndexParamCustomContentPipe’ undeclared (first use in this function)
+	  case OMX_IndexParamCustomContentPipe
+	  Some enums have been deprecated in 1.2.0
+	  https://gitlab.freedesktop.org/gstreamer/gst-omx/issues/27
+
+2018-05-18 10:55:21 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* configure.ac:
+	* examples/egl/Makefile.am:
+	* examples/egl/meson.build:
+	  testegl: properly detect and use rpi specific libs
+	  Use pkg-config to detect and configure rpi specific libs used in testegl
+	  rather than hardcoding their flags.
+
+2018-05-18 10:53:34 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* examples/egl/testegl.c:
+	  testelg: include eglext.h
+	  Neded for the declaration of eglSaneChooseConfigBRCM().
+
+2018-05-18 10:38:33 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* examples/egl/testegl.c:
+	  testegl: move up pi specific macros
+	  We need to define __VCCOREVER__ and disable redundant-decls before
+	  including the egl.h from the pi.
+
 === release 1.15.90 ===
 
 2019-04-11 00:40:52 +0100  Tim-Philipp Müller <tim@centricular.com>
