@@ -3,19 +3,12 @@
 GSTREAMER 1.16 RELEASE NOTES
 
 
-GStreamer 1.16 has not been released yet. It is scheduled for release in
-April 2019.
-
-1.15.x is the unstable development version that is being developed in
-the git master branch and which will eventually result in 1.16.
-
-1.16 will be backwards-compatible to the stable 1.14, 1.12, 1.10, 1.8,
-1.6, 1.4, 1.2 and 1.0 release series.
+GStreamer 1.16.0 was originally released on 19 April 2019.
 
 See https://gstreamer.freedesktop.org/releases/1.16/ for the latest
 version of this document.
 
-_Last updated: Wednesday 10 April 2019, 00:50 UTC (log)_
+_Last updated: Friday 19 April 2019, 00:00 UTC (log)_
 
 
 Introduction
@@ -75,6 +68,10 @@ Highlights
 
 -   The GStreamer Rust bindings and Rust plugins module are now
     officially part of upstream GStreamer.
+
+-   The GStreamer Editing Services gained a gesdemux element that allows
+    directly playing back serialized edit list with playbin or
+    (uri)decodebin
 
 -   Many performance improvements
 
@@ -208,7 +205,8 @@ this new infrastructure and provides the following elements:
 -   ccconverter: a closed caption converter that can convert between
     different formats
 
--   line21decoder: extract line21 closed captions from SD video streams
+-   line21encoder, line21decoder: inject/extract line21 closed captions
+    to/from SD video streams
 
 -   cc708overlay: decodes CEA 608/708 captions and overlays them on
     video
@@ -218,7 +216,11 @@ support:
 
 -   qtdemux and qtmux support CEA 608/708 Closed Caption tracks
 
--   mpegvideoparse extracts Closed Captions from MPEG-2 video streams
+-   mpegvideoparse, h264parse extracts Closed Captions from MPEG-2/H.264
+    video streams
+
+-   avviddec, avvidenc, x264enc got support for extracting/injecting
+    Closed Captions
 
 -   decklinkvideosink can output closed captions and decklinkvideosrc
     can extract closed captions
@@ -265,7 +267,7 @@ New Elements
     or uridecodebin3 etc.
 
 -   New closed caption elements: cccombiner, ccextractor, ccconverter,
-    line21decoder and cc708overlay (see above)
+    line21encoder, line21decoder and cc708overlay (see above)
 
 -   wpesrc: new source element acting as a Web Browser based on WebKit
     WPE
@@ -402,6 +404,9 @@ New element features and additions
 -   srtpdec, srtpenc: add support for MKIs which allow multiple keys to
     be used with a single SRTP stream
 
+-   srtpdec, srtpenc: add support for AES-GCM and also add support for
+    it in gst-rtsp-server and rtspsrc.
+
 -   The srt Secure Reliable Transport plugin has integrated server and
     client elements srt{client,server}{src,sink} into one (srtsrc and
     srtsink), since SRT connection mode can be changed by uri
@@ -434,7 +439,24 @@ New element features and additions
     "connector-properties" can be used to pass custom properties to the
     DRM.
 
--   waylandsink has a "fullscreen" property now.
+-   waylandsink has a "fullscreen" property now and supports the
+    XDG-Shell protocol.
+
+-   decklinkvideosink, decklinkvideosrc support selecting between
+    half/full duplex
+
+-   The vulkan plugin gained support for macOS and iOS via MoltenVK in
+    addition to the existing support for X11 and Wayland
+
+-   imagefreeze has a new num-buffers property to limit the number of
+    buffers that are produced and to send an EOS event afterwards
+
+-   webrtcbin has a new, introspectable get-transceiver signal in
+    addition to the old get-transceivers signal that couldn’t be used
+    from bindings
+
+-   Support for per-element latency information was added to the latency
+    tracer
 
 Plugin and library moves
 
@@ -574,6 +596,18 @@ Miscellaneous API additions
 -   gst_audio_buffer_truncate() convenience function to truncate a raw
     audio buffer
 
+-   GstDiscoverer has support for caching the results of discovery in
+    the default cache directory. This can be enabled with the use-cache
+    property and is disabled by default.
+
+-   GstMeta that are attached to GstBuffers are now always stored in the
+    order in which they were added.
+
+-   Additional support for signalling ONVIF specific features were
+    added: the SEEK event can store a trickmode-interval now and support
+    for the Rate-Control and Frames RTSP headers was added to the RTSP
+    library.
+
 
 Miscellaneous performance and memory optimisations
 
@@ -677,49 +711,6 @@ Tracing framework and debugging improvements
         object. This is currently limited to pads for GstElements and
         events for the pads. The output may look like this:
 
-                    (gdb) gst-print pad.object.parent
-                    GstMatroskaDemux (matroskademux0) {
-                        SinkPad (sink, pull) {
-                        }
-                        SrcPad (video_0, push) {
-                          events:
-                            stream-start:
-                              stream-id: 0463ccb080d00b8689bf569a435c4ff84f9ff753545318ae2328ea0763fd0bec/001:1274058367
-                            caps: video/x-theora
-                              width: 1920
-                              height: 800
-                              pixel-aspect-ratio: 1/1
-                              framerate: 24/1
-                              streamheader: < 0x5555557c7d30 [GstBuffer], 0x5555557c7e40 [GstBuffer], 0x7fffe00141d0 [GstBuffer] >
-                            segment: time
-                              rate: 1
-                            tag: global
-                              container-format: Matroska
-                        }
-                        SrcPad (audio_0, push) {
-                          events:
-                            stream-start:
-                              stream-id: 0463ccb080d00b8689bf569a435c4ff84f9ff753545318ae2328ea0763fd0bec/002:1551204875
-                            caps: audio/mpeg
-                              mpegversion: 4
-                              framed: true
-                              stream-format: raw
-                              codec_data: 0x7fffe0014500 [GstBuffer]
-                              level: 2
-                              base-profile: lc
-                              profile: lc
-                              channels: 2
-                              rate: 44100
-                            segment: time
-                              rate: 1
-                            tag: global
-                              container-format: Matroska
-                            tag: stream
-                              audio-codec: MPEG-4 AAC audio
-                              language-code: en
-                        }
-                    }
-
 -   gst_structure_to_string() now serialises the actual value of
     pointers when serialising GstStructures instead of claiming they’re
     NULL. This makes debug logging in various places less confusing,
@@ -761,7 +752,35 @@ GStreamer RTSP server
 
 GStreamer VAAPI
 
--   this section will be filled in in due course
+-   Support Wayland’s display for context sharing, so the application
+    can pass its own wl_display in order to be used for the VAAPI
+    display creation.
+
+-   A lot of work to support new Intel hardware using media-driver as VA
+    backend.
+
+-   For non-x86 devices, VAAPI display can instantiate, through DRM,
+    with no PCI bus. This enables the usage of libva-v4l2-request
+    driver.
+
+-   Added support for XDG-shell protocol as wl_shell replacement which
+    is currently deprecated. This change add as dependency
+    wayland-protocol.
+
+-   GstVaapiFilter, GstVaapiWindow, and GstVaapiDecoder classes now
+    inherit from GstObject, gaining all the GStreamer’s instrumentation
+    support.
+
+-   The metadata now specifies the plugin as Hardware class.
+
+-   H264 decoder is more stable with problematic streams.
+
+-   In H265 decoder added support for profiles main-422-10 (P010_10LE),
+    main-444 (AYUV) and main-444-10 (Y410)
+
+-   JPEG decoder handles dynamic resolution changes.
+
+-   More specification adherence in H264 and H265 encoders.
 
 
 GStreamer OMX
@@ -789,12 +808,111 @@ GStreamer OMX
 
 GStreamer Editing Services and NLE
 
--   this section will be filled in in due course
+-   Added a gesdemux element, it is an auto pluggable element that
+    allows decoding edit list like files supported by GES
+
+-   Added gessrc which wraps a GESTimeline as a standard source element
+    (implementing the ges protocol handler)
+
+-   Added basic support for videorate::rate property potentially
+    allowing changing playback speed
+
+-   Layer priority is now fully automatic and they should be moved with
+    the new ges_timeline_move_layer method, ges_layer_set_priority is
+    now deprecated.
+
+-   Added a ges_timeline_element_get_layer_priority so we can simply get
+    all information about GESTimelineElement position in the timeline
+
+-   GESVideoSource now auto orientates the images if it is defined in a
+    meta (overridable).
+
+-   Added some PyGObject overrides to make the API more pythonic
+
+-   The threading model has been made more explicit with safe guard to
+    make sure not thread safe APIs are not used from the wrong threads.
+    It is also now possible to properly handle in what thread the API
+    should be used.
+
+-   Optimized GESClip and GESTrackElement creation
+
+-   Added a way to compile out the old, unused and deprecated
+    GESPitiviFormatter
+
+-   Re implemented the timeline editing API making it faster and making
+    the code much more maintainable
+
+-   Simplified usage of nlecomposition outside GES by removing quirks in
+    it API usage and removing the need to treat it specially from an
+    application perspective.
+
+-   ges-launch-1.0:
+
+    -   Added support to add titles to the timeline
+    -   Enhance the help auto generating it from the code
+
+-   Deprecate ges_timeline_load_from_uri as loading the timeline should
+    be done through a project now
+
+-   MANY leaks have been plugged and the unit testsuite is now “leak
+    free”
 
 
 GStreamer validate
 
--   this section will be filled in in due course
+-   Added an action type to verify the checksum of the sink last-sample
+
+-   Added an include keyword to validate scenarios
+
+-   Added the notion of variable in scenarios, with the set-vars keyword
+
+-   Started adding support for “performance” like tests by allowing to
+    define the number of dropped buffers or the minimum buffer frequency
+    on a specific pad
+
+-   Added a validateflow plugin which allows defining the data flow to
+    be seen on a particular pad and verifying that following runs match
+    the expectations
+
+-   Added support for appsrc based test definition so we can instrument
+    the data pushed into the pipeline from scenarios
+
+-   Added a mockdecryptor allowing adding tests with on encrypted files,
+    the element will potentially be instrumented with a validate
+    scenario
+
+-   gst-validate-launcher:
+
+    -   Cleaned up output
+
+    -   Changed the default for “muting” tests as user doesn’t expect
+        hundreds of windows to show up when running the testsuite
+
+    -   Fixed the outputted xunit files to be compatible with GitLab
+
+    -   Added support to run tests on media files in push mode (using
+        pushfile://)
+
+    -   Added support for running inside gst-build
+
+    -   Added support for running ssim tests on rendered files
+
+    -   Added a way to simply define tests on pipelines through a simple
+        .json file
+
+    -   Added a python app to easily run python testsuite reusing all
+        the launcher features
+
+    -   Added flatpak knowledge so we can print backtrace even when
+        running from within flatpak
+
+    -   Added a way to automatically generated “known issues”
+        suppressions lines
+
+    -   Added a way to rerun tests to check if they are flaky and added
+        a way to tolerate tests known to be flaky
+
+    -   Add a way to output html log files
 
 
 GStreamer Python Bindings
@@ -1223,20 +1341,6 @@ Yeongjin Jeong, Yuji Kuwabara, Zeeshan Ali,
 suggestions or helped testing.
 
 
-Bugs fixed in 1.16
-
--   this section will be filled in in due course
-
-More than XXX bugs have been fixed during the development of 1.16.
-
-This list does not include issues that have been cherry-picked into the
-stable 1.16 branch and fixed there as well, all fixes that ended up in
-the 1.16 branch are also included in 1.16.
-
-This list also does not include issues that have been fixed without a
-bug report in bugzilla, so the actual number of fixes is much higher.
-
-
 Stable 1.16 branch
 
 After the 1.16.0 release there will be several 1.16.x bug-fix releases
@@ -1247,7 +1351,7 @@ the git 1.16 branch, which is a stable branch.
 
 1.16.0
 
-1.16.0 is scheduled to be released in April 2019.
+1.16.0 was released on 19 April 2019.
 
 
 Known Issues
@@ -1272,9 +1376,9 @@ unstable development version leading up to the stable 1.18 release. The
 development of 1.17/1.18 will happen in the git master branch.
 
 The plan for the 1.18 development cycle is yet to be confirmed, but it
-is expected that feature freeze will be around July 2019 followed by
-several 1.17 pre-releases and the new 1.18 stable release in
-August/September.
+is possible that the next cycle will be a short one in which case
+feature freeze would be perhaps around August 2019 with a new 1.18
+stable release in September.
 
 1.18 will be backwards-compatible to the stable 1.16, 1.14, 1.12, 1.10,
 1.8, 1.6, 1.4, 1.2 and 1.0 release series.
@@ -1282,7 +1386,7 @@ August/September.
 ------------------------------------------------------------------------
 
 _These release notes have been prepared by Tim-Philipp Müller with_
-_contributions from Sebastian Dröge, Guillaume Desmottes and Matthew
-Waters._
+_contributions from Sebastian Dröge, Guillaume Desmottes, Matthew
+Waters, _ _Thibault Saunier, and Víctor Manuel Jáquez Leal._
 
 _License: CC BY-SA 4.0_

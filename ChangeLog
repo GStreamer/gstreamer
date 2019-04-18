@@ -1,3 +1,182 @@
+=== release 1.16.0 ===
+
+2019-04-19 00:35:57 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.16.0
+
+2019-04-18 16:44:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	  asset: Avoid unrefing a task we do not own
+
+2019-04-17 23:53:14 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-clip.c:
+	  clip: Optimize set_top_effect_index by checking parent sooner
+
+2019-04-17 23:51:13 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-clip.c:
+	  clip: Return TRUE when the the effect index does not change
+
+2019-04-13 20:03:52 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-clip.c:
+	  clip: Remove obsolete FIXME
+
+2019-04-11 23:58:48 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-container.c:
+	  container: Call _remove_child when cannot set parent
+	  ges_container_add removes the child being added if the call to
+	  ges_timeline_element_set_parent fails. In this case, subclasses should
+	  be given the chance to revert the effects of the add_child vmethod which
+	  has just been called.
+
+2019-04-11 23:45:13 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-container.c:
+	  ges: Remove unused nb_effects field
+
+2019-04-12 17:30:14 +0300  Mart Raudsepp <mart.raudsepp@collabora.com>
+
+	* ges/ges-track.c:
+	  track: Avoid various sorting operations before timeline commit
+	  These are showing up in performance profile of 1000+ clips looped addition.
+	  All this is done at commit time as well, so let that do only one update and
+	  sorting.
+
+2019-04-15 17:03:49 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	  asset: Do not take an extra ref on asset when already initialized
+	  The task already has a ref so this one doesn't make sense and leads to leaks
+
+2019-04-12 18:31:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-project.c:
+	* tests/check/ges/project.c:
+	  xml-formatter: Fix some asset leaks
+
+2019-04-09 08:58:24 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/ges/clip.c:
+	* tests/check/ges/group.c:
+	* tests/check/ges/layer.c:
+	* tests/check/ges/mixers.c:
+	* tests/check/ges/project.c:
+	* tests/check/ges/timelineedition.c:
+	  tests: Plug misc leaks
+
+2019-04-09 08:56:49 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/gstframepositioner.c:
+	  framepositioner: Plug caps leak
+
+2019-04-09 08:56:08 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-xml-formatter.c:
+	  xml-formatter: Plug some leaks
+
+2019-04-08 16:25:59 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	  timeline: Plug leak of the auto transition asset
+
+2019-04-08 16:25:44 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-tree.c:
+	  tree: Plug a GList leak
+
+2019-04-08 16:25:29 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	  pipeline: Plug pad leak
+
+2019-04-08 16:23:18 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-title-source.c:
+	* tests/check/ges/titles.c:
+	  title: Deprecate method that return newly allocated `const gchar*`
+	  This is just plain broken 190643508f14a64e36f085a69de819505e79dadb
+	  but we can't do anything about it.
+
+2019-04-05 11:24:39 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-project.c:
+	  Plug some GError leaks when loading assets
+
+2019-04-01 11:52:43 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	  xml-formatter: Free pending clips on disposal
+
+2019-03-28 13:51:36 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	  asset: Plug a GError leak
+
+2019-03-28 13:08:55 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/ges/mixers.c:
+	  tests: Avoid random timeout and let the launcher set it up for us
+
+2019-03-28 13:08:01 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	  asset: s/unsure/ensure
+
+2019-03-28 13:06:37 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-project.c:
+	  asset: Plug a leak of EncodingProfiles
+
+2019-03-28 13:06:16 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* tests/check/ges/group.c:
+	  xml-formatter: Plug leaks of pending groups
+
+2019-03-28 13:05:45 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-asset.c:
+	  asset: plug a GTask leak
+
+2019-03-28 11:29:05 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-track-element.c:
+	* tests/check/ges/clip.c:
+	  Fix splitting control bindings leaks
+
+2019-03-28 11:09:13 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/ges/asset.c:
+	  tests: Fix a leak in the 'asset' test
+
+2019-03-28 11:08:58 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-tree.c:
+	  tree: Fixup some GList leaks
+
+2019-04-15 18:37:58 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* ges/ges-uri-asset.c:
+	  uri-asset: Ensure that the discoverer stops on deinit.
+	  Discoverer maintain a referernce on the discoverer object while
+	  the async timeout callback is alive to prevent a potential crash
+	  if the object is freed while the callback is pending.
+	  But if g_main_context is released before calling the timeout callback,
+	  the discoverer pointer which was weak referenced from GESUriClipAssetClass
+	  will not be disposed because the discoverer object is not finalized.
+
 === release 1.15.90 ===
 
 2019-04-11 00:37:00 +0100  Tim-Philipp Müller <tim@centricular.com>
