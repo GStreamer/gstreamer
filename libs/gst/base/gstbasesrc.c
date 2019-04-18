@@ -2442,7 +2442,7 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length,
   /* ERRORS */
 unexpected_length:
   {
-    GST_WARNING_OBJECT (src, "processing at or past EOS");
+    GST_DEBUG_OBJECT (src, "processing at or past EOS");
     return FALSE;
   }
 }
