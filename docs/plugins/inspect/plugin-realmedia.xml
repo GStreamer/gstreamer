@@ -3,7 +3,7 @@
   <description>RealMedia support plugins</description>
   <filename>../../gst/realmedia/.libs/libgstrealmedia.so</filename>
   <basename>libgstrealmedia.so</basename>
-  <version>1.15.90</version>
+  <version>1.16.0</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
