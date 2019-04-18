@@ -1,3 +1,86 @@
+=== release 1.16.0 ===
+
+2019-04-19 00:38:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.16.0
+
+2019-04-19 00:38:12 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2019-04-15 19:34:05 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264_fei.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h264,h265: guard VA version for max_qp property
+	  This patch fixes a regression from commit 5b1fe9c6.
+	  max_qp, in rate control configuration, appeared in libva release
+	  2.1 (API 1.1), thus it is required to guard the VA API version.
+	  Fixes: #150
+
+2019-04-08 18:29:35 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiimage.c:
+	* gst-libs/gst/vaapi/video-format.c:
+	  libs: Add RGB565 image format support.
+
+2019-04-10 13:59:05 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* configure.ac:
+	  build: configure: delay USE_GTK conditional until check libva-x11
+	  libva-x11 is used for X11 applications, so it is required to build
+	  any GTK application.
+	  Later, when Wayland test is added, we should change this.
+
+2019-04-10 13:25:10 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* configure.ac:
+	  build: configure: disable GLX if libva-x11 is not found
+
+2019-04-15 13:55:26 +0200  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: utils: avoid macro evaluation when stringify
+	  string_of_va_chroma_format() gets a wrong string format description.
+	  For example, the YUV420_10BPP get a string of 0x00000100 as output.
+	  It's because VA_RT_FORMAT_xxx values are macro definitions. And
+	  STRINGIFY(VA_RT_FORMAT_xxx) will expand to its real value
+	  0x00000XXX.
+	  To avoid the macro evaluation, it is changed to show only the color
+	  format without VA_RT_FORMAT_ prefix.
+
+2019-04-15 13:54:15 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils.c:
+	  libs: utils: use glib's macros
+	  Don't reinvent the wheel.
+
+2019-04-11 15:05:02 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugins: find the preferred format from right caps.
+	  When the downstream has any caps, then raw video feature will
+	  be used. At this situation, the preferred format should be chose
+	  from caps which contains "vide/x-raw" feature instead of from
+	  the fist allowed caps.
+	  Fixes #142
+
+2019-04-10 11:43:33 -0700  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: h265: fill tier in va seq param buf
+	  Now that tier is calculated in commit 58e74f9440fe (!68),
+	  ensure we fill in the general_tier_flag in the
+	  VAEncSequenceParameterBufferHEVC.
+
 === release 1.15.90 ===
 
 2019-04-11 00:40:03 +0100  Tim-Philipp Müller <tim@centricular.com>
