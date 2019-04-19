@@ -3,10 +3,10 @@
   <description>HEVC/H.265 decoder using libde265</description>
   <filename>../../ext/libde265/.libs/libgstde265.so</filename>
   <basename>libgstde265.so</basename>
-  <version>1.16.0</version>
+  <version>1.17.0.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

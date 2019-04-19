@@ -3,10 +3,10 @@
   <description>SCTP encoder/decoder plugin</description>
   <filename>../../ext/sctp/.libs/libgstsctp.so</filename>
   <basename>libgstsctp.so</basename>
-  <version>1.16.0</version>
+  <version>1.17.0.1</version>
   <license>BSD</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

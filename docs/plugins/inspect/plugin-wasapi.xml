@@ -3,7 +3,7 @@
   <description>Windows audio session API plugin</description>
   <filename>../../sys/wasapi/.libs/libgstwasapi.dll</filename>
   <basename>libgstwasapi.dll</basename>
-  <version>1.16.0</version>
+  <version>1.17.0.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
