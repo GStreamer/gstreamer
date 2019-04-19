@@ -128,6 +128,10 @@ build nodebug fedora x86_64:
   image: $FEDORA_IMAGE
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic"
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 .test:
   stage: 'test'
