@@ -59,3 +59,5 @@ gstomx = library('gstomx',
   install : true,
   install_dir : plugins_install_dir,
 )
+
+plugins = [gstomx]

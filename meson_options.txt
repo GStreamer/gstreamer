@@ -11,3 +11,4 @@ option('struct_packing', type : 'combo',
 option('examples', type : 'feature', value : 'auto', yield : true)
 option('tests', type : 'feature', value : 'auto', yield : true)
 option('tools', type : 'feature', value : 'auto', yield : true)
+option('doc', type : 'feature', value : 'auto', yield : true)

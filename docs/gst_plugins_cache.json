@@ -1,0 +1,11 @@
+{
+    "omx": {
+        "description": "GStreamer OpenMAX Plug-ins",
+        "elements": {},
+        "filename": "libgstomx.so",
+        "license": "LGPL",
+        "package": "GStreamer OpenMAX Plug-ins",
+        "source": "gst-omx",
+        "url": "Unknown package origin"
+    }
+}
