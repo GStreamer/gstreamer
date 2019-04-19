@@ -104,6 +104,8 @@ BLACKLIST = [
     (r'check.gstreamer.gst_gstsystemclock.test_async_sync_interaction$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/346'),
     (r'check.gstreamer.gst_gstsystemclock.test_periodic_multi', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/347'),
     (r'check.gstreamer.gst_gstsystemclock.test_periodic_shot$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/348'),
+    (r'check.gstreamer.gst_gstsystemclock.test_stress_cleanup_unschedule', 'flaky under high server load'),
+    (r'check.gstreamer.gst_gstsystemclock.test_stress_reschedule', 'flaky under high server load'),
     (r'check.gstreamer.pipelines_seek.test_loopback_2$', '?'),
     (r'check.gstreamer.gst_gstelement.test_foreach_pad$', '?'),
     (r'check.gstreamer.libs_baseparse.parser_pull_short_read$', '?'),
