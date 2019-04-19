@@ -23,6 +23,7 @@ namespace GES {
 		public const string MULTI_FILE_URI_PREFIX = @"multifile://";
 		public const int PADDING = 4;
 		public const int PADDING_LARGE = 20;
+		public const uint TIMELINE_ELEMENT_NO_LAYER_PRIORITY = 4294967295;
 #endregion
 	}
 }

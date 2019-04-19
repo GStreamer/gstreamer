@@ -19,6 +19,10 @@ namespace Gst.Video {
 		Film = 6,
 		Bt2020 = 7,
 		Adobergb = 8,
+		Smptest428 = 9,
+		Smpterp431 = 10,
+		Smpteeg432 = 11,
+		Ebu3213 = 12,
 	}
 
 	internal class VideoColorPrimariesGType {

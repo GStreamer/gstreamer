@@ -96,39 +96,6 @@ namespace Gst.Base {
 		}
 
 		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_bit_writer_init(IntPtr raw);
-
-		public void Init() {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			gst_bit_writer_init(this_as_native);
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-		}
-
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_bit_writer_init_with_data(IntPtr raw, byte[] data, uint size, bool initialized);
-
-		public void InitWithData(byte[] data, uint size, bool initialized) {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			gst_bit_writer_init_with_data(this_as_native, data, size, initialized);
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-		}
-
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_bit_writer_init_with_size(IntPtr raw, uint size, bool mfixed);
-
-		public void InitWithSize(uint size, bool mfixed) {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			gst_bit_writer_init_with_size(this_as_native, size, mfixed);
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-		}
-
-		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_bit_writer_put_bits_uint16(IntPtr raw, ushort value, uint nbits);
 
 		public bool PutBitsUint16(ushort value, uint nbits) {

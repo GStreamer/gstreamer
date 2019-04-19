@@ -12,6 +12,7 @@ namespace Gst.Sdp {
 		Null = 0,
 		AesCm128 = 1,
 		AesKw128 = 2,
+		AesGcm128 = 6,
 	}
 #endregion
 }

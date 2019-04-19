@@ -329,6 +329,19 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_audio_meta(IntPtr buffer, IntPtr info, UIntPtr samples, UIntPtr offsets);
+
+		public static Gst.Audio.AudioMeta BufferAddAudioMeta(Gst.Buffer buffer, Gst.Audio.AudioInfo info, ulong samples, ulong offsets) {
+			IntPtr raw_ret = gst_buffer_add_audio_meta(buffer == null ? IntPtr.Zero : buffer.Handle, info == null ? IntPtr.Zero : info.Handle, new UIntPtr (samples), new UIntPtr (offsets));
+			Gst.Audio.AudioMeta ret = Gst.Audio.AudioMeta.New (raw_ret);
+			return ret;
+		}
+
+		public static Gst.Audio.AudioMeta BufferAddAudioMeta(Gst.Buffer buffer, Gst.Audio.AudioInfo info, ulong samples) {
+			return BufferAddAudioMeta (buffer, info, samples, 0);
+		}
+
+		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_get_audio_downmix_meta_for_channels(IntPtr buffer, int[] to_position, int to_channels);
 
 		public static Gst.Audio.AudioDownmixMeta BufferGetAudioDownmixMetaForChannels(Gst.Buffer buffer, Gst.Audio.AudioChannelPosition[] to_position, int to_channels) {

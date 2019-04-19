@@ -1163,6 +1163,64 @@ namespace GES {
 			Marshal.FreeHGlobal (native_value);
 		}
 
+		static GetLayerPriorityNativeDelegate GetLayerPriority_cb_delegate;
+		static GetLayerPriorityNativeDelegate GetLayerPriorityVMCallback {
+			get {
+				if (GetLayerPriority_cb_delegate == null)
+					GetLayerPriority_cb_delegate = new GetLayerPriorityNativeDelegate (GetLayerPriority_cb);
+				return GetLayerPriority_cb_delegate;
+			}
+		}
+
+		static void OverrideGetLayerPriority (GLib.GType gtype)
+		{
+			OverrideGetLayerPriority (gtype, GetLayerPriorityVMCallback);
+		}
+
+		static void OverrideGetLayerPriority (GLib.GType gtype, GetLayerPriorityNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("get_layer_priority"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate uint GetLayerPriorityNativeDelegate (IntPtr inst);
+
+		static uint GetLayerPriority_cb (IntPtr inst)
+		{
+			try {
+				TimelineElement __obj = GLib.Object.GetObject (inst, false) as TimelineElement;
+				uint __result;
+				__result = __obj.OnGetLayerPriority ();
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.TimelineElement), ConnectionMethod="OverrideGetLayerPriority")]
+		protected virtual uint OnGetLayerPriority ()
+		{
+			return InternalGetLayerPriority ();
+		}
+
+		private uint InternalGetLayerPriority ()
+		{
+			GetLayerPriorityNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("get_layer_priority"));
+				unmanaged = (GetLayerPriorityNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(GetLayerPriorityNativeDelegate));
+			}
+			if (unmanaged == null) return 0;
+
+			uint __result = unmanaged (this.Handle);
+			return __result;
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -1302,14 +1360,22 @@ namespace GES {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // set_child_property
 							, "get_track_types"
+							, "get_layer_priority"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("get_layer_priority"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // get_layer_priority
+							, "set_child_property"
 							, "_ges_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_ges_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 17 // _ges_reserved
-							, "set_child_property"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 16 // _ges_reserved
+							, "get_layer_priority"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -1376,6 +1442,17 @@ namespace GES {
 			value = (GLib.Value) Marshal.PtrToStructure (native_value, typeof (GLib.Value));
 			Marshal.FreeHGlobal (native_value);
 			return value;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint ges_timeline_element_get_layer_priority(IntPtr raw);
+
+		public uint LayerPriority { 
+			get {
+				uint raw_ret = ges_timeline_element_get_layer_priority(Handle);
+				uint ret = raw_ret;
+				return ret;
+			}
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]

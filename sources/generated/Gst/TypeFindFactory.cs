@@ -74,17 +74,6 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_type_find_factory_get_extensions(IntPtr raw);
-
-		public string[] Extensions { 
-			get {
-				IntPtr raw_ret = gst_type_find_factory_get_extensions(Handle);
-				string[] ret = GLib.Marshaller.NullTermPtrToStringArray (raw_ret, false);
-				return ret;
-			}
-		}
-
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_type_find_factory_has_function(IntPtr raw);
 
 		public bool HasFunction { 

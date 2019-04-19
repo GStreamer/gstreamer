@@ -135,22 +135,14 @@ namespace Gst {
 			int cnt_data = data == null ? 0 : data.Length;
 			IntPtr[] native_data = new IntPtr [cnt_data];
 			for (int i = 0; i < cnt_data; i++)
-				native_data [i] = GLib.Marshaller.StringToPtrGStrdup (data[i]);
+				native_data [i] = GLib.Marshaller.StringToPtrGStrdup(data[i]);
 			int cnt_env_vars = env_vars == null ? 0 : env_vars.Length;
 			IntPtr[] native_env_vars = new IntPtr [cnt_env_vars + 1];
 			for (int i = 0; i < cnt_env_vars; i++)
-				native_env_vars [i] = GLib.Marshaller.StringToPtrGStrdup (env_vars[i]);
+				native_env_vars [i] = GLib.Marshaller.StringToPtrGStrdup(env_vars[i]);
 			native_env_vars [cnt_env_vars] = IntPtr.Zero;
 			IntPtr raw_ret = gst_tag_freeform_string_to_utf8(native_data, size, native_env_vars);
 			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
-			for (int i = 0; i < native_data.Length; i++) {
-				data [i] = GLib.Marshaller.Utf8PtrToString (native_data[i]);
-				GLib.Marshaller.Free (native_data[i]);
-			}
-			for (int i = 0; i < native_env_vars.Length - 1; i++) {
-				env_vars [i] = GLib.Marshaller.Utf8PtrToString (native_env_vars[i]);
-				GLib.Marshaller.Free (native_env_vars[i]);
-			}
 			return ret;
 		}
 
@@ -470,14 +462,10 @@ namespace Gst {
 			int cnt_schemas = schemas == null ? 0 : schemas.Length;
 			IntPtr[] native_schemas = new IntPtr [cnt_schemas + 1];
 			for (int i = 0; i < cnt_schemas; i++)
-				native_schemas [i] = GLib.Marshaller.StringToPtrGStrdup (schemas[i]);
+				native_schemas [i] = GLib.Marshaller.StringToPtrGStrdup(schemas[i]);
 			native_schemas [cnt_schemas] = IntPtr.Zero;
 			IntPtr raw_ret = gst_tag_list_to_xmp_buffer(list == null ? IntPtr.Zero : list.Handle, read_only, native_schemas);
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
-			for (int i = 0; i < native_schemas.Length - 1; i++) {
-				schemas [i] = GLib.Marshaller.Utf8PtrToString (native_schemas[i]);
-				GLib.Marshaller.Free (native_schemas[i]);
-			}
 			return ret;
 		}
 

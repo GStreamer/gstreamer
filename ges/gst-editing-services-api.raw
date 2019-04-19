@@ -202,7 +202,7 @@
         <parameter name="error" type="GError**"/>
       </parameters>
     </callback>
-    <callback name="FormatterLoadFromURIMethod" cname="GESFormatterLoadFromURIMethod">
+    <callback name="FormatterLoadFromURIMethod" cname="GESFormatterLoadFromURIMethod" deprecated="true" deprecated-version="1.16">
       <return-type type="gboolean"/>
       <parameters throws="1">
         <parameter name="formatter" type="GESFormatter*"/>
@@ -211,7 +211,7 @@
         <parameter name="error" type="GError**"/>
       </parameters>
     </callback>
-    <callback name="FormatterSaveToURIMethod" cname="GESFormatterSaveToURIMethod">
+    <callback name="FormatterSaveToURIMethod" cname="GESFormatterSaveToURIMethod" deprecated="true" deprecated-version="1.16">
       <return-type type="gboolean"/>
       <parameters throws="1">
         <parameter name="formatter" type="GESFormatter*"/>
@@ -2528,7 +2528,8 @@
         <method vm="lookup_child"/>
         <method vm="get_track_types"/>
         <method vm="set_child_property"/>
-        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="17"/>
+        <method vm="get_layer_priority"/>
+        <field cname="_ges_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gesGesReserved" type="gpointer" array="true" array_len="16"/>
       </class_struct>
       <method name="GetType" cname="ges_timeline_element_get_type" shared="true">
         <return-type type="GType"/>
@@ -2538,6 +2539,10 @@
         <parameters>
           <parameter name="copy" type="GESTimelineElement*"/>
         </parameters>
+      </virtual_method>
+      <virtual_method name="GetLayerPriority" cname="get_layer_priority">
+        <return-type type="guint32"/>
+        <parameters/>
       </virtual_method>
       <virtual_method name="GetTrackTypes" cname="get_track_types" version="1.6.0">
         <return-type type="GESTrackType"/>
@@ -2677,6 +2682,10 @@
       </method>
       <method name="GetInpoint" cname="ges_timeline_element_get_inpoint">
         <return-type type="guint64"/>
+        <parameters/>
+      </method>
+      <method name="GetLayerPriority" cname="ges_timeline_element_get_layer_priority">
+        <return-type type="guint32"/>
         <parameters/>
       </method>
       <method name="GetMaxDuration" cname="ges_timeline_element_get_max_duration">
@@ -2991,16 +3000,16 @@
         <return-type type="guint32"/>
         <parameters/>
       </method>
-      <method name="GetFontDesc" cname="ges_title_source_get_font_desc">
-        <return-type type="const-gchar*"/>
+      <method name="GetFontDesc" cname="ges_title_source_get_font_desc" deprecated="true" deprecated-version="1.16">
+        <return-type type="gchar*" owned="true"/>
         <parameters/>
       </method>
       <method name="GetHalignment" cname="ges_title_source_get_halignment">
         <return-type type="GESTextHAlign"/>
         <parameters/>
       </method>
-      <method name="GetText" cname="ges_title_source_get_text">
-        <return-type type="const-gchar*"/>
+      <method name="GetText" cname="ges_title_source_get_text" deprecated="true" deprecated-version="1.16">
+        <return-type type="gchar*" owned="true"/>
         <parameters/>
       </method>
       <method name="GetTextColor" cname="ges_title_source_get_text_color">
@@ -3247,9 +3256,9 @@
         <return-type type="void"/>
         <parameters>
           <parameter name="element" type="GstElement*"/>
-          <parameter allow-none="1" name="wanted_categories" type="const-gchar**" array="true" null_term_array="true"/>
-          <parameter allow-none="1" name="blacklist" type="const-gchar**" array="true" null_term_array="true"/>
-          <parameter allow-none="1" name="whitelist" type="const-gchar**" array="true" null_term_array="true"/>
+          <parameter allow-none="1" name="wanted_categories" type="const gchar**" array="true" null_term_array="true"/>
+          <parameter allow-none="1" name="blacklist" type="const gchar**" array="true" null_term_array="true"/>
+          <parameter allow-none="1" name="whitelist" type="const gchar**" array="true" null_term_array="true"/>
         </parameters>
       </method>
       <method name="Edit" cname="ges_track_element_edit">
@@ -3841,6 +3850,12 @@
       <method name="Deinit" cname="ges_deinit" shared="true">
         <return-type type="void"/>
       </method>
+      <method name="EdgeName" cname="ges_edge_name" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="edge" type="GESEdge"/>
+        </parameters>
+      </method>
       <method name="Init" cname="ges_init" shared="true">
         <return-type type="gboolean"/>
       </method>
@@ -3848,7 +3863,7 @@
         <return-type type="gboolean" array_index="1"/>
         <parameters throws="1">
           <parameter allow-none="1" name="argc" type="gint*" owned="true" pass_as="ref" array_index="1"/>
-          <parameter allow-none="1" name="argv" type="char***" owned="true" pass_as="ref" array="true" array_length_param_index="0"/>
+          <parameter allow-none="1" name="argv" type="char****" owned="true" pass_as="ref" array="true" array_length_param_index="0"/>
           <parameter name="error" type="GError**"/>
         </parameters>
       </method>
@@ -3917,6 +3932,7 @@
       <constant value="multifile://" ctype="gchar*" gtype="gchar*" name="MULTI_FILE_URI_PREFIX"/>
       <constant value="4" ctype="gint" gtype="gint" name="PADDING"/>
       <constant value="20" ctype="gint" gtype="gint" name="PADDING_LARGE"/>
+      <constant value="4294967295" ctype="guint32" gtype="guint32" name="TIMELINE_ELEMENT_NO_LAYER_PRIORITY"/>
     </object>
   </namespace>
 </api>

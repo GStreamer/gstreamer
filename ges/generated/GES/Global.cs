@@ -30,6 +30,15 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_edge_name(int edge);
+
+		public static string EdgeName(GES.Edge edge) {
+			IntPtr raw_ret = ges_edge_name((int) edge);
+			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_init();
 
 		public static bool Init() {

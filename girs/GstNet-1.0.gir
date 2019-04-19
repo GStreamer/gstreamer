@@ -214,7 +214,7 @@ MT safe. Caller owns return value (gst_net_time_packet_free to free).</doc>
         <parameters>
           <parameter name="buffer" transfer-ownership="none">
             <doc xml:space="preserve">a buffer from which to construct the packet, or NULL</doc>
-            <array zero-terminated="0" c:type="guint8*">
+            <array zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>

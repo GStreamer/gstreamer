@@ -174,6 +174,7 @@ int main (int argc, char *argv[]) {
 	g_print("\"GESTimelineElementClass.lookup_child\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, lookup_child));
 	g_print("\"GESTimelineElementClass.get_track_types\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, get_track_types));
 	g_print("\"GESTimelineElementClass.set_child_property\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, set_child_property));
+	g_print("\"GESTimelineElementClass.get_layer_priority\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElementClass, get_layer_priority));
 	g_print("\"sizeof(GESTimelineElement)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESTimelineElement));
 	g_print("\"GESTimelineElement.parent\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElement, parent));
 	g_print("\"GESTimelineElement.asset\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESTimelineElement, asset));

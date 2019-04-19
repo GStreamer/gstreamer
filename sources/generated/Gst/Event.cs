@@ -209,6 +209,15 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_event_parse_seek_trickmode_interval(IntPtr raw, out ulong interval);
+
+		public ulong ParseSeekTrickmodeInterval() {
+			ulong interval;
+			gst_event_parse_seek_trickmode_interval(Handle, out interval);
+			return interval;
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_event_parse_segment(IntPtr raw, IntPtr segment);
 
 		public Gst.Segment ParseSegment() {
@@ -351,6 +360,15 @@ namespace Gst {
 		public uint GroupId { 
 			set {
 				gst_event_set_group_id(Handle, value);
+			}
+		}
+
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_event_set_seek_trickmode_interval(IntPtr raw, ulong interval);
+
+		public ulong SeekTrickmodeInterval { 
+			set {
+				gst_event_set_seek_trickmode_interval(Handle, value);
 			}
 		}
 

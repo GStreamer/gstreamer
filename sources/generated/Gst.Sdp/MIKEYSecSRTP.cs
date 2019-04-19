@@ -22,6 +22,7 @@ namespace Gst.Sdp {
 		SrtpAuth = 10,
 		AuthTagLen = 11,
 		SrtpPrefixLen = 12,
+		AeadAuthTagLen = 20,
 	}
 #endregion
 }

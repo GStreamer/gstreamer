@@ -130,31 +130,19 @@ namespace Gst {
 			int cnt_env_vars = env_vars == null ? 0 : env_vars.Length;
 			IntPtr[] native_env_vars = new IntPtr [cnt_env_vars + 1];
 			for (int i = 0; i < cnt_env_vars; i++)
-				native_env_vars [i] = GLib.Marshaller.StringToPtrGStrdup (env_vars[i]);
+				native_env_vars [i] = GLib.Marshaller.StringToPtrGStrdup(env_vars[i]);
 			native_env_vars [cnt_env_vars] = IntPtr.Zero;
 			int cnt_paths = paths == null ? 0 : paths.Length;
 			IntPtr[] native_paths = new IntPtr [cnt_paths + 1];
 			for (int i = 0; i < cnt_paths; i++)
-				native_paths [i] = GLib.Marshaller.StringToPtrGStrdup (paths[i]);
+				native_paths [i] = GLib.Marshaller.StringToPtrGStrdup(paths[i]);
 			native_paths [cnt_paths] = IntPtr.Zero;
 			int cnt_names = names == null ? 0 : names.Length;
 			IntPtr[] native_names = new IntPtr [cnt_names + 1];
 			for (int i = 0; i < cnt_names; i++)
-				native_names [i] = GLib.Marshaller.StringToPtrGStrdup (names[i]);
+				native_names [i] = GLib.Marshaller.StringToPtrGStrdup(names[i]);
 			native_names [cnt_names] = IntPtr.Zero;
 			gst_plugin_add_dependency(Handle, native_env_vars, native_paths, native_names, (int) flags);
-			for (int i = 0; i < native_env_vars.Length - 1; i++) {
-				env_vars [i] = GLib.Marshaller.Utf8PtrToString (native_env_vars[i]);
-				GLib.Marshaller.Free (native_env_vars[i]);
-			}
-			for (int i = 0; i < native_paths.Length - 1; i++) {
-				paths [i] = GLib.Marshaller.Utf8PtrToString (native_paths[i]);
-				GLib.Marshaller.Free (native_paths[i]);
-			}
-			for (int i = 0; i < native_names.Length - 1; i++) {
-				names [i] = GLib.Marshaller.Utf8PtrToString (native_names[i]);
-				GLib.Marshaller.Free (native_names[i]);
-			}
 		}
 
 		public void AddDependency(Gst.PluginDependencyFlags flags) {

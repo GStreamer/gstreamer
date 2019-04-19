@@ -189,6 +189,7 @@ namespace AbiTester {
 			Console.WriteLine("\"GESTimelineElementClass.lookup_child\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("lookup_child") + "\"");
 			Console.WriteLine("\"GESTimelineElementClass.get_track_types\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("get_track_types") + "\"");
 			Console.WriteLine("\"GESTimelineElementClass.set_child_property\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("set_child_property") + "\"");
+			Console.WriteLine("\"GESTimelineElementClass.get_layer_priority\": \"" + GES.TimelineElement.class_abi.GetFieldOffset("get_layer_priority") + "\"");
 			Console.WriteLine("\"sizeof(GESTimelineElement)\": \"" + GES.TimelineElement.abi_info.Size + "\"");
 			Console.WriteLine("\"GESTimelineElement.parent\": \"" + GES.TimelineElement.abi_info.GetFieldOffset("parent") + "\"");
 			Console.WriteLine("\"GESTimelineElement.asset\": \"" + GES.TimelineElement.abi_info.GetFieldOffset("asset") + "\"");

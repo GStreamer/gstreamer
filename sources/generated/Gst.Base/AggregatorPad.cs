@@ -18,6 +18,21 @@ namespace Gst.Base {
 			CreateNativeObject (new string [0], new GLib.Value [0]);
 		}
 
+		[GLib.Property ("emit-signals")]
+		public bool EmitSignals {
+			get {
+				GLib.Value val = GetProperty ("emit-signals");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("emit-signals", val);
+				val.Dispose ();
+			}
+		}
+
 		public Gst.Segment Segment {
 			get {
 				unsafe {
@@ -25,6 +40,67 @@ namespace Gst.Base {
 					return Gst.Segment.New ((*raw_ptr));
 				}
 			}
+		}
+
+		[GLib.Signal("buffer-consumed")]
+		public event Gst.Base.BufferConsumedHandler BufferConsumed {
+			add {
+				this.AddSignalHandler ("buffer-consumed", value, typeof (Gst.Base.BufferConsumedArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("buffer-consumed", value);
+			}
+		}
+
+		static BufferConsumedNativeDelegate BufferConsumed_cb_delegate;
+		static BufferConsumedNativeDelegate BufferConsumedVMCallback {
+			get {
+				if (BufferConsumed_cb_delegate == null)
+					BufferConsumed_cb_delegate = new BufferConsumedNativeDelegate (BufferConsumed_cb);
+				return BufferConsumed_cb_delegate;
+			}
+		}
+
+		static void OverrideBufferConsumed (GLib.GType gtype)
+		{
+			OverrideBufferConsumed (gtype, BufferConsumedVMCallback);
+		}
+
+		static void OverrideBufferConsumed (GLib.GType gtype, BufferConsumedNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "buffer-consumed", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void BufferConsumedNativeDelegate (IntPtr inst, IntPtr _object);
+
+		static void BufferConsumed_cb (IntPtr inst, IntPtr _object)
+		{
+			try {
+				AggregatorPad __obj = GLib.Object.GetObject (inst, false) as AggregatorPad;
+				__obj.OnBufferConsumed (_object == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (_object, typeof (Gst.Buffer), false));
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.AggregatorPad), ConnectionMethod="OverrideBufferConsumed")]
+		protected virtual void OnBufferConsumed (Gst.Buffer _object)
+		{
+			InternalBufferConsumed (_object);
+		}
+
+		private void InternalBufferConsumed (Gst.Buffer _object)
+		{
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (2);
+			GLib.Value[] vals = new GLib.Value [2];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (_object);
+			inst_and_params.Append (vals [1]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
 		}
 
 		static FlushNativeDelegate Flush_cb_delegate;

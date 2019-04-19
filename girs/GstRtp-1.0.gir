@@ -398,7 +398,7 @@ extension.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">profile-specific data</doc>
-            <array length="1" zero-terminated="0" c:type="guint8*">
+            <array length="1" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -1154,7 +1154,7 @@ reached.</doc>
           </parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">the data</doc>
-            <array length="1" zero-terminated="0" c:type="guint8*">
+            <array length="1" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -2341,7 +2341,7 @@ the buffer downstream.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">data to set as payload</doc>
-            <array length="1" zero-terminated="0" c:type="guint8*">
+            <array length="1" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -3091,6 +3091,14 @@ Variable arguments should be in the form field name, field type
       </property>
       <property name="mtu" writable="1" transfer-ownership="none">
         <type name="guint" c:type="guint"/>
+      </property>
+      <property name="onvif-no-rate-control"
+                version="1.16"
+                writable="1"
+                transfer-ownership="none">
+        <doc xml:space="preserve">Make the payloader timestamp packets according to the Rate-Control=no
+behaviour specified in the ONVIF replay spec.</doc>
+        <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="perfect-rtptime" writable="1" transfer-ownership="none">
         <doc xml:space="preserve">Try to use the offset fields to generate perfect RTP timestamps. When this

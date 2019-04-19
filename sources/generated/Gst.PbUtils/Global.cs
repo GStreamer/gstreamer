@@ -250,32 +250,6 @@ namespace Gst.PbUtils {
 		}
 
 		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_install_plugins_async(IntPtr[] details, IntPtr ctx, Gst.PbUtilsSharp.InstallPluginsResultFuncNative func, IntPtr user_data);
-
-		public static Gst.PbUtils.InstallPluginsReturn InstallPluginsAsync(string[] details, Gst.PbUtils.InstallPluginsContext ctx, Gst.PbUtils.InstallPluginsResultFunc func) {
-			int cnt_details = details == null ? 0 : details.Length;
-			IntPtr[] native_details = new IntPtr [cnt_details + 1];
-			for (int i = 0; i < cnt_details; i++)
-				native_details [i] = GLib.Marshaller.StringToPtrGStrdup (details[i]);
-			native_details [cnt_details] = IntPtr.Zero;
-			IntPtr native_ctx = GLib.Marshaller.StructureToPtrAlloc (ctx);
-			Gst.PbUtilsSharp.InstallPluginsResultFuncWrapper func_wrapper = new Gst.PbUtilsSharp.InstallPluginsResultFuncWrapper (func);
-			func_wrapper.PersistUntilCalled ();
-			int raw_ret = gst_install_plugins_async(native_details, native_ctx, func_wrapper.NativeDelegate, IntPtr.Zero);
-			Gst.PbUtils.InstallPluginsReturn ret = (Gst.PbUtils.InstallPluginsReturn) raw_ret;
-			for (int i = 0; i < native_details.Length - 1; i++) {
-				details [i] = GLib.Marshaller.Utf8PtrToString (native_details[i]);
-				GLib.Marshaller.Free (native_details[i]);
-			}
-			Marshal.FreeHGlobal (native_ctx);
-			return ret;
-		}
-
-		public static Gst.PbUtils.InstallPluginsReturn InstallPluginsAsync(string[] details, Gst.PbUtils.InstallPluginsResultFunc func) {
-			return InstallPluginsAsync (details, Gst.PbUtils.InstallPluginsContext.Zero, func);
-		}
-
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_install_plugins_installation_in_progress();
 
 		public static bool InstallPluginsInstallationInProgress() {
@@ -300,30 +274,6 @@ namespace Gst.PbUtils {
 			bool raw_ret = gst_install_plugins_supported();
 			bool ret = raw_ret;
 			return ret;
-		}
-
-		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_install_plugins_sync(IntPtr[] details, IntPtr ctx);
-
-		public static Gst.PbUtils.InstallPluginsReturn InstallPluginsSync(string[] details, Gst.PbUtils.InstallPluginsContext ctx) {
-			int cnt_details = details == null ? 0 : details.Length;
-			IntPtr[] native_details = new IntPtr [cnt_details + 1];
-			for (int i = 0; i < cnt_details; i++)
-				native_details [i] = GLib.Marshaller.StringToPtrGStrdup (details[i]);
-			native_details [cnt_details] = IntPtr.Zero;
-			IntPtr native_ctx = GLib.Marshaller.StructureToPtrAlloc (ctx);
-			int raw_ret = gst_install_plugins_sync(native_details, native_ctx);
-			Gst.PbUtils.InstallPluginsReturn ret = (Gst.PbUtils.InstallPluginsReturn) raw_ret;
-			for (int i = 0; i < native_details.Length - 1; i++) {
-				details [i] = GLib.Marshaller.Utf8PtrToString (native_details[i]);
-				GLib.Marshaller.Free (native_details[i]);
-			}
-			Marshal.FreeHGlobal (native_ctx);
-			return ret;
-		}
-
-		public static Gst.PbUtils.InstallPluginsReturn InstallPluginsSync(string[] details) {
-			return InstallPluginsSync (details, Gst.PbUtils.InstallPluginsContext.Zero);
 		}
 
 		[DllImport("libgstpbutils-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

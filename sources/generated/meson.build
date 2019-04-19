@@ -87,6 +87,7 @@ generated_sources = [
     'Gst.Base/BaseTransform.cs',
     'Gst.Base/BitReader.cs',
     'Gst.Base/BitWriter.cs',
+    'Gst.Base/BufferConsumedHandler.cs',
     'Gst.Base/ByteReader.cs',
     'Gst.Base/ByteWriter.cs',
     'Gst.Base/CollectData.cs',

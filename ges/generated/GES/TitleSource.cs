@@ -76,10 +76,11 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern void ges_title_source_set_font_desc(IntPtr raw, IntPtr font_desc);
 
+		[Obsolete]
 		public string FontDesc { 
 			get {
 				IntPtr raw_ret = ges_title_source_get_font_desc(Handle);
-				string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+				string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
 				return ret;
 			}
 			set {
@@ -112,10 +113,11 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern void ges_title_source_set_text(IntPtr raw, IntPtr text);
 
+		[Obsolete]
 		public string Text { 
 			get {
 				IntPtr raw_ret = ges_title_source_get_text(Handle);
-				string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+				string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
 				return ret;
 			}
 			set {

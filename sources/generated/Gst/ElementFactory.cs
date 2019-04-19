@@ -197,17 +197,6 @@ namespace Gst {
 		}
 
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_element_factory_get_uri_protocols(IntPtr raw);
-
-		public string[] UriProtocols { 
-			get {
-				IntPtr raw_ret = gst_element_factory_get_uri_protocols(Handle);
-				string[] ret = GLib.Marshaller.NullTermPtrToStringArray (raw_ret, false);
-				return ret;
-			}
-		}
-
-		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_element_factory_get_uri_type(IntPtr raw);
 
 		public Gst.URIType UriType { 

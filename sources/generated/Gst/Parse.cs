@@ -85,15 +85,11 @@ namespace Gst {
 			int cnt_argv = argv == null ? 0 : argv.Length;
 			IntPtr[] native_argv = new IntPtr [cnt_argv + 1];
 			for (int i = 0; i < cnt_argv; i++)
-				native_argv [i] = GLib.Marshaller.StringToPtrGStrdup (argv[i]);
+				native_argv [i] = GLib.Marshaller.StringToPtrGStrdup(argv[i]);
 			native_argv [cnt_argv] = IntPtr.Zero;
 			IntPtr error = IntPtr.Zero;
 			IntPtr raw_ret = gst_parse_launchv(native_argv, out error);
 			Gst.Element ret = GLib.Object.GetObject(raw_ret) as Gst.Element;
-			for (int i = 0; i < native_argv.Length - 1; i++) {
-				argv [i] = GLib.Marshaller.Utf8PtrToString (native_argv[i]);
-				GLib.Marshaller.Free (native_argv[i]);
-			}
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
 			return ret;
 		}
@@ -105,15 +101,11 @@ namespace Gst {
 			int cnt_argv = argv == null ? 0 : argv.Length;
 			IntPtr[] native_argv = new IntPtr [cnt_argv + 1];
 			for (int i = 0; i < cnt_argv; i++)
-				native_argv [i] = GLib.Marshaller.StringToPtrGStrdup (argv[i]);
+				native_argv [i] = GLib.Marshaller.StringToPtrGStrdup(argv[i]);
 			native_argv [cnt_argv] = IntPtr.Zero;
 			IntPtr error = IntPtr.Zero;
 			IntPtr raw_ret = gst_parse_launchv_full(native_argv, context == null ? IntPtr.Zero : context.Handle, (int) flags, out error);
 			Gst.Element ret = GLib.Object.GetObject(raw_ret) as Gst.Element;
-			for (int i = 0; i < native_argv.Length - 1; i++) {
-				argv [i] = GLib.Marshaller.Utf8PtrToString (native_argv[i]);
-				GLib.Marshaller.Free (native_argv[i]);
-			}
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
 			return ret;
 		}

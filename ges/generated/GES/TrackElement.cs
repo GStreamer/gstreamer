@@ -453,31 +453,19 @@ namespace GES {
 			int cnt_wanted_categories = wanted_categories == null ? 0 : wanted_categories.Length;
 			IntPtr[] native_wanted_categories = new IntPtr [cnt_wanted_categories + 1];
 			for (int i = 0; i < cnt_wanted_categories; i++)
-				native_wanted_categories [i] = GLib.Marshaller.StringToPtrGStrdup (wanted_categories[i]);
+				native_wanted_categories [i] = GLib.Marshaller.StringToPtrGStrdup(wanted_categories[i]);
 			native_wanted_categories [cnt_wanted_categories] = IntPtr.Zero;
 			int cnt_blacklist = blacklist == null ? 0 : blacklist.Length;
 			IntPtr[] native_blacklist = new IntPtr [cnt_blacklist + 1];
 			for (int i = 0; i < cnt_blacklist; i++)
-				native_blacklist [i] = GLib.Marshaller.StringToPtrGStrdup (blacklist[i]);
+				native_blacklist [i] = GLib.Marshaller.StringToPtrGStrdup(blacklist[i]);
 			native_blacklist [cnt_blacklist] = IntPtr.Zero;
 			int cnt_whitelist = whitelist == null ? 0 : whitelist.Length;
 			IntPtr[] native_whitelist = new IntPtr [cnt_whitelist + 1];
 			for (int i = 0; i < cnt_whitelist; i++)
-				native_whitelist [i] = GLib.Marshaller.StringToPtrGStrdup (whitelist[i]);
+				native_whitelist [i] = GLib.Marshaller.StringToPtrGStrdup(whitelist[i]);
 			native_whitelist [cnt_whitelist] = IntPtr.Zero;
 			ges_track_element_add_children_props(Handle, element == null ? IntPtr.Zero : element.Handle, native_wanted_categories, native_blacklist, native_whitelist);
-			for (int i = 0; i < native_wanted_categories.Length - 1; i++) {
-				wanted_categories [i] = GLib.Marshaller.Utf8PtrToString (native_wanted_categories[i]);
-				GLib.Marshaller.Free (native_wanted_categories[i]);
-			}
-			for (int i = 0; i < native_blacklist.Length - 1; i++) {
-				blacklist [i] = GLib.Marshaller.Utf8PtrToString (native_blacklist[i]);
-				GLib.Marshaller.Free (native_blacklist[i]);
-			}
-			for (int i = 0; i < native_whitelist.Length - 1; i++) {
-				whitelist [i] = GLib.Marshaller.Utf8PtrToString (native_whitelist[i]);
-				GLib.Marshaller.Free (native_whitelist[i]);
-			}
 		}
 
 		public void AddChildrenProps(Gst.Element element) {

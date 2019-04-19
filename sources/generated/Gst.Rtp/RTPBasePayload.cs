@@ -63,6 +63,21 @@ namespace Gst.Rtp {
 			}
 		}
 
+		[GLib.Property ("onvif-no-rate-control")]
+		public bool OnvifNoRateControl {
+			get {
+				GLib.Value val = GetProperty ("onvif-no-rate-control");
+				bool ret = (bool) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value(value);
+				SetProperty("onvif-no-rate-control", val);
+				val.Dispose ();
+			}
+		}
+
 		[GLib.Property ("perfect-rtptime")]
 		public bool PerfectRtptime {
 			get {

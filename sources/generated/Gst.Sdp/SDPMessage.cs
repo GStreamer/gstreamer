@@ -211,16 +211,12 @@ namespace Gst.Sdp {
 			int cnt_repeat = repeat == null ? 0 : repeat.Length;
 			IntPtr[] native_repeat = new IntPtr [cnt_repeat + 1];
 			for (int i = 0; i < cnt_repeat; i++)
-				native_repeat [i] = GLib.Marshaller.StringToPtrGStrdup (repeat[i]);
+				native_repeat [i] = GLib.Marshaller.StringToPtrGStrdup(repeat[i]);
 			native_repeat [cnt_repeat] = IntPtr.Zero;
 			int raw_ret = gst_sdp_message_add_time(Handle, native_start, native_stop, native_repeat);
 			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
 			GLib.Marshaller.Free (native_start);
 			GLib.Marshaller.Free (native_stop);
-			for (int i = 0; i < native_repeat.Length - 1; i++) {
-				repeat [i] = GLib.Marshaller.Utf8PtrToString (native_repeat[i]);
-				GLib.Marshaller.Free (native_repeat[i]);
-			}
 			return ret;
 		}
 

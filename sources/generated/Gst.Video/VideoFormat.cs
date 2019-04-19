@@ -94,6 +94,8 @@ namespace Gst.Video {
 		Nv1210le40 = 81,
 		Y210 = 82,
 		Y410 = 83,
+		Vuya = 84,
+		Bgr10a2Le = 85,
 	}
 
 	internal class VideoFormatGType {

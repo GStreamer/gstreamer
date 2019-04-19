@@ -97,7 +97,9 @@ namespace Gst.Rtsp {
 		MediaProperties = 84,
 		SeekStyle = 85,
 		AcceptRanges = 86,
-		Last = 87,
+		Frames = 87,
+		RateControl = 88,
+		Last = 89,
 	}
 
 	internal class RTSPHeaderFieldGType {

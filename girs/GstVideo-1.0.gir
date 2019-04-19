@@ -1716,7 +1716,7 @@ of cores.</doc>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="VIDEO_FORMATS_ALL"
-              value="{ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }"
+              value="{ I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }"
               c:type="GST_VIDEO_FORMATS_ALL">
       <type name="utf8" c:type="gchar*"/>
     </constant>
@@ -1888,7 +1888,7 @@ Performs the multiplication, meta-&gt;matrix X matrix.</doc>
           </instance-parameter>
           <parameter name="matrix" transfer-ownership="none">
             <doc xml:space="preserve">a 4x4 transformation matrix to be applied</doc>
-            <type name="gfloat" c:type="const gfloat"/>
+            <type name="gfloat" c:type="const gfloat*"/>
           </parameter>
         </parameters>
       </method>
@@ -2900,7 +2900,7 @@ type, or %GST_VIDEO_CAPTION_TYPE_UNKNOWN.</doc>
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">pixel lines</doc>
-            <type name="gpointer" c:type="gpointer"/>
+            <type name="gpointer" c:type="gpointer*"/>
           </parameter>
           <parameter name="width" transfer-ownership="none">
             <doc xml:space="preserve">the number of pixels on one line</doc>
@@ -3453,6 +3453,30 @@ the CIE XYZ colorspace.</doc>
               glib:nick="adobergb">
         <doc xml:space="preserve">Adobe RGB primaries. Since: 1.8</doc>
       </member>
+      <member name="smptest428"
+              value="9"
+              c:identifier="GST_VIDEO_COLOR_PRIMARIES_SMPTEST428"
+              glib:nick="smptest428">
+        <doc xml:space="preserve">SMPTE ST 428 primaries. Since: 1.16</doc>
+      </member>
+      <member name="smpterp431"
+              value="10"
+              c:identifier="GST_VIDEO_COLOR_PRIMARIES_SMPTERP431"
+              glib:nick="smpterp431">
+        <doc xml:space="preserve">SMPTE RP 431 primaries. Since: 1.16</doc>
+      </member>
+      <member name="smpteeg432"
+              value="11"
+              c:identifier="GST_VIDEO_COLOR_PRIMARIES_SMPTEEG432"
+              glib:nick="smpteeg432">
+        <doc xml:space="preserve">SMPTE EG 432 primaries. Since: 1.16</doc>
+      </member>
+      <member name="ebu3213"
+              value="12"
+              c:identifier="GST_VIDEO_COLOR_PRIMARIES_EBU3213"
+              glib:nick="ebu3213">
+        <doc xml:space="preserve">EBU 3213 primaries. Since: 1.16</doc>
+      </member>
       <function name="get_info"
                 c:identifier="gst_video_color_primaries_get_info"
                 version="1.6">
@@ -3563,7 +3587,7 @@ the component values in range [0.0 .. 1.0] back to their representation in
                      caller-allocates="1"
                      transfer-ownership="none">
             <doc xml:space="preserve">output offsets</doc>
-            <array zero-terminated="0" c:type="gint" fixed-size="4">
+            <array zero-terminated="0" c:type="gint*" fixed-size="4">
               <type name="gint" c:type="gint"/>
             </array>
           </parameter>
@@ -3572,7 +3596,7 @@ the component values in range [0.0 .. 1.0] back to their representation in
                      caller-allocates="1"
                      transfer-ownership="none">
             <doc xml:space="preserve">output scale</doc>
-            <array zero-terminated="0" c:type="gint" fixed-size="4">
+            <array zero-terminated="0" c:type="gint*" fixed-size="4">
               <type name="gint" c:type="gint"/>
             </array>
           </parameter>
@@ -5320,7 +5344,7 @@ performance is achived when @quantizer is a power of 2.
           </parameter>
           <parameter name="quantizer" transfer-ownership="none">
             <doc xml:space="preserve">quantizer</doc>
-            <type name="guint" c:type="guint"/>
+            <type name="guint" c:type="guint*"/>
           </parameter>
           <parameter name="width" transfer-ownership="none">
             <doc xml:space="preserve">the width of the lines</doc>
@@ -7200,6 +7224,18 @@ for details about the layout and packing of these formats in memory.</doc>
               glib:nick="y410">
         <doc xml:space="preserve">packed 4:4:4 YUV, 10 bits per channel(A-V-Y-U...) (Since: 1.16)</doc>
       </member>
+      <member name="vuya"
+              value="84"
+              c:identifier="GST_VIDEO_FORMAT_VUYA"
+              glib:nick="vuya">
+        <doc xml:space="preserve">packed 4:4:4 YUV with alpha channel (V0-U0-Y0-A0...) (Since: 1.16)</doc>
+      </member>
+      <member name="bgr10a2_le"
+              value="85"
+              c:identifier="GST_VIDEO_FORMAT_BGR10A2_LE"
+              glib:nick="bgr10a2-le">
+        <doc xml:space="preserve">packed 4:4:4 RGB with alpha channel(B-G-R-A), 10 bits for R/G/B channel and MSB 2 bits for alpha channel (Since: 1.16)</doc>
+      </member>
       <function name="from_fourcc" c:identifier="gst_video_format_from_fourcc">
         <doc xml:space="preserve">Converts a FOURCC value into the corresponding #GstVideoFormat.
 If the FOURCC cannot be represented by #GstVideoFormat,
@@ -7567,11 +7603,11 @@ formats this means that a complete pixel needs to be packed.</doc>
                    nullable="1"
                    allow-none="1">
           <doc xml:space="preserve">pointers to the destination data planes</doc>
-          <type name="gpointer" c:type="gpointer"/>
+          <type name="gpointer" c:type="gpointer*"/>
         </parameter>
         <parameter name="stride" transfer-ownership="none">
           <doc xml:space="preserve">strides of the destination planes</doc>
-          <type name="gint" c:type="const gint"/>
+          <type name="gint" c:type="const gint*"/>
         </parameter>
         <parameter name="chroma_site" transfer-ownership="none">
           <doc xml:space="preserve">the chroma siting of the target when subsampled (not used)</doc>
@@ -7625,11 +7661,11 @@ separate step after unpacking.</doc>
                    nullable="1"
                    allow-none="1">
           <doc xml:space="preserve">pointers to the data planes</doc>
-          <type name="gpointer" c:type="const gpointer"/>
+          <type name="gpointer" c:type="const gpointer*"/>
         </parameter>
         <parameter name="stride" transfer-ownership="none">
           <doc xml:space="preserve">strides of the planes</doc>
-          <type name="gint" c:type="const gint"/>
+          <type name="gint" c:type="const gint*"/>
         </parameter>
         <parameter name="x" transfer-ownership="none">
           <doc xml:space="preserve">the x position in the image to start from</doc>
@@ -8003,7 +8039,7 @@ All video planes of @buffer will be mapped and the pointers will be set in
                 c:type="GstVideoGLTextureUploadMeta*"/>
         </parameter>
         <parameter name="texture_id" transfer-ownership="none">
-          <type name="guint" c:type="guint"/>
+          <type name="guint" c:type="guint*"/>
         </parameter>
       </parameters>
     </callback>
@@ -8064,7 +8100,7 @@ to upload something to an OpenGL texture.</doc>
           </instance-parameter>
           <parameter name="texture_id" transfer-ownership="none">
             <doc xml:space="preserve">the texture IDs to upload to</doc>
-            <type name="guint" c:type="guint"/>
+            <type name="guint" c:type="guint*"/>
           </parameter>
         </parameters>
       </method>
@@ -11346,7 +11382,7 @@ gst_video_scaler_get_info().</doc>
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">source pixels lines</doc>
-            <type name="gpointer" c:type="gpointer"/>
+            <type name="gpointer" c:type="gpointer*"/>
           </parameter>
           <parameter name="dest"
                      transfer-ownership="none"
@@ -12460,7 +12496,7 @@ the parity check bits).</doc>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">The user data content of the Ancillary packet.
    Does not contain the ADF, DID, SDID nor CS.</doc>
-            <array length="4" zero-terminated="0" c:type="guint8*">
+            <array length="4" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -12552,7 +12588,7 @@ to get the Ancillary data that might be present on that line.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">The line of data to parse</doc>
-            <array zero-terminated="0" c:type="guint8*">
+            <array zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -12669,7 +12705,7 @@ parameters.</doc>
         </parameter>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve">The Closed Caption data</doc>
-          <array length="3" zero-terminated="0" c:type="guint8*">
+          <array length="3" zero-terminated="0" c:type="const guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>
@@ -12704,7 +12740,7 @@ parameters.</doc>
         </parameter>
         <parameter name="texture_type" transfer-ownership="none">
           <doc xml:space="preserve">array of #GstVideoGLTextureType</doc>
-          <type name="VideoGLTextureType" c:type="GstVideoGLTextureType"/>
+          <type name="VideoGLTextureType" c:type="GstVideoGLTextureType*"/>
         </parameter>
         <parameter name="upload"
                    transfer-ownership="none"
@@ -12802,13 +12838,13 @@ gst_buffer_add_video_meta_full() with them.</doc>
         </parameter>
         <parameter name="offset" transfer-ownership="none">
           <doc xml:space="preserve">offset of each plane</doc>
-          <array zero-terminated="0" c:type="gsize" fixed-size="4">
+          <array zero-terminated="0" c:type="gsize*" fixed-size="4">
             <type name="gsize" c:type="gsize"/>
           </array>
         </parameter>
         <parameter name="stride" transfer-ownership="none">
           <doc xml:space="preserve">stride of each plane</doc>
-          <array zero-terminated="0" c:type="gint" fixed-size="4">
+          <array zero-terminated="0" c:type="gint*" fixed-size="4">
             <type name="gint" c:type="gint"/>
           </array>
         </parameter>
@@ -12916,8 +12952,9 @@ parameters.</doc>
               version="1.10">
       <doc xml:space="preserve">Attaches #GstVideoTimeCodeMeta metadata to @buffer with the given
 parameters.</doc>
-      <return-value transfer-ownership="none">
-        <doc xml:space="preserve">the #GstVideoTimeCodeMeta on @buffer.</doc>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve">the #GstVideoTimeCodeMeta on @buffer, or
+(since 1.16) %NULL if the timecode was invalid.</doc>
         <type name="VideoTimeCodeMeta" c:type="GstVideoTimeCodeMeta*"/>
       </return-value>
       <parameters>
@@ -12937,7 +12974,8 @@ parameters.</doc>
       <doc xml:space="preserve">Attaches #GstVideoTimeCodeMeta metadata to @buffer with the given
 parameters.</doc>
       <return-value transfer-ownership="none">
-        <doc xml:space="preserve">the #GstVideoTimeCodeMeta on @buffer.</doc>
+        <doc xml:space="preserve">the #GstVideoTimeCodeMeta on @buffer, or
+(since 1.16) %NULL if the timecode was invalid.</doc>
         <type name="VideoTimeCodeMeta" c:type="GstVideoTimeCodeMeta*"/>
       </return-value>
       <parameters>
@@ -13832,7 +13870,7 @@ not contain a valid chroma description.</doc>
                    nullable="1"
                    allow-none="1">
           <doc xml:space="preserve">pixel lines</doc>
-          <type name="gpointer" c:type="gpointer"/>
+          <type name="gpointer" c:type="gpointer*"/>
         </parameter>
         <parameter name="width" transfer-ownership="none">
           <doc xml:space="preserve">the number of pixels on one line</doc>
@@ -13991,7 +14029,7 @@ the component values in range [0.0 .. 1.0] back to their representation in
                    caller-allocates="1"
                    transfer-ownership="none">
           <doc xml:space="preserve">output offsets</doc>
-          <array zero-terminated="0" c:type="gint" fixed-size="4">
+          <array zero-terminated="0" c:type="gint*" fixed-size="4">
             <type name="gint" c:type="gint"/>
           </array>
         </parameter>
@@ -14000,7 +14038,7 @@ the component values in range [0.0 .. 1.0] back to their representation in
                    caller-allocates="1"
                    transfer-ownership="none">
           <doc xml:space="preserve">output scale</doc>
-          <array zero-terminated="0" c:type="gint" fixed-size="4">
+          <array zero-terminated="0" c:type="gint*" fixed-size="4">
             <type name="gint" c:type="gint"/>
           </array>
         </parameter>
@@ -14219,7 +14257,7 @@ performance is achived when @quantizer is a power of 2.
         </parameter>
         <parameter name="quantizer" transfer-ownership="none">
           <doc xml:space="preserve">quantizer</doc>
-          <type name="guint" c:type="guint"/>
+          <type name="guint" c:type="guint*"/>
         </parameter>
         <parameter name="width" transfer-ownership="none">
           <doc xml:space="preserve">the width of the lines</doc>

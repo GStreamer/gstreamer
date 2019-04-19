@@ -1356,6 +1356,15 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_audio_decoder_finish_subframe(IntPtr raw, IntPtr buf);
+
+		public Gst.FlowReturn FinishSubframe(Gst.Buffer buf) {
+			int raw_ret = gst_audio_decoder_finish_subframe(Handle, buf == null ? IntPtr.Zero : buf.Handle);
+			Gst.FlowReturn ret = (Gst.FlowReturn) raw_ret;
+			return ret;
+		}
+
+		[DllImport("libgstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_audio_decoder_get_allocator(IntPtr raw, out IntPtr allocator, IntPtr parms);
 
 		public void GetAllocator(out Gst.Allocator allocator, out Gst.AllocationParams parms) {

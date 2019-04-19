@@ -1967,8 +1967,18 @@ read from @socket which should be used before starting to read new data.</doc>
               c:identifier="GST_RTSP_HDR_ACCEPT_RANGES"
               glib:nick="accept-ranges">
       </member>
-      <member name="last"
+      <member name="frames"
               value="87"
+              c:identifier="GST_RTSP_HDR_FRAMES"
+              glib:nick="frames">
+      </member>
+      <member name="rate_control"
+              value="88"
+              c:identifier="GST_RTSP_HDR_RATE_CONTROL"
+              glib:nick="rate-control">
+      </member>
+      <member name="last"
+              value="89"
               c:identifier="GST_RTSP_HDR_LAST"
               glib:nick="last">
       </member>
@@ -2620,7 +2630,7 @@ will be replaced by the new body.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">the data</doc>
-            <array length="1" zero-terminated="0" c:type="guint8*">
+            <array length="1" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -4326,7 +4336,7 @@ are reached. #GST_RTSP_EINTR when @watch was flushing.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="full">
             <doc xml:space="preserve">the data to queue</doc>
-            <array length="1" zero-terminated="0" c:type="guint8*">
+            <array length="1" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
