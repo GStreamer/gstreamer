@@ -3,10 +3,10 @@
   <description>GStreamer core tracers</description>
   <filename>../../plugins/tracers/.libs/libgstcoretracers.so</filename>
   <basename>libgstcoretracers.so</basename>
-  <version>1.16.0</version>
+  <version>1.17.0.1</version>
   <license>LGPL</license>
   <source>gstreamer</source>
-  <package>GStreamer source release</package>
+  <package>GStreamer git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <tracer>
