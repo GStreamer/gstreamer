@@ -8,6 +8,7 @@ import sys
 from scripts.common import git
 from scripts.common import Colors
 from scripts.common import accept_command
+from scripts.common import get_meson
 
 
 SCRIPTDIR = os.path.normpath(os.path.dirname(__file__))
@@ -143,6 +144,8 @@ if __name__ == "__main__":
         sys.stdin.close()
 
     if options.manifest:
+        meson = get_meson()
+        targets_s = subprocess.check_output(meson + ['subprojects', 'download'])
         repos_commits = manifest_get_commits(options.manifest)
     else:
         repos_commits = {}
