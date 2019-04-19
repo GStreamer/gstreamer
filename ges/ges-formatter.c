@@ -237,12 +237,24 @@ ges_formatter_can_load_uri (const gchar * uri, GError ** error)
   for (tmp = formatter_assets; tmp; tmp = tmp->next) {
     GESAsset *asset = GES_ASSET (tmp->data);
     GESFormatter *dummy_instance;
+    gchar **valid_exts =
+        g_strsplit (ges_meta_container_get_string (GES_META_CONTAINER (asset),
+            GES_META_FORMATTER_EXTENSION), ",", -1);
+    gint i;
 
-    if (extension
-        && g_strcmp0 (extension,
-            ges_meta_container_get_string (GES_META_CONTAINER (asset),
-                GES_META_FORMATTER_EXTENSION)))
-      continue;
+    if (extension) {
+      gboolean found = FALSE;
+
+      for (i = 0; valid_exts[i]; i++) {
+        if (!g_strcmp0 (extension, valid_exts[i])) {
+          found = TRUE;
+          break;
+        }
+      }
+
+      if (!found)
+        goto next;
+    }
 
     class = g_type_class_ref (ges_asset_get_extractable_type (asset));
     dummy_instance =
@@ -256,7 +268,10 @@ ges_formatter_can_load_uri (const gchar * uri, GError ** error)
     }
     g_type_class_unref (class);
     gst_object_unref (dummy_instance);
+  next:
+    g_strfreev (valid_exts);
   }
+  g_free (extension);
 
   g_list_free (formatter_assets);
   return ret;
