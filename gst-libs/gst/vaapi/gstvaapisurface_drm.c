@@ -36,6 +36,7 @@ gst_vaapi_surface_get_drm_buf_handle (GstVaapiSurface * surface, guint type)
   if (!image)
     goto error_derive_image;
 
+  /* The proxy takes ownership if the image, even creation failure. */
   proxy =
       gst_vaapi_buffer_proxy_new_from_object (GST_VAAPI_OBJECT (surface),
       image->internal_image.buf, type, gst_vaapi_object_unref, image);
@@ -52,7 +53,6 @@ error_derive_image:
 error_alloc_export_buffer:
   {
     GST_ERROR ("failed to allocate export buffer proxy");
-    gst_vaapi_object_unref (image);
     return NULL;
   }
 }
