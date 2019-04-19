@@ -1,0 +1,5 @@
+[wrap-git]
+directory=gst-docs
+url=https://gitlab.freedesktop.org/gstreamer/gst-docs.git
+push-url=git@gitlab.freedesktop.org:gstreamer/gst-docs.git
+revision=master
