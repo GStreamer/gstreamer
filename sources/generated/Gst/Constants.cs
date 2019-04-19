@@ -166,8 +166,8 @@ namespace Gst {
 		public const int VALUE_UNORDERED = 2;
 		public const int VERSION_MAJOR = 1;
 		public const int VERSION_MICRO = 0;
-		public const int VERSION_MINOR = 16;
-		public const int VERSION_NANO = 0;
+		public const int VERSION_MINOR = 17;
+		public const int VERSION_NANO = 1;
 #endregion
 	}
 }
