@@ -464,6 +464,8 @@ class LauncherConfig(Loggable):
                             action="store_true", default=False,
                             help="Dump logs to stdout when a test fails."
                             " Note that mdv is used to enhance output if avalaible, install with `pip install mdv`.")
+        parser.add_argument("--max-dump-size", dest="max_dump_size", type=float,
+                            default=0.5, help="Maximum size of logs to dump on stdout in MB.")
         parser.add_argument("-c", "--config", dest="config",
                             help="This is DEPRECATED, prefer using the testsuite format"
                             " to configure testsuites")

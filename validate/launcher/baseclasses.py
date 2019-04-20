@@ -175,6 +175,15 @@ class Test(Loggable):
         self.kill_subprocess()
         self.process = None
 
+    def should_dump_on_failure(self):
+        if not self.options.dump_on_failure:
+            return False
+
+        try:
+            return os.path.getsize(self.logfile) < self.options.max_dump_size * 1024 * 1024
+        except FileNotFoundError:
+            return False
+
     def __str__(self):
         string = self.classname
         if self.result != Result.NOT_RUN:
