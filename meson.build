@@ -279,7 +279,7 @@ glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libg
 gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
 
 cdata.set('HAVE_ZLIB', zlib_dep.found())
-cdata.set('HAVE_BZ2', bz2lib.found())
+cdata.set('HAVE_BZ2', bz2lib.found() and cc.has_header('bzlib.h'))
 
 # Check all of the things.
 # TODO: None of these are actually used yet because
