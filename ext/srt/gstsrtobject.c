@@ -1391,7 +1391,7 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
         continue;
       case SRTS_CONNECTED:
         /* good to go */
-        GST_WARNING_OBJECT (srtobject->element, "good to go");
+        GST_LOG_OBJECT (srtobject->element, "good to go");
         break;
       default:
         GST_WARNING_OBJECT (srtobject->element, "not ready");
