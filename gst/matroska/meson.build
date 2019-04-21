@@ -12,7 +12,7 @@ matroska_sources = [
 ]
 
 bz2_dep = cc.find_library('bz2', required : get_option('bz2'))
-cdata.set('HAVE_BZ2', bz2_dep.found())
+cdata.set('HAVE_BZ2', bz2_dep.found() and cc.has_header('bzlib.h'))
 
 gstmatroska = library('gstmatroska',
   matroska_sources,
