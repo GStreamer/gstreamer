@@ -1158,7 +1158,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
   // If we have a format that supports VANC and we are asked to extract CC,
   // then do it here.
-  if (self->output_cc && mode->vanc && !self->no_signal)
+  if (self->output_cc && !self->no_signal)
     extract_cc_from_vbi (self, buffer, vf, mode);
 
   if (f.no_signal)

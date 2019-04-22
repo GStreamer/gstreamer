@@ -211,7 +211,6 @@ struct _GstDecklinkMode {
   int par_d;
   gboolean tff;
   const gchar *colorimetry;
-  gboolean vanc;
 };
 
 const GstDecklinkMode * gst_decklink_get_mode (GstDecklinkModeEnum e);
