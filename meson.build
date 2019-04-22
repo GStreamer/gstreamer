@@ -170,6 +170,8 @@ else
   cdata.set('DISABLE_ORC', 1)
 endif
 
+gmodule_dep = dependency('gmodule-2.0', fallback : ['glib', 'libgmodule_dep'])
+
 configure_file(output : 'config.h', configuration : cdata)
 
 ugly_args = ['-DHAVE_CONFIG_H']
