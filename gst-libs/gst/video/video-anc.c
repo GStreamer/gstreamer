@@ -404,13 +404,24 @@ convert_line_from_uyvy (GstVideoVBIParser * parser, const guint8 * data)
 {
   guint i;
   guint8 *y = parser->work_data;
-  guint8 *uv = y + parser->info.width;
 
-  for (i = 0; i < parser->info.width - 3; i += 4) {
-    *uv++ = data[(i / 4) * 4 + 0];
-    *y++ = data[(i / 4) * 4 + 1];
-    *uv++ = data[(i / 4) * 4 + 2];
-    *y++ = data[(i / 4) * 4 + 3];
+  /* Data is stored differently in SD, making no distinction between Y and UV */
+  if (parser->info.width < 1280) {
+    for (i = 0; i < parser->info.width - 3; i += 4) {
+      *y++ = data[(i / 4) * 4 + 0];
+      *y++ = data[(i / 4) * 4 + 1];
+      *y++ = data[(i / 4) * 4 + 2];
+      *y++ = data[(i / 4) * 4 + 3];
+    }
+  } else {
+    guint8 *uv = y + parser->info.width;
+
+    for (i = 0; i < parser->info.width - 3; i += 4) {
+      *uv++ = data[(i / 4) * 4 + 0];
+      *y++ = data[(i / 4) * 4 + 1];
+      *uv++ = data[(i / 4) * 4 + 2];
+      *y++ = data[(i / 4) * 4 + 3];
+    }
   }
   GST_MEMDUMP ("Converted line", parser->work_data, 128);
 }
@@ -446,30 +457,57 @@ convert_line_from_v210 (GstVideoVBIParser * parser, const guint8 * data)
 {
   guint i;
   guint16 *y = (guint16 *) parser->work_data;
-  guint16 *uv = y + parser->info.width;
   guint32 a, b, c, d;
 
-  /* Convert the line */
-  for (i = 0; i < parser->info.width - 5; i += 6) {
-    a = GST_READ_UINT32_LE (data + (i / 6) * 16 + 0);
-    b = GST_READ_UINT32_LE (data + (i / 6) * 16 + 4);
-    c = GST_READ_UINT32_LE (data + (i / 6) * 16 + 8);
-    d = GST_READ_UINT32_LE (data + (i / 6) * 16 + 12);
+  /* Data is stored differently in SD, making no distinction between Y and UV */
+  if (parser->info.width < 1280) {
+    /* Convert the line */
+    for (i = 0; i < parser->info.width - 5; i += 6) {
+      a = GST_READ_UINT32_LE (data + (i / 6) * 16 + 0);
+      b = GST_READ_UINT32_LE (data + (i / 6) * 16 + 4);
+      c = GST_READ_UINT32_LE (data + (i / 6) * 16 + 8);
+      d = GST_READ_UINT32_LE (data + (i / 6) * 16 + 12);
 
-    *uv++ = (a >> 0) & 0x3ff;
-    *y++ = (a >> 10) & 0x3ff;
-    *uv++ = (a >> 20) & 0x3ff;
-    *y++ = (b >> 0) & 0x3ff;
+      *y++ = (a >> 0) & 0x3ff;
+      *y++ = (a >> 10) & 0x3ff;
+      *y++ = (a >> 20) & 0x3ff;
+      *y++ = (b >> 0) & 0x3ff;
 
-    *uv++ = (b >> 10) & 0x3ff;
-    *y++ = (b >> 20) & 0x3ff;
-    *uv++ = (c >> 0) & 0x3ff;
-    *y++ = (c >> 10) & 0x3ff;
+      *y++ = (b >> 10) & 0x3ff;
+      *y++ = (b >> 20) & 0x3ff;
+      *y++ = (c >> 0) & 0x3ff;
+      *y++ = (c >> 10) & 0x3ff;
 
-    *uv++ = (c >> 20) & 0x3ff;
-    *y++ = (d >> 0) & 0x3ff;
-    *uv++ = (d >> 10) & 0x3ff;
-    *y++ = (d >> 20) & 0x3ff;
+      *y++ = (c >> 20) & 0x3ff;
+      *y++ = (d >> 0) & 0x3ff;
+      *y++ = (d >> 10) & 0x3ff;
+      *y++ = (d >> 20) & 0x3ff;
+    }
+  } else {
+    guint16 *uv = y + parser->info.width;
+
+    /* Convert the line */
+    for (i = 0; i < parser->info.width - 5; i += 6) {
+      a = GST_READ_UINT32_LE (data + (i / 6) * 16 + 0);
+      b = GST_READ_UINT32_LE (data + (i / 6) * 16 + 4);
+      c = GST_READ_UINT32_LE (data + (i / 6) * 16 + 8);
+      d = GST_READ_UINT32_LE (data + (i / 6) * 16 + 12);
+
+      *uv++ = (a >> 0) & 0x3ff;
+      *y++ = (a >> 10) & 0x3ff;
+      *uv++ = (a >> 20) & 0x3ff;
+      *y++ = (b >> 0) & 0x3ff;
+
+      *uv++ = (b >> 10) & 0x3ff;
+      *y++ = (b >> 20) & 0x3ff;
+      *uv++ = (c >> 0) & 0x3ff;
+      *y++ = (c >> 10) & 0x3ff;
+
+      *uv++ = (c >> 20) & 0x3ff;
+      *y++ = (d >> 0) & 0x3ff;
+      *uv++ = (d >> 10) & 0x3ff;
+      *y++ = (d >> 20) & 0x3ff;
+    }
   }
 
   if (0) {
@@ -767,39 +805,71 @@ convert_line_to_v210 (GstVideoVBIEncoder * encoder, guint8 * data)
 {
   guint i;
   const guint16 *y = (const guint16 *) encoder->work_data;
-  const guint16 *uv = y + encoder->info.width;
   guint32 a, b, c, d;
 
-  /* Convert the line */
-  for (i = 0; i < encoder->info.width - 5; i += 6) {
-    a = ((uv[0] & 0x3ff) << 0)
-        | ((y[0] & 0x3ff) << 10)
-        | ((uv[1] & 0x3ff) << 20);
-    uv += 2;
-    y++;
+  /* Data is stored differently in SD, making no distinction between Y and UV */
+  if (encoder->info.width < 1280) {
+    /* Convert the line */
+    for (i = 0; i < encoder->info.width - 5; i += 6) {
+      a = ((y[0] & 0x3ff) << 0)
+          | ((y[1] & 0x3ff) << 10)
+          | ((y[2] & 0x3ff) << 20);
+      y += 3;
 
-    b = ((y[0] & 0x3ff) << 0)
-        | ((uv[0] & 0x3ff) << 10)
-        | ((y[1] & 0x3ff) << 20);
-    y += 2;
-    uv++;
+      b = ((y[0] & 0x3ff) << 0)
+          | ((y[1] & 0x3ff) << 10)
+          | ((y[2] & 0x3ff) << 20);
+      y += 3;
 
-    c = ((uv[0] & 0x3ff) << 0)
-        | ((y[0] & 0x3ff) << 10)
-        | ((uv[1] & 0x3ff) << 20);
-    uv += 2;
-    y++;
+      c = ((y[0] & 0x3ff) << 0)
+          | ((y[1] & 0x3ff) << 10)
+          | ((y[2] & 0x3ff) << 20);
+      y += 3;
 
-    d = ((y[0] & 0x3ff) << 0)
-        | ((uv[0] & 0x3ff) << 10)
-        | ((y[1] & 0x3ff) << 20);
-    y += 2;
-    uv++;
+      d = ((y[0] & 0x3ff) << 0)
+          | ((y[1] & 0x3ff) << 10)
+          | ((y[2] & 0x3ff) << 20);
+      y += 3;
 
-    GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 0, a);
-    GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 4, b);
-    GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 8, c);
-    GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 12, d);
+      GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 0, a);
+      GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 4, b);
+      GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 8, c);
+      GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 12, d);
+    }
+  } else {
+    const guint16 *uv = y + encoder->info.width;
+
+    /* Convert the line */
+    for (i = 0; i < encoder->info.width - 5; i += 6) {
+      a = ((uv[0] & 0x3ff) << 0)
+          | ((y[0] & 0x3ff) << 10)
+          | ((uv[1] & 0x3ff) << 20);
+      uv += 2;
+      y++;
+
+      b = ((y[0] & 0x3ff) << 0)
+          | ((uv[0] & 0x3ff) << 10)
+          | ((y[1] & 0x3ff) << 20);
+      y += 2;
+      uv++;
+
+      c = ((uv[0] & 0x3ff) << 0)
+          | ((y[0] & 0x3ff) << 10)
+          | ((uv[1] & 0x3ff) << 20);
+      uv += 2;
+      y++;
+
+      d = ((y[0] & 0x3ff) << 0)
+          | ((uv[0] & 0x3ff) << 10)
+          | ((y[1] & 0x3ff) << 20);
+      y += 2;
+      uv++;
+
+      GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 0, a);
+      GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 4, b);
+      GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 8, c);
+      GST_WRITE_UINT32_LE (data + (i / 6) * 16 + 12, d);
+    }
   }
 }
 
@@ -808,13 +878,24 @@ convert_line_to_uyvy (GstVideoVBIEncoder * encoder, guint8 * data)
 {
   guint i;
   const guint8 *y = encoder->work_data;
-  const guint8 *uv = y + encoder->info.width;
 
-  for (i = 0; i < encoder->info.width - 3; i += 4) {
-    data[(i / 4) * 4 + 0] = *uv++;
-    data[(i / 4) * 4 + 1] = *y++;
-    data[(i / 4) * 4 + 2] = *uv++;
-    data[(i / 4) * 4 + 3] = *y++;
+  /* Data is stored differently in SD, making no distinction between Y and UV */
+  if (encoder->info.width < 1280) {
+    for (i = 0; i < encoder->info.width - 3; i += 4) {
+      data[(i / 4) * 4 + 0] = *y++;
+      data[(i / 4) * 4 + 1] = *y++;
+      data[(i / 4) * 4 + 2] = *y++;
+      data[(i / 4) * 4 + 3] = *y++;
+    }
+  } else {
+    const guint8 *uv = y + encoder->info.width;
+
+    for (i = 0; i < encoder->info.width - 3; i += 4) {
+      data[(i / 4) * 4 + 0] = *uv++;
+      data[(i / 4) * 4 + 1] = *y++;
+      data[(i / 4) * 4 + 2] = *uv++;
+      data[(i / 4) * 4 + 3] = *y++;
+    }
   }
 }
 

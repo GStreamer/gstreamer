@@ -28,10 +28,10 @@
 GST_START_TEST (parse_8bit)
 {
   GstVideoVBIParser *parser;
-  guint8 line[1440] = { 0, };
+  guint8 line[2560] = { 0, };
   GstVideoAncillary vanc;
 
-  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_UYVY, 720);
+  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_UYVY, 1280);
   fail_unless (parser != NULL);
 
   /* empty line */
@@ -124,10 +124,10 @@ GST_END_TEST;
 GST_START_TEST (parse_10bit)
 {
   GstVideoVBIParser *parser;
-  guint8 line[1920] = { 0, };
+  guint8 line[3414] = { 0, };
   GstVideoAncillary vanc;
 
-  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_v210, 720);
+  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_v210, 1280);
   fail_unless (parser != NULL);
 
   /* empty line */
@@ -220,15 +220,15 @@ GST_START_TEST (encode_8bit)
 {
   GstVideoVBIParser *parser;
   GstVideoVBIEncoder *encoder;
-  guint8 line[1440] = { 0, };
+  guint8 line[2560] = { 0, };
   const guint8 data1[] = { 0x01, 0x02, 0x03, 0x04, 0x50, 0x60, 0x70, 0x80 };
   const guint8 data2[] = { 0x04, 0x03, 0x02, 0x01 };
   GstVideoAncillary vanc;
 
-  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_UYVY, 720);
+  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_UYVY, 1280);
   fail_unless (parser != NULL);
 
-  encoder = gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_UYVY, 720);
+  encoder = gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_UYVY, 1280);
   fail_unless (encoder != NULL);
 
   /* Write a single ADF packet and try to parse it back again */
@@ -282,15 +282,15 @@ GST_START_TEST (encode_10bit)
 {
   GstVideoVBIParser *parser;
   GstVideoVBIEncoder *encoder;
-  guint8 line[1920] = { 0, };
+  guint8 line[3414] = { 0, };
   const guint8 data1[] = { 0x01, 0x02, 0x03, 0x04, 0x50, 0x60, 0x70, 0x80 };
   const guint8 data2[] = { 0x04, 0x03, 0x02, 0x01 };
   GstVideoAncillary vanc;
 
-  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_v210, 720);
+  parser = gst_video_vbi_parser_new (GST_VIDEO_FORMAT_v210, 1280);
   fail_unless (parser != NULL);
 
-  encoder = gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_v210, 720);
+  encoder = gst_video_vbi_encoder_new (GST_VIDEO_FORMAT_v210, 1280);
   fail_unless (encoder != NULL);
 
   /* Write a single ADF packet and try to parse it back again */
