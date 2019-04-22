@@ -228,7 +228,7 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
   stream->last_dts = GST_CLOCK_STIME_NONE;
 
   stream->pcr_ref = 0;
-  stream->last_pcr = -1;
+  stream->next_pcr = -1;
 
   return stream;
 }

@@ -1067,14 +1067,16 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
     }
 
     /* Need to decide whether to write a new PCR in this packet */
-    if (stream->last_pcr == -1 ||
-        (cur_pcr - stream->last_pcr >
-            (TSMUX_SYS_CLOCK_FREQ / TSMUX_DEFAULT_PCR_FREQ))) {
-
+    if (stream->next_pcr == -1 || cur_pcr > stream->next_pcr) {
       stream->pi.flags |=
           TSMUX_PACKET_FLAG_ADAPTATION | TSMUX_PACKET_FLAG_WRITE_PCR;
       stream->pi.pcr = cur_pcr;
-      stream->last_pcr = cur_pcr;
+
+      if (stream->next_pcr == -1)
+        stream->next_pcr =
+            cur_pcr + TSMUX_SYS_CLOCK_FREQ / TSMUX_DEFAULT_PCR_FREQ;
+      else
+        stream->next_pcr += TSMUX_SYS_CLOCK_FREQ / TSMUX_DEFAULT_PCR_FREQ;
     } else {
       cur_pcr = -1;
     }

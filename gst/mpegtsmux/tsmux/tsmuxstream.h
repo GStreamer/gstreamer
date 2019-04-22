@@ -199,8 +199,8 @@ struct TsMuxStream {
 
   /* count of programs using this as PCR */
   gint   pcr_ref;
-  /* last time PCR written */
-  gint64 last_pcr;
+  /* Next time PCR should be written */
+  gint64 next_pcr;
 
   /* audio parameters for stream
    * (used in stream descriptor) */
