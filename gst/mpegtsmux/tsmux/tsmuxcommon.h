@@ -121,6 +121,8 @@ G_BEGIN_DECLS
 #define TSMUX_DEFAULT_PMT_INTERVAL (TSMUX_CLOCK_FREQ / 10)
 /* SI  interval (1/10th sec) */
 #define TSMUX_DEFAULT_SI_INTERVAL  (TSMUX_CLOCK_FREQ / 10)
+/* Bitrate (bits per second) */
+#define TSMUX_DEFAULT_BITRATE      0
 
 typedef struct TsMuxPacketInfo TsMuxPacketInfo;
 typedef struct TsMuxProgram TsMuxProgram;

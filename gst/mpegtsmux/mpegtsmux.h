@@ -139,6 +139,7 @@ struct MpegTsMux {
   guint pmt_interval;
   gint alignment;
   guint si_interval;
+  guint64 bitrate;
 
   /* state */
   gboolean first;

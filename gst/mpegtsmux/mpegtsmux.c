@@ -115,7 +115,8 @@ enum
   PROP_PAT_INTERVAL,
   PROP_PMT_INTERVAL,
   PROP_ALIGNMENT,
-  PROP_SI_INTERVAL
+  PROP_SI_INTERVAL,
+  PROP_BITRATE,
 };
 
 #define MPEGTSMUX_DEFAULT_ALIGNMENT    -1
@@ -305,6 +306,13 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
           "Set the interval (in ticks of the 90kHz clock) for writing out the Service"
           "Information tables", 1, G_MAXUINT, TSMUX_DEFAULT_SI_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
+      g_param_spec_uint64 ("bitrate", "Bitrate (in bits per second)",
+          "Set the target bitrate, will insert null packets as padding "
+          " to achieve multiplex-wide constant bitrate",
+          0, G_MAXUINT64, TSMUX_DEFAULT_BITRATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -338,6 +346,7 @@ mpegtsmux_init (MpegTsMux * mux)
   mux->si_interval = TSMUX_DEFAULT_SI_INTERVAL;
   mux->prog_map = NULL;
   mux->alignment = MPEGTSMUX_DEFAULT_ALIGNMENT;
+  mux->bitrate = TSMUX_DEFAULT_BITRATE;
 
   /* initial state */
   mpegtsmux_reset (mux, TRUE);
@@ -511,6 +520,11 @@ gst_mpegtsmux_set_property (GObject * object, guint prop_id,
       mux->si_interval = g_value_get_uint (value);
       tsmux_set_si_interval (mux->tsmux, mux->si_interval);
       break;
+    case PROP_BITRATE:
+      mux->bitrate = g_value_get_uint64 (value);
+      if (mux->tsmux)
+        tsmux_set_bitrate (mux->tsmux, mux->bitrate);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -541,6 +555,9 @@ gst_mpegtsmux_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SI_INTERVAL:
       g_value_set_uint (value, mux->si_interval);
+      break;
+    case PROP_BITRATE:
+      g_value_set_uint64 (value, mux->bitrate);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -178,6 +178,9 @@ struct TsMux {
 
   /* scratch space for writing ES_info descriptors */
   guint8 es_info_buf[TSMUX_MAX_ES_INFO_LENGTH];
+
+  guint64 bitrate;
+  guint64 n_bytes;
 };
 
 /* create/free new muxer session */
@@ -191,6 +194,7 @@ void 		tsmux_set_pat_interval          (TsMux *mux, guint interval);
 guint 		tsmux_get_pat_interval          (TsMux *mux);
 void 		tsmux_resend_pat                (TsMux *mux);
 guint16		tsmux_get_new_pid 		(TsMux *mux);
+void    tsmux_set_bitrate       (TsMux *mux, guint64 bitrate);
 
 /* pid/program management */
 TsMuxProgram *	tsmux_program_new 		(TsMux *mux, gint prog_id);

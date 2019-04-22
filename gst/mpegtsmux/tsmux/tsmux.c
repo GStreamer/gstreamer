@@ -634,6 +634,8 @@ tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr)
     return TRUE;
   }
 
+  mux->n_bytes += gst_buffer_get_size (buf);
+
   return mux->write_func (buf, mux->write_func_data, pcr);
 }
 
@@ -1019,6 +1021,67 @@ tsmux_write_si (TsMux * mux)
 
 }
 
+static void
+tsmux_write_null_ts_header (guint8 * buf)
+{
+  *buf++ = TSMUX_SYNC_BYTE;
+  *buf++ = 0x1f;
+  *buf++ = 0xff;
+  *buf++ = 0x10;
+}
+
+static gboolean
+pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
+{
+  guint64 bitrate;
+  GstBuffer *buf = NULL;
+  GstMapInfo map;
+  gboolean ret = TRUE;
+
+  do {
+    if (GST_CLOCK_STIME_IS_VALID (cur_ts)) {
+      GstClockTimeDiff diff;
+
+      if (!GST_CLOCK_STIME_IS_VALID (stream->first_ts))
+        stream->first_ts = cur_ts;
+
+      diff = GST_CLOCK_DIFF (stream->first_ts, cur_ts);
+
+      if (diff) {
+        bitrate =
+            gst_util_uint64_scale (mux->n_bytes * 8, TSMUX_CLOCK_FREQ, diff);
+
+        GST_LOG ("Transport stream bitrate: %" G_GUINT64_FORMAT, bitrate);
+
+        if (bitrate < mux->bitrate) {
+          GST_LOG_OBJECT (mux, "Padding transport stream");
+
+          if (!tsmux_get_buffer (mux, &buf)) {
+            ret = FALSE;
+            goto done;
+          }
+
+          gst_buffer_map (buf, &map, GST_MAP_READ);
+
+          tsmux_write_null_ts_header (map.data);
+
+          gst_buffer_unmap (buf, &map);
+
+          if (!(ret = tsmux_packet_out (mux, buf, -1)))
+            goto done;
+        }
+      } else {
+        break;
+      }
+    } else {
+      break;
+    }
+  } while (bitrate < mux->bitrate);
+
+done:
+  return ret;
+}
+
 /**
  * tsmux_write_stream_packet:
  * @mux: a #TsMux
@@ -1051,6 +1114,11 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
       cur_ts = tsmux_stream_get_dts (stream);
     else
       cur_ts = tsmux_stream_get_pts (stream);
+
+    if (mux->bitrate) {
+      if (!pad_stream (mux, stream, cur_ts))
+        goto fail;
+    }
 
     cur_pcr = 0;
     if (cur_ts != G_MININT64) {
@@ -1165,9 +1233,10 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   /* ERRORS */
 fail:
   {
-    gst_buffer_unmap (buf, &map);
-    if (buf)
+    if (buf) {
+      gst_buffer_unmap (buf, &map);
       gst_buffer_unref (buf);
+    }
     return FALSE;
   }
 }
@@ -1311,4 +1380,10 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
 
   return tsmux_section_write_packet (GINT_TO_POINTER (GST_MPEGTS_SECTION_PMT),
       &program->pmt, mux);
+}
+
+void
+tsmux_set_bitrate (TsMux * mux, guint64 bitrate)
+{
+  mux->bitrate = bitrate;
 }

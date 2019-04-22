@@ -197,6 +197,8 @@ struct TsMuxStream {
   gint64 last_dts;
   gint64 last_pts;
 
+  gint64 first_ts;
+
   /* count of programs using this as PCR */
   gint   pcr_ref;
   /* Next time PCR should be written */

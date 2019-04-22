@@ -224,6 +224,8 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
       break;
   }
 
+  stream->first_ts = GST_CLOCK_STIME_NONE;
+
   stream->last_pts = GST_CLOCK_STIME_NONE;
   stream->last_dts = GST_CLOCK_STIME_NONE;
 
