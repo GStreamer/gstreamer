@@ -155,6 +155,8 @@ else
   cdata.set('DISABLE_ORC', 1)
 endif
 
+gmodule_dep = dependency('gmodule-2.0', fallback : ['glib', 'libgmodule_dep'])
+
 ugly_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')
 libsinc = include_directories('gst-libs')
