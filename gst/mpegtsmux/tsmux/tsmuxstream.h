@@ -256,7 +256,8 @@ gint 		tsmux_stream_bytes_avail 	(TsMuxStream *stream);
 gboolean 	tsmux_stream_initialize_pes_packet (TsMuxStream *stream);
 gboolean 	tsmux_stream_get_data 		(TsMuxStream *stream, guint8 *buf, guint len);
 
-guint64 	tsmux_stream_get_pts 		(TsMuxStream *stream);
+gint64 	tsmux_stream_get_pts 		(TsMuxStream *stream);
+gint64 	tsmux_stream_get_dts 		(TsMuxStream *stream);
 
 G_END_DECLS
 

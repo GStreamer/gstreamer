@@ -307,10 +307,9 @@ tsmux_stream_consume (TsMuxStream * stream, guint len)
   if (stream->cur_buffer_consumed == 0 && stream->cur_buffer->size != 0)
     return;
 
-  if (GST_CLOCK_STIME_IS_VALID (stream->cur_buffer->pts)) {
+  if (GST_CLOCK_STIME_IS_VALID (stream->cur_buffer->pts))
     stream->last_pts = stream->cur_buffer->pts;
-    stream->last_dts = stream->cur_buffer->dts;
-  } else if (GST_CLOCK_STIME_IS_VALID (stream->cur_buffer->dts))
+  if (GST_CLOCK_STIME_IS_VALID (stream->cur_buffer->dts))
     stream->last_dts = stream->cur_buffer->dts;
 
   if (stream->cur_buffer_consumed == stream->cur_buffer->size) {
@@ -716,8 +715,10 @@ tsmux_stream_add_data (TsMuxStream * stream, guint8 * data, guint len,
   packet->pts = pts;
   packet->dts = dts;
 
-  if (stream->bytes_avail == 0)
+  if (stream->bytes_avail == 0) {
     stream->last_pts = pts;
+    stream->last_dts = dts;
+  }
 
   stream->bytes_avail += len;
   stream->buffers = g_list_append (stream->buffers, packet);
@@ -1087,10 +1088,27 @@ tsmux_stream_is_pcr (TsMuxStream * stream)
  *
  * Returns: the PTS of the last buffer in @stream.
  */
-guint64
+gint64
 tsmux_stream_get_pts (TsMuxStream * stream)
 {
   g_return_val_if_fail (stream != NULL, GST_CLOCK_STIME_NONE);
 
   return stream->last_pts;
+}
+
+/**
+ * tsmux_stream_get_dts:
+ * @stream: a #TsMuxStream
+ *
+ * Return the DTS of the last buffer that has had bytes written and
+ * which _had_ a DTS in @stream.
+ *
+ * Returns: the DTS of the last buffer in @stream.
+ */
+gint64
+tsmux_stream_get_dts (TsMuxStream * stream)
+{
+  g_return_val_if_fail (stream != NULL, GST_CLOCK_STIME_NONE);
+
+  return stream->last_dts;
 }
