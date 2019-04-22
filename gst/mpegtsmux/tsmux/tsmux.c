@@ -796,7 +796,7 @@ tsmux_write_adaptation_field (guint8 * buf,
 
 static gboolean
 tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
-    guint * payload_len_out, guint * payload_offset_out)
+    guint * payload_len_out, guint * payload_offset_out, guint stream_avail)
 {
   guint8 *tmp;
   guint8 adaptation_flag;
@@ -809,7 +809,7 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
   buf[0] = TSMUX_SYNC_BYTE;
 
   TS_DEBUG ("PID 0x%04x, counter = 0x%01x, %u bytes avail", pi->pid,
-      pi->packet_count & 0x0f, pi->stream_avail);
+      pi->packet_count & 0x0f, stream_avail);
 
   /* 3 bits: 
    *   transport_error_indicator
@@ -833,9 +833,9 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
     write_adapt = TRUE;
   }
 
-  if (pi->stream_avail < TSMUX_PAYLOAD_LENGTH) {
+  if (stream_avail < TSMUX_PAYLOAD_LENGTH) {
     /* Need an adaptation field regardless for stuffing */
-    adapt_min_length = TSMUX_PAYLOAD_LENGTH - pi->stream_avail;
+    adapt_min_length = TSMUX_PAYLOAD_LENGTH - stream_avail;
     write_adapt = TRUE;
   }
 
@@ -859,13 +859,13 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
   *payload_offset_out = TSMUX_HEADER_LENGTH + adapt_len;
 
   /* Now if we are going to write out some payload, flag that fact */
-  if (payload_len > 0 && pi->stream_avail > 0) {
+  if (payload_len > 0 && stream_avail > 0) {
     /* Flag the presence of a payload */
     adaptation_flag |= 0x10;
 
     /* We must have enough data to fill the payload, or some calculation
      * went wrong */
-    g_assert (payload_len <= pi->stream_avail);
+    g_assert (payload_len <= stream_avail);
 
     /* Packet with payload, increment the continuity counter */
     pi->packet_count++;
@@ -933,7 +933,8 @@ tsmux_section_write_packet (GstMpegtsSectionType * type,
       /* Wee need room for a pointer byte */
       section->pi.stream_avail++;
 
-      if (!tsmux_write_ts_header (packet, &section->pi, &len, &offset))
+      if (!tsmux_write_ts_header (packet, &section->pi, &len, &offset,
+              section->pi.stream_avail))
         goto fail;
 
       /* Write the pointer byte */
@@ -941,7 +942,8 @@ tsmux_section_write_packet (GstMpegtsSectionType * type,
       payload_len = len - 1;
 
     } else {
-      if (!tsmux_write_ts_header (packet, &section->pi, &len, &offset))
+      if (!tsmux_write_ts_header (packet, &section->pi, &len, &offset,
+              section->pi.stream_avail))
         goto fail;
       payload_len = len;
     }
@@ -1031,7 +1033,7 @@ tsmux_write_null_ts_header (guint8 * buf)
 }
 
 static gboolean
-pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
+pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts, gint64 * cur_pcr)
 {
   guint64 bitrate;
   GstBuffer *buf = NULL;
@@ -1046,6 +1048,11 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
         stream->first_ts = cur_ts;
 
       diff = GST_CLOCK_DIFF (stream->first_ts, cur_ts);
+
+      *cur_pcr =
+          (CLOCK_BASE - TSMUX_PCR_OFFSET) * 300 +
+          gst_util_uint64_scale (mux->n_bytes * 8, TSMUX_SYS_CLOCK_FREQ,
+          mux->bitrate);
 
       if (diff) {
         bitrate =
@@ -1063,11 +1070,31 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
 
           gst_buffer_map (buf, &map, GST_MAP_READ);
 
-          tsmux_write_null_ts_header (map.data);
+          if (stream->next_pcr == -1 || *cur_pcr > stream->next_pcr) {
+            guint payload_len, payload_offs;
+
+            stream->pi.flags |=
+                TSMUX_PACKET_FLAG_ADAPTATION | TSMUX_PACKET_FLAG_WRITE_PCR;
+            stream->pi.pcr = *cur_pcr;
+
+            if (stream->next_pcr == -1)
+              stream->next_pcr =
+                  *cur_pcr + TSMUX_SYS_CLOCK_FREQ / TSMUX_DEFAULT_PCR_FREQ;
+            else
+              stream->next_pcr += TSMUX_SYS_CLOCK_FREQ / TSMUX_DEFAULT_PCR_FREQ;
+
+            tsmux_write_ts_header (map.data, &stream->pi, &payload_len,
+                &payload_offs, 0);
+
+            stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+          } else {
+            tsmux_write_null_ts_header (map.data);
+            *cur_pcr = -1;
+          }
 
           gst_buffer_unmap (buf, &map);
 
-          if (!(ret = tsmux_packet_out (mux, buf, -1)))
+          if (!(ret = tsmux_packet_out (mux, buf, *cur_pcr)))
             goto done;
         }
       } else {
@@ -1115,23 +1142,21 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
     else
       cur_ts = tsmux_stream_get_pts (stream);
 
-    if (mux->bitrate) {
-      if (!pad_stream (mux, stream, cur_ts))
-        goto fail;
-    }
-
     cur_pcr = 0;
-    if (cur_ts != G_MININT64) {
-      TS_DEBUG ("TS for PCR stream is %" G_GINT64_FORMAT, cur_ts);
-    }
 
-    /* FIXME: The current PCR needs more careful calculation than just
-     * writing a fixed offset */
-    if (cur_ts != G_MININT64) {
-      /* CLOCK_BASE >= TSMUX_PCR_OFFSET */
-      cur_ts += CLOCK_BASE;
-      cur_pcr = (cur_ts - TSMUX_PCR_OFFSET) *
-          (TSMUX_SYS_CLOCK_FREQ / TSMUX_CLOCK_FREQ);
+    if (mux->bitrate) {
+      if (!pad_stream (mux, stream, cur_ts, &cur_pcr))
+        goto fail;
+    } else {
+      /* FIXME: The current PCR needs more careful calculation than just
+       * writing a fixed offset */
+      if (cur_ts != G_MININT64) {
+        TS_DEBUG ("TS for PCR stream is %" G_GINT64_FORMAT, cur_ts);
+        /* CLOCK_BASE >= TSMUX_PCR_OFFSET */
+        cur_ts += CLOCK_BASE;
+        cur_pcr = (cur_ts - TSMUX_PCR_OFFSET) *
+            (TSMUX_SYS_CLOCK_FREQ / TSMUX_CLOCK_FREQ);
+      }
     }
 
     /* Need to decide whether to write a new PCR in this packet */
@@ -1213,7 +1238,8 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (!tsmux_write_ts_header (map.data, pi, &payload_len, &payload_offs))
+  if (!tsmux_write_ts_header (map.data, pi, &payload_len, &payload_offs,
+          pi->stream_avail))
     goto fail;
 
 
