@@ -525,7 +525,7 @@ gst_is_video_overlay_prepare_window_handle_message (GstMessage * msg)
  * properties. This helper will install "render-rectangle" property into the
  * class.
  *
- * Since 1.14
+ * Since: 1.14
  */
 void
 gst_video_overlay_install_properties (GObjectClass * oclass, gint last_prop_id)
@@ -553,7 +553,7 @@ gst_video_overlay_install_properties (GObjectClass * oclass, gint last_prop_id)
  *
  * Returns: %TRUE if the @property_id matches the GstVideoOverlay property
  *
- * Since 1.14
+ * Since: 1.14
  */
 gboolean
 gst_video_overlay_set_property (GObject * object, gint last_prop_id,

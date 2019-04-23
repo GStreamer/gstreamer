@@ -675,7 +675,7 @@ position_to_string (GstAudioChannelPosition pos)
  * Returns: (transfer full): a newly allocated string representing
  * @position
  *
- * Since 1.10
+ * Since: 1.10
  */
 gchar *
 gst_audio_channel_positions_to_string (const GstAudioChannelPosition * position,

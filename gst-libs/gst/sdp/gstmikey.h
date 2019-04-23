@@ -219,7 +219,7 @@ gst_mikey_payload_copy (const GstMIKEYPayload * payload)
  * @GST_MIKEY_ENC_NULL: no encryption
  * @GST_MIKEY_ENC_AES_CM_128: AES-CM using a 128-bit key
  * @GST_MIKEY_ENC_AES_KW_128: AES Key Wrap using a 128-bit key
- * @GST_MIKEY_ENC_AES_GCM_128: AES-GCM using a 128-bit key (Since 1.16)
+ * @GST_MIKEY_ENC_AES_GCM_128: AES-GCM using a 128-bit key (Since: 1.16)
  *
  * The encryption algorithm used to encrypt the Encr data field
  */
@@ -395,7 +395,7 @@ typedef enum
  * @GST_MIKEY_SP_SRTP_SRTP_AUTH: SRTP authentication off/on, 0 if off, 1 if on
  * @GST_MIKEY_SP_SRTP_AUTH_TAG_LEN: Authentication tag length
  * @GST_MIKEY_SP_SRTP_SRTP_PREFIX_LEN: SRTP prefix length
- * @GST_MIKEY_SP_SRTP_AEAD_AUTH_TAG_LEN: AEAD authentication tag length (Since 1.16)
+ * @GST_MIKEY_SP_SRTP_AEAD_AUTH_TAG_LEN: AEAD authentication tag length (Since: 1.16)
  *
  * This policy specifies the parameters for SRTP and SRTCP
  */

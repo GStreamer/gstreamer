@@ -64,7 +64,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_GRAY16_BE: 16-bit grayscale, most significant byte first
  * @GST_VIDEO_FORMAT_GRAY16_LE: 16-bit grayscale, least significant byte first
  * @GST_VIDEO_FORMAT_v308: packed 4:4:4 YUV (Y-U-V ...)
- * @GST_VIDEO_FORMAT_IYU2: packed 4:4:4 YUV (U-Y-V ...) (Since 1.10)
+ * @GST_VIDEO_FORMAT_IYU2: packed 4:4:4 YUV (U-Y-V ...) (Since: 1.10)
  * @GST_VIDEO_FORMAT_RGB16: rgb 5-6-5 bits per component
  * @GST_VIDEO_FORMAT_BGR16: reverse rgb 5-6-5 bits per component
  * @GST_VIDEO_FORMAT_RGB15: rgb 5-5-5 bits per component
@@ -283,7 +283,7 @@ typedef enum
  *   in the least significant bits of the destination.
  * @GST_VIDEO_PACK_FLAG_INTERLACED: The source is interlaced. The unpacked
  *   format will be interlaced as well with each line containing
- *   information from alternating fields. (Since 1.2)
+ *   information from alternating fields. (Since: 1.2)
  *
  * The different flags that can be used when packing and unpacking.
  */

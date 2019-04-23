@@ -967,7 +967,7 @@ remote_address_failed:
  *
  * Returns: #GST_RTSP_OK when a connection could be made.
  *
- * Since 1.8
+ * Since: 1.8
  */
 GstRTSPResult
 gst_rtsp_connection_connect_with_response (GstRTSPConnection * conn,

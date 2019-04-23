@@ -223,17 +223,17 @@ struct _GstVideoEncoder
  *                  Query handler on the sink pad. This function should
  *                  return TRUE if the query could be performed. Subclasses
  *                  should chain up to the parent implementation to invoke the
- *                  default handler. Since 1.4
+ *                  default handler. Since: 1.4
  * @src_query:      Optional.
  *                  Query handler on the source pad. This function should
  *                  return TRUE if the query could be performed. Subclasses
  *                  should chain up to the parent implementation to invoke the
- *                  default handler. Since 1.4
+ *                  default handler. Since: 1.4
  * @transform_meta: Optional. Transform the metadata on the input buffer to the
  *                  output buffer. By default this method is copies all meta without
  *                  tags and meta with only the "video" tag. subclasses can
  *                  implement this method and return %TRUE if the metadata is to be
- *                  copied. Since 1.6
+ *                  copied. Since: 1.6
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden, and @set_format

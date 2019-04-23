@@ -174,10 +174,10 @@ static struct rtsp_header rtsp_headers[] = {
 
   {"RTCP-Interval", FALSE},
 
-  /* Since 1.4 */
+  /* Since: 1.4 */
   {"KeyMgmt", FALSE},
 
-  /* Since 1.14 */
+  /* Since: 1.14 */
   {"Pipelined-Requests", FALSE},
   {"Media-Properties", FALSE},
   {"Seek-Style", FALSE},
