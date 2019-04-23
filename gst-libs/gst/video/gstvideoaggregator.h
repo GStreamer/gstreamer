@@ -54,6 +54,8 @@ typedef struct _GstVideoAggregatorPadPrivate GstVideoAggregatorPadPrivate;
 /**
  * GstVideoAggregatorPad:
  * @info: The #GstVideoInfo currently set on the pad
+ *
+ * Since: 1.16
  */
 struct _GstVideoAggregatorPad
 {
@@ -75,6 +77,8 @@ struct _GstVideoAggregatorPad
  *                          have changed.
  * @prepare_frame: Prepare the frame from the pad buffer and sets it to prepared_frame
  * @clean_frame:   clean the frame previously prepared in prepare_frame
+ *
+ * Since: 1.16
  */
 struct _GstVideoAggregatorPadClass
 {
@@ -129,6 +133,8 @@ typedef struct _GstVideoAggregatorConvertPadPrivate GstVideoAggregatorConvertPad
  * An implementation of GstPad that can be used with #GstVideoAggregator.
  *
  * See #GstVideoAggregator for more details.
+ *
+ * Since: 1.16
  */
 struct _GstVideoAggregatorConvertPad
 {
@@ -143,6 +149,7 @@ struct _GstVideoAggregatorConvertPad
 /**
  * GstVideoAggregatorConvertPadClass:
  *
+ * Since: 1.16
  */
 struct _GstVideoAggregatorConvertPadClass
 {
@@ -181,6 +188,8 @@ void gst_video_aggregator_convert_pad_update_conversion_info (GstVideoAggregator
  * GstVideoAggregator:
  * @info: The #GstVideoInfo representing the currently set
  * srcpad caps.
+ *
+ * Since: 1.16
  */
 struct _GstVideoAggregator
 {
@@ -211,6 +220,8 @@ struct _GstVideoAggregator
  *                            the #aggregate_frames vmethod.
  * @find_best_format:         Optional.
  *                            Lets subclasses decide of the best common format to use.
+ *
+ * Since: 1.16
  **/
 struct _GstVideoAggregatorClass
 {
