@@ -209,12 +209,12 @@ typedef struct _GstBufferPool GstBufferPool;
  *                                 is added/removed
  * @GST_BUFFER_FLAG_SYNC_AFTER:    Elements which write to disk or permanent
  * 				 storage should ensure the data is synced after
- * 				 writing the contents of this buffer. (Since 1.6)
+ * 				 writing the contents of this buffer. (Since: 1.6)
  * @GST_BUFFER_FLAG_NON_DROPPABLE: This buffer is important and should not be dropped.
  *                                 This can be used to mark important buffers, e.g. to flag
  *                                 RTP packets carrying keyframes or codec setup data for RTP
  *                                 Forward Error Correction purposes, or to prevent still video
- *                                 frames from being dropped by elements due to QoS. (Since 1.14)
+ *                                 frames from being dropped by elements due to QoS. (Since: 1.14)
  * @GST_BUFFER_FLAG_LAST:          additional media specific flags can be added starting from
  *                                 this flag.
  *
@@ -500,7 +500,7 @@ GstBuffer * gst_buffer_copy_deep (const GstBuffer * buf);
  * @GST_BUFFER_COPY_META: flag indicating that buffer meta should be
  *   copied
  * @GST_BUFFER_COPY_DEEP: flag indicating that memory should always be
- *   copied instead of reffed (Since 1.2)
+ *   copied instead of reffed (Since: 1.2)
  *
  * A set of flags that can be provided to the gst_buffer_copy_into()
  * function to specify which items should be copied.

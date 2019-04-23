@@ -113,7 +113,7 @@
  * Typically, #GstParentBufferMeta is used when the child buffer is directly
  * using the #GstMemory of the parent buffer, and wants to prevent the parent
  * buffer from being returned to a buffer pool until the #GstMemory is available
- * for re-use. (Since 1.6)
+ * for re-use. (Since: 1.6)
  *
  */
 #include "gst_private.h"

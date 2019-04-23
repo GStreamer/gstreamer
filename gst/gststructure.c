@@ -3101,7 +3101,7 @@ gst_structure_get_array (GstStructure * structure, const gchar * fieldname,
  * with @fieldname or the existing field did not contain a %GST_TYPE_LIST, this
  * function returns %FALSE.
  *
- * Since 1.12
+ * Since: 1.12
  */
 gboolean
 gst_structure_get_list (GstStructure * structure, const gchar * fieldname,
@@ -3149,7 +3149,7 @@ _gst_structure_set_any_list (GstStructure * structure, GType type,
  * the field specified by @fieldname.  Be aware that this is slower then using
  * %GST_TYPE_ARRAY in a #GValue directly.
  *
- * Since 1.12
+ * Since: 1.12
  */
 void
 gst_structure_set_array (GstStructure * structure, const gchar * fieldname,
@@ -3169,7 +3169,7 @@ gst_structure_set_array (GstStructure * structure, const gchar * fieldname,
  * the field specified by @fieldname. Be aware that this is slower then using
  * %GST_TYPE_LIST in a #GValue directly.
  *
- * Since 1.12
+ * Since: 1.12
  */
 void
 gst_structure_set_list (GstStructure * structure, const gchar * fieldname,

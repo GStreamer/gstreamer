@@ -97,7 +97,7 @@ typedef enum
  *         the directory
  * @GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX : interpret
  *         filename argument as filter prefix and check all matching files in
- *         the directory. Since 1.8.
+ *         the directory. Since: 1.8.
  * @GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_RELATIVE_TO_EXE : interpret
  *   non-absolute paths as relative to the main executable directory. Since
  *   1.14.

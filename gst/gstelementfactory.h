@@ -103,8 +103,8 @@ gboolean                gst_element_register                    (GstPlugin *plug
  * @GST_ELEMENT_FACTORY_TYPE_PARSER: Parser elements
  * @GST_ELEMENT_FACTORY_TYPE_PAYLOADER: Payloader elements
  * @GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER: Depayloader elements
- * @GST_ELEMENT_FACTORY_TYPE_DECRYPTOR: Elements handling decryption (Since 1.6)
- * @GST_ELEMENT_FACTORY_TYPE_ENCRYPTOR: Elements handling encryption (Since 1.6)
+ * @GST_ELEMENT_FACTORY_TYPE_DECRYPTOR: Elements handling decryption (Since: 1.6)
+ * @GST_ELEMENT_FACTORY_TYPE_ENCRYPTOR: Elements handling encryption (Since: 1.6)
  * @GST_ELEMENT_FACTORY_TYPE_MAX_ELEMENTS: Private, do not use
  * @GST_ELEMENT_FACTORY_TYPE_MEDIA_VIDEO: Elements handling video media types
  * @GST_ELEMENT_FACTORY_TYPE_MEDIA_AUDIO: Elements handling audio media types
