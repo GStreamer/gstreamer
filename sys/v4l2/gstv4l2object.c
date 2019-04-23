@@ -3883,8 +3883,8 @@ gst_v4l2_object_try_format (GstV4l2Object * v4l2object, GstCaps * caps,
 
 /**
  * gst_v4l2_object_acquire_format:
- * @v4l2object the object
- * @info a GstVideoInfo to be filled
+ * @v4l2object: the object
+ * @info: a GstVideoInfo to be filled
  *
  * Acquire the driver choosen format. This is useful in decoder or encoder elements where
  * the output format is choosen by the HW.

@@ -163,7 +163,7 @@ fs_free (VisualFX * _this)
 }
 
 
-/**
+/*
  * Cree une nouvelle 'bombe', c'est a dire une particule appartenant a une fusee d'artifice.
  */
 static void
@@ -199,7 +199,7 @@ addABomb (FSData * fs, int mx, int my, float radius, float vage, float gravity,
 }
 
 
-/**
+/*
  * Met a jour la position et vitesse d'une particule.
  */
 static void
@@ -213,7 +213,7 @@ updateStar (Star * s)
 }
 
 
-/**
+/*
  * Ajoute de nouvelles particules au moment d'un evenement sonore.
  */
 static void
@@ -282,7 +282,7 @@ fs_sound_event_occured (VisualFX * _this, PluginInfo * info)
 }
 
 
-/**
+/*
  * Main methode of the FX.
  */
 static void

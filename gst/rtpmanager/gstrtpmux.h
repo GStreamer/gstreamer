@@ -51,8 +51,7 @@ typedef struct
 } GstRTPMuxPadPrivate;
 
 
-/**
- * GstRTPMux:
+/* GstRTPMux:
  *
  * The opaque #GstRTPMux structure.
  */

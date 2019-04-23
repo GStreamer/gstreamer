@@ -20,7 +20,7 @@
 #include <libsoup/soup.h>
 #include "gstsouputils.h"
 
-/**
+/*
  * Soup logger funcs
  */
 

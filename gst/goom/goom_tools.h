@@ -21,7 +21,7 @@
 
 #include "goom_config.h"
 
-/**
+/*
  * Random number generator wrapper for faster random number.
  */
 

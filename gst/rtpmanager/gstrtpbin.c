@@ -2480,7 +2480,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    *
    * Enables RTP retransmission on all streams. To control retransmission on
    * a per-SSRC basis, connect to the #GstRtpBin::new-jitterbuffer signal and
-   * set the #GstRtpJitterBuffer::do-retransmission property on the
+   * set the #GstRtpJitterBuffer:do-retransmission property on the
    * #GstRtpJitterBuffer object instead.
    */
   g_object_class_install_property (gobject_class, PROP_DO_RETRANSMISSION,
