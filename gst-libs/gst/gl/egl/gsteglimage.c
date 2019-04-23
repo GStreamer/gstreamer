@@ -64,6 +64,10 @@
 #ifndef DRM_FORMAT_GR88
 #define DRM_FORMAT_GR88 fourcc_code('G', 'R', '8', '8')
 #endif
+
+#ifndef DRM_FORMAT_NV24
+#define DRM_FORMAT_NV24 fourcc_code('N', 'V', '2', '4')
+#endif
 #endif
 
 #ifndef EGL_LINUX_DMA_BUF_EXT
