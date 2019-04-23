@@ -926,6 +926,12 @@ gst_gl_window_set_render_rectangle (GstGLWindow * window, gint x, gint y,
   return ret;
 }
 
+/**
+ * gst_gl_window_queue_resize:
+ * @window: a #GstGLWindow
+ *
+ * Queue resizing of @window.
+ */
 void
 gst_gl_window_queue_resize (GstGLWindow * window)
 {
@@ -954,6 +960,14 @@ _on_resize (gpointer data)
       resize->height);
 }
 
+/**
+ * gst_gl_window_resize:
+ * @window: a #GstGLWindow
+ * @width: new width
+ * @height: new height
+ *
+ * Resize @window to the given @width and @height.
+ */
 void
 gst_gl_window_resize (GstGLWindow * window, guint width, guint height)
 {
@@ -975,6 +989,16 @@ gst_gl_window_resize (GstGLWindow * window, guint width, guint height)
   window->queue_resize = FALSE;
 }
 
+/**
+ * gst_gl_window_controls_viewport:
+ * @window: a #GstGLWindow
+ *
+ * Checks if @window controls the GL viewport.
+ *
+ * Returns: %TRUE if @window controls the GL viewport, otherwise %FALSE
+ *
+ * Since: 1.16
+ */
 gboolean
 gst_gl_window_controls_viewport (GstGLWindow * window)
 {

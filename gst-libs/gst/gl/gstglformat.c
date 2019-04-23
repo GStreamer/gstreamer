@@ -300,6 +300,8 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
  *
  * Get the unsized format and type from @format for usage in glReadPixels,
  * glTex{Sub}Image*, glTexImage* and similar functions.
+ *
+ * Since: 1.16
  */
 void
 gst_gl_format_type_from_sized_gl_format (GstGLFormat format,
@@ -362,6 +364,8 @@ gst_gl_format_type_from_sized_gl_format (GstGLFormat format,
  *
  * Returns: Whether @format is supported by @context based on the OpenGL API,
  *          version, or available OpenGL extension/s.
+ *
+ * Since: 1.16
  */
 gboolean
 gst_gl_format_is_supported (GstGLContext * context, GstGLFormat format)
