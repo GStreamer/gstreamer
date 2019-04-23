@@ -2107,6 +2107,7 @@ gst_rtsp_stream_get_buffer_size (GstRTSPStream * stream)
  *
  * Returns: %TRUE if the requested ttl has been set successfully.
  *
+ * Since: 1.16
  */
 gboolean
 gst_rtsp_stream_set_max_mcast_ttl (GstRTSPStream * stream, guint ttl)
@@ -2133,6 +2134,7 @@ gst_rtsp_stream_set_max_mcast_ttl (GstRTSPStream * stream, guint ttl)
  *
  * Returns: the maximum time-to-live value of outgoing multicast packets.
  *
+ * Since: 1.16
  */
 guint
 gst_rtsp_stream_get_max_mcast_ttl (GstRTSPStream * stream)
@@ -2155,6 +2157,7 @@ gst_rtsp_stream_get_max_mcast_ttl (GstRTSPStream * stream)
  *
  * Returns: TRUE if the requested ttl value is allowed.
  *
+ * Since: 1.16
  */
 gboolean
 gst_rtsp_stream_verify_mcast_ttl (GstRTSPStream * stream, guint ttl)
@@ -2176,6 +2179,8 @@ gst_rtsp_stream_verify_mcast_ttl (GstRTSPStream * stream, guint ttl)
  *
  * Decide whether the multicast socket should be bound to a multicast address or
  * INADDR_ANY.
+ *
+ * Since: 1.16
  */
 void
 gst_rtsp_stream_set_bind_mcast_address (GstRTSPStream * stream,
@@ -2195,6 +2200,8 @@ gst_rtsp_stream_set_bind_mcast_address (GstRTSPStream * stream,
  * Check if multicast sockets are configured to be bound to multicast addresses.
  *
  * Returns: %TRUE if multicast sockets are configured to be bound to multicast addresses.
+ *
+ * Since: 1.16
  */
 gboolean
 gst_rtsp_stream_is_bind_mcast_address (GstRTSPStream * stream)
@@ -4712,6 +4719,8 @@ gst_rtsp_stream_get_rtcp_multicast_socket (GstRTSPStream * stream,
  * allocated.
  *
  * Returns: %TRUE if @destination can be addedd and handled by @stream.
+ *
+ * Since: 1.16
  */
 gboolean
 gst_rtsp_stream_add_multicast_client_address (GstRTSPStream * stream,
@@ -4760,6 +4769,8 @@ add_addr_error:
  * Get all multicast client addresses that RTP data will be sent to
  *
  * Returns: A comma separated list of host:port pairs with destinations
+ *
+ * Since: 1.16
  */
 gchar *
 gst_rtsp_stream_get_multicast_client_addresses (GstRTSPStream * stream)

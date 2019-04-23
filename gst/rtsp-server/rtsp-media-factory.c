@@ -1511,6 +1511,8 @@ gst_rtsp_media_factory_get_publish_clock_mode (GstRTSPMediaFactory * factory)
  * Set the maximum time-to-live value of outgoing multicast packets.
  *
  * Returns: %TRUE if the requested ttl has been set successfully.
+ *
+ * Since: 1.16
  */
 gboolean
 gst_rtsp_media_factory_set_max_mcast_ttl (GstRTSPMediaFactory * factory,
@@ -1541,6 +1543,8 @@ gst_rtsp_media_factory_set_max_mcast_ttl (GstRTSPMediaFactory * factory,
  * Get the the maximum time-to-live value of outgoing multicast packets.
  *
  * Returns: the maximum time-to-live value of outgoing multicast packets.
+ *
+ * Since: 1.16
  */
 guint
 gst_rtsp_media_factory_get_max_mcast_ttl (GstRTSPMediaFactory * factory)
@@ -1566,6 +1570,8 @@ gst_rtsp_media_factory_get_max_mcast_ttl (GstRTSPMediaFactory * factory)
  *
  * Decide whether the multicast socket should be bound to a multicast address or
  * INADDR_ANY.
+ *
+ * Since: 1.16
  */
 void
 gst_rtsp_media_factory_set_bind_mcast_address (GstRTSPMediaFactory * factory,
@@ -1589,6 +1595,8 @@ gst_rtsp_media_factory_set_bind_mcast_address (GstRTSPMediaFactory * factory,
  * Check if multicast sockets are configured to be bound to multicast addresses.
  *
  * Returns: %TRUE if multicast sockets are configured to be bound to multicast addresses.
+ *
+ * Since: 1.16
  */
 gboolean
 gst_rtsp_media_factory_is_bind_mcast_address (GstRTSPMediaFactory * factory)
