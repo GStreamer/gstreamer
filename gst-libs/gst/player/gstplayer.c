@@ -4331,7 +4331,7 @@ gst_player_set_multiview_flags (GstPlayer * self, GstVideoMultiviewFlags flags)
  *
  * Returns: The current value of audio-video-offset in nanoseconds
  *
- * Since 1.10
+ * Since: 1.10
  */
 gint64
 gst_player_get_audio_video_offset (GstPlayer * self)
@@ -4352,7 +4352,7 @@ gst_player_get_audio_video_offset (GstPlayer * self)
  *
  * Sets audio-video-offset property by value of @offset
  *
- * Since 1.10
+ * Since: 1.10
  */
 void
 gst_player_set_audio_video_offset (GstPlayer * self, gint64 offset)
@@ -4370,7 +4370,7 @@ gst_player_set_audio_video_offset (GstPlayer * self, gint64 offset)
  *
  * Returns: The current value of subtitle-video-offset in nanoseconds
  *
- * Since 1.16
+ * Since: 1.16
  */
 gint64
 gst_player_get_subtitle_video_offset (GstPlayer * self)
@@ -4391,7 +4391,7 @@ gst_player_get_subtitle_video_offset (GstPlayer * self)
  *
  * Sets subtitle-video-offset property by value of @offset
  *
- * Since 1.16
+ * Since: 1.16
  */
 void
 gst_player_set_subtitle_video_offset (GstPlayer * self, gint64 offset)
@@ -4547,7 +4547,7 @@ gst_player_error_get_name (GstPlayerError error)
  * This function takes ownership of @config.
  *
  * Returns: %TRUE when the configuration could be set.
- * Since 1.10
+ * Since: 1.10
  */
 gboolean
 gst_player_set_config (GstPlayer * self, GstStructure * config)
@@ -4583,7 +4583,7 @@ gst_player_set_config (GstPlayer * self, GstStructure * config)
  * Returns: (transfer full): a copy of the current configuration of @player. Use
  * gst_structure_free() after usage or gst_player_set_config().
  *
- * Since 1.10
+ * Since: 1.10
  */
 GstStructure *
 gst_player_get_config (GstPlayer * self)
@@ -4608,7 +4608,7 @@ gst_player_get_config (GstPlayer * self)
  * to a server during playback. This is typically used when playing HTTP
  * or RTSP streams.
  *
- * Since 1.10
+ * Since: 1.10
  */
 void
 gst_player_config_set_user_agent (GstStructure * config, const gchar * agent)
@@ -4628,7 +4628,7 @@ gst_player_config_set_user_agent (GstStructure * config, const gchar * agent)
  * gst_player_config_set_user_agent() if any.
  *
  * Returns: (transfer full): the configured agent, or %NULL
- * Since 1.10
+ * Since: 1.10
  */
 gchar *
 gst_player_config_get_user_agent (const GstStructure * config)
@@ -4650,7 +4650,7 @@ gst_player_config_get_user_agent (const GstStructure * config)
  *
  * set interval in milliseconds between two position-updated signals.
  * pass 0 to stop updating the position.
- * Since 1.10
+ * Since: 1.10
  */
 void
 gst_player_config_set_position_update_interval (GstStructure * config,
@@ -4669,7 +4669,7 @@ gst_player_config_set_position_update_interval (GstStructure * config,
  *
  * Returns: current position update interval in milliseconds
  *
- * Since 1.10
+ * Since: 1.10
  */
 guint
 gst_player_config_get_position_update_interval (const GstStructure * config)
@@ -4716,7 +4716,7 @@ gst_player_config_set_seek_accurate (GstStructure * config, gboolean accurate)
  *
  * Returns: %TRUE if accurate seeking is enabled
  *
- * Since 1.12
+ * Since: 1.12
  */
 gboolean
 gst_player_config_get_seek_accurate (const GstStructure * config)
@@ -4746,7 +4746,7 @@ gst_player_config_get_seek_accurate (const GstStructure * config)
  *
  * Returns: (transfer full):  Current video snapshot sample or %NULL on failure
  *
- * Since 1.12
+ * Since: 1.12
  */
 GstSample *
 gst_player_get_video_snapshot (GstPlayer * self,
