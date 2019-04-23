@@ -5,7 +5,7 @@ if meson.is_cross_build()
         error('Documentation enabled but building the doc while cross building is not supported yet.')
     endif
 
-    message('Documentation not built as building the docmentation while cross building is not supported yet.')
+    message('Documentation not built as building it while cross building is not supported yet.')
     subdir_done()
 endif
 

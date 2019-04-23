@@ -547,8 +547,7 @@ gst_rtsp_session_pool_cleanup (GstRTSPSessionPool * pool)
  * locked so no further actions on @pool can be performed from @func.
  *
  * If @func returns #GST_RTSP_FILTER_REMOVE, the session will be set to the
- * expired state with gst_rtsp_session_set_expired() and removed from
- * @pool.
+ * expired state and removed from @pool.
  *
  * If @func returns #GST_RTSP_FILTER_KEEP, the session will remain in @pool.
  *

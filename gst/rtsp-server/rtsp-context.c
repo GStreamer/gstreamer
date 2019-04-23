@@ -56,7 +56,7 @@ gst_rtsp_context_get_current (void)
 
 /**
  * gst_rtsp_context_push_current:
- * @ctx: a ##GstRTSPContext
+ * @ctx: a #GstRTSPContext
  *
  * Pushes @ctx onto the context stack. The current
  * context can then be received using gst_rtsp_context_get_current().
