@@ -93,9 +93,9 @@ enum
 
 #define SUPPORTED_CAPS \
 GST_STATIC_CAPS ( \
-    GST_AUDIO_CAPS_MAKE (GST_AUDIO_NE (F32)) "; " \
-    GST_AUDIO_CAPS_MAKE (GST_AUDIO_NE (F64)) "; " \
-    GST_AUDIO_CAPS_MAKE (GST_AUDIO_NE (S16)) \
+    GST_AUDIO_CAPS_MAKE (GST_AUDIO_NE (F32)) ", layout=(string)interleaved; " \
+    GST_AUDIO_CAPS_MAKE (GST_AUDIO_NE (F64)) ", layout=(string)interleaved; " \
+    GST_AUDIO_CAPS_MAKE (GST_AUDIO_NE (S16)) ", layout=(string)interleaved" \
 )
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
