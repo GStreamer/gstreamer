@@ -88,7 +88,7 @@ gst_omx_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 {
   GstOMXMemory *omem = (GstOMXMemory *) mem;
 
-  return omem->buf->omx_buf->pBuffer + omem->mem.offset;
+  return omem->buf->omx_buf->pBuffer;
 }
 
 static void
