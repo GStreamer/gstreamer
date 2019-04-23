@@ -488,7 +488,7 @@ gst_jack_ring_buffer_acquire (GstAudioRingBuffer * buf,
       if (res != 0 && res != EEXIST)
         goto cannot_connect;
     }
-    free (ports);
+    jack_free (ports);
   }
 done:
 
@@ -523,7 +523,7 @@ cannot_connect:
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
         ("Could not connect output ports to physical ports (%d:%s)",
             res, g_strerror (res)));
-    free (ports);
+    jack_free (ports);
     return FALSE;
   }
 }
@@ -927,7 +927,7 @@ gst_jack_audio_sink_getcaps (GstBaseSink * bsink, GstCaps * filter)
     max = 0;
     if (ports != NULL) {
       for (; ports[max]; max++);
-      free (ports);
+      jack_free (ports);
     } else
       max = 0;
   } else {
