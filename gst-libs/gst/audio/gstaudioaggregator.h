@@ -62,6 +62,8 @@ typedef struct _GstAudioAggregatorPadPrivate GstAudioAggregatorPadPrivate;
  * @info: The audio info for this pad set from the incoming caps
  *
  * The default implementation of GstPad used with #GstAudioAggregator
+ *
+ * Since: 1.14
  */
 struct _GstAudioAggregatorPad
 {
@@ -82,6 +84,8 @@ struct _GstAudioAggregatorPad
  * @convert_buffer: Convert a buffer from one format to another.
  * @update_conversion_info: Called when either the input or output
  *  formats have changed.
+ *
+ * Since: 1.14
  */
 struct _GstAudioAggregatorPadClass
   {
@@ -122,6 +126,8 @@ typedef struct _GstAudioAggregatorConvertPadPrivate GstAudioAggregatorConvertPad
  * An implementation of GstPad that can be used with #GstAudioAggregator.
  *
  * See #GstAudioAggregator for more details.
+ *
+ * Since: 1.14
  */
 struct _GstAudioAggregatorConvertPad
 {
@@ -136,6 +142,7 @@ struct _GstAudioAggregatorConvertPad
 /**
  * GstAudioAggregatorConvertPadClass:
  *
+ * Since: 1.14
  */
 struct _GstAudioAggregatorConvertPadClass
 {
@@ -164,6 +171,8 @@ GType gst_audio_aggregator_convert_pad_get_type           (void);
  * @current_caps: The caps set by the subclass
  *
  * GstAudioAggregator object
+ *
+ * Since: 1.14
  */
 struct _GstAudioAggregator
 {
@@ -185,6 +194,8 @@ struct _GstAudioAggregator
  *  buffer.  The in_offset and out_offset are in "frames", which is
  *  the size of a sample times the number of channels. Returns TRUE if
  *  any non-silence was added to the buffer
+ *
+ * Since: 1.14
  */
 struct _GstAudioAggregatorClass {
   GstAggregatorClass   parent_class;
