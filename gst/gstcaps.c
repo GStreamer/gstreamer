@@ -974,6 +974,8 @@ gst_caps_set_features_simple (GstCaps * caps, GstCapsFeatures * features)
  * contained in @caps.
  *
  * Returns: (transfer full): the new #GstCaps
+ *
+ * Since: 1.16
  */
 GstCaps *
 gst_caps_copy_nth (const GstCaps * caps, guint nth)
