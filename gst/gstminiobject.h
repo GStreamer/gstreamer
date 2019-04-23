@@ -126,7 +126,7 @@ typedef void (*GstMiniObjectNotify) (gpointer user_data, GstMiniObject * obj);
  * READONLY mode. Only read locks can be performed on the object.
  * @GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED: the object is expected to stay alive
  * even after gst_deinit() has been called and so should be ignored by leak
- * detection tools. (Since 1.10)
+ * detection tools. (Since: 1.10)
  * @GST_MINI_OBJECT_FLAG_LAST: first flag that can be used by subclasses.
  *
  * Flags for the mini object

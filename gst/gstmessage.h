@@ -99,28 +99,28 @@ typedef struct _GstMessage GstMessage;
  *     e.g. when using playbin in gapless playback mode, to get notified when
  *     the next title actually starts playing (which will be some time after
  *     the URI for the next title has been set).
- * @GST_MESSAGE_NEED_CONTEXT: Message indicating that an element wants a specific context (Since 1.2)
- * @GST_MESSAGE_HAVE_CONTEXT: Message indicating that an element created a context (Since 1.2)
+ * @GST_MESSAGE_NEED_CONTEXT: Message indicating that an element wants a specific context (Since: 1.2)
+ * @GST_MESSAGE_HAVE_CONTEXT: Message indicating that an element created a context (Since: 1.2)
  * @GST_MESSAGE_EXTENDED: Message is an extended message type (see below).
  *     These extended message IDs can't be used directly with mask-based API
  *     like gst_bus_poll() or gst_bus_timed_pop_filtered(), but you can still
  *     filter for GST_MESSAGE_EXTENDED and then check the result for the
- *     specific type. (Since 1.4)
+ *     specific type. (Since: 1.4)
  * @GST_MESSAGE_DEVICE_ADDED: Message indicating a #GstDevice was added to
- *     a #GstDeviceProvider (Since 1.4)
+ *     a #GstDeviceProvider (Since: 1.4)
  * @GST_MESSAGE_DEVICE_REMOVED: Message indicating a #GstDevice was removed
- *     from a #GstDeviceProvider (Since 1.4)
+ *     from a #GstDeviceProvider (Since: 1.4)
  * @GST_MESSAGE_PROPERTY_NOTIFY: Message indicating a #GObject property has
- *     changed (Since 1.10)
+ *     changed (Since: 1.10)
  * @GST_MESSAGE_STREAM_COLLECTION: Message indicating a new #GstStreamCollection
- *     is available (Since 1.10)
+ *     is available (Since: 1.10)
  * @GST_MESSAGE_STREAMS_SELECTED: Message indicating the active selection of
- *     #GstStreams has changed (Since 1.10)
+ *     #GstStreams has changed (Since: 1.10)
  * @GST_MESSAGE_REDIRECT: Message indicating to request the application to
  *     try to play the given URL(s). Useful if for example a HTTP 302/303
- *     response is received with a non-HTTP URL inside. (Since 1.10)
+ *     response is received with a non-HTTP URL inside. (Since: 1.10)
  * @GST_MESSAGE_DEVICE_CHANGED: Message indicating a #GstDevice was changed
- *     a #GstDeviceProvider (Since 1.16)
+ *     a #GstDeviceProvider (Since: 1.16)
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.

@@ -424,7 +424,7 @@ struct _GstClockEntry {
  * @GST_CLOCK_FLAG_CAN_SET_RESOLUTION: clock's resolution can be changed
  * @GST_CLOCK_FLAG_CAN_SET_MASTER: clock can be slaved to a master clock
  * @GST_CLOCK_FLAG_NEEDS_STARTUP_SYNC: clock needs to be synced before it can be used
- *     (Since 1.6)
+ *     (Since: 1.6)
  * @GST_CLOCK_FLAG_LAST: subclasses can add additional flags starting from this flag
  *
  * The capabilities of this clock
