@@ -55,6 +55,11 @@ struct _GstVideoAncillary {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstVideoAncillaryDID:
+ *
+ * Since: 1.16
+ */
 typedef enum {
   GST_VIDEO_ANCILLARY_DID_UNDEFINED = 0x00,
   GST_VIDEO_ANCILLARY_DID_DELETION  = 0x80,
