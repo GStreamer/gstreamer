@@ -42,6 +42,8 @@ typedef struct _GstBitWriter GstBitWriter;
  * @bit_size: Size of written @data in bits
  *
  * A bit writer instance.
+ *
+ * Since: 1.16
  */
 struct _GstBitWriter
 {
