@@ -59,6 +59,8 @@ typedef struct _GstAggregatorPadPrivate GstAggregatorPadPrivate;
  * @segment: last segment received.
  *
  * The implementation the GstPad to use with #GstAggregator
+ *
+ * Since: 1.14
  */
 struct _GstAggregatorPad
 {
@@ -84,6 +86,7 @@ struct _GstAggregatorPad
  *               Called before input buffers are queued in the pad, return %TRUE
  *               if the buffer should be skipped.
  *
+ * Since: 1.14
  */
 struct _GstAggregatorPadClass
 {
@@ -137,6 +140,8 @@ gboolean    gst_aggregator_pad_is_eos       (GstAggregatorPad *  pad);
  * @srcpad: the aggregator's source pad
  *
  * Aggregator base class object structure.
+ *
+ * Since: 1.14
  */
 struct _GstAggregator
 {
@@ -240,6 +245,8 @@ struct _GstAggregator
  *
  * Basically, a simple implementation will override @aggregate, and call
  * _finish_buffer from inside that function.
+ *
+ * Since: 1.14
  */
 struct _GstAggregatorClass {
   GstElementClass   parent_class;
