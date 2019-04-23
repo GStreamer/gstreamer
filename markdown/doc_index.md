@@ -28,8 +28,8 @@ all about.
 ## GStreamer APIs References
 
 * [GStreamer Core library](gstreamer)
-* [GStreamer Libraries Reference](libs.html)
-* [GStreamer Plugins Reference](plugins_doc.html)
+* [GStreamer Libraries Reference](libs.md)
+* [GStreamer Plugins Reference](plugins_doc.md)
 
 > ![Warning](images/icons/emoticons/warning.svg) Only the API in libraries from
 > GStreamer core and gst-plugins-base are guaranteed to be API and ABI stable

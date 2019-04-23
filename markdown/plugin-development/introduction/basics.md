@@ -14,7 +14,7 @@ concepts presented here serve mainly to refresh your memory.
 
 Elements are at the core of GStreamer. In the context of plugin
 development, an *element* is an object derived from the [`
-GstElement`](../../gstreamer/html/GstElement.html) class. Elements
+GstElement`](GstElement) class. Elements
 provide some sort of functionality when linked with other elements: For
 example, a source element provides data to a stream, and a filter
 element acts on the data in a stream. Without elements, GStreamer is
@@ -48,8 +48,7 @@ all plugins to determine which are needed. Plugins are only loaded when
 their provided elements are requested.
 
 See the *GStreamer Library Reference* for the current implementation
-details of [`GstElement`](../../gstreamer/html/GstElement.html) and
-[`GstPlugin`](../../gstreamer/html/GstPlugin.html).
+details of [`GstElement`](GstElement) and [`GstPlugin`](GstPlugin).
 
 ## Pads
 
@@ -78,7 +77,7 @@ between elements. Data flows out of one element through one or more
 respectively.
 
 See the *GStreamer Library Reference* for the current implementation
-details of a [`GstPad`](../../gstreamer/html/GstPad.html).
+details of a [`GstPad`](GstPad).
 
 ## GstMiniObject, Buffers and Events
 
@@ -131,10 +130,8 @@ will be used is the *EOS* event, which is used to indicate the end-of-stream
 (usually end-of-file).
 
 See the *GStreamer Library Reference* for the current implementation
-details of a
-[`GstMiniObject`](../../gstreamer/html/gstreamer-GstMiniObject.html),
-[`GstBuffer`](../../gstreamer/html/GstBuffer.html) and
-[`GstEvent`](../../gstreamer/html/GstEvent.html).
+details of a [`GstMiniObject`](GstMiniObject), [`GstBuffer`](GstBuffer)
+and [`GstEvent`](GstEvent).
 
 ### Buffer Allocation
 

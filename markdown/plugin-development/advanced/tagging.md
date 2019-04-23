@@ -40,7 +40,7 @@ reading, but any GStreamer element may extract tags while processing
 data, and most decoders, demuxers and parsers do.
 
 A tag writer is called
-[`TagSetter`](../../gstreamer/html/GstTagSetter.html). An element
+[`TagSetter`](GstTagSetter). An element
 supporting both can be used in a tag editor for quick tag changing
 (note: in-place tag editing is still poorly supported at the time of
 writing and usually requires tag extraction/stripping and remuxing of
@@ -48,8 +48,7 @@ the stream with new tags).
 
 ## Reading Tags from Streams
 
-The basic object for tags is a [`GstTagList
-`](../../gstreamer/html/GstTagList.html). An element that is reading
+The basic object for tags is a [`GstTagList`](GstTagList). An element that is reading
 tags from a stream should create an empty taglist and fill this with
 individual tags. Empty tag lists can be created with `gst_tag_list_new
 ()`. Then, the element can fill the list using `gst_tag_list_add ()
