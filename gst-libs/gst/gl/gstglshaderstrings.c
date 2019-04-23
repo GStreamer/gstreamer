@@ -113,6 +113,8 @@ const gchar *gst_gl_shader_string_fragment_external_oes_default =
  *
  * Returns: a shader string defining the precision of float types based on
  *      @context, @version and @profile
+ *
+ * Since: 1.16
  */
 const gchar *
 gst_gl_shader_string_get_highest_precision (GstGLContext * context,
@@ -135,6 +137,8 @@ gst_gl_shader_string_get_highest_precision (GstGLContext * context,
  *
  * Returns: a passthrough shader string for copying an input texture to
  *          the output
+ *
+ * Since: 1.16
  */
 gchar *
 gst_gl_shader_string_fragment_get_default (GstGLContext * context,
@@ -154,6 +158,8 @@ gst_gl_shader_string_fragment_get_default (GstGLContext * context,
  *
  * Returns: a passthrough shader string for copying an input external-oes
  *          texture to the output
+ *
+ * Since: 1.16
  */
 gchar *
 gst_gl_shader_string_fragment_external_oes_get_default (GstGLContext * context,

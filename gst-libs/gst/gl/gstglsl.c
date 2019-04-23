@@ -937,6 +937,8 @@ _gst_glsl_mangle_shader (const gchar * str, guint shader_type,
  * @profile: a #GstGLSLProfile
  *
  * Returns: whether @context supports the 'precision' specifier in GLSL shaders
+ *
+ * Since: 1.16
  */
 gboolean
 gst_gl_context_supports_precision (GstGLContext * context,
@@ -962,6 +964,8 @@ gst_gl_context_supports_precision (GstGLContext * context,
  * @profile: a #GstGLSLProfile
  *
  * Returns: whether @context supports the 'precision highp' specifier in GLSL shaders
+ *
+ * Since: 1.16
  */
 gboolean
 gst_gl_context_supports_precision_highp (GstGLContext * context,
