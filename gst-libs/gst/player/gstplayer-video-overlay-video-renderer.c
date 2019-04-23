@@ -219,7 +219,7 @@ gst_player_video_overlay_video_renderer_new (gpointer window_handle)
  *
  * Returns: (transfer full):
  *
- * Since 1.12
+ * Since: 1.12
  */
 GstPlayerVideoRenderer *
 gst_player_video_overlay_video_renderer_new_with_sink (gpointer window_handle,
