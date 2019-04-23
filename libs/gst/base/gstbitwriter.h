@@ -160,7 +160,7 @@ _gst_bit_writer_check_remaining (GstBitWriter * bitwriter, guint32 bits)
   g_assert (new_bit_size
       && ((new_bit_size & __GST_BITS_WRITER_ALIGNMENT_MASK) == 0));
   clear_pos = ((bitwriter->bit_size + 7) >> 3);
-  bitwriter->data = g_realloc (bitwriter->data, (new_bit_size >> 3));
+  bitwriter->data = (guint8 *) g_realloc (bitwriter->data, (new_bit_size >> 3));
   memset (bitwriter->data + clear_pos, 0, (new_bit_size >> 3) - clear_pos);
   bitwriter->bit_capacity = new_bit_size;
   return TRUE;
