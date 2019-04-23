@@ -1845,7 +1845,7 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
       HAVE_OPENCV="yes"
     fi
   ], [
-    PKG_CHECK_MODULES([OPENCV], [opencv4 >= 4.0.0 opencv4 < 4.1.0] , [
+    PKG_CHECK_MODULES([OPENCV], [opencv4 >= 4.0.0 opencv4 < 4.2.0] , [
     AC_PROG_CXX
     AC_LANG([C++])
     OLD_CPPFLAGS=$CPPFLAGS
