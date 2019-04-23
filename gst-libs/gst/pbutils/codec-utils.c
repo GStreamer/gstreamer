@@ -197,7 +197,7 @@ gst_codec_utils_aac_get_audio_object_type_full (GstBitReader * br,
  *
  * Returns: The sample rate if sr_idx is valid, 0 otherwise.
  *
- * Since 1.10
+ * Since: 1.10
  */
 guint
 gst_codec_utils_aac_get_sample_rate (const guint8 * audio_config, guint len)
@@ -226,7 +226,7 @@ gst_codec_utils_aac_get_sample_rate (const guint8 * audio_config, guint len)
  *
  * Returns: The channels or 0 if the channel could not be determined.
  *
- * Since 1.10
+ * Since: 1.10
  */
 guint
 gst_codec_utils_aac_get_channels (const guint8 * audio_config, guint len)
@@ -824,7 +824,7 @@ gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
  *
  * Returns: The profile as a const string, or %NULL if there is an error.
  *
- * Since 1.4
+ * Since: 1.4
  */
 const gchar *
 gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
@@ -865,7 +865,7 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
  *
  * Returns: The tier as a const string, or %NULL if there is an error.
  *
- * Since 1.4
+ * Since: 1.4
  */
 const gchar *
 gst_codec_utils_h265_get_tier (const guint8 * profile_tier_level, guint len)
@@ -902,7 +902,7 @@ gst_codec_utils_h265_get_tier (const guint8 * profile_tier_level, guint len)
  *
  * Returns: The level as a const string, or %NULL if there is an error.
  *
- * Since 1.4
+ * Since: 1.4
  */
 const gchar *
 gst_codec_utils_h265_get_level (const guint8 * profile_tier_level, guint len)
@@ -955,7 +955,7 @@ gst_codec_utils_h265_get_level (const guint8 * profile_tier_level, guint len)
  *
  * Returns: the level_idc or 0 if the level is unknown
  *
- * Since 1.4
+ * Since: 1.4
  */
 guint8
 gst_codec_utils_h265_get_level_idc (const gchar * level)
@@ -1007,7 +1007,7 @@ gst_codec_utils_h265_get_level_idc (const gchar * level)
  *
  * Returns: %TRUE if the level, tier, profile could be set, %FALSE otherwise.
  *
- * Since 1.4
+ * Since: 1.4
  */
 gboolean
 gst_codec_utils_h265_caps_set_level_tier_and_profile (GstCaps * caps,

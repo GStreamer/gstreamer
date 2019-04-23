@@ -289,8 +289,8 @@ GstVideoFieldOrder gst_video_field_order_from_string  (const gchar * order);
  * @fps_d: the framerate demnominator
  * @offset: offsets of the planes
  * @stride: strides of the planes
- * @multiview_mode: delivery mode for multiple views. (Since 1.6)
- * @multiview_flags: flags for multiple views configuration (Since 1.6)
+ * @multiview_mode: delivery mode for multiple views. (Since: 1.6)
+ * @multiview_flags: flags for multiple views configuration (Since: 1.6)
  *
  * Information describing image properties. This information can be filled
  * in from GstCaps with gst_video_info_from_caps(). The information is also used

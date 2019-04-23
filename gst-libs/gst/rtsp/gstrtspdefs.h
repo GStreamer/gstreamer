@@ -332,10 +332,10 @@ typedef enum {
 
   GST_RTSP_HDR_RTCP_INTERVAL,       /* RTCP-Interval */
 
-  /* Since 1.4 */
+  /* Since: 1.4 */
   GST_RTSP_HDR_KEYMGMT,             /* KeyMgmt */
 
-  /* Since 1.14 */
+  /* Since: 1.14 */
   GST_RTSP_HDR_PIPELINED_REQUESTS,  /* Pipelined-Requests Rr     opt.      SETUP */
   GST_RTSP_HDR_MEDIA_PROPERTIES,    /* Media-Properties   Rr     opt.      SETUP */
   GST_RTSP_HDR_SEEK_STYLE,          /* Seek-Type          Rr     opt.      PLAY */

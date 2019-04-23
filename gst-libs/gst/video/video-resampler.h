@@ -119,7 +119,7 @@ typedef enum {
  * @GST_VIDEO_RESAMPLER_FLAG_NONE: no flags
  * @GST_VIDEO_RESAMPLER_FLAG_HALF_TAPS: when no taps are given, half the
  *              number of calculated taps. This can be used when making scalers
- *              for the different fields of an interlaced picture. Since 1.10
+ *              for the different fields of an interlaced picture. Since: 1.10
  *
  * Different resampler flags.
  *

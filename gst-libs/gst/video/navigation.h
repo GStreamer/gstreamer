@@ -196,7 +196,7 @@ gboolean        gst_navigation_query_parse_angles       (GstQuery *query, guint 
  * feature (such as a multiangle DVD) change - either angles have appeared or
  * disappeared.
  * @GST_NAVIGATION_MESSAGE_EVENT: Sent when a navigation event was not handled
- * by any element in the pipeline (Since 1.6)
+ * by any element in the pipeline (Since: 1.6)
  *
  * A set of notifications that may be received on the bus when navigation
  * related status changes.

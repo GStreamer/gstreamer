@@ -2641,7 +2641,7 @@ gst_video_encoder_get_allocator (GstVideoEncoder * encoder,
  * For streams with reordered frames this can be used to ensure that there
  * is enough time to accomodate first DTS, which may be less than first PTS
  *
- * Since 1.6
+ * Since: 1.6
  */
 void
 gst_video_encoder_set_min_pts (GstVideoEncoder * encoder, GstClockTime min_pts)

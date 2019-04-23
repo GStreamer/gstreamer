@@ -60,7 +60,7 @@ typedef void (*GstAudioRingBufferCallback) (GstAudioRingBuffer *rbuf, guint8* da
  * @GST_AUDIO_RING_BUFFER_STATE_STARTED: The ringbuffer is started
  * @GST_AUDIO_RING_BUFFER_STATE_ERROR: The ringbuffer has encountered an
  *     error after it has been started, e.g. because the device was
- *     disconnected (Since 1.2)
+ *     disconnected (Since: 1.2)
  *
  * The state of the ringbuffer.
  */
@@ -85,9 +85,9 @@ typedef enum {
  * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DTS: samples in DTS format
  * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG2_AAC: samples in MPEG-2 AAC ADTS format
  * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG4_AAC: samples in MPEG-4 AAC ADTS format
- * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG2_AAC_RAW: samples in MPEG-2 AAC raw format (Since 1.12)
- * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG4_AAC_RAW: samples in MPEG-4 AAC raw format (Since 1.12)
- * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_FLAC: samples in FLAC format (Since 1.12)
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG2_AAC_RAW: samples in MPEG-2 AAC raw format (Since: 1.12)
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MPEG4_AAC_RAW: samples in MPEG-4 AAC raw format (Since: 1.12)
+ * @GST_AUDIO_RING_BUFFER_FORMAT_TYPE_FLAC: samples in FLAC format (Since: 1.12)
  *
  * The format of the samples in the ringbuffer.
  */

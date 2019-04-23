@@ -576,7 +576,7 @@ gst_encoding_profile_get_presence (GstEncodingProfile * profile)
  *
  * Returns: Whther @profile is enabled or not
  *
- * Since 1.6
+ * Since: 1.6
  */
 gboolean
 gst_encoding_profile_is_enabled (GstEncodingProfile * profile)
@@ -750,7 +750,7 @@ gst_encoding_profile_set_presence (GstEncodingProfile * profile, guint presence)
  *
  * Set whether the profile should be used or not.
  *
- * Since 1.6
+ * Since: 1.6
  */
 void
 gst_encoding_profile_set_enabled (GstEncodingProfile * profile,
@@ -1991,7 +1991,7 @@ gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)
  *
  * Returns: (transfer full): The copy of @self
  *
- * Since 1.12
+ * Since: 1.12
  */
 GstEncodingProfile *
 gst_encoding_profile_copy (GstEncodingProfile * self)
