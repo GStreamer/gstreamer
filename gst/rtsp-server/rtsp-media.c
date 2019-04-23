@@ -1869,6 +1869,8 @@ gst_rtsp_media_get_multicast_iface (GstRTSPMedia * media)
  * Set the maximum time-to-live value of outgoing multicast packets.
  *
  * Returns: %TRUE if the requested ttl has been set successfully.
+ *
+ * Since: 1.16
  */
 gboolean
 gst_rtsp_media_set_max_mcast_ttl (GstRTSPMedia * media, guint ttl)
@@ -1907,6 +1909,8 @@ gst_rtsp_media_set_max_mcast_ttl (GstRTSPMedia * media, guint ttl)
  * Get the the maximum time-to-live value of outgoing multicast packets.
  *
  * Returns: the maximum time-to-live value of outgoing multicast packets.
+ *
+ * Since: 1.16
  */
 guint
 gst_rtsp_media_get_max_mcast_ttl (GstRTSPMedia * media)
@@ -1932,6 +1936,8 @@ gst_rtsp_media_get_max_mcast_ttl (GstRTSPMedia * media)
  *
  * Decide whether the multicast socket should be bound to a multicast address or
  * INADDR_ANY.
+ *
+ * Since: 1.16
  */
 void
 gst_rtsp_media_set_bind_mcast_address (GstRTSPMedia * media,
@@ -1960,6 +1966,8 @@ gst_rtsp_media_set_bind_mcast_address (GstRTSPMedia * media,
  * Check if multicast sockets are configured to be bound to multicast addresses.
  *
  * Returns: %TRUE if multicast sockets are configured to be bound to multicast addresses.
+ *
+ * Since: 1.16
  */
 gboolean
 gst_rtsp_media_is_bind_mcast_address (GstRTSPMedia * media)

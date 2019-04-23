@@ -682,6 +682,8 @@ gst_rtsp_stream_transport_keep_alive (GstRTSPStreamTransport * trans)
  * @trans: a #GstRTSPStreamTransport
  *
  * Signal the installed message_sent callback for @trans.
+ *
+ * Since: 1.16
  */
 void
 gst_rtsp_stream_transport_message_sent (GstRTSPStreamTransport * trans)
