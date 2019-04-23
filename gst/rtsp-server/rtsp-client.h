@@ -87,7 +87,7 @@ struct _GstRTSPClient {
  * @params_get: get parameters. This function should also initialize the
  *    RTSP response(ctx->response) via a call to gst_rtsp_message_init_response()
  * @tunnel_http_response: called when a response to the GET request is about to
- *   be sent for a tunneled connection. The response can be modified. Since 1.4
+ *   be sent for a tunneled connection. The response can be modified. Since: 1.4
  *
  * The client class structure.
  */
