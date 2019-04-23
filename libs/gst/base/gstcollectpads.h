@@ -137,7 +137,7 @@ typedef enum {
  * @pos: position in the buffer
  * @segment: last segment received.
  * @dts: the signed version of the DTS converted to running time. To access
- *       this member, use %GST_COLLECT_PADS_DTS macro. (Since 1.6)
+ *       this member, use %GST_COLLECT_PADS_DTS macro. (Since: 1.6)
  *
  * Structure used by the collect_pads.
  */

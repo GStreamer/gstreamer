@@ -199,7 +199,7 @@ struct _GstBaseTransform {
  *                  member variable. If the buffer is dropped due to QoS, it returns
  *                  GST_BASE_TRANSFORM_FLOW_DROPPED. If this input buffer is not
  *                  contiguous with any previous input buffer, then @is_discont
- *                  is set to %TRUE. (Since 1.6)
+ *                  is set to %TRUE. (Since: 1.6)
  * @generate_output: Called after each new input buffer is submitted repeatedly
  *                   until it either generates an error or fails to generate an output
  *                   buffer. The default implementation takes the contents of the
@@ -208,7 +208,7 @@ struct _GstBaseTransform {
  *                   calls either @transform or @transform_ip. Elements that don't
  *                   do 1-to-1 transformations on input to output buffers can either
  *                   return GST_BASE_TRANSFORM_FLOW_DROPPED or simply not generate
- *                   an output buffer until they are ready to do so. (Since 1.6)
+ *                   an output buffer until they are ready to do so. (Since: 1.6)
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum either @transform or @transform_ip need to be overridden.
