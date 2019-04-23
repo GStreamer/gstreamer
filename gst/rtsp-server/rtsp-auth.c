@@ -323,7 +323,7 @@ gst_rtsp_auth_get_tls_certificate (GstRTSPAuth * auth)
  * If set to %NULL (the default), then peer certificate validation will always
  * set the %G_TLS_CERTIFICATE_UNKNOWN_CA error.
  *
- * Since 1.6
+ * Since: 1.6
  */
 void
 gst_rtsp_auth_set_tls_database (GstRTSPAuth * auth, GTlsDatabase * database)
