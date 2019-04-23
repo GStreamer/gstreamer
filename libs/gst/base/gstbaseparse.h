@@ -221,10 +221,10 @@ struct _GstBaseParse {
  * @sink_query:     Optional.
  *                   Query handler on the sink pad. This function should chain
  *                   up to the parent implementation to let the default handler
- *                   run (Since 1.2)
+ *                   run (Since: 1.2)
  * @src_query:      Optional.
  *                   Query handler on the source pad. Should chain up to the
- *                   parent to let the default handler run (Since 1.2)
+ *                   parent to let the default handler run (Since: 1.2)
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden.
