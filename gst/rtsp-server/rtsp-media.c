@@ -2398,6 +2398,8 @@ gst_rtsp_media_get_status (GstRTSPMedia * media)
  * gst_rtsp_media_prepare().
  *
  * Returns: %TRUE on success.
+ *
+ * Since: 1.14
  */
 gboolean
 gst_rtsp_media_seek_full (GstRTSPMedia * media, GstRTSPTimeRange * range,
@@ -4225,7 +4227,7 @@ gst_rtsp_media_get_transport_mode (GstRTSPMedia * media)
 }
 
 /**
- * gst_rtsp_media_get_seekable:
+ * gst_rtsp_media_seekable:
  * @media: a #GstRTSPMedia
  *
  * Check if the pipeline for @media seek and up to what point in time,
@@ -4234,6 +4236,8 @@ gst_rtsp_media_get_transport_mode (GstRTSPMedia * media)
  * Returns: -1 if the stream is not seekable, 0 if seekable only to the beginning
  * and > 0 to indicate the longest duration between any two random access points.
  * %G_MAXINT64 means any value is possible.
+ *
+ * Since: 1.14
  */
 GstClockTimeDiff
 gst_rtsp_media_seekable (GstRTSPMedia * media)
@@ -4263,6 +4267,8 @@ gst_rtsp_media_seekable (GstRTSPMedia * media)
  * SETUP.
  *
  * Returns: %TRUE if the media pipeline has been sucessfully updated.
+ *
+ * Since: 1.14
  */
 gboolean
 gst_rtsp_media_complete_pipeline (GstRTSPMedia * media, GPtrArray * transports)

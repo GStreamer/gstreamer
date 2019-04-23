@@ -181,6 +181,20 @@ cleanup:
   }
 }
 
+/**
+ * gst_rtsp_sdp_make_media:
+ * @sdp: a #GstRTSPMessage
+ * @info: a #GstSDPInfo
+ * @stream: a #GstRTSPStream
+ * @caps: a #GstCaps
+ * @profile: a #GstRTSPProfile
+ *
+ * Creates a #GstSDPMedia from the parameters and stores it in @sdp.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.14
+ */
 gboolean
 gst_rtsp_sdp_make_media (GstSDPMessage * sdp, GstSDPInfo * info,
     GstRTSPStream * stream, GstCaps * caps, GstRTSPProfile profile)

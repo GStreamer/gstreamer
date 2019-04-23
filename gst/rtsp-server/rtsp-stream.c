@@ -3971,6 +3971,7 @@ gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
  * Get the multicast RTP socket from @stream for a @family.
  *
  * Returns: (transfer full) (nullable): the multicast RTP socket or %NULL if no
+ *
  * socket could be allocated for @family. Unref after usage
  */
 GSocket *
@@ -4005,6 +4006,8 @@ gst_rtsp_stream_get_rtp_multicast_socket (GstRTSPStream * stream,
  *
  * Returns: (transfer full) (nullable): the multicast RTCP socket or %NULL if no
  * socket could be allocated for @family. Unref after usage
+ *
+ * Since: 1.14
  */
 GSocket *
 gst_rtsp_stream_get_rtcp_multicast_socket (GstRTSPStream * stream,
@@ -4262,6 +4265,8 @@ gst_rtsp_stream_set_blocked (GstRTSPStream * stream, gboolean blocked)
  * Unblocks the dataflow on @stream if it is linked.
  *
  * Returns: %TRUE on success
+ *
+ * Since: 1.14
  */
 gboolean
 gst_rtsp_stream_unblock_linked (GstRTSPStream * stream)
@@ -4478,6 +4483,8 @@ gst_rtsp_stream_query_stop (GstRTSPStream * stream, gint64 * stop)
  * Checks whether the individual @stream is seekable.
  *
  * Returns: %TRUE if @stream is seekable, else %FALSE.
+ *
+ * Since: 1.14
  */
 gboolean
 gst_rtsp_stream_seekable (GstRTSPStream * stream)
@@ -4532,6 +4539,8 @@ beach:
  * SETUP.
  *
  * Returns: %TRUE if the stream has been sucessfully updated.
+ *
+ * Since: 1.14
  */
 gboolean
 gst_rtsp_stream_complete_stream (GstRTSPStream * stream,
@@ -4580,6 +4589,8 @@ unallowed_transport:
  * seek operations on it.
  *
  * Returns: %TRUE if the stream contains at least one sink element.
+ *
+ * Since: 1.14
  */
 gboolean
 gst_rtsp_stream_is_complete (GstRTSPStream * stream)
@@ -4604,6 +4615,8 @@ gst_rtsp_stream_is_complete (GstRTSPStream * stream)
  * Checks whether the stream is a sender.
  *
  * Returns: %TRUE if the stream is a sender and %FALSE otherwise.
+ *
+ * Since: 1.14
  */
 gboolean
 gst_rtsp_stream_is_sender (GstRTSPStream * stream)
@@ -4628,6 +4641,8 @@ gst_rtsp_stream_is_sender (GstRTSPStream * stream)
  * Checks whether the stream is a receiver.
  *
  * Returns: %TRUE if the stream is a receiver and %FALSE otherwise.
+ *
+ * Since: 1.14
  */
 gboolean
 gst_rtsp_stream_is_receiver (GstRTSPStream * stream)
