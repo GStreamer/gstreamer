@@ -502,7 +502,7 @@ gst_jack_ring_buffer_acquire (GstAudioRingBuffer * buf,
       if (res != 0 && res != EEXIST)
         goto cannot_connect;
     }
-    free (ports);
+    jack_free (ports);
   }
 done:
 
@@ -537,7 +537,7 @@ cannot_connect:
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Could not connect input ports to physical ports (%d:%s)",
             res, g_strerror (res)));
-    free (ports);
+    jack_free (ports);
     return FALSE;
   }
 }
