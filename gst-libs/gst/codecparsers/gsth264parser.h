@@ -397,8 +397,8 @@ struct _GstH264NalUnitExtensionMVC
  * @valid: If the NAL unit is valid, which means it has
  * already been parsed
  * @data: The data from which the NAL unit has been parsed
- * @header_bytes: The size of the NALU header in bytes (Since 1.6)
- * @extension_type: the extension type (Since 1.6)
+ * @header_bytes: The size of the NALU header in bytes (Since: 1.6)
+ * @extension_type: the extension type (Since: 1.6)
  *
  * Structure defining the NAL unit headers
  */

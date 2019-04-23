@@ -221,7 +221,7 @@ typedef enum
  * @GST_H265_SEI_BUF_PERIOD: Buffering Period SEI Message
  * @GST_H265_SEI_PIC_TIMING: Picture Timing SEI Message
  * @GST_H265_SEI_RECOVERY_POINT: Recovery Point SEI Message (D.3.8)
- * @GST_H265_SEI_TIME_CODE: Time code SEI message (D.2.27) (Since 1.16)
+ * @GST_H265_SEI_TIME_CODE: Time code SEI message (D.2.27) (Since: 1.16)
  * ...
  *
  * The type of SEI message.
