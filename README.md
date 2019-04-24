@@ -17,27 +17,82 @@ for *stable* automatic formatting.
 
 80 columns line width is thus not yet enforced, but strongly suggested.
 
-# Build a web portal from the sources
+# Build the documentation
 
 ## Install dependencies
 
-* Follow [hotdoc's installation guide](https://people.collabora.com/~meh/hotdoc_hotdoc/html/installing.html),
+* Follow [hotdoc's installation guide](https://hotdoc.github.io/installing.html),
   preferably in a virtualenv.
 
 * We *experimentally* use the hotdoc C extension to include functions by
   name, follow the steps outlined [here](https://github.com/hotdoc/hotdoc_c_extension)
 
-* Build the portal:
+## Build the portal without the API documentation
 
 ```
-make
+meson build
+ninja -C build/ GStreamer-doc
 ```
 
-* And browse it:
+And browse it:
 
 ```
-gio open built_doc/html/index.html
+gio open build/GStreamer-doc/html/index.html
 ```
+
+## API documentation
+
+Building the API documentation in the portal implies using
+[gst-build](https://gitlab.freedesktop.org/gstreamer/gst-build/) which allows us
+to aggregate the documentation from all GStreamer modules using the hotdoc subproject
+feature.
+
+From `gst-build`:
+
+```
+meson build/
+ninja -C build subprojects/gst-docs/GStreamer-doc
+```
+
+And browse the doc:
+
+```
+gio open build/subprojects/gst-docs/GStreamer-doc/html/index.html
+```
+
+You can also generate a release tarball of the portal with:
+
+```
+ninja -C build gst-docs@release
+```
+
+### Adding a newly written plugin to the documentation
+
+To add a plugin to the documentation you need to add the given
+meson target to the `plugins` list present in each GStreamer module for
+example:
+
+``` meson
+gst_elements = library('gstcoreelements',
+  gst_elements_sources,
+  c_args : gst_c_args,
+  include_directories : [configinc],
+  dependencies : [gobject_dep, glib_dep, gst_dep, gst_base_dep],
+  install : true,
+  install_dir : plugins_install_dir,
+)
+plugins += [gst_elements]
+```
+
+Then when rebuilding, the `gst_plugins_cache.json` file will be updated
+in the given module and this change should be commited to the git repository.
+
+The plugins documentation is generated exclusively based on that file to
+avoid needing to have built all plugins to get the documentation generated.
+
+NOTE: When moving plugins from one module to another, the `gst_plugins_cache.json`
+from the module where the plugin has been removed should be manually edited
+to reflect the removal.
 
 ## Licensing
 
