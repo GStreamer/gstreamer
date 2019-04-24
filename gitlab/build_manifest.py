@@ -28,6 +28,7 @@ GSTREAMER_MODULES: List[str] = [
     'gst-omx',
     'gst-python',
     'gst-rtsp-server',
+    'gstreamer-sharp',
     'gstreamer-vaapi',
     'gst-integration-testsuites',
     'gst-examples',
