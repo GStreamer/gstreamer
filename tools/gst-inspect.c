@@ -41,7 +41,6 @@
 #   include <sys/wait.h>
 #endif
 
-static const gchar DEFAULT_PAGER[] = "less";
 
 /* "R" : support color
  * "X" : do not clear the screen when leaving the pager
@@ -52,6 +51,7 @@ static const gchar DEFAULT_PAGER[] = "less";
 gboolean colored_output = TRUE;
 
 #ifdef G_OS_UNIX
+static const gchar DEFAULT_PAGER[] = "less";
 GPid child_pid = -1;
 #endif
 GMainLoop *loop = NULL;
