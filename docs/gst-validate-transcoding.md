@@ -32,7 +32,7 @@ This is the serialization format of a [GstEncodingProfile](GstEncodingProfile).
 
 Internally the transcoding application uses [GstEncodeBin](encodebin).
 `gst-validate-transcoding-GST_API_VERSION` uses its own serialization
-format to describe the [`GstEncodeBin.profile`](GstEncodeBin--profile) property of the
+format to describe the [`GstEncodeBin.profile`](encodebin:profile) property of the
 encodebin.
 
 The simplest serialized profile looks like:
@@ -59,7 +59,7 @@ This field allows you to specify how many times maximum a
 [GstEncodingProfile](GstEncodingProfile) can be used inside an encodebin.
 
 You can also use the `restriction_caps->encoded_format_caps` syntax to
-specify the [restriction caps](GstEncodingProfile::restriction-caps)
+specify the [restriction caps](GstEncodingProfile:restriction-caps)
 to be set on a [GstEncodingProfile](GstEncodingProfile). It
 corresponds to the restriction [GstCaps](GstCaps) to apply before the encoder
 that will be used in the profile. The fields present in restriction caps

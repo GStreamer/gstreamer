@@ -785,7 +785,7 @@ _do_report_synthesis (GstValidateRunner * runner)
  * @runner: The #GstValidateRunner to print all the reports for
  *
  * Prints all the reports on the terminal or on wherever is set
- * in the #GST_VALIDATE_FILE env variable.
+ * in the `GST_VALIDATE_FILE` env variable.
  *
  * Returns: 0 if no critical error has been found and 18 if a critical
  * error has been detected. That return value is usually to be used as

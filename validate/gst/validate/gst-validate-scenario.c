@@ -31,7 +31,7 @@
  * It is basically an ordered list of #GstValidateAction that will be executed during the
  * execution of the pipeline.
  *
- * Possible configurations (see #GST_VALIDATE_CONFIG):
+ * Possible configurations (see [GST_VALIDATE_CONFIG](gst-validate-environment-variables.md)):
  *  * scenario-action-execution-interval: Sets the interval in
  *    milliseconds (1/1000ths of a second), between which actions
  *    will be executed, setting it to 0 means "execute in idle".

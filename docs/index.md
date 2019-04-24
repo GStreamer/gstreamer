@@ -18,10 +18,9 @@ elements. The generated reports are ordered by level of importance from
 "issue" to "critical".
 
 Some tools have been implemented to help developers validate and test
-their GstElement, you can have a look at the [command line tools
-section](command-line-tools.md) to find more information.
+their GstElement, see [gst-validate](gst-validate.md) for example.
 
-On top of that, the notion of a [validation scenario] has been
-implemented so that developers can easily execute a set of actions on
+On top of that, the notion of a [validation scenario](gst-validate-scenarios.md)
+has been implemented so that developers can easily execute a set of actions on
 pipelines to test real world interactive cases and reproduce existing
 issues in a convenient way.

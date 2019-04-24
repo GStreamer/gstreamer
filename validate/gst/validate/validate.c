@@ -172,7 +172,7 @@ create_config (const gchar * config, const gchar * suffix)
 
 /**
  * gst_validate_plugin_get_config:
- * @plugin, a #GstPlugin, or #NULL
+ * @plugin: a #GstPlugin, or #NULL
  *
  * Return the configuration specific to @plugin, or the "core" one if @plugin
  * is #NULL
