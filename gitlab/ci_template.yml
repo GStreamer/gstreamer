@@ -18,6 +18,10 @@ variables:
   INDENT_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/gst-indent:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
   MANIFEST_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/build-manifest:d19082b72667fb3382bdc3621520c4d26e258b2e'
 
+  # Branch to track for modules that have no ref specified in the manifest
+  GST_UPSTREAM_BRANCH: 'master'
+  ORC_UPSTREAM_BRANCH: 'master'
+
   GIT_STRATEGY: none
   MESON_BUILDTYPE_ARGS: --default-library=both
   DEFAULT_MESON_ARGS: >
@@ -57,7 +61,7 @@ gst indent:
   script:
     # man indent. grep RETURN VALUE, grab a beer on my behalf...
     - indent --version || true
-    - curl -o gst-indent https://gitlab.freedesktop.org/gstreamer/gstreamer/raw/master/tools/gst-indent
+    - curl -o gst-indent https://gitlab.freedesktop.org/gstreamer/gstreamer/raw/${GST_UPSTREAM_BRANCH}/tools/gst-indent
     - chmod +x gst-indent
     - find . -name '*.c' -exec ./gst-indent {} +
     - |
@@ -523,7 +527,7 @@ build cerbero cross win64:
     GSTREAMER_ROOT_ANDROID: ${CI_PROJECT_DIR}/examples/cerbero-android-universal
   script:
     - mkdir -p ${EXAMPLES_HOME}/outputs
-    - curl -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/master/gitlab/clone_manifest_ref.py
+    - curl -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py
     - chmod +x clone_manifest_ref.py
     - ./clone_manifest_ref.py --manifest manifest.xml --project gst-examples --destination ${EXAMPLES_HOME}/gst-examples
     - ./clone_manifest_ref.py --manifest manifest.xml --project gst-docs --destination ${EXAMPLES_HOME}/gst-docs

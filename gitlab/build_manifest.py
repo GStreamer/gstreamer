@@ -65,9 +65,9 @@ def get_cerbero_last_build_info (namespace : str, branch : str):
 
     return deps[0]['commit']
 
-def get_branches_info(module: str, namespace: str, branches: List[str]) -> Tuple[str, str]:
+def get_branch_info(module: str, namespace: str, branch: str) -> Tuple[str, str]:
     try:
-        res = git('ls-remote', f'https://gitlab.freedesktop.org/{namespace}/{module}.git', *branches)
+        res = git('ls-remote', f'https://gitlab.freedesktop.org/{namespace}/{module}.git', branch)
     except subprocess.CalledProcessError:
         return None, None
 
@@ -76,37 +76,39 @@ def get_branches_info(module: str, namespace: str, branches: List[str]) -> Tuple
 
     # Special case cerbero to avoid cache misses
     if module == 'cerbero':
-        for branch in branches:
-            sha = get_cerbero_last_build_info(namespace, branch)
-            if sha is not None:
-                return sha, sha
+        sha = get_cerbero_last_build_info(namespace, branch)
+        if sha is not None:
+            return sha, sha
 
     lines = res.split('\n')
-    for branch in branches:
-        for line in lines:
-            if line.endswith('/' + branch):
-                try:
-                    sha, refname = line.split('\t')
-                except ValueError:
-                    continue
-                return refname.strip(), sha
+    for line in lines:
+        if line.endswith('/' + branch):
+            try:
+                sha, refname = line.split('\t')
+            except ValueError:
+                continue
+            return refname.strip(), sha
 
     return None, None
 
 
 def find_repository_sha(module: str, branchname: str) -> Tuple[str, str, str]:
     namespace: str = os.environ["CI_PROJECT_NAMESPACE"]
+    ups_branch: str = os.getenv('GST_UPSTREAM_BRANCH', default='master')
+
+    if module == "orc":
+        ups_branch = os.getenv('ORC_UPSTREAM_BRANCH', default='master')
 
     if module == os.environ['CI_PROJECT_NAME']:
         return 'user', branchname, os.environ['CI_COMMIT_SHA']
 
-    if branchname != "master":
-        remote_refname, sha = get_branches_info(module, namespace, [branchname])
+    if branchname != ups_branch:
+        remote_refname, sha = get_branch_info(module, namespace, branchname)
         if sha is not None:
             return 'user', remote_refname, sha
 
     # Check upstream project for a branch
-    remote_refname, sha = get_branches_info(module, 'gstreamer', [branchname, 'master'])
+    remote_refname, sha = get_branch_info(module, 'gstreamer', ups_branch)
     if sha is not None:
         return 'origin', remote_refname, sha
 
@@ -152,6 +154,7 @@ def test_find_repository_sha():
     os.environ["CI_PROJECT_NAME"] = "some-random-project"
     os.environ["CI_PROJECT_URL"] = "https://gitlab.freedesktop.org/gstreamer/gst-plugins-good"
     os.environ["CI_PROJECT_NAMESPACE"] = "alatiera"
+    os.environ["GST_UPSTREAM_BRANCH"] = "master"
     del os.environ["READ_PROJECTS_TOKEN"]
 
     # This should find the repository in the user namespace
@@ -182,11 +185,13 @@ def test_get_project_branch():
     os.environ["CI_PROJECT_NAMESPACE"] = "nowaythisnamespaceexists_"
     del os.environ["READ_PROJECTS_TOKEN"]
 
+    os.environ['GST_UPSTREAM_BRANCH'] = '1.12'
     remote, refname, twelve = find_repository_sha('gst-plugins-good', '1.12')
     assert twelve is not None
     assert remote == 'origin'
     assert refname == "refs/heads/1.12"
 
+    os.environ['GST_UPSTREAM_BRANCH'] = '1.14'
     remote, refname, fourteen = find_repository_sha('gst-plugins-good', '1.14')
     assert fourteen is not None
     assert remote == 'origin'
