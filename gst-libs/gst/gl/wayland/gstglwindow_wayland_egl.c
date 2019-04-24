@@ -342,7 +342,7 @@ create_wl_shell_surface (GstGLWindowWaylandEGL * window_egl)
 
   GST_DEBUG ("Creating surfaces for wl-shell");
 
-  wl_shell_surface = wl_shell_get_shell_surface (display->wl_shell,
+  wl_shell_surface = wl_shell_get_shell_surface (display->shell,
       window_egl->window.surface);
 
   if (window_egl->window.queue) {
