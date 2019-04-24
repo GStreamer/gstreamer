@@ -1861,6 +1861,32 @@ GST_START_TEST (test_on_sending_nacks)
 
 GST_END_TEST;
 
+static void
+disable_probation_on_new_ssrc (GObject * session, GObject * source)
+{
+  g_object_set (source, "probation", 0, NULL);
+}
+
+GST_START_TEST (test_disable_probation)
+{
+  SessionHarness *h = session_harness_new ();
+
+  g_object_set (h->internal_session, "internal-ssrc", 0xDEADBEEF, NULL);
+  g_signal_connect (h->internal_session, "on-new-ssrc",
+      G_CALLBACK (disable_probation_on_new_ssrc), NULL);
+
+  /* Receive a RTP buffer from the wire */
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_recv_rtp (h, generate_test_buffer (0, 0x12345678)));
+
+  /* When probation is disable, the packet should be produced immediatly */
+  fail_unless_equals_int (1, gst_harness_buffers_in_queue (h->recv_rtp_h));
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpsession_suite (void)
 {
@@ -1890,6 +1916,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_change_sent_sdes);
   tcase_add_test (tc_chain, test_disable_sr_timestamp);
   tcase_add_test (tc_chain, test_on_sending_nacks);
+  tcase_add_test (tc_chain, test_disable_probation);
   return s;
 }
 
