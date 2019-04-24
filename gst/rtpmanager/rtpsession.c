@@ -2240,6 +2240,9 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   prevactive = RTP_SOURCE_IS_ACTIVE (source);
   oldrate = source->bitrate;
 
+  if (created)
+    on_new_ssrc (sess, source);
+
   /* let source process the packet */
   result = rtp_source_process_rtp (source, &pinfo);
 
@@ -2252,8 +2255,6 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   if (oldrate != source->bitrate)
     sess->recalc_bandwidth = TRUE;
 
-  if (created)
-    on_new_ssrc (sess, source);
 
   if (source->validated) {
     gboolean created;
