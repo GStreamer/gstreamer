@@ -1,5 +1,5 @@
 project('GStreamer manuals and tutorials', 'c',
-  version: '1.15.0.1',
+  version: '1.16.0',
   meson_version: '>=0.48.0')
 
 hotdoc = import('hotdoc')
