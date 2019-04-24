@@ -76,8 +76,7 @@ registry_handle_global (void *data, struct wl_registry *registry,
     xdg_wm_base_add_listener (priv->xdg_wm_base, &xdg_wm_base_listener,
         display);
   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
-    display->wl_shell =
-        wl_registry_bind (registry, name, &wl_shell_interface, 1);
+    display->shell = wl_registry_bind (registry, name, &wl_shell_interface, 1);
   }
 }
 
@@ -119,7 +118,7 @@ gst_gl_display_wayland_finalize (GObject * object)
   GstGLDisplayWaylandPrivate *priv =
       gst_gl_display_wayland_get_instance_private (display_wayland);
 
-  g_clear_pointer (&display_wayland->wl_shell, wl_shell_destroy);
+  g_clear_pointer (&display_wayland->shell, wl_shell_destroy);
   g_clear_pointer (&priv->xdg_wm_base, xdg_wm_base_destroy);
 
   /* Cause eglTerminate() to occur before wl_display_disconnect()
