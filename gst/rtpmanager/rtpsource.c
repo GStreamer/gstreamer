@@ -1210,7 +1210,9 @@ bad_sequence:
   }
 probation_seqnum:
   {
-    GST_WARNING ("probation: seqnr %d != expected %d", seqnr, expected);
+    GST_WARNING ("probation: seqnr %d != expected %d "
+        "(SSRC %u curr_probation %i probation %i)", seqnr, expected, src->ssrc,
+        src->curr_probation, src->probation);
     src->curr_probation = src->probation;
     src->stats.max_seq = seqnr;
     return FALSE;
