@@ -42,6 +42,7 @@ dnf install -y \
     ffmpeg \
     ffmpeg-libs \
     ffmpeg-devel \
+    flex \
     flite \
     flite-devel \
     mono-devel \
