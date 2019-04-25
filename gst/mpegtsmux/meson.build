@@ -1,11 +1,13 @@
 tsmux_sources = [
+  'mpegtsmuxplugin.c',
   'mpegtsmux.c',
+  'atscmux.c',
   'mpegtsmux_aac.c',
   'mpegtsmux_opus.c',
   'mpegtsmux_ttxt.c',
   'mpegtsmux_jpeg2000.c',
   'tsmux/tsmux.c',
-  'tsmux/tsmuxstream.c',
+  'tsmux/tsmuxstream.c'
 ]
 
 gstmpegtsmux = library('gstmpegtsmux',
