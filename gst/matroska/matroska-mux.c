@@ -983,7 +983,7 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (mux->state >= GST_MATROSKA_MUX_STATE_HEADER
         && !gst_caps_is_equal (caps, old_caps)) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
-          ("Caps changed are not supported by Matroska"));
+          ("Caps changes are not supported by Matroska"));
       gst_caps_unref (old_caps);
       goto refuse_caps;
     }
@@ -1813,7 +1813,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (mux->state >= GST_MATROSKA_MUX_STATE_HEADER
         && !gst_caps_is_equal (caps, old_caps)) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
-          ("Caps changed are not supported by Matroska"));
+          ("Caps changes are not supported by Matroska"));
       gst_caps_unref (old_caps);
       goto refuse_caps;
     }
@@ -2249,7 +2249,7 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
     if (mux->state >= GST_MATROSKA_MUX_STATE_HEADER
         && !gst_caps_is_equal (caps, old_caps)) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
-          ("Caps changed are not supported by Matroska"));
+          ("Caps changes are not supported by Matroska"));
       gst_caps_unref (old_caps);
       goto refuse_caps;
     }
