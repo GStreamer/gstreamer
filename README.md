@@ -3,7 +3,7 @@
 GStreamer [meson](http://mesonbuild.com/) based repositories aggregrator.
 
 Check out this module and run meson on it, and it will git clone the other
-GStreamer modules as [meson subprojects](https://github.com/mesonbuild/meson/wiki/Subprojects)
+GStreamer modules as [meson subprojects](http://mesonbuild.com/Subprojects.html)
 and build everything in one go. Once that is done you can switch into an
 uninstalled environment which allows you to easily develop and test the latest
 version of GStreamer without the need to install anything or touch an existing
