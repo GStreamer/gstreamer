@@ -1,9 +1,13 @@
 # gst-build
 
-GStreamer [meson](http://mesonbuild.com/) based repositories aggregrator
+GStreamer [meson](http://mesonbuild.com/) based repositories aggregrator.
 
-You can build GStreamer and all its modules at once using
-meson and its [subproject](https://github.com/mesonbuild/meson/wiki/Subprojects) feature.
+Check out this module and run meson on it, and it will git clone the other
+GStreamer modules as [meson subprojects](https://github.com/mesonbuild/meson/wiki/Subprojects)
+and build everything in one go. Once that is done you can switch into an
+uninstalled environment which allows you to easily develop and test the latest
+version of GStreamer without the need to install anything or touch an existing
+GStreamer system installation.
 
 ## Getting started
 
