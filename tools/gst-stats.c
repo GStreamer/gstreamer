@@ -124,16 +124,17 @@ typedef struct
 static void
 latencies_foreach_print_stats (gchar * key, GstLatencyStats * ls, gpointer data)
 {
-  printf ("\t%s: mean=%" G_GUINT64_FORMAT " min=%" G_GUINT64_FORMAT " max=%"
-      G_GUINT64_FORMAT "\n", key, ls->total / ls->count, ls->min, ls->max);
+  printf ("\t%s: mean=%" GST_TIME_FORMAT " min=%" GST_TIME_FORMAT " max=%"
+      GST_TIME_FORMAT "\n", key, GST_TIME_ARGS (ls->total / ls->count),
+      GST_TIME_ARGS (ls->min), GST_TIME_ARGS (ls->max));
 }
 
 static void
 reported_latencies_foreach_print_stats (GstReportedLatency * rl, gpointer data)
 {
-  printf ("\t%s: min=%" G_GUINT64_FORMAT " max=%" G_GUINT64_FORMAT " ts=%"
-      GST_TIME_FORMAT "\n", rl->element, rl->min,
-      rl->max, GST_TIME_ARGS (rl->ts));
+  printf ("\t%s: min=%" GST_TIME_FORMAT " max=%" GST_TIME_FORMAT " ts=%"
+      GST_TIME_FORMAT "\n", rl->element, GST_TIME_ARGS (rl->min),
+      GST_TIME_ARGS (rl->max), GST_TIME_ARGS (rl->ts));
 }
 
 static void
