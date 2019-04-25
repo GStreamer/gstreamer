@@ -763,6 +763,7 @@ gst_image_freeze_src_loop (GstPad * pad)
   guint64 cstart, cstop;
   gboolean in_seg, eos;
   GstFlowReturn flow_ret = GST_FLOW_OK;
+  gboolean first = FALSE;
 
   g_mutex_lock (&self->lock);
   if (!gst_pad_has_current_caps (self->srcpad)) {
@@ -817,6 +818,7 @@ gst_image_freeze_src_loop (GstPad * pad)
     g_mutex_unlock (&self->lock);
 
     self->need_segment = FALSE;
+    first = TRUE;
 
     gst_pad_push_event (self->srcpad, e);
   }
@@ -869,6 +871,10 @@ gst_image_freeze_src_loop (GstPad * pad)
     GST_BUFFER_DURATION (buffer) = cstop - cstart;
     GST_BUFFER_OFFSET (buffer) = offset;
     GST_BUFFER_OFFSET_END (buffer) = offset + 1;
+    if (first)
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+    else
+      GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
     flow_ret = gst_pad_push (self->srcpad, buffer);
     GST_DEBUG_OBJECT (pad, "Pushing buffer resulted in %s",
         gst_flow_get_name (flow_ret));
