@@ -19,6 +19,7 @@ msdk_sources = [
   'gstmsdkvideomemory.c',
   'gstmsdkvp8dec.c',
   'gstmsdkvp8enc.c',
+  'gstmsdkvp9enc.c',
   'gstmsdkvpp.c',
   'gstmsdkvpputil.c',
   'msdk-enums.c',
