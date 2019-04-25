@@ -102,6 +102,7 @@ typedef struct TsMux TsMux;
 
 typedef gboolean (*TsMuxWriteFunc) (GstBuffer * buf, void *user_data, gint64 new_pcr);
 typedef void (*TsMuxAllocFunc) (GstBuffer ** buf, void *user_data);
+typedef TsMuxStream * (*TsMuxNewStreamFunc) (guint16 new_pid, TsMuxStreamType stream_type, void *user_data);
 
 struct TsMuxSection {
   TsMuxPacketInfo pi;
@@ -175,6 +176,9 @@ struct TsMux {
   /* callback to alloc new packet buffer */
   TsMuxAllocFunc alloc_func;
   void *alloc_func_data;
+  /* callback to create a new stream */
+  TsMuxNewStreamFunc new_stream_func;
+  void *new_stream_data;
 
   /* scratch space for writing ES_info descriptors */
   guint8 es_info_buf[TSMUX_MAX_ES_INFO_LENGTH];
@@ -190,6 +194,7 @@ void 		tsmux_free 			(TsMux *mux);
 /* Setting muxing session properties */
 void 		tsmux_set_write_func 		(TsMux *mux, TsMuxWriteFunc func, void *user_data);
 void 		tsmux_set_alloc_func 		(TsMux *mux, TsMuxAllocFunc func, void *user_data);
+void    tsmux_set_new_stream_func (TsMux * mux, TsMuxNewStreamFunc func, void *user_data);
 void 		tsmux_set_pat_interval          (TsMux *mux, guint interval);
 guint 		tsmux_get_pat_interval          (TsMux *mux);
 void 		tsmux_resend_pat                (TsMux *mux);

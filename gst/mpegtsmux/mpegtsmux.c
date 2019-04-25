@@ -171,6 +171,7 @@ static void gst_mpegtsmux_get_property (GObject * object, guint prop_id,
 
 static void mpegtsmux_reset (MpegTsMux * mux, gboolean alloc);
 static void mpegtsmux_dispose (GObject * object);
+static void mpegtsmux_constructed (GObject * object);
 static void alloc_packet_cb (GstBuffer ** _buf, void *user_data);
 static gboolean new_packet_cb (GstBuffer * buf, void *user_data,
     gint64 new_pcr);
@@ -199,6 +200,8 @@ static gboolean mpegtsmux_send_event (GstElement * element, GstEvent * event);
 static void mpegtsmux_set_header_on_caps (MpegTsMux * mux);
 static gboolean mpegtsmux_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
+
+static TsMux *mpegtsmux_default_create_ts_mux (MpegTsMux * mux);
 
 #if 0
 static void mpegtsmux_set_index (GstElement * element, GstIndex * index);
@@ -260,11 +263,14 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_mpegtsmux_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_mpegtsmux_get_property);
   gobject_class->dispose = mpegtsmux_dispose;
+  gobject_class->constructed = mpegtsmux_constructed;
 
   gstelement_class->request_new_pad = mpegtsmux_request_new_pad;
   gstelement_class->release_pad = mpegtsmux_release_pad;
   gstelement_class->change_state = mpegtsmux_change_state;
   gstelement_class->send_event = mpegtsmux_send_event;
+
+  klass->create_ts_mux = mpegtsmux_default_create_ts_mux;
 
 #if 0
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (mpegtsmux_set_index);
@@ -347,9 +353,6 @@ mpegtsmux_init (MpegTsMux * mux)
   mux->prog_map = NULL;
   mux->alignment = MPEGTSMUX_DEFAULT_ALIGNMENT;
   mux->bitrate = TSMUX_DEFAULT_BITRATE;
-
-  /* initial state */
-  mpegtsmux_reset (mux, TRUE);
 }
 
 static void
@@ -437,9 +440,11 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   }
 
   if (alloc) {
-    mux->tsmux = tsmux_new ();
-    tsmux_set_write_func (mux->tsmux, new_packet_cb, mux);
-    tsmux_set_alloc_func (mux->tsmux, alloc_packet_cb, mux);
+    MpegTsMuxClass *klass = GST_MPEG_TSMUX_GET_CLASS (mux);
+
+    g_assert (klass->create_ts_mux);
+
+    mux->tsmux = klass->create_ts_mux (mux);
   }
 }
 
@@ -471,6 +476,15 @@ mpegtsmux_dispose (GObject * object)
     mux->programs = NULL;
   }
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+}
+
+static void
+mpegtsmux_constructed (GObject * object)
+{
+  MpegTsMux *mux = GST_MPEG_TSMUX (object);
+
+  /* initial state */
+  mpegtsmux_reset (mux, TRUE);
 }
 
 static void
@@ -2062,4 +2076,14 @@ mpegtsmux_send_event (GstElement * element, GstEvent * event)
   }
 
   return FALSE;
+}
+
+static TsMux *
+mpegtsmux_default_create_ts_mux (MpegTsMux * mux)
+{
+  TsMux *tsmux = tsmux_new ();
+  tsmux_set_write_func (tsmux, new_packet_cb, mux);
+  tsmux_set_alloc_func (tsmux, alloc_packet_cb, mux);
+
+  return tsmux;
 }

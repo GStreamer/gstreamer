@@ -153,6 +153,9 @@ tsmux_new (void)
   mux->si_sections = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) tsmux_section_free);
 
+  mux->new_stream_func = (TsMuxNewStreamFunc) tsmux_stream_new;
+  mux->new_stream_data = NULL;
+
   return mux;
 }
 
@@ -191,6 +194,26 @@ tsmux_set_alloc_func (TsMux * mux, TsMuxAllocFunc func, void *user_data)
 
   mux->alloc_func = func;
   mux->alloc_func_data = user_data;
+}
+
+/**
+ * tsmux_set_new_stream_func:
+ * @mux: a #TsMux
+ * @func: a user callback function
+ * @user_data: user data passed to @func
+ *
+ * Set the callback function and user data to be called when @mux needs
+ * to create a new stream.
+ * @user_data will be passed as user data in @func.
+ */
+void
+tsmux_set_new_stream_func (TsMux * mux, TsMuxNewStreamFunc func,
+    void *user_data)
+{
+  g_return_if_fail (mux != NULL);
+
+  mux->new_stream_func = func;
+  mux->new_stream_data = user_data;
 }
 
 /**
@@ -556,6 +579,7 @@ tsmux_create_stream (TsMux * mux, TsMuxStreamType stream_type, guint16 pid,
   guint16 new_pid;
 
   g_return_val_if_fail (mux != NULL, NULL);
+  g_return_val_if_fail (mux->new_stream_func != NULL, NULL);
 
   if (pid == TSMUX_PID_AUTO) {
     new_pid = tsmux_get_new_pid (mux);
@@ -567,7 +591,7 @@ tsmux_create_stream (TsMux * mux, TsMuxStreamType stream_type, guint16 pid,
   if (tsmux_find_stream (mux, new_pid))
     return NULL;
 
-  stream = tsmux_stream_new (new_pid, stream_type);
+  stream = mux->new_stream_func (new_pid, stream_type, mux->new_stream_data);
 
   mux->streams = g_list_prepend (mux->streams, stream);
   mux->nb_streams++;

@@ -93,6 +93,7 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_MPEG_TSMUX  (mpegtsmux_get_type())
 #define GST_MPEG_TSMUX(obj)  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_MPEG_TSMUX, MpegTsMux))
+#define GST_MPEG_TSMUX_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_MPEG_TSMUX,MpegTsMuxClass))
 
 #define CLOCK_BASE 9LL
 #define CLOCK_FREQ (CLOCK_BASE * 10000)   /* 90 kHz PTS clock */
@@ -172,8 +173,15 @@ struct MpegTsMux {
 #endif
 };
 
+/**
+ * MpegTsMuxClass:
+ * @create_ts_mux: Optional.
+ *                 Called in order to create the #TsMux object.
+ */
 struct MpegTsMuxClass {
   GstElementClass parent_class;
+
+  TsMux * (*create_ts_mux) (MpegTsMux *mux);
 };
 
 struct MpegTsPadData {
