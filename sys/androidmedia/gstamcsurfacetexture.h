@@ -54,7 +54,7 @@ struct _GstAmcSurfaceTextureClass
                                         GError ** err);
 
   gboolean (* get_transform_matrix)    (GstAmcSurfaceTexture *texture,
-                                        const gfloat *matrix,
+                                        gfloat *matrix,
                                         GError ** err);
 
   gboolean (* get_timestamp)           (GstAmcSurfaceTexture *texture,
@@ -88,7 +88,7 @@ gboolean gst_amc_surface_texture_attach_to_gl_context    (GstAmcSurfaceTexture *
                                                          GError ** err);
 
 gboolean gst_amc_surface_texture_get_transform_matrix    (GstAmcSurfaceTexture *texture,
-                                                         const gfloat *matrix,
+                                                         gfloat *matrix,
                                                          GError ** err);
 
 gboolean gst_amc_surface_texture_get_timestamp           (GstAmcSurfaceTexture *texture,

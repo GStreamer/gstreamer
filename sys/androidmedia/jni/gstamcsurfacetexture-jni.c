@@ -210,7 +210,7 @@ gst_amc_surface_texture_jni_attach_to_gl_context (GstAmcSurfaceTexture * base,
 
 static gboolean
 gst_amc_surface_texture_jni_get_transform_matrix (GstAmcSurfaceTexture * base,
-    const gfloat * matrix, GError ** err)
+    gfloat * matrix, GError ** err)
 {
   GstAmcSurfaceTextureJNI *self = GST_AMC_SURFACE_TEXTURE_JNI (base);
   JNIEnv *env;

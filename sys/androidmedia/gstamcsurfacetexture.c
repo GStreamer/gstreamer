@@ -78,7 +78,7 @@ gst_amc_surface_texture_attach_to_gl_context (GstAmcSurfaceTexture * self,
 
 gboolean
 gst_amc_surface_texture_get_transform_matrix (GstAmcSurfaceTexture * self,
-    const gfloat * matrix, GError ** err)
+    gfloat * matrix, GError ** err)
 {
   GstAmcSurfaceTextureClass *klass;
   klass = GST_AMC_SURFACE_TEXTURE_GET_CLASS (self);
