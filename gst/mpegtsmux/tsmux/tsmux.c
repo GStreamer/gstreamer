@@ -561,7 +561,7 @@ tsmux_get_new_pid (TsMux * mux)
 /**
  * tsmux_create_stream:
  * @mux: a #TsMux
- * @stream_type: a #TsMuxStreamType
+ * @stream_type: the stream type
  * @pid: the PID of the new stream.
  *
  * Create a new stream of @stream_type in the muxer session @mux.
@@ -572,7 +572,7 @@ tsmux_get_new_pid (TsMux * mux)
  * Returns: a new #TsMuxStream.
  */
 TsMuxStream *
-tsmux_create_stream (TsMux * mux, TsMuxStreamType stream_type, guint16 pid,
+tsmux_create_stream (TsMux * mux, guint stream_type, guint16 pid,
     gchar * language)
 {
   TsMuxStream *stream;

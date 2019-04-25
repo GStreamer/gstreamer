@@ -624,7 +624,7 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
   GstCaps *caps;
   GstStructure *s;
   GstPad *pad;
-  TsMuxStreamType st = TSMUX_ST_RESERVED;
+  guint st = TSMUX_ST_RESERVED;
   const gchar *mt;
   const GValue *value = NULL;
   GstBuffer *codec_data = NULL;
@@ -873,7 +873,14 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
     ts_data->prepare_func = mpegtsmux_prepare_jpeg2000;
     ts_data->prepare_data = private_data;
     ts_data->free_func = mpegtsmux_free_jpeg2000;
+  } else {
+    MpegTsMuxClass *klass = GST_MPEG_TSMUX_GET_CLASS (mux);
+
+    if (klass->handle_media_type) {
+      st = klass->handle_media_type (mux, mt, ts_data);
+    }
   }
+
 
   if (st != TSMUX_ST_RESERVED) {
     ts_data->stream = tsmux_create_stream (mux->tsmux, st, ts_data->pid,

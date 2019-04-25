@@ -91,6 +91,7 @@ typedef enum TsMuxStreamState TsMuxStreamState;
 typedef struct TsMuxStreamBuffer TsMuxStreamBuffer;
 
 typedef void (*TsMuxStreamBufferReleaseFunc) (guint8 *data, void *user_data);
+typedef void (*TsMuxStreamGetESDescriptorsFunc) (TsMuxStream *stream, GstMpegtsPMTStream *pmt_stream, void *user_data);
 
 /* Stream type assignments
  *
@@ -159,7 +160,7 @@ enum TsMuxStreamState {
 struct TsMuxStream {
   TsMuxStreamState state;
   TsMuxPacketInfo pi;
-  TsMuxStreamType stream_type;
+  guint stream_type;
 
   /* stream_id (13818-1) */
   guint8 id;
@@ -180,6 +181,10 @@ struct TsMuxStream {
 
   /* helper to release collected buffers */
   TsMuxStreamBufferReleaseFunc buffer_release;
+
+  /* Override or extend the default Elementary Stream descriptors */
+  TsMuxStreamGetESDescriptorsFunc get_es_descrs;
+  void *get_es_descrs_data;
 
   /* optional fixed PES size for stream type */
   guint16 pes_payload_size;
@@ -232,13 +237,17 @@ struct TsMuxStream {
 };
 
 /* stream management */
-TsMuxStream *	tsmux_stream_new 		(guint16 pid, TsMuxStreamType stream_type);
+TsMuxStream *	tsmux_stream_new 		(guint16 pid, guint stream_type);
 void 		tsmux_stream_free 		(TsMuxStream *stream);
 
 guint16         tsmux_stream_get_pid            (TsMuxStream *stream);
 
 void 		tsmux_stream_set_buffer_release_func 	(TsMuxStream *stream, 
        							 TsMuxStreamBufferReleaseFunc func);
+
+void 		tsmux_stream_set_get_es_descriptors_func 	(TsMuxStream *stream,
+                                                   TsMuxStreamGetESDescriptorsFunc func,
+                                                   void *user_data);
 
 /* Add a new buffer to the pool of available bytes. If pts or dts are not -1, they
  * indicate the PTS or DTS of the first access unit within this packet */
@@ -252,6 +261,7 @@ gboolean	tsmux_stream_is_pcr 		(TsMuxStream *stream);
 
 gboolean 	tsmux_stream_at_pes_start 	(TsMuxStream *stream);
 void 		tsmux_stream_get_es_descrs 	(TsMuxStream *stream, GstMpegtsPMTStream *pmt_stream);
+void    tsmux_stream_default_get_es_descrs (TsMuxStream * stream, GstMpegtsPMTStream * pmt_stream);
 
 gint 		tsmux_stream_bytes_in_buffer 	(TsMuxStream *stream);
 gint 		tsmux_stream_bytes_avail 	(TsMuxStream *stream);

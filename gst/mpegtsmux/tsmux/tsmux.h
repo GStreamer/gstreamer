@@ -102,7 +102,7 @@ typedef struct TsMux TsMux;
 
 typedef gboolean (*TsMuxWriteFunc) (GstBuffer * buf, void *user_data, gint64 new_pcr);
 typedef void (*TsMuxAllocFunc) (GstBuffer ** buf, void *user_data);
-typedef TsMuxStream * (*TsMuxNewStreamFunc) (guint16 new_pid, TsMuxStreamType stream_type, void *user_data);
+typedef TsMuxStream * (*TsMuxNewStreamFunc) (guint16 new_pid, guint stream_type, void *user_data);
 
 struct TsMuxSection {
   TsMuxPacketInfo pi;
@@ -215,7 +215,7 @@ void            tsmux_resend_si                 (TsMux *mux);
 gboolean        tsmux_add_mpegts_si_section     (TsMux * mux, GstMpegtsSection * section);
 
 /* stream management */
-TsMuxStream *	tsmux_create_stream 		(TsMux *mux, TsMuxStreamType stream_type, guint16 pid, gchar *language);
+TsMuxStream *	tsmux_create_stream 		(TsMux *mux, guint stream_type, guint16 pid, gchar *language);
 TsMuxStream *	tsmux_find_stream 		(TsMux *mux, guint16 pid);
 
 void 		tsmux_program_add_stream 	(TsMuxProgram *program, TsMuxStream *stream);

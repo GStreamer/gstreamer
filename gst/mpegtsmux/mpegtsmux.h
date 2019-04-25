@@ -182,6 +182,7 @@ struct MpegTsMuxClass {
   GstElementClass parent_class;
 
   TsMux * (*create_ts_mux) (MpegTsMux *mux);
+  guint (*handle_media_type) (MpegTsMux *mux, const gchar *media_type, MpegTsPadData * ts_data);
 };
 
 struct MpegTsPadData {

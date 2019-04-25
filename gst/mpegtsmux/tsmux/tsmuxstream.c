@@ -122,7 +122,7 @@ struct TsMuxStreamBuffer
  * Returns: a new #TsMuxStream.
  */
 TsMuxStream *
-tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
+tsmux_stream_new (guint16 pid, guint stream_type)
 {
   TsMuxStream *stream = g_slice_new0 (TsMuxStream);
 
@@ -220,7 +220,7 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       break;
     default:
-      g_critical ("Stream type 0x%0x not yet implemented", stream_type);
+      /* Might be a custom stream type implemented by a subclass */
       break;
   }
 
@@ -231,6 +231,10 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
 
   stream->pcr_ref = 0;
   stream->next_pcr = -1;
+
+  stream->get_es_descrs =
+      (TsMuxStreamGetESDescriptorsFunc) tsmux_stream_default_get_es_descrs;
+  stream->get_es_descrs_data = NULL;
 
   return stream;
 }
@@ -293,6 +297,25 @@ tsmux_stream_set_buffer_release_func (TsMuxStream * stream,
   g_return_if_fail (stream != NULL);
 
   stream->buffer_release = func;
+}
+
+/**
+ * tsmux_stream_set_get_es_descriptors_func:
+ * @stream: a #TsMuxStream
+ * @func: a user callback function
+ * @user_data: user data passed to @func
+ *
+ * Set the callback function and user data to be called when @stream has
+ * to create Elementary Stream Descriptors.
+ */
+void
+tsmux_stream_set_get_es_descriptors_func (TsMuxStream * stream,
+    TsMuxStreamGetESDescriptorsFunc func, void *user_data)
+{
+  g_return_if_fail (stream != NULL);
+
+  stream->get_es_descrs = func;
+  stream->get_es_descrs_data = user_data;
 }
 
 /* Advance the current packet stream position by len bytes.
@@ -727,7 +750,7 @@ tsmux_stream_add_data (TsMuxStream * stream, guint8 * data, guint len,
 }
 
 /**
- * tsmux_stream_get_es_descrs:
+ * tsmux_stream_default_get_es_descrs:
  * @stream: a #TsMuxStream
  * @buf: a buffer to hold the ES descriptor
  * @len: the length used in @buf
@@ -738,7 +761,7 @@ tsmux_stream_add_data (TsMuxStream * stream, guint8 * data, guint len,
  * @buf and @len must be at least #TSMUX_MIN_ES_DESC_LEN.
  */
 void
-tsmux_stream_get_es_descrs (TsMuxStream * stream,
+tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
     GstMpegtsPMTStream * pmt_stream)
 {
   GstMpegtsDescriptor *descriptor;
@@ -1037,6 +1060,26 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream,
     default:
       break;
   }
+}
+
+/**
+ * tsmux_stream_get_es_descrs:
+ * @stream: a #TsMuxStream
+ * @buf: a buffer to hold the ES descriptor
+ * @len: the length used in @buf
+ *
+ * Write an Elementary Stream Descriptor for @stream into @buf. the number of
+ * bytes consumed in @buf will be updated in @len.
+ *
+ * @buf and @len must be at least #TSMUX_MIN_ES_DESC_LEN.
+ */
+void
+tsmux_stream_get_es_descrs (TsMuxStream * stream,
+    GstMpegtsPMTStream * pmt_stream)
+{
+  g_return_if_fail (stream->get_es_descrs != NULL);
+
+  return stream->get_es_descrs (stream, pmt_stream, stream->get_es_descrs_data);
 }
 
 /**
