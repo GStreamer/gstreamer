@@ -22,7 +22,7 @@
 #ifndef __ATSCMUX_H__
 #define __ATSCMUX_H__
 
-#include "mpegtsmux.h"
+#include "basetsmux.h"
 
 G_BEGIN_DECLS
 
@@ -32,11 +32,11 @@ typedef struct ATSCMux ATSCMux;
 typedef struct ATSCMuxClass ATSCMuxClass;
 
 struct ATSCMux {
-  MpegTsMux parent;
+  BaseTsMux parent;
 };
 
 struct ATSCMuxClass {
-  MpegTsMuxClass parent_class;
+  BaseTsMuxClass parent_class;
 };
 
 GType atscmux_get_type (void);

@@ -27,17 +27,17 @@
 #endif
 
 #include <stdio.h>
-#include "mpegtsmux_jpeg2000.h"
+#include "basetsmux_jpeg2000.h"
 #include <string.h>
 #include <gst/audio/audio.h>
 #include <gst/base/gstbytewriter.h>
 #include <gst/gst.h>
 
-#define GST_CAT_DEFAULT mpegtsmux_debug
+#define GST_CAT_DEFAULT basetsmux_debug
 
 GstBuffer *
-mpegtsmux_prepare_jpeg2000 (GstBuffer * buf, MpegTsPadData * data,
-    MpegTsMux * mux)
+basetsmux_prepare_jpeg2000 (GstBuffer * buf, BaseTsPadData * data,
+    BaseTsMux * mux)
 {
   j2k_private_data *private_data = data->prepare_data;
   GstByteWriter wr;
@@ -127,7 +127,7 @@ mpegtsmux_prepare_jpeg2000 (GstBuffer * buf, MpegTsPadData * data,
 }
 
 void
-mpegtsmux_free_jpeg2000 (gpointer prepare_data)
+basetsmux_free_jpeg2000 (gpointer prepare_data)
 {
   /*  Free prepare data memory object */
   g_free (prepare_data);

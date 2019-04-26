@@ -1,5 +1,5 @@
 /* 
- * Copyright 2006, 2007, 2008 Fluendo S.A. 
+ * Copyright 2006, 2007, 2008, 2009, 2010 Fluendo S.A. 
  *  Authors: Jan Schmidt <jan@fluendo.com>
  *           Kapil Agrawal <kapil@fluendo.com>
  *           Julien Moutte <julien@fluendo.com>
@@ -80,70 +80,148 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef __BASETSMUX_H__
+#define __BASETSMUX_H__
+
+#include <gst/gst.h>
+#include <gst/base/gstcollectpads.h>
+#include <gst/base/gstadapter.h>
+
+G_BEGIN_DECLS
+
+#include <tsmux/tsmux.h>
+
+#define GST_TYPE_BASE_TSMUX  (basetsmux_get_type())
+#define GST_BASE_TSMUX(obj)  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_BASE_TSMUX, BaseTsMux))
+#define GST_BASE_TSMUX_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_BASE_TSMUX,BaseTsMuxClass))
+
+#define CLOCK_BASE 9LL
+#define CLOCK_FREQ (CLOCK_BASE * 10000)   /* 90 kHz PTS clock */
+#define CLOCK_FREQ_SCR (CLOCK_FREQ * 300) /* 27 MHz SCR clock */
+
+#define GSTTIME_TO_MPEGTIME(time) \
+    (((time) > 0 ? (gint64) 1 : (gint64) -1) * \
+    (gint64) gst_util_uint64_scale (ABS(time), CLOCK_BASE, GST_MSECOND/10))
+
+/* 27 MHz SCR conversions: */
+#define MPEG_SYS_TIME_TO_GSTTIME(time) (gst_util_uint64_scale ((time), \
+                        GST_USECOND, CLOCK_FREQ_SCR / 1000000))
+#define GSTTIME_TO_MPEG_SYS_TIME(time) (gst_util_uint64_scale ((time), \
+                        CLOCK_FREQ_SCR / 1000000, GST_USECOND))
+
+#define NORMAL_TS_PACKET_LENGTH 188
+#define M2TS_PACKET_LENGTH      192
+
+#define DEFAULT_PROG_ID	0
+
+typedef struct BaseTsMux BaseTsMux;
+typedef struct BaseTsMuxClass BaseTsMuxClass;
+typedef struct BaseTsPadData BaseTsPadData;
+
+typedef GstBuffer * (*BaseTsPadDataPrepareFunction) (GstBuffer * buf,
+    BaseTsPadData * data, BaseTsMux * mux);
+
+typedef void (*BaseTsPadDataFreePrepareDataFunction) (gpointer prepare_data);
+
+struct BaseTsMux {
+  GstElement parent;
+
+  GstPad *srcpad;
+
+  GstCollectPads *collect;
+
+  TsMux *tsmux;
+  GHashTable *programs;
+
+  /* properties */
+  gboolean m2ts_mode;
+  GstStructure *prog_map;
+  guint pat_interval;
+  guint pmt_interval;
+  gint alignment;
+  guint si_interval;
+  guint64 bitrate;
+
+  /* state */
+  gboolean first;
+  GstClockTime pending_key_unit_ts;
+  GstEvent *force_key_unit_event;
+
+  /* write callback handling/state */
+  GstFlowReturn last_flow_ret;
+  GQueue streamheader;
+  gboolean streamheader_sent;
+  gboolean is_delta;
+  gboolean is_header;
+  GstClockTime last_ts;
+
+  /* m2ts specific */
+  gint64 previous_pcr;
+  gint64 previous_offset;
+  gint64 pcr_rate_num;
+  gint64 pcr_rate_den;
+  GstAdapter *adapter;
+
+  /* output buffer aggregation */
+  GstAdapter *out_adapter;
+  GstBuffer *out_buffer;
+
+#if 0
+  /* SPN/PTS index handling */
+  GstIndex *element_index;
+  gint spn_count;
+#endif
+};
+
+/**
+ * BaseTsMuxClass:
+ * @create_ts_mux: Optional.
+ *                 Called in order to create the #TsMux object.
+ */
+struct BaseTsMuxClass {
+  GstElementClass parent_class;
+
+  TsMux * (*create_ts_mux) (BaseTsMux *mux);
+  guint (*handle_media_type) (BaseTsMux *mux, const gchar *media_type, BaseTsPadData * ts_data);
+};
+
+struct BaseTsPadData {
+  /* parent */
+  GstCollectData collect;
+
+  gint pid;
+  TsMuxStream *stream;
+
+  /* most recent DTS */
+  gint64 dts;
+
+#if 0
+  /* (optional) index writing */
+  gint element_index_writer_id;
 #endif
 
-#include "mpegtsmux_opus.h"
-#include <string.h>
-#include <gst/audio/audio.h>
+  /* optional codec data available in the caps */
+  GstBuffer *codec_data;
 
-#define GST_CAT_DEFAULT mpegtsmux_debug
+  /* Opaque data pointer to a structure used by the prepare function */
+  gpointer prepare_data;
 
-GstBuffer *
-mpegtsmux_prepare_opus (GstBuffer * buf, MpegTsPadData * pad_data,
-    MpegTsMux * mux)
-{
-  gssize insize = gst_buffer_get_size (buf);
-  gsize outsize;
-  GstBuffer *outbuf;
-  GstMapInfo map;
-  guint n;
-  GstAudioClippingMeta *cmeta = gst_buffer_get_audio_clipping_meta (buf);
+  /* handler to prepare input data */
+  BaseTsPadDataPrepareFunction prepare_func;
+  /* handler to free the private data */
+  BaseTsPadDataFreePrepareDataFunction free_func;
 
-  g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
+  /* program id to which it is attached to (not program pid) */
+  gint prog_id;
+  /* program this stream belongs to */
+  TsMuxProgram *prog;
 
-  outsize = 2 + insize / 255 + 1;
-  if (cmeta && cmeta->start)
-    outsize += 2;
-  if (cmeta && cmeta->end)
-    outsize += 2;
+  gchar *language;
+};
 
-  outbuf = gst_buffer_new_and_alloc (outsize);
-  gst_buffer_copy_into (outbuf, buf,
-      GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
-  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
-  map.data[0] = 0x7f;
-  map.data[1] = 0xe0;
+GType basetsmux_get_type (void);
 
-  if (cmeta && cmeta->start)
-    map.data[1] |= 0x10;
-  if (cmeta && cmeta->end)
-    map.data[1] |= 0x08;
 
-  n = 2;
-  do {
-    g_assert (n < outsize);
-    /* FIXME: this should be using insize for writing here but ffmpeg and the
-     * only available sample stream from obe.tv are not including the control
-     * header size in au_size
-     */
-    map.data[n] = MIN (insize, 255);
-    insize -= 255;
-    n++;
-  } while (insize >= 0);
+G_END_DECLS
 
-  if (cmeta && cmeta->start) {
-    GST_WRITE_UINT16_BE (&map.data[n], cmeta->start);
-    n += 2;
-  }
-
-  if (cmeta && cmeta->end)
-    GST_WRITE_UINT16_BE (&map.data[n], cmeta->end);
-
-  gst_buffer_unmap (outbuf, &map);
-
-  outbuf = gst_buffer_append (outbuf, gst_buffer_ref (buf));
-
-  return outbuf;
-}
+#endif

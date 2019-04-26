@@ -80,12 +80,12 @@
  *
  */
  
-#ifndef __MPEGTSMUX_OPUS_H__
-#define __MPEGTSMUX_OPUS_H__
+#ifndef __BASETSMUX_AAC_H__
+#define __BASETSMUX_AAC_H__
  
-#include "mpegtsmux.h"
+#include "basetsmux.h"
 
-GstBuffer * mpegtsmux_prepare_opus (GstBuffer * buf, MpegTsPadData * data,
-    MpegTsMux * mux);
+GstBuffer * basetsmux_prepare_aac (GstBuffer * buf, BaseTsPadData * data,
+    BaseTsMux * mux);
  
-#endif /* __MPEGTSMUX_OPUS_H__ */
+#endif /* __BASETSMUX_AAC_H__ */

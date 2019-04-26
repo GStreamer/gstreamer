@@ -79,78 +79,13 @@
  * SOFTWARE.
  *
  */
+ 
+#ifndef __BASETSMUX_OPUS_H__
+#define __BASETSMUX_OPUS_H__
+ 
+#include "basetsmux.h"
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#include "mpegtsmux_ttxt.h"
-#include <string.h>
-
-#define GST_CAT_DEFAULT mpegtsmux_debug
-
-/* from EN 300 472 spec: ITU-R System B Teletext in DVB
- *
- * PES packet = PES header + PES payload data
- *  where PES header must be fixed at 45 bytes (likely by using PES stuffing)
- * PES packet must completely fill an integral number of TS packets
- *  using (184 bytes) payload data only (so no adaptation field stuffing)
- */
-
-GstBuffer *
-mpegtsmux_prepare_teletext (GstBuffer * buf, MpegTsPadData * pad_data,
-    MpegTsMux * mux)
-{
-  GstBuffer *out_buf;
-  guint8 *data, *odata;
-  gint size, stuff;
-  gboolean add_id = FALSE;
-  GstMapInfo map, omap;
-
-  gst_buffer_map (buf, &map, GST_MAP_READ);
-  size = map.size;
-  data = map.data;
-
-  /* check if leading data_identifier byte is already present,
-   * if not increase size since it will need to be added */
-  if (data[0] < 0x10 || data[0] > 0x1F) {
-    size += 1;
-    add_id = TRUE;
-  }
-
-  if (size <= 184 - 45) {
-    stuff = 184 - 45 - size;
-  } else {
-    stuff = size - (184 - 45);
-    stuff = 184 - (stuff % 184);
-  }
-  if (G_UNLIKELY (stuff == 1))
-    stuff += 184;
-
-  GST_DEBUG_OBJECT (mux, "Preparing teletext buffer for output");
-
-  out_buf = gst_buffer_new_and_alloc (size + stuff);
-  gst_buffer_copy_into (out_buf, buf,
-      GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
-
-  /* copy data */
-  gst_buffer_map (out_buf, &omap, GST_MAP_WRITE);
-  odata = omap.data;
-  /* add data_identifier if needed */
-  if (add_id) {
-    *odata = 0x10;
-    memcpy (odata + 1, data, size - 1);
-  } else {
-    memcpy (odata, data, size);
-  }
-
-  /* add stuffing data_unit */
-  odata += size;
-  *odata++ = 0xFF;
-  *odata = stuff;
-
-  gst_buffer_unmap (buf, &map);
-  gst_buffer_unmap (out_buf, &omap);
-
-  return out_buf;
-}
+GstBuffer * basetsmux_prepare_opus (GstBuffer * buf, BaseTsPadData * data,
+    BaseTsMux * mux);
+ 
+#endif /* __BASETSMUX_OPUS_H__ */

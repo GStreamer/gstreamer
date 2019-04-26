@@ -84,13 +84,13 @@
 #include "config.h"
 #endif
 
-#include "mpegtsmux_aac.h"
+#include "basetsmux_aac.h"
 #include <string.h>
 
-#define GST_CAT_DEFAULT mpegtsmux_debug
+#define GST_CAT_DEFAULT basetsmux_debug
 
 GstBuffer *
-mpegtsmux_prepare_aac (GstBuffer * buf, MpegTsPadData * data, MpegTsMux * mux)
+basetsmux_prepare_aac (GstBuffer * buf, BaseTsPadData * data, BaseTsMux * mux)
 {
   guint8 adts_header[7] = { 0, };
   gsize out_size = gst_buffer_get_size (buf) + 7;

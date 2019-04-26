@@ -79,13 +79,71 @@
  * SOFTWARE.
  *
  */
- 
-#ifndef __MPEGTSMUX_TTXT_H__
-#define __MPEGTSMUX_TTXT_H__
- 
-#include "mpegtsmux.h"
 
-GstBuffer * mpegtsmux_prepare_teletext (GstBuffer * buf, MpegTsPadData * data,
-    MpegTsMux * mux);
- 
-#endif /* __MPEGTSMUX_TTXT_H__ */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "basetsmux_opus.h"
+#include <string.h>
+#include <gst/audio/audio.h>
+
+#define GST_CAT_DEFAULT basetsmux_debug
+
+GstBuffer *
+basetsmux_prepare_opus (GstBuffer * buf, BaseTsPadData * pad_data,
+    BaseTsMux * mux)
+{
+  gssize insize = gst_buffer_get_size (buf);
+  gsize outsize;
+  GstBuffer *outbuf;
+  GstMapInfo map;
+  guint n;
+  GstAudioClippingMeta *cmeta = gst_buffer_get_audio_clipping_meta (buf);
+
+  g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
+
+  outsize = 2 + insize / 255 + 1;
+  if (cmeta && cmeta->start)
+    outsize += 2;
+  if (cmeta && cmeta->end)
+    outsize += 2;
+
+  outbuf = gst_buffer_new_and_alloc (outsize);
+  gst_buffer_copy_into (outbuf, buf,
+      GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+  map.data[0] = 0x7f;
+  map.data[1] = 0xe0;
+
+  if (cmeta && cmeta->start)
+    map.data[1] |= 0x10;
+  if (cmeta && cmeta->end)
+    map.data[1] |= 0x08;
+
+  n = 2;
+  do {
+    g_assert (n < outsize);
+    /* FIXME: this should be using insize for writing here but ffmpeg and the
+     * only available sample stream from obe.tv are not including the control
+     * header size in au_size
+     */
+    map.data[n] = MIN (insize, 255);
+    insize -= 255;
+    n++;
+  } while (insize >= 0);
+
+  if (cmeta && cmeta->start) {
+    GST_WRITE_UINT16_BE (&map.data[n], cmeta->start);
+    n += 2;
+  }
+
+  if (cmeta && cmeta->end)
+    GST_WRITE_UINT16_BE (&map.data[n], cmeta->end);
+
+  gst_buffer_unmap (outbuf, &map);
+
+  outbuf = gst_buffer_append (outbuf, gst_buffer_ref (buf));
+
+  return outbuf;
+}

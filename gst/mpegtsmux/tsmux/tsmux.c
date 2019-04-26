@@ -88,7 +88,7 @@
 #include "tsmux.h"
 #include "tsmuxstream.h"
 
-#define GST_CAT_DEFAULT mpegtsmux_debug
+#define GST_CAT_DEFAULT basetsmux_debug
 
 /* Maximum total data length for a PAT section is 1024 bytes, minus an 
  * 8 byte header, then the length of each program entry is 32 bits, 

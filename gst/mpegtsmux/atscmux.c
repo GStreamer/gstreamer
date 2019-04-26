@@ -24,11 +24,21 @@
 GST_DEBUG_CATEGORY (atscmux_debug);
 #define GST_CAT_DEFAULT atscmux_debug
 
-G_DEFINE_TYPE (ATSCMux, atscmux, GST_TYPE_MPEG_TSMUX)
+G_DEFINE_TYPE (ATSCMux, atscmux, GST_TYPE_BASE_TSMUX);
+
 #define parent_class atscmux_parent_class
 #define ATSCMUX_ST_PS_AUDIO_EAC3 0x87
-     static GstStaticPadTemplate atscmux_sink_factory =
-         GST_STATIC_PAD_TEMPLATE ("sink_%d",
+
+static GstStaticPadTemplate atscmux_src_factory =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/mpegts, "
+        "systemstream = (boolean) true, " "packetsize = (int) 192 ")
+    );
+
+static GstStaticPadTemplate atscmux_sink_factory =
+    GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpeg, "
@@ -40,9 +50,9 @@ G_DEFINE_TYPE (ATSCMux, atscmux, GST_TYPE_MPEG_TSMUX)
         "audio/x-ac3, framed = (boolean) TRUE;"
         "audio/x-eac3, framed = (boolean) TRUE;"));
 
-     static void
-         atscmux_stream_get_es_descrs (TsMuxStream * stream,
-    GstMpegtsPMTStream * pmt_stream, MpegTsMux * mpegtsmux)
+static void
+atscmux_stream_get_es_descrs (TsMuxStream * stream,
+    GstMpegtsPMTStream * pmt_stream, BaseTsMux * mpegtsmux)
 {
   GstMpegtsDescriptor *descriptor;
 
@@ -111,7 +121,7 @@ G_DEFINE_TYPE (ATSCMux, atscmux, GST_TYPE_MPEG_TSMUX)
 
 static TsMuxStream *
 atscmux_create_new_stream (guint16 new_pid,
-    TsMuxStreamType stream_type, MpegTsMux * mpegtsmux)
+    TsMuxStreamType stream_type, BaseTsMux * mpegtsmux)
 {
   TsMuxStream *ret = tsmux_stream_new (new_pid, stream_type);
 
@@ -129,9 +139,9 @@ atscmux_create_new_stream (guint16 new_pid,
 }
 
 static TsMux *
-atscmux_create_ts_mux (MpegTsMux * mpegtsmux)
+atscmux_create_ts_mux (BaseTsMux * mpegtsmux)
 {
-  TsMux *ret = ((MpegTsMuxClass *) parent_class)->create_ts_mux (mpegtsmux);
+  TsMux *ret = ((BaseTsMuxClass *) parent_class)->create_ts_mux (mpegtsmux);
 
   tsmux_set_new_stream_func (ret,
       (TsMuxNewStreamFunc) atscmux_create_new_stream, mpegtsmux);
@@ -140,8 +150,8 @@ atscmux_create_ts_mux (MpegTsMux * mpegtsmux)
 }
 
 static guint
-atscmux_handle_media_type (MpegTsMux * mux, const gchar * media_type,
-    MpegTsPadData * ts_data)
+atscmux_handle_media_type (BaseTsMux * mux, const gchar * media_type,
+    BaseTsPadData * ts_data)
 {
   guint ret = TSMUX_ST_RESERVED;
 
@@ -156,7 +166,7 @@ static void
 atscmux_class_init (ATSCMuxClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-  MpegTsMuxClass *mpegtsmux_class = (MpegTsMuxClass *) klass;
+  BaseTsMuxClass *mpegtsmux_class = (BaseTsMuxClass *) klass;
 
   GST_DEBUG_CATEGORY_INIT (atscmux_debug, "atscmux", 0, "ATSC muxer");
 
@@ -170,6 +180,9 @@ atscmux_class_init (ATSCMuxClass * klass)
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &atscmux_sink_factory);
+
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &atscmux_src_factory);
 }
 
 static void

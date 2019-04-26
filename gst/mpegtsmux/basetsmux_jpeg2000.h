@@ -22,10 +22,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __MPEGTSMUX_JPEG2000_H__
-#define __MPEGTSMUX_JPEG2000_H__
+#ifndef __BASETSMUX_JPEG2000_H__
+#define __BASETSMUX_JPEG2000_H__
 
-#include "mpegtsmux.h"
+#include "basetsmux.h"
 
 /* color specifications for JPEG 2000 stream over MPEG TS */
 typedef enum
@@ -38,7 +38,7 @@ typedef enum
   GST_MPEGTS_JPEG2000_COLORSPEC_CIEXYZ,
   GST_MPEGTS_JPEG2000_COLORSPEC_REC2020,
   GST_MPEGTS_JPEG2000_COLORSPEC_SMPTE2084
-} GstMpegTsJpeg2000ColorSpec;
+} GstBaseTsJpeg2000ColorSpec;
 
 
 typedef struct j2k_private_data
@@ -55,9 +55,9 @@ typedef struct j2k_private_data
   guint8 color_spec;
 } j2k_private_data;
 
-GstBuffer *mpegtsmux_prepare_jpeg2000 (GstBuffer * buf, MpegTsPadData * data,
-    MpegTsMux * mux);
+GstBuffer *basetsmux_prepare_jpeg2000 (GstBuffer * buf, BaseTsPadData * data,
+    BaseTsMux * mux);
 
-void mpegtsmux_free_jpeg2000 (gpointer prepare_data);
+void basetsmux_free_jpeg2000 (gpointer prepare_data);
 
-#endif /* __MPEGTSMUX_JPEG2000_H__ */
+#endif /* __BASETSMUX_JPEG2000_H__ */

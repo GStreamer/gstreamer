@@ -80,12 +80,12 @@
  *
  */
  
-#ifndef __MPEGTSMUX_AAC_H__
-#define __MPEGTSMUX_AAC_H__
+#ifndef __BASETSMUX_TTXT_H__
+#define __BASETSMUX_TTXT_H__
  
-#include "mpegtsmux.h"
+#include "basetsmux.h"
 
-GstBuffer * mpegtsmux_prepare_aac (GstBuffer * buf, MpegTsPadData * data,
-    MpegTsMux * mux);
+GstBuffer * basetsmux_prepare_teletext (GstBuffer * buf, BaseTsPadData * data,
+    BaseTsMux * mux);
  
-#endif /* __MPEGTSMUX_AAC_H__ */
+#endif /* __BASETSMUX_TTXT_H__ */

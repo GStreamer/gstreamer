@@ -1,5 +1,5 @@
 /* 
- * Copyright 2006, 2007, 2008, 2009, 2010 Fluendo S.A. 
+ * Copyright 2006, 2007, 2008 Fluendo S.A. 
  *  Authors: Jan Schmidt <jan@fluendo.com>
  *           Kapil Agrawal <kapil@fluendo.com>
  *           Julien Moutte <julien@fluendo.com>
@@ -80,36 +80,77 @@
  *
  */
 
-#ifndef __MPEGTSMUX_H__
-#define __MPEGTSMUX_H__
-
-#include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
-#include <gst/base/gstadapter.h>
-
-G_BEGIN_DECLS
-
-#include <tsmux/tsmux.h>
-#include "basetsmux.h"
-
-#define GST_TYPE_MPEG_TSMUX  (mpegtsmux_get_type())
-#define GST_MPEG_TSMUX(obj)  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_MPEG_TSMUX, MpegTsMux))
-#define GST_MPEG_TSMUX_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_MPEG_TSMUX,MpegTsMuxClass))
-
-typedef struct MpegTsMux MpegTsMux;
-typedef struct MpegTsMuxClass MpegTsMuxClass;
-typedef struct MpegTsPadData MpegTsPadData;
-
-struct MpegTsMux {
-  BaseTsMux parent;
-};
-
-struct MpegTsMuxClass {
-  BaseTsMuxClass parent_class;
-};
-
-GType mpegtsmux_get_type (void);
-
-G_END_DECLS
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
+
+#include "basetsmux_ttxt.h"
+#include <string.h>
+
+#define GST_CAT_DEFAULT basetsmux_debug
+
+/* from EN 300 472 spec: ITU-R System B Teletext in DVB
+ *
+ * PES packet = PES header + PES payload data
+ *  where PES header must be fixed at 45 bytes (likely by using PES stuffing)
+ * PES packet must completely fill an integral number of TS packets
+ *  using (184 bytes) payload data only (so no adaptation field stuffing)
+ */
+
+GstBuffer *
+basetsmux_prepare_teletext (GstBuffer * buf, BaseTsPadData * pad_data,
+    BaseTsMux * mux)
+{
+  GstBuffer *out_buf;
+  guint8 *data, *odata;
+  gint size, stuff;
+  gboolean add_id = FALSE;
+  GstMapInfo map, omap;
+
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  size = map.size;
+  data = map.data;
+
+  /* check if leading data_identifier byte is already present,
+   * if not increase size since it will need to be added */
+  if (data[0] < 0x10 || data[0] > 0x1F) {
+    size += 1;
+    add_id = TRUE;
+  }
+
+  if (size <= 184 - 45) {
+    stuff = 184 - 45 - size;
+  } else {
+    stuff = size - (184 - 45);
+    stuff = 184 - (stuff % 184);
+  }
+  if (G_UNLIKELY (stuff == 1))
+    stuff += 184;
+
+  GST_DEBUG_OBJECT (mux, "Preparing teletext buffer for output");
+
+  out_buf = gst_buffer_new_and_alloc (size + stuff);
+  gst_buffer_copy_into (out_buf, buf,
+      GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
+
+  /* copy data */
+  gst_buffer_map (out_buf, &omap, GST_MAP_WRITE);
+  odata = omap.data;
+  /* add data_identifier if needed */
+  if (add_id) {
+    *odata = 0x10;
+    memcpy (odata + 1, data, size - 1);
+  } else {
+    memcpy (odata, data, size);
+  }
+
+  /* add stuffing data_unit */
+  odata += size;
+  *odata++ = 0xFF;
+  *odata = stuff;
+
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unmap (out_buf, &omap);
+
+  return out_buf;
+}

@@ -1,11 +1,12 @@
 tsmux_sources = [
   'mpegtsmuxplugin.c',
+  'basetsmux.c',
   'mpegtsmux.c',
   'atscmux.c',
-  'mpegtsmux_aac.c',
-  'mpegtsmux_opus.c',
-  'mpegtsmux_ttxt.c',
-  'mpegtsmux_jpeg2000.c',
+  'basetsmux_aac.c',
+  'basetsmux_opus.c',
+  'basetsmux_ttxt.c',
+  'basetsmux_jpeg2000.c',
   'tsmux/tsmux.c',
   'tsmux/tsmuxstream.c'
 ]
