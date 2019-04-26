@@ -1775,6 +1775,31 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
 
   READ_UINT8 (&nr, sps->sps_extension_flag, 1);
 
+  if (sps->sps_extension_flag) {
+    READ_UINT8 (&nr, sps->sps_range_extension_flag, 1);
+    READ_UINT8 (&nr, sps->sps_multilayer_extension_flag, 1);
+    READ_UINT8 (&nr, sps->sps_3d_extension_flag, 1);
+    READ_UINT8 (&nr, sps->sps_extension_5bits, 5);
+  }
+
+  if (sps->sps_range_extension_flag) {
+    READ_UINT8 (&nr,
+        sps->sps_extnsion_params.transform_skip_rotation_enabled_flag, 1);
+    READ_UINT8 (&nr,
+        sps->sps_extnsion_params.transform_skip_context_enabled_flag, 1);
+    READ_UINT8 (&nr, sps->sps_extnsion_params.implicit_rdpcm_enabled_flag, 1);
+    READ_UINT8 (&nr, sps->sps_extnsion_params.explicit_rdpcm_enabled_flag, 1);
+    READ_UINT8 (&nr,
+        sps->sps_extnsion_params.extended_precision_processing_flag, 1);
+    READ_UINT8 (&nr, sps->sps_extnsion_params.intra_smoothing_disabled_flag, 1);
+    READ_UINT8 (&nr,
+        sps->sps_extnsion_params.high_precision_offsets_enabled_flag, 1);
+    READ_UINT8 (&nr,
+        sps->sps_extnsion_params.persistent_rice_adaptation_enabled_flag, 1);
+    READ_UINT8 (&nr,
+        sps->sps_extnsion_params.cabac_bypass_alignment_enabled_flag, 1);
+  }
+
   /* calculate ChromaArrayType */
   if (!sps->separate_colour_plane_flag)
     sps->chroma_array_type = sps->chroma_format_idc;
@@ -1847,7 +1872,7 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
   GstH265SPS *sps;
   gint sps_id;
   gint qp_bd_offset;
-  guint32 CtbSizeY, MinCbLog2SizeY, CtbLog2SizeY;
+  guint32 CtbSizeY, MinCbLog2SizeY, CtbLog2SizeY, MaxBitDepthY, MaxBitDepthC;
   guint8 i;
 
   INITIALIZE_DEBUG_CATEGORY;
@@ -1977,6 +2002,45 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
   READ_UINT8 (&nr, pps->slice_segment_header_extension_present_flag, 1);
   READ_UINT8 (&nr, pps->pps_extension_flag, 1);
 
+  if (pps->pps_extension_flag) {
+    READ_UINT8 (&nr, pps->pps_range_extension_flag, 1);
+    READ_UINT8 (&nr, pps->pps_multilayer_extension_flag, 1);
+    READ_UINT8 (&nr, pps->pps_3d_extension_flag, 1);
+    READ_UINT8 (&nr, pps->pps_extension_5bits, 5);
+  }
+
+  if (pps->pps_range_extension_flag) {
+    READ_UE (&nr,
+        pps->pps_extension_params.log2_max_transform_skip_block_size_minus2);
+    READ_UINT8 (&nr,
+        pps->pps_extension_params.cross_component_prediction_enabled_flag, 1);
+    READ_UINT8 (&nr,
+        pps->pps_extension_params.chroma_qp_offset_list_enabled_flag, 1);
+    if (pps->pps_extension_params.chroma_qp_offset_list_enabled_flag) {
+      READ_UE_MAX (&nr,
+          pps->pps_extension_params.diff_cu_chroma_qp_offset_depth,
+          sps->log2_diff_max_min_luma_coding_block_size);
+      READ_UE_MAX (&nr,
+          pps->pps_extension_params.chroma_qp_offset_list_len_minus1, 5);
+      for (i = 0;
+          i <= pps->pps_extension_params.chroma_qp_offset_list_len_minus1;
+          i++) {
+        READ_SE_ALLOWED (&nr, pps->pps_extension_params.cb_qp_offset_list[i],
+            -12, 12);
+        READ_SE_ALLOWED (&nr, pps->pps_extension_params.cr_qp_offset_list[i],
+            -12, 12);
+      }
+    }
+    MaxBitDepthY =
+        sps->bit_depth_luma_minus8 > 2 ? sps->bit_depth_luma_minus8 - 2 : 0;
+    MaxBitDepthC =
+        sps->bit_depth_chroma_minus8 > 2 ? sps->bit_depth_chroma_minus8 - 2 : 0;
+    READ_UE_ALLOWED (&nr, pps->pps_extension_params.log2_sao_offset_scale_luma,
+        0, MaxBitDepthY);
+    READ_UE_ALLOWED (&nr,
+        pps->pps_extension_params.log2_sao_offset_scale_chroma, 0,
+        MaxBitDepthC);
+  }
   pps->valid = TRUE;
   return GST_H265_PARSER_OK;
 
@@ -2240,6 +2304,9 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
       READ_SE_ALLOWED (&nr, slice->cb_qp_offset, -12, 12);
       READ_SE_ALLOWED (&nr, slice->cr_qp_offset, -12, 12);
     }
+
+    if (pps->pps_extension_params.chroma_qp_offset_list_enabled_flag)
+      READ_UINT8 (&nr, slice->cu_chroma_qp_offset_enabled_flag, 1);
 
     if (pps->deblocking_filter_override_enabled_flag)
       READ_UINT8 (&nr, slice->deblocking_filter_override_flag, 1);
