@@ -222,6 +222,8 @@ typedef enum
  * @GST_H265_SEI_PIC_TIMING: Picture Timing SEI Message
  * @GST_H265_SEI_RECOVERY_POINT: Recovery Point SEI Message (D.3.8)
  * @GST_H265_SEI_TIME_CODE: Time code SEI message (D.2.27) (Since: 1.16)
+ * @GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME: Mastering display colour volume information SEI message (D.2.28) (Since: 1.18)
+ * @GST_H265_SEI_CONTENT_LIGHT_LEVEL: Content light level information SEI message (D.2.35) (Since: 1.18)
  * ...
  *
  * The type of SEI message.
@@ -232,6 +234,8 @@ typedef enum
   GST_H265_SEI_PIC_TIMING = 1,
   GST_H265_SEI_RECOVERY_POINT = 6,
   GST_H265_SEI_TIME_CODE = 136,
+  GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME = 137,
+  GST_H265_SEI_CONTENT_LIGHT_LEVEL = 144,
       /* and more...  */
 } GstH265SEIPayloadType;
 
@@ -321,6 +325,8 @@ typedef struct _GstH265PicTiming                GstH265PicTiming;
 typedef struct _GstH265BufferingPeriod          GstH265BufferingPeriod;
 typedef struct _GstH265RecoveryPoint            GstH265RecoveryPoint;
 typedef struct _GstH265TimeCode                 GstH265TimeCode;
+typedef struct _GstH265MasteringDisplayColourVolume GstH265MasteringDisplayColourVolume;
+typedef struct _GstH265ContentLightLevel        GstH265ContentLightLevel;
 typedef struct _GstH265SEIMessage               GstH265SEIMessage;
 
 /**
@@ -1199,6 +1205,40 @@ struct _GstH265TimeCode
   guint32 time_offset_value[3];
 };
 
+/**
+ * GstH265MasteringDisplayColourVolume:
+ * The colour volume (primaries, white point and luminance range) of display
+ * defined by SMPTE ST 2086.
+ *
+ * D.2.28
+ *
+ * Since: 1.18
+ */
+struct _GstH265MasteringDisplayColourVolume
+{
+  guint16 display_primaries_x[3];
+  guint16 display_primaries_y[3];
+  guint16 white_point_x;
+  guint16 white_point_y;
+  guint32 max_display_mastering_luminance;
+  guint32 min_display_mastering_luminance;
+};
+
+/**
+ * GstH265ContentLightLevel:
+ * The upper bounds for the nominal target brightness light level
+ * as specified in CEA-861.3
+ *
+ * D.2.35
+ *
+ * Since: 1.18
+ */
+struct _GstH265ContentLightLevel
+{
+  guint16 max_content_light_level;
+  guint16 max_pic_average_light_level;
+};
+
 struct _GstH265SEIMessage
 {
   GstH265SEIPayloadType payloadType;
@@ -1208,6 +1248,8 @@ struct _GstH265SEIMessage
     GstH265PicTiming pic_timing;
     GstH265RecoveryPoint recovery_point;
     GstH265TimeCode time_code;
+    GstH265MasteringDisplayColourVolume mastering_display_colour_volume;
+    GstH265ContentLightLevel content_light_level;
     /* ... could implement more */
   } payload;
 };
