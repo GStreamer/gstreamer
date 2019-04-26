@@ -1,16 +1,1 @@
-deploy:
-  image: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:latest'
-  stage: deploy
-
-  script:
-  - dnf install -y cmake
-  - pip3 install --upgrade hotdoc meson
-  - meson build/
-  - ninja -C build/ GStreamer-doc
-  - mv build/GStreamer-doc/html documentation/
-  - ARTIFACTS_PATH=$(echo "${CI_JOB_URL}/artifacts/documentation/index.html" |sed "s/${CI_PROJECT_NAMESPACE}/-/g" | sed "s/gitlab/${CI_PROJECT_NAMESPACE}.pages/g")
-  - printf "\n\n==========================================\n= You can find the result at $ARTIFACTS_PATH =\n==========================================\n\n"
-
-  artifacts:
-    paths:
-    - documentation/
+include: 'https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/master/gitlab/ci_template.yml'
