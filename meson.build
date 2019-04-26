@@ -3,24 +3,70 @@ project('GStreamer manuals and tutorials', 'c',
   meson_version: '>=0.48.0')
 
 hotdoc = import('hotdoc')
+hotdoc_subprojects = []
 
 apiversion = '1.0'
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
+
+libs = ''
+plugins_doc = ''
+deps = []
+plugins_sitemap = ''
+if get_option('built_subprojects') != ''
+    foreach project_name: get_option('built_subprojects').split(',')
+        sub = subproject(project_name)
+        if sub.get_variable('build_hotdoc')
+            message('Building @0@ documentation'.format(project_name))
+
+            foreach lib: sub.get_variable('libs_doc')
+              hotdoc_subprojects += [lib]
+              libs += lib.full_path() + pathsep
+              deps += [lib]
+            endforeach
+
+            foreach plugin_doc: sub.get_variable('plugins_doc')
+              plugins_doc += plugin_doc.full_path() + pathsep
+              hotdoc_subprojects += [plugin_doc]
+              deps += [plugin_doc]
+            endforeach
+        else
+            message('@0@ did not build hotdoc documentation, can\'t build API doc'.format(project_name))
+        endif
+    endforeach
+endif
+
+if get_option('use_portal_index')
+  index = 'markdown/index.md'
+else
+  index = 'markdown/simple-index.md'
+endif
+sitemap_gen = find_program('scripts/generate_sitemap.py')
+sitemap = configure_file(command: [sitemap_gen, '@INPUT@', '@OUTPUT@',
+  index.split('/')[1], libs, plugins_doc],
+  input: 'sitemap.txt',
+  output: 'sitemap.txt')
 
 html_theme = 'https://github.com/hotdoc/hotdoc_lumen_theme/releases/download/0.9/hotdoc_lumen_theme-0.9.tar.xz?sha256=ec3807f13eda2d4914fcf251b7e9607e90f33430725a2b1d433a90c9210a52fc'
 
 gstreamer_doc = hotdoc.generate_doc('GStreamer',
     project_version: apiversion,
-    sitemap: 'sitemap.txt',
-    index: 'markdown/index.md',
-    build_by_default: true,
+    sitemap: sitemap,
+    index: index,
     install: true,
     extra_assets: [join_paths(meson.current_source_dir(), 'images')],
     syntax_highlighting_activate: true,
     html_theme: html_theme,
     include_paths: join_paths(meson.current_source_dir(), 'examples'),
     html_extra_theme: join_paths(meson.current_source_dir(), 'theme/extra'),
-    edit_on_github_repository: 'https://gitlab.freedesktop.org/gstreamer/gst-docs/',
-    edit_on_github_branch: 'master',
+    dependencies: deps,
+    subprojects: hotdoc_subprojects,
     disable_incremental_build: true,
+    gst_list_plugins_page: 'plugins_doc.md',
     devhelp_activate: true,
+    build_always_stale: true,
+    edit_on_github_repository: 'https://gitlab.freedesktop.org/gstreamer/gst-docs/',
 )
