@@ -44,7 +44,6 @@ static struct
   jclass jklass;
   jmethodID constructor;
   jmethodID set_on_frame_available_listener;
-  jmethodID set_default_buffer_size;
   jmethodID update_tex_image;
   jmethodID detach_from_gl_context;
   jmethodID attach_to_gl_context;
@@ -86,13 +85,6 @@ gst_amc_surface_texture_static_init (void)
       "setOnFrameAvailableListener",
       "(Landroid/graphics/SurfaceTexture$OnFrameAvailableListener;)V");
   if (!surface_texture.set_on_frame_available_listener) {
-    goto error;
-  }
-
-  surface_texture.set_default_buffer_size =
-      gst_amc_jni_get_method_id (env, &err, surface_texture.jklass,
-      "setDefaultBufferSize", "(II)V");
-  if (!surface_texture.set_default_buffer_size) {
     goto error;
   }
 
@@ -146,19 +138,6 @@ error:
   g_clear_error (&err);
   gst_amc_jni_object_unref (env, surface_texture.constructor);
   return FALSE;
-}
-
-static gboolean
-gst_amc_surface_texture_jni_set_default_buffer_size (GstAmcSurfaceTexture *
-    base, gint width, gint height, GError ** err)
-{
-  GstAmcSurfaceTextureJNI *self = GST_AMC_SURFACE_TEXTURE_JNI (base);
-  JNIEnv *env;
-
-  env = gst_amc_jni_get_env ();
-
-  return gst_amc_jni_call_void_method (env, err, self->jobject,
-      surface_texture.set_default_buffer_size, width, height);
 }
 
 static gboolean
@@ -402,8 +381,6 @@ gst_amc_surface_texture_jni_class_init (GstAmcSurfaceTextureJNIClass * klass)
 
   gobject_class->dispose = gst_amc_surface_texture_jni_dispose;
 
-  surface_texture_class->set_default_buffer_size =
-      gst_amc_surface_texture_jni_set_default_buffer_size;
   surface_texture_class->update_tex_image =
       gst_amc_surface_texture_jni_update_tex_image;
   surface_texture_class->detach_from_gl_context =

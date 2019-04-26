@@ -41,15 +41,6 @@ gst_amc_surface_texture_class_init (GstAmcSurfaceTextureClass * klass)
 }
 
 gboolean
-gst_amc_surface_texture_set_default_buffer_size (GstAmcSurfaceTexture * self,
-    gint width, gint height, GError ** err)
-{
-  GstAmcSurfaceTextureClass *klass;
-  klass = GST_AMC_SURFACE_TEXTURE_GET_CLASS (self);
-  return klass->set_default_buffer_size (self, width, height, err);
-}
-
-gboolean
 gst_amc_surface_texture_update_tex_image (GstAmcSurfaceTexture * self,
     GError ** err)
 {

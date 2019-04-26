@@ -38,11 +38,6 @@ struct _GstAmcSurfaceTextureClass
 {
   GObjectClass parent_class;
 
-  gboolean (* set_default_buffer_size) (GstAmcSurfaceTexture *texture,
-                                        gint width,
-                                        gint height,
-                                        GError ** err);
-
   gboolean (* update_tex_image)        (GstAmcSurfaceTexture *texture,
                                         GError ** err);
 
@@ -71,11 +66,6 @@ struct _GstAmcSurfaceTextureClass
 };
 
 gboolean gst_amc_surface_texture_static_init (void);
-
-gboolean gst_amc_surface_texture_set_default_buffer_size (GstAmcSurfaceTexture *texture,
-                                                         gint width,
-                                                         gint height,
-                                                         GError ** err);
 
 gboolean gst_amc_surface_texture_update_tex_image        (GstAmcSurfaceTexture *texture,
                                                          GError ** err);
