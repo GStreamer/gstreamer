@@ -3792,6 +3792,7 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
   gboolean ret = TRUE;
   GstVideoCodecFrame *frame;
   GstCaps *prevcaps;
+  GstCaps *incaps;
 
   if (!state) {
     GST_DEBUG_OBJECT (decoder,
@@ -3819,6 +3820,32 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
 
   if (state->caps == NULL)
     state->caps = gst_video_info_to_caps (&state->info);
+
+  incaps = gst_pad_get_current_caps (GST_VIDEO_DECODER_SINK_PAD (decoder));
+  if (incaps) {
+    GstStructure *in_struct;
+
+    in_struct = gst_caps_get_structure (incaps, 0);
+    if (gst_structure_has_field (in_struct, "mastering-display-info") ||
+        gst_structure_has_field (in_struct, "content-light-level")) {
+      const gchar *s;
+
+      /* prefer upstream information */
+      state->caps = gst_caps_make_writable (state->caps);
+      if ((s = gst_structure_get_string (in_struct, "mastering-display-info"))) {
+        gst_caps_set_simple (state->caps,
+            "mastering-display-info", G_TYPE_STRING, s, NULL);
+      }
+
+      if ((s = gst_structure_get_string (in_struct, "content-light-level"))) {
+        gst_caps_set_simple (state->caps,
+            "content-light-level", G_TYPE_STRING, s, NULL);
+      }
+    }
+
+    gst_caps_unref (incaps);
+  }
+
   if (state->allocation_caps == NULL)
     state->allocation_caps = gst_caps_ref (state->caps);
 
