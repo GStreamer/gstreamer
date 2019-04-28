@@ -54,6 +54,16 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
   mfxU32 fourcc = req->Info.FourCC;
   mfxU16 surfaces_num = req->NumFrameSuggested;
 
+  /* MFX_MAKEFOURCC('V','P','8','S') is used for MFX_FOURCC_VP9_SEGMAP surface
+   * in MSDK and this surface is an internal surface. The external allocator
+   * shouldn't be used for this surface allocation
+   *
+   * See https://github.com/Intel-Media-SDK/MediaSDK/issues/762
+   */
+  if (req->Type & MFX_MEMTYPE_INTERNAL_FRAME
+      && fourcc == MFX_MAKEFOURCC ('V', 'P', '8', 'S'))
+    return MFX_ERR_UNSUPPORTED;
+
   if (req->Type & MFX_MEMTYPE_EXTERNAL_FRAME) {
     GstMsdkAllocResponse *cached =
         gst_msdk_context_get_cached_alloc_responses_by_request (context, req);
