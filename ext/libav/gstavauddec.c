@@ -597,29 +597,20 @@ no_codec:
 static void
 gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
 {
-  GstFFMpegAudDecClass *oclass;
   gboolean got_any_frames = FALSE;
+  gboolean got_frame;
 
-  oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  if (avcodec_send_packet (ffmpegdec->context, NULL))
+    goto send_packet_failed;
 
-  if (oclass->in_plugin->capabilities & AV_CODEC_CAP_DELAY) {
-    gboolean got_frame;
+  do {
+    GstFlowReturn ret;
 
-    GST_LOG_OBJECT (ffmpegdec,
-        "codec has delay capabilities, calling until libav has drained everything");
-
-    if (avcodec_send_packet (ffmpegdec->context, NULL))
-      goto send_packet_failed;
-
-    do {
-      GstFlowReturn ret;
-
-      got_frame = gst_ffmpegauddec_frame (ffmpegdec, &ret);
-      if (got_frame)
-        got_any_frames = TRUE;
-    } while (got_frame);
-    avcodec_flush_buffers (ffmpegdec->context);
-  }
+    got_frame = gst_ffmpegauddec_frame (ffmpegdec, &ret);
+    if (got_frame)
+      got_any_frames = TRUE;
+  } while (got_frame);
+  avcodec_flush_buffers (ffmpegdec->context);
 
   if (got_any_frames)
     gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
