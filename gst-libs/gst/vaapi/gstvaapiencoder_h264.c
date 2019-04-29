@@ -111,7 +111,7 @@ typedef enum
   GST_VAAPI_ENCODER_H264_PREDICTION_DEFAULT,
   GST_VAAPI_ENCODER_H264_PREDICTION_HIERARCHICAL_P,
   GST_VAAPI_ENCODER_H264_PREDICTION_HIERARCHICAL_B
-} GstVaapiEnoderH264PredictionType;
+} GstVaapiEncoderH264PredictionType;
 
 static GType
 gst_vaapi_encoder_h264_prediction_type (void)
