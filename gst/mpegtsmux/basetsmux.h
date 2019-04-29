@@ -134,7 +134,6 @@ struct BaseTsMux {
   GHashTable *programs;
 
   /* properties */
-  gboolean m2ts_mode;
   GstStructure *prog_map;
   guint pat_interval;
   guint pmt_interval;
@@ -155,12 +154,8 @@ struct BaseTsMux {
   gboolean is_header;
   GstClockTime last_ts;
 
-  /* m2ts specific */
-  gint64 previous_pcr;
-  gint64 previous_offset;
-  gint64 pcr_rate_num;
-  gint64 pcr_rate_den;
-  GstAdapter *adapter;
+  gsize packet_size;
+  gsize automatic_alignment;
 
   /* output buffer aggregation */
   GstAdapter *out_adapter;
@@ -183,7 +178,14 @@ struct BaseTsMuxClass {
 
   TsMux * (*create_ts_mux) (BaseTsMux *mux);
   guint (*handle_media_type) (BaseTsMux *mux, const gchar *media_type, BaseTsPadData * ts_data);
+  void (*allocate_packet) (BaseTsMux *mux, GstBuffer **buffer);
+  gboolean (*output_packet) (BaseTsMux *mux, GstBuffer *buffer, gint64 new_pcr);
+  void (*reset) (BaseTsMux *mux);
+  gboolean (*drain) (BaseTsMux *mux);
 };
+
+void gst_base_tsmux_set_packet_size (BaseTsMux *mux, gsize size);
+void gst_base_tsmux_set_automatic_alignment (BaseTsMux *mux, gsize alignment);
 
 struct BaseTsPadData {
   /* parent */
