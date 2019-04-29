@@ -265,7 +265,7 @@ gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
 
       clk = gst_element_get_clock (element);
       if (clk != NULL) {
-        if (GST_IS_SYSTEM_CLOCK (clk)) {
+        if (G_OBJECT_TYPE (clk) == GST_TYPE_SYSTEM_CLOCK) {
           gint clocktype;
           g_object_get (clk, "clock-type", &clocktype, NULL);
           if (clocktype == GST_CLOCK_TYPE_MONOTONIC &&
