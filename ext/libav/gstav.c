@@ -48,7 +48,7 @@ static GMutex gst_avcodec_mutex;
 static inline gboolean
 gst_ffmpeg_avcodec_is_ffmpeg (void)
 {
-  guint av_version = avutil_version ();
+  guint av_version = avcodec_version ();
 
   GST_DEBUG ("Using libavcodec version %d.%d.%d",
       av_version >> 16, (av_version & 0x00ff00) >> 8, av_version & 0xff);
