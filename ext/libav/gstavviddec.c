@@ -1739,28 +1739,19 @@ static GstFlowReturn
 gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
 {
   GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
-  GstFFMpegVidDecClass *oclass;
+  GstFlowReturn ret;
+  gboolean got_frame = FALSE;
 
   if (!ffmpegdec->opened)
     return GST_FLOW_OK;
 
-  oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  if (avcodec_send_packet (ffmpegdec->context, NULL))
+    goto send_packet_failed;
 
-  if (oclass->in_plugin->capabilities & AV_CODEC_CAP_DELAY) {
-    GstFlowReturn ret;
-    gboolean got_frame = FALSE;
-
-    GST_LOG_OBJECT (ffmpegdec,
-        "codec has delay capabilities, calling until ffmpeg has drained everything");
-
-    if (avcodec_send_packet (ffmpegdec->context, NULL))
-      goto send_packet_failed;
-
-    do {
-      got_frame = gst_ffmpegviddec_frame (ffmpegdec, NULL, &ret);
-    } while (got_frame && ret == GST_FLOW_OK);
-    avcodec_flush_buffers (ffmpegdec->context);
-  }
+  do {
+    got_frame = gst_ffmpegviddec_frame (ffmpegdec, NULL, &ret);
+  } while (got_frame && ret == GST_FLOW_OK);
+  avcodec_flush_buffers (ffmpegdec->context);
 
 done:
   return GST_FLOW_OK;
