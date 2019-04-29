@@ -84,66 +84,73 @@
 #include "config.h"
 #endif
 
-#include "basetsmux_opus.h"
+#include "gstbasetsmuxaac.h"
 #include <string.h>
-#include <gst/audio/audio.h>
 
-#define GST_CAT_DEFAULT basetsmux_debug
+#define GST_CAT_DEFAULT gst_base_ts_mux_debug
 
 GstBuffer *
-basetsmux_prepare_opus (GstBuffer * buf, BaseTsPadData * pad_data,
-    BaseTsMux * mux)
+gst_base_ts_mux_prepare_aac (GstBuffer * buf, GstBaseTsPadData * data,
+    GstBaseTsMux * mux)
 {
-  gssize insize = gst_buffer_get_size (buf);
-  gsize outsize;
-  GstBuffer *outbuf;
-  GstMapInfo map;
-  guint n;
-  GstAudioClippingMeta *cmeta = gst_buffer_get_audio_clipping_meta (buf);
+  guint8 adts_header[7] = { 0, };
+  gsize out_size = gst_buffer_get_size (buf) + 7;
+  GstBuffer *out_buf = gst_buffer_new_and_alloc (out_size);
+  gsize out_offset = 0;
+  guint8 rate_idx = 0, channels = 0, obj_type = 0;
+  GstMapInfo codec_data_map;
+  GstMapInfo buf_map;
 
-  g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
+  GST_DEBUG_OBJECT (mux, "Preparing AAC buffer for output");
 
-  outsize = 2 + insize / 255 + 1;
-  if (cmeta && cmeta->start)
-    outsize += 2;
-  if (cmeta && cmeta->end)
-    outsize += 2;
-
-  outbuf = gst_buffer_new_and_alloc (outsize);
-  gst_buffer_copy_into (outbuf, buf,
+  gst_buffer_copy_into (out_buf, buf,
       GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
-  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
-  map.data[0] = 0x7f;
-  map.data[1] = 0xe0;
 
-  if (cmeta && cmeta->start)
-    map.data[1] |= 0x10;
-  if (cmeta && cmeta->end)
-    map.data[1] |= 0x08;
+  gst_buffer_map (data->codec_data, &codec_data_map, GST_MAP_READ);
 
-  n = 2;
-  do {
-    g_assert (n < outsize);
-    /* FIXME: this should be using insize for writing here but ffmpeg and the
-     * only available sample stream from obe.tv are not including the control
-     * header size in au_size
-     */
-    map.data[n] = MIN (insize, 255);
-    insize -= 255;
-    n++;
-  } while (insize >= 0);
+  /* Generate ADTS header */
+  obj_type = GST_READ_UINT8 (codec_data_map.data) >> 3;
+  rate_idx = (GST_READ_UINT8 (codec_data_map.data) & 0x7) << 1;
+  rate_idx |= (GST_READ_UINT8 (codec_data_map.data + 1) & 0x80) >> 7;
+  channels = (GST_READ_UINT8 (codec_data_map.data + 1) & 0x78) >> 3;
+  GST_DEBUG_OBJECT (mux, "Rate index %u, channels %u, object type %u", rate_idx,
+      channels, obj_type);
+  /* Sync point over a full byte */
+  adts_header[0] = 0xFF;
+  /* Sync point continued over first 4 bits + static 4 bits
+   * (ID, layer, protection)*/
+  adts_header[1] = 0xF1;
+  /* Object type over first 2 bits */
+  adts_header[2] = (obj_type - 1) << 6;
+  /* rate index over next 4 bits */
+  adts_header[2] |= (rate_idx << 2);
+  /* channels over last 2 bits */
+  adts_header[2] |= (channels & 0x4) >> 2;
+  /* channels continued over next 2 bits + 4 bits at zero */
+  adts_header[3] = (channels & 0x3) << 6;
+  /* frame size over last 2 bits */
+  adts_header[3] |= (out_size & 0x1800) >> 11;
+  /* frame size continued over full byte */
+  adts_header[4] = (out_size & 0x1FF8) >> 3;
+  /* frame size continued first 3 bits */
+  adts_header[5] = (out_size & 0x7) << 5;
+  /* buffer fullness (0x7FF for VBR) over 5 last bits */
+  adts_header[5] |= 0x1F;
+  /* buffer fullness (0x7FF for VBR) continued over 6 first bits + 2 zeros for
+   * number of raw data blocks */
+  adts_header[6] = 0xFC;
 
-  if (cmeta && cmeta->start) {
-    GST_WRITE_UINT16_BE (&map.data[n], cmeta->start);
-    n += 2;
-  }
+  /* Insert ADTS header */
+  gst_buffer_fill (out_buf, out_offset, adts_header, 7);
+  out_offset += 7;
 
-  if (cmeta && cmeta->end)
-    GST_WRITE_UINT16_BE (&map.data[n], cmeta->end);
+  gst_buffer_map (buf, &buf_map, GST_MAP_READ);
 
-  gst_buffer_unmap (outbuf, &map);
+  /* Now copy complete frame */
+  gst_buffer_fill (out_buf, out_offset, buf_map.data, buf_map.size);
 
-  outbuf = gst_buffer_append (outbuf, gst_buffer_ref (buf));
+  gst_buffer_unmap (data->codec_data, &codec_data_map);
+  gst_buffer_unmap (buf, &buf_map);
 
-  return outbuf;
+  return out_buf;
 }

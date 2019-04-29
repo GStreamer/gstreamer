@@ -84,73 +84,66 @@
 #include "config.h"
 #endif
 
-#include "basetsmux_ttxt.h"
+#include "gstbasetsmuxopus.h"
 #include <string.h>
+#include <gst/audio/audio.h>
 
-#define GST_CAT_DEFAULT basetsmux_debug
-
-/* from EN 300 472 spec: ITU-R System B Teletext in DVB
- *
- * PES packet = PES header + PES payload data
- *  where PES header must be fixed at 45 bytes (likely by using PES stuffing)
- * PES packet must completely fill an integral number of TS packets
- *  using (184 bytes) payload data only (so no adaptation field stuffing)
- */
+#define GST_CAT_DEFAULT gst_base_ts_mux_debug
 
 GstBuffer *
-basetsmux_prepare_teletext (GstBuffer * buf, BaseTsPadData * pad_data,
-    BaseTsMux * mux)
+gst_base_ts_mux_prepare_opus (GstBuffer * buf, GstBaseTsPadData * pad_data,
+    GstBaseTsMux * mux)
 {
-  GstBuffer *out_buf;
-  guint8 *data, *odata;
-  gint size, stuff;
-  gboolean add_id = FALSE;
-  GstMapInfo map, omap;
+  gssize insize = gst_buffer_get_size (buf);
+  gsize outsize;
+  GstBuffer *outbuf;
+  GstMapInfo map;
+  guint n;
+  GstAudioClippingMeta *cmeta = gst_buffer_get_audio_clipping_meta (buf);
 
-  gst_buffer_map (buf, &map, GST_MAP_READ);
-  size = map.size;
-  data = map.data;
+  g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
 
-  /* check if leading data_identifier byte is already present,
-   * if not increase size since it will need to be added */
-  if (data[0] < 0x10 || data[0] > 0x1F) {
-    size += 1;
-    add_id = TRUE;
-  }
+  outsize = 2 + insize / 255 + 1;
+  if (cmeta && cmeta->start)
+    outsize += 2;
+  if (cmeta && cmeta->end)
+    outsize += 2;
 
-  if (size <= 184 - 45) {
-    stuff = 184 - 45 - size;
-  } else {
-    stuff = size - (184 - 45);
-    stuff = 184 - (stuff % 184);
-  }
-  if (G_UNLIKELY (stuff == 1))
-    stuff += 184;
-
-  GST_DEBUG_OBJECT (mux, "Preparing teletext buffer for output");
-
-  out_buf = gst_buffer_new_and_alloc (size + stuff);
-  gst_buffer_copy_into (out_buf, buf,
+  outbuf = gst_buffer_new_and_alloc (outsize);
+  gst_buffer_copy_into (outbuf, buf,
       GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
+  gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
+  map.data[0] = 0x7f;
+  map.data[1] = 0xe0;
 
-  /* copy data */
-  gst_buffer_map (out_buf, &omap, GST_MAP_WRITE);
-  odata = omap.data;
-  /* add data_identifier if needed */
-  if (add_id) {
-    *odata = 0x10;
-    memcpy (odata + 1, data, size - 1);
-  } else {
-    memcpy (odata, data, size);
+  if (cmeta && cmeta->start)
+    map.data[1] |= 0x10;
+  if (cmeta && cmeta->end)
+    map.data[1] |= 0x08;
+
+  n = 2;
+  do {
+    g_assert (n < outsize);
+    /* FIXME: this should be using insize for writing here but ffmpeg and the
+     * only available sample stream from obe.tv are not including the control
+     * header size in au_size
+     */
+    map.data[n] = MIN (insize, 255);
+    insize -= 255;
+    n++;
+  } while (insize >= 0);
+
+  if (cmeta && cmeta->start) {
+    GST_WRITE_UINT16_BE (&map.data[n], cmeta->start);
+    n += 2;
   }
 
-  /* add stuffing data_unit */
-  odata += size;
-  *odata++ = 0xFF;
-  *odata = stuff;
+  if (cmeta && cmeta->end)
+    GST_WRITE_UINT16_BE (&map.data[n], cmeta->end);
 
-  gst_buffer_unmap (buf, &map);
-  gst_buffer_unmap (out_buf, &omap);
+  gst_buffer_unmap (outbuf, &map);
 
-  return out_buf;
+  outbuf = gst_buffer_append (outbuf, gst_buffer_ref (buf));
+
+  return outbuf;
 }

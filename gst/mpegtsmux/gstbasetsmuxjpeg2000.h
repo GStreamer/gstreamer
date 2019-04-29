@@ -25,7 +25,7 @@
 #ifndef __BASETSMUX_JPEG2000_H__
 #define __BASETSMUX_JPEG2000_H__
 
-#include "basetsmux.h"
+#include "gstbasetsmux.h"
 
 /* color specifications for JPEG 2000 stream over MPEG TS */
 typedef enum
@@ -38,7 +38,7 @@ typedef enum
   GST_MPEGTS_JPEG2000_COLORSPEC_CIEXYZ,
   GST_MPEGTS_JPEG2000_COLORSPEC_REC2020,
   GST_MPEGTS_JPEG2000_COLORSPEC_SMPTE2084
-} GstBaseTsJpeg2000ColorSpec;
+} GstGstBaseTsJpeg2000ColorSpec;
 
 
 typedef struct j2k_private_data
@@ -55,9 +55,9 @@ typedef struct j2k_private_data
   guint8 color_spec;
 } j2k_private_data;
 
-GstBuffer *basetsmux_prepare_jpeg2000 (GstBuffer * buf, BaseTsPadData * data,
-    BaseTsMux * mux);
+GstBuffer *gst_base_ts_mux_prepare_jpeg2000 (GstBuffer * buf, GstBaseTsPadData * data,
+    GstBaseTsMux * mux);
 
-void basetsmux_free_jpeg2000 (gpointer prepare_data);
+void gst_base_ts_mux_free_jpeg2000 (gpointer prepare_data);
 
 #endif /* __BASETSMUX_JPEG2000_H__ */

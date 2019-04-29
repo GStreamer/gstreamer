@@ -1,5 +1,5 @@
 /* 
- * Copyright 2006, 2007, 2008, 2009, 2010 Fluendo S.A. 
+ * Copyright 2006, 2007, 2008 Fluendo S.A. 
  *  Authors: Jan Schmidt <jan@fluendo.com>
  *           Kapil Agrawal <kapil@fluendo.com>
  *           Julien Moutte <julien@fluendo.com>
@@ -79,47 +79,13 @@
  * SOFTWARE.
  *
  */
+ 
+#ifndef __BASETSMUX_AAC_H__
+#define __BASETSMUX_AAC_H__
+ 
+#include "gstbasetsmux.h"
 
-#ifndef __MPEGTSMUX_H__
-#define __MPEGTSMUX_H__
-
-#include <gst/gst.h>
-#include <gst/base/gstcollectpads.h>
-#include <gst/base/gstadapter.h>
-
-G_BEGIN_DECLS
-
-#include <tsmux/tsmux.h>
-#include "basetsmux.h"
-
-#define GST_TYPE_MPEG_TSMUX  (mpegtsmux_get_type())
-#define GST_MPEG_TSMUX(obj)  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_MPEG_TSMUX, MpegTsMux))
-#define GST_MPEG_TSMUX_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_MPEG_TSMUX,MpegTsMuxClass))
-
-typedef struct MpegTsMux MpegTsMux;
-typedef struct MpegTsMuxClass MpegTsMuxClass;
-typedef struct MpegTsPadData MpegTsPadData;
-
-struct MpegTsMux {
-  BaseTsMux parent;
-
-  /* Properties */
-  gboolean m2ts_mode;
-
-  /* m2ts specific */
-  gint64 previous_pcr;
-  gint64 previous_offset;
-  gint64 pcr_rate_num;
-  gint64 pcr_rate_den;
-  GstAdapter *adapter;
-};
-
-struct MpegTsMuxClass {
-  BaseTsMuxClass parent_class;
-};
-
-GType mpegtsmux_get_type (void);
-
-G_END_DECLS
-
-#endif
+GstBuffer * gst_base_ts_mux_prepare_aac (GstBuffer * buf, GstBaseTsPadData * data,
+    GstBaseTsMux * mux);
+ 
+#endif /* __BASETSMUX_AAC_H__ */

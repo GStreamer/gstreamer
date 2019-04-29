@@ -1,7 +1,7 @@
 /* ATSC Transport Stream muxer
  * Copyright (C) 2019 Mathieu Duponchelle <mathieu@centricular.com>
  *
- * atscmux.h:
+ * gstatscmux.h:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,24 +22,24 @@
 #ifndef __ATSCMUX_H__
 #define __ATSCMUX_H__
 
-#include "basetsmux.h"
+#include "gstbasetsmux.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ATSCMUX  (atscmux_get_type())
+#define GST_TYPE_ATSCMUX  (gst_atsc_mux_get_type())
 
-typedef struct ATSCMux ATSCMux;
-typedef struct ATSCMuxClass ATSCMuxClass;
+typedef struct GstATSCMux GstATSCMux;
+typedef struct GstATSCMuxClass GstATSCMuxClass;
 
-struct ATSCMux {
-  BaseTsMux parent;
+struct GstATSCMux {
+  GstBaseTsMux parent;
 };
 
-struct ATSCMuxClass {
-  BaseTsMuxClass parent_class;
+struct GstATSCMuxClass {
+  GstBaseTsMuxClass parent_class;
 };
 
-GType atscmux_get_type (void);
+GType gst_atsc_mux_get_type (void);
 
 G_END_DECLS
 

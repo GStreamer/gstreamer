@@ -19,17 +19,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "atscmux.h"
+#include "gstatscmux.h"
 
-GST_DEBUG_CATEGORY (atscmux_debug);
-#define GST_CAT_DEFAULT atscmux_debug
+GST_DEBUG_CATEGORY (gst_atsc_mux_debug);
+#define GST_CAT_DEFAULT gst_atsc_mux_debug
 
-G_DEFINE_TYPE (ATSCMux, atscmux, GST_TYPE_BASE_TSMUX);
+G_DEFINE_TYPE (GstATSCMux, gst_atsc_mux, GST_TYPE_BASE_TS_MUX);
 
-#define parent_class atscmux_parent_class
+#define parent_class gst_atsc_mux_parent_class
 #define ATSCMUX_ST_PS_AUDIO_EAC3 0x87
 
-static GstStaticPadTemplate atscmux_src_factory =
+static GstStaticPadTemplate gst_atsc_mux_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -37,7 +37,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "systemstream = (boolean) true, " "packetsize = (int) 192 ")
     );
 
-static GstStaticPadTemplate atscmux_sink_factory =
+static GstStaticPadTemplate gst_atsc_mux_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
@@ -50,9 +50,11 @@ static GstStaticPadTemplate atscmux_sink_factory =
         "audio/x-ac3, framed = (boolean) TRUE;"
         "audio/x-eac3, framed = (boolean) TRUE;"));
 
+/* Internals */
+
 static void
-atscmux_stream_get_es_descrs (TsMuxStream * stream,
-    GstMpegtsPMTStream * pmt_stream, BaseTsMux * mpegtsmux)
+gst_atsc_mux_stream_get_es_descrs (TsMuxStream * stream,
+    GstMpegtsPMTStream * pmt_stream, GstBaseTsMux * mpegtsmux)
 {
   GstMpegtsDescriptor *descriptor;
 
@@ -120,8 +122,8 @@ atscmux_stream_get_es_descrs (TsMuxStream * stream,
 }
 
 static TsMuxStream *
-atscmux_create_new_stream (guint16 new_pid,
-    TsMuxStreamType stream_type, BaseTsMux * mpegtsmux)
+gst_atsc_mux_create_new_stream (guint16 new_pid,
+    TsMuxStreamType stream_type, GstBaseTsMux * mpegtsmux)
 {
   TsMuxStream *ret = tsmux_stream_new (new_pid, stream_type);
 
@@ -132,26 +134,28 @@ atscmux_create_new_stream (guint16 new_pid,
   }
 
   tsmux_stream_set_get_es_descriptors_func (ret,
-      (TsMuxStreamGetESDescriptorsFunc) atscmux_stream_get_es_descrs,
+      (TsMuxStreamGetESDescriptorsFunc) gst_atsc_mux_stream_get_es_descrs,
       mpegtsmux);
 
   return ret;
 }
 
+/* GstBaseTsMux implementation */
+
 static TsMux *
-atscmux_create_ts_mux (BaseTsMux * mpegtsmux)
+gst_atsc_mux_create_ts_mux (GstBaseTsMux * mpegtsmux)
 {
-  TsMux *ret = ((BaseTsMuxClass *) parent_class)->create_ts_mux (mpegtsmux);
+  TsMux *ret = ((GstBaseTsMuxClass *) parent_class)->create_ts_mux (mpegtsmux);
 
   tsmux_set_new_stream_func (ret,
-      (TsMuxNewStreamFunc) atscmux_create_new_stream, mpegtsmux);
+      (TsMuxNewStreamFunc) gst_atsc_mux_create_new_stream, mpegtsmux);
 
   return ret;
 }
 
 static guint
-atscmux_handle_media_type (BaseTsMux * mux, const gchar * media_type,
-    BaseTsPadData * ts_data)
+gst_atsc_mux_handle_media_type (GstBaseTsMux * mux, const gchar * media_type,
+    GstBaseTsPadData * ts_data)
 {
   guint ret = TSMUX_ST_RESERVED;
 
@@ -163,29 +167,29 @@ atscmux_handle_media_type (BaseTsMux * mux, const gchar * media_type,
 }
 
 static void
-atscmux_class_init (ATSCMuxClass * klass)
+gst_atsc_mux_class_init (GstATSCMuxClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-  BaseTsMuxClass *mpegtsmux_class = (BaseTsMuxClass *) klass;
+  GstBaseTsMuxClass *mpegtsmux_class = (GstBaseTsMuxClass *) klass;
 
-  GST_DEBUG_CATEGORY_INIT (atscmux_debug, "atscmux", 0, "ATSC muxer");
+  GST_DEBUG_CATEGORY_INIT (gst_atsc_mux_debug, "atscmux", 0, "ATSC muxer");
 
   gst_element_class_set_static_metadata (gstelement_class,
       "ATSC Transport Stream Muxer", "Codec/Muxer",
       "Multiplexes media streams into an ATSC-compliant Transport Stream",
       "Mathieu Duponchelle <mathieu@centricular.com>");
 
-  mpegtsmux_class->create_ts_mux = atscmux_create_ts_mux;
-  mpegtsmux_class->handle_media_type = atscmux_handle_media_type;
+  mpegtsmux_class->create_ts_mux = gst_atsc_mux_create_ts_mux;
+  mpegtsmux_class->handle_media_type = gst_atsc_mux_handle_media_type;
 
   gst_element_class_add_static_pad_template (gstelement_class,
-      &atscmux_sink_factory);
+      &gst_atsc_mux_sink_factory);
 
   gst_element_class_add_static_pad_template (gstelement_class,
-      &atscmux_src_factory);
+      &gst_atsc_mux_src_factory);
 }
 
 static void
-atscmux_init (ATSCMux * mux)
+gst_atsc_mux_init (GstATSCMux * mux)
 {
 }

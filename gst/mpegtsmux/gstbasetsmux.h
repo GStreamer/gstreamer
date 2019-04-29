@@ -86,44 +86,29 @@
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 #include <gst/base/gstadapter.h>
+#include <glib-object.h>
 
 G_BEGIN_DECLS
 
-#include <tsmux/tsmux.h>
+#include "tsmux/tsmux.h"
 
-#define GST_TYPE_BASE_TSMUX  (basetsmux_get_type())
-#define GST_BASE_TSMUX(obj)  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_BASE_TSMUX, BaseTsMux))
-#define GST_BASE_TSMUX_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_BASE_TSMUX,BaseTsMuxClass))
+#define GST_TYPE_BASE_TS_MUX  (gst_base_ts_mux_get_type())
+#define GST_BASE_TS_MUX(obj)  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_BASE_TS_MUX, GstBaseTsMux))
+#define GST_BASE_TS_MUX_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_BASE_TS_MUX, GstBaseTsMuxClass))
+#define GST_BASE_TS_MUX_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj),GST_TYPE_BASE_TS_MUX,GstBaseTsMuxClass))
 
-#define CLOCK_BASE 9LL
-#define CLOCK_FREQ (CLOCK_BASE * 10000)   /* 90 kHz PTS clock */
-#define CLOCK_FREQ_SCR (CLOCK_FREQ * 300) /* 27 MHz SCR clock */
+#define GST_BASE_TS_MUX_NORMAL_PACKET_LENGTH 188
 
-#define GSTTIME_TO_MPEGTIME(time) \
-    (((time) > 0 ? (gint64) 1 : (gint64) -1) * \
-    (gint64) gst_util_uint64_scale (ABS(time), CLOCK_BASE, GST_MSECOND/10))
+typedef struct GstBaseTsMux GstBaseTsMux;
+typedef struct GstBaseTsMuxClass GstBaseTsMuxClass;
+typedef struct GstBaseTsPadData GstBaseTsPadData;
 
-/* 27 MHz SCR conversions: */
-#define MPEG_SYS_TIME_TO_GSTTIME(time) (gst_util_uint64_scale ((time), \
-                        GST_USECOND, CLOCK_FREQ_SCR / 1000000))
-#define GSTTIME_TO_MPEG_SYS_TIME(time) (gst_util_uint64_scale ((time), \
-                        CLOCK_FREQ_SCR / 1000000, GST_USECOND))
+typedef GstBuffer * (*GstBaseTsPadDataPrepareFunction) (GstBuffer * buf,
+    GstBaseTsPadData * data, GstBaseTsMux * mux);
 
-#define NORMAL_TS_PACKET_LENGTH 188
-#define M2TS_PACKET_LENGTH      192
+typedef void (*GstBaseTsPadDataFreePrepareDataFunction) (gpointer prepare_data);
 
-#define DEFAULT_PROG_ID	0
-
-typedef struct BaseTsMux BaseTsMux;
-typedef struct BaseTsMuxClass BaseTsMuxClass;
-typedef struct BaseTsPadData BaseTsPadData;
-
-typedef GstBuffer * (*BaseTsPadDataPrepareFunction) (GstBuffer * buf,
-    BaseTsPadData * data, BaseTsMux * mux);
-
-typedef void (*BaseTsPadDataFreePrepareDataFunction) (gpointer prepare_data);
-
-struct BaseTsMux {
+struct GstBaseTsMux {
   GstElement parent;
 
   GstPad *srcpad;
@@ -160,34 +145,41 @@ struct BaseTsMux {
   /* output buffer aggregation */
   GstAdapter *out_adapter;
   GstBuffer *out_buffer;
-
-#if 0
-  /* SPN/PTS index handling */
-  GstIndex *element_index;
-  gint spn_count;
-#endif
 };
 
 /**
- * BaseTsMuxClass:
+ * GstBaseTsMuxClass:
  * @create_ts_mux: Optional.
  *                 Called in order to create the #TsMux object.
+ * @handle_media_type: Optional.
+ *                 Called in order to determine the stream-type for a given
+ *                 @media_type (eg. video/x-h264).
+ * @allocate_packet: Optional.
+ *                 Called when the underlying #TsMux object needs a packet
+ *                 to write into.
+ * @output_packet: Optional.
+ *                 Called when the underlying #TsMux object has a packet
+ *                 ready to output.
+ * @reset:         Optional.
+ *                 Called when the subclass needs to reset.
+ * @drain:         Optional.
+ *                 Called at EOS, if the subclass has data it needs to drain.
  */
-struct BaseTsMuxClass {
+struct GstBaseTsMuxClass {
   GstElementClass parent_class;
 
-  TsMux * (*create_ts_mux) (BaseTsMux *mux);
-  guint (*handle_media_type) (BaseTsMux *mux, const gchar *media_type, BaseTsPadData * ts_data);
-  void (*allocate_packet) (BaseTsMux *mux, GstBuffer **buffer);
-  gboolean (*output_packet) (BaseTsMux *mux, GstBuffer *buffer, gint64 new_pcr);
-  void (*reset) (BaseTsMux *mux);
-  gboolean (*drain) (BaseTsMux *mux);
+  TsMux *   (*create_ts_mux) (GstBaseTsMux *mux);
+  guint     (*handle_media_type) (GstBaseTsMux *mux, const gchar *media_type, GstBaseTsPadData * ts_data);
+  void      (*allocate_packet) (GstBaseTsMux *mux, GstBuffer **buffer);
+  gboolean  (*output_packet) (GstBaseTsMux *mux, GstBuffer *buffer, gint64 new_pcr);
+  void      (*reset) (GstBaseTsMux *mux);
+  gboolean  (*drain) (GstBaseTsMux *mux);
 };
 
-void gst_base_tsmux_set_packet_size (BaseTsMux *mux, gsize size);
-void gst_base_tsmux_set_automatic_alignment (BaseTsMux *mux, gsize alignment);
+void gst_base_ts_mux_set_packet_size (GstBaseTsMux *mux, gsize size);
+void gst_base_ts_mux_set_automatic_alignment (GstBaseTsMux *mux, gsize alignment);
 
-struct BaseTsPadData {
+struct GstBaseTsPadData {
   /* parent */
   GstCollectData collect;
 
@@ -197,11 +189,6 @@ struct BaseTsPadData {
   /* most recent DTS */
   gint64 dts;
 
-#if 0
-  /* (optional) index writing */
-  gint element_index_writer_id;
-#endif
-
   /* optional codec data available in the caps */
   GstBuffer *codec_data;
 
@@ -209,9 +196,9 @@ struct BaseTsPadData {
   gpointer prepare_data;
 
   /* handler to prepare input data */
-  BaseTsPadDataPrepareFunction prepare_func;
+  GstBaseTsPadDataPrepareFunction prepare_func;
   /* handler to free the private data */
-  BaseTsPadDataFreePrepareDataFunction free_func;
+  GstBaseTsPadDataFreePrepareDataFunction free_func;
 
   /* program id to which it is attached to (not program pid) */
   gint prog_id;
@@ -221,7 +208,7 @@ struct BaseTsPadData {
   gchar *language;
 };
 
-GType basetsmux_get_type (void);
+GType gst_base_ts_mux_get_type (void);
 
 
 G_END_DECLS

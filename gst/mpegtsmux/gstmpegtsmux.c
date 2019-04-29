@@ -82,9 +82,11 @@
  *
  */
 
-#include "mpegtsmux.h"
+#include "gstmpegtsmux.h"
 
 #define MPEGTSMUX_DEFAULT_M2TS         FALSE
+
+#define M2TS_PACKET_LENGTH      192
 
 enum
 {
@@ -92,7 +94,7 @@ enum
   PROP_M2TS_MODE,
 };
 
-static GstStaticPadTemplate mpegtsmux_sink_factory =
+static GstStaticPadTemplate gst_mpeg_ts_mux_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
@@ -129,7 +131,7 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
         "subpicture/x-dvb; application/x-teletext; meta/x-klv, parsed=true;"
         "image/x-jpc, profile = (int)[0, 49151];"));
 
-static GstStaticPadTemplate mpegtsmux_src_factory =
+static GstStaticPadTemplate gst_mpeg_ts_mux_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -137,59 +139,16 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "systemstream = (boolean) true, " "packetsize = (int) { 188, 192} ")
     );
 
-GST_DEBUG_CATEGORY (mpegtsmux_debug);
-#define GST_CAT_DEFAULT mpegtsmux_debug
+GST_DEBUG_CATEGORY (gst_mpeg_ts_mux_debug);
+#define GST_CAT_DEFAULT gst_mpeg_ts_mux_debug
 
-G_DEFINE_TYPE (MpegTsMux, mpegtsmux, GST_TYPE_BASE_TSMUX);
-#define parent_class mpegtsmux_parent_class
+G_DEFINE_TYPE (GstMpegTsMux, gst_mpeg_ts_mux, GST_TYPE_BASE_TS_MUX);
+#define parent_class gst_mpeg_ts_mux_parent_class
 
-static void
-gst_mpegtsmux_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  MpegTsMux *mux = GST_MPEG_TSMUX (object);
-
-  switch (prop_id) {
-    case PROP_M2TS_MODE:
-      /* set incase if the output stream need to be of 192 bytes */
-      mux->m2ts_mode = g_value_get_boolean (value);
-      gst_base_tsmux_set_packet_size (GST_BASE_TSMUX (mux),
-          mux->m2ts_mode ? M2TS_PACKET_LENGTH : NORMAL_TS_PACKET_LENGTH);
-      gst_base_tsmux_set_automatic_alignment (GST_BASE_TSMUX (mux),
-          mux->m2ts_mode ? 32 : 0);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_mpegtsmux_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  MpegTsMux *mux = GST_MPEG_TSMUX (object);
-
-  switch (prop_id) {
-    case PROP_M2TS_MODE:
-      g_value_set_boolean (value, mux->m2ts_mode);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_mpegtsmux_allocate_packet (BaseTsMux * mux, GstBuffer ** buffer)
-{
-  ((BaseTsMuxClass *) parent_class)->allocate_packet (mux, buffer);
-
-  gst_buffer_set_size (*buffer, NORMAL_TS_PACKET_LENGTH);
-}
+/* Internals */
 
 static gboolean
-new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf, gint64 new_pcr)
+new_packet_m2ts (GstMpegTsMux * mux, GstBuffer * buf, gint64 new_pcr)
 {
   GstBuffer *out_buf;
   int chunk_bytes;
@@ -272,8 +231,8 @@ new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf, gint64 new_pcr)
 
       GST_LOG_OBJECT (mux, "Outputting a packet of length %d PCR %"
           G_GUINT64_FORMAT, M2TS_PACKET_LENGTH, cur_pcr);
-      ((BaseTsMuxClass *) parent_class)->output_packet (GST_BASE_TSMUX (mux),
-          out_buf, -1);
+      ((GstBaseTsMuxClass *)
+          parent_class)->output_packet (GST_BASE_TS_MUX (mux), out_buf, -1);
     }
   }
 
@@ -291,8 +250,8 @@ new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf, gint64 new_pcr)
   GST_LOG_OBJECT (mux, "Outputting a packet of length %d PCR %"
       G_GUINT64_FORMAT, M2TS_PACKET_LENGTH, new_pcr);
 
-  ((BaseTsMuxClass *) parent_class)->output_packet (GST_BASE_TSMUX (mux), buf,
-      -1);
+  ((GstBaseTsMuxClass *) parent_class)->output_packet (GST_BASE_TS_MUX (mux),
+      buf, -1);
 
   if (new_pcr != mux->previous_pcr) {
     mux->previous_pcr = new_pcr;
@@ -303,16 +262,26 @@ exit:
   return TRUE;
 }
 
+/* GstBaseTsMux implementation */
+
+static void
+gst_mpeg_ts_mux_allocate_packet (GstBaseTsMux * mux, GstBuffer ** buffer)
+{
+  ((GstBaseTsMuxClass *) parent_class)->allocate_packet (mux, buffer);
+
+  gst_buffer_set_size (*buffer, GST_BASE_TS_MUX_NORMAL_PACKET_LENGTH);
+}
+
 static gboolean
-gst_mpegtsmux_output_packet (BaseTsMux * base_tsmux, GstBuffer * buffer,
+gst_mpeg_ts_mux_output_packet (GstBaseTsMux * base_tsmux, GstBuffer * buffer,
     gint64 new_pcr)
 {
-  MpegTsMux *mux = (MpegTsMux *) base_tsmux;
+  GstMpegTsMux *mux = GST_MPEG_TS_MUX (base_tsmux);
   GstMapInfo map;
 
   if (!mux->m2ts_mode)
-    return ((BaseTsMuxClass *) parent_class)->output_packet (base_tsmux, buffer,
-        new_pcr);
+    return ((GstBaseTsMuxClass *) parent_class)->output_packet (base_tsmux,
+        buffer, new_pcr);
 
   gst_buffer_set_size (buffer, M2TS_PACKET_LENGTH);
 
@@ -327,9 +296,9 @@ gst_mpegtsmux_output_packet (BaseTsMux * base_tsmux, GstBuffer * buffer,
 }
 
 static void
-gst_mpegtsmux_reset (BaseTsMux * base_tsmux)
+gst_mpeg_ts_mux_reset (GstBaseTsMux * base_tsmux)
 {
-  MpegTsMux *mux = (MpegTsMux *) base_tsmux;
+  GstMpegTsMux *mux = GST_MPEG_TS_MUX (base_tsmux);
 
   if (mux->adapter)
     gst_adapter_clear (mux->adapter);
@@ -339,10 +308,56 @@ gst_mpegtsmux_reset (BaseTsMux * base_tsmux)
   mux->pcr_rate_num = mux->pcr_rate_den = 1;
 }
 
-static void
-gst_mpegtsmux_dispose (GObject * object)
+static gboolean
+gst_mpeg_ts_mux_drain (GstBaseTsMux * mux)
 {
-  MpegTsMux *mux = (MpegTsMux *) object;
+  return new_packet_m2ts (GST_MPEG_TS_MUX (mux), NULL, -1);
+}
+
+/* GObject implementation */
+
+static void
+gst_mpeg_ts_mux_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMpegTsMux *mux = GST_MPEG_TS_MUX (object);
+
+  switch (prop_id) {
+    case PROP_M2TS_MODE:
+      /* set incase if the output stream need to be of 192 bytes */
+      mux->m2ts_mode = g_value_get_boolean (value);
+      gst_base_ts_mux_set_packet_size (GST_BASE_TS_MUX (mux),
+          mux->m2ts_mode ? M2TS_PACKET_LENGTH :
+          GST_BASE_TS_MUX_NORMAL_PACKET_LENGTH);
+      gst_base_ts_mux_set_automatic_alignment (GST_BASE_TS_MUX (mux),
+          mux->m2ts_mode ? 32 : 0);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpeg_ts_mux_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMpegTsMux *mux = GST_MPEG_TS_MUX (object);
+
+  switch (prop_id) {
+    case PROP_M2TS_MODE:
+      g_value_set_boolean (value, mux->m2ts_mode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpeg_ts_mux_dispose (GObject * object)
+{
+  GstMpegTsMux *mux = GST_MPEG_TS_MUX (object);
 
   if (mux->adapter) {
     g_object_unref (mux->adapter);
@@ -352,32 +367,28 @@ gst_mpegtsmux_dispose (GObject * object)
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
-static gboolean
-gst_mpegtsmux_drain (BaseTsMux * mux)
-{
-  return new_packet_m2ts ((MpegTsMux *) mux, NULL, -1);
-}
-
 static void
-mpegtsmux_class_init (MpegTsMuxClass * klass)
+gst_mpeg_ts_mux_class_init (GstMpegTsMuxClass * klass)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  BaseTsMuxClass *base_tsmux_class = (BaseTsMuxClass *) klass;
+  GstBaseTsMuxClass *base_tsmux_class = GST_BASE_TS_MUX_CLASS (klass);
 
-  GST_DEBUG_CATEGORY_INIT (mpegtsmux_debug, "mpegtsmux", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_mpeg_ts_mux_debug, "mpegtsmux", 0,
       "MPEG Transport Stream muxer");
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_mpegtsmux_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_mpegtsmux_get_property);
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_mpegtsmux_dispose);
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_mpeg_ts_mux_set_property);
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_mpeg_ts_mux_get_property);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_mpeg_ts_mux_dispose);
 
   base_tsmux_class->allocate_packet =
-      GST_DEBUG_FUNCPTR (gst_mpegtsmux_allocate_packet);
+      GST_DEBUG_FUNCPTR (gst_mpeg_ts_mux_allocate_packet);
   base_tsmux_class->output_packet =
-      GST_DEBUG_FUNCPTR (gst_mpegtsmux_output_packet);
-  base_tsmux_class->reset = GST_DEBUG_FUNCPTR (gst_mpegtsmux_reset);
-  base_tsmux_class->drain = GST_DEBUG_FUNCPTR (gst_mpegtsmux_drain);
+      GST_DEBUG_FUNCPTR (gst_mpeg_ts_mux_output_packet);
+  base_tsmux_class->reset = GST_DEBUG_FUNCPTR (gst_mpeg_ts_mux_reset);
+  base_tsmux_class->drain = GST_DEBUG_FUNCPTR (gst_mpeg_ts_mux_drain);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "MPEG Transport Stream Muxer", "Codec/Muxer",
@@ -385,10 +396,10 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
       "Fluendo <contact@fluendo.com>");
 
   gst_element_class_add_static_pad_template (gstelement_class,
-      &mpegtsmux_sink_factory);
+      &gst_mpeg_ts_mux_sink_factory);
 
   gst_element_class_add_static_pad_template (gstelement_class,
-      &mpegtsmux_src_factory);
+      &gst_mpeg_ts_mux_src_factory);
 
   g_object_class_install_property (gobject_class, PROP_M2TS_MODE,
       g_param_spec_boolean ("m2ts-mode", "M2TS(192 bytes) Mode",
@@ -398,7 +409,7 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
 }
 
 static void
-mpegtsmux_init (MpegTsMux * mux)
+gst_mpeg_ts_mux_init (GstMpegTsMux * mux)
 {
   mux->m2ts_mode = MPEGTSMUX_DEFAULT_M2TS;
   mux->adapter = gst_adapter_new ();
