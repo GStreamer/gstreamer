@@ -103,6 +103,241 @@ typedef enum {
   GST_VIDEO_ANCILLARY_DID16_S2016_3_AFD_BAR	= 0x4105,
 } GstVideoAncillaryDID16;
 
+/**
+ * GstVideoAFDValue:
+ * @GST_VIDEO_AFD_UNAVAILABLE: Unavailable (see note 0 below).
+ * @GST_VIDEO_AFD_16_9_TOP_ALIGNED: For 4:3 coded frame, letterbox 16:9 image,
+ *      at top of the coded frame. For 16:9 coded frame, full frame 16:9 image,
+ *      the same as the coded frame.
+ * @GST_VIDEO_AFD_14_9_TOP_ALIGNED: For 4:3 coded frame, letterbox 14:9 image,
+ *      at top of the coded frame. For 16:9 coded frame, pillarbox 14:9 image,
+ *      horizontally centered in the coded frame.
+ * @GST_VIDEO_AFD_GREATER_THAN_16_9: For 4:3 coded frame, letterbox image with an aspect ratio
+ *      greater than 16:9, vertically centered in the coded frame. For 16:9 coded frame,
+ *      letterbox image with an aspect ratio greater than 16:9.
+ * @GST_VIDEO_AFD_4_3_FULL_16_9_FULL: For 4:3 coded frame, full frame 4:3 image,
+ *      the same as the coded frame. For 16:9 coded frame, full frame 16:9 image, the same as
+ *      the coded frame.
+ * @GST_VIDEO_AFD_4_3_FULL_4_3_PILLAR: For 4:3 coded frame, full frame 4:3 image, the same as
+ *      the coded frame. For 16:9 coded frame, pillarbox 4:3 image, horizontally centered in the
+ *      coded frame.
+ * @GST_VIDEO_AFD_16_9_LETTER_16_9_FULL: For 4:3 coded frame, letterbox 16:9 image, vertically centered in
+ *      the coded frame with all image areas protected. For 16:9 coded frame, full frame 16:9 image,
+ *      with all image areas protected.
+ * @GST_VIDEO_AFD_14_9_LETTER_14_9_PILLAR: For 4:3 coded frame, letterbox 14:9 image, vertically centered in
+ *      the coded frame. For 16:9 coded frame, pillarbox 14:9 image, horizontally centered in the
+ *      coded frame.
+ * @GST_VIDEO_AFD_4_3_FULL_14_9_CENTER: For 4:3 coded frame, full frame 4:3 image, with alternative 14:9
+ *      center. For 16:9 coded frame, pillarbox 4:3 image, with alternative 14:9 center.
+ * @GST_VIDEO_AFD_16_9_LETTER_14_9_CENTER: For 4:3 coded frame, letterbox 16:9 image, with alternative 14:9
+ *      center. For 16:9 coded frame, full frame 16:9 image, with alternative 14:9 center.
+ * @GST_VIDEO_AFD_16_9_LETTER_4_3_CENTER: For 4:3 coded frame, letterbox 16:9 image, with alternative 4:3
+ *      center. For 16:9 coded frame, full frame 16:9 image, with alternative 4:3 center.
+ *
+ * Enumeration of the various values for Active Format Description (AFD)
+ *
+ * AFD should be included in video user data whenever the rectangular
+ * picture area containing useful information does not extend to the full height or width of the coded
+ * frame. AFD data may also be included in user data when the rectangular picture area containing
+ * useful information extends to the full height and width of the coded frame.
+ *
+ * For details, see Table 6.14 Active Format in:
+ *
+ * ATSC Digital Television Standard:
+ * Part 4 – MPEG-2 Video System Characteristics
+ *
+ * https://www.atsc.org/wp-content/uploads/2015/03/a_53-Part-4-2009.pdf
+ *
+ * and Active Format Description in Complete list of AFD codes
+ *
+ * https://en.wikipedia.org/wiki/Active_Format_Description#Complete_list_of_AFD_codes
+ *
+ * and SMPTE ST2016-1
+ *
+ * Notes:
+ *
+ * 1) AFD 0 is undefined for ATSC and SMPTE ST2016-1, indicating that AFD data is not available:
+ * If Bar Data is not present, AFD '0000' indicates that exact information
+ * is not available and the active image should be assumed to be the same as the coded frame. AFD '0000'.
+ * AFD '0000' accompanied by Bar Data signals that the active image’s aspect ratio is narrower than 16:9,
+ * but is not 4:3 or 14:9. As the exact aspect ratio cannot be conveyed by AFD alone, wherever possible,
+ * AFD ‘0000’ should be accompanied by Bar Data to define the exact vertical or horizontal extent
+ * of the active image.
+ * 2) AFD 0 is reserved for DVB/ETSI
+ * 3) values 1, 5, 6, 7, and 12 are reserved for both ATSC and DVB/ETSI
+ * 4) values 2 and 3 are not recommended for ATSC, but are valid for DVB/ETSI
+ *
+ * Since: 1.18
+ */
+typedef enum {
+  GST_VIDEO_AFD_UNAVAILABLE = 0,
+  GST_VIDEO_AFD_16_9_TOP_ALIGNED = 2,
+  GST_VIDEO_AFD_14_9_TOP_ALIGNED = 3,
+  GST_VIDEO_AFD_GREATER_THAN_16_9 = 4,
+  GST_VIDEO_AFD_4_3_FULL_16_9_FULL = 8,
+  GST_VIDEO_AFD_4_3_FULL_4_3_PILLAR = 9,
+  GST_VIDEO_AFD_16_9_LETTER_16_9_FULL = 10,
+  GST_VIDEO_AFD_14_9_LETTER_14_9_PILLAR = 11,
+  GST_VIDEO_AFD_4_3_FULL_14_9_CENTER = 13,
+  GST_VIDEO_AFD_16_9_LETTER_14_9_CENTER = 14,
+  GST_VIDEO_AFD_16_9_LETTER_4_3_CENTER = 15
+} GstVideoAFDValue;
+
+/**
+ * GstVideoAFDSpec:
+ * @GST_VIDEO_AFD_SPEC_DVB_ETSI: AFD value is from DVB/ETSI standard
+ * @GST_VIDEO_AFD_SPEC_ATSC_A53: AFD value is from ATSC A/53 standard
+ * @GST_VIDEO_AFD_SPEC_SMPT_ST2016_1 : AFD value is from SMPTE ST2016-1 standard
+ *
+ * Enumeration of the different standards that may apply to AFD data:
+ *
+ * 0) ETSI/DVB:
+ * https://www.etsi.org/deliver/etsi_ts/101100_101199/101154/02.01.01_60/ts_101154v020101p.pdf
+ *
+ * 1) ATSC A/53:
+ * https://www.atsc.org/wp-content/uploads/2015/03/a_53-Part-4-2009.pdf
+ *
+ * 2) SMPTE ST2016-1:
+ *
+ * Since 1.18
+ */
+typedef enum {
+  GST_VIDEO_AFD_SPEC_DVB_ETSI,
+  GST_VIDEO_AFD_SPEC_ATSC_A53,
+  GST_VIDEO_AFD_SPEC_SMPTE_ST2016_1
+} GstVideoAFDSpec;
+
+/**
+ * GstVideoAFDMeta:
+ * @meta: parent #GstMeta
+ * @field: 0 for progressive or field 1 and 1 for field 2
+ * @spec: #GstVideoAFDSpec that applies to @afd
+ * @afd: #GstVideoAFDValue AFD value
+ *
+ * Active Format Description (AFD)
+ *
+ * For details, see Table 6.14 Active Format in:
+ *
+ * ATSC Digital Television Standard:
+ * Part 4 – MPEG-2 Video System Characteristics
+ *
+ * https://www.atsc.org/wp-content/uploads/2015/03/a_53-Part-4-2009.pdf
+ *
+ * and Active Format Description in Complete list of AFD codes
+ *
+ * https://en.wikipedia.org/wiki/Active_Format_Description#Complete_list_of_AFD_codes
+ *
+ * and SMPTE ST2016-1
+ *
+ * Since: 1.18
+ */
+typedef struct {
+  GstMeta meta;
+
+  guint8 field;
+  GstVideoAFDSpec spec;
+  GstVideoAFDValue afd;
+} GstVideoAFDMeta;
+
+GST_VIDEO_API GType gst_video_afd_meta_api_get_type (void);
+#define GST_VIDEO_AFD_META_API_TYPE (gst_video_afd_meta_api_get_type())
+
+GST_VIDEO_API const GstMetaInfo *gst_video_afd_meta_get_info (void);
+#define GST_VIDEO_AFD_META_INFO (gst_video_afd_meta_get_info())
+
+/**
+ * gst_buffer_get_video_afd_meta:
+ * @b: A #GstBuffer
+ * @field: 0 for progressive or field 1 and 1 for field 2
+ * @spec: #GstVideoAFDSpec that applies to @afd
+ * @afd: #GstVideoAFDValue AFD value
+ *
+ * Gets the #GstVideoAFDMeta that might be present on @b.
+ * Note: there may be two #GstVideoAFDMeta structs for interlaced video.
+ *
+ * Since: 1.18
+ *
+ * Returns: The first #GstVideoAFDMeta present on @b, or %NULL if
+ * no #GstVideoAFDMeta are present
+ */
+#define gst_buffer_get_video_afd_meta(b) \
+        ((GstVideoAFDMeta*)gst_buffer_get_meta((b)))
+
+GST_VIDEO_API
+GstVideoAFDMeta *gst_buffer_add_video_afd_meta (GstBuffer * buffer, guint8 field,
+						GstVideoAFDSpec spec,
+						GstVideoAFDValue afd);
+/**
+ * GstVideoBarMeta:
+ * @meta: parent #GstMeta
+ * @field: 0 for progressive or field 1 and 1 for field 2
+ * @is_letterbox: if true then bar data specifies letterbox, otherwise pillarbox
+ * @bar_data1: If @is_letterbox is true, then the value specifies the
+ *      last line of a horizontal letterbox bar area at top of reconstructed frame.
+ *      Otherwise, it specifies the last horizontal luminance sample of a vertical pillarbox
+ *      bar area at the left side of the reconstructed frame
+ * @bar_data2: If @is_letterbox is true, then the value specifies the
+ *      first line of a horizontal letterbox bar area at bottom of reconstructed frame.
+ *      Otherwise, it specifies the first horizontal
+ *      luminance sample of a vertical pillarbox bar area at the right side of the reconstructed frame.
+ *
+ * Bar data should be included in video user data
+ * whenever the rectangular picture area containing useful information
+ * does not extend to the full height or width of the coded frame
+ * and AFD alone is insufficient to describe the extent of the image.
+ *
+ * Note: either vertical or horizontal bars are specified, but not both.
+ *
+ * For more details, see:
+ *
+ * https://www.atsc.org/wp-content/uploads/2015/03/a_53-Part-4-2009.pdf
+ *
+ * and SMPTE ST2016-1
+ *
+ * Since: 1.18
+ */
+typedef struct {
+  GstMeta meta;
+
+  guint8 field;
+  gboolean is_letterbox;
+  guint bar_data1;
+  guint bar_data2;
+} GstVideoBarMeta;
+
+GST_VIDEO_API GType gst_video_bar_meta_api_get_type (void);
+#define GST_VIDEO_BAR_META_API_TYPE (gst_video_bar_meta_api_get_type())
+
+GST_VIDEO_API const GstMetaInfo *gst_video_bar_meta_get_info (void);
+#define GST_VIDEO_BAR_META_INFO (gst_video_bar_meta_get_info())
+
+#define gst_buffer_get_video_bar_meta(b) \
+        ((GstVideoBarMeta*)gst_buffer_get_meta((b)))
+
+/**
+ * gst_buffer_get_video_bar_meta:
+ * @b: A #GstBuffer
+ * @field: 0 for progressive or field 1 and 1 for field 2
+ * @is_letterbox: if true then bar data specifies letterbox, otherwise pillarbox
+ * @bar_data1: If @is_letterbox is true, then the value specifies the
+ *      last line of a horizontal letterbox bar area at top of reconstructed frame.
+ *      Otherwise, it specifies the last horizontal luminance sample of a vertical pillarbox
+ *      bar area at the left side of the reconstructed frame
+ * @bar_data2: If @is_letterbox is true, then the value specifies the
+ *      first line of a horizontal letterbox bar area at bottom of reconstructed frame.
+ *      Otherwise, it specifies the first horizontal
+ *      luminance sample of a vertical pillarbox bar area at the right side of the reconstructed frame.
+ * Gets the #GstVideoBarMeta that might be present on @b.
+ *
+ * Since: 1.18
+ *
+ * Returns: The first #GstVideoBarMeta present on @b, or %NULL if
+ * no #GstVideoBarMeta are present
+ */
+GST_VIDEO_API
+GstVideoBarMeta *gst_buffer_add_video_bar_meta (GstBuffer * buffer, guint8 field,
+    gboolean is_letterbox, guint bar_data1, guint bar_data2);
+
 /* Closed Caption support */
 /**
  * GstVideoCaptionType:
