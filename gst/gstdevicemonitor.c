@@ -384,6 +384,13 @@ again:
   devices = NULL;
   hidden = NULL;
 
+  for (i = 0; i < monitor->priv->providers->len; i++) {
+    GstDeviceProvider *provider =
+        g_ptr_array_index (monitor->priv->providers, i);
+
+    update_hidden_providers_list (&hidden, provider);
+  }
+
   cookie = monitor->priv->cookie;
 
   for (i = 0; i < monitor->priv->providers->len; i++) {
@@ -398,7 +405,6 @@ again:
       tmpdev = gst_device_provider_get_devices (provider);
 
       GST_OBJECT_LOCK (monitor);
-      update_hidden_providers_list (&hidden, provider);
     } else {
       tmpdev = NULL;
     }
