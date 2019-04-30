@@ -86,11 +86,72 @@
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 #include <gst/base/gstadapter.h>
-#include <glib-object.h>
+#include <gst/base/gstaggregator.h>
 
 G_BEGIN_DECLS
 
 #include "tsmux/tsmux.h"
+
+#define GST_TYPE_BASE_TS_MUX_PAD (gst_base_ts_mux_pad_get_type())
+#define GST_BASE_TS_MUX_PAD(obj) \
+        (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_TS_MUX_PAD, GstBaseTsMuxPad))
+#define GST_BASE_TS_MUX_PAD_CAST(obj) ((GstBaseTsMuxPad *)(obj))
+#define GST_BASE_TS_MUX_PAD_CLASS(klass) \
+        (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_BASE_TS_MUX_PAD, GstBaseTsMuxPadClass))
+#define GST_IS_BASE_TS_MUX_PAD(obj) \
+        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_BASE_TS_MUX_PAD))
+#define GST_IS_BASE_TS_MUX_PAD_CLASS(klass) \
+        (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_TS_MUX_PAD))
+#define GST_BASE_TS_MUX_PAD_GET_CLASS(obj) \
+        (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_BASE_TS_MUX_PAD,GstBaseTsMuxPadClass))
+
+typedef struct _GstBaseTsMuxPad GstBaseTsMuxPad;
+typedef struct _GstBaseTsMuxPadClass GstBaseTsMuxPadClass;
+typedef struct _GstBaseTsMuxPadPrivate GstBaseTsMuxPadPrivate;
+typedef struct GstBaseTsMux GstBaseTsMux;
+typedef struct GstBaseTsMuxClass GstBaseTsMuxClass;
+typedef struct GstBaseTsPadData GstBaseTsPadData;
+
+typedef GstBuffer * (*GstBaseTsMuxPadPrepareFunction) (GstBuffer * buf,
+    GstBaseTsMuxPad * data, GstBaseTsMux * mux);
+
+typedef void (*GstBaseTsMuxPadFreePrepareDataFunction) (gpointer prepare_data);
+
+struct _GstBaseTsMuxPad
+{
+  GstAggregatorPad              parent;
+
+  gint pid;
+  TsMuxStream *stream;
+
+  /* most recent DTS */
+  gint64 dts;
+
+  /* optional codec data available in the caps */
+  GstBuffer *codec_data;
+
+  /* Opaque data pointer to a structure used by the prepare function */
+  gpointer prepare_data;
+
+  /* handler to prepare input data */
+  GstBaseTsMuxPadPrepareFunction prepare_func;
+  /* handler to free the private data */
+  GstBaseTsMuxPadFreePrepareDataFunction free_func;
+
+  /* program id to which it is attached to (not program pid) */
+  gint prog_id;
+  /* program this stream belongs to */
+  TsMuxProgram *prog;
+
+  gchar *language;
+};
+
+struct _GstBaseTsMuxPadClass
+{
+  GstAggregatorPadClass parent_class;
+};
+
+GType gst_base_ts_mux_pad_get_type   (void);
 
 #define GST_TYPE_BASE_TS_MUX  (gst_base_ts_mux_get_type())
 #define GST_BASE_TS_MUX(obj)  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_BASE_TS_MUX, GstBaseTsMux))
@@ -99,21 +160,8 @@ G_BEGIN_DECLS
 
 #define GST_BASE_TS_MUX_NORMAL_PACKET_LENGTH 188
 
-typedef struct GstBaseTsMux GstBaseTsMux;
-typedef struct GstBaseTsMuxClass GstBaseTsMuxClass;
-typedef struct GstBaseTsPadData GstBaseTsPadData;
-
-typedef GstBuffer * (*GstBaseTsPadDataPrepareFunction) (GstBuffer * buf,
-    GstBaseTsPadData * data, GstBaseTsMux * mux);
-
-typedef void (*GstBaseTsPadDataFreePrepareDataFunction) (gpointer prepare_data);
-
 struct GstBaseTsMux {
-  GstElement parent;
-
-  GstPad *srcpad;
-
-  GstCollectPads *collect;
+  GstAggregator parent;
 
   TsMux *tsmux;
   GHashTable *programs;
@@ -166,10 +214,10 @@ struct GstBaseTsMux {
  *                 Called at EOS, if the subclass has data it needs to drain.
  */
 struct GstBaseTsMuxClass {
-  GstElementClass parent_class;
+  GstAggregatorClass parent_class;
 
   TsMux *   (*create_ts_mux) (GstBaseTsMux *mux);
-  guint     (*handle_media_type) (GstBaseTsMux *mux, const gchar *media_type, GstBaseTsPadData * ts_data);
+  guint     (*handle_media_type) (GstBaseTsMux *mux, const gchar *media_type, GstBaseTsMuxPad * pad);
   void      (*allocate_packet) (GstBaseTsMux *mux, GstBuffer **buffer);
   gboolean  (*output_packet) (GstBaseTsMux *mux, GstBuffer *buffer, gint64 new_pcr);
   void      (*reset) (GstBaseTsMux *mux);
@@ -178,6 +226,11 @@ struct GstBaseTsMuxClass {
 
 void gst_base_ts_mux_set_packet_size (GstBaseTsMux *mux, gsize size);
 void gst_base_ts_mux_set_automatic_alignment (GstBaseTsMux *mux, gsize alignment);
+
+typedef GstBuffer * (*GstBaseTsPadDataPrepareFunction) (GstBuffer * buf,
+    GstBaseTsPadData * data, GstBaseTsMux * mux);
+
+typedef void (*GstBaseTsPadDataFreePrepareDataFunction) (gpointer prepare_data);
 
 struct GstBaseTsPadData {
   /* parent */
@@ -209,7 +262,6 @@ struct GstBaseTsPadData {
 };
 
 GType gst_base_ts_mux_get_type (void);
-
 
 G_END_DECLS
 

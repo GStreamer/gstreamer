@@ -55,7 +55,7 @@ typedef struct j2k_private_data
   guint8 color_spec;
 } j2k_private_data;
 
-GstBuffer *gst_base_ts_mux_prepare_jpeg2000 (GstBuffer * buf, GstBaseTsPadData * data,
+GstBuffer *gst_base_ts_mux_prepare_jpeg2000 (GstBuffer * buf, GstBaseTsMuxPad * pad,
     GstBaseTsMux * mux);
 
 void gst_base_ts_mux_free_jpeg2000 (gpointer prepare_data);

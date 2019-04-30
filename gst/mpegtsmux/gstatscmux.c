@@ -34,7 +34,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpegts, "
-        "systemstream = (boolean) true, " "packetsize = (int) 192 ")
+        "systemstream = (boolean) true, " "packetsize = (int) 188 ")
     );
 
 static GstStaticPadTemplate gst_atsc_mux_sink_factory =
@@ -155,7 +155,7 @@ gst_atsc_mux_create_ts_mux (GstBaseTsMux * mpegtsmux)
 
 static guint
 gst_atsc_mux_handle_media_type (GstBaseTsMux * mux, const gchar * media_type,
-    GstBaseTsPadData * ts_data)
+    GstBaseTsMuxPad * pad)
 {
   guint ret = TSMUX_ST_RESERVED;
 
@@ -182,11 +182,11 @@ gst_atsc_mux_class_init (GstATSCMuxClass * klass)
   mpegtsmux_class->create_ts_mux = gst_atsc_mux_create_ts_mux;
   mpegtsmux_class->handle_media_type = gst_atsc_mux_handle_media_type;
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &gst_atsc_mux_sink_factory);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &gst_atsc_mux_sink_factory, GST_TYPE_BASE_TS_MUX_PAD);
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &gst_atsc_mux_src_factory);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &gst_atsc_mux_src_factory, GST_TYPE_AGGREGATOR_PAD);
 }
 
 static void

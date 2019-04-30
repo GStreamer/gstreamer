@@ -75,14 +75,14 @@ setup_src_pad (GstElement * element,
     sinkpad = gst_element_get_request_pad (element, sinkname);
   fail_if (sinkpad == NULL, "Could not get sink pad from %s",
       GST_ELEMENT_NAME (element));
-  /* references are owned by: 1) us, 2) tsmux, 3) collect pads */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
+  /* references are owned by: 1) us, 2) tsmux */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
   fail_unless (gst_pad_link (srcpad, sinkpad) == GST_PAD_LINK_OK,
       "Could not link source and %s sink pads", GST_ELEMENT_NAME (element));
   gst_object_unref (sinkpad);   /* because we got it higher up */
 
-  /* references are owned by: 1) tsmux, 2) collect pads */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
+  /* references are owned by: 1) tsmux */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 1);
 
   if (padname)
     *padname = g_strdup (GST_PAD_NAME (sinkpad));
@@ -98,16 +98,16 @@ teardown_src_pad (GstElement * element, const gchar * sinkname)
   /* clean up floating src pad */
   if (!(sinkpad = gst_element_get_static_pad (element, sinkname)))
     sinkpad = gst_element_get_request_pad (element, sinkname);
-  /* pad refs held by 1) tsmux 2) collectpads and 3) us (through _get) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
+  /* pad refs held by 1) tsmux 2) us (through _get) */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
   srcpad = gst_pad_get_peer (sinkpad);
 
   gst_pad_unlink (srcpad, sinkpad);
   GST_DEBUG ("src %p", srcpad);
 
   /* after unlinking, pad refs still held by
-   * 1) tsmux and 2) collectpads and 3) us (through _get) */
-  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 3);
+   * 1) tsmux and 2) us (through _get) */
+  ASSERT_OBJECT_REFCOUNT (sinkpad, "sinkpad", 2);
   gst_object_unref (sinkpad);
   /* one more ref is held by element itself */
 
@@ -161,6 +161,7 @@ check_tsmux_pad (GstStaticPadTemplate * srctemplate,
   gint i;
   gint pmt_pid = -1, el_pid = -1, pcr_pid = -1, packets = 0;
   gchar *padname;
+  GstQuery *drain;
 
   mux = setup_tsmux (srctemplate, sinkname, &padname);
 
@@ -199,6 +200,10 @@ check_tsmux_pad (GstStaticPadTemplate * srctemplate,
       fail ("Got %s flow instead of OK", gst_flow_get_name (flow));
     ts += 40 * GST_MSECOND;
   }
+
+  drain = gst_query_new_drain ();
+  gst_pad_peer_query (mysrcpad, drain);
+  gst_query_unref (drain);
 
   if (check_func)
     check_func (buffers);
@@ -366,339 +371,6 @@ GST_START_TEST (test_audio)
 
 GST_END_TEST;
 
-
-typedef struct _TestData
-{
-  GstEvent *sink_event;
-  gint src_events;
-} TestData;
-
-typedef struct _ThreadData
-{
-  GstPad *pad;
-  GstBuffer *buffer;
-  GstFlowReturn flow_return;
-  GThread *thread;
-} ThreadData;
-
-static gboolean
-src_event (GstPad * pad, GstObject * parent, GstEvent * event)
-{
-  TestData *data = (TestData *) gst_pad_get_element_private (pad);
-
-  if (event->type == GST_EVENT_CUSTOM_UPSTREAM)
-    data->src_events += 1;
-
-  gst_event_unref (event);
-  return TRUE;
-}
-
-static gboolean
-sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
-{
-  TestData *data = (TestData *) gst_pad_get_element_private (pad);
-
-  if (event->type == GST_EVENT_CUSTOM_DOWNSTREAM)
-    data->sink_event = event;
-
-  gst_event_unref (event);
-  return TRUE;
-}
-
-static void
-link_sinks (GstElement * mpegtsmux,
-    GstPad ** src1, GstPad ** src2, GstPad ** src3, TestData * test_data)
-{
-  GstPad *mux_sink1, *mux_sink2, *mux_sink3;
-
-  /* link 3 sink pads, 2 video 1 audio */
-  *src1 = gst_pad_new_from_static_template (&video_src_template, "src1");
-  gst_pad_set_active (*src1, TRUE);
-  gst_pad_set_element_private (*src1, test_data);
-  gst_pad_set_event_function (*src1, src_event);
-  mux_sink1 = gst_element_get_request_pad (mpegtsmux, "sink_1");
-  fail_unless (gst_pad_link (*src1, mux_sink1) == GST_PAD_LINK_OK);
-
-  *src2 = gst_pad_new_from_static_template (&video_src_template, "src2");
-  gst_pad_set_active (*src2, TRUE);
-  gst_pad_set_element_private (*src2, test_data);
-  gst_pad_set_event_function (*src2, src_event);
-  mux_sink2 = gst_element_get_request_pad (mpegtsmux, "sink_2");
-  fail_unless (gst_pad_link (*src2, mux_sink2) == GST_PAD_LINK_OK);
-
-  *src3 = gst_pad_new_from_static_template (&audio_src_template, "src3");
-  gst_pad_set_active (*src3, TRUE);
-  gst_pad_set_element_private (*src3, test_data);
-  gst_pad_set_event_function (*src3, src_event);
-  mux_sink3 = gst_element_get_request_pad (mpegtsmux, "sink_3");
-  fail_unless (gst_pad_link (*src3, mux_sink3) == GST_PAD_LINK_OK);
-
-  gst_object_unref (mux_sink1);
-  gst_object_unref (mux_sink2);
-  gst_object_unref (mux_sink3);
-}
-
-static void
-link_src (GstElement * mpegtsmux, GstPad ** sink, TestData * test_data)
-{
-  GstPad *mux_src;
-
-  mux_src = gst_element_get_static_pad (mpegtsmux, "src");
-  *sink = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_active (*sink, TRUE);
-  gst_pad_set_event_function (*sink, sink_event);
-  gst_pad_set_element_private (*sink, test_data);
-  fail_unless (gst_pad_link (mux_src, *sink) == GST_PAD_LINK_OK);
-
-  gst_object_unref (mux_src);
-}
-
-static void
-setup_caps (GstElement * mpegtsmux, GstPad * src1, GstPad * src2, GstPad * src3)
-{
-  GstSegment segment;
-  GstCaps *caps;
-
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-
-  caps = gst_caps_new_simple ("video/x-h264",
-      "stream-format", G_TYPE_STRING, "byte-stream",
-      "alignment", G_TYPE_STRING, "nal", NULL);
-  gst_pad_push_event (src1, gst_event_new_stream_start ("1"));
-  gst_pad_push_event (src1, gst_event_new_caps (caps));
-  gst_pad_push_event (src1, gst_event_new_segment (&segment));
-  gst_pad_push_event (src2, gst_event_new_stream_start ("2"));
-  gst_pad_push_event (src2, gst_event_new_caps (caps));
-  gst_pad_push_event (src2, gst_event_new_segment (&segment));
-  gst_caps_unref (caps);
-  caps = gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 4,
-      "stream-format", G_TYPE_STRING, "raw", "framed", G_TYPE_BOOLEAN, TRUE,
-      NULL);
-  gst_pad_push_event (src3, gst_event_new_stream_start ("3"));
-  gst_pad_push_event (src3, gst_event_new_caps (caps));
-  gst_pad_push_event (src3, gst_event_new_segment (&segment));
-  gst_caps_unref (caps);
-}
-
-static gpointer
-pad_push_thread (gpointer user_data)
-{
-  ThreadData *data = (ThreadData *) user_data;
-
-  data->flow_return = gst_pad_push (data->pad, data->buffer);
-
-  return NULL;
-}
-
-static ThreadData *
-pad_push (GstPad * pad, GstBuffer * buffer, GstClockTime timestamp)
-{
-  ThreadData *data;
-
-  data = g_new0 (ThreadData, 1);
-  data->pad = pad;
-  data->buffer = buffer;
-  GST_BUFFER_TIMESTAMP (buffer) = timestamp;
-  data->thread = g_thread_try_new ("gst-check", pad_push_thread, data, NULL);
-
-  return data;
-}
-
-GST_START_TEST (test_force_key_unit_event_downstream)
-{
-  GstElement *mpegtsmux;
-  GstPad *sink;
-  GstPad *src1;
-  GstPad *src2;
-  GstPad *src3;
-  GstEvent *sink_event;
-  GstClockTime timestamp, stream_time, running_time;
-  gboolean all_headers = TRUE;
-  gint count = 0;
-  ThreadData *thread_data_1, *thread_data_2, *thread_data_3, *thread_data_4;
-  TestData test_data = { 0, };
-
-  mpegtsmux = gst_check_setup_element ("mpegtsmux");
-
-  link_src (mpegtsmux, &sink, &test_data);
-  link_sinks (mpegtsmux, &src1, &src2, &src3, &test_data);
-  gst_element_set_state (mpegtsmux, GST_STATE_PLAYING);
-  setup_caps (mpegtsmux, src1, src2, src3);
-
-  /* send a force-key-unit event with running_time=2s */
-  timestamp = stream_time = running_time = 2 * GST_SECOND;
-  sink_event = gst_video_event_new_downstream_force_key_unit (timestamp,
-      stream_time, running_time, all_headers, count);
-
-  fail_unless (gst_pad_push_event (src1, sink_event));
-  fail_unless (test_data.sink_event == NULL);
-
-  /* push 4 buffers, make sure mpegtsmux handles the force-key-unit event when
-   * the buffer with the requested running time is collected */
-  thread_data_1 = pad_push (src1, gst_buffer_new (), 1 * GST_SECOND);
-  thread_data_2 = pad_push (src2, gst_buffer_new (), 2 * GST_SECOND);
-  thread_data_3 = pad_push (src3, gst_buffer_new (), 3 * GST_SECOND);
-
-  g_thread_join (thread_data_1->thread);
-  fail_unless (test_data.sink_event == NULL);
-
-  /* push again on src1 so that the buffer on src2 is collected */
-  thread_data_4 = pad_push (src1, gst_buffer_new (), 4 * GST_SECOND);
-
-  g_thread_join (thread_data_2->thread);
-  fail_unless (test_data.sink_event != NULL);
-
-  gst_element_set_state (mpegtsmux, GST_STATE_NULL);
-
-  g_thread_join (thread_data_3->thread);
-  g_thread_join (thread_data_4->thread);
-
-  g_free (thread_data_1);
-  g_free (thread_data_2);
-  g_free (thread_data_3);
-  g_free (thread_data_4);
-  gst_object_unref (src1);
-  gst_object_unref (src2);
-  gst_object_unref (src3);
-  gst_object_unref (sink);
-  gst_object_unref (mpegtsmux);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_force_key_unit_event_upstream)
-{
-  GstElement *mpegtsmux;
-  GstPad *sink;
-  GstPad *src1;
-  GstPad *src2;
-  GstPad *src3;
-  GstClockTime timestamp, stream_time, running_time;
-  gboolean all_headers = TRUE;
-  gint count = 0;
-  TestData test_data = { 0, };
-  ThreadData *thread_data_1, *thread_data_2, *thread_data_3, *thread_data_4;
-  GstEvent *event;
-
-  mpegtsmux = gst_check_setup_element ("mpegtsmux");
-
-  link_src (mpegtsmux, &sink, &test_data);
-  link_sinks (mpegtsmux, &src1, &src2, &src3, &test_data);
-  gst_element_set_state (mpegtsmux, GST_STATE_PLAYING);
-  setup_caps (mpegtsmux, src1, src2, src3);
-
-  /* send an upstream force-key-unit event with running_time=2s */
-  timestamp = stream_time = running_time = 2 * GST_SECOND;
-  event =
-      gst_video_event_new_upstream_force_key_unit (running_time, TRUE, count);
-  fail_unless (gst_pad_push_event (sink, event));
-
-  fail_unless (test_data.sink_event == NULL);
-  fail_unless_equals_int (test_data.src_events, 3);
-
-  /* send downstream events with unrelated seqnums */
-  event = gst_video_event_new_downstream_force_key_unit (timestamp,
-      stream_time, running_time, all_headers, count);
-  fail_unless (gst_pad_push_event (src1, event));
-  event = gst_video_event_new_downstream_force_key_unit (timestamp,
-      stream_time, running_time, all_headers, count);
-  fail_unless (gst_pad_push_event (src2, event));
-
-  /* events should be skipped */
-  fail_unless (test_data.sink_event == NULL);
-
-  /* push 4 buffers, make sure mpegtsmux handles the force-key-unit event when
-   * the buffer with the requested running time is collected */
-  thread_data_1 = pad_push (src1, gst_buffer_new (), 1 * GST_SECOND);
-  thread_data_2 = pad_push (src2, gst_buffer_new (), 2 * GST_SECOND);
-  thread_data_3 = pad_push (src3, gst_buffer_new (), 3 * GST_SECOND);
-
-  g_thread_join (thread_data_1->thread);
-  fail_unless (test_data.sink_event == NULL);
-
-  /* push again on src1 so that the buffer on src2 is collected */
-  thread_data_4 = pad_push (src1, gst_buffer_new (), 4 * GST_SECOND);
-
-  g_thread_join (thread_data_2->thread);
-  fail_unless (test_data.sink_event != NULL);
-
-  gst_element_set_state (mpegtsmux, GST_STATE_NULL);
-
-  g_thread_join (thread_data_3->thread);
-  g_thread_join (thread_data_4->thread);
-
-  g_free (thread_data_1);
-  g_free (thread_data_2);
-  g_free (thread_data_3);
-  g_free (thread_data_4);
-
-  gst_object_unref (src1);
-  gst_object_unref (src2);
-  gst_object_unref (src3);
-  gst_object_unref (sink);
-  gst_object_unref (mpegtsmux);
-}
-
-GST_END_TEST;
-
-static GstFlowReturn expected_flow;
-
-static GstFlowReturn
-flow_test_stat_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer)
-{
-  gst_buffer_unref (buffer);
-
-  GST_INFO ("returning flow %s (%d)", gst_flow_get_name (expected_flow),
-      expected_flow);
-  return expected_flow;
-}
-
-GST_START_TEST (test_propagate_flow_status)
-{
-  GstElement *mux;
-  gchar *padname;
-  GstBuffer *inbuffer;
-  GstCaps *caps;
-  guint i;
-
-  GstFlowReturn expected[] = { GST_FLOW_OK, GST_FLOW_FLUSHING, GST_FLOW_EOS,
-    GST_FLOW_NOT_NEGOTIATED, GST_FLOW_ERROR, GST_FLOW_NOT_SUPPORTED
-  };
-
-  mux = setup_tsmux (&video_src_template, "sink_%d", &padname);
-  gst_pad_set_chain_function (mysinkpad, flow_test_stat_chain_func);
-
-  fail_unless (gst_element_set_state (mux,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
-
-  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  gst_check_setup_events (mysrcpad, mux, caps, GST_FORMAT_TIME);
-  gst_caps_unref (caps);
-
-  for (i = 0; i < G_N_ELEMENTS (expected); ++i) {
-    GstFlowReturn res;
-
-    inbuffer = gst_buffer_new_and_alloc (1);
-    ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
-
-    expected_flow = expected[i];
-    GST_INFO ("expecting flow %s (%d)", gst_flow_get_name (expected_flow),
-        expected_flow);
-
-    GST_BUFFER_TIMESTAMP (inbuffer) = i * GST_SECOND;
-
-    res = gst_pad_push (mysrcpad, inbuffer);
-
-    fail_unless_equals_int (res, expected[i]);
-  }
-
-  cleanup_tsmux (mux, padname);
-  g_free (padname);
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_multiple_state_change)
 {
   GstElement *mux;
@@ -716,7 +388,6 @@ GST_START_TEST (test_multiple_state_change)
   size_t num_transitions_to_test = 10;
 
   mux = setup_tsmux (&video_src_template, "sink_%d", &padname);
-  gst_pad_set_chain_function (mysinkpad, flow_test_stat_chain_func);
   gst_segment_init (&segment, GST_FORMAT_TIME);
 
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
@@ -724,6 +395,7 @@ GST_START_TEST (test_multiple_state_change)
   gst_caps_unref (caps);
 
   for (i = 0; i < num_transitions_to_test; ++i) {
+    GstQuery *drain;
     GstState next_state = states[i % G_N_ELEMENTS (states)];
     fail_unless (gst_element_set_state (mux,
             next_state) == GST_STATE_CHANGE_SUCCESS,
@@ -739,9 +411,12 @@ GST_START_TEST (test_multiple_state_change)
       inbuffer = gst_buffer_new_and_alloc (1);
       ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-      expected_flow = GST_FLOW_OK;
       GST_BUFFER_PTS (inbuffer) = 0;
       fail_unless (GST_FLOW_OK == gst_pad_push (mysrcpad, inbuffer));
+
+      drain = gst_query_new_drain ();
+      gst_pad_peer_query (mysrcpad, drain);
+      gst_query_unref (drain);
     }
   }
 
@@ -813,9 +488,6 @@ mpegtsmux_suite (void)
 
   tcase_add_test (tc_chain, test_audio);
   tcase_add_test (tc_chain, test_video);
-  tcase_add_test (tc_chain, test_force_key_unit_event_downstream);
-  tcase_add_test (tc_chain, test_force_key_unit_event_upstream);
-  tcase_add_test (tc_chain, test_propagate_flow_status);
   tcase_add_test (tc_chain, test_multiple_state_change);
   tcase_add_test (tc_chain, test_align);
   tcase_add_test (tc_chain, test_keyframe_flag_propagation);

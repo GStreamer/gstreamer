@@ -85,7 +85,7 @@
  
 #include "gstbasetsmux.h"
 
-GstBuffer * gst_base_ts_mux_prepare_teletext (GstBuffer * buf, GstBaseTsPadData * data,
+GstBuffer * gst_base_ts_mux_prepare_teletext (GstBuffer * buf, GstBaseTsMuxPad * pad,
     GstBaseTsMux * mux);
  
 #endif /* __BASETSMUX_TTXT_H__ */

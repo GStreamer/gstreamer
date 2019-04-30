@@ -91,7 +91,7 @@
 #define GST_CAT_DEFAULT gst_base_ts_mux_debug
 
 GstBuffer *
-gst_base_ts_mux_prepare_opus (GstBuffer * buf, GstBaseTsPadData * pad_data,
+gst_base_ts_mux_prepare_opus (GstBuffer * buf, GstBaseTsMuxPad * pad,
     GstBaseTsMux * mux)
 {
   gssize insize = gst_buffer_get_size (buf);

@@ -90,7 +90,7 @@
 #define GST_CAT_DEFAULT gst_base_ts_mux_debug
 
 GstBuffer *
-gst_base_ts_mux_prepare_aac (GstBuffer * buf, GstBaseTsPadData * data,
+gst_base_ts_mux_prepare_aac (GstBuffer * buf, GstBaseTsMuxPad * pad,
     GstBaseTsMux * mux)
 {
   guint8 adts_header[7] = { 0, };
@@ -106,7 +106,7 @@ gst_base_ts_mux_prepare_aac (GstBuffer * buf, GstBaseTsPadData * data,
   gst_buffer_copy_into (out_buf, buf,
       GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_TIMESTAMPS, 0, 0);
 
-  gst_buffer_map (data->codec_data, &codec_data_map, GST_MAP_READ);
+  gst_buffer_map (pad->codec_data, &codec_data_map, GST_MAP_READ);
 
   /* Generate ADTS header */
   obj_type = GST_READ_UINT8 (codec_data_map.data) >> 3;
@@ -149,7 +149,7 @@ gst_base_ts_mux_prepare_aac (GstBuffer * buf, GstBaseTsPadData * data,
   /* Now copy complete frame */
   gst_buffer_fill (out_buf, out_offset, buf_map.data, buf_map.size);
 
-  gst_buffer_unmap (data->codec_data, &codec_data_map);
+  gst_buffer_unmap (pad->codec_data, &codec_data_map);
   gst_buffer_unmap (buf, &buf_map);
 
   return out_buf;

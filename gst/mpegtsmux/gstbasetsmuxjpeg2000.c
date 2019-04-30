@@ -36,10 +36,10 @@
 #define GST_CAT_DEFAULT gst_base_ts_mux_debug
 
 GstBuffer *
-gst_base_ts_mux_prepare_jpeg2000 (GstBuffer * buf, GstBaseTsPadData * data,
+gst_base_ts_mux_prepare_jpeg2000 (GstBuffer * buf, GstBaseTsMuxPad * pad,
     GstBaseTsMux * mux)
 {
-  j2k_private_data *private_data = data->prepare_data;
+  j2k_private_data *private_data = pad->prepare_data;
   GstByteWriter wr;
   GstBuffer *out_buf = NULL;
   guint8 *elsm_header = NULL;

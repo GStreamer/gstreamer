@@ -395,11 +395,11 @@ gst_mpeg_ts_mux_class_init (GstMpegTsMuxClass * klass)
       "Multiplexes media streams into an MPEG Transport Stream",
       "Fluendo <contact@fluendo.com>");
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &gst_mpeg_ts_mux_sink_factory);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &gst_mpeg_ts_mux_sink_factory, GST_TYPE_BASE_TS_MUX_PAD);
 
-  gst_element_class_add_static_pad_template (gstelement_class,
-      &gst_mpeg_ts_mux_src_factory);
+  gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
+      &gst_mpeg_ts_mux_src_factory, GST_TYPE_AGGREGATOR_PAD);
 
   g_object_class_install_property (gobject_class, PROP_M2TS_MODE,
       g_param_spec_boolean ("m2ts-mode", "M2TS(192 bytes) Mode",

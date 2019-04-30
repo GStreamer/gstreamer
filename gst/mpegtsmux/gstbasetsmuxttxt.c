@@ -98,7 +98,7 @@
  */
 
 GstBuffer *
-gst_base_ts_mux_prepare_teletext (GstBuffer * buf, GstBaseTsPadData * pad_data,
+gst_base_ts_mux_prepare_teletext (GstBuffer * buf, GstBaseTsMuxPad * pad,
     GstBaseTsMux * mux)
 {
   GstBuffer *out_buf;
