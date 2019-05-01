@@ -2828,7 +2828,7 @@ test_overlay_blend_rect_verify (gint x, gint y, gint width, gint height,
     fail_unless_equals_int (data[i + 3], 0x80);
 #else
     /* A - R - G - B */
-    fail_unless_equals_int (data[i], 0x00);
+    fail_unless_equals_int (data[i], 0x80);
     fail_unless_equals_int (data[i + 1], 0x80);
     fail_unless_equals_int (data[i + 2], 0x80);
     fail_unless_equals_int (data[i + 3], 0x80);
