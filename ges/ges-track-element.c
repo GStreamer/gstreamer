@@ -1343,57 +1343,17 @@ ges_track_element_copy_bindings (GESTrackElement * element,
  *
  * Returns: %TRUE if the object as been edited properly, %FALSE if an error
  * occured
+ *
+ * Deprecated: 1.18: use #ges_timeline_element_edit instead.
  */
 gboolean
 ges_track_element_edit (GESTrackElement * object,
     GList * layers, GESEditMode mode, GESEdge edge, guint64 position)
 {
-  GESTrack *track = ges_track_element_get_track (object);
-  GESTimeline *timeline;
-
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
 
-  if (G_UNLIKELY (!track)) {
-    GST_WARNING_OBJECT (object, "Trying to edit in %d mode but not in "
-        "any Track yet.", mode);
-    return FALSE;
-  }
-
-  timeline = GES_TIMELINE (ges_track_get_timeline (track));
-
-  if (G_UNLIKELY (!timeline)) {
-    GST_WARNING_OBJECT (object, "Trying to edit in %d mode but "
-        "track %p is not in any timeline yet.", mode, track);
-    return FALSE;
-  }
-
-  switch (mode) {
-    case GES_EDIT_MODE_NORMAL:
-      return timeline_move_object (timeline, GES_TIMELINE_ELEMENT (object), -1,
-          layers, edge, position);
-      break;
-    case GES_EDIT_MODE_TRIM:
-      return timeline_trim_object (timeline, GES_TIMELINE_ELEMENT (object), -1,
-          layers, edge, position);
-      break;
-    case GES_EDIT_MODE_RIPPLE:
-      return timeline_ripple_object (timeline, GES_TIMELINE_ELEMENT (object),
-          GES_TIMELINE_ELEMENT_PRIORITY (object) / LAYER_HEIGHT,
-          layers, edge, position);
-      break;
-    case GES_EDIT_MODE_ROLL:
-      return timeline_roll_object (timeline, GES_TIMELINE_ELEMENT (object),
-          layers, edge, position);
-      break;
-    case GES_EDIT_MODE_SLIDE:
-      return timeline_slide_object (timeline, object, layers, edge, position);
-      break;
-    default:
-      GST_ERROR ("Unkown edit mode: %d", mode);
-      return FALSE;
-  }
-
-  return TRUE;
+  return ges_timeline_element_edit (GES_TIMELINE_ELEMENT (object),
+      layers, -1, mode, edge, position);
 }
 
 /**

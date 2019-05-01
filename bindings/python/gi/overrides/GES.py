@@ -81,6 +81,12 @@ class TimelineElement(GES.TimelineElement):
 TimelineElement = override(TimelineElement)
 __all__.append('TimelineElement')
 
+class Container(GES.Container):
+    def edit(self, layers, new_layer_priority, mode, edge, position):
+        return GES.TimelineElement.edit(self, layers, new_layer_priority, mode, edge, position)
+
+Container = override(Container)
+__all__.append('Container')
 
 try:
     from gi.repository import Gst

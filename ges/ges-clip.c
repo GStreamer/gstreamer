@@ -615,50 +615,6 @@ done:
 
 }
 
-static gboolean
-_edit (GESContainer * container, GList * layers,
-    gint new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position)
-{
-  GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (container);
-  GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
-
-  if (!G_UNLIKELY (GES_CONTAINER_CHILDREN (container))) {
-    GST_WARNING_OBJECT (container, "Trying to edit, but not containing"
-        "any TrackElement yet.");
-    return FALSE;
-  }
-
-  if (!timeline) {
-    GST_WARNING_OBJECT (container, "Trying to edit, but not in any"
-        "timeline.");
-    return FALSE;
-  }
-
-  switch (mode) {
-    case GES_EDIT_MODE_RIPPLE:
-      return timeline_ripple_object (timeline, element,
-          new_layer_priority <
-          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (container) :
-          new_layer_priority, layers, edge, position);
-    case GES_EDIT_MODE_TRIM:
-      return timeline_trim_object (timeline, element,
-          new_layer_priority <
-          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (container) :
-          new_layer_priority, layers, edge, position);
-    case GES_EDIT_MODE_NORMAL:
-      return timeline_move_object (timeline, element,
-          new_layer_priority <
-          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (container) :
-          new_layer_priority, layers, edge, position);
-    case GES_EDIT_MODE_ROLL:
-      return timeline_roll_object (timeline, element, layers, edge, position);
-    case GES_EDIT_MODE_SLIDE:
-      GST_ERROR ("Sliding not implemented.");
-      return FALSE;
-  }
-  return FALSE;
-}
-
 static void
 _deep_copy (GESTimelineElement * element, GESTimelineElement * copy)
 {
@@ -855,7 +811,6 @@ ges_clip_class_init (GESClipClass * klass)
   container_class->ungroup = _ungroup;
   container_class->group = _group;
   container_class->grouping_priority = G_MAXUINT;
-  container_class->edit = _edit;
 }
 
 static void

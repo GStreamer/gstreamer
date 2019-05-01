@@ -337,7 +337,15 @@ GES_API
 GESTrackType ges_timeline_element_get_track_types  (GESTimelineElement * self);
 
 GES_API
-guint32 ges_timeline_element_get_layer_priority    (GESTimelineElement * self);
+guint32 ges_timeline_element_get_layer_priority                       (GESTimelineElement * self);
+
+GES_API
+gboolean ges_timeline_element_edit                                    (GESTimelineElement * self,
+                                                                       GList * layers,
+                                                                       gint64 new_layer_priority,
+                                                                       GESEditMode mode,
+                                                                       GESEdge edge,
+                                                                       guint64 position);
 
 G_END_DECLS
 

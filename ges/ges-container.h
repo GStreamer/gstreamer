@@ -119,6 +119,8 @@ struct _GESContainerClass
   gboolean (*remove_child)        (GESContainer *container, GESTimelineElement *element);
   GList* (*ungroup)               (GESContainer *container, gboolean recursive);
   GESContainer * (*group)         (GList *containers);
+
+  /* Deprecated and not used anymore */
   gboolean (*edit)                (GESContainer * container,
                                    GList * layers, gint new_layer_priority,
                                    GESEditMode mode,

@@ -1007,6 +1007,8 @@ ges_container_group (GList * containers)
  *
  * Returns: %TRUE if the container as been edited properly, %FALSE if an error
  * occured
+ *
+ * Deprecated: 1.18: use #ges_timeline_element_edit instead.
  */
 gboolean
 ges_container_edit (GESContainer * container, GList * layers,
@@ -1014,11 +1016,6 @@ ges_container_edit (GESContainer * container, GList * layers,
 {
   g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
 
-  if (G_UNLIKELY (GES_CONTAINER_GET_CLASS (container)->edit == NULL)) {
-    GST_WARNING_OBJECT (container, "No edit vmethod implementation");
-    return FALSE;
-  }
-
-  return GES_CONTAINER_GET_CLASS (container)->edit (container, layers,
-      new_layer_priority, mode, edge, position);
+  return ges_timeline_element_edit (GES_TIMELINE_ELEMENT (container),
+      layers, new_layer_priority, mode, edge, position);
 }

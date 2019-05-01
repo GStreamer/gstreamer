@@ -1942,3 +1942,56 @@ ges_timeline_element_set_flags (GESTimelineElement * self,
   self->priv->flags = flags;
 
 }
+
+/**
+ * ges_timeline_element_edit:
+ * @self: the #GESClip to edit
+ * @layers: (element-type GESLayer): The layers you want the edit to
+ * happen in, %NULL means that the edition is done in all the
+ * #GESLayers contained in the current timeline.
+ * @new_layer_priority: The priority of the layer @self should land in.
+ * If the layer you're trying to move the element to doesn't exist, it will
+ * be created automatically. -1 means no move.
+ * @mode: The #GESEditMode in which the editition will happen.
+ * @edge: The #GESEdge the edit should happen on.
+ * @position: The position at which to edit @self (in nanosecond)
+ *
+ * Edit @self in the different exisiting #GESEditMode modes. In the case of
+ * slide, and roll, you need to specify a #GESEdge
+ *
+ * Returns: %TRUE if @self as been edited properly, %FALSE if an error
+ * occured
+ */
+gboolean
+ges_timeline_element_edit (GESTimelineElement * self, GList * layers,
+    gint64 new_layer_priority, GESEditMode mode, GESEdge edge, guint64 position)
+{
+  GESTimeline *timeline;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (self), FALSE);
+
+  timeline = GES_TIMELINE_ELEMENT_TIMELINE (self);
+  switch (mode) {
+    case GES_EDIT_MODE_RIPPLE:
+      return timeline_ripple_object (timeline, self,
+          new_layer_priority <
+          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self) :
+          new_layer_priority, layers, edge, position);
+    case GES_EDIT_MODE_TRIM:
+      return timeline_trim_object (timeline, self,
+          new_layer_priority <
+          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self) :
+          new_layer_priority, layers, edge, position);
+    case GES_EDIT_MODE_NORMAL:
+      return timeline_move_object (timeline, self,
+          new_layer_priority <
+          0 ? GES_TIMELINE_ELEMENT_LAYER_PRIORITY (self) :
+          new_layer_priority, layers, edge, position);
+    case GES_EDIT_MODE_ROLL:
+      return timeline_roll_object (timeline, self, layers, edge, position);
+    case GES_EDIT_MODE_SLIDE:
+      GST_ERROR_OBJECT (self, "Sliding not implemented.");
+      return FALSE;
+  }
+  return FALSE;
+}
