@@ -28,25 +28,9 @@
  * You can use the following children properties through the
  * #ges_track_element_set_child_property and alike set of methods:
  *
- * <informaltable frame="none">
- * <tgroup cols="3">
- * <colspec colname="properties_type" colwidth="150px"/>
- * <colspec colname="properties_name" colwidth="200px"/>
- * <colspec colname="properties_flags" colwidth="400px"/>
- * <tbody>
- * <row>
- *  <entry role="property_type"><link linkend="gdouble"><type>double</type></link></entry>
- *  <entry role="property_name"><link linkend="GESAudioSource--volume">volume</link></entry>
- *  <entry>volume factor, 1.0=100%.</entry>
- * </row>
- * <row>
- *  <entry role="property_type"><link linkend="gboolean"><type>gboolean</type></link></entry>
- *  <entry role="property_name"><link linkend="GESAudioSource--mute">mute</link></entry>
- *  <entry>mute channel.</entry>
- * </row>
- * </tbody>
- * </tgroup>
- * </informaltable>
+ * - #gdouble `volume`: volume factor, 1.0=100%.
+ * - #gboolean `mute`: mute channel.
+ *
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

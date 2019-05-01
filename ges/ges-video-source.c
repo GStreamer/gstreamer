@@ -23,64 +23,22 @@
  * @title: GESVideoSource
  * @short_description: Base Class for video sources
  *
- * # Children Properties:
+ * ## Children Properties:
+ *
  * You can use the following children properties through the
  * #ges_track_element_set_child_property and alike set of methods:
- *
- * <informaltable frame="none">
- * <tgroup cols="3">
- * <colspec colname="properties_type" colwidth="150px"/>
- * <colspec colname="properties_name" colwidth="200px"/>
- * <colspec colname="properties_flags" colwidth="400px"/>
- * <tbody>
- * <row>
- *  <entry role="property_type"><link linkend="gdouble"><type>double</type></link></entry>
- *  <entry role="property_name"><link linkend="GESVideoSource--alpha">alpha</link></entry>
- *  <entry>The desired alpha for the stream.</entry>
- * </row>
- * <row>
- *  <entry role="property_type"><link linkend="gint"><type>gint</type></link></entry>
- *  <entry role="property_name"><link linkend="GESVideoSource--posx">posx</link></entry>
- *  <entry>The desired x position for the stream.</entry>
- * </row>
- * <row>
- *  <entry role="property_type"><link linkend="gint"><type>gint</type></link></entry>
- *  <entry role="property_name"><link linkend="GESVideoSource--posy">posy</link></entry>
- *  <entry>The desired y position for the stream</entry>
- * </row>
- * <row>
- *  <entry role="property_type"><link linkend="gint"><type>gint</type></link></entry>
- *  <entry role="property_name"><link linkend="GESVideoSource--width">width</link></entry>
- *  <entry>The desired width for that source. Set to 0 if size is not mandatory, will be set to width of the current track.</entry>
- * </row>
- * <row>
- *  <entry role="property_type"><link linkend="gint"><type>gint</type></link></entry>
- *  <entry role="property_name"><link linkend="GESVideoSource--height">height</link></entry>
- *  <entry>The desired height for that source. Set to 0 if size is not mandatory, will be set to height of the current track.</entry>
- * </row>
- * <row>
- *  <entry role="property_type"><link linkend="GstDeinterlaceModes"><type>GstDeinterlaceModes</type></link></entry>
- *  <entry role="property_name"><link linkend="GESVideoSource--deinterlace-mode">deinterlace-mode</link></entry>
- *  <entry>Deinterlace Mode</entry>
- * </row>
- * <row>
- *  <entry role="property_type"><link linkend="GstDeinterlaceFields"><type>GstDeinterlaceFields</type></link></entry>
- *  <entry role="property_name"><link linkend="GESVideoSource--deinterlace-fields">deinterlace-fields</link></entry>
- *  <entry>Fields to use for deinterlacing</entry>
- * </row>
- * <row>
- *  <entry role="property_type"><link linkend="GstDeinterlaceFieldLayout"><type>GstDeinterlaceFieldLayout</type></link></entry>
- *  <entry role="property_name"><link linkend="GESVideoSource--deinterlace-tff">deinterlace-tff</link></entry>
- *  <entry>Deinterlace top field first</entry>
- * </row>
- * <row>
- *  <entry role="property_type"><link linkend="GstVideoOrientationMethod"><type>GstVideoOrientationMethod</type></link></entry>
- *  <entry role="property_name"><link linkend="GESVideoSource--video-direction">video-direction</link></entry>
- *  <entry>The desired video rotation and flipping.</entry>
- * </row>
- * </tbody>
- * </tgroup>
- * </informaltable>
+ * 
+ * - #gdouble `alpha`: The desired alpha for the stream.
+ * - #gint `posx`: The desired x position for the stream.
+ * - #gint `posy`: The desired y position for the stream
+ * - #gint `width`: The desired width for that source.
+ *   Set to 0 if size is not mandatory, will be set to width of the current track.
+ * - #gint `height`: The desired height for that source.
+ *   Set to 0 if size is not mandatory, will be set to height of the current track.
+ * - #GstDeinterlaceModes `deinterlace-mode`: Deinterlace Mode
+ * - #GstDeinterlaceFields `deinterlace-fields`: Fields to use for deinterlacing
+ * - #GstDeinterlaceFieldLayout `deinterlace-tff`: Deinterlace top field first
+ * - #GstVideoOrientationMethod `video-direction`: The desired video rotation and flipping.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

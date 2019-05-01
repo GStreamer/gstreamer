@@ -26,10 +26,14 @@
 
 G_BEGIN_DECLS
 
-/* Padding */
+/**
+ * GES_PADDING: (attributes doc.skip=true)
+ */
 #define GES_PADDING         4
 
-/* padding for very extensible base classes */
+/**
+ * GES_PADDING_LARGE: (attributes doc.skip=true)
+ */
 #define GES_PADDING_LARGE   20
 
 /* Type definitions */
