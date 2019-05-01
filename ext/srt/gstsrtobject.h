@@ -118,7 +118,8 @@ gssize          gst_srt_object_write    (GstSRTObject * srtobject,
                                          GCancellable *cancellable,
                                          GError **err);
 
-void            gst_srt_object_wakeup   (GstSRTObject * srtobject);
+void            gst_srt_object_wakeup   (GstSRTObject * srtobject,
+                                         GCancellable *cancellable);
 
 GstStructure   *gst_srt_object_get_stats        (GstSRTObject * srtobject);
 

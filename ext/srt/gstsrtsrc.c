@@ -218,8 +218,7 @@ gst_srt_src_unlock (GstBaseSrc * bsrc)
 {
   GstSRTSrc *self = GST_SRT_SRC (bsrc);
 
-  g_cancellable_cancel (self->cancellable);
-  gst_srt_object_wakeup (self->srtobject);
+  gst_srt_object_wakeup (self->srtobject, self->cancellable);
 
   return TRUE;
 }
