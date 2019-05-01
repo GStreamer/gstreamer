@@ -186,7 +186,7 @@ integration testsuites fedora:
   before_script:
     - rm -f gst-build/build/subprojects/gstreamer-vaapi/gst/vaapi/libgstvaapi.so
   variables:
-    EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures"
+    EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --check-bugs"
     TEST_SUITE: "validate ges"
   except:
     variables:
