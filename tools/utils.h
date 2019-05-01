@@ -20,7 +20,7 @@
 #include <gst/pbutils/encoding-profile.h>
 
 gchar * sanitize_timeline_description (int argc, char **argv);
-guint get_flags_from_string (GType type, const gchar * str_flags);
+gboolean get_flags_from_string (GType type, const gchar * str_flags, guint *val);
 gchar * ensure_uri (const gchar * location);
 GstEncodingProfile * parse_encoding_profile (const gchar * format);
 void print_enum (GType enum_type);

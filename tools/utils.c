@@ -84,21 +84,22 @@ sanitize_timeline_description (int argc, char **argv)
   return string;
 }
 
-guint
-get_flags_from_string (GType type, const gchar * str_flags)
+gboolean
+get_flags_from_string (GType type, const gchar * str_flags, guint * flags)
 {
-  guint i;
-  gint flags = 0;
-  GFlagsClass *class = g_type_class_ref (type);
+  GValue value = G_VALUE_INIT;
+  g_value_init (&value, type);
 
-  for (i = 0; i < class->n_values; i++) {
-    if (g_strrstr (str_flags, class->values[i].value_nick)) {
-      flags |= class->values[i].value;
-    }
+  if (!gst_value_deserialize (&value, str_flags)) {
+    g_value_unset (&value);
+
+    return FALSE;
   }
-  g_type_class_unref (class);
 
-  return flags;
+  *flags = g_value_get_flags (&value);
+  g_value_unset (&value);
+
+  return TRUE;
 }
 
 gchar *

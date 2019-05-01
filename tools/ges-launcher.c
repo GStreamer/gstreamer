@@ -86,9 +86,7 @@ _parse_track_type (const gchar * option_name, const gchar * value,
 {
   ParsedOptions *opts = &self->priv->parsed_options;
 
-  opts->track_types = get_flags_from_string (GES_TYPE_TRACK_TYPE, value);
-
-  if (opts->track_types == 0)
+  if (!get_flags_from_string (GES_TYPE_TRACK_TYPE, value, &opts->track_types))
     return FALSE;
 
   return TRUE;
