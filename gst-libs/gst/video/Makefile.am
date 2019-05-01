@@ -5,7 +5,7 @@ include $(top_srcdir)/common/orc.mak
 glib_enum_headers = video.h video-format.h video-color.h video-info.h video-dither.h \
 			colorbalance.h navigation.h video-chroma.h video-tile.h video-converter.h \
 			video-resampler.h video-frame.h video-scaler.h video-anc.h \
-			video-overlay-composition.h video-hdr.h
+			video-overlay-composition.h video-hdr.h gstvideotimecode.h
 glib_enum_define = GST_VIDEO
 glib_gen_prefix = gst_video
 glib_gen_basename = video
