@@ -49,8 +49,6 @@ struct _GstWasapiSrc
   /* Client was reset, so it needs to be started again */
   gboolean client_needs_restart;
 
-  /* Actual size of the allocated buffer */
-  guint buffer_frame_count;
   /* The mix format that wasapi prefers in shared mode */
   WAVEFORMATEX *mix_format;
   /* The probed caps that we can accept */

@@ -457,7 +457,7 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   spec->segsize = devicep_frames * bpf;
 
   /* We need a minimum of 2 segments to ensure glitch-free playback */
-  spec->segtotal = MAX (self->buffer_frame_count * bpf / spec->segsize, 2);
+  spec->segtotal = MAX (buffer_frames * bpf / spec->segsize, 2);
 
   GST_INFO_OBJECT (self, "segsize is %i, segtotal is %i", spec->segsize,
       spec->segtotal);
