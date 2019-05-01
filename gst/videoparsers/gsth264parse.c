@@ -584,7 +584,7 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         if (sei.payload.stereo_video_info.field_views_flag) {
           mview_mode = GST_VIDEO_MULTIVIEW_MODE_ROW_INTERLEAVED;
           if (!sei.payload.stereo_video_info.top_field_is_left_view_flag)
-            mview_mode |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
+            mview_flags |= GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST;
         } else {
           mview_mode = GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME;
           if (sei.payload.stereo_video_info.next_frame_is_second_view_flag) {
