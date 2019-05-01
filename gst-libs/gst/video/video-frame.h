@@ -179,9 +179,9 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
  * @GST_VIDEO_BUFFER_FLAG_LAST:        Offset to define more flags
  *
  * Additional video buffer flags. These flags can potentially be used on any
- * buffers carrying video data - even encoded data.
+ * buffers carrying closed caption data, or video data - even encoded data.
  *
- * Note that these are only valid for #GstCaps of type: video/...
+ * Note that these are only valid for #GstCaps of type: video/... and caption/...
  * They can conflict with other extended buffer flags.
  */
 typedef enum {
