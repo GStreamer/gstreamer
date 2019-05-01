@@ -35,6 +35,9 @@
  *
  * Returns: (transfer full): A #GstSample containing the last frame from
  * @playsink in the format defined by the @caps
+ *
+ * Deprecated: 1.18: Use the "convert-sample" action signal of
+ * #playsink instead.
  */
 GstSample *
 ges_play_sink_convert_frame (GstElement * playsink, GstCaps * caps)

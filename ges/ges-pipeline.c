@@ -22,6 +22,8 @@
  * SECTION:gespipeline
  * @title: GESPipeline
  * @short_description: Convenience GstPipeline for editing.
+ * @symbols:
+ * - ges_play_sink_convert_frame
  *
  * #GESPipeline allows developers to view and render #GESTimeline
  * in a simple fashion.

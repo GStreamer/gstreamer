@@ -42,7 +42,6 @@ gi-index
 		ges-operation.h
 		ges-overlay-clip.h
 		# ges-pitivi-formatter.h
-		ges-screenshot.h
 		ges-source-clip.h
 		ges-source.h
 		ges-text-overlay-clip.h
@@ -50,7 +49,6 @@ gi-index
 		ges-track-element-asset.h
 		ges-transition-clip.h
 		ges-transition.h
-		ges-types.h
 		ges-uri-asset.h
 		ges-video-test-source.h
 		ges-video-transition.h
