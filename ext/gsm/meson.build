@@ -7,7 +7,7 @@ gsm_cargs = []
 gsm_dep = cc.find_library('gsm', required : get_option('gsm'))
 have_gsm_create = cc.has_header_symbol('gsm.h', 'gsm_create')
 if not have_gsm_create
-	have_gsm_create = cc.has_header_symbol('gsm/smg.h', 'gsm_create')
+  have_gsm_create = cc.has_header_symbol('gsm/gsm.h', 'gsm_create')
   if not have_gsm_create and get_option('gsm').enabled()
     error('GSM plugin is enabled: found libgsm but no headers')
   else
