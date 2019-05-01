@@ -24,6 +24,7 @@
 
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
+#include "../../../ges/ges-internal.h"
 
 GESPipeline * ges_test_create_pipeline (GESTimeline *timeline);
 /*  The first 2 NLE priorities are used for:
@@ -98,22 +99,6 @@ G_STMT_START {                                          \
     "%s in layer %d instead of %d", GES_TIMELINE_ELEMENT_NAME (clip),        \
     GES_TIMELINE_ELEMENT_LAYER_PRIORITY (clip), layer_prio);                 \
 }
-
-#define GES_TIMELINE_ELEMENT_FORMAT \
-    "s<%p>" \
-    " [ %" GST_TIME_FORMAT \
-    " (%" GST_TIME_FORMAT \
-    ") - %" GST_TIME_FORMAT "(%" GST_TIME_FORMAT") layer: %" G_GINT32_FORMAT "] "
-
-#define GES_TIMELINE_ELEMENT_ARGS(element) \
-    GES_TIMELINE_ELEMENT_NAME(element), element, \
-    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_START(element)), \
-    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_INPOINT(element)), \
-    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_DURATION(element)), \
-    GST_TIME_ARGS(GES_TIMELINE_ELEMENT_MAX_DURATION(element)), \
-    GES_TIMELINE_ELEMENT_LAYER_PRIORITY(element)
-#define GES_ARGS GES_TIMELINE_ELEMENT_ARGS
-#define GES_FORMAT GES_TIMELINE_ELEMENT_FORMAT
 
 void print_timeline(GESTimeline *timeline);
 
