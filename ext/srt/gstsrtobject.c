@@ -1292,9 +1292,10 @@ gst_srt_object_write_to_callers (GstSRTObject * srtobject,
     GstBufferList * headers,
     const GstMapInfo * mapinfo, GCancellable * cancellable, GError ** error)
 {
-  GList *callers = srtobject->callers;
+  GList *callers;
 
   GST_OBJECT_LOCK (srtobject->element);
+  callers = srtobject->callers;
   while (callers != NULL) {
     gssize len = 0;
     const guint8 *msg = mapinfo->data;
