@@ -55,7 +55,6 @@ struct _GstSRTObject
   gint                          poll_id;
   gboolean                      sent_headers;
 
-  GMutex                        sock_lock;
   GCond                         sock_cond;
 
   GTask                        *listener_task;
