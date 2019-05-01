@@ -108,7 +108,7 @@ gst_rtp_vraw_depay_init (GstRtpVRawDepay * rtpvrawdepay)
 }
 
 static void
-gst_rtp_vraw_depay_reset (GstRtpVRawDepay * rtpvrawdepay)
+gst_rtp_vraw_depay_reset (GstRtpVRawDepay * rtpvrawdepay, gboolean full)
 {
   if (rtpvrawdepay->outbuf) {
     gst_video_frame_unmap (&rtpvrawdepay->frame);
@@ -116,7 +116,8 @@ gst_rtp_vraw_depay_reset (GstRtpVRawDepay * rtpvrawdepay)
     rtpvrawdepay->outbuf = NULL;
   }
   rtpvrawdepay->timestamp = -1;
-  if (rtpvrawdepay->pool) {
+
+  if (full && rtpvrawdepay->pool) {
     gst_buffer_pool_set_active (rtpvrawdepay->pool, FALSE);
     gst_object_unref (rtpvrawdepay->pool);
     rtpvrawdepay->pool = NULL;
@@ -613,7 +614,7 @@ gst_rtp_vraw_depay_handle_event (GstRTPBaseDepayload * filter, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      gst_rtp_vraw_depay_reset (rtpvrawdepay);
+      gst_rtp_vraw_depay_reset (rtpvrawdepay, FALSE);
       break;
     default:
       break;
@@ -638,7 +639,7 @@ gst_rtp_vraw_depay_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_rtp_vraw_depay_reset (rtpvrawdepay);
+      gst_rtp_vraw_depay_reset (rtpvrawdepay, TRUE);
       break;
     default:
       break;
@@ -648,7 +649,7 @@ gst_rtp_vraw_depay_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_rtp_vraw_depay_reset (rtpvrawdepay);
+      gst_rtp_vraw_depay_reset (rtpvrawdepay, TRUE);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
