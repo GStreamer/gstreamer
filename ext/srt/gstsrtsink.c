@@ -223,8 +223,7 @@ gst_srt_sink_unlock (GstBaseSink * bsink)
 {
   GstSRTSink *self = GST_SRT_SINK (bsink);
 
-  g_cancellable_cancel (self->cancellable);
-  gst_srt_object_wakeup (self->srtobject);
+  gst_srt_object_wakeup (self->srtobject, self->cancellable);
 
   return TRUE;
 }

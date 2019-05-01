@@ -1212,24 +1212,23 @@ out:
 }
 
 void
-gst_srt_object_wakeup (GstSRTObject * srtobject)
+gst_srt_object_wakeup (GstSRTObject * srtobject, GCancellable * cancellable)
 {
-  GstSRTConnectionMode connection_mode = GST_SRT_CONNECTION_MODE_NONE;
-
   GST_DEBUG_OBJECT (srtobject->element, "waking up SRT");
 
   /* Removing all socket descriptors from the monitoring list
    * wakes up SRT's threads. We only have one to remove. */
   srt_epoll_remove_usock (srtobject->poll_id, srtobject->sock);
 
-  gst_structure_get_enum (srtobject->parameters, "mode",
-      GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode);
-
-  if (connection_mode == GST_SRT_CONNECTION_MODE_LISTENER) {
-    GST_OBJECT_LOCK (srtobject->element);
-    g_cond_signal (&srtobject->sock_cond);
-    GST_OBJECT_UNLOCK (srtobject->element);
-  }
+  /* connection is only waited for in listener mode,
+   * but there is no harm in raising signal in any case */
+  GST_OBJECT_LOCK (srtobject->element);
+  /* however, a race might be harmful ...
+   * the cancellation is used as 'flushing' flag here,
+   * so make sure it is so detected by the intended part at proper time */
+  g_cancellable_cancel (cancellable);
+  g_cond_signal (&srtobject->sock_cond);
+  GST_OBJECT_UNLOCK (srtobject->element);
 }
 
 static gboolean
