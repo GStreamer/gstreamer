@@ -262,6 +262,7 @@ struct _GstVaapiEncoder
   GstVaapiRateControl rate_control;
   guint32 rate_control_mask;
   guint bitrate; /* kbps */
+  guint target_percentage;
   guint keyframe_period;
 
   /* Maximum number of reference frames supported

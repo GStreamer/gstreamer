@@ -145,8 +145,6 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
    *          else minimum bitrate = maximum bitrate * (2 * target percentage -100) / 100
    *      Target bitrate will be calculated like the following in the driver.
    *          target bitrate = maximum bitrate * target percentage / 100
-   *
-   * Note that target percentage is set as 70 currently in GStreamer VA-API.
    */
   GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
       GST_VAAPI_ENCODER_PROP_BITRATE,
@@ -154,6 +152,18 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
           "Bitrate (kbps)",
           "The desired bitrate expressed in kbps (0: auto-calculate)",
           0, 100 * 1024, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoder:target-percentage:
+   *
+   * The desired target percentage of bitrate for variable rate controls.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_PROP_TARGET_PERCENTAGE,
+      g_param_spec_uint ("target-percentage",
+          "Target Percentage",
+          "The desired target percentage of bitrate for variable rate "
+          "controls.", 1, 100, 70, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstVaapiEncoder:keyframe-period:
@@ -1035,7 +1045,7 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
 
   target_percentage =
       (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CBR) ?
-      100 : 70;
+      100 : encoder->target_percentage;
 
   /* *INDENT-OFF* */
   /* Default values for rate control parameter */
@@ -1197,6 +1207,10 @@ set_property (GstVaapiEncoder * encoder, gint prop_id, const GValue * value)
       break;
     case GST_VAAPI_ENCODER_PROP_BITRATE:
       status = gst_vaapi_encoder_set_bitrate (encoder,
+          g_value_get_uint (value));
+      break;
+    case GST_VAAPI_ENCODER_PROP_TARGET_PERCENTAGE:
+      status = gst_vaapi_encoder_set_target_percentage (encoder,
           g_value_get_uint (value));
       break;
     case GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD:
@@ -1365,6 +1379,28 @@ gst_vaapi_encoder_set_bitrate (GstVaapiEncoder * encoder, guint bitrate)
   }
 
   encoder->bitrate = bitrate;
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+}
+
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_target_percentage (GstVaapiEncoder * encoder,
+    guint target_percentage)
+{
+  g_return_val_if_fail (encoder != NULL, 0);
+
+  if (encoder->target_percentage != target_percentage
+      && encoder->num_codedbuf_queued > 0) {
+    if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) != GST_VAAPI_RATECONTROL_CBR) {
+      GST_INFO ("Target percentage is changed to %d on runtime",
+          target_percentage);
+      encoder->target_percentage = target_percentage;
+      return gst_vaapi_encoder_reconfigure_internal (encoder);
+    }
+    GST_WARNING ("Target percentage is ignored for CBR rate-control");
+    return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+  }
+
+  encoder->target_percentage = target_percentage;
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 

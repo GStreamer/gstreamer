@@ -114,6 +114,8 @@ typedef enum {
  * GstVaapiEncoderProp:
  * @GST_VAAPI_ENCODER_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
  * @GST_VAAPI_ENCODER_PROP_BITRATE: Bitrate expressed in kbps (uint).
+ * @GST_VAAPI_ENCODER_PROP_TARGET_PERCENTAGE: Desired target percentage of
+ *  bitrate for variable rate controls.
  * @GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD: The maximal distance
  *   between two keyframes (uint).
  * @GST_VAAPI_ENCODER_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
@@ -126,6 +128,7 @@ typedef enum {
 typedef enum {
   GST_VAAPI_ENCODER_PROP_RATECONTROL = 1,
   GST_VAAPI_ENCODER_PROP_BITRATE,
+  GST_VAAPI_ENCODER_PROP_TARGET_PERCENTAGE,
   GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD,
   GST_VAAPI_ENCODER_PROP_TUNE,
   GST_VAAPI_ENCODER_PROP_QUALITY_LEVEL,
@@ -179,6 +182,10 @@ gst_vaapi_encoder_set_rate_control (GstVaapiEncoder * encoder,
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_set_bitrate (GstVaapiEncoder * encoder, guint bitrate);
+
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_target_percentage (GstVaapiEncoder * encoder,
+    guint target_percentage);
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
