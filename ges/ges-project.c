@@ -80,6 +80,7 @@ typedef struct EmitLoadedInIdle
 
 enum
 {
+  LOADING_SIGNAL,
   LOADED_SIGNAL,
   ERROR_LOADING_ASSET,
   ASSET_ADDED_SIGNAL,
@@ -179,6 +180,7 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
 
   priv = GES_PROJECT (project)->priv;
 
+  g_signal_emit (project, _signals[LOADING_SIGNAL], 0, timeline);
   if (priv->uri == NULL) {
     EmitLoadedInIdle *data = g_slice_new (EmitLoadedInIdle);
 
@@ -482,9 +484,22 @@ ges_project_class_init (GESProjectClass * klass)
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_ASSET);
 
   /**
+   * GESProject::loading:
+   * @project: the #GESProject that is starting to load a timeline
+   * @timeline: The #GESTimeline that started loading
+   *
+   * Since: 1.18
+   */
+  _signals[LOADING_SIGNAL] =
+      g_signal_new ("loading", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESProjectClass, loading),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
+      1, GES_TYPE_TIMELINE);
+
+  /**
    * GESProject::loaded:
-   * @project: the #GESProject that is done loading a project.
-   * @timeline: The #GESTimeline that complete loading
+   * @project: the #GESProject that is done loading a timeline.
+   * @timeline: The #GESTimeline that completed loading
    */
   _signals[LOADED_SIGNAL] =
       g_signal_new ("loaded", G_TYPE_FROM_CLASS (klass),
