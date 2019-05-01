@@ -189,7 +189,6 @@ gst_srt_object_new (GstElement * element)
   srtobject->listener_poll_id = SRT_ERROR;
   srtobject->sent_headers = FALSE;
 
-  g_mutex_init (&srtobject->sock_lock);
   g_cond_init (&srtobject->sock_cond);
   return srtobject;
 }
@@ -204,7 +203,6 @@ gst_srt_object_destroy (GstSRTObject * srtobject)
     srtobject->poll_id = SRT_ERROR;
   }
 
-  g_mutex_clear (&srtobject->sock_lock);
   g_cond_clear (&srtobject->sock_cond);
 
   GST_DEBUG_OBJECT (srtobject->element, "Destroying srtobject");
@@ -683,11 +681,8 @@ idle_listen_source_cb (gpointer data)
 
     GST_OBJECT_LOCK (srtobject->element);
     srtobject->callers = g_list_append (srtobject->callers, caller);
-    GST_OBJECT_UNLOCK (srtobject->element);
-
-    g_mutex_lock (&srtobject->sock_lock);
     g_cond_signal (&srtobject->sock_cond);
-    g_mutex_unlock (&srtobject->sock_lock);
+    GST_OBJECT_UNLOCK (srtobject->element);
 
     /* notifying caller-added */
     if (srtobject->caller_added_closure != NULL) {
@@ -1096,17 +1091,23 @@ static gboolean
 gst_srt_object_wait_caller (GstSRTObject * srtobject,
     GCancellable * cancellable, GError ** errorj)
 {
+  gboolean ret = FALSE;
+
   GST_DEBUG_OBJECT (srtobject->element, "Waiting connection from caller");
 
-  if (g_cancellable_is_cancelled (cancellable)) {
-    return FALSE;
+  GST_OBJECT_LOCK (srtobject->element);
+  while (!g_cancellable_is_cancelled (cancellable)) {
+    ret = g_list_length (srtobject->callers) >= 1;
+    if (ret)
+      break;
+    g_cond_wait (&srtobject->sock_cond,
+        GST_OBJECT_GET_LOCK (srtobject->element));
   }
+  GST_OBJECT_UNLOCK (srtobject->element);
 
-  g_mutex_lock (&srtobject->sock_lock);
-  g_cond_wait (&srtobject->sock_cond, &srtobject->sock_lock);
-  g_mutex_unlock (&srtobject->sock_lock);
+  GST_DEBUG_OBJECT (srtobject->element, "got %s connection", ret ? "a" : "no");
 
-  return TRUE;
+  return ret;
 }
 
 gssize
@@ -1129,11 +1130,8 @@ gst_srt_object_read (GstSRTObject * srtobject,
   if (connection_mode == GST_SRT_CONNECTION_MODE_LISTENER) {
     SRTCaller *caller;
 
-    if (g_list_length (srtobject->callers) < 1) {
-      if (!gst_srt_object_wait_caller (srtobject, cancellable, error)) {
-        return -1;
-      }
-    }
+    if (!gst_srt_object_wait_caller (srtobject, cancellable, error))
+      return -1;
 
     caller = srtobject->callers->data;
     poll_id = caller->poll_id;
@@ -1228,9 +1226,9 @@ gst_srt_object_wakeup (GstSRTObject * srtobject)
       GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode);
 
   if (connection_mode == GST_SRT_CONNECTION_MODE_LISTENER) {
-    g_mutex_lock (&srtobject->sock_lock);
+    GST_OBJECT_LOCK (srtobject->element);
     g_cond_signal (&srtobject->sock_cond);
-    g_mutex_unlock (&srtobject->sock_lock);
+    GST_OBJECT_UNLOCK (srtobject->element);
   }
 }
 
@@ -1428,11 +1426,9 @@ gst_srt_object_write (GstSRTObject * srtobject,
       GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode);
 
   if (connection_mode == GST_SRT_CONNECTION_MODE_LISTENER) {
-    if (g_list_length (srtobject->callers) < 1) {
-      if (!gst_srt_object_wait_caller (srtobject, cancellable, error)) {
-        return -1;
-      }
-    }
+    if (!gst_srt_object_wait_caller (srtobject, cancellable, error))
+      return -1;
+
     len =
         gst_srt_object_write_to_callers (srtobject, headers, mapinfo,
         cancellable, error);
