@@ -889,6 +889,7 @@ gst_x265_enc_get_header_buffer (GstX265Enc * encoder)
   gint32 vps_idx, sps_idx, pps_idx;
   int header_return;
   GstBuffer *buf;
+  gsize header_size = 0;
 
   header_return = x265_encoder_headers (encoder->x265enc, &nal, &i_nal);
   if (header_return < 0) {
@@ -905,12 +906,17 @@ gst_x265_enc_get_header_buffer (GstX265Enc * encoder)
 
   vps_idx = sps_idx = pps_idx = -1;
   for (i = 0; i < i_nal; i++) {
-    if (nal[i].type == 32) {
+    if (nal[i].type == NAL_UNIT_VPS) {
       vps_idx = i;
-    } else if (nal[i].type == 33) {
+      header_size += nal[i].sizeBytes;
+    } else if (nal[i].type == NAL_UNIT_SPS) {
       sps_idx = i;
-    } else if (nal[i].type == 34) {
+      header_size += nal[i].sizeBytes;
+    } else if (nal[i].type == NAL_UNIT_PPS) {
       pps_idx = i;
+      header_size += nal[i].sizeBytes;
+    } else if (nal[i].type == NAL_UNIT_PREFIX_SEI) {
+      header_size += nal[i].sizeBytes;
     }
   }
 
@@ -921,15 +927,20 @@ gst_x265_enc_get_header_buffer (GstX265Enc * encoder)
   }
 
   offset = 0;
-  buf =
-      gst_buffer_new_allocate (NULL,
-      nal[vps_idx].sizeBytes + nal[sps_idx].sizeBytes + nal[pps_idx].sizeBytes,
-      NULL);
+  buf = gst_buffer_new_allocate (NULL, header_size, NULL);
   gst_buffer_fill (buf, offset, nal[vps_idx].payload, nal[vps_idx].sizeBytes);
   offset += nal[vps_idx].sizeBytes;
   gst_buffer_fill (buf, offset, nal[sps_idx].payload, nal[sps_idx].sizeBytes);
   offset += nal[sps_idx].sizeBytes;
   gst_buffer_fill (buf, offset, nal[pps_idx].payload, nal[pps_idx].sizeBytes);
+  offset += nal[pps_idx].sizeBytes;
+
+  for (i = 0; i < i_nal; i++) {
+    if (nal[i].type == NAL_UNIT_PREFIX_SEI) {
+      gst_buffer_fill (buf, offset, nal[i].payload, nal[i].sizeBytes);
+      offset += nal[i].sizeBytes;
+    }
+  }
 
   return buf;
 }
