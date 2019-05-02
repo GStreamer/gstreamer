@@ -40,7 +40,7 @@ check_assrender =
 endif
 
 if USE_AVTP
-check_avtp = elements/avtpaafpay elements/avtpaafdepay elements/avtpsink
+check_avtp = elements/avtpaafpay elements/avtpaafdepay elements/avtpsink elements/avtpsrc
 else
 check_avtp =
 endif
@@ -512,6 +512,9 @@ elements_avtpaafdepay_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(LDADD)
 
 elements_avtpsink_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_avtpsink_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(LDADD)
+
+elements_avtpsrc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_avtpsrc_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(LDADD)
 
 elements_mpegtsmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_mpegtsmux_LDADD = $(GST_PLUGINS_BASE_LIBS) $(GST_VIDEO_LIBS) $(GST_BASE_LIBS) $(LDADD)
