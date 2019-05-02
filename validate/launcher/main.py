@@ -139,7 +139,7 @@ http://wiki.pitivi.org/wiki/Bug_reporting#Debug_logs).
 
 QA_ASSETS = "gst-integration-testsuites"
 MEDIAS_FOLDER = "medias"
-DEFAULT_GST_QA_ASSETS_REPO = "git://anongit.freedesktop.org/gstreamer/gst-integration-testsuites"
+DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.freedesktop.org/gstreamer/gst-integration-testsuites.git"
 OLD_DEFAULT_GST_QA_ASSETS_REPO = "https://gitlab.com/thiblahute/gst-integration-testsuites.git"
 DEFAULT_TESTSUITES_DIRS = [os.path.join(DEFAULT_MAIN_DIR, QA_ASSETS, "testsuites")]
 
