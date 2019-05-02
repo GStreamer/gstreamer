@@ -1,1 +1,1 @@
-include: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/master/gitlab/ci_template.yml"
+include: "https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/1.16/gitlab/ci_template.yml"
