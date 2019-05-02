@@ -5,7 +5,9 @@ libgstnvdec_la_SOURCES = \
 	plugin.c
 
 noinst_HEADERS = \
-	gstnvdec.h
+	cuviddec.h \
+	gstnvdec.h \
+	nvcuvid.h
 
 libgstnvdec_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
