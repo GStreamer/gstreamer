@@ -689,6 +689,80 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
   if (encoder->keyintmax > 0) {
     encoder->x265param.keyframeMax = encoder->keyintmax;
   }
+#if (X265_BUILD >= 79)
+  {
+    GstVideoMasteringDisplayInfo minfo;
+    GstVideoContentLightLevel cll;
+
+    if (gst_video_mastering_display_info_from_caps (&minfo,
+            encoder->input_state->caps)) {
+      guint16 displayPrimaryX[3];
+      guint16 displayPrimaryY[3];
+      guint16 whitePointX, whitePointY;
+      guint32 maxDisplayMasteringLuminance;
+      guint32 minDisplayMasteringLuminance;
+      const guint chroma_scale = 50000;
+      const guint luma_scale = 10000;
+
+      GST_DEBUG_OBJECT (encoder, "Apply mastering display info");
+
+      displayPrimaryX[0] =
+          (guint16) gst_util_uint64_scale_round (minfo.Gx_n, chroma_scale,
+          minfo.Gx_d);
+      displayPrimaryX[1] =
+          (guint16) gst_util_uint64_scale_round (minfo.Bx_n, chroma_scale,
+          minfo.Bx_d);
+      displayPrimaryX[2] =
+          (guint16) gst_util_uint64_scale_round (minfo.Rx_n, chroma_scale,
+          minfo.Rx_d);
+
+      displayPrimaryY[0] =
+          (guint16) gst_util_uint64_scale_round (minfo.Gy_n, chroma_scale,
+          minfo.Gy_d);
+      displayPrimaryY[1] =
+          (guint16) gst_util_uint64_scale_round (minfo.By_n, chroma_scale,
+          minfo.By_d);
+      displayPrimaryY[2] =
+          (guint16) gst_util_uint64_scale_round (minfo.Ry_n, chroma_scale,
+          minfo.Ry_d);
+
+      whitePointX =
+          (guint16) gst_util_uint64_scale_round (minfo.Wx_n, chroma_scale,
+          minfo.Wx_d);
+      whitePointY =
+          (guint16) gst_util_uint64_scale_round (minfo.Wy_n, chroma_scale,
+          minfo.Wy_d);
+
+      maxDisplayMasteringLuminance =
+          (guint32) gst_util_uint64_scale_round (minfo.max_luma_n, luma_scale,
+          minfo.max_luma_d);
+      minDisplayMasteringLuminance =
+          (guint32) gst_util_uint64_scale_round (minfo.min_luma_n, luma_scale,
+          minfo.min_luma_d);
+
+      encoder->x265param.masteringDisplayColorVolume =
+          g_strdup_printf ("G(%hu,%hu)B(%hu,%hu)R(%hu,%hu)WP(%hu,%hu)L(%u,%u)",
+          displayPrimaryX[0], displayPrimaryY[0],
+          displayPrimaryX[1], displayPrimaryY[1],
+          displayPrimaryX[2], displayPrimaryY[2],
+          whitePointX, whitePointY,
+          maxDisplayMasteringLuminance, minDisplayMasteringLuminance);
+    }
+
+    if (gst_video_content_light_level_from_caps (&cll,
+            encoder->input_state->caps)) {
+      gdouble val;
+
+      GST_DEBUG_OBJECT (encoder, "Apply content light level");
+
+      gst_util_fraction_to_double (cll.maxCLL_n, cll.maxCLL_d, &val);
+      encoder->x265param.maxCLL = (guint16) val;
+
+      gst_util_fraction_to_double (cll.maxFALL_n, cll.maxFALL_d, &val);
+      encoder->x265param.maxFALL = (guint16) val;
+    }
+  }
+#endif
 
   /* apply option-string property */
   if (encoder->option_string_prop && encoder->option_string_prop->len) {
