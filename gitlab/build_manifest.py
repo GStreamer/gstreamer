@@ -2,12 +2,14 @@
 
 import argparse
 import os
-import requests
 import sys
 import subprocess
+import urllib.error
+import urllib.parse
+import urllib.request
+import json
 
 from typing import Dict, Tuple, List
-from urllib.parse import urlparse
 # from pprint import pprint
 
 GSTREAMER_MODULES: List[str] = [
@@ -44,6 +46,23 @@ os.environ['GIT_TERMINAL_PROMPT'] = '0'
 def git(*args, repository_path='.'):
     return subprocess.check_output(["git"] + list(args), cwd=repository_path).decode()
 
+def get_cerbero_last_build_info (namespace : str, branch : str):
+    base_url = f"https://gitlab.freedesktop.org/{namespace}/cerbero/-/jobs"
+    url = f"{base_url}/artifacts/{branch}/raw/cerbero-build/cerbero-deps.log"
+    deps = [{'commit': None}]
+
+    try:
+        # The logs are only available if all jobs have passed so it does not
+        # matter which distro/arch is picked.
+        values = { 'job': "cerbero deps fedora x86_64" }
+        data = urllib.parse.urlencode(values)
+        req = urllib.request.Request(f"{url}?{data}")
+        resp = urllib.request.urlopen(req);
+        deps = json.loads(resp.read())
+    except urllib.error.URLError:
+        return None
+
+    return deps[0]['commit']
 
 def get_branches_info(module: str, namespace: str, branches: List[str]) -> Tuple[str, str]:
     try:
@@ -53,6 +72,13 @@ def get_branches_info(module: str, namespace: str, branches: List[str]) -> Tuple
 
     if not res:
         return None, None
+
+    # Special case cerbero to avoid cache misses
+    if module == 'cerbero':
+        for branch in branches:
+            sha = get_cerbero_last_build_info(namespace, branch)
+            if sha is not None:
+                return sha, sha
 
     lines = res.split('\n')
     for branch in branches:
