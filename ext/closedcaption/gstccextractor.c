@@ -61,7 +61,7 @@ static GstStaticPadTemplate captiontemplate =
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS
-    ("closedcaption/x-cea-608,format={ (string) raw, (string) s334-1a}; "
+    ("closedcaption/x-cea-608,format={ (string) raw, (string) s334-1a, (string) scte-20, (string) additional-cea-608}; "
         "closedcaption/x-cea-708,format={ (string) cc_data, (string) cdp }"));
 
 G_DEFINE_TYPE (GstCCExtractor, gst_cc_extractor, GST_TYPE_ELEMENT);
