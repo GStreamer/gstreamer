@@ -378,6 +378,7 @@ build cerbero fedora x86_64:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-build"
       - $CI_PROJECT_NAME == "gst-omx"
+      - $CI_PROJECT_NAME == "gstreamer-vaapi"
 
 
 #
@@ -411,6 +412,7 @@ build cerbero android universal:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-build"
       - $CI_PROJECT_NAME == "gst-omx"
+      - $CI_PROJECT_NAME == "gstreamer-vaapi"
 
 #
 # Cerbero Cross Windows builds
@@ -441,6 +443,7 @@ build cerbero cross win32:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-build"
       - $CI_PROJECT_NAME == "gst-omx"
+      - $CI_PROJECT_NAME == "gstreamer-vaapi"
 
 cerbero deps windows x86_64:
   extends: '.cerbero deps'
@@ -468,6 +471,7 @@ build cerbero cross win64:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-build"
       - $CI_PROJECT_NAME == "gst-omx"
+      - $CI_PROJECT_NAME == "gstreamer-vaapi"
 
 #
 # Build an Android App using the android binaries
@@ -521,6 +525,7 @@ android universal examples:
       - $CI_PROJECT_NAME == "gst-build"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
+      - $CI_PROJECT_NAME == "gstreamer-vaapi"
 
 cerbero android universal examples:
   extends: ".android universal examples"
