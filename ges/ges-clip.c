@@ -149,7 +149,7 @@ _set_start (GESTimelineElement * element, GstClockTime start)
   }
   container->children_control_mode = GES_CHILDREN_UPDATE;
 
-  return FALSE;
+  return -1;
 }
 
 static gboolean

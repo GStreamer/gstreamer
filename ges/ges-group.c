@@ -411,7 +411,7 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
   _set_duration0 (element, last_child_end - _START (element));
   priv->setting_value = FALSE;
 
-  return FALSE;
+  return -1;
 }
 
 /****************************************************

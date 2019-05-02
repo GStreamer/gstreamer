@@ -163,9 +163,15 @@ struct _GESTimelineElement
 /**
  * GESTimelineElementClass:
  * @set_parent: method to set the parent of a #GESTimelineElement.
- * @set_start: method to set the start of a #GESTimelineElement
- * @set_duration: method to set the duration of a #GESTimelineElement
- * @set_inpoint: method to set the inpoint of a #GESTimelineElement
+ * @set_start: method to set the start of a #GESTimelineElement,
+ *  -1 means that the subclass handled emiting the notify signal and
+ *  the base class should return TRUE.
+ * @set_duration: method to set the duration of a #GESTimelineElement,
+ *  -1 means that the subclass handled emiting the notify signal and
+ *  the base class should return TRUE.
+ * @set_inpoint: method to set the inpoint of a #GESTimelineElement,
+ *  -1 means that the subclass handled emiting the notify signal and
+ *  the base class should return TRUE.
  * @set_max_duration: method to set the maximun duration of a #GESTimelineElement
  * @set_priority: method to set the priority of a #GESTimelineElement
  * @ripple: method to ripple an object

@@ -56,9 +56,10 @@ _set_start (GESTimelineElement * element, GstClockTime start)
   if (element->timeline
       && !ELEMENT_FLAG_IS_SET (element, GES_TIMELINE_ELEMENT_SET_SIMPLE)
       && !ELEMENT_FLAG_IS_SET (toplevel, GES_TIMELINE_ELEMENT_SET_SIMPLE)) {
-    ges_timeline_move_object_simple (element->timeline, element, NULL,
-        GES_EDGE_NONE, start);
-    return FALSE;
+    if (!ges_timeline_move_object_simple (element->timeline, element, NULL,
+            GES_EDGE_NONE, start))
+      return FALSE;
+    return -1;
   }
 
   return

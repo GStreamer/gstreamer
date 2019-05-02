@@ -721,15 +721,16 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
 
   gst_object_unref (toplevel_container);
   if (klass->set_start) {
-    gboolean res = klass->set_start (self, start);
-    if (res) {
+    gint res = klass->set_start (self, start);
+    if (res == TRUE) {
       self->start = start;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_START]);
     }
 
     GST_DEBUG_OBJECT (self, "New start: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)));
-    return res;
+
+    return ! !res;
   }
 
   GST_WARNING_OBJECT (self, "No set_start virtual method implementation"
@@ -764,12 +765,12 @@ ges_timeline_element_set_inpoint (GESTimelineElement * self,
 
   if (klass->set_inpoint) {
     gboolean res = klass->set_inpoint (self, inpoint);
-    if (res) {
+    if (res == TRUE) {
       self->inpoint = inpoint;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_INPOINT]);
     }
 
-    return res;
+    return ! !res;
   }
 
   GST_DEBUG_OBJECT (self, "No set_inpoint virtual method implementation"
@@ -842,12 +843,12 @@ ges_timeline_element_set_duration (GESTimelineElement * self,
 
   if (klass->set_duration) {
     gboolean res = klass->set_duration (self, duration);
-    if (res) {
+    if (res == TRUE) {
       self->duration = duration;
       g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DURATION]);
     }
 
-    return res;
+    return ! !res;
   }
 
   GST_WARNING_OBJECT (self, "No set_duration virtual method implementation"
