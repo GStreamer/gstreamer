@@ -709,9 +709,11 @@ _get_preferred_caps (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
 
   /* we don't need to do format conversion if GL_TEXTURE_UPLOAD_META
    * is negotiated */
-  if (f != GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META
-      && postproc->format != format)
+  if (f == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META) {
+    postproc->format = DEFAULT_FORMAT;
+  } else if (postproc->format != format) {
     postproc->format = format;
+  }
 
   return outcaps;
 
