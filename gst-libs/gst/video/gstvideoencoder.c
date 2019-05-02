@@ -1677,6 +1677,8 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
   if (encoder->priv->output_state_changed) {
+    GstCaps *incaps;
+
     state->caps = gst_caps_make_writable (state->caps);
 
     /* Fill caps */
@@ -1724,6 +1726,33 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
           caps_mview_mode, "multiview-flags", GST_TYPE_VIDEO_MULTIVIEW_FLAGSET,
           GST_VIDEO_INFO_MULTIVIEW_FLAGS (info), GST_FLAG_SET_MASK_EXACT, NULL);
     }
+
+    incaps = gst_pad_get_current_caps (GST_VIDEO_ENCODER_SINK_PAD (encoder));
+    if (incaps) {
+      GstStructure *in_struct;
+      GstStructure *out_struct;
+      const gchar *s;
+
+      in_struct = gst_caps_get_structure (incaps, 0);
+      out_struct = gst_caps_get_structure (state->caps, 0);
+
+      /* forward upstream mastering display info and content light level
+       * if subclass didn't set */
+      if ((s = gst_structure_get_string (in_struct, "mastering-display-info"))
+          && !gst_structure_has_field (out_struct, "mastering-display-info")) {
+        gst_caps_set_simple (state->caps, "mastering-display-info",
+            G_TYPE_STRING, s, NULL);
+      }
+
+      if ((s = gst_structure_get_string (in_struct, "content-light-level")) &&
+          !gst_structure_has_field (out_struct, "content-light-level")) {
+        gst_caps_set_simple (state->caps,
+            "content-light-level", G_TYPE_STRING, s, NULL);
+      }
+
+      gst_caps_unref (incaps);
+    }
+
     encoder->priv->output_state_changed = FALSE;
   }
 
