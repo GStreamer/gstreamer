@@ -51,6 +51,9 @@
  * ]|
  */
 
+/* using GValueArray, which has not replacement */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -601,46 +604,72 @@ gst_rist_sink_start (GstRistSink * sink)
 static GstStructure *
 gst_rist_sink_create_stats (GstRistSink * sink)
 {
-  GObject *session = NULL, *source = NULL;
-  GstStructure *sstats = NULL, *ret;
-  guint64 pkt_sent = 0, rtx_sent = 0, rtt;
-  guint rb_rtt = 0;
   RistSenderBond *bond;
+  GstStructure *ret;
+  GValueArray *session_stats;
+  guint64 total_pkt_sent = 0, total_rtx_sent = 0;
+  gint i;
 
-  bond = g_ptr_array_index (sink->bonds, 0);
   ret = gst_structure_new_empty ("rist/x-sender-stats");
+  session_stats = g_value_array_new (sink->bonds->len);
 
-  g_signal_emit_by_name (sink->rtpbin, "get-internal-session", 0, &session);
-  if (!session)
-    return ret;
+  for (i = 0; i < sink->bonds->len; i++) {
+    GObject *session = NULL, *source = NULL;
+    GstStructure *sstats = NULL, *stats;
+    guint64 pkt_sent = 0, rtx_sent = 0, rtt;
+    guint rb_rtt = 0;
+    GValue value = G_VALUE_INIT;
 
-  g_signal_emit_by_name (session, "get-source-by-ssrc", sink->rtp_ssrc,
-      &source);
-  if (source) {
-    g_object_get (source, "stats", &sstats, NULL);
-    gst_structure_get_uint64 (sstats, "packets-sent", &pkt_sent);
-    gst_structure_free (sstats);
-    g_clear_object (&source);
+    g_signal_emit_by_name (sink->rtpbin, "get-internal-session", i, &session);
+    if (!session)
+      continue;
+
+    stats = gst_structure_new_empty ("rist/x-sender-session-stats");
+    bond = g_ptr_array_index (sink->bonds, i);
+
+    g_signal_emit_by_name (session, "get-source-by-ssrc", sink->rtp_ssrc,
+        &source);
+    if (source) {
+      g_object_get (source, "stats", &sstats, NULL);
+      gst_structure_get_uint64 (sstats, "packets-sent", &pkt_sent);
+      gst_structure_free (sstats);
+      g_clear_object (&source);
+    }
+
+    g_signal_emit_by_name (session, "get-source-by-ssrc", bond->rtcp_ssrc,
+        &source);
+    if (source) {
+      g_object_get (source, "stats", &sstats, NULL);
+      gst_structure_get_uint (sstats, "rb-round-trip", &rb_rtt);
+      gst_structure_free (sstats);
+      g_clear_object (&source);
+    }
+    g_object_unref (session);
+
+    g_object_get (bond->rtx_send, "num-rtx-packets", &rtx_sent, NULL);
+
+    /* rb_rtt is in Q16 in NTP time */
+    rtt = gst_util_uint64_scale (rb_rtt, GST_SECOND, 65536);
+
+    gst_structure_set (stats, "session-id", G_TYPE_INT, i,
+        "sent-original-packets", G_TYPE_UINT64, pkt_sent,
+        "sent-retransmitted-packets", G_TYPE_UINT64, rtx_sent,
+        "round-trip-time", G_TYPE_UINT64, rtt, NULL);
+
+    g_value_init (&value, GST_TYPE_STRUCTURE);
+    g_value_take_boxed (&value, stats);
+    g_value_array_append (session_stats, &value);
+    g_value_unset (&value);
+
+    total_pkt_sent += pkt_sent;
+    total_rtx_sent += rtx_sent;
   }
 
-  g_signal_emit_by_name (session, "get-source-by-ssrc", bond->rtcp_ssrc,
-      &source);
-  if (source) {
-    g_object_get (source, "stats", &sstats, NULL);
-    gst_structure_get_uint (sstats, "rb-round-trip", &rb_rtt);
-    gst_structure_free (sstats);
-    g_clear_object (&source);
-  }
-  g_object_unref (session);
-
-  g_object_get (bond->rtx_send, "num-rtx-packets", &rtx_sent, NULL);
-
-  /* rb_rtt is in Q16 in NTP time */
-  rtt = gst_util_uint64_scale (rb_rtt, GST_SECOND, 65536);
-
-  gst_structure_set (ret, "sent-original-packets", G_TYPE_UINT64, pkt_sent,
-      "sent-retransmitted-packets", G_TYPE_UINT64, rtx_sent,
-      "round-trip-time", G_TYPE_UINT64, rtt, NULL);
+  gst_structure_set (ret,
+      "sent-original-packets", G_TYPE_UINT64, total_pkt_sent,
+      "sent-retransmitted-packets", G_TYPE_UINT64, total_rtx_sent,
+      "session-stats", G_TYPE_VALUE_ARRAY, session_stats, NULL);
+  g_value_array_free (session_stats);
 
   return ret;
 }
