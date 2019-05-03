@@ -69,8 +69,11 @@ struct _GstDecklinkVideoSink
 
   GstVideoVBIEncoder *vbiencoder;
   GstVideoFormat anc_vformat;
+
   gint caption_line;
   guint16 cdp_hdr_sequence_cntr;
+
+  gint afd_bar_line;
 };
 
 struct _GstDecklinkVideoSinkClass
