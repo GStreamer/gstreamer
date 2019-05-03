@@ -3335,8 +3335,8 @@ amc_init (GstPlugin * plugin)
 {
   const gchar *ignore;
 
-  gst_plugin_add_dependency_simple (plugin, NULL, "/etc", "media_codecs.xml",
-      GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+  gst_plugin_add_dependency_simple (plugin, NULL, "/etc:/system/vendor/etc",
+      "media_codecs.xml", GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
   gst_amc_codec_info_quark = g_quark_from_static_string ("gst-amc-codec-info");
 
