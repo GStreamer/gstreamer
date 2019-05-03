@@ -141,7 +141,7 @@ page where you can enter a description of the changes you are submitting.
 
 Couple of additional points:
 
-- If you are submitting a Merge Request for an issue (or multipe issues) that
+- If you are submitting a Merge Request for an issue (or multiple issues) that
   already exist, please add 'Fixes #123' to the commit message of one of your
   commits, so that there is a cross-reference in GitLab and the issue will be
   closed automatically when your Merge Request is merged.
@@ -297,7 +297,7 @@ You can make changes to the last commit using:
 
 Once everything looks fine, push your branch to your local fork e.g. using
 
-    git push origin topic-branch
+    git push your-personal-gitlab-fork your-branch
 
 This push will display a link to be able create a merge request from your branch.
 Click this link and fill out the details of the merge request.  You can also
@@ -413,7 +413,7 @@ This way it is easy to see for maintainers and for yourself what's left to do
 and if there are any open questions/issues.
 
 Whenever you have made changes to your patches locally you can just
-`git push -f my-personal-gitlab-fork your-branch` to your personal fork,
+`git push -f your-personal-gitlab-fork your-branch` to your personal fork,
 and GitLab will pick up the changes automatically. You do _not_ need to submit
 a new Merge Request whenever you make changes to an already-submitted patchset,
 and in fact you shouldn't do that because it means all the previous discussion
@@ -432,15 +432,15 @@ to the `master` branch anymore.
 Existing merge request against the `master` branch, including merged ones,
 that should be considered for backporting in the future should be labeled with
 the `Needs backport` label unless there is any specific urgency to get it
-backported. All merge requests with the (`Needs backport`)[needs-backport]
+backported. All merge requests with the [`Needs backport`][needs-backport]
 label will be regularly considered for backporting by GStreamer developers.
 
 ### Creating a merge request for backports
 
 When creating a merge request for backporting changes, include one or more
-changes in the merge request and ideally all from the (list)[needs-backport]
-after reviewing them and potentially fixing them to work cleanly with the
-stable branch.
+changes in the merge request and ideally all from the [`Needs
+backport`][needs-backport] list after reviewing them and potentially fixing them
+to work cleanly with the stable branch.
 
 If there are specific commits or areas of commits where further feedback is
 needed, please create a task list in the description of the merge request and
