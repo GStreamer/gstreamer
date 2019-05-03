@@ -4886,7 +4886,9 @@ gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
 
     if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
       sent_event = gst_event_new_eos ();
-      gst_event_set_seqnum (sent_event, stream->segment_seqnum[1]);
+      if (stream->segment_seqnum[1] != GST_SEQNUM_INVALID) {
+        gst_event_set_seqnum (sent_event, stream->segment_seqnum[1]);
+      }
     } else {
       sent_event = gst_event_ref (event);
     }
