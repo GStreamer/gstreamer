@@ -329,6 +329,8 @@ gst_vaapi_encoder_ensure_param_roi_regions (GstVaapiEncoder * encoder,
     roi = (GstVideoRegionOfInterestMeta *)
         gst_buffer_iterate_meta_filtered (input, &state,
         GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE);
+    if (!roi)
+      continue;
 
     /* ignore roi if overflow */
     if ((roi->x > G_MAXINT16) || (roi->y > G_MAXINT16)
