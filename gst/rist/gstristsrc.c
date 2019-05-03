@@ -1136,9 +1136,8 @@ gst_rist_src_finalize (GObject * object)
   }
   g_ptr_array_free (src->bonds, TRUE);
 
-  if (src->jitterbuffer)
-    gst_object_unref (src->jitterbuffer);
-  gst_object_unref (src->rtxbin);
+  g_clear_object (&src->jitterbuffer);
+  g_clear_object (&src->rtxbin);
 
   g_mutex_unlock (&src->bonds_lock);
   g_mutex_clear (&src->bonds_lock);
