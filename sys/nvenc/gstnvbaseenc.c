@@ -1862,6 +1862,29 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
         dest += dest_stride;
         src += src_stride;
       }
+    } else if (GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_Y444) {
+      src = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
+      src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
+      dest = (guint8 *) in_buf_lock.bufferDataPtr +
+          GST_ROUND_UP_32 (height) * in_buf_lock.pitch;
+      dest_stride = in_buf_lock.pitch;
+
+      for (y = 0; y < height; ++y) {
+        memcpy (dest, src, width);
+        dest += dest_stride;
+        src += src_stride;
+      }
+
+      src = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 2);
+      src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 2);
+      dest = (guint8 *) in_buf_lock.bufferDataPtr +
+          2 * GST_ROUND_UP_32 (height) * in_buf_lock.pitch;
+
+      for (y = 0; y < height; ++y) {
+        memcpy (dest, src, width);
+        dest += dest_stride;
+        src += src_stride;
+      }
     } else {
       // FIXME: this only works for NV12 and I420
       g_assert_not_reached ();

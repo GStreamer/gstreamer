@@ -56,7 +56,7 @@ G_DEFINE_TYPE (GstNvH264Enc, gst_nv_h264_enc, GST_TYPE_NV_BASE_ENC);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { NV12, I420 }, "       // TODO: YV12, Y444 support
+    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { NV12, I420, Y444 }, "
         "width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ], "
         "framerate = (fraction) [0, MAX],"
         "interlace-mode = { progressive, mixed, interleaved } "
@@ -510,7 +510,7 @@ gst_nv_h264_enc_set_encoder_config (GstNvBaseEnc * nvenc,
   config->encodeCodecConfig.h264Config.chromaFormatIDC = 1;
   if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_Y444) {
     GST_DEBUG_OBJECT (h264enc, "have Y444 input, setting config accordingly");
-    config->encodeCodecConfig.h264Config.separateColourPlaneFlag = 1;
+    config->profileGUID = NV_ENC_H264_PROFILE_HIGH_444_GUID;
     config->encodeCodecConfig.h264Config.chromaFormatIDC = 3;
   }
 
