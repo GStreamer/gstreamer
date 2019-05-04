@@ -59,12 +59,6 @@
 /* for strtol() */
 #include <stdlib.h>
 
-/* for setsockopt() */
-#ifndef G_OS_WIN32
-#include <sys/types.h>
-#include <sys/socket.h>
-#endif
-
 #include "gstrist.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rist_src_debug);
