@@ -5338,6 +5338,66 @@ pack_bgr10a2_le (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+#define PACK_RGB10A2_LE GST_VIDEO_FORMAT_ARGB64, unpack_rgb10a2_le, 1, pack_rgb10a2_le
+static void
+unpack_rgb10a2_le (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  int i;
+  const guint8 *restrict s = GET_LINE (y);
+  guint16 *restrict d = dest;
+  guint32 ARGB;
+  guint16 A, R, G, B;
+
+  s += x * 4;
+
+  for (i = 0; i < width; i++) {
+    ARGB = GST_READ_UINT32_LE (s + 4 * i);
+
+    R = ((ARGB >> 0) & 0x3ff) << 6;
+    G = ((ARGB >> 10) & 0x3ff) << 6;
+    B = ((ARGB >> 20) & 0x3ff) << 6;
+    A = ((ARGB >> 30) & 0x03) << 14;
+
+    if (!(flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)) {
+      R |= (R >> 10);
+      G |= (G >> 10);
+      B |= (B >> 10);
+      A |= (A >> 10);
+    }
+
+    d[4 * i + 0] = A;
+    d[4 * i + 1] = R;
+    d[4 * i + 2] = G;
+    d[4 * i + 3] = B;
+  }
+}
+
+static void
+pack_rgb10a2_le (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  int i;
+  guint32 *restrict d = GET_LINE (y);
+  const guint16 *restrict s = src;
+  guint32 ARGB;
+  guint16 A, R, G, B;
+
+  for (i = 0; i < width; i++) {
+    A = s[4 * i] & 0xc000;
+    R = s[4 * i + 1] & 0xffc0;
+    G = s[4 * i + 2] & 0xffc0;
+    B = s[4 * i + 3] & 0xffc0;
+
+    ARGB = (R >> 6) | (G << 4) | (B << 14) | (A << 16);
+
+    GST_WRITE_UINT32_LE (d + i, ARGB);
+  }
+}
+
 typedef struct
 {
   guint32 fourcc;
@@ -5670,6 +5730,8 @@ static const VideoFormat formats[] = {
   MAKE_RGBA_LE_PACK_FORMAT (BGR10A2_LE, "raw video", DPTH10_10_10_2, PSTR4444,
       PLANE0,
       OFFS0, SUB4444, PACK_BGR10A2_LE),
+  MAKE_RGBA_LE_PACK_FORMAT (RGB10A2_LE, "raw video", DPTH10_10_10_2, PSTR4444,
+      PLANE0, OFFS0, SUB4444, PACK_RGB10A2_LE),
 };
 
 static GstVideoFormat
@@ -5804,7 +5866,10 @@ gst_video_format_from_masks (gint depth, gint bpp, gint endianness,
 
   if (depth == 32 && bpp == 32 && alpha_mask == 0xc0000000 &&
       endianness == G_LITTLE_ENDIAN) {
-    format = GST_VIDEO_FORMAT_BGR10A2_LE;
+    if (red_mask == 0x3ff00000)
+      format = GST_VIDEO_FORMAT_RGB10A2_LE;
+    else
+      format = GST_VIDEO_FORMAT_BGR10A2_LE;
   } else if (depth == 30 && bpp == 32) {
     format = GST_VIDEO_FORMAT_r210;
   } else if (depth == 24 && bpp == 32) {
