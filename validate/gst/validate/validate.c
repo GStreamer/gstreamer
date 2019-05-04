@@ -56,6 +56,8 @@ static GList *core_config = NULL;
 static gboolean validate_initialized = FALSE;
 GstClockTime _priv_start_time;
 
+GQuark _Q_VALIDATE_MONITOR;
+
 #ifdef G_OS_WIN32
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 BOOL WINAPI
