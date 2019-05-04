@@ -83,6 +83,55 @@ GST_START_TEST (test_add_pad_unref_element)
 
 GST_END_TEST;
 
+static void
+test_add_pad_while_paused_dummy_task (void *user_data)
+{
+  GstPad *pad = (GstPad *) user_data;
+  gst_pad_pause_task (pad);
+}
+
+static gboolean
+test_add_pad_while_paused_pad_activatemode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  *(gboolean *) pad->activatemodedata = active;
+  fail_unless (mode == GST_PAD_MODE_PUSH);
+  if (active)
+    gst_pad_start_task (pad, test_add_pad_while_paused_dummy_task, pad, NULL);
+  else
+    gst_pad_stop_task (pad);
+  return TRUE;
+}
+
+GST_START_TEST (test_add_pad_while_paused)
+{
+  GstElement *e;
+  GstPad *p;
+  gboolean active = FALSE;
+
+  e = gst_element_factory_make ("fakesrc", "source");
+  gst_element_set_state (e, GST_STATE_PAUSED);
+  {
+    GstPad *old_pad = gst_element_get_static_pad (e, "src");
+    gst_element_remove_pad (e, old_pad);
+    gst_object_unref (old_pad);
+  }
+
+  p = gst_pad_new ("dynamic", GST_PAD_SRC);
+  gst_pad_set_activatemode_function_full (p,
+      test_add_pad_while_paused_pad_activatemode, (void *) &active, NULL);
+
+  fail_if (active);
+  gst_element_add_pad (e, p);
+  fail_if (!active);
+  gst_element_set_state (e, GST_STATE_NULL);
+  fail_if (active);
+
+  gst_object_unref (e);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_error_no_bus)
 {
   GstElement *e;
@@ -921,6 +970,7 @@ gst_element_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_add_remove_pad);
   tcase_add_test (tc_chain, test_add_pad_unref_element);
+  tcase_add_test (tc_chain, test_add_pad_while_paused);
   tcase_add_test (tc_chain, test_error_no_bus);
   tcase_add_test (tc_chain, test_link);
   tcase_add_test (tc_chain, test_link_no_pads);
