@@ -747,6 +747,7 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
 {
   gchar *pad_name;
   gboolean active;
+  gboolean should_activate;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
@@ -771,10 +772,8 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
     goto had_parent;
 
   /* check for active pads */
-  if (!active && (GST_STATE (element) > GST_STATE_READY ||
-          GST_STATE_NEXT (element) == GST_STATE_PAUSED)) {
-    gst_pad_set_active (pad, TRUE);
-  }
+  should_activate = !active && (GST_STATE (element) > GST_STATE_READY ||
+      GST_STATE_NEXT (element) == GST_STATE_PAUSED);
 
   g_free (pad_name);
 
@@ -795,6 +794,9 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   element->numpads++;
   element->pads_cookie++;
   GST_OBJECT_UNLOCK (element);
+
+  if (should_activate)
+    gst_pad_set_active (pad, TRUE);
 
   /* emit the PAD_ADDED signal */
   g_signal_emit (element, gst_element_signals[PAD_ADDED], 0, pad);
