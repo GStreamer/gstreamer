@@ -935,3 +935,12 @@ class TestPriorities(common.GESSimpleTimelineTest):
         clip.props.start = 101
         self.timeline.commit()
         self.assertGreater(clip.props.priority, clip1.props.priority)
+
+
+class TestTimelineElement(common.GESSimpleTimelineTest):
+
+    def test_set_child_property(self):
+        clip = self.add_clip(0, 0, 100)
+        source = clip.find_track_element(None, GES.VideoSource)
+        self.assertTrue(source.set_child_property("height", 5))
+        self.assertEqual(clip.get_child_property("height"), (True, 5))

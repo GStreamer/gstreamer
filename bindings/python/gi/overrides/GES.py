@@ -70,7 +70,7 @@ class TimelineElement(GES.TimelineElement):
         )
 
     def set_child_property(self, prop_name, prop_value):
-        res, child, unused_pspec = self.lookup_child(prop_name)
+        res, child, unused_pspec = GES.TimelineElement.lookup_child(self, prop_name)
         if not res:
             return res
 
