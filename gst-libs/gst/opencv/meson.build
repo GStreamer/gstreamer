@@ -9,9 +9,9 @@ opencv_headers = [
   'gstopencvvideofilter.h',
 ]
 
-opencv_dep = dependency('opencv', version : '>= 3.0.0', required : get_option('opencv'))
+opencv_dep = dependency('opencv', version : '>= 3.0.0', required : false)
 if not opencv_dep.found()
-  opencv_dep = dependency('opencv4', version : '>= 4.0.0', required : get_option('opencv'))
+  opencv_dep = dependency('opencv4', version : '>= 4.0.0', required : false)
 endif
 if opencv_dep.found()
   gstopencv = library('gstopencv-' + api_version,
@@ -30,4 +30,6 @@ if opencv_dep.found()
     dependencies : [gstvideo_dep, opencv_dep])
 
   install_headers(opencv_headers, subdir : 'gstreamer-1.0/gst/opencv')
+elif get_option('opencv').enabled()
+  error('OpenCV support enabled but required dependencies were not found.')
 endif
