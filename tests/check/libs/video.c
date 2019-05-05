@@ -2698,7 +2698,8 @@ GST_START_TEST (test_video_transfer)
 {
   gint i, j;
 
-  for (j = GST_VIDEO_TRANSFER_GAMMA10; j <= GST_VIDEO_TRANSFER_LOG316; j++) {
+  for (j = GST_VIDEO_TRANSFER_GAMMA10; j <= GST_VIDEO_TRANSFER_ARIB_STD_B67;
+      j++) {
     for (i = 0; i < 256; i++) {
       gdouble val1, val2;
 
