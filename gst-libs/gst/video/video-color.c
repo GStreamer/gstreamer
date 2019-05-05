@@ -78,6 +78,7 @@ static const ColorimetryInfo colorimetry[] = {
   MAKE_COLORIMETRY (BT2020, _16_235, BT2020, BT2020_12, BT2020),
   MAKE_COLORIMETRY (BT2020_10, _16_235, BT2020, BT2020_10, BT2020),
   MAKE_COLORIMETRY (BT2100_PQ, _16_235, BT2020, SMPTE2084, BT2020),
+  MAKE_COLORIMETRY (BT2100_HLG, _16_235, BT2020, ARIB_STD_B67, BT2020),
   MAKE_COLORIMETRY (NONAME, _0_255, BT601, UNKNOWN, UNKNOWN),
   MAKE_COLORIMETRY (NONAME, _UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN),
 };
@@ -492,6 +493,20 @@ gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val)
       res = pow ((c1 + c2 * Ln) / (1.0 + c3 * Ln), m);
       break;
     }
+    case GST_VIDEO_TRANSFER_ARIB_STD_B67:
+    {
+      gdouble a = 0.17883277;
+      gdouble b = 0.28466892;
+      gdouble c = 0.55991073;
+
+      /* For [0, 1] normalized source as defined by HEVC specification */
+      if (val > (1.0 / 12.0))
+        res = a * log (12.0 * val - b) + c;
+      else
+        res = sqrt (3.0 * val);
+
+      break;
+    }
   }
   return res;
 }
@@ -591,6 +606,19 @@ gst_video_color_transfer_decode (GstVideoTransferFunction func, gdouble val)
       gdouble nm = pow (val, mi);
 
       res = pow ((nm - c1) / (c2 - c3 * nm), ni);
+      break;
+    }
+    case GST_VIDEO_TRANSFER_ARIB_STD_B67:
+    {
+      gdouble a = 0.17883277;
+      gdouble b = 0.28466892;
+      gdouble c = 0.55991073;
+
+      if (val > 0.5)
+        res = (exp ((val - c) / a) + b) / 12.0;
+      else
+        res = val * val / 3.0;
+
       break;
     }
   }
