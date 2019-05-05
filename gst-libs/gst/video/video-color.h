@@ -90,6 +90,10 @@ gboolean gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble *
  *                                range. Used for BT.2020 with 12 bits per
  *                                component. Since: 1.6
  * @GST_VIDEO_TRANSFER_ADOBERGB: Gamma 2.19921875. Since: 1.8
+ * @GST_VIDEO_TRANSFER_BT2020_10: Rec. ITU-R BT.2020-2 with 10 bits per component.
+ *                                (functionally the same as the values
+ *                                GST_VIDEO_TRANSFER_BT709 and GST_VIDEO_TRANSFER_BT2020_12).
+ *                                Since: 1.18
  *
  * The video transfer function defines the formula for converting between
  * non-linear RGB (R'G'B') and linear RGB
@@ -107,7 +111,8 @@ typedef enum {
   GST_VIDEO_TRANSFER_LOG100,
   GST_VIDEO_TRANSFER_LOG316,
   GST_VIDEO_TRANSFER_BT2020_12,
-  GST_VIDEO_TRANSFER_ADOBERGB
+  GST_VIDEO_TRANSFER_ADOBERGB,
+  GST_VIDEO_TRANSFER_BT2020_10
 } GstVideoTransferFunction;
 
 GST_VIDEO_API
@@ -205,6 +210,7 @@ typedef struct {
 #define GST_VIDEO_COLORIMETRY_SMPTE240M   "smpte240m"
 #define GST_VIDEO_COLORIMETRY_SRGB        "sRGB"
 #define GST_VIDEO_COLORIMETRY_BT2020      "bt2020"
+#define GST_VIDEO_COLORIMETRY_BT2020_10   "bt2020-10"
 
 GST_VIDEO_API
 gboolean     gst_video_colorimetry_matches     (const GstVideoColorimetry *cinfo, const gchar *color);

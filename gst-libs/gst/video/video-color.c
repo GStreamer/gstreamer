@@ -76,6 +76,7 @@ static const ColorimetryInfo colorimetry[] = {
   MAKE_COLORIMETRY (SMPTE240M, _16_235, SMPTE240M, SMPTE240M, SMPTE240M),
   MAKE_COLORIMETRY (SRGB, _0_255, RGB, SRGB, BT709),
   MAKE_COLORIMETRY (BT2020, _16_235, BT2020, BT2020_12, BT2020),
+  MAKE_COLORIMETRY (BT2020_10, _16_235, BT2020, BT2020_10, BT2020),
   MAKE_COLORIMETRY (NONAME, _0_255, BT601, UNKNOWN, UNKNOWN),
   MAKE_COLORIMETRY (NONAME, _UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN),
 };
@@ -434,6 +435,7 @@ gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val)
       res = pow (val, 1.0 / 2.2);
       break;
     case GST_VIDEO_TRANSFER_BT709:
+    case GST_VIDEO_TRANSFER_BT2020_10:
       if (val < 0.018)
         res = 4.5 * val;
       else
@@ -522,6 +524,7 @@ gst_video_color_transfer_decode (GstVideoTransferFunction func, gdouble val)
       res = pow (val, 2.2);
       break;
     case GST_VIDEO_TRANSFER_BT709:
+    case GST_VIDEO_TRANSFER_BT2020_10:
       if (val < 0.081)
         res = val / 4.5;
       else
