@@ -14,6 +14,11 @@ libgstsctp_1_0_la_CFLAGS = \
 
 libgstsctp_1_0_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
 
+libgstsctp_1_0_la_LDFLAGS = \
+    $(GST_LIB_LDFLAGS) \
+    $(GST_ALL_LDFLAGS) \
+    $(GST_LT_LDFLAGS)
+
 libgstsctp_1_0_includedir = $(includedir)/gstreamer-1.0/gst/sctp
 libgstsctp_1_0_include_HEADERS = \
     sctpsendmeta.h \
