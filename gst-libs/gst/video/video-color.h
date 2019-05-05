@@ -94,6 +94,9 @@ gboolean gst_video_color_matrix_get_Kr_Kb (GstVideoColorMatrix matrix, gdouble *
  *                                (functionally the same as the values
  *                                GST_VIDEO_TRANSFER_BT709 and GST_VIDEO_TRANSFER_BT2020_12).
  *                                Since: 1.18
+ * @GST_VIDEO_TRANSFER_SMPTE2084: SMPTE ST 2084 for 10, 12, 14, and 16-bit systems.
+ *                                Known as perceptual quantization (PQ)
+ *                                Since: 1.18
  *
  * The video transfer function defines the formula for converting between
  * non-linear RGB (R'G'B') and linear RGB
@@ -112,7 +115,8 @@ typedef enum {
   GST_VIDEO_TRANSFER_LOG316,
   GST_VIDEO_TRANSFER_BT2020_12,
   GST_VIDEO_TRANSFER_ADOBERGB,
-  GST_VIDEO_TRANSFER_BT2020_10
+  GST_VIDEO_TRANSFER_BT2020_10,
+  GST_VIDEO_TRANSFER_SMPTE2084
 } GstVideoTransferFunction;
 
 GST_VIDEO_API
@@ -211,6 +215,7 @@ typedef struct {
 #define GST_VIDEO_COLORIMETRY_SRGB        "sRGB"
 #define GST_VIDEO_COLORIMETRY_BT2020      "bt2020"
 #define GST_VIDEO_COLORIMETRY_BT2020_10   "bt2020-10"
+#define GST_VIDEO_COLORIMETRY_BT2100_PQ   "bt2100-pq"
 
 GST_VIDEO_API
 gboolean     gst_video_colorimetry_matches     (const GstVideoColorimetry *cinfo, const gchar *color);

@@ -77,6 +77,7 @@ static const ColorimetryInfo colorimetry[] = {
   MAKE_COLORIMETRY (SRGB, _0_255, RGB, SRGB, BT709),
   MAKE_COLORIMETRY (BT2020, _16_235, BT2020, BT2020_12, BT2020),
   MAKE_COLORIMETRY (BT2020_10, _16_235, BT2020, BT2020_10, BT2020),
+  MAKE_COLORIMETRY (BT2100_PQ, _16_235, BT2020, SMPTE2084, BT2020),
   MAKE_COLORIMETRY (NONAME, _0_255, BT601, UNKNOWN, UNKNOWN),
   MAKE_COLORIMETRY (NONAME, _UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN),
 };
@@ -477,6 +478,20 @@ gst_video_color_transfer_encode (GstVideoTransferFunction func, gdouble val)
     case GST_VIDEO_TRANSFER_ADOBERGB:
       res = pow (val, 1.0 / 2.19921875);
       break;
+    case GST_VIDEO_TRANSFER_SMPTE2084:
+    {
+      gdouble c1 = 3424.0 / 4096.0;     /* c3 - c2 + 1 */
+      gdouble c2 = 32 * 2413 / 4096.0;
+      gdouble c3 = 32 * 2392 / 4096.0;
+      gdouble m = 128 * 2523 / 4096.0;
+      gdouble n = 0.25 * 2610 / 4096.0;
+      gdouble Ln = pow (val, n);
+
+      /* val equal to 1 for peak white is ordinarily intended to
+       * correspond to a reference output luminance level of 10000 cd/m^2  */
+      res = pow ((c1 + c2 * Ln) / (1.0 + c3 * Ln), m);
+      break;
+    }
   }
   return res;
 }
@@ -566,6 +581,18 @@ gst_video_color_transfer_decode (GstVideoTransferFunction func, gdouble val)
     case GST_VIDEO_TRANSFER_ADOBERGB:
       res = pow (val, 2.19921875);
       break;
+    case GST_VIDEO_TRANSFER_SMPTE2084:
+    {
+      gdouble c1 = 3424.0 / 4096.0;     /* c3 - c2 + 1 */
+      gdouble c2 = 32 * 2413 / 4096.0;
+      gdouble c3 = 32 * 2392 / 4096.0;
+      gdouble mi = 1 / (128 * 2523 / 4096.0);
+      gdouble ni = 1 / (0.25 * 2610 / 4096.0);
+      gdouble nm = pow (val, mi);
+
+      res = pow ((nm - c1) / (c2 - c3 * nm), ni);
+      break;
+    }
   }
   return res;
 }
