@@ -659,7 +659,6 @@ gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
              * GstVideoTransferFunction, but functionally same as "1: BT709" */
           case 1:
           case 6:
-          case 14:
             colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
             break;
           case 2:
@@ -686,7 +685,16 @@ gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
           case 13:
             colorimetry.transfer = GST_VIDEO_TRANSFER_SRGB;
             break;
+          case 14:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_10;
+            break;
           case 15:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+            break;
+          case 16:
+            colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE2084;
+            break;
+          case 18:
             colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
             break;
           default:
