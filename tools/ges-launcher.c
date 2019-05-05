@@ -707,9 +707,9 @@ _local_command_line (GApplication * application, gchar ** arguments[],
           "Specify the track types to be created. "
           "When loading a project, only relevant tracks will be added to the timeline.",
         "<track-types>"},
-    {"video-caps", 't', 0, G_OPTION_ARG_STRING, &opts->video_track_caps,
+    {"video-caps", 0, 0, G_OPTION_ARG_STRING, &opts->video_track_caps,
         "Specify the track restriction caps of the video track.",},
-    {"audio-caps", 't', 0, G_OPTION_ARG_STRING, &opts->audio_track_caps,
+    {"audio-caps", 0, 0, G_OPTION_ARG_STRING, &opts->audio_track_caps,
         "Specify the track restriction caps of the audio track.",},
     {"track-types", 't', 0, G_OPTION_ARG_CALLBACK, &_parse_track_type,
           "Specify the track types to be created. "
