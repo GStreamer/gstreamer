@@ -375,7 +375,7 @@ else
 
   case $host_os in
     mingw32*)
-      WIN32_LIBS="-lws2_32"
+      WIN32_LIBS="-lws2_32 -lbcrypt"
       ;;
     *)
       WIN32_LIBS=
