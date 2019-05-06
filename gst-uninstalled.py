@@ -117,6 +117,8 @@ def get_subprocess_env(options, gst_version):
     for target in targets:
         filenames = listify(target['filename'])
         for filename in filenames:
+            if filename.startswith(options.sysroot):
+                filename = filename[len(options.sysroot):]
             root = os.path.dirname(filename)
             if srcdir_path / "subprojects/gst-devtools/validate/plugins" in (srcdir_path / root).parents:
                 continue
@@ -227,6 +229,9 @@ if __name__ == "__main__":
     parser.add_argument("--srcdir",
                         default=SCRIPTDIR,
                         help="The top level source directory")
+    parser.add_argument("--sysroot",
+                        default='',
+                        help="The sysroot path used during cross-compilation")
     options, args = parser.parse_known_args()
 
     if not os.path.exists(options.builddir):
