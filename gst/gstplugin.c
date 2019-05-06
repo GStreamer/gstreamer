@@ -69,6 +69,13 @@
 
 #include <gst/gst.h>
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+#define GST_WINAPI_ONLY_APP
+#endif
+#endif
+
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING
 
 static guint _num_static_plugins;       /* 0    */
@@ -767,7 +774,12 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
         GST_PLUGIN_ERROR_MODULE, "Dynamic loading not supported");
     goto return_error;
   }
-
+#if defined(GST_WINAPI_ONLY_APP)
+  /* plugins loaded by filename by Universal Windows Platform apps do not use
+   * an actual file with a path, they use a packaged (asset) library */
+  file_status.st_mtime = 0;
+  file_status.st_size = 0;
+#else
   if (g_stat (filename, &file_status)) {
     GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "problem accessing file");
     g_set_error (error,
@@ -776,6 +788,7 @@ _priv_gst_plugin_load_file_for_registry (const gchar * filename,
         g_strerror (errno));
     goto return_error;
   }
+#endif
 
   flags = G_MODULE_BIND_LOCAL;
   /* libgstpython.so is the gst-python plugin loader. It needs to be loaded with
