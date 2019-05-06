@@ -56,6 +56,22 @@ python module to use with Gst 0.10"
 
     warnings.warn(warn_msg, RuntimeWarning)
 
+
+class Element(Gst.Element):
+    @staticmethod
+    def link_many(*args):
+        '''
+        @raises: Gst.LinkError
+        '''
+        for pair in pairwise(args):
+            if not pair[0].link(pair[1]):
+                raise LinkError(
+                    'Failed to link {} and {}'.format(pair[0], pair[1]))
+
+Element = override(Element)
+__all__.append('Element')
+
+
 class Bin(Gst.Bin):
     def __init__(self, name=None):
         Gst.Bin.__init__(self, name=name)
@@ -591,21 +607,6 @@ def pairwise(iterable):
     a, b = itertools.tee(iterable)
     next(b, None)
     return zip(a, b)
-
-
-class Element(Gst.Element):
-    @staticmethod
-    def link_many(*args):
-        '''
-        @raises: Gst.LinkError
-        '''
-        for pair in pairwise(args):
-            if not pair[0].link(pair[1]):
-                raise LinkError(
-                    'Failed to link {} and {}'.format(pair[0], pair[1]))
-
-Element = override(Element)
-__all__.append('Element')
 
 
 def TIME_ARGS(time):

@@ -86,5 +86,12 @@ class TestStructure(TestCase):
         test = Gst.Structure('test,test=1')
         self.assertEqual(test['test'], 1)
 
+
+class TestBin(TestCase):
+
+    def test_add_pad(self):
+        Gst.init(None)
+        self.assertEqual(Gst.ElementFactory.make("bin", None).sinkpads, [])
+
 if __name__ == "__main__":
     unittest.main()
