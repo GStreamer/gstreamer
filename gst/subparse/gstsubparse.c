@@ -1861,7 +1861,8 @@ gst_sub_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (self->parser_type == GST_SUB_PARSE_FORMAT_SUBRIP ||
           self->parser_type == GST_SUB_PARSE_FORMAT_TMPLAYER ||
           self->parser_type == GST_SUB_PARSE_FORMAT_MPL2 ||
-          self->parser_type == GST_SUB_PARSE_FORMAT_QTTEXT) {
+          self->parser_type == GST_SUB_PARSE_FORMAT_QTTEXT ||
+          self->parser_type == GST_SUB_PARSE_FORMAT_VTT) {
         gchar term_chars[] = { '\n', '\n', '\0' };
         GstBuffer *buf = gst_buffer_new_and_alloc (2 + 1);
 
