@@ -249,7 +249,8 @@ gst_fd_sink_render_buffers (GstFdSink * sink, GstBuffer ** buffers,
     guint64 bytes_written = 0;
 
     ret = gst_writev_buffers (GST_OBJECT_CAST (sink), sink->fd, sink->fdset,
-        buffers, num_buffers, mem_nums, total_mems, &bytes_written, skip);
+        buffers, num_buffers, mem_nums, total_mems, &bytes_written, skip,
+        0, -1, NULL);
 
     sink->bytes_written += bytes_written;
     sink->current_pos += bytes_written;

@@ -85,6 +85,10 @@ struct _GstFileSink {
   guint   current_buffer_size;
 
   gboolean append;
+  gboolean o_sync;
+  gint max_transient_error_timeout;
+
+  gboolean flushing;
 };
 
 struct _GstFileSinkClass {

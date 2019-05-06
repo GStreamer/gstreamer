@@ -32,6 +32,7 @@
 #ifdef HAVE_SYS_UIO_H
 #include <sys/uio.h>
 #endif
+#include <sys/types.h>
 #include <errno.h>
 #include <string.h>
 #include <string.h>
@@ -39,6 +40,11 @@
 #include "gstelements_private.h"
 
 #ifdef G_OS_WIN32
+#  include <io.h>               /* lseek, open, close, read */
+#  undef lseek
+#  define lseek _lseeki64
+#  undef off_t
+#  define off_t guint64
 #  define WIN32_LEAN_AND_MEAN   /* prevents from including too many things */
 #  include <windows.h>
 #  undef WIN32_LEAN_AND_MEAN
@@ -215,13 +221,20 @@ fill_vectors (struct iovec *vecs, GstMapInfo * maps, guint n, GstBuffer * buf)
 GstFlowReturn
 gst_writev_buffers (GstObject * sink, gint fd, GstPoll * fdset,
     GstBuffer ** buffers, guint num_buffers, guint8 * mem_nums,
-    guint total_mem_num, guint64 * bytes_written, guint64 skip)
+    guint total_mem_num, guint64 * bytes_written, guint64 skip,
+    gint max_transient_error_timeout, guint64 current_position,
+    gboolean * flushing)
 {
   struct iovec *vecs;
   GstMapInfo *map_infos;
   GstFlowReturn flow_ret;
   gsize size = 0;
   guint i, j;
+  gint64 start_time = 0;
+
+  max_transient_error_timeout *= 1000;
+  if (max_transient_error_timeout)
+    start_time = g_get_monotonic_time ();
 
   GST_LOG_OBJECT (sink, "%u buffers, %u memories", num_buffers, total_mem_num);
 
@@ -248,6 +261,11 @@ gst_writev_buffers (GstObject * sink, gint fd, GstPoll * fdset,
     }
 
     do {
+      if (flushing != NULL && g_atomic_int_get (flushing)) {
+        GST_DEBUG_OBJECT (sink, "Flushing, exiting loop");
+        flow_ret = GST_FLOW_FLUSHING;
+        goto out;
+      }
 #ifndef HAVE_WIN32
       if (fdset != NULL) {
         do {
@@ -279,9 +297,45 @@ gst_writev_buffers (GstObject * sink, gint fd, GstPoll * fdset,
 
       if (ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
         /* do nothing, try again */
+        if (max_transient_error_timeout)
+          start_time = g_get_monotonic_time ();
+      } else if (ret < 0 && errno == EACCES && max_transient_error_timeout > 0) {
+        /* seek back to where we started writing and try again after sleeping
+         * for 10ms.
+         *
+         * Some network file systems report EACCES spuriously, presumably
+         * because at the same time another client is reading the file.
+         * It happens at least on Linux and macOS on SMB/CIFS and NFS file
+         * systems.
+         *
+         * Note that NFS does not check access permissions during open()
+         * but only on write()/read() according to open(2), so we would
+         * loop here in case of NFS.
+         */
+        if (g_get_monotonic_time () > start_time + max_transient_error_timeout) {
+          GST_ERROR_OBJECT (sink, "Got EACCES for more than %dms, failing",
+              max_transient_error_timeout);
+          goto write_error;
+        }
+        GST_DEBUG_OBJECT (sink, "got EACCES, retry after 10ms sleep");
+        g_assert (current_position != -1);
+        g_usleep (10000);
+
+        /* Seek back to the current position, sometimes a partial write
+         * happened and we have no idea how much and if what was written
+         * is actually correct (it sometimes isn't)
+         */
+        ret = lseek (fd, current_position + *bytes_written, SEEK_SET);
+        if (ret < 0 || ret != current_position + *bytes_written) {
+          GST_ERROR_OBJECT (sink,
+              "failed to seek back to current write position");
+          goto write_error;
+        }
       } else if (ret < 0) {
         goto write_error;
-      } else if (ret < left) {
+      } else {                  /* if (ret < left) */
+        if (max_transient_error_timeout)
+          start_time = g_get_monotonic_time ();
         /* skip vectors that have been written in full */
         while (ret >= vecs[0].iov_len) {
           ret -= vecs[0].iov_len;

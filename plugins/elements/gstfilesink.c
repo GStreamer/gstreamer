@@ -49,6 +49,7 @@
 #include "gstfilesink.h"
 #include <string.h>
 #include <sys/types.h>
+#include <fcntl.h>
 
 #ifdef G_OS_WIN32
 #include <io.h>                 /* lseek, open, close, read */
@@ -106,6 +107,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_file_sink_debug);
 #define DEFAULT_BUFFER_MODE 	GST_FILE_SINK_BUFFER_MODE_DEFAULT
 #define DEFAULT_BUFFER_SIZE 	64 * 1024
 #define DEFAULT_APPEND		FALSE
+#define DEFAULT_O_SYNC		FALSE
+#define DEFAULT_MAX_TRANSIENT_ERROR_TIMEOUT	0
 
 enum
 {
@@ -114,6 +117,8 @@ enum
   PROP_BUFFER_MODE,
   PROP_BUFFER_SIZE,
   PROP_APPEND,
+  PROP_O_SYNC,
+  PROP_MAX_TRANSIENT_ERROR_TIMEOUT,
   PROP_LAST
 };
 
@@ -121,12 +126,12 @@ enum
  * use the 'file pointer' opened in glib (and returned from this function)
  * in this library, as they may have unrelated C runtimes. */
 static FILE *
-gst_fopen (const gchar * filename, const gchar * mode)
+gst_fopen (const gchar * filename, const gchar * mode, gboolean o_sync)
 {
+  FILE *retval;
 #ifdef G_OS_WIN32
   wchar_t *wfilename = g_utf8_to_utf16 (filename, -1, NULL, NULL, NULL);
   wchar_t *wmode;
-  FILE *retval;
   int save_errno;
 
   if (wfilename == NULL) {
@@ -151,7 +156,23 @@ gst_fopen (const gchar * filename, const gchar * mode)
   errno = save_errno;
   return retval;
 #else
-  return fopen (filename, mode);
+  int fd;
+  int flags = O_CREAT | O_WRONLY;
+
+  if (strcmp (mode, "wb") == 0)
+    flags |= O_TRUNC;
+  else if (strcmp (mode, "ab") == 0)
+    flags |= O_APPEND;
+  else
+    g_assert_not_reached ();
+
+  if (o_sync)
+    flags |= O_SYNC;
+
+  fd = open (filename, flags, 0666);
+
+  retval = fdopen (fd, mode);
+  return retval;
 #endif
 }
 
@@ -172,6 +193,8 @@ static GstFlowReturn gst_file_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
 static GstFlowReturn gst_file_sink_render_list (GstBaseSink * sink,
     GstBufferList * list);
+static gboolean gst_file_sink_unlock (GstBaseSink * sink);
+static gboolean gst_file_sink_unlock_stop (GstBaseSink * sink);
 
 static gboolean gst_file_sink_do_seek (GstFileSink * filesink,
     guint64 new_offset);
@@ -230,6 +253,19 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
           "Append to an already existing file", DEFAULT_APPEND,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_O_SYNC,
+      g_param_spec_boolean ("o-sync", "Synchronous IO",
+          "Open the file with O_SYNC for enabling synchronous IO",
+          DEFAULT_O_SYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class,
+      PROP_MAX_TRANSIENT_ERROR_TIMEOUT,
+      g_param_spec_int ("max-transient-error-timeout",
+          "Max Transient Error Timeout",
+          "Retry up to this many ms on transient errors (currently EACCES)", 0,
+          G_MAXINT, DEFAULT_MAX_TRANSIENT_ERROR_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (gstelement_class,
       "File Sink",
       "Sink/File", "Write stream to a file",
@@ -243,6 +279,9 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
   gstbasesink_class->render_list =
       GST_DEBUG_FUNCPTR (gst_file_sink_render_list);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_file_sink_event);
+  gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_file_sink_unlock);
+  gstbasesink_class->unlock_stop =
+      GST_DEBUG_FUNCPTR (gst_file_sink_unlock_stop);
 
   if (sizeof (off_t) < 8) {
     GST_LOG ("No large file support, sizeof (off_t) = %" G_GSIZE_FORMAT "!",
@@ -330,6 +369,12 @@ gst_file_sink_set_property (GObject * object, guint prop_id,
     case PROP_APPEND:
       sink->append = g_value_get_boolean (value);
       break;
+    case PROP_O_SYNC:
+      sink->o_sync = g_value_get_boolean (value);
+      break;
+    case PROP_MAX_TRANSIENT_ERROR_TIMEOUT:
+      sink->max_transient_error_timeout = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -355,6 +400,12 @@ gst_file_sink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_APPEND:
       g_value_set_boolean (value, sink->append);
       break;
+    case PROP_O_SYNC:
+      g_value_set_boolean (value, sink->o_sync);
+      break;
+    case PROP_MAX_TRANSIENT_ERROR_TIMEOUT:
+      g_value_set_int (value, sink->max_transient_error_timeout);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -369,9 +420,9 @@ gst_file_sink_open_file (GstFileSink * sink)
     goto no_filename;
 
   if (sink->append)
-    sink->file = gst_fopen (sink->filename, "ab");
+    sink->file = gst_fopen (sink->filename, "ab", sink->o_sync);
   else
-    sink->file = gst_fopen (sink->filename, "wb");
+    sink->file = gst_fopen (sink->filename, "wb", sink->o_sync);
   if (sink->file == NULL)
     goto open_failed;
 
@@ -652,13 +703,21 @@ static GstFlowReturn
 gst_file_sink_render_buffers (GstFileSink * sink, GstBuffer ** buffers,
     guint num_buffers, guint8 * mem_nums, guint total_mems, gsize size)
 {
+  GstFlowReturn ret;
+  guint64 bytes_written = 0;
+
   GST_DEBUG_OBJECT (sink,
       "writing %u buffers (%u memories, %" G_GSIZE_FORMAT
       " bytes) at position %" G_GUINT64_FORMAT, num_buffers, total_mems, size,
       sink->current_pos);
 
-  return gst_writev_buffers (GST_OBJECT_CAST (sink), fileno (sink->file), NULL,
-      buffers, num_buffers, mem_nums, total_mems, &sink->current_pos, 0);
+  ret = gst_writev_buffers (GST_OBJECT_CAST (sink), fileno (sink->file), NULL,
+      buffers, num_buffers, mem_nums, total_mems, &bytes_written, 0,
+      sink->max_transient_error_timeout, sink->current_pos, &sink->flushing);
+
+  sink->current_pos += bytes_written;
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -857,13 +916,45 @@ gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 static gboolean
 gst_file_sink_start (GstBaseSink * basesink)
 {
-  return gst_file_sink_open_file (GST_FILE_SINK (basesink));
+  GstFileSink *filesink;
+
+  filesink = GST_FILE_SINK_CAST (basesink);
+
+  g_atomic_int_set (&filesink->flushing, FALSE);
+  return gst_file_sink_open_file (filesink);
 }
 
 static gboolean
 gst_file_sink_stop (GstBaseSink * basesink)
 {
-  gst_file_sink_close_file (GST_FILE_SINK (basesink));
+  GstFileSink *filesink;
+
+  filesink = GST_FILE_SINK_CAST (basesink);
+
+  gst_file_sink_close_file (filesink);
+  g_atomic_int_set (&filesink->flushing, TRUE);
+  return TRUE;
+}
+
+static gboolean
+gst_file_sink_unlock (GstBaseSink * basesink)
+{
+  GstFileSink *filesink;
+
+  filesink = GST_FILE_SINK_CAST (basesink);
+  g_atomic_int_set (&filesink->flushing, TRUE);
+
+  return TRUE;
+}
+
+static gboolean
+gst_file_sink_unlock_stop (GstBaseSink * basesink)
+{
+  GstFileSink *filesink;
+
+  filesink = GST_FILE_SINK_CAST (basesink);
+  g_atomic_int_set (&filesink->flushing, FALSE);
+
   return TRUE;
 }
 
