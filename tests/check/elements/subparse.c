@@ -476,7 +476,17 @@ GST_START_TEST (test_webvtt)
         2 * GST_SECOND, 3 * GST_SECOND, "Hello\nWorld"}
     ,
   };
+
+  /* Test with no newline at the end */
+  SubParseInputChunk webvtt_input2[] = {
+    {
+          "1\n00:00:01,000 --> 00:00:02,000\nLast cue, no newline at the end",
+        1 * GST_SECOND, 2 * GST_SECOND, "Last cue, no newline at the end"}
+    ,
+  };
+
   test_vtt_do_test (webvtt_input, 0, G_N_ELEMENTS (webvtt_input));
+  test_vtt_do_test (webvtt_input2, 0, G_N_ELEMENTS (webvtt_input2));
 }
 
 GST_END_TEST;
