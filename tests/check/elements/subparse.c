@@ -194,6 +194,14 @@ static SubParseInputChunk srt_input5[] = {
   ,
 };
 
+/* Test with no newline at the end */
+static SubParseInputChunk srt_input6[] = {
+  {
+        "1\n00:00:01,000 --> 00:00:02,000\nLast cue, no newline at the end",
+      1 * GST_SECOND, 2 * GST_SECOND, "Last cue, no newline at the end"}
+  ,
+};
+
 
 static void
 setup_subparse (void)
@@ -390,6 +398,9 @@ GST_START_TEST (test_srt)
 
   /* try with some broken/cut-off timestamp */
   test_srt_do_test (srt_input5, 0, G_N_ELEMENTS (srt_input5));
+
+  /* try without an empty line at the end */
+  test_srt_do_test (srt_input6, 0, G_N_ELEMENTS (srt_input6));
 }
 
 GST_END_TEST;
