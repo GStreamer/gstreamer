@@ -189,11 +189,55 @@ get_profile (guint profile_idc)
   return profile;
 }
 
+static gboolean
+get_chroma_type (GstVp9FrameHdr * frame_hdr, GstVp9Parser * parser,
+    GstVaapiContextInfo * info)
+{
+  switch (frame_hdr->profile) {
+    case GST_VP9_PROFILE_0:
+      info->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+      break;
+    case GST_VP9_PROFILE_1:
+      if (parser->subsampling_x == 1 && parser->subsampling_y == 0)
+        info->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422;
+      else if (parser->subsampling_x == 0 && parser->subsampling_y == 0)
+        info->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444;
+      else
+        return FALSE;
+      break;
+    case GST_VP9_PROFILE_2:
+      if (parser->bit_depth == 10)
+        info->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
+      else
+        info->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_12BPP;
+      break;
+    case GST_VP9_PROFILE_3:
+      if (parser->subsampling_x == 1 && parser->subsampling_y == 0) {
+        if (parser->bit_depth == 10)
+          info->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_10BPP;
+        else
+          info->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_12BPP;
+      } else if (parser->subsampling_x == 0 && parser->subsampling_y == 0) {
+        if (parser->bit_depth == 10)
+          info->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444_10BPP;
+        else
+          info->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444_12BPP;
+      } else
+        return FALSE;
+      break;
+    default:
+      return FALSE;
+      break;
+  }
+  return TRUE;
+}
+
 static GstVaapiDecoderStatus
 ensure_context (GstVaapiDecoderVp9 * decoder)
 {
   GstVaapiDecoderVp9Private *const priv = &decoder->priv;
   GstVp9FrameHdr *frame_hdr = &priv->frame_hdr;
+  GstVp9Parser *parser = priv->parser;
   GstVaapiProfile profile;
   const GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
   gboolean reset_context = FALSE;
@@ -220,19 +264,12 @@ ensure_context (GstVaapiDecoderVp9 * decoder)
 
     info.profile = priv->profile;
     info.entrypoint = entrypoint;
-    if (priv->parser->bit_depth == GST_VP9_BIT_DEPTH_8) {
-      info.chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
-    } else if (priv->parser->bit_depth == GST_VP9_BIT_DEPTH_10) {
-      info.chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
-    } else {
-      GST_WARNING ("VP9 with depth %d, bigger than 10BPP not supported now",
-          priv->parser->bit_depth);
-      return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
-    }
-
     info.width = priv->width;
     info.height = priv->height;
     info.ref_frames = 8;
+    if (!get_chroma_type (frame_hdr, parser, &info))
+      return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
+
     reset_context =
         gst_vaapi_decoder_ensure_context (GST_VAAPI_DECODER (decoder), &info);
 
