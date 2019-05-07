@@ -23,6 +23,7 @@
 #endif
 
 #include "gstrist.h"
+#include "gstroundrobin.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -38,6 +39,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
   if (!gst_element_register (plugin, "ristrtxreceive", GST_RANK_NONE,
           GST_TYPE_RIST_RTX_RECEIVE))
+    return FALSE;
+  if (!gst_element_register (plugin, "roundrobin", GST_RANK_NONE,
+          GST_TYPE_ROUND_ROBIN))
     return FALSE;
 
   return TRUE;

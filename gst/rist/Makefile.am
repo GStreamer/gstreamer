@@ -5,9 +5,11 @@ libgstrist_la_SOURCES = \
 	gstristsink.c \
 	gstristrtxsend.c \
 	gstristrtxreceive.c \
+	gstroundrobin.c \
 	gstristplugin.c
 
 noinst_HEADERS = \
+	gstroundrobin.h \
 	gstrist.h
 
 libgstrist_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \

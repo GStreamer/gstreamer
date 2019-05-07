@@ -1,4 +1,5 @@
 rist_sources = [
+  'gstroundrobin.c',
   'gstristrtxsend.c',
   'gstristrtxreceive.c',
   'gstristsrc.c',
