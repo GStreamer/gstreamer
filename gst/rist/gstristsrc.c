@@ -47,6 +47,8 @@
  * ]|
  */
 
+/* using GValueArray, which has not replacement */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -636,31 +638,64 @@ gst_rist_src_start (GstRistSrc * src)
 static GstStructure *
 gst_rist_src_create_stats (GstRistSrc * src)
 {
-  GObject *session = NULL, *source = NULL;
-  GstStructure *stats = NULL, *ret;
-  guint64 dropped = 0, received = 0, recovered = 0, lost = 0;
+  GstStructure *ret;
+  GValueArray *session_stats;
+  guint64 total_dropped = 0, total_received = 0, recovered = 0, lost = 0;
   guint64 duplicates = 0, rtx_sent = 0, rtt = 0;
+  gint i;
 
   ret = gst_structure_new_empty ("rist/x-receiver-stats");
+  session_stats = g_value_array_new (src->bonds->len);
 
-  g_signal_emit_by_name (src->rtpbin, "get-internal-session", 0, &session);
-  if (!session)
-    return ret;
+  for (i = 0; i < src->bonds->len; i++) {
+    GObject *session = NULL, *source = NULL;
+    GstStructure *sstats = NULL, *stats;
+    const gchar *rtp_from = NULL, *rtcp_from = NULL;
+    guint64 dropped = 0, received = 0;
+    GValue value = G_VALUE_INIT;
 
-  g_signal_emit_by_name (session, "get-source-by-ssrc", src->rtp_ssrc, &source);
-  if (source) {
-    gint packets_lost;
-    g_object_get (source, "stats", &stats, NULL);
-    gst_structure_get_int (stats, "packets-lost", &packets_lost);
-    gst_structure_free (stats);
+    g_signal_emit_by_name (src->rtpbin, "get-internal-session", i, &session);
+    if (!session)
+      continue;
+
+    stats = gst_structure_new_empty ("rist/x-receiver-session-stats");
+
+    g_signal_emit_by_name (session, "get-source-by-ssrc", src->rtp_ssrc,
+        &source);
+    if (source) {
+      gint packet_lost;
+      g_object_get (source, "stats", &sstats, NULL);
+      gst_structure_get_int (sstats, "packets-lost", &packet_lost);
+      dropped = MAX (packet_lost, 0);
+      gst_structure_get_uint64 (sstats, "packets-received", &received);
+      rtp_from = gst_structure_get_string (sstats, "rtp-from");
+      rtcp_from = gst_structure_get_string (sstats, "rtcp-from");
+    }
+    g_object_unref (session);
+
+    gst_structure_set (stats, "session-id", G_TYPE_INT, i,
+        "rtp-from", G_TYPE_STRING, rtp_from ? rtp_from : "",
+        "rtcp-from", G_TYPE_STRING, rtcp_from ? rtcp_from : "",
+        "dropped", G_TYPE_UINT64, MAX (dropped, 0),
+        "received", G_TYPE_UINT64, received, NULL);
+
+    if (sstats)
+      gst_structure_free (sstats);
     g_clear_object (&source);
-    dropped = MAX (packets_lost, 0);
+
+    g_value_init (&value, GST_TYPE_STRUCTURE);
+    g_value_take_boxed (&value, stats);
+    g_value_array_append (session_stats, &value);
+    g_value_unset (&value);
+
+    total_dropped += dropped;
   }
-  g_object_unref (session);
 
   if (src->jitterbuffer) {
+    GstStructure *stats;
     g_object_get (src->jitterbuffer, "stats", &stats, NULL);
-    gst_structure_get (stats, "num-pushed", G_TYPE_UINT64, &received,
+    gst_structure_get (stats,
+        "num-pushed", G_TYPE_UINT64, &total_received,
         "num-lost", G_TYPE_UINT64, &lost,
         "rtx-count", G_TYPE_UINT64, &rtx_sent,
         "num-duplicates", G_TYPE_UINT64, &duplicates,
@@ -669,13 +704,15 @@ gst_rist_src_create_stats (GstRistSrc * src)
     gst_structure_free (stats);
   }
 
-  gst_structure_set (ret, "dropped", G_TYPE_UINT64, dropped,
-      "received", G_TYPE_UINT64, received,
+  gst_structure_set (ret, "dropped", G_TYPE_UINT64, total_dropped,
+      "received", G_TYPE_UINT64, total_received,
       "recovered", G_TYPE_UINT64, recovered,
       "permanently-lost", G_TYPE_UINT64, lost,
       "duplicates", G_TYPE_UINT64, duplicates,
       "retransmission-requests-sent", G_TYPE_UINT64, rtx_sent,
-      "rtx-roundtrip-time", G_TYPE_UINT64, rtt, NULL);
+      "rtx-roundtrip-time", G_TYPE_UINT64, rtt,
+      "session-stats", G_TYPE_VALUE_ARRAY, session_stats, NULL);
+  g_value_array_free (session_stats);
 
   return ret;
 }
