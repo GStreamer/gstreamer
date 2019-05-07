@@ -88,6 +88,7 @@ ges_track_enable_update
 ges_track_get_elements
 ges_track_is_updating
 ges_track_commit
+ges_track_set_create_element_for_gap_func
 ges_track_get_mixing
 ges_track_set_mixing
 <SUBSECTION Standard>
