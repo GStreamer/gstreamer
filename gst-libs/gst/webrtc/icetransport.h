@@ -71,6 +71,10 @@ void            gst_webrtc_ice_transport_selected_pair_change       (GstWebRTCIC
 GST_WEBRTC_API
 void            gst_webrtc_ice_transport_new_candidate              (GstWebRTCICETransport * ice, guint stream_id, GstWebRTCICEComponent component, gchar * attr);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCICETransport, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_ICE_TRANSPORT_H__ */
