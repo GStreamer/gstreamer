@@ -218,6 +218,9 @@ gst_vulkan_sink_query (GstBaseSink * bsink, GstQuery * query)
       if (gst_vulkan_handle_context_query (GST_ELEMENT (vk_sink), query,
               &vk_sink->display, &vk_sink->instance, &vk_sink->device))
         return TRUE;
+      if (gst_vulkan_queue_handle_context_query (GST_ELEMENT (vk_sink), query,
+              &vk_sink->swapper->queue))
+        return TRUE;
 
       break;
     }
