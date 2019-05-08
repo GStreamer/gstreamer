@@ -29,6 +29,7 @@
 #include <gst/base/gstbaseparse.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/video/video.h>
+#include "gstvideoparseutils.h"
 
 G_BEGIN_DECLS
 
@@ -145,10 +146,8 @@ struct _GstH264Parse
   gboolean aud_needed;
   gboolean aud_insert;
 
-  /* pending closed captions */
-  guint8 closedcaptions[96];
-  guint closedcaptions_size;
-  GstVideoCaptionType closedcaptions_type;
+  GstVideoParseUserData user_data;
+
 
   /* For forward predicted trickmode */
   gboolean discard_bidirectional;

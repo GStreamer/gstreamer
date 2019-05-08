@@ -532,11 +532,18 @@ gst_h264_parse_process_sei_user_data (GstH264Parse * h264parse,
     GstH264RegisteredUserData * rud)
 {
   guint16 provider_code;
-  guint32 atsc_user_id;
   GstByteReader br;
+  GstVideoParseUtilsField field = GST_VIDEO_PARSE_UTILS_FIELD_1;
 
-  if (rud->country_code != 0xB5)
-    return;
+  /* only US country code is currently supported */
+  switch (rud->country_code) {
+    case ITU_T_T35_COUNTRY_CODE_US:
+      break;
+    default:
+      GST_LOG_OBJECT (h264parse, "Unsupported country code %d",
+          rud->country_code);
+      return;
+  }
 
   if (rud->data == NULL || rud->size < 2)
     return;
@@ -545,75 +552,12 @@ gst_h264_parse_process_sei_user_data (GstH264Parse * h264parse,
 
   provider_code = gst_byte_reader_get_uint16_be_unchecked (&br);
 
-  /* There is also 0x29 / 47 for DirecTV, but we don't handle that for now.
-   * https://en.wikipedia.org/wiki/CEA-708#Picture_User_Data */
-  if (provider_code != 0x0031)
-    return;
+  if (h264parse->sei_pic_struct ==
+      (guint8) GST_H264_SEI_PIC_STRUCT_BOTTOM_FIELD)
+    field = GST_VIDEO_PARSE_UTILS_FIELD_2;
+  gst_video_parse_user_data ((GstElement *) h264parse, &h264parse->user_data,
+      &br, field, provider_code);
 
-  /* ANSI/SCTE 128-2010a section 8.1.2 */
-  if (!gst_byte_reader_get_uint32_be (&br, &atsc_user_id))
-    return;
-
-  atsc_user_id = GUINT32_FROM_BE (atsc_user_id);
-  switch (atsc_user_id) {
-    case GST_MAKE_FOURCC ('G', 'A', '9', '4'):{
-      guint8 user_data_type_code, m;
-
-      /* 8.2.1 ATSC1_data() Semantics, Table 15 */
-      if (!gst_byte_reader_get_uint8 (&br, &user_data_type_code))
-        return;
-
-      switch (user_data_type_code) {
-        case 0x03:{
-          guint8 process_cc_data_flag;
-          guint8 cc_count, em_data, b;
-          guint i;
-
-          if (!gst_byte_reader_get_uint8 (&br, &b) || (b & 0x20) != 0)
-            break;
-
-          if (!gst_byte_reader_get_uint8 (&br, &em_data) || em_data != 0xff)
-            break;
-
-          process_cc_data_flag = (b & 0x40) != 0;
-          cc_count = b & 0x1f;
-
-          if (cc_count * 3 > gst_byte_reader_get_remaining (&br))
-            break;
-
-          if (!process_cc_data_flag || cc_count == 0) {
-            gst_byte_reader_skip_unchecked (&br, cc_count * 3);
-            break;
-          }
-
-          /* Shouldn't really happen so let's not go out of our way to handle it */
-          if (h264parse->closedcaptions_size > 0) {
-            GST_WARNING_OBJECT (h264parse, "unused pending closed captions!");
-            GST_MEMDUMP_OBJECT (h264parse, "unused captions being dropped",
-                h264parse->closedcaptions, h264parse->closedcaptions_size);
-          }
-
-          for (i = 0; i < cc_count * 3; i++) {
-            h264parse->closedcaptions[i] =
-                gst_byte_reader_get_uint8_unchecked (&br);
-          }
-          h264parse->closedcaptions_size = cc_count * 3;
-          h264parse->closedcaptions_type = GST_VIDEO_CAPTION_TYPE_CEA708_RAW;
-
-          GST_LOG_OBJECT (h264parse, "Extracted closed captions");
-          break;
-        }
-        default:
-          GST_LOG ("Unhandled atsc1 user data type %d", atsc_user_id);
-          break;
-      }
-      if (!gst_byte_reader_get_uint8 (&br, &m) || m != 0xff)
-        GST_WARNING_OBJECT (h264parse, "Marker bits mismatch after ATSC1_data");
-      break;
-    }
-    default:
-      break;
-  }
 }
 
 static void
@@ -2593,6 +2537,8 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstH264Parse *h264parse;
   GstBuffer *buffer;
   GstEvent *event;
+  GstBuffer *parse_buffer = NULL;
+  gboolean is_interlaced = FALSE;
 
   h264parse = GST_H264_PARSE (parse);
 
@@ -2649,15 +2595,6 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     }
   } else {
     buffer = frame->buffer;
-  }
-
-  if (h264parse->closedcaptions_size > 0) {
-    gst_buffer_add_video_caption_meta (buffer,
-        h264parse->closedcaptions_type, h264parse->closedcaptions,
-        h264parse->closedcaptions_size);
-
-    h264parse->closedcaptions_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
-    h264parse->closedcaptions_size = 0;
   }
 
   if ((event = check_pending_key_unit_event (h264parse->force_key_unit_event,
@@ -2750,9 +2687,9 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
     for (i = 0; i < h264parse->num_clock_timestamp; i++) {
       GstH264ClockTimestamp *tim = &h264parse->clock_timestamp[i];
-      GstVideoTimeCodeFlags flags = 0;
       gint field_count = -1;
       guint n_frames;
+      GstVideoTimeCodeFlags flags = 0;
 
       /* Table D-1 */
       switch (h264parse->sei_pic_struct) {
@@ -2791,8 +2728,10 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       if (tim->counting_type == 4)
         flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
 
-      if (tim->ct_type == GST_H264_CT_TYPE_INTERLACED)
+      if (tim->ct_type == GST_H264_CT_TYPE_INTERLACED) {
         flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
+        is_interlaced = TRUE;
+      }
 
       n_frames =
           gst_util_uint64_scale_int (tim->n_frames, 1,
@@ -2810,6 +2749,22 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
     h264parse->num_clock_timestamp = 0;
   }
+
+  if (frame->out_buffer) {
+    parse_buffer = frame->out_buffer =
+        gst_buffer_make_writable (frame->out_buffer);
+  } else {
+    parse_buffer = frame->buffer = gst_buffer_make_writable (frame->buffer);
+  }
+
+  if (is_interlaced) {
+    GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+    if (h264parse->sei_pic_struct == GST_H264_SEI_PIC_STRUCT_TOP_FIELD)
+      GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+  }
+
+  gst_video_push_user_data ((GstElement *) h264parse, &h264parse->user_data,
+      parse_buffer);
 
   gst_h264_parse_reset_frame (h264parse);
 
