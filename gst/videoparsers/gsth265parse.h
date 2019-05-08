@@ -25,6 +25,7 @@
 #include <gst/base/gstbaseparse.h>
 #include <gst/codecparsers/gsth265parser.h>
 #include <gst/video/video.h>
+#include "gstvideoparseutils.h"
 
 G_BEGIN_DECLS
 
@@ -107,6 +108,8 @@ struct _GstH265Parse
   gboolean header;
   /* AU state */
   gboolean picture_start;
+
+  GstVideoParseUserData user_data;
 
   /* props */
   gint interval;

@@ -271,6 +271,7 @@ typedef enum
  * GstH265SEIPayloadType:
  * @GST_H265_SEI_BUF_PERIOD: Buffering Period SEI Message
  * @GST_H265_SEI_PIC_TIMING: Picture Timing SEI Message
+ * @GST_H265_SEI_REGISTERED_USER_DATA: Registered user data (D.2.5)
  * @GST_H265_SEI_RECOVERY_POINT: Recovery Point SEI Message (D.3.8)
  * @GST_H265_SEI_TIME_CODE: Time code SEI message (D.2.27) (Since: 1.16)
  * @GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME: Mastering display colour volume information SEI message (D.2.28) (Since: 1.18)
@@ -283,6 +284,7 @@ typedef enum
 {
   GST_H265_SEI_BUF_PERIOD = 0,
   GST_H265_SEI_PIC_TIMING = 1,
+  GST_H265_SEI_REGISTERED_USER_DATA = 4,
   GST_H265_SEI_RECOVERY_POINT = 6,
   GST_H265_SEI_TIME_CODE = 136,
   GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME = 137,
@@ -373,6 +375,7 @@ typedef struct _GstH265ShortTermRefPicSet       GstH265ShortTermRefPicSet;
 typedef struct _GstH265SliceHdr                 GstH265SliceHdr;
 
 typedef struct _GstH265PicTiming                GstH265PicTiming;
+typedef struct _GstH265RegisteredUserData     	GstH265RegisteredUserData;
 typedef struct _GstH265BufferingPeriod          GstH265BufferingPeriod;
 typedef struct _GstH265RecoveryPoint            GstH265RecoveryPoint;
 typedef struct _GstH265TimeCode                 GstH265TimeCode;
@@ -1226,6 +1229,15 @@ struct _GstH265RecoveryPoint
   guint8 broken_link_flag;
 };
 
+struct _GstH265RegisteredUserData
+{
+  guint8 country_code;
+  guint8 country_code_extension;
+  const guint8 *data;
+  guint size;
+};
+
+
 /**
  * GstH265TimeCode:
  * The time code SEI message provides time code information similar to that
@@ -1297,6 +1309,7 @@ struct _GstH265SEIMessage
   union {
     GstH265BufferingPeriod buffering_period;
     GstH265PicTiming pic_timing;
+    GstH265RegisteredUserData registered_user_data;
     GstH265RecoveryPoint recovery_point;
     GstH265TimeCode time_code;
     GstH265MasteringDisplayColourVolume mastering_display_colour_volume;

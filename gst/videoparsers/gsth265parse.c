@@ -114,6 +114,9 @@ static GstCaps *gst_h265_parse_get_caps (GstBaseParse * parse,
 static gboolean gst_h265_parse_event (GstBaseParse * parse, GstEvent * event);
 static gboolean gst_h265_parse_src_event (GstBaseParse * parse,
     GstEvent * event);
+static void
+gst_h265_parse_process_sei_user_data (GstH265Parse * h265parse,
+    GstH265RegisteredUserData * rud);
 
 static void
 gst_h265_parse_class_init (GstH265ParseClass * klass)
@@ -570,6 +573,10 @@ gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       case GST_H265_SEI_PIC_TIMING:
         h265parse->sei_pic_struct = sei.payload.pic_timing.pic_struct;
         break;
+      case GST_H265_SEI_REGISTERED_USER_DATA:
+        gst_h265_parse_process_sei_user_data (h265parse,
+            &sei.payload.registered_user_data);
+        break;
       case GST_H265_SEI_BUF_PERIOD:
         /* FIXME */
         break;
@@ -670,6 +677,39 @@ gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
     }
   }
   g_array_free (messages, TRUE);
+}
+
+static void
+gst_h265_parse_process_sei_user_data (GstH265Parse * h265parse,
+    GstH265RegisteredUserData * rud)
+{
+  guint16 provider_code;
+  GstByteReader br;
+  GstVideoParseUtilsField field = GST_VIDEO_PARSE_UTILS_FIELD_1;
+
+  /* only US country code is currently supported */
+  switch (rud->country_code) {
+    case ITU_T_T35_COUNTRY_CODE_US:
+      break;
+    default:
+      GST_LOG_OBJECT (h265parse, "Unsupported country code %d",
+          rud->country_code);
+      return;
+  }
+
+  if (rud->data == NULL || rud->size < 2)
+    return;
+
+  gst_byte_reader_init (&br, rud->data, rud->size);
+
+  provider_code = gst_byte_reader_get_uint16_be_unchecked (&br);
+
+  if (h265parse->sei_pic_struct ==
+      (guint8) GST_H265_SEI_PIC_STRUCT_BOTTOM_FIELD)
+    field = GST_VIDEO_PARSE_UTILS_FIELD_1;
+  gst_video_parse_user_data ((GstElement *) h265parse, &h265parse->user_data,
+      &br, field, provider_code);
+
 }
 
 /* caller guarantees 2 bytes of nal payload */
@@ -2565,6 +2605,7 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstH265Parse *h265parse;
   GstBuffer *buffer;
   GstEvent *event;
+  GstBuffer *parse_buffer = NULL;
 
   h265parse = GST_H265_PARSE (parse);
 
@@ -2671,9 +2712,9 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     guint i = 0;
 
     for (i = 0; i < h265parse->time_code.num_clock_ts; i++) {
-      GstVideoTimeCodeFlags flags = 0;
       gint field_count = -1;
       guint n_frames;
+      GstVideoTimeCodeFlags flags = 0;
 
       if (!h265parse->time_code.clock_timestamp_flag[i])
         break;
@@ -2741,6 +2782,22 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           seconds_value[i] : 0, n_frames, field_count);
     }
   }
+
+  if (frame->out_buffer) {
+    parse_buffer = frame->out_buffer =
+        gst_buffer_make_writable (frame->out_buffer);
+  } else {
+    parse_buffer = frame->buffer = gst_buffer_make_writable (frame->buffer);
+  }
+
+  if (h265parse->sei_pic_struct != GST_H265_SEI_PIC_STRUCT_FRAME) {
+    GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+    if (h265parse->sei_pic_struct == GST_H265_SEI_PIC_STRUCT_TOP_FIELD)
+      GST_BUFFER_FLAG_SET (parse_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+  }
+
+  gst_video_push_user_data ((GstElement *) h265parse, &h265parse->user_data,
+      parse_buffer);
 
   gst_h265_parse_reset_frame (h265parse);
 

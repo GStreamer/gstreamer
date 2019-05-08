@@ -1132,6 +1132,53 @@ error:
   return GST_H265_PARSER_ERROR;
 }
 
+
+static GstH265ParserResult
+gst_h265_parser_parse_registered_user_data (GstH265Parser * parser,
+    GstH265RegisteredUserData * rud, NalReader * nr, guint payload_size)
+{
+  guint8 *data = NULL;
+  guint i;
+
+  rud->data = NULL;
+  rud->size = 0;
+
+  if (payload_size < 2)
+    return GST_H265_PARSER_ERROR;
+
+  READ_UINT8 (nr, rud->country_code, 8);
+  --payload_size;
+
+  if (rud->country_code == 0xFF) {
+    READ_UINT8 (nr, rud->country_code_extension, 8);
+    --payload_size;
+  } else {
+    rud->country_code_extension = 0;
+  }
+
+  if (payload_size < 8)
+    return GST_H265_PARSER_ERROR;
+
+  data = g_malloc (payload_size);
+  for (i = 0; i < payload_size / 8; ++i) {
+    READ_UINT8 (nr, data[i], 8);
+  }
+
+  GST_MEMDUMP ("SEI user data", data, payload_size / 8);
+
+  rud->data = data;
+  rud->size = payload_size;
+  return GST_H265_PARSER_OK;
+
+error:
+  {
+    GST_WARNING ("error parsing \"Registered User Data\"");
+    g_free (data);
+    return GST_H265_PARSER_ERROR;
+  }
+}
+
+
 static GstH265ParserResult
 gst_h265_parser_parse_time_code (GstH265Parser * parser,
     GstH265TimeCode * tc, NalReader * nr)
@@ -2471,6 +2518,10 @@ gst_h265_parser_parse_sei_message (GstH265Parser * parser,
         /* size not set; might depend on emulation_prevention_three_byte */
         res = gst_h265_parser_parse_pic_timing (parser,
             &sei->payload.pic_timing, nr);
+        break;
+      case GST_H265_SEI_REGISTERED_USER_DATA:
+        res = gst_h265_parser_parse_registered_user_data (parser,
+            &sei->payload.registered_user_data, nr, payloadSizeBytes);
         break;
       case GST_H265_SEI_RECOVERY_POINT:
         res = gst_h265_parser_parse_recovery_point (parser,
