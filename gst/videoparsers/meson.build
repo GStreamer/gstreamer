@@ -10,6 +10,7 @@ vparse_sources = [
   'gstpngparse.c',
   'gstvc1parse.c',
   'gsth265parse.c',
+  'gstvideoparseutils.c',
   'gstjpeg2000parse.c',
 ]
 
