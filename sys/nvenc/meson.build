@@ -13,7 +13,7 @@ if nvenc_option.disabled()
   subdir_done()
 endif
 
-if host_machine.system() == 'windows'
+if cuda_dep.type_name() == 'internal'
   if cc.has_header('cuda_gl_interop.h', args: '-I' + cuda_incdir)
     use_nvenc_gl = true
   endif
