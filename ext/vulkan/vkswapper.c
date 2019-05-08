@@ -450,7 +450,7 @@ gst_vulkan_swapper_get_supported_caps (GstVulkanSwapper * swapper,
 
   caps = gst_caps_new_empty_simple ("video/x-raw");
   gst_caps_set_features (caps, 0,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER));
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE));
   s = gst_caps_get_structure (caps, 0);
 
   {
@@ -480,6 +480,9 @@ gst_vulkan_swapper_get_supported_caps (GstVulkanSwapper * swapper,
         GST_TYPE_FRACTION, 1, 1, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
         G_MAXINT, 1, NULL);
   }
+
+  gst_caps_append_structure_full (caps, gst_structure_copy (s),
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER));
 
   GST_INFO_OBJECT (swapper, "Probed the following caps %" GST_PTR_FORMAT, caps);
 
@@ -649,8 +652,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     n_images_wanted = swapper->surf_props.maxImageCount;
   }
 
-  if (swapper->
-      surf_props.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
+  if (swapper->surf_props.
+      supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
     preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
   } else {
     preTransform = swapper->surf_props.currentTransform;
@@ -681,8 +684,8 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
-  if ((swapper->surf_props.
-          supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
+  if ((swapper->
+          surf_props.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
       != 0) {
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   } else {
@@ -804,9 +807,10 @@ static gboolean
 _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     GstBuffer * buffer, VkCommandBuffer * cmd_ret, GError ** error)
 {
-  GstVulkanBufferMemory *buf_mem;
+  GstMemory *in_mem;
   GstVulkanImageMemory *swap_mem;
   VkCommandBuffer cmd;
+  GstVideoRectangle src, dst, rslt;
   VkResult err;
 
   g_return_val_if_fail (swap_idx < swapper->n_swap_chain_images, FALSE);
@@ -814,8 +818,6 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
 
   if (!(cmd = gst_vulkan_command_pool_create (swapper->cmd_pool, error)))
     return FALSE;
-
-  buf_mem = (GstVulkanBufferMemory *) gst_buffer_peek_memory (buffer, 0);
 
   {
     VkCommandBufferInheritanceInfo buf_inh = { 0, };
@@ -845,29 +847,50 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     return FALSE;
   }
 
-  {
+  src.x = src.y = 0;
+  src.w = GST_VIDEO_INFO_WIDTH (&swapper->v_info);
+  src.h = GST_VIDEO_INFO_HEIGHT (&swapper->v_info);
+
+  dst.x = dst.y = 0;
+  dst.w = gst_vulkan_image_memory_get_width (swap_mem);
+  dst.h = gst_vulkan_image_memory_get_height (swap_mem);
+
+  gst_video_sink_center_rect (src, dst, &rslt, FALSE);
+
+  GST_TRACE_OBJECT (swapper, "rendering into result rectangle %ux%u+%u,%u "
+      "src %ux%u dst %ux%u", rslt.w, rslt.h, rslt.x, rslt.y, src.w, src.h,
+      dst.w, dst.h);
+
+  in_mem = gst_buffer_peek_memory (buffer, 0);
+  if (gst_is_vulkan_buffer_memory (in_mem)) {
+    GstVulkanBufferMemory *buf_mem = (GstVulkanBufferMemory *) in_mem;
     VkBufferImageCopy region = { 0, };
-    GstVideoRectangle src, dst, rslt;
 
-    src.x = src.y = 0;
-    src.w = GST_VIDEO_INFO_WIDTH (&swapper->v_info);
-    src.h = GST_VIDEO_INFO_HEIGHT (&swapper->v_info);
-
-    dst.x = dst.y = 0;
-    dst.w = gst_vulkan_image_memory_get_width (swap_mem);
-    dst.h = gst_vulkan_image_memory_get_height (swap_mem);
-
-    gst_video_sink_center_rect (src, dst, &rslt, FALSE);
-
-    GST_TRACE_OBJECT (swapper, "rendering into result rectangle %ux%u+%u,%u "
-        "src %ux%u dst %ux%u", rslt.w, rslt.h, rslt.x, rslt.y, src.w, src.h,
-        dst.w, dst.h);
     GST_VK_BUFFER_IMAGE_COPY (region, 0, src.w, src.h,
         GST_VK_IMAGE_SUBRESOURCE_LAYERS_INIT (VK_IMAGE_ASPECT_COLOR_BIT, 0, 0,
             1), GST_VK_OFFSET3D_INIT (rslt.x, rslt.y, 0),
         GST_VK_EXTENT3D_INIT (rslt.w, rslt.h, 1));
 
     vkCmdCopyBufferToImage (cmd, buf_mem->buffer, swap_mem->image,
+        swap_mem->image_layout, 1, &region);
+  } else if (gst_is_vulkan_image_memory (in_mem)) {
+    GstVulkanImageMemory *img_mem = (GstVulkanImageMemory *) in_mem;
+    VkImageCopy region = { 0, };
+
+    /* FIXME: should really be a blit to resize to the output dimensions */
+    GST_VK_IMAGE_COPY (region,
+        GST_VK_IMAGE_SUBRESOURCE_LAYERS_INIT (VK_IMAGE_ASPECT_COLOR_BIT, 0, 0,
+            1), GST_VK_OFFSET3D_INIT (src.x, src.y, 0),
+        GST_VK_IMAGE_SUBRESOURCE_LAYERS_INIT (VK_IMAGE_ASPECT_COLOR_BIT, 0, 0,
+            1), GST_VK_OFFSET3D_INIT (rslt.x, rslt.y, 0),
+        GST_VK_EXTENT3D_INIT (rslt.w, rslt.h, 1));
+
+    if (!_swapper_set_image_layout_with_cmd (swapper, cmd, img_mem,
+            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, error)) {
+      return FALSE;
+    }
+
+    vkCmdCopyImage (cmd, img_mem->image, img_mem->image_layout, swap_mem->image,
         swap_mem->image_layout, 1, &region);
   }
 
@@ -1054,7 +1077,7 @@ gst_vulkan_swapper_render_buffer (GstVulkanSwapper * swapper,
         "Buffer has no memory");
     return FALSE;
   }
-  if (!gst_is_vulkan_buffer_memory (mem)) {
+  if (!gst_is_vulkan_buffer_memory (mem) && !gst_is_vulkan_image_memory (mem)) {
     g_set_error_literal (error, GST_VULKAN_ERROR, VK_ERROR_FORMAT_NOT_SUPPORTED,
         "Incorrect memory type");
     return FALSE;

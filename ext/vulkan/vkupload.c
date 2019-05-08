@@ -503,6 +503,7 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     GstMemory *in_mem, *out_mem;
     GstVulkanBufferMemory *buf_mem;
     GstVulkanImageMemory *img_mem;
+    VkImageMemoryBarrier image_memory_barrier;
 
     in_mem = gst_buffer_peek_memory (inbuf, i);
     if (!gst_is_vulkan_buffer_memory (in_mem)) {
@@ -525,6 +526,13 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
             1), GST_VK_OFFSET3D_INIT (0, 0, 0),
         GST_VK_EXTENT3D_INIT (GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
             GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i), 1));
+
+    gst_vulkan_image_memory_set_layout (img_mem,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &image_memory_barrier);
+
+    vkCmdPipelineBarrier (cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, NULL, 0, NULL, 1,
+        &image_memory_barrier);
 
     vkCmdCopyBufferToImage (cmd, buf_mem->buffer, img_mem->image,
         img_mem->image_layout, 1, &region);

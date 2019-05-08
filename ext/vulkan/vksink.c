@@ -70,10 +70,13 @@ static void gst_vulkan_sink_video_overlay_init (GstVideoOverlayInterface *
 
 
 static GstStaticPadTemplate gst_vulkan_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
+            GST_VULKAN_SWAPPER_VIDEO_FORMATS) ";"
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER,
             GST_VULKAN_SWAPPER_VIDEO_FORMATS)));
 
