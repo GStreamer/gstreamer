@@ -104,6 +104,9 @@ struct _GstMsdkEnc
   guint num_tasks;
   MsdkEncTask *tasks;
   guint next_task;
+  /* Extra frames for encoding, set by each element,
+   * the default value is 0 */
+  guint num_extra_frames;
 
   gboolean has_vpp;
   mfxVideoParam vpp_param;
