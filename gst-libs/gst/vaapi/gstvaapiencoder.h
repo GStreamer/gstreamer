@@ -117,6 +117,8 @@ typedef enum {
  * @GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD: The maximal distance
  *   between two keyframes (uint).
  * @GST_VAAPI_ENCODER_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
+ * @GST_VAAPI_ENCODER_PROP_DEFAULT_ROI_VALUE: The default delta qp to apply
+ *   to each region of interest.
  * @GST_VAAPI_ENCODER_PROP_TRELLIS: Use trellis quantization method (gboolean).
  *
  * The set of configurable properties for the encoder.
