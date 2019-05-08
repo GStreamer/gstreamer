@@ -65,6 +65,10 @@ GST_WEBRTC_API
 void                        gst_webrtc_dtls_transport_set_transport     (GstWebRTCDTLSTransport * transport,
                                                                          GstWebRTCICETransport * ice);
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCDTLSTransport, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_DTLS_TRANSPORT_H__ */

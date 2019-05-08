@@ -61,6 +61,10 @@ struct _GstWebRTCRTPTransceiverClass
   gpointer              _padding[GST_PADDING];
 };
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCRTPTransceiver, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_RTP_TRANSCEIVER_H__ */

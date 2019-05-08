@@ -66,6 +66,10 @@ void                        gst_webrtc_rtp_sender_set_rtcp_transport    (GstWebR
                                                                          GstWebRTCDTLSTransport * transport);
 
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCRTPSender, gst_object_unref)
+#endif
+
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_RTP_SENDER_H__ */
