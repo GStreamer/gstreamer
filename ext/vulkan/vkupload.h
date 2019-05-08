@@ -65,6 +65,7 @@ struct _GstVulkanUpload
 
   GstVulkanInstance     *instance;
   GstVulkanDevice       *device;
+  GstVulkanQueue        *queue;
 
   GstCaps               *in_caps;
   GstCaps               *out_caps;

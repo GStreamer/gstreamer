@@ -5,6 +5,7 @@ endif
 vulkan_sources = [
   'gstvulkan.c',
   'vksink.c',
+  'vkshader.c',
   'vkswapper.c',
   'vktrash.c',
   'vkupload.c',

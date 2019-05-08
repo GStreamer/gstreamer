@@ -22,44 +22,43 @@
 #include "config.h"
 #endif
 
-#include "gstvkbufferpool.h"
+#include "gstvkimagebufferpool.h"
 
 /**
- * SECTION:vkbufferpool
- * @title: GstVulkanBufferPool
- * @short_description: buffer pool for #GstVulkanBufferMemory objects
- * @see_also: #GstBufferPool, #GstVulkanBufferMemory
+ * SECTION:vkimagebufferpool
+ * @title: GstVulkanImageBufferPool
+ * @short_description: buffer pool for #GstVulkanImageMemory objects
+ * @see_also: #GstBufferPool, #GstVulkanImageMemory
  *
- * a #GstVulkanBufferPool is an object that allocates buffers with #GstVulkanBufferMemory
+ * a #GstVulkanImageBufferPool is an object that allocates buffers with #GstVulkanImageMemory
  *
- * A #GstVulkanBufferPool is created with gst_vulkan_buffer_pool_new()
+ * A #GstVulkanImageBufferPool is created with gst_vulkan_image_buffer_pool_new()
  *
- * #GstVulkanBufferPool implements the VideoMeta buffer pool option
+ * #GstVulkanImageBufferPool implements the VideoMeta buffer pool option
  * #GST_BUFFER_POOL_OPTION_VIDEO_META
  */
 
 /* bufferpool */
-struct _GstVulkanBufferPoolPrivate
+struct _GstVulkanImageBufferPoolPrivate
 {
   GstCaps *caps;
   GstVideoInfo v_info;
   gboolean add_videometa;
-  gsize alloc_sizes[GST_VIDEO_MAX_PLANES];
 };
 
-static void gst_vulkan_buffer_pool_finalize (GObject * object);
+static void gst_vulkan_image_buffer_pool_finalize (GObject * object);
 
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_VULKAN_BUFFER_POOL);
-#define GST_CAT_DEFAULT GST_CAT_VULKAN_BUFFER_POOL
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_VULKAN_IMAGE_BUFFER_POOL);
+#define GST_CAT_DEFAULT GST_CAT_VULKAN_IMAGE_BUFFER_POOL
 
-#define gst_vulkan_buffer_pool_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstVulkanBufferPool, gst_vulkan_buffer_pool,
-    GST_TYPE_BUFFER_POOL, G_ADD_PRIVATE (GstVulkanBufferPool)
-    GST_DEBUG_CATEGORY_INIT (GST_CAT_VULKAN_BUFFER_POOL,
-        "vulkanbufferpool", 0, "Vulkan Buffer Pool"));
+#define gst_vulkan_image_buffer_pool_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVulkanImageBufferPool, gst_vulkan_image_buffer_pool,
+    GST_TYPE_BUFFER_POOL, G_ADD_PRIVATE (GstVulkanImageBufferPool)
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_VULKAN_IMAGE_BUFFER_POOL,
+        "vulkanimagebufferpool", 0, "Vulkan Image Buffer Pool"));
 
 static const gchar **
-gst_vulkan_buffer_pool_get_options (GstBufferPool * pool)
+gst_vulkan_image_buffer_pool_get_options (GstBufferPool * pool)
 {
   static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
     NULL
@@ -69,10 +68,11 @@ gst_vulkan_buffer_pool_get_options (GstBufferPool * pool)
 }
 
 static gboolean
-gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
+gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
+    GstStructure * config)
 {
-  GstVulkanBufferPool *vk_pool = GST_VULKAN_BUFFER_POOL_CAST (pool);
-  GstVulkanBufferPoolPrivate *priv = vk_pool->priv;
+  GstVulkanImageBufferPool *vk_pool = GST_VULKAN_IMAGE_BUFFER_POOL_CAST (pool);
+  GstVulkanImageBufferPoolPrivate *priv = vk_pool->priv;
   guint min_buffers, max_buffers;
   GstCaps *caps = NULL;
   gboolean ret = TRUE;
@@ -103,7 +103,7 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     VkFormat vk_format;
 
     vk_format = gst_vulkan_format_from_video_format (v_format, i);
-    width = GST_VIDEO_INFO_PLANE_STRIDE (&priv->v_info, i);
+    width = GST_VIDEO_INFO_COMP_WIDTH (&priv->v_info, i);
     height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i);
 
     img_mem = (GstVulkanImageMemory *)
@@ -112,9 +112,8 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    priv->alloc_sizes[i] = img_mem->requirements.size;
     priv->v_info.offset[i] = priv->v_info.size;
-    priv->v_info.size += priv->alloc_sizes[i];
+    priv->v_info.size += img_mem->requirements.size;
 
     gst_memory_unref (GST_MEMORY_CAST (img_mem));
   }
@@ -148,11 +147,11 @@ wrong_caps:
 
 /* This function handles GstBuffer creation */
 static GstFlowReturn
-gst_vulkan_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
+gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     GstBufferPoolAcquireParams * params)
 {
-  GstVulkanBufferPool *vk_pool = GST_VULKAN_BUFFER_POOL_CAST (pool);
-  GstVulkanBufferPoolPrivate *priv = vk_pool->priv;
+  GstVulkanImageBufferPool *vk_pool = GST_VULKAN_IMAGE_BUFFER_POOL_CAST (pool);
+  GstVulkanImageBufferPoolPrivate *priv = vk_pool->priv;
   GstBuffer *buf;
   guint i;
 
@@ -167,12 +166,15 @@ gst_vulkan_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
     vk_format = gst_vulkan_format_from_video_format (v_format, i);
 
-    mem = gst_vulkan_buffer_memory_alloc (vk_pool->device,
-        vk_format, priv->alloc_sizes[i],
+    mem = gst_vulkan_image_memory_alloc (vk_pool->device,
+        vk_format, GST_VIDEO_INFO_COMP_WIDTH (&priv->v_info, i),
+        GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i),
+        VK_IMAGE_TILING_OPTIMAL /* FIXME: support linear */ ,
         /* FIXME: choose from outside */
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        /* FIXME: choosefrom outside */
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+        VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+        /* FIXME: choose from outside */
+        0);
     if (!mem) {
       gst_buffer_unref (buf);
       goto mem_create_failed;
@@ -199,7 +201,7 @@ mem_create_failed:
 }
 
 /**
- * gst_vulkan_buffer_pool_new:
+ * gst_vulkan_image_buffer_pool_new:
  * @device: the #GstVulkanDevice to use
  *
  * Returns: (transfer full): a #GstBufferPool that allocates buffers with #GstGLMemory
@@ -207,11 +209,11 @@ mem_create_failed:
  * Since: 1.18
  */
 GstBufferPool *
-gst_vulkan_buffer_pool_new (GstVulkanDevice * device)
+gst_vulkan_image_buffer_pool_new (GstVulkanDevice * device)
 {
-  GstVulkanBufferPool *pool;
+  GstVulkanImageBufferPool *pool;
 
-  pool = g_object_new (GST_TYPE_VULKAN_BUFFER_POOL, NULL);
+  pool = g_object_new (GST_TYPE_VULKAN_IMAGE_BUFFER_POOL, NULL);
   g_object_ref_sink (pool);
   pool->device = gst_object_ref (device);
 
@@ -222,36 +224,36 @@ gst_vulkan_buffer_pool_new (GstVulkanDevice * device)
 }
 
 static void
-gst_vulkan_buffer_pool_class_init (GstVulkanBufferPoolClass * klass)
+gst_vulkan_image_buffer_pool_class_init (GstVulkanImageBufferPoolClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
 
-  gobject_class->finalize = gst_vulkan_buffer_pool_finalize;
+  gobject_class->finalize = gst_vulkan_image_buffer_pool_finalize;
 
-  gstbufferpool_class->get_options = gst_vulkan_buffer_pool_get_options;
-  gstbufferpool_class->set_config = gst_vulkan_buffer_pool_set_config;
-  gstbufferpool_class->alloc_buffer = gst_vulkan_buffer_pool_alloc;
+  gstbufferpool_class->get_options = gst_vulkan_image_buffer_pool_get_options;
+  gstbufferpool_class->set_config = gst_vulkan_image_buffer_pool_set_config;
+  gstbufferpool_class->alloc_buffer = gst_vulkan_image_buffer_pool_alloc;
 }
 
 static void
-gst_vulkan_buffer_pool_init (GstVulkanBufferPool * pool)
+gst_vulkan_image_buffer_pool_init (GstVulkanImageBufferPool * pool)
 {
-  pool->priv = gst_vulkan_buffer_pool_get_instance_private (pool);
+  pool->priv = gst_vulkan_image_buffer_pool_get_instance_private (pool);
 }
 
 static void
-gst_vulkan_buffer_pool_finalize (GObject * object)
+gst_vulkan_image_buffer_pool_finalize (GObject * object)
 {
-  GstVulkanBufferPool *pool = GST_VULKAN_BUFFER_POOL_CAST (object);
-  GstVulkanBufferPoolPrivate *priv = pool->priv;
+  GstVulkanImageBufferPool *pool = GST_VULKAN_IMAGE_BUFFER_POOL_CAST (object);
+  GstVulkanImageBufferPoolPrivate *priv = pool->priv;
 
   GST_LOG_OBJECT (pool, "finalize Vulkan buffer pool %p", pool);
 
   if (priv->caps)
     gst_caps_unref (priv->caps);
 
-  G_OBJECT_CLASS (gst_vulkan_buffer_pool_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_vulkan_image_buffer_pool_parent_class)->finalize (object);
 
   /* only release the context once all our memory have been deleted */
   if (pool->device) {

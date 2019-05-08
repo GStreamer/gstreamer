@@ -32,6 +32,7 @@
 #include <string.h>
 
 #include "vkupload.h"
+#include "vktrash.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_upload);
 #define GST_CAT_DEFAULT gst_debug_vulkan_upload
@@ -367,9 +368,266 @@ static const struct UploadMethod raw_to_buffer_upload = {
   _raw_to_buffer_free,
 };
 
+struct BufferToImageUpload
+{
+  GstVulkanUpload *upload;
+
+  GstVideoInfo in_info;
+  GstVideoInfo out_info;
+
+  GstBufferPool *pool;
+  gboolean pool_active;
+
+  GstVulkanCommandPool *cmd_pool;
+  GList *trash_list;
+};
+
+static gpointer
+_buffer_to_image_new_impl (GstVulkanUpload * upload)
+{
+  struct BufferToImageUpload *raw = g_new0 (struct BufferToImageUpload, 1);
+
+  raw->upload = upload;
+
+  return raw;
+}
+
+static GstCaps *
+_buffer_to_image_transform_caps (gpointer impl, GstPadDirection direction,
+    GstCaps * caps)
+{
+  GstCaps *ret;
+
+  if (direction == GST_PAD_SINK) {
+    ret =
+        _set_caps_features_with_passthrough (caps,
+        GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL);
+  } else {
+    ret =
+        _set_caps_features_with_passthrough (caps,
+        GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER, NULL);
+  }
+
+  return ret;
+}
+
+static gboolean
+_buffer_to_image_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
+{
+  struct BufferToImageUpload *raw = impl;
+
+  if (!gst_video_info_from_caps (&raw->in_info, in_caps))
+    return FALSE;
+
+  if (!gst_video_info_from_caps (&raw->out_info, out_caps))
+    return FALSE;
+
+  return TRUE;
+}
+
+static void
+_buffer_to_image_propose_allocation (gpointer impl, GstQuery * decide_query,
+    GstQuery * query)
+{
+  /* a little trickery with the impl pointer */
+  _buffer_propose_allocation (impl, decide_query, query);
+}
+
+static GstFlowReturn
+_buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
+{
+  struct BufferToImageUpload *raw = impl;
+  GstFlowReturn ret;
+  GError *error = NULL;
+  VkResult err;
+  VkCommandBuffer cmd;
+  guint i;
+
+  if (!raw->cmd_pool) {
+    if (!(raw->cmd_pool =
+            gst_vulkan_queue_create_command_pool (raw->upload->queue,
+                &error))) {
+      goto error;
+    }
+  }
+
+  if (!(cmd = gst_vulkan_command_pool_create (raw->cmd_pool, &error)))
+    goto error;
+
+  if (!raw->pool) {
+    GstStructure *config;
+    guint min = 0, max = 0;
+    gsize size = 1;
+
+    raw->pool = gst_vulkan_image_buffer_pool_new (raw->upload->device);
+    config = gst_buffer_pool_get_config (raw->pool);
+    gst_buffer_pool_config_set_params (config, raw->upload->out_caps, size, min,
+        max);
+    gst_buffer_pool_set_config (raw->pool, config);
+  }
+  if (!raw->pool_active) {
+    gst_buffer_pool_set_active (raw->pool, TRUE);
+    raw->pool_active = TRUE;
+  }
+
+  if ((ret =
+          gst_buffer_pool_acquire_buffer (raw->pool, outbuf,
+              NULL)) != GST_FLOW_OK)
+    goto out;
+
+  {
+    VkCommandBufferInheritanceInfo buf_inh = { 0, };
+    VkCommandBufferBeginInfo cmd_buf_info = { 0, };
+
+    buf_inh.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+    buf_inh.pNext = NULL;
+    buf_inh.renderPass = VK_NULL_HANDLE;
+    buf_inh.subpass = 0;
+    buf_inh.framebuffer = VK_NULL_HANDLE;
+    buf_inh.occlusionQueryEnable = FALSE;
+    buf_inh.queryFlags = 0;
+    buf_inh.pipelineStatistics = 0;
+
+    cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    cmd_buf_info.pNext = NULL;
+    cmd_buf_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    cmd_buf_info.pInheritanceInfo = &buf_inh;
+
+    err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
+    if (gst_vulkan_error_to_g_error (err, &error, "vkBeginCommandBuffer") < 0)
+      return FALSE;
+  }
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->out_info); i++) {
+    VkBufferImageCopy region = { 0, };
+    GstMemory *in_mem, *out_mem;
+    GstVulkanBufferMemory *buf_mem;
+    GstVulkanImageMemory *img_mem;
+
+    in_mem = gst_buffer_peek_memory (inbuf, i);
+    if (!gst_is_vulkan_buffer_memory (in_mem)) {
+      GST_WARNING_OBJECT (raw->upload, "Input is not a GstVulkanBufferMemory");
+      goto error;
+    }
+    buf_mem = (GstVulkanBufferMemory *) in_mem;
+
+    out_mem = gst_buffer_peek_memory (*outbuf, i);
+    if (!gst_is_vulkan_image_memory (out_mem)) {
+      GST_WARNING_OBJECT (raw->upload, "Output is not a GstVulkanImageMemory");
+      goto error;
+    }
+    img_mem = (GstVulkanImageMemory *) out_mem;
+
+    GST_VK_BUFFER_IMAGE_COPY (region, 0,
+        GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
+        GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
+        GST_VK_IMAGE_SUBRESOURCE_LAYERS_INIT (VK_IMAGE_ASPECT_COLOR_BIT, 0, 0,
+            1), GST_VK_OFFSET3D_INIT (0, 0, 0),
+        GST_VK_EXTENT3D_INIT (GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
+            GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i), 1));
+
+    vkCmdCopyBufferToImage (cmd, buf_mem->buffer, img_mem->image,
+        img_mem->image_layout, 1, &region);
+  }
+
+  err = vkEndCommandBuffer (cmd);
+  if (gst_vulkan_error_to_g_error (err, &error, "vkEndCommandBuffer") < 0)
+    return FALSE;
+
+  {
+    VkSubmitInfo submit_info = { 0, };
+    VkPipelineStageFlags stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    GstVulkanFence *fence;
+
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.pNext = NULL;
+    submit_info.waitSemaphoreCount = 0;
+    submit_info.pWaitSemaphores = NULL;
+    submit_info.pWaitDstStageMask = &stages;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &cmd;
+    submit_info.signalSemaphoreCount = 0;
+    submit_info.pSignalSemaphores = NULL;
+
+    fence = gst_vulkan_fence_new (raw->upload->device, 0, &error);
+    if (!fence)
+      goto error;
+
+    err =
+        vkQueueSubmit (raw->upload->queue->queue, 1, &submit_info,
+        GST_VULKAN_FENCE_FENCE (fence));
+    if (gst_vulkan_error_to_g_error (err, &error, "vkQueueSubmit") < 0)
+      goto error;
+
+    raw->trash_list = g_list_prepend (raw->trash_list,
+        gst_vulkan_trash_new_free_command_buffer (fence, raw->cmd_pool, cmd));
+  }
+
+  raw->trash_list = gst_vulkan_trash_list_gc (raw->trash_list);
+
+  ret = GST_FLOW_OK;
+
+out:
+  return ret;
+
+error:
+  if (error) {
+    GST_WARNING_OBJECT (raw->upload, "Error: %s", error->message);
+    g_clear_error (&error);
+  }
+  gst_buffer_unref (*outbuf);
+  *outbuf = NULL;
+  ret = GST_FLOW_ERROR;
+  goto out;
+}
+
+static void
+_buffer_to_image_free (gpointer impl)
+{
+  struct BufferToImageUpload *raw = impl;
+
+  if (raw->pool) {
+    if (raw->pool_active) {
+      gst_buffer_pool_set_active (raw->pool, FALSE);
+    }
+    raw->pool_active = FALSE;
+    gst_object_unref (raw->pool);
+    raw->pool = NULL;
+  }
+
+  if (raw->cmd_pool)
+    gst_object_unref (raw->cmd_pool);
+  raw->cmd_pool = NULL;
+
+  if (!gst_vulkan_trash_list_wait (raw->trash_list, -1))
+    GST_WARNING_OBJECT (raw->upload,
+        "Failed to wait for all fences to complete " "before shutting down");
+  raw->trash_list = NULL;
+
+  g_free (impl);
+}
+
+static GstStaticCaps _buffer_to_image_in_templ =
+GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER ")");
+static GstStaticCaps _buffer_to_image_out_templ =
+GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE ")");
+
+static const struct UploadMethod buffer_to_image_upload = {
+  "BufferToVulkanImage",
+  &_buffer_to_image_in_templ,
+  &_buffer_to_image_out_templ,
+  _buffer_to_image_new_impl,
+  _buffer_to_image_transform_caps,
+  _buffer_to_image_set_caps,
+  _buffer_to_image_propose_allocation,
+  _buffer_to_image_perform,
+  _buffer_to_image_free,
+};
+
 static const struct UploadMethod *upload_methods[] = {
   &buffer_upload,
   &raw_to_buffer_upload,
+  &buffer_to_image_upload,
 };
 
 static GstCaps *
@@ -559,15 +817,17 @@ gst_vulkan_upload_query (GstBaseTransform * bt, GstPadDirection direction,
     GstQuery * query)
 {
   GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (bt);
-  gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:{
-      res = gst_vulkan_handle_context_query (GST_ELEMENT (vk_upload), query,
-          NULL, &vk_upload->instance, &vk_upload->device);
+      if (gst_vulkan_handle_context_query (GST_ELEMENT (vk_upload), query,
+              NULL, &vk_upload->instance, &vk_upload->device))
+        return TRUE;
 
-      if (res)
-        return res;
+      if (gst_vulkan_queue_handle_context_query (GST_ELEMENT (vk_upload), query,
+              &vk_upload->queue))
+        return TRUE;
+
       break;
     }
     default:
@@ -585,6 +845,44 @@ gst_vulkan_upload_set_context (GstElement * element, GstContext * context)
   gst_vulkan_handle_set_context (element, context, NULL, &vk_upload->instance);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+}
+
+struct choose_data
+{
+  GstVulkanUpload *upload;
+  GstVulkanQueue *queue;
+};
+
+static gboolean
+_choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
+    struct choose_data *data)
+{
+  guint flags = device->queue_family_props[queue->family].queueFlags;
+
+  GST_ERROR ("flags 0x%x", flags);
+
+  if ((flags & VK_QUEUE_GRAPHICS_BIT) != 0) {
+    if (data->queue)
+      gst_object_unref (data->queue);
+    data->queue = gst_object_ref (queue);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static GstVulkanQueue *
+_find_graphics_queue (GstVulkanUpload * upload)
+{
+  struct choose_data data;
+
+  data.upload = upload;
+  data.queue = NULL;
+
+  gst_vulkan_device_foreach_queue (upload->device,
+      (GstVulkanDeviceForEachQueueFunc) _choose_queue, &data);
+
+  return data.queue;
 }
 
 static GstStateChangeReturn
@@ -618,6 +916,12 @@ gst_vulkan_upload_change_state (GstElement * element, GstStateChange transition)
           g_clear_error (&error);
           return GST_STATE_CHANGE_FAILURE;
         }
+      }
+
+      if (!gst_vulkan_queue_run_context_query (GST_ELEMENT (vk_upload),
+              &vk_upload->queue)) {
+        GST_DEBUG_OBJECT (vk_upload, "No queue retrieved from peer elements");
+        vk_upload->queue = _find_graphics_queue (vk_upload);
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:

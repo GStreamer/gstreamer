@@ -62,6 +62,10 @@ typedef struct _GstVulkanBufferPool GstVulkanBufferPool;
 typedef struct _GstVulkanBufferPoolClass GstVulkanBufferPoolClass;
 typedef struct _GstVulkanBufferPoolPrivate GstVulkanBufferPoolPrivate;
 
+typedef struct _GstVulkanImageBufferPool GstVulkanImageBufferPool;
+typedef struct _GstVulkanImageBufferPoolClass GstVulkanImageBufferPoolClass;
+typedef struct _GstVulkanImageBufferPoolPrivate GstVulkanImageBufferPoolPrivate;
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_FWD_H__ */
