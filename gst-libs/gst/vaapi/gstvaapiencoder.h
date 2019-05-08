@@ -117,6 +117,7 @@ typedef enum {
  * @GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD: The maximal distance
  *   between two keyframes (uint).
  * @GST_VAAPI_ENCODER_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
+ * @GST_VAAPI_ENCODER_PROP_TRELLIS: Use trellis quantization method (gboolean).
  *
  * The set of configurable properties for the encoder.
  */
@@ -126,7 +127,8 @@ typedef enum {
   GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD,
   GST_VAAPI_ENCODER_PROP_TUNE,
   GST_VAAPI_ENCODER_PROP_QUALITY_LEVEL,
-  GST_VAAPI_ENCODER_PROP_DEFAULT_ROI_VALUE
+  GST_VAAPI_ENCODER_PROP_DEFAULT_ROI_VALUE,
+  GST_VAAPI_ENCODER_PROP_TRELLIS
 } GstVaapiEncoderProp;
 
 /**
@@ -191,6 +193,9 @@ gst_vaapi_encoder_set_tuning (GstVaapiEncoder * encoder,
 GstVaapiEncoderStatus
 gst_vaapi_encoder_set_quality_level (GstVaapiEncoder * encoder,
     guint quality_level);
+
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_trellis (GstVaapiEncoder * encoder, gboolean trellis);
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_get_buffer_with_timeout (GstVaapiEncoder * encoder,

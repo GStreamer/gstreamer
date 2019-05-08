@@ -206,6 +206,21 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
           "higher value means lower-quality)",
           -10, 10, -10, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+
+  /**
+   * GstVaapiEncoder: trellis:
+   *
+   * The trellis quantization method the encoder can use.
+   * Trellis is an improved quantization algorithm.
+   *
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_PROP_TRELLIS,
+      g_param_spec_boolean ("trellis",
+          "Trellis Quantization",
+          "The Trellis Quantization Method of Encoder",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   return props;
 }
 
@@ -270,6 +285,35 @@ gst_vaapi_encoder_ensure_param_control_rate (GstVaapiEncoder * encoder,
   gst_vaapi_enc_picture_add_misc_param (picture, misc);
   gst_vaapi_codec_object_replace (&misc, NULL);
 
+  return TRUE;
+}
+
+gboolean
+gst_vaapi_encoder_ensure_param_trellis (GstVaapiEncoder * encoder,
+    GstVaapiEncPicture * picture)
+{
+#if VA_CHECK_VERSION(1,0,0)
+  GstVaapiEncMiscParam *misc;
+  VAEncMiscParameterQuantization *param;
+
+  if (!encoder->trellis)
+    return TRUE;
+
+  misc = GST_VAAPI_ENC_QUANTIZATION_MISC_PARAM_NEW (encoder);
+  if (!misc)
+    return FALSE;
+  if (!misc->data)
+    return FALSE;
+
+  param = (VAEncMiscParameterQuantization *) misc->data;
+  param->quantization_flags.bits.disable_trellis = 0;
+  param->quantization_flags.bits.enable_trellis_I = 1;
+  param->quantization_flags.bits.enable_trellis_B = 1;
+  param->quantization_flags.bits.enable_trellis_P = 1;
+
+  gst_vaapi_enc_picture_add_misc_param (picture, misc);
+  gst_vaapi_codec_object_replace (&misc, NULL);
+#endif
   return TRUE;
 }
 
@@ -1028,6 +1072,24 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
       GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder));
 #endif
 
+  if (encoder->trellis) {
+#if VA_CHECK_VERSION(1,0,0)
+    guint quantization_method = 0;
+    if (get_config_attribute (encoder, VAConfigAttribEncQuantization,
+            &quantization_method) == FALSE
+        || !(quantization_method & VA_ENC_QUANTIZATION_TRELLIS_SUPPORTED)) {
+
+      GST_INFO ("Trellis Quantization is not supported,"
+          " trellis will be disabled");
+      encoder->trellis = FALSE;
+    }
+#else
+    GST_INFO ("The encode trellis quantization option is not supported"
+        " in this VAAPI version.");
+    encoder->trellis = FALSE;
+#endif
+  }
+
   codedbuf_size = encoder->codedbuf_pool ?
       gst_vaapi_coded_buffer_pool_get_buffer_size (GST_VAAPI_CODED_BUFFER_POOL
       (encoder)) : 0;
@@ -1151,6 +1213,10 @@ set_property (GstVaapiEncoder * encoder, gint prop_id, const GValue * value)
     case GST_VAAPI_ENCODER_PROP_DEFAULT_ROI_VALUE:
       encoder->default_roi_value = g_value_get_int (value);
       status = GST_VAAPI_ENCODER_STATUS_SUCCESS;
+      break;
+    case GST_VAAPI_ENCODER_PROP_TRELLIS:
+      status =
+          gst_vaapi_encoder_set_trellis (encoder, g_value_get_boolean (value));
       break;
   }
   return status;
@@ -1405,6 +1471,40 @@ gst_vaapi_encoder_set_quality_level (GstVaapiEncoder * encoder,
 error_operation_failed:
   {
     GST_ERROR ("could not change quality level after encoding started");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
+}
+
+/**
+ * gst_vaapi_encoder_set_trellis:
+ * @encoder: a #GstVaapiEncoder
+ * @trellis: whether to use trellis quantization
+ *
+ * Notifies the @encoder to use the supplied @trellis option.
+ *
+ * Note: currently, the tuning option can only be specified before the
+ * last call to gst_vaapi_encoder_set_codec_state(), which shall occur
+ * before the first frame is encoded. Afterwards, any change to this
+ * parameter causes gst_vaapi_encoder_set_tuning() to return
+ * @GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED.
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_trellis (GstVaapiEncoder * encoder, gboolean trellis)
+{
+  g_return_val_if_fail (encoder != NULL, 0);
+
+  if (encoder->trellis != trellis && encoder->num_codedbuf_queued > 0)
+    goto error_operation_failed;
+
+  encoder->trellis = trellis;
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
+error_operation_failed:
+  {
+    GST_ERROR ("could not change trellis options after encoding started");
     return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
   }
 }

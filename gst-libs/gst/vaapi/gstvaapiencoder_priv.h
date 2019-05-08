@@ -289,6 +289,9 @@ struct _GstVaapiEncoder
   VAEncMiscParameterHRD va_hrd;
 
   gint8 default_roi_value;
+
+  /* trellis quantization */
+  gboolean trellis;
 };
 
 struct _GstVaapiEncoderClassData
@@ -424,6 +427,11 @@ gst_vaapi_encoder_ensure_param_control_rate (GstVaapiEncoder * encoder,
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_encoder_ensure_param_roi_regions (GstVaapiEncoder * encoder,
+    GstVaapiEncPicture * picture);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_encoder_ensure_param_trellis (GstVaapiEncoder * encoder,
     GstVaapiEncPicture * picture);
 
 G_GNUC_INTERNAL

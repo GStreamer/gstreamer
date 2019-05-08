@@ -342,6 +342,12 @@ gst_vaapi_enc_picture_encode (GstVaapiEncPicture * picture);
       VAEncMiscParameterTypeQualityLevel,                               \
       sizeof (VAEncMiscParameterBufferQualityLevel))
 
+/* GstVaapiEncQuantizationMiscParam */
+#define GST_VAAPI_ENC_QUANTIZATION_MISC_PARAM_NEW(encoder)              \
+  gst_vaapi_enc_misc_param_new (GST_VAAPI_ENCODER_CAST (encoder),       \
+      VAEncMiscParameterTypeQuantization,                               \
+      sizeof (VAEncMiscParameterQuantization))
+
 /* GstVaapiEncPicture  */
 #define GST_VAAPI_ENC_PICTURE_NEW(codec, encoder, frame)                \
   gst_vaapi_enc_picture_new (GST_VAAPI_ENCODER_CAST (encoder),          \

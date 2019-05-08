@@ -2566,6 +2566,9 @@ ensure_misc_params (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
     }
   }
 
+  if (!gst_vaapi_encoder_ensure_param_trellis (base_encoder, picture))
+    return FALSE;
+
   if (!gst_vaapi_encoder_ensure_param_roi_regions (base_encoder, picture))
     return FALSE;
 
