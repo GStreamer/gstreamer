@@ -823,7 +823,7 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
     guint * payload_len_out, guint * payload_offset_out, guint stream_avail)
 {
   guint8 *tmp;
-  guint8 adaptation_flag;
+  guint8 adaptation_flag = 0;
   guint8 adapt_min_length = 0;
   guint8 adapt_len = 0;
   guint payload_len;
@@ -851,7 +851,6 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
    * 2 bits: adaptation field control (1x has_adaptation_field | x1 has_payload)
    * 4 bits: continuity counter (xxxx)
    */
-  adaptation_flag = pi->packet_count & 0x0f;
 
   if (pi->flags & TSMUX_PACKET_FLAG_ADAPTATION) {
     write_adapt = TRUE;
@@ -894,6 +893,8 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
     /* Packet with payload, increment the continuity counter */
     pi->packet_count++;
   }
+
+  adaptation_flag |= pi->packet_count & 0x0f;
 
   /* Write the byte of transport_scrambling_control, adaptation_field_control 
    * + continuity counter out */
