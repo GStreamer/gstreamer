@@ -5409,7 +5409,7 @@ activate_failed:
  * - "dropped" G_TYPE_UINT64   Number of dropped frames
  * - "rendered" G_TYPE_UINT64   Number of rendered frames
  *
- * Returns: (transfer full) pointer to #GstStructure
+ * Returns: (transfer full): pointer to #GstStructure
  *
  *  Since: 1.18
  */
