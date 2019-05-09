@@ -5082,7 +5082,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    * GstWebRTCBin::set-local-description:
    * @object: the #GstWebRtcBin
    * @desc: a #GstWebRTCSessionDescription description
-   * @promise (allow-none): a #GstPromise to be notified when it's set
+   * @promise: (nullable): a #GstPromise to be notified when it's set
    */
   gst_webrtc_bin_signals[SET_LOCAL_DESCRIPTION_SIGNAL] =
       g_signal_new_class_handler ("set-local-description",
@@ -5095,7 +5095,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    * GstWebRTCBin::set-remote-description:
    * @object: the #GstWebRtcBin
    * @desc: a #GstWebRTCSessionDescription description
-   * @promise (allow-none): a #GstPromise to be notified when it's set
+   * @promise: (nullable): a #GstPromise to be notified when it's set
    */
   gst_webrtc_bin_signals[SET_REMOTE_DESCRIPTION_SIGNAL] =
       g_signal_new_class_handler ("set-remote-description",
@@ -5107,6 +5107,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   /**
    * GstWebRTCBin::add-ice-candidate:
    * @object: the #GstWebRtcBin
+   * @mline_index: the index of the media description in the SDP
    * @ice-candidate: an ice candidate
    */
   gst_webrtc_bin_signals[ADD_ICE_CANDIDATE_SIGNAL] =
@@ -5118,6 +5119,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   /**
    * GstWebRTCBin::get-stats:
    * @object: the #GstWebRtcBin
+   * @pad: (nullable): A #GstPad to get the stats for, or %NULL for all
    * @promise: a #GstPromise for the result
    *
    * The @promise will contain the result of retrieving the session statistics.
@@ -5203,6 +5205,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   /**
    * GstWebRTCBin::on-ice-candidate:
    * @object: the #GstWebRtcBin
+   * @mline_index: the index of the media description in the SDP
    * @candidate: the ICE candidate
    */
   gst_webrtc_bin_signals[ON_ICE_CANDIDATE_SIGNAL] =
@@ -5303,7 +5306,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    *  id                    G_TYPE_INT            Override the default identifier selection of this channel
    *  priority              GST_TYPE_WEBRTC_PRIORITY_TYPE   The priority to use for this channel
    *
-   * Returns: a new data channel object
+   * Returns: (transfer full): a new data channel object
    */
   gst_webrtc_bin_signals[CREATE_DATA_CHANNEL_SIGNAL] =
       g_signal_new_class_handler ("create-data-channel",
