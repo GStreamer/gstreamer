@@ -294,21 +294,27 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     VkApplicationInfo app = { 0, };
     VkInstanceCreateInfo inst_info = { 0, };
 
-    app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    app.pNext = NULL;
-    app.pApplicationName = APP_SHORT_NAME;
-    app.applicationVersion = 0;
-    app.pEngineName = APP_SHORT_NAME;
-    app.engineVersion = 0;
-    app.apiVersion = VK_API_VERSION_1_0;
+    /* *INDENT-OFF* */
+    app = (VkApplicationInfo) {
+        .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+        .pNext = NULL,
+        .pApplicationName = APP_SHORT_NAME,
+        .applicationVersion = 0,
+        .pEngineName = APP_SHORT_NAME,
+        .engineVersion = 0,
+        .apiVersion = VK_API_VERSION_1_0
+    };
 
-    inst_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    inst_info.pNext = NULL;
-    inst_info.pApplicationInfo = &app;
-    inst_info.enabledLayerCount = 0;
-    inst_info.ppEnabledLayerNames = NULL;
-    inst_info.enabledExtensionCount = enabled_extension_count;
-    inst_info.ppEnabledExtensionNames = (const char *const *) extension_names;
+    inst_info = (VkInstanceCreateInfo) {
+        .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+        .pNext = NULL,
+        .pApplicationInfo = &app,
+        .enabledLayerCount = 0,
+        .ppEnabledLayerNames = NULL,
+        .enabledExtensionCount = enabled_extension_count,
+        .ppEnabledExtensionNames = (const char *const *) extension_names
+    };
+    /* *INDENT-ON* */
 
     err = vkCreateInstance (&inst_info, NULL, &instance->instance);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateInstance") < 0) {

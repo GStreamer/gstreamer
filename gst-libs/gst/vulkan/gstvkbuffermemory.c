@@ -39,30 +39,26 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFUALT);
 
 static GstAllocator *_vulkan_buffer_memory_allocator;
 
-#define GST_VK_BUFFER_CREATE_INFO_INIT GST_VK_STRUCT_8
-#define GST_VK_BUFFER_CREATE_INFO(info, pNext, flags, size, usage, sharingMode, queueFamilyIndexCount, pQueueFamilyIndices ) \
-  G_STMT_START { \
-    VkBufferCreateInfo tmp = GST_VK_BUFFER_CREATE_INFO_INIT (VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, pNext, flags, size, usage, sharingMode, queueFamilyIndexCount, pQueueFamilyIndices); \
-    (info) = tmp; \
-  } G_STMT_END
-
 static gboolean
 _create_info_from_args (VkBufferCreateInfo * info, gsize size,
     VkBufferUsageFlags usage)
 {
   /* FIXME: validate these */
-  GST_VK_BUFFER_CREATE_INFO (*info, NULL, 0, size, usage,
-      VK_SHARING_MODE_EXCLUSIVE, 0, NULL);
+  /* *INDENT-OFF* */
+  *info = (VkBufferCreateInfo) {
+      .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
+      .size = size,
+      .usage = usage,
+      .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+      .queueFamilyIndexCount = 0,
+      .pQueueFamilyIndices = NULL,
+  };
+  /* *INDENT-ON* */
 
   return TRUE;
 }
-
-#define GST_VK_BUFFER_VIEW_CREATE_INFO_INIT GST_VK_STRUCT_7
-#define GST_VK_BUFFER_VIEW_CREATE_INFO(info, pNext, flags, buffer, format, offset, range) \
-  G_STMT_START { \
-    VkBufferViewCreateInfo tmp = GST_VK_BUFFER_VIEW_CREATE_INFO_INIT (VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO, pNext, flags, buffer, format, offset, range); \
-    (info) = tmp; \
-  } G_STMT_END
 
 static gboolean
 _create_view_from_args (VkBufferViewCreateInfo * info, VkBuffer buffer,
@@ -71,8 +67,17 @@ _create_view_from_args (VkBufferViewCreateInfo * info, VkBuffer buffer,
   /* FIXME: validate these */
   g_assert (format != VK_FORMAT_UNDEFINED);
 
-  GST_VK_BUFFER_VIEW_CREATE_INFO (*info, NULL, 0, buffer, format, offset,
-      range);
+  /* *INDENT-OFF* */
+  *info = (VkBufferViewCreateInfo) {
+      .sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
+      .buffer = buffer,
+      .format = format,
+      .offset = offset,
+      .range = range,
+  };
+  /* *INDENT-ON* */
 
   return TRUE;
 }

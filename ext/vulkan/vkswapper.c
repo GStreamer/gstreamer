@@ -527,19 +527,25 @@ _swapper_set_image_layout (GstVulkanSwapper * swapper,
     VkCommandBufferInheritanceInfo buf_inh = { 0, };
     VkCommandBufferBeginInfo cmd_buf_info = { 0, };
 
-    buf_inh.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-    buf_inh.pNext = NULL;
-    buf_inh.renderPass = VK_NULL_HANDLE;
-    buf_inh.subpass = 0;
-    buf_inh.framebuffer = VK_NULL_HANDLE;
-    buf_inh.occlusionQueryEnable = FALSE;
-    buf_inh.queryFlags = 0;
-    buf_inh.pipelineStatistics = 0;
+    /* *INDENT-OFF* */
+    buf_inh = (VkCommandBufferInheritanceInfo) {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
+        .pNext = NULL,
+        .renderPass = VK_NULL_HANDLE,
+        .subpass = 0,
+        .framebuffer = VK_NULL_HANDLE,
+        .occlusionQueryEnable = FALSE,
+        .queryFlags = 0,
+        .pipelineStatistics = 0
+    };
 
-    cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    cmd_buf_info.pNext = NULL;
-    cmd_buf_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    cmd_buf_info.pInheritanceInfo = &buf_inh;
+    cmd_buf_info = (VkCommandBufferBeginInfo) {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = NULL,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+        .pInheritanceInfo = &buf_inh
+    };
+    /* *INDENT-ON* */
 
     err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
     if (gst_vulkan_error_to_g_error (err, error, "vkBeginCommandBuffer") < 0)
@@ -558,15 +564,19 @@ _swapper_set_image_layout (GstVulkanSwapper * swapper,
     VkSubmitInfo submit_info = { 0, };
     VkPipelineStageFlags stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 
-    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit_info.pNext = NULL;
-    submit_info.waitSemaphoreCount = 0;
-    submit_info.pWaitSemaphores = NULL;
-    submit_info.pWaitDstStageMask = &stages;
-    submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers = &cmd;
-    submit_info.signalSemaphoreCount = 0;
-    submit_info.pSignalSemaphores = NULL;
+    /* *INDENT-OFF* */
+    submit_info = (VkSubmitInfo) {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .pNext = NULL,
+        .waitSemaphoreCount = 0,
+        .pWaitSemaphores = NULL,
+        .pWaitDstStageMask = &stages,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &cmd,
+        .signalSemaphoreCount = 0,
+        .pSignalSemaphores = NULL,
+    };
+    /* *INDENT-ON* */
 
     err =
         vkQueueSubmit (swapper->queue->queue, 1, &submit_info,
@@ -701,23 +711,27 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
 
     old_swap_chain = swapper->swap_chain;
 
-    swap_chain_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    swap_chain_info.pNext = NULL;
-    swap_chain_info.surface = swapper->surface;
-    swap_chain_info.minImageCount = n_images_wanted;
-    swap_chain_info.imageFormat = format;
-    swap_chain_info.imageColorSpace = color_space;
-    swap_chain_info.imageExtent = swapchain_dims;
-    swap_chain_info.imageArrayLayers = 1;
-    swap_chain_info.imageUsage = usage;
-    swap_chain_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    swap_chain_info.queueFamilyIndexCount = 0;
-    swap_chain_info.pQueueFamilyIndices = NULL;
-    swap_chain_info.preTransform = preTransform;
-    swap_chain_info.presentMode = present_mode;
-    swap_chain_info.compositeAlpha = alpha_flags;
-    swap_chain_info.clipped = TRUE;
-    swap_chain_info.oldSwapchain = swapper->swap_chain;
+    /* *INDENT-OFF* */
+    swap_chain_info = (VkSwapchainCreateInfoKHR) {
+        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+        .pNext = NULL,
+        .surface = swapper->surface,
+        .minImageCount = n_images_wanted,
+        .imageFormat = format,
+        .imageColorSpace = color_space,
+        .imageExtent = swapchain_dims,
+        .imageArrayLayers = 1,
+        .imageUsage = usage,
+        .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .queueFamilyIndexCount = 0,
+        .pQueueFamilyIndices = NULL,
+        .preTransform = preTransform,
+        .presentMode = present_mode,
+        .compositeAlpha = alpha_flags,
+        .clipped = TRUE,
+        .oldSwapchain = old_swap_chain
+    };
+    /* *INDENT-ON* */
 
     err =
         swapper->CreateSwapchainKHR (swapper->device->device, &swap_chain_info,
@@ -823,19 +837,25 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     VkCommandBufferInheritanceInfo buf_inh = { 0, };
     VkCommandBufferBeginInfo cmd_buf_info = { 0, };
 
-    buf_inh.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-    buf_inh.pNext = NULL;
-    buf_inh.renderPass = VK_NULL_HANDLE;
-    buf_inh.subpass = 0;
-    buf_inh.framebuffer = VK_NULL_HANDLE;
-    buf_inh.occlusionQueryEnable = FALSE;
-    buf_inh.queryFlags = 0;
-    buf_inh.pipelineStatistics = 0;
+    /* *INDENT-OFF* */
+    buf_inh = (VkCommandBufferInheritanceInfo) {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
+        .pNext = NULL,
+        .renderPass = VK_NULL_HANDLE,
+        .subpass = 0,
+        .framebuffer = VK_NULL_HANDLE,
+        .occlusionQueryEnable = FALSE,
+        .queryFlags = 0,
+        .pipelineStatistics = 0
+    };
 
-    cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    cmd_buf_info.pNext = NULL;
-    cmd_buf_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    cmd_buf_info.pInheritanceInfo = &buf_inh;
+    cmd_buf_info = (VkCommandBufferBeginInfo) {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = NULL,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+        .pInheritanceInfo = &buf_inh
+    };
+    /* *INDENT-ON* */
 
     err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
     if (gst_vulkan_error_to_g_error (err, error, "vkBeginCommandBuffer") < 0)
@@ -866,10 +886,25 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     GstVulkanBufferMemory *buf_mem = (GstVulkanBufferMemory *) in_mem;
     VkBufferImageCopy region = { 0, };
 
-    GST_VK_BUFFER_IMAGE_COPY (region, 0, src.w, src.h,
-        GST_VK_IMAGE_SUBRESOURCE_LAYERS_INIT (VK_IMAGE_ASPECT_COLOR_BIT, 0, 0,
-            1), GST_VK_OFFSET3D_INIT (rslt.x, rslt.y, 0),
-        GST_VK_EXTENT3D_INIT (rslt.w, rslt.h, 1));
+    /* *INDENT-OFF* */
+    region = (VkBufferImageCopy) {
+        .bufferOffset = 0,
+        .bufferRowLength = src.w,
+        .bufferImageHeight = src.h,
+        .imageSubresource = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+        .imageOffset = { .x = rslt.x, .y = rslt.y, .z = 0, },
+        .imageExtent = {
+            .width = rslt.w,
+            .height = rslt.h,
+            .depth = 1,
+        }
+    };
+    /* *INDENT-ON* */
 
     vkCmdCopyBufferToImage (cmd, buf_mem->buffer, swap_mem->image,
         swap_mem->image_layout, 1, &region);
@@ -878,12 +913,25 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     VkImageCopy region = { 0, };
 
     /* FIXME: should really be a blit to resize to the output dimensions */
-    GST_VK_IMAGE_COPY (region,
-        GST_VK_IMAGE_SUBRESOURCE_LAYERS_INIT (VK_IMAGE_ASPECT_COLOR_BIT, 0, 0,
-            1), GST_VK_OFFSET3D_INIT (src.x, src.y, 0),
-        GST_VK_IMAGE_SUBRESOURCE_LAYERS_INIT (VK_IMAGE_ASPECT_COLOR_BIT, 0, 0,
-            1), GST_VK_OFFSET3D_INIT (rslt.x, rslt.y, 0),
-        GST_VK_EXTENT3D_INIT (rslt.w, rslt.h, 1));
+    /* *INDENT-OFF* */
+    region = (VkImageCopy) {
+        .srcSubresource = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+        .srcOffset = { src.x, src.y, 0 },
+        .dstSubresource = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+        .dstOffset = { rslt.x, rslt.y, 0 },
+        .extent = { rslt.w, rslt.h, 1 }
+    };
+    /* *INDENT-ON* */
 
     if (!_swapper_set_image_layout_with_cmd (swapper, cmd, img_mem,
             VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, error)) {
@@ -924,10 +972,6 @@ _render_buffer_unlocked (GstVulkanSwapper * swapper,
   swapper->priv->trash_list =
       gst_vulkan_trash_list_gc (swapper->priv->trash_list);
 
-  semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-  semaphore_info.pNext = NULL;
-  semaphore_info.flags = 0;
-
   if (!buffer) {
     g_set_error (error, GST_VULKAN_ERROR,
         VK_ERROR_INITIALIZATION_FAILED, "Invalid buffer");
@@ -941,6 +985,14 @@ _render_buffer_unlocked (GstVulkanSwapper * swapper,
   }
 
   gst_buffer_replace (&swapper->current_buffer, buffer);
+
+  /* *INDENT-OFF* */
+  semaphore_info = (VkSemaphoreCreateInfo) {
+      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
+  };
+  /* *INDENT-ON* */
 
 reacquire:
   err = vkCreateSemaphore (swapper->device->device, &semaphore_info,
@@ -973,18 +1025,22 @@ reacquire:
     goto error;
 
   {
-    VkSubmitInfo submit_info = { 0, };
     VkPipelineStageFlags stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    VkSubmitInfo submit_info = { 0, };
 
-    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit_info.pNext = NULL;
-    submit_info.waitSemaphoreCount = 1;
-    submit_info.pWaitSemaphores = &acquire_semaphore;
-    submit_info.pWaitDstStageMask = &stages;
-    submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers = &cmd;
-    submit_info.signalSemaphoreCount = 1;
-    submit_info.pSignalSemaphores = &present_semaphore;
+    /* *INDENT-OFF* */
+    submit_info = (VkSubmitInfo) {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .pNext = NULL,
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &acquire_semaphore,
+        .pWaitDstStageMask = &stages,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &cmd,
+        .signalSemaphoreCount = 1,
+        .pSignalSemaphores = &present_semaphore,
+    };
+    /* *INDENT-ON* */
 
     fence = gst_vulkan_fence_new (swapper->device, 0, error);
     if (!fence)
@@ -1006,14 +1062,18 @@ reacquire:
     fence = NULL;
   }
 
-  present.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-  present.pNext = NULL;
-  present.waitSemaphoreCount = 1;
-  present.pWaitSemaphores = &present_semaphore;
-  present.swapchainCount = 1;
-  present.pSwapchains = &swapper->swap_chain;
-  present.pImageIndices = &swap_idx;
-  present.pResults = &present_err;
+  /* *INDENT-OFF* */
+  present = (VkPresentInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+      .pNext = NULL,
+      .waitSemaphoreCount = 1,
+      .pWaitSemaphores = &present_semaphore,
+      .swapchainCount = 1,
+      .pSwapchains = &swapper->swap_chain,
+      .pImageIndices = &swap_idx,
+      .pResults = &present_err,
+  };
+  /* *INDENT-ON* */
 
   err = swapper->QueuePresentKHR (swapper->queue->queue, &present);
   if (gst_vulkan_error_to_g_error (err, error, "vkQueuePresentKHR") < 0)
@@ -1031,8 +1091,13 @@ reacquire:
     VkSubmitInfo submit_info = { 0, };
     VkPipelineStageFlags stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
 
-    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit_info.pWaitDstStageMask = &stages;
+    /* *INDENT-OFF* */
+    submit_info = (VkSubmitInfo) {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .pWaitDstStageMask = &stages,
+        0,
+    };
+    /* *INDENT-ON* */
 
     fence = gst_vulkan_fence_new (swapper->device, 0, error);
     if (!fence)

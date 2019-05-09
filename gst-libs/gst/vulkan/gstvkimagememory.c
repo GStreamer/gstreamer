@@ -114,17 +114,29 @@ gst_vulkan_format_from_video_format (GstVideoFormat v_format, guint plane)
 static void
 _view_create_info (VkImage image, VkFormat format, VkImageViewCreateInfo * info)
 {
-  info->sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-  info->pNext = NULL;
-  info->image = image;
-  info->format = format;
-  info->viewType = VK_IMAGE_VIEW_TYPE_2D;
-  info->flags = 0;
-
-  GST_VK_COMPONENT_MAPPING (info->components, VK_COMPONENT_SWIZZLE_R,
-      VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A);
-  GST_VK_IMAGE_SUBRESOURCE_RANGE (info->subresourceRange,
-      VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
+  /* *INDENT-OFF* */
+  *info = (VkImageViewCreateInfo) {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+      .pNext = NULL,
+      .image = image,
+      .format = format,
+      .viewType = VK_IMAGE_VIEW_TYPE_2D,
+      .flags = 0,
+      .components = (VkComponentMapping) {
+          VK_COMPONENT_SWIZZLE_R,
+          VK_COMPONENT_SWIZZLE_G,
+          VK_COMPONENT_SWIZZLE_B,
+          VK_COMPONENT_SWIZZLE_A
+      },
+      .subresourceRange = (VkImageSubresourceRange) {
+          .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+          .baseMipLevel = 0,
+          .levelCount = 1,
+          .baseArrayLayer = 0,
+          .layerCount = 1,
+      }
+  };
+  /* *INDENT-ON* */
 }
 
 static gboolean
@@ -133,21 +145,25 @@ _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
 {
   /* FIXME: validate these */
 
-  info->sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-  info->pNext = NULL;
-  info->flags = 0;
-  info->imageType = VK_IMAGE_TYPE_2D;
-  info->format = format;
-  GST_VK_EXTENT3D (info->extent, width, height, 1);
-  info->mipLevels = 1;
-  info->arrayLayers = 1;
-  info->samples = VK_SAMPLE_COUNT_1_BIT;
-  info->tiling = tiling;
-  info->usage = usage;
-  info->sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  info->queueFamilyIndexCount = 0;
-  info->pQueueFamilyIndices = NULL;
-  info->initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  /* *INDENT-OFF* */
+  *info = (VkImageCreateInfo) {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+      .pNext = NULL,
+      .flags = 0,
+      .imageType = VK_IMAGE_TYPE_2D,
+      .format = format,
+      .extent = (VkExtent3D) { width, height, 1 },
+      .mipLevels = 1,
+      .arrayLayers = 1,
+      .samples = VK_SAMPLE_COUNT_1_BIT,
+      .tiling = tiling,
+      .usage = usage,
+      .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+      .queueFamilyIndexCount = 0,
+      .pQueueFamilyIndices = NULL,
+      .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+  };
+  /* *INDENT-ON* */
 
   return TRUE;
 }
@@ -462,17 +478,26 @@ gst_vulkan_image_memory_set_layout (GstVulkanImageMemory * vk_mem,
 {
   /* validate vk_mem->usage with image_layout */
 
-  barrier->sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-  barrier->pNext = NULL;
-  barrier->dstAccessMask = _access_flags_from_layout (image_layout);
-  barrier->srcAccessMask = _access_flags_from_layout (vk_mem->image_layout);
-  barrier->oldLayout = vk_mem->image_layout;
-  barrier->newLayout = image_layout;
-  barrier->srcQueueFamilyIndex = 0;
-  barrier->dstQueueFamilyIndex = 0;
-  barrier->image = vk_mem->image;
-  GST_VK_IMAGE_SUBRESOURCE_RANGE (barrier->subresourceRange,
-      VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1);
+  /* *INDENT-OFF* */
+  *barrier = (VkImageMemoryBarrier) {
+      .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+      .pNext = NULL,
+      .dstAccessMask = _access_flags_from_layout (image_layout),
+      .srcAccessMask = _access_flags_from_layout (vk_mem->image_layout),
+      .oldLayout = vk_mem->image_layout,
+      .newLayout = image_layout,
+      .srcQueueFamilyIndex = 0,
+      .dstQueueFamilyIndex = 0,
+      .image = vk_mem->image,
+      .subresourceRange = (VkImageSubresourceRange) {
+          .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+          .baseMipLevel = 0,
+          .levelCount = 1,
+          .baseArrayLayer = 0,
+          .layerCount = 1
+      }
+  };
+  /* *INDENT-ON* */
 
   /* FIXME: what if the barrier is never submitted or is submitted out of order? */
   vk_mem->image_layout = image_layout;

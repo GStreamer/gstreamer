@@ -479,19 +479,25 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     VkCommandBufferInheritanceInfo buf_inh = { 0, };
     VkCommandBufferBeginInfo cmd_buf_info = { 0, };
 
-    buf_inh.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-    buf_inh.pNext = NULL;
-    buf_inh.renderPass = VK_NULL_HANDLE;
-    buf_inh.subpass = 0;
-    buf_inh.framebuffer = VK_NULL_HANDLE;
-    buf_inh.occlusionQueryEnable = FALSE;
-    buf_inh.queryFlags = 0;
-    buf_inh.pipelineStatistics = 0;
+    /* *INDENT-OFF* */
+    buf_inh = (VkCommandBufferInheritanceInfo) {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
+        .pNext = NULL,
+        .renderPass = VK_NULL_HANDLE,
+        .subpass = 0,
+        .framebuffer = VK_NULL_HANDLE,
+        .occlusionQueryEnable = FALSE,
+        .queryFlags = 0,
+        .pipelineStatistics = 0
+    };
 
-    cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    cmd_buf_info.pNext = NULL;
-    cmd_buf_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    cmd_buf_info.pInheritanceInfo = &buf_inh;
+    cmd_buf_info = (VkCommandBufferBeginInfo) {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .pNext = NULL,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+        .pInheritanceInfo = &buf_inh
+    };
+    /* *INDENT-ON* */
 
     err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
     if (gst_vulkan_error_to_g_error (err, &error, "vkBeginCommandBuffer") < 0)
@@ -499,7 +505,7 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   }
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->out_info); i++) {
-    VkBufferImageCopy region = { 0, };
+    VkBufferImageCopy region;
     GstMemory *in_mem, *out_mem;
     GstVulkanBufferMemory *buf_mem;
     GstVulkanImageMemory *img_mem;
@@ -519,13 +525,25 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     }
     img_mem = (GstVulkanImageMemory *) out_mem;
 
-    GST_VK_BUFFER_IMAGE_COPY (region, 0,
-        GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
-        GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
-        GST_VK_IMAGE_SUBRESOURCE_LAYERS_INIT (VK_IMAGE_ASPECT_COLOR_BIT, 0, 0,
-            1), GST_VK_OFFSET3D_INIT (0, 0, 0),
-        GST_VK_EXTENT3D_INIT (GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
-            GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i), 1));
+    /* *INDENT-OFF* */
+    region = (VkBufferImageCopy) {
+        .bufferOffset = 0,
+        .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
+        .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
+        .imageSubresource = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+        .imageOffset = { .x = 0, .y = 0, .z = 0, },
+        .imageExtent = {
+            .width = GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
+            .height = GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i),
+            .depth = 1,
+        }
+    };
+    /* *INDENT-ON* */
 
     gst_vulkan_image_memory_set_layout (img_mem,
         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &image_memory_barrier);
@@ -547,15 +565,19 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     VkPipelineStageFlags stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
     GstVulkanFence *fence;
 
-    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submit_info.pNext = NULL;
-    submit_info.waitSemaphoreCount = 0;
-    submit_info.pWaitSemaphores = NULL;
-    submit_info.pWaitDstStageMask = &stages;
-    submit_info.commandBufferCount = 1;
-    submit_info.pCommandBuffers = &cmd;
-    submit_info.signalSemaphoreCount = 0;
-    submit_info.pSignalSemaphores = NULL;
+    /* *INDENT-OFF* */
+    submit_info = (VkSubmitInfo) {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .pNext = NULL,
+        .waitSemaphoreCount = 0,
+        .pWaitSemaphores = NULL,
+        .pWaitDstStageMask = &stages,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &cmd,
+        .signalSemaphoreCount = 0,
+        .pSignalSemaphores = NULL
+    };
+    /* *INDENT-ON* */
 
     fence = gst_vulkan_fence_new (raw->upload->device, 0, &error);
     if (!fence)

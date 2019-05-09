@@ -24,7 +24,6 @@
 #include <gst/gst.h>
 
 #include <gst/vulkan/gstvkapi.h>
-#include <gst/vulkan/gstvkmacros.h>
 
 #include <gst/vulkan/gstvkerror.h>
 #include <gst/vulkan/gstvkinstance.h>
