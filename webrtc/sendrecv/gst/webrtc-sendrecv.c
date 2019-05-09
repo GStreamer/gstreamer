@@ -172,6 +172,7 @@ static void
 on_incoming_stream (GstElement * webrtc, GstPad * pad, GstElement * pipe)
 {
   GstElement *decodebin;
+  GstPad *sinkpad;
 
   if (GST_PAD_DIRECTION (pad) != GST_PAD_SRC)
     return;
@@ -181,7 +182,9 @@ on_incoming_stream (GstElement * webrtc, GstPad * pad, GstElement * pipe)
       G_CALLBACK (on_incoming_decodebin_stream), pipe);
   gst_bin_add (GST_BIN (pipe), decodebin);
   gst_element_sync_state_with_parent (decodebin);
-  gst_element_link (webrtc, decodebin);
+
+  sinkpad = gst_element_get_static_pad (decodebin, "sink");
+  gst_pad_link (pad, sinkpad);
 }
 
 static void
