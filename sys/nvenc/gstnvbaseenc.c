@@ -1099,6 +1099,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   NV_ENC_INITIALIZE_PARAMS *params;
   NV_ENC_PRESET_CONFIG preset_config = { 0, };
   NVENCSTATUS nv_ret;
+  gint dar_n, dar_d;
 
   g_atomic_int_set (&nvenc->reconfig, FALSE);
 
@@ -1204,6 +1205,14 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     params->frameRateDen = info->fps_d;
   } else {
     GST_FIXME_OBJECT (nvenc, "variable framerate");
+  }
+
+  if (gst_util_fraction_multiply (GST_VIDEO_INFO_WIDTH (info),
+          GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_PAR_N (info),
+          GST_VIDEO_INFO_PAR_D (info), &dar_n, &dar_d) && dar_n > 0
+      && dar_d > 0) {
+    params->darWidth = dar_n;
+    params->darHeight = dar_d;
   }
 
   if (nvenc->rate_control_mode != GST_NV_RC_MODE_DEFAULT) {
