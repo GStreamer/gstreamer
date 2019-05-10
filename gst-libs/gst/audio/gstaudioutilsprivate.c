@@ -238,7 +238,11 @@ __gst_audio_init_thread_priority (void)
     return _gst_audio_avrt_tbl.dll != NULL;
 
   if (!_gst_audio_avrt_tbl.dll)
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
+    _gst_audio_avrt_tbl.dll = LoadPackagedLibrary (TEXT ("avrt.dll"), 0);
+#else
     _gst_audio_avrt_tbl.dll = LoadLibrary (TEXT ("avrt.dll"));
+#endif
 
   if (!_gst_audio_avrt_tbl.dll) {
     GST_WARNING ("Failed to set thread priority, can't find avrt.dll");
