@@ -5,6 +5,7 @@
 		installing/on-windows.md
 		installing/on-linux.md
 		installing/building-from-source-using-cerbero.md
+		installing/building-from-source-using-meson.md
 	tutorials/index.md
 		tutorials/basic/index.md
 			tutorials/basic/hello-world.md
