@@ -2023,6 +2023,7 @@ reset_properties (GstVaapiEncoderH265 * encoder)
   GstVaapiH265ReorderPool *reorder_pool;
   GstVaapiH265RefPool *ref_pool;
   guint ctu_size;
+  gboolean ret;
 
   if (encoder->idr_period < base_encoder->keyframe_period)
     encoder->idr_period = base_encoder->keyframe_period;
@@ -2032,9 +2033,10 @@ reset_properties (GstVaapiEncoderH265 * encoder)
   encoder->qp_i = encoder->init_qp;
 
   ctu_size = encoder->ctu_width * encoder->ctu_height;
-  g_assert (gst_vaapi_encoder_ensure_num_slices (base_encoder, encoder->profile,
-          GST_VAAPI_ENTRYPOINT_SLICE_ENCODE, (ctu_size + 1) / 2,
-          &encoder->num_slices));
+  ret = gst_vaapi_encoder_ensure_num_slices (base_encoder, encoder->profile,
+      GST_VAAPI_ENTRYPOINT_SLICE_ENCODE, (ctu_size + 1) / 2,
+      &encoder->num_slices);
+  g_assert (ret);
 
   gst_vaapi_encoder_ensure_max_num_ref_frames (base_encoder, encoder->profile,
       GST_VAAPI_ENTRYPOINT_SLICE_ENCODE);

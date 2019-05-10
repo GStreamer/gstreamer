@@ -2716,6 +2716,7 @@ reset_properties (GstVaapiEncoderH264 * encoder)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   guint mb_size, i;
+  gboolean ret;
 
   if (encoder->idr_period < base_encoder->keyframe_period)
     encoder->idr_period = base_encoder->keyframe_period;
@@ -2725,8 +2726,9 @@ reset_properties (GstVaapiEncoderH264 * encoder)
   encoder->qp_i = encoder->init_qp;
 
   mb_size = encoder->mb_width * encoder->mb_height;
-  g_assert (gst_vaapi_encoder_ensure_num_slices (base_encoder, encoder->profile,
-          encoder->entrypoint, (mb_size + 1) / 2, &encoder->num_slices));
+  ret = gst_vaapi_encoder_ensure_num_slices (base_encoder, encoder->profile,
+      encoder->entrypoint, (mb_size + 1) / 2, &encoder->num_slices);
+  g_assert (ret);
 
   if (encoder->num_bframes > (base_encoder->keyframe_period + 1) / 2)
     encoder->num_bframes = (base_encoder->keyframe_period + 1) / 2;
