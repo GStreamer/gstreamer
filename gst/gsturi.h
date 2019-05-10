@@ -392,6 +392,25 @@ gst_uri_unref (GstUri * uri)
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (uri));
 }
 
+/**
+ * gst_clear_uri: (skip)
+ * @uri_ptr: a pointer to a #GstUri reference
+ *
+ * Clears a reference to a #GstUri.
+ *
+ * @uri_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the uri is decreased and the pointer is set to %NULL.
+ *
+ * Since: 1.18
+ */
+static inline void
+gst_clear_uri (GstUri ** uri_ptr)
+{
+  gst_clear_mini_object ((GstMiniObject **) uri_ptr);
+}
+
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstUri, gst_uri_unref)
 #endif
