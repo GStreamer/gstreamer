@@ -100,6 +100,9 @@ def get_subprocess_env(options, gst_version):
                                                          'lib', 'girepository-1.0'))
     prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(PREFIX_DIR, 'lib', 'pkgconfig'))
 
+    # gst-indent
+    prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'gstreamer', 'tools'))
+
     # Library and binary search paths
     prepend_env_var(env, "PATH", os.path.join(PREFIX_DIR, 'bin'))
     if lib_path_envvar != 'PATH':
