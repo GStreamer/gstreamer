@@ -91,6 +91,38 @@ class GstObjectPrettyPrinter:
             return "0x%x" % long(self.val)
 
 
+GST_SECOND = 1000000000
+GST_CLOCK_TIME_NONE = 2**64-1
+GST_CLOCK_STIME_NONE = -2**63
+
+
+def format_time(n, signed):
+    prefix = ""
+    invalid = False
+    if signed:
+        if n == GST_CLOCK_STIME_NONE:
+            invalid = True
+        prefix = "+" if n >= 0 else "-"
+        n = abs(n)
+    else:
+        if n == GST_CLOCK_TIME_NONE:
+            invalid = True
+
+    if invalid:
+        return "99:99:99.999999999"
+
+    return "%s%u:%02u:%02u.%09u" % (
+        prefix,
+        n / (GST_SECOND * 60 * 60),
+        (n / (GST_SECOND * 60)) % 60,
+        (n / GST_SECOND) % 60,
+        n % GST_SECOND)
+
+
+def format_time_value(val):
+    return format_time(int(val), str(val.type) == "GstClockTimeDiff")
+
+
 class GstClockTimePrinter:
     "Prints a GstClockTime / GstClockTimeDiff"
 
@@ -98,30 +130,7 @@ class GstClockTimePrinter:
         self.val = val
 
     def to_string(self):
-        GST_SECOND = 1000000000
-        GST_CLOCK_TIME_NONE = 2**64-1
-        GST_CLOCK_STIME_NONE = -2**63
-        n = int(self.val)
-        prefix = ""
-        invalid = False
-        if str(self.val.type) == "GstClockTimeDiff":
-            if n == GST_CLOCK_STIME_NONE:
-                invalid = True
-            prefix = "+" if n >= 0 else "-"
-            n = abs(n)
-        else:
-            if n == GST_CLOCK_TIME_NONE:
-                invalid = True
-
-        if invalid:
-            return str(n) + " [99:99:99.999999999]"
-
-        return str(n) + " [%s%u:%02u:%02u.%09u]" % (
-            prefix,
-            n / (GST_SECOND * 60 * 60),
-            (n / (GST_SECOND * 60)) % 60,
-            (n / GST_SECOND) % 60,
-            n % GST_SECOND)
+        return "%d [%s]" % (int(self.val), format_time_value(self.val))
 
 
 def gst_pretty_printer_lookup(val):
