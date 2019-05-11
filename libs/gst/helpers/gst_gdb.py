@@ -251,6 +251,36 @@ def _g_value_get_value(val):
     return val["data"].cast(t).dereference()
 
 
+def gst_object_from_value(value):
+    if value.type.code != gdb.TYPE_CODE_PTR:
+        value = value.address
+
+    if not is_gst_type(value, "GstObject"):
+        raise Exception("'%s' is not a GstObject" % args[0])
+
+    return value.cast(gdb.lookup_type("GstObject").pointer())
+
+
+def gst_object_pipeline(obj):
+    try:
+        while obj["parent"] != 0:
+            tmp = obj["parent"]
+            # sanity checks to handle memory corruption
+            if g_inherits_type(obj, "GstElement") and \
+               GdbGstElement(obj) not in GdbGstElement(tmp).children():
+                break
+            if g_inherits_type(obj, "GstPad") and \
+               GdbGstPad(obj) not in GdbGstElement(tmp).pads():
+                break
+            obj = tmp
+    except gdb.MemoryError:
+        pass
+
+    if not g_inherits_type(obj, "GstElement"):
+        raise Exception("Toplevel parent is not a GstElement")
+    return obj.cast(gdb.lookup_type("GstElement").pointer())
+
+
 def element_state_to_name(state):
     names = [
         "VOID_PENDING",
@@ -967,30 +997,8 @@ Usage: gst-dot <gst-object> <file-name>"""
         if not value:
             raise Exception("'%s' is not a valid object" % args[0])
 
-        if value.type.code != gdb.TYPE_CODE_PTR:
-            value = value.address
-
-        if not is_gst_type(value, "GstObject"):
-            raise Exception("'%s' is not a GstObject" % args[0])
-
-        value = value.cast(gdb.lookup_type("GstObject").pointer())
-        try:
-            while value["parent"] != 0:
-                tmp = value["parent"]
-                # sanity checks to handle memory corruption
-                if g_inherits_type(value, "GstElement") and \
-                   GdbGstElement(value) not in GdbGstElement(tmp).children():
-                    break
-                if g_inherits_type(value, "GstPad") and \
-                   GdbGstPad(value) not in GdbGstElement(tmp).pads():
-                    break
-                value = tmp
-        except gdb.MemoryError:
-            pass
-
-        if not g_inherits_type(value, "GstElement"):
-            raise Exception("Toplevel parent is not a GstElement")
-        value = value.cast(gdb.lookup_type("GstElement").pointer())
+        value = gst_object_from_value(value)
+        value = gst_object_pipeline(value)
 
         dot = GdbGstElement(value).pipeline_dot()
         file = open(args[1], "w")
