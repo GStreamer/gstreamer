@@ -525,6 +525,41 @@ class GdbGstStructure:
             _gdb_write(indent+1, "%s: %s" % (key, str(value)))
 
 
+class GdbGstSegment:
+    def __init__(self, val):
+        self.val = val
+        self.fmt = str(self.val["format"]).split("_")[-1].lower()
+
+    def format_value(self, n):
+        if self.fmt == "time":
+            return format_time(n, False)
+        else:
+            return str(n)
+
+    def print_optional(self, indent, key, skip=None):
+        value = int(self.val[key])
+        if skip is None or value != skip:
+            _gdb_write(indent, "%s:%s %s" %
+                       (key, (8-len(key))*" ", self.format_value(value)))
+
+    def print(self, indent):
+        _gdb_write(indent, "segment: %s" % self.fmt)
+        rate = float(self.val["rate"])
+        applied_rate = float(self.val["applied_rate"])
+        if applied_rate != 1.0:
+            applied = "(applied rate: %g)" % applied_rate
+        else:
+            applied = ""
+        _gdb_write(indent+1, "rate: %g%s" % (rate, applied))
+        self.print_optional(indent+1, "base", 0)
+        self.print_optional(indent+1, "offset", 0)
+        self.print_optional(indent+1, "start")
+        self.print_optional(indent+1, "stop", GST_CLOCK_TIME_NONE)
+        self.print_optional(indent+1, "time")
+        self.print_optional(indent+1, "position")
+        self.print_optional(indent+1, "duration", GST_CLOCK_TIME_NONE)
+
+
 class GdbGstEvent:
     def __init__(self, val):
         self.val = val.cast(gdb.lookup_type("GstEventImpl").pointer())
@@ -556,15 +591,7 @@ class GdbGstEvent:
             _gdb_write(indent + 1, "stream-id: %s" % stream_id.string())
         elif typestr == "segment":
             segment = self.structure().value("segment").value()
-            fmt = str(segment["format"]).split("_")[-1].lower()
-            _gdb_write(indent, "segment: %s" % fmt)
-            rate = float(segment["rate"])
-            applied_rate = float(segment["applied_rate"])
-            if applied_rate != 1.0:
-                applied = "(applied rate: %g)" % applied_rate
-            else:
-                applied = ""
-            _gdb_write(indent+1, "rate: %g%s" % (rate, applied))
+            GdbGstSegment(segment).print(indent)
         elif typestr == "tag":
             struct = self.structure()
             # skip 'GstTagList-'
