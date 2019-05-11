@@ -1053,6 +1053,58 @@ GstDot()
 GstPrint()
 
 
+class GstPipeline(gdb.Function):
+    """\
+Find the top-level pipeline for the given element"""
+
+    def __init__(self):
+        super(GstPipeline, self).__init__("gst_pipeline")
+
+    def invoke(self, arg):
+        value = gst_object_from_value(arg)
+        return gst_object_pipeline(value)
+
+
+class GstBinGet(gdb.Function):
+    """\
+Find a child element with the given name"""
+
+    def __init__(self):
+        super(GstBinGet, self).__init__("gst_bin_get")
+
+    def find(self, obj, name, recurse):
+        for child in obj.children():
+            if child.name() == name:
+                return child.val
+            if recurse:
+                result = self.find(child, name, recurse)
+                if result is not None:
+                    return result
+
+    def invoke(self, element, arg):
+        value = gst_object_from_value(element)
+        if not g_inherits_type(value, "GstElement"):
+            raise Exception("'%s' is not a GstElement" %
+                            str(value.address))
+
+        try:
+            name = arg.string()
+        except gdb.error:
+            raise Exception("Usage: $gst_bin_get(<gst-object>, \"<name>\")")
+
+        obj = GdbGstElement(value)
+        child = self.find(obj, name, False)
+        if child is None:
+            child = self.find(obj, name, True)
+        if child is None:
+            raise Exception("No child named '%s' found." % name)
+        return child
+
+
+GstPipeline()
+GstBinGet()
+
+
 def register(obj):
     if obj is None:
         obj = gdb
