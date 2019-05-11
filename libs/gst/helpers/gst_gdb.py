@@ -871,6 +871,12 @@ class GdbGstElement(GdbGstObject):
 
         _gdb_write(indent, "}")
 
+    @save_memory_access_print("<inaccessible memory>")
+    def print_tree(self, indent):
+        _gdb_write(indent, "%s" % self.name())
+        for child in self.children():
+            child.print_tree(indent+1)
+
     def _dot(self, indent=0):
         spc = "  " * indent
 
@@ -1049,8 +1055,31 @@ Usage gst-print <gstreamer-object>"""
         obj.print(0)
 
 
+class GstPipelineTree(gdb.Command):
+    """\
+Usage: gst-pipeline-tree <gst-object>"""
+    def __init__(self):
+        super(GstPipelineTree, self).__init__("gst-pipeline-tree",
+                                              gdb.COMPLETE_SYMBOL)
+
+    def invoke(self, arg, from_tty):
+        self.dont_repeat()
+        args = gdb.string_to_argv(arg)
+        if len(args) != 1:
+            raise Exception("Usage: gst-pipeline-tree <gst-object>")
+
+        value = gdb.parse_and_eval(args[0])
+        if not value:
+            raise Exception("'%s' is not a valid object" % args[0])
+
+        value = gst_object_from_value(value)
+        value = gst_object_pipeline(value)
+        GdbGstElement(value).print_tree(0)
+
+
 GstDot()
 GstPrint()
+GstPipelineTree()
 
 
 class GstPipeline(gdb.Function):
