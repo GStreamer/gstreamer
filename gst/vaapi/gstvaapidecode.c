@@ -238,8 +238,9 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
   out_caps = gst_caps_make_writable (out_caps);
   gst_caps_append (out_caps, gst_caps_from_string (GST_VAAPI_MAKE_DMABUF_CAPS));
 
-  raw_caps = gst_vaapi_plugin_base_get_allowed_raw_caps
-      (GST_VAAPI_PLUGIN_BASE (decode));
+  raw_caps = gst_vaapi_plugin_base_get_allowed_srcpad_raw_caps
+      (GST_VAAPI_PLUGIN_BASE (decode),
+      GST_VIDEO_INFO_FORMAT (&decode->decoded_info));
   if (!raw_caps) {
     gst_caps_unref (out_caps);
     GST_WARNING_OBJECT (decode, "failed to create raw sink caps");
