@@ -251,6 +251,24 @@ def _g_value_get_value(val):
     return val["data"].cast(t).dereference()
 
 
+def element_state_to_name(state):
+    names = [
+        "VOID_PENDING",
+        "NULL",
+        "READY",
+        "PAUSED",
+        "PLAYING"]
+    return names[state] if state < len(names) else "UNKNOWN"
+
+
+def task_state_to_name(state):
+    names = [
+        "STARTED",
+        "STOPPED",
+        "PAUSED"]
+    return names[state] if state < len(names) else "UNKNOWN"
+
+
 def _gdb_write(indent, text):
     gdb.write("%s%s\n" % ("  " * indent, text))
 
@@ -534,6 +552,10 @@ class GdbGstObject:
         obj = self.val.cast(gdb.lookup_type("GstObject").pointer())
         return obj["name"].string()
 
+    def full_name(self):
+        parent = self.parent_element()
+        return "%s%s" % (parent.name() + ":" if parent else "", self.name())
+
     def dot_name(self):
         ptr = self.val.cast(gdb.lookup_type("void").pointer())
         return re.sub('[^a-zA-Z0-9<>]', '_', "%s_%s" % (self.name(), str(ptr)))
@@ -547,6 +569,13 @@ class GdbGstObject:
         if p != 0 and g_inherits_type(p, "GstElement"):
             element = p.cast(gdb.lookup_type("GstElement").pointer())
             return GdbGstElement(element)
+        return None
+
+    def parent_pad(self):
+        p = self.parent()
+        if p != 0 and g_inherits_type(p, "GstPad"):
+            pad = p.cast(gdb.lookup_type("GstPad").pointer())
+            return GdbGstPad(pad)
         return None
 
 
@@ -607,6 +636,29 @@ class GdbGstPad(GdbGstObject):
                 _gdb_write(indent+1, "events:")
                 first = False
             ev.print(indent+2)
+
+        if self.is_linked():
+            real = self.peer().parent_pad()
+            _gdb_write(indent+1, "peer: %s" %
+                       (real.full_name() if real else self.peer().full_name()))
+
+        if g_inherits_type(self.val, "GstGhostPad"):
+            t = gdb.lookup_type("GstProxyPad").pointer()
+            internal = GdbGstPad(self.val.cast(t)["priv"]["internal"])
+            if internal and internal.peer():
+                _gdb_write(indent+1, "inner peer: %s" %
+                           internal.peer().full_name())
+
+        task = self.val["task"]
+        if long(task) != 0:
+            _gdb_write(indent+1, "task: %s" %
+                       task_state_to_name(int(task["state"])))
+
+        offset = long(self.val["offset"])
+        if offset != 0:
+            _gdb_write(indent+1, "offset: %d [%s]" %
+                       (offset, format_time(offset, True)))
+
         _gdb_write(indent, "}")
 
     def _dot(self, color, pname, indent):
@@ -760,6 +812,27 @@ class GdbGstElement(GdbGstObject):
                    (g_type_name_from_instance(self.val), self.name()))
         for p in self.pads():
             p.print(indent+2)
+
+        first = True
+        for child in self.children():
+            if first:
+                _gdb_write(indent+2, "children:")
+                first = False
+            _gdb_write(indent+3, child.name())
+
+        current_state = self.val["current_state"]
+        s = "state: %s" % element_state_to_name(current_state)
+        for var in ("pending", "target"):
+            state = self.val[var + "_state"]
+            if state > 0 and state != current_state:
+                s += ", %s: %s" % (var, element_state_to_name(state))
+        _gdb_write(indent+2, s)
+
+        _gdb_write(indent+2, "base_time: %s" %
+                   format_time_value(self.val["base_time"]))
+        _gdb_write(indent+2, "start_time: %s" %
+                   format_time_value(self.val["start_time"]))
+
         _gdb_write(indent, "}")
 
     def _dot(self, indent=0):
