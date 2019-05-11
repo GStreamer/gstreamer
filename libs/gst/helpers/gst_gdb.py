@@ -269,9 +269,15 @@ def gst_object_pipeline(obj):
             if g_inherits_type(obj, "GstElement") and \
                GdbGstElement(obj) not in GdbGstElement(tmp).children():
                 break
-            if g_inherits_type(obj, "GstPad") and \
-               GdbGstPad(obj) not in GdbGstElement(tmp).pads():
-                break
+            if g_inherits_type(obj, "GstPad"):
+                pad = GdbGstPad(obj)
+                if g_inherits_type(tmp, "GstElement"):
+                    if pad not in GdbGstElement(tmp).pads():
+                        break
+                elif g_inherits_type(tmp, "GstProxyPad"):
+                    t = gdb.lookup_type("GstProxyPad").pointer()
+                    if pad != GdbGstPad(tmp.cast(t)["priv"]["internal"]):
+                        break
             obj = tmp
     except gdb.MemoryError:
         pass
