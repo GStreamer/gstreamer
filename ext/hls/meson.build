@@ -12,6 +12,8 @@ hls_cargs = ['-DGST_USE_UNSTABLE_API']
 
 hls_crypto = get_option('hls-crypto')
 hls_option = get_option('hls')
+# used for unit test
+hls_dep = dependency('', required : false)
 
 have_hls_crypto = false
 if not hls_option.disabled()
@@ -62,4 +64,5 @@ if have_hls_crypto
   )
   pkgconfig.generate(gsthls, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gsthls]
+  hls_dep = declare_dependency(include_directories : include_directories('.'))
 endif

@@ -22,8 +22,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <unistd.h>
-
 #include <gst/check/gstcheck.h>
 
 #undef GST_CAT_DEFAULT
