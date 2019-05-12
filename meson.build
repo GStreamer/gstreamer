@@ -251,8 +251,11 @@ glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libg
              dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])]
 # GIO is used by the GIO plugin, and by the TCP, SDP, and RTSP plugins
 gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
-giounix_dep = dependency('gio-unix-2.0', version : glib_req, required : host_system != 'windows',
-                         fallback: ['glib', 'libgiounix_dep'])
+giounix_dep = dependency('', required: false)
+if host_system != 'windows'
+  giounix_dep = dependency('gio-unix-2.0', version : glib_req,
+                           fallback: ['glib', 'libgiounix_dep'])
+endif
 gmodule_dep = dependency('gmodule-no-export-2.0',
                          fallback: ['glib', 'libgmodule_dep'])
 
