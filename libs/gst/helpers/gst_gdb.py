@@ -1157,8 +1157,35 @@ Find a child element with the given name"""
         return child
 
 
+class GstElementPad(gdb.Function):
+    """\
+Get the pad with the given name"""
+
+    def __init__(self):
+        super(GstElementPad, self).__init__("gst_element_pad")
+
+    def invoke(self, element, arg):
+        value = gst_object_from_value(element)
+        if not g_inherits_type(value, "GstElement"):
+            raise Exception("'%s' is not a GstElement" %
+                            str(value.address))
+
+        try:
+            name = arg.string()
+        except gdb.error:
+            raise Exception("Usage: $gst_element_pad(<gst-object>, \"<pad-name>\")")
+
+        obj = GdbGstElement(value)
+        for pad in obj.pads():
+            if pad.name() == name:
+                return pad.val
+
+        raise Exception("No pad named '%s' found." % name)
+
+
 GstPipeline()
 GstBinGet()
+GstElementPad()
 
 
 def register(obj):
