@@ -86,6 +86,7 @@ typedef enum
  * @GST_VAAPI_POSTPROC_FLAG_DEINTERLACE: Deinterlacing.
  * @GST_VAAPI_POSTPROC_FLAG_SIZE: Video scaling.
  * @GST_VAAPI_POSTPROC_FLAG_SCALE: Video scaling mode.
+ * @GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION: Video rotation and flip/mirroring.
  * @GST_VAAPI_POSTPROC_FLAG_SKINTONE: Skin tone enhancement.
  *
  * The set of operations that are to be performed for each frame.
@@ -101,6 +102,8 @@ typedef enum
   GST_VAAPI_POSTPROC_FLAG_CONTRAST    = 1 << GST_VAAPI_FILTER_OP_CONTRAST,
   GST_VAAPI_POSTPROC_FLAG_DEINTERLACE = 1 << GST_VAAPI_FILTER_OP_DEINTERLACING,
   GST_VAAPI_POSTPROC_FLAG_SCALE       = 1 << GST_VAAPI_FILTER_OP_SCALING,
+  GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION =
+      1 << GST_VAAPI_FILTER_OP_VIDEO_DIRECTION,
   GST_VAAPI_POSTPROC_FLAG_SKINTONE    = 1 << GST_VAAPI_FILTER_OP_SKINTONE,
 
   /* Additional custom flags */
@@ -160,8 +163,11 @@ struct _GstVaapiPostproc
   gfloat denoise_level;
   gfloat sharpen_level;
 
-  /* Color balance filter values */
   GstVaapiScaleMethod scale_method;
+
+  GstVideoOrientationMethod video_direction;
+
+  /* Color balance filter values */
   gfloat hue;
   gfloat saturation;
   gfloat brightness;

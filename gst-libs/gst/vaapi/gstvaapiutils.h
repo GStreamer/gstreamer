@@ -147,4 +147,8 @@ G_GNUC_INTERNAL
 guint
 to_GstVaapiScaleMethod (guint flags);
 
+G_GNUC_INTERNAL
+guint
+from_GstVideoOrientationMethod (guint value);
+
 #endif /* GST_VAAPI_UTILS_H */

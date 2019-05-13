@@ -121,6 +121,7 @@ enum
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
   PROP_SCALE_METHOD,
+  PROP_VIDEO_DIRECTION,
   PROP_SKIN_TONE_ENHANCEMENT,
 };
 
@@ -591,6 +592,16 @@ update_filter (GstVaapiPostproc * postproc)
     if (gst_vaapi_filter_get_scaling_default (postproc->filter) ==
         postproc->scale_method)
       postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_SCALE);
+  }
+
+  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION) {
+    if (!gst_vaapi_filter_set_video_direction (postproc->filter,
+            postproc->video_direction))
+      return FALSE;
+
+    if (gst_vaapi_filter_get_video_direction_default (postproc->filter) ==
+        postproc->video_direction)
+      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION);
   }
 
   if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_SKINTONE) {
@@ -1613,6 +1624,10 @@ gst_vaapipostproc_set_property (GObject * object,
       postproc->scale_method = g_value_get_enum (value);
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SCALE;
       break;
+    case PROP_VIDEO_DIRECTION:
+      postproc->video_direction = g_value_get_enum (value);
+      postproc->flags |= GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION;
+      break;
     case PROP_SKIN_TONE_ENHANCEMENT:
       postproc->skintone_enhance = g_value_get_boolean (value);
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SKINTONE;
@@ -1673,6 +1688,9 @@ gst_vaapipostproc_get_property (GObject * object,
       break;
     case PROP_SCALE_METHOD:
       g_value_set_enum (value, postproc->scale_method);
+      break;
+    case PROP_VIDEO_DIRECTION:
+      g_value_set_enum (value, postproc->video_direction);
       break;
     case PROP_SKIN_TONE_ENHANCEMENT:
       g_value_set_boolean (value, postproc->skintone_enhance);
@@ -1893,6 +1911,17 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   if (filter_op)
     g_object_class_install_property (object_class,
         PROP_SCALE_METHOD, filter_op->pspec);
+
+  /**
+   * GstVaapiPostproc:video-direction:
+   *
+   * The video-direction to use, expressed as an enum value. See
+   * #GstVideoDirectionMethod.
+   */
+  filter_op = find_filter_op (filter_ops, GST_VAAPI_FILTER_OP_VIDEO_DIRECTION);
+  if (filter_op)
+    g_object_class_install_property (object_class,
+        PROP_VIDEO_DIRECTION, filter_op->pspec);
 
   /**
    * GstVaapiPostproc:skin-tone-enhancement:

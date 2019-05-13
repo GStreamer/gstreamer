@@ -828,3 +828,27 @@ to_GstVaapiScaleMethod (guint flags)
   }
   return method;
 }
+
+/* VPP: translate GstVideoOrientationMethod into VA mirror flags */
+guint
+from_GstVideoOrientationMethod (guint value)
+{
+  guint va_flags = 0;
+
+  switch (value) {
+#if VA_CHECK_VERSION(1,1,0)
+    case GST_VIDEO_ORIENTATION_IDENTITY:
+      va_flags = VA_MIRROR_NONE;
+      break;
+    case GST_VIDEO_ORIENTATION_HORIZ:
+      va_flags = VA_MIRROR_HORIZONTAL;
+      break;
+    case GST_VIDEO_ORIENTATION_VERT:
+      va_flags = VA_MIRROR_VERTICAL;
+      break;
+#endif
+    default:
+      break;
+  }
+  return va_flags;
+}

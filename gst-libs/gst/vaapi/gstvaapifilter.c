@@ -61,6 +61,7 @@ struct _GstVaapiFilter
   GPtrArray *operations;
   GstVideoFormat format;
   GstVaapiScaleMethod scale_method;
+  GstVideoOrientationMethod video_direction;
   GArray *formats;
   GArray *forward_references;
   GArray *backward_references;
@@ -113,6 +114,17 @@ gst_vaapi_scale_method_get_type (void)
     g_once_init_leave (&g_type, type);
   }
   return g_type;
+}
+
+static const gchar *
+gst_vaapi_get_video_direction_nick (GstVideoOrientationMethod method)
+{
+  gpointer const klass = g_type_class_peek (GST_TYPE_VIDEO_ORIENTATION_METHOD);
+  GEnumValue *const e = g_enum_get_value (klass, method);
+
+  if (e)
+    return e->value_nick;
+  return "<unknown>";
 }
 
 GType
@@ -277,6 +289,7 @@ vpp_get_filter_caps (GstVaapiFilter * filter, VAProcFilterType type,
 
 #define DEFAULT_FORMAT  GST_VIDEO_FORMAT_UNKNOWN
 #define DEFAULT_SCALING GST_VAAPI_SCALE_METHOD_DEFAULT
+#define DEFAULT_VIDEO_DIRECTION GST_VIDEO_ORIENTATION_IDENTITY
 
 enum
 {
@@ -297,6 +310,7 @@ enum
   PROP_CONTRAST = GST_VAAPI_FILTER_OP_CONTRAST,
   PROP_DEINTERLACING = GST_VAAPI_FILTER_OP_DEINTERLACING,
   PROP_SCALING = GST_VAAPI_FILTER_OP_SCALING,
+  PROP_VIDEO_DIRECTION = GST_VAAPI_FILTER_OP_VIDEO_DIRECTION,
   PROP_SKINTONE = GST_VAAPI_FILTER_OP_SKINTONE,
 
   N_PROPERTIES
@@ -421,6 +435,18 @@ init_properties (void)
       DEFAULT_SCALING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
+   * GstVaapiFilter:video-direction:
+   *
+   * The video-direction to use, expressed as an enum value. See
+   * #GstVideoOrientationMethod.
+   */
+  g_properties[PROP_VIDEO_DIRECTION] = g_param_spec_enum ("video-direction",
+      "Video Direction",
+      "Video direction: rotation and flipping",
+      GST_TYPE_VIDEO_ORIENTATION_METHOD,
+      DEFAULT_VIDEO_DIRECTION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
    * GstVaapiFilter:skin-tone-enhancement:
    *
    * Apply the skin tone enhancement algorithm.
@@ -465,6 +491,7 @@ op_data_new (GstVaapiFilterOp op, GParamSpec * pspec)
     case GST_VAAPI_FILTER_OP_FORMAT:
     case GST_VAAPI_FILTER_OP_CROP:
     case GST_VAAPI_FILTER_OP_SCALING:
+    case GST_VAAPI_FILTER_OP_VIDEO_DIRECTION:
       op_data->va_type = VAProcFilterNone;
       break;
     case GST_VAAPI_FILTER_OP_DENOISE:
@@ -1330,6 +1357,9 @@ gst_vaapi_filter_set_operation (GstVaapiFilter * filter, GstVaapiFilterOp op,
       return op_set_skintone (filter, op_data,
           (value ? g_value_get_boolean (value) :
               G_PARAM_SPEC_BOOLEAN (op_data->pspec)->default_value));
+    case GST_VAAPI_FILTER_OP_VIDEO_DIRECTION:
+      return gst_vaapi_filter_set_video_direction (filter, value ?
+          g_value_get_enum (value) : DEFAULT_VIDEO_DIRECTION);
     default:
       break;
   }
@@ -1362,6 +1392,7 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
   guint i, num_filters = 0;
   VAStatus va_status;
   VARectangle src_rect, dst_rect;
+  guint va_mirror = from_GstVideoOrientationMethod (filter->video_direction);
 
   if (!ensure_operations (filter))
     return GST_VAAPI_FILTER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -1443,6 +1474,10 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
       from_GstVaapiScaleMethod (filter->scale_method);
   pipeline_param->filters = filters;
   pipeline_param->num_filters = num_filters;
+
+#if VA_CHECK_VERSION(1,1,0)
+  pipeline_param->mirror_state = va_mirror;
+#endif
 
   // Reference frames for advanced deinterlacing
   if (filter->forward_references->len > 0) {
@@ -1838,6 +1873,58 @@ gst_vaapi_filter_set_skintone (GstVaapiFilter * filter, gboolean enhance)
       find_operation (filter, GST_VAAPI_FILTER_OP_SKINTONE), enhance);
 }
 
+/**
+ * gst_vaapi_filter_set_video_direction:
+ * @filter: a #GstVaapiFilter
+ * @method: the video direction (see #GstVideoOrientationMethod)
+ *
+ * Applies mirror/rotation to the video processing pipeline.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_video_direction (GstVaapiFilter * filter,
+    GstVideoOrientationMethod method)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  switch (method) {
+    case GST_VIDEO_ORIENTATION_IDENTITY:
+      break;
+    case GST_VIDEO_ORIENTATION_HORIZ:
+    case GST_VIDEO_ORIENTATION_VERT:
+    {
+#if VA_CHECK_VERSION(1,1,0)
+      VAProcPipelineCaps pipeline_caps;
+      guint va_mirror = from_GstVideoOrientationMethod (method);
+
+      VAStatus va_status = vaQueryVideoProcPipelineCaps (filter->va_display,
+          filter->va_context, NULL, 0, &pipeline_caps);
+      if (!vaapi_check_status (va_status, "vaQueryVideoProcPipelineCaps()"))
+        return FALSE;
+
+      if (!(pipeline_caps.mirror_flags & va_mirror)) {
+        GST_WARNING ("%s video-direction unsupported",
+            gst_vaapi_get_video_direction_nick (method));
+        return TRUE;
+      }
+#else
+      GST_WARNING ("%s video-direction unsupported",
+          gst_vaapi_get_video_direction_nick (method));
+      return TRUE;
+#endif
+      break;
+    }
+    default:
+      GST_WARNING ("%s video-direction unsupported or unimplemented",
+          gst_vaapi_get_video_direction_nick (method));
+      return TRUE;
+  }
+
+  filter->video_direction = method;
+  return TRUE;
+}
+
 static inline gfloat
 op_get_float_default_value (GstVaapiFilter * filter,
     GstVaapiFilterOpData * op_data)
@@ -1914,4 +2001,12 @@ gst_vaapi_filter_get_skintone_default (GstVaapiFilter * filter)
   g_return_val_if_fail (filter != NULL, FALSE);
 
   return FALSE;
+}
+
+GstVideoOrientationMethod
+gst_vaapi_filter_get_video_direction_default (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, FALSE);
+
+  return DEFAULT_VIDEO_DIRECTION;
 }

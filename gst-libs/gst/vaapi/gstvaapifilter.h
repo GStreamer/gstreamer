@@ -48,6 +48,8 @@ typedef struct _GstVaapiFilterOpInfo            GstVaapiFilterOpInfo;
  * @GST_VAAPI_FILTER_OP_BRIGHTNESS: Change brightness (float).
  * @GST_VAAPI_FILTER_OP_CONTRAST: Change contrast (float).
  * @GST_VAAPI_FILTER_OP_SCALING: Change scaling method (#GstVaapiScaleMethod).
+ * @GST_VAAPI_FILTER_OP_VIDEO_DIRECTION: Change video direction
+ *   (#GstVideoOrientationMethod).
  * @GST_VAAPI_FILTER_OP_SKINTONE: Skin tone enhancement (bool).
  *
  * The set of operations that could be applied to the filter.
@@ -63,6 +65,7 @@ typedef enum {
   GST_VAAPI_FILTER_OP_CONTRAST,
   GST_VAAPI_FILTER_OP_DEINTERLACING,
   GST_VAAPI_FILTER_OP_SCALING,
+  GST_VAAPI_FILTER_OP_VIDEO_DIRECTION,
   GST_VAAPI_FILTER_OP_SKINTONE,
 } GstVaapiFilterOp;
 
@@ -247,6 +250,10 @@ gst_vaapi_filter_set_scaling (GstVaapiFilter * filter,
     GstVaapiScaleMethod method);
 
 gboolean
+gst_vaapi_filter_set_video_direction (GstVaapiFilter * filter,
+    GstVideoOrientationMethod method);
+
+gboolean
 gst_vaapi_filter_set_skintone (GstVaapiFilter * filter,
     gboolean enhance);
 
@@ -270,6 +277,9 @@ gst_vaapi_filter_get_contrast_default (GstVaapiFilter * filter);
 
 GstVaapiScaleMethod
 gst_vaapi_filter_get_scaling_default (GstVaapiFilter * filter);
+
+GstVideoOrientationMethod
+gst_vaapi_filter_get_video_direction_default (GstVaapiFilter * filter);
 
 gboolean
 gst_vaapi_filter_get_skintone_default (GstVaapiFilter * filter);
