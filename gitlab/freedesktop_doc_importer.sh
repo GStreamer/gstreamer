@@ -4,6 +4,7 @@ set -e
 
 BRANCH=master
 NAMESPACE=gstreamer
+JOB=documentation
 
 WORK_DIR=`mktemp -d -p "$DIR"`
 
@@ -18,12 +19,12 @@ trap cleanup EXIT
 
 echo ""
 echo "============================================================================================================================"
-echo "Updating documentation from: https://gitlab.freedesktop.org/$NAMESPACE/gst-docs/-/jobs/artifacts/$BRANCH/download?job=deploy"
+echo "Updating documentation from: https://gitlab.freedesktop.org/$NAMESPACE/gst-docs/-/jobs/artifacts/$BRANCH/download?job=$JOB"
 
 date
 
 cd $WORK_DIR
-wget https://gitlab.freedesktop.org/$NAMESPACE/gst-docs/-/jobs/artifacts/$BRANCH/download?job=deploy -O gstdocs.zip
+wget https://gitlab.freedesktop.org/$NAMESPACE/gst-docs/-/jobs/artifacts/$BRANCH/download?job=$JOB -O gstdocs.zip
 
 unzip gstdocs.zip
 
