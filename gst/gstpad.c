@@ -3569,7 +3569,8 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   if ((flags & GST_PAD_PROBE_TYPE_IDLE))
     pad->priv->idle_running--;
 
-  if (original_data != NULL && info->data == NULL) {
+  if (ret != GST_PAD_PROBE_HANDLED && original_data != NULL
+      && info->data == NULL) {
     GST_DEBUG_OBJECT (pad, "data item in pad probe info was dropped");
     info->type = GST_PAD_PROBE_TYPE_INVALID;
     data->dropped = TRUE;

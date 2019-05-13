@@ -622,6 +622,21 @@ _handled_probe_handler (GstPad * pad, GstPadProbeInfo * info, gpointer userdata)
   return GST_PAD_PROBE_HANDLED;
 }
 
+static GstPadProbeReturn
+_cleaning_handled_probe_handler (GstPad * pad, GstPadProbeInfo * info,
+    gpointer userdata)
+{
+  GstFlowReturn customflow = (GstFlowReturn) GPOINTER_TO_INT (userdata);
+
+  /* We are handling the data, we unref it and we reset the data field */
+  if (!(GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_QUERY_BOTH))
+    gst_mini_object_unref (info->data);
+  GST_PAD_PROBE_INFO_FLOW_RETURN (info) = customflow;
+  GST_PAD_PROBE_INFO_DATA (info) = NULL;
+
+  return GST_PAD_PROBE_HANDLED;
+}
+
 
 
 GST_START_TEST (test_events_query_unlinked)
@@ -777,6 +792,22 @@ GST_START_TEST (test_push_unlinked)
     GST_DEBUG ("Testing with %s", gst_flow_get_name (fl));
     id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
         _handled_probe_handler, GINT_TO_POINTER (fl), NULL);
+    buffer = gst_buffer_new ();
+    gst_buffer_ref (buffer);
+    fail_unless (gst_pad_push (src, buffer) == fl);
+    ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+    gst_buffer_unref (buffer);
+    gst_pad_remove_probe (src, id);
+
+  }
+
+  /* Same thing, except that this time we also set the info data field
+   * to NULL in the probe. We can because we are returning _HANDLED */
+  GST_DEBUG ("push buffer handled and custom return (with info data NULL'ed)");
+  for (fl = GST_FLOW_NOT_SUPPORTED; fl <= GST_FLOW_OK; fl += 1) {
+    GST_DEBUG ("Testing with %s", gst_flow_get_name (fl));
+    id = gst_pad_add_probe (src, GST_PAD_PROBE_TYPE_BUFFER,
+        _cleaning_handled_probe_handler, GINT_TO_POINTER (fl), NULL);
     buffer = gst_buffer_new ();
     gst_buffer_ref (buffer);
     fail_unless (gst_pad_push (src, buffer) == fl);
