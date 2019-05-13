@@ -275,7 +275,13 @@ if build_gir
   )]
 endif
 
+gst_compile_args = []
+if get_option('default_library') == 'static'
+  gst_compile_args += ['-DGST_STATIC_COMPILATION']
+endif
+
 gst_dep = declare_dependency(link_with : libgst,
+  compile_args : gst_compile_args,
   include_directories : gst_incdirs,
   dependencies : [glib_dep, gobject_dep, gmodule_dep],
   # Everything that uses libgst needs this built to compile
