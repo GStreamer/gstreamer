@@ -248,6 +248,10 @@ gst_gl_composition_overlay_add_transformation (GstGLCompositionOverlay *
   float rel_x, rel_y, rel_w, rel_h;
 
   meta = gst_buffer_get_video_meta (video_buffer);
+  if (!meta) {
+    GST_WARNING_OBJECT (overlay, "buffer doesn't contain video meta");
+    return;
+  }
 
   gst_video_overlay_rectangle_get_render_rectangle (overlay->rectangle,
       &comp_x, &comp_y, &comp_width, &comp_height);
