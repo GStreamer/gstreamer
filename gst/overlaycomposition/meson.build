@@ -7,3 +7,4 @@ gstoverlaycomposition = library('gstoverlaycomposition',
   install_dir : plugins_install_dir,
 )
 pkgconfig.generate(gstoverlaycomposition, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstoverlaycomposition]
