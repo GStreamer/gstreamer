@@ -110,7 +110,7 @@ if meson.is_cross_build() or build_machine.system() == 'windows'
         error('Documentation enabled but building the doc while cross building or building on windows is not supported yet.')
     endif
 
-    message('Documentation not built as building the docmentation while cross building or building on windows is not supported yet.')
+    message('Documentation not built as building the documentation while cross building or building on windows is not supported yet.')
 else
   hotdoc_p = find_program('hotdoc', required : get_option('doc'))
   if hotdoc_p.found()
