@@ -54,7 +54,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstadder.so",
+        "filename": "gstadder",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -387,6 +387,14 @@
                         ],
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -595,12 +603,20 @@
                         "default": "false",
                         "type-name": "gboolean",
                         "writable": true
+                    },
+                    "use-driver-timestamps": {
+                        "blurb": "Use driver timestamps or the pipeline clock timestamps",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
                     }
                 },
                 "rank": "primary"
             }
         },
-        "filename": "libgstalsa.so",
+        "filename": "gstalsa",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -774,6 +790,14 @@
                         "min": "0",
                         "type-name": "guint64",
                         "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
                     },
                     "sync": {
                         "blurb": "Sync on the clock",
@@ -1534,7 +1558,7 @@
                 }
             }
         },
-        "filename": "libgstapp.so",
+        "filename": "gstapp",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -1670,7 +1694,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstaudioconvert.so",
+        "filename": "gstaudioconvert",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -2089,7 +2113,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstaudiomixer.so",
+        "filename": "gstaudiomixer",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -2208,7 +2232,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstaudiorate.so",
+        "filename": "gstaudiorate",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -2378,7 +2402,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstaudioresample.so",
+        "filename": "gstaudioresample",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -2408,6 +2432,14 @@
                     }
                 },
                 "properties": {
+                    "apply-tick-ramp": {
+                        "blurb": "Apply ramp to tick samples",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "blocksize": {
                         "blurb": "Size in bytes to read per buffer (-1 = default)",
                         "construct": false,
@@ -2460,6 +2492,26 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "marker-tick-period": {
+                        "blurb": "Make every Nth tick a marker tick (= a tick with different volume). Only used if wave = ticks. 0 = no marker ticks.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "marker-tick-volume": {
+                        "blurb": "Volume of marker ticks. Only used if wave = ticks andmarker-tick-period is set to a nonzero value.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "1",
+                        "min": "0",
+                        "type-name": "gdouble",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -2493,6 +2545,26 @@
                         "max": "2147483647",
                         "min": "1",
                         "type-name": "gint",
+                        "writable": true
+                    },
+                    "sine-periods-per-tick": {
+                        "blurb": "Number of sine wave periods in one tick. Only used if wave = ticks.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "10",
+                        "max": "-1",
+                        "min": "1",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "tick-interval": {
+                        "blurb": "Distance between start of current and start of next tick, in nanoseconds.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1000000000",
+                        "max": "18446744073709551615",
+                        "min": "1",
+                        "type-name": "guint64",
                         "writable": true
                     },
                     "timestamp-offset": {
@@ -2603,7 +2675,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstaudiotestsrc.so",
+        "filename": "gstaudiotestsrc",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -2821,7 +2893,149 @@
                 }
             }
         },
-        "filename": "libgstcdparanoia.so",
+        "filename": "gstcdparanoia",
+        "license": "LGPL",
+        "package": "GStreamer Base Plug-ins git",
+        "source": "gst-plugins-base",
+        "url": "Unknown package origin"
+    },
+    "compositor": {
+        "description": "Compositor",
+        "elements": {
+            "compositor": {
+                "author": "Wim Taymans <wim@fluendo.com>, Sebastian Dr\u00f6ge <sebastian.droege@collabora.co.uk>",
+                "description": "Composite multiple video streams",
+                "hierarchy": [
+                    "GstCompositor",
+                    "GstVideoAggregator",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Editor/Video/Compositor",
+                "long-name": "Compositor",
+                "pad-templates": {
+                    "sink_%%u": {
+                        "caps": "video/x-raw:\n         format: { AYUV, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, RGBx, BGRx }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { AYUV, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, RGBx, BGRx }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "background": {
+                        "blurb": "Background type",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "checker (0)",
+                        "enum": true,
+                        "type-name": "GstCompositorBackground",
+                        "values": [
+                            {
+                                "desc": "Checker pattern",
+                                "name": "checker",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Black",
+                                "name": "black",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "White",
+                                "name": "white",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "Transparent Background to enable further compositing",
+                                "name": "transparent",
+                                "value": "3"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "latency": {
+                        "blurb": "Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "min-upstream-latency": {
+                        "blurb": "When sources with a higher latency are expected to be plugged in dynamically after the aggregator has started playing, this allows overriding the minimum latency reported by the initial source(s). This is only taken into account when larger than the actually reported minimum latency. (nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "start-time": {
+                        "blurb": "Start time to use if start-time-selection=set",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "start-time-selection": {
+                        "blurb": "Decides which start time is output",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "zero (0)",
+                        "enum": true,
+                        "type-name": "GstAggregatorStartTimeSelection",
+                        "values": [
+                            {
+                                "desc": "Start at 0 running time (default)",
+                                "name": "zero",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Start at first observed input running time",
+                                "name": "first",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Set start time with start-time property",
+                                "name": "set",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    }
+                },
+                "rank": "primary + 1"
+            }
+        },
+        "filename": "gstcompositor",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -2990,7 +3204,7 @@
                 }
             }
         },
-        "filename": "libgstencoding.so",
+        "filename": "gstencoding",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -3131,6 +3345,14 @@
                         "min": "0",
                         "type-name": "guint64",
                         "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
                     },
                     "sync": {
                         "blurb": "Sync on the clock",
@@ -3372,6 +3594,14 @@
                         "type-name": "guint64",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "stream": {
                         "blurb": "Stream to write to",
                         "construct": false,
@@ -3494,7 +3724,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstgio.so",
+        "filename": "gstgio",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -3503,7 +3733,7 @@
     "libvisual": {
         "description": "libvisual visualization plugins",
         "elements": {},
-        "filename": "libgstlibvisual.so",
+        "filename": "gstlibvisual",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -3937,7 +4167,7 @@
                 }
             }
         },
-        "filename": "libgstogg.so",
+        "filename": "gstogg",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -4235,12 +4465,12 @@
                 "long-name": "OpenGL color converter",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:GLMemory):\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: { (string)2D, (string)rectangle, (string)external-oes }\n\nvideo/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: { (string)2D, (string)rectangle, (string)external-oes }\n",
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, VUYA, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: { (string)2D, (string)rectangle, (string)external-oes }\n\nvideo/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, VUYA, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: { (string)2D, (string)rectangle, (string)external-oes }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:GLMemory):\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: { (string)2D, (string)rectangle, (string)external-oes }\n\nvideo/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: { (string)2D, (string)rectangle, (string)external-oes }\n",
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, VUYA, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: { (string)2D, (string)rectangle, (string)external-oes }\n\nvideo/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, VUYA, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: { (string)2D, (string)rectangle, (string)external-oes }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -6167,7 +6397,7 @@
                 "long-name": "GL Filter Bin",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta, meta:GstVideoOverlayComposition):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta, meta:GstVideoOverlayComposition):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -6433,7 +6663,7 @@
                 "long-name": "GL Sink Bin",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta, meta:GstVideoOverlayComposition):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta, meta:GstVideoOverlayComposition):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -7286,6 +7516,14 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -7333,6 +7571,235 @@
                         "retval": "gboolean"
                     }
                 }
+            },
+            "glmixerbin": {
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "OpenGL video_mixer empty bin",
+                "hierarchy": [
+                    "GstGLMixerBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Bin/Filter/Effect/Video/Mixer",
+                "long-name": "OpenGL video_mixer empty bin",
+                "pad-templates": {
+                    "sink_%%u": {
+                        "caps": "video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta, meta:GstVideoOverlayComposition):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(ANY):\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "latency": {
+                        "blurb": "Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "mixer": {
+                        "blurb": "The GL mixer chain to use",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstElement",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "start-time": {
+                        "blurb": "Start time to use if start-time-selection=set",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "start-time-selection": {
+                        "blurb": "Decides which start time is output",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "zero (0)",
+                        "enum": true,
+                        "type-name": "GstGLMixerBinStartTimeSelection",
+                        "values": [
+                            {
+                                "desc": "Start at 0 running time (default)",
+                                "name": "zero",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Start at first observed input running time",
+                                "name": "first",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Set start time with start-time property",
+                                "name": "set",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "create-element": {
+                        "args": [],
+                        "retval": "GstElement"
+                    }
+                }
+            },
+            "glmosaic": {
+                "author": "Julien Isorce <julien.isorce@gmail.com>",
+                "description": "OpenGL mosaic",
+                "hierarchy": [
+                    "GstGLMosaic",
+                    "GstGLMixer",
+                    "GstGLBaseMixer",
+                    "GstVideoAggregator",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Effect/Video",
+                "long-name": "OpenGL mosaic",
+                "pad-templates": {
+                    "sink_%%u": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "context": {
+                        "blurb": "Get OpenGL context",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstGLContext",
+                        "writable": false
+                    },
+                    "latency": {
+                        "blurb": "Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "min-upstream-latency": {
+                        "blurb": "When sources with a higher latency are expected to be plugged in dynamically after the aggregator has started playing, this allows overriding the minimum latency reported by the initial source(s). This is only taken into account when larger than the actually reported minimum latency. (nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "start-time": {
+                        "blurb": "Start time to use if start-time-selection=set",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "start-time-selection": {
+                        "blurb": "Decides which start time is output",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "zero (0)",
+                        "enum": true,
+                        "type-name": "GstAggregatorStartTimeSelection",
+                        "values": [
+                            {
+                                "desc": "Start at 0 running time (default)",
+                                "name": "zero",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Start at first observed input running time",
+                                "name": "first",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Set start time with start-time property",
+                                "name": "set",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    }
+                },
+                "rank": "none"
             },
             "gloverlay": {
                 "author": "Filippo Argiolas <filippo.argiolas@gmail.com>, Matthew Waters <matthew@centricular.com>",
@@ -7654,7 +8121,7 @@
                 "long-name": "GL Sink Bin",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta, meta:GstVideoOverlayComposition):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta, meta:GstVideoOverlayComposition):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -7921,6 +8388,142 @@
                         "retval": "GstElement"
                     }
                 }
+            },
+            "glstereomix": {
+                "author": "Jan Schmidt <jan@centricular.com>",
+                "description": "OpenGL stereo video combiner",
+                "hierarchy": [
+                    "GstGLStereoMix",
+                    "GstGLMixer",
+                    "GstGLBaseMixer",
+                    "GstVideoAggregator",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Effect/Video",
+                "long-name": "OpenGL stereo video combiner",
+                "pad-templates": {
+                    "sink_%%u": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, VUYA, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, VUYA, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "context": {
+                        "blurb": "Get OpenGL context",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstGLContext",
+                        "writable": false
+                    },
+                    "downmix-mode": {
+                        "blurb": "Output anaglyph type to generate when downmixing to mono",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "green-magenta-dubois (0)",
+                        "enum": true,
+                        "type-name": "GstGLStereoDownmix",
+                        "values": [
+                            {
+                                "desc": "GST_GL_STEREO_DOWNMIX_ANAGLYPH_GREEN_MAGENTA_DUBOIS",
+                                "name": "green-magenta-dubois",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "GST_GL_STEREO_DOWNMIX_ANAGLYPH_RED_CYAN_DUBOIS",
+                                "name": "red-cyan-dubois",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "GST_GL_STEREO_DOWNMIX_ANAGLYPH_AMBER_BLUE_DUBOIS",
+                                "name": "amber-blue-dubois",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "latency": {
+                        "blurb": "Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "min-upstream-latency": {
+                        "blurb": "When sources with a higher latency are expected to be plugged in dynamically after the aggregator has started playing, this allows overriding the minimum latency reported by the initial source(s). This is only taken into account when larger than the actually reported minimum latency. (nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "start-time": {
+                        "blurb": "Start time to use if start-time-selection=set",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "start-time-selection": {
+                        "blurb": "Decides which start time is output",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "zero (0)",
+                        "enum": true,
+                        "type-name": "GstAggregatorStartTimeSelection",
+                        "values": [
+                            {
+                                "desc": "Start at 0 running time (default)",
+                                "name": "zero",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Start at first observed input running time",
+                                "name": "first",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Set start time with start-time property",
+                                "name": "set",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    }
+                },
+                "rank": "none"
             },
             "glstereosplit": {
                 "author": "Jan Schmidt <jan@centricular.com>\nMatthew Waters <matthew@centricular.com>",
@@ -8357,7 +8960,7 @@
                 "long-name": "OpenGL uploader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta, meta:GstVideoOverlayComposition):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta, meta:GstVideoOverlayComposition):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -8571,6 +9174,298 @@
                                 "desc": "GST_VIDEO_ORIENTATION_CUSTOM",
                                 "name": "custom",
                                 "value": "9"
+                            }
+                        ],
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "glvideomixer": {
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "OpenGL video_mixer bin",
+                "hierarchy": [
+                    "GstGLVideoMixerBin",
+                    "GstGLMixerBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Bin/Filter/Effect/Video/Compositor",
+                "long-name": "OpenGL video_mixer bin",
+                "pad-templates": {
+                    "sink_%%u": {
+                        "caps": "video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:SystemMemory, meta:GstVideoOverlayComposition):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta, meta:GstVideoOverlayComposition):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, BGRA, RGBx, BGRx, ARGB, ABGR, xRGB, xBGR, RGB, BGR, RGB16, BGR16, AYUV, VUYA, I420, YV12, NV12, NV21, YUY2, UYVY, Y41B, Y42B, Y444, GRAY8, GRAY16_LE, GRAY16_BE, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(ANY):\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "background": {
+                        "blurb": "Background type",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "checker (0)",
+                        "enum": true,
+                        "type-name": "GstGLVideoMixerBackground",
+                        "values": [
+                            {
+                                "desc": "Checker pattern",
+                                "name": "checker",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Black",
+                                "name": "black",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "White",
+                                "name": "white",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "Transparent Background to enable further compositing",
+                                "name": "transparent",
+                                "value": "3"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "latency": {
+                        "blurb": "Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "mixer": {
+                        "blurb": "The GL mixer chain to use",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstElement",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "start-time": {
+                        "blurb": "Start time to use if start-time-selection=set",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "start-time-selection": {
+                        "blurb": "Decides which start time is output",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "zero (0)",
+                        "enum": true,
+                        "type-name": "GstGLMixerBinStartTimeSelection",
+                        "values": [
+                            {
+                                "desc": "Start at 0 running time (default)",
+                                "name": "zero",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Start at first observed input running time",
+                                "name": "first",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Set start time with start-time property",
+                                "name": "set",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "create-element": {
+                        "args": [],
+                        "retval": "GstElement"
+                    }
+                }
+            },
+            "glvideomixerelement": {
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "OpenGL video_mixer",
+                "hierarchy": [
+                    "GstGLVideoMixer",
+                    "GstGLMixer",
+                    "GstGLBaseMixer",
+                    "GstVideoAggregator",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Effect/Video/Compositor",
+                "long-name": "OpenGL video_mixer",
+                "pad-templates": {
+                    "sink_%%u": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "background": {
+                        "blurb": "Background type",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "checker (0)",
+                        "enum": true,
+                        "type-name": "GstGLVideoMixerBackground",
+                        "values": [
+                            {
+                                "desc": "Checker pattern",
+                                "name": "checker",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Black",
+                                "name": "black",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "White",
+                                "name": "white",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "Transparent Background to enable further compositing",
+                                "name": "transparent",
+                                "value": "3"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "context": {
+                        "blurb": "Get OpenGL context",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstGLContext",
+                        "writable": false
+                    },
+                    "latency": {
+                        "blurb": "Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "min-upstream-latency": {
+                        "blurb": "When sources with a higher latency are expected to be plugged in dynamically after the aggregator has started playing, this allows overriding the minimum latency reported by the initial source(s). This is only taken into account when larger than the actually reported minimum latency. (nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "start-time": {
+                        "blurb": "Start time to use if start-time-selection=set",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "start-time-selection": {
+                        "blurb": "Decides which start time is output",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "zero (0)",
+                        "enum": true,
+                        "type-name": "GstAggregatorStartTimeSelection",
+                        "values": [
+                            {
+                                "desc": "Start at 0 running time (default)",
+                                "name": "zero",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Start at first observed input running time",
+                                "name": "first",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Set start time with start-time property",
+                                "name": "set",
+                                "value": "2"
                             }
                         ],
                         "writable": true
@@ -8903,7 +9798,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstopengl.so",
+        "filename": "gstopengl",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -9272,7 +10167,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstopus.so",
+        "filename": "gstopus",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -9296,12 +10191,12 @@
                 "long-name": "Clock overlay",
                 "pad-templates": {
                     "src": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     },
                     "video_sink": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -9745,7 +10640,7 @@
                 "long-name": "Text overlay",
                 "pad-templates": {
                     "src": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     },
@@ -9755,7 +10650,7 @@
                         "presence": "always"
                     },
                     "video_sink": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -10340,12 +11235,12 @@
                 "long-name": "Time overlay",
                 "pad-templates": {
                     "src": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     },
                     "video_sink": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -10798,7 +11693,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstpango.so",
+        "filename": "gstpango",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -10807,7 +11702,7 @@
     "pbtypes": {
         "description": "gst-plugins-base dynamic types",
         "elements": {},
-        "filename": "libgstpbtypes.so",
+        "filename": "gstpbtypes",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -13552,7 +14447,7 @@
                 }
             }
         },
-        "filename": "libgstplayback.so",
+        "filename": "gstplayback",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -13940,12 +14835,12 @@
                 "long-name": "rawvideoparse",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-unaligned-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-unaligned-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14083,304 +14978,324 @@
                                 "value": "22"
                             },
                             {
-                                "desc": "GST_VIDEO_FORMAT_Y210",
-                                "name": "y210",
-                                "value": "23"
-                            },
-                            {
                                 "desc": "GST_VIDEO_FORMAT_NV12",
                                 "name": "nv12",
-                                "value": "24"
+                                "value": "23"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_NV21",
                                 "name": "nv21",
-                                "value": "25"
+                                "value": "24"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GRAY8",
                                 "name": "gray8",
-                                "value": "26"
+                                "value": "25"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GRAY16_BE",
                                 "name": "gray16-be",
-                                "value": "27"
+                                "value": "26"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GRAY16_LE",
                                 "name": "gray16-le",
-                                "value": "28"
+                                "value": "27"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_v308",
                                 "name": "v308",
-                                "value": "29"
+                                "value": "28"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_RGB16",
                                 "name": "rgb16",
-                                "value": "30"
+                                "value": "29"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_BGR16",
                                 "name": "bgr16",
-                                "value": "31"
+                                "value": "30"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_RGB15",
                                 "name": "rgb15",
-                                "value": "32"
+                                "value": "31"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_BGR15",
                                 "name": "bgr15",
-                                "value": "33"
+                                "value": "32"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_UYVP",
                                 "name": "uyvp",
-                                "value": "34"
+                                "value": "33"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_A420",
                                 "name": "a420",
-                                "value": "35"
+                                "value": "34"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_RGB8P",
                                 "name": "rgb8p",
-                                "value": "36"
+                                "value": "35"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_YUV9",
                                 "name": "yuv9",
-                                "value": "37"
+                                "value": "36"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_YVU9",
                                 "name": "yvu9",
-                                "value": "38"
+                                "value": "37"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_IYU1",
                                 "name": "iyu1",
-                                "value": "39"
+                                "value": "38"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_ARGB64",
                                 "name": "argb64",
-                                "value": "40"
+                                "value": "39"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_AYUV64",
                                 "name": "ayuv64",
-                                "value": "41"
+                                "value": "40"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_r210",
                                 "name": "r210",
-                                "value": "42"
+                                "value": "41"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_I420_10BE",
                                 "name": "i420-10be",
-                                "value": "43"
+                                "value": "42"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_I420_10LE",
                                 "name": "i420-10le",
-                                "value": "44"
+                                "value": "43"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_I422_10BE",
                                 "name": "i422-10be",
-                                "value": "45"
+                                "value": "44"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_I422_10LE",
                                 "name": "i422-10le",
-                                "value": "46"
+                                "value": "45"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_Y444_10BE",
                                 "name": "y444-10be",
-                                "value": "47"
+                                "value": "46"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_Y444_10LE",
                                 "name": "y444-10le",
-                                "value": "48"
+                                "value": "47"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GBR",
                                 "name": "gbr",
-                                "value": "49"
+                                "value": "48"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GBR_10BE",
                                 "name": "gbr-10be",
-                                "value": "50"
+                                "value": "49"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GBR_10LE",
                                 "name": "gbr-10le",
-                                "value": "51"
+                                "value": "50"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_NV16",
                                 "name": "nv16",
-                                "value": "52"
+                                "value": "51"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_NV24",
                                 "name": "nv24",
-                                "value": "53"
+                                "value": "52"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_NV12_64Z32",
                                 "name": "nv12-64z32",
-                                "value": "54"
+                                "value": "53"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_A420_10BE",
                                 "name": "a420-10be",
-                                "value": "55"
+                                "value": "54"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_A420_10LE",
                                 "name": "a420-10le",
-                                "value": "56"
+                                "value": "55"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_A422_10BE",
                                 "name": "a422-10be",
-                                "value": "57"
+                                "value": "56"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_A422_10LE",
                                 "name": "a422-10le",
-                                "value": "58"
+                                "value": "57"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_A444_10BE",
                                 "name": "a444-10be",
-                                "value": "59"
+                                "value": "58"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_A444_10LE",
                                 "name": "a444-10le",
-                                "value": "60"
+                                "value": "59"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_NV61",
                                 "name": "nv61",
-                                "value": "61"
+                                "value": "60"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_P010_10BE",
                                 "name": "p010-10be",
-                                "value": "62"
+                                "value": "61"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_P010_10LE",
                                 "name": "p010-10le",
-                                "value": "63"
+                                "value": "62"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_IYU2",
                                 "name": "iyu2",
-                                "value": "64"
+                                "value": "63"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_VYUY",
                                 "name": "vyuy",
-                                "value": "65"
+                                "value": "64"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GBRA",
                                 "name": "gbra",
-                                "value": "66"
+                                "value": "65"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GBRA_10BE",
                                 "name": "gbra-10be",
-                                "value": "67"
+                                "value": "66"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GBRA_10LE",
                                 "name": "gbra-10le",
-                                "value": "68"
+                                "value": "67"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GBR_12BE",
                                 "name": "gbr-12be",
-                                "value": "69"
+                                "value": "68"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GBR_12LE",
                                 "name": "gbr-12le",
-                                "value": "70"
+                                "value": "69"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GBRA_12BE",
                                 "name": "gbra-12be",
-                                "value": "71"
+                                "value": "70"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GBRA_12LE",
                                 "name": "gbra-12le",
-                                "value": "72"
+                                "value": "71"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_I420_12BE",
                                 "name": "i420-12be",
-                                "value": "73"
+                                "value": "72"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_I420_12LE",
                                 "name": "i420-12le",
-                                "value": "74"
+                                "value": "73"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_I422_12BE",
                                 "name": "i422-12be",
-                                "value": "75"
+                                "value": "74"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_I422_12LE",
                                 "name": "i422-12le",
-                                "value": "76"
+                                "value": "75"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_Y444_12BE",
                                 "name": "y444-12be",
-                                "value": "77"
+                                "value": "76"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_Y444_12LE",
                                 "name": "y444-12le",
-                                "value": "78"
+                                "value": "77"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_GRAY10_LE32",
                                 "name": "gray10-le32",
-                                "value": "79"
+                                "value": "78"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_NV12_10LE32",
                                 "name": "nv12-10le32",
-                                "value": "80"
+                                "value": "79"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_NV16_10LE32",
                                 "name": "nv16-10le32",
-                                "value": "81"
+                                "value": "80"
                             },
                             {
                                 "desc": "GST_VIDEO_FORMAT_NV12_10LE40",
                                 "name": "nv12-10le40",
+                                "value": "81"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_Y210",
+                                "name": "y210",
                                 "value": "82"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_Y410",
+                                "name": "y410",
+                                "value": "83"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_VUYA",
+                                "name": "vuya",
+                                "value": "84"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_BGR10A2_LE",
+                                "name": "bgr10a2-le",
+                                "value": "85"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_RGB10A2_LE",
+                                "name": "rgb10a2-le",
+                                "value": "86"
                             }
                         ],
                         "writable": true
@@ -14566,12 +15481,12 @@
                 "long-name": "unalignedvideoparse",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-unaligned-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-unaligned-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14612,7 +15527,7 @@
                 "rank": "marginal"
             }
         },
-        "filename": "libgstrawparse.so",
+        "filename": "gstrawparse",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -14726,7 +15641,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstsubparse.so",
+        "filename": "gstsubparse",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -15040,6 +15955,14 @@
                         "default": "true",
                         "type-name": "gboolean",
                         "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
                     },
                     "sync": {
                         "blurb": "Sync on the clock",
@@ -15568,6 +16491,14 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -16019,6 +16950,14 @@
                         "min": "0",
                         "type-name": "guint64",
                         "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
                     },
                     "sync": {
                         "blurb": "Sync on the clock",
@@ -16498,6 +17437,14 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -16816,7 +17763,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgsttcp.so",
+        "filename": "gsttcp",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -17139,7 +18086,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgsttheora.so",
+        "filename": "gsttheora",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -17148,7 +18095,7 @@
     "typefindfunctions": {
         "description": "default typefind functions",
         "elements": {},
-        "filename": "libgsttypefindfunctions.so",
+        "filename": "gsttypefindfunctions",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -17173,12 +18120,12 @@
                 "long-name": "Colorspace converter",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -17448,7 +18395,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvideoconvert.so",
+        "filename": "gstvideoconvert",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -17530,6 +18477,16 @@
                         "min": "0",
                         "type-name": "guint64",
                         "writable": false
+                    },
+                    "max-duplication-time": {
+                        "blurb": "Do not duplicate frames if the gap exceeds this period (in ns) (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
                     },
                     "max-rate": {
                         "blurb": "Maximum framerate allowed to pass through (in frames per second, implies drop-only)",
@@ -17614,7 +18571,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvideorate.so",
+        "filename": "gstvideorate",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -17639,12 +18596,12 @@
                 "long-name": "Video scaler",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 32767 ]\n         height: [ 1, 32767 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 32767 ]\n         height: [ 1, 32767 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 32767 ]\n         height: [ 1, 32767 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 32767 ]\n         height: [ 1, 32767 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 32767 ]\n         height: [ 1, 32767 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 32767 ]\n         height: [ 1, 32767 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 32767 ]\n         height: [ 1, 32767 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 32767 ]\n         height: [ 1, 32767 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -17802,7 +18759,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvideoscale.so",
+        "filename": "gstvideoscale",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -17827,7 +18784,7 @@
                 "long-name": "Video test source",
                 "pad-templates": {
                     "src": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n multiview-mode: { (string)mono, (string)left, (string)right }\nvideo/x-bayer:\n         format: { bggr, rggb, grbg, gbrg }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n multiview-mode: { (string)mono, (string)left, (string)right }\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n multiview-mode: { (string)mono, (string)left, (string)right }\nvideo/x-bayer:\n         format: { bggr, rggb, grbg, gbrg }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n multiview-mode: { (string)mono, (string)left, (string)right }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -18252,7 +19209,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvideotestsrc.so",
+        "filename": "gstvideotestsrc",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -18333,7 +19290,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvolume.so",
+        "filename": "gstvolume",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -18636,7 +19593,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvorbis.so",
+        "filename": "gstvorbis",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -18811,6 +19768,14 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -18871,7 +19836,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgstximagesink.so",
+        "filename": "gstximagesink",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
@@ -19143,6 +20108,14 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -19203,7 +20176,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstxvimagesink.so",
+        "filename": "gstxvimagesink",
         "license": "LGPL",
         "package": "GStreamer Base Plug-ins git",
         "source": "gst-plugins-base",
