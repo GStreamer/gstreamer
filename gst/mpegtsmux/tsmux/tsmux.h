@@ -119,8 +119,9 @@ struct TsMuxProgram {
 
   /* interval between PMT in MPEG PTS clock time */
   guint    pmt_interval;
-  /* last time PMT written in MPEG PTS clock time */
-  gint64   last_pmt_ts;
+
+  /* Next PMT position, 27 MHz */
+  gint64   next_pmt_pcr;
 
   /* program ID for the PAT */
   guint16 pgm_number;
@@ -160,15 +161,15 @@ struct TsMux {
   gboolean pat_changed;
   /* interval between PAT in MPEG PTS clock time */
   guint    pat_interval;
-  /* last time PAT written in MPEG PTS clock time */
-  gint64   last_pat_ts;
+  /* Next PAT position, 27 MHz */
+  gint64   next_pat_pcr;
 
   /* trigger writing Service Information Tables */
   gboolean si_changed;
   /* interval between SIT in MPEG PTS clock time */
   guint    si_interval;
-  /* last time SIT written in MPEG PTS clock time */
-  gint64   last_si_ts;
+  /* Next SIT position, 27 MHz */
+  gint64   next_si_pcr;
 
   /* callback to write finished packet */
   TsMuxWriteFunc write_func;
