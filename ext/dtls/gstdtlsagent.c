@@ -126,7 +126,7 @@ _gst_dtls_init_openssl (void)
     SSL_load_error_strings ();
     ERR_load_BIO_strings ();
 
-    {
+    if (!CRYPTO_get_locking_callback ()) {
       gint i;
       gint num_locks;
       num_locks = CRYPTO_num_locks ();
