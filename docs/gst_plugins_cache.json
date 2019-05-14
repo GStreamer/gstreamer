@@ -285,7 +285,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgst1394.so",
+        "filename": "gst1394",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -773,7 +773,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstalaw.so",
+        "filename": "gstalaw",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -957,7 +957,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstalpha.so",
+        "filename": "gstalpha",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -1022,7 +1022,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstalphacolor.so",
+        "filename": "gstalphacolor",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -1078,7 +1078,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstapetag.so",
+        "filename": "gstapetag",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -2401,12 +2401,12 @@
                 "name": "scaletempo",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: F32LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-raw:\n         format: F64LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-raw:\n         format: S16LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "audio/x-raw:\n         format: F32LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\naudio/x-raw:\n         format: F64LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\naudio/x-raw:\n         format: S16LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: F32LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-raw:\n         format: F64LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\naudio/x-raw:\n         format: S16LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "caps": "audio/x-raw:\n         format: F32LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\naudio/x-raw:\n         format: F64LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\naudio/x-raw:\n         format: S16LE\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -2478,9 +2478,80 @@
                     }
                 },
                 "rank": "none"
+            },
+            "stereo": {
+                "author": "Erik Walthinsen <omega@cse.ogi.edu>",
+                "description": "Muck with the stereo signal to enhance its 'stereo-ness'",
+                "hierarchy": [
+                    "GstStereo",
+                    "GstAudioFilter",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Effect/Audio",
+                "long-name": "Stereo effect",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n           rate: [ 1, 2147483647 ]\n       channels: 2\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: S16LE\n           rate: [ 1, 2147483647 ]\n       channels: 2\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "active": {
+                        "blurb": "active",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Handle Quality-of-Service events",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "stereo": {
+                        "blurb": "stereo",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0.01",
+                        "max": "1",
+                        "min": "0",
+                        "type-name": "gfloat",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
             }
         },
-        "filename": "libgstaudiofx.so",
+        "filename": "gstaudiofx",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -2930,7 +3001,7 @@
                 "rank": "primary + 1"
             }
         },
-        "filename": "libgstaudioparsers.so",
+        "filename": "gstaudioparsers",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -2985,7 +3056,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgstauparse.so",
+        "filename": "gstauparse",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -3311,7 +3382,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstautodetect.so",
+        "filename": "gstautodetect",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -3502,7 +3573,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstavi.so",
+        "filename": "gstavi",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -3814,7 +3885,7 @@
                 }
             }
         },
-        "filename": "libgstcairo.so",
+        "filename": "gstcairo",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -3917,7 +3988,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstcutter.so",
+        "filename": "gstcutter",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -4749,6 +4820,14 @@
                         "type-name": "guint64",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -4791,7 +4870,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstdebug.so",
+        "filename": "gstdebug",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -4815,12 +4894,12 @@
                 "name": "deinterlace",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n         format: { AYUV, ARGB, ABGR, RGBA, BGRA, Y444, xRGB, xBGR, RGBx, BGRx, RGB, BGR, YUY2, YVYU, UYVY, Y42B, I420, YV12, Y41B, NV12, NV21 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { AYUV, ARGB, ABGR, RGBA, BGRA, Y444, xRGB, xBGR, RGBx, BGRx, RGB, BGR, YUY2, YVYU, UYVY, Y42B, I420, YV12, Y41B, NV12, NV21 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw:\n         format: { AYUV, ARGB, ABGR, RGBA, BGRA, Y444, xRGB, xBGR, RGBx, BGRx, RGB, BGR, YUY2, YVYU, UYVY, Y42B, I420, YV12, Y41B, NV12, NV21 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { AYUV, ARGB, ABGR, RGBA, BGRA, Y444, xRGB, xBGR, RGBx, BGRx, RGB, BGR, YUY2, YVYU, UYVY, Y42B, I420, YV12, Y41B, NV12, NV21 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -5042,7 +5121,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstdeinterlace.so",
+        "filename": "gstdeinterlace",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -5378,7 +5457,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstdtmf.so",
+        "filename": "gstdtmf",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -6508,7 +6587,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgsteffectv.so",
+        "filename": "gsteffectv",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -6826,7 +6905,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstequalizer.so",
+        "filename": "gstequalizer",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -7224,7 +7303,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstflac.so",
+        "filename": "gstflac",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -7248,7 +7327,7 @@
                 "name": "flvdemux",
                 "pad-templates": {
                     "audio": {
-                        "caps": "audio/x-adpcm:\n         layout: swf\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/mpeg:\n    mpegversion: 1\n          layer: 3\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)22050, (int)44100 }\n         parsed: true\naudio/mpeg:\n    mpegversion: 4\n  stream-format: raw\n         framed: true\naudio/x-nellymoser:\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)16000, (int)22050, (int)44100 }\naudio/x-raw:\n         format: { U8, S16LE }\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/x-alaw:\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/x-mulaw:\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/x-speex:\n       channels: 1\n           rate: 16000\n",
+                        "caps": "audio/x-adpcm:\n         layout: swf\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/mpeg:\n    mpegversion: 1\n          layer: 3\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)22050, (int)44100 }\n         parsed: true\naudio/mpeg:\n    mpegversion: 4\n  stream-format: raw\n         framed: true\naudio/x-nellymoser:\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)16000, (int)22050, (int)44100 }\naudio/x-raw:\n         format: { U8, S16LE }\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/x-alaw:\n       channels: { (int)1, (int)2 }\n           rate: 8000\naudio/x-mulaw:\n       channels: { (int)1, (int)2 }\n           rate: 8000\naudio/x-speex:\n       channels: 1\n           rate: 16000\n",
                         "direction": "src",
                         "presence": "sometimes"
                     },
@@ -7317,7 +7396,7 @@
                 "name": "flvmux",
                 "pad-templates": {
                     "audio": {
-                        "caps": "audio/x-adpcm:\n         layout: swf\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/mpeg:\n    mpegversion: 1\n          layer: 3\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)22050, (int)44100 }\n         parsed: true\naudio/mpeg:\n    mpegversion: { (int)4, (int)2 }\n  stream-format: raw\naudio/x-nellymoser:\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)16000, (int)22050, (int)44100 }\naudio/x-raw:\n         format: { U8, S16LE }\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/x-alaw:\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/x-mulaw:\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/x-speex:\n       channels: 1\n           rate: 16000\n",
+                        "caps": "audio/x-adpcm:\n         layout: swf\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/mpeg:\n    mpegversion: 1\n          layer: 3\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)22050, (int)44100 }\n         parsed: true\naudio/mpeg:\n    mpegversion: { (int)4, (int)2 }\n  stream-format: raw\naudio/x-nellymoser:\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)8000, (int)11025, (int)16000, (int)22050, (int)44100 }\naudio/x-raw:\n         format: { U8, S16LE }\n         layout: interleaved\n       channels: { (int)1, (int)2 }\n           rate: { (int)5512, (int)11025, (int)22050, (int)44100 }\naudio/x-alaw:\n       channels: { (int)1, (int)2 }\n           rate: 8000\naudio/x-mulaw:\n       channels: { (int)1, (int)2 }\n           rate: 8000\naudio/x-speex:\n       channels: 1\n           rate: 16000\n",
                         "direction": "sink",
                         "presence": "request"
                     },
@@ -7333,6 +7412,14 @@
                     }
                 },
                 "properties": {
+                    "encoder": {
+                        "blurb": "The value of encoder in the meta packet.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "GStreamer 1.17.0.1 FLV muxer",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
                     "latency": {
                         "blurb": "Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds)",
                         "construct": false,
@@ -7347,7 +7434,7 @@
                         "blurb": "The value of metadatacreator in the meta packet.",
                         "construct": false,
                         "construct-only": false,
-                        "default": "GStreamer 1.15.0.1 FLV muxer",
+                        "default": "GStreamer 1.17.0.1 FLV muxer",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -7425,7 +7512,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstflv.so",
+        "filename": "gstflv",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -7480,7 +7567,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstflxdec.so",
+        "filename": "gstflxdec",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -7858,6 +7945,14 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -7890,7 +7985,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstgdkpixbuf.so",
+        "filename": "gstgdkpixbuf",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -8017,7 +8112,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstgoom.so",
+        "filename": "gstgoom",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -8144,7 +8239,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstgoom2k1.so",
+        "filename": "gstgoom2k1",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -8217,7 +8312,7 @@
                 }
             }
         },
-        "filename": "libgsticydemux.so",
+        "filename": "gsticydemux",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -8281,7 +8376,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstid3demux.so",
+        "filename": "gstid3demux",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -8325,6 +8420,16 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "num-buffers": {
+                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -8336,7 +8441,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstimagefreeze.so",
+        "filename": "gstimagefreeze",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -8477,7 +8582,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstinterleave.so",
+        "filename": "gstinterleave",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -9637,7 +9742,7 @@
                         "presence": "request"
                     },
                     "caption_%%u": {
-                        "caps": "closedcaption/x-cea-608:\n         format: cc_data\nclosedcaption/x-cea-708:\n         format: cdp\n",
+                        "caps": "closedcaption/x-cea-608:\n         format: s334-1a\nclosedcaption/x-cea-708:\n         format: cdp\n",
                         "direction": "sink",
                         "presence": "request"
                     },
@@ -9924,7 +10029,7 @@
                 "rank": "marginal"
             }
         },
-        "filename": "libgstisomp4.so",
+        "filename": "gstisomp4",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -10206,6 +10311,14 @@
                             }
                         ],
                         "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
                     },
                     "sync": {
                         "blurb": "Sync on the clock",
@@ -10494,7 +10607,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstjack.so",
+        "filename": "gstjack",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -10684,7 +10797,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstjpeg.so",
+        "filename": "gstjpeg",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -10857,7 +10970,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstlame.so",
+        "filename": "gstlame",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -10967,7 +11080,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstlevel.so",
+        "filename": "gstlevel",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -11266,7 +11379,7 @@
                         "presence": "request"
                     },
                     "video_%%u": {
-                        "caps": "video/x-vp8:\n          width: [ 16, 4096 ]\n         height: [ 16, 4096 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-vp9:\n          width: [ 16, 4096 ]\n         height: [ 16, 4096 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-av1:\n          width: [ 16, 4096 ]\n         height: [ 16, 4096 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-vp8:\n          width: [ 16, 2147483647 ]\n         height: [ 16, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-vp9:\n          width: [ 16, 2147483647 ]\n         height: [ 16, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-av1:\n          width: [ 16, 2147483647 ]\n         height: [ 16, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "request"
                     }
@@ -11358,7 +11471,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstmatroska.so",
+        "filename": "gstmatroska",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -11413,7 +11526,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstmonoscope.so",
+        "filename": "gstmonoscope",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -11497,7 +11610,7 @@
                 "rank": "marginal"
             }
         },
-        "filename": "libgstmpg123.so",
+        "filename": "gstmpg123",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -11661,7 +11774,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstmulaw.so",
+        "filename": "gstmulaw",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -11893,6 +12006,14 @@
                         "min": "0",
                         "type-name": "guint64",
                         "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
                     },
                     "sync": {
                         "blurb": "Sync on the clock",
@@ -12494,7 +12615,7 @@
                 }
             }
         },
-        "filename": "libgstmultifile.so",
+        "filename": "gstmultifile",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -12636,7 +12757,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstmultipart.so",
+        "filename": "gstmultipart",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -12701,7 +12822,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstnavigationtest.so",
+        "filename": "gstnavigationtest",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -12952,6 +13073,14 @@
                         ],
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -13169,7 +13298,7 @@
                 "rank": "secondary + 1"
             }
         },
-        "filename": "libgstoss4.so",
+        "filename": "gstoss4",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -13404,6 +13533,14 @@
                         ],
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -13611,7 +13748,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgstossaudio.so",
+        "filename": "gstossaudio",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -13739,7 +13876,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstpng.so",
+        "filename": "gstpng",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -13765,7 +13902,7 @@
                 "name": "pulsesink",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-raw:\n         format: { S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 32 ]\naudio/x-alaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 32 ]\naudio/x-mulaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 32 ]\naudio/x-ac3:\n         framed: true\naudio/x-eac3:\n         framed: true\naudio/x-dts:\n         framed: true\n     block-size: { (int)512, (int)1024, (int)2048 }\naudio/mpeg:\n    mpegversion: 1\nmpegaudioversion: [ 1, 3 ]\n         parsed: true\naudio/mpeg:\n    mpegversion: { (int)2, (int)4 }\n         framed: true\n  stream-format: adts\n",
+                        "caps": "audio/x-raw:\n         format: { S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }\n         layout: interleaved\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\naudio/x-alaw:\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\naudio/x-mulaw:\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\naudio/x-ac3:\n         framed: true\naudio/x-eac3:\n         framed: true\naudio/x-dts:\n         framed: true\n     block-size: { (int)512, (int)1024, (int)2048 }\naudio/mpeg:\n    mpegversion: 1\nmpegaudioversion: [ 1, 3 ]\n         parsed: true\naudio/mpeg:\n    mpegversion: { (int)2, (int)4 }\n         framed: true\n  stream-format: adts\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -14013,6 +14150,14 @@
                         ],
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "stream-properties": {
                         "blurb": "list of pulseaudio stream properties",
                         "construct": false,
@@ -14080,7 +14225,7 @@
                 "name": "pulsesrc",
                 "pad-templates": {
                     "src": {
-                        "caps": "audio/x-raw:\n         format: { S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 32 ]\naudio/x-alaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 32 ]\naudio/x-mulaw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 32 ]\n",
+                        "caps": "audio/x-raw:\n         format: { S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, S24LE, S24BE, S24_32LE, S24_32BE, U8 }\n         layout: interleaved\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\naudio/x-alaw:\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\naudio/x-mulaw:\n           rate: [ 1, 384000 ]\n       channels: [ 1, 32 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -14296,7 +14441,7 @@
                 "rank": "primary + 10"
             }
         },
-        "filename": "libgstpulseaudio.so",
+        "filename": "gstpulseaudio",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -14578,7 +14723,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstreplaygain.so",
+        "filename": "gstreplaygain",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -14767,6 +14912,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -15010,6 +15163,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -15251,6 +15412,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -15483,6 +15652,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -15713,6 +15890,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -15956,6 +16141,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -16186,6 +16379,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -16446,6 +16647,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -16687,6 +16896,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -16917,6 +17134,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -17176,6 +17401,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -17408,6 +17641,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -17638,6 +17879,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -17882,6 +18131,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -18112,6 +18369,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -18352,6 +18617,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -18607,6 +18880,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -18847,6 +19128,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -19097,6 +19386,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -19361,6 +19658,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -19593,6 +19898,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -19823,6 +20136,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -20075,6 +20396,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -20381,6 +20710,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -20613,6 +20950,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -20843,6 +21188,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -21087,6 +21440,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -21317,6 +21678,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -21613,6 +21982,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -21843,6 +22220,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -22086,6 +22471,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -22325,6 +22718,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -22849,6 +23250,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -23090,6 +23499,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -23320,6 +23737,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -23787,6 +24212,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -24204,6 +24637,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -24434,6 +24875,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -24692,6 +25141,14 @@
                         "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -24962,6 +25419,14 @@
                         "type-name": "gchararray",
                         "writable": true
                     },
+                    "onvif-no-rate-control": {
+                        "blurb": "Enable ONVIF Rate-Control=no timestamping mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -25067,7 +25532,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgstrtp.so",
+        "filename": "gstrtp",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -26015,7 +26480,7 @@
                         "writable": true
                     },
                     "rtx-delay-reorder": {
-                        "blurb": "Sending retransmission event when this much reordering (0 disable, -1 automatic)",
+                        "blurb": "Sending retransmission event when this much reordering (0 disable)",
                         "construct": false,
                         "construct-only": false,
                         "default": "3",
@@ -26848,7 +27313,7 @@
                         "blurb": "Various statistics",
                         "construct": false,
                         "construct-only": false,
-                        "default": "application/x-rtp-session-stats, rtx-drop-count=(uint)0, sent-nack-count=(uint)0, recv-nack-count=(uint)0, source-stats=(GValueArray)<  >, rtx-count=(uint)0;",
+                        "default": "application/x-rtp-session-stats, rtx-drop-count=(uint)0, sent-nack-count=(uint)0, recv-nack-count=(uint)0, source-stats=(GValueArray)<  >, rtx-count=(uint)0, recv-rtx-req-count=(uint)0, sent-rtx-req-count=(uint)0;",
                         "type-name": "GstStructure",
                         "writable": false
                     },
@@ -27051,7 +27516,7 @@
                 }
             }
         },
-        "filename": "libgstrtpmanager.so",
+        "filename": "gstrtpmanager",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -27753,7 +28218,7 @@
                         "blurb": "The User-Agent string to send to the server",
                         "construct": false,
                         "construct-only": false,
-                        "default": "GStreamer/1.15.0.1",
+                        "default": "GStreamer/1.17.0.1",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -27940,7 +28405,7 @@
                 }
             }
         },
-        "filename": "libgstrtsp.so",
+        "filename": "gstrtsp",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -28020,7 +28485,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstshapewipe.so",
+        "filename": "gstshapewipe",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -28235,6 +28700,14 @@
                         "type-name": "guint64",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "streamname": {
                         "blurb": "name of the stream",
                         "construct": false,
@@ -28309,7 +28782,7 @@
                 }
             }
         },
-        "filename": "libgstshout2.so",
+        "filename": "gstshout2",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -29572,7 +30045,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstsmpte.so",
+        "filename": "gstsmpte",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -29804,6 +30277,14 @@
                         "construct-only": false,
                         "type-name": "SoupSession",
                         "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
                     },
                     "sync": {
                         "blurb": "Sync on the clock",
@@ -30122,7 +30603,7 @@
                         "blurb": "Value of the User-Agent HTTP request header field",
                         "construct": false,
                         "construct-only": false,
-                        "default": "GStreamer souphttpsrc 1.15.0.1 ",
+                        "default": "GStreamer souphttpsrc 1.17.0.1 ",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -30146,7 +30627,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstsoup.so",
+        "filename": "gstsoup",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -30273,7 +30754,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstspectrum.so",
+        "filename": "gstspectrum",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -30558,7 +31039,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstspeex.so",
+        "filename": "gstspeex",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -30660,7 +31141,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgsttaglib.so",
+        "filename": "gsttaglib",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -30941,7 +31422,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgsttwolame.so",
+        "filename": "gsttwolame",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -31108,6 +31589,14 @@
                         "construct-only": false,
                         "type-name": "GSocket",
                         "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
                     },
                     "sync": {
                         "blurb": "Sync on the clock",
@@ -31395,6 +31884,14 @@
                         "construct-only": false,
                         "type-name": "GSocket",
                         "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
                     },
                     "sync": {
                         "blurb": "Sync on the clock",
@@ -31768,6 +32265,14 @@
                         "type-name": "GSocket",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -32096,7 +32601,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstudp.so",
+        "filename": "gstudp",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -32705,6 +33210,14 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -33165,7 +33678,7 @@
                 }
             }
         },
-        "filename": "libgstvideo4linux2.so",
+        "filename": "gstvideo4linux2",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -33339,7 +33852,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvideobox.so",
+        "filename": "gstvideobox",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -33516,7 +34029,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvideocrop.so",
+        "filename": "gstvideocrop",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -33942,7 +34455,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvideofilter.so",
+        "filename": "gstvideofilter",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -34028,7 +34541,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstvideomixer.so",
+        "filename": "gstvideomixer",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -34132,29 +34645,9 @@
                                 "value": "0x00000004"
                             },
                             {
-                                "desc": "Print frame information",
-                                "name": "visualize-frame-info",
-                                "value": "0x00000008"
-                            },
-                            {
-                                "desc": "Show macroblock mode selection overlaid on image",
-                                "name": "visualize-macroblock-modes",
-                                "value": "0x00000010"
-                            },
-                            {
-                                "desc": "Show dc diff for each macro block overlaid on image",
-                                "name": "visualize-dc-diff",
-                                "value": "0x00000020"
-                            },
-                            {
-                                "desc": "Print video rate info",
-                                "name": "visualize-rate-info",
-                                "value": "0x00000040"
-                            },
-                            {
                                 "desc": "Multi-frame quality enhancement",
                                 "name": "mfqe",
-                                "value": "0x00000400"
+                                "value": "0x00000008"
                             }
                         ],
                         "writable": true
@@ -34874,29 +35367,9 @@
                                 "value": "0x00000004"
                             },
                             {
-                                "desc": "Print frame information",
-                                "name": "visualize-frame-info",
-                                "value": "0x00000008"
-                            },
-                            {
-                                "desc": "Show macroblock mode selection overlaid on image",
-                                "name": "visualize-macroblock-modes",
-                                "value": "0x00000010"
-                            },
-                            {
-                                "desc": "Show dc diff for each macro block overlaid on image",
-                                "name": "visualize-dc-diff",
-                                "value": "0x00000020"
-                            },
-                            {
-                                "desc": "Print video rate info",
-                                "name": "visualize-rate-info",
-                                "value": "0x00000040"
-                            },
-                            {
                                 "desc": "Multi-frame quality enhancement",
                                 "name": "mfqe",
-                                "value": "0x00000400"
+                                "value": "0x00000008"
                             }
                         ],
                         "writable": true
@@ -35522,7 +35995,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstvpx.so",
+        "filename": "gstvpx",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -35577,7 +36050,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstwavenc.so",
+        "filename": "gstwavenc",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -35885,7 +36358,7 @@
                 }
             }
         },
-        "filename": "libgstwavpack.so",
+        "filename": "gstwavpack",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -35909,7 +36382,7 @@
                 "name": "wavparse",
                 "pad-templates": {
                     "sink": {
-                        "caps": "audio/x-wav:\n",
+                        "caps": "audio/x-wav:\naudio/x-rf64:\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -35948,7 +36421,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstwavparse.so",
+        "filename": "gstwavparse",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -36126,7 +36599,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstximagesrc.so",
+        "filename": "gstximagesrc",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -36190,7 +36663,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgsty4menc.so",
+        "filename": "gsty4menc",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
