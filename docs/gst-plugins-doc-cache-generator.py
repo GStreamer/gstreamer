@@ -21,6 +21,7 @@ import json
 import os
 import sys
 import subprocess
+import tempfile
 
 from collections import OrderedDict
 try:
@@ -84,7 +85,8 @@ if __name__ == "__main__":
     except FileNotFoundError:
         pass
 
-    cmd = [os.path.join(os.path.dirname(os.path.realpath(__file__)), 'gst-hotdoc-plugins-scanner')]
+    out = output_filename + '.tmp'
+    cmd = [os.path.join(os.path.dirname(os.path.realpath(__file__)), 'gst-hotdoc-plugins-scanner'), out]
     gst_plugins_paths = []
     for plugin_path in sys.argv[3:]:
         cmd.append(plugin_path)
@@ -110,11 +112,13 @@ if __name__ == "__main__":
             with open(stderrlogfile, 'r') as f:
                 print(f.read(), file=sys.stderr)
             raise
-    try:
-        plugins = json.loads(data.decode(), object_pairs_hook=OrderedDict)
-    except json.decoder.JSONDecodeError:
-        print("Could not decode:\n%s" % data.decode(), file=sys.stderr)
-        raise
+
+    with open(out, 'r') as jfile:
+        try:
+            plugins = json.load(jfile, object_pairs_hook=OrderedDict)
+        except json.decoder.JSONDecodeError:
+            print("Could not decode:\n%s" % jfile.read(), file=sys.stderr)
+            raise
 
     modified = dict_recursive_update(cache, plugins)
 

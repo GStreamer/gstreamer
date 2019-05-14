@@ -690,8 +690,9 @@ main (int argc, char *argv[])
   GList *features, *tmp;
   gint i;
   gboolean first = TRUE;
+  GError *err = NULL;
 
-  g_assert (argc >= 2);
+  g_assert (argc >= 3);
 
   setlocale (LC_ALL, "");
   setlocale (LC_NUMERIC, "C");
@@ -706,7 +707,7 @@ main (int argc, char *argv[])
   gst_init (NULL, NULL);
 
   json = g_string_new ("{");
-  for (i = 1; i < argc; i++) {
+  for (i = 2; i < argc; i++) {
     gchar *basename;
     libfile = argv[i];
     plugin = gst_plugin_load_file (libfile, &error);
@@ -757,7 +758,13 @@ main (int argc, char *argv[])
   }
 
   g_string_append_c (json, '}');
-  g_print ("%s", json->str);
+  if (!g_file_set_contents (argv[1], json->str, -1, &err)) {
+    g_printerr ("Could not set json to %s: %s", argv[1], err->message);
+    g_clear_error (&err);
+
+    return -1;
+  }
+  g_string_free (json, TRUE);
 
   return 0;
 }
