@@ -1887,6 +1887,76 @@ GST_START_TEST (test_disable_probation)
 
 GST_END_TEST;
 
+GST_START_TEST (test_request_late_nack)
+{
+  SessionHarness *h = session_harness_new ();
+  GstBuffer *buf;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket rtcp_packet;
+  guint8 *fci_data;
+  guint32 fci_length;
+
+  g_object_set (h->internal_session, "internal-ssrc", 0xDEADBEEF, NULL);
+
+  /* Receive a RTP buffer from the wire */
+  fail_unless_equals_int (GST_FLOW_OK,
+      session_harness_recv_rtp (h, generate_test_buffer (0, 0x12345678)));
+
+  /* Wait for first regular RTCP to be sent so that we are clear to send early RTCP */
+  session_harness_produce_rtcp (h, 1);
+  gst_buffer_unref (session_harness_pull_rtcp (h));
+
+  /* request NACK immediately, but also advance the clock, so the request is
+   * now late, but it should be kept to avoid sendign an early rtcp without
+   * NACK. This would otherwise lead to a stall if the late packet was cause
+   * by high RTT, we need to send some RTX in order to update that statistic. */
+  session_harness_rtp_retransmission_request (h, 0x12345678, 1234, 0, 0, 0);
+  gst_test_clock_advance_time (h->testclock, 100 * GST_USECOND);
+
+  /* NACK should be produced immediately as early RTCP is allowed. Pull buffer
+     without advancing the clock to ensure this is the case */
+  buf = session_harness_pull_rtcp (h);
+
+  fail_unless (gst_rtcp_buffer_validate (buf));
+  gst_rtcp_buffer_map (buf, GST_MAP_READ, &rtcp);
+  fail_unless_equals_int (3, gst_rtcp_buffer_get_packet_count (&rtcp));
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &rtcp_packet));
+
+  /* first a Receiver Report */
+  fail_unless_equals_int (GST_RTCP_TYPE_RR,
+      gst_rtcp_packet_get_type (&rtcp_packet));
+  fail_unless (gst_rtcp_packet_move_to_next (&rtcp_packet));
+
+  /* then a SDES */
+  fail_unless_equals_int (GST_RTCP_TYPE_SDES,
+      gst_rtcp_packet_get_type (&rtcp_packet));
+  fail_unless (gst_rtcp_packet_move_to_next (&rtcp_packet));
+
+  /* and then our NACK */
+  fail_unless_equals_int (GST_RTCP_TYPE_RTPFB,
+      gst_rtcp_packet_get_type (&rtcp_packet));
+  fail_unless_equals_int (GST_RTCP_RTPFB_TYPE_NACK,
+      gst_rtcp_packet_fb_get_type (&rtcp_packet));
+
+  fail_unless_equals_int (0xDEADBEEF,
+      gst_rtcp_packet_fb_get_sender_ssrc (&rtcp_packet));
+  fail_unless_equals_int (0x12345678,
+      gst_rtcp_packet_fb_get_media_ssrc (&rtcp_packet));
+
+  fci_data = gst_rtcp_packet_fb_get_fci (&rtcp_packet);
+  fci_length =
+      gst_rtcp_packet_fb_get_fci_length (&rtcp_packet) * sizeof (guint32);
+  fail_unless_equals_int (4, fci_length);
+  fail_unless_equals_int (GST_READ_UINT32_BE (fci_data), 1234L << 16);
+
+  gst_rtcp_buffer_unmap (&rtcp);
+  gst_buffer_unref (buf);
+
+  session_harness_free (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpsession_suite (void)
 {
@@ -1917,6 +1987,7 @@ rtpsession_suite (void)
   tcase_add_test (tc_chain, test_disable_sr_timestamp);
   tcase_add_test (tc_chain, test_on_sending_nacks);
   tcase_add_test (tc_chain, test_disable_probation);
+  tcase_add_test (tc_chain, test_request_late_nack);
   return s;
 }
 

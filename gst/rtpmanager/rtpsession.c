@@ -3667,6 +3667,14 @@ session_nack (const gchar * key, RTPSource * source, ReportData * data)
     if (nack_deadlines[i] >= data->current_time)
       break;
   }
+
+  if (data->is_early) {
+    /* don't remove them all if this is an early RTCP packet. It may happen
+     * that the NACKs are late due to high RTT, not sending NACKs at all would
+     * keep the RTX RTT stats high and maintain a dropping state. */
+    i = MIN (n_nacks - 1, i);
+  }
+
   if (i) {
     GST_WARNING ("Removing %u expired NACKS", i);
     rtp_source_clear_nacks (source, i);
