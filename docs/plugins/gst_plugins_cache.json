@@ -560,6 +560,14 @@
                         ],
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -1054,6 +1062,14 @@
                         "type-name": "guint64",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -1354,6 +1370,14 @@
                         "min": "0",
                         "type-name": "guint64",
                         "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
                     },
                     "sync": {
                         "blurb": "Sync on the clock",
@@ -1678,13 +1702,23 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "eos-after": {
+                        "blurb": "EOS after N buffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "error-after": {
                         "blurb": "Error after N buffers",
                         "construct": false,
                         "construct-only": false,
                         "default": "-1",
                         "max": "2147483647",
-                        "min": "-2147483648",
+                        "min": "-1",
                         "type-name": "gint",
                         "writable": true
                     },
