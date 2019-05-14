@@ -1198,8 +1198,13 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
 }
 
 static gboolean
-is_blacklisted_hidden_directory (const gchar * dirent)
+is_blacklisted_directory (const gchar * dirent)
 {
+  /* hotdoc private folder can contain many files and it slows down
+   * the discovery for nothing */
+  if (g_str_has_prefix (dirent, "hotdoc-private-"))
+    return TRUE;
+
   if (G_LIKELY (dirent[0] != '.'))
     return FALSE;
 
@@ -1242,7 +1247,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
     }
 
     if (file_status.st_mode & S_IFDIR) {
-      if (G_UNLIKELY (is_blacklisted_hidden_directory (dirent))) {
+      if (G_UNLIKELY (is_blacklisted_directory (dirent))) {
         GST_TRACE_OBJECT (context->registry, "ignoring %s directory", dirent);
         g_free (filename);
         continue;
