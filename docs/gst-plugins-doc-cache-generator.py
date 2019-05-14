@@ -39,34 +39,38 @@ BUILD_ROOT = "@BUILD_ROOT@"
 
 
 def dict_recursive_update(d, u):
+    modified = False
     unstable_values = d.get(UNSTABLE_VALUE, [])
     if not isinstance(unstable_values, list):
         unstable_values = [unstable_values]
     for k, v in u.items():
         if isinstance(v, Mapping):
-            r = dict_recursive_update(d.get(k, {}), v)
+            r = d.get(k, {})
+            modified |= dict_recursive_update(r, v)
             d[k] = r
         elif k not in unstable_values:
             d[k] = u[k]
-    return d
+            modified = True
+    return modified
 
 
 def test_unstable_values():
     current_cache = { "v1": "yes", "unstable-values": "v1"}
     new_cache = { "v1": "no" }
 
-    assert(dict_recursive_update(current_cache, new_cache) == current_cache)
+    assert(dict_recursive_update(current_cache, new_cache) == False)
 
     new_cache = { "v1": "no", "unstable-values": "v2" }
-    assert(dict_recursive_update(current_cache, new_cache) == new_cache)
+    assert(dict_recursive_update(current_cache, new_cache) == True)
 
     current_cache = { "v1": "yes", "v2": "yay", "unstable-values": "v1",}
     new_cache = { "v1": "no" }
-    assert(dict_recursive_update(current_cache, new_cache) == current_cache)
+    assert(dict_recursive_update(current_cache, new_cache) == False)
 
     current_cache = { "v1": "yes", "v2": "yay", "unstable-values": "v2"}
     new_cache = { "v1": "no", "v2": "unstable" }
-    assert(dict_recursive_update(current_cache, new_cache) == { "v1": "no", "v2": "yay", "unstable-values": "v2" })
+    assert (dict_recursive_update(current_cache, new_cache) == True)
+    assert (current_cache == { "v1": "no", "v2": "yay", "unstable-values": "v2" })
 
 if __name__ == "__main__":
     cache_filename = sys.argv[1]
@@ -112,11 +116,11 @@ if __name__ == "__main__":
         print("Could not decode:\n%s" % data.decode(), file=sys.stderr)
         raise
 
-    new_cache = dict_recursive_update(cache, plugins)
+    modified = dict_recursive_update(cache, plugins)
 
     with open(output_filename, 'w') as f:
         json.dump(cache, f, indent=4, sort_keys=True)
 
-    if new_cache != cache:
+    if modified:
         with open(cache_filename, 'w') as f:
             json.dump(cache, f, indent=4, sort_keys=True)
