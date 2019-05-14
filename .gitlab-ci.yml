@@ -9,8 +9,6 @@ stages:
   - "full tests"
   # build some apps to check that cross-platform binaries are usable
   - "apps"
-  # Deploy the documentation
-  - "deploy"
 
 test manifest:
   variables:
