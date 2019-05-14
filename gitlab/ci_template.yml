@@ -8,11 +8,13 @@ stages:
   - 'full tests'
   # build some apps to check that cross-platform binaries are usable
   - 'apps'
+  - 'deploy'
 
 variables:
   ANDROID_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/android:2019-03-26-196225'
   CERBERO_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:7ed820aa1fcf95938cc161e397b1bf455f1f5b74'
   FEDORA_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:2019-03-26-196223'
+  FEDORA30_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:2019-05-13-295487'
   INDENT_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/gst-indent:6f7e01e1e30a73efa880acdc8e911f1f20c58dbb'
   MANIFEST_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/build-manifest:d19082b72667fb3382bdc3621520c4d26e258b2e'
 
@@ -71,6 +73,7 @@ gst indent:
       - $CI_PROJECT_NAME == "gstreamer-sharp"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 .build:
   stage: 'full builds'
@@ -119,13 +122,15 @@ build fedora x86_64:
   image: $FEDORA_IMAGE
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic"
+  except:
+    - $CI_PROJECT_NAME == "gst-docs"
 
 build nodebug fedora x86_64:
   extends: '.build'
   stage: 'build'
-  image: $FEDORA_IMAGE
+  image: $FEDORA30_IMAGE
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled"
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
@@ -167,6 +172,7 @@ build nodebug fedora x86_64:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-examples"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 .test fedora x86_64:
   image: $FEDORA_IMAGE
@@ -184,6 +190,7 @@ check fedora:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-examples"
       - $CI_PROJECT_NAME == "gst-omx"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
@@ -197,6 +204,7 @@ integration testsuites fedora:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
       - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 # Valgrind
 .valgrind fedora x86_64:
@@ -297,6 +305,7 @@ valgrind ges:
   except:
     variables:
       - $CI_PROJECT_NAME == "gst-build"
+      - $CI_PROJECT_NAME == "gst-docs"
   cache:
     key: "${CI_JOB_NAME}"
     paths:
@@ -383,7 +392,7 @@ build cerbero fedora x86_64:
       - $CI_PROJECT_NAME == "gst-build"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
-
+      - $CI_PROJECT_NAME == "gst-docs"
 
 #
 # Cerbero Android Universal build
@@ -417,6 +426,7 @@ build cerbero android universal:
       - $CI_PROJECT_NAME == "gst-build"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 #
 # Cerbero Cross Windows builds
@@ -448,6 +458,7 @@ build cerbero cross win32:
       - $CI_PROJECT_NAME == "gst-build"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 cerbero deps windows x86_64:
   extends: '.cerbero deps'
@@ -476,6 +487,7 @@ build cerbero cross win64:
       - $CI_PROJECT_NAME == "gst-build"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 #
 # Build an Android App using the android binaries
@@ -530,6 +542,7 @@ android universal examples:
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gst-integration-testsuites"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 cerbero android universal examples:
   extends: ".android universal examples"
@@ -538,3 +551,26 @@ cerbero android universal examples:
   only:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
+
+documentation:
+  image: $FEDORA30_IMAGE
+  dependencies:
+    - 'build nodebug fedora x86_64'
+  stage: deploy
+
+  script:
+  - cd gst-build/
+  - ./gst-uninstalled.py hotdoc run --conf-file=build/subprojects/gst-docs/GStreamer-doc.json --fatal-warnings
+  - cd -
+  - mv gst-build/build/subprojects/gst-docs/GStreamer-doc/html documentation/
+
+  artifacts:
+    paths:
+    - documentation/
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-integration-testsuite"
+      - $CI_PROJECT_NAME == "gst-python"
+      - $CI_PROJECT_NAME == "gst-sharp"
+      - $CI_PROJECT_NAME == "gst-build"
