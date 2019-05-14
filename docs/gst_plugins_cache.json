@@ -91,7 +91,7 @@
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
-                        "default": "rtspclientsink0",
+                        "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
                         "writable": true
@@ -381,10 +381,11 @@
                         "writable": true
                     },
                     "user-agent": {
+                        "unstable-values": true,
                         "blurb": "The User-Agent string to send to the server",
                         "construct": false,
                         "construct-only": false,
-                        "default": "GStreamer/1.15.0.1",
+                        "default": "GStreamer/@GSTREAMER_VERSION@",
                         "type-name": "gchararray",
                         "writable": true
                     },
