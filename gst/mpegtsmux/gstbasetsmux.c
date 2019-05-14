@@ -685,19 +685,21 @@ gst_base_ts_mux_create_streams (GstBaseTsMux * mux)
       tsmux_set_pmt_interval (ts_pad->prog, mux->pmt_interval);
       g_hash_table_insert (mux->programs,
           GINT_TO_POINTER (ts_pad->prog_id), ts_pad->prog);
-
-      /* Take the first stream of the program for the PCR */
-      GST_DEBUG_OBJECT (ts_pad,
-          "Use stream (pid=%d) from pad as PCR for program (prog_id = %d)",
-          ts_pad->pid, ts_pad->prog_id);
-
-      tsmux_program_set_pcr_stream (ts_pad->prog, ts_pad->stream);
     }
 
     if (ts_pad->stream == NULL) {
       ret = gst_base_ts_mux_create_stream (mux, ts_pad);
       if (ret != GST_FLOW_OK)
         goto no_stream;
+    }
+
+    if (ts_pad->prog->pcr_stream == NULL) {
+      /* Take the first stream of the program for the PCR */
+      GST_DEBUG_OBJECT (ts_pad,
+          "Use stream (pid=%d) from pad as PCR for program (prog_id = %d)",
+          ts_pad->pid, ts_pad->prog_id);
+
+      tsmux_program_set_pcr_stream (ts_pad->prog, ts_pad->stream);
     }
 
     /* Check for user-specified PCR PID */
