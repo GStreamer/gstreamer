@@ -39015,6 +39015,579 @@
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
+    "rist": {
+        "description": "Source and Sink for RIST TR-06-1 streaming specification",
+        "elements": {
+            "ristdispatcher": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com",
+                "description": "Dispatcher element used by ristsink.",
+                "hierarchy": [
+                    "GstRistDispatcher",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Network",
+                "long-name": "RIST Dispatcher",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src_%%d": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "request"
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "ristrtxreceive": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com>",
+                "description": "Receive retransmitted RIST packets according to VSF TR-06-1",
+                "hierarchy": [
+                    "GstRistRtxReceive",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec",
+                "long-name": "RIST Retransmission receiver",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-rtx-packets": {
+                        "blurb": " Number of retransmission packets received",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": false
+                    },
+                    "num-rtx-requests": {
+                        "blurb": "Number of retransmission events received",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": false
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "ristrtxsend": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com>",
+                "description": "Retransmit RTP packets when needed, according to VSF TR-06-1",
+                "hierarchy": [
+                    "GstRistRtxSend",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec",
+                "long-name": "RIST Retransmission Sender",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-rtp:\n     clock-rate: [ 1, 2147483647 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "max-size-packets": {
+                        "blurb": "Amount of packets to queue (0 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "32767",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "max-size-time": {
+                        "blurb": "Amount of ms to queue (0 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-rtx-packets": {
+                        "blurb": " Number of retransmission packets sent",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": false
+                    },
+                    "num-rtx-requests": {
+                        "blurb": "Number of retransmission events received",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": false
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "ristsink": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com",
+                "description": "Sink that implements RIST TR-06-1 streaming specification",
+                "hierarchy": [
+                    "GstRistSink",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Network",
+                "long-name": "RIST Sink",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "address": {
+                        "blurb": "Address to send packets to (can be IPv4 or IPv6).",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "localhost",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "bonding-addresses": {
+                        "blurb": "Comma (,) seperated list of <address>:<port> to send to. Only used if 'enale-bonding' is set.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "localhost:5004",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "bonding-method": {
+                        "blurb": "Defines the bonding method to use.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "redundant (0)",
+                        "enum": true,
+                        "type-name": "GstRistBondingMethodType",
+                        "values": [
+                            {
+                                "desc": "GST_RIST_BONDING_METHOD_REDUNDANT",
+                                "name": "redundant",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "GST_RIST_BONDING_METHOD_COMBINED",
+                                "name": "combined",
+                                "value": "1"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "cname": {
+                        "blurb": "Set the CNAME in the SDES block of the sender report.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "user3283979497@host-99161034",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "dispatcher": {
+                        "blurb": "An element that takes care of multi-plexing bounds. When set \"bonding-method\" is ignored.",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstElement",
+                        "writable": true
+                    },
+                    "max-rtcp-bandwidth": {
+                        "blurb": "The maximum bandwidth used for RTCP in fraction of RTP bandwdith",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "0.05",
+                        "max": "0.05",
+                        "min": "0",
+                        "type-name": "gdouble",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "min-rtcp-interval": {
+                        "blurb": "The minimum interval in ms between two regular successive RTCP packets.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "100",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "multicast-iface": {
+                        "blurb": "The multicast interface to use to send packets.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "multicast-loopback": {
+                        "blurb": "When enabled, the packet will be received locally.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "multicast-ttl": {
+                        "blurb": "The multicast time-to-live parameter.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "255",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "port": {
+                        "blurb": "The port RTP packets will be sent, RTCP port is derived from it, this port must be an even number.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "5004",
+                        "max": "65534",
+                        "min": "2",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "sender-buffer": {
+                        "blurb": "Size of the retransmission queue in ms",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "1200",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Statistic in a GstStructure named 'rist/x-sender-stats'",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "rist/x-sender-stats, sent-original-packets=(guint64)0, sent-retransmitted-packets=(guint64)0, session-stats=(GValueArray)< \"rist/x-sender-session-stats\\,\\ session-id\\=\\(int\\)0\\,\\ sent-original-packets\\=\\(guint64\\)0\\,\\ sent-retransmitted-packets\\=\\(guint64\\)0\\,\\ round-trip-time\\=\\(guint64\\)0\\;\" >;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
+                    "stats-update-interval": {
+                        "blurb": "The interval between 'stats' update notification (0 disabled)",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "ristsrc": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com",
+                "description": "Source that implements RIST TR-06-1 streaming specification",
+                "hierarchy": [
+                    "GstRistSrc",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Network",
+                "long-name": "RIST Source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "address": {
+                        "blurb": "Address to receive packets from (can be IPv4 or IPv6).",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0.0.0.0",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "bonding-addresses": {
+                        "blurb": "Comma (,) seperated list of <address>:<port> to receive from. Only used if 'enale-bonding' is set.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0.0.0.0:5004",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "cname": {
+                        "blurb": "Set the CNAME in the SDES block of the receiver report.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "user2251453196@host-63409ad8",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "max-rtcp-bandwidth": {
+                        "blurb": "The maximum bandwidth used for RTCP in fraction of RTP bandwdith",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "0.05",
+                        "max": "0.05",
+                        "min": "0",
+                        "type-name": "gdouble",
+                        "writable": true
+                    },
+                    "max-rtx-retries": {
+                        "blurb": "The maximum number of retransmission requests for a lost packet.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "7",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "min-rtcp-interval": {
+                        "blurb": "The minimum interval in ms between two successive RTCP packets",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "100",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "multicast-iface": {
+                        "blurb": "The multicast interface to use to send packets.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "multicast-loopback": {
+                        "blurb": "When enabled, the packet will be received locally.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "multicast-ttl": {
+                        "blurb": "The multicast time-to-live parameter.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "255",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "port": {
+                        "blurb": "The port to listen for RTP packets, RTCP port is derived from it, this port must be an even number.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "5004",
+                        "max": "65534",
+                        "min": "2",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "receiver-buffer": {
+                        "blurb": "Buffering duration in ms",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "1000",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "reorder-section": {
+                        "blurb": "Time to wait before sending retransmission request in ms.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "70",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Statistic in a GstStructure named 'rist/x-receiver-stats'",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "rist/x-receiver-stats, dropped=(guint64)0, received=(guint64)0, recovered=(guint64)0, permanently-lost=(guint64)0, duplicates=(guint64)0, retransmission-requests-sent=(guint64)0, rtx-roundtrip-time=(guint64)0, session-stats=(GValueArray)< \"rist/x-receiver-session-stats\\,\\ session-id\\=\\(int\\)0\\,\\ rtp-from\\=\\(string\\)\\\"\\\"\\,\\ rtcp-from\\=\\(string\\)\\\"\\\"\\,\\ dropped\\=\\(guint64\\)0\\,\\ received\\=\\(guint64\\)0\\;\" >;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
+                    "stats-update-interval": {
+                        "blurb": "The interval between 'stats' update notification (0 disabled)",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            }
+        },
+        "filename": "libgstrist.so",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
     "rsvg": {
         "description": "RSVG plugin library",
         "elements": {
@@ -39367,6 +39940,14 @@
                         "min": "0",
                         "type-name": "guint64",
                         "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
                     },
                     "sync": {
                         "blurb": "Sync on the clock",
