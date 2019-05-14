@@ -17,7 +17,7 @@ dnl check if this is a release version
 AS_NANO(GST_GIT="no", GST_GIT="yes")
 
 dnl can autoconf find the source ?
-AC_CONFIG_SRCDIR([docs/plugins/gst-plugins-bad-plugins-docs.sgml])
+AC_CONFIG_SRCDIR([gst/aiff/aiff.c])
 
 dnl define the output header for config
 AC_CONFIG_HEADERS([config.h])
