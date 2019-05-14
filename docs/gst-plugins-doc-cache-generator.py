@@ -79,7 +79,7 @@ if __name__ == "__main__":
     subenv = os.environ.copy()
     cache = {}
     try:
-        with open(cache_filename) as f:
+        with open(cache_filename, newline='\n') as f:
             cache = json.load(f)
     except FileNotFoundError:
         pass
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         gst_plugins_paths.append(os.path.dirname(plugin_path))
 
     try:
-        with open(os.path.join(BUILD_ROOT, 'GstPluginsPath.json')) as f:
+        with open(os.path.join(BUILD_ROOT, 'GstPluginsPath.json'), newline='\n') as f:
             plugin_paths = os.pathsep.join(json.load(f))
     except FileNotFoundError:
         plugin_paths = ""
@@ -118,9 +118,9 @@ if __name__ == "__main__":
 
     modified = dict_recursive_update(cache, plugins)
 
-    with open(output_filename, 'w') as f:
+    with open(output_filename, 'w', newline='\n') as f:
         json.dump(cache, f, indent=4, sort_keys=True)
 
     if modified:
-        with open(cache_filename, 'w') as f:
+        with open(cache_filename, 'w', newline='\n') as f:
             json.dump(cache, f, indent=4, sort_keys=True)
