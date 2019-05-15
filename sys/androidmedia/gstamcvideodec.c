@@ -766,29 +766,20 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     return FALSE;
   }
 
-  if (!gst_amc_format_get_int (format, "crop-left", &crop_left, &err) ||
-      !gst_amc_format_get_int (format, "crop-right", &crop_right, &err) ||
-      !gst_amc_format_get_int (format, "crop-top", &crop_top, &err) ||
-      !gst_amc_format_get_int (format, "crop-bottom", &crop_bottom, &err)) {
-    GST_ERROR_OBJECT (self, "Failed to get crop rectangle: %s", err->message);
-    g_clear_error (&err);
-    return FALSE;
+  if (gst_amc_format_get_int (format, "crop-left", &crop_left, NULL) &&
+      gst_amc_format_get_int (format, "crop-right", &crop_right, NULL)) {
+    width = crop_right + 1 - crop_left;
+  }
+
+  if (gst_amc_format_get_int (format, "crop-top", &crop_top, NULL) &&
+      gst_amc_format_get_int (format, "crop-bottom", &crop_bottom, NULL)) {
+    height = crop_bottom + 1 - crop_top;
   }
 
   if (width == 0 || height == 0) {
     GST_ERROR_OBJECT (self, "Height or width not set");
     return FALSE;
   }
-
-  if (crop_bottom)
-    height = height - (height - crop_bottom - 1);
-  if (crop_top)
-    height = height - crop_top;
-
-  if (crop_right)
-    width = width - (width - crop_right - 1);
-  if (crop_left)
-    width = width - crop_left;
 
   mime = caps_to_mime (self->input_state->caps);
   if (!mime) {
