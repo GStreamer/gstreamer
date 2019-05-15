@@ -46,5 +46,6 @@ if nvcuvid_dep_found
     install_dir : plugins_install_dir,
   )
   pkgconfig.generate(gstnvdec, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstnvdec]
 endif
 
