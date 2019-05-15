@@ -36,7 +36,6 @@ except ImportError:  # python <3.3
 # make it happen. For properties, the best way is to use th
 # GST_PARAM_DOC_SHOW_DEFAULT flag.
 UNSTABLE_VALUE = "unstable-values"
-BUILD_ROOT = "@BUILD_ROOT@"
 
 
 def dict_recursive_update(d, u):
@@ -76,6 +75,7 @@ def test_unstable_values():
 if __name__ == "__main__":
     cache_filename = sys.argv[1]
     output_filename = sys.argv[2]
+    build_root = os.environ.get('MESON_BUILD_ROOT', '')
 
     subenv = os.environ.copy()
     cache = {}
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         gst_plugins_paths.append(os.path.dirname(plugin_path))
 
     try:
-        with open(os.path.join(BUILD_ROOT, 'GstPluginsPath.json'), newline='\n') as f:
+        with open(os.path.join(build_root, 'GstPluginsPath.json'), newline='\n') as f:
             plugin_paths = os.pathsep.join(json.load(f))
     except FileNotFoundError:
         plugin_paths = ""
