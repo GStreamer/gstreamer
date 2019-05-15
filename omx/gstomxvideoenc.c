@@ -3157,6 +3157,27 @@ create_input_pool (GstOMXVideoEnc * self, GstCaps * caps, guint num_buffers)
 }
 #endif
 
+static GstStructure *
+get_allocation_video_meta (GstOMXVideoEnc * self, GstVideoInfo * info)
+{
+  GstStructure *result;
+  GstVideoAlignment align;
+
+  gst_omx_video_get_port_padding (self->enc_in_port, info, &align);
+
+  result = gst_structure_new_empty ("video-meta");
+
+  gst_structure_set (result, "padding-top", G_TYPE_UINT, align.padding_top,
+      "padding-bottom", G_TYPE_UINT, align.padding_bottom,
+      "padding-left", G_TYPE_UINT, align.padding_left,
+      "padding-right", G_TYPE_UINT, align.padding_right, NULL);
+
+  GST_LOG_OBJECT (self, "Request buffer layout to producer: %" GST_PTR_FORMAT,
+      result);
+
+  return result;
+}
+
 static gboolean
 gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query)
@@ -3166,6 +3187,7 @@ gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
   GstCaps *caps;
   GstVideoInfo info;
   GstBufferPool *pool = NULL;
+  GstStructure *params;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -3179,7 +3201,9 @@ gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
     return FALSE;
   }
 
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  params = get_allocation_video_meta (self, &info);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, params);
+  gst_structure_free (params);
 
   num_buffers = self->enc_in_port->port_def.nBufferCountMin + 1;
 
