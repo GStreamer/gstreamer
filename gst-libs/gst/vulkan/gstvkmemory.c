@@ -99,8 +99,7 @@ _vk_mem_init (GstVulkanMemory * mem, GstAllocator * allocator,
     align |= params->align;
     offset = params->prefix;
     maxsize += params->prefix + params->padding;
-    if ((maxsize & align) != 0)
-      maxsize += ~(maxsize & align) + 1;
+    maxsize += align;
   }
 
   gst_memory_init (GST_MEMORY_CAST (mem), flags, allocator, parent, maxsize,
