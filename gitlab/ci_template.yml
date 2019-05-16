@@ -123,7 +123,8 @@ build fedora x86_64:
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic"
   except:
-    - $CI_PROJECT_NAME == "gst-docs"
+    variables:
+      - $CI_PROJECT_NAME == "gst-docs"
 
 build nodebug fedora x86_64:
   extends: '.build'
@@ -134,7 +135,6 @@ build nodebug fedora x86_64:
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
-      - $CI_PROJECT_NAME == "gst-docs"
 
 .test:
   stage: 'test'
