@@ -1864,6 +1864,8 @@ ges_timeline_element_paste (GESTimelineElement * self,
  * Returns: The priority of the first layer the element is in (note that only
  * groups can span over several layers). %GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY
  * means that the element is not in a layer.
+ *
+ * Since: 1.16
  */
 guint32
 ges_timeline_element_get_layer_priority (GESTimelineElement * self)

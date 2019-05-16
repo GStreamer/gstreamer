@@ -390,6 +390,8 @@ ges_init_check (int *argc, char **argv[], GError ** err)
  * or ges_init_check().
  *
  * Returns: %TRUE if initialization has been done, %FALSE otherwise.
+ *
+ * Since: 1.16
  */
 gboolean
 ges_is_initialized (void)
