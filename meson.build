@@ -69,6 +69,7 @@ pathsep = host_machine.system() == 'windows' ? ';' : ':'
 subproject('orc', required: get_option('orc'))
 
 subprojects_names = []
+plugins_doc_caches = []
 all_plugins = ''
 foreach sp : subprojects
   project_name = sp[0]
@@ -83,7 +84,11 @@ foreach sp : subprojects
   endif
 
   if subproj.found() and build_infos.has_key('build-hotdoc', default: false)
-    foreach plugin: subproj.get_variable('plugins')
+    plugins = subproj.get_variable('plugins')
+    if plugins.length() > 0
+      plugins_doc_caches += [subproj.get_variable('plugins_doc_dep')]
+    endif
+    foreach plugin: plugins
       all_plugins += pathsep + plugin.full_path()
     endforeach
     if documented_projects != ''
@@ -98,6 +103,13 @@ foreach sp : subprojects
     endif
   endif
 endforeach
+
+plugins_doc_dep = custom_target('plugins-doc-cache',
+  command: [python3, '-c', 'print("Built all doc caches")'],
+  input: plugins_doc_caches,
+  output: 'plugins_doc_caches',
+  capture: true,
+)
 
 foreach custom_subproj: get_option('custom_subprojects').split(',')
     if custom_subproj != ''
