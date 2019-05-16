@@ -98,6 +98,8 @@ def get_subprocess_env(options, gst_version):
                                                         'gst-python', 'plugin'))
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(PREFIX_DIR, 'lib',
                                                         'gstreamer-1.0'))
+    prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(options.builddir, 'subprojects',
+        'libnice', 'gst'))
     prepend_env_var(env, "GST_VALIDATE_SCENARIOS_PATH", os.path.join(
         PREFIX_DIR, 'share', 'gstreamer-1.0', 'validate', 'scenarios'))
     prepend_env_var(env, "GI_TYPELIB_PATH", os.path.join(PREFIX_DIR, 'lib',
