@@ -24,7 +24,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -124,7 +124,7 @@
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
-                        "default": "vaapidecodebin0",
+                        "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
                         "writable": true
@@ -151,7 +151,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Decoder/Video",
+                "klass": "Codec/Decoder/Video/Hardware",
                 "long-name": "VA-API H264 decoder",
                 "name": "vaapih264dec",
                 "pad-templates": {
@@ -161,7 +161,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -187,7 +187,7 @@
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
-                        "default": "vaapidecode_h264-0",
+                        "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
                         "writable": true
@@ -215,12 +215,12 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Encoder/Video",
+                "klass": "Codec/Encoder/Video/Hardware",
                 "long-name": "VA-API H264 encoder",
                 "name": "vaapih264enc",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -312,7 +312,7 @@
                         "construct-only": false,
                         "default": "26",
                         "max": "51",
-                        "min": "1",
+                        "min": "0",
                         "type-name": "guint",
                         "writable": true
                     },
@@ -368,7 +368,7 @@
                         "construct-only": false,
                         "default": "1",
                         "max": "51",
-                        "min": "1",
+                        "min": "0",
                         "type-name": "guint",
                         "writable": true
                     },
@@ -376,7 +376,7 @@
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
-                        "default": "vaapiencodeh264-0",
+                        "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
                         "writable": true
@@ -513,6 +513,16 @@
                         "type-name": "guint",
                         "writable": true
                     },
+                    "target-percentage": {
+                        "blurb": "The desired target percentage of bitrate for variable rate controls.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "70",
+                        "max": "100",
+                        "min": "1",
+                        "type-name": "guint",
+                        "writable": true
+                    },
                     "temporal-levels": {
                         "blurb": "Number of temporal levels in the encoded stream ",
                         "construct": false,
@@ -521,6 +531,14 @@
                         "max": "4",
                         "min": "1",
                         "type-name": "guint",
+                        "writable": true
+                    },
+                    "trellis": {
+                        "blurb": "The Trellis Quantization Method of Encoder",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "tune": {
@@ -553,7 +571,7 @@
                         "blurb": "Set of View Ids used for MVC encoding",
                         "construct": false,
                         "construct-only": false,
-                        "type-name": "GValueArray",
+                        "type-name": "GstValueArray",
                         "writable": true
                     }
                 },
@@ -571,7 +589,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Decoder/Video",
+                "klass": "Codec/Decoder/Video/Hardware",
                 "long-name": "VA-API H265 decoder",
                 "name": "vaapih265dec",
                 "pad-templates": {
@@ -581,7 +599,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -591,7 +609,7 @@
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
-                        "default": "vaapidecode_h265-0",
+                        "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
                         "writable": true
@@ -619,12 +637,12 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Encoder/Video",
+                "klass": "Codec/Encoder/Video/Hardware",
                 "long-name": "VA-API H265 encoder",
                 "name": "vaapih265enc",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -671,7 +689,7 @@
                         "construct-only": false,
                         "default": "26",
                         "max": "51",
-                        "min": "1",
+                        "min": "0",
                         "type-name": "guint",
                         "writable": true
                     },
@@ -735,7 +753,7 @@
                         "construct-only": false,
                         "default": "1",
                         "max": "51",
-                        "min": "1",
+                        "min": "0",
                         "type-name": "guint",
                         "writable": true
                     },
@@ -743,7 +761,7 @@
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
-                        "default": "vaapiencodeh265-0",
+                        "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
                         "writable": true
@@ -839,6 +857,24 @@
                         "type-name": "guint",
                         "writable": true
                     },
+                    "target-percentage": {
+                        "blurb": "The desired target percentage of bitrate for variable rate controls.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "70",
+                        "max": "100",
+                        "min": "1",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "trellis": {
+                        "blurb": "The Trellis Quantization Method of Encoder",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "tune": {
                         "blurb": "Encoder tuning option",
                         "construct": false,
@@ -851,6 +887,11 @@
                                 "desc": "None",
                                 "name": "none",
                                 "value": "0"
+                            },
+                            {
+                                "desc": "Low power mode",
+                                "name": "low-power",
+                                "value": "3"
                             }
                         ],
                         "writable": true
@@ -870,7 +911,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Decoder/Video",
+                "klass": "Codec/Decoder/Video/Hardware",
                 "long-name": "VA-API JPEG decoder",
                 "name": "vaapijpegdec",
                 "pad-templates": {
@@ -880,7 +921,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -890,7 +931,7 @@
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
-                        "default": "vaapidecode_jpeg0",
+                        "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
                         "writable": true
@@ -1055,7 +1096,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Decoder/Video",
+                "klass": "Codec/Decoder/Video/Hardware",
                 "long-name": "VA-API MPEG2 decoder",
                 "name": "vaapimpeg2dec",
                 "pad-templates": {
@@ -1065,7 +1106,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -1075,7 +1116,7 @@
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
-                        "default": "vaapidecode_mpeg2-0",
+                        "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
                         "writable": true
@@ -1255,17 +1296,17 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Filter/Converter/Video;Filter/Converter/Video/Scaler;Filter/Effect/Video;Filter/Effect/Video/Deinterlace",
+                "klass": "Filter/Converter/Effect/Video/Scaler/Deinterlace/Hardware",
                 "long-name": "VA-API video postprocessing",
                 "name": "vaapipostproc",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -1788,6 +1829,31 @@
                                 "desc": "GST_VIDEO_FORMAT_NV12_10LE40",
                                 "name": "nv12-10le40",
                                 "value": "81"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_Y210",
+                                "name": "y210",
+                                "value": "82"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_Y410",
+                                "name": "y410",
+                                "value": "83"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_VUYA",
+                                "name": "vuya",
+                                "value": "84"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_BGR10A2_LE",
+                                "name": "bgr10a2-le",
+                                "value": "85"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_RGB10A2_LE",
+                                "name": "rgb10a2-le",
+                                "value": "86"
                             }
                         ],
                         "writable": true
@@ -1816,7 +1882,7 @@
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
-                        "default": "vaapipostproc0",
+                        "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
                         "writable": true
@@ -1921,7 +1987,7 @@
                 "name": "vaapisink",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:VASurface, meta:GstVideoOverlayComposition):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoOverlayComposition):\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:VASurface, meta:GstVideoOverlayComposition):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoOverlayComposition):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -2079,7 +2145,7 @@
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
-                        "default": "vaapisink0",
+                        "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
                         "writable": true
@@ -2181,6 +2247,14 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -2220,7 +2294,7 @@
                         "writable": true
                     }
                 },
-                "rank": "primary",
+                "rank": "marginal",
                 "signals": {
                     "handoff": {
                         "args": [
@@ -2242,7 +2316,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Decoder/Video",
+                "klass": "Codec/Decoder/Video/Hardware",
                 "long-name": "VA-API VC1 decoder",
                 "name": "vaapivc1dec",
                 "pad-templates": {
@@ -2252,7 +2326,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { NV12, I420, YV12, YUY2, UYVY, Y210, P010_10LE, AYUV, Y410 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -2262,7 +2336,7 @@
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
-                        "default": "vaapidecode_vc1-0",
+                        "default": "NULL",
                         "hotdoc-fixed-default": true,
                         "type-name": "gchararray",
                         "writable": true
@@ -2739,7 +2813,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstvaapi.so",
+        "filename": "gstvaapi",
         "license": "LGPL",
         "package": "gstreamer-vaapi",
         "source": "gstreamer-vaapi",
