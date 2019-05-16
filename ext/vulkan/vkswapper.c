@@ -524,26 +524,12 @@ _swapper_set_image_layout (GstVulkanSwapper * swapper,
     goto error;
 
   {
-    VkCommandBufferInheritanceInfo buf_inh = { 0, };
-    VkCommandBufferBeginInfo cmd_buf_info = { 0, };
-
     /* *INDENT-OFF* */
-    buf_inh = (VkCommandBufferInheritanceInfo) {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
-        .pNext = NULL,
-        .renderPass = VK_NULL_HANDLE,
-        .subpass = 0,
-        .framebuffer = VK_NULL_HANDLE,
-        .occlusionQueryEnable = FALSE,
-        .queryFlags = 0,
-        .pipelineStatistics = 0
-    };
-
-    cmd_buf_info = (VkCommandBufferBeginInfo) {
+    VkCommandBufferBeginInfo cmd_buf_info = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .pNext = NULL,
         .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        .pInheritanceInfo = &buf_inh
+        .pInheritanceInfo = NULL
     };
     /* *INDENT-ON* */
 
@@ -834,26 +820,12 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     return FALSE;
 
   {
-    VkCommandBufferInheritanceInfo buf_inh = { 0, };
-    VkCommandBufferBeginInfo cmd_buf_info = { 0, };
-
     /* *INDENT-OFF* */
-    buf_inh = (VkCommandBufferInheritanceInfo) {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO,
-        .pNext = NULL,
-        .renderPass = VK_NULL_HANDLE,
-        .subpass = 0,
-        .framebuffer = VK_NULL_HANDLE,
-        .occlusionQueryEnable = FALSE,
-        .queryFlags = 0,
-        .pipelineStatistics = 0
-    };
-
-    cmd_buf_info = (VkCommandBufferBeginInfo) {
+    VkCommandBufferBeginInfo cmd_buf_info = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .pNext = NULL,
         .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        .pInheritanceInfo = &buf_inh
+        .pInheritanceInfo = NULL
     };
     /* *INDENT-ON* */
 
