@@ -161,19 +161,19 @@ gst_fdkaacenc_get_caps (GstAudioEncoder * enc, GstCaps * filter)
   caps = gst_caps_new_empty ();
 
   for (layout = channel_layouts; layout->channels; layout++) {
-    guint64 channel_mask;
+    gint channels = layout->channels;
     GstCaps *tmp =
         gst_caps_make_writable (gst_pad_get_pad_template_caps
         (GST_AUDIO_ENCODER_SINK_PAD (enc)));
 
-    if (layout->channels == 1) {
-      gst_caps_set_simple (tmp, "channels", G_TYPE_INT, layout->channels, NULL);
+    if (channels == 1) {
+      gst_caps_set_simple (tmp, "channels", G_TYPE_INT, channels, NULL);
     } else {
-      gst_audio_channel_positions_to_mask (layout->positions,
-          layout->channels, FALSE, &channel_mask);
-      gst_caps_set_simple (tmp, "channels", G_TYPE_INT,
-          layout->channels, "channel-mask", GST_TYPE_BITMASK,
-          channel_mask, NULL);
+      guint64 channel_mask;
+      gst_audio_channel_positions_to_mask (layout->positions, channels, FALSE,
+          &channel_mask);
+      gst_caps_set_simple (tmp, "channels", G_TYPE_INT, channels,
+          "channel-mask", GST_TYPE_BITMASK, channel_mask, NULL);
     }
 
     gst_caps_append (caps, tmp);
@@ -256,27 +256,33 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
     self->need_reorder = FALSE;
     self->aac_positions = NULL;
   } else {
-    guint64 in_channel_mask, out_channel_mask;
+    gint in_channels = GST_AUDIO_INFO_CHANNELS (info);
+    const GstAudioChannelPosition *in_positions =
+        &GST_AUDIO_INFO_POSITION (info, 0);
+    guint64 in_channel_mask;
     const GstFdkAacChannelLayout *layout;
 
+    gst_audio_channel_positions_to_mask (in_positions, in_channels, FALSE,
+        &in_channel_mask);
+
     for (layout = channel_layouts; layout->channels; layout++) {
-      if (layout->channels != GST_AUDIO_INFO_CHANNELS (info))
+      gint channels = layout->channels;
+      const GstAudioChannelPosition *positions = layout->positions;
+      guint64 channel_mask;
+
+      if (channels != in_channels)
         continue;
 
-      gst_audio_channel_positions_to_mask (&GST_AUDIO_INFO_POSITION (info, 0),
-          GST_AUDIO_INFO_CHANNELS (info), FALSE, &in_channel_mask);
-      gst_audio_channel_positions_to_mask (layout->positions,
-          layout->channels, FALSE, &out_channel_mask);
-      if (in_channel_mask == out_channel_mask) {
-        channel_mode = layout->mode;
-        self->need_reorder =
-            memcmp (layout->positions,
-            &GST_AUDIO_INFO_POSITION (info, 0),
-            GST_AUDIO_INFO_CHANNELS (info) *
-            sizeof (GstAudioChannelPosition)) != 0;
-        self->aac_positions = layout->positions;
-        break;
-      }
+      gst_audio_channel_positions_to_mask (positions, channels, FALSE,
+          &channel_mask);
+      if (channel_mask != in_channel_mask)
+        continue;
+
+      channel_mode = layout->mode;
+      self->need_reorder = memcmp (positions, in_positions,
+          channels * sizeof *positions) != 0;
+      self->aac_positions = positions;
+      break;
     }
 
     if (!layout->channels) {
