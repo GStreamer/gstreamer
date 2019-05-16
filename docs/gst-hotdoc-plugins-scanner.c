@@ -703,7 +703,6 @@ main (int argc, char *argv[])
   textdomain (GETTEXT_PACKAGE);
 #endif
 
-  g_setenv ("GST_REGISTRY_FORK", "no", TRUE);
   gst_init (NULL, NULL);
 
   json = g_string_new ("{");
