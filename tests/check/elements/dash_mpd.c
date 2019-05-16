@@ -6113,6 +6113,202 @@ GST_START_TEST (dash_mpdparser_check_mpd_xml_generator)
 GST_END_TEST;
 
 /*
+ * Test add mpd content with mpd_client set methods
+ *
+ */
+GST_START_TEST (dash_mpdparser_check_mpd_client_set_methods)
+{
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\""
+      "     schemaLocation=\"TestSchemaLocation\""
+      "     xmlns:xsi=\"TestNamespaceXSI\""
+      "     xmlns:ext=\"TestNamespaceEXT\""
+      "     id=\"testId\""
+      "     type=\"static\""
+      "     availabilityStartTime=\"2015-03-24T1:10:50+08:00\""
+      "     availabilityEndTime=\"2015-03-24T1:10:50.123456-04:30\""
+      "     mediaPresentationDuration=\"P0Y1M2DT12H10M20.5S\""
+      "     minimumUpdatePeriod=\"P0Y1M2DT12H10M20.5S\""
+      "     minBufferTime=\"P0Y1M2DT12H10M20.5S\""
+      "     timeShiftBufferDepth=\"P0Y1M2DT12H10M20.5S\""
+      "     suggestedPresentationDelay=\"P0Y1M2DT12H10M20.5S\""
+      "     maxSegmentDuration=\"P0Y1M2DT12H10M20.5S\""
+      "     maxSubsegmentDuration=\"P0Y1M2DT12H10M20.5S\">"
+      "     <BaseURL serviceLocation=\"TestServiceLocation\""
+      "     byteRange=\"TestByteRange\">TestBaseURL</BaseURL>"
+      "     <Location>TestLocation</Location>"
+      "     <ProgramInformation lang=\"en\""
+      "     moreInformationURL=\"TestMoreInformationUrl\">"
+      "     <Title>TestTitle</Title>"
+      "     <Source>TestSource</Source>"
+      "     <Copyright>TestCopyright</Copyright>"
+      "     </ProgramInformation>"
+      "     <Metrics metrics=\"TestMetric\"><Range starttime=\"P0Y1M2DT12H10M20.5S\""
+      "           duration=\"P0Y1M2DT12H10M20.1234567S\">"
+      "    </Range></Metrics>"
+      "  <Period id=\"TestId\" start=\"PT1M\" duration=\"PT40S\""
+      "          bitstreamSwitching=\"true\">"
+      "    <AdaptationSet id=\"9\" contentType=\"video\" mimeType=\"video\">"
+      "      <Representation id=\"audio_1\" "
+      "                      bandwidth=\"100\""
+      "                      qualityRanking=\"200\""
+      "                      width=\"640\""
+      "                      height=\"480\""
+      "                      codecs=\"avc1\""
+      "                      audioSamplingRate=\"44100\""
+      "                      mimeType=\"audio/mp4\">"
+      "        <SegmentList duration=\"15\" startNumber=\"11\">"
+      "          <SegmentURL media=\"segment001.ts\"></SegmentURL>"
+      "          <SegmentURL media=\"segment002.ts\"></SegmentURL>"
+      "        </SegmentList>"
+      "      </Representation></AdaptationSet></Period>" "     </MPD>";
+  gboolean ret;
+  gchar *period_id;
+  guint adaptation_set_id;
+  gchar *representation_id;
+  GstMPDClient *first_mpdclient = NULL;
+  GstMPDClient *second_mpdclient = NULL;
+  GstMPDBaseURLNode *first_baseURL, *second_baseURL;
+  GstMPDPeriodNode *first_period, *second_period;
+  GstMPDAdaptationSetNode *first_adap_set, *second_adap_set;
+  GstMPDRepresentationNode *first_rep, *second_rep;
+  GstMPDSegmentListNode *first_seg_list, *second_seg_list;
+  GstMPDSegmentURLNode *first_seg_url, *second_seg_url;
+
+  first_mpdclient = gst_mpd_client_new ();
+
+  ret = gst_mpd_client_parse (first_mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  second_mpdclient = gst_mpd_client_new ();
+  gst_mpd_client_set_root_node (second_mpdclient,
+      "default-namespace", "urn:mpeg:dash:schema:mpd:2011",
+      "profiles", "urn:mpeg:dash:profile:isoff-main:2011",
+      "schema-location", "TestSchemaLocation",
+      "namespace-xsi", "TestNamespaceXSI",
+      "namespace-ext", "TestNamespaceEXT", "id", "testId", NULL);
+  gst_mpd_client_add_baseurl_node (second_mpdclient,
+      "url", "TestBaseURL",
+      "service location", "TestServiceLocation",
+      "byte-range", "TestByteRange", NULL);
+  period_id = gst_mpd_client_set_period_node (second_mpdclient, (gchar *) "TestId", "start", 60000,     // ms
+      "duration", 40000, "bitstream-switching", 1, NULL);
+  adaptation_set_id =
+      gst_mpd_client_set_adaptation_set_node (second_mpdclient, period_id, 9,
+      "content-type", "video", "mime-type", "video", NULL);
+
+  representation_id =
+      gst_mpd_client_set_representation_node (second_mpdclient, period_id,
+      adaptation_set_id, (gchar *) "audio_1", "bandwidth", 100,
+      "quality-ranking", 200, "mime-type", "audio/mp4", "width", 640, "height",
+      480, "codecs", "avc1", "audio-sampling-rate", 44100, NULL);
+
+  gst_mpd_client_set_segment_list (second_mpdclient, period_id,
+      adaptation_set_id, representation_id, "duration", 15, "start-number", 11,
+      NULL);
+  gst_mpd_client_add_segment_url (second_mpdclient, period_id,
+      adaptation_set_id, representation_id, "media", "segment001.ts", NULL);
+  gst_mpd_client_add_segment_url (second_mpdclient, period_id,
+      adaptation_set_id, representation_id, "media", "segment002.ts", NULL);
+
+  /* assert that parameters are equal */
+  assert_equals_string (first_mpdclient->mpd_root_node->default_namespace,
+      second_mpdclient->mpd_root_node->default_namespace);
+  assert_equals_string (first_mpdclient->mpd_root_node->namespace_xsi,
+      second_mpdclient->mpd_root_node->namespace_xsi);
+  assert_equals_string (first_mpdclient->mpd_root_node->namespace_ext,
+      second_mpdclient->mpd_root_node->namespace_ext);
+  assert_equals_string (first_mpdclient->mpd_root_node->schemaLocation,
+      second_mpdclient->mpd_root_node->schemaLocation);
+  assert_equals_string (first_mpdclient->mpd_root_node->id,
+      second_mpdclient->mpd_root_node->id);
+  assert_equals_string (first_mpdclient->mpd_root_node->profiles,
+      second_mpdclient->mpd_root_node->profiles);
+
+
+  /* baseURLs */
+  first_baseURL =
+      (GstMPDBaseURLNode *) first_mpdclient->mpd_root_node->BaseURLs->data;
+  second_baseURL =
+      (GstMPDBaseURLNode *) second_mpdclient->mpd_root_node->BaseURLs->data;
+  assert_equals_string (first_baseURL->baseURL, second_baseURL->baseURL);
+  assert_equals_string (first_baseURL->serviceLocation,
+      second_baseURL->serviceLocation);
+  assert_equals_string (first_baseURL->byteRange, second_baseURL->byteRange);
+
+  /* Period */
+  first_period =
+      (GstMPDPeriodNode *) first_mpdclient->mpd_root_node->Periods->data;
+  second_period =
+      (GstMPDPeriodNode *) second_mpdclient->mpd_root_node->Periods->data;
+
+  assert_equals_string (first_period->id, second_period->id);
+  assert_equals_int64 (first_period->start, second_period->start);
+  assert_equals_int64 (first_period->duration, second_period->duration);
+  assert_equals_int (first_period->bitstreamSwitching,
+      second_period->bitstreamSwitching);
+
+  /* Adaptation set */
+  first_adap_set =
+      (GstMPDAdaptationSetNode *) first_period->AdaptationSets->data;
+  second_adap_set =
+      (GstMPDAdaptationSetNode *) second_period->AdaptationSets->data;
+
+  assert_equals_int (first_adap_set->id, second_adap_set->id);
+  assert_equals_string (first_adap_set->contentType,
+      second_adap_set->contentType);
+  assert_equals_string (GST_MPD_REPRESENTATION_BASE_NODE
+      (first_adap_set)->mimeType,
+      GST_MPD_REPRESENTATION_BASE_NODE (second_adap_set)->mimeType);
+
+  /* Representation */
+  first_rep =
+      (GstMPDRepresentationNode *) first_adap_set->Representations->data;
+  second_rep =
+      (GstMPDRepresentationNode *) second_adap_set->Representations->data;
+  assert_equals_string (first_rep->id, second_rep->id);
+  assert_equals_int (first_rep->bandwidth, second_rep->bandwidth);
+  assert_equals_int (first_rep->qualityRanking, second_rep->qualityRanking);
+  assert_equals_string (GST_MPD_REPRESENTATION_BASE_NODE (first_rep)->mimeType,
+      GST_MPD_REPRESENTATION_BASE_NODE (second_rep)->mimeType);
+
+  assert_equals_int (GST_MPD_REPRESENTATION_BASE_NODE (first_rep)->width,
+      GST_MPD_REPRESENTATION_BASE_NODE (second_rep)->width);
+
+  assert_equals_int (GST_MPD_REPRESENTATION_BASE_NODE (first_rep)->height,
+      GST_MPD_REPRESENTATION_BASE_NODE (second_rep)->height);
+
+  assert_equals_string (GST_MPD_REPRESENTATION_BASE_NODE (first_rep)->codecs,
+      GST_MPD_REPRESENTATION_BASE_NODE (second_rep)->codecs);
+
+  assert_equals_string (GST_MPD_REPRESENTATION_BASE_NODE
+      (first_rep)->audioSamplingRate,
+      GST_MPD_REPRESENTATION_BASE_NODE (second_rep)->audioSamplingRate);
+
+  /*SegmentList */
+  first_seg_list = (GstMPDSegmentListNode *) first_rep->SegmentList;
+  second_seg_list = (GstMPDSegmentListNode *) second_rep->SegmentList;
+  assert_equals_int (GST_MPD_MULT_SEGMENT_BASE_NODE (first_seg_list)->duration,
+      GST_MPD_MULT_SEGMENT_BASE_NODE (second_seg_list)->duration);
+  assert_equals_int (GST_MPD_MULT_SEGMENT_BASE_NODE
+      (first_seg_list)->startNumber,
+      GST_MPD_MULT_SEGMENT_BASE_NODE (second_seg_list)->startNumber);
+
+  first_seg_url = (GstMPDSegmentURLNode *) first_seg_list->SegmentURL->data;
+  second_seg_url = (GstMPDSegmentURLNode *) second_seg_list->SegmentURL->data;
+
+  assert_equals_string (first_seg_url->media, second_seg_url->media);
+
+
+  gst_mpd_client_free (first_mpdclient);
+  gst_mpd_client_free (second_mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * create a test suite containing all dash testcases
  */
 static Suite *
@@ -6133,6 +6329,9 @@ dash_suite (void)
 
   /* test parsing the simplest possible mpd */
   tcase_add_test (tc_simpleMPD, dash_mpdparser_check_mpd_xml_generator);
+
+  /* test mpd client set methods */
+  tcase_add_test (tc_simpleMPD, dash_mpdparser_check_mpd_client_set_methods);
 
   /* tests parsing attributes from each element type */
   tcase_add_test (tc_simpleMPD, dash_mpdparser_mpd);

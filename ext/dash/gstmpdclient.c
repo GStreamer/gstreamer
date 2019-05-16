@@ -48,6 +48,82 @@ static GstMPDRepresentationNode *gst_mpd_client_get_lowest_representation (GList
 static GstStreamPeriod *gst_mpd_client_get_stream_period (GstMPDClient *
     client);
 
+typedef GstMPDNode *(*MpdClientStringIDFilter) (GList * list, gchar * data);
+typedef GstMPDNode *(*MpdClientIDFilter) (GList * list, guint data);
+
+static GstMPDNode *
+gst_mpd_client_get_period_with_id (GList * periods, gchar * period_id)
+{
+  GstMPDPeriodNode *period;
+  GList *list = NULL;
+
+  for (list = g_list_first (periods); list; list = g_list_next (list)) {
+    period = (GstMPDPeriodNode *) list->data;
+    if (!g_strcmp0 (period->id, period_id))
+      return GST_MPD_NODE (period);
+  }
+  return NULL;
+}
+
+static GstMPDNode *
+gst_mpd_client_get_adaptation_set_with_id (GList * adaptation_sets, guint id)
+{
+  GstMPDAdaptationSetNode *adaptation_set;
+  GList *list = NULL;
+
+  for (list = g_list_first (adaptation_sets); list; list = g_list_next (list)) {
+    adaptation_set = (GstMPDAdaptationSetNode *) list->data;
+    if (adaptation_set->id == id)
+      return GST_MPD_NODE (adaptation_set);
+  }
+  return NULL;
+}
+
+static GstMPDNode *
+gst_mpd_client_get_representation_with_id (GList * representations,
+    gchar * rep_id)
+{
+  GstMPDRepresentationNode *representation;
+  GList *list = NULL;
+
+  for (list = g_list_first (representations); list; list = g_list_next (list)) {
+    representation = (GstMPDRepresentationNode *) list->data;
+    if (!g_strcmp0 (representation->id, rep_id))
+      return GST_MPD_NODE (representation);
+  }
+  return NULL;
+}
+
+static gchar *
+_generate_new_string_id (GList * list, const gchar * tuple,
+    MpdClientStringIDFilter filter)
+{
+  guint i = 0;
+  gchar *id = NULL;
+  GstMPDNode *node;
+  do {
+    g_free (id);
+    id = g_strdup_printf (tuple, i);
+    node = filter (list, id);
+    i++;
+  } while (node);
+
+  return id;
+}
+
+static guint
+_generate_new_id (GList * list, MpdClientIDFilter filter)
+{
+  guint id = 0;
+  GstMPDNode *node;
+  do {
+    node = filter (list, id);
+    id++;
+  } while (node);
+
+  return id;
+}
+
 static GstMPDRepresentationNode *
 gst_mpd_client_get_lowest_representation (GList * Representations)
 {
@@ -373,6 +449,22 @@ gst_mpd_client_new (void)
   GST_DEBUG_CATEGORY_INIT (gst_dash_mpd_client_debug, "dashmpdclient", 0,
       "DashmMpdClient");
   return g_object_new (GST_TYPE_MPD_CLIENT, NULL);
+}
+
+GstMPDClient *
+gst_mpd_client_new_static (void)
+{
+  GstMPDClient *client = gst_mpd_client_new ();
+
+  client->mpd_root_node = gst_mpd_root_node_new ();
+  client->mpd_root_node->default_namespace =
+      g_strdup ("urn:mpeg:dash:schema:mpd:2011");
+  client->mpd_root_node->profiles =
+      g_strdup ("urn:mpeg:dash:profile:isoff-main:2011");
+  client->mpd_root_node->type = GST_MPD_FILE_TYPE_STATIC;
+  client->mpd_root_node->minBufferTime = 1500;
+
+  return client;
 }
 
 void
@@ -1311,6 +1403,8 @@ gst_mpd_client_setup_media_presentation (GstMPDClient * client,
       /* might be a live file, ignore unspecified duration */
     } else {
       /* Invalid MPD file! */
+      GST_ERROR
+          ("Invalid MPD file. The MPD is static without a valid duration");
       goto syntax_error;
     }
 
@@ -3011,4 +3105,293 @@ gst_mpd_client_get_period_index_at_time (GstMPDClient * client,
   }
 
   return period_idx;
+}
+
+/* add or set node methods */
+
+gboolean
+gst_mpd_client_set_root_node (GstMPDClient * client,
+    const gchar * property_name, ...)
+{
+  va_list myargs;
+  g_return_val_if_fail (client != NULL, FALSE);
+
+  va_start (myargs, property_name);
+
+  if (!client->mpd_root_node)
+    client->mpd_root_node = gst_mpd_root_node_new ();
+  g_object_set_valist (G_OBJECT (client->mpd_root_node), property_name, myargs);
+
+  va_end (myargs);
+
+  return TRUE;
+}
+
+gboolean
+gst_mpd_client_add_baseurl_node (GstMPDClient * client,
+    const gchar * property_name, ...)
+{
+  GstMPDBaseURLNode *baseurl_node = NULL;
+  va_list myargs;
+
+  g_return_val_if_fail (client != NULL, FALSE);
+  g_return_val_if_fail (client->mpd_root_node != NULL, FALSE);
+
+  va_start (myargs, property_name);
+
+  baseurl_node = gst_mpd_baseurl_node_new ();
+  g_object_set_valist (G_OBJECT (baseurl_node), property_name, myargs);
+  client->mpd_root_node->BaseURLs =
+      g_list_append (client->mpd_root_node->BaseURLs, baseurl_node);
+
+  va_end (myargs);
+  return TRUE;
+}
+
+/* returns a period id */
+gchar *
+gst_mpd_client_set_period_node (GstMPDClient * client,
+    gchar * period_id, const gchar * property_name, ...)
+{
+  GstMPDPeriodNode *period_node = NULL;
+  va_list myargs;
+
+  g_return_val_if_fail (client != NULL, NULL);
+  g_return_val_if_fail (client->mpd_root_node != NULL, NULL);
+
+  va_start (myargs, property_name);
+
+  period_node =
+      GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
+      (client->mpd_root_node->Periods, period_id));
+  if (!period_node) {
+    period_node = gst_mpd_period_node_new ();
+    if (period_id)
+      period_node->id = g_strdup (period_id);
+    else
+      period_node->id =
+          _generate_new_string_id (client->mpd_root_node->Periods,
+          "period_%.2d", gst_mpd_client_get_period_with_id);
+    client->mpd_root_node->Periods =
+        g_list_append (client->mpd_root_node->Periods, period_node);
+  }
+
+  g_object_set_valist (G_OBJECT (period_node), property_name, myargs);
+
+  va_end (myargs);
+  return period_node->id;
+}
+
+/* returns an adaptation set id */
+guint
+gst_mpd_client_set_adaptation_set_node (GstMPDClient * client,
+    gchar * period_id, guint adaptation_set_id, const gchar * property_name,
+    ...)
+{
+  GstMPDAdaptationSetNode *adap_node = NULL;
+  GstMPDPeriodNode *period_node = NULL;
+  va_list myargs;
+
+  g_return_val_if_fail (client != NULL, 0);
+  g_return_val_if_fail (client->mpd_root_node != NULL, 0);
+
+  va_start (myargs, property_name);
+
+  period_node =
+      GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
+      (client->mpd_root_node->Periods, period_id));
+  g_return_val_if_fail (period_node != NULL, 0);
+  adap_node =
+      GST_MPD_ADAPTATION_SET_NODE (gst_mpd_client_get_adaptation_set_with_id
+      (period_node->AdaptationSets, adaptation_set_id));
+  if (!adap_node) {
+    adap_node = gst_mpd_adaptation_set_node_new ();
+    if (adaptation_set_id)
+      adap_node->id = adaptation_set_id;
+    else
+      adap_node->id =
+          _generate_new_id (period_node->AdaptationSets,
+          gst_mpd_client_get_adaptation_set_with_id);
+    GST_DEBUG_OBJECT (client, "Add a new adaptation set with id %d",
+        adap_node->id);
+    period_node->AdaptationSets =
+        g_list_append (period_node->AdaptationSets, adap_node);
+  }
+  g_object_set_valist (G_OBJECT (adap_node), property_name, myargs);
+
+  va_end (myargs);
+  return adap_node->id;
+}
+
+/* returns a representation id */
+gchar *
+gst_mpd_client_set_representation_node (GstMPDClient * client,
+    gchar * period_id, guint adaptation_set_id, gchar * representation_id,
+    const gchar * property_name, ...)
+{
+  GstMPDRepresentationNode *rep_node = NULL;
+  GstMPDAdaptationSetNode *adap_set_node = NULL;
+  GstMPDPeriodNode *period_node = NULL;
+  va_list myargs;
+
+  g_return_val_if_fail (client != NULL, NULL);
+  g_return_val_if_fail (client->mpd_root_node != NULL, NULL);
+
+  va_start (myargs, property_name);
+
+  period_node =
+      GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
+      (client->mpd_root_node->Periods, period_id));
+  adap_set_node =
+      GST_MPD_ADAPTATION_SET_NODE (gst_mpd_client_get_adaptation_set_with_id
+      (period_node->AdaptationSets, adaptation_set_id));
+  g_return_val_if_fail (adap_set_node != NULL, NULL);
+  rep_node =
+      GST_MPD_REPRESENTATION_NODE (gst_mpd_client_get_representation_with_id
+      (adap_set_node->Representations, representation_id));
+  if (!rep_node) {
+    rep_node = gst_mpd_representation_node_new ();
+    if (representation_id)
+      rep_node->id = g_strdup (representation_id);
+    else
+      rep_node->id =
+          _generate_new_string_id (adap_set_node->Representations,
+          "representation_%.2d", gst_mpd_client_get_representation_with_id);
+    GST_DEBUG_OBJECT (client, "Add a new representation with id %s",
+        rep_node->id);
+    adap_set_node->Representations =
+        g_list_append (adap_set_node->Representations, rep_node);
+  }
+  g_object_set_valist (G_OBJECT (rep_node), property_name, myargs);
+
+
+  va_end (myargs);
+  return rep_node->id;
+}
+
+/* add/set a segment list node */
+gboolean
+gst_mpd_client_set_segment_list (GstMPDClient * client,
+    gchar * period_id, guint adap_set_id, gchar * rep_id,
+    const gchar * property_name, ...)
+{
+  GstMPDRepresentationNode *representation = NULL;
+  GstMPDAdaptationSetNode *adaptation_set = NULL;
+  GstMPDPeriodNode *period = NULL;
+  va_list myargs;
+
+  g_return_val_if_fail (client != NULL, FALSE);
+  g_return_val_if_fail (client->mpd_root_node != NULL, FALSE);
+
+  va_start (myargs, property_name);
+
+  period =
+      GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
+      (client->mpd_root_node->Periods, period_id));
+  adaptation_set =
+      GST_MPD_ADAPTATION_SET_NODE (gst_mpd_client_get_adaptation_set_with_id
+      (period->AdaptationSets, adap_set_id));
+  g_return_val_if_fail (adaptation_set != NULL, FALSE);
+
+  representation =
+      GST_MPD_REPRESENTATION_NODE (gst_mpd_client_get_representation_with_id
+      (adaptation_set->Representations, rep_id));
+  if (!representation->SegmentList) {
+    representation->SegmentList = gst_mpd_segment_list_node_new ();
+  }
+
+  g_object_set_valist (G_OBJECT (representation->SegmentList), property_name,
+      myargs);
+
+  va_end (myargs);
+  return TRUE;
+}
+
+/* add/set a segment template node */
+gboolean
+gst_mpd_client_set_segment_template (GstMPDClient * client,
+    gchar * period_id, guint adap_set_id, gchar * rep_id,
+    const gchar * property_name, ...)
+{
+  GstMPDRepresentationNode *representation = NULL;
+  GstMPDAdaptationSetNode *adaptation_set = NULL;
+  GstMPDPeriodNode *period = NULL;
+  va_list myargs;
+
+  g_return_val_if_fail (client != NULL, FALSE);
+  g_return_val_if_fail (client->mpd_root_node != NULL, FALSE);
+
+  va_start (myargs, property_name);
+
+  period =
+      GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
+      (client->mpd_root_node->Periods, period_id));
+  adaptation_set =
+      GST_MPD_ADAPTATION_SET_NODE (gst_mpd_client_get_adaptation_set_with_id
+      (period->AdaptationSets, adap_set_id));
+  g_return_val_if_fail (adaptation_set != NULL, FALSE);
+
+  representation =
+      GST_MPD_REPRESENTATION_NODE (gst_mpd_client_get_representation_with_id
+      (adaptation_set->Representations, rep_id));
+  if (!representation->SegmentTemplate) {
+    representation->SegmentTemplate = gst_mpd_segment_template_node_new ();
+  }
+
+  g_object_set_valist (G_OBJECT (representation->SegmentTemplate),
+      property_name, myargs);
+
+  va_end (myargs);
+  return TRUE;
+}
+
+/* add a segmentURL node with to a SegmentList node */
+gboolean
+gst_mpd_client_add_segment_url (GstMPDClient * client,
+    gchar * period_id, guint adap_set_id, gchar * rep_id,
+    const gchar * property_name, ...)
+{
+  GstMPDRepresentationNode *representation = NULL;
+  GstMPDAdaptationSetNode *adaptation_set = NULL;
+  GstMPDPeriodNode *period = NULL;
+  GstMPDSegmentURLNode *segment_url = NULL;
+  guint64 media_presentation_duration = 0;
+  va_list myargs;
+
+  g_return_val_if_fail (client != NULL, FALSE);
+  g_return_val_if_fail (client->mpd_root_node != NULL, FALSE);
+
+  va_start (myargs, property_name);
+
+  period =
+      GST_MPD_PERIOD_NODE (gst_mpd_client_get_period_with_id
+      (client->mpd_root_node->Periods, period_id));
+  adaptation_set =
+      GST_MPD_ADAPTATION_SET_NODE (gst_mpd_client_get_adaptation_set_with_id
+      (period->AdaptationSets, adap_set_id));
+  g_return_val_if_fail (adaptation_set != NULL, FALSE);
+
+  representation =
+      GST_MPD_REPRESENTATION_NODE (gst_mpd_client_get_representation_with_id
+      (adaptation_set->Representations, rep_id));
+
+  if (!representation->SegmentList) {
+    representation->SegmentList = gst_mpd_segment_list_node_new ();
+  }
+
+  segment_url = gst_mpd_segment_url_node_new ();
+  g_object_set_valist (G_OBJECT (segment_url), property_name, myargs);
+  gst_mpd_segment_list_node_add_segment (representation->SegmentList,
+      segment_url);
+
+  /* Set the media presentation time according to the new segment duration added */
+  g_object_get (client->mpd_root_node, "media-presentation-duration",
+      &media_presentation_duration, NULL);
+  media_presentation_duration +=
+      GST_MPD_MULT_SEGMENT_BASE_NODE (representation->SegmentList)->duration;
+  g_object_set (client->mpd_root_node, "media-presentation-duration",
+      media_presentation_duration, NULL);
+
+  va_end (myargs);
+  return TRUE;
 }

@@ -50,7 +50,10 @@ struct _GstMPDClient
 };
 
 /* Basic initialization/deinitialization functions */
+
 GstMPDClient *gst_mpd_client_new (void);
+GstMPDClient *gst_mpd_client_new_static (void);
+
 void gst_mpd_client_active_streams_free (GstMPDClient * client);
 void gst_mpd_client_free (GstMPDClient * client);
 
@@ -138,7 +141,48 @@ gint64 gst_mpd_client_parse_default_presentation_delay(GstMPDClient * client, co
 /* profiles */
 gboolean gst_mpd_client_has_isoff_ondemand_profile (GstMPDClient *client);
 
+/* add/set node methods */
+gboolean gst_mpd_client_set_root_node (GstMPDClient * client,
+                                       const gchar * property_name,
+                                       ...);
+gchar * gst_mpd_client_set_period_node (GstMPDClient * client,
+                                        gchar * period_id,
+                                        const gchar * property_name,
+                                        ...);
+guint gst_mpd_client_set_adaptation_set_node (GstMPDClient * client,
+                                              gchar * period_id,
+                                              guint adap_set_id,
+                                              const gchar * property_name,
+                                              ...);
+gchar * gst_mpd_client_set_representation_node (GstMPDClient * client,
+                                                gchar * period_id,
+                                                guint adap_set_id,
+                                                gchar * rep_id,
+                                                const gchar * property_name,
+                                                ...);
+gboolean gst_mpd_client_set_segment_list (GstMPDClient * client,
+                                          gchar * period_id,
+                                          guint adap_set_id,
+                                          gchar * rep_id,
+                                          const gchar * property_name,
+                                          ...);
+gboolean gst_mpd_client_set_segment_template (GstMPDClient * client,
+                                              gchar * period_id,
+                                              guint adap_set_id,
+                                              gchar * rep_id,
+                                              const gchar * property_name,
+                                              ...);
 
+/* create a new node */
+gboolean gst_mpd_client_add_baseurl_node (GstMPDClient * client,
+                                          const gchar * property_name,
+                                          ...);
+gboolean gst_mpd_client_add_segment_url (GstMPDClient * client,
+                                         gchar * period_id,
+                                         guint adap_set_id,
+                                         gchar * rep_id,
+                                         const gchar * property_name,
+                                         ...);
 G_END_DECLS
 
 #endif /* __GST_MPDCLIENT_H__ */

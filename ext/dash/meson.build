@@ -30,6 +30,7 @@ dash_sources = [
   'gstmpdparser.c',
   'gstmpdclient.c',
   'gstplugin.c',
+  'gstdashsink.c',
 ]
 
 xml2_dep = dependency('libxml-2.0',
@@ -39,7 +40,7 @@ xml2_dep = dependency('libxml-2.0',
 )
 
 if xml2_dep.found()
-  gstdashdemux = library('gstdashdemux',
+  gstdashdemux = library('gstdash',
     dash_sources,
     c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
     link_args : noseh_link_args,
