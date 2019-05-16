@@ -534,6 +534,8 @@ ges_uri_clip_asset_new (const gchar * uri, GCancellable * cancellable,
  * Finalize the request of an async #GESUriClipAsset
  *
  * Returns: (transfer full): The #GESUriClipAsset previously requested
+ *
+ * Since: 1.16
  */
 GESUriClipAsset *
 ges_uri_clip_asset_finish (GAsyncResult * res, GError ** error)

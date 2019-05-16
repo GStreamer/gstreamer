@@ -2565,6 +2565,8 @@ ges_timeline_paste_element (GESTimeline * timeline,
  * the timeline. If @new_layer_priority is superior than the number
  * of layers present in the time, it will move to the end of the
  * stack of layers.
+ *
+ * Since: 1.16
  */
 gboolean
 ges_timeline_move_layer (GESTimeline * timeline, GESLayer * layer,
