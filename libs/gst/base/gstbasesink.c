@@ -5411,7 +5411,7 @@ activate_failed:
  *
  * Returns: (transfer full): pointer to #GstStructure
  *
- *  Since: 1.18
+ * Since: 1.18
  */
 GstStructure *
 gst_base_sink_get_stats (GstBaseSink * sink)
