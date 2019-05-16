@@ -109,7 +109,9 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     img_mem = (GstVulkanImageMemory *)
         gst_vulkan_image_memory_alloc (vk_pool->device, vk_format, width,
         height, VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
+        VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     priv->alloc_sizes[i] = img_mem->requirements.size;
