@@ -660,7 +660,7 @@
                 }
             }
         },
-        "filename": "libgstnle.so",
+        "filename": "gstnle",
         "license": "LGPL",
         "package": "GStreamer Editing Services",
         "source": "gst-editing-services",
