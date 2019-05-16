@@ -34239,6 +34239,470 @@
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
+    "nvdec": {
+        "description": "GStreamer NVDEC plugin",
+        "elements": {
+            "nvdec": {
+                "author": "Ericsson AB, http://www.ericsson.com",
+                "description": "NVDEC video decoder",
+                "hierarchy": [
+                    "GstNvDec",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "long-name": "NVDEC video decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-h264:\n  stream-format: byte-stream\n      alignment: au\nvideo/x-h265:\n  stream-format: byte-stream\n      alignment: au\nvideo/mpeg:\n    mpegversion: { (int)1, (int)2, (int)4 }\n   systemstream: false\nimage/jpeg:\nvideo/x-vp8:\nvideo/x-vp9:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: NV12\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            }
+        },
+        "filename": "gstnvdec",
+        "license": "BSD",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
+    "nvenc": {
+        "description": "GStreamer NVENC plugin",
+        "elements": {
+            "nvh264enc": {
+                "author": "Tim-Philipp M\u00fcller <tim@centricular.com>\nMatthew Waters <matthew@centricular.com>",
+                "description": "Encode H.264 video streams using NVIDIA's hardware-accelerated NVENC encoder API",
+                "hierarchy": [
+                    "GstNvH264Enc",
+                    "GstNvBaseEnc",
+                    "GstVideoEncoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Encoder/Video/Hardware",
+                "long-name": "NVENC H.264 Video Encoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw:\n         format: { NV12, I420, Y444 }\n          width: [ 16, 4096 ]\n         height: [ 16, 4096 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)mixed, (string)interleaved }\n\nvideo/x-raw(memory:GLMemory):\n         format: { NV12, Y444 }\n          width: [ 16, 4096 ]\n         height: [ 16, 4096 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)mixed, (string)interleaved }\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-h264:\n          width: [ 1, 4096 ]\n         height: [ 1, 4096 ]\n      framerate: [ 0/1, 2147483647/1 ]\n  stream-format: byte-stream\n      alignment: au\n        profile: { (string)high, (string)main, (string)baseline }\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "bitrate": {
+                        "blurb": "Bitrate in kbit/sec (0 = from NVENC preset)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2048000",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "cuda-device-id": {
+                        "blurb": "Set the GPU device to use for operations",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "gop-size": {
+                        "blurb": "Number of frames between intra frames (-1 = infinite)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "75",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "preset": {
+                        "blurb": "Encoding Preset",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "default (0)",
+                        "enum": true,
+                        "type-name": "GstNvPreset",
+                        "values": [
+                            {
+                                "desc": "Default",
+                                "name": "default",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "High Performance",
+                                "name": "hp",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "High Quality",
+                                "name": "hq",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "Low Latency",
+                                "name": "low-latency",
+                                "value": "3"
+                            },
+                            {
+                                "desc": "Low Latency, High Quality",
+                                "name": "low-latency-hq",
+                                "value": "4"
+                            },
+                            {
+                                "desc": "Low Latency, High Performance",
+                                "name": "low-latency-hp",
+                                "value": "5"
+                            },
+                            {
+                                "desc": "Lossless",
+                                "name": "lossless",
+                                "value": "6"
+                            },
+                            {
+                                "desc": "Lossless, High Performance",
+                                "name": "lossless-hp",
+                                "value": "7"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Handle Quality-of-Service events from downstream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "qp-const": {
+                        "blurb": "Constant quantizer (-1 = from NVENC preset)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "51",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "qp-max": {
+                        "blurb": "Maximum quantizer (-1 = from NVENC preset)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "51",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "qp-min": {
+                        "blurb": "Minimum quantizer (-1 = from NVENC preset)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "51",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "rc-mode": {
+                        "blurb": "Rate Control Mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "default (0)",
+                        "enum": true,
+                        "type-name": "GstNvRCMode",
+                        "values": [
+                            {
+                                "desc": "Default (from NVENC preset)",
+                                "name": "default",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Constant Quantization",
+                                "name": "constqp",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Constant Bit Rate",
+                                "name": "cbr",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "Variable Bit Rate",
+                                "name": "vbr",
+                                "value": "3"
+                            },
+                            {
+                                "desc": "Variable Bit Rate (with minimum quantization parameter)",
+                                "name": "vbr-minqp",
+                                "value": "4"
+                            }
+                        ],
+                        "writable": true
+                    }
+                },
+                "rank": "primary + 256"
+            },
+            "nvh265enc": {
+                "author": "Tim-Philipp M\u00fcller <tim@centricular.com>, Matthew Waters <matthew@centricular.com>, Seungha Yang <pudding8757@gmail.com>",
+                "description": "Encode HEVC video streams using NVIDIA's hardware-accelerated NVENC encoder API",
+                "hierarchy": [
+                    "GstNvH265Enc",
+                    "GstNvBaseEnc",
+                    "GstVideoEncoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Encoder/Video/Hardware",
+                "long-name": "NVENC HEVC Video Encoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw:\n         format: { NV12, I420 }\n          width: [ 16, 4096 ]\n         height: [ 16, 4096 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory):\n         format: { NV12, Y444 }\n          width: [ 16, 4096 ]\n         height: [ 16, 4096 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-h265:\n          width: [ 1, 4096 ]\n         height: [ 1, 4096 ]\n      framerate: [ 0/1, 2147483647/1 ]\n  stream-format: byte-stream\n      alignment: au\n        profile: { (string)main }\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "bitrate": {
+                        "blurb": "Bitrate in kbit/sec (0 = from NVENC preset)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2048000",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "cuda-device-id": {
+                        "blurb": "Set the GPU device to use for operations",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "gop-size": {
+                        "blurb": "Number of frames between intra frames (-1 = infinite)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "75",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "preset": {
+                        "blurb": "Encoding Preset",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "default (0)",
+                        "enum": true,
+                        "type-name": "GstNvPreset",
+                        "values": [
+                            {
+                                "desc": "Default",
+                                "name": "default",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "High Performance",
+                                "name": "hp",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "High Quality",
+                                "name": "hq",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "Low Latency",
+                                "name": "low-latency",
+                                "value": "3"
+                            },
+                            {
+                                "desc": "Low Latency, High Quality",
+                                "name": "low-latency-hq",
+                                "value": "4"
+                            },
+                            {
+                                "desc": "Low Latency, High Performance",
+                                "name": "low-latency-hp",
+                                "value": "5"
+                            },
+                            {
+                                "desc": "Lossless",
+                                "name": "lossless",
+                                "value": "6"
+                            },
+                            {
+                                "desc": "Lossless, High Performance",
+                                "name": "lossless-hp",
+                                "value": "7"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Handle Quality-of-Service events from downstream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "qp-const": {
+                        "blurb": "Constant quantizer (-1 = from NVENC preset)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "51",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "qp-max": {
+                        "blurb": "Maximum quantizer (-1 = from NVENC preset)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "51",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "qp-min": {
+                        "blurb": "Minimum quantizer (-1 = from NVENC preset)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "51",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "rc-mode": {
+                        "blurb": "Rate Control Mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "default (0)",
+                        "enum": true,
+                        "type-name": "GstNvRCMode",
+                        "values": [
+                            {
+                                "desc": "Default (from NVENC preset)",
+                                "name": "default",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Constant Quantization",
+                                "name": "constqp",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Constant Bit Rate",
+                                "name": "cbr",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "Variable Bit Rate",
+                                "name": "vbr",
+                                "value": "3"
+                            },
+                            {
+                                "desc": "Variable Bit Rate (with minimum quantization parameter)",
+                                "name": "vbr-minqp",
+                                "value": "4"
+                            }
+                        ],
+                        "writable": true
+                    }
+                },
+                "rank": "primary + 256"
+            }
+        },
+        "filename": "gstnvenc",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
     "opencv": {
         "description": "GStreamer OpenCV Plugins",
         "elements": {
