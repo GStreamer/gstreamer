@@ -1964,6 +1964,8 @@ ges_timeline_element_set_flags (GESTimelineElement * self,
  *
  * Returns: %TRUE if @self as been edited properly, %FALSE if an error
  * occured
+ *
+ * Since: 1.18
  */
 gboolean
 ges_timeline_element_edit (GESTimelineElement * self, GList * layers,
