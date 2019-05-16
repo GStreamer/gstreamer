@@ -1721,6 +1721,9 @@ add_slice_headers (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
       slice_param->num_ref_idx_l1_active_minus1 = reflist_1_count - 1;
     else
       slice_param->num_ref_idx_l1_active_minus1 = 0;
+    if (picture->type == GST_VAAPI_PICTURE_TYPE_P && encoder->low_delay_b)
+      slice_param->num_ref_idx_l1_active_minus1 =
+          slice_param->num_ref_idx_l0_active_minus1;
 
     i_ref = 0;
     if (picture->type != GST_VAAPI_PICTURE_TYPE_I) {
