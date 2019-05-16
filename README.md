@@ -84,10 +84,22 @@ gst_elements = library('gstcoreelements',
 plugins += [gst_elements]
 ```
 
-Then when rebuilding, the `gst_plugins_cache.json` file will be updated
-in the given module and this change should be commited to the git repository.
+Then you need to regenerate the `gst_plugins_cache.json` file by running
+the target manually, if building from the module itself:
 
-The plugins documentation is generated exclusively based on that file to
+```
+ninja -C <build-dir> docs/gst_plugins_cache.json
+```
+
+if you use `gst-build` you can run the target that will rebuild all cache files:
+
+```
+ninja -C <build-dir> plugins_doc_caches`
+```
+
+NOTE: the newly generated cache should be commited to the git repos.
+
+The plugins documentation is generated based on that file to
 avoid needing to have built all plugins to get the documentation generated.
 
 NOTE: When moving plugins from one module to another, the `gst_plugins_cache.json`
