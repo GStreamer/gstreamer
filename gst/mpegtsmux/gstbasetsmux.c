@@ -1834,7 +1834,7 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
       g_param_spec_uint64 ("bitrate", "Bitrate (in bits per second)",
           "Set the target bitrate, will insert null packets as padding "
-          " to achieve multiplex-wide constant bitrate",
+          " to achieve multiplex-wide constant bitrate (0 means no padding)",
           0, G_MAXUINT64, TSMUX_DEFAULT_BITRATE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
