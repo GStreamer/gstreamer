@@ -163,12 +163,7 @@ _vk_buffer_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
     goto vk_error;
 
   if (usage & (VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT |
-          VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT |
-          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
-          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-          VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
-          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
-          VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT)) {
+          VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT)) {
     VkBufferViewCreateInfo view_info;
 
     _create_view_from_args (&view_info, mem->buffer, format, 0,
@@ -220,12 +215,7 @@ _vk_buffer_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
   /* XXX: we don't actually if the buffer has a vkDeviceMemory bound so
    * this may fail */
   if (usage & (VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT |
-          VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT |
-          VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
-          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
-          VK_BUFFER_USAGE_INDEX_BUFFER_BIT |
-          VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
-          VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT)) {
+          VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT)) {
     VkBufferViewCreateInfo view_info;
 
     _create_view_from_args (&view_info, mem->buffer, format, 0,
