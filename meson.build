@@ -64,10 +64,12 @@ if build_system == 'windows'
   subproject('win-nasm')
 endif
 
+pathsep = host_machine.system() == 'windows' ? ';' : ':'
+
 subproject('orc', required: get_option('orc'))
 
 subprojects_names = []
-all_plugins = []
+all_plugins = ''
 foreach sp : subprojects
   project_name = sp[0]
   build_infos = sp[1]
@@ -82,7 +84,7 @@ foreach sp : subprojects
 
   if subproj.found() and build_infos.has_key('build-hotdoc', default: false)
     foreach plugin: subproj.get_variable('plugins')
-      all_plugins += plugin.full_path()
+      all_plugins += pathsep + plugin.full_path()
     endforeach
     if documented_projects != ''
       documented_projects += ','

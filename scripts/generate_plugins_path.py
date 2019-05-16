@@ -7,12 +7,12 @@ import json
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--builddir", help="The meson build directory")
-    parser.add_argument(dest="plugins", help="The list of plugins", nargs="+")
+    parser.add_argument(dest="plugins", help="The list of plugins")
 
     options = parser.parse_args()
 
     all_paths = set()
-    for plugin in options.plugins:
+    for plugin in options.plugins.split(os.pathsep):
         all_paths.add(os.path.dirname(plugin))
 
     with open(os.path.join(options.builddir, 'GstPluginsPath.json'), "w") as f:
