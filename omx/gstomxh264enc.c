@@ -863,22 +863,27 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * enc, GstOMXPort * port,
      */
     GstBuffer *hdrs;
     GstMapInfo map = GST_MAP_INFO_INIT;
+    GstFlowReturn flow_ret;
 
     GST_DEBUG_OBJECT (self, "got codecconfig in byte-stream format");
 
     hdrs = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
+    GST_BUFFER_FLAG_SET (hdrs, GST_BUFFER_FLAG_HEADER);
 
     gst_buffer_map (hdrs, &map, GST_MAP_WRITE);
     memcpy (map.data,
         buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
         buf->omx_buf->nFilledLen);
     gst_buffer_unmap (hdrs, &map);
-    self->headers = g_list_append (self->headers, hdrs);
+    self->headers = g_list_append (self->headers, gst_buffer_ref (hdrs));
+    frame->output_buffer = hdrs;
+    flow_ret =
+        gst_video_encoder_finish_subframe (GST_VIDEO_ENCODER (self), frame);
 
     if (frame)
       gst_video_codec_frame_unref (frame);
 
-    return GST_FLOW_OK;
+    return flow_ret;
   } else if (self->headers) {
     gst_video_encoder_set_headers (GST_VIDEO_ENCODER (self), self->headers);
     self->headers = NULL;
