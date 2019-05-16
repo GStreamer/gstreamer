@@ -55,23 +55,27 @@ gst_vulkan_format_from_video_format (GstVideoFormat v_format, guint plane)
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_RGBA:
+      return VK_FORMAT_R8G8B8A8_UNORM;
+    case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_BGRA:
+      return VK_FORMAT_B8G8R8A8_UNORM;
+    case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_AYUV:
       n_plane_components = 4;
       break;
     case GST_VIDEO_FORMAT_RGB:
+      return VK_FORMAT_R8G8B8_UNORM;
     case GST_VIDEO_FORMAT_BGR:
-      n_plane_components = 3;
+      return VK_FORMAT_B8G8R8_UNORM;
       break;
     case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
       return VK_FORMAT_R5G6B5_UNORM_PACK16;
+    case GST_VIDEO_FORMAT_BGR16:
+      return VK_FORMAT_B5G6R5_UNORM_PACK16;
     case GST_VIDEO_FORMAT_GRAY16_BE:
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_YUY2:
@@ -99,8 +103,6 @@ gst_vulkan_format_from_video_format (GstVideoFormat v_format, guint plane)
   switch (n_plane_components) {
     case 4:
       return VK_FORMAT_R8G8B8A8_UNORM;
-    case 3:
-      return VK_FORMAT_R8G8B8_UNORM;
     case 2:
       return VK_FORMAT_R8G8_UNORM;
     case 1:
