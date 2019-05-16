@@ -557,7 +557,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
 
 
   /**
-   * GstBaseSink::stats:
+   * GstBaseSink:stats:
    *
    * Various #GstBaseSink statistics. This property returns a #GstStructure
    * with name `application/x-gst-base-sink-stats` with the following fields:
