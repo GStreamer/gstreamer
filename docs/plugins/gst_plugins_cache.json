@@ -2946,5 +2946,14 @@
         "package": "GStreamer git",
         "source": "gstreamer",
         "url": "Unknown package origin"
+    },
+    "coretracers": {
+        "description": "GStreamer core tracers",
+        "elements": {},
+        "filename": "libgstcoretracers.so",
+        "license": "LGPL",
+        "package": "GStreamer git",
+        "source": "gstreamer",
+        "url": "Unknown package origin"
     }
 }
