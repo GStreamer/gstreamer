@@ -75,7 +75,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstaccurip.so",
+        "filename": "gstaccurip",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -160,7 +160,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstadpcmdec.so",
+        "filename": "gstadpcmdec",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -277,7 +277,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstadpcmenc.so",
+        "filename": "gstadpcmenc",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -379,7 +379,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstaiff.so",
+        "filename": "gstaiff",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -721,7 +721,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstasfmux.so",
+        "filename": "gstasfmux",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -807,7 +807,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstassrender.so",
+        "filename": "gstassrender",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -919,7 +919,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstaudiobuffersplit.so",
+        "filename": "gstaudiobuffersplit",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
@@ -1025,7 +1025,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstaudiofxbad.so",
+        "filename": "gstaudiofxbad",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
@@ -1148,7 +1148,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstaudiomixmatrix.so",
+        "filename": "gstaudiomixmatrix",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -1692,7 +1692,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstaudiovisualizers.so",
+        "filename": "gstaudiovisualizers",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -1835,7 +1835,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstautoconvert.so",
+        "filename": "gstautoconvert",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -1955,7 +1955,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstbayer.so",
+        "filename": "gstbayer",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -2323,7 +2323,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstbluez.so",
+        "filename": "gstbluez",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -2465,7 +2465,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstbz2.so",
+        "filename": "gstbz2",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -3049,7 +3049,7 @@
                 }
             }
         },
-        "filename": "libgstcamerabin.so",
+        "filename": "gstcamerabin",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -3133,7 +3133,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstchromaprint.so",
+        "filename": "gstchromaprint",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -3336,7 +3336,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstcoloreffects.so",
+        "filename": "gstcoloreffects",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -5042,7 +5042,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstcurl.so",
+        "filename": "gstcurl",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -5234,7 +5234,7 @@
                 }
             }
         },
-        "filename": "libgstdashdemux.so",
+        "filename": "gstdashdemux",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
@@ -6567,7 +6567,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstdebugutilsbad.so",
+        "filename": "gstdebugutilsbad",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -8070,7 +8070,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstdecklink.so",
+        "filename": "gstdecklink",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
@@ -8851,7 +8851,7 @@
                 }
             }
         },
-        "filename": "libgstdtls.so",
+        "filename": "gstdtls",
         "license": "BSD",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -11926,7 +11926,7 @@
                 }
             }
         },
-        "filename": "libgstdvb.so",
+        "filename": "gstdvb",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -12014,7 +12014,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstdvbsuboverlay.so",
+        "filename": "gstdvbsuboverlay",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -12076,7 +12076,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstdvdspu.so",
+        "filename": "gstdvdspu",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -12456,7 +12456,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstfaceoverlay.so",
+        "filename": "gstfaceoverlay",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -12641,7 +12641,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstfbdevsink.so",
+        "filename": "gstfbdevsink",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -12817,7 +12817,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstfdkaac.so",
+        "filename": "gstfdkaac",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -12873,7 +12873,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstfestival.so",
+        "filename": "gstfestival",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -13082,7 +13082,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstfieldanalysis.so",
+        "filename": "gstfieldanalysis",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -13278,7 +13278,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgstfluidsynthmidi.so",
+        "filename": "gstfluidsynthmidi",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -13383,7 +13383,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstfreeverb.so",
+        "filename": "gstfreeverb",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -21200,7 +21200,7 @@
                         "blurb": "Indicator colour",
                         "construct": false,
                         "construct-only": false,
-                        "default": "0",
+                        "default": "1.35632e-19",
                         "max": "1",
                         "min": "0",
                         "type-name": "gfloat",
@@ -21210,7 +21210,7 @@
                         "blurb": "Indicator colour",
                         "construct": false,
                         "construct-only": false,
-                        "default": "0",
+                        "default": "1.35632e-19",
                         "max": "1",
                         "min": "0",
                         "type-name": "gfloat",
@@ -21253,7 +21253,7 @@
                         "blurb": "Indicator transparency",
                         "construct": false,
                         "construct-only": false,
-                        "default": "0",
+                        "default": "1.02588e-71",
                         "max": "1",
                         "min": "0",
                         "type-name": "gdouble",
@@ -25165,7 +25165,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstfrei0r.so",
+        "filename": "gstfrei0r",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -25655,7 +25655,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstgaudieffects.so",
+        "filename": "gstgaudieffects",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -25783,7 +25783,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstgdp.so",
+        "filename": "gstgdp",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -27668,7 +27668,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstgeometrictransform.so",
+        "filename": "gstgeometrictransform",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -27830,7 +27830,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstgsm.so",
+        "filename": "gstgsm",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -28552,7 +28552,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgsthls.so",
+        "filename": "gsthls",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
@@ -28635,7 +28635,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstid3tag.so",
+        "filename": "gstid3tag",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -29447,7 +29447,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstinter.so",
+        "filename": "gstinter",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
@@ -29595,7 +29595,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstinterlace.so",
+        "filename": "gstinterlace",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -29861,7 +29861,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstipcpipeline.so",
+        "filename": "gstipcpipeline",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
@@ -30056,7 +30056,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstivfparse.so",
+        "filename": "gstivfparse",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -30177,7 +30177,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstivtc.so",
+        "filename": "gstivtc",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
@@ -30253,7 +30253,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstjp2kdecimator.so",
+        "filename": "gstjp2kdecimator",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -30364,7 +30364,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstjpegformat.so",
+        "filename": "gstjpegformat",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -30725,7 +30725,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstkate.so",
+        "filename": "gstkate",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -31003,7 +31003,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgstkms.so",
+        "filename": "gstkms",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -31977,7 +31977,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstlegacyrawparse.so",
+        "filename": "gstlegacyrawparse",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -32033,7 +32033,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstmidi.so",
+        "filename": "gstmidi",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -32829,7 +32829,7 @@
                 }
             }
         },
-        "filename": "libgstmpegpsdemux.so",
+        "filename": "gstmpegpsdemux",
         "license": "unknown",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -32893,7 +32893,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstmpegpsmux.so",
+        "filename": "gstmpegpsmux",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -33101,7 +33101,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstmpegtsdemux.so",
+        "filename": "gstmpegtsdemux",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -33212,7 +33212,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstmpegtsmux.so",
+        "filename": "gstmpegtsmux",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -33655,7 +33655,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstmxf.so",
+        "filename": "gstmxf",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -33825,7 +33825,7 @@
                 "rank": "marginal"
             }
         },
-        "filename": "libgstnetsim.so",
+        "filename": "gstnetsim",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -36183,7 +36183,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstopencv.so",
+        "filename": "gstopencv",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -36540,7 +36540,7 @@
                 "rank": "marginal"
             }
         },
-        "filename": "libgstopenh264.so",
+        "filename": "gstopenh264",
         "license": "BSD",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -36748,7 +36748,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstopenjpeg.so",
+        "filename": "gstopenjpeg",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -36813,7 +36813,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstopusparse.so",
+        "filename": "gstopusparse",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -36987,7 +36987,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstpcapparse.so",
+        "filename": "gstpcapparse",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -37107,7 +37107,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstpnm.so",
+        "filename": "gstpnm",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -37236,7 +37236,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstremovesilence.so",
+        "filename": "gstremovesilence",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -37341,7 +37341,7 @@
                 }
             }
         },
-        "filename": "libgstresindvd.so",
+        "filename": "gstresindvd",
         "license": "GPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -37535,7 +37535,493 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstrfbsrc.so",
+        "filename": "gstrfbsrc",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
+    "rist": {
+        "description": "Source and Sink for RIST TR-06-1 streaming specification",
+        "elements": {
+            "ristrtxreceive": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com>",
+                "description": "Receive retransmitted RIST packets according to VSF TR-06-1",
+                "hierarchy": [
+                    "GstRistRtxReceive",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec",
+                "long-name": "RIST Retransmission receiver",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-rtx-packets": {
+                        "blurb": " Number of retransmission packets received",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": false
+                    },
+                    "num-rtx-requests": {
+                        "blurb": "Number of retransmission events received",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": false
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "ristrtxsend": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com>",
+                "description": "Retransmit RTP packets when needed, according to VSF TR-06-1",
+                "hierarchy": [
+                    "GstRistRtxSend",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec",
+                "long-name": "RIST Retransmission Sender",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-rtp:\n     clock-rate: [ 1, 2147483647 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "max-size-packets": {
+                        "blurb": "Amount of packets to queue (0 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "32767",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "max-size-time": {
+                        "blurb": "Amount of ms to queue (0 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-rtx-packets": {
+                        "blurb": " Number of retransmission packets sent",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": false
+                    },
+                    "num-rtx-requests": {
+                        "blurb": "Number of retransmission events received",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": false
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "ristsink": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com",
+                "description": "Sink that implements RIST TR-06-1 streaming specification",
+                "hierarchy": [
+                    "GstRistSink",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Network",
+                "long-name": "RIST Sink",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "address": {
+                        "blurb": "Address to send packets to (can be IPv4 or IPv6).",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "localhost",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "cname": {
+                        "blurb": "Set the CNAME in the SDES block of the sender report.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "user1802220788@host-249d1067",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "max-rtcp-bandwidth": {
+                        "blurb": "The maximum bandwidth used for RTCP in fraction of RTP bandwdith",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "0.05",
+                        "max": "0.05",
+                        "min": "0",
+                        "type-name": "gdouble",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "min-rtcp-interval": {
+                        "blurb": "The minimum interval in ms between two regular successive RTCP packets.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "100",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "multicast-iface": {
+                        "blurb": "The multicast interface to use to send packets.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "multicast-loopback": {
+                        "blurb": "When enabled, the packet will be received locally.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "multicast-ttl": {
+                        "blurb": "The multicast time-to-live parameter.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "255",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "port": {
+                        "blurb": "The port RTP packets will be sent, RTCP port is derived from it, this port must be an even number.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "5004",
+                        "max": "65534",
+                        "min": "2",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "sender-buffer": {
+                        "blurb": "Size of the retransmission queue in ms",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "1200",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Statistic in a GstStructure named 'rist/x-sender-stats'",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "rist/x-sender-stats, sent-original-packets=(guint64)0, sent-retransmitted-packets=(guint64)0, round-trip-time=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
+                    "stats-update-interval": {
+                        "blurb": "The interval between 'stats' update notification (0 disabled)",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "ristsrc": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com",
+                "description": "Source that implements RIST TR-06-1 streaming specification",
+                "hierarchy": [
+                    "GstRistSrc",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Network",
+                "long-name": "RIST Source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "address": {
+                        "blurb": "Address to receive packets from (can be IPv4 or IPv6).",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0.0.0.0",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "cname": {
+                        "blurb": "Set the CNAME in the SDES block of the receiver report.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "user3968283371@host-d2f08585",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "max-rtcp-bandwidth": {
+                        "blurb": "The maximum bandwidth used for RTCP in fraction of RTP bandwdith",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "0.05",
+                        "max": "0.05",
+                        "min": "0",
+                        "type-name": "gdouble",
+                        "writable": true
+                    },
+                    "max-rtx-retries": {
+                        "blurb": "The maximum number of retransmission requests for a lost packet.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "7",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "min-rtcp-interval": {
+                        "blurb": "The minimum interval in ms between two successive RTCP packets",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "100",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "multicast-iface": {
+                        "blurb": "The multicast interface to use to send packets.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "multicast-loopback": {
+                        "blurb": "When enabled, the packet will be received locally.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "multicast-ttl": {
+                        "blurb": "The multicast time-to-live parameter.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "255",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "port": {
+                        "blurb": "The port to listen for RTP packets, RTCP port is derived from it, this port must be an even number.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "5004",
+                        "max": "65534",
+                        "min": "2",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "receiver-buffer": {
+                        "blurb": "Buffering duration in ms",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "1000",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "reorder-section": {
+                        "blurb": "Time to wait before sending retransmission request in ms.",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "70",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Statistic in a GstStructure named 'rist/x-receiver-stats'",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "rist/x-receiver-stats, dropped=(guint64)0, received=(guint64)0, recovered=(guint64)0, permanently-lost=(guint64)0, duplicates=(guint64)0, retransmission-requests-sent=(guint64)0, rtx-roundtrip-time=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
+                    "stats-update-interval": {
+                        "blurb": "The interval between 'stats' update notification (0 disabled)",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            }
+        },
+        "filename": "gstrist",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -37758,7 +38244,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstrsvg.so",
+        "filename": "gstrsvg",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -38160,7 +38646,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstrtponvif.so",
+        "filename": "gstrtponvif",
         "license": "unknown",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -39547,7 +40033,7 @@
                 }
             }
         },
-        "filename": "libgstsdpelem.so",
+        "filename": "gstsdpelem",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -39651,7 +40137,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstsegmentclip.so",
+        "filename": "gstsegmentclip",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -39981,7 +40467,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstshm.so",
+        "filename": "gstshm",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -40147,7 +40633,7 @@
                 "rank": "marginal"
             }
         },
-        "filename": "libgstsiren.so",
+        "filename": "gstsiren",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -40249,7 +40735,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstsmooth.so",
+        "filename": "gstsmooth",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -40377,7 +40863,7 @@
                 }
             }
         },
-        "filename": "libgstsmoothstreaming.so",
+        "filename": "gstsmoothstreaming",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -40529,7 +41015,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstsoundtouch.so",
+        "filename": "gstsoundtouch",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -40882,7 +41368,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstspeed.so",
+        "filename": "gstspeed",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -41250,7 +41736,7 @@
                 }
             }
         },
-        "filename": "libgstsrtp.so",
+        "filename": "gstsrtp",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -41392,7 +41878,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstsubenc.so",
+        "filename": "gstsubenc",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -41627,7 +42113,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgsttimecode.so",
+        "filename": "gsttimecode",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -41735,7 +42221,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstttmlsubs.so",
+        "filename": "gstttmlsubs",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -42389,7 +42875,7 @@
                 }
             }
         },
-        "filename": "libgstuvch264.so",
+        "filename": "gstuvch264",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -42577,7 +43063,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvideofiltersbad.so",
+        "filename": "gstvideofiltersbad",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
@@ -42645,7 +43131,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvideoframe_audiolevel.so",
+        "filename": "gstvideoframe_audiolevel",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -43204,7 +43690,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvideoparsersbad.so",
+        "filename": "gstvideoparsersbad",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -43556,7 +44042,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstvideosignal.so",
+        "filename": "gstvideosignal",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -43613,7 +44099,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstvmnc.so",
+        "filename": "gstvmnc",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -44149,7 +44635,7 @@
                 "rank": "marginal"
             }
         },
-        "filename": "libgstwaylandsink.so",
+        "filename": "gstwaylandsink",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -44354,7 +44840,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstwebp.so",
+        "filename": "gstwebp",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -45098,7 +45584,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstwebrtcdsp.so",
+        "filename": "gstwebrtcdsp",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -45405,7 +45891,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgsty4mdec.so",
+        "filename": "gsty4mdec",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
@@ -45496,7 +45982,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstyadif.so",
+        "filename": "gstyadif",
         "license": "GPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
@@ -45586,7 +46072,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstzbar.so",
+        "filename": "gstzbar",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
