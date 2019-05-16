@@ -857,32 +857,28 @@ gst_omx_h264_enc_handle_output_frame (GstOMXVideoEnc * enc, GstOMXPort * port,
   GstOMXH264Enc *self = GST_OMX_H264_ENC (enc);
 
   if (buf->omx_buf->nFlags & OMX_BUFFERFLAG_CODECCONFIG) {
-    /* The codec data is SPS/PPS with a startcode => bytestream stream format
+    /* The codec data is SPS/PPS but our output is stream-format=byte-stream.
      * For bytestream stream format the SPS/PPS is only in-stream and not
      * in the caps!
      */
-    if (buf->omx_buf->nFilledLen >= 4 &&
-        GST_READ_UINT32_BE (buf->omx_buf->pBuffer +
-            buf->omx_buf->nOffset) == 0x00000001) {
-      GstBuffer *hdrs;
-      GstMapInfo map = GST_MAP_INFO_INIT;
+    GstBuffer *hdrs;
+    GstMapInfo map = GST_MAP_INFO_INIT;
 
-      GST_DEBUG_OBJECT (self, "got codecconfig in byte-stream format");
+    GST_DEBUG_OBJECT (self, "got codecconfig in byte-stream format");
 
-      hdrs = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
+    hdrs = gst_buffer_new_and_alloc (buf->omx_buf->nFilledLen);
 
-      gst_buffer_map (hdrs, &map, GST_MAP_WRITE);
-      memcpy (map.data,
-          buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
-          buf->omx_buf->nFilledLen);
-      gst_buffer_unmap (hdrs, &map);
-      self->headers = g_list_append (self->headers, hdrs);
+    gst_buffer_map (hdrs, &map, GST_MAP_WRITE);
+    memcpy (map.data,
+        buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
+        buf->omx_buf->nFilledLen);
+    gst_buffer_unmap (hdrs, &map);
+    self->headers = g_list_append (self->headers, hdrs);
 
-      if (frame)
-        gst_video_codec_frame_unref (frame);
+    if (frame)
+      gst_video_codec_frame_unref (frame);
 
-      return GST_FLOW_OK;
-    }
+    return GST_FLOW_OK;
   } else if (self->headers) {
     gst_video_encoder_set_headers (GST_VIDEO_ENCODER (self), self->headers);
     self->headers = NULL;
