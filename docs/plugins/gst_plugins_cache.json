@@ -2941,7 +2941,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstcoreelements.so",
+        "filename": "gstcoreelements",
         "license": "LGPL",
         "package": "GStreamer git",
         "source": "gstreamer",
