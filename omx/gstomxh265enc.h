@@ -55,6 +55,8 @@ struct _GstOMXH265Enc
   gboolean constrained_intra_prediction;
   guint32 loop_filter_mode;
 #endif
+
+  GList *headers;
 };
 
 struct _GstOMXH265EncClass
