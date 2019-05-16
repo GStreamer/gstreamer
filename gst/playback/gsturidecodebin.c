@@ -1310,12 +1310,14 @@ gen_source_element (GstURIDecodeBin * decoder)
 
   GST_LOG_OBJECT (decoder, "found source type %s", G_OBJECT_TYPE_NAME (source));
 
+  decoder->is_stream = IS_STREAM_URI (decoder->uri);
+
   query = gst_query_new_scheduling ();
   if (gst_element_query (source, query)) {
     gst_query_parse_scheduling (query, &flags, NULL, NULL, NULL);
-    decoder->is_stream = flags & GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED;
-  } else
-    decoder->is_stream = IS_STREAM_URI (decoder->uri);
+    if ((flags & GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED))
+      decoder->is_stream = TRUE;
+  }
   gst_query_unref (query);
 
   GST_LOG_OBJECT (decoder, "source is stream: %d", decoder->is_stream);
