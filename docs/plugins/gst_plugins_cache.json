@@ -5048,6 +5048,213 @@
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
+    "d3d": {
+        "description": "Direct3D plugin",
+        "elements": {
+            "d3dvideosink": {
+                "author": "David Hoyt <dhoyt@hoytsoft.org>, Roland Krikava <info@bluedigits.com>",
+                "description": "Display data using a Direct3D video renderer",
+                "hierarchy": [
+                    "GstD3DVideoSink",
+                    "GstVideoSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Sink/Video",
+                "long-name": "Direct3D video sink",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw:\n         format: { I420, YV12, UYVY, YUY2, NV12, BGRx, RGBx, RGBA, BGRA, BGR, RGB16, RGB15 }\n      framerate: [ 0/1, 2147483647/1 ]\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "async": {
+                        "blurb": "Go asynchronously to PAUSED",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "blocksize": {
+                        "blurb": "Size in bytes to pull per buffer (0 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "create-render-window": {
+                        "blurb": "If no window ID is given, a new render window is created",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "enable-last-sample": {
+                        "blurb": "Enable the last-sample property",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "enable-navigation-events": {
+                        "blurb": "When enabled, navigation events are sent upstream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "force-aspect-ratio": {
+                        "blurb": "When enabled, scaling will respect original aspect ratio",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "last-sample": {
+                        "blurb": "The last sample received in the sink",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstSample",
+                        "writable": false
+                    },
+                    "max-bitrate": {
+                        "blurb": "The maximum bits per second to render (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "max-lateness": {
+                        "blurb": "Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "5000000",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "processing-deadline": {
+                        "blurb": "Maximum processing deadline in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "15000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Generate Quality-of-Service events upstream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "render-delay": {
+                        "blurb": "Additional render delay of the sink in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "show-preroll-frame": {
+                        "blurb": "Whether to render video frames during preroll",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
+                    "stream-stop-on-close": {
+                        "blurb": "If the render window is closed stop stream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "sync": {
+                        "blurb": "Sync on the clock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "throttle-time": {
+                        "blurb": "The time to keep between rendered buffers (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "ts-offset": {
+                        "blurb": "Timestamp offset in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "-9223372036854775808",
+                        "type-name": "gint64",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            }
+        },
+        "filename": "gstd3d",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
     "dashdemux": {
         "description": "DASH demuxer plugin",
         "elements": {
@@ -8318,6 +8525,207 @@
         "filename": "libgstdirectfb.so",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins prerelease",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
+    "directsoundsrc": {
+        "description": "Direct Sound Source plugin library",
+        "elements": {
+            "directsoundsrc": {
+                "author": "Joni Valtanen <joni.valtanen@movial.fi>",
+                "description": "Capture from a soundcard via DirectSound",
+                "hierarchy": [
+                    "GstDirectSoundSrc",
+                    "GstAudioSrc",
+                    "GstAudioBaseSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Audio",
+                "long-name": "DirectSound audio source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: { S16LE, S8 }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "actual-buffer-time": {
+                        "blurb": "Actual configured size of audio buffer in microseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "type-name": "gint64",
+                        "writable": false
+                    },
+                    "actual-latency-time": {
+                        "blurb": "Actual configured audio latency in microseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "type-name": "gint64",
+                        "writable": false
+                    },
+                    "blocksize": {
+                        "blurb": "Size in bytes to read per buffer (-1 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "buffer-time": {
+                        "blurb": "Size of audio buffer in microseconds. This is the maximum amount of data that is buffered in the device and the maximum latency that the source reports. This value might be ignored by the element if necessary; see \"actual-buffer-time\"",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "200000",
+                        "max": "9223372036854775807",
+                        "min": "1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "device": {
+                        "blurb": "DirectSound playback device as a GUID string (volume and mute will not work!)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "device-name": {
+                        "blurb": "Human-readable name of the sound device",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "do-timestamp": {
+                        "blurb": "Apply current stream time to buffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "latency-time": {
+                        "blurb": "The minimum amount of data to read in each iteration in microseconds. This is the minimum latency that the source reports. This value might be ignored by the element if necessary; see \"actual-latency-time\"",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "10000",
+                        "max": "9223372036854775807",
+                        "min": "1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "mute": {
+                        "blurb": "Mute state of this stream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-buffers": {
+                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "provide-clock": {
+                        "blurb": "Provide a clock to be used as the global pipeline clock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "slave-method": {
+                        "blurb": "Algorithm used to match the rate of the masterclock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "skew (2)",
+                        "enum": true,
+                        "type-name": "GstAudioBaseSrcSlaveMethod",
+                        "values": [
+                            {
+                                "desc": "GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE",
+                                "name": "resample",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "GST_AUDIO_BASE_SRC_SLAVE_RE_TIMESTAMP",
+                                "name": "re-timestamp",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "GST_AUDIO_BASE_SRC_SLAVE_SKEW",
+                                "name": "skew",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "GST_AUDIO_BASE_SRC_SLAVE_NONE",
+                                "name": "none",
+                                "value": "3"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "typefind": {
+                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "volume": {
+                        "blurb": "Volume of this stream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "1",
+                        "min": "0",
+                        "type-name": "gdouble",
+                        "writable": true
+                    }
+                },
+                "rank": "secondary"
+            }
+        },
+        "filename": "gstdirectsoundsrc",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
@@ -44448,6 +44856,560 @@
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
+    "wasapi": {
+        "description": "Windows audio session API plugin",
+        "elements": {
+            "wasapisink": {
+                "author": "Nirbheek Chauhan <nirbheek@centricular.com>, Ole Andr\u00c3\u00a9 Vadla Ravn\u00c3\u00a5s <ole.andre.ravnas@tandberg.com>",
+                "description": "Stream audio to an audio capture device through WASAPI",
+                "hierarchy": [
+                    "GstWasapiSink",
+                    "GstAudioSink",
+                    "GstAudioBaseSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Sink/Audio/Hardware",
+                "long-name": "WasapiSrc",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-raw:\n         format: { S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "alignment-threshold": {
+                        "blurb": "Timestamp alignment threshold in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "40000000",
+                        "max": "18446744073709551614",
+                        "min": "1",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "async": {
+                        "blurb": "Go asynchronously to PAUSED",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "blocksize": {
+                        "blurb": "Size in bytes to pull per buffer (0 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "buffer-time": {
+                        "blurb": "Size of audio buffer in microseconds, this is the minimum latency that the sink reports",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "200000",
+                        "max": "9223372036854775807",
+                        "min": "1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "can-activate-pull": {
+                        "blurb": "Allow pull-based scheduling",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "device": {
+                        "blurb": "WASAPI playback device as a GUID string",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "discont-wait": {
+                        "blurb": "Window of time in nanoseconds to wait before creating a discontinuity",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1000000000",
+                        "max": "18446744073709551614",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "drift-tolerance": {
+                        "blurb": "Tolerance for clock drift in microseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "40000",
+                        "max": "9223372036854775807",
+                        "min": "1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "enable-last-sample": {
+                        "blurb": "Enable the last-sample property",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "exclusive": {
+                        "blurb": "Open the device in exclusive mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "last-sample": {
+                        "blurb": "The last sample received in the sink",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstSample",
+                        "writable": false
+                    },
+                    "latency-time": {
+                        "blurb": "The minimum amount of data to write in each iteration in microseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "10000",
+                        "max": "9223372036854775807",
+                        "min": "1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "low-latency": {
+                        "blurb": "Optimize all settings for lowest latency. Always safe to enable.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "max-bitrate": {
+                        "blurb": "The maximum bits per second to render (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "max-lateness": {
+                        "blurb": "Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "mute": {
+                        "blurb": "Mute state of this stream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "processing-deadline": {
+                        "blurb": "Maximum processing deadline in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "20000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "provide-clock": {
+                        "blurb": "Provide a clock to be used as the global pipeline clock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Generate Quality-of-Service events upstream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "render-delay": {
+                        "blurb": "Additional render delay of the sink in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "role": {
+                        "blurb": "Role of the device: communications, multimedia, etc",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "console (0)",
+                        "enum": true,
+                        "type-name": "GstWasapiDeviceRole",
+                        "values": [
+                            {
+                                "desc": "Games, system notifications, voice commands",
+                                "name": "console",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Music, movies, recorded media",
+                                "name": "multimedia",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Voice communications",
+                                "name": "comms",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "slave-method": {
+                        "blurb": "Algorithm used to match the rate of the masterclock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "skew (1)",
+                        "enum": true,
+                        "type-name": "GstAudioBaseSinkSlaveMethod",
+                        "values": [
+                            {
+                                "desc": "GST_AUDIO_BASE_SINK_SLAVE_RESAMPLE",
+                                "name": "resample",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "GST_AUDIO_BASE_SINK_SLAVE_SKEW",
+                                "name": "skew",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "GST_AUDIO_BASE_SINK_SLAVE_NONE",
+                                "name": "none",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "GST_AUDIO_BASE_SINK_SLAVE_CUSTOM",
+                                "name": "custom",
+                                "value": "3"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
+                    "sync": {
+                        "blurb": "Sync on the clock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "throttle-time": {
+                        "blurb": "The time to keep between rendered buffers (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "ts-offset": {
+                        "blurb": "Timestamp offset in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "-9223372036854775808",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "use-audioclient3": {
+                        "blurb": "Use the Windows 10 AudioClient3 API when available and if the low-latency property is set to TRUE",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "wasapisrc": {
+                "author": "Nirbheek Chauhan <nirbheek@centricular.com>, Ole Andr\u00c3\u00a9 Vadla Ravn\u00c3\u00a5s <ole.andre.ravnas@tandberg.com>",
+                "description": "Stream audio from an audio capture device through WASAPI",
+                "hierarchy": [
+                    "GstWasapiSrc",
+                    "GstAudioSrc",
+                    "GstAudioBaseSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Audio/Hardware",
+                "long-name": "WasapiSrc",
+                "pad-templates": {
+                    "src": {
+                        "caps": "audio/x-raw:\n         format: { S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }\n         layout: interleaved\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "actual-buffer-time": {
+                        "blurb": "Actual configured size of audio buffer in microseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "type-name": "gint64",
+                        "writable": false
+                    },
+                    "actual-latency-time": {
+                        "blurb": "Actual configured audio latency in microseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "type-name": "gint64",
+                        "writable": false
+                    },
+                    "blocksize": {
+                        "blurb": "Size in bytes to read per buffer (-1 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "buffer-time": {
+                        "blurb": "Size of audio buffer in microseconds. This is the maximum amount of data that is buffered in the device and the maximum latency that the source reports. This value might be ignored by the element if necessary; see \"actual-buffer-time\"",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "200000",
+                        "max": "9223372036854775807",
+                        "min": "1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "device": {
+                        "blurb": "WASAPI playback device as a GUID string",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "do-timestamp": {
+                        "blurb": "Apply current stream time to buffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "exclusive": {
+                        "blurb": "Open the device in exclusive mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "latency-time": {
+                        "blurb": "The minimum amount of data to read in each iteration in microseconds. This is the minimum latency that the source reports. This value might be ignored by the element if necessary; see \"actual-latency-time\"",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "10000",
+                        "max": "9223372036854775807",
+                        "min": "1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "loopback": {
+                        "blurb": "Open the sink device for loopback recording",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "low-latency": {
+                        "blurb": "Optimize all settings for lowest latency. Always safe to enable.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-buffers": {
+                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "provide-clock": {
+                        "blurb": "Provide a clock to be used as the global pipeline clock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "role": {
+                        "blurb": "Role of the device: communications, multimedia, etc",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "console (0)",
+                        "enum": true,
+                        "type-name": "GstWasapiDeviceRole",
+                        "values": [
+                            {
+                                "desc": "Games, system notifications, voice commands",
+                                "name": "console",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Music, movies, recorded media",
+                                "name": "multimedia",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Voice communications",
+                                "name": "comms",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "slave-method": {
+                        "blurb": "Algorithm used to match the rate of the masterclock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "skew (2)",
+                        "enum": true,
+                        "type-name": "GstAudioBaseSrcSlaveMethod",
+                        "values": [
+                            {
+                                "desc": "GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE",
+                                "name": "resample",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "GST_AUDIO_BASE_SRC_SLAVE_RE_TIMESTAMP",
+                                "name": "re-timestamp",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "GST_AUDIO_BASE_SRC_SLAVE_SKEW",
+                                "name": "skew",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "GST_AUDIO_BASE_SRC_SLAVE_NONE",
+                                "name": "none",
+                                "value": "3"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "typefind": {
+                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "use-audioclient3": {
+                        "blurb": "Whether to use the Windows 10 AudioClient3 API when available",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            }
+        },
+        "filename": "gstwasapi",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
     "waylandsink": {
         "description": "Wayland Video Sink",
         "elements": {
@@ -45585,6 +46547,422 @@
             }
         },
         "filename": "gstwebrtcdsp",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
+    "winks": {
+        "description": "Windows kernel streaming plugin",
+        "elements": {
+            "ksvideosrc": {
+                "author": "Ole Andr\u00c3\u00a9 Vadla Ravn\u00c3\u00a5s <ole.andre.ravnas@tandberg.com>\nHaakon Sporsheim <hakon.sporsheim@tandberg.com>\nAndres Colubri <andres.colubri@gmail.com>",
+                "description": "Stream data from a video capture device through Windows kernel streaming",
+                "hierarchy": [
+                    "GstKsVideoSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Video/Hardware",
+                "long-name": "KsVideoSrc",
+                "pad-templates": {
+                    "src": {
+                        "caps": "video/x-raw:\n         format: RGB15\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: RGB16\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: BGR\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: BGRx\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nimage/jpeg:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: dvsd\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: dvsd\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "blocksize": {
+                        "blurb": "Size in bytes to read per buffer (-1 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "device-index": {
+                        "blurb": "The zero-based device index",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "device-name": {
+                        "blurb": "The human-readable device name",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "device-path": {
+                        "blurb": "The device path",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "do-stats": {
+                        "blurb": "Enable logging of statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "do-timestamp": {
+                        "blurb": "Apply current stream time to buffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "enable-quirks": {
+                        "blurb": "Enable driver-specific quirks",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "fps": {
+                        "blurb": "Last measured framerate, if statistics are enabled",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": false
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-buffers": {
+                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "typefind": {
+                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            }
+        },
+        "filename": "gstwinks",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
+    "winscreencap": {
+        "description": "Screen capture plugin for Windows",
+        "elements": {
+            "dx9screencapsrc": {
+                "author": "Haakon Sporsheim <hakon.sporsheim@tandberg.com>",
+                "description": "Captures screen",
+                "hierarchy": [
+                    "GstDX9ScreenCapSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Video",
+                "long-name": "DirectX 9 screen capture source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "video/x-raw:\n         format: BGR\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "blocksize": {
+                        "blurb": "Size in bytes to read per buffer (-1 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "cursor": {
+                        "blurb": "Whether to show mouse cursor (default off)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "do-timestamp": {
+                        "blurb": "Apply current stream time to buffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "height": {
+                        "blurb": "Height of screen capture area (0 = maximum)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "monitor": {
+                        "blurb": "Which monitor to use (0 = 1st monitor and default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-buffers": {
+                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "typefind": {
+                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "width": {
+                        "blurb": "Width of screen capture area (0 = maximum)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "x": {
+                        "blurb": "Horizontal coordinate of top left corner for the screen capture area",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "y": {
+                        "blurb": "Vertical coordinate of top left corner for the screen capture area",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "gdiscreencapsrc": {
+                "author": "Haakon Sporsheim <hakon.sporsheim@tandberg.com>",
+                "description": "Captures screen",
+                "hierarchy": [
+                    "GstGDIScreenCapSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Video",
+                "long-name": "GDI screen capture source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "video/x-raw:\n         format: BGR\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "blocksize": {
+                        "blurb": "Size in bytes to read per buffer (-1 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "cursor": {
+                        "blurb": "Whether to show mouse cursor (default off)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "do-timestamp": {
+                        "blurb": "Apply current stream time to buffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "height": {
+                        "blurb": "Height of screen capture area (0 = maximum)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "monitor": {
+                        "blurb": "Which monitor to use (0 = 1st monitor and default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-buffers": {
+                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "typefind": {
+                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "width": {
+                        "blurb": "Width of screen capture area (0 = maximum)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "x": {
+                        "blurb": "Horizontal coordinate of top left corner for the screen capture area",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "y": {
+                        "blurb": "Vertical coordinate of top left corner for the screen capture area",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gstwinscreencap",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
