@@ -144,7 +144,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgsta52dec.so",
+        "filename": "gsta52dec",
         "license": "GPL",
         "package": "GStreamer Ugly Plug-ins git",
         "source": "gst-plugins-ugly",
@@ -642,7 +642,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgstasf.so",
+        "filename": "gstasf",
         "license": "LGPL",
         "package": "GStreamer Ugly Plug-ins git",
         "source": "gst-plugins-ugly",
@@ -780,7 +780,7 @@
                 "rank": "secondary - 1"
             }
         },
-        "filename": "libgstcdio.so",
+        "filename": "gstcdio",
         "license": "GPL",
         "package": "GStreamer Ugly Plug-ins git",
         "source": "gst-plugins-ugly",
@@ -864,7 +864,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstdvdlpcmdec.so",
+        "filename": "gstdvdlpcmdec",
         "license": "LGPL",
         "package": "GStreamer Ugly Plug-ins git",
         "source": "gst-plugins-ugly",
@@ -990,7 +990,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstdvdread.so",
+        "filename": "gstdvdread",
         "license": "GPL",
         "package": "GStreamer Ugly Plug-ins git",
         "source": "gst-plugins-ugly",
@@ -1090,7 +1090,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstdvdsub.so",
+        "filename": "gstdvdsub",
         "license": "LGPL",
         "package": "GStreamer Ugly Plug-ins git",
         "source": "gst-plugins-ugly",
@@ -1573,7 +1573,7 @@
                 "rank": "marginal"
             }
         },
-        "filename": "libgstrealmedia.so",
+        "filename": "gstrealmedia",
         "license": "LGPL",
         "package": "GStreamer Ugly Plug-ins git",
         "source": "gst-plugins-ugly",
@@ -2378,7 +2378,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstx264.so",
+        "filename": "gstx264",
         "license": "GPL",
         "package": "GStreamer Ugly Plug-ins git",
         "source": "gst-plugins-ugly",
@@ -2433,7 +2433,7 @@
                 "rank": "marginal"
             }
         },
-        "filename": "libgstxingmux.so",
+        "filename": "gstxingmux",
         "license": "LGPL",
         "package": "GStreamer Ugly Plug-ins git",
         "source": "gst-plugins-ugly",
