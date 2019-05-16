@@ -1,9 +1,16 @@
 if get_option('vulkan').disabled()
   subdir_done()
 endif
+glslc = find_program('glslc', required: get_option('vulkan'))
+if not glslc.found()
+  subdir_done()
+endif
+
+subdir('shaders')
 
 vulkan_sources = [
   'gstvulkan.c',
+  'vkimageidentity.c',
   'vksink.c',
   'vkshader.c',
   'vkswapper.c',
@@ -12,7 +19,7 @@ vulkan_sources = [
 ]
 
 gstvulkan_plugin = library('gstvulkan',
-  vulkan_sources,
+  vulkan_sources, vulkan_compiled_shader_sources,
   c_args : gst_plugins_bad_args,
   objc_args : gst_plugins_bad_args,
   link_args : noseh_link_args,
