@@ -444,7 +444,7 @@
                 }
             }
         },
-        "filename": "libgstrtspclientsink.so",
+        "filename": "gstrtspclientsink",
         "license": "LGPL",
         "package": "GStreamer RTSP Server Library git",
         "source": "gst-rtsp-server",
