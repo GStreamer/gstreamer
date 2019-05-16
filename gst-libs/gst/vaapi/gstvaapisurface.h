@@ -116,7 +116,7 @@ typedef enum
 } GstVaapiSurfaceStatus;
 
 /**
- * GstVaapiSurfaceRenderFlags
+ * GstVaapiSurfaceRenderFlags:
  * @GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD:
  *   selects the top field of the surface
  * @GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD:
