@@ -37,19 +37,42 @@ struct _GstVulkanTrash
   gpointer              user_data;
 };
 
-GstVulkanTrash *    gst_vulkan_trash_new                        (GstVulkanFence * fence,
-                                                                 GstVulkanTrashNotify notify,
-                                                                 gpointer user_data);
-GstVulkanTrash *    gst_vulkan_trash_new_free_command_buffer    (GstVulkanFence * fence,
-                                                                 GstVulkanCommandPool * pool,
-                                                                 VkCommandBuffer cmd);
-GstVulkanTrash *    gst_vulkan_trash_new_free_semaphore         (GstVulkanFence * fence,
-                                                                 VkSemaphore cmd);
-void                gst_vulkan_trash_free                       (GstVulkanTrash * trash);
+GstVulkanTrash *    gst_vulkan_trash_new                            (GstVulkanFence * fence,
+                                                                     GstVulkanTrashNotify notify,
+                                                                     gpointer user_data);
 
-GList *             gst_vulkan_trash_list_gc                    (GList * trash_list);
-gboolean            gst_vulkan_trash_list_wait                  (GList * trash_list,
-                                                                 guint64 timeout);
+GstVulkanTrash *    gst_vulkan_trash_new_free_descriptor_pool       (GstVulkanFence * fence,
+                                                                     VkDescriptorPool descriptor_pool);
+GstVulkanTrash *    gst_vulkan_trash_new_free_descriptor_set_layout (GstVulkanFence * fence,
+                                                                     VkDescriptorSetLayout descriptor_set_layout);
+GstVulkanTrash *    gst_vulkan_trash_new_free_framebuffer           (GstVulkanFence * fence,
+                                                                     VkFramebuffer framebuffer);
+GstVulkanTrash *    gst_vulkan_trash_new_free_pipeline              (GstVulkanFence * fence,
+                                                                     VkPipeline pipeline);
+GstVulkanTrash *    gst_vulkan_trash_new_free_pipeline_layout       (GstVulkanFence * fence,
+                                                                     VkPipelineLayout pipeline_layout);
+GstVulkanTrash *    gst_vulkan_trash_new_free_render_pass           (GstVulkanFence * fence,
+                                                                     VkRenderPass render_pass);
+GstVulkanTrash *    gst_vulkan_trash_new_free_sampler               (GstVulkanFence * fence,
+                                                                     VkSampler sampler);
+GstVulkanTrash *    gst_vulkan_trash_new_free_semaphore             (GstVulkanFence * fence,
+                                                                     VkSemaphore semaphore);
+
+GstVulkanTrash *    gst_vulkan_trash_new_free_command_buffer        (GstVulkanFence * fence,
+                                                                     GstVulkanCommandPool * parent,
+                                                                     VkCommandBuffer command_buffer);
+GstVulkanTrash *    gst_vulkan_trash_new_free_descriptor_set        (GstVulkanFence * fence,
+                                                                     VkDescriptorPool parent,
+                                                                     VkDescriptorSet descriptor_set);
+
+GstVulkanTrash *    gst_vulkan_trash_new_object_unref               (GstVulkanFence * fence,
+                                                                     GstObject * object);
+
+void                gst_vulkan_trash_free                           (GstVulkanTrash * trash);
+
+GList *             gst_vulkan_trash_list_gc                        (GList * trash_list);
+gboolean            gst_vulkan_trash_list_wait                      (GList * trash_list,
+                                                                     guint64 timeout);
 
 G_END_DECLS
 
