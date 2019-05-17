@@ -294,7 +294,7 @@ gst_rist_sink_init (GstRistSink * sink)
    *
    * * To select RIST compatible SSRC
    */
-  sink->rtpbin = gst_element_factory_make ("rtpbin", "rist_send_rtbpin");
+  sink->rtpbin = gst_element_factory_make ("rtpbin", "rist_send_rtpbin");
   if (!sink->rtpbin) {
     sink->missing_plugin = "rtpmanager";
     goto missing_plugin;

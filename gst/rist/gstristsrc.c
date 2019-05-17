@@ -316,7 +316,7 @@ gst_rist_src_init (GstRistSrc * src)
       gst_static_pad_template_get (&src_templ));
   gst_element_add_pad (GST_ELEMENT (src), src->srcpad);
 
-  src->rtpbin = gst_element_factory_make ("rtpbin", "rist_recv_rtbpin");
+  src->rtpbin = gst_element_factory_make ("rtpbin", "rist_recv_rtpbin");
   if (!src->rtpbin) {
     src->missing_plugin = "rtpmanager";
     goto missing_plugin;
