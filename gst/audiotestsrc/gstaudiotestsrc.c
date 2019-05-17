@@ -245,8 +245,8 @@ gst_audio_test_src_class_init (GstAudioTestSrcClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FREQ,
       g_param_spec_double ("freq", "Frequency", "Frequency of test signal. "
-          "The sample rate needs to be at least 4 times higher.",
-          0.0, (gdouble) G_MAXINT / 4, DEFAULT_FREQ,
+          "The sample rate needs to be at least 2 times higher.",
+          0.0, (gdouble) G_MAXINT / 2, DEFAULT_FREQ,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_VOLUME,
       g_param_spec_double ("volume", "Volume", "Volume of test signal", 0.0,
@@ -372,7 +372,7 @@ gst_audio_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 
   GST_DEBUG_OBJECT (src, "fixating samplerate to %d", GST_AUDIO_DEF_RATE);
 
-  rate = MAX (GST_AUDIO_DEF_RATE, src->freq * 4);
+  rate = MAX (GST_AUDIO_DEF_RATE, src->freq * 2);
   gst_structure_fixate_field_nearest_int (structure, "rate", rate);
 
   gst_structure_fixate_field_string (structure, "format", DEFAULT_FORMAT_STR);
