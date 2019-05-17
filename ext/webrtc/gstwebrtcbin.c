@@ -5055,7 +5055,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   /**
    * GstWebRTCBin::create-offer:
    * @object: the #webrtcbin
-   * @options: create-offer options
+   * @options: (nullable): create-offer options
    * @promise: a #GstPromise which will contain the offer
    */
   gst_webrtc_bin_signals[CREATE_OFFER_SIGNAL] =
@@ -5068,7 +5068,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   /**
    * GstWebRTCBin::create-answer:
    * @object: the #webrtcbin
-   * @options: create-answer options
+   * @options: (nullable): create-answer options
    * @promise: a #GstPromise which will contain the answer
    */
   gst_webrtc_bin_signals[CREATE_ANSWER_SIGNAL] =
@@ -5265,7 +5265,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    * @object: the #GstWebRTCBin
    * @idx: The index of the transceiver
    *
-   * Returns: the #GstWebRTCRTPTransceiver, or %NULL
+   * Returns: (transfer full): the #GstWebRTCRTPTransceiver, or %NULL
    * Since: 1.16
    */
   gst_webrtc_bin_signals[GET_TRANSCEIVER_SIGNAL] =
