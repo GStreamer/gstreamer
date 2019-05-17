@@ -234,7 +234,7 @@ else
 check_msdk=
 endif
 
-if USE_NVENC
+if USE_NVCODEC
 check_nvenc=elements/nvenc
 else
 check_nvenc=

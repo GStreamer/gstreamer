@@ -29,15 +29,33 @@
 #include "config.h"
 #endif
 
+#if HAVE_NVCODEC_GST_GL
 #include "gstnvdec.h"
+#endif
+
+#include "gstnvenc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "nvdec", GST_RANK_PRIMARY,
-      GST_TYPE_NVDEC);
+  gboolean ret = TRUE;
+
+  if (!gst_cuda_load_library ())
+    return TRUE;
+
+#if HAVE_NVCODEC_GST_GL
+  /* FIXME: make nvdec usable without OpenGL dependency */
+  if (gst_cuvid_load_library ()) {
+    ret &= gst_element_register (plugin, "nvdec", GST_RANK_PRIMARY,
+        GST_TYPE_NVDEC);
+  }
+#endif
+
+  ret &= gst_nvenc_plugin_init (plugin);
+
+  return TRUE;
 }
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, nvdec,
-    "GStreamer NVDEC plugin", plugin_init, VERSION, "BSD",
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, nvcodec,
+    "GStreamer NVCODEC plugin", plugin_init, VERSION, "LGPL",
     GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

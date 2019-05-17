@@ -283,7 +283,7 @@ gst_nvenc_create_cuda_context (guint device_id)
 
   GST_INFO ("Initialising CUDA..");
 
-  cres = cuInit (0);
+  cres = CuInit (0);
 
   if (cres != CUDA_SUCCESS) {
     GST_WARNING ("Failed to initialise CUDA, error code: 0x%08x", cres);
@@ -292,7 +292,7 @@ gst_nvenc_create_cuda_context (guint device_id)
 
   GST_INFO ("Initialised CUDA");
 
-  cres = cuDeviceGetCount (&dev_count);
+  cres = CuDeviceGetCount (&dev_count);
   if (cres != CUDA_SUCCESS || dev_count == 0) {
     GST_WARNING ("No CUDA devices detected");
     return NULL;
@@ -300,11 +300,11 @@ gst_nvenc_create_cuda_context (guint device_id)
 
   GST_INFO ("%d CUDA device(s) detected", dev_count);
   for (i = 0; i < dev_count; ++i) {
-    if (cuDeviceGet (&cdev, i) == CUDA_SUCCESS
-        && cuDeviceGetName (name, sizeof (name), cdev) == CUDA_SUCCESS
-        && cuDeviceGetAttribute (&maj,
+    if (CuDeviceGet (&cdev, i) == CUDA_SUCCESS
+        && CuDeviceGetName (name, sizeof (name), cdev) == CUDA_SUCCESS
+        && CuDeviceGetAttribute (&maj,
             CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, cdev) == CUDA_SUCCESS
-        && cuDeviceGetAttribute (&min,
+        && CuDeviceGetAttribute (&min,
             CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR,
             cdev) == CUDA_SUCCESS) {
       GST_INFO ("GPU #%d supports NVENC: %s (%s) (Compute SM %d.%d)", i,
@@ -321,12 +321,12 @@ gst_nvenc_create_cuda_context (guint device_id)
     return NULL;
   }
 
-  if (cuCtxCreate (&cuda_ctx, 0, cuda_dev) != CUDA_SUCCESS) {
+  if (CuCtxCreate (&cuda_ctx, 0, cuda_dev) != CUDA_SUCCESS) {
     GST_WARNING ("Failed to create CUDA context for cuda device %d", cuda_dev);
     return NULL;
   }
 
-  if (cuCtxPopCurrent (&old_ctx) != CUDA_SUCCESS) {
+  if (CuCtxPopCurrent (&old_ctx) != CUDA_SUCCESS) {
     return NULL;
   }
 
@@ -339,7 +339,7 @@ gboolean
 gst_nvenc_destroy_cuda_context (CUcontext ctx)
 {
   GST_INFO ("Destroying CUDA context %p", ctx);
-  return (cuCtxDestroy (ctx) == CUDA_SUCCESS);
+  return (CuCtxDestroy (ctx) == CUDA_SUCCESS);
 }
 
 static gboolean
@@ -362,31 +362,27 @@ load_nvenc_library (void)
   return TRUE;
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+gboolean
+gst_nvenc_plugin_init (GstPlugin * plugin)
 {
+  gboolean ret = TRUE;
+
   GST_DEBUG_CATEGORY_INIT (gst_nvenc_debug, "nvenc", 0, "Nvidia NVENC encoder");
 
   nvenc_api.version = NV_ENCODE_API_FUNCTION_LIST_VER;
   if (!load_nvenc_library ())
-    return FALSE;
+    return TRUE;
 
   if (nvEncodeAPICreateInstance (&nvenc_api) != NV_ENC_SUCCESS) {
     GST_ERROR ("Failed to get NVEncodeAPI function table!");
   } else {
     GST_INFO ("Created NVEncodeAPI instance, got function table");
 
-    gst_element_register (plugin, "nvh264enc", GST_RANK_PRIMARY * 2,
+    ret &= gst_element_register (plugin, "nvh264enc", GST_RANK_PRIMARY * 2,
         gst_nv_h264_enc_get_type ());
-    gst_element_register (plugin, "nvh265enc", GST_RANK_PRIMARY * 2,
+    ret &= gst_element_register (plugin, "nvh265enc", GST_RANK_PRIMARY * 2,
         gst_nv_h265_enc_get_type ());
   }
 
-  return TRUE;
+  return ret;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    nvenc,
-    "GStreamer NVENC plugin",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

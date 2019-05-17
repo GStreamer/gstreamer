@@ -23,8 +23,8 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+#include "gstcudaloader.h"
 #include "nvEncodeAPI.h"
-#include <cuda.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_nvenc_debug);
 
@@ -35,5 +35,8 @@ gboolean                gst_nvenc_destroy_cuda_context (CUcontext ctx);
 gboolean                gst_nvenc_cmp_guid (GUID g1, GUID g2);
 
 NV_ENC_BUFFER_FORMAT    gst_nvenc_get_nv_buffer_format (GstVideoFormat fmt);
+
+gboolean                gst_nvenc_plugin_init (GstPlugin * plugin);
+
 
 #endif /* __GST_NVENC_H_INCLUDED__ */
