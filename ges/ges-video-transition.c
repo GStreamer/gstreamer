@@ -364,9 +364,13 @@ ges_video_transition_create_element (GESTrackElement * object)
       mixer, GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR, &priv->smpte,
       priv, &priv->mixer_ghostb);
   g_object_set (priv->mixer_sinka, "zorder", 0, NULL);
-  gst_util_set_object_arg (G_OBJECT (priv->mixer_sinka), "operator", "source");
   g_object_set (priv->mixer_sinkb, "zorder", 1, NULL);
-  gst_util_set_object_arg (G_OBJECT (priv->mixer_sinkb), "operator", "add");
+  gst_util_set_object_arg (G_OBJECT (priv->mixer_sinka), "operator",
+      priv->type ==
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE ? "source" : "over");
+  gst_util_set_object_arg (G_OBJECT (priv->mixer_sinkb), "operator",
+      priv->type ==
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE ? "add" : "over");
 
   fast_element_link (mixer, priv->positioner);
   fast_element_link (priv->positioner, oconv);
@@ -538,6 +542,13 @@ ges_video_transition_set_transition_type_internal (GESVideoTransition
   if (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
     g_object_set (priv->smpte, "type", (gint) type, NULL);
   }
+
+  gst_util_set_object_arg (G_OBJECT (priv->mixer_sinka), "operator",
+      priv->type ==
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE ? "source" : "over");
+  gst_util_set_object_arg (G_OBJECT (priv->mixer_sinkb), "operator",
+      priv->type ==
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE ? "add" : "over");
 
   return TRUE;
 }
