@@ -47,6 +47,7 @@ typedef struct _GstVaapiEncoderH265 GstVaapiEncoderH265;
  * @GST_VAAPI_ENCODER_H265_PROP_QP_IP: Difference of QP between I and P frame.
  * @GST_VAAPI_ENCODER_H265_PROP_QP_IB: Difference of QP between I and B frame.
  * @GST_VAAPI_ENCODER_H265_PROP_LOW_DELAY_B: use low delay b feature.
+ * @GST_VAAPI_ENCODER_H265_PROP_MAX_QP: Maximal quantizer value (uint).
  *
  * The set of H.265 encoder specific configurable properties.
  */
@@ -61,6 +62,7 @@ typedef enum {
   GST_VAAPI_ENCODER_H265_PROP_QP_IP = -9,
   GST_VAAPI_ENCODER_H265_PROP_QP_IB = -10,
   GST_VAAPI_ENCODER_H265_PROP_LOW_DELAY_B = -11,
+  GST_VAAPI_ENCODER_H265_PROP_MAX_QP = -12,
 } GstVaapiEncoderH265Prop;
 
 GstVaapiEncoder *

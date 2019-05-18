@@ -56,6 +56,7 @@ typedef struct _GstVaapiEncoderH264 GstVaapiEncoderH264;
  * @GST_VAAPI_ENCODER_H264_PROP_QP_IB: Difference of QP between I and B frame.
  * @GST_VAAPI_ENCODER_H264_PROP_TEMPORAL_LEVELS: Number of temporal levels
  * @GST_VAAPI_ENCODER_H264_PROP_PREDICTION_TYPE: Reference picture selection modes
+ * @GST_VAAPI_ENCODER_H264_PROP_MAX_QP: Maximal quantizer value (uint).
  *
  * The set of H.264 encoder specific configurable properties.
  */
@@ -77,6 +78,7 @@ typedef enum {
   GST_VAAPI_ENCODER_H264_PROP_QP_IB = -15,
   GST_VAAPI_ENCODER_H264_PROP_TEMPORAL_LEVELS = -16,
   GST_VAAPI_ENCODER_H264_PROP_PREDICTION_TYPE = -17,
+  GST_VAAPI_ENCODER_H264_PROP_MAX_QP = -18,
 } GstVaapiEncoderH264Prop;
 
 GstVaapiEncoder *

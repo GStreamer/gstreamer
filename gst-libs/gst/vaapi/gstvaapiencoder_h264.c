@@ -745,6 +745,7 @@ struct _GstVaapiEncoderH264
   guint32 ip_period;
   guint32 init_qp;
   guint32 min_qp;
+  guint32 max_qp;
   guint32 qp_i;
   guint32 qp_ip;
   guint32 qp_ib;
@@ -2398,9 +2399,9 @@ add_slice_headers (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
           (gint) encoder->min_qp) {
         slice_param->slice_qp_delta = encoder->min_qp - encoder->init_qp;
       }
-      /* TODO: max_qp might be provided as a property in the future */
-      if ((gint) encoder->init_qp + slice_param->slice_qp_delta > 51) {
-        slice_param->slice_qp_delta = 51 - encoder->init_qp;
+      if ((gint) encoder->init_qp + slice_param->slice_qp_delta >
+          (gint) encoder->max_qp) {
+        slice_param->slice_qp_delta = encoder->max_qp - encoder->init_qp;
       }
     }
     slice_param->disable_deblocking_filter_idc = 0;
@@ -2521,10 +2522,7 @@ ensure_control_rate_params (GstVaapiEncoderH264 * encoder)
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).min_qp = encoder->min_qp;
 
 #if VA_CHECK_VERSION(1,1,0)
-  /* @FIXME: should not set this value, should be ignored if set to zero *
-   * https://github.com/intel/media-driver/issues/587 */
-  if (encoder->min_qp > 0)
-    GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).max_qp = 51;
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).max_qp = encoder->max_qp;
 #endif
 
 #if VA_CHECK_VERSION(1,0,0)
@@ -2753,8 +2751,12 @@ reset_properties (GstVaapiEncoderH264 * encoder)
   if (encoder->idr_period < base_encoder->keyframe_period)
     encoder->idr_period = base_encoder->keyframe_period;
 
+  g_assert (encoder->min_qp <= encoder->max_qp);
   if (encoder->min_qp > encoder->init_qp)
     encoder->min_qp = encoder->init_qp;
+  if (encoder->max_qp < encoder->init_qp)
+    encoder->max_qp = encoder->init_qp;
+
   encoder->qp_i = encoder->init_qp;
 
   mb_size = encoder->mb_width * encoder->mb_height;
@@ -3547,6 +3549,9 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_PROP_PREDICTION_TYPE:
       encoder->prediction_type = g_value_get_enum (value);
       break;
+    case GST_VAAPI_ENCODER_H264_PROP_MAX_QP:
+      encoder->max_qp = g_value_get_uint (value);
+      break;
 
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
@@ -3647,6 +3652,19 @@ gst_vaapi_encoder_h264_get_default_properties (void)
       GST_VAAPI_ENCODER_H264_PROP_MIN_QP,
       g_param_spec_uint ("min-qp",
           "Minimum QP", "Minimum quantizer value", 0, 51, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:max-qp:
+   *
+   * The maximum quantizer value.
+   *
+   * Since: 1.18
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_MAX_QP,
+      g_param_spec_uint ("max-qp",
+          "Maximum QP", "Maximum quantizer value", 0, 51, 51,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**

@@ -49,6 +49,7 @@ typedef struct _GstVaapiEncoderH264Fei GstVaapiEncoderH264Fei;
  *   in milliseconds (uint).
  * @GST_VAAPI_ENCODER_H264_FEI_PROP_NUM_VIEWS: Number of views per frame.
  * @GST_VAAPI_ENCODER_H264_FEI_PROP_VIEW_IDS: View IDs
+ * @GST_VAAPI_ENCODER_H264_FEI_PROP_MAX_QP: Maximal quantizer value (uint).
  *
  * The set of H.264 encoder specific configurable properties.
  */
@@ -79,7 +80,8 @@ typedef enum {
   GST_VAAPI_ENCODER_H264_PROP_MULTI_PRED_L0 = -25,
   GST_VAAPI_ENCODER_H264_PROP_MULTI_PRED_L1 = -26,
   GST_VAAPI_ENCODER_H264_PROP_ENABLE_STATS_OUT = -27,
-  GST_VAAPI_ENCODER_H264_PROP_FEI_MODE = -28
+  GST_VAAPI_ENCODER_H264_PROP_FEI_MODE = -28,
+  GST_VAAPI_ENCODER_H264_FEI_PROP_MAX_QP = -29,
 
 } GstVaapiEncoderH264FeiProp;
 
