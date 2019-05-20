@@ -461,23 +461,10 @@ gst_avwait_set_property (GObject * object, guint prop_id,
       frames = g_ascii_strtoll (parts[3], NULL, 10);
       gst_video_time_code_init (self->tc, 0, 1, NULL, 0, hours, minutes,
           seconds, frames, 0);
-      if (self->end_tc
-          && gst_video_time_code_compare (self->tc, self->end_tc) != -1) {
-        gchar *end_tc;
-
-        end_tc = gst_video_time_code_to_string (self->end_tc);
-        g_warning
-            ("ERROR: End timecode %s must be after start timecode %s. Start timecode rejected",
-            end_tc, tc_str);
-        gst_video_time_code_free (self->tc);
-        g_free (end_tc);
-        self->tc = gst_video_time_code_new_empty ();
-      } else {
-        if (GST_VIDEO_INFO_FORMAT (&self->vinfo) != GST_VIDEO_FORMAT_UNKNOWN
-            && self->vinfo.fps_n != 0) {
-          self->tc->config.fps_n = self->vinfo.fps_n;
-          self->tc->config.fps_d = self->vinfo.fps_d;
-        }
+      if (GST_VIDEO_INFO_FORMAT (&self->vinfo) != GST_VIDEO_FORMAT_UNKNOWN
+          && self->vinfo.fps_n != 0) {
+        self->tc->config.fps_n = self->vinfo.fps_n;
+        self->tc->config.fps_d = self->vinfo.fps_d;
       }
       g_strfreev (parts);
       break;
@@ -486,26 +473,11 @@ gst_avwait_set_property (GObject * object, guint prop_id,
       if (self->tc)
         gst_video_time_code_free (self->tc);
       self->tc = g_value_dup_boxed (value);
-      if (self->end_tc
-          && gst_video_time_code_compare (self->tc, self->end_tc) != -1) {
-        gchar *start_tc, *end_tc;
-
-        start_tc = gst_video_time_code_to_string (self->tc);
-        end_tc = gst_video_time_code_to_string (self->end_tc);
-        g_warning
-            ("ERROR: End timecode %s must be after start timecode %s. Start timecode rejected",
-            end_tc, start_tc);
-        gst_video_time_code_free (self->tc);
-        g_free (start_tc);
-        g_free (end_tc);
-        self->tc = gst_video_time_code_new_empty ();
-      } else {
-        if (self->tc->config.fps_n == 0
-            && GST_VIDEO_INFO_FORMAT (&self->vinfo) !=
-            GST_VIDEO_FORMAT_UNKNOWN && self->vinfo.fps_n != 0) {
-          self->tc->config.fps_n = self->vinfo.fps_n;
-          self->tc->config.fps_d = self->vinfo.fps_d;
-        }
+      if (self->tc->config.fps_n == 0
+          && GST_VIDEO_INFO_FORMAT (&self->vinfo) !=
+          GST_VIDEO_FORMAT_UNKNOWN && self->vinfo.fps_n != 0) {
+        self->tc->config.fps_n = self->vinfo.fps_n;
+        self->tc->config.fps_d = self->vinfo.fps_d;
       }
       break;
     }
@@ -513,26 +485,11 @@ gst_avwait_set_property (GObject * object, guint prop_id,
       if (self->end_tc)
         gst_video_time_code_free (self->end_tc);
       self->end_tc = g_value_dup_boxed (value);
-      if (self->tc && self->end_tc
-          && gst_video_time_code_compare (self->tc, self->end_tc) != -1) {
-        gchar *start_tc, *end_tc;
-
-        start_tc = gst_video_time_code_to_string (self->tc);
-        end_tc = gst_video_time_code_to_string (self->end_tc);
-        g_warning
-            ("ERROR: End timecode %s must be after start timecode %s. End timecode rejected",
-            end_tc, start_tc);
-        gst_video_time_code_free (self->end_tc);
-        self->end_tc = NULL;
-        g_free (start_tc);
-        g_free (end_tc);
-      } else if (self->end_tc) {
-        if (self->end_tc->config.fps_n == 0
-            && GST_VIDEO_INFO_FORMAT (&self->vinfo) !=
-            GST_VIDEO_FORMAT_UNKNOWN && self->vinfo.fps_n != 0) {
-          self->end_tc->config.fps_n = self->vinfo.fps_n;
-          self->end_tc->config.fps_d = self->vinfo.fps_d;
-        }
+      if (self->end_tc->config.fps_n == 0
+          && GST_VIDEO_INFO_FORMAT (&self->vinfo) !=
+          GST_VIDEO_FORMAT_UNKNOWN && self->vinfo.fps_n != 0) {
+        self->end_tc->config.fps_n = self->vinfo.fps_n;
+        self->end_tc->config.fps_d = self->vinfo.fps_d;
       }
       break;
     }
@@ -785,6 +742,22 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   }
   switch (self->mode) {
     case MODE_TIMECODE:{
+      if (self->tc && self->end_tc
+          && gst_video_time_code_compare (self->tc, self->end_tc) != -1) {
+        gchar *tc_str, *end_tc;
+
+        tc_str = gst_video_time_code_to_string (self->tc);
+        end_tc = gst_video_time_code_to_string (self->end_tc);
+        GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
+            ("End timecode %s must be after start timecode %s. Start timecode rejected",
+                end_tc, tc_str));
+        g_free (end_tc);
+        g_free (tc_str);
+        gst_buffer_unref (inbuf);
+        g_mutex_unlock (&self->mutex);
+        return GST_FLOW_ERROR;
+      }
+
       if (self->tc != NULL && tc != NULL) {
         gboolean emit_passthrough_signal = FALSE;
         if (gst_video_time_code_compare (tc, self->tc) < 0
