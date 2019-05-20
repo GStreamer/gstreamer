@@ -520,7 +520,7 @@ gst_dash_demux_get_presentation_offset (GstAdaptiveDemux * demux,
   GstDashDemuxStream *dashstream = (GstDashDemuxStream *) stream;
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
 
-  return gst_mpd_parser_get_stream_presentation_offset (dashdemux->client,
+  return gst_mpd_client_get_stream_presentation_offset (dashdemux->client,
       dashstream->index);
 }
 
@@ -529,7 +529,7 @@ gst_dash_demux_get_period_start_time (GstAdaptiveDemux * demux)
 {
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
 
-  return gst_mpd_parser_get_period_start_time (dashdemux->client);
+  return gst_mpd_client_get_period_start_time (dashdemux->client);
 }
 
 static void
@@ -778,14 +778,14 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
       gst_mpd_client_get_period_index (demux->client));
 
   /* clean old active stream list, if any */
-  gst_active_streams_free (demux->client);
+  gst_mpd_client_active_streams_free (demux->client);
 
   if (!gst_dash_demux_setup_mpdparser_streams (demux, demux->client)) {
     return FALSE;
   }
 
   GST_DEBUG_OBJECT (demux, "Creating stream objects");
-  for (i = 0; i < gst_mpdparser_get_nb_active_stream (demux->client); i++) {
+  for (i = 0; i < gst_mpd_client_get_nb_active_stream (demux->client); i++) {
     GstDashDemuxStream *stream;
     GstActiveStream *active_stream;
     GstCaps *caps;
@@ -794,7 +794,8 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     gchar *lang = NULL;
     GstTagList *tags = NULL;
 
-    active_stream = gst_mpdparser_get_active_stream_by_index (demux->client, i);
+    active_stream =
+        gst_mpd_client_get_active_stream_by_index (demux->client, i);
     if (active_stream == NULL)
       continue;
 
@@ -1036,7 +1037,7 @@ gst_dash_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
 
   if (gst_buffer_map (buf, &mapinfo, GST_MAP_READ)) {
     manifest = (gchar *) mapinfo.data;
-    if (gst_mpd_parse (dashdemux->client, manifest, mapinfo.size)) {
+    if (gst_mpd_client_parse (dashdemux->client, manifest, mapinfo.size)) {
       if (gst_mpd_client_setup_media_presentation (dashdemux->client, 0, 0,
               NULL)) {
         ret = TRUE;
@@ -1232,7 +1233,7 @@ gst_dash_demux_stream_update_headers_info (GstAdaptiveDemuxStream * stream)
 
   if (path != NULL) {
     stream->fragment.header_uri =
-        gst_uri_join_strings (gst_mpdparser_get_baseURL (dashdemux->client,
+        gst_uri_join_strings (gst_mpd_client_get_baseURL (dashdemux->client,
             dashstream->index), path);
     g_free (path);
     path = NULL;
@@ -1244,7 +1245,7 @@ gst_dash_demux_stream_update_headers_info (GstAdaptiveDemuxStream * stream)
 
   if (path != NULL) {
     stream->fragment.index_uri =
-        gst_uri_join_strings (gst_mpdparser_get_baseURL (dashdemux->client,
+        gst_uri_join_strings (gst_mpd_client_get_baseURL (dashdemux->client,
             dashstream->index), path);
     g_free (path);
   }
@@ -1501,9 +1502,9 @@ gst_dash_demux_stream_seek (GstAdaptiveDemuxStream * stream, gboolean forward,
   if (is_isobmff) {
     GstClockTime period_start, offset;
 
-    period_start = gst_mpd_parser_get_period_start_time (dashdemux->client);
+    period_start = gst_mpd_client_get_period_start_time (dashdemux->client);
     offset =
-        gst_mpd_parser_get_stream_presentation_offset (dashdemux->client,
+        gst_mpd_client_get_stream_presentation_offset (dashdemux->client,
         dashstream->index);
 
     if (G_UNLIKELY (ts < period_start))
@@ -2198,12 +2199,12 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
   if (GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (base_demux) ||
       ABS (base_demux->segment.rate) <= 1.0) {
     new_index =
-        gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list, bitrate,
+        gst_mpd_client_get_rep_idx_with_max_bandwidth (rep_list, bitrate,
         demux->max_video_width, demux->max_video_height,
         demux->max_video_framerate_n, demux->max_video_framerate_d);
   } else {
     new_index =
-        gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list,
+        gst_mpd_client_get_rep_idx_with_max_bandwidth (rep_list,
         bitrate / ABS (base_demux->segment.rate), demux->max_video_width,
         demux->max_video_height, demux->max_video_framerate_n,
         demux->max_video_framerate_d);
@@ -2211,7 +2212,7 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
 
   /* if no representation has the required bandwidth, take the lowest one */
   if (new_index == -1)
-    new_index = gst_mpdparser_get_rep_idx_with_min_bandwidth (rep_list);
+    new_index = gst_mpd_client_get_rep_idx_with_min_bandwidth (rep_list);
 
   if (new_index != active_stream->representation_idx) {
     GstRepresentationNode *rep = g_list_nth_data (rep_list, new_index);
@@ -2346,7 +2347,7 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     GST_DEBUG_OBJECT (demux, "Seeking to Period %d", current_period);
 
     /* clean old active stream list, if any */
-    gst_active_streams_free (dashdemux->client);
+    gst_mpd_client_active_streams_free (dashdemux->client);
     dashdemux->trickmode_no_audio = trickmode_no_audio;
 
     /* setup video, audio and subtitle streams, starting from the new Period */
@@ -2356,7 +2357,7 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     streams = demux->next_streams;
   } else if (dashdemux->trickmode_no_audio != trickmode_no_audio) {
     /* clean old active stream list, if any */
-    gst_active_streams_free (dashdemux->client);
+    gst_mpd_client_active_streams_free (dashdemux->client);
     dashdemux->trickmode_no_audio = trickmode_no_audio;
 
     /* setup video, audio and subtitle streams, starting from the new Period */
@@ -2404,7 +2405,7 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
   new_client->mpd_base_uri = g_strdup (demux->manifest_base_uri);
   gst_buffer_map (buffer, &mapinfo, GST_MAP_READ);
 
-  if (gst_mpd_parse (new_client, (gchar *) mapinfo.data, mapinfo.size)) {
+  if (gst_mpd_client_parse (new_client, (gchar *) mapinfo.data, mapinfo.size)) {
     const gchar *period_id;
     guint period_idx;
     GList *iter;
@@ -2490,7 +2491,7 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
         /* _get_next_fragment_timestamp() returned relative timestamp to
          * corresponding period start, but _client_stream_seek expects absolute
          * MPD time. */
-        ts += gst_mpd_parser_get_period_start_time (dashdemux->client);
+        ts += gst_mpd_client_get_period_start_time (dashdemux->client);
 
         GST_DEBUG_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (demux_stream),
             "Current position: %" GST_TIME_FORMAT ", updating to %"

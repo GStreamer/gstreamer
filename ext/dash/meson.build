@@ -1,6 +1,9 @@
 dash_sources = [
   'gstdashdemux.c',
+  'gstxmlhelper.c',
+  'gstmpdhelper.c',
   'gstmpdparser.c',
+  'gstmpdclient.c',
   'gstplugin.c',
 ]
 
