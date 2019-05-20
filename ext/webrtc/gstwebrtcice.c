@@ -411,9 +411,8 @@ _add_stun_server (GstWebRTCICE * ice, GstUri * stun_server)
   gchar *ip = NULL;
   guint port;
 
-  GST_DEBUG_OBJECT (ice, "adding stun server, %s", s);
-
   s = gst_uri_to_string (stun_server);
+  GST_DEBUG_OBJECT (ice, "adding stun server, %s", s);
 
   host = gst_uri_get_host (stun_server);
   if (!host) {
