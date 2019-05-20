@@ -61,6 +61,7 @@ base_tests = [
   [['libs/player.c'], not enable_gst_player_tests, [gstplayer_dep]],
   [['libs/vc1parser.c'], false, [gstcodecparsers_dep]],
   [['libs/vp8parser.c'], false, [gstcodecparsers_dep]],
+  [['libs/vkmemory.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
 ]
 
 # FIXME: unistd dependency, unstable or not tested yet on windows
