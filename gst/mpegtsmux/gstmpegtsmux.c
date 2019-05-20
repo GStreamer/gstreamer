@@ -83,6 +83,7 @@
  */
 
 #include "gstmpegtsmux.h"
+#include <string.h>
 
 #define MPEGTSMUX_DEFAULT_M2TS         FALSE
 
