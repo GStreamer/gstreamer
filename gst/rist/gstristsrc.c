@@ -908,7 +908,8 @@ gst_rist_src_class_init (GstRistSrcClass * klass)
   g_object_class_install_property (object_class, PROP_CNAME,
       g_param_spec_string ("cname", "CName",
           "Set the CNAME in the SDES block of the receiver report.", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_DOC_SHOW_DEFAULT));
 
   g_object_class_install_property (object_class, PROP_MULTICAST_LOOPBACK,
       g_param_spec_boolean ("multicast-loopback", "Multicast Loopback",

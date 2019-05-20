@@ -21651,20 +21651,26 @@
                         "blurb": "Current time",
                         "construct": false,
                         "construct-only": false,
-                        "default": "0",
+                        "default": "1.8115e-152",
                         "max": "1",
                         "min": "0",
                         "type-name": "gdouble",
+                        "unstable-values": [
+                            "default"
+                        ],
                         "writable": true
                     },
                     "transparency": {
                         "blurb": "Indicator transparency",
                         "construct": false,
                         "construct-only": false,
-                        "default": "1.02588e-71",
+                        "default": "2.73945e-57",
                         "max": "1",
                         "min": "0",
                         "type-name": "gdouble",
+                        "unstable-values": [
+                            "default"
+                        ],
                         "writable": true
                     }
                 },
@@ -37985,6 +37991,116 @@
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
+    "proxy": {
+        "description": "plugin for proxied inter-pipeline communication",
+        "elements": {
+            "proxysink": {
+                "author": "Sebastian Dr\u00f6ge <sebastian@centricular.com>",
+                "description": "Proxy source for internal process communication",
+                "hierarchy": [
+                    "GstProxySink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Sink",
+                "long-name": "Proxy Sink",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "proxysrc": {
+                "author": "Sebastian Dr\u00f6ge <sebastian@centricular.com>",
+                "description": "Proxy source for internal process communication",
+                "hierarchy": [
+                    "GstProxySrc",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source",
+                "long-name": "Proxy source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "proxysink": {
+                        "blurb": "Matching proxysink",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstProxySink",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gstproxy",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
     "removesilence": {
         "description": "Removes silence from an audio stream",
         "elements": {
@@ -38603,7 +38719,7 @@
                         "blurb": "Set the CNAME in the SDES block of the sender report.",
                         "construct": false,
                         "construct-only": false,
-                        "default": "user1802220788@host-249d1067",
+                        "default": "NULL",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -38758,7 +38874,7 @@
                         "blurb": "Set the CNAME in the SDES block of the receiver report.",
                         "construct": false,
                         "construct-only": false,
-                        "default": "user3968283371@host-d2f08585",
+                        "default": "NULL",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -46454,6 +46570,27 @@
                         ],
                         "writable": false
                     },
+                    "ice-transport-policy": {
+                        "blurb": "The policy to apply for ICE transport",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "all (0)",
+                        "enum": true,
+                        "type-name": "GstWebRTCICETransportPolicy",
+                        "values": [
+                            {
+                                "desc": "GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL",
+                                "name": "all",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY",
+                                "name": "relay",
+                                "value": "1"
+                            }
+                        ],
+                        "writable": true
+                    },
                     "local-description": {
                         "blurb": "The local SDP description to use for this connection",
                         "construct": false,
@@ -46599,6 +46736,12 @@
                         ],
                         "retval": "void"
                     },
+                    "get-transceiver": {
+                        "args": [
+                            "gint"
+                        ],
+                        "retval": "GstWebRTCRTPTransceiver"
+                    },
                     "get-transceivers": {
                         "args": [],
                         "retval": "GArray"
@@ -46659,7 +46802,7 @@
                 }
             }
         },
-        "filename": "libgstwebrtc.so",
+        "filename": "gstwebrtc",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
