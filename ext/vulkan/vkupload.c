@@ -496,6 +496,7 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     GstVulkanBufferMemory *buf_mem;
     GstVulkanImageMemory *img_mem;
     VkImageMemoryBarrier image_memory_barrier;
+    VkBufferMemoryBarrier buffer_memory_barrier;
 
     in_mem = gst_buffer_peek_memory (inbuf, i);
     if (!gst_is_vulkan_buffer_memory (in_mem)) {
@@ -529,17 +530,49 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
             .depth = 1,
         }
     };
+
+    image_memory_barrier = (VkImageMemoryBarrier) {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .pNext = NULL,
+        .srcAccessMask = img_mem->barrier.parent.access_flags,
+        .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+        .oldLayout = img_mem->barrier.image_layout,
+        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        /* FIXME: implement exclusive transfers */
+        .srcQueueFamilyIndex = 0,
+        .dstQueueFamilyIndex = 0,
+        .image = img_mem->image,
+        .subresourceRange = img_mem->barrier.subresource_range
+    };
+
+    buffer_memory_barrier = (VkBufferMemoryBarrier) {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .pNext = NULL,
+        .srcAccessMask = buf_mem->barrier.parent.access_flags,
+        .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+        /* FIXME: implement exclusive transfers */
+        .srcQueueFamilyIndex = 0,
+        .dstQueueFamilyIndex = 0,
+        .buffer = buf_mem->buffer,
+        .offset = region.bufferOffset,
+        .size = region.bufferRowLength * region.bufferImageHeight
+    };
     /* *INDENT-ON* */
 
-    gst_vulkan_image_memory_set_layout (img_mem,
-        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &image_memory_barrier);
+    vkCmdPipelineBarrier (cmd,
+        buf_mem->barrier.parent.pipeline_stages | img_mem->barrier.
+        parent.pipeline_stages, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 1,
+        &buffer_memory_barrier, 1, &image_memory_barrier);
 
-    vkCmdPipelineBarrier (cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, NULL, 0, NULL, 1,
-        &image_memory_barrier);
+    buf_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    buf_mem->barrier.parent.access_flags = buffer_memory_barrier.dstAccessMask;
+
+    img_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    img_mem->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
+    img_mem->barrier.image_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 
     vkCmdCopyBufferToImage (cmd, buf_mem->buffer, img_mem->image,
-        img_mem->image_layout, 1, &region);
+        img_mem->barrier.image_layout, 1, &region);
   }
 
   err = vkEndCommandBuffer (cmd);
@@ -768,6 +801,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     GstVulkanBufferMemory *buf_mem;
     GstVulkanImageMemory *img_mem;
     VkImageMemoryBarrier image_memory_barrier;
+    VkBufferMemoryBarrier buffer_memory_barrier;
 
     in_mem = gst_buffer_peek_memory (inbuf, i);
     if (!gst_is_vulkan_buffer_memory (in_mem)) {
@@ -801,17 +835,49 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
             .depth = 1,
         }
     };
+
+    buffer_memory_barrier = (VkBufferMemoryBarrier) {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+        .pNext = NULL,
+        .srcAccessMask = buf_mem->barrier.parent.access_flags,
+        .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+        /* FIXME: implement exclusive transfers */
+        .srcQueueFamilyIndex = 0,
+        .dstQueueFamilyIndex = 0,
+        .buffer = buf_mem->buffer,
+        .offset = region.bufferOffset,
+        .size = region.bufferRowLength * region.bufferImageHeight
+    };
+
+    image_memory_barrier = (VkImageMemoryBarrier) {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .pNext = NULL,
+        .srcAccessMask = img_mem->barrier.parent.access_flags,
+        .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+        .oldLayout = img_mem->barrier.image_layout,
+        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        /* FIXME: implement exclusive transfers */
+        .srcQueueFamilyIndex = 0,
+        .dstQueueFamilyIndex = 0,
+        .image = img_mem->image,
+        .subresourceRange = img_mem->barrier.subresource_range
+    };
     /* *INDENT-ON* */
 
-    gst_vulkan_image_memory_set_layout (img_mem,
-        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &image_memory_barrier);
+    vkCmdPipelineBarrier (cmd,
+        buf_mem->barrier.parent.pipeline_stages | img_mem->barrier.
+        parent.pipeline_stages, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 1,
+        &buffer_memory_barrier, 1, &image_memory_barrier);
 
-    vkCmdPipelineBarrier (cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, 0, 0, NULL, 0, NULL, 1,
-        &image_memory_barrier);
+    buf_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    buf_mem->barrier.parent.access_flags = buffer_memory_barrier.dstAccessMask;
+
+    img_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    img_mem->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
+    img_mem->barrier.image_layout = image_memory_barrier.newLayout;
 
     vkCmdCopyBufferToImage (cmd, buf_mem->buffer, img_mem->image,
-        img_mem->image_layout, 1, &region);
+        img_mem->barrier.image_layout, 1, &region);
   }
 
   err = vkEndCommandBuffer (cmd);
@@ -820,7 +886,6 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 
   {
     VkSubmitInfo submit_info = { 0, };
-    VkPipelineStageFlags stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
     GstVulkanFence *fence;
 
     /* *INDENT-OFF* */
@@ -829,7 +894,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         .pNext = NULL,
         .waitSemaphoreCount = 0,
         .pWaitSemaphores = NULL,
-        .pWaitDstStageMask = &stages,
+        .pWaitDstStageMask = NULL,
         .commandBufferCount = 1,
         .pCommandBuffers = &cmd,
         .signalSemaphoreCount = 0,

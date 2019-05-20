@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2015 Matthew Waters <matthew@centricular.com>
+ * Copyright (C) 2019 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,27 +18,36 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_VULKAN_H__
-#define __GST_VULKAN_H__
+#ifndef __GST_VULKAN_BARRIER_H__
+#define __GST_VULKAN_BARRIER_H__
 
-#include <gst/gst.h>
-
+#include <gst/vulkan/vulkan_fwd.h>
 #include <gst/vulkan/gstvkapi.h>
 
-#include <gst/vulkan/gstvkerror.h>
-#include <gst/vulkan/gstvkinstance.h>
-#include <gst/vulkan/gstvkdevice.h>
-#include <gst/vulkan/gstvkqueue.h>
-#include <gst/vulkan/gstvkfence.h>
-#include <gst/vulkan/gstvkdisplay.h>
-#include <gst/vulkan/gstvkwindow.h>
-#include <gst/vulkan/gstvkmemory.h>
-#include <gst/vulkan/gstvkbarrier.h>
-#include <gst/vulkan/gstvkbuffermemory.h>
-#include <gst/vulkan/gstvkimagememory.h>
-#include <gst/vulkan/gstvkbufferpool.h>
-#include <gst/vulkan/gstvkimagebufferpool.h>
-#include <gst/vulkan/gstvkutils.h>
-#include <gst/vulkan/gstvkcommandpool.h>
+G_BEGIN_DECLS
 
-#endif /* __GST_VULKAN_H__ */
+typedef enum
+{
+  GST_VULKAN_BARRIER_NONE = 0,
+  GST_VULKAN_BARRIER_TYPE_MEMORY = 1,
+  GST_VULKAN_BARRIER_TYPE_BUFFER = 2,
+  GST_VULKAN_BARRIER_TYPE_IMAGE = 3,
+} GstVulkanBarrierType;
+
+typedef enum
+{
+  GST_VULKAN_BARRIER_FLAG_NONE = 0,
+} GstVulkanBarrierFlags;
+
+struct _GstVulkanBarrierMemoryInfo
+{
+  GstVulkanBarrierType type;
+  GstVulkanBarrierFlags flags;
+  GstVulkanQueue * queue;
+  VkPipelineStageFlags pipeline_stages;
+  VkAccessFlags access_flags;
+};
+
+G_END_DECLS
+
+#endif /* __GST_VULKAN_BARRIER_H__ */

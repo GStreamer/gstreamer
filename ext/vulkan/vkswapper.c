@@ -490,100 +490,6 @@ gst_vulkan_swapper_get_supported_caps (GstVulkanSwapper * swapper,
 }
 
 static gboolean
-_swapper_set_image_layout_with_cmd (GstVulkanSwapper * swapper,
-    VkCommandBuffer cmd, GstVulkanImageMemory * image,
-    VkImageLayout new_image_layout, GError ** error)
-{
-  VkPipelineStageFlags src_stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-  VkPipelineStageFlags dest_stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-  VkImageMemoryBarrier image_memory_barrier;
-
-  gst_vulkan_image_memory_set_layout (image, new_image_layout,
-      &image_memory_barrier);
-
-  vkCmdPipelineBarrier (cmd, src_stages, dest_stages, 0, 0, NULL, 0, NULL, 1,
-      &image_memory_barrier);
-
-  return TRUE;
-}
-
-static gboolean
-_swapper_set_image_layout (GstVulkanSwapper * swapper,
-    GstVulkanImageMemory * image, VkImageLayout new_image_layout,
-    GError ** error)
-{
-  VkCommandBuffer cmd = VK_NULL_HANDLE;
-  GstVulkanFence *fence = NULL;
-  VkResult err;
-
-  if (!(cmd = gst_vulkan_command_pool_create (swapper->cmd_pool, error)))
-    goto error;
-
-  fence = gst_vulkan_fence_new (swapper->device, 0, error);
-  if (!fence)
-    goto error;
-
-  {
-    /* *INDENT-OFF* */
-    VkCommandBufferBeginInfo cmd_buf_info = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-        .pNext = NULL,
-        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-        .pInheritanceInfo = NULL
-    };
-    /* *INDENT-ON* */
-
-    err = vkBeginCommandBuffer (cmd, &cmd_buf_info);
-    if (gst_vulkan_error_to_g_error (err, error, "vkBeginCommandBuffer") < 0)
-      goto error;
-  }
-
-  if (!_swapper_set_image_layout_with_cmd (swapper, cmd, image,
-          new_image_layout, error))
-    goto error;
-
-  err = vkEndCommandBuffer (cmd);
-  if (gst_vulkan_error_to_g_error (err, error, "vkEndCommandBuffer") < 0)
-    goto error;
-
-  {
-    VkSubmitInfo submit_info = { 0, };
-    VkPipelineStageFlags stages = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-
-    /* *INDENT-OFF* */
-    submit_info = (VkSubmitInfo) {
-        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .pNext = NULL,
-        .waitSemaphoreCount = 0,
-        .pWaitSemaphores = NULL,
-        .pWaitDstStageMask = &stages,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &cmd,
-        .signalSemaphoreCount = 0,
-        .pSignalSemaphores = NULL,
-    };
-    /* *INDENT-ON* */
-
-    err =
-        vkQueueSubmit (swapper->queue->queue, 1, &submit_info,
-        GST_VULKAN_FENCE_FENCE (fence));
-    if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0)
-      goto error;
-  }
-
-  swapper->priv->trash_list = g_list_prepend (swapper->priv->trash_list,
-      gst_vulkan_trash_new_free_command_buffer (fence, swapper->cmd_pool, cmd));
-  fence = NULL;
-
-  return TRUE;
-
-error:
-  if (fence)
-    gst_vulkan_fence_unref (fence);
-  return FALSE;
-}
-
-static gboolean
 _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     GError ** error)
 {
@@ -754,11 +660,12 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         format, swapchain_dims.width, swapchain_dims.height,
         VK_IMAGE_TILING_OPTIMAL, usage, NULL, NULL);
 
-    if (!_swapper_set_image_layout (swapper, swapper->swap_chain_images[i],
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, error)) {
-      g_free (swap_chain_images);
-      return FALSE;
-    }
+    swapper->swap_chain_images[i]->barrier.parent.pipeline_stages =
+        VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+    swapper->swap_chain_images[i]->barrier.parent.access_flags =
+        VK_ACCESS_MEMORY_READ_BIT;
+    swapper->swap_chain_images[i]->barrier.image_layout =
+        VK_IMAGE_LAYOUT_UNDEFINED;
   }
 
   g_free (swap_chain_images);
@@ -808,13 +715,13 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     GstBuffer * buffer, VkCommandBuffer * cmd_ret, GError ** error)
 {
   GstMemory *in_mem;
-  GstVulkanImageMemory *swap_mem;
+  GstVulkanImageMemory *swap_img;
   VkCommandBuffer cmd;
   GstVideoRectangle src, dst, rslt;
   VkResult err;
 
   g_return_val_if_fail (swap_idx < swapper->n_swap_chain_images, FALSE);
-  swap_mem = swapper->swap_chain_images[swap_idx];
+  swap_img = swapper->swap_chain_images[swap_idx];
 
   if (!(cmd = gst_vulkan_command_pool_create (swapper->cmd_pool, error)))
     return FALSE;
@@ -834,9 +741,30 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
       return FALSE;
   }
 
-  if (!_swapper_set_image_layout_with_cmd (swapper, cmd, swap_mem,
-          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, error)) {
-    return FALSE;
+  {
+    /* *INDENT-OFF* */
+    VkImageMemoryBarrier image_memory_barrier = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .pNext = NULL,
+        .srcAccessMask = swap_img->barrier.parent.access_flags,
+        .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+        .oldLayout = swap_img->barrier.image_layout,
+        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        /* FIXME: implement exclusive transfers */
+        .srcQueueFamilyIndex = 0,
+        .dstQueueFamilyIndex = 0,
+        .image = swap_img->image,
+        .subresourceRange = swap_img->barrier.subresource_range
+    };
+    /* *INDENT-ON* */
+
+    vkCmdPipelineBarrier (cmd, swap_img->barrier.parent.pipeline_stages,
+        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
+        &image_memory_barrier);
+
+    swap_img->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    swap_img->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
+    swap_img->barrier.image_layout = image_memory_barrier.newLayout;
   }
 
   src.x = src.y = 0;
@@ -844,8 +772,8 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   src.h = GST_VIDEO_INFO_HEIGHT (&swapper->v_info);
 
   dst.x = dst.y = 0;
-  dst.w = gst_vulkan_image_memory_get_width (swap_mem);
-  dst.h = gst_vulkan_image_memory_get_height (swap_mem);
+  dst.w = gst_vulkan_image_memory_get_width (swap_img);
+  dst.h = gst_vulkan_image_memory_get_height (swap_img);
 
   gst_video_sink_center_rect (src, dst, &rslt, FALSE);
 
@@ -856,10 +784,8 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   in_mem = gst_buffer_peek_memory (buffer, 0);
   if (gst_is_vulkan_buffer_memory (in_mem)) {
     GstVulkanBufferMemory *buf_mem = (GstVulkanBufferMemory *) in_mem;
-    VkBufferImageCopy region = { 0, };
-
     /* *INDENT-OFF* */
-    region = (VkBufferImageCopy) {
+    VkBufferImageCopy region = {
         .bufferOffset = 0,
         .bufferRowLength = src.w,
         .bufferImageHeight = src.h,
@@ -876,17 +802,33 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
             .depth = 1,
         }
     };
+    VkBufferMemoryBarrier buffer_memory_barrier = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+        .pNext = NULL,
+        .srcAccessMask = buf_mem->barrier.parent.access_flags,
+        .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+        /* FIXME: implement exclusive transfers */
+        .srcQueueFamilyIndex = 0,
+        .dstQueueFamilyIndex = 0,
+        .buffer = buf_mem->buffer,
+        .offset = region.bufferOffset,
+        .size = region.bufferRowLength * region.bufferImageHeight
+    };
     /* *INDENT-ON* */
+    vkCmdPipelineBarrier (cmd, buf_mem->barrier.parent.pipeline_stages,
+        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 1, &buffer_memory_barrier,
+        0, NULL);
 
-    vkCmdCopyBufferToImage (cmd, buf_mem->buffer, swap_mem->image,
-        swap_mem->image_layout, 1, &region);
+    buf_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    buf_mem->barrier.parent.access_flags = buffer_memory_barrier.dstAccessMask;
+
+    vkCmdCopyBufferToImage (cmd, buf_mem->buffer, swap_img->image,
+        swap_img->barrier.image_layout, 1, &region);
   } else if (gst_is_vulkan_image_memory (in_mem)) {
     GstVulkanImageMemory *img_mem = (GstVulkanImageMemory *) in_mem;
-    VkImageCopy region = { 0, };
-
     /* FIXME: should really be a blit to resize to the output dimensions */
     /* *INDENT-OFF* */
-    region = (VkImageCopy) {
+    VkImageCopy region = {
         .srcSubresource = {
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .mipLevel = 0,
@@ -903,20 +845,57 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
         .dstOffset = { rslt.x, rslt.y, 0 },
         .extent = { rslt.w, rslt.h, 1 }
     };
+    VkImageMemoryBarrier image_memory_barrier = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .pNext = NULL,
+        .srcAccessMask = img_mem->barrier.parent.access_flags,
+        .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+        .oldLayout = img_mem->barrier.image_layout,
+        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        /* FIXME: implement exclusive transfers */
+        .srcQueueFamilyIndex = 0,
+        .dstQueueFamilyIndex = 0,
+        .image = img_mem->image,
+        .subresourceRange = img_mem->barrier.subresource_range
+    };
     /* *INDENT-ON* */
 
-    if (!_swapper_set_image_layout_with_cmd (swapper, cmd, img_mem,
-            VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, error)) {
-      return FALSE;
-    }
+    vkCmdPipelineBarrier (cmd, img_mem->barrier.parent.pipeline_stages,
+        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
+        &image_memory_barrier);
 
-    vkCmdCopyImage (cmd, img_mem->image, img_mem->image_layout, swap_mem->image,
-        swap_mem->image_layout, 1, &region);
+    img_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    img_mem->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
+    img_mem->barrier.image_layout = image_memory_barrier.newLayout;
+
+    vkCmdCopyImage (cmd, img_mem->image, img_mem->barrier.image_layout,
+        swap_img->image, swap_img->barrier.image_layout, 1, &region);
   }
 
-  if (!_swapper_set_image_layout_with_cmd (swapper, cmd, swap_mem,
-          VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, error)) {
-    return FALSE;
+  {
+    /* *INDENT-OFF* */
+    VkImageMemoryBarrier image_memory_barrier = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .pNext = NULL,
+        .srcAccessMask = swap_img->barrier.parent.access_flags,
+        .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+        .oldLayout = swap_img->barrier.image_layout,
+        .newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        /* FIXME: implement exclusive transfers */
+        .srcQueueFamilyIndex = 0,
+        .dstQueueFamilyIndex = 0,
+        .image = swap_img->image,
+        .subresourceRange = swap_img->barrier.subresource_range
+    };
+    /* *INDENT-ON* */
+
+    vkCmdPipelineBarrier (cmd, swap_img->barrier.parent.pipeline_stages,
+        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
+        &image_memory_barrier);
+
+    swap_img->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    swap_img->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
+    swap_img->barrier.image_layout = image_memory_barrier.newLayout;
   }
 
   err = vkEndCommandBuffer (cmd);

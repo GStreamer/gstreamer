@@ -1089,8 +1089,56 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
         .clearValueCount = 1,
         .pClearValues = &clearColor
     };
+
+    VkImageMemoryBarrier in_image_memory_barrier = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .pNext = NULL,
+        .srcAccessMask = in_img_mem->barrier.parent.access_flags,
+        .dstAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT,
+        .oldLayout = in_img_mem->barrier.image_layout,
+        .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+        /* FIXME: implement exclusive transfers */
+        .srcQueueFamilyIndex = 0,
+        .dstQueueFamilyIndex = 0,
+        .image = in_img_mem->image,
+        .subresourceRange = in_img_mem->barrier.subresource_range
+    };
+
+    VkImageMemoryBarrier out_image_memory_barrier = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .pNext = NULL,
+        .srcAccessMask = out_img_mem->barrier.parent.access_flags,
+        .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        .oldLayout = out_img_mem->barrier.image_layout,
+        .newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        /* FIXME: implement exclusive transfers */
+        .srcQueueFamilyIndex = 0,
+        .dstQueueFamilyIndex = 0,
+        .image = out_img_mem->image,
+        .subresourceRange = out_img_mem->barrier.subresource_range
+    };
     /* *INDENT-ON* */
     VkDeviceSize offsets[] = { 0 };
+
+    vkCmdPipelineBarrier (cmd, in_img_mem->barrier.parent.pipeline_stages,
+        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1,
+        &in_image_memory_barrier);
+
+    in_img_mem->barrier.parent.pipeline_stages =
+        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    in_img_mem->barrier.parent.access_flags =
+        in_image_memory_barrier.dstAccessMask;
+    in_img_mem->barrier.image_layout = in_image_memory_barrier.newLayout;
+
+    vkCmdPipelineBarrier (cmd, out_img_mem->barrier.parent.pipeline_stages,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, NULL, 0, NULL, 1,
+        &out_image_memory_barrier);
+
+    out_img_mem->barrier.parent.pipeline_stages =
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    out_img_mem->barrier.parent.access_flags =
+        out_image_memory_barrier.dstAccessMask;
+    out_img_mem->barrier.image_layout = out_image_memory_barrier.newLayout;
 
     vkCmdBeginRenderPass (cmd, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline (cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,

@@ -21,6 +21,7 @@
 #ifndef __GST_VULKAN_IMAGE_MEMORY_H__
 #define __GST_VULKAN_IMAGE_MEMORY_H__
 
+#include <gst/vulkan/gstvkbarrier.h>
 #include <gst/vulkan/gstvkdevice.h>
 
 #include <gst/video/video.h>
@@ -41,9 +42,14 @@ GType gst_vulkan_image_memory_allocator_get_type(void);
 #define GST_VULKAN_IMAGE_MEMORY_ALLOCATOR_NAME "VulkanImage"
 #define GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE "memory:VulkanImage"
 
-typedef struct _GstVulkanImageMemory GstVulkanImageMemory;
-typedef struct _GstVulkanImageMemoryAllocator GstVulkanImageMemoryAllocator;
-typedef struct _GstVulkanImageMemoryAllocatorClass GstVulkanImageMemoryAllocatorClass;
+struct _GstVulkanBarrierImageInfo
+{
+  GstVulkanBarrierMemoryInfo parent;
+
+  VkImageLayout image_layout;
+  /* FIXME: multiple layers or mipmap levels may require multiple barriers */
+  VkImageSubresourceRange subresource_range;
+};
 
 struct _GstVulkanImageMemory
 {
@@ -52,7 +58,6 @@ struct _GstVulkanImageMemory
   GstVulkanDevice * device;
 
   VkImage image;
-  VkImageLayout image_layout;
   VkImageView view;
   GstVulkanMemory *vk_mem;
 
@@ -60,6 +65,8 @@ struct _GstVulkanImageMemory
   VkMemoryRequirements requirements;
   VkImageFormatProperties format_properties;
   VkImageUsageFlags usage;
+
+  GstVulkanBarrierImageInfo barrier;
 
   GMutex lock;
   gboolean wrapped;
@@ -111,11 +118,6 @@ GstMemory *     gst_vulkan_image_memory_wrapped         (GstVulkanDevice * devic
                                                          VkImageUsageFlags usage,
                                                          gpointer user_data,
                                                          GDestroyNotify notify);
-
-GST_VULKAN_API
-gboolean        gst_vulkan_image_memory_set_layout      (GstVulkanImageMemory * vk_mem,
-                                                         VkImageLayout image_layout,
-                                                         VkImageMemoryBarrier * barrier);
 
 GST_VULKAN_API
 guint32         gst_vulkan_image_memory_get_width       (GstVulkanImageMemory * image);

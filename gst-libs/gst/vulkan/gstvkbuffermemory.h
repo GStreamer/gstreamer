@@ -25,6 +25,7 @@
 #include <gst/gstallocator.h>
 #include <gst/gstmemory.h>
 
+#include <gst/vulkan/gstvkbarrier.h>
 #include <gst/vulkan/vulkan.h>
 
 G_BEGIN_DECLS
@@ -43,6 +44,15 @@ GType gst_vulkan_buffer_memory_allocator_get_type(void);
 #define GST_VULKAN_BUFFER_MEMORY_ALLOCATOR_NAME "VulkanBuffer"
 #define GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER "memory:VulkanBuffer"
 
+
+struct _GstVulkanBarrierBufferInfo
+{
+  GstVulkanBarrierMemoryInfo parent;
+
+  VkDeviceSize offset;
+  VkDeviceSize size;
+};
+
 struct _GstVulkanBufferMemory
 {
   GstMemory parent;
@@ -55,6 +65,8 @@ struct _GstVulkanBufferMemory
 
   VkMemoryRequirements requirements;
   VkBufferUsageFlags usage;
+
+  GstVulkanBarrierBufferInfo barrier;
 
   GMutex lock;
   gboolean wrapped;

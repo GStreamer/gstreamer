@@ -190,7 +190,19 @@ _vk_image_mem_init (GstVulkanImageMemory * mem, GstAllocator * allocator,
       align, offset, size);
 
   mem->device = gst_object_ref (device);
-  mem->image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+  mem->barrier.parent.type = GST_VULKAN_BARRIER_TYPE_IMAGE;
+  mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+  mem->barrier.parent.access_flags = 0;
+  mem->barrier.image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+  /* *INDENT-OFF* */
+  mem->barrier.subresource_range = (VkImageSubresourceRange) {
+          .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+          .baseMipLevel = 0,
+          .levelCount = 1,
+          .baseArrayLayer = 0,
+          .layerCount = 1,
+  };
+  /* *INDENT-ON* */
   mem->usage = usage;
   mem->wrapped = FALSE;
   mem->notify = notify;
@@ -441,70 +453,6 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
   gst_object_unref (mem->device);
 
   g_free (mem);
-}
-
-static VkAccessFlags
-_access_flags_from_layout (VkImageLayout image_layout)
-{
-  if (image_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-    return VK_ACCESS_TRANSFER_WRITE_BIT;
-
-  if (image_layout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
-    return VK_ACCESS_TRANSFER_READ_BIT;
-
-  if (image_layout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-    return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-  if (image_layout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-    return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-  if (image_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-    return VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
-
-  return 0;
-}
-
-/**
- * gst_vulkan_image_memory_set_layout:
- * @vk_mem: a #GstVulkanImageMemory
- * @image_layout: the new iamge layout
- * @barrier: (inout): the barrier to fill
- *
- * Returns: wether the layout could be performed
- *
- * Since: 1.18
- */
-gboolean
-gst_vulkan_image_memory_set_layout (GstVulkanImageMemory * vk_mem,
-    VkImageLayout image_layout, VkImageMemoryBarrier * barrier)
-{
-  /* validate vk_mem->usage with image_layout */
-
-  /* *INDENT-OFF* */
-  *barrier = (VkImageMemoryBarrier) {
-      .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-      .pNext = NULL,
-      .dstAccessMask = _access_flags_from_layout (image_layout),
-      .srcAccessMask = _access_flags_from_layout (vk_mem->image_layout),
-      .oldLayout = vk_mem->image_layout,
-      .newLayout = image_layout,
-      .srcQueueFamilyIndex = 0,
-      .dstQueueFamilyIndex = 0,
-      .image = vk_mem->image,
-      .subresourceRange = (VkImageSubresourceRange) {
-          .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-          .baseMipLevel = 0,
-          .levelCount = 1,
-          .baseArrayLayer = 0,
-          .layerCount = 1
-      }
-  };
-  /* *INDENT-ON* */
-
-  /* FIXME: what if the barrier is never submitted or is submitted out of order? */
-  vk_mem->image_layout = image_layout;
-
-  return TRUE;
 }
 
 /**

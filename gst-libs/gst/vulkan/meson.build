@@ -21,6 +21,7 @@ vulkan_sources = [
 ]
 
 vulkan_headers = [
+  'gstvkbarrier.h',
   'gstvkbuffermemory.h',
   'gstvkbufferpool.h',
   'gstvkcommandpool.h',
