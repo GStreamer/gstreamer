@@ -1212,8 +1212,6 @@ _choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
 {
   guint flags = device->queue_family_props[queue->family].queueFlags;
 
-  GST_ERROR ("flags 0x%x", flags);
-
   if ((flags & VK_QUEUE_GRAPHICS_BIT) != 0) {
     if (data->queue)
       gst_object_unref (data->queue);
