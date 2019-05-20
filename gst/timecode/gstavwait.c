@@ -713,6 +713,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     gst_buffer_unref (inbuf);
     return GST_FLOW_ERROR;
   }
+
   g_mutex_lock (&self->mutex);
   self->vsegment.position = timestamp;
   running_time =
@@ -728,18 +729,21 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     }
     self->last_seen_tc = tc;
   }
+
   while (self->mode == MODE_VIDEO_FIRST
       && self->first_audio_running_time == GST_CLOCK_TIME_NONE
       && !self->audio_eos_flag
       && !self->shutdown_flag && !self->video_flush_flag) {
     g_cond_wait (&self->audio_cond, &self->mutex);
   }
+
   if (self->video_flush_flag || self->shutdown_flag) {
     GST_DEBUG_OBJECT (self, "Shutting down, ignoring buffer");
     gst_buffer_unref (inbuf);
     g_mutex_unlock (&self->mutex);
     return GST_FLOW_FLUSHING;
   }
+
   switch (self->mode) {
     case MODE_TIMECODE:{
       if (self->tc && self->end_tc
@@ -760,6 +764,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 
       if (self->tc != NULL && tc != NULL) {
         gboolean emit_passthrough_signal = FALSE;
+
         if (gst_video_time_code_compare (tc, self->tc) < 0
             && self->running_time_to_wait_for == GST_CLOCK_TIME_NONE) {
           GST_DEBUG_OBJECT (self, "Timecode not yet reached, ignoring frame");
@@ -780,6 +785,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
                 self->running_time_to_wait_for;
           }
         }
+
         if (self->end_tc && gst_video_time_code_compare (tc, self->end_tc) >= 0) {
           if (self->running_time_to_end_at == GST_CLOCK_TIME_NONE) {
             GST_INFO_OBJECT (self, "End timecode reached at %" GST_TIME_FORMAT,
@@ -905,12 +911,14 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     self->was_recording = self->recording;
   g_cond_signal (&self->cond);
   g_mutex_unlock (&self->mutex);
+
   if (inbuf) {
     GST_WARNING_OBJECT (self, "Pass video buffer ending at %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf) +
             GST_BUFFER_DURATION (inbuf)));
     ret = gst_pad_push (self->vsrcpad, inbuf);
   }
+
   g_mutex_lock (&self->mutex);
   if (self->must_send_end_message & END_MESSAGE_AUDIO_PUSHED) {
     self->must_send_end_message = END_MESSAGE_NORMAL;
@@ -972,6 +980,7 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     gst_buffer_unref (inbuf);
     return GST_FLOW_ERROR;
   }
+
   g_mutex_lock (&self->mutex);
   self->asegment.position = timestamp;
   asign =
@@ -983,9 +992,11 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     GST_ERROR_OBJECT (self, "Could not get current running time");
     return GST_FLOW_ERROR;
   }
+
   if (self->first_audio_running_time == GST_CLOCK_TIME_NONE) {
     self->first_audio_running_time = current_running_time;
   }
+
   g_cond_signal (&self->audio_cond);
   if (self->vsegment.format == GST_FORMAT_TIME) {
     vsign =
@@ -995,6 +1006,7 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       video_running_time = GST_CLOCK_TIME_NONE;
     }
   }
+
   duration =
       gst_util_uint64_scale (gst_buffer_get_size (inbuf) / self->ainfo.bpf,
       GST_SECOND, self->ainfo.rate);
@@ -1009,6 +1021,7 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       return GST_FLOW_ERROR;
     }
   }
+
   while (!(self->video_eos_flag || self->audio_flush_flag
           || self->shutdown_flag) &&
       /* Start at timecode */
@@ -1025,12 +1038,14 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       video_running_time = GST_CLOCK_TIME_NONE;
     }
   }
+
   if (self->audio_flush_flag || self->shutdown_flag) {
     GST_DEBUG_OBJECT (self, "Shutting down, ignoring frame");
     gst_buffer_unref (inbuf);
     g_mutex_unlock (&self->mutex);
     return GST_FLOW_FLUSHING;
   }
+
   if (self->audio_running_time_to_wait_for == GST_CLOCK_TIME_NONE
       /* Audio ends before start : drop */
       || gst_avwait_compare_guint64_with_signs (esign,
@@ -1052,7 +1067,6 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
         !(self->must_send_end_message & END_MESSAGE_AUDIO_PUSHED)) {
       send_element_message = TRUE;
     }
-
   } else if (gst_avwait_compare_guint64_with_signs (esign, running_time_at_end,
           1, self->audio_running_time_to_wait_for) >= 0
       && gst_avwait_compare_guint64_with_signs (esign, running_time_at_end, 1,
@@ -1097,6 +1111,7 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     g_assert_not_reached ();
   }
   g_mutex_unlock (&self->mutex);
+
   if (inbuf) {
     GstClockTime new_duration =
         gst_util_uint64_scale (gst_buffer_get_size (inbuf) / self->ainfo.bpf,
@@ -1108,6 +1123,7 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
         GST_TIME_ARGS (new_running_time_at_end));
     ret = gst_pad_push (self->asrcpad, inbuf);
   }
+
   if (send_element_message) {
     g_mutex_lock (&self->mutex);
     if ((self->must_send_end_message & END_MESSAGE_VIDEO_PUSHED) ||
