@@ -18,6 +18,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstgldisplay_egl
+ * @short_description: EGL Display connection
+ * @title: GstGLDisplayEGL
+ * @see_also: #GstGLDisplay
+ *
+ * #GstGLDisplayEGL represents a connection to an EGL `EGLDisplay` handle created
+ * internally (gst_gl_display_egl_new()) or wrapped by the application
+ * (gst_gl_display_egl_new_with_egl_display())
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -92,11 +103,11 @@ gst_gl_display_egl_finalize (GObject * object)
  * @type: a #GstGLDisplayType
  * @display: pointer to a display (or 0)
  *
- * Attempts to create a new #EGLDisplay from @display.  If @type is
+ * Attempts to create a new `EGLDisplay` from @display.  If @type is
  * %GST_GL_DISPLAY_TYPE_ANY, then @display must be 0. @type must not be
  * %GST_GL_DISPLAY_TYPE_NONE.
  *
- * Returns: A #EGLDisplay or %EGL_NO_DISPLAY
+ * Returns: A `EGLDisplay` or `EGL_NO_DISPLAY`
  *
  * Since: 1.12
  */

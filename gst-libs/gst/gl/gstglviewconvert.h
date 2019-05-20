@@ -89,7 +89,7 @@ struct _GstGLViewConvert
 
   GstGLFramebuffer *fbo;
 
-  /* <private> */
+  /*< private >*/
   GstGLViewConvertPrivate *priv;
 
   gpointer _padding[GST_PADDING];
@@ -102,7 +102,7 @@ struct _GstGLViewConvert
  */
 struct _GstGLViewConvertClass
 {
-  /* <private> */
+  /*< private >*/
   GstObjectClass object_class;
 
   gpointer                  _padding[GST_PADDING];

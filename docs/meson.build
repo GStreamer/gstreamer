@@ -71,10 +71,11 @@ foreach h: ['pbutils-private.h', 'gsttageditingprivate.h', 'id3v2.h',
   '_kiss_fft_guts_f32.h', '_kiss_fft_guts_f64.h', '_kiss_fft_guts_s16.h',
   '_kiss_fft_guts_s16.h', '_kiss_fft_guts_s32.h', '_kiss_fft_guts_s32.h',
   'pbutils-marshal.h', 'audio-resampler-private.h', '*orc-dist.*',
-  '*-neon.h', 'audio-resampler-macros.[ch]', '*-prelude.h'
+  '*-neon.h', 'audio-resampler-macros.[ch]', '*-prelude.h', '*_private.h',
+  'gstglfuncs.[ch]', 'gstgl_fwd.h'
   ]
 
-    libs_excludes += [join_paths(meson.current_source_dir(), '..', 'gst-libs/gst/*/', h)]
+  libs_excludes += [join_paths(meson.current_source_dir(), '..', 'gst-libs/gst/*/', h)]
 endforeach
 
 libs = [
@@ -91,7 +92,14 @@ libs = [
 ]
 
 if build_gstgl
-  libs + [['gl', gl_gir, gstgl_dep]]
+  libs += [['gl', gl_gir, gstgl_dep, [
+      join_paths('../gst-libs/gst', 'gl', 'egl', 'gstegl.[ch]'),
+      join_paths('../gst-libs/gst', 'gl', 'egl', 'gsteglimage.[ch]'),
+      join_paths('../gst-libs/gst', 'gl', 'egl', 'gstgldisplay_egl.[ch]'),
+      join_paths('../gst-libs/gst', 'gl', 'egl', 'gstglmemoryegl.[ch]'),
+      join_paths('../gst-libs/gst', 'gl', 'x11', 'gstgldisplay_x11.[ch]'),
+      join_paths('../gst-libs/gst', 'gl', 'wayland', 'gstgldisplay_wayland.[ch]'),
+  ]]]
 endif
 
 libs_doc = []
@@ -99,9 +107,13 @@ foreach lib: libs
   name = lib[0]
   gir = lib[1]
   deps = [lib[2], gir]
+  extra_sources = []
+  if lib.length() >= 4
+    extra_sources = lib[3]
+  endif
   libs_doc += [hotdoc.generate_doc('gst-plugins-base-' + name,
       project_version: api_version,
-      gi_c_sources: [join_paths('../gst-libs/gst', name, '*.[hc]')],
+      gi_c_sources: [join_paths('../gst-libs/gst', name, '*.[hc]')] + extra_sources,
       gi_sources: gir[0].full_path(),
       gi_c_source_filters: libs_excludes,
       gi_c_source_roots: [join_paths(meson.current_source_dir(), '../gst-libs/gst/' + name), ],

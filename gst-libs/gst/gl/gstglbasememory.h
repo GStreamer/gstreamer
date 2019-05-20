@@ -107,7 +107,7 @@ struct _GstGLBaseMemory
 
   GstGLContext         *context;
 
-  /* <protected> */
+  /*< protected >*/
   GMutex                lock;
 
   GstMapFlags           map_flags;       /* cumulative map flags */
@@ -118,7 +118,7 @@ struct _GstGLBaseMemory
 
   GstGLQuery           *query;
 
-  /* <private> */
+  /*< private >*/
   gsize                 alloc_size;     /* because maxsize is used for mapping */
   gpointer              alloc_data;
 
@@ -215,7 +215,7 @@ struct _GstGLAllocationParams
   /* GST_GL_ALLOCATION_PARAMS_ALLOC_FLAG_WRAP_GPU_HANDLE only */
   gpointer                          gl_handle;
 
-  /* <private> */
+  /*< private >*/
   gpointer                          _padding[GST_PADDING];
 };
 
@@ -370,8 +370,8 @@ struct _GstGLBaseMemoryAllocatorClass
   GstGLBaseMemoryAllocatorUnmapFunction         unmap;
   GstGLBaseMemoryAllocatorCopyFunction          copy;
   GstGLBaseMemoryAllocatorDestroyFunction       destroy;
-  /* <private> */
 
+  /*< private >*/
   gpointer                                      _padding[GST_PADDING];
 };
 

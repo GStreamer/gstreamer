@@ -43,7 +43,7 @@ GType gst_gl_overlay_compositor_get_type (void);
  */
 struct _GstGLOverlayCompositor
 {
-  /* <private> */
+  /*< private >*/
   GstObject parent;
 
   GstGLContext *context;
@@ -68,7 +68,7 @@ struct _GstGLOverlayCompositorClass
 {
   GstObjectClass object_class;
 
-  /* <private> */
+  /*< private >*/
   gpointer _padding[GST_PADDING];
 };
 

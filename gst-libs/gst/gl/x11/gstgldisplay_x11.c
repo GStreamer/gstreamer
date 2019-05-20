@@ -18,6 +18,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstgldisplay_x11
+ * @short_description: X11 Display connection
+ * @title: GstGLDisplayX11
+ * @see_also: #GstGLDisplay
+ *
+ * #GstGLDisplayX11 represents a connection to an X11 `Display` handle created
+ * internally (gst_gl_display_x11_new()) or wrapped by the application
+ * (gst_gl_display_x11_new_with_display())
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -77,7 +88,7 @@ gst_gl_display_x11_finalize (GObject * object)
  * gst_gl_display_x11_new:
  * @name: (allow-none): a display name
  *
- * Create a new #GstGLDisplayX11 from the x11 display name.  See XOpenDisplay()
+ * Create a new #GstGLDisplayX11 from the x11 display name.  See `XOpenDisplay`()
  * for details on what is a valid name.
  *
  * Returns: (transfer full): a new #GstGLDisplayX11 or %NULL

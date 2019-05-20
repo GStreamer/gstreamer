@@ -75,12 +75,12 @@ typedef enum
  */
 struct _GstGLDisplay
 {
-  /* <private> */
+  /*< private >*/
   GstObject             object;
 
   GstGLDisplayType      type;
 
-  /* <protected> */
+  /*< protected >*/
   GList                    *windows;        /* OBJECT lock */
   GMainContext             *main_context;
   GMainLoop                *main_loop;
@@ -96,7 +96,7 @@ struct _GstGLDisplayClass
   guintptr          (*get_handle)      (GstGLDisplay * display);
   GstGLWindow *     (*create_window)    (GstGLDisplay * display);
 
-  /* <private> */
+  /*< private >*/
   gpointer _padding[GST_PADDING];
 };
 

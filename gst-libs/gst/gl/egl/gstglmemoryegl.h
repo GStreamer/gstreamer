@@ -46,7 +46,7 @@ GST_GL_API GType gst_gl_memory_egl_allocator_get_type(void);
  */
 struct _GstGLMemoryEGL
 {
-  /* <private> */
+  /*< private >*/
   GstGLMemory mem;
 
   GstEGLImage *image;
@@ -74,13 +74,13 @@ GST_GL_API
 gpointer      gst_gl_memory_egl_get_display             (GstGLMemoryEGL * mem);
 
 /**
- * GstGLMemoryEGLAllocator
+ * GstGLMemoryEGLAllocator:
  *
  * Opaque #GstGLMemoryEGLAllocator struct
  */
 struct _GstGLMemoryEGLAllocator
 {
-  /* <private> */
+  /*< private >*/
 
   GstGLMemoryAllocator parent;
 
@@ -94,7 +94,7 @@ struct _GstGLMemoryEGLAllocator
  */
 struct _GstGLMemoryEGLAllocatorClass
 {
-  /* <private> */
+  /*< private >*/
   GstGLMemoryAllocatorClass parent_class;
 
   gpointer _padding[GST_PADDING];

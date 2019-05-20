@@ -49,6 +49,11 @@ _init_debug (void)
   }
 }
 
+/**
+ * gst_glsl_error_quark:
+ *
+ * Returns: the quark used for GstGLSL in #GError's
+ */
 GQuark
 gst_glsl_error_quark (void)
 {
@@ -232,7 +237,7 @@ _is_valid_version_profile (GstGLSLVersion version, GstGLSLProfile profile)
  * @version: a #GstGLSLVersion
  * @profile: a #GstGLSLVersion
  *
- * Returns: the combined GLSL #version string for @version and @profile
+ * Returns: the combined GLSL `#version` string for @version and @profile
  */
 gchar *
 gst_glsl_version_profile_to_string (GstGLSLVersion version,
@@ -295,14 +300,14 @@ _check_valid_version_preprocessor_string (const gchar * str)
 
 /**
  * gst_glsl_version_profile_from_string:
- * @string: a valid GLSL #version string
+ * @string: a valid GLSL `#version` string
  * @version_ret: (out): resulting #GstGLSLVersion
  * @profile_ret: (out): resulting #GstGLSLVersion
  *
- * Note: this function expects either a #version GLSL preprocesser directive
+ * Note: this function expects either a `#version` GLSL preprocesser directive
  * or a valid GLSL version and/or profile.
  *
- * Returns: TRUE if a valid #version string was found, FALSE otherwise
+ * Returns: TRUE if a valid `#version` string was found, FALSE otherwise
  */
 gboolean
 gst_glsl_version_profile_from_string (const gchar * string,
@@ -461,14 +466,14 @@ _gst_glsl_shader_string_find_version (const gchar * str)
 
 /**
  * gst_glsl_string_get_version_profile:
- * @s: string to search for a valid #version string
+ * @s: string to search for a valid `#version` string
  * @version: (out): resulting #GstGLSLVersion
  * @profile: (out): resulting #GstGLSLProfile
  *
- * Note: this function first searches the first 1 kilobytes for a #version
+ * Note: this function first searches the first 1 kilobytes for a `#version`
  * preprocessor directive and then executes gst_glsl_version_profile_from_string().
  *
- * Returns: TRUE if a valid #version string was found, FALSE otherwise
+ * Returns: TRUE if a valid `#version` string was found, FALSE otherwise
  */
 gboolean
 gst_glsl_string_get_version_profile (const gchar * s, GstGLSLVersion * version,

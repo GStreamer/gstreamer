@@ -906,7 +906,7 @@ G_PASTE(gst_gl_shader_set_uniform_,gl_suffix) (GstGLShader * shader,        \
  * @name: name of the uniform
  * @value: value to set
  *
- * Perform glUniform1f() for @name on @shader
+ * Perform `glUniform1f()` for @name on @shader
  */
 set_uniform_func_decl(1f, float value)
 set_uniform_body(1f, "%f", value);
@@ -918,7 +918,7 @@ set_uniform_body(1f, "%f", value);
  * @count: number of values to set
  * @value: (array length=count): values to set
  *
- * Perform glUniform1fv() for @name on @shader
+ * Perform `glUniform1fv()` for @name on @shader
  */
 set_uniform_v(1fv, float, 1, "%f", item[0]);
 
@@ -928,7 +928,7 @@ set_uniform_v(1fv, float, 1, "%f", item[0]);
  * @name: name of the uniform
  * @value: value to set
  *
- * Perform glUniform1i() for @name on @shader
+ * Perform `glUniform1i()` for @name on @shader
  */
 set_uniform_func_decl(1i, int value)
 set_uniform_body(1i, "%i", value);
@@ -940,7 +940,7 @@ set_uniform_body(1i, "%i", value);
  * @count: number of values to set
  * @value: (array length=count): values to set
  *
- * Perform glUniform1iv() for @name on @shader
+ * Perform `glUniform1iv()` for @name on @shader
  */
 set_uniform_v(1iv, int, 1, "%i", item[0]);
 
@@ -951,7 +951,7 @@ set_uniform_v(1iv, int, 1, "%i", item[0]);
  * @v0: first value to set
  * @v1: second value to set
  *
- * Perform glUniform2f() for @name on @shader
+ * Perform `glUniform2f()` for @name on @shader
  */
 set_uniform_func_decl(2f, float v0, float v1)
 set_uniform_body(2f, "%f, %f", v0, v1);
@@ -963,7 +963,7 @@ set_uniform_body(2f, "%f, %f", v0, v1);
  * @count: number of values to set
  * @value: (array length=count): values to set
  *
- * Perform glUniform2fv() for @name on @shader
+ * Perform `glUniform2fv()` for @name on @shader
  */
 set_uniform_v(2fv, float, 2, "%f, %f", item[0], item[1]);
 
@@ -974,7 +974,7 @@ set_uniform_v(2fv, float, 2, "%f, %f", item[0], item[1]);
  * @v0: first value to set
  * @v1: second value to set
  *
- * Perform glUniform2i() for @name on @shader
+ * Perform `glUniform2i()` for @name on @shader
  */
 set_uniform_func_decl(2i, int v0, int v1)
 set_uniform_body(2i, "%i, %i", v0, v1);
@@ -986,7 +986,7 @@ set_uniform_body(2i, "%i, %i", v0, v1);
  * @count: number of values to set
  * @value: (array length=count): values to set
  *
- * Perform glUniform2iv() for @name on @shader
+ * Perform `glUniform2iv()` for @name on @shader
  */
 set_uniform_v(2iv, int, 2, "%i, %i", item[0], item[1]);
 
@@ -998,7 +998,7 @@ set_uniform_v(2iv, int, 2, "%i, %i", item[0], item[1]);
  * @v1: second value to set
  * @v2: third value to set
  *
- * Perform glUniform3f() for @name on @shader
+ * Perform `glUniform3f()` for @name on @shader
  */
 set_uniform_func_decl(3f, float v0, float v1, float v2)
 set_uniform_body(3f, "%f, %f, %f", v0, v1, v2);
@@ -1010,7 +1010,7 @@ set_uniform_body(3f, "%f, %f, %f", v0, v1, v2);
  * @count: number of values to set
  * @value: (array length=count): values to set
  *
- * Perform glUniform3fv() for @name on @shader
+ * Perform `glUniform3fv()` for @name on @shader
  */
 set_uniform_v(3fv, float, 3, "%f, %f, %f", item[0], item[1], item[2]);
 
@@ -1022,7 +1022,7 @@ set_uniform_v(3fv, float, 3, "%f, %f, %f", item[0], item[1], item[2]);
  * @v1: second value to set
  * @v2: third value to set
  *
- * Perform glUniform3i() for @name on @shader
+ * Perform `glUniform3i()` for @name on @shader
  */
 set_uniform_func_decl(3i, int v0, int v1, int v2)
 set_uniform_body(3i, "%i, %i, %i", v0, v1, v2);
@@ -1034,7 +1034,7 @@ set_uniform_body(3i, "%i, %i, %i", v0, v1, v2);
  * @count: number of values to set
  * @value: (array length=count): values to set
  *
- * Perform glUniform3iv() for @name on @shader
+ * Perform `glUniform3iv()` for @name on @shader
  */
 set_uniform_v(3iv, int, 3, "%i, %i, %i", item[0], item[1], item[2]);
 
@@ -1047,7 +1047,7 @@ set_uniform_v(3iv, int, 3, "%i, %i, %i", item[0], item[1], item[2]);
  * @v2: third value to set
  * @v3: fourth value to set
  *
- * Perform glUniform4f() for @name on @shader
+ * Perform `glUniform4f()` for @name on @shader
  */
 set_uniform_func_decl(4f, float v0, float v1, float v2, float v3)
 set_uniform_body(4f, "%f, %f, %f, %f", v0, v1, v2, v3);
@@ -1059,7 +1059,7 @@ set_uniform_body(4f, "%f, %f, %f, %f", v0, v1, v2, v3);
  * @count: number of values to set
  * @value: (array length=count): values to set
  *
- * Perform glUniform4fv() for @name on @shader
+ * Perform `glUniform4fv()` for @name on @shader
  */
 set_uniform_v(4fv, float, 4, "%f, %f, %f, %f", item[0], item[1], item[2], item[3]);
 
@@ -1072,7 +1072,7 @@ set_uniform_v(4fv, float, 4, "%f, %f, %f, %f", item[0], item[1], item[2], item[3
  * @v2: third value to set
  * @v3: fourth value to set
  *
- * Perform glUniform4i() for @name on @shader
+ * Perform `glUniform4i()` for @name on @shader
  */
 set_uniform_func_decl(4i, int v0, int v1, int v2, int v3)
 set_uniform_body(4i, "%i, %i, %i, %i", v0, v1, v2, v3);
@@ -1084,7 +1084,7 @@ set_uniform_body(4i, "%i, %i, %i, %i", v0, v1, v2, v3);
  * @count: number of values to set
  * @value: (array length=count): values to set
  *
- * Perform glUniform4iv() for @name on @shader
+ * Perform `glUniform4iv()` for @name on @shader
  */
 set_uniform_v(4iv, int, 4, "%i, %i, %i, %i", item[0], item[1], item[2], item[3]);
 /* *INDENT-ON* */
@@ -1097,7 +1097,7 @@ set_uniform_v(4iv, int, 4, "%i, %i, %i, %i", item[0], item[1], item[2], item[3])
  * @transpose: transpose the matrix
  * @value: matrix to set
  *
- * Perform glUniformMatrix2fv() for @name on @shader
+ * Perform `glUniformMatrix2fv()` for @name on @shader
  */
 void
 gst_gl_shader_set_uniform_matrix_2fv (GstGLShader * shader, const gchar * name,
@@ -1116,7 +1116,7 @@ gst_gl_shader_set_uniform_matrix_2fv (GstGLShader * shader, const gchar * name,
  * @transpose: transpose the matrix
  * @value: values to set
  *
- * Perform glUniformMatrix3fv() for @name on @shader
+ * Perform `glUniformMatrix3fv()` for @name on @shader
  */
 void
 gst_gl_shader_set_uniform_matrix_3fv (GstGLShader * shader, const gchar * name,
@@ -1135,7 +1135,7 @@ gst_gl_shader_set_uniform_matrix_3fv (GstGLShader * shader, const gchar * name,
  * @transpose: transpose the matrix
  * @value: values to set
  *
- * Perform glUniformMatrix4fv() for @name on @shader
+ * Perform `glUniformMatrix4fv()` for @name on @shader
  */
 void
 gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
@@ -1154,7 +1154,7 @@ gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
  * @transpose: transpose the matrix
  * @value: values to set
  *
- * Perform glUniformMatrix2x3fv() for @name on @shader
+ * Perform `glUniformMatrix2x3fv()` for @name on @shader
  */
 void
 gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader * shader,
@@ -1173,7 +1173,7 @@ gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader * shader,
  * @transpose: transpose the matrix
  * @value: values to set
  *
- * Perform glUniformMatrix2x4fv() for @name on @shader
+ * Perform `glUniformMatrix2x4fv()` for @name on @shader
  */
 void
 gst_gl_shader_set_uniform_matrix_2x4fv (GstGLShader * shader,
@@ -1192,7 +1192,7 @@ gst_gl_shader_set_uniform_matrix_2x4fv (GstGLShader * shader,
  * @transpose: transpose the matrix
  * @value: values to set
  *
- * Perform glUniformMatrix3x2fv() for @name on @shader
+ * Perform `glUniformMatrix3x2fv()` for @name on @shader
  */
 void
 gst_gl_shader_set_uniform_matrix_3x2fv (GstGLShader * shader,
@@ -1211,7 +1211,7 @@ gst_gl_shader_set_uniform_matrix_3x2fv (GstGLShader * shader,
  * @transpose: transpose the matrix
  * @value: values to set
  *
- * Perform glUniformMatrix3x4fv() for @name on @shader
+ * Perform `glUniformMatrix3x4fv()` for @name on @shader
  */
 void
 gst_gl_shader_set_uniform_matrix_3x4fv (GstGLShader * shader,
@@ -1230,7 +1230,7 @@ gst_gl_shader_set_uniform_matrix_3x4fv (GstGLShader * shader,
  * @transpose: transpose the matrix
  * @value: values to set
  *
- * Perform glUniformMatrix4x2fv() for @name on @shader
+ * Perform `glUniformMatrix4x2fv()` for @name on @shader
  */
 void
 gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader * shader,
@@ -1249,7 +1249,7 @@ gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader * shader,
  * @transpose: transpose the matrix
  * @value: values to set
  *
- * Perform glUniformMatrix4x3fv() for @name on @shader
+ * Perform `glUniformMatrix4x3fv()` for @name on @shader
  */
 void
 gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader * shader,
@@ -1292,7 +1292,7 @@ gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)
  * @name: name of the attribute
  *
  * Bind attribute @name to the specified location @index using
- * glBindAttributeLocation().
+ * `glBindAttributeLocation()`.
  */
 void
 gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index,
@@ -1315,7 +1315,7 @@ gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index,
  * @name: name of the attribute
  *
  * Bind attribute @name to the specified location @index using
- * glBindFragDataLocation().
+ * `glBindFragDataLocation()`.
  */
 void
 gst_gl_shader_bind_frag_data_location (GstGLShader * shader,

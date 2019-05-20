@@ -52,7 +52,7 @@ typedef gboolean (*GstGLFramebufferFunc) (gpointer stuff);
  */
 struct _GstGLFramebuffer
 {
-  /* <private> */
+  /*< private >*/
   GstObject             object;
 
   GstGLContext *context;
@@ -72,7 +72,7 @@ struct _GstGLFramebuffer
  */
 struct _GstGLFramebufferClass
 {
-  /* <private> */
+  /*< private >*/
   GstObjectClass object_class;
 
   gpointer          _padding[GST_PADDING];

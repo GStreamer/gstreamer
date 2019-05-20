@@ -41,7 +41,6 @@ struct _GstGLWindowVivFBEGL {
   /*< private >*/
   GstGLWindow parent;
 
-  /* <private> */
   EGLNativeWindowType win_id;
   gboolean external_window;
   gint window_width, window_height;
@@ -54,7 +53,6 @@ struct _GstGLWindowVivFBEGLClass {
   /*< private >*/
   GstGLWindowClass parent_class;
 
-  /*< private >*/
   gpointer _reserved[GST_PADDING];
 };
 

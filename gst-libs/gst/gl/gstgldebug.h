@@ -35,7 +35,7 @@ typedef gchar * (*GstGLAsyncDebugLogGetMessage) (gpointer user_data);
  */
 struct _GstGLAsyncDebug
 {
-  /* <private> */
+  /*< private >*/
   guint             state_flags;
   GstDebugCategory *cat;
   GstDebugLevel     level;
@@ -45,7 +45,7 @@ struct _GstGLAsyncDebug
   GObject          *object;
   gchar            *debug_msg;
 
-  /* <protected> */
+  /*< protected >*/
   GstGLAsyncDebugLogGetMessage callback;
   gpointer          user_data;
   GDestroyNotify    notify;
@@ -70,7 +70,7 @@ void                gst_gl_async_debug_thaw                     (GstGLAsyncDebug
  * GST_GL_ASYNC_CAT_LEVEL_LOG_valist:
  * @ad: the #GstGLAsyncDebug to store the message in
  * @cat: the #GstDebugCategory to output the message in
- * @level: the #GstLevel
+ * @level: the #GstDebugLevel
  * @object: (allow-none): a #GObject to associate with the debug message
  * @format: a printf style format string
  * @varargs: the list of arguments for @format
@@ -85,7 +85,7 @@ void                gst_gl_async_debug_thaw                     (GstGLAsyncDebug
  * GST_GL_ASYNC_CAT_LEVEL_LOG:
  * @ad: the #GstGLAsyncDebug to store the message in
  * @cat: the #GstDebugCategory to output the message in
- * @level: the #GstLevel
+ * @level: the #GstDebugLevel
  * @object: (allow-none): a #GObject to associate with the debug message
  * @format: a printf style format string
  * @...: the list of arguments for @format

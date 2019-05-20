@@ -46,7 +46,7 @@ typedef enum
  */
 struct _GstGLQuery
 {
-  /* <private> */
+  /*< private >*/
   GstGLContext *    context;
   guint             query_type;
   guint             query_id;
@@ -55,7 +55,6 @@ struct _GstGLQuery
   gboolean          start_called;
   GstGLAsyncDebug   debug;
 
-  /* <private> */
   gpointer          _padding[GST_PADDING];
 };
 

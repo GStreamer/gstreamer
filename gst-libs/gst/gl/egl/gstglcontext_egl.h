@@ -50,7 +50,7 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLContextEGL, gst_object_unref)
  */
 struct _GstGLContextEGL
 {
-  /* <private> */
+  /*< private >*/
   GstGLContext context;
 
   GstGLDisplayEGL *display_egl;
@@ -78,7 +78,7 @@ struct _GstGLContextEGL
  */
 struct _GstGLContextEGLClass
 {
-  /* <private> */
+  /*< private >*/
   GstGLContextClass parent;
 };
 

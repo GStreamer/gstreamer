@@ -64,10 +64,10 @@ struct _GstGLRenderbuffer
   guint                     width;
   guint                     height;
 
-  /* <protected> */
+  /*< protected >*/
   gboolean                  renderbuffer_wrapped;
 
-  /* <private> */
+  /*< private >*/
   gpointer                  _padding[GST_PADDING];
 };
 
@@ -80,7 +80,7 @@ struct _GstGLRenderbufferAllocator
 {
   GstGLBaseMemoryAllocator parent;
 
-  /* <private> */
+  /*< private >*/
   gpointer                  _padding[GST_PADDING];
 };
 
@@ -93,7 +93,7 @@ struct _GstGLRenderbufferAllocatorClass
 {
   GstGLBaseMemoryAllocatorClass             parent_class;
 
-  /* <private> */
+  /*< private >*/
   gpointer                  _padding[GST_PADDING];
 };
 
@@ -122,7 +122,7 @@ struct _GstGLRenderbufferAllocationParams
   guint width;
   guint height;
 
-  /* <private> */
+  /*< private >*/
   gpointer _padding[GST_PADDING];
 };
 

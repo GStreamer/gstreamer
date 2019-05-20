@@ -80,7 +80,7 @@ struct _GstGLBufferAllocationParams
   guint                     gl_target;
   guint                     gl_usage;
 
-  /* <private> */
+  /*< private >*/
   gpointer                  _padding[GST_PADDING];
 };
 
@@ -100,7 +100,7 @@ struct _GstGLBufferAllocator
 {
   GstGLBaseMemoryAllocator parent;
 
-  /* <private> */
+  /*< private >*/
   gpointer _padding[GST_PADDING];
 };
 
@@ -113,7 +113,7 @@ struct _GstGLBufferAllocatorClass
 {
   GstGLBaseMemoryAllocatorClass parent_class;
 
-  /* <private> */
+  /*< private >*/
   gpointer _padding[GST_PADDING];
 };
 

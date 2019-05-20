@@ -53,6 +53,11 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_BASE_MEMORY);
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstGLBaseMemory, gst_gl_base_memory);
 
+/**
+ * gst_gl_base_memory_error_quark:
+ *
+ * Returns: the quark used for #GstGLBaseMemory in #GError's
+ */
 GQuark
 gst_gl_base_memory_error_quark (void)
 {

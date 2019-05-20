@@ -116,8 +116,8 @@ _gl_type_n_bytes (guint type)
 
 /**
  * gst_gl_format_type_n_bytes:
- * @format: the OpenGL format, %GL_RGBA, %GL_LUMINANCE, etc
- * @type: the OpenGL type, %GL_UNSIGNED_BYTE, %GL_FLOAT, etc
+ * @format: the OpenGL format, `GL_RGBA`, `GL_LUMINANCE`, etc
+ * @type: the OpenGL type, `GL_UNSIGNED_BYTE`, `GL_FLOAT`, etc
  *
  * Returns: the number of bytes the specified @format, @type combination takes
  * per pixel
@@ -216,8 +216,8 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
 /**
  * gst_gl_sized_gl_format_from_gl_format_type:
  * @context: a #GstGLContext
- * @format: an OpenGL format, %GL_RGBA, %GL_LUMINANCE, etc
- * @type: an OpenGL type, %GL_UNSIGNED_BYTE, %GL_FLOAT, etc
+ * @format: an OpenGL format, `GL_RGBA`, `GL_LUMINANCE`, etc
+ * @type: an OpenGL type, `GL_UNSIGNED_BYTE`, `GL_FLOAT`, etc
  *
  * Returns: the sized internal format specified by @format and @type that can
  *          be used in @context

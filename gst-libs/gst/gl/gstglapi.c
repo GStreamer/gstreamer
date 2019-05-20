@@ -34,6 +34,15 @@
 #include "gstglapi.h"
 
 /**
+ * GstGLFuncs:
+ *
+ * Structure containing function pointers to OpenGL functions.
+ *
+ * Each field is named exactly the same as the OpenGL function without the
+ * `gl` prefix.
+ */
+
+/**
  * gst_gl_api_to_string:
  * @api: a #GstGLAPI to stringify
  *

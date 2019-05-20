@@ -47,7 +47,7 @@ struct _GstGLBufferPool
 
   GstGLContext *context;
 
-  /* <private> */
+  /*< private >*/
   GstGLBufferPoolPrivate *priv;
 
   gpointer _padding[GST_PADDING];
@@ -62,7 +62,7 @@ struct _GstGLBufferPoolClass
 {
   GstBufferPoolClass parent_class;
 
-  /* <private> */
+  /*< private >*/
   gpointer _padding[GST_PADDING];
 };
 

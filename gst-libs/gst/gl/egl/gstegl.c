@@ -17,6 +17,14 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
+/**
+ * SECTION:gstegl
+ * @short_description: EGL helpers
+ * @title: GstEGL
+ * @see_also: #GstGLDisplayEGL, #GstEGLImage
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

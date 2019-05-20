@@ -56,7 +56,7 @@ struct _GstGLSLStage
  */
 struct _GstGLSLStageClass
 {
-  /* <private> */
+  /*< private >*/
   GstObjectClass parent;
 
   gpointer _padding[GST_PADDING];

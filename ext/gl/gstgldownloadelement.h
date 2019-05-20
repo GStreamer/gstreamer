@@ -41,7 +41,6 @@ typedef struct _GstGLDownloadElementClass GstGLDownloadElementClass;
 
 struct _GstGLDownloadElement
 {
-  /* <private> */
   GstGLBaseFilter  parent;
 
   gboolean do_pbo_transfers;
@@ -51,7 +50,6 @@ struct _GstGLDownloadElement
 
 struct _GstGLDownloadElementClass
 {
-  /* <private> */
   GstGLBaseFilterClass object_class;
 };
 

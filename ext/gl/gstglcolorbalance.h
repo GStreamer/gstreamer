@@ -49,7 +49,6 @@ typedef struct _GstGLColorBalanceClass GstGLColorBalanceClass;
 struct _GstGLColorBalance {
   GstGLFilter videofilter;
 
-  /* < private > */
   GstGLShader *shader;
 
   /* channels for interface */

@@ -129,6 +129,11 @@ enum
 
 static guint gst_gl_window_signals[LAST_SIGNAL] = { 0 };
 
+/**
+ * gst_gl_window_error_quark:
+ *
+ * Returns: the quark used for #GstGLWindow in #GError's
+ */
 GQuark
 gst_gl_window_error_quark (void)
 {

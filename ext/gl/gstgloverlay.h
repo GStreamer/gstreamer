@@ -53,7 +53,6 @@ struct _GstGLOverlay
 
   gdouble       alpha;
 
-  /* <private> */
   GstGLShader  *shader;
   GstGLMemory  *image_memory;
 

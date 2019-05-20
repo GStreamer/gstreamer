@@ -48,7 +48,7 @@ struct _GstGLDisplayEGL
 {
   GstGLDisplay          parent;
 
-  /* <private> */
+  /*< private >*/
   gpointer display;
 
   gboolean foreign_display;

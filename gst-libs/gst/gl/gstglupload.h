@@ -50,7 +50,7 @@ typedef enum
   GST_GL_UPLOAD_ERROR = -1,
   GST_GL_UPLOAD_UNSUPPORTED = -2,
   GST_GL_UPLOAD_RECONFIGURE = -3,
-  /* <private> */
+  /*< private >*/
   GST_GL_UPLOAD_UNSHARED_GL_CONTEXT = -100,
 } GstGLUploadReturn;
 
@@ -65,7 +65,7 @@ struct _GstGLUpload
 
   GstGLContext    *context;
 
-  /* <private> */
+  /*< private >*/
   GstGLUploadPrivate *priv;
 
   gpointer _reserved[GST_PADDING];
@@ -80,7 +80,7 @@ struct _GstGLUploadClass
 {
   GstObjectClass object_class;
 
-  /* <private> */
+  /*< private >*/
   gpointer _padding[GST_PADDING];
 };
 

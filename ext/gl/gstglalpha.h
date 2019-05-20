@@ -65,7 +65,6 @@ GstGLAlphaMethod;
 struct _GstGLAlpha {
   GstGLFilter videofilter;
 
-  /* < private > */
   GstGLShader *alpha_shader;
   GstGLShader *chroma_key_shader;
 

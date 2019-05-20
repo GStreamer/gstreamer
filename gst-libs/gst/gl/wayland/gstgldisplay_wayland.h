@@ -60,7 +60,7 @@ struct _GstGLDisplayWayland
   /* Basic shell, see private struct for others (e.g. XDG-shell) */
   struct wl_shell     *shell;
 
-  /* <private> */
+  /*< private >*/
   gboolean foreign_display;
 
   gpointer _padding[GST_PADDING];

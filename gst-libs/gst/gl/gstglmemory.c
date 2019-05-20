@@ -363,8 +363,8 @@ gst_gl_memory_init (GstGLMemory * mem, GstAllocator * allocator,
  * @read_pointer: the data pointer to pass to glReadPixels
  *
  * Reads the texture in #GstGLMemory into @read_pointer if no buffer is bound
- * to %GL_PIXEL_PACK_BUFFER.  Otherwise @read_pointer is the byte offset into
- * the currently bound %GL_PIXEL_PACK_BUFFER buffer to store the result of
+ * to `GL_PIXEL_PACK_BUFFER`.  Otherwise @read_pointer is the byte offset into
+ * the currently bound `GL_PIXEL_PACK_BUFFER` buffer to store the result of
  * glReadPixels.  See the OpenGL specification for glReadPixels for more
  * details.
  *

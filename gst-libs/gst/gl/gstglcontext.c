@@ -246,6 +246,11 @@ G_DEFINE_TYPE (GstGLWrappedContext, gst_gl_wrapped_context,
 #define GST_IS_GL_WRAPPED_CONTEXT_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_GL_WRAPPED_CONTEXT))
 #define GST_GL_WRAPPED_CONTEXT_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_GL_WRAPPED_CONTEXT, GstGLWrappedContextClass))
 
+/**
+ * gst_gl_context_error_quark:
+ *
+ * Returns: the quark used for #GstGLContext in #GError's
+ */
 GQuark
 gst_gl_context_error_quark (void)
 {
@@ -837,7 +842,7 @@ gst_gl_context_get_gl_api (GstGLContext * context)
  *
  * Note: On success, you need to cast the returned function pointer to the
  * correct type to be able to call it correctly.  On 32-bit Windows, this will
- * include the %GSTGLAPI identifier to use the correct calling convention.
+ * include the `GSTGLAPI` identifier to use the correct calling convention.
  * e.g.
  *
  * |[<!-- language="C" -->

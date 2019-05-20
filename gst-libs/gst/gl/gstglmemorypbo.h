@@ -44,7 +44,7 @@ GType gst_gl_memory_pbo_allocator_get_type(void);
  */
 struct _GstGLMemoryPBO
 {
-  /* <private> */
+  /*< private >*/
   GstGLMemory      mem;
 
   GstGLBuffer          *pbo;
@@ -88,7 +88,7 @@ struct _GstGLMemoryPBOAllocator
 {
   GstGLMemoryAllocator parent;
 
-  /* <private> */
+  /*< private >*/
   gpointer             _padding[GST_PADDING];
 };
 
@@ -101,7 +101,7 @@ struct _GstGLMemoryPBOAllocatorClass
 {
   GstGLMemoryAllocatorClass parent_class;
 
-  /* <private> */
+  /*< private >*/
   gpointer                  _padding[GST_PADDING];
 };
 

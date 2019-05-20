@@ -44,7 +44,7 @@ GType gst_gl_color_convert_get_type (void);
  */
 struct _GstGLColorConvert
 {
-  /* <private> */
+  /*< private >*/
   GstObject        parent;
 
   GstGLContext    *context;
@@ -63,7 +63,7 @@ struct _GstGLColorConvert
   GstGLFramebuffer *fbo;
   GstGLShader     *shader;
 
-  /* <private> */
+  /*< private >*/
   GstGLColorConvertPrivate *priv;
 
   gpointer _reserved[GST_PADDING];
@@ -76,7 +76,7 @@ struct _GstGLColorConvert
  */
 struct _GstGLColorConvertClass
 {
-  /* <private> */
+  /*< private >*/
   GstObjectClass object_class;
 
   gpointer _padding[GST_PADDING];

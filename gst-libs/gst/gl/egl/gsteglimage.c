@@ -27,11 +27,11 @@
  * @title: GstEGLImage
  * @see_also: #GstGLMemoryEGL, #GstGLContext
  *
- * #GstEGLImage represents and holds an #EGLImage handle.
+ * #GstEGLImage represents and holds an `EGLImage` handle.
  *
  * A #GstEGLImage can be created from a dmabuf with gst_egl_image_from_dmabuf(),
  * or gst_egl_image_from_dmabuf_direct(), or #GstGLMemoryEGL provides a
- * #GstAllocator to allocate #EGLImage's bound to and OpenGL texture.
+ * #GstAllocator to allocate `EGLImage`'s bound to and OpenGL texture.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -200,7 +200,7 @@ gst_egl_image_ensure_debug_category (void)
  * gst_egl_image_get_image:
  * @image: a #GstEGLImage
  *
- * Returns: the #EGLImageKHR of @image
+ * Returns: the `EGLImage` of @image
  */
 gpointer
 gst_egl_image_get_image (GstEGLImage * image)
@@ -400,7 +400,7 @@ _destroy_egl_image (GstEGLImage * image, gpointer user_data)
  * gst_egl_image_from_texture:
  * @context: a #GstGLContext (must be an EGL context)
  * @gl_mem: a #GstGLMemory
- * @attribs: additional attributes to add to the eglCreateImage() call.
+ * @attribs: additional attributes to add to the `eglCreateImage`() call.
  *
  * Returns: (transfer full): a #GstEGLImage wrapping @gl_mem or %NULL on failure
  */

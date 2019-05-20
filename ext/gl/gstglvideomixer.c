@@ -545,7 +545,6 @@ struct _GstGLVideoMixerPad
 {
   GstGLMixerPad parent;
 
-  /* < private > */
   /* properties */
   gint xpos, ypos;
   gint width, height;

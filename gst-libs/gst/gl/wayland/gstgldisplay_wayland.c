@@ -18,6 +18,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstgldisplay_wayland
+ * @short_description: Wayland display connection
+ * @title: GstGLDisplayWayland
+ * @see_also: #GstGLDisplay
+ *
+ * #GstGLDisplayWayland represents a connection to a Wayland `wl_display` handle
+ * created internally (gst_gl_display_wayland_new()) or wrapped by the application
+ * (gst_gl_display_wayland_new_with_display())
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -137,7 +148,7 @@ gst_gl_display_wayland_finalize (GObject * object)
  * gst_gl_display_wayland_new:
  * @name: (allow-none): a display name
  *
- * Create a new #GstGLDisplayWayland from the wayland display name.  See wl_display_connect()
+ * Create a new #GstGLDisplayWayland from the wayland display name.  See `wl_display_connect`()
  * for details on what is a valid name.
  *
  * Returns: (transfer full): a new #GstGLDisplayWayland or %NULL

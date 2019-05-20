@@ -18,6 +18,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstglfeature
+ * @short_description: OpenGL feature checking
+ * @title: GstGLFeature
+ * @see_also: #GstGLContext
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

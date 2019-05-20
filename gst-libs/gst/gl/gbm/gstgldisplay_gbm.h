@@ -48,7 +48,7 @@ struct _GstGLDisplayGBM
 {
   GstGLDisplay parent;
 
-  /* <private> */
+  /*< private >*/
 
   int drm_fd;
   drmModeRes *drm_mode_resources;

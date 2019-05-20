@@ -51,7 +51,7 @@ struct _GstGLDisplayVivFB
 {
   GstGLDisplay          parent;
 
-  /* <private> */
+  /*< private >*/
   gint disp_idx;
   EGLNativeDisplayType display;
 };
