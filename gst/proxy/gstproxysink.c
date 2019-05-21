@@ -67,6 +67,10 @@ static gboolean gst_proxy_sink_sink_event (GstPad * pad, GstObject * parent,
 static GstStateChangeReturn gst_proxy_sink_change_state (GstElement * element,
     GstStateChange transition);
 
+static gboolean gst_proxy_sink_send_event (GstElement * element,
+    GstEvent * event);
+static gboolean gst_proxy_sink_query (GstElement * element, GstQuery * query);
+
 static void
 gst_proxy_sink_class_init (GstProxySinkClass * klass)
 {
@@ -75,6 +79,8 @@ gst_proxy_sink_class_init (GstProxySinkClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_proxy_sink_debug, "proxysink", 0, "proxy sink");
 
   gstelement_class->change_state = gst_proxy_sink_change_state;
+  gstelement_class->send_event = gst_proxy_sink_send_event;
+  gstelement_class->query = gst_proxy_sink_query;
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
@@ -120,6 +126,31 @@ gst_proxy_sink_change_state (GstElement * element, GstStateChange transition)
   ret = gstelement_class->change_state (element, transition);
 
   return ret;
+}
+
+static gboolean
+gst_proxy_sink_send_event (GstElement * element, GstEvent * event)
+{
+  GstProxySink *self = GST_PROXY_SINK (element);
+
+  if (GST_EVENT_IS_UPSTREAM (event)) {
+    return gst_pad_push_event (self->sinkpad, event);
+  } else {
+    gst_event_unref (event);
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_proxy_sink_query (GstElement * element, GstQuery * query)
+{
+  GstProxySink *self = GST_PROXY_SINK (element);
+
+  if (GST_QUERY_IS_UPSTREAM (query)) {
+    return gst_pad_peer_query (self->sinkpad, query);
+  } else {
+    return FALSE;
+  }
 }
 
 static gboolean
