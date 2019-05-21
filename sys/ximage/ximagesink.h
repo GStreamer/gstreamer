@@ -81,6 +81,8 @@ typedef struct _GstXImageSinkClass GstXImageSinkClass;
  * @heightmm ratio
  * @use_xshm: used to known whether of not XShm extension is usable or not even
  * if the Extension is present
+ * @use_xkb: used to known wether of not Xkb extension is usable or not even
+ * if the Extension is present
  * @caps: the #GstCaps that Display @disp can accept
  *
  * Structure used to store various information collected/calculated for a
@@ -107,6 +109,7 @@ struct _GstXContext
   GValue *par;                  /* calculated pixel aspect ratio */
 
   gboolean use_xshm;
+  gboolean use_xkb;
 
   GstCaps *caps;
   GstCaps *last_caps;

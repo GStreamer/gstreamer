@@ -631,8 +631,13 @@ gst_x_image_sink_handle_xevents (GstXImageSink * ximagesink)
         /* Key pressed/released over our window. We send upstream
            events for interactivity/navigation */
         g_mutex_lock (&ximagesink->x_lock);
-        keysym = XkbKeycodeToKeysym (ximagesink->xcontext->disp,
-            e.xkey.keycode, 0, 0);
+        if (ximagesink->xcontext->use_xkb) {
+          keysym = XkbKeycodeToKeysym (ximagesink->xcontext->disp,
+              e.xkey.keycode, 0, 0);
+        } else {
+          keysym = XKeycodeToKeysym (ximagesink->xcontext->disp,
+              e.xkey.keycode, 0);
+        }
         if (keysym != NoSymbol) {
           key_str = XKeysymToString (keysym);
         } else {
@@ -844,6 +849,9 @@ gst_x_image_sink_xcontext_get (GstXImageSink * ximagesink)
   gint endianness;
   GstVideoFormat vformat;
   guint32 alpha_mask;
+  int opcode, event, err;
+  int major = XkbMajorVersion;
+  int minor = XkbMinorVersion;
 
   g_return_val_if_fail (GST_IS_X_IMAGE_SINK (ximagesink), NULL);
 
@@ -914,6 +922,13 @@ gst_x_image_sink_xcontext_get (GstXImageSink * ximagesink)
   {
     xcontext->use_xshm = FALSE;
     GST_DEBUG ("ximagesink is not using XShm extension");
+  }
+  if (XkbQueryExtension (xcontext->disp, &opcode, &event, &err, &major, &minor)) {
+    xcontext->use_xkb = TRUE;
+    GST_DEBUG ("ximagesink is using Xkb extension");
+  } else {
+    xcontext->use_xkb = FALSE;
+    GST_DEBUG ("ximagesink is not using Xkb extension");
   }
 
   /* extrapolate alpha mask */

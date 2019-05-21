@@ -636,6 +636,9 @@ gst_xvcontext_new (GstXvContextConfig * config, GError ** error)
   const char *channels[4] = { "XV_HUE", "XV_SATURATION",
     "XV_BRIGHTNESS", "XV_CONTRAST"
   };
+  int opcode, event, err;
+  int major = XkbMajorVersion;
+  int minor = XkbMinorVersion;
 
   g_return_val_if_fail (config != NULL, NULL);
 
@@ -717,6 +720,13 @@ gst_xvcontext_new (GstXvContextConfig * config, GError ** error)
   {
     context->use_xshm = FALSE;
     GST_DEBUG ("xvimagesink is not using XShm extension");
+  }
+  if (XkbQueryExtension (context->disp, &opcode, &event, &err, &major, &minor)) {
+    context->use_xkb = TRUE;
+    GST_DEBUG ("xvimagesink is using Xkb extension");
+  } else {
+    context->use_xkb = FALSE;
+    GST_DEBUG ("xvimagesink is not using Xkb extension");
   }
 
   xv_attr = XvQueryPortAttributes (context->disp, context->xv_port_id, &N_attr);

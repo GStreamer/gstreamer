@@ -485,8 +485,13 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
         /* Key pressed/released over our window. We send upstream
            events for interactivity/navigation */
         g_mutex_lock (&xvimagesink->context->lock);
-        keysym = XkbKeycodeToKeysym (xvimagesink->context->disp,
-            e.xkey.keycode, 0, 0);
+        if (xvimagesink->context->use_xkb) {
+          keysym = XkbKeycodeToKeysym (xvimagesink->context->disp,
+              e.xkey.keycode, 0, 0);
+        } else {
+          keysym = XKeycodeToKeysym (xvimagesink->context->disp,
+              e.xkey.keycode, 0);
+        }
         if (keysym != NoSymbol) {
           key_str = XKeysymToString (keysym);
         } else {

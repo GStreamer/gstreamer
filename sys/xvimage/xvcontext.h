@@ -110,6 +110,8 @@ struct _GstXvImageFormat
  * @heightmm ratio
  * @use_xshm: used to known whether of not XShm extension is usable or not even
  * if the Extension is present
+ * @use_xkb: used to known wether of not Xkb extension is usable or not even
+ * if the Extension is present
  * @xv_port_id: the XVideo port ID
  * @im_format: used to store at least a valid format for XShm calls checks
  * @formats_list: list of supported image formats on @xv_port_id
@@ -145,6 +147,7 @@ struct _GstXvContext
   GValue *par;                  /* calculated pixel aspect ratio */
 
   gboolean use_xshm;
+  gboolean use_xkb;
 
   XvPortID xv_port_id;
   guint nb_adaptors;
