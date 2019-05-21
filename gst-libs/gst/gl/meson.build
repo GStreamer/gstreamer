@@ -112,6 +112,7 @@ glconf_options = [
     'GST_GL_HAVE_WINDOW_X11',
     'GST_GL_HAVE_WINDOW_COCOA',
     'GST_GL_HAVE_WINDOW_WIN32',
+    'GST_GL_HAVE_WINDOW_WINRT',
     'GST_GL_HAVE_WINDOW_WAYLAND',
     'GST_GL_HAVE_WINDOW_ANDROID',
     'GST_GL_HAVE_WINDOW_DISPMANX',
@@ -232,6 +233,7 @@ if gl_winsys.contains('auto')
   need_win_x11 = 'auto'
   need_win_wayland = 'auto'
   need_win_win32 = 'auto'
+  need_win_winrt = 'auto'
   need_win_cocoa = 'auto'
   need_win_eagl = 'auto'
   need_win_dispmanx = 'auto'
@@ -242,6 +244,7 @@ else
   need_win_x11 = 'no'
   need_win_wayland = 'no'
   need_win_win32 = 'no'
+  need_win_winrt = 'no'
   need_win_cocoa = 'no'
   need_win_eagl = 'no'
   need_win_dispmanx = 'no'
@@ -255,6 +258,8 @@ else
       need_win_wayland = 'yes'
     elif winsys == 'win32'
       need_win_win32 = 'yes'
+    elif winsys == 'winrt'
+      need_win_winrt = 'yes'
     elif winsys == 'cocoa'
       need_win_cocoa = 'yes'
     elif winsys == 'eagl'
@@ -655,7 +660,6 @@ endif
 
 if need_platform_wgl != 'no' and need_win_win32 != 'no'
   gdi_dep = cc.find_library('gdi32', required : false)
-  # FIXME: Revert back to has_header once it gains prefix support
   wglext_h = cc.has_header('GL/wglext.h',
                            prefix : '''#include <windows.h>
                                        #include <GL/gl.h>''',
@@ -674,6 +678,32 @@ if need_platform_wgl != 'no' and need_win_win32 != 'no'
     enabled_gl_platforms += 'wgl'
     glconf.set('GST_GL_HAVE_WINDOW_WIN32', 1)
     glconf.set('GST_GL_HAVE_PLATFORM_WGL', 1)
+  endif
+endif
+
+# WinRT ANGLE checks
+if need_win_winrt != 'no' and host_system == 'windows'
+  if need_win_winrt == 'yes' and not enabled_gl_platforms.contains('egl')
+    error('Impossible situation requested: Cannot use WinRT ANGLE without EGL support')
+  endif
+
+  if egl_dep.found()
+    windows_graphics_h = cc.has_header('windows.graphics.h')
+    windows_app_dep = cc.find_library('WindowsApp', required: false)
+
+    if windows_graphics_h and windows_app_dep.found()
+      enabled_gl_winsys += 'winrt'
+      glconf.set10('GST_GL_HAVE_WINDOW_WINRT', 1)
+      gl_sources += [
+        'winrt/gstglwindow_winrt_egl.c'
+      ]
+    elif need_win_winrt == 'yes'
+      error('WinRT is enabled, but headers/libraries were not found')
+    endif
+  elif need_win_winrt == 'yes'
+    error('WinRT ANGLE is enabled, but EGL was not found')
+  else
+    message('WinRT ANGLE disabled because EGL was not found')
   endif
 endif
 

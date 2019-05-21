@@ -1,6 +1,4 @@
 /* gstglconfig.h
- *
- * This is a generated file.  Please modify `configure.ac'
  */
 
 #ifndef __GST_GL_CONFIG_H__
@@ -19,6 +17,7 @@ G_BEGIN_DECLS
 #mesondefine GST_GL_HAVE_WINDOW_X11
 #mesondefine GST_GL_HAVE_WINDOW_COCOA
 #mesondefine GST_GL_HAVE_WINDOW_WIN32
+#mesondefine GST_GL_HAVE_WINDOW_WINRT
 #mesondefine GST_GL_HAVE_WINDOW_WAYLAND
 #mesondefine GST_GL_HAVE_WINDOW_ANDROID
 #mesondefine GST_GL_HAVE_WINDOW_DISPMANX

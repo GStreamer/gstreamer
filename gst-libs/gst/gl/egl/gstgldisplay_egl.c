@@ -59,6 +59,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 #ifndef EGL_PLATFORM_DEVICE_EXT
 #define EGL_PLATFORM_DEVICE_EXT 0x313F
 #endif
+#ifndef EGL_PLATFORM_ANGLE_ANGLE
+#define EGL_PLATFORM_ANGLE_ANGLE 0x3202
+#endif
 
 typedef EGLDisplay (*_gst_eglGetPlatformDisplay_type) (EGLenum platform,
     void *native_display, const EGLint * attrib_list);
@@ -122,7 +125,7 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
 {
   const gchar *egl_exts;
   EGLDisplay ret = EGL_NO_DISPLAY;
-  _gst_eglGetPlatformDisplay_type _gst_eglGetPlatformDisplay;
+  _gst_eglGetPlatformDisplay_type _gst_eglGetPlatformDisplay = NULL;
 
   g_return_val_if_fail (type != GST_GL_DISPLAY_TYPE_NONE, EGL_NO_DISPLAY);
   g_return_val_if_fail ((type != GST_GL_DISPLAY_TYPE_ANY && display != 0)
@@ -147,8 +150,11 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
   if (!gst_gl_check_extension ("EGL_EXT_platform_base", egl_exts))
     goto default_display;
 
+  /* we need EXT for WinRT to pass attributes */
+#if !GST_GL_HAVE_WINDOW_WINRT
   _gst_eglGetPlatformDisplay = (_gst_eglGetPlatformDisplay_type)
       eglGetProcAddress ("eglGetPlatformDisplay");
+#endif
   if (!_gst_eglGetPlatformDisplay)
     _gst_eglGetPlatformDisplay = (_gst_eglGetPlatformDisplay_type)
         eglGetProcAddress ("eglGetPlatformDisplayEXT");
@@ -180,6 +186,34 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
         NULL);
   }
 #endif
+#if GST_GL_HAVE_WINDOW_WINRT
+  if (ret == EGL_NO_DISPLAY && (type & GST_GL_DISPLAY_TYPE_EGL) &&
+      (gst_gl_check_extension ("EGL_ANGLE_platform_angle", egl_exts) ||
+          gst_gl_check_extension ("EGL_ANGLE_platform_angle", egl_exts))) {
+    const EGLint attrs[] = {
+      /* These are the default display attributes, used to request ANGLE's
+       * D3D11 renderer. eglInitialize will only succeed with these
+       * attributes if the hardware supports D3D11 Feature Level 10_0+. */
+      EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
+
+      /* EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER is an optimization
+       * that can have large performance benefits on mobile devices. Its
+       * syntax is subject to change, though. Please update your Visual
+       * Studio templates if you experience compilation issues with it. */
+      EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER, EGL_TRUE,
+
+      /* EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE is an option that
+       * enables ANGLE to automatically call the IDXGIDevice3::Trim method
+       * on behalf of the application when it gets suspended. Calling
+       * IDXGIDevice3::Trim when an application is suspended is a Windows
+       * Store application certification requirement. */
+      EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE, EGL_TRUE,
+      EGL_NONE,
+    };
+    ret = _gst_eglGetPlatformDisplay (EGL_PLATFORM_ANGLE_ANGLE,
+        (gpointer) display, attrs);
+  }
+#endif
   if (ret == EGL_NO_DISPLAY && (type & GST_GL_DISPLAY_TYPE_EGL_DEVICE) &&
       (gst_gl_check_extension ("EGL_EXT_device_base", egl_exts) &&
           gst_gl_check_extension ("EGL_EXT_platform_device", egl_exts))) {
@@ -187,7 +221,6 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
         _gst_eglGetPlatformDisplay (EGL_PLATFORM_DEVICE_EXT, (gpointer) display,
         NULL);
   }
-
   /* android only has one winsys/display connection */
 
   if (ret != EGL_NO_DISPLAY)

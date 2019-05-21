@@ -804,11 +804,22 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     window_handle = gst_gl_window_get_window_handle (window);
 
   if (window_handle) {
+#if GST_GL_HAVE_WINDOW_WINRT
+    const EGLint attrs[] = {
+      /* EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER is an optimization that can
+       * have large performance benefits on mobile devices. */
+      EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER, EGL_TRUE,
+      EGL_NONE
+    };
+#else
+    const EGLint *attrs = NULL;
+#endif
+
     GST_DEBUG ("Creating EGLSurface from window_handle %p",
         (void *) window_handle);
     egl->egl_surface =
         eglCreateWindowSurface (egl->egl_display, egl->egl_config,
-        (EGLNativeWindowType) window_handle, NULL);
+        (EGLNativeWindowType) window_handle, attrs);
     /* Store window handle for later comparision */
     egl->window_handle = window_handle;
   } else if (!gst_gl_check_extension ("EGL_KHR_surfaceless_context",
@@ -906,6 +917,16 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
       gst_object_unref (window);
     }
     if (handle && handle != egl->window_handle) {
+#if GST_GL_HAVE_WINDOW_WINRT
+      const EGLint attrs[] = {
+        /* EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER is an optimization that can
+         * have large performance benefits on mobile devices. */
+        EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER, EGL_TRUE,
+        EGL_NONE
+      };
+#else
+      const EGLint *attrs = NULL;
+#endif
       GST_DEBUG_OBJECT (context,
           "Handle changed (have:%p, now:%p), switching surface",
           (void *) egl->window_handle, (void *) handle);
@@ -920,7 +941,7 @@ gst_gl_context_egl_activate (GstGLContext * context, gboolean activate)
       }
       egl->egl_surface =
           eglCreateWindowSurface (egl->egl_display, egl->egl_config,
-          (EGLNativeWindowType) handle, NULL);
+          (EGLNativeWindowType) handle, attrs);
       egl->window_handle = handle;
 
       if (egl->egl_surface == EGL_NO_SURFACE) {

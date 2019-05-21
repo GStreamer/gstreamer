@@ -68,6 +68,9 @@
 #if GST_GL_HAVE_WINDOW_DISPMANX
 #include "dispmanx/gstglwindow_dispmanx_egl.h"
 #endif
+#if GST_GL_HAVE_WINDOW_WINRT
+#include "winrt/gstglwindow_winrt_egl.h"
+#endif
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
 #define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))
@@ -289,6 +292,10 @@ gst_gl_window_new (GstGLDisplay * display)
 #if GST_GL_HAVE_WINDOW_GBM
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "gbm")))
     window = GST_GL_WINDOW (gst_gl_window_gbm_egl_new (display));
+#endif
+#if GST_GL_HAVE_WINDOW_WINRT
+  if (!window && (!user_choice || g_strstr_len (user_choice, 5, "winrt")))
+    window = GST_GL_WINDOW (gst_gl_window_winrt_egl_new (display));
 #endif
 
   if (!window) {
