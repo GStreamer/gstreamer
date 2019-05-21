@@ -134,6 +134,7 @@ struct _GstValidateScenarioPrivate
 
   GstEvent *last_seek;
   GstSeekFlags seek_flags;
+  GstFormat seek_format;
   GstClockTime segment_start;
   GstClockTime segment_stop;
   GstClockTime seek_pos_tol;
@@ -694,18 +695,42 @@ gst_validate_scenario_execute_seek (GstValidateScenario * scenario,
   seek = gst_event_new_seek (rate, format, flags, start_type, start,
       stop_type, stop);
 
+  if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Trying to seek in format %d, but not support yet!", format);
+
+  }
+
   gst_event_ref (seek);
   if (gst_element_send_event (pipeline, seek)) {
     gst_event_replace (&priv->last_seek, seek);
     priv->seek_flags = flags;
+    priv->seek_format = format;
   } else {
-    GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
-        "Could not execute seek: '(position %" GST_TIME_FORMAT
-        "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
-        " stop: %" GST_TIME_FORMAT " Rate %lf'",
-        GST_TIME_ARGS (action->playback_time), action->name,
-        action->action_number, action->repeat, GST_TIME_ARGS (start),
-        GST_TIME_ARGS (stop), rate);
+    switch (format) {
+      case GST_FORMAT_TIME:
+        GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
+            "Could not execute seek: '(position %" GST_TIME_FORMAT
+            "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
+            " stop: %" GST_TIME_FORMAT " Rate %lf'",
+            GST_TIME_ARGS (action->playback_time), action->name,
+            action->action_number, action->repeat, GST_TIME_ARGS (start),
+            GST_TIME_ARGS (stop), rate);
+        break;
+      default:
+      {
+        gchar *format_str = g_enum_to_string (GST_TYPE_FORMAT, format);
+
+        GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
+            "Could not execute seek in format %s '(position %" GST_TIME_FORMAT
+            "), %s (num %u, missing repeat: %i), seeking to: %" G_GINT64_FORMAT
+            " stop: %" G_GINT64_FORMAT " Rate %lf'", format_str,
+            GST_TIME_ARGS (action->playback_time), action->name,
+            action->action_number, action->repeat, start, stop, rate);
+        g_free (format_str);
+        break;
+      }
+    }
     ret = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
   }
   gst_event_unref (seek);
@@ -1638,7 +1663,8 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
   if ((GST_CLOCK_TIME_IS_VALID (stop_with_tolerance)
           && *position > stop_with_tolerance)
       || (priv->seek_flags & GST_SEEK_FLAG_ACCURATE
-          && *position < start_with_tolerance)) {
+          && *position < start_with_tolerance
+          && priv->seek_format == GST_FORMAT_TIME)) {
 
     GST_VALIDATE_REPORT (scenario, QUERY_POSITION_OUT_OF_SEGMENT,
         "Current position %" GST_TIME_FORMAT " not in the expected range [%"
@@ -1660,7 +1686,8 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
   gst_query_unref (query);
   gst_object_unref (pipeline);
 
-  if (priv->seeked_in_pause && priv->seek_flags & GST_SEEK_FLAG_ACCURATE) {
+  if (priv->seeked_in_pause && priv->seek_flags & GST_SEEK_FLAG_ACCURATE &&
+      priv->seek_format == GST_FORMAT_TIME) {
     if ((*rate > 0 && (*position >= priv->segment_start + priv->seek_pos_tol ||
                 *position < ((priv->segment_start <
                         priv->seek_pos_tol) ? 0 : priv->segment_start -

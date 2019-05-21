@@ -2083,7 +2083,7 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
     GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
     /* Safely store pending accurate seek values */
     if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
-      if (seek_flags & GST_SEEK_FLAG_ACCURATE) {
+      if (seek_flags & GST_SEEK_FLAG_ACCURATE && format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (pad,
             "Storing expected accurate seek time %" GST_TIME_FORMAT,
             GST_TIME_ARGS (start));
