@@ -95,6 +95,9 @@ struct _GstVulkanSwapperClass
 GstVulkanSwapper *  gst_vulkan_swapper_new                      (GstVulkanDevice * device,
                                                                  GstVulkanWindow * window);
 
+gboolean            gst_vulkan_swapper_choose_queue             (GstVulkanSwapper * swapper,
+                                                                 GstVulkanQueue * available_queue,
+                                                                 GError ** error);
 GstCaps *           gst_vulkan_swapper_get_supported_caps       (GstVulkanSwapper * swapper,
                                                                  GError ** error);
 gboolean            gst_vulkan_swapper_set_caps                 (GstVulkanSwapper * swapper,

@@ -244,46 +244,80 @@ _choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
   return TRUE;
 }
 
+/*
+ * gst_vulkan_swapper_choose_queue:
+ * @swapper: a #GstVulkanSwapper
+ * @available_queue: (transfer none): a #GstVulkanQueue chosen elsewhere
+ * @error: a #GError
+ */
+gboolean
+gst_vulkan_swapper_choose_queue (GstVulkanSwapper * swapper,
+    GstVulkanQueue * available_queue, GError ** error)
+{
+  if (!_vulkan_swapper_ensure_surface (swapper, error))
+    return FALSE;
+
+  if (swapper->queue)
+    return TRUE;
+
+  if (available_queue) {
+    guint flags =
+        swapper->device->queue_family_props[available_queue->family].queueFlags;
+    gboolean supports_present;
+
+    supports_present =
+        gst_vulkan_window_get_presentation_support (swapper->window,
+        swapper->device, available_queue->index);
+    if (supports_present && flags & VK_QUEUE_GRAPHICS_BIT)
+      swapper->queue = gst_object_ref (available_queue);
+  }
+
+  if (!swapper->queue) {
+    struct choose_data data;
+
+    data.swapper = swapper;
+    data.present_queue = NULL;
+    data.graphics_queue = NULL;
+
+    gst_vulkan_device_foreach_queue (swapper->device,
+        (GstVulkanDeviceForEachQueueFunc) _choose_queue, &data);
+
+    if (data.graphics_queue != data.present_queue) {
+      /* FIXME: add support for separate graphics/present queues */
+      g_set_error (error, GST_VULKAN_ERROR,
+          VK_ERROR_INITIALIZATION_FAILED,
+          "Failed to find a compatible present/graphics queue");
+      if (data.present_queue)
+        gst_object_unref (data.present_queue);
+      if (data.graphics_queue)
+        gst_object_unref (data.graphics_queue);
+      return FALSE;
+    }
+
+    swapper->queue = gst_object_ref (data.present_queue);
+    if (data.present_queue)
+      gst_object_unref (data.present_queue);
+    if (data.graphics_queue)
+      gst_object_unref (data.graphics_queue);
+  }
+
+  return TRUE;
+}
+
 static gboolean
 _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
     GError ** error)
 {
-  struct choose_data data;
   VkPhysicalDevice gpu;
   VkResult err;
 
   if (swapper->surf_formats)
     return TRUE;
 
-  if (!_vulkan_swapper_ensure_surface (swapper, error))
-    return FALSE;
-
   gpu = gst_vulkan_device_get_physical_device (swapper->device);
 
-  data.swapper = swapper;
-  data.present_queue = NULL;
-  data.graphics_queue = NULL;
-
-  gst_vulkan_device_foreach_queue (swapper->device,
-      (GstVulkanDeviceForEachQueueFunc) _choose_queue, &data);
-
-  if (data.graphics_queue != data.present_queue) {
-    /* FIXME: add support for separate graphics/present queues */
-    g_set_error (error, GST_VULKAN_ERROR,
-        VK_ERROR_INITIALIZATION_FAILED,
-        "Failed to find a compatible present/graphics queue");
-    if (data.present_queue)
-      gst_object_unref (data.present_queue);
-    if (data.graphics_queue)
-      gst_object_unref (data.graphics_queue);
+  if (!gst_vulkan_swapper_choose_queue (swapper, NULL, error))
     return FALSE;
-  }
-
-  swapper->queue = gst_object_ref (data.present_queue);
-  if (data.present_queue)
-    gst_object_unref (data.present_queue);
-  if (data.graphics_queue)
-    gst_object_unref (data.graphics_queue);
 
   if (!(swapper->cmd_pool =
           gst_vulkan_queue_create_command_pool (swapper->queue, error)))

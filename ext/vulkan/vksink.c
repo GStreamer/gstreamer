@@ -272,7 +272,8 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
         g_clear_error (&error);
         return GST_STATE_CHANGE_FAILURE;
       }
-
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* FIXME: this probably doesn't need to be so early in the setup process */
       if (!(vk_sink->window =
               gst_vulkan_display_create_window (vk_sink->display))) {
@@ -301,8 +302,19 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
             ("Failed to create a swapper"), (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
+
+      {
+        GstVulkanQueue *queue = NULL;
+        GError *error = NULL;
+
+        gst_vulkan_queue_run_context_query (GST_ELEMENT (vk_sink), &queue);
+        if (!gst_vulkan_swapper_choose_queue (vk_sink->swapper, queue, &error)) {
+          GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
+              ("Swapper failed to choose a compatible Vulkan Queue"), ("%s",
+                  error->message));
+          return GST_STATE_CHANGE_FAILURE;
+        }
+      }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -318,19 +330,19 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
       if (vk_sink->swapper)
         gst_object_unref (vk_sink->swapper);
       vk_sink->swapper = NULL;
-      if (vk_sink->display)
-        gst_object_unref (vk_sink->display);
-      vk_sink->display = NULL;
       if (vk_sink->window) {
         gst_vulkan_window_close (vk_sink->window);
         gst_object_unref (vk_sink->window);
       }
       vk_sink->window = NULL;
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (vk_sink->display)
+        gst_object_unref (vk_sink->display);
+      vk_sink->display = NULL;
       if (vk_sink->device)
         gst_object_unref (vk_sink->device);
       vk_sink->device = NULL;
