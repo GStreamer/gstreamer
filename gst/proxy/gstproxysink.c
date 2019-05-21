@@ -97,6 +97,8 @@ gst_proxy_sink_init (GstProxySink * self)
   gst_pad_set_query_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_proxy_sink_sink_query));
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
+
+  GST_OBJECT_FLAG_SET (self, GST_ELEMENT_FLAG_SINK);
 }
 
 static GstStateChangeReturn
