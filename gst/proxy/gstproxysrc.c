@@ -226,6 +226,10 @@ gst_proxy_src_init (GstProxySrc * self)
   sinkpad = gst_element_get_static_pad (self->queue, "sink");
   gst_pad_link (self->internal_srcpad, sinkpad);
   gst_object_unref (sinkpad);
+
+  gst_bin_set_suppressed_flags (GST_BIN (self),
+      GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK);
+  GST_OBJECT_FLAG_SET (self, GST_ELEMENT_FLAG_SOURCE);
 }
 
 static void
