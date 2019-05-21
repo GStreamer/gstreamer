@@ -88,17 +88,25 @@ GST_START_TEST (test_buffer_mem_allocate)
 GST_END_TEST;
 
 static Suite *
-insert_bin_suite (void)
+vkmemory_suite (void)
 {
   Suite *s = suite_create ("vkmemory");
   TCase *tc_basic = tcase_create ("general");
+  gboolean have_instance;
 
   suite_add_tcase (s, tc_basic);
   tcase_add_checked_fixture (tc_basic, setup, teardown);
-  tcase_add_test (tc_basic, test_buffer_mem_allocate);
+
+  /* FIXME: CI doesn't have a software vulkan renderer (and none exists currently) */
+  instance = gst_vulkan_instance_new ();
+  have_instance = gst_vulkan_instance_open (instance, NULL);
+  gst_object_unref (instance);
+  if (have_instance) {
+    tcase_add_test (tc_basic, test_buffer_mem_allocate);
+  }
 
   return s;
 }
 
 
-GST_CHECK_MAIN (insert_bin);
+GST_CHECK_MAIN (vkmemory);
