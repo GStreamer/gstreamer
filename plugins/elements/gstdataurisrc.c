@@ -334,7 +334,7 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri,
   /* uri must be an URI as defined in RFC 2397
    * data:[<mediatype>][;base64],<data>
    */
-  if (strncmp ("data:", uri, 5) != 0)
+  if (g_ascii_strncasecmp ("data:", uri, 5) != 0)
     goto invalid_uri;
 
   uri += 5;
