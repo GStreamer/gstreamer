@@ -266,6 +266,8 @@ typedef enum /*< underscore_name=gst_webrtc_stats_type >*/
  * GstWebRTCFECType:
  * @GST_WEBRTC_FEC_TYPE_NONE: none
  * @GST_WEBRTC_FEC_TYPE_ULP_RED: ulpfec + red
+ *
+ * Since: 1.14.1
  */
 typedef enum /*< underscore_name=gst_webrtc_fec_type >*/
 {
@@ -281,6 +283,8 @@ typedef enum /*< underscore_name=gst_webrtc_fec_type >*/
  * GST_WEBRTC_SCTP_TRANSPORT_STATE_CLOSED: closed
  *
  * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate">http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate</ulink>
+ *
+ * Since: 1.16
  */
 typedef enum /*< underscore_name=gst_webrtc_sctp_transport_state >*/
 {
@@ -298,6 +302,8 @@ typedef enum /*< underscore_name=gst_webrtc_sctp_transport_state >*/
  * GST_WEBRTC_PRIORITY_TYPE_HIGH: high
  *
  * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype">http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype</ulink>
+ *
+ * Since: 1.16
  */
 typedef enum /*< underscore_name=gst_webrtc_priority_type >*/
 {
@@ -316,6 +322,8 @@ typedef enum /*< underscore_name=gst_webrtc_priority_type >*/
  * GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED: closed
  *
  * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate">http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate</ulink>
+ *
+ * Since: 1.16
  */
 typedef enum /*< underscore_name=gst_webrtc_data_channel_state >*/
 {
@@ -335,6 +343,8 @@ typedef enum /*< underscore_name=gst_webrtc_data_channel_state >*/
  *
  * See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
  * for more information.
+ *
+ * Since: 1.16
  */
 typedef enum /*<underscore_name=gst_webrtc_bundle_policy>*/
 {
@@ -351,6 +361,8 @@ typedef enum /*<underscore_name=gst_webrtc_bundle_policy>*/
  *
  * See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
  * for more information.
+ *
+ * Since: 1.16
  */
 typedef enum /*<underscore_name=gst_webrtc_ice_transport_policy>*/
 {
