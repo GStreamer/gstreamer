@@ -344,6 +344,9 @@ gst_data_uri_src_set_uri (GstURIHandler * handler, const gchar * uri,
   if (data_start == NULL)
     goto invalid_uri;
 
+  if (parameters_start > data_start)
+    parameters_start = NULL;
+
   if (data_start != uri && parameters_start != uri)
     mimetype =
         g_strndup (uri,
