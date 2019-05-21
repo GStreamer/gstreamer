@@ -28,7 +28,7 @@
  * stream passed to this element must be RTP payloaded already. Even though
  * RTP SSRC collision is rare in unidirectional streaming, this element expect
  * the upstream elements to obey to collision events and change the SSRC in
- * use. Collision will ocure when tranmitting and receiving over multicast on
+ * use. Collision will occur when transmitting and receiving over multicast on
  * the same host.
  *
  * ## Example launch line

@@ -24,9 +24,9 @@
  * @see_also: ristsink
  *
  * This element implements RIST TR-06-1 Simple Profile receiver. The stream
- * produced by this element will be RTP payloaded. This element also implement
+ * produced by this element will be RTP payloaded. This element also implements
  * the URI scheme `rist://` allowing to render RIST streams in GStreamer based
- * media players. The RIST uri handler also allow setting propertied through
+ * media players. The RIST URI handler also allows setting propertied through
  * the URI query.
  *
  * ## Example launch line
