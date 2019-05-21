@@ -4312,6 +4312,150 @@ gst_v4l2_object_get_caps (GstV4l2Object * v4l2object, GstCaps * filter)
   return ret;
 }
 
+static gboolean
+gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
+    gsize offset[GST_VIDEO_MAX_PLANES], gint stride[GST_VIDEO_MAX_PLANES],
+    gsize buffer_size, guint padded_height)
+{
+  guint p;
+  gboolean need_fmt_update = FALSE;
+
+  if (n_planes != GST_VIDEO_INFO_N_PLANES (&obj->info)) {
+    GST_WARNING_OBJECT (obj->dbg_obj,
+        "Cannot import buffers with different number planes");
+    return FALSE;
+  }
+
+  for (p = 0; p < n_planes; p++) {
+    if (stride[p] < obj->info.stride[p]) {
+      GST_DEBUG_OBJECT (obj->dbg_obj,
+          "Not importing as remote stride %i is smaller than %i on plane %u",
+          stride[p], obj->info.stride[p], p);
+      return FALSE;
+    } else if (stride[p] > obj->info.stride[p]) {
+      GST_LOG_OBJECT (obj->dbg_obj,
+          "remote stride %i is higher than %i on plane %u",
+          stride[p], obj->info.stride[p], p);
+      need_fmt_update = TRUE;
+    }
+
+    if (offset[p] < obj->info.offset[p]) {
+      GST_DEBUG_OBJECT (obj->dbg_obj,
+          "Not importing as offset %" G_GSIZE_FORMAT
+          " is smaller than %" G_GSIZE_FORMAT " on plane %u",
+          offset[p], obj->info.offset[p], p);
+      return FALSE;
+    } else if (offset[p] > obj->info.offset[p]) {
+      GST_LOG_OBJECT (obj->dbg_obj,
+          "Remote offset %" G_GSIZE_FORMAT
+          " is higher than %" G_GSIZE_FORMAT " on plane %u",
+          offset[p], obj->info.offset[p], p);
+      need_fmt_update = TRUE;
+    }
+  }
+
+  if (need_fmt_update) {
+    struct v4l2_format format;
+    gint wanted_stride[GST_VIDEO_MAX_PLANES] = { 0, };
+
+    format = obj->format;
+
+    if (padded_height) {
+      GST_DEBUG_OBJECT (obj->dbg_obj, "Padded height %u", padded_height);
+
+      obj->align.padding_bottom =
+          padded_height - GST_VIDEO_INFO_HEIGHT (&obj->info);
+    } else {
+      GST_WARNING_OBJECT (obj->dbg_obj,
+          "Failed to compute padded height; keep the default one");
+      padded_height = format.fmt.pix_mp.height;
+    }
+
+    /* update the current format with the stride we want to import from */
+    if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
+      guint i;
+
+      GST_DEBUG_OBJECT (obj->dbg_obj, "Wanted strides:");
+
+      for (i = 0; i < obj->n_v4l2_planes; i++) {
+        gint plane_stride = stride[i];
+
+        if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo))
+          plane_stride = GST_VIDEO_TILE_X_TILES (plane_stride) <<
+              GST_VIDEO_FORMAT_INFO_TILE_WS (obj->info.finfo);
+
+        format.fmt.pix_mp.plane_fmt[i].bytesperline = plane_stride;
+        format.fmt.pix_mp.height = padded_height;
+        wanted_stride[i] = plane_stride;
+        GST_DEBUG_OBJECT (obj->dbg_obj, "    [%u] %i", i, wanted_stride[i]);
+      }
+    } else {
+      gint plane_stride = stride[0];
+
+      GST_DEBUG_OBJECT (obj->dbg_obj, "Wanted stride: %i", plane_stride);
+
+      if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo))
+        plane_stride = GST_VIDEO_TILE_X_TILES (plane_stride) <<
+            GST_VIDEO_FORMAT_INFO_TILE_WS (obj->info.finfo);
+
+      format.fmt.pix.bytesperline = plane_stride;
+      format.fmt.pix.height = padded_height;
+      wanted_stride[0] = plane_stride;
+    }
+
+    if (obj->ioctl (obj->video_fd, VIDIOC_S_FMT, &format) < 0) {
+      GST_WARNING_OBJECT (obj->dbg_obj,
+          "Something went wrong trying to update current format: %s",
+          g_strerror (errno));
+      return FALSE;
+    }
+
+    gst_v4l2_object_save_format (obj, obj->fmtdesc, &format, &obj->info,
+        &obj->align);
+
+    if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
+      guint i;
+
+      for (i = 0; i < obj->n_v4l2_planes; i++) {
+        if (format.fmt.pix_mp.plane_fmt[i].bytesperline != wanted_stride[i]) {
+          GST_DEBUG_OBJECT (obj->dbg_obj,
+              "[%i] Driver did not accept the new stride (wants %i, got %i)",
+              i, wanted_stride[i], format.fmt.pix_mp.plane_fmt[i].bytesperline);
+          return FALSE;
+        }
+      }
+
+      if (format.fmt.pix_mp.height != padded_height) {
+        GST_DEBUG_OBJECT (obj->dbg_obj,
+            "Driver did not accept the padded height (wants %i, got %i)",
+            padded_height, format.fmt.pix_mp.height);
+      }
+    } else {
+      if (format.fmt.pix.bytesperline != wanted_stride[0]) {
+        GST_DEBUG_OBJECT (obj->dbg_obj,
+            "Driver did not accept the new stride (wants %i, got %i)",
+            wanted_stride[0], format.fmt.pix.bytesperline);
+        return FALSE;
+      }
+
+      if (format.fmt.pix.height != padded_height) {
+        GST_DEBUG_OBJECT (obj->dbg_obj,
+            "Driver did not accept the padded height (wants %i, got %i)",
+            padded_height, format.fmt.pix.height);
+      }
+    }
+  }
+
+  if (obj->align.padding_bottom) {
+    /* Crop because of vertical padding */
+    GST_DEBUG_OBJECT (obj->dbg_obj, "crop because of bottom padding of %d",
+        obj->align.padding_bottom);
+    gst_v4l2_object_set_crop (obj);
+  }
+
+  return TRUE;
+}
+
 gboolean
 gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 {
@@ -4689,145 +4833,14 @@ gst_v4l2_object_try_import (GstV4l2Object * obj, GstBuffer * buffer)
 
   /* we need matching strides/offsets and size */
   if (vmeta) {
-    guint p;
-    gboolean need_fmt_update = FALSE;
+    guint plane_height[GST_VIDEO_MAX_PLANES] = { 0, };
 
-    if (vmeta->n_planes != GST_VIDEO_INFO_N_PLANES (&obj->info)) {
-      GST_WARNING_OBJECT (obj->dbg_obj,
-          "Cannot import buffers with different number planes");
+    gst_video_meta_get_plane_height (vmeta, plane_height);
+
+    if (!gst_v4l2_object_match_buffer_layout (obj, vmeta->n_planes,
+            vmeta->offset, vmeta->stride, gst_buffer_get_size (buffer),
+            plane_height[0]))
       return FALSE;
-    }
-
-    for (p = 0; p < vmeta->n_planes; p++) {
-      if (vmeta->stride[p] < obj->info.stride[p]) {
-        GST_DEBUG_OBJECT (obj->dbg_obj,
-            "Not importing as remote stride %i is smaller than %i on plane %u",
-            vmeta->stride[p], obj->info.stride[p], p);
-        return FALSE;
-      } else if (vmeta->stride[p] > obj->info.stride[p]) {
-        GST_LOG_OBJECT (obj->dbg_obj,
-            "remote stride %i is higher than %i on plane %u",
-            vmeta->stride[p], obj->info.stride[p], p);
-        need_fmt_update = TRUE;
-      }
-
-      if (vmeta->offset[p] < obj->info.offset[p]) {
-        GST_DEBUG_OBJECT (obj->dbg_obj,
-            "Not importing as offset %" G_GSIZE_FORMAT
-            " is smaller than %" G_GSIZE_FORMAT " on plane %u",
-            vmeta->offset[p], obj->info.offset[p], p);
-        return FALSE;
-      } else if (vmeta->offset[p] > obj->info.offset[p]) {
-        GST_LOG_OBJECT (obj->dbg_obj,
-            "Remote offset %" G_GSIZE_FORMAT
-            " is higher than %" G_GSIZE_FORMAT " on plane %u",
-            vmeta->offset[p], obj->info.offset[p], p);
-        need_fmt_update = TRUE;
-      }
-    }
-
-    if (need_fmt_update) {
-      struct v4l2_format format;
-      gint wanted_stride[GST_VIDEO_MAX_PLANES] = { 0, };
-      guint32 padded_height;
-      guint plane_height[GST_VIDEO_MAX_PLANES];
-
-      format = obj->format;
-
-      if (gst_video_meta_get_plane_height (vmeta, plane_height)) {
-        padded_height = plane_height[0];
-        GST_DEBUG_OBJECT (obj->dbg_obj, "Padded height %u", padded_height);
-
-        obj->align.padding_bottom =
-            padded_height - GST_VIDEO_INFO_HEIGHT (&obj->info);
-      } else {
-        GST_WARNING_OBJECT (obj->dbg_obj,
-            "Failed to compute padded height; keep the default one");
-        padded_height = format.fmt.pix_mp.height;
-      }
-
-      /* update the current format with the stride we want to import from */
-      if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-        guint i;
-
-        GST_DEBUG_OBJECT (obj->dbg_obj, "Wanted strides:");
-
-        for (i = 0; i < obj->n_v4l2_planes; i++) {
-          gint stride = vmeta->stride[i];
-
-          if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo))
-            stride = GST_VIDEO_TILE_X_TILES (stride) <<
-                GST_VIDEO_FORMAT_INFO_TILE_WS (obj->info.finfo);
-
-          format.fmt.pix_mp.plane_fmt[i].bytesperline = stride;
-          format.fmt.pix_mp.height = padded_height;
-          wanted_stride[i] = stride;
-          GST_DEBUG_OBJECT (obj->dbg_obj, "    [%u] %i", i, wanted_stride[i]);
-        }
-      } else {
-        gint stride = vmeta->stride[0];
-
-        GST_DEBUG_OBJECT (obj->dbg_obj, "Wanted stride: %i", stride);
-
-        if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo))
-          stride = GST_VIDEO_TILE_X_TILES (stride) <<
-              GST_VIDEO_FORMAT_INFO_TILE_WS (obj->info.finfo);
-
-        format.fmt.pix.bytesperline = stride;
-        format.fmt.pix.height = padded_height;
-        wanted_stride[0] = stride;
-      }
-
-      if (obj->ioctl (obj->video_fd, VIDIOC_S_FMT, &format) < 0) {
-        GST_WARNING_OBJECT (obj->dbg_obj,
-            "Something went wrong trying to update current format: %s",
-            g_strerror (errno));
-        return FALSE;
-      }
-
-      gst_v4l2_object_save_format (obj, obj->fmtdesc, &format, &obj->info,
-          &obj->align);
-
-      if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-        guint i;
-
-        for (i = 0; i < obj->n_v4l2_planes; i++) {
-          if (format.fmt.pix_mp.plane_fmt[i].bytesperline != wanted_stride[i]) {
-            GST_DEBUG_OBJECT (obj->dbg_obj,
-                "[%i] Driver did not accept the new stride (wants %i, got %i)",
-                i, wanted_stride[i],
-                format.fmt.pix_mp.plane_fmt[i].bytesperline);
-            return FALSE;
-          }
-        }
-
-        if (format.fmt.pix_mp.height != padded_height) {
-          GST_DEBUG_OBJECT (obj->dbg_obj,
-              "Driver did not accept the padded height (wants %i, got %i)",
-              padded_height, format.fmt.pix_mp.height);
-        }
-      } else {
-        if (format.fmt.pix.bytesperline != wanted_stride[0]) {
-          GST_DEBUG_OBJECT (obj->dbg_obj,
-              "Driver did not accept the new stride (wants %i, got %i)",
-              wanted_stride[0], format.fmt.pix.bytesperline);
-          return FALSE;
-        }
-
-        if (format.fmt.pix.height != padded_height) {
-          GST_DEBUG_OBJECT (obj->dbg_obj,
-              "Driver did not accept the padded height (wants %i, got %i)",
-              padded_height, format.fmt.pix.height);
-        }
-      }
-    }
-
-    if (obj->align.padding_bottom) {
-      /* Crop because of vertical padding */
-      GST_DEBUG_OBJECT (obj->dbg_obj, "crop because of bottom padding of %d",
-          obj->align.padding_bottom);
-      gst_v4l2_object_set_crop (obj);
-    }
   }
 
   /* we can always import single memory buffer, but otherwise we need the same
