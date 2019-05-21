@@ -208,6 +208,12 @@ GType gst_mpegts_atsc_mgt_table_get_type (void);
 GST_MPEGTS_API
 const GstMpegtsAtscMGT * gst_mpegts_section_get_atsc_mgt (GstMpegtsSection * section);
 
+GST_MPEGTS_API
+GstMpegtsSection * gst_mpegts_section_from_atsc_mgt (GstMpegtsAtscMGT * mgt);
+
+GST_MPEGTS_API
+GstMpegtsAtscMGT * gst_mpegts_atsc_mgt_new (void);
+
 /* Multiple string structure (used in ETT and EIT */
 
 #define GST_TYPE_MPEGTS_ATSC_STRING_SEGMENT (gst_mpegts_atsc_string_segment_get_type())
@@ -237,6 +243,13 @@ struct _GstMpegtsAtscStringSegment {
 
 GST_MPEGTS_API
 const gchar * gst_mpegts_atsc_string_segment_get_string (GstMpegtsAtscStringSegment * seg);
+
+GST_MPEGTS_API
+gboolean
+gst_mpegts_atsc_string_segment_set_string (GstMpegtsAtscStringSegment * seg,
+                                           gchar *string,
+                                           guint8 compression_type,
+                                           guint8 mode);
 
 /**
  * GstMpegtsAtscMultString:
@@ -382,6 +395,96 @@ const GstMpegtsAtscSTT * gst_mpegts_section_get_atsc_stt (GstMpegtsSection * sec
 
 GST_MPEGTS_API
 GstDateTime * gst_mpegts_atsc_stt_get_datetime_utc (GstMpegtsAtscSTT * stt);
+
+GST_MPEGTS_API
+GstMpegtsSection * gst_mpegts_section_from_atsc_stt (GstMpegtsAtscSTT * stt);
+
+GST_MPEGTS_API
+GstMpegtsAtscSTT * gst_mpegts_atsc_stt_new (void);
+
+/* RRT */
+#define GST_TYPE_MPEGTS_ATSC_RRT (gst_mpegts_atsc_rrt_get_type ())
+#define GST_TYPE_MPEGTS_ATSC_RRT_DIMENSION (gst_mpegts_atsc_rrt_dimension_get_type ())
+#define GST_TYPE_MPEGTS_ATSC_RRT_DIMENSION_VALUE (gst_mpegts_atsc_rrt_dimension_value_get_type ())
+
+typedef struct _GstMpegtsAtscRRT GstMpegtsAtscRRT;
+typedef struct _GstMpegtsAtscRRTDimension GstMpegtsAtscRRTDimension;
+typedef struct _GstMpegtsAtscRRTDimensionValue GstMpegtsAtscRRTDimensionValue;
+
+/**
+ * GstMpegtsAtscRRTDimensionValue:
+ * @abbrev_ratings: (element-type GstMpegtsAtscMultString): the abbreviated ratings
+ * @ratings: (element-type GstMpegtsAtscMultString): the ratings
+ *
+ * Since: 1.18
+ */
+struct _GstMpegtsAtscRRTDimensionValue
+{
+  GPtrArray *abbrev_ratings;
+  GPtrArray *ratings;
+};
+
+/**
+ * _GstMpegtsAtscRRTDimension:
+ * @names: (element-type GstMpegtsAtscMultString): the names
+ * @graduated_scale: whether the ratings represent a graduated scale
+ * @values_defined: the number of values defined for this dimension
+ * @values: (element-type GstMpegtsAtscRRTDimensionValue): set of values
+ *
+ * Since: 1.18
+ */
+struct _GstMpegtsAtscRRTDimension
+{
+  GPtrArray * names;
+  gboolean    graduated_scale;
+  guint8      values_defined;
+  GPtrArray * values;
+};
+
+/**
+ * GstMpegtsAtscRRT:
+ * @protocol_version: The protocol version
+ * @names: (element-type GstMpegtsAtscMultString): the names
+ * @dimensions_defined: the number of dimensions defined for this rating table
+ * @dimensions: (element-type GstMpegtsAtscRRTDimension): A set of dimensions
+ * @descriptors: descriptors
+ *
+ * Region Rating Table (A65)
+ *
+ * Since: 1.18
+ */
+struct _GstMpegtsAtscRRT
+{
+  guint8      protocol_version;
+  GPtrArray * names;
+  guint8      dimensions_defined;
+  GPtrArray * dimensions;
+  GPtrArray * descriptors;
+};
+
+GST_MPEGTS_API
+GType gst_mpegts_atsc_rrt_get_type (void);
+
+GST_MPEGTS_API
+GType gst_mpegts_atsc_rrt_dimension_get_type (void);
+
+GST_MPEGTS_API
+GType gst_mpegts_atsc_rrt_dimension_value_get_type (void);
+
+GST_MPEGTS_API
+const GstMpegtsAtscRRT * gst_mpegts_section_get_atsc_rrt (GstMpegtsSection * section);
+
+GST_MPEGTS_API
+GstMpegtsSection * gst_mpegts_section_from_atsc_rrt (GstMpegtsAtscRRT * rrt);
+
+GST_MPEGTS_API
+GstMpegtsAtscRRT * gst_mpegts_atsc_rrt_new (void);
+
+GST_MPEGTS_API
+GstMpegtsAtscRRTDimension * gst_mpegts_atsc_rrt_dimension_new (void);
+
+GST_MPEGTS_API
+GstMpegtsAtscRRTDimensionValue * gst_mpegts_atsc_rrt_dimension_value_new (void);
 
 G_END_DECLS
 

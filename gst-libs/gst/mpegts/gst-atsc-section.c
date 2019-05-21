@@ -372,6 +372,131 @@ error:
   return NULL;
 }
 
+static gboolean
+_packetize_mgt (GstMpegtsSection * section)
+{
+  const GstMpegtsAtscMGT *mgt;
+  guint8 *pos, *data;
+  gsize length;
+  guint i, j;
+
+  mgt = gst_mpegts_section_get_atsc_mgt (section);
+
+  if (mgt == NULL)
+    return FALSE;
+
+  if (mgt->tables_defined != mgt->tables->len)
+    return FALSE;
+
+  /* 8 byte common section fields
+   * 1 byte protocol version
+   * 2 byte tables_defined
+   * 2 byte reserved / descriptors_length
+   * 4 byte CRC
+   */
+  length = 17;
+
+  for (i = 0; i < mgt->tables->len; i++) {
+    GstMpegtsAtscMGTTable *mgt_table = g_ptr_array_index (mgt->tables, 1);
+    /* 2 byte table_type
+     * 2 byte reserved / table_type_PID
+     * 1 byte reserved / table_type_version_number
+     * 4 byte number bytes
+     * 2 byte reserved / table_type_descriptors_length
+     */
+    length += 11;
+
+    if (mgt_table->descriptors) {
+      for (j = 0; j < mgt_table->descriptors->len; j++) {
+        GstMpegtsDescriptor *descriptor =
+            g_ptr_array_index (mgt_table->descriptors, j);
+        length += descriptor->length + 2;
+      }
+    }
+  }
+
+  if (mgt->descriptors) {
+    for (i = 0; i < mgt->descriptors->len; i++) {
+      GstMpegtsDescriptor *descriptor = g_ptr_array_index (mgt->descriptors, i);
+      length += descriptor->length + 2;
+    }
+  }
+
+  _packetize_common_section (section, length);
+
+  data = section->data + 8;
+
+  /* protocol_version - 8 bit */
+  GST_WRITE_UINT8 (data, mgt->protocol_version);
+  data += 1;
+
+  /* tables_defined - 16 bit uimsbf */
+  GST_WRITE_UINT16_BE (data, mgt->tables_defined);
+  data += 2;
+
+  for (i = 0; i < mgt->tables_defined; i++) {
+    GstMpegtsAtscMGTTable *mgt_table = g_ptr_array_index (mgt->tables, 1);
+
+    /* table_type - 16 bit uimsbf */
+    GST_WRITE_UINT16_BE (data, mgt_table->table_type);
+    data += 2;
+
+    /* 3 bit reserved, 13 bit table_type_PID uimsbf */
+    GST_WRITE_UINT16_BE (data, mgt_table->pid | 0xe000);
+    data += 2;
+
+    /* 3 bit reserved, 5 bit table_type_version_number uimsbf */
+    GST_WRITE_UINT8 (data, mgt_table->version_number | 0xe0);
+    data += 1;
+
+    /* 4 bit reserved, 12 bit table_type_descriptor_length uimsbf */
+    pos = data;
+    *data++ = 0xF0;
+    *data++ = 0x00;
+
+    _packetize_descriptor_array (mgt_table->descriptors, &data);
+
+    /* Go back and update the descriptor length */
+    GST_WRITE_UINT16_BE (pos, (data - pos - 2) | 0xF000);
+  }
+
+  /* 4 bit reserved, 12 bit descriptor_length uimsbf */
+  pos = data;
+  *data++ = 0xF0;
+  *data++ = 0x00;
+
+  _packetize_descriptor_array (mgt->descriptors, &data);
+
+  /* Go back and update the descriptor length */
+  GST_WRITE_UINT16_BE (pos, (data - pos - 2) | 0xF000);
+
+  return TRUE;
+}
+
+/**
+ * gst_mpegts_section_from_atsc_mgt:
+ * @mgt: (transfer full): a #GstMpegtsAtscMGT to create the #GstMpegtsSection from
+ *
+ * Returns: (transfer full): the #GstMpegtsSection
+ * Since: 1.18
+ */
+GstMpegtsSection *
+gst_mpegts_section_from_atsc_mgt (GstMpegtsAtscMGT * mgt)
+{
+  GstMpegtsSection *section;
+
+  g_return_val_if_fail (mgt != NULL, NULL);
+
+  section = _gst_mpegts_section_init (0x1ffb,
+      GST_MTS_TABLE_ID_ATSC_MASTER_GUIDE);
+
+  section->subtable_extension = 0x0000;
+  section->cached_parsed = (gpointer) mgt;
+  section->packetizer = _packetize_mgt;
+  section->destroy_parsed = (GDestroyNotify) _gst_mpegts_atsc_mgt_free;
+
+  return section;
+}
 
 /**
  * gst_mpegts_section_get_atsc_mgt:
@@ -395,6 +520,28 @@ gst_mpegts_section_get_atsc_mgt (GstMpegtsSection * section)
         (GDestroyNotify) _gst_mpegts_atsc_mgt_free);
 
   return (const GstMpegtsAtscMGT *) section->cached_parsed;
+}
+
+/**
+ * gst_mpegts_section_atsc_mgt_new:
+ *
+ * Returns: (transfer full): #GstMpegtsAtscMGT
+ * Since: 1.18
+ */
+GstMpegtsAtscMGT *
+gst_mpegts_atsc_mgt_new (void)
+{
+  GstMpegtsAtscMGT *mgt;
+
+  mgt = g_slice_new0 (GstMpegtsAtscMGT);
+
+  mgt->tables = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_atsc_mgt_table_free);
+
+  mgt->descriptors = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      gst_mpegts_descriptor_free);
+
+  return mgt;
 }
 
 /* Multi string structure */
@@ -464,6 +611,66 @@ gst_mpegts_atsc_string_segment_get_string (GstMpegtsAtscStringSegment * seg)
     _gst_mpegts_atsc_string_segment_decode_string (seg);
 
   return seg->cached_string;
+}
+
+gboolean
+gst_mpegts_atsc_string_segment_set_string (GstMpegtsAtscStringSegment * seg,
+    gchar * string, guint8 compression_type, guint8 mode)
+{
+  const gchar *to_encoding = NULL;
+  gboolean ret = FALSE;
+  gsize written;
+  GError *err = NULL;
+  unsigned long len;
+
+  if (compression_type) {
+    GST_FIXME ("Compressed strings not yet supported");
+    goto done;
+  }
+
+  switch (mode) {
+    case 0x3f:
+      to_encoding = "UTF-16BE";
+      break;
+    default:
+      break;
+  }
+
+  if (seg->cached_string)
+    g_free (seg->cached_string);
+
+  if (seg->compressed_data)
+    g_free (seg->compressed_data);
+
+  seg->cached_string = g_strdup (string);
+  seg->compression_type = compression_type;
+  seg->mode = mode;
+
+  len = strlen (string);
+
+  if (to_encoding && len) {
+    gchar *converted = g_convert (string, len, to_encoding, "UTF-8",
+        NULL, &written, &err);
+
+    if (err) {
+      GST_WARNING ("Failed to convert input string to codeset %s (%s)",
+          to_encoding, err->message);
+      g_error_free (err);
+      goto done;
+    }
+
+    seg->compressed_data = (guint8 *) g_strndup (converted, written);
+    seg->compressed_data_size = written;
+    g_free (converted);
+  } else {
+    seg->compressed_data = (guint8 *) g_strndup (string, len);
+    seg->compressed_data_size = len;
+  }
+
+  ret = TRUE;
+
+done:
+  return ret;
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscStringSegment, gst_mpegts_atsc_string_segment,
@@ -573,6 +780,82 @@ error:
   if (res)
     g_ptr_array_unref (res);
   return NULL;
+}
+
+static void
+_packetize_atsc_mult_string (GPtrArray * strings, guint8 ** data)
+{
+  guint i;
+
+  if (strings == NULL)
+    return;
+
+  /* 8 bit number_strings */
+  GST_WRITE_UINT8 (*data, strings->len);
+  *data += 1;
+
+  for (i = 0; i < strings->len; i++) {
+    GstMpegtsAtscMultString *string;
+    guint j;
+
+    string = g_ptr_array_index (strings, i);
+
+    /* 24 bit ISO_639_langcode */
+    GST_WRITE_UINT8 (*data, string->iso_639_langcode[0]);
+    *data += 1;
+    GST_WRITE_UINT8 (*data, string->iso_639_langcode[1]);
+    *data += 1;
+    GST_WRITE_UINT8 (*data, string->iso_639_langcode[2]);
+    *data += 1;
+    /* 8 bit number_segments */
+    GST_WRITE_UINT8 (*data, string->segments->len);
+    *data += 1;
+
+    for (j = 0; j < string->segments->len; j++) {
+      GstMpegtsAtscStringSegment *seg;
+
+      seg = g_ptr_array_index (string->segments, j);
+
+      /* 8 bit compression_type */
+      GST_WRITE_UINT8 (*data, seg->compression_type);
+      *data += 1;
+      /* 8 bit mode */
+      GST_WRITE_UINT8 (*data, seg->mode);
+      *data += 1;
+      /* 8 bit number_bytes */
+      GST_WRITE_UINT8 (*data, seg->compressed_data_size);
+      *data += 1;
+      /* number_bytes compressed string */
+      memcpy (*data, seg->compressed_data, seg->compressed_data_size);
+      *data += seg->compressed_data_size;
+    }
+  }
+}
+
+static gsize
+_get_atsc_mult_string_packetized_length (GPtrArray * strings)
+{
+  gsize length = 1;
+  guint i;
+
+  for (i = 0; i < strings->len; i++) {
+    GstMpegtsAtscMultString *string;
+    guint j;
+
+    string = g_ptr_array_index (strings, i);
+
+    length += 4;
+
+    for (j = 0; j < string->segments->len; j++) {
+      GstMpegtsAtscStringSegment *seg;
+
+      seg = g_ptr_array_index (string->segments, j);
+
+      length += 3 + seg->compressed_data_size;
+    }
+  }
+
+  return length;
 }
 
 /* EIT */
@@ -893,6 +1176,84 @@ error:
   return NULL;
 }
 
+static gboolean
+_packetize_stt (GstMpegtsSection * section)
+{
+  const GstMpegtsAtscSTT *stt;
+  guint8 *data;
+  gsize length;
+  guint i;
+
+  stt = gst_mpegts_section_get_atsc_stt (section);
+
+  if (stt == NULL)
+    return FALSE;
+
+  /* 8 byte common section fields
+   * 1 byte protocol version
+   * 4 byte system time
+   * 1 byte GPS_UTC_offset
+   * 2 byte daylight saving
+   * 4 byte CRC
+   */
+  length = 20;
+
+  if (stt->descriptors) {
+    for (i = 0; i < stt->descriptors->len; i++) {
+      GstMpegtsDescriptor *descriptor = g_ptr_array_index (stt->descriptors, i);
+      length += descriptor->length + 2;
+    }
+  }
+
+  _packetize_common_section (section, length);
+
+  data = section->data + 8;
+
+  /* protocol_version - 8 bit */
+  GST_WRITE_UINT8 (data, stt->protocol_version);
+  data += 1;
+  /* system time - 32 bit uimsbf */
+  GST_WRITE_UINT32_BE (data, stt->system_time);
+  data += 4;
+  /* GPS_UTC_offset - 8 bit */
+  GST_WRITE_UINT8 (data, stt->gps_utc_offset);
+  data += 1;
+  /* daylight_saving - 16 bit uimsbf */
+  GST_WRITE_UINT8 (data,
+      (stt->ds_status << 7) | 0x60 | (stt->ds_dayofmonth & 0x1f));
+  data += 1;
+  GST_WRITE_UINT8 (data, stt->ds_hour);
+  data += 1;
+
+  _packetize_descriptor_array (stt->descriptors, &data);
+
+  return TRUE;
+}
+
+/**
+ * gst_mpegts_section_section_from_atsc_stt:
+ * @stt: (transfer full): a #GstMpegtsAtscSTT to create the #GstMpegtsSection from
+ *
+ * Returns: (transfer full): the #GstMpegtsSection
+ * Since: 1.18
+ */
+GstMpegtsSection *
+gst_mpegts_section_from_atsc_stt (GstMpegtsAtscSTT * stt)
+{
+  GstMpegtsSection *section;
+
+  g_return_val_if_fail (stt != NULL, NULL);
+
+  section = _gst_mpegts_section_init (0x1ffb,
+      GST_MTS_TABLE_ID_ATSC_SYSTEM_TIME);
+
+  section->subtable_extension = 0x0000;
+  section->cached_parsed = (gpointer) stt;
+  section->packetizer = _packetize_stt;
+  section->destroy_parsed = (GDestroyNotify) _gst_mpegts_atsc_stt_free;
+
+  return section;
+}
 
 /**
  * gst_mpegts_section_get_atsc_stt:
@@ -918,6 +1279,24 @@ gst_mpegts_section_get_atsc_stt (GstMpegtsSection * section)
   return (const GstMpegtsAtscSTT *) section->cached_parsed;
 }
 
+/**
+ * gst_mpegts_section_atsc_stt_new:
+ *
+ * Returns: (transfer full): #GstMpegtsAtscSTT
+ * Since: 1.18
+ */
+GstMpegtsAtscSTT *
+gst_mpegts_atsc_stt_new (void)
+{
+  GstMpegtsAtscSTT *stt;
+
+  stt = g_slice_new0 (GstMpegtsAtscSTT);
+  stt->descriptors = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      gst_mpegts_descriptor_free);
+
+  return stt;
+}
+
 #define GPS_TO_UTC_TICKS G_GINT64_CONSTANT(315964800)
 static GstDateTime *
 _gst_mpegts_atsc_gps_time_to_datetime (guint32 systemtime, guint8 gps_offset)
@@ -936,4 +1315,404 @@ gst_mpegts_atsc_stt_get_datetime_utc (GstMpegtsAtscSTT * stt)
   if (stt->utc_datetime)
     return gst_date_time_ref (stt->utc_datetime);
   return NULL;
+}
+
+/* RRT */
+
+static GstMpegtsAtscRRTDimensionValue *
+_gst_mpegts_atsc_rrt_dimension_value_copy (GstMpegtsAtscRRTDimensionValue *
+    value)
+{
+  GstMpegtsAtscRRTDimensionValue *copy;
+
+  copy = g_slice_dup (GstMpegtsAtscRRTDimensionValue, value);
+  copy->abbrev_ratings = g_ptr_array_ref (value->abbrev_ratings);
+  copy->ratings = g_ptr_array_ref (value->ratings);
+
+  return copy;
+}
+
+static void
+_gst_mpegts_atsc_rrt_dimension_value_free (GstMpegtsAtscRRTDimensionValue *
+    value)
+{
+  if (value->abbrev_ratings)
+    g_ptr_array_unref (value->abbrev_ratings);
+  if (value->ratings)
+    g_ptr_array_unref (value->ratings);
+
+  g_slice_free (GstMpegtsAtscRRTDimensionValue, value);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscRRTDimensionValue,
+    gst_mpegts_atsc_rrt_dimension_value,
+    (GBoxedCopyFunc) _gst_mpegts_atsc_rrt_dimension_value_copy,
+    (GFreeFunc) _gst_mpegts_atsc_rrt_dimension_value_free);
+
+static GstMpegtsAtscRRTDimension *
+_gst_mpegts_atsc_rrt_dimension_copy (GstMpegtsAtscRRTDimension * dim)
+{
+  GstMpegtsAtscRRTDimension *copy;
+
+  copy = g_slice_dup (GstMpegtsAtscRRTDimension, dim);
+  copy->names = g_ptr_array_ref (dim->names);
+  copy->values = g_ptr_array_ref (dim->values);
+
+  return copy;
+}
+
+static void
+_gst_mpegts_atsc_rrt_dimension_free (GstMpegtsAtscRRTDimension * dim)
+{
+  if (dim->names)
+    g_ptr_array_unref (dim->names);
+  if (dim->values)
+    g_ptr_array_unref (dim->values);
+
+  g_slice_free (GstMpegtsAtscRRTDimension, dim);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscRRTDimension, gst_mpegts_atsc_rrt_dimension,
+    (GBoxedCopyFunc) _gst_mpegts_atsc_rrt_dimension_copy,
+    (GFreeFunc) _gst_mpegts_atsc_rrt_dimension_free);
+
+static GstMpegtsAtscRRT *
+_gst_mpegts_atsc_rrt_copy (GstMpegtsAtscRRT * rrt)
+{
+  GstMpegtsAtscRRT *copy;
+
+  copy = g_slice_dup (GstMpegtsAtscRRT, rrt);
+  copy->names = g_ptr_array_ref (rrt->names);
+  copy->dimensions = g_ptr_array_ref (rrt->dimensions);
+  copy->descriptors = g_ptr_array_ref (rrt->descriptors);
+
+  return copy;
+}
+
+static void
+_gst_mpegts_atsc_rrt_free (GstMpegtsAtscRRT * rrt)
+{
+  if (rrt->names)
+    g_ptr_array_unref (rrt->names);
+  if (rrt->dimensions)
+    g_ptr_array_unref (rrt->dimensions);
+  if (rrt->descriptors)
+    g_ptr_array_unref (rrt->descriptors);
+
+  g_slice_free (GstMpegtsAtscRRT, rrt);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegtsAtscRRT, gst_mpegts_atsc_rrt,
+    (GBoxedCopyFunc) _gst_mpegts_atsc_rrt_copy,
+    (GFreeFunc) _gst_mpegts_atsc_rrt_free);
+
+static gpointer
+_parse_rrt (GstMpegtsSection * section)
+{
+  GstMpegtsAtscRRT *rrt = NULL;
+  guint i = 0;
+  guint8 *data;
+  guint16 descriptors_loop_length;
+  guint8 text_length;
+
+  rrt = g_slice_new0 (GstMpegtsAtscRRT);
+
+  data = section->data;
+
+  /* Skip already parsed data */
+  data += 8;
+
+  rrt->protocol_version = GST_READ_UINT8 (data);
+  data += 1;
+
+  text_length = GST_READ_UINT8 (data);
+  data += 1;
+  rrt->names = _parse_atsc_mult_string (data, text_length);
+  data += text_length;
+
+  rrt->dimensions_defined = GST_READ_UINT8 (data);
+  data += 1;
+
+  rrt->dimensions = g_ptr_array_new_full (rrt->dimensions_defined,
+      (GDestroyNotify) _gst_mpegts_atsc_rrt_dimension_free);
+
+  for (i = 0; i < rrt->dimensions_defined; i++) {
+    GstMpegtsAtscRRTDimension *dim;
+    guint8 tmp;
+    guint j = 0;
+
+    dim = g_slice_new0 (GstMpegtsAtscRRTDimension);
+    g_ptr_array_add (rrt->dimensions, dim);
+
+    text_length = GST_READ_UINT8 (data);
+    data += 1;
+    dim->names = _parse_atsc_mult_string (data, text_length);
+    data += text_length;
+
+    tmp = GST_READ_UINT8 (data);
+    data += 1;
+
+    dim->graduated_scale = tmp & 0x10;
+    dim->values_defined = tmp & 0x0f;
+
+    dim->values = g_ptr_array_new_full (dim->values_defined,
+        (GDestroyNotify) _gst_mpegts_atsc_rrt_dimension_value_free);
+
+    for (j = 0; j < dim->values_defined; j++) {
+      GstMpegtsAtscRRTDimensionValue *val;
+
+      val = g_slice_new0 (GstMpegtsAtscRRTDimensionValue);
+      g_ptr_array_add (dim->values, val);
+
+      text_length = GST_READ_UINT8 (data);
+      data += 1;
+      val->abbrev_ratings = _parse_atsc_mult_string (data, text_length);
+      data += text_length;
+
+      text_length = GST_READ_UINT8 (data);
+      data += 1;
+      val->ratings = _parse_atsc_mult_string (data, text_length);
+      data += text_length;
+    }
+  }
+
+  descriptors_loop_length = GST_READ_UINT16_BE (data) & 0x3FF;
+  data += 2;
+  rrt->descriptors =
+      gst_mpegts_parse_descriptors (data, descriptors_loop_length);
+
+  return (gpointer) rrt;
+}
+
+static gboolean
+_packetize_rrt (GstMpegtsSection * section)
+{
+  const GstMpegtsAtscRRT *rrt;
+  guint8 *data, *pos;
+  gsize length;
+  gsize names_length;
+  guint i, j;
+
+  rrt = gst_mpegts_section_get_atsc_rrt (section);
+
+  if (rrt == NULL)
+    return FALSE;
+
+  names_length = _get_atsc_mult_string_packetized_length (rrt->names);
+
+  /* 8 byte common section fields
+   * 1 byte protocol version
+   * 1 byte rating_region_name_length
+   * name_length bytes
+   * 1 byte dimensions_defined
+   * 2 byte reserved / descriptors_length
+   * 4 byte CRC
+   */
+  length = names_length + 17;
+
+  for (i = 0; i < rrt->dimensions->len; i++) {
+    GstMpegtsAtscRRTDimension *dim = g_ptr_array_index (rrt->dimensions, i);
+
+    /* 1 byte dimension_name_length
+     * 1 byte reserved / graduated_scale / values_defined
+     */
+    length += 2;
+    length += _get_atsc_mult_string_packetized_length (dim->names);
+    for (j = 0; j < dim->values->len; j++) {
+      GstMpegtsAtscRRTDimensionValue *val = g_ptr_array_index (dim->values, j);
+
+      /* 1 byte abbrev_rating_value_length
+       * 1 byte rating_value_length
+       */
+      length += 2;
+      length += _get_atsc_mult_string_packetized_length (val->abbrev_ratings);
+      length += _get_atsc_mult_string_packetized_length (val->ratings);
+    }
+  }
+
+  if (rrt->descriptors) {
+    for (i = 0; i < rrt->descriptors->len; i++) {
+      GstMpegtsDescriptor *descriptor = g_ptr_array_index (rrt->descriptors, i);
+      length += descriptor->length + 2;
+    }
+  }
+
+  if (length > 1024) {
+    GST_WARNING ("RRT size can not exceed 1024");
+    return FALSE;
+  }
+
+  _packetize_common_section (section, length);
+
+  data = section->data + 8;
+
+  /* protocol_version - 8 bit */
+  GST_WRITE_UINT8 (data, rrt->protocol_version);
+  data += 1;
+
+  /* rating_region_name_length - 8 bit */
+  GST_WRITE_UINT8 (data, names_length);
+  data += 1;
+
+  _packetize_atsc_mult_string (rrt->names, &data);
+
+  for (i = 0; i < rrt->dimensions->len; i++) {
+    GstMpegtsAtscRRTDimension *dim = g_ptr_array_index (rrt->dimensions, i);
+
+    /* dimension_name_length - 8 bit */
+    GST_WRITE_UINT8 (data,
+        _get_atsc_mult_string_packetized_length (dim->names));
+    data += 1;
+
+    _packetize_atsc_mult_string (rrt->names, &data);
+
+    /* 3 bit reserved / 1 bit graduated_scale / 4 bit values_defined */
+    GST_WRITE_UINT8 (data,
+        0xe0 | ((dim->graduated_scale ? 1 : 0) << 4) | (dim->
+            values_defined & 0x0f));
+    data += 1;
+
+    for (j = 0; j < dim->values->len; j++) {
+      GstMpegtsAtscRRTDimensionValue *val = g_ptr_array_index (dim->values, j);
+
+      /* abbrev_rating_value_length - 8 bit */
+      GST_WRITE_UINT8 (data,
+          _get_atsc_mult_string_packetized_length (val->abbrev_ratings));
+      data += 1;
+
+      _packetize_atsc_mult_string (val->abbrev_ratings, &data);
+
+      /* rating_value_length - 8 bit */
+      GST_WRITE_UINT8 (data,
+          _get_atsc_mult_string_packetized_length (val->ratings));
+      data += 1;
+
+      _packetize_atsc_mult_string (val->ratings, &data);
+    }
+  }
+
+  /* 6 bit reserved, 10 bit descriptor_length uimsbf */
+  pos = data;
+  *data++ = 0xFC;
+  *data++ = 0x00;
+
+  _packetize_descriptor_array (rrt->descriptors, &data);
+
+  /* Go back and update the descriptor length */
+  GST_WRITE_UINT16_BE (pos, (data - pos - 2) | 0xFC00);
+
+  return TRUE;
+}
+
+/**
+ * gst_mpegts_section_section_from_atsc_rrt:
+ * @rrt: (transfer full): a #GstMpegtsAtscRRT to create the #GstMpegtsSection from
+ *
+ * Returns: (transfer full): the #GstMpegtsSection
+ * Since: 1.18
+ */
+GstMpegtsSection *
+gst_mpegts_section_from_atsc_rrt (GstMpegtsAtscRRT * rrt)
+{
+  GstMpegtsSection *section;
+
+  g_return_val_if_fail (rrt != NULL, NULL);
+
+  section = _gst_mpegts_section_init (0x1ffb,
+      GST_MTS_TABLE_ID_ATSC_RATING_REGION);
+
+  /* FIXME random rating_region, what should be the default? */
+  section->subtable_extension = 0xff01;
+  section->cached_parsed = (gpointer) rrt;
+  section->packetizer = _packetize_rrt;
+  section->destroy_parsed = (GDestroyNotify) _gst_mpegts_atsc_rrt_free;
+
+  return section;
+}
+
+/**
+ * gst_mpegts_section_get_atsc_rrt:
+ * @section: a #GstMpegtsSection of type %GST_MPEGTS_SECTION_ATSC_RRT
+ *
+ * Returns the #GstMpegtsAtscRRT contained in the @section.
+ *
+ * Returns: The #GstMpegtsAtscRRT contained in the section, or %NULL if an error
+ * happened.
+ * Since: 1.18
+ */
+const GstMpegtsAtscRRT *
+gst_mpegts_section_get_atsc_rrt (GstMpegtsSection * section)
+{
+  g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_ATSC_RRT,
+      NULL);
+  g_return_val_if_fail (section->cached_parsed || section->data, NULL);
+
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_section_checks (section, 17, _parse_rrt,
+        (GDestroyNotify) _gst_mpegts_atsc_rrt_free);
+
+  return (const GstMpegtsAtscRRT *) section->cached_parsed;
+}
+
+/**
+ * gst_mpegts_section_atsc_rrt_dimension_value_new:
+ *
+ * Returns: (transfer full): #GstMpegtsAtscRRTDimensionValue
+ * Since: 1.18
+ */
+GstMpegtsAtscRRTDimensionValue *
+gst_mpegts_atsc_rrt_dimension_value_new (void)
+{
+  GstMpegtsAtscRRTDimensionValue *val;
+
+  val = g_slice_new0 (GstMpegtsAtscRRTDimensionValue);
+  val->abbrev_ratings = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_atsc_mult_string_free);
+  val->ratings = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_atsc_mult_string_free);
+
+  return val;
+}
+
+/**
+ * gst_mpegts_section_atsc_rrt_dimension_new:
+ *
+ * Returns: (transfer full): #GstMpegtsAtscRRTDimension
+ * Since: 1.18
+ */
+GstMpegtsAtscRRTDimension *
+gst_mpegts_atsc_rrt_dimension_new (void)
+{
+  GstMpegtsAtscRRTDimension *dim;
+
+  dim = g_slice_new0 (GstMpegtsAtscRRTDimension);
+  dim->names = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_atsc_mult_string_free);
+  dim->values = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_atsc_rrt_dimension_value_free);
+
+  return dim;
+}
+
+/**
+ * gst_mpegts_section_atsc_rrt_new:
+ *
+ * Returns: (transfer full): #GstMpegtsAtscRRT
+ * Since: 1.18
+ */
+GstMpegtsAtscRRT *
+gst_mpegts_atsc_rrt_new (void)
+{
+  GstMpegtsAtscRRT *rrt;
+
+  rrt = g_slice_new0 (GstMpegtsAtscRRT);
+  rrt->names = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_atsc_mult_string_free);
+  rrt->dimensions = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_atsc_rrt_dimension_free);
+  rrt->descriptors = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      gst_mpegts_descriptor_free);
+
+  return rrt;
 }

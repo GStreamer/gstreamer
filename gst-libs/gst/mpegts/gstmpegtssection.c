@@ -1119,6 +1119,10 @@ _identify_section (guint16 pid, guint8 table_id)
       if (pid == 0x1ffb)
         return GST_MPEGTS_SECTION_ATSC_STT;
       break;
+    case GST_MTS_TABLE_ID_ATSC_RATING_REGION:
+      if (pid == 0x1ffb)
+        return GST_MPEGTS_SECTION_ATSC_RRT;
+      break;
     default:
       /* Handle ranges */
       if (table_id >= GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_PRESENT &&
