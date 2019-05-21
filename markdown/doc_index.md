@@ -29,7 +29,7 @@ all about.
 
 * [GStreamer Core library](gstreamer)
 * [GStreamer Libraries Reference](libs.md)
-* [GStreamer Plugins Reference](plugins_doc.md)
+* [GStreamer Plugins Reference](gst-index)
 
 > ![Warning](images/icons/emoticons/warning.svg) Only the API in libraries from
 > GStreamer core and gst-plugins-base are guaranteed to be API and ABI stable

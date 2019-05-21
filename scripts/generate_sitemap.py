@@ -16,7 +16,7 @@ if __name__ == "__main__":
                 if not lib:
                     continue
                 index += "\n			" + lib + '.json'
-            index += '\n		plugins_doc.md'
+            index += '\n		gst-index'
             for plugin in plugins:
                 if not plugin:
                     continue
