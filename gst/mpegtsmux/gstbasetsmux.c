@@ -1222,7 +1222,6 @@ gst_base_ts_mux_send_event (GstElement * element, GstEvent * event)
   GstBaseTsMux *mux = GST_BASE_TS_MUX (element);
 
   section = gst_event_parse_mpegts_section (event);
-  gst_event_unref (event);
 
   if (section) {
     GST_DEBUG ("Received event with mpegts section");
@@ -1230,10 +1229,12 @@ gst_base_ts_mux_send_event (GstElement * element, GstEvent * event)
     /* TODO: Check that the section type is supported */
     tsmux_add_mpegts_si_section (mux->tsmux, section);
 
+    gst_event_unref (event);
+
     return TRUE;
   }
 
-  return FALSE;
+  return GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
 }
 
 /* GstAggregator implementation */
