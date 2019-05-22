@@ -299,7 +299,7 @@ gst_ivf_parse_handle_frame_data (GstIvfParse * ivf, GstBaseParseFrame * frame,
   GstBuffer *out_buffer;
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
-  if (map.size >= IVF_FILE_HEADER_SIZE) {
+  if (map.size >= IVF_FRAME_HEADER_SIZE) {
     guint32 frame_size = GST_READ_UINT32_LE (map.data);
     guint64 frame_pts = GST_READ_UINT64_LE (map.data + 4);
 
