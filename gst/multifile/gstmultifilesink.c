@@ -234,7 +234,7 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_MAX_FILE_DURATION,
       g_param_spec_uint64 ("max-file-duration", "Maximum File Duration",
-          "Maximum file duration before starting a new file in max-size mode "
+          "Maximum file duration before starting a new file in max-duration mode "
           "(in nanoseconds)", 0, G_MAXUINT64, DEFAULT_MAX_FILE_DURATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
