@@ -1703,14 +1703,17 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
     } else {
       GstIterator *it = gst_element_iterate_sink_pads (muxer);
       GstEvent *ev;
+      guint32 seqnum;
 
       ev = gst_event_new_flush_start ();
+      seqnum = gst_event_get_seqnum (ev);
       while (gst_iterator_foreach (it, _send_event, ev) == GST_ITERATOR_RESYNC);
       gst_event_unref (ev);
 
       gst_iterator_resync (it);
 
       ev = gst_event_new_flush_stop (TRUE);
+      gst_event_set_seqnum (ev, seqnum);
       while (gst_iterator_foreach (it, _send_event, ev) == GST_ITERATOR_RESYNC);
       gst_event_unref (ev);
 
