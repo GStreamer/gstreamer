@@ -186,6 +186,9 @@ struct TsMux {
 
   guint64 bitrate;
   guint64 n_bytes;
+
+  /* For the per-PID continuity counter */
+  guint8 pid_packet_counts[8192];
 };
 
 /* create/free new muxer session */

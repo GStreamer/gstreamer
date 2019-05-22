@@ -821,7 +821,7 @@ tsmux_write_adaptation_field (guint8 * buf,
 }
 
 static gboolean
-tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
+tsmux_write_ts_header (TsMux * mux, guint8 * buf, TsMuxPacketInfo * pi,
     guint * payload_len_out, guint * payload_offset_out, guint stream_avail)
 {
   guint8 *tmp;
@@ -835,7 +835,7 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
   buf[0] = TSMUX_SYNC_BYTE;
 
   TS_DEBUG ("PID 0x%04x, counter = 0x%01x, %u bytes avail", pi->pid,
-      pi->packet_count & 0x0f, stream_avail);
+      mux->pid_packet_counts[pi->pid] & 0x0f, stream_avail);
 
   /* 3 bits: 
    *   transport_error_indicator
@@ -893,10 +893,10 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
     g_assert (payload_len <= stream_avail);
 
     /* Packet with payload, increment the continuity counter */
-    pi->packet_count++;
+    mux->pid_packet_counts[pi->pid]++;
   }
 
-  adaptation_flag |= pi->packet_count & 0x0f;
+  adaptation_flag |= mux->pid_packet_counts[pi->pid] & 0x0f;
 
   /* Write the byte of transport_scrambling_control, adaptation_field_control 
    * + continuity counter out */
@@ -960,7 +960,7 @@ tsmux_section_write_packet (GstMpegtsSectionType * type,
       /* Wee need room for a pointer byte */
       section->pi.stream_avail++;
 
-      if (!tsmux_write_ts_header (packet, &section->pi, &len, &offset,
+      if (!tsmux_write_ts_header (mux, packet, &section->pi, &len, &offset,
               section->pi.stream_avail))
         goto fail;
 
@@ -969,7 +969,7 @@ tsmux_section_write_packet (GstMpegtsSectionType * type,
       payload_len = len - 1;
 
     } else {
-      if (!tsmux_write_ts_header (packet, &section->pi, &len, &offset,
+      if (!tsmux_write_ts_header (mux, packet, &section->pi, &len, &offset,
               section->pi.stream_avail))
         goto fail;
       payload_len = len;
@@ -1218,7 +1218,7 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
           if ((new_pcr =
                   write_new_pcr (mux, stream, get_current_pcr (mux,
                           cur_ts)) != -1))
-            tsmux_write_ts_header (map.data, &stream->pi, &payload_len,
+            tsmux_write_ts_header (mux, map.data, &stream->pi, &payload_len,
                 &payload_offs, 0);
           else
             tsmux_write_null_ts_header (map.data);
@@ -1297,7 +1297,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (!tsmux_write_ts_header (map.data, pi, &payload_len, &payload_offs,
+  if (!tsmux_write_ts_header (mux, map.data, pi, &payload_len, &payload_offs,
           pi->stream_avail))
     goto fail;
 

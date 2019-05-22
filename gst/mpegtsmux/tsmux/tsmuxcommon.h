@@ -135,9 +135,6 @@ struct TsMuxPacketInfo {
 
   gboolean packet_start_unit_indicator;
 
-  /* continuity counter */
-  guint8 packet_count;
-
   /* payload bytes available
    * (including PES header if applicable) */
   guint stream_avail;
