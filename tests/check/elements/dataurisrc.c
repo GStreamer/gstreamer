@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include <gst/check/gstcheck.h>
+#include <gst/check/check.h>
 
 /* sine wave encoded in ogg/vorbis, created with:
  *   gst-launch-1.0 audiotestsrc num-buffers=110 ! audioconvert ! \
@@ -519,6 +519,55 @@ GST_START_TEST (test_dataurisrc_from_uri)
 
 GST_END_TEST;
 
+GST_START_TEST (test_dataurisrc_uris)
+{
+#define STRING_CONTENT(s) s, sizeof(s) - 1
+  static const struct
+  {
+    const char *name;
+    const char *uri;
+    const char *mimetype;
+    const char *contents;
+    gsize contents_len;
+  } tests[] = {
+    /* *INDENT-OFF* */
+    {"simple", "data:,HelloWorld", NULL, STRING_CONTENT ("HelloWorld")},
+    {"nodata", "data:,", NULL, STRING_CONTENT ("")},
+    {"case_sensitive", "dATa:,HelloWorld", NULL, STRING_CONTENT ("HelloWorld")},
+    {"semicolon_after_comma", "data:,;base64", NULL,
+        STRING_CONTENT (";base64")},
+    {"mimetype", "data:image/png,nopng", "image/png", STRING_CONTENT ("nopng")},
+    {"charset_base64",
+          "data:text/plain;charset=ISO-8859-5;base64,wOPh29DdILjW0ePb0OLe0g==",
+        "text/plain", STRING_CONTENT ("Руслан Ижбулатов")},
+    /* *INDENT-ON* */
+  };
+  gint i;
+#undef STRING_CONTENT
+
+  for (i = 0; i < G_N_ELEMENTS (tests); i++) {
+    GstHarness *h;
+    GstElement *src;
+    GstBuffer *buf;
+
+    src = gst_element_factory_make ("dataurisrc", NULL);
+    g_object_set (src, "uri", tests[i].uri, NULL);
+    h = gst_harness_new_with_element (src, NULL, "src");
+    gst_harness_play (h);
+
+    buf = gst_harness_pull (h);
+    fail_unless (buf);
+
+    gst_check_buffer_data (buf, tests[i].contents, tests[i].contents_len);
+    gst_buffer_unref (buf);
+
+    gst_harness_teardown (h);
+    gst_object_unref (src);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 dataurisrc_suite (void)
 {
@@ -531,6 +580,7 @@ dataurisrc_suite (void)
   tcase_add_test (tc_chain, test_dataurisrc_push);
   tcase_add_test (tc_chain, test_dataurisrc_uri_iface);
   tcase_add_test (tc_chain, test_dataurisrc_from_uri);
+  tcase_add_test (tc_chain, test_dataurisrc_uris);
 
   return s;
 }
