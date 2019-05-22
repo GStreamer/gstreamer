@@ -146,6 +146,22 @@ static TsMux *
 gst_atsc_mux_create_ts_mux (GstBaseTsMux * mpegtsmux)
 {
   TsMux *ret = ((GstBaseTsMuxClass *) parent_class)->create_ts_mux (mpegtsmux);
+  GstMpegtsAtscMGT *mgt;
+  GstMpegtsAtscSTT *stt;
+  GstMpegtsAtscRRT *rrt;
+  GstMpegtsSection *section;
+
+  mgt = gst_mpegts_atsc_mgt_new ();
+  section = gst_mpegts_section_from_atsc_mgt (mgt);
+  tsmux_add_mpegts_si_section (ret, section);
+
+  stt = gst_mpegts_atsc_stt_new ();
+  section = gst_mpegts_section_from_atsc_stt (stt);
+  tsmux_add_mpegts_si_section (ret, section);
+
+  rrt = gst_mpegts_atsc_rrt_new ();
+  section = gst_mpegts_section_from_atsc_rrt (rrt);
+  tsmux_add_mpegts_si_section (ret, section);
 
   tsmux_set_new_stream_func (ret,
       (TsMuxNewStreamFunc) gst_atsc_mux_create_new_stream, mpegtsmux);
