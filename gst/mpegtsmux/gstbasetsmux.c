@@ -137,7 +137,23 @@ gst_base_ts_mux_pad_reset (GstBaseTsMuxPad * pad)
 static GstFlowReturn
 gst_base_ts_mux_pad_flush (GstAggregatorPad * agg_pad, GstAggregator * agg)
 {
-  gst_base_ts_mux_pad_reset (GST_BASE_TS_MUX_PAD (agg_pad));
+  GList *cur;
+  GstBaseTsMux *mux = GST_BASE_TS_MUX (agg);
+
+  /* Send initial segments again after a flush-stop, and also resend the
+   * header sections */
+  mux->first = TRUE;
+
+  /* output PAT, SI tables */
+  tsmux_resend_pat (mux->tsmux);
+  tsmux_resend_si (mux->tsmux);
+
+  /* output PMT for each program */
+  for (cur = mux->tsmux->programs; cur; cur = cur->next) {
+    TsMuxProgram *program = (TsMuxProgram *) cur->data;
+
+    tsmux_resend_pmt (program);
+  }
 
   return GST_FLOW_OK;
 }
@@ -285,6 +301,7 @@ gst_base_ts_mux_reset (GstBaseTsMux * mux, gboolean alloc)
   GstBuffer *buf;
   GstBaseTsMuxClass *klass = GST_BASE_TS_MUX_GET_CLASS (mux);
   GHashTable *si_sections = NULL;
+  GList *l;
 
   mux->first = TRUE;
   mux->last_flow_ret = GST_FLOW_OK;
@@ -317,6 +334,10 @@ gst_base_ts_mux_reset (GstBaseTsMux * mux, gboolean alloc)
 
   gst_event_replace (&mux->force_key_unit_event, NULL);
   gst_buffer_replace (&mux->out_buffer, NULL);
+
+  for (l = GST_ELEMENT (mux)->sinkpads; l; l = l->next) {
+    gst_base_ts_mux_pad_reset (GST_BASE_TS_MUX_PAD (l->data));
+  }
 
   if (alloc) {
     g_assert (klass->create_ts_mux);
@@ -1323,25 +1344,6 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
          GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_LOCKED);
          }
        */
-      break;
-    }
-    case GST_EVENT_FLUSH_STOP:{
-      GList *cur;
-
-      /* Send initial segments again after a flush-stop, and also resend the
-       * header sections */
-      mux->first = TRUE;
-
-      /* output PAT, SI tables */
-      tsmux_resend_pat (mux->tsmux);
-      tsmux_resend_si (mux->tsmux);
-
-      /* output PMT for each program */
-      for (cur = mux->tsmux->programs; cur; cur = cur->next) {
-        TsMuxProgram *program = (TsMuxProgram *) cur->data;
-
-        tsmux_resend_pmt (program);
-      }
       break;
     }
     default:
