@@ -540,12 +540,8 @@ static void
 gst_harness_setup_src_pad (GstHarness * h,
     GstStaticPadTemplate * src_tmpl, const gchar * element_sinkpad_name)
 {
-  GstHarnessPrivate *priv = h->priv;
   g_assert (src_tmpl);
   g_assert (h->srcpad == NULL);
-
-  priv->src_event_queue =
-      g_async_queue_new_full ((GDestroyNotify) gst_event_unref);
 
   /* sending pad */
   h->srcpad = gst_pad_new_from_static_template (src_tmpl, "src");
@@ -565,14 +561,8 @@ static void
 gst_harness_setup_sink_pad (GstHarness * h,
     GstStaticPadTemplate * sink_tmpl, const gchar * element_srcpad_name)
 {
-  GstHarnessPrivate *priv = h->priv;
   g_assert (sink_tmpl);
   g_assert (h->sinkpad == NULL);
-
-  priv->buffer_queue = g_async_queue_new_full (
-      (GDestroyNotify) gst_buffer_unref);
-  priv->sink_event_queue = g_async_queue_new_full (
-      (GDestroyNotify) gst_event_unref);
 
   /* receiving pad */
   h->sinkpad = gst_pad_new_from_static_template (sink_tmpl, "sink");
@@ -667,6 +657,13 @@ gst_harness_new_empty (void)
   priv->latency_max = GST_CLOCK_TIME_NONE;
   priv->drop_buffers = FALSE;
   priv->testclock = GST_TEST_CLOCK_CAST (gst_test_clock_new ());
+
+  priv->buffer_queue = g_async_queue_new_full (
+      (GDestroyNotify) gst_buffer_unref);
+  priv->src_event_queue = g_async_queue_new_full (
+      (GDestroyNotify) gst_event_unref);
+  priv->sink_event_queue = g_async_queue_new_full (
+      (GDestroyNotify) gst_event_unref);
 
   priv->propose_allocator = NULL;
   gst_allocation_params_init (&priv->propose_allocation_params);
@@ -1067,8 +1064,6 @@ gst_harness_teardown (GstHarness * h)
     GST_PAD_STREAM_UNLOCK (h->srcpad);
 
     gst_object_unref (h->srcpad);
-
-    g_async_queue_unref (priv->src_event_queue);
   }
 
   if (h->sinkpad) {
@@ -1087,9 +1082,6 @@ gst_harness_teardown (GstHarness * h)
     GST_PAD_STREAM_UNLOCK (h->sinkpad);
 
     gst_object_unref (h->sinkpad);
-
-    g_async_queue_unref (priv->buffer_queue);
-    g_async_queue_unref (priv->sink_event_queue);
   }
 
   gst_object_replace ((GstObject **) & priv->propose_allocator, NULL);
@@ -1113,6 +1105,10 @@ gst_harness_teardown (GstHarness * h)
   g_cond_clear (&priv->blocking_push_cond);
   g_mutex_clear (&priv->blocking_push_mutex);
   g_mutex_clear (&priv->priv_mutex);
+
+  g_async_queue_unref (priv->buffer_queue);
+  g_async_queue_unref (priv->src_event_queue);
+  g_async_queue_unref (priv->sink_event_queue);
 
   g_ptr_array_unref (priv->stress);
 
