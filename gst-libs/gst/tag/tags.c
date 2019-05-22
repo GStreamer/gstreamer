@@ -82,6 +82,12 @@ gst_tag_register_tags_internal (gpointer unused)
   gst_tag_register_static (GST_TAG_MUSICBRAINZ_ALBUMARTISTID, GST_TAG_FLAG_META,
       G_TYPE_STRING,
       _("album artist ID"), _("MusicBrainz album artist ID"), NULL);
+  gst_tag_register_static (GST_TAG_MUSICBRAINZ_RELEASEGROUPID,
+      GST_TAG_FLAG_META, G_TYPE_STRING, _("release group ID"),
+      _("MusicBrainz release group ID"), NULL);
+  gst_tag_register_static (GST_TAG_MUSICBRAINZ_RELEASETRACKID,
+      GST_TAG_FLAG_META, G_TYPE_STRING, _("release track ID"),
+      _("MusicBrainz release track ID"), NULL);
   gst_tag_register_static (GST_TAG_MUSICBRAINZ_TRMID, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("track TRM ID"), _("MusicBrainz TRM ID"), NULL);
 

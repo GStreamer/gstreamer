@@ -58,6 +58,18 @@ G_BEGIN_DECLS
  */
 #define GST_TAG_MUSICBRAINZ_ALBUMARTISTID	"musicbrainz-albumartistid"
 /**
+ * GST_TAG_MUSICBRAINZ_RELEASEGROUPID:
+ *
+ * MusicBrainz Release Group ID
+ */
+#define GST_TAG_MUSICBRAINZ_RELEASEGROUPID	"musicbrainz-releasegroupid"
+/**
+ * GST_TAG_MUSICBRAINZ_RELEASETRACKID:
+ *
+ * MusicBrainz Release Track ID
+ */
+#define GST_TAG_MUSICBRAINZ_RELEASETRACKID	"musicbrainz-releasetrackid"
+/**
  * GST_TAG_MUSICBRAINZ_TRMID:
  *
  * MusicBrainz track TRM ID
@@ -431,12 +443,12 @@ GST_TAG_API
 const gchar *           gst_tag_to_vorbis_tag                   (const gchar *          gst_tag);
 
 GST_TAG_API
-void                    gst_vorbis_tag_add                      (GstTagList *           list, 
-                                                                 const gchar *          tag, 
+void                    gst_vorbis_tag_add                      (GstTagList *           list,
+                                                                 const gchar *          tag,
                                                                  const gchar *          value);
 
 GST_TAG_API
-GList *                 gst_tag_to_vorbis_comments              (const GstTagList *     list, 
+GList *                 gst_tag_to_vorbis_comments              (const GstTagList *     list,
                                                                  const gchar *          tag);
 
 /* functions to convert GstBuffers with vorbiscomment contents to GstTagLists and back */
