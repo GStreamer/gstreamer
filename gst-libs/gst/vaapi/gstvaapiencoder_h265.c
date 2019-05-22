@@ -1643,6 +1643,16 @@ fill_picture (GstVaapiEncoderH265 * encoder, GstVaapiEncPicture * picture,
       || GST_VAAPI_ENCODER_TUNE (encoder) == GST_VAAPI_ENCODER_TUNE_LOW_POWER)
     pic_param->pic_fields.bits.cu_qp_delta_enabled_flag = 1;
 
+  /* XXX: Intel's media-driver, when using low-power mode, requires
+   * that diff_cu_qp_delta_depth has to be equal to
+   * log2_diff_max_min_luma_coding_block_size, meaning 3.
+   *
+   * For now we assume that on only Intel's media-drivers supports
+   * H265 low-power */
+  if ((GST_VAAPI_ENCODER_TUNE (encoder) == GST_VAAPI_ENCODER_TUNE_LOW_POWER) &&
+      (pic_param->pic_fields.bits.cu_qp_delta_enabled_flag))
+    pic_param->diff_cu_qp_delta_depth = 3;
+
   pic_param->pic_fields.bits.pps_loop_filter_across_slices_enabled_flag = TRUE;
 
   if (GST_VAAPI_ENC_PICTURE_IS_IDR (picture))
