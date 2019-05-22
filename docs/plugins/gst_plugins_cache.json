@@ -1328,12 +1328,30 @@
                         "type-name": "gint64",
                         "writable": true
                     },
+                    "max-transient-error-timeout": {
+                        "blurb": "Retry up to this many ms on transient errors (currently EACCES)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
                         "construct-only": false,
                         "default": "NULL",
                         "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "o-sync": {
+                        "blurb": "Open the file with O_SYNC for enabling synchronous IO",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
                         "writable": true
                     },
                     "parent": {
@@ -1832,6 +1850,50 @@
                     "sink_%%u": {
                         "caps": "ANY",
                         "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstSelectorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "active": {
+                                    "blurb": "If the pad is currently active",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": false
+                                },
+                                "always-ok": {
+                                    "blurb": "Make an inactive pad return OK instead of NOT_LINKED",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "true",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "running-time": {
+                                    "blurb": "Running time of stream on pad",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "9223372036854775807",
+                                    "min": "0",
+                                    "type-name": "gint64",
+                                    "writable": false
+                                },
+                                "tags": {
+                                    "blurb": "The currently active tags on the pad",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "type-name": "GstTagList",
+                                    "writable": false
+                                }
+                            }
+                        },
                         "presence": "request"
                     },
                     "src": {
@@ -1929,6 +1991,27 @@
                     "sink_%%u": {
                         "caps": "ANY",
                         "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstMultiQueuePad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "group-id": {
+                                    "blurb": "Group to which this pad belongs",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": true
+                                }
+                            }
+                        },
                         "presence": "request"
                     },
                     "src_%%u": {
@@ -2950,7 +3033,7 @@
     "coretracers": {
         "description": "GStreamer core tracers",
         "elements": {},
-        "filename": "libgstcoretracers.so",
+        "filename": "gstcoretracers",
         "license": "LGPL",
         "package": "GStreamer git",
         "source": "gstreamer",

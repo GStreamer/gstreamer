@@ -10,13 +10,18 @@
 #include "gst/gst-i18n-app.h"
 
 static GRegex *cleanup_caps_field = NULL;
+static void _add_object_details (GString * json, GObject * object);
 
 static gboolean
-has_sometimes_template (GstElement * element)
+has_sometimes_template (GObject * object)
 {
-  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+  GstElementClass *klass;
   GList *l;
 
+  if (!GST_IS_OBJECT (object))
+    return FALSE;
+
+  klass = GST_ELEMENT_GET_CLASS (object);
   for (l = klass->padtemplates; l != NULL; l = l->next) {
     if (GST_PAD_TEMPLATE (l->data)->presence == GST_PAD_SOMETIMES)
       return TRUE;
@@ -182,7 +187,7 @@ _serialize_enum (GString * json, const gchar * key_name, GType gtype,
 
 
 static void
-_add_element_signals (GString * json, GstElement * element)
+_add_signals (GString * json, GObject * object)
 {
   gboolean opened = FALSE;
   guint *signals;
@@ -197,7 +202,7 @@ _add_element_signals (GString * json, GstElement * element)
 
     /* For elements that have sometimes pads, also list a few useful GstElement
      * signals. Put these first, so element-specific ones come later. */
-    if (k == 0 && has_sometimes_template (element)) {
+    if (k == 0 && has_sometimes_template (object)) {
       query = g_new0 (GSignalQuery, 1);
       g_signal_query (g_signal_lookup ("pad-added", GST_TYPE_ELEMENT), query);
       found_signals = g_slist_append (found_signals, query);
@@ -210,11 +215,14 @@ _add_element_signals (GString * json, GstElement * element)
       found_signals = g_slist_append (found_signals, query);
     }
 
-    for (type = G_OBJECT_TYPE (element); type; type = g_type_parent (type)) {
+    for (type = G_OBJECT_TYPE (object); type; type = g_type_parent (type)) {
       if (type == GST_TYPE_ELEMENT || type == GST_TYPE_OBJECT)
         break;
 
-      if (type == GST_TYPE_BIN && G_OBJECT_TYPE (element) != GST_TYPE_BIN)
+      if (type == GST_TYPE_PAD)
+        break;
+
+      if (type == GST_TYPE_BIN && G_OBJECT_TYPE (object) != GST_TYPE_BIN)
         continue;
 
       signals = g_signal_list_ids (type, &nsignals);
@@ -273,13 +281,12 @@ _add_element_signals (GString * json, GstElement * element)
 }
 
 static void
-_add_element_properties (GString * json, GstElement * element)
+_add_properties (GString * json, GObject * object, GObjectClass * klass)
 {
   gchar *tmpstr;
   guint i, n_props;
   gboolean opened = FALSE;
   GParamSpec **specs, *spec;
-  GObjectClass *klass = G_OBJECT_GET_CLASS (element);
 
   specs = g_object_class_list_properties (klass, &n_props);
 
@@ -287,10 +294,13 @@ _add_element_properties (GString * json, GstElement * element)
     GValue value = { 0, };
     spec = specs[i];
 
+    if (spec->owner_type == GST_TYPE_PAD || spec->owner_type == GST_TYPE_OBJECT)
+      continue;
+
     g_value_init (&value, spec->value_type);
-    if (element && ! !(spec->flags & G_PARAM_READABLE) &&
+    if (object && ! !(spec->flags & G_PARAM_READABLE) &&
         !(spec->flags & GST_PARAM_DOC_SHOW_DEFAULT)) {
-      g_object_get_property (G_OBJECT (element), spec->name, &value);
+      g_object_get_property (G_OBJECT (object), spec->name, &value);
     } else {
       /* if we can't read the property value, assume it's set to the default
        * (which might not be entirely true for sub-classes, but that's an
@@ -346,8 +356,8 @@ _add_element_properties (GString * json, GstElement * element)
             ",\"max\": \"%lu\"",
             g_value_get_ulong (&value), pulong->minimum, pulong->maximum);
 
-        GST_ERROR ("%s: property '%s' of type ulong: consider changing to "
-            "uint/uint64", GST_OBJECT_NAME (element),
+        GST_ERROR_OBJECT (object,
+            "property '%s' of type ulong: consider changing to " "uint/uint64",
             g_param_spec_get_name (spec));
         break;
       }
@@ -361,8 +371,8 @@ _add_element_properties (GString * json, GstElement * element)
             ",\"max\": \"%ld\"",
             g_value_get_long (&value), plong->minimum, plong->maximum);
 
-        GST_ERROR ("%s: property '%s' of type long: consider changing to "
-            "int/int64", GST_OBJECT_NAME (element),
+        GST_ERROR_OBJECT (object,
+            "property '%s' of type long: consider changing to " "int/int64",
             g_param_spec_get_name (spec));
         break;
       }
@@ -434,8 +444,8 @@ _add_element_properties (GString * json, GstElement * element)
       }
       case G_TYPE_CHAR:
       case G_TYPE_UCHAR:
-        GST_ERROR ("%s: property '%s' of type char: consider changing to "
-            "int/string", GST_OBJECT_NAME (element),
+        GST_ERROR_OBJECT (object,
+            "property '%s' of type char: consider changing to " "int/string",
             g_param_spec_get_name (spec));
         /* fall through */
       default:
@@ -556,7 +566,8 @@ _build_caps (const GstCaps * caps)
 }
 
 static void
-_add_element_pad_templates (GString * json, GstElementFactory * factory)
+_add_element_pad_templates (GString * json, GstElement * element,
+    GstElementFactory * factory)
 {
   gboolean opened = FALSE;
   const GList *pads;
@@ -566,6 +577,8 @@ _add_element_pad_templates (GString * json, GstElementFactory * factory)
   pads = gst_element_factory_get_static_pad_templates (factory);
   while (pads) {
     gchar *name, *caps;
+    GType pad_type;
+    GstPadTemplate *tmpl;
     padtemplate = (GstStaticPadTemplate *) (pads->data);
     pads = g_list_next (pads);
 
@@ -576,7 +589,7 @@ _add_element_pad_templates (GString * json, GstElementFactory * factory)
         "\"%s\": {"
         "\"caps\": \"%s\","
         "\"direction\": \"%s\","
-        "\"presence\": \"%s\"}",
+        "\"presence\": \"%s\"",
         opened ? "," : ",\"pad-templates\": {",
         name, caps,
         padtemplate->direction ==
@@ -588,6 +601,20 @@ _add_element_pad_templates (GString * json, GstElementFactory * factory)
         GST_PAD_REQUEST ? "request" : "unknown");
     opened = TRUE;
     g_free (name);
+
+    tmpl = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (element),
+        padtemplate->name_template);
+    pad_type = GST_PAD_TEMPLATE_GTYPE (tmpl);
+    if (pad_type != G_TYPE_NONE && pad_type != GST_TYPE_PAD) {
+      GObject *tmpobj;
+
+      g_string_append (json, ",\"object-type\": {");
+      tmpobj = g_object_new (pad_type, NULL);
+      _add_object_details (json, tmpobj);
+      g_object_unref (tmpobj);
+      g_string_append (json, "}");
+    }
+    g_string_append (json, "}");
   }
   if (opened)
     g_string_append (json, "}");
@@ -645,9 +672,27 @@ _add_factory_details (GString * json, GstElementFactory * factory)
 }
 
 static void
-_add_element_details (GString * json, GstPluginFeature * feature)
+_add_object_details (GString * json, GObject * object)
 {
   GType type;
+  g_string_append (json, "\"hierarchy\": [");
+
+  for (type = G_OBJECT_TYPE (object);; type = g_type_parent (type)) {
+    g_string_append_printf (json, "\"%s\"%c", g_type_name (type),
+        type == G_TYPE_OBJECT ? ' ' : ',');
+
+    if (type == G_TYPE_OBJECT)
+      break;
+  }
+  g_string_append (json, "]");
+  _add_properties (json, object, G_OBJECT_GET_CLASS (object));
+  _add_signals (json, object);
+
+}
+
+static void
+_add_element_details (GString * json, GstPluginFeature * feature)
+{
   GstElement *element =
       gst_element_factory_create (GST_ELEMENT_FACTORY (feature), NULL);
   char s[20];
@@ -661,20 +706,9 @@ _add_element_details (GString * json, GstPluginFeature * feature)
       get_rank_name (s, gst_plugin_feature_get_rank (feature)));
 
   _add_factory_details (json, GST_ELEMENT_FACTORY (feature));
+  _add_object_details (json, G_OBJECT (element));
 
-  g_string_append (json, "\"hierarchy\": [");
-
-  for (type = G_OBJECT_TYPE (element);; type = g_type_parent (type)) {
-    g_string_append_printf (json, "\"%s\"%c", g_type_name (type),
-        type == G_TYPE_OBJECT ? ' ' : ',');
-
-    if (type == G_TYPE_OBJECT)
-      break;
-  }
-  g_string_append (json, "]");
-  _add_element_properties (json, element);
-  _add_element_signals (json, element);
-  _add_element_pad_templates (json, GST_ELEMENT_FACTORY (feature));
+  _add_element_pad_templates (json, element, GST_ELEMENT_FACTORY (feature));
 
   g_string_append (json, "}");
 }
