@@ -2925,6 +2925,7 @@ gst_aggregator_pad_class_init (GstAggregatorPadClass * klass)
 
   /**
    * GstAggregatorPad:buffer-consumed:
+   * @buffer: The buffer that was consumed
    *
    * Signals that a buffer was consumed. As aggregator pads store buffers
    * in an internal queue, there is no direct match between input and output
