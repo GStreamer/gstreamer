@@ -82,6 +82,7 @@ struct _GstVPXDec
   gboolean have_video_meta;
   GstBufferPool *pool;
   gsize buf_size;
+  gboolean safe_remap;
 };
 
 struct _GstVPXDecClass

@@ -286,6 +286,7 @@ gst_vpx_dec_start (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (gst_vpx_dec, "start");
   gst_vpx_dec->decoder_inited = FALSE;
+  gst_vpx_dec->safe_remap = FALSE;
 
   return TRUE;
 }
@@ -401,6 +402,15 @@ gst_vpx_dec_prepare_image (GstVPXDec * dec, const vpx_image_t * img)
 
   buffer = gst_buffer_ref (frame->buffer);
 
+  /* FIXME: an atomic remap would be preferable, for now we simply
+   * remap the buffer from RW to RO when using a sysmem allocator,
+   * in order to avoid a useless memcpy in GstVideoDecoder.
+   */
+  if (dec->safe_remap) {
+    gst_buffer_unmap (buffer, &frame->info);
+    gst_buffer_map (buffer, &frame->info, GST_MAP_READ);
+  }
+
   vmeta = gst_buffer_get_video_meta (buffer);
   vmeta->format = GST_VIDEO_INFO_FORMAT (info);
   vmeta->width = GST_VIDEO_INFO_WIDTH (info);
@@ -449,6 +459,9 @@ gst_vpx_dec_get_buffer_cb (gpointer priv, gsize min_size,
       gst_object_unref (allocator);
       allocator = NULL;
     }
+
+    dec->safe_remap = (allocator == NULL
+        || !g_strcmp0 (allocator->mem_type, GST_ALLOCATOR_SYSMEM));
 
     pool = gst_buffer_pool_new ();
     config = gst_buffer_pool_get_config (pool);
