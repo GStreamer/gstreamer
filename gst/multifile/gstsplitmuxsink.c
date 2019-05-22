@@ -2027,10 +2027,12 @@ handle_gathered_gop (GstSplitMuxSink * splitmux)
   /* Check for overrun - have we output at least one byte and overrun
    * either threshold? */
   if (need_new_fragment (splitmux, queued_time, queued_gop_time, queued_bytes)) {
-    GstClockTime *sink_running_time = g_new (GstClockTime, 1);
-    *sink_running_time = splitmux->reference_ctx->out_running_time;
-    g_object_set_qdata_full (G_OBJECT (splitmux->sink),
-        RUNNING_TIME, sink_running_time, g_free);
+    if (splitmux->async_finalize) {
+      GstClockTime *sink_running_time = g_new (GstClockTime, 1);
+      *sink_running_time = splitmux->reference_ctx->out_running_time;
+      g_object_set_qdata_full (G_OBJECT (splitmux->sink),
+          RUNNING_TIME, sink_running_time, g_free);
+    }
     g_atomic_int_set (&(splitmux->do_split_next_gop), FALSE);
     /* Tell the output side to start a new fragment */
     GST_INFO_OBJECT (splitmux,
