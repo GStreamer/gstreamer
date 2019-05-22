@@ -797,6 +797,7 @@ GST_START_TEST (test_flushing_seek)
   ChainData data2 = { 0, };
   TestData test = { 0, };
   GstBuffer *buf;
+  guint32 seqnum;
 
   _test_data_init (&test, TRUE);
 
@@ -817,16 +818,20 @@ GST_START_TEST (test_flushing_seek)
   /* now do a successful flushing seek */
   event = gst_event_new_seek (1, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
       GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, 10 * GST_SECOND);
+  seqnum = gst_event_get_seqnum (event);
   fail_unless (gst_pad_send_event (test.srcpad, event));
 
-  /* flushing starts once one of the upstream elements sends the first
-   * FLUSH_START */
-  fail_unless_equals_int (test.flush_start_events, 0);
+  /* flushing starts when a flushing seek is received, and stops
+   * when all sink pads have received FLUSH_STOP */
+  fail_unless_equals_int (test.flush_start_events, 1);
   fail_unless_equals_int (test.flush_stop_events, 0);
 
-  /* send a first FLUSH_START on agg:sink_0, will be sent downstream */
+  /* send a first FLUSH_START on agg:sink_0, nothing will be sent
+   * downstream */
   GST_DEBUG_OBJECT (data2.sinkpad, "send flush_start");
-  fail_unless (gst_pad_push_event (data2.srcpad, gst_event_new_flush_start ()));
+  event = gst_event_new_flush_start ();
+  gst_event_set_seqnum (event, seqnum);
+  fail_unless (gst_pad_push_event (data2.srcpad, event));
   fail_unless_equals_int (test.flush_start_events, 1);
   fail_unless_equals_int (test.flush_stop_events, 0);
 
@@ -834,16 +839,19 @@ GST_START_TEST (test_flushing_seek)
   data2.expected_result = GST_FLOW_FLUSHING;
   thread2 = g_thread_try_new ("gst-check", push_data, &data2, NULL);
 
-  /* this should send not additional flush_start */
+  /* this should send no additional flush_start */
   GST_DEBUG_OBJECT (data1.sinkpad, "send flush_start");
-  fail_unless (gst_pad_push_event (data1.srcpad, gst_event_new_flush_start ()));
+  event = gst_event_new_flush_start ();
+  gst_event_set_seqnum (event, seqnum);
+  fail_unless (gst_pad_push_event (data1.srcpad, event));
   fail_unless_equals_int (test.flush_start_events, 1);
   fail_unless_equals_int (test.flush_stop_events, 0);
 
   /* the first FLUSH_STOP is not forwarded downstream */
   GST_DEBUG_OBJECT (data1.srcpad, "send flush_stop");
-  fail_unless (gst_pad_push_event (data1.srcpad,
-          gst_event_new_flush_stop (TRUE)));
+  event = gst_event_new_flush_stop (TRUE);
+  gst_event_set_seqnum (event, seqnum);
+  fail_unless (gst_pad_push_event (data1.srcpad, event));
   fail_unless_equals_int (test.flush_start_events, 1);
   fail_unless_equals_int (test.flush_stop_events, 0);
 
@@ -858,7 +866,9 @@ GST_START_TEST (test_flushing_seek)
   /* flush agg:sink_1 as well. This completes the flushing seek so a FLUSH_STOP is
    * sent downstream */
   GST_DEBUG_OBJECT (data2.srcpad, "send flush_stop");
-  gst_pad_push_event (data2.srcpad, gst_event_new_flush_stop (TRUE));
+  event = gst_event_new_flush_stop (TRUE);
+  gst_event_set_seqnum (event, seqnum);
+  gst_pad_push_event (data2.srcpad, event);
 
   /* and the last FLUSH_STOP is forwarded downstream */
   fail_unless_equals_int (test.flush_stop_events, 1);
