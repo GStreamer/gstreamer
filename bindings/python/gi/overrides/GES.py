@@ -50,16 +50,6 @@ python module to use with GES 0.10"
 
     warnings.warn(warn_msg, RuntimeWarning)
 
-
-class TrackElement(GES.TrackElement):
-    def set_child_property(self, prop_name, prop_value):
-        return TimelineElement.set_child_property(self, prop_name, prop_value)
-
-
-TrackElement = override(TrackElement)
-__all__.append('TrackElement')
-
-
 class TimelineElement(GES.TimelineElement):
     def __repr__(self):
         return "%s [%s (%s) %s]" % (
@@ -80,6 +70,14 @@ class TimelineElement(GES.TimelineElement):
 
 TimelineElement = override(TimelineElement)
 __all__.append('TimelineElement')
+
+class TrackElement(GES.TrackElement):
+    def set_child_property(self, prop_name, prop_value):
+        return TimelineElement.set_child_property(self, prop_name, prop_value)
+
+TrackElement = override(TrackElement)
+__all__.append('TrackElement')
+
 
 class Container(GES.Container):
     def edit(self, layers, new_layer_priority, mode, edge, position):
