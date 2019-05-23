@@ -43,7 +43,8 @@
 
 /* Supported set of tuning options, within this implementation */
 #define SUPPORTED_TUNE_OPTIONS \
-  (GST_VAAPI_ENCODER_TUNE_MASK (NONE))
+  (GST_VAAPI_ENCODER_TUNE_MASK (NONE) |           \
+   GST_VAAPI_ENCODER_TUNE_MASK (LOW_POWER))
 
 /* Supported set of VA packed headers, within this implementation */
 #define SUPPORTED_PACKED_HEADERS                \
@@ -102,6 +103,7 @@ struct _GstVaapiEncoderVP9
   guint frame_num;
   GstVaapiSurfaceProxy *ref_list[GST_VP9_REF_FRAMES];   /* reference list */
   guint ref_list_idx;           /* next free slot in ref_list */
+  GstVaapiEntrypoint entrypoint;
 
   /* Bitrate contral parameters, CPB = Coded Picture Buffer */
   guint bitrate_bits;           /* bitrate (bits) */
@@ -161,7 +163,7 @@ static gboolean
 ensure_hw_profile (GstVaapiEncoderVP9 * encoder)
 {
   GstVaapiDisplay *const display = GST_VAAPI_ENCODER_DISPLAY (encoder);
-  GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  GstVaapiEntrypoint entrypoint = encoder->entrypoint;
   GstVaapiProfile profile, profiles[2];
   guint i, num_profiles = 0;
 
@@ -206,6 +208,8 @@ set_context_info (GstVaapiEncoder * base_encoder)
   /* Only YUV 4:2:0 formats are supported for now. */
   base_encoder->codedbuf_size = GST_ROUND_UP_16 (vip->width) *
       GST_ROUND_UP_16 (vip->height) * 3 / 2;
+
+  base_encoder->context_info.entrypoint = encoder->entrypoint;
 
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
@@ -512,6 +516,8 @@ gst_vaapi_encoder_vp9_reconfigure (GstVaapiEncoder * base_encoder)
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return status;
 
+  if (GST_VAAPI_ENCODER_TUNE (encoder) == GST_VAAPI_ENCODER_TUNE_LOW_POWER)
+    encoder->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP;
   ensure_control_rate_params (encoder);
   return set_context_info (base_encoder);
 }
@@ -526,6 +532,7 @@ gst_vaapi_encoder_vp9_init (GstVaapiEncoder * base_encoder)
   encoder->sharpness_level = DEFAULT_SHARPNESS_LEVEL;
   encoder->yac_qi = DEFAULT_YAC_QINDEX;
   encoder->cpb_length = DEFAULT_CPB_LENGTH;
+  encoder->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
 
   memset (encoder->ref_list, 0,
       G_N_ELEMENTS (encoder->ref_list) * sizeof (encoder->ref_list[0]));
