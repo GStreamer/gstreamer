@@ -691,8 +691,7 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
  * @duration: The duration value to set on the new #GESClip
  * @track_types: The #GESTrackType to set on the the new #GESClip
  *
- * Creates Clip from asset, adds it to layer and
- * returns a reference to it.
+ * Creates Clip from asset, adds it to layer and returns its pointer.
  *
  * Returns: (transfer none): Created #GESClip
  */

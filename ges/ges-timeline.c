@@ -33,7 +33,7 @@
  * Contains a list of #GESLayer which users should use to arrange the
  * various clips through time.
  *
- * The output type is determined by the #GESTrack that are set on
+ * The output types are determined by the #GESTrack that are set on
  * the #GESTimeline.
  *
  * To save/load a timeline, you can use the ges_timeline_load_from_uri() and

@@ -347,7 +347,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   /**
    * GESTimelineElement:start:
    *
-   * The position of the object in its container (in nanoseconds).
+   * The position of the object in the timeline (in nanoseconds).
    */
   properties[PROP_START] = g_param_spec_uint64 ("start", "Start",
       "The position in the container", 0, G_MAXUINT64, 0, G_PARAM_READWRITE);
