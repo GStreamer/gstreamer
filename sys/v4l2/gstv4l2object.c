@@ -4456,6 +4456,79 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
   return TRUE;
 }
 
+static gboolean
+validate_video_meta_struct (GstV4l2Object * obj, const GstStructure * s)
+{
+  guint i;
+
+  for (i = 0; i < gst_structure_n_fields (s); i++) {
+    const gchar *name = gst_structure_nth_field_name (s, i);
+
+    if (!g_str_equal (name, "padding-top")
+        && !g_str_equal (name, "padding-bottom")
+        && !g_str_equal (name, "padding-left")
+        && !g_str_equal (name, "padding-right")) {
+      GST_WARNING_OBJECT (obj->dbg_obj, "Unknown video meta field: '%s'", name);
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_v4l2_object_match_buffer_layout_from_struct (GstV4l2Object * obj,
+    const GstStructure * s, GstCaps * caps, guint buffer_size)
+{
+  GstVideoInfo info;
+  GstVideoAlignment align;
+  gsize plane_size[GST_VIDEO_MAX_PLANES];
+
+  if (!validate_video_meta_struct (obj, s))
+    return FALSE;
+
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_WARNING_OBJECT (obj->dbg_obj, "Failed to create video info");
+    return FALSE;
+  }
+
+  gst_video_alignment_reset (&align);
+
+  gst_structure_get_uint (s, "padding-top", &align.padding_top);
+  gst_structure_get_uint (s, "padding-bottom", &align.padding_bottom);
+  gst_structure_get_uint (s, "padding-left", &align.padding_left);
+  gst_structure_get_uint (s, "padding-right", &align.padding_right);
+
+  if (align.padding_top || align.padding_bottom || align.padding_left ||
+      align.padding_right) {
+    GST_DEBUG_OBJECT (obj->dbg_obj,
+        "Upstream requested padding (top: %d bottom: %d left: %d right: %d)",
+        align.padding_top, align.padding_bottom, align.padding_left,
+        align.padding_right);
+  }
+
+  if (!gst_video_info_align_full (&info, &align, plane_size)) {
+    GST_WARNING_OBJECT (obj->dbg_obj, "Failed to align video info");
+    return FALSE;
+  }
+
+  if (GST_VIDEO_INFO_SIZE (&info) != buffer_size) {
+    GST_WARNING_OBJECT (obj->dbg_obj,
+        "Requested buffer size (%d) doesn't match video info size (%"
+        G_GSIZE_FORMAT ")", buffer_size, GST_VIDEO_INFO_SIZE (&info));
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (obj->dbg_obj,
+      "try matching buffer layout requested by downstream");
+
+  gst_v4l2_object_match_buffer_layout (obj, GST_VIDEO_INFO_N_PLANES (&info),
+      info.offset, info.stride, buffer_size,
+      GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size));
+
+  return TRUE;
+}
+
 gboolean
 gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
 {
@@ -4468,6 +4541,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   gboolean can_share_own_pool, pushing_from_our_pool = FALSE;
   GstAllocator *allocator = NULL;
   GstAllocationParams params = { 0 };
+  guint video_idx;
 
   GST_DEBUG_OBJECT (obj->dbg_obj, "decide allocation");
 
@@ -4498,7 +4572,16 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       GST_PTR_FORMAT, size, min, max, pool);
 
   has_video_meta =
-      gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+      gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE,
+      &video_idx);
+
+  if (has_video_meta) {
+    const GstStructure *params;
+    gst_query_parse_nth_allocation_meta (query, video_idx, &params);
+
+    if (params)
+      gst_v4l2_object_match_buffer_layout_from_struct (obj, params, caps, size);
+  }
 
   can_share_own_pool = (has_video_meta || !obj->need_video_meta);
 
