@@ -67,9 +67,9 @@ The configuration file:
 ``` shell
  core, action=set-property, target-element-klass=Sink, property-name=sync, property-value=false
 
- ssim, is-config=true, output-video-format="I420", reference-video-format="I420"
- ssim, element-classification="Video/Decoder", output-dir=/tmp/test/before-agingtv/
- ssim, element-name=my_agingtv, output-dir=/tmp/test/after-agingtv/, \
+ validatessim, is-config=true, output-video-format="I420", reference-video-format="I420"
+ validatessim, element-classification="Video/Decoder", output-dir=/tmp/test/before-agingtv/
+ validatessim, element-name=my_agingtv, output-dir=/tmp/test/after-agingtv/, \
        reference-images-dir=/tmp/test/before-agingtv/, \
        result-output-dir=/tmp/test/failures, check-recurrence=5.0
 ```
