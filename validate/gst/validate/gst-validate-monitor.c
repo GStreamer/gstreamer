@@ -394,6 +394,7 @@ gst_validate_monitor_attach_override (GstValidateMonitor * monitor,
     gst_object_unref (runner);
   if (mrunner)
     gst_object_unref (mrunner);
+  gst_validate_override_attached (override);
 }
 
 static void

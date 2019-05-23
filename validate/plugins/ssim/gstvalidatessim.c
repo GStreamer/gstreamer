@@ -192,8 +192,6 @@ _runner_set (GObject * object, GParamSpec * pspec, gpointer user_data)
   GstValidateRunner *runner =
       gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (self));
 
-  self->priv->is_attached = TRUE;
-
   g_signal_connect (runner, "stopping", G_CALLBACK (runner_stopping), self);
   gst_object_unref (runner);
 }
@@ -284,8 +282,9 @@ _can_attach (GstValidateOverride * override, GstValidateMonitor * monitor)
   GstElement *element = NULL;
   GstStructure *structure;
   gboolean res = TRUE;
+  ValidateSsimOverride *self = VALIDATE_SSIM_OVERRIDE (override);
 
-  if (VALIDATE_SSIM_OVERRIDE (override)->priv->is_attached) {
+  if (self->priv->is_attached) {
     GST_ERROR_OBJECT (override, "Already attached");
 
     goto fail;
@@ -333,6 +332,15 @@ fail:
 }
 
 static void
+validate_ssim_override_attached (GstValidateOverride * override)
+{
+  ValidateSsimOverride *self = VALIDATE_SSIM_OVERRIDE (override);
+  GST_ERROR_OBJECT (override, "ATTACGHED!");
+
+  self->priv->is_attached = TRUE;
+}
+
+static void
 _finalize (GObject * object)
 {
   ValidateSsimOverridePrivate *priv = VALIDATE_SSIM_OVERRIDE (object)->priv;
@@ -355,8 +363,11 @@ static void
 validate_ssim_override_class_init (ValidateSsimOverrideClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstValidateOverrideClass *override_class =
+      GST_VALIDATE_OVERRIDE_CLASS (klass);
 
   gobject_class->finalize = _finalize;
+  override_class->attached = validate_ssim_override_attached;
 
   if (!gst_validate_is_initialized ())
     return;

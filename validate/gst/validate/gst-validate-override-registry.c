@@ -185,7 +185,6 @@ static void
       GST_INFO_OBJECT (registry, "Adding override %s to %s", entry->name, name);
 
       gst_validate_monitor_attach_override (monitor, entry->override);
-      gst_validate_override_attached (entry->override);
     }
   }
 }
