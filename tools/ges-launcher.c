@@ -748,6 +748,7 @@ _local_command_line (GApplication * application, gchar ** arguments[],
   argc = g_strv_length (argv);
   *exit_status = 0;
 
+  gst_init (&argc, &argv);
   if (!g_option_context_parse (ctx, &argc, &argv, &error)) {
     gst_init (NULL, NULL);
     g_printerr ("Error initializing: %s\n", error->message);
