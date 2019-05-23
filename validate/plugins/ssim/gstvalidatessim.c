@@ -44,6 +44,7 @@
 #define SSIM_CONVERSION_ERROR g_quark_from_static_string ("validatessim::conversion-error")
 #define SSIM_SAVING_ERROR g_quark_from_static_string ("validatessim::saving-error")
 #define MONITOR_DATA g_quark_from_static_string ("validate-ssim-monitor-data")
+#define NOT_ATTACHED g_quark_from_static_string ("validatessim::not-attached")
 
 typedef struct _ValidateSsimOverridePrivate ValidateSsimOverridePrivate;
 
@@ -128,6 +129,14 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
   const gchar *compared_files_dir =
       gst_structure_get_string (self->priv->config,
       "reference-images-dir");
+
+  if (!self->priv->is_attached) {
+    gchar *config_str = gst_structure_to_string (self->priv->config);
+    GST_VALIDATE_REPORT (self, NOT_ATTACHED,
+        "The test ended without SSIM being attached for config %s", config_str);
+    g_free (config_str);
+    return;
+  }
 
   if (!compared_files_dir) {
     return;
@@ -335,7 +344,6 @@ static void
 validate_ssim_override_attached (GstValidateOverride * override)
 {
   ValidateSsimOverride *self = VALIDATE_SSIM_OVERRIDE (override);
-  GST_ERROR_OBJECT (override, "ATTACGHED!");
 
   self->priv->is_attached = TRUE;
 }
@@ -390,6 +398,12 @@ validate_ssim_override_class_init (ValidateSsimOverrideClass * klass)
   gst_validate_issue_register (gst_validate_issue_new (SSIM_SAVING_ERROR,
           "The ValidateSSim plugin could not save PNG file",
           "The ValidateSSim plugin could not save PNG file",
+          GST_VALIDATE_REPORT_LEVEL_CRITICAL));
+
+  gst_validate_issue_register (gst_validate_issue_new
+      (NOT_ATTACHED,
+          "The ssim override was never attached.",
+          "The ssim override was never attached.",
           GST_VALIDATE_REPORT_LEVEL_CRITICAL));
 }
 
