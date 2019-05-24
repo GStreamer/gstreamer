@@ -102,6 +102,13 @@ typedef enum
     GSTCURL_HTTP_VERSION_MAX
   } GstCurlHttpVersion;
 
+typedef enum _GstCGstCurlHttpSrcSeekable
+{
+    GSTCURL_SEEKABLE_UNKNOWN,
+    GSTCURL_SEEKABLE_TRUE,
+    GSTCURL_SEEKABLE_FALSE
+} GstCGstCurlHttpSrcSeekable;
+
 struct _GstCurlHttpSrcMultiTaskContext
 {
   GstTask     *task;
@@ -158,6 +165,8 @@ struct _GstCurlHttpSrc
   GstStructure *request_headers;  /* CURLOPT_HTTPHEADER */
   struct curl_slist *slist;
   gboolean accept_compressed_encodings; /* CURLOPT_ACCEPT_ENCODING */
+  gint64 request_position;     /* Seek to this position. */
+  gint64 stop_position;        /* Stop at this position. */
 
   /* Connection options */
   glong allow_3xx_redirect;     /* CURLOPT_FOLLOWLOCATION */
@@ -213,6 +222,8 @@ struct _GstCurlHttpSrc
   guint status_code;
   gchar *reason_phrase;
   gboolean hdrs_updated;
+  guint64 content_size;
+  GstCGstCurlHttpSrcSeekable seekable;
 
   CURLcode curl_result;
   char curl_errbuf[CURL_ERROR_SIZE];

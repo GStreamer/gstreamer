@@ -193,6 +193,9 @@ static void gst_curl_http_src_cleanup_instance (GstCurlHttpSrc * src);
 static gboolean gst_curl_http_src_query (GstBaseSrc * bsrc, GstQuery * query);
 static gboolean gst_curl_http_src_get_content_length (GstBaseSrc * bsrc,
     guint64 * size);
+static gboolean gst_curl_http_src_is_seekable (GstBaseSrc * bsrc);
+static gboolean gst_curl_http_src_do_seek (GstBaseSrc * bsrc,
+    GstSegment * segment);
 static gboolean gst_curl_http_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_curl_http_src_unlock_stop (GstBaseSrc * bsrc);
 
@@ -278,6 +281,9 @@ gst_curl_http_src_class_init (GstCurlHttpSrcClass * klass)
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_curl_http_src_query);
   gstbasesrc_class->get_size =
       GST_DEBUG_FUNCPTR (gst_curl_http_src_get_content_length);
+  gstbasesrc_class->is_seekable =
+      GST_DEBUG_FUNCPTR (gst_curl_http_src_is_seekable);
+  gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_curl_http_src_do_seek);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_curl_http_src_unlock);
   gstbasesrc_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_curl_http_src_unlock_stop);
@@ -702,6 +708,10 @@ gst_curl_http_src_init (GstCurlHttpSrc * source)
   source->retries_remaining = source->total_retries;
   source->slist = NULL;
   source->accept_compressed_encodings = FALSE;
+  source->seekable = GSTCURL_SEEKABLE_UNKNOWN;
+  source->content_size = 0;
+  source->request_position = 0;
+  source->stop_position = -1;
 
   gst_base_src_set_automatic_eos (GST_BASE_SRC (source), FALSE);
 
@@ -1139,6 +1149,23 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
   gst_curl_setopt_bool (s, handle, CURLOPT_SSL_VERIFYPEER, s->strict_ssl);
   gst_curl_setopt_str (s, handle, CURLOPT_CAINFO, s->custom_ca_file);
 
+  if (s->request_position || s->stop_position > 0) {
+    gchar *range;
+    if (s->stop_position < 1) {
+      /* start specified, no end specified */
+      range = g_strdup_printf ("%" G_GINT64_FORMAT "-", s->request_position);
+    } else {
+      /* in GStreamer the end position indicates the first byte that is not
+         in the range, whereas in HTTP the Content-Range header includes the
+         byte listed in the end value */
+      range = g_strdup_printf ("%" G_GINT64_FORMAT "-%" G_GINT64_FORMAT,
+          s->request_position, s->stop_position - 1);
+    }
+    GST_TRACE_OBJECT (s, "Requesting range: %s", range);
+    curl_easy_setopt (handle, CURLOPT_RANGE, range);
+    g_free (range);
+  }
+
   switch (s->preferred_http_version) {
     case GSTCURL_HTTP_VERSION_1_0:
       GST_DEBUG_OBJECT (s, "Setting version as HTTP/1.0");
@@ -1192,6 +1219,7 @@ gst_curl_http_src_handle_response (GstCurlHttpSrc * src)
 {
   glong curl_info_long;
   gdouble curl_info_dbl;
+  curl_off_t curl_info_offt;
   gchar *redirect_url;
   GstBaseSrc *basesrc;
   const GValue *response_headers;
@@ -1284,15 +1312,25 @@ gst_curl_http_src_handle_response (GstCurlHttpSrc * src)
   /*
    * Push the content length
    */
-  if (curl_easy_getinfo (src->curl_handle, CURLINFO_CONTENT_LENGTH_DOWNLOAD,
-          &curl_info_dbl) == CURLE_OK) {
-    if (curl_info_dbl == -1) {
+  if (curl_easy_getinfo (src->curl_handle, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T,
+          &curl_info_offt) == CURLE_OK) {
+    if (curl_info_offt == -1) {
       GST_WARNING_OBJECT (src,
           "No Content-Length was specified in the response.");
+      src->seekable = GSTCURL_SEEKABLE_FALSE;
     } else {
-      GST_INFO_OBJECT (src, "Content-Length was given as %.0f", curl_info_dbl);
+      /* Note that in the case of a range get, Content-Length is the number
+         of bytes requested, not the total size of the resource */
+      GST_INFO_OBJECT (src, "Content-Length was given as %" G_GUINT64_FORMAT,
+          curl_info_offt);
+      if (src->content_size == 0) {
+        src->content_size = src->request_position + curl_info_offt;
+      }
       basesrc = GST_BASE_SRC_CAST (src);
-      basesrc->segment.duration = curl_info_dbl;
+      basesrc->segment.duration = src->request_position + curl_info_offt;
+      if (src->seekable == GSTCURL_SEEKABLE_UNKNOWN) {
+        src->seekable = GSTCURL_SEEKABLE_TRUE;
+      }
       gst_element_post_message (GST_ELEMENT (src),
           gst_message_new_duration_changed (GST_OBJECT (src)));
     }
@@ -1524,6 +1562,59 @@ gst_curl_http_src_get_content_length (GstBaseSrc * bsrc, guint64 * size)
     GST_DEBUG_OBJECT (src,
         "No content length has yet been set, or there was an error!");
   }
+  return ret;
+}
+
+static gboolean
+gst_curl_http_src_is_seekable (GstBaseSrc * bsrc)
+{
+  GstCurlHttpSrc *src = GST_CURLHTTPSRC (bsrc);
+
+  /* NOTE: if seekable is UNKNOWN, assume yes */
+  return src->seekable != GSTCURL_SEEKABLE_FALSE;
+}
+
+static gboolean
+gst_curl_http_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
+{
+  GstCurlHttpSrc *src = GST_CURLHTTPSRC (bsrc);
+  gboolean ret = TRUE;
+
+  g_mutex_lock (&src->buffer_mutex);
+  GST_DEBUG_OBJECT (src, "do_seek(%" G_GINT64_FORMAT ", %" G_GINT64_FORMAT
+      ")", segment->start, segment->stop);
+  if (src->state == GSTCURL_UNLOCK) {
+    GST_WARNING_OBJECT (src, "Attempt to seek while unlocked");
+    ret = FALSE;
+    goto done;
+  }
+  if (src->request_position == segment->start &&
+      src->stop_position == segment->stop) {
+    GST_DEBUG_OBJECT (src, "Seek to current read/end position");
+    goto done;
+  }
+
+  if (src->seekable == GSTCURL_SEEKABLE_FALSE) {
+    GST_WARNING_OBJECT (src, "Not seekable");
+    ret = FALSE;
+    goto done;
+  }
+
+  if (segment->rate < 0.0 || segment->format != GST_FORMAT_BYTES) {
+    GST_WARNING_OBJECT (src, "Invalid seek segment");
+    ret = FALSE;
+    goto done;
+  }
+
+  if (src->content_size > 0 && segment->start >= src->content_size) {
+    GST_WARNING_OBJECT (src,
+        "Potentially seeking beyond end of file, might EOS immediately");
+  }
+
+  src->request_position = segment->start;
+  src->stop_position = segment->stop;
+done:
+  g_mutex_unlock (&src->buffer_mutex);
   return ret;
 }
 
@@ -1893,6 +1984,17 @@ gst_curl_http_src_get_header (void *header, size_t size, size_t nmemb,
       /* We have some special cases - deal with them here */
       if (g_strcmp0 (header_key, "content-type") == 0) {
         gst_curl_http_src_negotiate_caps (src);
+      } else if (g_strcmp0 (header_key, "accept-ranges") == 0 &&
+          g_ascii_strcasecmp (header_value, "none") == 0) {
+        s->seekable = GSTCURL_SEEKABLE_FALSE;
+      } else if (g_strcmp0 (header_key, "content-range") == 0) {
+        /* In the case of a Range GET, the Content-Length header will contain
+           the size of range requested, and the Content-Range header will
+           have the start, stop and total size of the resource */
+        gchar *size = strchr (header_value, '/');
+        if (size) {
+          s->content_size = atoi (size);
+        }
       }
 
       g_free (header_key);
