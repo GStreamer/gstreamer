@@ -118,7 +118,10 @@ gst_video_colorimetry_from_string (GstVideoColorimetry * cinfo,
   const ColorimetryInfo *ci;
   gboolean res = FALSE;
 
-  if ((ci = gst_video_get_colorimetry (color))) {
+  if (!color) {
+    *cinfo = colorimetry[DEFAULT_UNKNOWN].color;
+    res = TRUE;
+  } else if ((ci = gst_video_get_colorimetry (color))) {
     *cinfo = ci->color;
     res = TRUE;
   } else {
