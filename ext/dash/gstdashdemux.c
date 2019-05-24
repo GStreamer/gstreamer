@@ -475,14 +475,14 @@ gst_dash_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
   GTimeSpan stream_now;
   GstClockTime seg_duration;
 
-  if (self->client->mpd_node->availabilityStartTime == NULL)
+  if (self->client->mpd_root_node->availabilityStartTime == NULL)
     return FALSE;
 
   seg_duration = gst_mpd_client_get_maximum_segment_duration (self->client);
   now = gst_dash_demux_get_server_now_utc (self);
   mstart =
-      gst_date_time_to_g_date_time (self->client->
-      mpd_node->availabilityStartTime);
+      gst_date_time_to_g_date_time (self->client->mpd_root_node->
+      availabilityStartTime);
   stream_now = g_date_time_difference (now, mstart);
   g_date_time_unref (now);
   g_date_time_unref (mstart);
@@ -491,11 +491,13 @@ gst_dash_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
     return FALSE;
 
   *stop = stream_now * GST_USECOND;
-  if (self->client->mpd_node->timeShiftBufferDepth == GST_MPD_DURATION_NONE) {
+  if (self->client->mpd_root_node->timeShiftBufferDepth ==
+      GST_MPD_DURATION_NONE) {
     *start = 0;
   } else {
     *start =
-        *stop - (self->client->mpd_node->timeShiftBufferDepth * GST_MSECOND);
+        *stop -
+        (self->client->mpd_root_node->timeShiftBufferDepth * GST_MSECOND);
     if (*start < 0)
       *start = 0;
   }
@@ -749,14 +751,14 @@ gst_dash_demux_get_property (GObject * object, guint prop_id, GValue * value,
 
 static gboolean
 gst_dash_demux_setup_mpdparser_streams (GstDashDemux * demux,
-    GstMpdClient * client)
+    GstMPDClient * client)
 {
   gboolean has_streams = FALSE;
   GList *adapt_sets, *iter;
 
   adapt_sets = gst_mpd_client_get_adaptation_sets (client);
   for (iter = adapt_sets; iter; iter = g_list_next (iter)) {
-    GstAdaptationSetNode *adapt_set_node = iter->data;
+    GstMPDAdaptationSetNode *adapt_set_node = iter->data;
 
     gst_mpd_client_setup_streaming (client, adapt_set_node);
     has_streams = TRUE;
@@ -814,7 +816,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     GST_LOG_OBJECT (demux, "Creating stream %d %" GST_PTR_FORMAT, i, caps);
 
     if (active_stream->cur_adapt_set) {
-      GstAdaptationSetNode *adp_set = active_stream->cur_adapt_set;
+      GstMPDAdaptationSetNode *adp_set = active_stream->cur_adapt_set;
       lang = adp_set->lang;
 
       /* Fallback to the language in ContentComponent node */
@@ -822,7 +824,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
         GList *it;
 
         for (it = adp_set->ContentComponents; it; it = it->next) {
-          GstContentComponentNode *cc_node = it->data;
+          GstMPDContentComponentNode *cc_node = it->data;
           if (cc_node->lang) {
             lang = cc_node->lang;
             break;
@@ -864,9 +866,9 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
         active_stream->cur_adapt_set->RepresentationBase &&
         active_stream->cur_adapt_set->RepresentationBase->ContentProtection) {
       GST_DEBUG_OBJECT (demux, "Adding ContentProtection events to source pad");
-      g_list_foreach (active_stream->cur_adapt_set->RepresentationBase->
-          ContentProtection, gst_dash_demux_send_content_protection_event,
-          stream);
+      g_list_foreach (active_stream->cur_adapt_set->
+          RepresentationBase->ContentProtection,
+          gst_dash_demux_send_content_protection_event, stream);
     }
 
     gst_isoff_sidx_parser_init (&stream->sidx_parser);
@@ -878,7 +880,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 static void
 gst_dash_demux_send_content_protection_event (gpointer data, gpointer userdata)
 {
-  GstDescriptorType *cp = (GstDescriptorType *) data;
+  GstMPDDescriptorType *cp = (GstMPDDescriptorType *) data;
   GstDashDemuxStream *stream = (GstDashDemuxStream *) userdata;
   GstEvent *event;
   GstBuffer *pssi;
@@ -939,7 +941,7 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
   period_idx = 0;
   if (gst_mpd_client_is_live (dashdemux->client)) {
     GDateTime *g_now;
-    if (dashdemux->client->mpd_node->availabilityStartTime == NULL) {
+    if (dashdemux->client->mpd_root_node->availabilityStartTime == NULL) {
       ret = FALSE;
       GST_ERROR_OBJECT (demux, "MPD does not have availabilityStartTime");
       goto done;
@@ -958,9 +960,9 @@ gst_dash_demux_setup_streams (GstAdaptiveDemux * demux)
     /* get period index for period encompassing the current time */
     g_now = gst_dash_demux_get_server_now_utc (dashdemux);
     now = gst_date_time_new_from_g_date_time (g_now);
-    if (dashdemux->client->mpd_node->suggestedPresentationDelay != -1) {
+    if (dashdemux->client->mpd_root_node->suggestedPresentationDelay != -1) {
       GstDateTime *target = gst_mpd_client_add_time_difference (now,
-          dashdemux->client->mpd_node->suggestedPresentationDelay * -1000);
+          dashdemux->client->mpd_root_node->suggestedPresentationDelay * -1000);
       gst_date_time_unref (now);
       now = target;
     } else if (dashdemux->default_presentation_delay) {
@@ -2215,7 +2217,7 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
     new_index = gst_mpd_client_get_rep_idx_with_min_bandwidth (rep_list);
 
   if (new_index != active_stream->representation_idx) {
-    GstRepresentationNode *rep = g_list_nth_data (rep_list, new_index);
+    GstMPDRepresentationNode *rep = g_list_nth_data (rep_list, new_index);
     GST_INFO_OBJECT (demux, "Changing representation idx: %d %d %u",
         dashstream->index, new_index, rep->bandwidth);
     if (gst_mpd_client_setup_representation (demux->client, active_stream, rep)) {
@@ -2384,7 +2386,7 @@ static gint64
 gst_dash_demux_get_manifest_update_interval (GstAdaptiveDemux * demux)
 {
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
-  return MIN (dashdemux->client->mpd_node->minimumUpdatePeriod * 1000,
+  return MIN (dashdemux->client->mpd_root_node->minimumUpdatePeriod * 1000,
       SLOW_CLOCK_UPDATE_INTERVAL);
 }
 
@@ -2393,7 +2395,7 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
     GstBuffer * buffer)
 {
   GstDashDemux *dashdemux = GST_DASH_DEMUX_CAST (demux);
-  GstMpdClient *new_client = NULL;
+  GstMPDClient *new_client = NULL;
   GstMapInfo mapinfo;
 
   GST_DEBUG_OBJECT (demux, "Updating manifest file from URL");
@@ -2956,8 +2958,8 @@ gst_dash_demux_parse_isobmff (GstAdaptiveDemux * demux,
               }
             }
             dash_stream->sidx_position =
-                SIDX (dash_stream)->entries[SIDX (dash_stream)->
-                entry_index].pts;
+                SIDX (dash_stream)->entries[SIDX (dash_stream)->entry_index].
+                pts;
           }
         }
 
@@ -3104,8 +3106,8 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
         } else if ((trun->flags & GST_TRUN_FLAGS_FIRST_SAMPLE_FLAGS_PRESENT)
             && k == 0) {
           sample_flags = trun->first_sample_flags;
-        } else if (traf->
-            tfhd.flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_FLAGS_PRESENT) {
+        } else if (traf->tfhd.
+            flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_FLAGS_PRESENT) {
           sample_flags = traf->tfhd.default_sample_flags;
         } else {
           trex_sample_flags = TRUE;
@@ -3115,8 +3117,8 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
 #if 0
         if (trun->flags & GST_TRUN_FLAGS_SAMPLE_DURATION_PRESENT) {
           sample_duration = sample->sample_duration;
-        } else if (traf->
-            tfhd.flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_DURATION_PRESENT) {
+        } else if (traf->tfhd.
+            flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_DURATION_PRESENT) {
           sample_duration = traf->tfhd.default_sample_duration;
         } else {
           GST_FIXME_OBJECT (stream->pad,
@@ -3129,8 +3131,8 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
 
         if (trun->flags & GST_TRUN_FLAGS_SAMPLE_SIZE_PRESENT) {
           prev_sample_end += sample->sample_size;
-        } else if (traf->
-            tfhd.flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_SIZE_PRESENT) {
+        } else if (traf->tfhd.
+            flags & GST_TFHD_FLAGS_DEFAULT_SAMPLE_SIZE_PRESENT) {
           prev_sample_end += traf->tfhd.default_sample_size;
         } else {
           GST_FIXME_OBJECT (stream->pad,

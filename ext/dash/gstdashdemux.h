@@ -125,7 +125,7 @@ struct _GstDashDemux
 
   GSList *next_periods;
 
-  GstMpdClient *client;         /* MPD client */
+  GstMPDClient *client;         /* MPD client */
   GMutex client_lock;
 
   GstDashDemuxClockDrift *clock_drift;
