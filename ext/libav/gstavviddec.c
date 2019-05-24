@@ -1225,7 +1225,6 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   if (!gst_structure_has_field (in_s, "colorimetry")
       || in_info->colorimetry.transfer == GST_VIDEO_TRANSFER_UNKNOWN) {
     switch (context->color_trc) {
-      case AVCOL_TRC_BT2020_10:
       case AVCOL_TRC_BT709:
       case AVCOL_TRC_SMPTE170M:
         out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
@@ -1248,8 +1247,17 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
       case AVCOL_TRC_LOG_SQRT:
         out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_LOG316;
         break;
+      case AVCOL_TRC_BT2020_10:
+        out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_10;
+        break;
       case AVCOL_TRC_BT2020_12:
         out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+        break;
+      case AVCOL_TRC_SMPTE2084:
+        out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE2084;
+        break;
+      case AVCOL_TRC_ARIB_STD_B67:
+        out_info->colorimetry.transfer = GST_VIDEO_TRANSFER_ARIB_STD_B67;
         break;
       default:
         break;

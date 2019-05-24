@@ -2986,8 +2986,17 @@ gst_ffmpeg_videoinfo_to_context (GstVideoInfo * info, AVCodecContext * context)
     case GST_VIDEO_TRANSFER_LOG316:
       context->color_trc = AVCOL_TRC_LOG_SQRT;
       break;
+    case GST_VIDEO_TRANSFER_BT2020_10:
+      context->color_trc = AVCOL_TRC_BT2020_10;
+      break;
     case GST_VIDEO_TRANSFER_BT2020_12:
       context->color_trc = AVCOL_TRC_BT2020_12;
+      break;
+    case GST_VIDEO_TRANSFER_SMPTE2084:
+      context->color_trc = AVCOL_TRC_SMPTE2084;
+      break;
+    case GST_VIDEO_TRANSFER_ARIB_STD_B67:
+      context->color_trc = AVCOL_TRC_ARIB_STD_B67;
       break;
     default:
       break;
