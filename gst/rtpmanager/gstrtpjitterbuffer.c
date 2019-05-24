@@ -784,7 +784,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   g_object_class_install_property (gobject_class, PROP_MAX_DROPOUT_TIME,
       g_param_spec_uint ("max-dropout-time", "Max dropout time",
           "The maximum time (milliseconds) of missing packets tolerated.",
-          0, G_MAXUINT, DEFAULT_MAX_DROPOUT_TIME,
+          0, G_MAXINT32, DEFAULT_MAX_DROPOUT_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAX_MISORDER_TIME,
