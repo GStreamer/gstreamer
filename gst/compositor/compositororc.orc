@@ -142,9 +142,8 @@ storel d, t
 .const 4 a_not_alpha 0x00ffffff
 
 loadl t, s
-shrul t2, t, 24
-convlw tw, t2
-convwb tb, tw
+convhlw tw, t
+convhwb tb, tw
 splatbl a, tb
 x4 convubw a_wide, a
 x4 mullw a_wide, a_wide, alpha
