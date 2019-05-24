@@ -3702,10 +3702,23 @@ _update_data_channel_from_sdp_media (GstWebRTCBin * webrtc,
 
   webrtc->priv->sctp_transport->max_message_size = max_size;
 
-  g_object_set (webrtc->priv->sctp_transport->sctpdec, "local-sctp-port",
-      local_port, NULL);
-  g_object_set (webrtc->priv->sctp_transport->sctpenc, "remote-sctp-port",
-      remote_port, NULL);
+  {
+    guint orig_local_port, orig_remote_port;
+
+    /* XXX: sctpassociation warns if we are in the wrong state */
+    g_object_get (webrtc->priv->sctp_transport->sctpdec, "local-sctp-port",
+        &orig_local_port, NULL);
+
+    if (orig_local_port != local_port)
+      g_object_set (webrtc->priv->sctp_transport->sctpdec, "local-sctp-port",
+          local_port, NULL);
+
+    g_object_get (webrtc->priv->sctp_transport->sctpenc, "remote-sctp-port",
+        &orig_remote_port, NULL);
+    if (orig_remote_port != remote_port)
+      g_object_set (webrtc->priv->sctp_transport->sctpenc, "remote-sctp-port",
+          remote_port, NULL);
+  }
 
   for (i = 0; i < webrtc->priv->data_channels->len; i++) {
     GstWebRTCDataChannel *channel;
