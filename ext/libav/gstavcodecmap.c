@@ -2289,6 +2289,16 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       gst_caps_set_simple (caps, "lsbf", G_TYPE_BOOLEAN,
           FALSE, "planar", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
+    case AV_CODEC_ID_APTX:
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/aptx",
+          NULL);
+      break;
+    case AV_CODEC_ID_APTX_HD:
+      caps =
+          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/aptx-hd",
+          NULL);
+      break;
     default:
       GST_DEBUG ("Unknown codec ID %d, please add mapping here", codec_id);
       break;
