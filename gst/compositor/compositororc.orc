@@ -77,8 +77,7 @@ storel d, t
 .const 4 a_not_alpha 0xffffff00
 
 loadl t, s
-shrul t2, t, 24
-convlw tw, t2
+convlw tw, t
 convwb tb, tw
 splatbl a, tb
 x4 convubw a_wide, a
