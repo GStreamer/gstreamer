@@ -915,6 +915,15 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     bitstream.Data = map_info.data;
     bitstream.DataLength = map_info.size;
     bitstream.MaxLength = map_info.size;
+
+    /*
+     * MFX_BITSTREAM_COMPLETE_FRAME was removed since commit df59db9, however
+     * some customers still use DecodedOrder (deprecated in msdk-2017 version)
+     * for low-latency streaming of non-b-frame encoded streams, which needs to
+     * output the frame at once, so add it back for this case
+     */
+    if (thiz->param.mfx.DecodedOrder == GST_MSDKDEC_OUTPUT_ORDER_DECODE)
+      bitstream.DataFlag |= MFX_BITSTREAM_COMPLETE_FRAME;
   } else {
     /* Non packetized streams: eg: vc1 advanced profile with per buffer bdu */
     gst_adapter_push (thiz->adapter, gst_buffer_ref (input_buffer));
@@ -1103,6 +1112,14 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     gst_adapter_flush (thiz->adapter, bitstream.DataOffset);
     flow = GST_FLOW_OK;
   }
+
+  /*
+   * DecodedOrder was deprecated in msdk-2017 version, but some
+   * customers still using this for low-latency streaming of non-b-frame
+   * encoded streams, which needs to output the frame at once
+   */
+  if (thiz->param.mfx.DecodedOrder == GST_MSDKDEC_OUTPUT_ORDER_DECODE)
+    gst_msdkdec_finish_task (thiz, task);
 
 done:
   if (surface)
