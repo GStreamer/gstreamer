@@ -4322,14 +4322,14 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
 
   if (n_planes != GST_VIDEO_INFO_N_PLANES (&obj->info)) {
     GST_WARNING_OBJECT (obj->dbg_obj,
-        "Cannot import buffers with different number planes");
+        "Cannot match buffers with different number planes");
     return FALSE;
   }
 
   for (p = 0; p < n_planes; p++) {
     if (stride[p] < obj->info.stride[p]) {
       GST_DEBUG_OBJECT (obj->dbg_obj,
-          "Not importing as remote stride %i is smaller than %i on plane %u",
+          "Not matching as remote stride %i is smaller than %i on plane %u",
           stride[p], obj->info.stride[p], p);
       return FALSE;
     } else if (stride[p] > obj->info.stride[p]) {
@@ -4341,7 +4341,7 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
 
     if (offset[p] < obj->info.offset[p]) {
       GST_DEBUG_OBJECT (obj->dbg_obj,
-          "Not importing as offset %" G_GSIZE_FORMAT
+          "Not matching as offset %" G_GSIZE_FORMAT
           " is smaller than %" G_GSIZE_FORMAT " on plane %u",
           offset[p], obj->info.offset[p], p);
       return FALSE;
