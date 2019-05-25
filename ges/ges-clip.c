@@ -665,16 +665,16 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * copy)
   GList *tmp;
   GESClip *self = GES_CLIP (element), *ccopy = GES_CLIP (copy);
 
+  if (!self->priv->layer)
+    return;
+
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     ccopy->priv->copied_track_elements =
         g_list_append (ccopy->priv->copied_track_elements,
         ges_timeline_element_copy (tmp->data, TRUE));
   }
 
-  if (self->priv->copied_layer)
-    ccopy->priv->copied_layer = g_object_ref (self->priv->copied_layer);
-  else if (self->priv->layer)
-    ccopy->priv->copied_layer = g_object_ref (self->priv->layer);
+  ccopy->priv->copied_layer = g_object_ref (self->priv->layer);
 }
 
 static GESTimelineElement *
