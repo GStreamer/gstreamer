@@ -217,6 +217,16 @@ def get_subprocess_env(options, gst_version):
         # Add meson/ into PYTHONPATH if we are using a local meson
         prepend_env_var(env, 'PYTHONPATH', mesonpath)
 
+    # For devhelp books
+    if not 'XDG_DATA_DIRS' in env or not env['XDG_DATA_DIRS']:
+        # Preserve default paths when empty
+        prepend_env_var(env, 'XDG_DATA_DIRS', '/usr/local/share/:/usr/share/')
+
+    prepend_env_var (env, 'XDG_DATA_DIRS', os.path.join(options.builddir,
+                                                        'subprojects',
+                                                        'gst-docs',
+                                                        'GStreamer-doc'))
+
     return env
 
 def get_windows_shell():
