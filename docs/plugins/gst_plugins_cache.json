@@ -1721,11 +1721,78 @@
                     "sink_%%u": {
                         "caps": "audio/x-raw:\n           rate: [ 1, 2147483647 ]\n       channels: 1\n         format: { S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }\n         layout: { (string)non-interleaved, (string)interleaved }\n",
                         "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAudioInterleavePad",
+                                "GstAudioAggregatorPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "channel": {
+                                    "blurb": "Number of the channel of this pad in the output",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": false
+                                },
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "request"
                     },
                     "src": {
                         "caps": "audio/x-raw:\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         format: { S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }\n         layout: interleaved\n",
                         "direction": "src",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAudioAggregatorPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "always"
                     }
                 },
@@ -1803,6 +1870,16 @@
                         "type-name": "guint64",
                         "writable": true
                     },
+                    "output-buffer-duration-fraction": {
+                        "blurb": "Output block size in nanoseconds, expressed as a fraction",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1/100",
+                        "max": "2147483647/1",
+                        "min": "1/2147483647",
+                        "type-name": "GstFraction",
+                        "writable": true
+                    },
                     "parent": {
                         "blurb": "The parent of the object",
                         "construct": false,
@@ -1867,11 +1944,102 @@
                     "sink_%%u": {
                         "caps": "audio/x-raw:\n         format: { S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAudioMixerPad",
+                                "GstAudioAggregatorConvertPad",
+                                "GstAudioAggregatorPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "converter-config": {
+                                    "blurb": "A GstStructure describing the configuration that should be used when converting this pad's audio buffers",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "type-name": "GstStructure",
+                                    "writable": true
+                                },
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "mute": {
+                                    "blurb": "Mute this pad",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "volume": {
+                                    "blurb": "Volume of this pad",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "1",
+                                    "max": "10",
+                                    "min": "0",
+                                    "type-name": "gdouble",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "request"
                     },
                     "src": {
                         "caps": "audio/x-raw:\n         format: { S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "src",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAudioAggregatorConvertPad",
+                                "GstAudioAggregatorPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "converter-config": {
+                                    "blurb": "A GstStructure describing the configuration that should be used when converting this pad's audio buffers",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "type-name": "GstStructure",
+                                    "writable": true
+                                },
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "always"
                     }
                 },
@@ -1932,6 +2100,16 @@
                         "max": "18446744073709551615",
                         "min": "1",
                         "type-name": "guint64",
+                        "writable": true
+                    },
+                    "output-buffer-duration-fraction": {
+                        "blurb": "Output block size in nanoseconds, expressed as a fraction",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1/100",
+                        "max": "2147483647/1",
+                        "min": "1/2147483647",
+                        "type-name": "GstFraction",
                         "writable": true
                     },
                     "parent": {
@@ -1999,11 +2177,102 @@
                     "sink_%%u": {
                         "caps": "audio/x-raw:\n         format: { S8, U8, S16LE, S16BE, U16LE, U16BE, S24_32LE, S24_32BE, U24_32LE, U24_32BE, S32LE, S32BE, U32LE, U32BE, S24LE, S24BE, U24LE, U24BE, S20LE, S20BE, U20LE, U20BE, S18LE, S18BE, U18LE, U18BE, F32LE, F32BE, F64LE, F64BE }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAudioMixerPad",
+                                "GstAudioAggregatorConvertPad",
+                                "GstAudioAggregatorPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "converter-config": {
+                                    "blurb": "A GstStructure describing the configuration that should be used when converting this pad's audio buffers",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "type-name": "GstStructure",
+                                    "writable": true
+                                },
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "mute": {
+                                    "blurb": "Mute this pad",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "volume": {
+                                    "blurb": "Volume of this pad",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "1",
+                                    "max": "10",
+                                    "min": "0",
+                                    "type-name": "gdouble",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "request"
                     },
                     "src": {
                         "caps": "audio/x-raw:\n         format: { S32LE, U32LE, S16LE, U16LE, S8, U8, F32LE, F64LE }\n           rate: [ 1, 2147483647 ]\n       channels: [ 1, 2147483647 ]\n         layout: interleaved\n",
                         "direction": "src",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAudioAggregatorConvertPad",
+                                "GstAudioAggregatorPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "converter-config": {
+                                    "blurb": "A GstStructure describing the configuration that should be used when converting this pad's audio buffers",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "type-name": "GstStructure",
+                                    "writable": true
+                                },
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "always"
                     }
                 },
@@ -2064,6 +2333,16 @@
                         "max": "18446744073709551615",
                         "min": "1",
                         "type-name": "guint64",
+                        "writable": true
+                    },
+                    "output-buffer-duration-fraction": {
+                        "blurb": "Output block size in nanoseconds, expressed as a fraction",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1/100",
+                        "max": "2147483647/1",
+                        "min": "1/2147483647",
+                        "type-name": "GstFraction",
                         "writable": true
                     },
                     "parent": {
@@ -2475,11 +2754,11 @@
                         "writable": true
                     },
                     "freq": {
-                        "blurb": "Frequency of test signal. The sample rate needs to be at least 4 times higher.",
+                        "blurb": "Frequency of test signal. The sample rate needs to be at least 2 times higher.",
                         "construct": false,
                         "construct-only": false,
                         "default": "440",
-                        "max": "5.36871e+08",
+                        "max": "1.07374e+09",
                         "min": "0",
                         "type-name": "gdouble",
                         "writable": true
@@ -2920,11 +3199,169 @@
                     "sink_%%u": {
                         "caps": "video/x-raw:\n         format: { AYUV, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, RGBx, BGRx }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstCompositorPad",
+                                "GstVideoAggregatorConvertPad",
+                                "GstVideoAggregatorPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "alpha": {
+                                    "blurb": "Alpha of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "1",
+                                    "max": "1",
+                                    "min": "0",
+                                    "type-name": "gdouble",
+                                    "writable": true
+                                },
+                                "converter-config": {
+                                    "blurb": "A GstStructure describing the configuration that should be used when scaling and converting this pad's video frames",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "type-name": "GstStructure",
+                                    "writable": true
+                                },
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "height": {
+                                    "blurb": "Height of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "2147483647",
+                                    "min": "-2147483648",
+                                    "type-name": "gint",
+                                    "writable": true
+                                },
+                                "operator": {
+                                    "blurb": "Blending operator to use for blending this pad over the previous ones",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "over (1)",
+                                    "enum": true,
+                                    "type-name": "GstCompositorOperator",
+                                    "values": [
+                                        {
+                                            "desc": "Source",
+                                            "name": "source",
+                                            "value": "0"
+                                        },
+                                        {
+                                            "desc": "Over",
+                                            "name": "over",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "desc": "Add",
+                                            "name": "add",
+                                            "value": "2"
+                                        }
+                                    ],
+                                    "writable": true
+                                },
+                                "repeat-after-eos": {
+                                    "blurb": "Repeat the last frame after EOS until all pads are EOS",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "width": {
+                                    "blurb": "Width of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "2147483647",
+                                    "min": "-2147483648",
+                                    "type-name": "gint",
+                                    "writable": true
+                                },
+                                "xpos": {
+                                    "blurb": "X Position of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "2147483647",
+                                    "min": "-2147483648",
+                                    "type-name": "gint",
+                                    "writable": true
+                                },
+                                "ypos": {
+                                    "blurb": "Y Position of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "2147483647",
+                                    "min": "-2147483648",
+                                    "type-name": "gint",
+                                    "writable": true
+                                },
+                                "zorder": {
+                                    "blurb": "Z Order of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "request"
                     },
                     "src": {
                         "caps": "video/x-raw:\n         format: { AYUV, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, RGBx, BGRx }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "always"
                     }
                 },
@@ -7711,11 +8148,86 @@
                     "sink_%%u": {
                         "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstGLMixerPad",
+                                "GstGLBaseMixerPad",
+                                "GstVideoAggregatorPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "repeat-after-eos": {
+                                    "blurb": "Repeat the last frame after EOS until all pads are EOS",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "zorder": {
+                                    "blurb": "Z Order of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "request"
                     },
                     "src": {
                         "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "always"
                     }
                 },
@@ -8409,11 +8921,87 @@
                     "sink_%%u": {
                         "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, VUYA, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstGLStereoMixPad",
+                                "GstGLMixerPad",
+                                "GstGLBaseMixerPad",
+                                "GstVideoAggregatorPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "repeat-after-eos": {
+                                    "blurb": "Repeat the last frame after EOS until all pads are EOS",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "zorder": {
+                                    "blurb": "Z Order of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "request"
                     },
                     "src": {
                         "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, Y41B, NV12, NV21, YUY2, UYVY, AYUV, VUYA, GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "always"
                     }
                 },
@@ -9352,11 +9940,573 @@
                     "sink_%%u": {
                         "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstGLVideoMixerPad",
+                                "GstGLMixerPad",
+                                "GstGLBaseMixerPad",
+                                "GstVideoAggregatorPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "alpha": {
+                                    "blurb": "Alpha of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "1",
+                                    "max": "1",
+                                    "min": "0",
+                                    "type-name": "gdouble",
+                                    "writable": true
+                                },
+                                "blend-constant-color-alpha": {
+                                    "blurb": "Blend Constant Color Alpha",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "1",
+                                    "min": "0",
+                                    "type-name": "gdouble",
+                                    "writable": true
+                                },
+                                "blend-constant-color-blue": {
+                                    "blurb": "Blend Constant Color Green",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "1",
+                                    "min": "0",
+                                    "type-name": "gdouble",
+                                    "writable": true
+                                },
+                                "blend-constant-color-green": {
+                                    "blurb": "Blend Constant Color Green",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "1",
+                                    "min": "0",
+                                    "type-name": "gdouble",
+                                    "writable": true
+                                },
+                                "blend-constant-color-red": {
+                                    "blurb": "Blend Constant Color Red",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "1",
+                                    "min": "0",
+                                    "type-name": "gdouble",
+                                    "writable": true
+                                },
+                                "blend-equation-alpha": {
+                                    "blurb": "Blend Equation for Alpha",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "add (0)",
+                                    "enum": true,
+                                    "type-name": "GstGLVideoMixerBlendEquation",
+                                    "values": [
+                                        {
+                                            "desc": "Add",
+                                            "name": "add",
+                                            "value": "0"
+                                        },
+                                        {
+                                            "desc": "Subtract",
+                                            "name": "subtract",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "desc": "Reverse Subtract",
+                                            "name": "reverse-subtract",
+                                            "value": "2"
+                                        }
+                                    ],
+                                    "writable": true
+                                },
+                                "blend-equation-rgb": {
+                                    "blurb": "Blend Equation for RGB",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "add (0)",
+                                    "enum": true,
+                                    "type-name": "GstGLVideoMixerBlendEquation",
+                                    "values": [
+                                        {
+                                            "desc": "Add",
+                                            "name": "add",
+                                            "value": "0"
+                                        },
+                                        {
+                                            "desc": "Subtract",
+                                            "name": "subtract",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "desc": "Reverse Subtract",
+                                            "name": "reverse-subtract",
+                                            "value": "2"
+                                        }
+                                    ],
+                                    "writable": true
+                                },
+                                "blend-function-dst-alpha": {
+                                    "blurb": "Blend Function for Destination Alpha",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "one-minus-src-alpha (7)",
+                                    "enum": true,
+                                    "type-name": "GstGLVideoMixerBlendFunction",
+                                    "values": [
+                                        {
+                                            "desc": "Zero",
+                                            "name": "zero",
+                                            "value": "0"
+                                        },
+                                        {
+                                            "desc": "One",
+                                            "name": "one",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "desc": "Source Color",
+                                            "name": "src-color",
+                                            "value": "2"
+                                        },
+                                        {
+                                            "desc": "One Minus Source Color",
+                                            "name": "one-minus-src-color",
+                                            "value": "3"
+                                        },
+                                        {
+                                            "desc": "Destination Color",
+                                            "name": "dst-color",
+                                            "value": "4"
+                                        },
+                                        {
+                                            "desc": "One Minus Destination Color",
+                                            "name": "one-minus-dst-color",
+                                            "value": "5"
+                                        },
+                                        {
+                                            "desc": "Source Alpha",
+                                            "name": "src-alpha",
+                                            "value": "6"
+                                        },
+                                        {
+                                            "desc": "One Minus Source Alpha",
+                                            "name": "one-minus-src-alpha",
+                                            "value": "7"
+                                        },
+                                        {
+                                            "desc": "Destination Alpha",
+                                            "name": "dst-alpha",
+                                            "value": "8"
+                                        },
+                                        {
+                                            "desc": "One Minus Destination Alpha",
+                                            "name": "one-minus-dst-alpha",
+                                            "value": "9"
+                                        },
+                                        {
+                                            "desc": "Constant Color",
+                                            "name": "constant-color",
+                                            "value": "10"
+                                        },
+                                        {
+                                            "desc": "One Minus Constant Color",
+                                            "name": "one-minus-contant-color",
+                                            "value": "11"
+                                        },
+                                        {
+                                            "desc": "Constant Alpha",
+                                            "name": "constant-alpha",
+                                            "value": "12"
+                                        },
+                                        {
+                                            "desc": "One Minus Constant Alpha",
+                                            "name": "one-minus-contant-alpha",
+                                            "value": "13"
+                                        },
+                                        {
+                                            "desc": "Source Alpha Saturate",
+                                            "name": "src-alpha-saturate",
+                                            "value": "14"
+                                        }
+                                    ],
+                                    "writable": true
+                                },
+                                "blend-function-dst-rgb": {
+                                    "blurb": "Blend Function for Destination RGB",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "one-minus-src-alpha (7)",
+                                    "enum": true,
+                                    "type-name": "GstGLVideoMixerBlendFunction",
+                                    "values": [
+                                        {
+                                            "desc": "Zero",
+                                            "name": "zero",
+                                            "value": "0"
+                                        },
+                                        {
+                                            "desc": "One",
+                                            "name": "one",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "desc": "Source Color",
+                                            "name": "src-color",
+                                            "value": "2"
+                                        },
+                                        {
+                                            "desc": "One Minus Source Color",
+                                            "name": "one-minus-src-color",
+                                            "value": "3"
+                                        },
+                                        {
+                                            "desc": "Destination Color",
+                                            "name": "dst-color",
+                                            "value": "4"
+                                        },
+                                        {
+                                            "desc": "One Minus Destination Color",
+                                            "name": "one-minus-dst-color",
+                                            "value": "5"
+                                        },
+                                        {
+                                            "desc": "Source Alpha",
+                                            "name": "src-alpha",
+                                            "value": "6"
+                                        },
+                                        {
+                                            "desc": "One Minus Source Alpha",
+                                            "name": "one-minus-src-alpha",
+                                            "value": "7"
+                                        },
+                                        {
+                                            "desc": "Destination Alpha",
+                                            "name": "dst-alpha",
+                                            "value": "8"
+                                        },
+                                        {
+                                            "desc": "One Minus Destination Alpha",
+                                            "name": "one-minus-dst-alpha",
+                                            "value": "9"
+                                        },
+                                        {
+                                            "desc": "Constant Color",
+                                            "name": "constant-color",
+                                            "value": "10"
+                                        },
+                                        {
+                                            "desc": "One Minus Constant Color",
+                                            "name": "one-minus-contant-color",
+                                            "value": "11"
+                                        },
+                                        {
+                                            "desc": "Constant Alpha",
+                                            "name": "constant-alpha",
+                                            "value": "12"
+                                        },
+                                        {
+                                            "desc": "One Minus Constant Alpha",
+                                            "name": "one-minus-contant-alpha",
+                                            "value": "13"
+                                        },
+                                        {
+                                            "desc": "Source Alpha Saturate",
+                                            "name": "src-alpha-saturate",
+                                            "value": "14"
+                                        }
+                                    ],
+                                    "writable": true
+                                },
+                                "blend-function-src-alpha": {
+                                    "blurb": "Blend Function for Source Alpha",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "one (1)",
+                                    "enum": true,
+                                    "type-name": "GstGLVideoMixerBlendFunction",
+                                    "values": [
+                                        {
+                                            "desc": "Zero",
+                                            "name": "zero",
+                                            "value": "0"
+                                        },
+                                        {
+                                            "desc": "One",
+                                            "name": "one",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "desc": "Source Color",
+                                            "name": "src-color",
+                                            "value": "2"
+                                        },
+                                        {
+                                            "desc": "One Minus Source Color",
+                                            "name": "one-minus-src-color",
+                                            "value": "3"
+                                        },
+                                        {
+                                            "desc": "Destination Color",
+                                            "name": "dst-color",
+                                            "value": "4"
+                                        },
+                                        {
+                                            "desc": "One Minus Destination Color",
+                                            "name": "one-minus-dst-color",
+                                            "value": "5"
+                                        },
+                                        {
+                                            "desc": "Source Alpha",
+                                            "name": "src-alpha",
+                                            "value": "6"
+                                        },
+                                        {
+                                            "desc": "One Minus Source Alpha",
+                                            "name": "one-minus-src-alpha",
+                                            "value": "7"
+                                        },
+                                        {
+                                            "desc": "Destination Alpha",
+                                            "name": "dst-alpha",
+                                            "value": "8"
+                                        },
+                                        {
+                                            "desc": "One Minus Destination Alpha",
+                                            "name": "one-minus-dst-alpha",
+                                            "value": "9"
+                                        },
+                                        {
+                                            "desc": "Constant Color",
+                                            "name": "constant-color",
+                                            "value": "10"
+                                        },
+                                        {
+                                            "desc": "One Minus Constant Color",
+                                            "name": "one-minus-contant-color",
+                                            "value": "11"
+                                        },
+                                        {
+                                            "desc": "Constant Alpha",
+                                            "name": "constant-alpha",
+                                            "value": "12"
+                                        },
+                                        {
+                                            "desc": "One Minus Constant Alpha",
+                                            "name": "one-minus-contant-alpha",
+                                            "value": "13"
+                                        },
+                                        {
+                                            "desc": "Source Alpha Saturate",
+                                            "name": "src-alpha-saturate",
+                                            "value": "14"
+                                        }
+                                    ],
+                                    "writable": true
+                                },
+                                "blend-function-src-rgb": {
+                                    "blurb": "Blend Function for Source RGB",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "src-alpha (6)",
+                                    "enum": true,
+                                    "type-name": "GstGLVideoMixerBlendFunction",
+                                    "values": [
+                                        {
+                                            "desc": "Zero",
+                                            "name": "zero",
+                                            "value": "0"
+                                        },
+                                        {
+                                            "desc": "One",
+                                            "name": "one",
+                                            "value": "1"
+                                        },
+                                        {
+                                            "desc": "Source Color",
+                                            "name": "src-color",
+                                            "value": "2"
+                                        },
+                                        {
+                                            "desc": "One Minus Source Color",
+                                            "name": "one-minus-src-color",
+                                            "value": "3"
+                                        },
+                                        {
+                                            "desc": "Destination Color",
+                                            "name": "dst-color",
+                                            "value": "4"
+                                        },
+                                        {
+                                            "desc": "One Minus Destination Color",
+                                            "name": "one-minus-dst-color",
+                                            "value": "5"
+                                        },
+                                        {
+                                            "desc": "Source Alpha",
+                                            "name": "src-alpha",
+                                            "value": "6"
+                                        },
+                                        {
+                                            "desc": "One Minus Source Alpha",
+                                            "name": "one-minus-src-alpha",
+                                            "value": "7"
+                                        },
+                                        {
+                                            "desc": "Destination Alpha",
+                                            "name": "dst-alpha",
+                                            "value": "8"
+                                        },
+                                        {
+                                            "desc": "One Minus Destination Alpha",
+                                            "name": "one-minus-dst-alpha",
+                                            "value": "9"
+                                        },
+                                        {
+                                            "desc": "Constant Color",
+                                            "name": "constant-color",
+                                            "value": "10"
+                                        },
+                                        {
+                                            "desc": "One Minus Constant Color",
+                                            "name": "one-minus-contant-color",
+                                            "value": "11"
+                                        },
+                                        {
+                                            "desc": "Constant Alpha",
+                                            "name": "constant-alpha",
+                                            "value": "12"
+                                        },
+                                        {
+                                            "desc": "One Minus Constant Alpha",
+                                            "name": "one-minus-contant-alpha",
+                                            "value": "13"
+                                        },
+                                        {
+                                            "desc": "Source Alpha Saturate",
+                                            "name": "src-alpha-saturate",
+                                            "value": "14"
+                                        }
+                                    ],
+                                    "writable": true
+                                },
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "height": {
+                                    "blurb": "Height of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "2147483647",
+                                    "min": "-2147483648",
+                                    "type-name": "gint",
+                                    "writable": true
+                                },
+                                "repeat-after-eos": {
+                                    "blurb": "Repeat the last frame after EOS until all pads are EOS",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "width": {
+                                    "blurb": "Width of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "2147483647",
+                                    "min": "-2147483648",
+                                    "type-name": "gint",
+                                    "writable": true
+                                },
+                                "xpos": {
+                                    "blurb": "X Position of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "2147483647",
+                                    "min": "-2147483648",
+                                    "type-name": "gint",
+                                    "writable": true
+                                },
+                                "ypos": {
+                                    "blurb": "Y Position of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "2147483647",
+                                    "min": "-2147483648",
+                                    "type-name": "gint",
+                                    "writable": true
+                                },
+                                "zorder": {
+                                    "blurb": "Z Order of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "request"
                     },
                     "src": {
                         "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "always"
                     }
                 },
