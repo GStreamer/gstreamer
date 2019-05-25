@@ -677,6 +677,28 @@ class TestInvalidOverlaps(common.GESSimpleTimelineTest):
             ]
         ])
 
+    def test_copy_paste_overlapping(self):
+        self.track_types = [GES.TrackType.AUDIO]
+        super().setUp()
+        clip = self.append_clip()
+
+        copy = clip.copy(True)
+        self.assertIsNone(copy.paste(copy.props.start))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+
+            ]
+        ])
+        copy = clip.copy(True)
+        self.assertIsNotNone(copy.paste(copy.props.start + 1))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 1, 10),
+            ]
+        ])
+
     def test_move_group_with_overlaping_clips(self):
         self.track_types = [GES.TrackType.AUDIO]
         super().setUp()
