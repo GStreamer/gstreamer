@@ -68,6 +68,7 @@
 #include "qtdemux_lang.h"
 #include "qtdemux.h"
 #include "qtpalette.h"
+#include "qtdemux_tree.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -487,13 +488,6 @@ qt_demux_state_string (enum QtDemuxState state)
       return "<UNKNOWN>";
   }
 }
-
-static GNode *qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc);
-static GNode *qtdemux_tree_get_child_by_type_full (GNode * node,
-    guint32 fourcc, GstByteReader * parser);
-static GNode *qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc);
-static GNode *qtdemux_tree_get_sibling_by_type_full (GNode * node,
-    guint32 fourcc, GstByteReader * parser);
 
 static GstFlowReturn qtdemux_add_fragmented_samples (GstQTDemux * qtdemux);
 
@@ -8338,92 +8332,6 @@ broken_atom_size:
             length));
     return FALSE;
   }
-}
-
-static GNode *
-qtdemux_tree_get_child_by_type (GNode * node, guint32 fourcc)
-{
-  GNode *child;
-  guint8 *buffer;
-  guint32 child_fourcc;
-
-  for (child = g_node_first_child (node); child;
-      child = g_node_next_sibling (child)) {
-    buffer = (guint8 *) child->data;
-
-    child_fourcc = QT_FOURCC (buffer + 4);
-
-    if (G_UNLIKELY (child_fourcc == fourcc)) {
-      return child;
-    }
-  }
-  return NULL;
-}
-
-static GNode *
-qtdemux_tree_get_child_by_type_full (GNode * node, guint32 fourcc,
-    GstByteReader * parser)
-{
-  GNode *child;
-  guint8 *buffer;
-  guint32 child_fourcc, child_len;
-
-  for (child = g_node_first_child (node); child;
-      child = g_node_next_sibling (child)) {
-    buffer = (guint8 *) child->data;
-
-    child_len = QT_UINT32 (buffer);
-    child_fourcc = QT_FOURCC (buffer + 4);
-
-    if (G_UNLIKELY (child_fourcc == fourcc)) {
-      if (G_UNLIKELY (child_len < (4 + 4)))
-        return NULL;
-      /* FIXME: must verify if atom length < parent atom length */
-      gst_byte_reader_init (parser, buffer + (4 + 4), child_len - (4 + 4));
-      return child;
-    }
-  }
-  return NULL;
-}
-
-static GNode *
-qtdemux_tree_get_child_by_index (GNode * node, guint index)
-{
-  return g_node_nth_child (node, index);
-}
-
-static GNode *
-qtdemux_tree_get_sibling_by_type_full (GNode * node, guint32 fourcc,
-    GstByteReader * parser)
-{
-  GNode *child;
-  guint8 *buffer;
-  guint32 child_fourcc, child_len;
-
-  for (child = g_node_next_sibling (node); child;
-      child = g_node_next_sibling (child)) {
-    buffer = (guint8 *) child->data;
-
-    child_fourcc = QT_FOURCC (buffer + 4);
-
-    if (child_fourcc == fourcc) {
-      if (parser) {
-        child_len = QT_UINT32 (buffer);
-        if (G_UNLIKELY (child_len < (4 + 4)))
-          return NULL;
-        /* FIXME: must verify if atom length < parent atom length */
-        gst_byte_reader_init (parser, buffer + (4 + 4), child_len - (4 + 4));
-      }
-      return child;
-    }
-  }
-  return NULL;
-}
-
-static GNode *
-qtdemux_tree_get_sibling_by_type (GNode * node, guint32 fourcc)
-{
-  return qtdemux_tree_get_sibling_by_type_full (node, fourcc, NULL);
 }
 
 static void
