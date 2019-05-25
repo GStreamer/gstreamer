@@ -31,7 +31,7 @@
  * ]|
  * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
  * Depending on the exact OpenGL version chosen and the exact requirements of
- * the OpenGL implementation, a #version header may be required.
+ * the OpenGL implementation, a `#version` header may be required.
  *
  * The following is a simple OpenGL ES (also usable with OpenGL 3 core contexts)
  * passthrough shader with the required inputs.
