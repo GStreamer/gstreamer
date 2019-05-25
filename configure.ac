@@ -165,7 +165,7 @@ AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef
     -Wwrite-strings -Wformat-nonliteral -Wformat-security -Wold-style-definition
     -Winit-self -Wmissing-include-dirs -Waddress
-    -Waggregate-return -Wno-multichar -Wnested-externs ])
+    -Waggregate-return -Wno-multichar -Wnested-externs -Wno-attributes])
 
 dnl define correct level for debugging messages
 AG_GST_SET_LEVEL_DEFAULT($GST_GIT)
