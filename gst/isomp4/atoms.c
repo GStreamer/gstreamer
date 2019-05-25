@@ -764,6 +764,8 @@ atom_ctts_free (AtomCTTS * ctts)
   g_free (ctts);
 }
 
+/* svmi is specified in ISO 23000-11 (Stereoscopic video application format)
+ * MPEG-A */
 static void
 atom_svmi_init (AtomSVMI * svmi)
 {
