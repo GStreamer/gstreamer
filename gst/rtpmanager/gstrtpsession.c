@@ -40,7 +40,7 @@
  *   * Support for multiple sender SSRC.
  *
  * The rtpsession will not demux packets based on SSRC or payload type, nor will
- * it correct for packet reordering and jitter. Use #GstRtpsSrcDemux,
+ * it correct for packet reordering and jitter. Use #GstRtpSsrcDemux,
  * #GstRtpPtDemux and GstRtpJitterBuffer in addition to #GstRtpSession to
  * perform these tasks. It is usually a good idea to use #GstRtpBin, which
  * combines all these features in one element.

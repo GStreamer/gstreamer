@@ -29,7 +29,7 @@
  * after the first picture. We also need a videorate element to set timestamps
  * on all buffers after the first one in accordance with the framerate.
  *
- * File names are created by replacing "\%d" with the index using printf().
+ * File names are created by replacing "\%d" with the index using `printf()`.
  *
  * ## Example launch line
  * |[

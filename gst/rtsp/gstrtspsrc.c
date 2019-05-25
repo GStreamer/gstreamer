@@ -73,7 +73,7 @@
  *
  * The message's structure contains three fields:
  *
- *   #GstRTSPSrcTimeoutCause `cause`: the cause of the timeout.
+ *   GstRTSPSrcTimeoutCause `cause`: the cause of the timeout.
  *
  *   #gint `stream-number`: an internal identifier of the stream that timed out.
  *

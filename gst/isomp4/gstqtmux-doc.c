@@ -66,20 +66,20 @@
  * The fragmented file features defined (only) in ISO Base Media are used by
  * ISMV files making up (a.o.) Smooth Streaming (ismlmux).
  *
- * A few properties (#GstMp4Mux:movie-timescale, #GstMp4Mux:trak-timescale)
+ * A few properties (#GstMP4Mux:movie-timescale, #GstMP4Mux:trak-timescale)
  * allow adjusting some technical parameters, which might be useful in (rare)
  * cases to resolve compatibility issues in some situations.
  *
  * Some other properties influence the result more fundamentally.
  * A typical mov/mp4 file's metadata (aka moov) is located at the end of the
  * file, somewhat contrary to this usually being called "the header".
- * However, a #GstMp4Mux:faststart file will (with some effort) arrange this to
+ * However, a #GstMP4Mux:faststart file will (with some effort) arrange this to
  * be located near start of the file, which then allows it e.g. to be played
  * while downloading. Alternatively, rather than having one chunk of metadata at
  * start (or end), there can be some metadata at start and most of the other
- * data can be spread out into fragments of #GstMp4Mux:fragment-duration.
+ * data can be spread out into fragments of #GstMP4Mux:fragment-duration.
  * If such fragmented layout is intended for streaming purposes, then
- * #GstMp4Mux:streamable allows foregoing to add index metadata (at the end of
+ * #GstMP4Mux:streamable allows foregoing to add index metadata (at the end of
  * file).
  *
  * ## Example pipelines

@@ -36,15 +36,15 @@
  * * #GstClockTime `duration`: the duration of the buffer.
  * * #GstClockTime `endtime`: the end time of the buffer that triggered the message as stream time (this
  *   is deprecated, as it can be calculated from stream-time + duration)
- * * #GstValueList of #gfloat `magnitude`: the level for each frequency band in dB.
+ * * A #GST_TYPE_LIST value of #gfloat `magnitude`: the level for each frequency band in dB.
  *   All values below the value of the
  *   #GstSpectrum:threshold property will be set to the threshold. Only present
  *   if the #GstSpectrum:message-magnitude property is %TRUE.
- * * #GstValueList of #gfloat `phase`: The phase for each frequency band. The value is between -pi and pi. Only
+ * * A #GST_TYPE_LIST of #gfloat `phase`: The phase for each frequency band. The value is between -pi and pi. Only
  *   present if the #GstSpectrum:message-phase property is %TRUE.
  *
  * If #GstSpectrum:multi-channel property is set to true. magnitude and phase
- * fields will be each a nested #GstValueArray. The first dimension are the
+ * fields will be each a nested #GST_TYPE_ARRAY value. The first dimension are the
  * channels and the second dimension are the values.
  *
  * ## Example application

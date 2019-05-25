@@ -25,7 +25,7 @@
  * framerate. The two incoming buffers are blended together using an effect
  * specific alpha mask. 
  *
- * The #GstSmpte:depth property defines the presision in bits of the mask. A
+ * The #GstSMPTE:depth property defines the presision in bits of the mask. A
  * higher presision will create a mask with smoother gradients in order to avoid
  * banding.
  *

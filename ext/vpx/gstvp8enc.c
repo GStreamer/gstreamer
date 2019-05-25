@@ -30,10 +30,10 @@
  * </ulink>. It's the successor of On2 VP3, which was the base of the
  * Theora video codec.
  *
- * To control the quality of the encoding, the #GstVP8Enc::target-bitrate,
- * #GstVP8Enc::min-quantizer, #GstVP8Enc::max-quantizer or #GstVP8Enc::cq-level
+ * To control the quality of the encoding, the #GstVP8Enc:target-bitrate,
+ * #GstVP8Enc:min-quantizer, #GstVP8Enc:max-quantizer or #GstVP8Enc:cq-level
  * properties can be used. Which one is used depends on the mode selected by
- * the #GstVP8Enc::end-usage property.
+ * the #GstVP8Enc:end-usage property.
  * See <ulink url="http://www.webmproject.org/docs/encoder-parameters/">Encoder Parameters</ulink>
  * for explanation, examples for useful encoding parameters and more details
  * on the encoding parameters.

@@ -25,12 +25,12 @@
  * using an effect specific SMPTE mask in the I420 input case. In the AYUV case,
  * the alpha channel is modified using the effect specific SMPTE mask.
  *
- * The #GstSmpteAlpha:position property is a controllabe double between 0.0 and
+ * The #GstSMPTEAlpha:position property is a controllabe double between 0.0 and
  * 1.0 that specifies the position in the transition. 0.0 is the start of the
  * transition with the alpha channel to complete opaque where 1.0 has the alpha
  * channel set to completely transparent.
  *
- * The #GstSmpteAlpha:depth property defines the precision in bits of the mask.
+ * The #GstSMPTEAlpha:depth property defines the precision in bits of the mask.
  * A higher presision will create a mask with smoother gradients in order to
  * avoid banding.
  *

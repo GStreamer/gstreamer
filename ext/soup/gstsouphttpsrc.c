@@ -31,7 +31,7 @@
  * If the server is not an Icecast server, it will behave as if the
  * #GstSoupHTTPSrc:iradio-mode property were not set. If it is, souphttpsrc will
  * output data with a media type of application/x-icy, in which case you will
- * need to use the #ICYDemux element as follow-up element to extract the Icecast
+ * need to use the #GstICYDemux element as follow-up element to extract the Icecast
  * metadata and to determine the underlying media type.
  *
  * ## Example launch line

@@ -48,7 +48,7 @@
  * This element is meant for easy no-hassle video snapshotting. It is not
  * suitable for video playback or video display at high framerates. Use
  * ximagesink, xvimagesink or some other suitable video sink in connection
- * with the #GstXOverlay interface instead if you want to do video playback.
+ * with the #GstVideoOverlay interface instead if you want to do video playback.
  *
  * ## Message details
  *
@@ -60,7 +60,7 @@
  *
  * * `pixbuf`: the #GdkPixbuf object
  * * `pixel-aspect-ratio`: the pixel aspect ratio (PAR) of the input image
- *   (this field contains a #GstFraction); the
+ *   (this field contains a value of type #GST_TYPE_FRACTION); the
  *   PAR is usually 1:1 for images, but is often something non-1:1 in the case
  *   of video input. In this case the image may be distorted and you may need
  *   to rescale it accordingly before saving it to file or displaying it. This

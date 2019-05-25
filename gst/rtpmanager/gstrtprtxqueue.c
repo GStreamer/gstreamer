@@ -25,8 +25,8 @@
  * @title: rtprtxqueue
  *
  * rtprtxqueue maintains a queue of transmitted RTP packets, up to a
- * configurable limit (see #GstRTPRtxQueue::max-size-time,
- * #GstRTPRtxQueue::max-size-packets), and retransmits them upon request
+ * configurable limit (see #GstRTPRtxQueue:max-size-time,
+ * #GstRTPRtxQueue:max-size-packets), and retransmits them upon request
  * from the downstream rtpsession (GstRTPRetransmissionRequest event).
  *
  * This element is similar to rtprtxsend, but it has differences:

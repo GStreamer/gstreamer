@@ -90,12 +90,12 @@
  * is interrupted uncleanly by a crash. Robust muxing mode requires a seekable
  * output, such as filesink, because it needs to rewrite the start of the file.
  *
- * To enable robust muxing mode, set the #GstQTMux::reserved-moov-update-period
- * and #GstQTMux::reserved-max-duration property. Also present is the
- * #GstQTMux::reserved-bytes-per-sec property, which can be increased if
+ * To enable robust muxing mode, set the #GstQTMux:reserved-moov-update-period
+ * and #GstQTMux:reserved-max-duration property. Also present is the
+ * #GstQTMux:reserved-bytes-per-sec property, which can be increased if
  * for some reason the default is not large enough and the initial reserved
  * space for headers is too small. Applications can monitor the
- * #GstQTMux::reserved-duration-remaining property to see how close to full
+ * #GstQTMux:reserved-duration-remaining property to see how close to full
  * the reserved space is becoming.
  *
  * Applications that wish to be able to use/edit a file while it is being
@@ -104,7 +104,7 @@
  * completely valid header from the start for all tracks (i.e. it appears as
  * though the file is "reserved-max-duration" long with all samples
  * present). This mode can be enabled by setting the
- * #GstQTMux::reserved-moov-update-period and #GstQTMux::reserved-prefill
+ * #GstQTMux:reserved-moov-update-period and #GstQTMux:reserved-prefill
  * properties. Note that this mode is only possible with input streams that have
  * a fixed sample size (such as raw audio and Prores Video) and that don't
  * have reordered samples.
