@@ -59,6 +59,21 @@ typedef struct _GstVideoCropMeta GstVideoCropMeta;
  * to no padding and no alignment. Since: 1.18
  *
  * Extra buffer metadata describing image properties
+ *
+ * This meta can also be used by downstream elements to specifiy their
+ * buffer layout requirements for upstream. Upstream should try to
+ * fit those requirements, if possible, in order to prevent buffer copies.
+ *
+ * This is done by passing a custom #GstStructure to
+ * gst_query_add_allocation_meta() when handling the ALLOCATION query.
+ * This structure should be named 'video-meta' and can have the following
+ * fields:
+ * - padding-top (uint): extra pixels on the top
+ * - padding-bottom (uint): extra pixels on the bottom
+ * - padding-left (uint): extra pixels on the left side
+ * - padding-right (uint): extra pixels on the right side
+ * The padding fields have the same semantic as #GstVideoMeta.alignment
+ * and so represent the paddings requested on produced video buffers.
  */
 struct _GstVideoMeta {
   GstMeta            meta;
