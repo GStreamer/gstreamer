@@ -649,7 +649,6 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
     if (!ges_layer_add_clip (self->priv->copied_layer, nclip)) {
       GST_INFO ("%" GES_FORMAT " could not be pasted to %" GST_TIME_FORMAT,
           GES_ARGS (element), GST_TIME_ARGS (paste_position));
-      gst_object_unref (nclip);
 
       return NULL;
     }

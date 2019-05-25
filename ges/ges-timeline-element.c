@@ -1897,7 +1897,8 @@ ges_timeline_element_get_track_types (GESTimelineElement * self)
  * using ges_timeline_element_copy with recurse=TRUE set,
  * otherwise it will fail.
  *
- * Returns: (transfer none): Paste @self copying the element
+ * Returns: (transfer full): New element resulting of pasting @self
+ * or %NULL
  *
  * Since: 1.6.0
  */
@@ -1925,7 +1926,7 @@ ges_timeline_element_paste (GESTimelineElement * self,
 
   g_clear_object (&self->priv->copied_from);
 
-  return g_object_ref (res);
+  return res ? g_object_ref (res) : res;
 }
 
 /**
