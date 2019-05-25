@@ -26,7 +26,7 @@
  * This plugin writes incoming data to a custom GIO #GOutputStream.
  *
  * It can, for example, be used to write a stream to memory with a
- * #GMemoryOuputStream or to write to a file with a #GFileOuputStream.
+ * #GMemoryOutputStream or to write to a file with a #GFileOutputStream.
  *
  * ## Example code
  *

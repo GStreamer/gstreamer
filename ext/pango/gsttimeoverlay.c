@@ -25,9 +25,10 @@
  *
  * This element overlays the buffer time stamps of a video stream on
  * top of itself. You can position the text and configure the font details
- * using the properties of the #GstBaseTextOverlay class. By default, the
- * time stamp is displayed in the top left corner of the picture, with some
- * padding to the left and to the top.
+ * using its properties.
+ *
+ * By default, the time stamp is displayed in the top left corner of the picture,
+ * with some padding to the left and to the top.
  *
  * |[
  * gst-launch-1.0 -v videotestsrc ! timeoverlay ! autovideosink

@@ -25,8 +25,9 @@
  *
  * This element overlays the current clock time on top of a video
  * stream. You can position the text and configure the font details
- * using the properties of the #GstBaseTextOverlay class. By default, the
- * time is displayed in the top left corner of the picture, with some
+ * using its properties.
+ *
+ * By default, the time is displayed in the top left corner of the picture, with some
  * padding to the left and to the top.
  *
  * ## Example launch lines

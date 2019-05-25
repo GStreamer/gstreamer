@@ -45,7 +45,7 @@
  * decodebin3 differs from the previous decodebin (decodebin2) in important ways:
  *
  * * supports publication and selection of stream information via
- * GstStreamCollection messages and #GST_EVENT_SELECT_STREAM events.
+ * GstStreamCollection messages and #GST_EVENT_SELECT_STREAMS events.
  *
  * * dynamically switches stream connections internally, and
  * reuses decoder elements when stream selections change, so that in

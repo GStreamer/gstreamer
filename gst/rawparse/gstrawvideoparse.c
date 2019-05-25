@@ -30,11 +30,6 @@
  * the second one etc. until the remaining unparsed bytes aren't enough to form
  * a complete frame, and it will then continue as described in the earlier case.
  *
- * The element implements the properties and sink caps configuration as specified
- * in the #GstRawBaseParse documentation. The properties configuration can be
- * modified by using the width, height, pixel-aspect-ratio, framerate, interlaced,
- * top-field-first, plane-strides, plane-offsets, and frame-size properties.
- *
  * If the properties configuration is used, plane strides and offsets will be
  * computed by using gst_video_info_set_format(). This can be overridden by passing
  * GstValueArrays to the plane-offsets and plane-strides properties. When this is
@@ -72,7 +67,6 @@
  * ]|
  *  Read raw data from a local file and parse it as video data with 320x240 pixels
  * and I420 video format. The queue element here is to force push based scheduling.
- * See the documentation in #GstRawBaseParse for the reason why.
  *
  */
 

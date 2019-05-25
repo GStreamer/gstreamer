@@ -29,11 +29,6 @@
  * (= 408 bytes) and keep the remaining 3 bytes. These will then be prepended to
  * the next input data.
  *
- * The element implements the properties and sink caps configuration as specified
- * in the #GstRawBaseParse documentation. The properties configuration can be
- * modified by using the sample-rate, num-channels, channel-positions, format,
- * and pcm-format properties.
- *
  * Currently, this parser supports raw data in a-law, mu-law, or linear PCM format.
  *
  * To facilitate operation with the unalignedaudioparse element, rawaudioparse

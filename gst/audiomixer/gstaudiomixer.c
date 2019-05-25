@@ -40,7 +40,7 @@
  * its output while playing.
  *
  * If you want to control the manner in which incoming data gets converted,
- * see the #GstAudioAggregatorPad:converter-config property, which will let
+ * see the #GstAudioAggregatorConvertPad:converter-config property, which will let
  * you for example change the way in which channels may get remapped.
  *
  * The input pads are from a GstPad subclass and have additional

@@ -26,8 +26,8 @@
  * @title: multisocketsink
  * @see_also: tcpserversink
  *
- * This plugin writes incoming data to a set of file descriptors. The
- * file descriptors can be added to multisocketsink by emitting the #GstMultiSocketSink::add signal.
+ * This plugin writes incoming data to a set of sockets. The
+ * sockets can be added to multisocketsink by emitting the #GstMultiSocketSink::add signal.
  * For each descriptor added, the #GstMultiSocketSink::client-added signal will be called.
  *
  * A client can also be added with the #GstMultiSocketSink::add-full signal
@@ -39,14 +39,14 @@
  * #GstMultiSocketSink::client-removed signal can also be fired when multisocketsink decides that a
  * client is not active anymore or, depending on the value of the
  * #GstMultiSocketSink:recover-policy property, if the client is reading too slowly.
- * In all cases, multisocketsink will never close a file descriptor itself.
- * The user of multisocketsink is responsible for closing all file descriptors.
- * This can for example be done in response to the #GstMultiSocketSink::client-fd-removed signal.
- * Note that multisocketsink still has a reference to the file descriptor when the
+ * In all cases, multisocketsink will never close a socket itself.
+ * The user of multisocketsink is responsible for closing all sockets.
+ * This can for example be done in response to the #GstMultiSocketSink::client-socket-removed signal.
+ * Note that multisocketsink still has a reference to the socket when the
  * #GstMultiSocketSink::client-removed signal is emitted, so that "get-stats" can be performed on
- * the descriptor; it is therefore not safe to close the file descriptor in
+ * the descriptor; it is therefore not safe to close the socket in
  * the #GstMultiSocketSink::client-removed signal handler, and you should use the
- * #GstMultiSocketSink::client-fd-removed signal to safely close the fd.
+ * #GstMultiSocketSink::client-socket-removed signal to safely close the socket.
  *
  * Multisocketsink internally keeps a queue of the incoming buffers and uses a
  * separate thread to send the buffers to the clients. This ensures that no
