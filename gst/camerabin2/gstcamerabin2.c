@@ -43,15 +43,15 @@
  * customization (there's a section about this below), then select
  * the desired mode and start capturing.
  *
- * In image capture mode, just send a #GstCameraBin:start-capture and a
+ * In image capture mode, just send a #GstCameraBin::start-capture and a
  * picture will be captured. When the picture is stored on the selected
  * location, a %GST_MESSAGE_ELEMENT named 'image-done' will be posted on
  * the #GstBus.
  *
- * In video capture mode, send a #GstCameraBin:start-capture to start
- * recording, then send a #GstCameraBin:stop-capture to stop recording.
+ * In video capture mode, send a #GstCameraBin::start-capture to start
+ * recording, then send a #GstCameraBin::stop-capture to stop recording.
  * Note that both signals are asynchronous, so, calling
- * #GstCameraBin:stop-capture doesn't guarantee that the video has been
+ * #GstCameraBin::stop-capture doesn't guarantee that the video has been
  * properly finished yet. Applications should wait for the 'video-done'
  * message to be posted on the bus.
  *
@@ -80,7 +80,7 @@
  * set their source that will provide buffers for the viewfinder and for
  * captures. This camera source is a special type of source that has 3 pads.
  * To use a 'regular' source with a single pad you should use
- * #GstWrapperCameraBinSource, it will adapt your source and provide 3 pads.
+ * #GstWrapperCameraBinSrc, it will adapt your source and provide 3 pads.
  *
  * Applications can also select the desired viewfinder sink using
  * #GstCameraBin:viewfinder-sink, it is also possible to select the audio

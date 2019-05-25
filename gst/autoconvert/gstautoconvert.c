@@ -30,7 +30,7 @@
  * no longer matches the caps.
  *
  * The list of element it will look into can be specified in the
- * #GstAutoConvert::factories property, otherwise it will look at all available
+ * #GstAutoConvert:factories property, otherwise it will look at all available
  * elements.
  */
 
