@@ -152,37 +152,6 @@ struct _asf_stream_video_format {
 
 typedef struct _asf_stream_video_format asf_stream_video_format;
 
-struct _asf_obj_data_correction {
-  guint8 type;
-  guint8 cycle;
-};
-
-typedef struct _asf_obj_data_correction asf_obj_data_correction;
-
-struct _asf_packet_info {
-  guint32  padsize;
-  guint8   replicsizetype;
-  guint8   fragoffsettype;
-  guint8   seqtype;
-  guint8   segsizetype;
-  gboolean multiple;
-  guint32  size_left;
-};
-
-typedef struct _asf_packet_info asf_packet_info;
-
-struct _asf_segment_info {
-  guint8   stream_number;
-  guint32  chunk_size;
-  guint32  frag_offset;
-  guint32  segment_size;
-  guint32  sequence;
-  guint32  frag_timestamp;
-  gboolean compressed;
-};
-
-typedef struct _asf_segment_info asf_segment_info;
-
 G_END_DECLS
 
 #endif /* __ASFHEADERS_H__ */
