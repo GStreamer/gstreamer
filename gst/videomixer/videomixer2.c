@@ -30,7 +30,7 @@
  * Videomixer will do colorspace conversion.
  *
  * Individual parameters for each input stream can be configured on the
- * #GstVideoMixer2Pad.
+ * videomixer pads.
  *
  * ## Sample pipelines
  * |[
