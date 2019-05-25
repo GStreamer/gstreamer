@@ -691,12 +691,34 @@ class TestInvalidOverlaps(common.GESSimpleTimelineTest):
             ]
         ])
         copy = clip.copy(True)
-        self.assertIsNotNone(copy.paste(copy.props.start + 1))
+        pasted = copy.paste(copy.props.start + 1)
         self.assertTimelineTopology([
             [
                 (GES.TestClip, 0, 10),
                 (GES.TestClip, 1, 10),
             ]
+        ])
+
+        pasted.move_to_layer(self.timeline.append_layer())
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+            ],
+            [
+                (GES.TestClip, 1, 10),
+            ]
+        ])
+
+        copy = pasted.copy(True)
+        self.assertIsNotNone(copy.paste(pasted.props.start - 1))
+        self.assertTimelineTopology([
+            [
+                (GES.TestClip, 0, 10),
+            ],
+            [
+                (GES.TestClip, 0, 10),
+                (GES.TestClip, 1, 10),
+            ],
         ])
 
     def test_move_group_with_overlaping_clips(self):
