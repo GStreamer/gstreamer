@@ -30657,11 +30657,92 @@
                     "sink_%%u": {
                         "caps": "video/x-raw:\n         format: { AYUV, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, RGBx, BGRx }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstVideoAggregatorConvertPad",
+                                "GstVideoAggregatorPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "converter-config": {
+                                    "blurb": "A GstStructure describing the configuration that should be used when scaling and converting this pad's video frames",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "type-name": "GstStructure",
+                                    "writable": true
+                                },
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "repeat-after-eos": {
+                                    "blurb": "Repeat the last frame after EOS until all pads are EOS",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                },
+                                "zorder": {
+                                    "blurb": "Z Order of the picture",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "request"
                     },
                     "src": {
                         "caps": "video/x-raw:\n         format: { RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "always"
                     }
                 },
@@ -30759,7 +30840,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstiqa.so",
+        "filename": "gstiqa",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -37804,7 +37885,7 @@
                 "name": "openh264dec",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-h264:\n  stream-format: byte-stream\n      alignment: au\n        profile: { (string)constrained-baseline, (string)baseline }\n",
+                        "caps": "video/x-h264:\n  stream-format: byte-stream\n      alignment: au\n        profile: { (string)constrained-baseline, (string)baseline, (string)main, (string)high }\n",
                         "direction": "sink",
                         "presence": "always",
                         "typename": "GstPad"
