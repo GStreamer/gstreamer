@@ -385,6 +385,360 @@
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
+    "aom": {
+        "description": "AOM plugin library",
+        "elements": {
+            "av1dec": {
+                "author": "Sean DuBois <sean@siobud.com>",
+                "description": "Decode AV1 video streams",
+                "hierarchy": [
+                    "GstAV1Dec",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video",
+                "long-name": "AV1 Decoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-av1:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw:\n         format: { I420, YV12, Y42B, Y444, I420_10LE, I420_12LE, I422_10LE, I422_12LE, Y444_10LE, Y444_12LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "av1enc": {
+                "author": "Sean DuBois <sean@siobud.com>",
+                "description": "Encode AV1 video streams",
+                "hierarchy": [
+                    "GstAV1Enc",
+                    "GstVideoEncoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Encoder/Video",
+                "long-name": "AV1 Encoder",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw:\n         format: { I420, Y42B, Y444, YV12 }\n      framerate: [ 0/1, 2147483647/1 ]\n          width: [ 4, 2147483647 ]\n         height: [ 4, 2147483647 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-av1:\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "buf-initial-sz": {
+                        "blurb": "Decoder buffer initial size, expressed in units of time (milliseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4000",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "buf-optimal-sz": {
+                        "blurb": "Decoder buffer optimal size, expressed in units of time (milliseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "5000",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "buf-sz": {
+                        "blurb": "Decoder buffer size, expressed in units of time (milliseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "6000",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "cpu-used": {
+                        "blurb": "CPU Used. A Value greater than 0 will increase encoder speed at the expense of quality.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "8",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "drop-frame": {
+                        "blurb": "Temporal resampling configuration, drop frames as a strategy to meet its target data rate Set to zero (0) to disable this feature.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "end-usage": {
+                        "blurb": "Rate control algorithm to use, indicates the end usage of this stream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "vbr (0)",
+                        "enum": true,
+                        "type-name": "GstAV1EncEndUsageMode",
+                        "values": [
+                            {
+                                "desc": "Variable Bit Rate Mode",
+                                "name": "vbr",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Constant Bit Rate Mode",
+                                "name": "cbr",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Constrained Quality Mode",
+                                "name": "cq",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "Constant Quality Mode",
+                                "name": "q",
+                                "value": "3"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "max-quantizer": {
+                        "blurb": "Maximum (worst quality) quantizer",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "min-quantizer": {
+                        "blurb": "Mininum (best quality) quantizer",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "overshoot-pct": {
+                        "blurb": "Rate control adaptation overshoot control",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "25",
+                        "max": "1000",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Handle Quality-of-Service events from downstream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "resize-denominator": {
+                        "blurb": "Frame resize denominator, assuming 8 as the numerator",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "8",
+                        "max": "16",
+                        "min": "8",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "resize-kf-denominator": {
+                        "blurb": "Frame resize keyframe denominator, assuming 8 as the numerator",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "8",
+                        "max": "16",
+                        "min": "8",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "resize-mode": {
+                        "blurb": "Frame resize mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "none (0)",
+                        "enum": true,
+                        "type-name": "GstAV1EncResizeMode",
+                        "values": [
+                            {
+                                "desc": "No frame resizing allowed",
+                                "name": "none",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "All frames are coded at the specified scale",
+                                "name": "fixed",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "All frames are coded at a random scale",
+                                "name": "random",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "superres-denominator": {
+                        "blurb": "Frame super-resolution denominator, used only by SUPERRES_FIXED mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "8",
+                        "max": "16",
+                        "min": "8",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "superres-kf-denominator": {
+                        "blurb": "Keyframe super-resolution denominator",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "8",
+                        "max": "16",
+                        "min": "8",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "superres-kf-qthresh": {
+                        "blurb": "Keyframe super-resolution qindex threshold, used only by SUPERRES_QTHRESH mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "63",
+                        "max": "63",
+                        "min": "1",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "superres-mode": {
+                        "blurb": "It integrates upscaling after the encode/decode process",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "none (0)",
+                        "enum": true,
+                        "type-name": "GstAV1EncSuperresMode",
+                        "values": [
+                            {
+                                "desc": "No frame superres allowed",
+                                "name": "none",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "All frames are coded at the specified scale and super-resolved",
+                                "name": "fixed",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "All frames are coded at a random scale and super-resolved",
+                                "name": "random",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "Superres scale for a frame is determined based on q_index",
+                                "name": "qthresh",
+                                "value": "3"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "superres-qthresh": {
+                        "blurb": "Frame super-resolution qindex threshold, used only by SUPERRES_QTHRESH mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "63",
+                        "max": "63",
+                        "min": "1",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "target-bitrate": {
+                        "blurb": "Target bitrate, in kilobits per second",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "256",
+                        "max": "-1",
+                        "min": "1",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "undershoot-pct": {
+                        "blurb": "Rate control adaptation undershoot control",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "25",
+                        "max": "1000",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            }
+        },
+        "filename": "gstaom",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "url": "Unknown package origin"
+    },
     "asfmux": {
         "description": "ASF Muxer Plugin",
         "elements": {
@@ -5508,7 +5862,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgstde265.so",
+        "filename": "gstde265",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -9352,7 +9706,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstdtsdec.so",
+        "filename": "gstdtsdec",
         "license": "GPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -12658,7 +13012,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgstfaac.so",
+        "filename": "gstfaac",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -12743,7 +13097,7 @@
                 "rank": "secondary"
             }
         },
-        "filename": "libgstfaad.so",
+        "filename": "gstfaad",
         "license": "GPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -13586,7 +13940,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstflite.so",
+        "filename": "gstflite",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -32553,7 +32907,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstmms.so",
+        "filename": "gstmms",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -33151,7 +33505,7 @@
                 "rank": "marginal"
             }
         },
-        "filename": "libgstmpeg2enc.so",
+        "filename": "gstmpeg2enc",
         "license": "GPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -33524,31 +33878,85 @@
     "mpegtsmux": {
         "description": "MPEG-TS muxer",
         "elements": {
-            "mpegtsmux": {
-                "author": "Fluendo <contact@fluendo.com>",
-                "description": "Multiplexes media streams into an MPEG Transport Stream",
+            "atscmux": {
+                "author": "Mathieu Duponchelle <mathieu@centricular.com>",
+                "description": "Multiplexes media streams into an ATSC-compliant Transport Stream",
                 "hierarchy": [
-                    "MpegTsMux",
+                    "GstATSCMux",
+                    "GstBaseTsMux",
+                    "GstAggregator",
                     "GstElement",
                     "GstObject",
                     "GInitiallyUnowned",
                     "GObject"
                 ],
                 "klass": "Codec/Muxer",
-                "long-name": "MPEG Transport Stream Muxer",
-                "name": "mpegtsmux",
+                "long-name": "ATSC Transport Stream Muxer",
                 "pad-templates": {
                     "sink_%%d": {
-                        "caps": "video/mpeg:\n         parsed: true\n    mpegversion: { (int)1, (int)2, (int)4 }\n   systemstream: false\nvideo/x-dirac:\nimage/x-jpc:\nvideo/x-h264:\n  stream-format: byte-stream\n      alignment: { (string)au, (string)nal }\nvideo/x-h265:\n  stream-format: byte-stream\n      alignment: { (string)au, (string)nal }\naudio/mpeg:\n         parsed: true\n    mpegversion: { (int)1, (int)2 }\naudio/mpeg:\n         framed: true\n    mpegversion: 4\n  stream-format: adts\naudio/mpeg:\n    mpegversion: 4\n  stream-format: raw\naudio/x-lpcm:\n          width: { (int)16, (int)20, (int)24 }\n           rate: { (int)48000, (int)96000 }\n       channels: [ 1, 8 ]\n  dynamic_range: [ 0, 255 ]\n       emphasis: { (boolean)false, (boolean)true }\n           mute: { (boolean)false, (boolean)true }\naudio/x-ac3:\n         framed: true\naudio/x-dts:\n         framed: true\naudio/x-opus:\n       channels: [ 1, 8 ]\nchannel-mapping-family: { (int)0, (int)1 }\nsubpicture/x-dvb:\napplication/x-teletext:\nmeta/x-klv:\n         parsed: true\nimage/x-jpc:\n        profile: [ 0, 49151 ]\n",
+                        "caps": "video/mpeg:\n         parsed: true\n    mpegversion: 2\n   systemstream: false\nvideo/x-h264:\n  stream-format: byte-stream\n      alignment: { (string)au, (string)nal }\naudio/x-ac3:\n         framed: true\naudio/x-eac3:\n         framed: true\n",
                         "direction": "sink",
-                        "presence": "request",
-                        "typename": "GstPad"
+                        "object-type": {
+                            "hierarchy": [
+                                "GstBaseTsMuxPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
+                        "presence": "request"
                     },
                     "src": {
-                        "caps": "video/mpegts:\n   systemstream: true\n     packetsize: { (int)188, (int)192 }\n",
+                        "caps": "video/mpegts:\n   systemstream: true\n     packetsize: 188\n",
                         "direction": "src",
-                        "presence": "always",
-                        "typename": "GstPad"
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
+                        "presence": "always"
                     }
                 },
                 "properties": {
@@ -33562,12 +33970,34 @@
                         "type-name": "gint",
                         "writable": true
                     },
-                    "m2ts-mode": {
-                        "blurb": "Set to TRUE to output Blu-Ray disc format with 192 byte packets. FALSE for standard TS format with 188 byte packets.",
+                    "bitrate": {
+                        "blurb": "Set the target bitrate, will insert null packets as padding  to achieve multiplex-wide constant bitrate (0 means no padding)",
                         "construct": false,
                         "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "latency": {
+                        "blurb": "Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "min-upstream-latency": {
+                        "blurb": "When sources with a higher latency are expected to be plugged in dynamically after the aggregator has started playing, this allows overriding the minimum latency reported by the initial source(s). This is only taken into account when larger than the actually reported minimum latency. (nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
                         "writable": true
                     },
                     "name": {
@@ -33620,6 +34050,266 @@
                         "max": "-1",
                         "min": "1",
                         "type-name": "guint",
+                        "writable": true
+                    },
+                    "start-time": {
+                        "blurb": "Start time to use if start-time-selection=set",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "start-time-selection": {
+                        "blurb": "Decides which start time is output",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "zero (0)",
+                        "enum": true,
+                        "type-name": "GstAggregatorStartTimeSelection",
+                        "values": [
+                            {
+                                "desc": "Start at 0 running time (default)",
+                                "name": "zero",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Start at first observed input running time",
+                                "name": "first",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Set start time with start-time property",
+                                "name": "set",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    }
+                },
+                "rank": "primary"
+            },
+            "mpegtsmux": {
+                "author": "Fluendo <contact@fluendo.com>",
+                "description": "Multiplexes media streams into an MPEG Transport Stream",
+                "hierarchy": [
+                    "GstMpegTsMux",
+                    "GstBaseTsMux",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Muxer",
+                "long-name": "MPEG Transport Stream Muxer",
+                "name": "mpegtsmux",
+                "pad-templates": {
+                    "sink_%%d": {
+                        "caps": "video/mpeg:\n         parsed: true\n    mpegversion: { (int)1, (int)2, (int)4 }\n   systemstream: false\nvideo/x-dirac:\nimage/x-jpc:\nvideo/x-h264:\n  stream-format: byte-stream\n      alignment: { (string)au, (string)nal }\nvideo/x-h265:\n  stream-format: byte-stream\n      alignment: { (string)au, (string)nal }\naudio/mpeg:\n         parsed: true\n    mpegversion: { (int)1, (int)2 }\naudio/mpeg:\n         framed: true\n    mpegversion: 4\n  stream-format: adts\naudio/mpeg:\n    mpegversion: 4\n  stream-format: raw\naudio/x-lpcm:\n          width: { (int)16, (int)20, (int)24 }\n           rate: { (int)48000, (int)96000 }\n       channels: [ 1, 8 ]\n  dynamic_range: [ 0, 255 ]\n       emphasis: { (boolean)false, (boolean)true }\n           mute: { (boolean)false, (boolean)true }\naudio/x-ac3:\n         framed: true\naudio/x-dts:\n         framed: true\naudio/x-opus:\n       channels: [ 1, 8 ]\nchannel-mapping-family: { (int)0, (int)1 }\nsubpicture/x-dvb:\napplication/x-teletext:\nmeta/x-klv:\n         parsed: true\nimage/x-jpc:\n        profile: [ 0, 49151 ]\n",
+                        "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstBaseTsMuxPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
+                        "presence": "request",
+                        "typename": "GstPad"
+                    },
+                    "src": {
+                        "caps": "video/mpegts:\n   systemstream: true\n     packetsize: { (int)188, (int)192 }\n",
+                        "direction": "src",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
+                        "presence": "always",
+                        "typename": "GstPad"
+                    }
+                },
+                "properties": {
+                    "alignment": {
+                        "blurb": "Number of packets per buffer (padded with dummy packets on EOS) (-1 = auto, 0 = all available packets, 7 for UDP streaming)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "bitrate": {
+                        "blurb": "Set the target bitrate, will insert null packets as padding  to achieve multiplex-wide constant bitrate (0 means no padding)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "latency": {
+                        "blurb": "Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "m2ts-mode": {
+                        "blurb": "Set to TRUE to output Blu-Ray disc format with 192 byte packets. FALSE for standard TS format with 188 byte packets.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "min-upstream-latency": {
+                        "blurb": "When sources with a higher latency are expected to be plugged in dynamically after the aggregator has started playing, this allows overriding the minimum latency reported by the initial source(s). This is only taken into account when larger than the actually reported minimum latency. (nanoseconds)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    },
+                    "pat-interval": {
+                        "blurb": "Set the interval (in ticks of the 90kHz clock) for writing out the PAT table",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "9000",
+                        "max": "-1",
+                        "min": "1",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "pmt-interval": {
+                        "blurb": "Set the interval (in ticks of the 90kHz clock) for writing out the PMT table",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "9000",
+                        "max": "-1",
+                        "min": "1",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "prog-map": {
+                        "blurb": "A GstStructure specifies the mapping from elementary streams to programs",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstStructure",
+                        "writable": true
+                    },
+                    "si-interval": {
+                        "blurb": "Set the interval (in ticks of the 90kHz clock) for writing out the ServiceInformation tables",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "9000",
+                        "max": "-1",
+                        "min": "1",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "start-time": {
+                        "blurb": "Start time to use if start-time-selection=set",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "start-time-selection": {
+                        "blurb": "Decides which start time is output",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "zero (0)",
+                        "enum": true,
+                        "type-name": "GstAggregatorStartTimeSelection",
+                        "values": [
+                            {
+                                "desc": "Start at 0 running time (default)",
+                                "name": "zero",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Start at first observed input running time",
+                                "name": "first",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Set start time with start-time property",
+                                "name": "set",
+                                "value": "2"
+                            }
+                        ],
                         "writable": true
                     }
                 },
@@ -33825,7 +34515,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstmplex.so",
+        "filename": "gstmplex",
         "license": "GPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -33977,6 +34667,34 @@
                     "src": {
                         "caps": "application/mxf:\n",
                         "direction": "src",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstMXFMuxPad",
+                                "GstAggregatorPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "emit-signals": {
+                                    "blurb": "Send signals to signal data consumption",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "false",
+                                    "type-name": "gboolean",
+                                    "writable": true
+                                }
+                            },
+                            "signals": {
+                                "buffer-consumed": {
+                                    "args": [
+                                        "GstBuffer"
+                                    ],
+                                    "retval": "void"
+                                }
+                            }
+                        },
                         "presence": "always",
                         "typename": "GstMXFMuxPad"
                     },
@@ -37086,7 +37804,7 @@
                 "name": "openh264dec",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-h264:\n  stream-format: byte-stream\n      alignment: au\n        profile: { (string)constrained-baseline, (string)baseline, (string)main, (string)high }\n",
+                        "caps": "video/x-h264:\n  stream-format: byte-stream\n      alignment: au\n        profile: { (string)constrained-baseline, (string)baseline }\n",
                         "direction": "sink",
                         "presence": "always",
                         "typename": "GstPad"
@@ -38532,492 +39250,6 @@
     "rist": {
         "description": "Source and Sink for RIST TR-06-1 streaming specification",
         "elements": {
-            "ristrtxreceive": {
-                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com>",
-                "description": "Receive retransmitted RIST packets according to VSF TR-06-1",
-                "hierarchy": [
-                    "GstRistRtxReceive",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec",
-                "long-name": "RIST Retransmission receiver",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "application/x-rtp:\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "application/x-rtp:\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "num-rtx-packets": {
-                        "blurb": " Number of retransmission packets received",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": false
-                    },
-                    "num-rtx-requests": {
-                        "blurb": "Number of retransmission events received",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": false
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    }
-                },
-                "rank": "none"
-            },
-            "ristrtxsend": {
-                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com>",
-                "description": "Retransmit RTP packets when needed, according to VSF TR-06-1",
-                "hierarchy": [
-                    "GstRistRtxSend",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec",
-                "long-name": "RIST Retransmission Sender",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "application/x-rtp:\n     clock-rate: [ 1, 2147483647 ]\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "application/x-rtp:\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "max-size-packets": {
-                        "blurb": "Amount of packets to queue (0 = unlimited)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "100",
-                        "max": "32767",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "max-size-time": {
-                        "blurb": "Amount of ms to queue (0 = unlimited)",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "num-rtx-packets": {
-                        "blurb": " Number of retransmission packets sent",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": false
-                    },
-                    "num-rtx-requests": {
-                        "blurb": "Number of retransmission events received",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": false
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    }
-                },
-                "rank": "none"
-            },
-            "ristsink": {
-                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com",
-                "description": "Sink that implements RIST TR-06-1 streaming specification",
-                "hierarchy": [
-                    "GstRistSink",
-                    "GstBin",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Source/Network",
-                "long-name": "RIST Sink",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "application/x-rtp:\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "address": {
-                        "blurb": "Address to send packets to (can be IPv4 or IPv6).",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "localhost",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "async-handling": {
-                        "blurb": "The bin will handle Asynchronous state changes",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "cname": {
-                        "blurb": "Set the CNAME in the SDES block of the sender report.",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "max-rtcp-bandwidth": {
-                        "blurb": "The maximum bandwidth used for RTCP in fraction of RTP bandwdith",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "0.05",
-                        "max": "0.05",
-                        "min": "0",
-                        "type-name": "gdouble",
-                        "writable": true
-                    },
-                    "message-forward": {
-                        "blurb": "Forwards all children messages",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "min-rtcp-interval": {
-                        "blurb": "The minimum interval in ms between two regular successive RTCP packets.",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "100",
-                        "max": "100",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "multicast-iface": {
-                        "blurb": "The multicast interface to use to send packets.",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "multicast-loopback": {
-                        "blurb": "When enabled, the packet will be received locally.",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "multicast-ttl": {
-                        "blurb": "The multicast time-to-live parameter.",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "1",
-                        "max": "255",
-                        "min": "0",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    },
-                    "port": {
-                        "blurb": "The port RTP packets will be sent, RTCP port is derived from it, this port must be an even number.",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "5004",
-                        "max": "65534",
-                        "min": "2",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "sender-buffer": {
-                        "blurb": "Size of the retransmission queue in ms",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "1200",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "stats": {
-                        "blurb": "Statistic in a GstStructure named 'rist/x-sender-stats'",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "rist/x-sender-stats, sent-original-packets=(guint64)0, sent-retransmitted-packets=(guint64)0, round-trip-time=(guint64)0;",
-                        "type-name": "GstStructure",
-                        "writable": false
-                    },
-                    "stats-update-interval": {
-                        "blurb": "The interval between 'stats' update notification (0 disabled)",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    }
-                },
-                "rank": "primary"
-            },
-            "ristsrc": {
-                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com",
-                "description": "Source that implements RIST TR-06-1 streaming specification",
-                "hierarchy": [
-                    "GstRistSrc",
-                    "GstBin",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Source/Network",
-                "long-name": "RIST Source",
-                "pad-templates": {
-                    "src": {
-                        "caps": "application/x-rtp:\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "address": {
-                        "blurb": "Address to receive packets from (can be IPv4 or IPv6).",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "0.0.0.0",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "async-handling": {
-                        "blurb": "The bin will handle Asynchronous state changes",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "cname": {
-                        "blurb": "Set the CNAME in the SDES block of the receiver report.",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "max-rtcp-bandwidth": {
-                        "blurb": "The maximum bandwidth used for RTCP in fraction of RTP bandwdith",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "0.05",
-                        "max": "0.05",
-                        "min": "0",
-                        "type-name": "gdouble",
-                        "writable": true
-                    },
-                    "max-rtx-retries": {
-                        "blurb": "The maximum number of retransmission requests for a lost packet.",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "7",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "message-forward": {
-                        "blurb": "Forwards all children messages",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "min-rtcp-interval": {
-                        "blurb": "The minimum interval in ms between two successive RTCP packets",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "100",
-                        "max": "100",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "multicast-iface": {
-                        "blurb": "The multicast interface to use to send packets.",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "multicast-loopback": {
-                        "blurb": "When enabled, the packet will be received locally.",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "false",
-                        "type-name": "gboolean",
-                        "writable": true
-                    },
-                    "multicast-ttl": {
-                        "blurb": "The multicast time-to-live parameter.",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "1",
-                        "max": "255",
-                        "min": "0",
-                        "type-name": "gint",
-                        "writable": true
-                    },
-                    "name": {
-                        "blurb": "The name of the object",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    },
-                    "parent": {
-                        "blurb": "The parent of the object",
-                        "construct": false,
-                        "construct-only": false,
-                        "type-name": "GstObject",
-                        "writable": true
-                    },
-                    "port": {
-                        "blurb": "The port to listen for RTP packets, RTCP port is derived from it, this port must be an even number.",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "5004",
-                        "max": "65534",
-                        "min": "2",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "receiver-buffer": {
-                        "blurb": "Buffering duration in ms",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "1000",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "reorder-section": {
-                        "blurb": "Time to wait before sending retransmission request in ms.",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "70",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    },
-                    "stats": {
-                        "blurb": "Statistic in a GstStructure named 'rist/x-receiver-stats'",
-                        "construct": false,
-                        "construct-only": false,
-                        "default": "rist/x-receiver-stats, dropped=(guint64)0, received=(guint64)0, recovered=(guint64)0, permanently-lost=(guint64)0, duplicates=(guint64)0, retransmission-requests-sent=(guint64)0, rtx-roundtrip-time=(guint64)0;",
-                        "type-name": "GstStructure",
-                        "writable": false
-                    },
-                    "stats-update-interval": {
-                        "blurb": "The interval between 'stats' update notification (0 disabled)",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "0",
-                        "max": "-1",
-                        "min": "0",
-                        "type-name": "guint",
-                        "writable": true
-                    }
-                },
-                "rank": "primary"
-            }
-        },
-        "filename": "gstrist",
-        "license": "LGPL",
-        "package": "GStreamer Bad Plug-ins git",
-        "source": "gst-plugins-bad",
-        "url": "Unknown package origin"
-    },
-    "rist": {
-        "description": "Source and Sink for RIST TR-06-1 streaming specification",
-        "elements": {
             "ristdispatcher": {
                 "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com",
                 "description": "Dispatcher element used by ristsink.",
@@ -39245,7 +39477,7 @@
                         "writable": true
                     },
                     "bonding-addresses": {
-                        "blurb": "Comma (,) seperated list of <address>:<port> to send to. Only used if 'enale-bonding' is set.",
+                        "blurb": "Comma (,) seperated list of <address>:<port> to send to. ",
                         "construct": false,
                         "construct-only": false,
                         "default": "localhost:5004",
@@ -39256,18 +39488,18 @@
                         "blurb": "Defines the bonding method to use.",
                         "construct": true,
                         "construct-only": false,
-                        "default": "redundant (0)",
+                        "default": "broadcast (0)",
                         "enum": true,
                         "type-name": "GstRistBondingMethodType",
                         "values": [
                             {
-                                "desc": "GST_RIST_BONDING_METHOD_REDUNDANT",
-                                "name": "redundant",
+                                "desc": "GST_RIST_BONDING_METHOD_BROADCAST",
+                                "name": "broadcast",
                                 "value": "0"
                             },
                             {
-                                "desc": "GST_RIST_BONDING_METHOD_COMBINED",
-                                "name": "combined",
+                                "desc": "GST_RIST_BONDING_METHOD_ROUND_ROBIN",
+                                "name": "round-robin",
                                 "value": "1"
                             }
                         ],
@@ -39277,7 +39509,7 @@
                         "blurb": "Set the CNAME in the SDES block of the sender report.",
                         "construct": false,
                         "construct-only": false,
-                        "default": "user3283979497@host-99161034",
+                        "default": "NULL",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -39447,7 +39679,7 @@
                         "blurb": "Set the CNAME in the SDES block of the receiver report.",
                         "construct": false,
                         "construct-only": false,
-                        "default": "user2251453196@host-63409ad8",
+                        "default": "NULL",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -39580,9 +39812,52 @@
                     }
                 },
                 "rank": "primary"
+            },
+            "roundrobin": {
+                "author": "Nicolas Dufresne <nicolas.dufresne@collabora.com",
+                "description": "A round robin dispatcher element.",
+                "hierarchy": [
+                    "GstRoundRobin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Network",
+                "long-name": "Round Robin",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src_%%d": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "request"
+                    }
+                },
+                "properties": {
+                    "name": {
+                        "blurb": "The name of the object",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "parent": {
+                        "blurb": "The parent of the object",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstObject",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
             }
         },
-        "filename": "libgstrist.so",
+        "filename": "gstrist",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -40077,7 +40352,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstrtmp.so",
+        "filename": "gstrtmp",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -42871,7 +43146,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstspandsp.so",
+        "filename": "gstspandsp",
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
@@ -46990,6 +47265,17 @@
                     "sink_%%u": {
                         "caps": "application/x-rtp:\n",
                         "direction": "sink",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstWebRTCBinPad",
+                                "GstGhostPad",
+                                "GstProxyPad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ]
+                        },
                         "presence": "request"
                     },
                     "src_%%u": {
@@ -48401,7 +48687,7 @@
                 "rank": "primary"
             }
         },
-        "filename": "libgstx265.so",
+        "filename": "gstx265",
         "license": "GPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
