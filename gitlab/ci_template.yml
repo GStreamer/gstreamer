@@ -19,6 +19,7 @@ variables:
   MANIFEST_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/build-manifest:d19082b72667fb3382bdc3621520c4d26e258b2e'
 
   GIT_STRATEGY: none
+  MESON_BUILDTYPE_ARGS: --default-library=both
   DEFAULT_MESON_ARGS: >
     --werror
     -Dpython=enabled
@@ -84,7 +85,7 @@ gst indent:
     CXX: "ccache g++"
     CCACHE_BASEDIR: "${CI_PROJECT_DIR}"
     CCACHE_DIR: "${CI_PROJECT_DIR}/ccache"
-    MESON_ARGS: "${DEFAULT_MESON_ARGS}"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS}"
 
   script:
     - ccache -z
@@ -121,7 +122,7 @@ build fedora x86_64:
   stage: 'build'
   image: $FEDORA_IMAGE
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic ${MESON_BUILDTYPE_ARGS}"
   except:
     variables:
       - $CI_PROJECT_NAME == "gst-docs"
@@ -132,7 +133,17 @@ build nodebug fedora x86_64:
   stage: 'build'
   image: $FEDORA30_IMAGE
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled ${MESON_BUILDTYPE_ARGS}"
+
+build static fedora x86_64:
+  extends: 'build fedora x86_64'
+  variables:
+    MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
+
+build static nodebug fedora x86_64:
+  extends: 'build nodebug fedora x86_64'
+  variables:
+    MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
 
 .test:
   stage: 'test'
