@@ -188,7 +188,7 @@ receive_handoff (GstElement * object G_GNUC_UNUSED, GstBuffer * buf,
 
 static void
 test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
-    GstClockTime exp_last_time)
+    GstClockTime exp_last_time, gboolean test_reverse)
 {
   GstMessage *msg;
   GstElement *pipeline;
@@ -229,20 +229,22 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
       "Expected end of playback range 3s, got %" GST_TIME_FORMAT,
       GST_TIME_ARGS (last_ts));
 
-  /* Test backwards */
-  seek_pipeline (pipeline, -1.0, 0, -1);
-  msg = run_pipeline (pipeline);
-  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
-  gst_message_unref (msg);
-  /* Check we saw the entire range of values */
-  fail_unless (first_ts == exp_first_time,
-      "Expected start of playback range %" GST_TIME_FORMAT
-      ", got %" GST_TIME_FORMAT, GST_TIME_ARGS (exp_first_time),
-      GST_TIME_ARGS (first_ts));
-  fail_unless (last_ts == exp_last_time,
-      "Expected end of playback range %" GST_TIME_FORMAT
-      ", got %" GST_TIME_FORMAT, GST_TIME_ARGS (exp_last_time),
-      GST_TIME_ARGS (last_ts));
+  if (test_reverse) {
+    /* Test backwards */
+    seek_pipeline (pipeline, -1.0, 0, -1);
+    msg = run_pipeline (pipeline);
+    fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+    gst_message_unref (msg);
+    /* Check we saw the entire range of values */
+    fail_unless (first_ts == exp_first_time,
+        "Expected start of playback range %" GST_TIME_FORMAT
+        ", got %" GST_TIME_FORMAT, GST_TIME_ARGS (exp_first_time),
+        GST_TIME_ARGS (first_ts));
+    fail_unless (last_ts == exp_last_time,
+        "Expected end of playback range %" GST_TIME_FORMAT
+        ", got %" GST_TIME_FORMAT, GST_TIME_ARGS (exp_last_time),
+        GST_TIME_ARGS (last_ts));
+  }
 
   gst_object_unref (pipeline);
 }
@@ -251,7 +253,7 @@ GST_START_TEST (test_splitmuxsrc)
 {
   gchar *in_pattern =
       g_build_filename (GST_TEST_FILES_PATH, "splitvideo*.ogg", NULL);
-  test_playback (in_pattern, 0, 3 * GST_SECOND);
+  test_playback (in_pattern, 0, 3 * GST_SECOND, TRUE);
   g_free (in_pattern);
 }
 
@@ -367,7 +369,62 @@ GST_START_TEST (test_splitmuxsink)
   fail_unless (count == 3, "Expected 3 output files, got %d", count);
 
   in_pattern = g_build_filename (tmpdir, "out*.ogg", NULL);
-  test_playback (in_pattern, 0, 3 * GST_SECOND);
+  test_playback (in_pattern, 0, 3 * GST_SECOND, TRUE);
+  g_free (in_pattern);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_splitmuxsink_multivid)
+{
+  GstMessage *msg;
+  GstElement *pipeline;
+  GstElement *sink;
+  gchar *dest_pattern;
+  guint count;
+  gchar *in_pattern;
+
+  /* This pipeline should start a new file every GOP, ie 1 second,
+   * driven by the primary video stream and with 2 auxilliary video streams */
+  pipeline =
+      gst_parse_launch
+      ("splitmuxsink name=splitsink "
+      " max-size-time=1000000 max-size-bytes=1000000 muxer=qtmux "
+      "videotestsrc num-buffers=15 ! video/x-raw,width=80,height=64,framerate=5/1 ! videoconvert !"
+      " queue ! vp8enc keyframe-max-dist=5 ! splitsink.video "
+      "videotestsrc num-buffers=15 pattern=snow ! video/x-raw,width=80,height=64,framerate=5/1 ! videoconvert !"
+      " queue ! vp8enc keyframe-max-dist=6 ! splitsink.video_aux_0 "
+      "videotestsrc num-buffers=15 pattern=ball ! video/x-raw,width=80,height=64,framerate=5/1 ! videoconvert !"
+      " queue ! vp8enc keyframe-max-dist=8 ! splitsink.video_aux_1 ", NULL);
+  fail_if (pipeline == NULL);
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (sink == NULL);
+  g_signal_connect (sink, "format-location-full",
+      (GCallback) check_format_location, NULL);
+  dest_pattern = g_build_filename (tmpdir, "out%05d.m4v", NULL);
+  g_object_set (G_OBJECT (sink), "location", dest_pattern, NULL);
+  g_free (dest_pattern);
+  g_object_unref (sink);
+
+  msg = run_pipeline (pipeline);
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  gst_object_unref (pipeline);
+
+  count = count_files (tmpdir);
+  fail_unless (count == 3, "Expected 3 output files, got %d", count);
+
+  in_pattern = g_build_filename (tmpdir, "out*.m4v", NULL);
+  /* FIXME: Reverse playback works poorly with multiple video streams
+   * in qtdemux (at least, maybe other demuxers) at the time this was
+   * written, and causes test failures like buffers being output
+   * multiple times by qtdemux as it loops through GOPs. Disable that
+   * for now */
+  test_playback (in_pattern, 0, 3 * GST_SECOND, FALSE);
   g_free (in_pattern);
 }
 
@@ -431,7 +488,7 @@ GST_START_TEST (test_splitmuxsink_async)
   fail_unless (count == 3, "Expected 3 output files, got %d", count);
 
   in_pattern = g_build_filename (tmpdir, "matroska*.mkv", NULL);
-  test_playback (in_pattern, 0, 3 * GST_SECOND);
+  test_playback (in_pattern, 0, 3 * GST_SECOND, TRUE);
   g_free (in_pattern);
 }
 
@@ -713,7 +770,7 @@ GST_START_TEST (test_splitmuxsrc_caps_change)
   fail_unless (count == 2, "Expected 2 output files, got %d", count);
 
   in_pattern = g_build_filename (tmpdir, "out*.mp4", NULL);
-  test_playback (in_pattern, 0, GST_SECOND);
+  test_playback (in_pattern, 0, GST_SECOND, TRUE);
   g_free (in_pattern);
 }
 
@@ -760,7 +817,7 @@ GST_START_TEST (test_splitmuxsrc_robust_mux)
    * reserved duration property. All we care about is that the muxing didn't fail because space ran out */
 
   in_pattern = g_build_filename (tmpdir, "out*.mp4", NULL);
-  test_playback (in_pattern, 0, GST_SECOND);
+  test_playback (in_pattern, 0, GST_SECOND, TRUE);
   g_free (in_pattern);
 }
 
@@ -802,7 +859,7 @@ splitmux_suite (void)
   TCase *tc_chain_complex = tcase_create ("complex");
   TCase *tc_chain_mp4_jpeg = tcase_create ("caps_change");
   gboolean have_theora, have_ogg, have_vorbis, have_matroska, have_qtmux,
-      have_jpeg;
+      have_jpeg, have_vp8;
 
   /* we assume that if encoder/muxer are there, decoder/demuxer will be a well */
   have_theora = gst_registry_check_feature_version (gst_registry_get (),
@@ -817,6 +874,8 @@ splitmux_suite (void)
       "qtmux", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
   have_jpeg = gst_registry_check_feature_version (gst_registry_get (),
       "jpegenc", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
+  have_vp8 = gst_registry_check_feature_version (gst_registry_get (),
+      "vp8enc", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
 
   suite_add_tcase (s, tc_chain);
   suite_add_tcase (s, tc_chain_basic);
@@ -853,6 +912,12 @@ splitmux_suite (void)
     tcase_add_test (tc_chain_mp4_jpeg, test_splitmuxsrc_robust_mux);
   } else {
     GST_INFO ("Skipping tests, missing plugins: jpegenc or mp4mux");
+  }
+
+  if (have_qtmux && have_vp8) {
+    tcase_add_test (tc_chain, test_splitmuxsink_multivid);
+  } else {
+    GST_INFO ("Skipping tests, missing plugins: vp8enc or mp4mux");
   }
   return s;
 }

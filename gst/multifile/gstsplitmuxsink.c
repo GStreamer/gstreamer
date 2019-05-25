@@ -1,5 +1,5 @@
 /* GStreamer Muxer bin that splits output stream by size/time
- * Copyright (C) <2014> Jan Schmidt <jan@centricular.com>
+ * Copyright (C) <2014-2019> Jan Schmidt <jan@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -146,6 +146,11 @@ GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
+static GstStaticPadTemplate video_aux_sink_template =
+GST_STATIC_PAD_TEMPLATE ("video_aux_%u",
+    GST_PAD_SINK,
+    GST_PAD_REQUEST,
+    GST_STATIC_CAPS_ANY);
 static GstStaticPadTemplate audio_sink_template =
 GST_STATIC_PAD_TEMPLATE ("audio_%u",
     GST_PAD_SINK,
@@ -264,6 +269,8 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &video_sink_template);
+  gst_element_class_add_static_pad_template (gstelement_class,
+      &video_aux_sink_template);
   gst_element_class_add_static_pad_template (gstelement_class,
       &audio_sink_template);
   gst_element_class_add_static_pad_template (gstelement_class,
@@ -2580,7 +2587,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
   GstElement *q;
   GstPad *q_sink = NULL, *q_src = NULL;
   gchar *gname, *qname;
-  gboolean is_video = FALSE;
+  gboolean is_primary_video = FALSE;
   MqStreamCtx *ctx;
 
   GST_DEBUG_OBJECT (element, "templ:%s, name:%s", templ->name_template, name);
@@ -2591,8 +2598,10 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
   g_signal_emit (splitmux, signals[SIGNAL_MUXER_ADDED], 0, splitmux->muxer);
 
   if (templ->name_template) {
-    if (g_str_equal (templ->name_template, "video")) {
-      if (splitmux->have_video)
+    if (g_str_equal (templ->name_template, "video") ||
+        g_str_has_prefix (templ->name_template, "video_aux_")) {
+      is_primary_video = g_str_equal (templ->name_template, "video");
+      if (is_primary_video && splitmux->have_video)
         goto already_have_video;
 
       /* FIXME: Look for a pad template with matching caps, rather than by name */
@@ -2610,7 +2619,6 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
             gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS
             (splitmux->muxer), "video");
       }
-      is_video = TRUE;
       name = NULL;
     } else {
       GST_DEBUG_OBJECT (element, "searching for pad-template with name '%s'",
@@ -2620,7 +2628,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
           (splitmux->muxer), templ->name_template);
 
       /* Fallback to find sink pad templates named 'audio' (flvmux) */
-      if (!mux_template) {
+      if (!mux_template && g_str_has_prefix (templ->name_template, "audio_")) {
         GST_DEBUG_OBJECT (element,
             "searching for pad-template with name 'audio'");
         mux_template =
@@ -2677,7 +2685,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
     goto fail;
   }
 
-  if (is_video)
+  if (is_primary_video)
     gname = g_strdup ("video");
   else if (name == NULL)
     gname = gst_pad_get_name (res);
@@ -2720,7 +2728,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
       gst_pad_add_probe (q_src,
       GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM | GST_PAD_PROBE_TYPE_EVENT_FLUSH,
       (GstPadProbeCallback) handle_mq_output, ctx, NULL);
-  if (is_video && splitmux->reference_ctx != NULL) {
+  if (is_primary_video && splitmux->reference_ctx != NULL) {
     splitmux->reference_ctx->is_reference = FALSE;
     splitmux->reference_ctx = NULL;
   }
@@ -2745,7 +2753,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
 
   g_free (gname);
 
-  if (is_video)
+  if (is_primary_video)
     splitmux->have_video = TRUE;
 
   gst_pad_set_active (res, TRUE);

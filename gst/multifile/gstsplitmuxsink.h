@@ -1,5 +1,5 @@
 /* GStreamer split muxer bin
- * Copyright (C) 2014 Jan Schmidt <jan@centricular.com>
+ * Copyright (C) 2014-2019 Jan Schmidt <jan@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
