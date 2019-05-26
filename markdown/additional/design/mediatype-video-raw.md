@@ -18,7 +18,7 @@
    view. use the frame id to get access to the different views.
 
  - **interlace-mode**, `G_TYPE_STRING`: Default progressive. The interlace
-   mode (also see the [interlaced video design docs](design/interlaced-video.md)).
+   mode (also see the [interlaced video design docs](additional/design/interlaced-video.md)).
    The following values are possible:
 
    - *"progressive"*: all frames are progressive

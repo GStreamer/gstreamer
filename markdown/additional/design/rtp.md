@@ -2,7 +2,7 @@
 
 These design docs detail some of the lower-level mechanism of certain parts
 of GStreamer's RTP stack. For a higher-level overview see the [RTP and RTSP
-support](rtp.md) section.
+support](additional/rtp.md) section.
 
 # RTP auxiliary stream design
 

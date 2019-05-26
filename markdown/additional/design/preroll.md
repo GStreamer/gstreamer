@@ -16,7 +16,7 @@ be signalled.
 
 Several things can happen that require the preroll cond to be signalled.
 These include state changes or flush events. The prerolling is
-implemented in sinks (see [Sink elements](design/element-sink.md)).
+implemented in sinks (see [Sink elements](additional/design/element-sink.md)).
 
 ## Committing the state
 

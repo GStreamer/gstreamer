@@ -30,18 +30,18 @@ Let’s look at some example sources.
     limit to how fast you can read from this source. This limit is
     usually much higher than the consumption rate. In some cases it
     might be slower (an NFS share, for example) in which case you might
-    need to use some buffering (see [buffering](design/buffering.md)).
+    need to use some buffering (see [buffering](additional/design/buffering.md)).
 
   - HTTP network element: you can PAUSE without data loss. Depending on
     the available network bandwidth, consumption rate might be higher
     than production rate in which case buffering should be used (see
-    [buffering](design/buffering.md)).
+    [buffering](additional/design/buffering.md)).
 
   - audio source: pausing the audio capture will lead to lost data. this
     source is therefore definitely live. In addition, an audio source
     will produce data at a fixed rate (the samplerate). Also depending
     on the buffersize, this source will introduce a latency (see
-    [latency](design/latency.md)).
+    [latency](additional/design/latency.md)).
 
   - udp network source: Pausing the receiving part will lead to lost
     data. This source is therefore a live source. Also in a typical case

@@ -41,7 +41,7 @@ buffer arrives at the sink, it will already be late and will be dropped.
 The latency is the time it takes to construct one buffer of data and it's
 exposed with a `LATENCY` query.
 
-See [latency](design/latency.md)
+See [latency](additional/design/latency.md)
 
 ## Timestamps
 

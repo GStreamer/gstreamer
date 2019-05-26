@@ -121,7 +121,7 @@ to only complete the state change to `PAUSED` after receiving the first
 data.
 
 Normally the state changes of elements are coordinated by the pipeline
-as explained in [states](design/states.md).
+as explained in [states](additional/design/states.md).
 
 Different categories of elements exist:
 
@@ -141,7 +141,7 @@ output streams.
 - *mixer/muxer elements*: combine several input streams into one output
 stream.
 
-Other categories of elements can be constructed (see [klass](design/draft-klass.md)).
+Other categories of elements can be constructed (see [klass](additional/design/draft-klass.md)).
 
 ## Bins
 
@@ -225,7 +225,7 @@ element can understand the buffer contents. It does this by querying the
 peer element for the supported formats and by selecting a suitable
 common format. The selected format is then first sent to the peer
 element with a CAPS event before pushing the buffer (see
-[negotiation](design/negotiation.md)).
+[negotiation](additional/design/negotiation.md)).
 
 When an element pad receives a CAPS event, it has to check if it
 understand the media type. The element must refuse following buffers if
@@ -397,7 +397,7 @@ Before going to `PLAYING`, the pipeline select a clock and samples the
 current time of the clock. This is the `base_time`. It then distributes
 this time to all elements. Elements can then synchronize against the
 clock using the buffer `running_time`
-`base_time` (See also [synchronisation](design/synchronisation.md)).
+`base_time` (See also [synchronisation](additional/design/synchronisation.md)).
 
 The following chain of state changes then takes place:
 

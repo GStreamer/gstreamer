@@ -40,7 +40,7 @@ not supported.
 
 **`GST_QUERY_DURATION`**: get info on the total duration of the stream.
 
-**`GST_QUERY_LATENCY`**: get amount of latency introduced in the pipeline. (See [latency](design/latency.md))
+**`GST_QUERY_LATENCY`**: get amount of latency introduced in the pipeline. (See [latency](additional/design/latency.md))
 
 **`GST_QUERY_RATE`**: get the current playback rate of the pipeline
 
@@ -56,16 +56,16 @@ not supported.
 
 **`GST_QUERY_FORMATS`**: return list of supported formats that can be used for `GST_QUERY_CONVERT`.
 
-**`GST_QUERY_BUFFERING`**: query available media for efficient seeking (See [buffering](design/buffering.md))
+**`GST_QUERY_BUFFERING`**: query available media for efficient seeking (See [buffering](additional/design/buffering.md))
 
 **`GST_QUERY_CUSTOM`**: a custom query, the name of the query defines the properties of the query.
 
 **`GST_QUERY_URI`**: query the uri of the source or sink element
 
-**`GST_QUERY_ALLOCATION`**: the buffer allocation properties (See [bufferpool](design/bufferpool.md))
+**`GST_QUERY_ALLOCATION`**: the buffer allocation properties (See [bufferpool](additional/design/bufferpool.md))
 
-**`GST_QUERY_SCHEDULING`**: the scheduling properties (See [scheduling](design/scheduling.md))
+**`GST_QUERY_SCHEDULING`**: the scheduling properties (See [scheduling](additional/design/scheduling.md))
 
-**`GST_QUERY_ACCEPT_CAPS`**: check if caps are supported (See [negotiation](design/negotiation.md))
+**`GST_QUERY_ACCEPT_CAPS`**: check if caps are supported (See [negotiation](additional/design/negotiation.md))
 
-**`GST_QUERY_CAPS`**: get the possible caps (See [negotiation](design/negotiation.md))
+**`GST_QUERY_CAPS`**: get the possible caps (See [negotiation](additional/design/negotiation.md))

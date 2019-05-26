@@ -177,7 +177,7 @@ then be placed under control of a parent. The floating ref keeps the object
 alive until it is parented, and once the object is parented you can forget
 about it.
 
-also see [relations](design/relations.md)
+also see [relations](additional/design/relations.md)
 
 ### parent-child relations
 
@@ -202,7 +202,7 @@ The responsibilities for an object that sinks other objects are summarised as:
     object.
     - remove the object from the list.
 
-also see [relations](design/relations.md)
+also see [relations](additional/design/relations.md)
 
 ### Properties
 

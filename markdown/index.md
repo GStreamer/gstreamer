@@ -21,7 +21,7 @@ cost of greater complexity, writing new applications is not always easy.
 
 <div class="row toned-row">
     <div class="col-lg-2 col-lg-offset-2 col-xs-6 col-md-3">
-      <a class="icon" id="apiref" href="api.html" data-hotdoc-relative-link=true>API Reference</a>
+      <a class="icon" id="apiref" href="libs.html" data-hotdoc-relative-link=true>API Reference</a>
     </div>
     <div class="col-lg-2 col-xs-6 col-md-3">
       <a class="icon" id="hig" href="application-development/index.html" data-hotdoc-relative-link=true>

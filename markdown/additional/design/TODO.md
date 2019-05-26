@@ -31,7 +31,7 @@ code-wise.
 
 ## IMPLEMENTATION
 
-  - implement more QOS, [qos](design/qos.md).
+  - implement more QOS, [qos](additional/design/qos.md).
 
   - implement BUFFERSIZE.
 

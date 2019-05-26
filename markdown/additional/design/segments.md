@@ -81,7 +81,7 @@ Videosink reports its current position as (simplified):
 current_position = clock_time - element->base_time + segment_time
 ```
 
-See [synchronisation](design/synchronisation.md) for a more detailed and
+See [synchronisation](additional/design/synchronisation.md) for a more detailed and
 accurate explanation of synchronisation and position reporting.
 
 Since after a flushing seek the `stream_time` is reset to 0, the new buffer

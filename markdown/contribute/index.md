@@ -2,7 +2,7 @@
 short-description: Contributing to GStreamer
 ...
 
-# How to Contribute to GStreamer
+# Contributing to GStreamer
 
 This document provides instructions and guidelines for submitting issues,
 feature requests and patches to GStreamer. The following applies to all

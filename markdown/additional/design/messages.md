@@ -9,8 +9,8 @@ without requiring an API change while allowing a wide range of different
 types of messages.
 
 Messages are posted by objects in the pipeline and are passed to the
-application using the `GstBus` (See also [gstbus](design/gstbus.md)
-and [gstpipeline](design/gstpipeline.md)).
+application using the `GstBus` (See also [gstbus](additional/design/gstbus.md)
+and [gstpipeline](additional/design/gstpipeline.md)).
 
 ## Message types
 

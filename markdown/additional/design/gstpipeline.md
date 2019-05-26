@@ -3,13 +3,13 @@
 A `GstPipeline` is usually a toplevel bin and provides all of its children
 with a clock.
 
-A `GstPipeline` also provides a toplevel `GstBus` (see [gstbus](design/gstbus.md))
+A `GstPipeline` also provides a toplevel `GstBus` (see [gstbus](additional/design/gstbus.md))
 
 The pipeline also calculates the `running_time` based on the selected
-clock (see also clocks.txt and [synchronisation](design/synchronisation.md)).
+clock (see also clocks.txt and [synchronisation](additional/design/synchronisation.md)).
 
 The pipeline will calculate a global latency for the elements in the
-pipeline. (See also [latency](design/latency.md)).
+pipeline. (See also [latency](additional/design/latency.md)).
 
 ## State changes
 
@@ -34,7 +34,7 @@ change:
 
 The `running_time` represents the total elapsed time, measured in clock
 units, that the pipeline spent in the PLAYING state (see
-[synchronisation](design/synchronisation.md)). The `running_time` is set to 0 after a
+[synchronisation](additional/design/synchronisation.md)). The `running_time` is set to 0 after a
 flushing seek.
 
 ## Clock selection
@@ -76,4 +76,4 @@ auto- matic clock selection algorithm described above.
 A `GstPipeline` provides a `GstBus` to the application. The bus can be
 retrieved with `gst_pipeline_get_bus()` and can then be used to
 retrieve messages posted by the elements in the pipeline (see
-[gstbus](design/gstbus.md)).
+[gstbus](additional/design/gstbus.md)).

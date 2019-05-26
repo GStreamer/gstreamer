@@ -16,7 +16,7 @@ downstream element and contains memory and metadata information.
 ## Lifecycle
 
 `GstMemory` extends from `GstMiniObject` and therefore uses its lifecycle
-management (See [miniobject](design/miniobject.md)).
+management (See [miniobject](additional/design/miniobject.md)).
 
 ## Writability
 

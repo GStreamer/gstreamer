@@ -29,7 +29,7 @@ pipeline to PAUSED and PLAYING again in order to let the pipeline select
 a new clock and distribute a new base time.
 
 The clock selection is performed as part of the state change from PAUSED
-to PLAYING and is described in [states](design/states.md).
+to PLAYING and is described in [states](additional/design/states.md).
 
 ## Clock features
 

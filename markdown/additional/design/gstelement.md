@@ -52,8 +52,8 @@ list of pads
 
 ## Ghost Pads
 
-More info in [ghostpad](design/gstghostpad.md).
+More info in [ghostpad](additional/design/gstghostpad.md).
 
 ## State
 
-An element has a state. More info in [state](design/states.md).
+An element has a state. More info in [state](additional/design/states.md).

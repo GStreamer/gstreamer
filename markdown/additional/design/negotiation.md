@@ -70,7 +70,7 @@ negotiation.
 
 The basics of negotiation are as follows:
 
-- `GstCaps` (see [caps](design/caps.md)) are refcounted before they are pushed as
+- `GstCaps` (see [caps](additional/design/caps.md)) are refcounted before they are pushed as
 an event to describe the contents of the following buffer.
 
 - An element should reconfigure itself to the new format received as a

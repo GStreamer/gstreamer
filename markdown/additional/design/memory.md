@@ -122,7 +122,7 @@ GstMemory * gst_memory_new_wrapped  (GstMemoryFlags flags,
 ## Lifecycle
 
 `GstMemory` extends from `GstMiniObject` and therefore uses its lifecycle
-management (See [miniobject](design/miniobject.md)).
+management (See [miniobject](additional/design/miniobject.md)).
 
 ## Data Access
 
@@ -131,7 +131,7 @@ call. This allows the implementation to monitor the access patterns or set up
 the required memory mappings when needed.
 
 The access of the memory object is controlled with the locking mechanism on
-`GstMiniObject` (See [miniobject](design/miniobject.md)).
+`GstMiniObject` (See [miniobject](additional/design/miniobject.md)).
 
 Mapping a memory region requires the caller to specify the access method: READ
 and/or WRITE. Mapping a memory region will first try to get a lock on the

@@ -11,7 +11,7 @@ description of the element.
 Caps are exposed on the element pads via `CAPS` and `ACCEPT_CAPS` queries.
 
 This function describes the possible types that the pad can handle or
-produce ([negotiation](design/negotiation.md)).
+produce ([negotiation](additional/design/negotiation.md)).
 
 Various methods exist to work with the media types such as subtracting
 or intersecting.

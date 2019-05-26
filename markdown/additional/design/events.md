@@ -93,7 +93,7 @@ upstream elements.
 
 A `FLUSH_START` may instruct the pipeline to distribute a new `base_time`
 to elements so that the `running_time` is reset to 0. (see
-[clocks](design/clocks.md) and [synchronisation](design/synchronisation.md)).
+[clocks](additional/design/clocks.md) and [synchronisation](additional/design/synchronisation.md)).
 
 ## EOS
 
@@ -151,7 +151,7 @@ is free to refuse buffers if they were not preceded by a SEGMENT event.
 
 Elements that sync to the clock should store the SEGMENT start and end
 values and subtract the start value from the buffer timestamp before
-comparing it against the stream time (see [clocks](design/clocks.md)).
+comparing it against the stream time (see [clocks](additional/design/clocks.md)).
 
 An element is allowed to send out buffers with the SEGMENT start time
 already subtracted from the timestamp. If it does so, it needs to send a
@@ -190,7 +190,7 @@ such as demuxers.
 A QOS, or quality of service message, is generated in an element to
 report to the upstream elements about the current quality of real-time
 performance of the stream. This is typically done by the sinks that
-measure the amount of framedrops they have. (see [qos](design/qos.md))
+measure the amount of framedrops they have. (see [qos](additional/design/qos.md))
 
 ## SEEK
 
@@ -247,7 +247,7 @@ The general flow of executing the seek with FLUSH is as follows:
    now from the new position.
 
 More information about the different seek types can be found in
-[seeking](design/seeking.md).
+[seeking](additional/design/seeking.md).
 
 ## NAVIGATION
 
@@ -262,7 +262,7 @@ It contains a single GstClockTime with the required latency. The latency
 value is calculated by the pipeline and distributed to all sink elements
 before they are set to PLAYING. The sinks will add the configured
 latency value to the timestamps of the buffer in order to delay their
-presentation. (See also [latency](design/latency.md)).
+presentation. (See also [latency](additional/design/latency.md)).
 
 ## DRAIN
 

@@ -179,7 +179,7 @@ parameters:
 
   - A long, English, name for the element.
 
-  - The type of the element, see the docs/design/draft-klass.txt
+  - The type of the element, see the docs/additional/design/draft-klass.txt
     document in the GStreamer core source tree for details and examples.
 
   - A brief description of the purpose of the element.

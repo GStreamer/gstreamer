@@ -36,7 +36,7 @@ Different sources exist for this counter:
 In GStreamer any element can provide a `GstClock` object that can be used
 in the pipeline. The `GstPipeline` object will select a clock from all the
 providers and will distribute it to all other elements (see
-[gstpipeline](design/gstpipeline.md)).
+[gstpipeline](additional/design/gstpipeline.md)).
 
 While it is possible, it is not recommended to create a clock derived
 from the contents of a stream (for example, create a clock from the PCR
@@ -60,7 +60,7 @@ time spent in the PLAYING state and is calculated as follows:
     is set to `PLAYING`.
 
   - after a flushing seek, the `running_time` is set to 0 (see
-    [seeking](design/seeking.md)). This is accomplished by redistributing a new
+    [seeking](additional/design/seeking.md)). This is accomplished by redistributing a new
     base\_time to the elements that got flushed.
 
 This algorithm captures the `running_time` when the pipeline is set from
@@ -83,7 +83,7 @@ clock. This value is monotonically increasing at the rate of the clock.
 ## Timestamps
 
 The `GstBuffer` timestamps and the preceding SEGMENT event (See
-[streams](design/streams.md)) define a transformation of the buffer timestamps
+[streams](additional/design/streams.md)) define a transformation of the buffer timestamps
 to `running_time` as follows:
 
 The following notation is used:
@@ -105,7 +105,7 @@ The following notation is used:
 Valid buffers for synchronisation are those with B.timestamp between
 `S.start` and `S.stop` (after applying the `S.offset`). All other buffers
 outside this range should be dropped or clipped to these boundaries (see
-also [segments](design/segments.md)).
+also [segments](additional/design/segments.md)).
 
 The following transformation to `running_time` exist:
 
@@ -187,7 +187,7 @@ is noted with `B.sync_time`. Thus:
 ```
 
 One then waits for the clock to reach `B.sync_time` before rendering the
-buffer in the sink (See also [clocks](design/clocks.md)).
+buffer in the sink (See also [clocks](additional/design/clocks.md)).
 
 For multiple streams this means that buffers with the same `running_time`
 are to be displayed at the same time.

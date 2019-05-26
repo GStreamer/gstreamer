@@ -41,7 +41,7 @@ more buffers are to be processed after the EOS event.
      with a timestamp of `S.start`.
    - marks playback rate (rate). This is the required playback rate.
    - marks applied rate (`applied_rate`). This is the already applied playback
-     rate. (See also [trickmodes](design/trickmodes.md))
+     rate. (See also [trickmodes](additional/design/trickmodes.md))
    - marks `running_time` of buffers. This is the time used to synchronize
      against the clock.
 
@@ -60,7 +60,7 @@ more buffers are to be processed after the EOS event.
 
   - a monotonically increasing value that can be used to synchronize
     against the clock (See also
-    [synchronisation](design/synchronisation.md)).
+    [synchronisation](additional/design/synchronisation.md)).
 
   - `stream_time`:
     *  current position in stream between 0 and duration.

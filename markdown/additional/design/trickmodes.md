@@ -86,7 +86,7 @@ is `GST_FORMAT_TIME`.
 
 One element will actually perform the seek, this is usually the demuxer
 or source element. For more information on how to perform the different
-seek types see [seeking](design/seeking.md).
+seek types see [seeking](additional/design/seeking.md).
 
 For client side trickmode a `SEGMENT` event will be sent downstream with
 the new rate and start/stop positions. All elements prepare themselves

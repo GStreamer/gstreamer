@@ -12,7 +12,7 @@ to/from it. `gst_bin_add()` and `gst_bin_remove()` perform these
 operations respectively.
 
 The bin maintains a parent-child relationship with its elements (see
-[relations](design/relations.md)).
+[relations](additional/design/relations.md)).
 
 ## Retrieving elements
 
@@ -35,7 +35,7 @@ operations include:
   - clock get/set
 
 The state change distribution is the most complex and is explained in
-[states](design/states.md).
+[states](additional/design/states.md).
 
 ## GstBus
 
@@ -50,7 +50,7 @@ handled specially.
 
 `ASYNC_START`/`ASYNC_STOP` messages received from the children are used to
 trigger a recalculation of the current state of the bin, as described in
-[states](design/states.md).
+[states](additional/design/states.md).
 
 The application can retrieve the external `GstBus` and integrate it in the
 mainloop or it can just `pop()` messages off in its own thread.
