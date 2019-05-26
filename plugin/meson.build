@@ -5,3 +5,5 @@ gst_elements_shared = shared_library('gstpython',
     install : true,
     install_dir : '@0@/gstreamer-1.0'.format(get_option('libdir')),
 )
+
+plugins = [gst_elements_shared]
