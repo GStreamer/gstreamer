@@ -31,7 +31,6 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -132,7 +131,8 @@ gst_kms_allocator_memory_reset (GstKMSAllocator * allocator, GstKMSMemory * mem)
   err = drmIoctl (allocator->priv->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &arg);
   if (err)
     GST_WARNING_OBJECT (allocator,
-        "Failed to destroy dumb buffer object: %s %d", strerror (errno), errno);
+        "Failed to destroy dumb buffer object: %s %d",
+        g_strerror (errno), errno);
 
   g_free (mem->bo);
   mem->bo = NULL;
@@ -240,7 +240,7 @@ done:
 create_failed:
   {
     GST_ERROR_OBJECT (allocator, "Failed to create buffer object: %s (%d)",
-        strerror (-ret), ret);
+        g_strerror (errno), errno);
     g_free (kmsmem->bo);
     kmsmem->bo = NULL;
     return FALSE;
@@ -367,7 +367,7 @@ gst_kms_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
   err = drmIoctl (alloc->priv->fd, DRM_IOCTL_MODE_MAP_DUMB, &arg);
   if (err) {
     GST_ERROR_OBJECT (alloc, "Failed to get offset of buffer object: %s %d",
-        strerror (-err), err);
+        g_strerror (errno), errno);
     return NULL;
   }
 
@@ -375,7 +375,7 @@ gst_kms_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
       PROT_READ | PROT_WRITE, MAP_SHARED, alloc->priv->fd, arg.offset);
   if (out == MAP_FAILED) {
     GST_ERROR_OBJECT (alloc, "Failed to map dumb buffer object: %s %d",
-        strerror (errno), errno);
+        g_strerror (errno), errno);
     return NULL;
   }
   kmsmem->bo->ptr = out;
@@ -469,7 +469,7 @@ gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
       offsets, &kmsmem->fb_id, 0);
   if (ret) {
     GST_ERROR_OBJECT (alloc, "Failed to bind to framebuffer: %s (%d)",
-        strerror (-ret), ret);
+        g_strerror (errno), errno);
     return FALSE;
   }
 
@@ -547,7 +547,7 @@ gst_kms_allocator_dmabuf_import (GstAllocator * allocator, gint * prime_fds,
     err = drmIoctl (alloc->priv->fd, DRM_IOCTL_GEM_CLOSE, &arg);
     if (err)
       GST_WARNING_OBJECT (allocator,
-          "Failed to close GEM handle: %s %d", strerror (errno), errno);
+          "Failed to close GEM handle: %s %d", g_strerror (errno), errno);
 
     kmsmem->gem_handle[i] = 0;
   }
@@ -558,7 +558,7 @@ gst_kms_allocator_dmabuf_import (GstAllocator * allocator, gint * prime_fds,
 import_fd_failed:
   {
     GST_ERROR_OBJECT (alloc, "Failed to import prime fd %d: %s (%d)",
-        prime_fds[i], strerror (-ret), ret);
+        prime_fds[i], g_strerror (errno), errno);
     /* fallback */
   }
 
