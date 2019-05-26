@@ -128,13 +128,19 @@ wayland_event_source_prepare (GSource * base, gint * timeout)
     wl_display_cancel_read (source->display);
 
   if (source->queue) {
-    if (wl_display_prepare_read_queue (source->display, source->queue) != 0)
-      return TRUE;
+    while (wl_display_prepare_read_queue (source->display, source->queue) != 0) {
+      if (wl_display_dispatch_queue_pending (source->display,
+              source->queue) < 0) {
+        g_critical ("Failed to dispatch pending events\n");
+      }
+    }
   } else {
-    if (wl_display_prepare_read (source->display) != 0)
-      return TRUE;
+    while (wl_display_prepare_read (source->display) != 0) {
+      if (wl_display_dispatch_pending (source->display) < 0) {
+        g_critical ("Failed to dispatch pending events\n");
+      }
+    }
   }
-
   source->reading = TRUE;
 
   /* FIXME: this may return EAGAIN if the fd is full */
@@ -148,13 +154,18 @@ static gboolean
 wayland_event_source_check (GSource * base)
 {
   WaylandEventSource *source = (WaylandEventSource *) base;
+  gboolean retval;
 
+  retval = source->pfd.revents;
+
+  if (source->pfd.revents & G_IO_IN) {
+    wl_display_read_events (source->display);
+  } else {
+    wl_display_cancel_read (source->display);
+  }
   source->reading = FALSE;
 
-  if (wl_display_read_events (source->display) == 0)
-    return TRUE;
-
-  return FALSE;
+  return retval;
 }
 
 static gboolean
