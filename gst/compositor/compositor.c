@@ -313,13 +313,14 @@ clamp_rectangle (gint x, gint y, gint w, gint h, gint outer_width,
 
 /* Call this with the lock taken */
 static gboolean
-_pad_obscures_rectangle (GstVideoAggregatorPad * pad, GstVideoRectangle rect)
+_pad_obscures_rectangle (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad,
+    GstVideoRectangle rect)
 {
   GstVideoRectangle pad_rect;
   GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
 
   /* No buffer to obscure the rectangle with */
-  if (gst_video_aggregator_pad_has_current_buffer (pad))
+  if (!gst_video_aggregator_pad_has_current_buffer (pad))
     return FALSE;
 
   /* Can't obscure if it's transparent and if the format has an alpha component
@@ -349,7 +350,6 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     GstVideoAggregator * vagg, GstBuffer * buffer,
     GstVideoFrame * prepared_frame)
 {
-  GstCompositor *comp = GST_COMPOSITOR (vagg);
   GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
   gint width, height;
   gboolean frame_obscured = FALSE;
@@ -393,7 +393,7 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
    * higher-zorder frames */
   l = g_list_find (GST_ELEMENT (vagg)->sinkpads, pad)->next;
   for (; l; l = l->next) {
-    if (_pad_obscures_rectangle (l->data, frame_rect)) {
+    if (_pad_obscures_rectangle (vagg, l->data, frame_rect)) {
       frame_obscured = TRUE;
       break;
     }
@@ -417,7 +417,6 @@ static void
 gst_compositor_pad_create_conversion_info (GstVideoAggregatorConvertPad * pad,
     GstVideoAggregator * vagg, GstVideoInfo * conversion_info)
 {
-  GstCompositor *comp = GST_COMPOSITOR (vagg);
   GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
   gint width, height;
 
@@ -837,33 +836,48 @@ _negotiated_caps (GstAggregator * agg, GstCaps * caps)
   return GST_AGGREGATOR_CLASS (parent_class)->negotiated_src_caps (agg, caps);
 }
 
-static GstFlowReturn
-gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
+static gboolean
+_should_draw_background (GstVideoAggregator * vagg)
 {
-  GList *l;
-  GstCompositor *self = GST_COMPOSITOR (vagg);
-  BlendFunction composite;
-  GstVideoFrame out_frame, *outframe;
+  GstVideoRectangle bg_rect;
+  gboolean draw = TRUE;
+  bg_rect.x = bg_rect.y = 0;
 
-  if (!gst_video_frame_map (&out_frame, &vagg->info, outbuf, GST_MAP_WRITE)) {
-    GST_WARNING_OBJECT (vagg, "Could not map output buffer");
-    return GST_FLOW_ERROR;
+  GST_OBJECT_LOCK (vagg);
+  bg_rect.w = GST_VIDEO_INFO_WIDTH (&vagg->info);
+  bg_rect.h = GST_VIDEO_INFO_HEIGHT (&vagg->info);
+  /* Check if the background is completely obscured by a pad
+   * TODO: Also skip if it's obscured by a combination of pads */
+  for (GList * l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
+    if (_pad_obscures_rectangle (vagg, l->data, bg_rect)) {
+      draw = FALSE;
+      break;
+    }
   }
+  GST_OBJECT_UNLOCK (vagg);
+  return draw;
+}
 
-  outframe = &out_frame;
-  /* default to blending */
-  composite = self->blend;
-  /* TODO: If the frames to be composited completely obscure the background,
+static BlendFunction
+_draw_background (GstVideoAggregator * vagg, GstVideoFrame * outframe)
+{
+  GstCompositor *comp = GST_COMPOSITOR (vagg);
+  BlendFunction composite = comp->blend;
+
+  /* If one of the frames to be composited completely obscures the background,
    * don't bother drawing the background at all. */
-  switch (self->background) {
+  if (!_should_draw_background (vagg))
+    return composite;
+
+  switch (comp->background) {
     case COMPOSITOR_BACKGROUND_CHECKER:
-      self->fill_checker (outframe);
+      comp->fill_checker (outframe);
       break;
     case COMPOSITOR_BACKGROUND_BLACK:
-      self->fill_color (outframe, 16, 128, 128);
+      comp->fill_color (outframe, 16, 128, 128);
       break;
     case COMPOSITOR_BACKGROUND_WHITE:
-      self->fill_color (outframe, 240, 128, 128);
+      comp->fill_color (outframe, 240, 128, 128);
       break;
     case COMPOSITOR_BACKGROUND_TRANSPARENT:
     {
@@ -885,10 +899,28 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
         }
       }
       /* use overlay to keep background transparent */
-      composite = self->overlay;
+      composite = comp->overlay;
       break;
     }
   }
+
+  return composite;
+}
+
+static GstFlowReturn
+gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
+{
+  GList *l;
+  BlendFunction composite;
+  GstVideoFrame out_frame, *outframe;
+
+  if (!gst_video_frame_map (&out_frame, &vagg->info, outbuf, GST_MAP_WRITE)) {
+    GST_WARNING_OBJECT (vagg, "Could not map output buffer");
+    return GST_FLOW_ERROR;
+  }
+
+  outframe = &out_frame;
+  composite = _draw_background (vagg, outframe);
 
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
