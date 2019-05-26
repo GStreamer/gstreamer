@@ -249,13 +249,13 @@ _blend_##format_name (const guint8 * src, guint8 * dest, \
   \
   /* If it's completely transparent... we just return */ \
   if (G_UNLIKELY (src_alpha == 0.0)) { \
-    GST_INFO ("Fast copy (alpha == 0.0)"); \
+    GST_LOG ("Fast copy (alpha == 0.0)"); \
     return; \
   } \
   \
   /* If it's completely opaque, we do a fast copy */ \
   if (G_UNLIKELY (src_alpha == 1.0)) { \
-    GST_INFO ("Fast copy (alpha == 1.0)"); \
+    GST_LOG ("Fast copy (alpha == 1.0)"); \
     for (i = 0; i < src_height; i++) { \
       MEMCPY (dest, src, src_width); \
       src += src_stride; \
@@ -499,13 +499,13 @@ _blend_##format_name (const guint8 * src, guint8 * dest, \
   \
   /* If it's completely transparent... we just return */ \
   if (G_UNLIKELY (src_alpha == 0.0)) { \
-    GST_INFO ("Fast copy (alpha == 0.0)"); \
+    GST_LOG ("Fast copy (alpha == 0.0)"); \
     return; \
   } \
   \
   /* If it's completely opaque, we do a fast copy */ \
   if (G_UNLIKELY (src_alpha == 1.0)) { \
-    GST_INFO ("Fast copy (alpha == 1.0)"); \
+    GST_LOG ("Fast copy (alpha == 1.0)"); \
     for (i = 0; i < src_height; i++) { \
       MEMCPY (dest, src, src_width); \
       src += src_stride; \
@@ -743,13 +743,13 @@ blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   \
   /* If it's completely transparent... we just return */ \
   if (G_UNLIKELY (src_alpha == 0.0)) { \
-    GST_INFO ("Fast copy (alpha == 0.0)"); \
+    GST_LOG ("Fast copy (alpha == 0.0)"); \
     return; \
   } \
   \
   /* If it's completely opaque, we do a fast copy */ \
   if (G_UNLIKELY (src_alpha == 1.0)) { \
-    GST_INFO ("Fast copy (alpha == 1.0)"); \
+    GST_LOG ("Fast copy (alpha == 1.0)"); \
     for (i = 0; i < src_height; i++) { \
       MEMCPY (dest, src, bpp * src_width); \
       src += src_stride; \
@@ -918,13 +918,13 @@ blend_##name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   \
   /* If it's completely transparent... we just return */ \
   if (G_UNLIKELY (src_alpha == 0.0)) { \
-    GST_INFO ("Fast copy (alpha == 0.0)"); \
+    GST_LOG ("Fast copy (alpha == 0.0)"); \
     return; \
   } \
   \
   /* If it's completely opaque, we do a fast copy */ \
   if (G_UNLIKELY (src_alpha == 1.0)) { \
-    GST_INFO ("Fast copy (alpha == 1.0)"); \
+    GST_LOG ("Fast copy (alpha == 1.0)"); \
     for (i = 0; i < src_height; i++) { \
       MEMCPY (dest, src, 2 * src_width); \
       src += src_stride; \
