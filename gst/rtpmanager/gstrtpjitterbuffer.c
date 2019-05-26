@@ -2633,10 +2633,10 @@ calculate_jitter (GstRtpJitterBuffer * jitterbuffer, GstClockTime dts,
   priv->avg_jitter = (diff + (15 * priv->avg_jitter)) >> 4;
 
   GST_LOG_OBJECT (jitterbuffer,
-      "dtsdiff %" GST_TIME_FORMAT " rtptime %" GST_TIME_FORMAT
-      ", clock-rate %d, diff %" GST_TIME_FORMAT ", jitter: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (dtsdiff), GST_TIME_ARGS (rtpdiffns), priv->clock_rate,
-      GST_TIME_ARGS (diff), GST_TIME_ARGS (priv->avg_jitter));
+      "dtsdiff %" GST_STIME_FORMAT " rtptime %" GST_STIME_FORMAT
+      ", clock-rate %d, diff %" GST_STIME_FORMAT ", jitter: %" GST_TIME_FORMAT,
+      GST_STIME_ARGS (dtsdiff), GST_STIME_ARGS (rtpdiffns), priv->clock_rate,
+      GST_STIME_ARGS (diff), GST_TIME_ARGS (priv->avg_jitter));
 
   return;
 
