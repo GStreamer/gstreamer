@@ -348,6 +348,15 @@ _paste (GESTimelineElement * element, GESTimelineElement * ref,
     nchild =
         ges_timeline_element_paste (map->child,
         paste_position - map->start_offset);
+
+    if (!nchild) {
+      while (ncontainer->children)
+        ges_container_remove (ncontainer, ncontainer->children->data);
+
+      g_object_unref (ncontainer);
+      return NULL;
+    }
+
     ges_timeline_element_set_timeline (GES_TIMELINE_ELEMENT (ncontainer),
         GES_TIMELINE_ELEMENT_TIMELINE (ref));
     ges_container_add (ncontainer, nchild);
