@@ -311,6 +311,39 @@ clamp_rectangle (gint x, gint y, gint w, gint h, gint outer_width,
   return clamped;
 }
 
+/* Call this with the lock taken */
+static gboolean
+_pad_obscures_rectangle (GstVideoAggregatorPad * pad, GstVideoRectangle rect)
+{
+  GstVideoRectangle pad_rect;
+  GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
+
+  /* No buffer to obscure the rectangle with */
+  if (gst_video_aggregator_pad_has_current_buffer (pad))
+    return FALSE;
+
+  /* Can't obscure if it's transparent and if the format has an alpha component
+   * we'd have to inspect every pixel to know if the frame is opaque, so assume
+   * it doesn't obscure. */
+  if (cpad->alpha != 1.0 || GST_VIDEO_INFO_HAS_ALPHA (&pad->info))
+    return FALSE;
+
+  pad_rect.x = cpad->xpos;
+  pad_rect.y = cpad->ypos;
+  /* Handle pixel and display aspect ratios to find the actual size */
+  _mixer_pad_get_output_size (cpad, GST_VIDEO_INFO_PAR_N (&vagg->info),
+      GST_VIDEO_INFO_PAR_D (&vagg->info), &(pad_rect.w), &(pad_rect.h));
+
+  if (!is_rectangle_contained (rect, pad_rect))
+    return FALSE;
+
+  GST_DEBUG_OBJECT (pad, "Pad %s %ix%i@(%i,%i) obscures rect %ix%i@(%i,%i)",
+      GST_PAD_NAME (pad), pad_rect.w, pad_rect.h, pad_rect.x, pad_rect.y,
+      rect.w, rect.h, rect.x, rect.y);
+
+  return TRUE;
+}
+
 static gboolean
 gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     GstVideoAggregator * vagg, GstBuffer * buffer,
@@ -360,32 +393,8 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
    * higher-zorder frames */
   l = g_list_find (GST_ELEMENT (vagg)->sinkpads, pad)->next;
   for (; l; l = l->next) {
-    GstVideoRectangle frame2_rect;
-    GstVideoAggregatorPad *pad2 = l->data;
-    GstCompositorPad *cpad2 = GST_COMPOSITOR_PAD (pad2);
-    gint pad2_width, pad2_height;
-
-    _mixer_pad_get_output_size (cpad2, GST_VIDEO_INFO_PAR_N (&vagg->info),
-        GST_VIDEO_INFO_PAR_D (&vagg->info), &pad2_width, &pad2_height);
-
-    /* We don't need to clamp the coords of the second rectangle */
-    frame2_rect.x = cpad2->xpos;
-    frame2_rect.y = cpad2->ypos;
-    frame2_rect.w = pad2_width;
-    frame2_rect.h = pad2_height;
-
-    /* Check if there's a buffer to be aggregated, ensure it can't have an alpha
-     * channel, then check opacity and frame boundaries */
-    if (gst_video_aggregator_pad_has_current_buffer (pad2)
-        && cpad2->alpha == 1.0 && !GST_VIDEO_INFO_HAS_ALPHA (&pad2->info)
-        && is_rectangle_contained (frame_rect, frame2_rect)) {
+    if (_pad_obscures_rectangle (l->data, frame_rect)) {
       frame_obscured = TRUE;
-      GST_DEBUG_OBJECT (pad, "%ix%i@(%i,%i) obscured by %s %ix%i@(%i,%i) "
-          "in output of size %ix%i; skipping frame", frame_rect.w, frame_rect.h,
-          frame_rect.x, frame_rect.y, GST_PAD_NAME (pad2), frame2_rect.w,
-          frame2_rect.h, frame2_rect.x, frame2_rect.y,
-          GST_VIDEO_INFO_WIDTH (&vagg->info),
-          GST_VIDEO_INFO_HEIGHT (&vagg->info));
       break;
     }
   }
