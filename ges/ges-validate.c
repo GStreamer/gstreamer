@@ -495,6 +495,56 @@ _ungroup (GstValidateScenario * scenario, GstValidateAction * action)
   return res;
 }
 
+static GstValidateExecuteActionReturn
+_copy_element (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  GESTimelineElement *element, *copied, *pasted;
+  gboolean recursive = FALSE;
+  const gchar *element_name, *paste_name;
+  GstClockTime position;
+  DECLARE_AND_GET_TIMELINE (scenario, action);
+
+
+  element_name = gst_structure_get_string (action->structure, "element-name");
+  element = ges_timeline_get_element (timeline, element_name);
+
+  g_return_val_if_fail (GES_IS_TIMELINE_ELEMENT (element),
+      GST_VALIDATE_EXECUTE_ACTION_ERROR);
+
+  gst_validate_printf (action, "Copying element %s\n",
+      GES_TIMELINE_ELEMENT_NAME (element));
+
+  if (!gst_structure_get_boolean (action->structure, "recursive", &recursive))
+    recursive = TRUE;
+
+  g_return_val_if_fail (gst_validate_action_get_clocktime (scenario, action,
+          "position", &position), FALSE);
+
+  copied = ges_timeline_element_copy (element, recursive);
+  pasted = ges_timeline_element_paste (copied, position);
+  gst_object_unref (timeline);
+
+  if (!pasted) {
+    GST_VALIDATE_REPORT (scenario,
+        g_quark_from_string ("scenario::execution-error"),
+        "Could not paste clip %s", element_name);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
+
+  paste_name = gst_structure_get_string (action->structure, "paste-name");
+  if (paste_name) {
+    if (!ges_timeline_element_set_name (pasted, paste_name)) {
+      GST_VALIDATE_REPORT (scenario,
+          g_quark_from_string ("scenario::execution-error"),
+          "Could not set element name %s", paste_name);
+
+      return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+    }
+  }
+
+  return GST_VALIDATE_EXECUTE_ACTION_OK;
+}
+
 static gboolean
 _set_control_source (GstValidateScenario * scenario, GstValidateAction * action)
 {
@@ -1096,6 +1146,36 @@ ges_validate_register_action_types (void)
           .description = "The value of the keyframe",
           .types = "float",
           .mandatory = TRUE,
+        },
+        {NULL}
+      }, "Remove a child from @container-name.", GST_VALIDATE_ACTION_TYPE_NONE);
+
+  gst_validate_register_action_type ("copy-element", "ges", _copy_element,
+      (GstValidateActionParameter []) {
+        {
+          .name = "element-name",
+          .description = "The name of the GESTtimelineElement to copy",
+          .types = "string",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "recurse",
+          .description = "Copy recursively or not",
+          .types = "boolean",
+          .def = "true",
+          .mandatory = FALSE,
+        },
+        {
+          .name = "position",
+          .description = "The time where to paste the element",
+          .types = "string or float",
+          .mandatory = TRUE,
+        },
+        {
+          .name = "paste-name",
+          .description = "The name of the copied element",
+          .types = "string",
+          .mandatory = FALSE,
         },
         {NULL}
       }, "Remove a child from @container-name.", GST_VALIDATE_ACTION_TYPE_NONE);
