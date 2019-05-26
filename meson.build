@@ -33,22 +33,22 @@ endif
 
 # Ordered list of subprojects (dict has no ordering guarantees)
 subprojects = [
-  ['gstreamer', {'build-hotdoc': true}],
-  ['gst-plugins-base', {'build-hotdoc': true}],
-  ['gst-plugins-good', {'build-hotdoc': true}],
+  ['gstreamer', {'build-hotdoc': true, 'has-plugins': true}],
+  ['gst-plugins-base', {'build-hotdoc': true, 'has-plugins': true}],
+  ['gst-plugins-good', {'build-hotdoc': true, 'has-plugins': true}],
   ['libnice', { 'option': get_option('libnice'), 'match_gst_version': false}],
-  ['gst-plugins-bad', { 'option': get_option('bad'), 'build-hotdoc': true }],
-  ['gst-plugins-ugly', { 'option': get_option('ugly'), 'build-hotdoc': true }],
-  ['gst-libav', { 'option': get_option('libav'), 'build-hotdoc': true }],
+  ['gst-plugins-bad', { 'option': get_option('bad'), 'build-hotdoc': true, 'has-plugins': true}],
+  ['gst-plugins-ugly', { 'option': get_option('ugly'), 'build-hotdoc': true, 'has-plugins': true}],
+  ['gst-libav', { 'option': get_option('libav'), 'build-hotdoc': true, 'has-plugins': true}],
   ['gst-rtsp-server', { 'option': get_option('rtsp_server'), 'build-hotdoc': true }],
   ['gst-devtools', { 'option': get_option('devtools'), 'build-hotdoc': true }],
   ['gst-integration-testsuites', { 'option': get_option('devtools') }],
-  ['gst-editing-services', { 'option': get_option('ges'), 'build-hotdoc': true }],
-  ['gstreamer-vaapi', { 'option': get_option('vaapi'), 'build-hotdoc': true }],
-  ['gst-omx', { 'option': get_option('omx'), 'build-hotdoc': true, }],
+  ['gst-editing-services', { 'option': get_option('ges'), 'build-hotdoc': true, 'has-plugins': true}],
+  ['gstreamer-vaapi', { 'option': get_option('vaapi'), 'build-hotdoc': true, 'has-plugins': true}],
+  ['gst-omx', { 'option': get_option('omx'), 'build-hotdoc': true, 'has-plugins': true}],
   ['gstreamer-sharp', { 'option': get_option('sharp') }],
   ['pygobject', { 'option': get_option('python'), 'match_gst_version': false }],
-  ['gst-python', { 'option': get_option('python') }],
+  ['gst-python', { 'option': get_option('python'), 'has-plugins': true}],
 ]
 
 python3 = import('python').find_installation()
@@ -83,23 +83,34 @@ foreach sp : subprojects
     subproj = subproject(project_name, required: is_required)
   endif
 
-  if subproj.found() and build_infos.has_key('build-hotdoc', default: false)
-    plugins = subproj.get_variable('plugins')
-    if plugins.length() > 0
-      plugins_doc_caches += [subproj.get_variable('plugins_doc_dep')]
+  if subproj.found()
+    # Replace by using subproject.get_variable('plugins', [])
+    # when https://github.com/mesonbuild/meson/pull/5426/files
+    # is merged and released
+    if build_infos.has_key('has-plugins', default: false)
+      plugins = subproj.get_variable('plugins')
+    else
+      plugins = []
     endif
+
     foreach plugin: plugins
       all_plugins += pathsep + plugin.full_path()
     endforeach
-    if documented_projects != ''
-      documented_projects += ','
-    endif
-    documented_projects  += project_name
 
     subprojects_names += [project_name]
     cmdres = run_command(python3, '-c', symlink.format(project_name, meson.current_source_dir()))
     if cmdres.returncode() == 0
       message('Created symlink to ' + project_name)
+    endif
+
+    if build_infos.has_key('build-hotdoc', default: false)
+      if plugins.length() > 0
+        plugins_doc_caches += [subproj.get_variable('plugins_doc_dep')]
+      endif
+      if documented_projects != ''
+        documented_projects += ','
+      endif
+      documented_projects  += project_name
     endif
   endif
 endforeach
