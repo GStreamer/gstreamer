@@ -68,6 +68,7 @@ gstreamer_doc = hotdoc.generate_doc('GStreamer',
     disable_incremental_build: true,
     gst_list_plugins_page: 'plugins_doc.md',
     devhelp_activate: true,
+    devhelp_online: 'https://gstreamer.freedesktop.org/documentation/',
     build_always_stale: true,
     edit_on_github_repository: 'https://gitlab.freedesktop.org/gstreamer/gst-docs/',
 )
