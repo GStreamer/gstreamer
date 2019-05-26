@@ -265,6 +265,9 @@ _mixer_pad_get_output_size (GstCompositorPad * comp_pad, gint out_par_n,
       pad_height, dar_n, dar_d, GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
       GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d);
 
+  /* Pick either height or width, whichever is an integer multiple of the
+   * display aspect ratio. However, prefer preserving the height to account
+   * for interlaced video. */
   if (pad_height % dar_n == 0) {
     pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
   } else if (pad_width % dar_d == 0) {
@@ -368,8 +371,6 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     /* We don't need to clamp the coords of the second rectangle */
     frame2_rect.x = cpad2->xpos;
     frame2_rect.y = cpad2->ypos;
-    /* This is effectively what set_info and the above conversion
-     * code do to calculate the desired width/height */
     frame2_rect.w = pad2_width;
     frame2_rect.h = pad2_height;
 
