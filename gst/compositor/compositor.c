@@ -231,9 +231,8 @@ gst_compositor_pad_set_property (GObject * object, guint prop_id,
 }
 
 static void
-_mixer_pad_get_output_size (GstCompositor * comp,
-    GstCompositorPad * comp_pad, gint out_par_n, gint out_par_d, gint * width,
-    gint * height)
+_mixer_pad_get_output_size (GstCompositorPad * comp_pad, gint out_par_n,
+    gint out_par_d, gint * width, gint * height)
 {
   GstVideoAggregatorPad *vagg_pad = GST_VIDEO_AGGREGATOR_PAD (comp_pad);
   gint pad_width, pad_height;
@@ -335,7 +334,7 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
    *     width/height. See ->set_info()
    * */
 
-  _mixer_pad_get_output_size (comp, cpad, GST_VIDEO_INFO_PAR_N (&vagg->info),
+  _mixer_pad_get_output_size (cpad, GST_VIDEO_INFO_PAR_N (&vagg->info),
       GST_VIDEO_INFO_PAR_D (&vagg->info), &width, &height);
 
   if (cpad->alpha == 0.0) {
@@ -363,7 +362,7 @@ gst_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     GstCompositorPad *cpad2 = GST_COMPOSITOR_PAD (pad2);
     gint pad2_width, pad2_height;
 
-    _mixer_pad_get_output_size (comp, cpad2, GST_VIDEO_INFO_PAR_N (&vagg->info),
+    _mixer_pad_get_output_size (cpad2, GST_VIDEO_INFO_PAR_N (&vagg->info),
         GST_VIDEO_INFO_PAR_D (&vagg->info), &pad2_width, &pad2_height);
 
     /* We don't need to clamp the coords of the second rectangle */
@@ -418,7 +417,7 @@ gst_compositor_pad_create_conversion_info (GstVideoAggregatorConvertPad * pad,
   if (!conversion_info->finfo)
     return;
 
-  _mixer_pad_get_output_size (comp, cpad, GST_VIDEO_INFO_PAR_N (&vagg->info),
+  _mixer_pad_get_output_size (cpad, GST_VIDEO_INFO_PAR_N (&vagg->info),
       GST_VIDEO_INFO_PAR_D (&vagg->info), &width, &height);
 
   /* The only thing that can change here is the width
@@ -769,8 +768,7 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
 
     fps_n = GST_VIDEO_INFO_FPS_N (&vaggpad->info);
     fps_d = GST_VIDEO_INFO_FPS_D (&vaggpad->info);
-    _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), compositor_pad, par_n,
-        par_d, &width, &height);
+    _mixer_pad_get_output_size (compositor_pad, par_n, par_d, &width, &height);
 
     if (width == 0 || height == 0)
       continue;
