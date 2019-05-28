@@ -1151,6 +1151,8 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         case SPLITMUX_OUTPUT_STATE_STOPPED:
           return;
       }
+    } else {
+      GST_LOG_OBJECT (ctx->srcpad, "Not yet ready for output");
     }
 
     GST_INFO_OBJECT (ctx->srcpad,
@@ -1743,6 +1745,7 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   send_fragment_opened_closed_msg (splitmux, TRUE, sink);
 
   /* FIXME: Is this always the correct next state? */
+  GST_LOG_OBJECT (splitmux, "Resetting state to AWAITING_COMMAND");
   splitmux->output_state = SPLITMUX_OUTPUT_STATE_AWAITING_COMMAND;
   GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
   return;
@@ -1908,8 +1911,10 @@ need_new_fragment (GstSplitMuxSink * splitmux,
     return FALSE;
 
   /* User told us to split now */
-  if (g_atomic_int_get (&(splitmux->do_split_next_gop)) == TRUE)
+  if (g_atomic_int_get (&(splitmux->do_split_next_gop)) == TRUE) {
+    GST_TRACE_OBJECT (splitmux, "Forcing because split_next_gop is set");
     return TRUE;
+  }
 
   /* User told us to split at this running time */
   if (splitmux->reference_ctx->in_running_time > time_to_split) {
@@ -1930,19 +1935,28 @@ need_new_fragment (GstSplitMuxSink * splitmux,
     return TRUE;
   }
 
-  if (thresh_bytes > 0 && queued_bytes > thresh_bytes)
+  if (thresh_bytes > 0 && queued_bytes > thresh_bytes) {
+    GST_TRACE_OBJECT (splitmux,
+        "queued bytes %" G_GUINT64_FORMAT " overruns byte limit", queued_bytes);
     return TRUE;                /* Would overrun byte limit */
+  }
 
-  if (thresh_time > 0 && queued_time > thresh_time)
-    return TRUE;                /* Would overrun byte limit */
+  if (thresh_time > 0 && queued_time > thresh_time) {
+    GST_TRACE_OBJECT (splitmux,
+        "queued time %" GST_STIME_FORMAT " overruns time limit",
+        GST_STIME_ARGS (queued_time));
+    return TRUE;                /* Would overrun time limit */
+  }
 
   /* Timecode-based threshold accounts for possible rounding errors:
    * 5us should be bigger than all possible rounding errors but nowhere near
    * big enough to skip to another frame */
   if (splitmux->next_max_tc_time != GST_CLOCK_TIME_NONE &&
       splitmux->reference_ctx->in_running_time >
-      splitmux->next_max_tc_time + 5 * GST_USECOND)
+      splitmux->next_max_tc_time + 5 * GST_USECOND) {
+    GST_TRACE_OBJECT (splitmux, "Splitting at timecode mark");
     return TRUE;                /* Timecode threshold */
+  }
 
   if (check_robust_muxing) {
     GstClockTime mux_reserved_remain;
@@ -2143,16 +2157,16 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
       MqStreamCtx *tmpctx = (MqStreamCtx *) (cur->data);
 
       GST_LOG_OBJECT (splitmux,
-          "Context %p (src pad %" GST_PTR_FORMAT ") TS %" GST_STIME_FORMAT
-          " EOS %d", tmpctx, tmpctx->srcpad,
+          "Context %p sink pad %" GST_PTR_FORMAT " @ TS %" GST_STIME_FORMAT
+          " EOS %d", tmpctx, tmpctx->sinkpad,
           GST_STIME_ARGS (tmpctx->in_running_time), tmpctx->in_eos);
 
       if (splitmux->max_in_running_time != GST_CLOCK_STIME_NONE &&
           tmpctx->in_running_time < splitmux->max_in_running_time &&
           !tmpctx->in_eos) {
         GST_LOG_OBJECT (splitmux,
-            "Context %p (src pad %" GST_PTR_FORMAT ") not ready. We'll sleep",
-            tmpctx, tmpctx->srcpad);
+            "Context %p sink pad %" GST_PTR_FORMAT " not ready. We'll sleep",
+            tmpctx, tmpctx->sinkpad);
         ready = FALSE;
         break;
       }
