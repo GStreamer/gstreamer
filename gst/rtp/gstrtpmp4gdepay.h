@@ -68,6 +68,7 @@ struct _GstRtpMP4GDepay
   guint prev_AU_num;
 
   gboolean check_adts; /* check for ADTS headers */
+  gboolean warn_adts;  /* warn about ADTS headers */
 
   GQueue *packets;
   
