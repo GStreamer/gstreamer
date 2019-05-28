@@ -58,7 +58,7 @@ struct _GstVaapiWindowGLXPrivate
 /**
  * GstVaapiWindowGLX:
  *
- * An X11 #Window suitable for GLX rendering.
+ * An X11 Window suitable for GLX rendering.
  */
 struct _GstVaapiWindowGLX
 {
@@ -69,7 +69,7 @@ struct _GstVaapiWindowGLX
 /**
  * GstVaapiWindowGLXClass:
  *
- * An X11 #Window suitable for GLX rendering.
+ * An X11 Window suitable for GLX rendering.
  */
 struct _GstVaapiWindowGLXClass
 {
@@ -361,9 +361,9 @@ error:
 /**
  * gst_vaapi_window_glx_new_with_xid:
  * @display: a #GstVaapiDisplay
- * @xid: an X11 #Window id
+ * @xid: an X11 Window id
  *
- * Creates a #GstVaapiWindow using the X11 #Window @xid. The caller
+ * Creates a #GstVaapiWindow using the X11 Window @xid. The caller
  * still owns the window and must call XDestroyWindow() when all
  * #GstVaapiWindow references are released. Doing so too early can
  * yield undefined behaviour.

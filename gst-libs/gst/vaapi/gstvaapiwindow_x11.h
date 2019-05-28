@@ -42,7 +42,7 @@ G_BEGIN_DECLS
  * GST_VAAPI_WINDOW_XWINDOW:
  * @window: a #GstVaapiWindow
  *
- * Macro that evaluates to the underlying X11 #Window of @window
+ * Macro that evaluates to the underlying X11 Window of @window
  */
 #define GST_VAAPI_WINDOW_XWINDOW(window) \
     gst_vaapi_window_x11_get_xid (GST_VAAPI_WINDOW_X11 (window))

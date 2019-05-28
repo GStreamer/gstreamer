@@ -59,7 +59,7 @@ struct _GstVaapiWindowX11Private
 /**
  * GstVaapiWindowX11:
  *
- * An X11 #Window wrapper.
+ * An X11 Window wrapper.
  */
 struct _GstVaapiWindowX11
 {
@@ -70,7 +70,7 @@ struct _GstVaapiWindowX11
 /**
  * GstVaapiWindowX11Class:
  *
- * An X11 #Window wrapper class.
+ * An X11 Window wrapper class.
  */
 struct _GstVaapiWindowX11Class
 {

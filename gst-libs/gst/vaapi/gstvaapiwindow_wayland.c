@@ -128,7 +128,7 @@ struct _GstVaapiWindowWayland
 /**
  * GstVaapiWindowWaylandClass:
  *
- * An Wayland #Window wrapper class.
+ * An Wayland Window wrapper class.
  */
 struct _GstVaapiWindowWaylandClass
 {

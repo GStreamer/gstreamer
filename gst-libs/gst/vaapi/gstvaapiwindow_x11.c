@@ -652,9 +652,9 @@ gst_vaapi_window_x11_new (GstVaapiDisplay * display, guint width, guint height)
 /**
  * gst_vaapi_window_x11_new_with_xid:
  * @display: a #GstVaapiDisplay
- * @xid: an X11 #Window id
+ * @xid: an X11 Window id
  *
- * Creates a #GstVaapiWindow using the X11 #Window @xid. The caller
+ * Creates a #GstVaapiWindow using the X11 Window @xid. The caller
  * still owns the window and must call XDestroyWindow() when all
  * #GstVaapiWindow references are released. Doing so too early can
  * yield undefined behaviour.
@@ -675,11 +675,11 @@ gst_vaapi_window_x11_new_with_xid (GstVaapiDisplay * display, Window xid)
  * gst_vaapi_window_x11_get_xid:
  * @window: a #GstVaapiWindowX11
  *
- * Returns the underlying X11 #Window that was created by
+ * Returns the underlying X11 Window that was created by
  * gst_vaapi_window_x11_new() or that was bound with
  * gst_vaapi_window_x11_new_with_xid().
  *
- * Return value: the underlying X11 #Window bound to @window.
+ * Return value: the underlying X11 Window bound to @window.
  */
 Window
 gst_vaapi_window_x11_get_xid (GstVaapiWindowX11 * window)

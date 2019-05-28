@@ -26,7 +26,7 @@
  * SECTION:element-vaapisink
  * @short_description: A VA-API based video sink
  *
- * vaapisink renders video frames to a drawable (X #Window) on a local
+ * vaapisink renders video frames to a drawable (X Window) on a local
  * display using the Video Acceleration (VA) API. The element will
  * create its own internal window and render into it.
  *

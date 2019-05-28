@@ -70,7 +70,7 @@ static const int x11_event_mask = (KeyPressMask | KeyReleaseMask
  * %None, no specific colormap will be bound to the window. Also note
  * the default background color is black.
  *
- * Return value: the newly created X #Window.
+ * Return value: the newly created X Window.
  */
 Window
 x11_create_window (Display * dpy, guint w, guint h, guint vid, Colormap cmap)

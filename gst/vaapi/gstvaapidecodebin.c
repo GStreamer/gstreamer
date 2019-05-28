@@ -30,7 +30,7 @@
  * the unregistered vaapidecode, a #GstQueue, and the
  * #GstVaapiPostproc, if it is available and functional in the setup.
  *
- * It offers the functionality of #GstVaapiDecode and the many options
+ * It offers the functionality of GstVaapiDecoder and the many options
  * of #GstVaapiPostproc.
  *
  * <refsect2>
