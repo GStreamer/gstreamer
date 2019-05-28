@@ -19267,7 +19267,7 @@
         <field cname="parent_class" access="private" writeable="false" readable="false" is_callback="false" name="ParentClass" type="GstControlBindingClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_padding" access="private" writeable="false" readable="false" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+        <field cname="_padding" access="private" writeable="false" readable="false" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="gst_proxy_control_binding_get_type" shared="true">
         <return-type type="GType" />
@@ -19285,7 +19285,7 @@
         <warning>missing glib:type-name</warning>
       </field>
       <field cname="property_name" access="private" writeable="false" readable="false" is_callback="false" name="PropertyName" type="gchar*" />
-      <field cname="_padding" access="private" writeable="false" readable="false" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+      <field cname="_padding" access="private" writeable="false" readable="false" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="TimedValueControlSource" cname="GstTimedValueControlSource" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstControlSource">
       <class_struct cname="GstTimedValueControlSourceClass">
@@ -30113,7 +30113,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="gst_webrtc_dtls_transport_get_type" shared="true">
         <return-type type="GType" />
@@ -30145,7 +30145,7 @@
       <field cname="session_id" access="public" writeable="false" readable="true" is_callback="false" name="SessionIdField" type="guint" />
       <field cname="dtlssrtpenc" access="public" writeable="false" readable="true" is_callback="false" name="Dtlssrtpenc" type="GstElement*" />
       <field cname="dtlssrtpdec" access="public" writeable="false" readable="true" is_callback="false" name="Dtlssrtpdec" type="GstElement*" />
-      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="WebRTCICETransport" cname="GstWebRTCICETransport" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject">
       <class_struct cname="GstWebRTCICETransportClass">
@@ -30153,7 +30153,7 @@
           <warning>missing glib:type-name</warning>
         </field>
         <method vm="gather_candidates" />
-        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="gst_webrtc_ice_transport_get_type" shared="true">
         <return-type type="GType" />
@@ -30196,7 +30196,7 @@
       <field cname="gathering_state" access="public" writeable="false" readable="true" is_callback="false" name="GatheringStateField" type="GstWebRTCICEGatheringState" />
       <field cname="src" access="public" writeable="false" readable="true" is_callback="false" name="Src" type="GstElement*" />
       <field cname="sink" access="public" writeable="false" readable="true" is_callback="false" name="Sink" type="GstElement*" />
-      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
       <signal name="OnNewCandidate" cname="on-new-candidate" when="last">
         <return-type type="void" />
         <parameters>
@@ -30213,7 +30213,7 @@
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="gst_webrtc_rtp_receiver_get_type" shared="true">
         <return-type type="GType" />
@@ -30234,14 +30234,14 @@
       <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstObject*" hidden="true" />
       <field cname="transport" access="public" writeable="false" readable="true" is_callback="false" name="Transport" type="GstWebRTCDTLSTransport*" />
       <field cname="rtcp_transport" access="public" writeable="false" readable="true" is_callback="false" name="RtcpTransport" type="GstWebRTCDTLSTransport*" />
-      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="WebRTCRTPSender" cname="GstWebRTCRTPSender" opaque="false" hidden="false" parent="GstObject">
       <class_struct cname="GstWebRTCRTPSenderClass">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="gst_webrtc_rtp_sender_get_type" shared="true">
         <return-type type="GType" />
@@ -30263,14 +30263,14 @@
       <field cname="transport" access="public" writeable="false" readable="true" is_callback="false" name="Transport" type="GstWebRTCDTLSTransport*" />
       <field cname="rtcp_transport" access="public" writeable="false" readable="true" is_callback="false" name="RtcpTransport" type="GstWebRTCDTLSTransport*" />
       <field cname="send_encodings" access="public" writeable="false" readable="true" is_callback="false" name="SendEncodings" type="GArray*" array="true" null_term_array="true" />
-      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <object name="WebRTCRTPTransceiver" cname="GstWebRTCRTPTransceiver" defaultconstructoraccess="protected" opaque="false" hidden="false" parent="GstObject">
       <class_struct cname="GstWebRTCRTPTransceiverClass">
         <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstObjectClass">
           <warning>missing glib:type-name</warning>
         </field>
-        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+        <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
       </class_struct>
       <method name="GetType" cname="gst_webrtc_rtp_transceiver_get_type" shared="true">
         <return-type type="GType" />
@@ -30289,7 +30289,7 @@
       <field cname="codec_preferences" access="public" writeable="false" readable="true" is_callback="false" name="CodecPreferences" type="GstCaps*">
         <warning>missing glib:type-name</warning>
       </field>
-      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" />
+      <field cname="_padding" access="public" writeable="false" readable="true" is_callback="false" name="_Padding" type="gpointer" array="true" array_len="4" padding="true" />
     </object>
     <boxed name="WebRTCSessionDescription" cname="GstWebRTCSessionDescription" opaque="false" hidden="false">
       <method name="GetType" cname="gst_webrtc_session_description_get_type" shared="true">
