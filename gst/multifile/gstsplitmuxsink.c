@@ -2562,7 +2562,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
   GstPad *res = NULL;
   GstElement *q;
   GstPad *q_sink = NULL, *q_src = NULL;
-  gchar *gname;
+  gchar *gname, *qname;
   gboolean is_video = FALSE;
   MqStreamCtx *ctx;
 
@@ -2667,8 +2667,12 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
   else
     gname = g_strdup (name);
 
-  if ((q = create_element (splitmux, "queue", NULL, FALSE)) == NULL)
+  qname = g_strdup_printf ("queue_%s", gname);
+  if ((q = create_element (splitmux, "queue", qname, FALSE)) == NULL) {
+    g_free (qname);
     goto fail;
+  }
+  g_free (qname);
 
   gst_element_set_state (q, GST_STATE_TARGET (splitmux));
 
