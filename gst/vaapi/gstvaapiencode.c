@@ -769,6 +769,9 @@ gst_vaapiencode_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_pad_stop_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
+
+      if (!gst_vaapiencode_drain (encode))
+        goto drain_error;
       break;
     default:
       break;
@@ -776,6 +779,12 @@ gst_vaapiencode_change_state (GstElement * element, GstStateChange transition)
   return
       GST_ELEMENT_CLASS (gst_vaapiencode_parent_class)->change_state (element,
       transition);
+
+drain_error:
+  {
+    GST_ERROR ("failed to drain pending encoded frames");
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
 
 static gboolean
