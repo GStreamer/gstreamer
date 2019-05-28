@@ -151,8 +151,12 @@ wayland_event_source_check (GSource * base)
 
   source->reading = FALSE;
 
-  if (wl_display_read_events (source->display) == 0)
-    return TRUE;
+  if (source->pfd.revents & G_IO_IN) {
+    if (wl_display_read_events (source->display) == 0)
+      return TRUE;
+  } else {
+    wl_display_cancel_read (source->display);
+  }
 
   return FALSE;
 }
