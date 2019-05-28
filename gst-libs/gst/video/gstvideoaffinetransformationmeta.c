@@ -138,7 +138,7 @@ gst_buffer_add_video_affine_transformation_meta (GstBuffer * buffer)
 /**
  * gst_video_affine_transformation_meta_apply_matrix:
  * @meta: a #GstVideoAffineTransformationMeta
- * @matrix: a 4x4 transformation matrix to be applied
+ * @matrix: (array fixed-size=16): a 4x4 transformation matrix to be applied
  *
  * Apply a transformation using the given 4x4 transformation matrix.
  * Performs the multiplication, meta->matrix X matrix.
