@@ -64,7 +64,6 @@ static gboolean tags = FALSE;
 static gboolean toc = FALSE;
 static gboolean messages = FALSE;
 static gboolean is_live = FALSE;
-static gboolean waiting_eos = FALSE;
 static gchar **exclude_args = NULL;
 
 /* convenience macro so we don't have to litter the code with if(!quiet) */
@@ -618,7 +617,6 @@ event_loop (GstElement * pipeline, gboolean blocking, gboolean do_progress,
         gst_element_set_state (pipeline, GST_STATE_PLAYING);
         break;
       case GST_MESSAGE_EOS:{
-        waiting_eos = FALSE;
         PRINT (_("Got EOS from element \"%s\".\n"),
             GST_MESSAGE_SRC_NAME (message));
         goto exit;
@@ -1190,7 +1188,6 @@ main (int argc, char *argv[])
       if (eos_on_shutdown && caught_error != ELR_NO_ERROR) {
         gboolean ignore_errors;
 
-        waiting_eos = TRUE;
         if (caught_error == ELR_INTERRUPT) {
           PRINT (_("EOS on shutdown enabled -- Forcing EOS on the pipeline\n"));
           gst_element_send_event (pipeline, gst_event_new_eos ());
