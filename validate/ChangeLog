@@ -1,3 +1,43 @@
+=== release 1.14.5 ===
+
+2019-05-29 18:09:11 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/ChangeLog:
+	* validate/NEWS:
+	* validate/configure.ac:
+	* validate/gst-validate.doap:
+	  Release 1.14.5
+
+2018-11-05 05:54:43 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	* validate/gst-validate.doap:
+	  Update git locations to gitlab
+
+2019-05-02 11:55:38 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/main.py:
+	  launcher: Update git repo to gitlab
+
+2018-12-06 15:35:18 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/reporters.py:
+	  validate:launcher: Make failure as <failure> in our xunit reporter
+	  I think it was a mistake to call them <error> as the two notions are
+	  different (we marked failed test as "failures" in the <testuite> node).
+	  Should make gitlab happy with our file!
+
+2018-12-14 12:00:18 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Fix error message
+
+2018-12-14 11:17:41 +0100  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate:launcher: Fix discovery of commands
+
 === release 1.14.4 ===
 
 2018-10-02 23:13:25 +0100  Tim-Philipp Müller <tim@centricular.com>
