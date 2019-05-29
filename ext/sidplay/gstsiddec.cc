@@ -30,12 +30,11 @@
  *
  * Seeking is not (and cannot be) implemented.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
+ *
  * |[
  * gst-launch-1.0 -v filesrc location=Hawkeye.sid ! siddec ! audioconvert ! audioresample ! autoaudiosink
  * ]| Decode a sid file and play it back.
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
