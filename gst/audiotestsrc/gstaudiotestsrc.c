@@ -26,46 +26,38 @@
  *
  * Waveform specific notes:
  *
- * <orderedlist>
- *   <listitem>
- *     <itemizedlist><title>Gaussian white noise</title>
+ * ## Gaussian white noise
+ * 
+ * This waveform produces white (zero mean) Gaussian noise.
+ * Volume sets the standard deviation of the noise in units of the range
+ * of values of the sample type, e.g. volume=0.1 produces noise with a
+ * standard deviation of 0.1*32767=3277 with 16-bit integer samples,
+ * or 0.1*1.0=0.1 with floating-point samples.
  *     
- *     This waveform produces white (zero mean) Gaussian noise.
- *     Volume sets the standard deviation of the noise in units of the range
- *     of values of the sample type, e.g. volume=0.1 produces noise with a
- *     standard deviation of 0.1*32767=3277 with 16-bit integer samples,
- *     or 0.1*1.0=0.1 with floating-point samples.
+ * ## Ticks
  *     
- *     </itemizedlist>
- *   </listitem>
- *   <listitem>
- *     <itemizedlist><title>Ticks</title>
- *     
- *     This waveform is special in that it does not produce one continuous
- *     signal. Instead, it produces finite-length sine wave pulses (the "ticks").
- *     It is useful for detecting time shifts between audio signal, for example
- *     between RTSP audio clients that shall play synchronized. It is also useful
- *     for generating a signal that feeds the trigger of an oscilloscope.
+ * This waveform is special in that it does not produce one continuous
+ * signal. Instead, it produces finite-length sine wave pulses (the "ticks").
+ * It is useful for detecting time shifts between audio signal, for example
+ * between RTSP audio clients that shall play synchronized. It is also useful
+ * for generating a signal that feeds the trigger of an oscilloscope.
  *
- *     To further help with oscilloscope triggering and time offset detection,
- *     the waveform can apply a different volume to every Nth tick (this is then
- *     called the "marker tick"). For instance, one could generate a tick every
- *     100ms, and make every 20th tick a marker tick (meaning that every 2 seconds
- *     there is a marker tick). This is useful for detecting large time offsets
- *     while still frequently triggering an oscilloscope.
+ * To further help with oscilloscope triggering and time offset detection,
+ * the waveform can apply a different volume to every Nth tick (this is then
+ * called the "marker tick"). For instance, one could generate a tick every
+ * 100ms, and make every 20th tick a marker tick (meaning that every 2 seconds
+ * there is a marker tick). This is useful for detecting large time offsets
+ * while still frequently triggering an oscilloscope.
  *
- *     Also, a "ramp" can be applied to the begin & end of ticks. The sudden
- *     start of the sine tick is a discontinuity, even if the sine wave starts
- *     at 0. The* resulting artifacts can often make it more difficult to use the
- *     ticks for an oscilloscope's trigger. To that end, an initial "ramp" can
- *     be applied. The first few samples are modulated by a cubic function to
- *     reduce the impact of the discontinuity, resulting in smaller artifacts.
- *     The number of samples equals floor(samplerate / sine-wave-frequency).
- *     Example: with a sample rate of 48 kHz and a sine wave frequency of 10 kHz,
- *     the first 4 samples are modulated by the cubic function.
- *     </itemizedlist>
- *   </listitem>
- * </orderedlist>
+ * Also, a "ramp" can be applied to the begin & end of ticks. The sudden
+ * start of the sine tick is a discontinuity, even if the sine wave starts
+ * at 0. The* resulting artifacts can often make it more difficult to use the
+ * ticks for an oscilloscope's trigger. To that end, an initial "ramp" can
+ * be applied. The first few samples are modulated by a cubic function to
+ * reduce the impact of the discontinuity, resulting in smaller artifacts.
+ * The number of samples equals floor(samplerate / sine-wave-frequency).
+ * Example: with a sample rate of 48 kHz and a sine wave frequency of 10 kHz,
+ * the first 4 samples are modulated by the cubic function.
  *
  * ## Example launch line
  * |[

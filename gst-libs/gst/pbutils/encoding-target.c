@@ -265,9 +265,9 @@ validate_name (const gchar * name)
  * first character, followed by either lowercase ASCII letters, digits or
  * hyphens ('-').
  *
- * The @category <emphasis>should</emphasis> be one of the existing
+ * The @category *should* be one of the existing
  * well-defined categories, like #GST_ENCODING_CATEGORY_DEVICE, but it
- * <emphasis>can</emphasis> be a application or user specific category if
+ * *can* be a application or user specific category if
  * needed.
  *
  * Returns: (transfer full): The newly created #GstEncodingTarget or %NULL if

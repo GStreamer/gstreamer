@@ -29,8 +29,8 @@
  * by supporting publication and selection of available streams via the
  * #GstStreamCollection message and #GST_EVENT_SELECT_STREAMS event API.
  *
- * <emphasis>playbin3 is still experimental API and a technology preview.
- * Its behaviour and exposed API is subject to change.</emphasis>
+ * > playbin3 is still experimental API and a technology preview.
+ * > Its behaviour and exposed API is subject to change.
  *
  * playbin3 can handle both audio and video files and features
  *

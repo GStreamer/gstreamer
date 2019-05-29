@@ -59,8 +59,8 @@
  * * does not handle network stream buffering. decodebin3 expects that network stream
  * buffering is handled upstream, before data is passed to it.
  *
- * <emphasis>decodebin3 is still experimental API and a technology preview.
- * Its behaviour and exposed API is subject to change.</emphasis>
+ * > decodebin3 is still experimental API and a technology preview.
+ * > Its behaviour and exposed API is subject to change.
  *
  */
 

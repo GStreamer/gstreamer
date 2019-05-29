@@ -30,8 +30,8 @@
  *
  * The main configuration is via the #GstURISourceBin:uri property.
  *
- * <emphasis>urisourcebin is still experimental API and a technology preview.
- * Its behaviour and exposed API is subject to change.</emphasis>
+ * > urisourcebin is still experimental API and a technology preview.
+ * > Its behaviour and exposed API is subject to change.
  */
 
 /* FIXME 0.11: suppress warnings for deprecated API such as GValueArray
