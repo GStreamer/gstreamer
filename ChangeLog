@@ -1,3 +1,153 @@
+=== release 1.14.5 ===
+
+2019-05-29 18:10:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* configure.ac:
+	* gstreamer-vaapi.doap:
+	* meson.build:
+	  Release 1.14.5
+
+2019-05-29 18:10:27 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-vaapi.xml:
+	  Update docs
+
+2019-05-11 19:29:26 +0200  He Junyan <junyan.he@hotmail.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginbase.h:
+	* gst/vaapi/gstvaapipostproc.c:
+	* gst/vaapi/gstvaapisink.c:
+	  plugins: Add more check for allowed raw caps.
+	  The gst_vaapi_plugin_base_get_allowed_raw_caps is used for both sink
+	  pad and src pad, which cause some bugs. For sink pad, we need to verify
+	  vaPutImage() while for the src pad we need to verify vaGetImage().
+	  For vaapidecoderXXX kind of plugins, the case is more complex. We need
+	  to verify whether the decoded result(in some surface, NV12 format most
+	  of the time) can be vaGetImage to some raw image format. Add more check
+	  to fix all these problems.
+	  Fixes: #123
+	  Signed-off-by: He Junyan's avatarHe Junyan <junyan.he@hotmail.com>
+
+2018-11-28 05:56:44 +0200  Jordan Petridis <jordan@centricular.com>
+
+	* gst/vaapi/gstvaapisink.c:
+	  Run gst-indent through the files
+	  This is required before we enabled an indent test in the CI.
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer-project/issues/33
+
+2019-05-02 16:00:57 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipostprocutil.c:
+	  vaapipostproc: don't do any color conversion when GL_TEXTURE_UPLOAD
+	  https://bugzilla.gnome.org/show_bug.cgi?id=748184 has resurrected
+	  with commit 3e992d8a
+	  Since gst_vaapi_find_preferred_caps_feature() returns a color format
+	  from caps negotiation, different from the default one (NV12), the
+	  postproc enables the color transformation. But when GL_TEXTURE_UPLOAD
+	  feature is negotiated, no color transformation shall be done.
+	  Nonetheless, with commit 3e992d8a the requested format changes
+	  firstly, because there's no video sink yet, so ANY caps are
+	  negotiated; but later, when there's a video sink and a caps
+	  renegotiation, the GL_TEXTURE_UPLOAD is negotiated though the color
+	  format conversion still ongoing. It is required to reset that
+	  conversion.
+	  This patch force default color format when GL_TEXTURE_UPLOAD is
+	  selected as preferred, thus avoiding the color conversion.
+	  Fixes: #157
+
+2019-05-10 18:29:10 +0800  He Junyan <junyan.he@hotmail.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder_h264.c:
+	* gst-libs/gst/vaapi/gstvaapiencoder_h265.c:
+	  libs: encoder: not call ensure_num_slices inside g_assert
+	  g_assert will take no effect when glib's G_DISABLE_ASSERT macro is
+	  defined. The function inside the g_assert will take no effect and
+	  we will fail to set the correct slice number.
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/merge_requests/87
+
+2019-05-03 10:31:52 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapiencoder.c:
+	  libs: encoder: continue if roi meta is NULL
+	  Coverity scan bug:
+	  If the function actually returns a null value, a null pointer
+	  dereference will occur.
+	  In gst_vaapi_encoder_ensure_param_roi_regions(): Return value of
+	  function which returns null is dereferenced without checking
+
+2019-02-27 13:02:10 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapipluginutil.c:
+	  plugin: if any caps in downstream, negotiate raw video
+	  When downstream has any caps, vaapi should not shovel vaapi featured
+	  buffers, but rather plain raw video, assuming always the worst case
+	  scenario (downstream cannot handle featured video memory but raw
+	  system memory buffers).
+	  This patch query the peer caps without any filter, to know if
+	  donwstream just ask for any caps, if so jump to the color space
+	  checking, otherwise do the caps intersection and continue with the
+	  feature selection algorithm.
+	  Fixes: #139
+
+2019-02-13 10:39:59 -0500  Adam Jackson <ajax@redhat.com>
+
+	* gst-libs/gst/vaapi/gstvaapiutils_glx.c:
+	  glx: Stop specifying GLX_DEPTH_SIZE
+	  This code is just confused. It's asking for at least as many bits of
+	  (z-axis) depth as the root window has bits of (color) depth. For rgb565
+	  or rgb888 this is harmless, but at 10 bits per channel this demands a
+	  30-bit or deeper Z buffer. While some hardware could in principle do a
+	  32-bit Z buffer, Mesa does not expose such fbconfigs (at least on Intel
+	  and AMD).
+	  We're not actually using the Z buffer, so just stop asking for one.
+
+2019-01-15 14:33:11 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: before set surface proxy, check if it already been created and exist.
+	  Fix the deinterlace black frame when playing with glimagesink:
+	  gst-launch-1.0 filesrc location=test.264 ! h264parse ! vaapih264dec \
+	  ! vaapipostproc deinterlace-mode=1 deinterlace-method=1 ! glimagesink
+
+2018-12-18 10:44:21 +0800  Wangfei <fei.w.wang@intel.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: fix csc fail when only change width or height.
+
+2018-11-20 16:07:44 +0800  Xiang, Haihao <haihao.xiang@intel.com>
+
+	* gst/vaapi/gstvaapivideomemory.c:
+	  Close dmabuf_fd
+	  Otherwise it will result in resource leak when failed to create
+	  dmabuf memory
+
+2018-11-14 11:34:20 +0100  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapipostproc: add some missing locking
+	  gst_vaapi_plugin_base_close() removed the raw caps that are used indirectly
+	  in gst_vaapipostproc_transform_caps(). The usage is already protected by
+	  the mutex.
+	  This is needed when the pipeline is stopped during startup.
+
+2018-11-12 13:39:51 +0100  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst/vaapi/gstvaapiencode.c:
+	  vaapiencode: don't start src pad task in set_format
+	  Otherwise the task may be restarted during shutdown. Start the task in
+	  gst_vaapiencode_handle_frame() instead.
+
+2019-02-08 09:21:28 +0300  Denis Nagorny <denis.nagorny@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	  libs: display: lock ensure_profile()
+	  Thread safety patch for ensure_profile() function
+	  Fixes #133
+
 === release 1.14.4 ===
 
 2018-10-02 23:14:39 +0100  Tim-Philipp Müller <tim@centricular.com>
