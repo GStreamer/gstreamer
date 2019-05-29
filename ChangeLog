@@ -1,3 +1,42 @@
+=== release 1.14.5 ===
+
+2019-05-29 18:10:58 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-omx.doap:
+	* meson.build:
+	  Release 1.14.5
+
+2018-05-18 10:53:34 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* examples/egl/testegl.c:
+	  testelg: include eglext.h
+	  Neded for the declaration of eglSaneChooseConfigBRCM().
+
+2018-05-18 10:38:33 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* examples/egl/testegl.c:
+	  testegl: move up pi specific macros
+	  We need to define __VCCOREVER__ and disable redundant-decls before
+	  including the egl.h from the pi.
+
+2018-11-05 05:43:43 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	* gst-omx.doap:
+	  Update git locations to gitlab
+
+2018-07-26 16:22:50 +0200  Guillaume Desmottes <guillaume.desmottes@collabora.co.uk>
+
+	* omx/gstomxvideodec.c:
+	  omxvideodec: fix pool caps reference stealing
+	  gst_buffer_pool_config_get_params() doesn't ref the returning caps;
+	  so gst_caps_replace() was unreffing the reference owned by the pool.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=796918
+
 === release 1.14.4 ===
 
 2018-10-02 23:15:11 +0100  Tim-Philipp Müller <tim@centricular.com>
