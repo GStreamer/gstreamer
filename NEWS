@@ -5,13 +5,16 @@ GSTREAMER 1.14 RELEASE NOTES
 
 GStreamer 1.14.0 was originally released on 19 March 2018.
 
-The latest bug-fix release in the 1.14 series is 1.14.3 and was released
-on 16 September 2018.
+The latest bug-fix release in the 1.14 series is 1.14.5 and was released
+on 29 May 2019.
+
+1.14.5 will likely be the last release in the 1.14 release series which
+has now been superseded by the 1.16 release series.
 
 See https://gstreamer.freedesktop.org/releases/1.14/ for the latest
 version of this document.
 
-_Last updated: Sunday 16 September 2018, 13:00 UTC (log)_
+_Last updated: Wednesday 29 May 2019, 12:00 UTC (log)_
 
 
 Introduction
@@ -1519,6 +1522,187 @@ For a full list of bugfixes see Bugzilla. Note that this is not the full
 list of changes. For the full list of changes please refer to the GIT
 logs or ChangeLogs of the particular modules.
 
+1.14.5
+
+The fifth and likely last 1.14 bug-fix release (1.14.5) was released on
+29 May 2019.
+
+This release only contains bugfixes and it should be safe to update from
+1.14.x.
+
+Highlighted bugfixes in 1.14.5
+
+GStreamer core
+
+-   aggregator: take the pad lock around queue gap event removal
+-   aggregator: don’t leak gap buffer when out of segment
+-   buffer: fix possible memory corruption in gst_buffer_foreach_meta()
+    when removing metas
+-   bus: Make removing of signal/bus watches thread-safe
+-   bus: Don’t allow removing signal watches with gst_bus_remove_watch()
+-   controlbinding: Check if the weak pointer was cleared before
+    explicitly removing it
+-   ptp clock: Wait for ANNOUNCE before selecting a master; increase
+    tolerance for late follow-up and delay-resp
+-   segment: Allow stop == -1 in gst_segment_to_running_time() and
+    negative rate
+-   g-i: annotations fixes
+
+gst-plugins-base
+
+-   audioconvert: fix endianness conversion for unpacked formats
+    (e.g. S24_32BE)
+-   audioringbuffer: Fix wrong memcpy address when reordering channels
+-   decodebin2: Make sure to remove pad probes when freeing
+    GstDecodeGroup
+-   glviewconvert: fix output when a transformation matrix is used
+-   glupload: prevent segfault when updating caps
+-   gl/egl: Determine correct format on dmabuf import
+-   glupload: dmabuf: be explicit about gl formats used
+-   id3tag: validate the year from v1 tags before passing to GstDateTime
+-   rtpbasepayload: fix sequence numbers when using buffer lists
+-   rtspconnection: fix security issue, potential heap overflow
+    (CVE-2019-9928)
+-   rtspconnection: fix GError set over the top of a previous GError
+-   rtspconnection: do not duplicate authentication headers
+-   subparse: don’t assert when failing to parse subrip timestamp
+-   video: various convert sample frame fixes
+-   video-converter: fix conversion from I420_10LE/BE, I420_12LE/BE,
+    A420_10LE/BE to BGRA/RGBA which created corrupted output
+-   video-format: Fix GBRA_10/12 alpha channel pixel strides
+
+gst-plugins-good
+
+-   flv: Use 8kHz sample rate for alaw/mulaw audio
+-   flvdemux: Do not error out if the first added and chained pad is not
+    linked
+-   flvmux: try harder to make sure timestamps are always increasing
+-   gdkpixbufdec: output a TIME segment which is what’s expected for raw
+    video
+-   matroskademux: fix handling of MS ACM audio
+-   matroska: fix handling of FlagInterlaced
+-   pulsesink: Deal with not being able to convert a format to caps
+-   rtph265depay, rtph264depay; aggregation packet marker handling fixes
+-   rtpmp4gdepay: detect broken senders who send AAC with ADTS frames
+-   rtprawdepay: keep buffer pool around when flushing/seeking
+-   rtpssrcdemux: Forward serialized events to all pads
+-   qmlglsink: Handle OPENGL header guard changes
+-   qtdemux: fix track language code parsing; ignore corrupted CTTS box
+-   qtmux: Correctly set tkhd width/height to the display size
+-   splitmuxsink: various timecode meta handling fixes
+-   splitmuxsink: make work with audio-only encoders as muxers,
+    e.g. wavenc
+-   v4l2sink: fix pool-less allocation query handling
+-   v4l2dec/enc: fix use after free when handling events
+-   vpx: Fix build against libvpx 1.8
+-   webmmux: allow resolutions above 4096
+
+gst-plugins-ugly
+
+-   sid: Fix cross-compilation by using AC_TRY_LINK instead of
+    AC_TRY_RUN
+-   x264: Only enable dynamic loading code for x264 before v253
+
+gst-plugins-bad
+
+-   assrender: fix disappearing subtitles when seeking back in time
+-   decklinkvideosink: fix segfault when audiosink is closed before
+    videosink
+-   decklinkvideosrc: respect pixel format property even if mode is set
+    to auto
+-   d3dvideosink: Fix calculating buffer size of packed format; don’t
+    leak thread object
+-   dtls: Don’t abort on non-fatal issues, make work with newer OpenSSL
+    versions
+-   msdk: more robust error handling; fix intel sdk libdir path
+-   nvenc: Ensure drain all frames on finish; fix element reuse and
+    clean up properly
+-   openh264dec: Fix handling of errors when doing EOS
+-   shmsrc: fixes a crash when is-live is true due a race condition
+-   shmsink: fix possible (racy) deadlock on shutdown
+-   siren: Fix invalid floating point operation
+-   tsdemux: Skew correction improvements: use upstream DTS if set
+-   wasapi: number of segments was always 2 (the absolute minimum) by
+    accident
+-   wasapi: Fix infinite loop when the device disappears
+
+gst-libav
+
+-   libav: Update internal snapshot to ffmpeg n3.4.6
+-   avdemux: fix negative pts if start_time is bigger than the ts
+
+gst-rtsp-server
+
+-   rtsp-client: Fix crash in close handler and remove timeout GSource
+    on cleanup
+-   rtsp-stream: Use cached address when allocating sockets
+-   rtsp-media: Handle set state when preparing
+-   rtsp-media: Fix race condition in finish_unprepare
+-   rtsp-stream: Use seqnum-offset for rtpinfo
+-   rtsp-stream: add source elements to the pipeline before activation
+    for stream-status create message
+
+gst-editing-services
+
+-   Fix compilation with latest GLib
+-   layer: Resort clips before syncing priorities
+-   timeline: Better handle loading inconsistent timelines
+
+gstreamer-vaapi
+
+-   thread-safety and memory leak fixes
+-   improve caps negotiation if downstream takes ANY caps
+-   fix build with -DG_DISABLE_ASSERT
+
+gst-omx
+
+-   fix caps leak
+
+cerbero
+
+-   Add support for MacOSX 10.14, iOS 12.1, Fedora 29/30, Linux Mint
+    Tara (19)
+-   Miscellaneous tarball download / error handling improvements
+-   disable parallel builds by default on Windows
+
+Contributors to 1.14.5
+
+Aaron Boxer, Adam Jackson, Aleix Conchillo Flaqué, Alexandru Băluț,
+Alicia Boya García, Andreas Frisch, Antonio Ospite, Arun Raghavan,
+Benjamin Berg, Brad Reitmeyer, Christopher Snowhill, Daniel Drake,
+Daniel Stone, Dardo D Kleiner, David Ing, Denis Nagorny, Edward Hervey,
+Erlend Eriksen, Florent Thiéry, Freyr666, Göran Jönsson, Guillaume
+Desmottes, Haihao Xiang, Haihua Hu, Havard Graff, He Junyan, Helmut
+Grohne, Ilya Smelykh, Jacek Tomaszewski, James Cowgill, Jan Alexander
+Steffens (heftig), Jan Schmidt, Johan Bjäreholt, Jordan Petridis, Josep
+Torra, Joshua M. Doe, Justin Kim, Kristofer Bjorkstrom, Lars Petter
+Endresen, Lars Wiréen, Linus Svensson, Lucas Stach, Maciej Wolny,
+Marc-André Lureau, Marc Leeman, Marcos Kintschner, Marco Trevisan
+(Treviño), Marouen Ghodhbane, Matej Knopp, Mathieu Duponchelle, Matthew
+Waters, Michael Olbrich, Michael Tretter, mrk501, Naveen Cherukuri,
+Nicola Murino, Nicolas Dufresne, Niels De Graef, Nirbheek Chauhan,
+okuoku, Olivier Crête, Patricia Muscalu, Per Forlin, Peter Körner,
+Philippe Normand, Philipp Zabel, Roland Jon, Russel Winder, Santiago
+Carot-Nemesio, Sebastian Dröge, Seungha Yang, Sjoerd Simons, Thiago
+Santos, Thibault Saunier, Tim-Philipp Müller, Tobias Ronge, Tomislav
+Tustonić, U. Artie Eoff, Víctor Manuel Jáquez Leal, Vincenzo Bono, Vivia
+Nikolaidou, Wangfei, Wim Taymans, Xabier Rodriguez Calvar, Xavier
+Claessens, Xiang, Haihao, Yeongjin Jeong, and many others. Thank you
+all!
+
+List of bugs fixed in 1.14.5
+
+For a full list of bugfixes see Bugzilla. Note that this is not the full
+list of changes. For the full list of changes please refer to the GIT
+logs or ChangeLogs of the particular modules.
+
+During the release cycle issue and patch tracking moved from bugzilla to
+gitlab, so information about this release may be on either of those two
+trackers.
+
+MRs with milestone 1.14.5:
+https://gitlab.freedesktop.org/groups/gstreamer/-/merge_requests?scope=all&utf8=%E2%9C%93&state=all&milestone_title=1.14.5
+
 
 Known Issues
 
@@ -1541,12 +1725,8 @@ Our next major feature release will be 1.16, and 1.15 will be the
 unstable development version leading up to the stable 1.16 release. The
 development of 1.15/1.16 will happen in the git master branch.
 
-The plan for the 1.16 development cycle is yet to be confirmed, but it
-is expected that feature freeze will be around September 2018 followed
-by several 1.15 pre-releases and the new 1.16 stable release in October.
-
-1.16 will be backwards-compatible to the stable 1.14, 1.12, 1.10, 1.8,
-1.6, 1.4, 1.2 and 1.0 release series.
+1.16.0 was released on 19 April 2019 and is backwards-compatible to the
+stable 1.14, 1.12, 1.10, 1.8, 1.6, 1.4, 1.2 and 1.0 release series.
 
 ------------------------------------------------------------------------
 
