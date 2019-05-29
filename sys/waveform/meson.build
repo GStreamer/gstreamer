@@ -24,4 +24,5 @@ if have_waveform
     install : true,
     install_dir : plugins_install_dir)
   pkgconfig.generate(gstwaveformsink, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstwaveformsink]
 endif

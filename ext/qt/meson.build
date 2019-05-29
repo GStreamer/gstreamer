@@ -160,6 +160,7 @@ if have_cxx and build_gstgl
         install: true,
         install_dir : plugins_install_dir)
       pkgconfig.generate(gstqmlgl, install_dir : plugins_pkgconfig_install_dir)
+      plugins += [gstqmlgl]
     endif
   endif
 endif
