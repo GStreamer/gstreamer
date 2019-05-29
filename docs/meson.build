@@ -179,5 +179,6 @@ foreach plugin_name: list_plugin_res.stdout().split(':')
         gst_c_source_filters: excludes,
         gst_order_generated_subpages: true,
         gst_plugin_name: plugin_name,
+        include_paths: join_paths(meson.current_source_dir(), '..'),
     )]
 endforeach

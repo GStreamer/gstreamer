@@ -82,6 +82,17 @@
  *
  */
 
+/**
+ * SECTION: element-mpegtsmux
+ * @title: MPEG Transport Stream muxer
+ *
+ * mpegtsmux muxes different streams into an MPEG Transport stream
+ *
+ * SI sections can be specified through a custom event:
+ *
+ * {{ tests/examples/mpegts/ts-section-writer.c }}
+ */
+
 #include "gstmpegtsmux.h"
 #include <string.h>
 
