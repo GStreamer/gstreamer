@@ -62,12 +62,11 @@
  * The new-payloader signal is fired when a payloader is created, in case
  * an app wants to do custom configuration (such as for MTU).
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 videotestsrc ! jpegenc ! rtspclientsink location=rtsp://some.server/url
  * ]| Establish a connection to an RTSP server and send JPEG encoded video packets
- * </refsect2>
  */
 
 /* FIXMEs
