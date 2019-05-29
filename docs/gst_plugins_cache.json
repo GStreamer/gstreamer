@@ -567,6 +567,14 @@
                         "type-name": "gboolean",
                         "writable": true
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -609,7 +617,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstaasink.so",
+        "filename": "gstaasink",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -3765,6 +3773,14 @@
                         "type-name": "gint",
                         "writable": false
                     },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
                     "sync": {
                         "blurb": "Sync on the clock",
                         "construct": false,
@@ -3797,7 +3813,7 @@
                 "rank": "none"
             }
         },
-        "filename": "libgstcacasink.so",
+        "filename": "gstcacasink",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -5477,6 +5493,7 @@
                     "GObject"
                 ],
                 "klass": "Codec/Decoder/Video",
+                "long-name": "DV video decoder",
                 "name": "dvdec",
                 "pad-templates": {
                     "sink": {
@@ -5544,38 +5561,38 @@
                             {
                                 "desc": "Monochrome, DC (Fastest)",
                                 "name": "fastest",
-                                "value": "0x00000000"
+                                "value": "0"
                             },
                             {
                                 "desc": "Monochrome, first AC coefficient",
                                 "name": "monochrome-ac",
-                                "value": "0x00000001"
+                                "value": "1"
                             },
                             {
                                 "desc": "Monochrome, highest quality",
                                 "name": "monochrome-best",
-                                "value": "0x00000002"
+                                "value": "2"
                             },
                             {
                                 "desc": "Colour, DC, fastest",
                                 "name": "colour-fastest",
-                                "value": "0x00000003"
+                                "value": "3"
                             },
                             {
                                 "desc": "Colour, using only the first AC coefficient",
                                 "name": "colour-ac",
-                                "value": "0x00000004"
+                                "value": "4"
                             },
                             {
                                 "desc": "Highest quality colour decoding",
                                 "name": "best",
-                                "value": "0x00000005"
+                                "value": "5"
                             }
                         ],
                         "writable": true
                     }
                 },
-                "rank": 64
+                "rank": "marginal"
             },
             "dvdemux": {
                 "author": "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>",
@@ -5588,6 +5605,7 @@
                     "GObject"
                 ],
                 "klass": "Codec/Demuxer",
+                "long-name": "DV system stream demuxer",
                 "name": "dvdemux",
                 "pad-templates": {
                     "audio": {
@@ -5624,7 +5642,7 @@
                         "writable": true
                     }
                 },
-                "rank": 256,
+                "rank": "primary",
                 "signals": {
                     "no-more-pads": {
                         "args": [],
@@ -5645,9 +5663,9 @@
                 }
             }
         },
-        "filename": "libgstdv.so",
+        "filename": "gstdv",
         "license": "LGPL",
-        "package": "GStreamer Good Plug-ins prerelease",
+        "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
         "url": "Unknown package origin"
     },
@@ -8323,6 +8341,384 @@
             }
         },
         "filename": "gstgoom2k1",
+        "license": "LGPL",
+        "package": "GStreamer Good Plug-ins git",
+        "source": "gst-plugins-good",
+        "url": "Unknown package origin"
+    },
+    "gtk": {
+        "description": "Gtk+ sink",
+        "elements": {
+            "gtkglsink": {
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "A video sink that renders to a GtkWidget using OpenGL",
+                "hierarchy": [
+                    "GstGtkGLSink",
+                    "GstGtkBaseSink",
+                    "GstVideoSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Sink/Video",
+                "long-name": "Gtk GL Video Sink",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "async": {
+                        "blurb": "Go asynchronously to PAUSED",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "blocksize": {
+                        "blurb": "Size in bytes to pull per buffer (0 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "enable-last-sample": {
+                        "blurb": "Enable the last-sample property",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "force-aspect-ratio": {
+                        "blurb": "When enabled, scaling will respect original aspect ratio",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "ignore-alpha": {
+                        "blurb": "When enabled, alpha will be ignored and converted to black",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "last-sample": {
+                        "blurb": "The last sample received in the sink",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstSample",
+                        "writable": false
+                    },
+                    "max-bitrate": {
+                        "blurb": "The maximum bits per second to render (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "max-lateness": {
+                        "blurb": "Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "5000000",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "pixel-aspect-ratio": {
+                        "blurb": "The pixel aspect ratio of the device",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0/1",
+                        "max": "2147483647/1",
+                        "min": "0/1",
+                        "type-name": "GstFraction",
+                        "writable": true
+                    },
+                    "processing-deadline": {
+                        "blurb": "Maximum processing deadline in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "15000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Generate Quality-of-Service events upstream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "render-delay": {
+                        "blurb": "Additional render delay of the sink in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "show-preroll-frame": {
+                        "blurb": "Whether to render video frames during preroll",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
+                    "sync": {
+                        "blurb": "Sync on the clock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "throttle-time": {
+                        "blurb": "The time to keep between rendered buffers (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "ts-offset": {
+                        "blurb": "Timestamp offset in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "-9223372036854775808",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "widget": {
+                        "blurb": "The GtkWidget to place in the widget hierarchy (must only be get from the GTK main thread)",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GtkWidget",
+                        "writable": false
+                    }
+                },
+                "rank": "none"
+            },
+            "gtksink": {
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "A video sink that renders to a GtkWidget",
+                "hierarchy": [
+                    "GstGtkSink",
+                    "GstGtkBaseSink",
+                    "GstVideoSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Sink/Video",
+                "long-name": "Gtk Video Sink",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw:\n         format: { BGRx, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "async": {
+                        "blurb": "Go asynchronously to PAUSED",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "blocksize": {
+                        "blurb": "Size in bytes to pull per buffer (0 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "enable-last-sample": {
+                        "blurb": "Enable the last-sample property",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "force-aspect-ratio": {
+                        "blurb": "When enabled, scaling will respect original aspect ratio",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "ignore-alpha": {
+                        "blurb": "When enabled, alpha will be ignored and converted to black",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "last-sample": {
+                        "blurb": "The last sample received in the sink",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstSample",
+                        "writable": false
+                    },
+                    "max-bitrate": {
+                        "blurb": "The maximum bits per second to render (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "max-lateness": {
+                        "blurb": "Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "5000000",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "pixel-aspect-ratio": {
+                        "blurb": "The pixel aspect ratio of the device",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0/1",
+                        "max": "2147483647/1",
+                        "min": "0/1",
+                        "type-name": "GstFraction",
+                        "writable": true
+                    },
+                    "processing-deadline": {
+                        "blurb": "Maximum processing deadline in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "15000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Generate Quality-of-Service events upstream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "render-delay": {
+                        "blurb": "Additional render delay of the sink in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "show-preroll-frame": {
+                        "blurb": "Whether to render video frames during preroll",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
+                    "sync": {
+                        "blurb": "Sync on the clock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "throttle-time": {
+                        "blurb": "The time to keep between rendered buffers (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "ts-offset": {
+                        "blurb": "Timestamp offset in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "-9223372036854775808",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "widget": {
+                        "blurb": "The GtkWidget to place in the widget hierarchy (must only be get from the GTK main thread)",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GtkWidget",
+                        "writable": false
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gstgtk",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -14819,6 +15215,267 @@
             }
         },
         "filename": "gstpulseaudio",
+        "license": "LGPL",
+        "package": "GStreamer Good Plug-ins git",
+        "source": "gst-plugins-good",
+        "url": "Unknown package origin"
+    },
+    "qmlgl": {
+        "description": "Qt gl plugin",
+        "elements": {
+            "qmlglsink": {
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "A video sink that renders to a QQuickItem",
+                "hierarchy": [
+                    "GstQtSink",
+                    "GstVideoSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Sink/Video",
+                "long-name": "Qt Video Sink",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "async": {
+                        "blurb": "Go asynchronously to PAUSED",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "blocksize": {
+                        "blurb": "Size in bytes to pull per buffer (0 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "enable-last-sample": {
+                        "blurb": "Enable the last-sample property",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "force-aspect-ratio": {
+                        "blurb": "When enabled, scaling will respect original aspect ratio",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "last-sample": {
+                        "blurb": "The last sample received in the sink",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstSample",
+                        "writable": false
+                    },
+                    "max-bitrate": {
+                        "blurb": "The maximum bits per second to render (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "max-lateness": {
+                        "blurb": "Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "5000000",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "pixel-aspect-ratio": {
+                        "blurb": "The pixel aspect ratio of the device",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0/1",
+                        "max": "2147483647/1",
+                        "min": "0/1",
+                        "type-name": "GstFraction",
+                        "writable": true
+                    },
+                    "processing-deadline": {
+                        "blurb": "Maximum processing deadline in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "15000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Generate Quality-of-Service events upstream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "render-delay": {
+                        "blurb": "Additional render delay of the sink in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "show-preroll-frame": {
+                        "blurb": "Whether to render video frames during preroll",
+                        "construct": true,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Sink Statistics",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "application/x-gst-base-sink-stats, average-rate=(double)0, dropped=(guint64)0, rendered=(guint64)0;",
+                        "type-name": "GstStructure",
+                        "writable": false
+                    },
+                    "sync": {
+                        "blurb": "Sync on the clock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "throttle-time": {
+                        "blurb": "The time to keep between rendered buffers (0 = disabled)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "ts-offset": {
+                        "blurb": "Timestamp offset in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "-9223372036854775808",
+                        "type-name": "gint64",
+                        "writable": true
+                    },
+                    "widget": {
+                        "blurb": "The QQuickItem to place in the object hierarchy",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "gpointer",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "qmlglsrc": {
+                "author": "Multimedia Team <shmmmw@freescale.com>",
+                "description": "A video src that captures a window from a QML view",
+                "hierarchy": [
+                    "GstQtSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Video",
+                "long-name": "Qt Video Source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "blocksize": {
+                        "blurb": "Size in bytes to read per buffer (-1 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "do-timestamp": {
+                        "blurb": "Apply current stream time to buffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "num-buffers": {
+                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "typefind": {
+                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "use-default-fbo": {
+                        "blurb": "When set it will not create a new FBO for the QML render thread",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "window": {
+                        "blurb": "The QQuickWindow to place in the object hierarchy",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "gpointer",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gstqmlgl",
         "license": "LGPL",
         "package": "GStreamer Good Plug-ins git",
         "source": "gst-plugins-good",
@@ -29267,9 +29924,24 @@
                                 "value": "1"
                             },
                             {
+                                "desc": "A bar moves from left to right",
+                                "name": "bar-wipe-lr",
+                                "value": "1"
+                            },
+                            {
                                 "desc": "A bar moves from top to bottom",
                                 "name": "bar-wipe-tb",
                                 "value": "2"
+                            },
+                            {
+                                "desc": "A bar moves from top to bottom",
+                                "name": "bar-wipe-tb",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "A box expands from the upper-left corner to the lower-right corner",
+                                "name": "box-wipe-tl",
+                                "value": "3"
                             },
                             {
                                 "desc": "A box expands from the upper-left corner to the lower-right corner",
@@ -29282,9 +29954,24 @@
                                 "value": "4"
                             },
                             {
+                                "desc": "A box expands from the upper-right corner to the lower-left corner",
+                                "name": "box-wipe-tr",
+                                "value": "4"
+                            },
+                            {
                                 "desc": "A box expands from the lower-right corner to the upper-left corner",
                                 "name": "box-wipe-br",
                                 "value": "5"
+                            },
+                            {
+                                "desc": "A box expands from the lower-right corner to the upper-left corner",
+                                "name": "box-wipe-br",
+                                "value": "5"
+                            },
+                            {
+                                "desc": "A box expands from the lower-left corner to the upper-right corner",
+                                "name": "box-wipe-bl",
+                                "value": "6"
                             },
                             {
                                 "desc": "A box expands from the lower-left corner to the upper-right corner",
@@ -29297,9 +29984,24 @@
                                 "value": "7"
                             },
                             {
+                                "desc": "A box shape expands from each of the four corners toward the center",
+                                "name": "four-box-wipe-ci",
+                                "value": "7"
+                            },
+                            {
                                 "desc": "A box shape expands from the center of each quadrant toward the corners of each quadrant",
                                 "name": "four-box-wipe-co",
                                 "value": "8"
+                            },
+                            {
+                                "desc": "A box shape expands from the center of each quadrant toward the corners of each quadrant",
+                                "name": "four-box-wipe-co",
+                                "value": "8"
+                            },
+                            {
+                                "desc": "A central, vertical line splits and expands toward the left and right edges",
+                                "name": "barndoor-v",
+                                "value": "21"
                             },
                             {
                                 "desc": "A central, vertical line splits and expands toward the left and right edges",
@@ -29312,9 +30014,24 @@
                                 "value": "22"
                             },
                             {
+                                "desc": "A central, horizontal line splits and expands toward the top and bottom edges",
+                                "name": "barndoor-h",
+                                "value": "22"
+                            },
+                            {
                                 "desc": "A box expands from the top edge's midpoint to the bottom corners",
                                 "name": "box-wipe-tc",
                                 "value": "23"
+                            },
+                            {
+                                "desc": "A box expands from the top edge's midpoint to the bottom corners",
+                                "name": "box-wipe-tc",
+                                "value": "23"
+                            },
+                            {
+                                "desc": "A box expands from the right edge's midpoint to the left corners",
+                                "name": "box-wipe-rc",
+                                "value": "24"
                             },
                             {
                                 "desc": "A box expands from the right edge's midpoint to the left corners",
@@ -29327,9 +30044,24 @@
                                 "value": "25"
                             },
                             {
+                                "desc": "A box expands from the bottom edge's midpoint to the top corners",
+                                "name": "box-wipe-bc",
+                                "value": "25"
+                            },
+                            {
                                 "desc": "A box expands from the left edge's midpoint to the right corners",
                                 "name": "box-wipe-lc",
                                 "value": "26"
+                            },
+                            {
+                                "desc": "A box expands from the left edge's midpoint to the right corners",
+                                "name": "box-wipe-lc",
+                                "value": "26"
+                            },
+                            {
+                                "desc": "A diagonal line moves from the upper-left corner to the lower-right corner",
+                                "name": "diagonal-tl",
+                                "value": "41"
                             },
                             {
                                 "desc": "A diagonal line moves from the upper-left corner to the lower-right corner",
@@ -29342,9 +30074,24 @@
                                 "value": "42"
                             },
                             {
+                                "desc": "A diagonal line moves from the upper right corner to the lower-left corner",
+                                "name": "diagonal-tr",
+                                "value": "42"
+                            },
+                            {
                                 "desc": "Two wedge shapes slide in from the top and bottom edges toward the center",
                                 "name": "bowtie-v",
                                 "value": "43"
+                            },
+                            {
+                                "desc": "Two wedge shapes slide in from the top and bottom edges toward the center",
+                                "name": "bowtie-v",
+                                "value": "43"
+                            },
+                            {
+                                "desc": "Two wedge shapes slide in from the left and right edges toward the center",
+                                "name": "bowtie-h",
+                                "value": "44"
                             },
                             {
                                 "desc": "Two wedge shapes slide in from the left and right edges toward the center",
@@ -29357,9 +30104,24 @@
                                 "value": "45"
                             },
                             {
+                                "desc": "A diagonal line from the lower-left to upper-right corners splits and expands toward the opposite corners",
+                                "name": "barndoor-dbl",
+                                "value": "45"
+                            },
+                            {
                                 "desc": "A diagonal line from upper-left to lower-right corners splits and expands toward the opposite corners",
                                 "name": "barndoor-dtl",
                                 "value": "46"
+                            },
+                            {
+                                "desc": "A diagonal line from upper-left to lower-right corners splits and expands toward the opposite corners",
+                                "name": "barndoor-dtl",
+                                "value": "46"
+                            },
+                            {
+                                "desc": "Four wedge shapes split from the center and retract toward the four edges",
+                                "name": "misc-diagonal-dbd",
+                                "value": "47"
                             },
                             {
                                 "desc": "Four wedge shapes split from the center and retract toward the four edges",
@@ -29372,9 +30134,24 @@
                                 "value": "48"
                             },
                             {
+                                "desc": "A diamond connecting the four edge midpoints simultaneously contracts toward the center and expands toward the edges",
+                                "name": "misc-diagonal-dd",
+                                "value": "48"
+                            },
+                            {
                                 "desc": "A wedge shape moves from top to bottom",
                                 "name": "vee-d",
                                 "value": "61"
+                            },
+                            {
+                                "desc": "A wedge shape moves from top to bottom",
+                                "name": "vee-d",
+                                "value": "61"
+                            },
+                            {
+                                "desc": "A wedge shape moves from right to left",
+                                "name": "vee-l",
+                                "value": "62"
                             },
                             {
                                 "desc": "A wedge shape moves from right to left",
@@ -29387,9 +30164,24 @@
                                 "value": "63"
                             },
                             {
+                                "desc": "A wedge shape moves from bottom to top",
+                                "name": "vee-u",
+                                "value": "63"
+                            },
+                            {
                                 "desc": "A wedge shape moves from left to right",
                                 "name": "vee-r",
                                 "value": "64"
+                            },
+                            {
+                                "desc": "A wedge shape moves from left to right",
+                                "name": "vee-r",
+                                "value": "64"
+                            },
+                            {
+                                "desc": "A 'V' shape extending from the bottom edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
+                                "name": "barnvee-d",
+                                "value": "65"
                             },
                             {
                                 "desc": "A 'V' shape extending from the bottom edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
@@ -29402,9 +30194,24 @@
                                 "value": "66"
                             },
                             {
+                                "desc": "A 'V' shape extending from the left edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
+                                "name": "barnvee-l",
+                                "value": "66"
+                            },
+                            {
                                 "desc": "A 'V' shape extending from the top edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
                                 "name": "barnvee-u",
                                 "value": "67"
+                            },
+                            {
+                                "desc": "A 'V' shape extending from the top edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
+                                "name": "barnvee-u",
+                                "value": "67"
+                            },
+                            {
+                                "desc": "A 'V' shape extending from the right edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
+                                "name": "barnvee-r",
+                                "value": "68"
                             },
                             {
                                 "desc": "A 'V' shape extending from the right edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
@@ -29417,9 +30224,24 @@
                                 "value": "101"
                             },
                             {
+                                "desc": "A rectangle expands from the center.",
+                                "name": "iris-rect",
+                                "value": "101"
+                            },
+                            {
                                 "desc": "A radial hand sweeps clockwise from the twelve o'clock position",
                                 "name": "clock-cw12",
                                 "value": "201"
+                            },
+                            {
+                                "desc": "A radial hand sweeps clockwise from the twelve o'clock position",
+                                "name": "clock-cw12",
+                                "value": "201"
+                            },
+                            {
+                                "desc": "A radial hand sweeps clockwise from the three o'clock position",
+                                "name": "clock-cw3",
+                                "value": "202"
                             },
                             {
                                 "desc": "A radial hand sweeps clockwise from the three o'clock position",
@@ -29432,9 +30254,24 @@
                                 "value": "203"
                             },
                             {
+                                "desc": "A radial hand sweeps clockwise from the six o'clock position",
+                                "name": "clock-cw6",
+                                "value": "203"
+                            },
+                            {
                                 "desc": "A radial hand sweeps clockwise from the nine o'clock position",
                                 "name": "clock-cw9",
                                 "value": "204"
+                            },
+                            {
+                                "desc": "A radial hand sweeps clockwise from the nine o'clock position",
+                                "name": "clock-cw9",
+                                "value": "204"
+                            },
+                            {
+                                "desc": "Two radial hands sweep clockwise from the twelve and six o'clock positions",
+                                "name": "pinwheel-tbv",
+                                "value": "205"
                             },
                             {
                                 "desc": "Two radial hands sweep clockwise from the twelve and six o'clock positions",
@@ -29447,9 +30284,24 @@
                                 "value": "206"
                             },
                             {
+                                "desc": "Two radial hands sweep clockwise from the nine and three o'clock positions",
+                                "name": "pinwheel-tbh",
+                                "value": "206"
+                            },
+                            {
                                 "desc": "Four radial hands sweep clockwise",
                                 "name": "pinwheel-fb",
                                 "value": "207"
+                            },
+                            {
+                                "desc": "Four radial hands sweep clockwise",
+                                "name": "pinwheel-fb",
+                                "value": "207"
+                            },
+                            {
+                                "desc": "A fan unfolds from the top edge, the fan axis at the center",
+                                "name": "fan-ct",
+                                "value": "211"
                             },
                             {
                                 "desc": "A fan unfolds from the top edge, the fan axis at the center",
@@ -29462,9 +30314,24 @@
                                 "value": "212"
                             },
                             {
+                                "desc": "A fan unfolds from the right edge, the fan axis at the center",
+                                "name": "fan-cr",
+                                "value": "212"
+                            },
+                            {
                                 "desc": "Two fans, their axes at the center, unfold from the top and bottom",
                                 "name": "doublefan-fov",
                                 "value": "213"
+                            },
+                            {
+                                "desc": "Two fans, their axes at the center, unfold from the top and bottom",
+                                "name": "doublefan-fov",
+                                "value": "213"
+                            },
+                            {
+                                "desc": "Two fans, their axes at the center, unfold from the left and right",
+                                "name": "doublefan-foh",
+                                "value": "214"
                             },
                             {
                                 "desc": "Two fans, their axes at the center, unfold from the left and right",
@@ -29477,9 +30344,24 @@
                                 "value": "221"
                             },
                             {
+                                "desc": "A radial hand sweeps clockwise from the top edge's midpoint",
+                                "name": "singlesweep-cwt",
+                                "value": "221"
+                            },
+                            {
                                 "desc": "A radial hand sweeps clockwise from the right edge's midpoint",
                                 "name": "singlesweep-cwr",
                                 "value": "222"
+                            },
+                            {
+                                "desc": "A radial hand sweeps clockwise from the right edge's midpoint",
+                                "name": "singlesweep-cwr",
+                                "value": "222"
+                            },
+                            {
+                                "desc": "A radial hand sweeps clockwise from the bottom edge's midpoint",
+                                "name": "singlesweep-cwb",
+                                "value": "223"
                             },
                             {
                                 "desc": "A radial hand sweeps clockwise from the bottom edge's midpoint",
@@ -29492,9 +30374,24 @@
                                 "value": "224"
                             },
                             {
+                                "desc": "A radial hand sweeps clockwise from the left edge's midpoint",
+                                "name": "singlesweep-cwl",
+                                "value": "224"
+                            },
+                            {
                                 "desc": "Two radial hands sweep clockwise and counter-clockwise from the top and bottom edges' midpoints",
                                 "name": "doublesweep-pv",
                                 "value": "225"
+                            },
+                            {
+                                "desc": "Two radial hands sweep clockwise and counter-clockwise from the top and bottom edges' midpoints",
+                                "name": "doublesweep-pv",
+                                "value": "225"
+                            },
+                            {
+                                "desc": "Two radial hands sweep clockwise and counter-clockwise from the left and right edges' midpoints",
+                                "name": "doublesweep-pd",
+                                "value": "226"
                             },
                             {
                                 "desc": "Two radial hands sweep clockwise and counter-clockwise from the left and right edges' midpoints",
@@ -29507,9 +30404,24 @@
                                 "value": "227"
                             },
                             {
+                                "desc": "Two radial hands attached at the top and bottom edges' midpoints sweep from right to left",
+                                "name": "doublesweep-ov",
+                                "value": "227"
+                            },
+                            {
                                 "desc": "Two radial hands attached at the left and right edges' midpoints sweep from top to bottom",
                                 "name": "doublesweep-oh",
                                 "value": "228"
+                            },
+                            {
+                                "desc": "Two radial hands attached at the left and right edges' midpoints sweep from top to bottom",
+                                "name": "doublesweep-oh",
+                                "value": "228"
+                            },
+                            {
+                                "desc": "A fan unfolds from the bottom, the fan axis at the top edge's midpoint",
+                                "name": "fan-t",
+                                "value": "231"
                             },
                             {
                                 "desc": "A fan unfolds from the bottom, the fan axis at the top edge's midpoint",
@@ -29522,9 +30434,24 @@
                                 "value": "232"
                             },
                             {
+                                "desc": "A fan unfolds from the left, the fan axis at the right edge's midpoint",
+                                "name": "fan-r",
+                                "value": "232"
+                            },
+                            {
                                 "desc": "A fan unfolds from the top, the fan axis at the bottom edge's midpoint",
                                 "name": "fan-b",
                                 "value": "233"
+                            },
+                            {
+                                "desc": "A fan unfolds from the top, the fan axis at the bottom edge's midpoint",
+                                "name": "fan-b",
+                                "value": "233"
+                            },
+                            {
+                                "desc": "A fan unfolds from the right, the fan axis at the left edge's midpoint",
+                                "name": "fan-l",
+                                "value": "234"
                             },
                             {
                                 "desc": "A fan unfolds from the right, the fan axis at the left edge's midpoint",
@@ -29537,9 +30464,24 @@
                                 "value": "235"
                             },
                             {
+                                "desc": "Two fans, their axes at the top and bottom, unfold from the center",
+                                "name": "doublefan-fiv",
+                                "value": "235"
+                            },
+                            {
                                 "desc": "Two fans, their axes at the left and right, unfold from the center",
                                 "name": "doublefan-fih",
                                 "value": "236"
+                            },
+                            {
+                                "desc": "Two fans, their axes at the left and right, unfold from the center",
+                                "name": "doublefan-fih",
+                                "value": "236"
+                            },
+                            {
+                                "desc": "A radial hand sweeps clockwise from the upper-left corner",
+                                "name": "singlesweep-cwtl",
+                                "value": "241"
                             },
                             {
                                 "desc": "A radial hand sweeps clockwise from the upper-left corner",
@@ -29552,9 +30494,24 @@
                                 "value": "242"
                             },
                             {
+                                "desc": "A radial hand sweeps counter-clockwise from the lower-left corner.",
+                                "name": "singlesweep-cwbl",
+                                "value": "242"
+                            },
+                            {
                                 "desc": "A radial hand sweeps clockwise from the lower-right corner",
                                 "name": "singlesweep-cwbr",
                                 "value": "243"
+                            },
+                            {
+                                "desc": "A radial hand sweeps clockwise from the lower-right corner",
+                                "name": "singlesweep-cwbr",
+                                "value": "243"
+                            },
+                            {
+                                "desc": "A radial hand sweeps counter-clockwise from the upper-right corner",
+                                "name": "singlesweep-cwtr",
+                                "value": "244"
                             },
                             {
                                 "desc": "A radial hand sweeps counter-clockwise from the upper-right corner",
@@ -29567,9 +30524,24 @@
                                 "value": "245"
                             },
                             {
+                                "desc": "Two radial hands attached at the upper-left and lower-right corners sweep down and up",
+                                "name": "doublesweep-pdtl",
+                                "value": "245"
+                            },
+                            {
                                 "desc": "Two radial hands attached at the lower-left and upper-right corners sweep down and up",
                                 "name": "doublesweep-pdbl",
                                 "value": "246"
+                            },
+                            {
+                                "desc": "Two radial hands attached at the lower-left and upper-right corners sweep down and up",
+                                "name": "doublesweep-pdbl",
+                                "value": "246"
+                            },
+                            {
+                                "desc": "Two radial hands attached at the upper-left and upper-right corners sweep down",
+                                "name": "saloondoor-t",
+                                "value": "251"
                             },
                             {
                                 "desc": "Two radial hands attached at the upper-left and upper-right corners sweep down",
@@ -29582,9 +30554,24 @@
                                 "value": "252"
                             },
                             {
+                                "desc": "Two radial hands attached at the upper-left and lower-left corners sweep to the right",
+                                "name": "saloondoor-l",
+                                "value": "252"
+                            },
+                            {
                                 "desc": "Two radial hands attached at the lower-left and lower-right corners sweep up",
                                 "name": "saloondoor-b",
                                 "value": "253"
+                            },
+                            {
+                                "desc": "Two radial hands attached at the lower-left and lower-right corners sweep up",
+                                "name": "saloondoor-b",
+                                "value": "253"
+                            },
+                            {
+                                "desc": "Two radial hands attached at the upper-right and lower-right corners sweep to the left",
+                                "name": "saloondoor-r",
+                                "value": "254"
                             },
                             {
                                 "desc": "Two radial hands attached at the upper-right and lower-right corners sweep to the left",
@@ -29597,6 +30584,16 @@
                                 "value": "261"
                             },
                             {
+                                "desc": "Two radial hands attached at the midpoints of the top and bottom halves sweep from right to left",
+                                "name": "windshield-r",
+                                "value": "261"
+                            },
+                            {
+                                "desc": "Two radial hands attached at the midpoints of the left and right halves sweep from top to bottom",
+                                "name": "windshield-u",
+                                "value": "262"
+                            },
+                            {
                                 "desc": "Two radial hands attached at the midpoints of the left and right halves sweep from top to bottom",
                                 "name": "windshield-u",
                                 "value": "262"
@@ -29605,6 +30602,16 @@
                                 "desc": "Two sets of radial hands attached at the midpoints of the top and bottom halves sweep from top to bottom and bottom to top",
                                 "name": "windshield-v",
                                 "value": "263"
+                            },
+                            {
+                                "desc": "Two sets of radial hands attached at the midpoints of the top and bottom halves sweep from top to bottom and bottom to top",
+                                "name": "windshield-v",
+                                "value": "263"
+                            },
+                            {
+                                "desc": "Two sets of radial hands attached at the midpoints of the left and right halves sweep from left to right and right to left",
+                                "name": "windshield-h",
+                                "value": "264"
                             },
                             {
                                 "desc": "Two sets of radial hands attached at the midpoints of the left and right halves sweep from left to right and right to left",
@@ -29721,24 +30728,9 @@
                                 "value": "1"
                             },
                             {
-                                "desc": "A bar moves from left to right",
-                                "name": "bar-wipe-lr",
-                                "value": "1"
-                            },
-                            {
                                 "desc": "A bar moves from top to bottom",
                                 "name": "bar-wipe-tb",
                                 "value": "2"
-                            },
-                            {
-                                "desc": "A bar moves from top to bottom",
-                                "name": "bar-wipe-tb",
-                                "value": "2"
-                            },
-                            {
-                                "desc": "A box expands from the upper-left corner to the lower-right corner",
-                                "name": "box-wipe-tl",
-                                "value": "3"
                             },
                             {
                                 "desc": "A box expands from the upper-left corner to the lower-right corner",
@@ -29751,24 +30743,9 @@
                                 "value": "4"
                             },
                             {
-                                "desc": "A box expands from the upper-right corner to the lower-left corner",
-                                "name": "box-wipe-tr",
-                                "value": "4"
-                            },
-                            {
                                 "desc": "A box expands from the lower-right corner to the upper-left corner",
                                 "name": "box-wipe-br",
                                 "value": "5"
-                            },
-                            {
-                                "desc": "A box expands from the lower-right corner to the upper-left corner",
-                                "name": "box-wipe-br",
-                                "value": "5"
-                            },
-                            {
-                                "desc": "A box expands from the lower-left corner to the upper-right corner",
-                                "name": "box-wipe-bl",
-                                "value": "6"
                             },
                             {
                                 "desc": "A box expands from the lower-left corner to the upper-right corner",
@@ -29781,24 +30758,9 @@
                                 "value": "7"
                             },
                             {
-                                "desc": "A box shape expands from each of the four corners toward the center",
-                                "name": "four-box-wipe-ci",
-                                "value": "7"
-                            },
-                            {
                                 "desc": "A box shape expands from the center of each quadrant toward the corners of each quadrant",
                                 "name": "four-box-wipe-co",
                                 "value": "8"
-                            },
-                            {
-                                "desc": "A box shape expands from the center of each quadrant toward the corners of each quadrant",
-                                "name": "four-box-wipe-co",
-                                "value": "8"
-                            },
-                            {
-                                "desc": "A central, vertical line splits and expands toward the left and right edges",
-                                "name": "barndoor-v",
-                                "value": "21"
                             },
                             {
                                 "desc": "A central, vertical line splits and expands toward the left and right edges",
@@ -29811,24 +30773,9 @@
                                 "value": "22"
                             },
                             {
-                                "desc": "A central, horizontal line splits and expands toward the top and bottom edges",
-                                "name": "barndoor-h",
-                                "value": "22"
-                            },
-                            {
                                 "desc": "A box expands from the top edge's midpoint to the bottom corners",
                                 "name": "box-wipe-tc",
                                 "value": "23"
-                            },
-                            {
-                                "desc": "A box expands from the top edge's midpoint to the bottom corners",
-                                "name": "box-wipe-tc",
-                                "value": "23"
-                            },
-                            {
-                                "desc": "A box expands from the right edge's midpoint to the left corners",
-                                "name": "box-wipe-rc",
-                                "value": "24"
                             },
                             {
                                 "desc": "A box expands from the right edge's midpoint to the left corners",
@@ -29841,24 +30788,9 @@
                                 "value": "25"
                             },
                             {
-                                "desc": "A box expands from the bottom edge's midpoint to the top corners",
-                                "name": "box-wipe-bc",
-                                "value": "25"
-                            },
-                            {
                                 "desc": "A box expands from the left edge's midpoint to the right corners",
                                 "name": "box-wipe-lc",
                                 "value": "26"
-                            },
-                            {
-                                "desc": "A box expands from the left edge's midpoint to the right corners",
-                                "name": "box-wipe-lc",
-                                "value": "26"
-                            },
-                            {
-                                "desc": "A diagonal line moves from the upper-left corner to the lower-right corner",
-                                "name": "diagonal-tl",
-                                "value": "41"
                             },
                             {
                                 "desc": "A diagonal line moves from the upper-left corner to the lower-right corner",
@@ -29871,24 +30803,9 @@
                                 "value": "42"
                             },
                             {
-                                "desc": "A diagonal line moves from the upper right corner to the lower-left corner",
-                                "name": "diagonal-tr",
-                                "value": "42"
-                            },
-                            {
                                 "desc": "Two wedge shapes slide in from the top and bottom edges toward the center",
                                 "name": "bowtie-v",
                                 "value": "43"
-                            },
-                            {
-                                "desc": "Two wedge shapes slide in from the top and bottom edges toward the center",
-                                "name": "bowtie-v",
-                                "value": "43"
-                            },
-                            {
-                                "desc": "Two wedge shapes slide in from the left and right edges toward the center",
-                                "name": "bowtie-h",
-                                "value": "44"
                             },
                             {
                                 "desc": "Two wedge shapes slide in from the left and right edges toward the center",
@@ -29901,24 +30818,9 @@
                                 "value": "45"
                             },
                             {
-                                "desc": "A diagonal line from the lower-left to upper-right corners splits and expands toward the opposite corners",
-                                "name": "barndoor-dbl",
-                                "value": "45"
-                            },
-                            {
                                 "desc": "A diagonal line from upper-left to lower-right corners splits and expands toward the opposite corners",
                                 "name": "barndoor-dtl",
                                 "value": "46"
-                            },
-                            {
-                                "desc": "A diagonal line from upper-left to lower-right corners splits and expands toward the opposite corners",
-                                "name": "barndoor-dtl",
-                                "value": "46"
-                            },
-                            {
-                                "desc": "Four wedge shapes split from the center and retract toward the four edges",
-                                "name": "misc-diagonal-dbd",
-                                "value": "47"
                             },
                             {
                                 "desc": "Four wedge shapes split from the center and retract toward the four edges",
@@ -29931,24 +30833,9 @@
                                 "value": "48"
                             },
                             {
-                                "desc": "A diamond connecting the four edge midpoints simultaneously contracts toward the center and expands toward the edges",
-                                "name": "misc-diagonal-dd",
-                                "value": "48"
-                            },
-                            {
                                 "desc": "A wedge shape moves from top to bottom",
                                 "name": "vee-d",
                                 "value": "61"
-                            },
-                            {
-                                "desc": "A wedge shape moves from top to bottom",
-                                "name": "vee-d",
-                                "value": "61"
-                            },
-                            {
-                                "desc": "A wedge shape moves from right to left",
-                                "name": "vee-l",
-                                "value": "62"
                             },
                             {
                                 "desc": "A wedge shape moves from right to left",
@@ -29961,24 +30848,9 @@
                                 "value": "63"
                             },
                             {
-                                "desc": "A wedge shape moves from bottom to top",
-                                "name": "vee-u",
-                                "value": "63"
-                            },
-                            {
                                 "desc": "A wedge shape moves from left to right",
                                 "name": "vee-r",
                                 "value": "64"
-                            },
-                            {
-                                "desc": "A wedge shape moves from left to right",
-                                "name": "vee-r",
-                                "value": "64"
-                            },
-                            {
-                                "desc": "A 'V' shape extending from the bottom edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-                                "name": "barnvee-d",
-                                "value": "65"
                             },
                             {
                                 "desc": "A 'V' shape extending from the bottom edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
@@ -29991,24 +30863,9 @@
                                 "value": "66"
                             },
                             {
-                                "desc": "A 'V' shape extending from the left edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-                                "name": "barnvee-l",
-                                "value": "66"
-                            },
-                            {
                                 "desc": "A 'V' shape extending from the top edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
                                 "name": "barnvee-u",
                                 "value": "67"
-                            },
-                            {
-                                "desc": "A 'V' shape extending from the top edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-                                "name": "barnvee-u",
-                                "value": "67"
-                            },
-                            {
-                                "desc": "A 'V' shape extending from the right edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
-                                "name": "barnvee-r",
-                                "value": "68"
                             },
                             {
                                 "desc": "A 'V' shape extending from the right edge's midpoint to the opposite corners contracts toward the center and expands toward the edges",
@@ -30021,24 +30878,9 @@
                                 "value": "101"
                             },
                             {
-                                "desc": "A rectangle expands from the center.",
-                                "name": "iris-rect",
-                                "value": "101"
-                            },
-                            {
                                 "desc": "A radial hand sweeps clockwise from the twelve o'clock position",
                                 "name": "clock-cw12",
                                 "value": "201"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the twelve o'clock position",
-                                "name": "clock-cw12",
-                                "value": "201"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the three o'clock position",
-                                "name": "clock-cw3",
-                                "value": "202"
                             },
                             {
                                 "desc": "A radial hand sweeps clockwise from the three o'clock position",
@@ -30051,24 +30893,9 @@
                                 "value": "203"
                             },
                             {
-                                "desc": "A radial hand sweeps clockwise from the six o'clock position",
-                                "name": "clock-cw6",
-                                "value": "203"
-                            },
-                            {
                                 "desc": "A radial hand sweeps clockwise from the nine o'clock position",
                                 "name": "clock-cw9",
                                 "value": "204"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the nine o'clock position",
-                                "name": "clock-cw9",
-                                "value": "204"
-                            },
-                            {
-                                "desc": "Two radial hands sweep clockwise from the twelve and six o'clock positions",
-                                "name": "pinwheel-tbv",
-                                "value": "205"
                             },
                             {
                                 "desc": "Two radial hands sweep clockwise from the twelve and six o'clock positions",
@@ -30081,24 +30908,9 @@
                                 "value": "206"
                             },
                             {
-                                "desc": "Two radial hands sweep clockwise from the nine and three o'clock positions",
-                                "name": "pinwheel-tbh",
-                                "value": "206"
-                            },
-                            {
                                 "desc": "Four radial hands sweep clockwise",
                                 "name": "pinwheel-fb",
                                 "value": "207"
-                            },
-                            {
-                                "desc": "Four radial hands sweep clockwise",
-                                "name": "pinwheel-fb",
-                                "value": "207"
-                            },
-                            {
-                                "desc": "A fan unfolds from the top edge, the fan axis at the center",
-                                "name": "fan-ct",
-                                "value": "211"
                             },
                             {
                                 "desc": "A fan unfolds from the top edge, the fan axis at the center",
@@ -30111,24 +30923,9 @@
                                 "value": "212"
                             },
                             {
-                                "desc": "A fan unfolds from the right edge, the fan axis at the center",
-                                "name": "fan-cr",
-                                "value": "212"
-                            },
-                            {
                                 "desc": "Two fans, their axes at the center, unfold from the top and bottom",
                                 "name": "doublefan-fov",
                                 "value": "213"
-                            },
-                            {
-                                "desc": "Two fans, their axes at the center, unfold from the top and bottom",
-                                "name": "doublefan-fov",
-                                "value": "213"
-                            },
-                            {
-                                "desc": "Two fans, their axes at the center, unfold from the left and right",
-                                "name": "doublefan-foh",
-                                "value": "214"
                             },
                             {
                                 "desc": "Two fans, their axes at the center, unfold from the left and right",
@@ -30141,24 +30938,9 @@
                                 "value": "221"
                             },
                             {
-                                "desc": "A radial hand sweeps clockwise from the top edge's midpoint",
-                                "name": "singlesweep-cwt",
-                                "value": "221"
-                            },
-                            {
                                 "desc": "A radial hand sweeps clockwise from the right edge's midpoint",
                                 "name": "singlesweep-cwr",
                                 "value": "222"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the right edge's midpoint",
-                                "name": "singlesweep-cwr",
-                                "value": "222"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the bottom edge's midpoint",
-                                "name": "singlesweep-cwb",
-                                "value": "223"
                             },
                             {
                                 "desc": "A radial hand sweeps clockwise from the bottom edge's midpoint",
@@ -30171,24 +30953,9 @@
                                 "value": "224"
                             },
                             {
-                                "desc": "A radial hand sweeps clockwise from the left edge's midpoint",
-                                "name": "singlesweep-cwl",
-                                "value": "224"
-                            },
-                            {
                                 "desc": "Two radial hands sweep clockwise and counter-clockwise from the top and bottom edges' midpoints",
                                 "name": "doublesweep-pv",
                                 "value": "225"
-                            },
-                            {
-                                "desc": "Two radial hands sweep clockwise and counter-clockwise from the top and bottom edges' midpoints",
-                                "name": "doublesweep-pv",
-                                "value": "225"
-                            },
-                            {
-                                "desc": "Two radial hands sweep clockwise and counter-clockwise from the left and right edges' midpoints",
-                                "name": "doublesweep-pd",
-                                "value": "226"
                             },
                             {
                                 "desc": "Two radial hands sweep clockwise and counter-clockwise from the left and right edges' midpoints",
@@ -30201,24 +30968,9 @@
                                 "value": "227"
                             },
                             {
-                                "desc": "Two radial hands attached at the top and bottom edges' midpoints sweep from right to left",
-                                "name": "doublesweep-ov",
-                                "value": "227"
-                            },
-                            {
                                 "desc": "Two radial hands attached at the left and right edges' midpoints sweep from top to bottom",
                                 "name": "doublesweep-oh",
                                 "value": "228"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the left and right edges' midpoints sweep from top to bottom",
-                                "name": "doublesweep-oh",
-                                "value": "228"
-                            },
-                            {
-                                "desc": "A fan unfolds from the bottom, the fan axis at the top edge's midpoint",
-                                "name": "fan-t",
-                                "value": "231"
                             },
                             {
                                 "desc": "A fan unfolds from the bottom, the fan axis at the top edge's midpoint",
@@ -30231,24 +30983,9 @@
                                 "value": "232"
                             },
                             {
-                                "desc": "A fan unfolds from the left, the fan axis at the right edge's midpoint",
-                                "name": "fan-r",
-                                "value": "232"
-                            },
-                            {
                                 "desc": "A fan unfolds from the top, the fan axis at the bottom edge's midpoint",
                                 "name": "fan-b",
                                 "value": "233"
-                            },
-                            {
-                                "desc": "A fan unfolds from the top, the fan axis at the bottom edge's midpoint",
-                                "name": "fan-b",
-                                "value": "233"
-                            },
-                            {
-                                "desc": "A fan unfolds from the right, the fan axis at the left edge's midpoint",
-                                "name": "fan-l",
-                                "value": "234"
                             },
                             {
                                 "desc": "A fan unfolds from the right, the fan axis at the left edge's midpoint",
@@ -30261,24 +30998,9 @@
                                 "value": "235"
                             },
                             {
-                                "desc": "Two fans, their axes at the top and bottom, unfold from the center",
-                                "name": "doublefan-fiv",
-                                "value": "235"
-                            },
-                            {
                                 "desc": "Two fans, their axes at the left and right, unfold from the center",
                                 "name": "doublefan-fih",
                                 "value": "236"
-                            },
-                            {
-                                "desc": "Two fans, their axes at the left and right, unfold from the center",
-                                "name": "doublefan-fih",
-                                "value": "236"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the upper-left corner",
-                                "name": "singlesweep-cwtl",
-                                "value": "241"
                             },
                             {
                                 "desc": "A radial hand sweeps clockwise from the upper-left corner",
@@ -30291,24 +31013,9 @@
                                 "value": "242"
                             },
                             {
-                                "desc": "A radial hand sweeps counter-clockwise from the lower-left corner.",
-                                "name": "singlesweep-cwbl",
-                                "value": "242"
-                            },
-                            {
                                 "desc": "A radial hand sweeps clockwise from the lower-right corner",
                                 "name": "singlesweep-cwbr",
                                 "value": "243"
-                            },
-                            {
-                                "desc": "A radial hand sweeps clockwise from the lower-right corner",
-                                "name": "singlesweep-cwbr",
-                                "value": "243"
-                            },
-                            {
-                                "desc": "A radial hand sweeps counter-clockwise from the upper-right corner",
-                                "name": "singlesweep-cwtr",
-                                "value": "244"
                             },
                             {
                                 "desc": "A radial hand sweeps counter-clockwise from the upper-right corner",
@@ -30321,24 +31028,9 @@
                                 "value": "245"
                             },
                             {
-                                "desc": "Two radial hands attached at the upper-left and lower-right corners sweep down and up",
-                                "name": "doublesweep-pdtl",
-                                "value": "245"
-                            },
-                            {
                                 "desc": "Two radial hands attached at the lower-left and upper-right corners sweep down and up",
                                 "name": "doublesweep-pdbl",
                                 "value": "246"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the lower-left and upper-right corners sweep down and up",
-                                "name": "doublesweep-pdbl",
-                                "value": "246"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the upper-left and upper-right corners sweep down",
-                                "name": "saloondoor-t",
-                                "value": "251"
                             },
                             {
                                 "desc": "Two radial hands attached at the upper-left and upper-right corners sweep down",
@@ -30351,24 +31043,9 @@
                                 "value": "252"
                             },
                             {
-                                "desc": "Two radial hands attached at the upper-left and lower-left corners sweep to the right",
-                                "name": "saloondoor-l",
-                                "value": "252"
-                            },
-                            {
                                 "desc": "Two radial hands attached at the lower-left and lower-right corners sweep up",
                                 "name": "saloondoor-b",
                                 "value": "253"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the lower-left and lower-right corners sweep up",
-                                "name": "saloondoor-b",
-                                "value": "253"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the upper-right and lower-right corners sweep to the left",
-                                "name": "saloondoor-r",
-                                "value": "254"
                             },
                             {
                                 "desc": "Two radial hands attached at the upper-right and lower-right corners sweep to the left",
@@ -30381,16 +31058,6 @@
                                 "value": "261"
                             },
                             {
-                                "desc": "Two radial hands attached at the midpoints of the top and bottom halves sweep from right to left",
-                                "name": "windshield-r",
-                                "value": "261"
-                            },
-                            {
-                                "desc": "Two radial hands attached at the midpoints of the left and right halves sweep from top to bottom",
-                                "name": "windshield-u",
-                                "value": "262"
-                            },
-                            {
                                 "desc": "Two radial hands attached at the midpoints of the left and right halves sweep from top to bottom",
                                 "name": "windshield-u",
                                 "value": "262"
@@ -30399,16 +31066,6 @@
                                 "desc": "Two sets of radial hands attached at the midpoints of the top and bottom halves sweep from top to bottom and bottom to top",
                                 "name": "windshield-v",
                                 "value": "263"
-                            },
-                            {
-                                "desc": "Two sets of radial hands attached at the midpoints of the top and bottom halves sweep from top to bottom and bottom to top",
-                                "name": "windshield-v",
-                                "value": "263"
-                            },
-                            {
-                                "desc": "Two sets of radial hands attached at the midpoints of the left and right halves sweep from left to right and right to left",
-                                "name": "windshield-h",
-                                "value": "264"
                             },
                             {
                                 "desc": "Two sets of radial hands attached at the midpoints of the left and right halves sweep from left to right and right to left",
@@ -35022,9 +35679,29 @@
                                 "value": "0x00000004"
                             },
                             {
+                                "desc": "Print frame information",
+                                "name": "visualize-frame-info",
+                                "value": "0x00000008"
+                            },
+                            {
+                                "desc": "Show macroblock mode selection overlaid on image",
+                                "name": "visualize-macroblock-modes",
+                                "value": "0x00000010"
+                            },
+                            {
+                                "desc": "Show dc diff for each macro block overlaid on image",
+                                "name": "visualize-dc-diff",
+                                "value": "0x00000020"
+                            },
+                            {
+                                "desc": "Print video rate info",
+                                "name": "visualize-rate-info",
+                                "value": "0x00000040"
+                            },
+                            {
                                 "desc": "Multi-frame quality enhancement",
                                 "name": "mfqe",
-                                "value": "0x00000008"
+                                "value": "0x00000400"
                             }
                         ],
                         "writable": true
@@ -35744,9 +36421,29 @@
                                 "value": "0x00000004"
                             },
                             {
+                                "desc": "Print frame information",
+                                "name": "visualize-frame-info",
+                                "value": "0x00000008"
+                            },
+                            {
+                                "desc": "Show macroblock mode selection overlaid on image",
+                                "name": "visualize-macroblock-modes",
+                                "value": "0x00000010"
+                            },
+                            {
+                                "desc": "Show dc diff for each macro block overlaid on image",
+                                "name": "visualize-dc-diff",
+                                "value": "0x00000020"
+                            },
+                            {
+                                "desc": "Print video rate info",
+                                "name": "visualize-rate-info",
+                                "value": "0x00000040"
+                            },
+                            {
                                 "desc": "Multi-frame quality enhancement",
                                 "name": "mfqe",
-                                "value": "0x00000008"
+                                "value": "0x00000400"
                             }
                         ],
                         "writable": true
