@@ -23,7 +23,7 @@ if not hls_option.disabled()
     endif
   endif
 
-  if not hls_crypto_dep.found() and ['auto', 'libgcrypt'].contains(hls_crypto)
+  if not have_hls_crypto and ['auto', 'libgcrypt'].contains(hls_crypto)
     hls_crypto_dep = cc.find_library('gcrypt', required : false)
     if hls_crypto_dep.found()
       have_hls_crypto = true
@@ -31,7 +31,7 @@ if not hls_option.disabled()
     endif
   endif
 
-  if not hls_crypto_dep.found() and ['auto', 'openssl'].contains(hls_crypto)
+  if not have_hls_crypto and ['auto', 'openssl'].contains(hls_crypto)
     hls_crypto_dep = dependency('openssl', required : false)
     if hls_crypto_dep.found()
       have_hls_crypto = true
