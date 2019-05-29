@@ -29,13 +29,8 @@
  * SECTION:nleobject
  * @short_description: Base class for GNonLin elements
  *
- * <refsect2>
- * <para>
  * NleObject encapsulates default behaviour and implements standard
  * properties provided by all the GNonLin elements.
- * </para>
- * </refsect2>
- *
  */
 
 

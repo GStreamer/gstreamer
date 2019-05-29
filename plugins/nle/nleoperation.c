@@ -28,13 +28,9 @@
 /**
  * SECTION:element-nleoperation
  *
- * <refsect2>
- * <para>
  * A NleOperation performs a transformation or mixing operation on the
  * data from one or more #NleSources, which is used to implement filters or 
  * effects.
- * </para>
- * </refsect2>
  */
 
 static GstStaticPadTemplate nle_operation_src_template =
