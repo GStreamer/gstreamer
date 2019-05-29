@@ -31,12 +31,11 @@
  * Modplug uses the <ulink url="http://modplug-xmms.sourceforge.net/">modplug</ulink>
  * library to decode tracked music in the MOD/S3M/XM/IT and related formats.
  * 
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
+ *
  * |[
  * gst-launch-1.0 -v filesrc location=1990s-nostalgia.xm ! modplug ! audioconvert ! alsasink
  * ]| Play a FastTracker xm file.
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

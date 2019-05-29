@@ -34,10 +34,8 @@
  *
  * The interface allows access to some common digital image capture parameters.
  *
- * <note>
- *   The GstPhotography interface is unstable API and may change in future.
- *   One can define GST_USE_UNSTABLE_API to acknowledge and avoid this warning.
- * </note>
+ * > The GstPhotography interface is unstable API and may change in future.
+ * > One can define GST_USE_UNSTABLE_API to acknowledge and avoid this warning.
  */
 
 static void gst_photography_iface_base_init (GstPhotographyInterface * iface);

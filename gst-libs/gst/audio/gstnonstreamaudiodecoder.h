@@ -293,11 +293,11 @@ struct _GstNonstreamAudioDecoder
  *
  * All functions are called with a locked decoder mutex.
  *
- * <note> If GST_ELEMENT_ERROR, GST_ELEMENT_WARNING, or GST_ELEMENT_INFO are called from
- * inside one of these functions, it is strongly recommended to unlock the decoder mutex
- * before and re-lock it after these macros to prevent potential deadlocks in case the
- * application does something with the element when it receives an ERROR/WARNING/INFO
- * message. Same goes for gst_element_post_message() calls and non-serialized events. </note>
+ * > If GST_ELEMENT_ERROR, GST_ELEMENT_WARNING, or GST_ELEMENT_INFO are called from
+ * > inside one of these functions, it is strongly recommended to unlock the decoder mutex
+ * > before and re-lock it after these macros to prevent potential deadlocks in case the
+ * > application does something with the element when it receives an ERROR/WARNING/INFO
+ * > message. Same goes for gst_element_post_message() calls and non-serialized events.
  *
  * By default, this class works by reading media data from the sinkpad, and then commencing
  * playback. Some decoders cannot be given data from a memory block, so the usual way of

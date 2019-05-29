@@ -21,12 +21,11 @@
  *
  * AV1 Encoder.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 videotestsrc num-buffers=50 ! av1enc ! webmmux ! filesink location=av1.webm
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

@@ -47,12 +47,11 @@
  *
  * Dewarp fisheye images
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 videotestsrc ! videoconvert ! circle radius=0.1 height=80  ! dewarp outer-radius=0.35 inner-radius=0.1 ! videoconvert ! xvimagesink
  * ]|
- * </refsect2>
  */
 
 

@@ -47,12 +47,11 @@
  * x, y, w, and h properties are optional, and change the image position and
  * size relative to the detected face position and size.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 autovideosrc ! videoconvert ! faceoverlay location=/path/to/gnome-video-effects/pixmaps/bow.svg x=0.5 y=0.5 w=0.7 h=0.7 ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

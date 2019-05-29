@@ -33,15 +33,9 @@
  * More concretely on the "libopenni2-dev" and "libopenni2" packages - that can
  * be downloaded in http://goo.gl/2H6SZ6.
  *
- * <refsect2>
- * <title>Examples</title>
- * <para>
- * Some recorded .oni files are available at:
- * <programlisting>
- *  http://people.cs.pitt.edu/~chang/1635/proj11/kinectRecord
- * </programlisting>
- * </para>
- * </refsect2>
+ * ## Examples
+ *
+ * Some recorded .oni files are available at <http://people.cs.pitt.edu/~chang/1635/proj11/kinectRecord>
  */
 
 

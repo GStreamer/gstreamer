@@ -59,8 +59,8 @@
  * If the "http_proxy" environment variable is set, its value is used.
  * The #GstCurlHttpSrc:proxy property can be used to override the default.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 curlhttpsrc location=http://127.0.1.1/index.html ! fakesink dump=1
  * ]| The above pipeline reads a web page from the local machine using HTTP and
@@ -70,7 +70,6 @@
  * ]| The above pipeline will start up a DASH streaming session from the given
  * MPD file. This requires GStreamer to have been built with dashdemux from
  * gst-plugins-bad.
- * </refsect2>
  */
 
 /*

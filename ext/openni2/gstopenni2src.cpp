@@ -18,22 +18,17 @@
 /**
  * SECTION:element-openni2src
  *
- * <refsect2>
- * <title>Examples</title>
- * <para>
- * Some recorded .oni files are available at:
- * <programlisting>
- *  http://people.cs.pitt.edu/~chang/1635/proj11/kinectRecord
- * </programlisting>
+ * ## Examples
  *
- * <programlisting>
-  LD_LIBRARY_PATH=/usr/lib/OpenNI2/Drivers/ gst-launch-1.0 --gst-debug=openni2src:5   openni2src location='Downloads/mr.oni' sourcetype=depth ! videoconvert ! ximagesink
- * </programlisting>
- * <programlisting>
-  LD_LIBRARY_PATH=/usr/lib/OpenNI2/Drivers/ gst-launch-1.0 --gst-debug=openni2src:5   openni2src location='Downloads/mr.oni' sourcetype=color ! videoconvert ! ximagesink
- * </programlisting>
- * </para>
- * </refsect2>
+ * Some recorded .oni files are available at <http://people.cs.pitt.edu/~chang/1635/proj11/kinectRecord>
+ *
+ * ``` shell
+ * LD_LIBRARY_PATH=/usr/lib/OpenNI2/Drivers/ gst-launch-1.0 --gst-debug=openni2src:5   openni2src location='Downloads/mr.oni' sourcetype=depth ! videoconvert ! ximagesink
+ * ```
+ *
+ * ``` shell
+ * LD_LIBRARY_PATH=/usr/lib/OpenNI2/Drivers/ gst-launch-1.0 --gst-debug=openni2src:5   openni2src location='Downloads/mr.oni' sourcetype=color ! videoconvert ! ximagesink
+ * ```
  */
 
 #ifdef HAVE_CONFIG_H

@@ -56,8 +56,8 @@
  * until the size is &lt;= GstFaceDetect::min-size-width or
  * GstFaceDetect::min-size-height.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 autovideosrc ! decodebin ! colorspace ! facedetect ! videoconvert ! xvimagesink
  * ]| Detect and show faces
@@ -65,7 +65,6 @@
  * gst-launch-1.0 autovideosrc ! video/x-raw,width=320,height=240 ! videoconvert ! facedetect min-size-width=60 min-size-height=60 ! colorspace ! xvimagesink
  * ]| Detect large faces on a smaller image
  *
- * </refsect2>
  */
 
 /* FIXME: development version of OpenCV has CV_HAAR_FIND_BIGGEST_OBJECT which

@@ -49,12 +49,11 @@
  *
  * Performs template matching on videos and images, providing detected positions via bus messages.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 videotestsrc ! videoconvert ! templatematch template=/path/to/file.jpg ! videoconvert ! xvimagesink
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

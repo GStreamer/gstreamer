@@ -97,8 +97,8 @@
  * [D] Scharstein, D. & Szeliski, R. (2001). A taxonomy and evaluation of dense two-frame stereo
  * correspondence algorithms, International Journal of Computer Vision 47: 7–42.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 videotestsrc ! video/x-raw,width=320,height=240 ! videoconvert ! disp0.sink_right videotestsrc ! video/x-raw,width=320,height=240 ! videoconvert ! disp0.sink_left disparity name=disp0 ! videoconvert ! ximagesink
  * ]|
@@ -112,7 +112,6 @@ gst-launch-1.0    multifilesrc  location=~/im3.png ! pngdec ! videoconvert  ! di
  * |[
  gst-launch-1.0    v4l2src device=/dev/video1 ! video/x-raw,width=320,height=240 ! videoconvert  ! disp0.sink_right     v4l2src device=/dev/video0 ! video/x-raw,width=320,height=240 ! videoconvert ! disp0.sink_left disparity   name=disp0 method=sgbm     disp0.src ! videoconvert ! ximagesink
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

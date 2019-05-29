@@ -74,110 +74,85 @@
  * @get_property then reports the corrected versions.
  *
  * The base class operates as follows:
- * <orderedlist>
- * <listitem>
- *   <itemizedlist><title>Unloaded mode</title>
- *     <listitem><para>
- *       Initial values are set. If a current subsong has already been
- *       defined (for example over the command line with gst-launch), then
- *       the subsong index is copied over to current_subsong .
- *       Same goes for the num-loops and output-mode properties.
- *       Media is NOT loaded yet.
- *     </para></listitem>
- *     <listitem><para>
- *       Once the sinkpad is activated, the process continues. The sinkpad is
- *       activated in push mode, and the class accumulates the incoming media
- *       data in an adapter inside the sinkpad's chain function until either an
- *       EOS event is received from upstream, or the number of bytes reported
- *       by upstream is reached. Then it loads the media, and starts the decoder
- *       output task.
- *     <listitem><para>
- *       If upstream cannot respond to the size query (in bytes) of @load_from_buffer
- *       fails, an error is reported, and the pipeline stops.
- *     </para></listitem>
- *     <listitem><para>
- *       If there are no errors, @load_from_buffer is called to load the media. The
- *       subclass must at least call gst_nonstream_audio_decoder_set_output_audioinfo()
- *       there, and is free to make use of the initial subsong, output mode, and
- *       position. If the actual output mode or position differs from the initial
- *       value,it must set the initial value to the actual one (for example, if
- *       the actual starting position is always 0, set *initial_position to 0).
- *       If loading is unsuccessful, an error is reported, and the pipeline
- *       stops. Otherwise, the base class calls @get_current_subsong to retrieve
- *       the actual current subsong, @get_subsong_duration to report the current
- *       subsong's duration in a duration event and message, and @get_subsong_tags
- *       to send tags downstream in an event (these functions are optional; if
- *       set to NULL, the associated operation is skipped). Afterwards, the base
- *       class switches to loaded mode, and starts the decoder output task.
- *     </para></listitem>
- *   </itemizedlist>
- *   <itemizedlist><title>Loaded mode</title>
- *     <listitem><para>
- *       Inside the decoder output task, the base class repeatedly calls @decode,
- *       which returns a buffer with decoded, ready-to-play samples. If the
- *       subclass reached the end of playback, @decode returns FALSE, otherwise
- *       TRUE.
- *     </para></listitem>
- *     <listitem><para>
- *       Upon reaching a loop end, subclass either ignores that, or loops back
- *       to the beginning of the loop. In the latter case, if the output mode is set
- *       to LOOPING, the subclass must call gst_nonstream_audio_decoder_handle_loop()
- *       *after* the playback position moved to the start of the loop. In
- *       STEADY mode, the subclass must *not* call this function.
- *       Since many decoders only provide a callback for when the looping occurs,
- *       and that looping occurs inside the decoding operation itself, the following
- *       mechanism for subclass is suggested: set a flag inside such a callback.
- *       Then, in the next @decode call, before doing the decoding, check this flag.
- *       If it is set, gst_nonstream_audio_decoder_handle_loop() is called, and the
- *       flag is cleared.
- *       (This function call is necessary in LOOPING mode because it updates the
- *       current segment and makes sure the next buffer that is sent downstream
- *       has its DISCONT flag set.)
- *     </para></listitem>
- *     <listitem><para>
- *       When the current subsong is switched, @set_current_subsong is called.
- *       If it fails, a warning is reported, and nothing else is done. Otherwise,
- *       it calls @get_subsong_duration to get the new current subsongs's
- *       duration, @get_subsong_tags to get its tags, reports a new duration
- *       (i.e. it sends a duration event downstream and generates a duration
- *       message), updates the current segment, and sends the subsong's tags in
- *       an event downstream. (If @set_current_subsong has been set to NULL by
- *       the subclass, attempts to set a current subsong are ignored; likewise,
- *       if @get_subsong_duration is NULL, no duration is reported, and if
- *       @get_subsong_tags is NULL, no tags are sent downstream.)
- *     </para></listitem>
- *     <listitem><para>
- *       When an attempt is made to switch the output mode, it is checked against
- *       the bitmask returned by @get_supported_output_modes. If the proposed
- *       new output mode is supported, the current segment is updated
- *       (it is open-ended in STEADY mode, and covers the (sub)song length in
- *       LOOPING mode), and the subclass' @set_output_mode function is called
- *       unless it is set to NULL. Subclasses should reset internal loop counters
- *       in this function.
- *     </para></listitem>
- *   </itemizedlist>
- * </listitem>
- * </orderedlist>
+ * * Unloaded mode
+ *   - Initial values are set. If a current subsong has already been
+ *     defined (for example over the command line with gst-launch), then
+ *     the subsong index is copied over to current_subsong .
+ *     Same goes for the num-loops and output-mode properties.
+ *     Media is NOT loaded yet.
+ *   - Once the sinkpad is activated, the process continues. The sinkpad is
+ *     activated in push mode, and the class accumulates the incoming media
+ *     data in an adapter inside the sinkpad's chain function until either an
+ *     EOS event is received from upstream, or the number of bytes reported
+ *     by upstream is reached. Then it loads the media, and starts the decoder
+ *     output task.
+ *   - If upstream cannot respond to the size query (in bytes) of @load_from_buffer
+ *     fails, an error is reported, and the pipeline stops.
+ *   - If there are no errors, @load_from_buffer is called to load the media. The
+ *     subclass must at least call gst_nonstream_audio_decoder_set_output_audioinfo()
+ *     there, and is free to make use of the initial subsong, output mode, and
+ *     position. If the actual output mode or position differs from the initial
+ *     value,it must set the initial value to the actual one (for example, if
+ *     the actual starting position is always 0, set *initial_position to 0).
+ *     If loading is unsuccessful, an error is reported, and the pipeline
+ *     stops. Otherwise, the base class calls @get_current_subsong to retrieve
+ *     the actual current subsong, @get_subsong_duration to report the current
+ *     subsong's duration in a duration event and message, and @get_subsong_tags
+ *     to send tags downstream in an event (these functions are optional; if
+ *     set to NULL, the associated operation is skipped). Afterwards, the base
+ *     class switches to loaded mode, and starts the decoder output task.
+ *
+ * * Loaded mode</title>
+ *   - Inside the decoder output task, the base class repeatedly calls @decode,
+ *     which returns a buffer with decoded, ready-to-play samples. If the
+ *     subclass reached the end of playback, @decode returns FALSE, otherwise
+ *     TRUE.
+ *   - Upon reaching a loop end, subclass either ignores that, or loops back
+ *     to the beginning of the loop. In the latter case, if the output mode is set
+ *     to LOOPING, the subclass must call gst_nonstream_audio_decoder_handle_loop()
+ *     *after* the playback position moved to the start of the loop. In
+ *     STEADY mode, the subclass must *not* call this function.
+ *     Since many decoders only provide a callback for when the looping occurs,
+ *     and that looping occurs inside the decoding operation itself, the following
+ *     mechanism for subclass is suggested: set a flag inside such a callback.
+ *     Then, in the next @decode call, before doing the decoding, check this flag.
+ *     If it is set, gst_nonstream_audio_decoder_handle_loop() is called, and the
+ *     flag is cleared.
+ *     (This function call is necessary in LOOPING mode because it updates the
+ *     current segment and makes sure the next buffer that is sent downstream
+ *     has its DISCONT flag set.)
+ *   - When the current subsong is switched, @set_current_subsong is called.
+ *     If it fails, a warning is reported, and nothing else is done. Otherwise,
+ *     it calls @get_subsong_duration to get the new current subsongs's
+ *     duration, @get_subsong_tags to get its tags, reports a new duration
+ *     (i.e. it sends a duration event downstream and generates a duration
+ *     message), updates the current segment, and sends the subsong's tags in
+ *     an event downstream. (If @set_current_subsong has been set to NULL by
+ *     the subclass, attempts to set a current subsong are ignored; likewise,
+ *     if @get_subsong_duration is NULL, no duration is reported, and if
+ *     @get_subsong_tags is NULL, no tags are sent downstream.)
+ *   - When an attempt is made to switch the output mode, it is checked against
+ *     the bitmask returned by @get_supported_output_modes. If the proposed
+ *     new output mode is supported, the current segment is updated
+ *     (it is open-ended in STEADY mode, and covers the (sub)song length in
+ *     LOOPING mode), and the subclass' @set_output_mode function is called
+ *     unless it is set to NULL. Subclasses should reset internal loop counters
+ *     in this function.
  *
  * The relationship between (sub)song duration, output mode, and number of loops
  * is defined this way (this is all done by the base class automatically):
- * <itemizedlist>
- * <listitem><para>
- *   Segments have their duration and stop values set to GST_CLOCK_TIME_NONE in
+ *
+ * * Segments have their duration and stop values set to GST_CLOCK_TIME_NONE in
  *   STEADY mode, and to the duration of the (sub)song in LOOPING mode.
- * </para></listitem>
- * <listitem><para>
- *   The duration that is returned to a DURATION query is always the duration
+ *
+ * * The duration that is returned to a DURATION query is always the duration
  *   of the (sub)song, regardless of number of loops or output mode. The same
  *   goes for DURATION messages and tags.
- * </para></listitem>
- * <listitem><para>
- *   If the number of loops is >0 or -1, durations of TOC entries are set to
+ *  
+ * * If the number of loops is >0 or -1, durations of TOC entries are set to
  *   the duration of the respective subsong in LOOPING mode and to G_MAXINT64 in
  *   STEADY mode. If the number of loops is 0, entry durations are set to the
  *   subsong duration regardless of the output mode.
- * </para></listitem>
- * </itemizedlist>
  */
 
 #ifdef HAVE_CONFIG_H

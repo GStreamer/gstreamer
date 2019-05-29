@@ -47,12 +47,11 @@
  * Equalizes the histogram of a grayscale image with the cvEqualizeHist OpenCV
  * function.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 videotestsrc pattern=23 ! cvequalizehist ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
  */
 
 

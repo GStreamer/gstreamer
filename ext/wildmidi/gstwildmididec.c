@@ -26,12 +26,11 @@
  * It uses <ulink url="https://www.mindwerks.net/projects/wildmidi/">WildMidi</ulink>
  * for this purpose. It can be autoplugged and therefore works with decodebin.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 filesrc location=media/example.mid ! wildmididec ! audioconvert ! audioresample ! autoaudiosink
  * ]|
- * </refsect2>
  */
 
 

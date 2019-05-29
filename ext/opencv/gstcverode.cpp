@@ -46,12 +46,11 @@
  *
  * Erodes the image with the cvErode OpenCV function.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * Example launch line
+ *
  * |[
  * gst-launch-1.0 videotestsrc ! cverode ! videoconvert ! autovideosink
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

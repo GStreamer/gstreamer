@@ -28,15 +28,14 @@
  * frames using the given ICC (International Color Consortium) profiles.
  * Falls back to internal sRGB profile if no ICC file is specified in property.
  *
- * <refsect2>
- * <title>Example launch line</title>
- * <para>(write everything in one line, without the backslash characters)</para>
+ * ## Example launch line
+ *
+ * (write everything in one line, without the backslash characters)
  * |[
  * gst-launch-1.0 filesrc location=photo_camera.png ! pngdec ! \
  * videoconvert ! lcms input-profile=sRGB.icc dest-profile=printer.icc \
  * pngenc ! filesink location=photo_print.png
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

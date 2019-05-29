@@ -50,12 +50,11 @@
  * color image enhancement." Image Processing, 1996. Proceedings., International
  * Conference on. Vol. 3. IEEE, 1996.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 videotestsrc ! videoconvert ! retinex ! videoconvert ! xvimagesink
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

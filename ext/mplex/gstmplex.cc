@@ -32,19 +32,17 @@
  * and the man-page of the mplex tool documents the properties of this element,
  * which are shared with the mplex tool.
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
+ *
  * |[
  * gst-launch-1.0 -v videotestsrc num-buffers=1000 ! mpeg2enc ! mplex ! filesink location=videotestsrc.mpg
  * ]| This example pipeline will encode a test video source to an
  * MPEG1 elementary stream and multiplexes this to an MPEG system stream.
- * <para>
+ *
  * If several streams are being multiplexed, there should (as usual) be
  * a queue in each stream, and due to mplex' buffering the capacities of these
  * may have to be set to a few times the default settings to prevent the
  * pipeline stalling.
- * </para>
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

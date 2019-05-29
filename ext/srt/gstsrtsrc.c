@@ -26,8 +26,7 @@
  * srtsrc is a network source that reads <ulink url="http://www.srtalliance.org/">SRT</ulink>
  * packets from the network.
  *
- * <refsect2>
- * <title>Examples</title>
+ * ## Examples
  * |[
  * gst-launch-1.0 -v srtsrc uri="srt://127.0.0.1:7001" ! fakesink
  * ]| This pipeline shows how to connect SRT server by setting #GstSRTSrc:uri property.
@@ -39,7 +38,6 @@
  * |[
  * gst-launch-1.0 -v srtclientsrc uri="srt://192.168.1.10:7001?mode=rendez-vous" ! fakesink
  * ]| This pipeline shows how to connect SRT server by setting #GstSRTSrc:uri property and using the rendez-vous mode.
- * </refsect2>
  *
  */
 

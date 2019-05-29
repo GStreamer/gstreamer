@@ -68,8 +68,8 @@
  * extraction using iterated graph cuts, ACM Trans. Graph., vol. 23, pp. 309–314,
  * 2004.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 --gst-debug=grabcut=4  v4l2src device=/dev/video0 ! videoconvert ! grabcut ! videoconvert ! video/x-raw,width=320,height=240 ! ximagesink
  * ]|
@@ -77,7 +77,6 @@
  * |[
  * gst-launch-1.0 --gst-debug=grabcut=4  v4l2src device=/dev/video0 ! videoconvert ! facedetect display=0 ! videoconvert ! grabcut test-mode=true ! videoconvert ! video/x-raw,width=320,height=240 ! ximagesink
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

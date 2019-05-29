@@ -26,12 +26,11 @@
  *
  * Read and decode samples from AVFoundation assets using the AVFAssetReader API
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 -v -m avfassetsrc uri="file://movie.mp4" ! autovideosink
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

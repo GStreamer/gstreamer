@@ -50,38 +50,17 @@ G_BEGIN_DECLS
  * Name of custom GstMessage that will be posted to #GstBus when autofocusing
  * is complete.
  * This message contains following fields:
- * <itemizedlist>
- * <listitem>
- *   <para>
- *   #GstPhotographyFocusStatus
- *   <classname>&quot;status&quot;</classname>:
- *   Tells if focusing succeeded or failed.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #G_TYPE_INT
- *   <classname>&quot;focus-window-rows&quot;</classname>:
- *   Tells number of focus matrix rows.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #G_TYPE_INT
- *   <classname>&quot;focus-window-columns&quot;</classname>:
- *   Tells number of focus matrix columns.
- *   </para>
- * </listitem>
- * <listitem>
- *   <para>
- *   #G_TYPE_INT
- *   <classname>&quot;focus-window-mask&quot;</classname>:
- *   Bitmask containing rows x columns bits which mark the focus points in the
- *   focus matrix. Lowest bit (LSB) always represents the top-left corner of the
- *   focus matrix. This field is only valid when focusing status is SUCCESS.
- *   </para>
- * </listitem>
- * </itemizedlist>
+ *
+ * * `status` (#GstPhotographyFocusStatus): Tells if focusing succeeded or failed.
+ *
+ * * `focus-window-rows` (#G_TYPE_INT): Tells number of focus matrix rows.
+ *
+ * * `focus-window-columns` (#G_TYPE_INT): Tells number of focus matrix columns.
+ *
+ * * `focus-window-mask` (#G_TYPE_INT): Bitmask containing rows x columns bits
+ *   which mark the focus points in the focus matrix. Lowest bit (LSB) always
+ *   represents the top-left corner of the focus matrix. This field is only valid
+ *   when focusing status is SUCCESS.
  */
 #define GST_PHOTOGRAPHY_AUTOFOCUS_DONE "autofocus-done"
 
@@ -93,15 +72,8 @@ G_BEGIN_DECLS
  * becoming "shaken" due to camera movement and too long exposure time.
  *
  * This message contains following fields:
- * <itemizedlist>
- * <listitem>
- *   <para>
- *   #GstPhotographyShakeRisk
- *   <classname>&quot;status&quot;</classname>:
- *   Tells risk level of capturing shaken image.
- *   </para>
- * </listitem>
- * </itemizedlist>
+ *
+ * * `status` (#GstPhotographyShakeRisk): Tells risk level of capturing shaken image.
  */
 #define GST_PHOTOGRAPHY_SHAKE_RISK "shake-risk"
 

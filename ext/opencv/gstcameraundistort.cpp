@@ -55,15 +55,14 @@
  *
  * Based on this tutorial: https://docs.opencv.org/2.4/doc/tutorials/calib3d/camera_calibration/camera_calibration.html
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
+ *
  * |[
  * gst-launch-1.0 -v v4l2src ! videoconvert ! cameraundistort settings="???" ! autovideosink
  * ]| will correct camera distortion based on provided settings.
  * |[
  * gst-launch-1.0 -v v4l2src ! videoconvert ! cameraundistort ! cameracalibrate ! autovideosink
  * ]| will correct camera distortion once camera calibration is done.
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

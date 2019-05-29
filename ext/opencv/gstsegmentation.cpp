@@ -78,12 +78,11 @@
  * per Image Pixel for the Task of Background Subtraction", Pattern Recognition
  * Letters, vol. 27, no. 7, pages 773-780, 2006.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0  v4l2src device=/dev/video0 ! videoconvert ! segmentation test-mode=true method=2 ! videoconvert ! ximagesink
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

@@ -23,12 +23,11 @@
  *
  * FIXME:Describe vdpaumpeg4dec here.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 -v -m fakesrc ! vdpaumpeg4dec ! fakesink silent=TRUE
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

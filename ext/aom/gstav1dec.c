@@ -21,12 +21,11 @@
  *
  * AV1 Decoder.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 -v filesrc location=videotestsrc.webm ! matroskademux ! av1dec ! videoconvert ! videoscale ! autovideosink
  * ]|
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

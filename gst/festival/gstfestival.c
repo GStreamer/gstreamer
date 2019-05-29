@@ -67,7 +67,7 @@
  * This element connects to a
  * <ulink url="http://www.festvox.org/festival/index.html">festival</ulink>
  * server process and uses it to synthesize speech. Festival need to run already
- * in server mode, started as <screen>festival --server</screen>
+ * in server mode, started as `festival --server`
  *
  * ## Example pipeline
  * |[

@@ -29,13 +29,8 @@
  *
  * The design mandates that the subclasses implement the following features and
  * behaviour:
- * <itemizedlist>
- *   <listitem><para>
- *     3 pads: viewfinder, image capture, video capture
- *   </para></listitem>
- *   <listitem><para>
- *   </para></listitem>
- * </itemizedlist>
+ *
+ * * 3 pads: viewfinder, image capture, video capture
  *
  * During construct_pipeline() vmethod a subclass can add several elements into
  * the bin and expose 3 srcs pads as ghostpads implementing the 3 pad templates.
