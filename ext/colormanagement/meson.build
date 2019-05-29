@@ -1,6 +1,6 @@
 lcms2_dep = dependency('lcms2', version : '>= 2.7', required : get_option('colormanagement'))
 if lcms2_dep.found()
-  gstassrender = library('gstcolormanagement',
+  gstcolormanagement = library('gstcolormanagement',
     'gstcolormanagement.c', 'gstlcms.c',
     c_args : gst_plugins_bad_args,
     link_args : noseh_link_args,
@@ -9,6 +9,6 @@ if lcms2_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstassrender, install_dir : plugins_pkgconfig_install_dir)
+  pkgconfig.generate(gstcolormanagement, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstcolormanagement]
 endif
-

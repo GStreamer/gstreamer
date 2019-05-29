@@ -23,6 +23,7 @@ if vdpau_dep.found()
       install_dir: plugins_install_dir,
     )
     pkgconfig.generate(gstvdpau, install_dir: plugins_pkgconfig_install_dir)
+    plugins += [gstvdpau]
   elif get_option('vdpau').enabled()
     error('vdpau plugin was enabled but required X11 dependency was not found.')
   endif

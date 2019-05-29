@@ -10,4 +10,5 @@ if openal_dep.found()
     install_dir: plugins_install_dir,
   )
   pkgconfig.generate(gstopenal, install_dir: plugins_pkgconfig_install_dir)
+  plugins += [gstopenal]
 endif

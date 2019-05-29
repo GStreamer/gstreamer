@@ -44,6 +44,7 @@ if have_jni_h
     install : true,
     install_dir : plugins_install_dir)
   pkgconfig.generate(gstandroidmedia, install_dir : plugins_pkgconfig_install_dir)
+  plugins += [gstandroidmedia]
 
   install_data(androidmedia_java_sources,
     install_dir : join_paths(get_option('datadir'), 'gst-android/ndk-build/androidmedia')
