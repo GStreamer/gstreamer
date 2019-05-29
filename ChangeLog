@@ -1,3 +1,78 @@
+=== release 1.14.5 ===
+
+2019-05-29 18:05:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.14.5
+
+2019-05-29 18:05:15 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/inspect/plugin-libav.xml:
+	  Update docs
+
+2018-11-05 05:40:03 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	  Update common submodule location
+	  Remove the git directory
+
+2018-11-05 13:17:08 +0800  Haihao Xiang <haihao.xiang@intel.com>
+
+	* .gitmodules:
+	* gst-libav.doap:
+	  Clone the code from gitlab
+	  This fixes https://gitlab.freedesktop.org/gstreamer/gst-libav/issues/43
+
+2019-04-29 11:52:31 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* ext/libav/gstav.c:
+	  gstav: Use libavcodec util function for version check
+	  The version of libavutil is printed in the log instead of libavcodec
+	  because avutil_version() returns LIBAVUTIL_VERSION_INT. This can be confusing,
+	  so we should be replace it with avcodec_version().
+
+2019-02-21 08:48:31 +0100  Guillaume Desmottes <guillaume.desmottes@collabora.com>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: fix negative pts if start_time is bigger than the ts
+	  The start time is supposed to be the ts of the first frame.
+	  FFmpeg uses fractions to represent timestamps and the start time may use a
+	  different base than the frame pts. So we may end up having the start
+	  time bigger than the pts because of rounding when converting to gst ts.
+	  See https://gitlab.freedesktop.org/gstreamer/gst-libav/issues/51
+	  for details.
+
+2019-02-12 17:23:55 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Only disable dxva2 once
+
+2018-11-08 16:33:57 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  codecmap: Add mapping for Voxware metasound
+	  Allows actually decoding such streams :)
+
+2019-05-02 08:35:50 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.4.6
+
+2018-11-05 10:22:57 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.4.5
+
+2018-10-05 09:36:44 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/ext/libav:
+	  libav: Update to ffmpeg n3.4.4
+
 === release 1.14.4 ===
 
 2018-10-02 23:10:02 +0100  Tim-Philipp Müller <tim@centricular.com>

@@ -1,4 +1,4 @@
-This is GStreamer gst-libav 1.14.4.
+This is GStreamer gst-libav 1.14.5.
 
 The GStreamer team is pleased to announce another bug-fix release in the
 stable 1.x API series of your favourite cross-platform multimedia framework!
@@ -6,6 +6,10 @@ stable 1.x API series of your favourite cross-platform multimedia framework!
 The 1.14 release series adds new features on top of the 1.12 series and is
 part of the API and ABI-stable 1.x release series of the GStreamer multimedia
 framework.
+
+The 1.14 release series has now been superseded by the stable 1.16 series
+which was released on 19 April 2019 and should be backwards compatible. We
+recommend you upgrade to 1.16 at your earliest convenience.
 
 Full release notes can be found at:
 
@@ -54,10 +58,10 @@ with other GStreamer modules for a complete multimedia experience.
 ==== Download ====
 
 You can find source releases of gstreamer in the download
-directory: https://gstreamer.freedesktop.org/src/gstreamer/
+directory: https://gstreamer.freedesktop.org/src/
 
 The git repository and details how to clone it can be found at
-https://cgit.freedesktop.org/gstreamer/gstreamer/
+https://gitlab.freedesktop.org/gstreamer/
 
 ==== Homepage ====
 
@@ -65,10 +69,16 @@ The project's website is https://gstreamer.freedesktop.org/
 
 ==== Support and Bugs ====
 
-We use GNOME's bugzilla for bug reports and feature requests:
-https://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+We have recently moved from GNOME Bugzilla to GitLab on freedesktop.org
+for bug reports and feature requests:
 
-Please submit patches via bugzilla as well.
+  https://gitlab.freedesktop.org/gstreamer
+
+Please submit patches via GitLab as well, in form of Merge Requests. See
+
+  https://gstreamer.freedesktop.org/documentation/contribute/
+
+for more details.
 
 For help and support, please subscribe to and send questions to the
 gstreamer-devel mailing list (see below for details).
