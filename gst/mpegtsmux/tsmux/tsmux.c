@@ -382,7 +382,7 @@ tsmux_free (TsMux * mux)
   g_list_free (mux->streams);
 
   /* Free SI table sections */
-  g_hash_table_destroy (mux->si_sections);
+  g_hash_table_unref (mux->si_sections);
 
   g_slice_free (TsMux, mux);
 }

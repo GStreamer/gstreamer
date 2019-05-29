@@ -270,11 +270,21 @@ gst_base_ts_mux_set_header_on_caps (GstBaseTsMux * mux)
   gst_caps_unref (caps);
 }
 
+static gboolean
+steal_si_section (GstMpegtsSectionType * type, TsMuxSection * section,
+    TsMux * mux)
+{
+  g_hash_table_insert (mux->si_sections, type, section);
+
+  return TRUE;
+}
+
 static void
 gst_base_ts_mux_reset (GstBaseTsMux * mux, gboolean alloc)
 {
   GstBuffer *buf;
   GstBaseTsMuxClass *klass = GST_BASE_TS_MUX_GET_CLASS (mux);
+  GHashTable *si_sections = NULL;
 
   mux->first = TRUE;
   mux->last_flow_ret = GST_FLOW_OK;
@@ -290,6 +300,9 @@ gst_base_ts_mux_reset (GstBaseTsMux * mux, gboolean alloc)
     gst_adapter_clear (mux->out_adapter);
 
   if (mux->tsmux) {
+    if (mux->tsmux->si_sections)
+      si_sections = g_hash_table_ref (mux->tsmux->si_sections);
+
     tsmux_free (mux->tsmux);
     mux->tsmux = NULL;
   }
@@ -309,7 +322,15 @@ gst_base_ts_mux_reset (GstBaseTsMux * mux, gboolean alloc)
     g_assert (klass->create_ts_mux);
 
     mux->tsmux = klass->create_ts_mux (mux);
+
+    /* Preserve user-specified sections across resets */
+    if (si_sections)
+      g_hash_table_foreach_steal (si_sections, (GHRFunc) steal_si_section,
+          mux->tsmux);
   }
+
+  if (si_sections)
+    g_hash_table_unref (si_sections);
 
   if (klass->reset)
     klass->reset (mux);
