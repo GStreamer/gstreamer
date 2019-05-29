@@ -1,3 +1,171 @@
+=== release 1.14.5 ===
+
+2019-05-29 18:06:41 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-rtsp-server.doap:
+	* meson.build:
+	  Release 1.14.5
+
+2018-12-05 15:07:25 +0100  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  Add source elements to the pipeline before activation
+	  In plug_src we changed the element state before adding it to
+	  the owner container. This prevented the pipeline from intercepting
+	  a GST_STREAM_STATUS_TYPE_CREATE message from the pad in order
+	  to assign a custom task pool.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/53
+
+2019-01-29 14:42:35 +0100  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Use cached address when allocating sockets
+	  If an address/port was previously decided upon (ex: multicast in the
+	  SDP), then use that instead of re-creating another one
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/57
+
+2019-04-23 15:09:34 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-server: Fix various Since markers
+
+2019-04-23 15:01:32 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-sdp.c:
+	* gst/rtsp-server/rtsp-session-media.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-server: Add various Since: 1.14 markers
+
+2019-03-28 00:27:37 +0100  Erlend Eriksen <erlend_ne@hotmail.com>
+
+	* gst/rtsp-server/rtsp-session-pool.c:
+	  session pool: fix missing klass-> in klass->create_session
+
+2019-03-14 07:37:26 +0100  Göran Jönsson <goranjn@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/media.c:
+	  rtsp-media: Handle set state when preparing.
+	  Handle the situation when  a call to gst_rtsp_media_set_state is done
+	  when media status is preparing.
+	  Also add unit test for this scenario.
+	  The unit test simulate on a media level when two clients share a (live)
+	  media.
+	  Both clients have done SETUP and got responses. Now client 1 is doing
+	  play and client 2 is just closing the connection.
+	  Then without patch there are a problem when
+	  client1 is calling gst_rtsp_media_unsuspend in handle_play_request.
+	  And client2 is doing closing connection we can end up in a call
+	  to gst_rtsp_media_set_state when
+	  priv->status == GST_RTSP_MEDIA_STATUS_PREPARING and all the logic for
+	  shut down media is jumped over .
+	  With this patch and this scenario we wait until
+	  priv->status == GST_RTSP_MEDIA_STATUS_PREPARED and then continue to
+	  execute after that and now we will execute the logic for
+	  shut down media.
+
+2018-12-04 14:12:04 +0100  Benjamin Berg <bberg@redhat.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  client: Fix crash in close handler
+	  The close handler could trigger a crash because it invalidated the
+	  watch_context while still leaving a source attached to it which would be
+	  cleaned up at a later point.
+
+2018-12-27 11:28:17 +0100  Lars Wiréen <larswi@axis.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-media: Fix race condition in finish_unprepare
+	  The previous fix for race condition around finish_unprepare where the
+	  function could be called twice assumed that the status wouldn't change
+	  during execution of the function. This assumption is incorrect as the
+	  state may change, for example if an error message arrives from the
+	  pipeline bus.
+	  Instead a flag keeping track on whether the finish_unprepare function
+	  is currently executing is introduced and checked.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/59
+
+2018-11-06 18:21:54 +0100  Linus Svensson <linussn@axis.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: Use seqnum-offset for rtpinfo
+	  The sequence number in the rtpinfo is supposed to be the first RTP
+	  sequence number. The "seqnum" property on a payloader is supposed to be
+	  the number from the last processed RTP packet. The sequence number for
+	  payloaders that inherit gstrtpbasepayload will not be correct in case of
+	  buffer lists. In order to fix the seqnum property on the payloaders
+	  gst-rtsp-server must get the sequence number for rtpinfo elsewhere and
+	  "seqnum-offset" from the "stats" property contains the value of the
+	  very first RTP packet in a stream. The server will, however, try to look
+	  at the last simple in the sink element and only use properties on the
+	  payloader in case there no sink elements yet, and by looking at the last
+	  sample of the sink gives the server full control of which RTP packet it
+	  looks at. If the payloader does not have the "stats" property, "seqnum"
+	  is still used since "seqnum-offset" is only present in as part of
+	  "stats" and this is still an issue not solved with this patch.
+	  Needed for gst-plugins-base!17
+
+2018-11-01 14:20:16 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gst/rtsp-server/meson.build:
+	  meson: add new onvif types
+
+2018-11-01 12:49:51 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/meson.build:
+	  Add ONVIF subclass headers to the installed headers in meson.build too
+
+2018-11-01 11:29:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-server-object.h:
+	* gst/rtsp-server/rtsp-server.h:
+	  rtsp-server: Declare GstRTSPServer struct before anything else
+	  It's needed by all kinds of other headers, including the ones that are
+	  required for defining the GstRTSPServer struct itself and its API.
+
+2018-11-01 10:23:02 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-onvif-client.h:
+	* gst/rtsp-server/rtsp-onvif-media-factory.h:
+	* gst/rtsp-server/rtsp-onvif-media.h:
+	* gst/rtsp-server/rtsp-onvif-server.h:
+	  Mark all ONVIF-specific subclasses as Since 1.14
+
+2018-11-01 10:18:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/Makefile.am:
+	* gst/rtsp-server/meson.build:
+	* gst/rtsp-server/rtsp-context.h:
+	* gst/rtsp-server/rtsp-onvif-server.c:
+	* gst/rtsp-server/rtsp-onvif-server.h:
+	* gst/rtsp-server/rtsp-server-object.h:
+	* gst/rtsp-server/rtsp-server-prelude.h:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-server.h:
+	* gst/rtsp-server/rtsp-session.h:
+	  Include ONVIF types from single-include rtsp-server.h
+	  ... by actually making it a single-include header and moving everything
+	  related to the GstRTSPServer type to rtsp-server-object.h instead.
+	  Otherwise there are too many circular includes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797361
+
+2018-10-20 16:14:53 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	  rtsp-client: Remove timeout GSource on cleanup
+	  Avoids ending up with races where a timeout would still be around
+	  *after* a client was gone. This could happen rather easily in
+	  RTSP-over-HTTP mode on a local connection, where each RTSP message
+	  would be sent as a different HTTP connection with the same tunnelid.
+	  If not properly removed, that timeout would then try to free again
+	  a client (and its contents).
+
 === release 1.14.4 ===
 
 2018-10-02 23:11:34 +0100  Tim-Philipp Müller <tim@centricular.com>
