@@ -408,6 +408,7 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
   gint i = 0;
   EGLint config_attrib[20];
   EGLint egl_api = 0;
+  EGLBoolean ret = EGL_FALSE;
 
   create_context =
       gst_gl_check_extension ("EGL_KHR_create_context", egl->egl_exts);
@@ -450,8 +451,10 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
   config_attrib[i++] = 1;
   config_attrib[i++] = EGL_NONE;
 
-  if (eglChooseConfig (egl->egl_display, config_attrib,
-          &egl->egl_config, 1, &numConfigs)) {
+  ret = eglChooseConfig (egl->egl_display, config_attrib,
+      &egl->egl_config, 1, &numConfigs);
+
+  if (ret && numConfigs == 1) {
     GST_INFO ("config set: %" G_GUINTPTR_FORMAT ", %u",
         (guintptr) egl->egl_config, (unsigned int) numConfigs);
   } else {
