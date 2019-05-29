@@ -25,7 +25,7 @@
  *
  * autovideosink is a video sink that automatically detects an appropriate
  * video sink to use.  It does so by scanning the registry for all elements
- * that have <quote>Sink</quote> and <quote>Video</quote> in the class field
+ * that have "Sink" and "Video" in the class field
  * of their element information, and also have a non-zero autoplugging rank.
  *
  * ## Example launch line

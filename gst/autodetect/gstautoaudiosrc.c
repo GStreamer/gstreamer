@@ -26,7 +26,7 @@
  *
  * autoaudiosrc is an audio source that automatically detects an appropriate
  * audio source to use.  It does so by scanning the registry for all elements
- * that have <quote>Source</quote> and <quote>Audio</quote> in the class field
+ * that have "Source" and "Audio" in the class field
  * of their element information, and also have a non-zero autoplugging rank.
  *
  * ## Example launch line

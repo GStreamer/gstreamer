@@ -91,5 +91,6 @@ foreach plugin_name: list_plugin_res.stdout().split(':')
       disable_incremental_build: true,
       gst_cache_file: plugins_cache,
       gst_plugin_name: plugin_name,
+      include_paths: join_paths(meson.current_source_dir(), '..'),
       )]
 endforeach

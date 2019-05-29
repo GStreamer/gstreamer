@@ -22,12 +22,11 @@
  *
  * Audio decoder for MPEG-1 layer 1/2/3 audio data.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
+ *
  * |[
  * gst-launch-1.0 filesrc location=music.mp3 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! autoaudiosink
  * ]| Decode and play the mp3 file
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

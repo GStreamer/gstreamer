@@ -37,64 +37,22 @@
  * structure of name "dtmf-event" with fields set according to the following
  * table:
  *
- * <informaltable>
- * <tgroup cols='4'>
- * <colspec colname='Name' />
- * <colspec colname='Type' />
- * <colspec colname='Possible values' />
- * <colspec colname='Purpose' />
- * <thead>
- * <row>
- * <entry>Name</entry>
- * <entry>GType</entry>
- * <entry>Possible values</entry>
- * <entry>Purpose</entry>
- * </row>
- * </thead>
- * <tbody>
- * <row>
- * <entry>type</entry>
- * <entry>G_TYPE_INT</entry>
- * <entry>0-1</entry>
- * <entry>The application uses this field to specify which of the two methods
- * specified in RFC 2833 to use. The value should be 0 for tones and 1 for
- * named events. Tones are specified by their frequencies and events are specied
- * by their number. This element can only take events as input. Do not confuse
- * with "method" which specified the output.
- * </entry>
- * </row>
- * <row>
- * <entry>number</entry>
- * <entry>G_TYPE_INT</entry>
- * <entry>0-15</entry>
- * <entry>The event number.</entry>
- * </row>
- * <row>
- * <entry>volume</entry>
- * <entry>G_TYPE_INT</entry>
- * <entry>0-36</entry>
- * <entry>This field describes the power level of the tone, expressed in dBm0
- * after dropping the sign. Power levels range from 0 to -63 dBm0. The range of
- * valid DTMF is from 0 to -36 dBm0. Can be omitted if start is set to FALSE.
- * </entry>
- * </row>
- * <row>
- * <entry>start</entry>
- * <entry>G_TYPE_BOOLEAN</entry>
- * <entry>True or False</entry>
- * <entry>Whether the event is starting or ending.</entry>
- * </row>
- * <row>
- * <entry>method</entry>
- * <entry>G_TYPE_INT</entry>
- * <entry>2</entry>
- * <entry>The method used for sending event, this element will react if this
- * field is absent or 2.
- * </entry>
- * </row>
- * </tbody>
- * </tgroup>
- * </informaltable>
+ * * `type` (G_TYPE_INT, 0-1): The application uses this field to specify which of the two methods
+ *   specified in RFC 2833 to use. The value should be 0 for tones and 1 for
+ *   named events. Tones are specified by their frequencies and events are specied
+ *   by their number. This element can only take events as input. Do not confuse
+ *   with "method" which specified the output.
+ *
+ * * `number` (G_TYPE_INT, 0-15): The event number.
+ *
+ * * `volume` (G_TYPE_INT, 0-36): This field describes the power level of the tone, expressed in dBm0
+ *   after dropping the sign. Power levels range from 0 to -63 dBm0. The range of
+ *   valid DTMF is from 0 to -36 dBm0. Can be omitted if start is set to FALSE.
+ *
+ * * `start` (G_TYPE_BOOLEAN, True or False): Whether the event is starting or ending.
+ *
+ * * `method` (G_TYPE_INT, 2): The method used for sending event, this element will react if this
+ *   field is absent or 2.
  *
  * For example, the following code informs the pipeline (and in turn, the
  * DTMFSrc element inside the pipeline) about the start of a DTMF named

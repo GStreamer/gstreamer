@@ -26,7 +26,7 @@
  *
  * autovideosrc is a video src that automatically detects an appropriate
  * video source to use.  It does so by scanning the registry for all elements
- * that have <quote>Source</quote> and <quote>Video</quote> in the class field
+ * that have "Source" and "Video" in the class field
  * of their element information, and also have a non-zero autoplugging rank.
  *
  * ## Example launch line

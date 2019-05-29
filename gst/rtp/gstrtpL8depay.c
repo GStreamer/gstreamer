@@ -25,13 +25,12 @@
  * Extract raw audio from RTP packets according to RFC 3551.
  * For detailed information see: http://www.rfc-editor.org/rfc/rfc3551.txt
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
+ *
  * |[
  * gst-launch udpsrc caps='application/x-rtp, media=(string)audio, clock-rate=(int)44100, encoding-name=(string)L8, encoding-params=(string)1, channels=(int)1, payload=(int)96' ! rtpL8depay ! pulsesink
  * ]| This example pipeline will depayload an RTP raw audio stream. Refer to
  * the rtpL8pay example to create the RTP stream.
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

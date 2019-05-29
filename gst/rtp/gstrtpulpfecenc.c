@@ -69,18 +69,16 @@
  * When using #GstRtpBin, this element should be inserted through the
  * #GstRtpBin::request-fec-encoder signal.
  *
+ * ## Example pipeline
  *
- * <refsect2>
- * <title>Example pipeline</title>
  * |[
  * gst-launch-1.0 videotestsrc ! x264enc ! video/x-h264, profile=baseline ! rtph264pay pt=96 ! rtpulpfecenc percentage=100 pt=122 ! udpsink port=8888
  * ]| This example will receive a stream with FEC and try to reconstruct the packets.
  *
  * Example programs are available at
- * <ulink url="https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs">rtpfecserver.rs</ulink>
+ * <https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs>
  * and
- * <ulink url="https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs">rtpfecclient.rs</ulink>
- * </refsect2>
+ * <https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>
  *
  * See also: #GstRtpUlpFecDec, #GstRtpBin
  * Since: 1.14

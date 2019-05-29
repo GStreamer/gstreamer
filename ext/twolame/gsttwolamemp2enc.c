@@ -30,8 +30,8 @@
  *
  * This element encodes raw integer audio into an MPEG-1 layer 2 (MP2) stream.
  *
- * <refsect2>
- * <title>Example pipelines</title>
+ * ## Example pipelines
+ *
  * |[
  * gst-launch-1.0 -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! twolame ! filesink location=sine.mp2
  * ]| Encode a test sine signal to MP2.
@@ -44,7 +44,6 @@
  * |[
  * gst-launch-1.0 -v cdda://5 ! audioconvert ! twolame bitrate=192 ! filesink location=track5.mp2
  * ]| Encode Audio CD track 5 to MP2
- * </refsect2>
  *
  */
 

@@ -1231,7 +1231,7 @@ failed:
 
 /*
   * Get the list of supported capture formats, a list of
-  * <code>struct v4l2_fmtdesc</code>.
+  * `struct v4l2_fmtdesc`.
   */
 static GSList *
 gst_v4l2_object_get_format_list (GstV4l2Object * v4l2object)

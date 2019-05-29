@@ -45,9 +45,7 @@
  *
  * ## Example application
  *
- * <informalexample><programlisting language="C">
- * <xi:include xmlns:xi="http://www.w3.org/2003/XInclude" parse="text" href="../../../../tests/examples/level/level-example.c" />
- * </programlisting></informalexample>
+ * {{ tests/examples/level/level-example.c }}
  *
  */
 

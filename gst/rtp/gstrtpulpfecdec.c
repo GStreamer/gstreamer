@@ -44,18 +44,16 @@
  * When using #GstRtpBin, this element should be inserted through the
  * #GstRtpBin::request-fec-decoder signal.
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
+ *
  * |[
  * gst-launch-1.0 udpsrc port=8888 caps="application/x-rtp, payload=96, clock-rate=90000" ! rtpstorage size-time=220000000 ! rtpssrcdemux ! application/x-rtp, payload=96, clock-rate=90000, media=video, encoding-name=H264 ! rtpjitterbuffer do-lost=1 latency=200 !  rtpulpfecdec pt=122 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink
  * ]| This example will receive a stream with FEC and try to reconstruct the packets.
  *
  * Example programs are available at
- * <ulink url="https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs">rtpfecserver.rs</ulink>
+ * <https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecserver.rs>
  * and
- * <ulink url="https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs">rtpfecclient.rs</ulink>
- *
- * </refsect2>
+ * <https://gitlab.freedesktop.org/gstreamer/gstreamer-rs/blob/master/examples/src/bin/rtpfecclient.rs>
  *
  * See also: #GstRtpUlpFecEnc, #GstRtpBin, #GstRtpStorage
  * Since: 1.14

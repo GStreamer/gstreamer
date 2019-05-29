@@ -30,16 +30,16 @@
  * consideration. See <ulink url="http://www.vorbis.com/">Ogg/Vorbis</ulink>
  * for a royalty free (and often higher quality) alternative.
  *
- * <refsect2>
- * <title>Output sample rate</title>
+ * ## Output sample rate
+ *
  * If no fixed output sample rate is negotiated on the element's src pad,
  * the element will choose an optimal sample rate to resample to internally.
  * For example, a 16-bit 44.1 KHz mono audio stream encoded at 48 kbit will
  * get resampled to 32 KHz.  Use filter caps on the src pad to force a
  * particular sample rate.
- * </refsect2>
- * <refsect2>
- * <title>Example pipelines</title>
+ *
+ * ## Example pipelines
+ *
  * |[
  * gst-launch-1.0 -v audiotestsrc wave=sine num-buffers=100 ! audioconvert ! lamemp3enc ! filesink location=sine.mp3
  * ]| Encode a test sine signal to MP3.
@@ -55,7 +55,6 @@
  * |[
  * gst-launch-1.0 -v audiotestsrc num-buffers=10 ! audio/x-raw,rate=44100,channels=1 ! lamemp3enc target=bitrate cbr=true bitrate=48 ! filesink location=test.mp3
  * ]| Encode to a fixed sample rate
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

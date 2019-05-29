@@ -36,12 +36,11 @@
  * When using #GstRtpBin, this element should be inserted through the
  * #GstRtpBin::request-aux-receiver signal.
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
+ *
  * |[
  * gst-launch-1.0 udpsrc port=8888 caps="application/x-rtp, payload=96, clock-rate=90000" ! rtpreddec pt=122 ! rtpstorage size-time=220000000 ! rtpssrcdemux ! application/x-rtp, payload=96, clock-rate=90000, media=video, encoding-name=H264 ! rtpjitterbuffer do-lost=1 latency=200 !  rtpulpfecdec pt=122 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink
  * ]| This example will receive a stream with RED and ULP FEC and try to reconstruct the packets.
- * </refsect2>
  *
  * See also: #GstRtpRedEnc, #GstWebRTCBin, #GstRtpBin
  * Since: 1.14

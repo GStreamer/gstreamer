@@ -25,13 +25,12 @@
  * Payload raw audio into RTP packets according to RFC 3551.
  * For detailed information see: http://www.rfc-editor.org/rfc/rfc3551.txt
  *
- * <refsect2>
- * <title>Example pipeline</title>
+ * ## Example pipeline
+ *
  * |[
  * gst-launch -v audiotestsrc ! audioconvert ! rtpL8pay ! udpsink
  * ]| This example pipeline will payload raw audio. Refer to
  * the rtpL8depay example to depayload and play the RTP stream.
- * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
