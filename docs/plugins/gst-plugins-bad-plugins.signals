@@ -841,3 +841,39 @@ GstWebRTCBin *gstwebrtcbin
 GstWebRTCRTPTransceiver *arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstSRTServerSrc::client-added</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSRTServerSrc *gstsrtserversrc
+gint  arg1
+GSocketAddress *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSRTServerSrc::client-closed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSRTServerSrc *gstsrtserversrc
+gint  arg1
+GSocketAddress *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSRTServerSink::client-added</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSRTServerSink *gstsrtserversink
+gint  arg1
+GSocketAddress *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSRTServerSink::client-removed</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSRTServerSink *gstsrtserversink
+gint  arg1
+GSocketAddress *arg2
+</SIGNAL>
+

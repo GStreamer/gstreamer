@@ -87,6 +87,9 @@ GObject
           GstInterAudioSink
           GstInterSubSink
           GstRTMPSink
+          GstSRTBaseSink
+            GstSRTClientSink
+            GstSRTServerSink
           GstShmSink
           GstVideoSink
             GstDfbVideoSink
@@ -115,8 +118,12 @@ GObject
             GstDvbSrc
             GstMMS
             GstNeonhttpSrc
+            GstOpenni2Src
             GstRTMPSrc
             GstRfbSrc
+            GstSRTBaseSrc
+              GstSRTClientSrc
+              GstSRTServerSrc
             GstShmSrc
             GstToneGenerateSrc
             GstVCDSrc
@@ -276,6 +283,7 @@ GObject
         GstMusepackDec
         GstNetSim
         GstNonstreamAudioDecoder
+          GstOpenMptDec
           GstWildmidiDec
         GstPcapParse
         GstPitch
@@ -349,6 +357,7 @@ GObject
       GstTask
       GstTaskPool
       GstWebRTCRTPTransceiver
+  GSocketAddress
   GstColorBalanceChannel
   GstEncodingProfile
   GstVdpDevice
@@ -391,6 +400,7 @@ GObject
     PangoFcFontMap
       PangoCairoFcFontMap
 GInterface
+  GSocketConnectable
   GTypePlugin
   GstChildProxy
   GstColorBalance

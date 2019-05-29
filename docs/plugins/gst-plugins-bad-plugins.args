@@ -72837,7 +72837,7 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
 <BLURB>URI of resource requested.</BLURB>
-<DEFAULT>"GStreamer curlhttpsrc libcurl/7.61.0"</DEFAULT>
+<DEFAULT>"GStreamer curlhttpsrc libcurl/7.64.0"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -73138,5 +73138,195 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Print latencies</NICK>
 <BLURB>Print the measured latencies on stdout.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenMptDec::filter-length</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,8]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Filter length</NICK>
+<BLURB>Length of interpolation filter to use for the samples (0 = internal default).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenMptDec::master-gain</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= -2147483647</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Master gain</NICK>
+<BLURB>Gain to apply to the playback, in millibel.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenMptDec::output-buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,268435455]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output buffer size</NICK>
+<BLURB>Size of each output buffer, in samples (actual size can be smaller than this during flush or EOS).</BLURB>
+<DEFAULT>1024</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenMptDec::stereo-separation</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,400]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stereo separation</NICK>
+<BLURB>Degree of separation for stereo channels, in percent.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenMptDec::volume-ramping</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Volume ramping</NICK>
+<BLURB>Volume ramping strength; higher value -> slower ramping (-1 = internal default).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenni2Src::location</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>Source uri, can be a file or a device.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenni2Src::sourcetype</NAME>
+<TYPE>GstOpenni2SrcSourcetype</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device source type</NICK>
+<BLURB>Type of readings to get from the source.</BLURB>
+<DEFAULT>Get depth readings</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTServerSrc::poll-timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Poll timeout</NICK>
+<BLURB>Return poll wait after timeout miliseconds.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTServerSink::poll-timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Poll Timeout</NICK>
+<BLURB>Return poll wait after timeout miliseconds (-1 = infinite).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTServerSink::stats</NAME>
+<TYPE>GstValueArray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Statistics</NICK>
+<BLURB>Array of GstStructures containing SRT statistics.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTClientSrc::bind-address</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bind Address</NICK>
+<BLURB>Address to bind socket to (required for rendez-vous mode) .</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTClientSrc::bind-port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bind Port</NICK>
+<BLURB>Port to bind socket to (Ignored in rendez-vous mode).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTClientSrc::poll-timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Poll timeout</NICK>
+<BLURB>Return poll wait after timeout miliseconds (-1 = infinite).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTClientSrc::rendez-vous</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Rendez Vous</NICK>
+<BLURB>Work in Rendez-Vous mode instead of client/caller mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTClientSink::bind-address</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bind Address</NICK>
+<BLURB>Address to bind socket to (required for rendez-vous mode) .</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTClientSink::bind-port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bind Port</NICK>
+<BLURB>Port to bind socket to (Ignored in rendez-vous mode).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTClientSink::poll-timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Poll Timeout</NICK>
+<BLURB>Return poll wait after timeout miliseconds (-1 = infinite).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTClientSink::rendez-vous</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Rendez Vous</NICK>
+<BLURB>Work in Rendez-Vous mode instead of client/caller mode.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSRTClientSink::stats</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Statistics</NICK>
+<BLURB>SRT Statistics.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
