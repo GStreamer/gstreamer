@@ -186,9 +186,11 @@ dnf remove -y "gstreamer1*devel"
 # it leads to build issues in examples.
 dnf remove -y "qt5-qtbase-devel"
 
-# FIXME: Why does installing directly with dnf *fails* ?
-dnf download glib2-doc
-rpm -i glib2-doc*.rpm
+# FIXME: Why does installing directly with dnf doesn't actually install
+# the documentation files?
+dnf download glib2-doc gdk-pixbuf2-devel*x86_64* gtk3-devel-docs
+rpm -i --reinstall *.rpm
+rm -f *.rpm
 
 # get gst-build and make all subprojects available
 git clone git://anongit.freedesktop.org/gstreamer/gst-build /gst-build/
