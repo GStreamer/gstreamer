@@ -1,3 +1,120 @@
+=== release 1.14.5 ===
+
+2019-05-29 18:08:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.14.5
+
+2018-11-05 05:51:47 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	* gst-editing-services.doap:
+	  Update git location to gitlab
+
+2018-08-15 19:14:30 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* tests/check/meson.build:
+	  meson: There is no gstreamer-plugins-good-1.0.pc
+	  There is no installed version of that, only an uninstalled version.
+
+2019-01-28 22:12:40 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_timeline.py:
+	  timeline: Better handle loading inconsistent timelines
+	  Auto transition when having 3 overlapping clips in a same point in the
+	  timeline is not supported as we can't handle it in a nice way. Before we
+	  to avoid creating 2 overlapping transitions (which is plain broken in
+	  NLE) were completely disabling `auto-transition` and removing all
+	  auto-transitions in the timeline but this is pretty weird for the end
+	  user. This commit changes and now makes sure 2 transitions are not
+	  created in the same place.
+	  Also cleanup previous test case.
+
+2019-01-28 18:59:40 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-layer.c:
+	* tests/check/python/test_timeline.py:
+	  layer: Resort clips before syncing priorities
+	  We set the priorities making the assumption that `start_clips` is properly
+	  ordered by start!
+	  Fixes https://gitlab.gnome.org/GNOME/pitivi/issues/2254
+
+2018-11-02 14:32:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pipeline.c:
+	* ges/ges-timeline.c:
+	* ges/ges-track.c:
+	  ges: Check the thread from which our API is used
+	  And add some missing API guards
+
+2018-10-31 10:06:08 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/Makefile.am:
+	* ges/meson.build:
+	  Fix the `package` name in the gir to match the `.pc` filename
+
+2018-11-02 09:30:28 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	  ges: Mark GValue in child property setters as const
+	  We can't change the vmethod at this point so just cast. This makes
+	  the API more explicit so it is better in all cases.
+
+2018-10-31 10:38:59 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/Makefile.am:
+	* ges/ges.h:
+	* ges/meson.build:
+	  Keep GESSmartVideoMixer out of the Gir and add geseffectasset.h to ges.h
+	  Fixing gstreamer-sys rust bindings.
+
+2018-07-14 09:00:51 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-pitivi-formatter.c:
+	  pitivi-formatter: Do not g_file_test on a NULL pointer
+
+2018-09-30 17:22:13 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-smart-video-mixer.c:
+	  videomixer: Drop allocation query after the compositor
+	  Working around https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/310
+
+2018-10-09 00:45:29 +0200  Alexandru Băluț <alexandru.balut@gmail.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* tests/check/python/common.py:
+	* tests/check/python/test_clip.py:
+	* tests/check/python/test_group.py:
+	  clip: Emit additional signals after child-removed
+	  When removing an effect from a clip, first the notify::priority signals
+	  were being emitted for the remaining effects which changed priority, and only
+	  at the end the child-removed signal. Now the child-removed signal is emitted
+	  first.
+
+2018-10-22 08:13:07 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-base-xml-formatter.c:
+	* ges/ges-xml-formatter.c:
+	  ges: Fix compilation with latest GLib
+	  g_clear_pointer() is now preserving the type of its arguments for the
+	  free function.
+	  ges-xml-formatter.c: In function ‘_dispose’:
+	  ges-xml-formatter.c:1635:7: error: function called through a non-compatible type [-Werror]
+	  (GDestroyNotify) g_hash_table_unref);
+	  /usr/include/glib-2.0/glib/gmem.h:121:8: note: in definition of macro ‘g_clear_pointer’
+	  (destroy) (_ptr);                                                        \
+	  ^~~~~~~
+	  https://bugzilla.gnome.org/show_bug.cgi?id=797310
+
 === release 1.14.4 ===
 
 2018-10-02 23:12:34 +0100  Tim-Philipp Müller <tim@centricular.com>
