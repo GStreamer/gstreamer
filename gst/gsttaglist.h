@@ -49,65 +49,16 @@ G_BEGIN_DECLS
  * In the table below this is shown for the cases that a tag exists in the list
  * (A) or does not exists (!A) and combinations thereof.
  *
- * <table frame="all" colsep="1" rowsep="1">
- *   <title>merge mode</title>
- *   <tgroup cols='5' align='left'>
- *     <thead>
- *       <row>
- *         <entry>merge mode</entry>
- *         <entry>A + B</entry>
- *         <entry>A + !B</entry>
- *         <entry>!A + B</entry>
- *         <entry>!A + !B</entry>
- *       </row>
- *     </thead>
- *     <tbody>
- *       <row>
- *         <entry>REPLACE_ALL</entry>
- *         <entry>B</entry>
- *         <entry>-</entry>
- *         <entry>B</entry>
- *         <entry>-</entry>
- *       </row>
- *       <row>
- *         <entry>REPLACE</entry>
- *         <entry>B</entry>
- *         <entry>A</entry>
- *         <entry>B</entry>
- *         <entry>-</entry>
- *       </row>
- *       <row>
- *         <entry>APPEND</entry>
- *         <entry>A, B</entry>
- *         <entry>A</entry>
- *         <entry>B</entry>
- *         <entry>-</entry>
- *       </row>
- *       <row>
- *         <entry>PREPEND</entry>
- *         <entry>B, A</entry>
- *         <entry>A</entry>
- *         <entry>B</entry>
- *         <entry>-</entry>
- *       </row>
- *       <row>
- *         <entry>KEEP</entry>
- *         <entry>A</entry>
- *         <entry>A</entry>
- *         <entry>B</entry>
- *         <entry>-</entry>
- *       </row>
- *       <row>
- *         <entry>KEEP_ALL</entry>
- *         <entry>A</entry>
- *         <entry>A</entry>
- *         <entry>-</entry>
- *         <entry>-</entry>
- *       </row>
- *     </tbody>
- *   </tgroup>
- * </table>
+ * | merge mode  | A + B | A + !B | !A + B | !A + !B |
+ * | ----------- | ----- | ------ | ------ | ------- |
+ * | REPLACE_ALL | B     | ∅      | B      | ∅       |
+ * | REPLACE     | B     | A      | B      | ∅       |
+ * | APPEND      | A, B  | A      | B      | ∅       |
+ * | PREPEND     | B, A  | A      | B      | ∅       |
+ * | KEEP        | A     | A      | B      | ∅       |
+ * | KEEP_ALL    | A     | A      | ∅      | ∅       |
  */
+
 typedef enum {
   GST_TAG_MERGE_UNDEFINED,
   GST_TAG_MERGE_REPLACE_ALL,

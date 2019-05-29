@@ -34,7 +34,7 @@
  * the ones they are interested in or can recover from,
  * and have a default handler handle the rest of them.
  *
- * The rest of this section will use the term <quote>error</quote>
+ * The rest of this section will use the term "error"
  * to mean both (non-fatal) warnings and (fatal) errors; they are treated
  * similarly.
  *

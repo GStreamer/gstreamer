@@ -829,9 +829,10 @@ gst_debug_bin_to_dot_data (GstBin * bin, GstDebugGraphDetails details)
  * To aid debugging applications one can use this method to write out the whole
  * network of gstreamer elements that form the pipeline into an dot file.
  * This file can be processed with graphviz to get an image.
- * <informalexample><programlisting>
+ *
+ * ``` shell
  *  dot -Tpng -oimage.png graph_lowlevel.dot
- * </programlisting></informalexample>
+ * ```
  */
 void
 gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,

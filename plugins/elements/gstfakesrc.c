@@ -28,7 +28,7 @@
  * a wide range of buffers and can operate in various scheduling modes.
  *
  * It is mostly used as a testing element, one trivial example for testing
- * basic <application>GStreamer</application> core functionality is:
+ * basic GStreamer core functionality is:
  *
  * ## Example launch line
  * |[

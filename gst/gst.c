@@ -36,7 +36,7 @@
  * GStreamer covers a wide range of use cases including: playback, recording,
  * editing, serving streams, voice over ip and video calls.
  *
- * The <application>GStreamer</application> library should be initialized with
+ * The `GStreamer` library should be initialized with
  * gst_init() before it can be used. You should pass pointers to the main argc
  * and argv variables so that GStreamer can process its own command line
  * options, as shown in the following example.

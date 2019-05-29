@@ -41,13 +41,10 @@
  * allocated filename.
  *
  * When the downloadbuffer has completely downloaded the media, it will
- * post an application message named  <classname>&quot;GstCacheDownloadComplete&quot;</classname>
+ * post an application message named `GstCacheDownloadComplete`
  * with the following information:
  *
- * *
- *   G_TYPE_STRING
- *   <classname>&quot;location&quot;</classname>:
- *   the location of the completely downloaded file.
+ * * G_TYPE_STRING `location`: the location of the completely downloaded file.
  *
  */
 

@@ -31,7 +31,7 @@
  * The above mentioned pipeline should dump data packets to the console.
  *
  * If the #GstFdSrc:timeout property is set to a value bigger than 0, fdsrc will
- * generate an element message named <classname>&quot;GstFdSrcTimeout&quot;</classname>
+ * generate an element message named `GstFdSrcTimeout`
  * if no data was received in the given timeout.
  *
  * The message's structure contains one field:
