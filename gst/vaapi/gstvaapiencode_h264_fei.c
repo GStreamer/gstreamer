@@ -27,12 +27,11 @@
  *
  * Encodes raw video streams into H.264 bitstreams.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  *  gst-launch-1.0 -ev videotestsrc num-buffers=60 !  vaapih264feienc fei-mode=ENC_PAK ! filesink location=test.264
  * ]|
- * </refsect2>
  */
 
 #include "gstcompat.h"

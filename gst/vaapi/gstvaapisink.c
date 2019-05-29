@@ -30,12 +30,11 @@
  * display using the Video Acceleration (VA) API. The element will
  * create its own internal window and render into it.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 videotestsrc ! vaapisink
  * ]|
- * </refsect2>
  */
 
 #include "gstcompat.h"

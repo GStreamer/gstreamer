@@ -26,12 +26,11 @@
  *
  * Encodes raw images into JPEG images.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  *  gst-launch-1.0 -ev videotestsrc num-buffers=1 ! timeoverlay ! vaapijpegenc ! filesink location=test.jpg
  * ]|
- * </refsect2>
  */
 
 #include "gstcompat.h"

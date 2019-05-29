@@ -33,12 +33,11 @@
  * It offers the functionality of GstVaapiDecoder and the many options
  * of #GstVaapiPostproc.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 filesrc location=~/big_buck_bunny.mov ! qtdemux ! h264parse ! vaapidecodebin ! vaapisink
  * ]|
- * </refsect2>
  */
 
 #include "gstcompat.h"

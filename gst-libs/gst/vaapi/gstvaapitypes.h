@@ -57,11 +57,10 @@ typedef gsize GstVaapiID;
  *
  * Can be used together with #GST_VAAPI_ID_ARGS to properly output an
  * integer value in a printf()-style text message.
- * <informalexample>
- * <programlisting>
+ *
+ * ``` C
  * printf("id: %" GST_VAAPI_ID_FORMAT "\n", GST_VAAPI_ID_ARGS(id));
- * </programlisting>
- * </informalexample>
+ * ```
  */
 #define GST_VAAPI_ID_FORMAT "p"
 

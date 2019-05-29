@@ -37,12 +37,11 @@
  * processed by other elements, but the performance would be rather
  * bad.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 filesrc location=~/image.jpeg ! jpegparse ! vaapijpegdec ! imagefreeze ! vaapisink
  * ]|
- * </refsect2>
  */
 
 /**
@@ -63,12 +62,11 @@
  * processed by other elements, but the performance would be rather
  * bad.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 filesrc location=~/sample.mpg ! mpegpsdemux ! vaapimpeg2dec ! vaapisink
  * ]|
- * </refsect2>
  */
 
 /**
@@ -89,12 +87,11 @@
  * processed by other elements, but the performance would be rather
  * bad.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 filesrc location=~/sample.mpeg4 ! mpeg4videoparse ! vaapimpeg4dec ! vaapisink
  * ]|
- * </refsect2>
  */
 
 /**
@@ -115,12 +112,11 @@
  * processed by other elements, but the performance would be rather
  * bad.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 filesrc location=~/sample.h263 ! h263parse ! vaapih263dec ! vaapisink
  * ]|
- * </refsect2>
  */
 
 /**
@@ -141,12 +137,11 @@
  * processed by other elements, but the performance would be rather
  * bad.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 filesrc location=~/big_buck_bunny.mov ! qtdemux ! h264parse ! vaapih264dec ! vaapisink
  * ]|
- * </refsect2>
  */
 
 /**
@@ -167,12 +162,11 @@
  * processed by other elements, but the performance would be rather
  * bad.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 filesrc location=./sample.bin ! h265parse ! vaapih265dec ! vaapisink
  * ]|
- * </refsect2>
  */
 
 /**
@@ -193,12 +187,11 @@
  * processed by other elements, but the performance would be rather
  * bad.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 filesrc location=~/elephants_dream.wmv  ! asfdemux ! vaapivc1dec ! vaapisink
  * ]|
- * </refsect2>
  */
 
 /**
@@ -219,12 +212,11 @@
  * processed by other elements, but the performance would be rather
  * bad.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  * gst-launch-1.0 filesrc location=./sample.webm ! matroskademux ! vaapivp8dec ! vaapisink
  * ]|
- * </refsect2>
  */
 
 /**
@@ -245,10 +237,8 @@
  * processed by other elements, but the performance would be rather
  * bad.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
  * |[
  * gst-launch-1.0 filesrc location=./sample.vp9.webm ! ivfparse ! vaapivp9dec ! vaapisink
  * ]|
- * </refsect2>
  */

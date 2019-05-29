@@ -27,12 +27,11 @@
  *
  * Encodes raw video streams into MPEG2 bitstreams.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example launch line
+ *
  * |[
  *  gst-launch-1.0 -ev videotestsrc num-buffers=60 ! timeoverlay ! vaapimpeg2enc ! matroskamux ! filesink location=test.mkv
  * ]|
- * </refsect2>
  */
 
 #include "gstcompat.h"
