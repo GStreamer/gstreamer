@@ -1,3 +1,26 @@
+=== release 1.14.5 ===
+
+2019-05-29 18:09:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	* meson.build:
+	  Release 1.14.5
+
+2018-11-05 05:51:05 +0000  Matthew Waters <matthew@centricular.com>
+
+	* .gitmodules:
+	* gst-python.doap:
+	  Update git locations to gitlab
+
+2018-07-20 15:58:35 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* examples/helloworld.py:
+	  helloworld: fix typo
+
 === release 1.14.4 ===
 
 2018-10-02 23:13:44 +0100  Tim-Philipp Müller <tim@centricular.com>
