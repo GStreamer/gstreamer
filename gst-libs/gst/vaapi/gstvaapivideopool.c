@@ -328,30 +328,16 @@ gst_vaapi_video_pool_get_size (GstVaapiVideoPool * pool)
   return size;
 }
 
-/**
- * gst_vaapi_video_pool_reserve:
- * @pool: a #GstVaapiVideoPool
- * @n: the number of objects to pre-allocate
- *
- * Pre-allocates up to @n objects in the pool. If @n is less than or
- * equal to the number of free and used objects in the pool, this call
- * has no effect. Otherwise, it is a request for allocation of
- * additional objects.
- *
- * Return value: %TRUE on success
- */
 static gboolean
 gst_vaapi_video_pool_reserve_unlocked (GstVaapiVideoPool * pool, guint n)
 {
   guint i, num_allocated;
 
-  num_allocated = gst_vaapi_video_pool_get_size (pool) + pool->used_count;
-  if (n < num_allocated)
+  num_allocated = g_queue_get_length (&pool->free_objects) + pool->used_count;
+  if (n <= num_allocated)
     return TRUE;
 
-  if ((n -= num_allocated) > pool->capacity)
-    n = pool->capacity;
-
+  n = MIN (n, pool->capacity);
   for (i = num_allocated; i < n; i++) {
     gpointer object;
 
@@ -365,6 +351,18 @@ gst_vaapi_video_pool_reserve_unlocked (GstVaapiVideoPool * pool, guint n)
   return TRUE;
 }
 
+/**
+ * gst_vaapi_video_pool_reserve:
+ * @pool: a #GstVaapiVideoPool
+ * @n: the number of objects to pre-allocate
+ *
+ * Pre-allocates up to @n objects in the pool. If @n is less than or
+ * equal to the number of free and used objects in the pool, this call
+ * has no effect. Otherwise, it is a request for allocation of
+ * additional objects.
+ *
+ * Return value: %TRUE on success
+ */
 gboolean
 gst_vaapi_video_pool_reserve (GstVaapiVideoPool * pool, guint n)
 {
