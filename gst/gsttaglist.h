@@ -51,12 +51,12 @@ G_BEGIN_DECLS
  *
  * | merge mode  | A + B | A + !B | !A + B | !A + !B |
  * | ----------- | ----- | ------ | ------ | ------- |
- * | REPLACE_ALL | B     | ∅      | B      | ∅       |
- * | REPLACE     | B     | A      | B      | ∅       |
- * | APPEND      | A, B  | A      | B      | ∅       |
- * | PREPEND     | B, A  | A      | B      | ∅       |
- * | KEEP        | A     | A      | B      | ∅       |
- * | KEEP_ALL    | A     | A      | ∅      | ∅       |
+ * | REPLACE_ALL | B     | ø      | B      | ø       |
+ * | REPLACE     | B     | A      | B      | ø       |
+ * | APPEND      | A, B  | A      | B      | ø       |
+ * | PREPEND     | B, A  | A      | B      | ø       |
+ * | KEEP        | A     | A      | B      | ø       |
+ * | KEEP_ALL    | A     | A      | ø      | ø       |
  */
 
 typedef enum {
