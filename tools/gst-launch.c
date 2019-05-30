@@ -38,6 +38,11 @@
 #elif defined (G_OS_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <io.h>
+#ifndef STDOUT_FILENO
+#define STDOUT_FILENO 1
+#endif
+#define isatty _isatty
 #endif
 #include <locale.h>             /* for LC_ALL */
 #include "tools.h"
@@ -991,6 +996,40 @@ bus_sync_handler (GstBus * bus, GstMessage * message, gpointer data)
   return GST_BUS_PASS;
 }
 
+static gboolean
+query_pipeline_position (gpointer user_data)
+{
+  gint64 pos = -1, dur = -1;
+  gboolean output_is_tty = GPOINTER_TO_INT (user_data);
+
+  if (buffering)
+    return G_SOURCE_CONTINUE;
+
+  gst_element_query_position (pipeline, GST_FORMAT_TIME, &pos);
+  gst_element_query_duration (pipeline, GST_FORMAT_TIME, &dur);
+
+  if (pos >= 0) {
+    gchar dstr[32], pstr[32];
+
+    /* FIXME: pretty print in nicer format */
+    g_snprintf (pstr, 32, "%" GST_TIME_FORMAT, GST_TIME_ARGS (pos));
+    pstr[9] = '\0';
+    g_snprintf (dstr, 32, "%" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
+    dstr[9] = '\0';
+
+    if (dur > 0 && dur >= pos) {
+      gdouble percent;
+      percent = 100 * (gdouble) (pos) / dur;
+
+      gst_print ("%s / %s (%.1f %%)%c", pstr, dstr, percent,
+          output_is_tty ? '\r' : '\n');
+    } else
+      gst_print ("%s / %s%c", pstr, dstr, output_is_tty ? '\r' : '\n');
+  }
+
+  return G_SOURCE_CONTINUE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1001,6 +1040,7 @@ main (int argc, char *argv[])
   gboolean check_index = FALSE;
 #endif
   gchar *savefile = NULL;
+  gboolean no_position = FALSE;
 #ifndef GST_DISABLE_OPTION_PARSING
   GOptionEntry options[] = {
     {"tags", 't', 0, G_OPTION_ARG_NONE, &tags,
@@ -1026,6 +1066,8 @@ main (int argc, char *argv[])
         N_("Gather and print index statistics"), NULL},
 #endif
     GST_TOOLS_GOPTION_VERSION,
+    {"no-position", '\0', 0, G_OPTION_ARG_NONE, &no_position,
+        N_("Do not print current position of pipeline"), NULL},
     {NULL}
   };
   GOptionContext *ctx;
@@ -1039,6 +1081,7 @@ main (int argc, char *argv[])
   GError *error = NULL;
   gulong deep_notify_id = 0;
   guint bus_watch_id = 0;
+  GSource *position_source = NULL;
 
   free (malloc (8));            /* -lefence */
 
@@ -1175,9 +1218,25 @@ main (int argc, char *argv[])
 #elif defined(G_OS_WIN32)
     SetConsoleCtrlHandler (w32_intr_handler, TRUE);
 #endif
+    if (!no_position) {
+      gboolean output_is_tty = TRUE;
+
+      if (!isatty (STDOUT_FILENO))
+        output_is_tty = FALSE;
+
+      position_source = g_timeout_source_new (100);
+      g_source_set_callback (position_source, query_pipeline_position,
+          GINT_TO_POINTER (output_is_tty), NULL);
+      g_source_attach (position_source, NULL);
+    }
 
     /* playing state will be set on state-changed message handler */
     g_main_loop_run (loop);
+
+    if (position_source) {
+      g_source_destroy (position_source);
+      g_source_unref (position_source);
+    }
 
     {
       GstClockTime tfnow;
