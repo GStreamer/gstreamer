@@ -55,12 +55,12 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { NV12, P010_10LE, YUY2 }, "
+        "format = (string) { NV12, P010_10LE, YUY2, Y210 }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ],"
         "interlace-mode = (string) progressive;"
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
-            "{ NV12, P010_10LE, YUY2 }") ";")
+            "{ NV12, P010_10LE, YUY2, Y210 }") ";")
     );
 
 #define gst_msdkh265dec_parent_class parent_class
