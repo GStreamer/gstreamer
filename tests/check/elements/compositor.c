@@ -1383,47 +1383,6 @@ GST_START_TEST (test_loop)
 
 GST_END_TEST;
 
-GST_START_TEST (test_flush_start_flush_stop)
-{
-  GstPadTemplate *sink_template;
-  GstPad *sinkpad1, *sinkpad2, *compositor_src;
-  GstElement *compositor;
-
-  GST_INFO ("preparing test");
-
-  /* build pipeline */
-  compositor = gst_element_factory_make ("compositor", "compositor");
-
-  sink_template =
-      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (compositor),
-      "sink_%u");
-  fail_unless (GST_IS_PAD_TEMPLATE (sink_template));
-  sinkpad1 = gst_element_request_pad (compositor, sink_template, NULL, NULL);
-  sinkpad2 = gst_element_request_pad (compositor, sink_template, NULL, NULL);
-  gst_object_unref (sinkpad2);
-
-  gst_element_set_state (compositor, GST_STATE_PLAYING);
-  fail_unless (gst_element_get_state (compositor, NULL, NULL,
-          GST_CLOCK_TIME_NONE) == GST_STATE_CHANGE_SUCCESS);
-
-  compositor_src = gst_element_get_static_pad (compositor, "src");
-  fail_if (GST_PAD_IS_FLUSHING (compositor_src));
-  gst_pad_send_event (sinkpad1, gst_event_new_flush_start ());
-  fail_if (GST_PAD_IS_FLUSHING (compositor_src));
-  fail_unless (GST_PAD_IS_FLUSHING (sinkpad1));
-  gst_pad_send_event (sinkpad1, gst_event_new_flush_stop (TRUE));
-  fail_if (GST_PAD_IS_FLUSHING (compositor_src));
-  fail_if (GST_PAD_IS_FLUSHING (sinkpad1));
-  gst_object_unref (compositor_src);
-
-  /* cleanup */
-  gst_element_set_state (compositor, GST_STATE_NULL);
-  gst_object_unref (sinkpad1);
-  gst_object_unref (compositor);
-}
-
-GST_END_TEST;
-
 GST_START_TEST (test_segment_base_handling)
 {
   GstElement *pipeline, *sink, *mix, *src1, *src2;
@@ -2094,7 +2053,6 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_duration_is_max);
   tcase_add_test (tc_chain, test_duration_unknown_overrides);
   tcase_add_test (tc_chain, test_loop);
-  tcase_add_test (tc_chain, test_flush_start_flush_stop);
   tcase_add_test (tc_chain, test_segment_base_handling);
   tcase_add_test (tc_chain, test_obscured_skipped);
   tcase_add_test (tc_chain, test_repeat_after_eos);
