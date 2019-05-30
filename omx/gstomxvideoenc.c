@@ -3193,8 +3193,8 @@ gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
 #endif
 
   GST_DEBUG_OBJECT (self,
-      "request at least %d buffers of size %" G_GSIZE_FORMAT, num_buffers,
-      info.size);
+      "request at least %d buffers of size %d", num_buffers,
+      (guint) self->enc_in_port->port_def.nBufferSize);
   gst_query_add_allocation_pool (query, pool,
       self->enc_in_port->port_def.nBufferSize, num_buffers, 0);
 
