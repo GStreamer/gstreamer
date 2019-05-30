@@ -169,10 +169,55 @@ gst_vaapi_decoder_jpeg_reset (GstVaapiDecoder * base_decoder)
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
+static gboolean
+get_chroma_type (GstJpegFrameHdr * frame_hdr, GstVaapiChromaType * chroma_type)
+{
+  int h0 = frame_hdr->components[0].horizontal_factor;
+  int h1 = frame_hdr->components[1].horizontal_factor;
+  int h2 = frame_hdr->components[2].horizontal_factor;
+  int v0 = frame_hdr->components[0].vertical_factor;
+  int v1 = frame_hdr->components[1].vertical_factor;
+  int v2 = frame_hdr->components[2].vertical_factor;
+
+  if (frame_hdr->num_components == 1) {
+    *chroma_type = GST_VAAPI_CHROMA_TYPE_YUV400;
+    return TRUE;
+  }
+
+  if (h1 != h2 || v1 != v2)
+    return FALSE;
+
+  if (h0 == h1) {
+    if (v0 == v1)
+      *chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444;
+    else if (v0 == 2 * v1)
+      *chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422;
+    else
+      return FALSE;
+  } else if (h0 == 2 * h1) {
+    if (v0 == v1)
+      *chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422;
+    else if (v0 == 2 * v1)
+      *chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+    else
+      return FALSE;
+  } else if (h0 == 4 * h1) {
+    if (v0 == v1)
+      *chroma_type = GST_VAAPI_CHROMA_TYPE_YUV411;
+    else
+      return FALSE;
+  } else
+    return FALSE;
+
+  return TRUE;
+}
+
 static GstVaapiDecoderStatus
 ensure_context (GstVaapiDecoderJpeg * decoder)
 {
   GstVaapiDecoderJpegPrivate *const priv = &decoder->priv;
+  GstJpegFrameHdr *const frame_hdr = &priv->frame_hdr;
+  GstVaapiChromaType chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
   GstVaapiProfile profiles[2];
   GstVaapiEntrypoint entrypoint = GST_VAAPI_ENTRYPOINT_VLD;
   guint i, n_profiles = 0;
@@ -208,10 +253,13 @@ ensure_context (GstVaapiDecoderJpeg * decoder)
 
     info.profile = priv->profile;
     info.entrypoint = entrypoint;
-    info.chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
     info.width = priv->width;
     info.height = priv->height;
     info.ref_frames = 2;
+    if (!get_chroma_type (frame_hdr, &chroma_type))
+      return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
+    info.chroma_type = chroma_type;
+
     reset_context =
         gst_vaapi_decoder_ensure_context (GST_VAAPI_DECODER (decoder), &info);
     if (!reset_context)

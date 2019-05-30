@@ -67,6 +67,7 @@ static const GstVideoFormatMap gst_vaapi_video_formats[] = {
   DEF_YUV (Y210, ('Y', '2', '1', '0'), 32, 422_10BPP),
   DEF_YUV (Y410, ('Y', '4', '1', '0'), 32, 444_10BPP),
   DEF_YUV (AYUV, ('A', 'Y', 'U', 'V'), 32, 444),
+  DEF_YUV (Y444, ('4', '4', '4', 'P'), 24, 444),
   DEF_YUV (GRAY8, ('Y', '8', '0', '0'), 8, 400),
   DEF_YUV (P010_10LE, ('P', '0', '1', '0'), 24, 420_10BPP),
   /* RGB formats */
