@@ -1,5 +1,12 @@
 === release 1.14.5 ===
 
+2018-08-15 18:57:27 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* tests/check/meson.build:
+	  meson: There is no gstreamer-plugins-good-1.0.pc
+	  There is no installed version of that, only an uninstalled version.
+	  (Ubuntu ships an installed version, but that's diverging from upstream.)
+
 2019-05-29 18:06:41 +0100  Tim-Philipp Müller <tim@centricular.com>
 
 	* ChangeLog:
