@@ -892,7 +892,7 @@ gst_tag_list_take (GstTagList **old_taglist, GstTagList *new_taglist)
  * ISO-639-2 or ISO-639-1 code for the language the content is in (string)
  *
  * There is utility API in libgsttag in gst-plugins-base to obtain a translated
- * language name from the language code: gst_tag_get_language_name()
+ * language name from the language code: `gst_tag_get_language_name()`
  */
 #define GST_TAG_LANGUAGE_CODE          "language-code"
 /**
@@ -909,7 +909,7 @@ gst_tag_list_take (GstTagList **old_taglist, GstTagList *new_taglist)
  * GST_TAG_IMAGE:
  *
  * image (sample) (sample taglist should specify the content type and preferably
- * also set "image-type" field as #GstTagImageType)
+ * also set "image-type" field as `GstTagImageType`)
  */
 #define GST_TAG_IMAGE                  "image"
 /**
