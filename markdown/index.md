@@ -15,7 +15,7 @@ framework come from its modularity: GStreamer can seamlessly incorporate
 new plugin modules. But because modularity and power often come at a
 cost of greater complexity, writing new applications is not always easy.
     </p>
-    <a class="btn btn-default btn-xl page-scroll" href="doc_index.html" data-hotdoc-relative-link=true>Get Started</a>
+    <a class="btn btn-default btn-xl page-scroll" href="tutorials/index.html" data-hotdoc-relative-link=true>Get Started</a>
 </div>
 </div>
 
