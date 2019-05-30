@@ -995,11 +995,16 @@ gst_v4l2_buffer_pool_orphan (GstBufferPool ** bpool)
    */
   ret = gst_v4l2_buffer_pool_stop (*bpool);
   if (!ret)
-    gst_v4l2_allocator_orphan (pool->vallocator);
+    ret = gst_v4l2_allocator_orphan (pool->vallocator);
+
+  if (!ret)
+    goto orphan_failed;
 
   pool->orphaned = TRUE;
   gst_object_unref (*bpool);
   *bpool = NULL;
+
+orphan_failed:
   return ret;
 }
 
