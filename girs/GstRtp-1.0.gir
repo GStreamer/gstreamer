@@ -398,7 +398,7 @@ extension.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">profile-specific data</doc>
-            <array length="1" zero-terminated="0" c:type="guint8*">
+            <array length="1" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -1154,7 +1154,7 @@ reached.</doc>
           </parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">the data</doc>
-            <array length="1" zero-terminated="0" c:type="guint8*">
+            <array length="1" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -1731,7 +1731,7 @@ the buffer downstream.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">data to set as payload</doc>
-            <array length="1" zero-terminated="0" c:type="guint8*">
+            <array length="1" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>

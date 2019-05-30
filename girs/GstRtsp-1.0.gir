@@ -2527,7 +2527,7 @@ all matching headers will be removed.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">the data</doc>
-            <array length="1" zero-terminated="0" c:type="guint8*">
+            <array length="1" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -4126,7 +4126,7 @@ are reached. #GST_RTSP_EINTR when @watch was flushing.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="full">
             <doc xml:space="preserve">the data to queue</doc>
-            <array length="1" zero-terminated="0" c:type="guint8*">
+            <array length="1" zero-terminated="0" c:type="const guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>

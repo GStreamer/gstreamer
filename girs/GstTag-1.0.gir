@@ -1039,7 +1039,7 @@ WINDOWS-1252/ISO-8859-1 is assumed (which will almost always succeed).</doc>
       <parameters>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve">string data</doc>
-          <array length="1" zero-terminated="0" c:type="gchar*">
+          <array length="1" zero-terminated="0" c:type="const gchar*">
             <type name="gchar"/>
           </array>
         </parameter>
@@ -1050,7 +1050,7 @@ WINDOWS-1252/ISO-8859-1 is assumed (which will almost always succeed).</doc>
         <parameter name="env_vars" transfer-ownership="none">
           <doc xml:space="preserve">
    a NULL-terminated string array of environment variable names, or NULL</doc>
-          <array c:type="gchar**">
+          <array c:type="const gchar**">
             <type name="utf8" c:type="gchar*"/>
           </array>
         </parameter>
@@ -1391,7 +1391,7 @@ data (we can't trust the declared mime type).</doc>
       <parameters>
         <parameter name="image_data" transfer-ownership="none">
           <doc xml:space="preserve">the (encoded) image</doc>
-          <array length="1" zero-terminated="0" c:type="guint8*">
+          <array length="1" zero-terminated="0" c:type="const guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>
@@ -1423,7 +1423,7 @@ more information on image tags in GStreamer.</doc>
         </parameter>
         <parameter name="image_data" transfer-ownership="none">
           <doc xml:space="preserve">the (encoded) image</doc>
-          <array length="2" zero-terminated="0" c:type="guint8*">
+          <array length="2" zero-terminated="0" c:type="const guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>
@@ -1505,7 +1505,7 @@ vorbiscomment packet.</doc>
       <parameters>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve">data to convert</doc>
-          <array length="1" zero-terminated="0" c:type="guint8*">
+          <array length="1" zero-terminated="0" c:type="const guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>
@@ -1515,7 +1515,7 @@ vorbiscomment packet.</doc>
         </parameter>
         <parameter name="id_data" transfer-ownership="none">
           <doc xml:space="preserve">identification data at start of stream</doc>
-          <array length="3" zero-terminated="0" c:type="guint8*">
+          <array length="3" zero-terminated="0" c:type="const guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>
@@ -1551,7 +1551,7 @@ vorbiscomment packet.</doc>
         </parameter>
         <parameter name="id_data" transfer-ownership="none">
           <doc xml:space="preserve">identification data at start of stream</doc>
-          <array length="2" zero-terminated="0" c:type="guint8*">
+          <array length="2" zero-terminated="0" c:type="const guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>
@@ -1596,7 +1596,7 @@ parsed data.</doc>
       <parameters>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve">128 bytes of data containing the ID3v1 tag</doc>
-          <array zero-terminated="0" c:type="guint8*" fixed-size="128">
+          <array zero-terminated="0" c:type="const guint8*" fixed-size="128">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>
@@ -1655,7 +1655,7 @@ is put in the beginning of the buffer.</doc>
         </parameter>
         <parameter name="id_data" transfer-ownership="none">
           <doc xml:space="preserve">identification data at start of stream</doc>
-          <array length="2" zero-terminated="0" c:type="guint8*">
+          <array length="2" zero-terminated="0" c:type="const guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>
@@ -1693,7 +1693,7 @@ be used</doc>
         <parameter name="schemas" transfer-ownership="none">
           <doc xml:space="preserve">
     %NULL terminated array of schemas to be used on serialization</doc>
-          <array c:type="gchar**">
+          <array c:type="const gchar**">
             <type name="utf8" c:type="gchar*"/>
           </array>
         </parameter>

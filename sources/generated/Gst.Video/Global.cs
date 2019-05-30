@@ -40,10 +40,12 @@ namespace Gst.Video {
 		}
 
 		[DllImport("libgstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_add_video_meta_full(IntPtr buffer, int flags, int format, uint width, uint height, uint n_planes, UIntPtr offset, int stride);
+		static extern IntPtr gst_buffer_add_video_meta_full(IntPtr buffer, int flags, int format, uint width, uint height, uint n_planes, UIntPtr[] offset, int[] stride);
 
-		public static Gst.Video.VideoMeta BufferAddVideoMetaFull(Gst.Buffer buffer, Gst.Video.VideoFrameFlags flags, Gst.Video.VideoFormat format, uint width, uint height, uint n_planes, ulong offset, int stride) {
-			IntPtr raw_ret = gst_buffer_add_video_meta_full(buffer == null ? IntPtr.Zero : buffer.Handle, (int) flags, (int) format, width, height, n_planes, new UIntPtr (offset), stride);
+		public static Gst.Video.VideoMeta BufferAddVideoMetaFull(Gst.Buffer buffer, Gst.Video.VideoFrameFlags flags, Gst.Video.VideoFormat format, uint width, uint height, ulong[] offset, int[] stride) {
+			offset = new UIntPtr[4];
+			stride = new int[4];
+			IntPtr raw_ret = gst_buffer_add_video_meta_full(buffer == null ? IntPtr.Zero : buffer.Handle, (int) flags, (int) format, width, height, (uint) (offset == null ? 0 : offset.Length), native_offset, stride);
 			Gst.Video.VideoMeta ret = Gst.Video.VideoMeta.New (raw_ret);
 			return ret;
 		}

@@ -1880,7 +1880,7 @@ Performs the multiplication, meta-&gt;matrix X matrix.</doc>
           </instance-parameter>
           <parameter name="matrix" transfer-ownership="none">
             <doc xml:space="preserve">a 4x4 transformation matrix to be applied</doc>
-            <type name="gfloat" c:type="const gfloat"/>
+            <type name="gfloat" c:type="const gfloat*"/>
           </parameter>
         </parameters>
       </method>
@@ -2151,7 +2151,7 @@ supports all the video bufferpool options.</doc>
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">pixel lines</doc>
-            <type name="gpointer" c:type="gpointer"/>
+            <type name="gpointer" c:type="gpointer*"/>
           </parameter>
           <parameter name="width" transfer-ownership="none">
             <doc xml:space="preserve">the number of pixels on one line</doc>
@@ -2814,7 +2814,7 @@ the component values in range [0.0 .. 1.0] back to their representation in
                      caller-allocates="1"
                      transfer-ownership="none">
             <doc xml:space="preserve">output offsets</doc>
-            <array zero-terminated="0" c:type="gint" fixed-size="4">
+            <array zero-terminated="0" c:type="gint*" fixed-size="4">
               <type name="gint" c:type="gint"/>
             </array>
           </parameter>
@@ -2823,7 +2823,7 @@ the component values in range [0.0 .. 1.0] back to their representation in
                      caller-allocates="1"
                      transfer-ownership="none">
             <doc xml:space="preserve">output scale</doc>
-            <array zero-terminated="0" c:type="gint" fixed-size="4">
+            <array zero-terminated="0" c:type="gint*" fixed-size="4">
               <type name="gint" c:type="gint"/>
             </array>
           </parameter>
@@ -4532,7 +4532,7 @@ performance is achived when @quantizer is a power of 2.
           </parameter>
           <parameter name="quantizer" transfer-ownership="none">
             <doc xml:space="preserve">quantizer</doc>
-            <type name="guint" c:type="guint"/>
+            <type name="guint" c:type="guint*"/>
           </parameter>
           <parameter name="width" transfer-ownership="none">
             <doc xml:space="preserve">the width of the lines</doc>
@@ -6758,11 +6758,11 @@ formats this means that a complete pixel needs to be packed.</doc>
                    nullable="1"
                    allow-none="1">
           <doc xml:space="preserve">pointers to the destination data planes</doc>
-          <type name="gpointer" c:type="gpointer"/>
+          <type name="gpointer" c:type="gpointer*"/>
         </parameter>
         <parameter name="stride" transfer-ownership="none">
           <doc xml:space="preserve">strides of the destination planes</doc>
-          <type name="gint" c:type="const gint"/>
+          <type name="gint" c:type="const gint*"/>
         </parameter>
         <parameter name="chroma_site" transfer-ownership="none">
           <doc xml:space="preserve">the chroma siting of the target when subsampled (not used)</doc>
@@ -6816,11 +6816,11 @@ separate step after unpacking.</doc>
                    nullable="1"
                    allow-none="1">
           <doc xml:space="preserve">pointers to the data planes</doc>
-          <type name="gpointer" c:type="const gpointer"/>
+          <type name="gpointer" c:type="const gpointer*"/>
         </parameter>
         <parameter name="stride" transfer-ownership="none">
           <doc xml:space="preserve">strides of the planes</doc>
-          <type name="gint" c:type="const gint"/>
+          <type name="gint" c:type="const gint*"/>
         </parameter>
         <parameter name="x" transfer-ownership="none">
           <doc xml:space="preserve">the x position in the image to start from</doc>
@@ -7172,7 +7172,7 @@ All video planes of @buffer will be mapped and the pointers will be set in
                 c:type="GstVideoGLTextureUploadMeta*"/>
         </parameter>
         <parameter name="texture_id" transfer-ownership="none">
-          <type name="guint" c:type="guint"/>
+          <type name="guint" c:type="guint*"/>
         </parameter>
       </parameters>
     </callback>
@@ -7233,7 +7233,7 @@ to upload something to an OpenGL texture.</doc>
           </instance-parameter>
           <parameter name="texture_id" transfer-ownership="none">
             <doc xml:space="preserve">the texture IDs to upload to</doc>
-            <type name="guint" c:type="guint"/>
+            <type name="guint" c:type="guint*"/>
           </parameter>
         </parameters>
       </method>
@@ -10470,7 +10470,7 @@ gst_video_scaler_get_info().</doc>
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">source pixels lines</doc>
-            <type name="gpointer" c:type="gpointer"/>
+            <type name="gpointer" c:type="gpointer*"/>
           </parameter>
           <parameter name="dest"
                      transfer-ownership="none"
@@ -11484,7 +11484,7 @@ parameters.</doc>
         </parameter>
         <parameter name="texture_type" transfer-ownership="none">
           <doc xml:space="preserve">array of #GstVideoGLTextureType</doc>
-          <type name="VideoGLTextureType" c:type="GstVideoGLTextureType"/>
+          <type name="VideoGLTextureType" c:type="GstVideoGLTextureType*"/>
         </parameter>
         <parameter name="upload"
                    transfer-ownership="none"
@@ -11582,11 +11582,15 @@ gst_buffer_add_video_meta_full() with them.</doc>
         </parameter>
         <parameter name="offset" transfer-ownership="none">
           <doc xml:space="preserve">offset of each plane</doc>
-          <type name="gsize" c:type="gsize"/>
+          <array zero-terminated="0" c:type="gsize*" fixed-size="4">
+            <type name="gsize" c:type="gsize"/>
+          </array>
         </parameter>
         <parameter name="stride" transfer-ownership="none">
           <doc xml:space="preserve">stride of each plane</doc>
-          <type name="gint" c:type="gint"/>
+          <array zero-terminated="0" c:type="gint*" fixed-size="4">
+            <type name="gint" c:type="gint"/>
+          </array>
         </parameter>
       </parameters>
     </function>
@@ -12562,7 +12566,7 @@ not contain a valid chroma description.</doc>
                    nullable="1"
                    allow-none="1">
           <doc xml:space="preserve">pixel lines</doc>
-          <type name="gpointer" c:type="gpointer"/>
+          <type name="gpointer" c:type="gpointer*"/>
         </parameter>
         <parameter name="width" transfer-ownership="none">
           <doc xml:space="preserve">the number of pixels on one line</doc>
@@ -12721,7 +12725,7 @@ the component values in range [0.0 .. 1.0] back to their representation in
                    caller-allocates="1"
                    transfer-ownership="none">
           <doc xml:space="preserve">output offsets</doc>
-          <array zero-terminated="0" c:type="gint" fixed-size="4">
+          <array zero-terminated="0" c:type="gint*" fixed-size="4">
             <type name="gint" c:type="gint"/>
           </array>
         </parameter>
@@ -12730,7 +12734,7 @@ the component values in range [0.0 .. 1.0] back to their representation in
                    caller-allocates="1"
                    transfer-ownership="none">
           <doc xml:space="preserve">output scale</doc>
-          <array zero-terminated="0" c:type="gint" fixed-size="4">
+          <array zero-terminated="0" c:type="gint*" fixed-size="4">
             <type name="gint" c:type="gint"/>
           </array>
         </parameter>
@@ -12949,7 +12953,7 @@ performance is achived when @quantizer is a power of 2.
         </parameter>
         <parameter name="quantizer" transfer-ownership="none">
           <doc xml:space="preserve">quantizer</doc>
-          <type name="guint" c:type="guint"/>
+          <type name="guint" c:type="guint*"/>
         </parameter>
         <parameter name="width" transfer-ownership="none">
           <doc xml:space="preserve">the width of the lines</doc>
