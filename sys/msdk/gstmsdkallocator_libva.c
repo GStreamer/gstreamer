@@ -347,6 +347,15 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         data->A = data->R;
         break;
 #endif
+#if VA_CHECK_VERSION(1, 2, 0)
+      case VA_FOURCC_Y210:
+        data->Pitch = mem_id->image.pitches[0];
+        data->Y = buf + mem_id->image.offsets[0];
+        data->U = data->Y + 2;
+        data->V = data->Y + 6;
+        break;
+#endif
+
       default:
         g_assert_not_reached ();
         break;
