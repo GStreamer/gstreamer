@@ -6,11 +6,9 @@ and/or use gtk-doc annotations.  -->
             xmlns="http://www.gtk.org/introspection/core/1.0"
             xmlns:c="http://www.gtk.org/introspection/c/1.0"
             xmlns:glib="http://www.gtk.org/introspection/glib/1.0">
-  <include name="GLib" version="2.0"/>
-  <include name="GModule" version="2.0"/>
-  <include name="GObject" version="2.0"/>
   <include name="Gst" version="1.0"/>
   <include name="GstBase" version="1.0"/>
+  <include name="GstTag" version="1.0"/>
   <package name="gstreamer-audio-1.0"/>
   <c:include name="gst/audio/audio.h"/>
   <namespace name="GstAudio"
@@ -252,7 +250,6 @@ transition band for the kaiser window. 0.087 is the default.</doc>
     <class name="AudioAggregator"
            c:symbol-prefix="audio_aggregator"
            c:type="GstAudioAggregator"
-           version="1.14"
            parent="GstBase.Aggregator"
            abstract="1"
            glib:type-name="GstAudioAggregator"
@@ -379,8 +376,7 @@ downstream specifies a range or a set of acceptable rates).</doc>
     </class>
     <record name="AudioAggregatorClass"
             c:type="GstAudioAggregatorClass"
-            glib:is-gtype-struct-for="AudioAggregator"
-            version="1.14">
+            glib:is-gtype-struct-for="AudioAggregator">
       <field name="parent_class">
         <type name="GstBase.AggregatorClass" c:type="GstAggregatorClass"/>
       </field>
@@ -438,7 +434,6 @@ downstream specifies a range or a set of acceptable rates).</doc>
     <class name="AudioAggregatorConvertPad"
            c:symbol-prefix="audio_aggregator_convert_pad"
            c:type="GstAudioAggregatorConvertPad"
-           version="1.14"
            parent="AudioAggregatorPad"
            glib:type-name="GstAudioAggregatorConvertPad"
            glib:get-type="gst_audio_aggregator_convert_pad_get_type"
@@ -465,8 +460,7 @@ See #GstAudioAggregator for more details.</doc>
     </class>
     <record name="AudioAggregatorConvertPadClass"
             c:type="GstAudioAggregatorConvertPadClass"
-            glib:is-gtype-struct-for="AudioAggregatorConvertPad"
-            version="1.14">
+            glib:is-gtype-struct-for="AudioAggregatorConvertPad">
       <field name="parent_class">
         <type name="AudioAggregatorPadClass"
               c:type="GstAudioAggregatorPadClass"/>
@@ -484,7 +478,6 @@ See #GstAudioAggregator for more details.</doc>
     <class name="AudioAggregatorPad"
            c:symbol-prefix="audio_aggregator_pad"
            c:type="GstAudioAggregatorPad"
-           version="1.14"
            parent="GstBase.AggregatorPad"
            glib:type-name="GstAudioAggregatorPad"
            glib:get-type="gst_audio_aggregator_pad_get_type"
@@ -539,8 +532,7 @@ See #GstAudioAggregator for more details.</doc>
     </class>
     <record name="AudioAggregatorPadClass"
             c:type="GstAudioAggregatorPadClass"
-            glib:is-gtype-struct-for="AudioAggregatorPad"
-            version="1.14">
+            glib:is-gtype-struct-for="AudioAggregatorPad">
       <field name="parent_class">
         <type name="GstBase.AggregatorPadClass"
               c:type="GstAggregatorPadClass"/>
@@ -1649,14 +1641,14 @@ Perform channel mixing on @in_data and write the result to @out_data.
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">input samples</doc>
-            <type name="gpointer" c:type="const gpointer*"/>
+            <type name="gpointer" c:type="const gpointer"/>
           </parameter>
           <parameter name="out"
                      transfer-ownership="none"
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">output samples</doc>
-            <type name="gpointer" c:type="gpointer*"/>
+            <type name="gpointer" c:type="gpointer"/>
           </parameter>
           <parameter name="samples" transfer-ownership="none">
             <doc xml:space="preserve">number of samples</doc>
@@ -2439,7 +2431,7 @@ are matching and @in and @out point to enough memory.</doc>
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">input frames</doc>
-            <type name="gpointer" c:type="gpointer*"/>
+            <type name="gpointer" c:type="gpointer"/>
           </parameter>
           <parameter name="in_frames" transfer-ownership="none">
             <doc xml:space="preserve">number of input frames</doc>
@@ -2450,7 +2442,7 @@ are matching and @in and @out point to enough memory.</doc>
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">output frames</doc>
-            <type name="gpointer" c:type="gpointer*"/>
+            <type name="gpointer" c:type="gpointer"/>
           </parameter>
           <parameter name="out_frames" transfer-ownership="none">
             <doc xml:space="preserve">number of output frames</doc>
@@ -5722,7 +5714,7 @@ and will be packed into @data.</doc>
         </parameter>
         <parameter name="src" transfer-ownership="none">
           <doc xml:space="preserve">a source array</doc>
-          <array zero-terminated="0" c:type="const gpointer">
+          <array zero-terminated="0" c:type="gpointer">
             <type name="guint8"/>
           </array>
         </parameter>
@@ -5763,7 +5755,7 @@ channels * size(unpack_format) bytes.</doc>
         </parameter>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve">pointer to the audio data</doc>
-          <array zero-terminated="0" c:type="const gpointer">
+          <array zero-terminated="0" c:type="gpointer">
             <type name="guint8"/>
           </array>
         </parameter>
@@ -5967,7 +5959,7 @@ Note: This initializes @info first, no values are preserved.</doc>
                      allow-none="1">
             <doc xml:space="preserve">the channel positions</doc>
             <array zero-terminated="0"
-                   c:type="const GstAudioChannelPosition*"
+                   c:type="GstAudioChannelPosition*"
                    fixed-size="64">
               <type name="AudioChannelPosition"
                     c:type="GstAudioChannelPosition"/>
@@ -6116,14 +6108,14 @@ modified in-place.</doc>
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">input samples</doc>
-            <type name="gpointer" c:type="const gpointer*"/>
+            <type name="gpointer" c:type="const gpointer"/>
           </parameter>
           <parameter name="out"
                      transfer-ownership="none"
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">output samples</doc>
-            <type name="gpointer" c:type="gpointer*"/>
+            <type name="gpointer" c:type="gpointer"/>
           </parameter>
           <parameter name="samples" transfer-ownership="none">
             <doc xml:space="preserve">number of samples</doc>
@@ -6294,7 +6286,7 @@ are matching and @in and @out point to enough memory.</doc>
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">input samples</doc>
-            <type name="gpointer" c:type="gpointer*"/>
+            <type name="gpointer" c:type="gpointer"/>
           </parameter>
           <parameter name="in_frames" transfer-ownership="none">
             <doc xml:space="preserve">number of input frames</doc>
@@ -6305,7 +6297,7 @@ are matching and @in and @out point to enough memory.</doc>
                      nullable="1"
                      allow-none="1">
             <doc xml:space="preserve">output samples</doc>
-            <type name="gpointer" c:type="gpointer*"/>
+            <type name="gpointer" c:type="gpointer"/>
           </parameter>
           <parameter name="out_frames" transfer-ownership="none">
             <doc xml:space="preserve">number of output frames</doc>
@@ -7400,7 +7392,7 @@ be called in when the ringbuffer is acquired.</doc>
           </instance-parameter>
           <parameter name="position" transfer-ownership="none">
             <doc xml:space="preserve">the device channel positions</doc>
-            <array zero-terminated="0" c:type="const GstAudioChannelPosition*">
+            <array zero-terminated="0" c:type="GstAudioChannelPosition*">
               <type name="AudioChannelPosition"
                     c:type="GstAudioChannelPosition"/>
             </array>
@@ -8963,7 +8955,7 @@ positions and the same positions, only in a different order.
           <doc xml:space="preserve">The channel positions in the buffer.</doc>
           <array length="2"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -8972,7 +8964,7 @@ positions and the same positions, only in a different order.
           <doc xml:space="preserve">The channel positions to convert to.</doc>
           <array length="2"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -9123,7 +9115,7 @@ in the order required by GStreamer.</doc>
           <doc xml:space="preserve">The %GstAudioChannelPositions</doc>
           <array length="1"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -9162,7 +9154,7 @@ Since 1.10</doc>
   to convert.</doc>
           <array length="1"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -9214,7 +9206,7 @@ checks if the channels are in the order required by GStreamer.</doc>
   to check.</doc>
           <array length="1"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -9381,7 +9373,7 @@ is possible.</doc>
           <doc xml:space="preserve">The channel positions to reorder from.</doc>
           <array length="0"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -9390,7 +9382,7 @@ is possible.</doc>
           <doc xml:space="preserve">The channel positions to reorder to.</doc>
           <array length="0"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -9433,7 +9425,7 @@ otherwise.</doc>
       <parameters>
         <parameter name="src" transfer-ownership="none">
           <doc xml:space="preserve">a buffer containing the data to payload</doc>
-          <array length="1" zero-terminated="0" c:type="const guint8*">
+          <array length="1" zero-terminated="0" c:type="guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>
@@ -9539,7 +9531,7 @@ positions and the same positions, only in a different order.</doc>
           <doc xml:space="preserve">The channel positions in the buffer.</doc>
           <array length="3"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -9548,7 +9540,7 @@ positions and the same positions, only in a different order.</doc>
           <doc xml:space="preserve">The channel positions to convert to.</doc>
           <array length="3"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -9672,7 +9664,7 @@ of the results.</doc>
   of the source</doc>
           <array length="2"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -9686,7 +9678,7 @@ of the results.</doc>
   the destination</doc>
           <array length="4"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>
@@ -9719,7 +9711,7 @@ channel positions.</doc>
   the destination</doc>
           <array length="2"
                  zero-terminated="0"
-                 c:type="const GstAudioChannelPosition*">
+                 c:type="GstAudioChannelPosition*">
             <type name="AudioChannelPosition"
                   c:type="GstAudioChannelPosition"/>
           </array>

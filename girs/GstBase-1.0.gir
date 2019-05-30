@@ -6,9 +6,6 @@ and/or use gtk-doc annotations.  -->
             xmlns="http://www.gtk.org/introspection/core/1.0"
             xmlns:c="http://www.gtk.org/introspection/c/1.0"
             xmlns:glib="http://www.gtk.org/introspection/glib/1.0">
-  <include name="GLib" version="2.0"/>
-  <include name="GModule" version="2.0"/>
-  <include name="GObject" version="2.0"/>
   <include name="Gst" version="1.0"/>
   <package name="gstreamer-base-1.0"/>
   <c:include name="gst/base/base.h"/>
@@ -934,7 +931,6 @@ buffer in the list before freeing the list after usage.</doc>
     <class name="Aggregator"
            c:symbol-prefix="aggregator"
            c:type="GstAggregator"
-           version="1.14"
            parent="Gst.Element"
            abstract="1"
            glib:type-name="GstAggregator"
@@ -1391,8 +1387,7 @@ can reconfigure its global latency.</doc>
     </class>
     <record name="AggregatorClass"
             c:type="GstAggregatorClass"
-            glib:is-gtype-struct-for="Aggregator"
-            version="1.14">
+            glib:is-gtype-struct-for="Aggregator">
       <doc xml:space="preserve">The aggregator base class will handle in a thread-safe way all manners of
 concurrent flushes, seeks, pad additions and removals, leaving to the
 subclass the responsibility of clipping buffers, and aggregating buffers in
@@ -1706,7 +1701,6 @@ _finish_buffer from inside that function.</doc>
     <class name="AggregatorPad"
            c:symbol-prefix="aggregator_pad"
            c:type="GstAggregatorPad"
-           version="1.14"
            parent="Gst.Pad"
            glib:type-name="GstAggregatorPad"
            glib:get-type="gst_aggregator_pad_get_type"
@@ -1828,8 +1822,7 @@ usage.</doc>
     </class>
     <record name="AggregatorPadClass"
             c:type="GstAggregatorPadClass"
-            glib:is-gtype-struct-for="AggregatorPad"
-            version="1.14">
+            glib:is-gtype-struct-for="AggregatorPad">
       <field name="parent_class">
         <type name="Gst.PadClass" c:type="GstPadClass"/>
       </field>
@@ -6833,7 +6826,7 @@ into 8, 16, 32 and 64 bit variables.</doc>
       <field name="data" writable="1">
         <doc xml:space="preserve">Data from which the bit reader will
   read</doc>
-        <array length="1" zero-terminated="0" c:type="const guint8*">
+        <array length="1" zero-terminated="0" c:type="guint8*">
           <type name="guint8" c:type="guint8"/>
         </array>
       </field>
@@ -7019,7 +7012,7 @@ can be called on already initialized instances.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">data from which the bit reader should read</doc>
-            <array length="1" zero-terminated="0" c:type="const guint8*">
+            <array length="1" zero-terminated="0" c:type="guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -7191,7 +7184,7 @@ Free-function: gst_bit_reader_free</doc>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">Data from which the #GstBitReader
   should read</doc>
-            <array length="1" zero-terminated="0" c:type="const guint8*">
+            <array length="1" zero-terminated="0" c:type="guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -7212,7 +7205,7 @@ in various character encodings.</doc>
       <field name="data" writable="1">
         <doc xml:space="preserve">Data from which the bit reader will
   read</doc>
-        <array length="1" zero-terminated="0" c:type="const guint8*">
+        <array length="1" zero-terminated="0" c:type="guint8*">
           <type name="guint8" c:type="guint8"/>
         </array>
       </field>
@@ -7410,7 +7403,7 @@ updates the current position.</doc>
                      transfer-ownership="none">
             <doc xml:space="preserve">address of a
     #guint8 pointer variable in which to store the result</doc>
-            <array length="0" zero-terminated="0" c:type="const guint8**">
+            <array length="0" zero-terminated="0" c:type="guint8**">
               <type name="guint8" c:type="guint8*"/>
             </array>
           </parameter>
@@ -7758,7 +7751,7 @@ This function will fail if no NUL-terminator was found in in the data.</doc>
                      transfer-ownership="none">
             <doc xml:space="preserve">address of a
     #gchar pointer variable in which to store the result</doc>
-            <array c:type="const gchar**">
+            <array c:type="gchar**">
               <type name="utf8" c:type="gchar*"/>
             </array>
           </parameter>
@@ -8004,7 +7997,7 @@ can be called on already initialized instances.</doc>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">data from which
     the #GstByteReader should read</doc>
-            <array length="1" zero-terminated="0" c:type="const guint8*">
+            <array length="1" zero-terminated="0" c:type="guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -8148,7 +8141,7 @@ keeps the current position.</doc>
                      transfer-ownership="none">
             <doc xml:space="preserve">address of a
     #guint8 pointer variable in which to store the result</doc>
-            <array length="0" zero-terminated="0" c:type="const guint8**">
+            <array length="0" zero-terminated="0" c:type="guint8**">
               <type name="guint8" c:type="guint8*"/>
             </array>
           </parameter>
@@ -8464,7 +8457,7 @@ This function will fail if no NUL-terminator was found in in the data.</doc>
                      transfer-ownership="none">
             <doc xml:space="preserve">address of a
     #gchar pointer variable in which to store the result</doc>
-            <array c:type="const gchar**">
+            <array c:type="gchar**">
               <type name="utf8" c:type="gchar*"/>
             </array>
           </parameter>
@@ -8802,7 +8795,7 @@ Free-function: gst_byte_reader_free</doc>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">data from which the
     #GstByteReader should read</doc>
-            <array length="1" zero-terminated="0" c:type="const guint8*">
+            <array length="1" zero-terminated="0" c:type="guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -9043,7 +9036,7 @@ read @size bytes from the #GstByteWriter from the beginning.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">Data to write</doc>
-            <array length="1" zero-terminated="0" c:type="const guint8*">
+            <array length="1" zero-terminated="0" c:type="guint8*">
               <type name="guint8" c:type="guint8"/>
             </array>
           </parameter>
@@ -9292,7 +9285,7 @@ read @size bytes from the #GstByteWriter from the beginning.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">UTF16 string to write</doc>
-            <array c:type="const guint16*">
+            <array c:type="guint16*">
               <type name="guint16" c:type="guint16"/>
             </array>
           </parameter>
@@ -9312,7 +9305,7 @@ read @size bytes from the #GstByteWriter from the beginning.</doc>
           </instance-parameter>
           <parameter name="data" transfer-ownership="none">
             <doc xml:space="preserve">UTF32 string to write</doc>
-            <array c:type="const guint32*">
+            <array c:type="guint32*">
               <type name="guint32" c:type="guint32"/>
             </array>
           </parameter>
@@ -11920,7 +11913,7 @@ Free-function: gst_bit_reader_free</doc>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve">Data from which the #GstBitReader
   should read</doc>
-          <array length="1" zero-terminated="0" c:type="const guint8*">
+          <array length="1" zero-terminated="0" c:type="guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>
@@ -11945,7 +11938,7 @@ Free-function: gst_byte_reader_free</doc>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve">data from which the
     #GstByteReader should read</doc>
-          <array length="1" zero-terminated="0" c:type="const guint8*">
+          <array length="1" zero-terminated="0" c:type="guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>
@@ -12153,7 +12146,7 @@ Free-function: gst_caps_unref</doc>
         </parameter>
         <parameter name="data" transfer-ownership="none">
           <doc xml:space="preserve">* a pointer with data to typefind</doc>
-          <array length="2" zero-terminated="0" c:type="const guint8*">
+          <array length="2" zero-terminated="0" c:type="guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </parameter>

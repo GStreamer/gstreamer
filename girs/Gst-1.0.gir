@@ -3875,7 +3875,7 @@ gst_buffer_pool_config_add_option().</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve">a %NULL terminated array
          of strings.</doc>
-          <array c:type="const gchar**">
+          <array c:type="gchar**">
             <type name="utf8"/>
           </array>
         </return-value>
@@ -4028,7 +4028,7 @@ gst_buffer_pool_config_add_option().</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve">a %NULL terminated array
          of strings.</doc>
-          <array c:type="const gchar**">
+          <array c:type="gchar**">
             <type name="utf8"/>
           </array>
         </return-value>
@@ -4265,7 +4265,7 @@ return.</doc>
           <return-value transfer-ownership="none">
             <doc xml:space="preserve">a %NULL terminated array
          of strings.</doc>
-            <array c:type="const gchar**">
+            <array c:type="gchar**">
               <type name="utf8"/>
             </array>
           </return-value>
@@ -15848,7 +15848,7 @@ make a copy of the protocol string array if you need to.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve">the supported protocols
     or %NULL</doc>
-          <array c:type="const gchar* const*">
+          <array c:type="gchar**">
             <type name="utf8"/>
           </array>
         </return-value>
@@ -20377,11 +20377,8 @@ receiving this message should stop the pipeline.</doc>
             <doc xml:space="preserve">A debugging string.</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
-          <parameter name="details"
-                     transfer-ownership="full"
-                     nullable="1"
-                     allow-none="1">
-            <doc xml:space="preserve">A GstStructure with details</doc>
+          <parameter name="details" transfer-ownership="full">
+            <doc xml:space="preserve">(allow-none): A GstStructure with details</doc>
             <type name="Structure" c:type="GstStructure*"/>
           </parameter>
         </parameters>
@@ -20462,11 +20459,8 @@ MT safe.</doc>
             <doc xml:space="preserve">A debugging string.</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
-          <parameter name="details"
-                     transfer-ownership="full"
-                     nullable="1"
-                     allow-none="1">
-            <doc xml:space="preserve">A GstStructure with details</doc>
+          <parameter name="details" transfer-ownership="full">
+            <doc xml:space="preserve">(allow-none): A GstStructure with details</doc>
             <type name="Structure" c:type="GstStructure*"/>
           </parameter>
         </parameters>
@@ -21183,11 +21177,8 @@ MT safe.</doc>
             <doc xml:space="preserve">A debugging string.</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
-          <parameter name="details"
-                     transfer-ownership="full"
-                     nullable="1"
-                     allow-none="1">
-            <doc xml:space="preserve">A GstStructure with details</doc>
+          <parameter name="details" transfer-ownership="full">
+            <doc xml:space="preserve">(allow-none): A GstStructure with details</doc>
             <type name="Structure" c:type="GstStructure*"/>
           </parameter>
         </parameters>
@@ -23223,7 +23214,7 @@ buffers.</doc>
                 version="1.2">
         <return-value transfer-ownership="none">
           <doc xml:space="preserve">an array of tags as strings.</doc>
-          <array c:type="const gchar* const*">
+          <array c:type="gchar**">
             <type name="utf8"/>
           </array>
         </return-value>
@@ -23267,7 +23258,7 @@ buffers.</doc>
           </parameter>
           <parameter name="tags" transfer-ownership="none">
             <doc xml:space="preserve">tags for @api</doc>
-            <array c:type="const gchar**">
+            <array c:type="gchar**">
               <type name="utf8" c:type="gchar*"/>
             </array>
           </parameter>
@@ -28605,7 +28596,7 @@ and with the given arguments.</doc>
                    c:identifier="gst_pad_template_new_from_static_pad_template_with_gtype"
                    version="1.14">
         <doc xml:space="preserve">Converts a #GstStaticPadTemplate into a #GstPadTemplate with a type.</doc>
-        <return-value transfer-ownership="none" nullable="1">
+        <return-value transfer-ownership="none">
           <doc xml:space="preserve">a new #GstPadTemplate.</doc>
           <type name="PadTemplate" c:type="GstPadTemplate*"/>
         </return-value>
@@ -28625,7 +28616,7 @@ and with the given arguments.</doc>
                    version="1.14">
         <doc xml:space="preserve">Creates a new pad template with a name according to the given template
 and with the given arguments.</doc>
-        <return-value transfer-ownership="none" nullable="1">
+        <return-value transfer-ownership="none">
           <doc xml:space="preserve">a new #GstPadTemplate.</doc>
           <type name="PadTemplate" c:type="GstPadTemplate*"/>
         </return-value>
@@ -29713,7 +29704,7 @@ codec libraries are currently installed.</doc>
     or %NULL. Environment variable names may be followed by a path component
      which will be added to the content of the environment variable, e.g.
      "HOME/.mystuff/plugins".</doc>
-            <array c:type="const gchar**">
+            <array c:type="gchar**">
               <type name="utf8" c:type="gchar*"/>
             </array>
           </parameter>
@@ -29723,7 +29714,7 @@ codec libraries are currently installed.</doc>
                      allow-none="1">
             <doc xml:space="preserve">%NULL-terminated array of directories/paths where dependent files
     may be, or %NULL.</doc>
-            <array c:type="const gchar**">
+            <array c:type="gchar**">
               <type name="utf8" c:type="gchar*"/>
             </array>
           </parameter>
@@ -29735,7 +29726,7 @@ codec libraries are currently installed.</doc>
     depending on @flags) to be used in combination with the paths from
     @paths and/or the paths extracted from the environment variables in
     @env_vars, or %NULL.</doc>
-            <array c:type="const gchar**">
+            <array c:type="gchar**">
               <type name="utf8" c:type="gchar*"/>
             </array>
           </parameter>
@@ -33726,7 +33717,7 @@ in the @formats array must be equal to @n_formats.</doc>
           <parameter name="formats" transfer-ownership="none">
             <doc xml:space="preserve">an array containing @n_formats
     @GstFormat values.</doc>
-            <array length="0" zero-terminated="0" c:type="const GstFormat*">
+            <array length="0" zero-terminated="0" c:type="GstFormat*">
               <type name="Format" c:type="GstFormat"/>
             </array>
           </parameter>
@@ -43016,7 +43007,7 @@ returns and must not be freed.</doc>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve">the
     requested data, or %NULL if that data is not available.</doc>
-          <array length="1" zero-terminated="0" c:type="const guint8*">
+          <array length="1" zero-terminated="0" c:type="guint8*">
             <type name="guint8" c:type="guint8"/>
           </array>
         </return-value>
@@ -43283,7 +43274,7 @@ a 0-length list.</doc>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve">
     a %NULL-terminated array of extensions associated with this factory</doc>
-          <array c:type="const gchar* const*">
+          <array c:type="gchar**">
             <type name="utf8"/>
           </array>
         </return-value>
@@ -43854,9 +43845,9 @@ See more about Media Fragments URI 1.0 (W3C) at https://www.w3.org/TR/media-frag
       </method>
       <method name="get_path" c:identifier="gst_uri_get_path" version="1.6">
         <doc xml:space="preserve">Extract the path string from the URI object.</doc>
-        <return-value transfer-ownership="full" nullable="1">
-          <doc xml:space="preserve">The path from the URI. Once finished
-                                     with the string should be g_free()'d.</doc>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve">(nullable): The path from the URI. Once finished
+                                      with the string should be g_free()'d.</doc>
           <type name="utf8" c:type="gchar*"/>
         </return-value>
         <parameters>
@@ -44735,7 +44726,7 @@ determine a order for the two provided values.</doc>
       <doc xml:space="preserve">The major version of GStreamer at compile time:</doc>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="VERSION_MICRO" value="5" c:type="GST_VERSION_MICRO">
+    <constant name="VERSION_MICRO" value="3" c:type="GST_VERSION_MICRO">
       <doc xml:space="preserve">The micro version of GStreamer at compile time:</doc>
       <type name="gint" c:type="gint"/>
     </constant>
@@ -46008,7 +45999,7 @@ is unknown.</doc>
       <parameters>
         <parameter name="formats" transfer-ownership="none">
           <doc xml:space="preserve">The format array to search</doc>
-          <array c:type="const GstFormat*">
+          <array c:type="GstFormat*">
             <type name="Format" c:type="GstFormat"/>
           </array>
         </parameter>
@@ -46158,8 +46149,8 @@ abort program execution.</doc>
                    nullable="1"
                    allow-none="1">
           <doc xml:space="preserve">pointer to application's argv</doc>
-          <array length="0" zero-terminated="0" c:type="char***">
-            <type name="utf8" c:type="char**"/>
+          <array length="0" zero-terminated="0" c:type="char**">
+            <type name="utf8" c:type="char*"/>
           </array>
         </parameter>
       </parameters>
@@ -46192,8 +46183,8 @@ use gst_init() instead.</doc>
                    nullable="1"
                    allow-none="1">
           <doc xml:space="preserve">pointer to application's argv</doc>
-          <array length="0" zero-terminated="0" c:type="char***">
-            <type name="utf8" c:type="char**"/>
+          <array length="0" zero-terminated="0" c:type="char**">
+            <type name="utf8" c:type="char*"/>
           </array>
         </parameter>
       </parameters>
@@ -46296,7 +46287,7 @@ or gst_init_check().</doc>
               version="1.2">
       <return-value transfer-ownership="none">
         <doc xml:space="preserve">an array of tags as strings.</doc>
-        <array c:type="const gchar* const*">
+        <array c:type="gchar**">
           <type name="utf8"/>
         </array>
       </return-value>
@@ -46342,7 +46333,7 @@ or gst_init_check().</doc>
         </parameter>
         <parameter name="tags" transfer-ownership="none">
           <doc xml:space="preserve">tags for @api</doc>
-          <array c:type="const gchar**">
+          <array c:type="gchar**">
             <type name="utf8" c:type="gchar*"/>
           </array>
         </parameter>
@@ -46752,7 +46743,7 @@ on failure.</doc>
       <parameters>
         <parameter name="argv" transfer-ownership="none">
           <doc xml:space="preserve">null-terminated array of arguments</doc>
-          <array c:type="const gchar**">
+          <array c:type="gchar**">
             <type name="utf8" c:type="gchar*"/>
           </array>
         </parameter>
@@ -46775,7 +46766,7 @@ An error does not mean that the pipeline could not be constructed.</doc>
       <parameters>
         <parameter name="argv" transfer-ownership="none">
           <doc xml:space="preserve">null-terminated array of arguments</doc>
-          <array c:type="const gchar**">
+          <array c:type="gchar**">
             <type name="utf8" c:type="gchar*"/>
           </array>
         </parameter>
@@ -47011,7 +47002,7 @@ the @system_identifiers supported by the set of available decryptors, or
           <doc xml:space="preserve">
 A null terminated array of strings that contains the UUID values of each
 protection system that is to be checked.</doc>
-          <array c:type="const gchar**">
+          <array c:type="gchar**">
             <type name="utf8" c:type="gchar*"/>
           </array>
         </parameter>
@@ -47048,7 +47039,7 @@ element has been found.</doc>
           <doc xml:space="preserve">A null terminated array of strings
 that contains the UUID values of each protection system that is to be
 checked.</doc>
-          <array c:type="const gchar**">
+          <array c:type="gchar**">
             <type name="utf8" c:type="gchar*"/>
           </array>
         </parameter>
@@ -47880,7 +47871,7 @@ the result.</doc>
       <parameters>
         <parameter name="mem" transfer-ownership="none">
           <doc xml:space="preserve">a pointer to the memory to dump</doc>
-          <array length="1" zero-terminated="0" c:type="const guchar*">
+          <array length="1" zero-terminated="0" c:type="guchar*">
             <type name="guint8" c:type="guchar"/>
           </array>
         </parameter>
