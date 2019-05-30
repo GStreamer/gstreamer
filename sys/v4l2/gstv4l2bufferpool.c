@@ -933,13 +933,29 @@ cannot_import:
 }
 
 static gboolean
+gst_v4l2_buffer_pool_vallocator_stop (GstV4l2BufferPool * pool)
+{
+  GstV4l2Return vret;
+
+  if (!pool->vallocator)
+    return TRUE;
+
+  vret = gst_v4l2_allocator_stop (pool->vallocator);
+
+  if (vret == GST_V4L2_BUSY)
+    GST_WARNING_OBJECT (pool, "some buffers are still outstanding");
+
+  return (vret == GST_V4L2_OK);
+}
+
+static gboolean
 gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
 {
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   gboolean ret;
 
   if (pool->orphaned)
-    return TRUE;
+    return gst_v4l2_buffer_pool_vallocator_stop (pool);
 
   GST_DEBUG_OBJECT (pool, "stopping pool");
 
@@ -959,16 +975,8 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
 
   ret = GST_BUFFER_POOL_CLASS (parent_class)->stop (bpool);
 
-  if (ret && pool->vallocator) {
-    GstV4l2Return vret;
-
-    vret = gst_v4l2_allocator_stop (pool->vallocator);
-
-    if (vret == GST_V4L2_BUSY)
-      GST_WARNING_OBJECT (pool, "some buffers are still outstanding");
-
-    ret = (vret == GST_V4L2_OK);
-  }
+  if (ret)
+    ret = gst_v4l2_buffer_pool_vallocator_stop (pool);
 
   return ret;
 }
@@ -1451,6 +1459,14 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
   GstV4l2Object *obj = pool->obj;
 
   GST_DEBUG_OBJECT (pool, "release buffer %p", buffer);
+
+  /* If the buffer's pool has been orphaned, dispose of it so that
+   * the pool resources can be freed */
+  if (pool->orphaned) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
+    pclass->release_buffer (bpool, buffer);
+    return;
+  }
 
   switch (obj->type) {
     case V4L2_BUF_TYPE_VIDEO_CAPTURE:
