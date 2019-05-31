@@ -38,27 +38,7 @@ G_BEGIN_DECLS
 typedef struct _GstMultiUDPSink GstMultiUDPSink;
 typedef struct _GstMultiUDPSinkClass GstMultiUDPSinkClass;
 
-#if GLIB_CHECK_VERSION (2, 43, 2)
-#define HAVE_G_SOCKET_SEND_MESSAGES
-#endif
-
-#ifndef HAVE_G_SOCKET_SEND_MESSAGES
-/* same as GOutputMessage used for g_socket_send_messages() */
-typedef struct {
-  /*< private >*/
-  GSocketAddress         *address;
-
-  GOutputVector          *vectors;
-  guint                   num_vectors;
-
-  guint                   bytes_sent;
-
-  GSocketControlMessage **control_messages;
-  guint                   num_control_messages;
-} GstOutputMessage;
-#else
 typedef GOutputMessage GstOutputMessage;
-#endif /* HAVE_G_SOCKET_SEND_MESSAGES*/
 
 typedef struct {
   gint ref_count;         /* for memory management */

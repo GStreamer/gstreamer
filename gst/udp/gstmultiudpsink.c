@@ -557,45 +557,6 @@ gst_multiudpsink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-/* replacement until we can depend unconditionally on the real one in GLib */
-#ifndef HAVE_G_SOCKET_SEND_MESSAGES
-#define g_socket_send_messages gst_socket_send_messages
-
-static gint
-gst_socket_send_messages (GSocket * socket, GstOutputMessage * messages,
-    guint num_messages, gint flags, GCancellable * cancellable, GError ** error)
-{
-  gssize result;
-  gint i;
-
-  for (i = 0; i < num_messages; ++i) {
-    GstOutputMessage *msg = &messages[i];
-    GError *msg_error = NULL;
-
-    result = g_socket_send_message (socket, msg->address,
-        msg->vectors, msg->num_vectors,
-        msg->control_messages, msg->num_control_messages,
-        flags, cancellable, &msg_error);
-
-    if (result < 0) {
-      /* if we couldn't send all messages, just return how many we did
-       * manage to send, provided we managed to send at least one */
-      if (msg_error->code == G_IO_ERROR_WOULD_BLOCK && i > 0) {
-        g_error_free (msg_error);
-        return i;
-      } else {
-        g_propagate_error (error, msg_error);
-        return -1;
-      }
-    }
-
-    msg->bytes_sent = result;
-  }
-
-  return i;
-}
-#endif /* HAVE_G_SOCKET_SEND_MESSAGES */
-
 static gsize
 fill_vectors (GOutputVector * vecs, GstMapInfo * maps, guint n, GstBuffer * buf)
 {
