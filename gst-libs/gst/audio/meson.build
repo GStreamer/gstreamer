@@ -17,3 +17,18 @@ gstbadaudio = library('gstbadaudio-' + api_version,
 gstbadaudio_dep = declare_dependency(link_with : gstbadaudio,
   include_directories : [libsinc],
   dependencies : [gstaudio_dep, gstbase_dep])
+
+if build_gir
+  audio_gir = gnome.generate_gir(gstbadaudio,
+    sources : badaudio_sources + badaudio_headers,
+    namespace : 'GstBadAudio',
+    nsversion : api_version,
+    identifier_prefix : 'Gst',
+    symbol_prefix : 'gst',
+    export_packages : 'gstreamer-bad-audio-1.0',
+    includes : ['Gst-1.0', 'GstAudio-1.0', 'GstBase-1.0'],
+    install : true,
+    extra_args : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    dependencies : [gstbase_dep, gstaudio_dep]
+  )
+endif
