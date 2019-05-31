@@ -118,8 +118,7 @@ gst_vaapi_decoder_vp9_close (GstVaapiDecoderVp9 * decoder)
   for (i = 0; i < GST_VP9_REF_FRAMES; i++)
     gst_vaapi_picture_replace (&priv->ref_frames[i], NULL);
 
-  if (priv->parser)
-    gst_vp9_parser_free (priv->parser);
+  g_clear_pointer (&priv->parser, gst_vp9_parser_free);
 }
 
 static gboolean
