@@ -106,6 +106,8 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
 #if ((MFX_VERSION >= 1027) && VA_CHECK_VERSION(1, 2, 0))
     if (format == VA_RT_FORMAT_YUV422 && va_fourcc == VA_FOURCC_Y210)
       format = VA_RT_FORMAT_YUV422_10;
+    else if (format == VA_RT_FORMAT_YUV444 && va_fourcc == VA_FOURCC_Y410)
+      format = VA_RT_FORMAT_YUV444_10;
 #endif
 
     va_status = vaCreateSurfaces (gst_msdk_context_get_handle (context),

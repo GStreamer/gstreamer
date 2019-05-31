@@ -71,6 +71,7 @@ static const struct fourcc_map gst_msdk_fourcc_mfx_to_va[] = {
 #endif
 #if ((MFX_VERSION >= 1027) && VA_CHECK_VERSION(1, 2, 0))
   FOURCC_MFX_TO_VA (Y210, Y210),
+  FOURCC_MFX_TO_VA (Y410, Y410),
 #endif
   {0, 0}
 };
