@@ -149,7 +149,7 @@ AG_GST_CHECK_FUNCTION
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-GLIB_REQ=2.40.0
+GLIB_REQ=2.44.0
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
 ORC_CHECK([0.4.16])
