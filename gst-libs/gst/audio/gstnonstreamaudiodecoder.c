@@ -42,8 +42,8 @@
  * Subsongs are a set of songs-within-a-song. An analogy would be a multitrack
  * recording, where each track is its own song. The first subsong is typically
  * the "main" one. Subsongs were popular for video games to enable context-
- * aware music; for example, subsong #0 would be the "main" song, #1 would be
- * an alternate song playing when a fight started, #2 would be heard during
+ * aware music; for example, subsong `#0` would be the "main" song, `#1` would be
+ * an alternate song playing when a fight started, `#2` would be heard during
  * conversations etc. The base class is designed to always have at least one
  * subsong. If the subclass doesn't provide any, the base class creates a
  * "pseudo" subsong, which is actually the whole song.
@@ -89,7 +89,7 @@
  *   - If upstream cannot respond to the size query (in bytes) of @load_from_buffer
  *     fails, an error is reported, and the pipeline stops.
  *   - If there are no errors, @load_from_buffer is called to load the media. The
- *     subclass must at least call gst_nonstream_audio_decoder_set_output_audioinfo()
+ *     subclass must at least call gst_nonstream_audio_decoder_set_output_format()
  *     there, and is free to make use of the initial subsong, output mode, and
  *     position. If the actual output mode or position differs from the initial
  *     value,it must set the initial value to the actual one (for example, if

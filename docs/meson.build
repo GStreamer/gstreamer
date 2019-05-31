@@ -99,7 +99,8 @@ if build_gir
         {'name': 'insertbin', 'gir': insertbin_gir, 'lib': gstinsertbin_dep},
         {'name': 'codecparsers', 'lib': gstcodecparsers_dep},
         {'name': 'adaptivedemux', 'lib': gstadaptivedemux_dep},
-        {'name': 'webrtc', 'gir': webrtc_gir, 'lib': gstwebrtc_dep},
+        {'name': 'webrtc', 'gir': webrtc_gir, 'lib': gstwebrtc_dep, 'suffix': 'lib'},
+        {'name': 'audio', 'gir': audio_gir, 'lib': gstbadaudio_dep, 'prefix': 'bad-'},
    ]
 endif
 
@@ -112,7 +113,9 @@ foreach lib_def: libs
     if lib_def.has_key('gir')
         if has_gi_extension
             gir = lib_def['gir']
-            libs_doc += [hotdoc.generate_doc('gst-plugins-bad-' + name,
+            prefix = lib_def.get('prefix', '')
+            suffix = lib_def.get('suffix', '')
+            libs_doc += [hotdoc.generate_doc(prefix + name + suffix,
                 project_version: api_version,
                 gi_c_sources: [join_paths(root_rel, 'gst-libs/gst', name, '*.[hc]')],
                 gi_sources: gir[0].full_path(),
