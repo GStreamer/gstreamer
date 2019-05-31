@@ -1313,6 +1313,8 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
         /* broken nal at start -> arrange to skip it,
          * otherwise have it terminate current au
          * (and so it will be skipped on next frame round) */
+        GST_ELEMENT_WARNING (h264parse, STREAM, DECODE,
+            (NULL), ("Broken bit stream"));
         if (current_off == 0) {
           GST_DEBUG_OBJECT (h264parse, "skipping broken nal");
           *skipsize = nalu.offset;
