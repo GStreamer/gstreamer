@@ -151,7 +151,7 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
       g_param_spec_uint ("bitrate",
           "Bitrate (kbps)",
           "The desired bitrate expressed in kbps (0: auto-calculate)",
-          0, 100 * 1024, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          0, 2000 * 1024, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstVaapiEncoder:target-percentage:
