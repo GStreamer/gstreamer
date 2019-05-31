@@ -791,7 +791,7 @@ fi
 dnl *** checks for dependency libraries ***
 
 dnl GLib
-GLIB_REQ=2.40.0
+GLIB_REQ=2.44.0
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
 dnl Check for documentation xrefs

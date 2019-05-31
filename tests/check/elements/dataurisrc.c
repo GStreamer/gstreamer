@@ -488,9 +488,7 @@ GST_START_TEST (test_dataurisrc_uri_iface)
       GST_URI_SRC);
   protocols = gst_uri_handler_get_protocols (GST_URI_HANDLER (src));
   fail_unless (protocols != NULL && *protocols != NULL);
-#if GLIB_CHECK_VERSION (2, 44, 0)
   fail_unless (g_strv_contains (protocols, "data"));
-#endif
   fail_if (gst_uri_handler_set_uri (GST_URI_HANDLER (src), "file:///foo",
           NULL));
   fail_unless (gst_uri_handler_set_uri (GST_URI_HANDLER (src), data_uri, NULL));
