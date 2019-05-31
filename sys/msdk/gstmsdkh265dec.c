@@ -48,19 +48,19 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-h265, "
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
         "stream-format = (string) byte-stream , alignment = (string) au , "
-        "profile = (string) { main, main-10, main-422-10, main-422-10-intra, main-444 } ")
+        "profile = (string) { main, main-10, main-422-10, main-422-10-intra, main-444, main-444-10, main-444-10-intra } ")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { NV12, P010_10LE, YUY2, Y210, VUYA }, "
+        "format = (string) { NV12, P010_10LE, YUY2, Y210, VUYA, Y410 }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ],"
         "interlace-mode = (string) progressive;"
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
-            "{ NV12, P010_10LE, YUY2, Y210, VUYA }") ";")
+            "{ NV12, P010_10LE, YUY2, Y210, VUYA, Y410 }") ";")
     );
 
 #define gst_msdkh265dec_parent_class parent_class
