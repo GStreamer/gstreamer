@@ -144,6 +144,11 @@ ensure_data (GstMsdkSystemMemory * mem)
       mem->surface->Data.V = mem->surface->Data.Y + 6;
       mem->surface->Data.Pitch = mem->destination_pitches[0];
       break;
+    case GST_VIDEO_FORMAT_Y410:
+      mem->surface->Data.U = mem->cached_data[0];       /* Data.Y410 */
+      mem->surface->Data.Pitch = mem->destination_pitches[0];
+      break;
+
     default:
       g_assert_not_reached ();
       break;

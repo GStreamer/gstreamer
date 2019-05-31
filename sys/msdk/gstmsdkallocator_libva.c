@@ -356,6 +356,10 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         data->U = data->Y + 2;
         data->V = data->Y + 6;
         break;
+      case VA_FOURCC_Y410:
+        data->Pitch = mem_id->image.pitches[0];
+        data->U = buf + mem_id->image.offsets[0];       /* data->Y410 */
+        break;
 #endif
 
       default:
