@@ -111,7 +111,8 @@ foreach lib: libs
   if lib.length() >= 4
     extra_sources = lib[3]
   endif
-  libs_doc += [hotdoc.generate_doc('gst-plugins-base-' + name,
+  project_name = name == 'app' ? 'applib': name
+  libs_doc += [hotdoc.generate_doc(project_name,
       project_version: api_version,
       gi_c_sources: [join_paths('../gst-libs/gst', name, '*.[hc]')] + extra_sources,
       gi_sources: gir[0].full_path(),
@@ -133,7 +134,7 @@ if not hotdoc.has_extensions('c-extension')
     endif
     message('c-extension not found, not building documentation')
 else
-    libs_doc += [hotdoc.generate_doc('gst-plugins-base-riff',
+    libs_doc += [hotdoc.generate_doc('riff',
         project_version: api_version,
         c_sources: ['../gst-libs/gst/riff/*.[hc]'],
         c_source_filters: libs_excludes,
