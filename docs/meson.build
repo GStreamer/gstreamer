@@ -132,13 +132,28 @@ foreach lib: libs
   )]
 endforeach
 
-plugins_doc = [hotdoc.generate_doc('GStreamer-core-plugins',
-    project_version: apiversion,
-    sitemap: 'plugins/sitemap.txt',
-    index: 'plugins/index.md',
-    gst_index: 'plugins/index.md',
-    gst_smart_index: true,
-    gst_c_sources: ['../plugins/elements/*.c', '../plugins/elements/*.h'],
-    dependencies: [plugins_doc_dep],
-    gst_cache_file: plugins_cache,
-)]
+plugins_doc = [
+    hotdoc.generate_doc('coreelements',
+        project_version: apiversion,
+        sitemap: 'plugins/sitemap.txt',
+        index: 'plugins/index.md',
+        gst_index: 'plugins/index.md',
+        gst_smart_index: true,
+        gst_c_sources: ['../plugins/elements/*.c', '../plugins/elements/*.h'],
+        dependencies: [plugins_doc_dep],
+        gst_cache_file: plugins_cache,
+        gst_plugin_name: 'coreelements',
+    ),
+    hotdoc.generate_doc('coretracers',
+        project_version: apiversion,
+        sitemap: 'plugins/sitemap.txt',
+        index: 'plugins/blank.md',
+        gst_index: 'plugins/blank.md',
+        gst_smart_index: true,
+        gst_c_sources: ['../plugins/tracers/*.c', '../plugins/tracers/*.h'],
+        dependencies: [plugins_doc_dep],
+        gst_cache_file: plugins_cache,
+        gst_plugin_name: 'coretracers',
+    )
+
+]

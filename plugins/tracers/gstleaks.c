@@ -19,13 +19,17 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:element-leakstracer
+ * SECTION:tracer-leaks
  * @short_description: detect GstObject and GstMiniObject leaks
  *
  * A tracing module tracking the lifetime of objects by logging those still
  * alive when program is exiting and raising a warning.
  * The type of objects tracked can be filtered using the parameters of the
- * tracer, for example: GST_TRACERS=leaks(filters="GstEvent,GstMessage",stack-traces-flags=full)
+ * tracer, for example:
+ *
+ * ```
+ * GST_TRACERS=leaks(filters="GstEvent,GstMessage",stack-traces-flags=full)
+ * ```
  */
 
 #ifdef HAVE_CONFIG_H

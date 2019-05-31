@@ -784,14 +784,31 @@ main (int argc, char *argv[])
     for (tmp = features; tmp; tmp = tmp->next) {
       GstPluginFeature *feature = tmp->data;
       if (GST_IS_ELEMENT_FACTORY (feature)) {
-
         if (!f)
           g_string_append_printf (json, ",");
-        f = FALSE;
         _add_element_details (json, feature);
+        f = FALSE;
+      }
+    }
+    g_string_append (json, "}, \"tracers\": {");
+    gst_plugin_feature_list_free (features);
+
+    f = TRUE;
+    features =
+        gst_registry_get_feature_list_by_plugin (gst_registry_get (),
+        gst_plugin_get_name (plugin));
+    for (tmp = features; tmp; tmp = tmp->next) {
+      GstPluginFeature *feature = tmp->data;
+
+      if (GST_IS_TRACER_FACTORY (feature)) {
+        if (!f)
+          g_string_append_printf (json, ",");
+        g_string_append_printf (json, "\"%s\": {}", GST_OBJECT_NAME (feature));
+        f = FALSE;
       }
     }
     g_string_append (json, "}}");
+    gst_plugin_feature_list_free (features);
   }
 
   g_string_append_c (json, '}');

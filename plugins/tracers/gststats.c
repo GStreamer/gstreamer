@@ -19,7 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:element-statstracer
+ * SECTION:tracer-stats
  * @short_description: log event stats
  *
  * A tracing module that builds usage statistic for elements and pads.

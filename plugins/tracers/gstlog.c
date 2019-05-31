@@ -19,7 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION:element-logtracer
+ * SECTION:tracer-log
  * @short_description: log hook event
  *
  * A tracing module that logs all data from all hooks.

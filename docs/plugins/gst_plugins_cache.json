@@ -3028,6 +3028,7 @@
         "license": "LGPL",
         "package": "GStreamer git",
         "source": "gstreamer",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "coretracers": {
@@ -3037,6 +3038,13 @@
         "license": "LGPL",
         "package": "GStreamer git",
         "source": "gstreamer",
+        "tracers": {
+            "latency": {},
+            "leaks": {},
+            "log": {},
+            "rusage": {},
+            "stats": {}
+        },
         "url": "Unknown package origin"
     }
 }
