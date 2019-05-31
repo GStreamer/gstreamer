@@ -16,7 +16,7 @@ else
 endif
 
 libva_req = ['>= 0.39.0', '!= 0.99.0']
-glib_req = '>= 2.40.0'
+glib_req = '>= 2.44.0'
 libwayland_req = '>= 1.11.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 

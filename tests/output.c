@@ -121,11 +121,6 @@ video_output_init (int *argc, char *argv[], GOptionEntry * options)
   GOptionContext *ctx;
   gboolean success;
 
-#if !GLIB_CHECK_VERSION(2,31,0)
-  if (!g_thread_supported ())
-    g_thread_init (NULL);
-#endif
-
   ctx = g_option_context_new ("- test options");
   if (!ctx)
     return FALSE;
