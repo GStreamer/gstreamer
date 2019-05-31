@@ -661,7 +661,7 @@ error_cannot_copy:
   }
 error_commit_buffer:
   {
-    GST_INFO_OBJECT (decode, "downstream element rejected the frame (%s [%d])",
+    GST_LOG_OBJECT (decode, "downstream element rejected the frame (%s [%d])",
         gst_flow_get_name (ret), ret);
     return ret;
   }
@@ -703,7 +703,6 @@ gst_vaapidecode_handle_frame (GstVideoDecoder * vdec,
 {
   GstVaapiDecode *const decode = GST_VAAPIDECODE (vdec);
   GstVaapiDecoderStatus status;
-  GstFlowReturn ret;
 
   if (!decode->input_state)
     goto not_negotiated;
@@ -714,9 +713,7 @@ gst_vaapidecode_handle_frame (GstVideoDecoder * vdec,
     if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
       /* Make sure that there are no decoded frames waiting in the
          output queue. */
-      ret = gst_vaapidecode_push_all_decoded_frames (decode);
-      if (ret != GST_FLOW_OK)
-        goto error_push_all_decoded_frames;
+      gst_vaapidecode_push_all_decoded_frames (decode);
 
       g_mutex_lock (&decode->surface_ready_mutex);
       if (gst_vaapi_decoder_check_status (decode->decoder) ==
@@ -736,15 +733,12 @@ gst_vaapidecode_handle_frame (GstVideoDecoder * vdec,
   return gst_vaapidecode_push_all_decoded_frames (decode);
 
   /* ERRORS */
-error_push_all_decoded_frames:
-  {
-    GST_ERROR ("push loop error while decoding %d", ret);
-    gst_video_decoder_drop_frame (vdec, frame);
-    return ret;
-  }
 error_decode:
   {
-    GST_ERROR ("decode error %d", status);
+    GstFlowReturn ret = GST_FLOW_OK;
+
+    GST_WARNING_OBJECT (decode, "decode error %d", status);
+
     switch (status) {
       case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC:
       case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE:
@@ -752,14 +746,12 @@ error_decode:
         ret = GST_FLOW_NOT_SUPPORTED;
         break;
       default:
-        ret = GST_FLOW_OK;
         GST_VIDEO_DECODER_ERROR (vdec, 1, STREAM, DECODE, ("Decoding error"),
             ("Decode error %d", status), ret);
-        GST_INFO ("requesting upstream a key unit");
+        GST_INFO_OBJECT (decode, "requesting upstream a key unit");
         gst_pad_push_event (GST_VIDEO_DECODER_SINK_PAD (decode),
             gst_video_event_new_upstream_force_key_unit (GST_CLOCK_TIME_NONE,
                 FALSE, 0));
-        ret = GST_FLOW_OK;
         break;
     }
     gst_video_decoder_drop_frame (vdec, frame);
@@ -768,9 +760,8 @@ error_decode:
 not_negotiated:
   {
     GST_ERROR_OBJECT (decode, "not negotiated");
-    ret = GST_FLOW_NOT_NEGOTIATED;
     gst_video_decoder_drop_frame (vdec, frame);
-    return ret;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 
