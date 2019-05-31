@@ -231,6 +231,10 @@ gst_msdk_system_memory_map_full (GstMemory * base_mem, GstMapInfo * info,
   /* The first channel in memory is V for MFX_FOURCC_AYUV (GST_VIDEO_FORMAT_VUYA) format */
   if (mem->surface->Info.FourCC == MFX_FOURCC_AYUV)
     return mem->surface->Data.V;
+#if (MFX_VERSION >= 1027)
+  else if (mem->surface->Info.FourCC == MFX_FOURCC_Y410)
+    return mem->surface->Data.U;        /* Data.Y410 */
+#endif
   else
     return mem->surface->Data.Y;
 }

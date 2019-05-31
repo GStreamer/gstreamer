@@ -238,6 +238,8 @@ gst_video_meta_map_msdk_memory (GstVideoMeta * meta, guint plane,
   /* The first channel in memory is V for GST_VIDEO_FORMAT_VUYA */
   if (meta->format == GST_VIDEO_FORMAT_VUYA)
     *data = mem->surface->Data.V + offset;
+  else if (meta->format == GST_VIDEO_FORMAT_Y410)
+    *data = mem->surface->Data.U + offset;      /* Data.Y410 */
   else
     *data = mem->surface->Data.Y + offset;
   *stride = pitch;
