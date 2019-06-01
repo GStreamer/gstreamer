@@ -557,6 +557,7 @@ documentation:
   stage: deploy
 
   script:
+  - pip3 install --upgrade git+https://github.com/hotdoc/hotdoc.git
   - cd gst-build/
   - ./gst-uninstalled.py hotdoc run --conf-file=build/subprojects/gst-docs/GStreamer-doc.json --fatal-warnings
   - cd -
