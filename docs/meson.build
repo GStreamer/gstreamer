@@ -116,7 +116,7 @@ foreach lib: libs
   name = lib[0]
   gir = lib[1]
   deps = [lib[2], gir]
-  libs_doc += [hotdoc.generate_doc('gstreamer-' + name,
+  libs_doc += [hotdoc.generate_doc(name,
       project_version: apiversion,
       gi_c_sources: ['../libs/gst/' + name + '/*.[hc]'],
       gi_c_source_filters: gst_excludes,
