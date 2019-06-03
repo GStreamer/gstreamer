@@ -29,6 +29,9 @@
 #include "gstuvch264_mjpgdemux.h"
 #include "gstuvch264_src.h"
 
+extern GType gst_uvc_h264_device_provider_get_type ();
+
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -38,6 +41,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "uvch264src", GST_RANK_NONE,
           GST_TYPE_UVC_H264_SRC))
+    return FALSE;
+
+  if (!gst_device_provider_register (plugin, "uvch264deviceprovider",
+          GST_RANK_PRIMARY, gst_uvc_h264_device_provider_get_type ()))
     return FALSE;
 
   return TRUE;

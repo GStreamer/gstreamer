@@ -2,6 +2,7 @@ uvch264_sources = [
   'gstuvch264.c',
   'gstuvch264_mjpgdemux.c',
   'gstuvch264_src.c',
+  'gstuvch264deviceprovider.c',
   'uvc_h264.c',
 ]
 
