@@ -30,7 +30,6 @@
 
 #include <gst/gst.h>
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
-#include <libusb.h>
 
 #include "uvc_h264.h"
 

@@ -120,3 +120,98 @@ uvc_h264_entropy_get_type (void)
   }
   return type;
 }
+
+guint8
+xu_get_id (GstObject * self, const gchar * devicename,
+    libusb_context ** usb_ctx)
+{
+  static const __u8 guid[16] = GUID_UVCX_H264_XU;
+  GUdevClient *client;
+  GUdevDevice *udevice;
+  GUdevDevice *parent;
+  guint64 busnum;
+  guint64 devnum;
+  libusb_device **device_list = NULL;
+  libusb_device *device = NULL;
+  ssize_t cnt;
+  int i, j, k;
+
+
+  if (*usb_ctx == NULL)
+    libusb_init (usb_ctx);
+
+  client = g_udev_client_new (NULL);
+  if (client) {
+    udevice = g_udev_client_query_by_device_file (client, devicename);
+    if (udevice) {
+      parent = g_udev_device_get_parent_with_subsystem (udevice, "usb",
+          "usb_device");
+      if (parent) {
+        busnum = g_udev_device_get_sysfs_attr_as_uint64 (parent, "busnum");
+        devnum = g_udev_device_get_sysfs_attr_as_uint64 (parent, "devnum");
+
+        cnt = libusb_get_device_list (*usb_ctx, &device_list);
+        for (i = 0; i < cnt; i++) {
+          if (busnum == libusb_get_bus_number (device_list[i]) &&
+              devnum == libusb_get_device_address (device_list[i])) {
+            device = libusb_ref_device (device_list[i]);
+            break;
+          }
+        }
+        libusb_free_device_list (device_list, 1);
+        g_object_unref (parent);
+      }
+      g_object_unref (udevice);
+    }
+    g_object_unref (client);
+  }
+
+  if (device) {
+    struct libusb_device_descriptor desc;
+
+    if (libusb_get_device_descriptor (device, &desc) == 0) {
+      for (i = 0; i < desc.bNumConfigurations; ++i) {
+        struct libusb_config_descriptor *config = NULL;
+
+        if (libusb_get_config_descriptor (device, i, &config) == 0) {
+          for (j = 0; j < config->bNumInterfaces; j++) {
+            for (k = 0; k < config->interface[j].num_altsetting; k++) {
+              const struct libusb_interface_descriptor *interface;
+              const guint8 *ptr = NULL;
+
+              interface = &config->interface[j].altsetting[k];
+              if (interface->bInterfaceClass != LIBUSB_CLASS_VIDEO ||
+                  interface->bInterfaceSubClass != USB_VIDEO_CONTROL)
+                continue;
+              ptr = interface->extra;
+              while (ptr - interface->extra +
+                  sizeof (xu_descriptor) < interface->extra_length) {
+                xu_descriptor *desc = (xu_descriptor *) ptr;
+
+                GST_DEBUG_OBJECT (self, "Found VideoControl interface with "
+                    "unit id %d : %" GUID_FORMAT, desc->bUnitID,
+                    GUID_ARGS (desc->guidExtensionCode));
+                if (desc->bDescriptorType == USB_VIDEO_CONTROL_INTERFACE &&
+                    desc->bDescriptorSubType == USB_VIDEO_CONTROL_XU_TYPE &&
+                    memcmp (desc->guidExtensionCode, guid, 16) == 0) {
+                  guint8 unit_id = desc->bUnitID;
+
+                  GST_DEBUG_OBJECT (self, "Found H264 XU unit : %d", unit_id);
+
+                  libusb_free_config_descriptor (config);
+                  libusb_unref_device (device);
+                  return unit_id;
+                }
+                ptr += desc->bLength;
+              }
+            }
+          }
+          libusb_free_config_descriptor (config);
+        }
+      }
+    }
+    libusb_unref_device (device);
+  }
+
+  return 0;
+}

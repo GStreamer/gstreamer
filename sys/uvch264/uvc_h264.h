@@ -33,6 +33,25 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#include <gst/video/video.h>
+#include <linux/uvcvideo.h>
+#include <linux/usb/video.h>
+#include <sys/ioctl.h>
+#include <string.h>
+
+#include <gudev/gudev.h>
+#include <libusb.h>
+
+#include <gst/gst.h>
+#include <libusb.h>
+
+#define USB_VIDEO_CONTROL		1
+#define USB_VIDEO_CONTROL_INTERFACE	0x24
+#define USB_VIDEO_CONTROL_XU_TYPE	0x06
+#ifndef LIBUSB_CLASS_VIDEO
+#define LIBUSB_CLASS_VIDEO 0x0e
+#endif
+
 /* bmHints defines */
 
 #define UVC_H264_BMHINTS_RESOLUTION        (0x0001)
@@ -323,6 +342,23 @@ typedef struct _uvcx_qp_steps_layers_t
 	guint8	bMaxQp;
 } __attribute__((packed)) uvcx_qp_steps_layers_t;
 
+typedef struct
+{
+  int8_t bLength;
+  int8_t bDescriptorType;
+  int8_t bDescriptorSubType;
+  int8_t bUnitID;
+  uint8_t guidExtensionCode[16];
+} __attribute__ ((__packed__)) xu_descriptor;
+
+#define GUID_FORMAT "02X%02X%02X%02X-%02X%02X%02X%02X-"\
+  "%02X%02X%02X%02X-%02X%02X%02X%02X"
+#define GUID_ARGS(guid) guid[0], guid[1], guid[2], guid[3],       \
+    guid[4], guid[5], guid[6], guid[7],                           \
+    guid[8], guid[9], guid[10], guid[11],                         \
+    guid[12], guid[13], guid[14], guid[15]
+
+guint8 xu_get_id (GstObject *self, const gchar *devname, libusb_context **usb_ctx);
 
 #ifdef _WIN32
 // GUID of the UVC H.264 extension unit: {A29E7641-DE04-47E3-8B2B-F4341AFF003B}
