@@ -294,6 +294,15 @@ gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
 
       break;
 
+#if (MFX_VERSION >= 1027)
+    case MFX_FOURCC_Y410:
+      mfx_info->BitDepthLuma = 10;
+      mfx_info->BitDepthChroma = 10;
+      mfx_info->Shift = 0;
+
+      break;
+#endif
+
     default:
       break;
   }
