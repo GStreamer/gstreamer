@@ -55,6 +55,7 @@ struct _GstOMXH264Enc
   guint32 entropy_mode;
   gboolean constrained_intra_prediction;
   guint32 loop_filter_mode;
+  guint8 ref_frames;
 
   GList *headers;
 };

@@ -62,6 +62,7 @@ enum
   PROP_ENTROPY_MODE,
   PROP_CONSTRAINED_INTRA_PREDICTION,
   PROP_LOOP_FILTER_MODE,
+  PROP_REF_FRAMES
 };
 
 #ifdef USE_OMX_TARGET_RPI
@@ -73,7 +74,9 @@ enum
 #define GST_OMX_H264_VIDEO_ENC_ENTROPY_MODE_DEFAULT (0xffffffff)
 #define GST_OMX_H264_VIDEO_ENC_CONSTRAINED_INTRA_PREDICTION_DEFAULT (FALSE)
 #define GST_OMX_H264_VIDEO_ENC_LOOP_FILTER_MODE_DEFAULT (0xffffffff)
-
+#define GST_OMX_H264_VIDEO_ENC_REF_FRAMES_DEFAULT 0
+#define GST_OMX_H264_VIDEO_ENC_REF_FRAMES_MIN 0
+#define GST_OMX_H264_VIDEO_ENC_REF_FRAMES_MAX 16
 
 /* class initialization */
 
@@ -210,6 +213,15 @@ gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  g_object_class_install_property (gobject_class, PROP_REF_FRAMES,
+      g_param_spec_uchar ("ref-frames", "Reference frames",
+          "Number of reference frames used for inter-motion search (0=component default)",
+          GST_OMX_H264_VIDEO_ENC_REF_FRAMES_MIN,
+          GST_OMX_H264_VIDEO_ENC_REF_FRAMES_MAX,
+          GST_OMX_H264_VIDEO_ENC_REF_FRAMES_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
   basevideoenc_class->flush = gst_omx_h264_enc_flush;
   basevideoenc_class->stop = gst_omx_h264_enc_stop;
 
@@ -258,6 +270,9 @@ gst_omx_h264_enc_set_property (GObject * object, guint prop_id,
     case PROP_LOOP_FILTER_MODE:
       self->loop_filter_mode = g_value_get_enum (value);
       break;
+    case PROP_REF_FRAMES:
+      self->ref_frames = g_value_get_uchar (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -295,6 +310,9 @@ gst_omx_h264_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_LOOP_FILTER_MODE:
       g_value_set_enum (value, self->loop_filter_mode);
       break;
+    case PROP_REF_FRAMES:
+      g_value_set_uchar (value, self->ref_frames);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -317,6 +335,7 @@ gst_omx_h264_enc_init (GstOMXH264Enc * self)
   self->constrained_intra_prediction =
       GST_OMX_H264_VIDEO_ENC_CONSTRAINED_INTRA_PREDICTION_DEFAULT;
   self->loop_filter_mode = GST_OMX_H264_VIDEO_ENC_LOOP_FILTER_MODE_DEFAULT;
+  self->ref_frames = GST_OMX_H264_VIDEO_ENC_REF_FRAMES_DEFAULT;
 }
 
 static gboolean
@@ -448,6 +467,9 @@ update_param_avc (GstOMXH264Enc * self,
     }
     param.nBFrames = self->b_frames;
   }
+
+  if (self->ref_frames != GST_OMX_H264_VIDEO_ENC_REF_FRAMES_DEFAULT)
+    param.nRefFrames = self->ref_frames;
 
   if (self->entropy_mode != GST_OMX_H264_VIDEO_ENC_ENTROPY_MODE_DEFAULT) {
     param.bEntropyCodingCABAC = self->entropy_mode;
