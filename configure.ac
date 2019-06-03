@@ -137,7 +137,7 @@ AG_GST_CHECK_FUNCTION
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-AG_GST_GLIB_CHECK([2.40.0])
+AG_GST_GLIB_CHECK([2.44.0])
 
 dnl Needed by plugins that use g_module_*() API
 PKG_CHECK_MODULES(GMODULE_NO_EXPORT, gmodule-no-export-2.0)
