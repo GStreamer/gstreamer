@@ -385,6 +385,21 @@ GType gst_video_info_get_type            (void);
 #define GST_VIDEO_INFO_N_PLANES(i)       (GST_VIDEO_FORMAT_INFO_N_PLANES((i)->finfo))
 #define GST_VIDEO_INFO_PLANE_OFFSET(i,p) ((i)->offset[p])
 #define GST_VIDEO_INFO_PLANE_STRIDE(i,p) ((i)->stride[p])
+/**
+ * GST_VIDEO_INFO_PLANE_HEIGHT:
+ *
+ * The padded height in pixels of a plane (padded size divided by the plane stride).
+ * In case of GST_VIDEO_INTERLACE_MODE_ALTERNATE info, this macro returns the
+ * plane heights used to hold a single field, not the full frame.
+ *
+ * The size passed as third argument is the size of the pixel data and should
+ * not contain any extra metadata padding.
+ *
+ * It is not valid to use this macro with a TILED format.
+ *
+ * Since: 1.18
+ */
+#define GST_VIDEO_INFO_PLANE_HEIGHT(i,p,sizes) ((i)->stride[p] == 0 ? 0 : sizes[p] / (i)->stride[p])
 
 /* dealing with components */
 #define GST_VIDEO_INFO_N_COMPONENTS(i)   GST_VIDEO_FORMAT_INFO_N_COMPONENTS((i)->finfo)
@@ -443,6 +458,9 @@ gboolean       gst_video_info_is_equal    (const GstVideoInfo *info,
 
 GST_VIDEO_API
 gboolean       gst_video_info_align       (GstVideoInfo * info, GstVideoAlignment * align);
+
+GST_VIDEO_API
+gboolean       gst_video_info_align_full  (GstVideoInfo * info, GstVideoAlignment * align, gsize plane_size[GST_VIDEO_MAX_PLANES]);
 
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoInfo, gst_video_info_free)

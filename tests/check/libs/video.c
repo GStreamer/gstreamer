@@ -3303,6 +3303,329 @@ GST_START_TEST (test_video_format_info_plane_to_components)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_info_align)
+{
+  GstVideoInfo info;
+  GstVideoAlignment align;
+  gsize plane_size[GST_VIDEO_MAX_PLANES];
+
+  /* NV12 */
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12, 1920, 1080);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 1080 * 1.5);
+
+  gst_video_alignment_reset (&align);
+  /* Align with no padding to retrieve the plane heights */
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 1080);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 1080 / 2);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==,
+      540);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+
+  gst_video_alignment_reset (&align);
+  align.padding_bottom = 8;
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 1088);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 1088 / 2);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 1088 * 1.5);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      1088);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==,
+      544);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+
+  /* NV16 */
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV16, 1920, 1080);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 1080 * 2);
+
+  gst_video_alignment_reset (&align);
+  /* Align with no padding to retrieve the plane heights */
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 1080);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 1080);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==,
+      1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+
+  gst_video_alignment_reset (&align);
+  align.padding_bottom = 8;
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 1088 * 2);
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 1088);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 1088);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      1088);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==,
+      1088);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+
+  /* RGB */
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_RGB, 1920, 1080);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 1080 * 3);
+
+  gst_video_alignment_reset (&align);
+  /* Align with no padding to retrieve the plane heights */
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 1080 * 3);
+  g_assert_cmpuint (plane_size[1], ==, 0);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 5760);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+
+  gst_video_alignment_reset (&align);
+  align.padding_bottom = 8;
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 1088 * 3);
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 1088 * 3);
+  g_assert_cmpuint (plane_size[1], ==, 0);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 5760);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      1088);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+
+  /* I420 */
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_I420, 1920, 1080);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 1080 * 1.5);
+
+  gst_video_alignment_reset (&align);
+  /* Align with no padding to retrieve the plane heights */
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 1080);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 1080 / 4);
+  g_assert_cmpuint (plane_size[2], ==, 1920 * 1080 / 4);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 960);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 960);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==,
+      540);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==,
+      540);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+
+  gst_video_alignment_reset (&align);
+  align.padding_bottom = 8;
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 1088 * 1.5);
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 1088);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 1088 / 4);
+  g_assert_cmpuint (plane_size[2], ==, 1920 * 1088 / 4);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 960);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 960);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      1088);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==,
+      544);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==,
+      544);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+
+  /* NV16 alternate */
+  gst_video_info_init (&info);
+  gst_video_info_set_interlaced_format (&info, GST_VIDEO_FORMAT_NV16,
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE, 1920, 1080);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 540);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 540 * 2);
+
+  gst_video_alignment_reset (&align);
+  /* Align with no padding to retrieve the plane heights */
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 540);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 540);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      540);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==,
+      540);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+
+  gst_video_alignment_reset (&align);
+  align.padding_bottom = 8;
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1080);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 540);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 544 * 2);
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 544);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 544);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      544);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==,
+      544);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+
+  /* NV16 alternate with an odd height */
+  gst_video_info_init (&info);
+  gst_video_info_set_interlaced_format (&info, GST_VIDEO_FORMAT_NV16,
+      GST_VIDEO_INTERLACE_MODE_ALTERNATE, 1920, 1081);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1081);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 541);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 541 * 2);
+
+  gst_video_alignment_reset (&align);
+  /* Align with no padding to retrieve the plane heights */
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 541);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 541);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      541);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==,
+      541);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+
+  gst_video_alignment_reset (&align);
+  align.padding_bottom = 2;
+  g_assert (gst_video_info_align_full (&info, &align, plane_size));
+
+  g_assert_cmpuint (GST_VIDEO_INFO_HEIGHT (&info), ==, 1081);
+  g_assert_cmpuint (GST_VIDEO_INFO_FIELD_HEIGHT (&info), ==, 541);
+  g_assert_cmpuint (GST_VIDEO_INFO_SIZE (&info), ==, 1920 * 542 * 2);
+
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 542);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 542);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 1), ==, 1920);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 2), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_STRIDE (&info, 3), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), ==,
+      542);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 1, plane_size), ==,
+      542);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 2, plane_size), ==, 0);
+  g_assert_cmpuint (GST_VIDEO_INFO_PLANE_HEIGHT (&info, 3, plane_size), ==, 0);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -3351,6 +3674,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_hdr);
   tcase_add_test (tc_chain, test_video_color_from_to_iso);
   tcase_add_test (tc_chain, test_video_format_info_plane_to_components);
+  tcase_add_test (tc_chain, test_video_info_align);
 
   return s;
 }
