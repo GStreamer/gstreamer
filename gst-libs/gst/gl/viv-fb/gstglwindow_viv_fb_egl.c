@@ -21,6 +21,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "../gstgl_fwd.h"
 #include <gst/gl/gstglcontext.h>
 #include <gst/gl/gstglfuncs.h>
