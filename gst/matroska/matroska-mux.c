@@ -353,7 +353,7 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MIN_CLUSTER_DURATION,
       g_param_spec_int64 ("min-cluster-duration", "Minimum cluster duration",
-          "Desidered cluster duration as nanoseconds. A new cluster will be "
+          "Desired cluster duration as nanoseconds. A new cluster will be "
           "created irrespective of this property if a force key unit event "
           "is received. 0 means create a new cluster for each video keyframe "
           "or for each audio buffer in audio only streams.", 0,
