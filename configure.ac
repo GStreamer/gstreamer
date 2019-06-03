@@ -475,6 +475,7 @@ AG_GST_CHECK_PLUGIN(proxy)
 AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(removesilence)
 AG_GST_CHECK_PLUGIN(rist)
+AG_GST_CHECK_PLUGIN(rtp)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(segmentclip)
 AG_GST_CHECK_PLUGIN(siren)
@@ -2554,6 +2555,7 @@ gst/proxy/Makefile
 gst/rawparse/Makefile
 gst/removesilence/Makefile
 gst/rist/Makefile
+gst/rtp/Makefile
 gst/sdp/Makefile
 gst/segmentclip/Makefile
 gst/siren/Makefile

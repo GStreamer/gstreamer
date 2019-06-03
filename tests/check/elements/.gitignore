@@ -49,6 +49,8 @@ pcapparse
 pnm
 rtponvifparse
 rtponviftimestamp
+rtpsrc
+rtpsink
 shm
 srtp
 templatematch
