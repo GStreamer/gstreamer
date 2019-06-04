@@ -102,6 +102,12 @@ if build_gstgl
   ]]]
 endif
 
+# Used to avoid conflicts with known plugin names
+project_names = {
+  'app': 'applib',
+  'rtp': 'rtplib',
+}
+
 libs_doc = []
 foreach lib: libs
   name = lib[0]
@@ -111,7 +117,7 @@ foreach lib: libs
   if lib.length() >= 4
     extra_sources = lib[3]
   endif
-  project_name = name == 'app' ? 'applib': name
+  project_name = project_names.get(name, name)
   libs_doc += [hotdoc.generate_doc(project_name,
       project_version: api_version,
       gi_c_sources: [join_paths('../gst-libs/gst', name, '*.[hc]')] + extra_sources,
