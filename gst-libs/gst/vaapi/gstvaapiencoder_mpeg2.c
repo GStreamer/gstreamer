@@ -417,8 +417,10 @@ ensure_sequence (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncPicture * picture)
   if (!fill_sequence (encoder, sequence))
     goto error;
 
-  if (picture->type == GST_VAAPI_PICTURE_TYPE_I &&
-      !set_sequence_packed_header (encoder, picture, sequence))
+  if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+          VA_ENC_PACKED_HEADER_SEQUENCE)
+      && picture->type == GST_VAAPI_PICTURE_TYPE_I
+      && !set_sequence_packed_header (encoder, picture, sequence))
     goto error;
   gst_vaapi_enc_picture_set_sequence (picture, sequence);
   gst_vaapi_codec_object_replace (&sequence, NULL);
@@ -442,7 +444,9 @@ ensure_picture (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncPicture * picture,
   if (!fill_picture (encoder, picture, codedbuf, surface))
     return FALSE;
 
-  if (!set_picture_packed_header (encoder, picture)) {
+  if ((GST_VAAPI_ENCODER_PACKED_HEADERS (encoder) &
+          VA_ENC_PACKED_HEADER_PICTURE)
+      && !set_picture_packed_header (encoder, picture)) {
     GST_ERROR ("set picture packed header failed");
     return FALSE;
   }
