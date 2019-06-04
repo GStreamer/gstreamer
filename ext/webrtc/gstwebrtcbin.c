@@ -3912,6 +3912,7 @@ static void
 _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
 {
   GstWebRTCSignalingState new_signaling_state = webrtc->signaling_state;
+  gboolean signalling_state_changed = FALSE;
   GError *error = NULL;
   GStrv bundled = NULL;
   guint bundle_idx = 0;
@@ -4051,22 +4052,6 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     }
   }
 
-  if (new_signaling_state != webrtc->signaling_state) {
-    gchar *from = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
-        webrtc->signaling_state);
-    gchar *to = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
-        new_signaling_state);
-    GST_TRACE_OBJECT (webrtc, "notify signaling-state from %s "
-        "to %s", from, to);
-    webrtc->signaling_state = new_signaling_state;
-    PC_UNLOCK (webrtc);
-    g_object_notify (G_OBJECT (webrtc), "signaling-state");
-    PC_LOCK (webrtc);
-
-    g_free (from);
-    g_free (to);
-  }
-
   if (sd->sdp->type == GST_WEBRTC_SDP_TYPE_ROLLBACK) {
     /* FIXME:
      * If the mid value of an RTCRtpTransceiver was set to a non-null value
@@ -4083,8 +4068,12 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
      */
   }
 
+  if (webrtc->signaling_state != new_signaling_state) {
+    webrtc->signaling_state = new_signaling_state;
+    signalling_state_changed = TRUE;
+  }
+
   if (webrtc->signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE) {
-    gboolean prev_need_negotiation = webrtc->priv->need_negotiation;
     GList *tmp;
 
     /* media modifications */
@@ -4108,16 +4097,6 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     g_list_free_full (webrtc->priv->pending_sink_transceivers,
         (GDestroyNotify) gst_object_unref);
     webrtc->priv->pending_sink_transceivers = NULL;
-
-    /* If connection's signaling state is now stable, update the
-     * negotiation-needed flag. If connection's [[ needNegotiation]] slot
-     * was true both before and after this update, queue a task to check
-     * connection's [[needNegotiation]] slot and, if still true, fire a
-     * simple event named negotiationneeded at connection.*/
-    _update_need_negotiation (webrtc);
-    if (prev_need_negotiation && webrtc->priv->need_negotiation) {
-      _check_need_negotiation_task (webrtc, NULL);
-    }
   }
 
   for (i = 0; i < gst_sdp_message_medias_len (sd->sdp->sdp); i++) {
@@ -4185,6 +4164,39 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
       _add_ice_candidate (webrtc, item, TRUE);
     }
     g_array_set_size (webrtc->priv->pending_ice_candidates, 0);
+  }
+
+  /*
+   * If connection's signaling state changed above, fire an event named
+   * signalingstatechange at connection.
+   */
+  if (signalling_state_changed) {
+    gchar *from = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
+        webrtc->signaling_state);
+    gchar *to = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
+        new_signaling_state);
+    GST_TRACE_OBJECT (webrtc, "notify signaling-state from %s "
+        "to %s", from, to);
+    PC_UNLOCK (webrtc);
+    g_object_notify (G_OBJECT (webrtc), "signaling-state");
+    PC_LOCK (webrtc);
+
+    g_free (from);
+    g_free (to);
+  }
+
+  if (webrtc->signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE) {
+    gboolean prev_need_negotiation = webrtc->priv->need_negotiation;
+
+    /* If connection's signaling state is now stable, update the
+     * negotiation-needed flag. If connection's [[ needNegotiation]] slot
+     * was true both before and after this update, queue a task to check
+     * connection's [[needNegotiation]] slot and, if still true, fire a
+     * simple event named negotiationneeded at connection.*/
+    _update_need_negotiation (webrtc);
+    if (prev_need_negotiation && webrtc->priv->need_negotiation) {
+      _check_need_negotiation_task (webrtc, NULL);
+    }
   }
 
 out:
