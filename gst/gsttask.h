@@ -210,9 +210,7 @@ gboolean        gst_task_pause          (GstTask *task);
 GST_API
 gboolean        gst_task_join           (GstTask *task);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTask, gst_object_unref)
-#endif
 
 G_END_DECLS
 

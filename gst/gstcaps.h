@@ -580,9 +580,7 @@ gchar *           gst_caps_to_string               (const GstCaps *caps) G_GNUC_
 GST_API
 GstCaps *         gst_caps_from_string             (const gchar   *string) G_GNUC_WARN_UNUSED_RESULT;
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstCaps, gst_caps_unref)
-#endif
 
 G_END_DECLS
 

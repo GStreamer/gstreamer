@@ -154,9 +154,7 @@ GstDateTime *   gst_date_time_ref                (GstDateTime * datetime);
 GST_API
 void            gst_date_time_unref              (GstDateTime * datetime);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDateTime, gst_date_time_unref)
-#endif
 
 G_END_DECLS
 

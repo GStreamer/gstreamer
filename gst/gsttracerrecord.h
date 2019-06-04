@@ -45,9 +45,7 @@ typedef struct _GstTracerRecordClass GstTracerRecordClass;
 GST_API
 GType gst_tracer_record_get_type          (void);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTracerRecord, gst_object_unref)
-#endif
 
 /**
  * GstTracerValueScope:

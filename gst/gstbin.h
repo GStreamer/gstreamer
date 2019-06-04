@@ -250,9 +250,7 @@ void            gst_bin_set_suppressed_flags (GstBin * bin, GstElementFlags flag
 GST_API
 GstElementFlags gst_bin_get_suppressed_flags (GstBin * bin);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBin, gst_object_unref)
-#endif
 
 G_END_DECLS
 

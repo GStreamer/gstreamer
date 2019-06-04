@@ -1057,9 +1057,7 @@ GList*                  gst_element_get_pad_template_list      (GstElement *elem
 GST_API
 const gchar *           gst_element_get_metadata               (GstElement * element, const gchar * key);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstElement, gst_object_unref)
-#endif
 
 G_END_DECLS
 

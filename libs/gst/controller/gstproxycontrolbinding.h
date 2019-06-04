@@ -79,9 +79,7 @@ GstControlBinding *     gst_proxy_control_binding_new (GstObject * object,
                                                        GstObject * ref_object,
                                                        const gchar * ref_property_name);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstProxyControlBinding, gst_object_unref)
-#endif
 G_END_DECLS
 
 #endif /* __GST_PROXY_CONTROL_BINDING_H__ */

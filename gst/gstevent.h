@@ -731,9 +731,7 @@ GstEvent*       gst_event_new_segment_done      (GstFormat format, gint64 positi
 GST_API
 void            gst_event_parse_segment_done    (GstEvent *event, GstFormat *format, gint64 *position);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEvent, gst_event_unref)
-#endif
 
 G_END_DECLS
 

@@ -238,9 +238,7 @@ gsize                    gst_buffer_list_calculate_size        (GstBufferList * 
 
 #define gst_buffer_list_add(l,b) gst_buffer_list_insert((l),-1,(b));
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBufferList, gst_buffer_list_unref)
-#endif
 
 G_END_DECLS
 

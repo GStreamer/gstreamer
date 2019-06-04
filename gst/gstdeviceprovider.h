@@ -172,9 +172,7 @@ void gst_device_provider_device_changed                    (GstDeviceProvider * 
 GST_API
 GstDeviceProviderFactory * gst_device_provider_get_factory (GstDeviceProvider * provider);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDeviceProvider, gst_object_unref)
-#endif
 
 G_END_DECLS
 

@@ -76,9 +76,7 @@ gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type
 
 #endif
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTracer, gst_object_unref)
-#endif
 
 G_END_DECLS
 

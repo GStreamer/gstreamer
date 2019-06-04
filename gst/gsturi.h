@@ -414,9 +414,7 @@ gst_clear_uri (GstUri ** uri_ptr)
   gst_clear_mini_object ((GstMiniObject **) uri_ptr);
 }
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstUri, gst_uri_unref)
-#endif
 
 G_END_DECLS
 

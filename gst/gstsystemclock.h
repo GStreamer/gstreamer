@@ -87,9 +87,7 @@ GstClock*               gst_system_clock_obtain         (void);
 GST_API
 void                    gst_system_clock_set_default    (GstClock *new_clock);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstSystemClock, gst_object_unref)
-#endif
 
 G_END_DECLS
 

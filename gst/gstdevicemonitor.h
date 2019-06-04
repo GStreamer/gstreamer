@@ -111,9 +111,7 @@ void      gst_device_monitor_set_show_all_devices (GstDeviceMonitor * monitor, g
 GST_API
 gboolean  gst_device_monitor_get_show_all_devices (GstDeviceMonitor * monitor);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDeviceMonitor, gst_object_unref)
-#endif
 
 G_END_DECLS
 

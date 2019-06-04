@@ -151,9 +151,7 @@ GstStructure *        gst_context_writable_structure       (GstContext * context
 GST_API
 gboolean              gst_context_is_persistent            (const GstContext * context);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstContext, gst_context_unref)
-#endif
 
 G_END_DECLS
 

@@ -702,9 +702,7 @@ void            gst_query_set_bitrate              (GstQuery * query, guint nomi
 GST_API
 void            gst_query_parse_bitrate            (GstQuery * query, guint * nominal_bitrate);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstQuery, gst_query_unref)
-#endif
 
 G_END_DECLS
 

@@ -796,13 +796,9 @@ GST_API
 GstReferenceTimestampMeta * gst_buffer_get_reference_timestamp_meta (GstBuffer * buffer,
                                                                      GstCaps   * reference);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBuffer, gst_buffer_unref)
-#endif
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBufferPool, gst_object_unref)
-#endif
 
 G_END_DECLS
 

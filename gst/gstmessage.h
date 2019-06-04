@@ -869,9 +869,7 @@ void            gst_message_parse_redirect_entry     (GstMessage * message, gsiz
 GST_API
 gsize           gst_message_get_num_redirect_entries (GstMessage * message);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMessage, gst_message_unref)
-#endif
 
 G_END_DECLS
 

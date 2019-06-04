@@ -281,9 +281,7 @@ gboolean     gst_segment_do_seek             (GstSegment * segment, gdouble rate
 GST_API
 gboolean     gst_segment_is_equal            (const GstSegment * s0, const GstSegment * s1);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstSegment, gst_segment_free)
-#endif
 
 G_END_DECLS
 

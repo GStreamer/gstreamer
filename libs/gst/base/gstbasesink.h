@@ -327,9 +327,7 @@ GstFlowReturn   gst_base_sink_wait              (GstBaseSink *sink, GstClockTime
 GST_BASE_API
 GstStructure 	*gst_base_sink_get_stats (GstBaseSink * sink);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBaseSink, gst_object_unref)
-#endif
 
 G_END_DECLS
 

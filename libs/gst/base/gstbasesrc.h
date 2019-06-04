@@ -315,9 +315,7 @@ GST_BASE_API
 void            gst_base_src_submit_buffer_list (GstBaseSrc    * src,
                                                  GstBufferList * buffer_list);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBaseSrc, gst_object_unref)
-#endif
 
 G_END_DECLS
 
