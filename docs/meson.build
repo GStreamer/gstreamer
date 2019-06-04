@@ -106,6 +106,7 @@ endif
 project_names = {
   'app': 'applib',
   'rtp': 'rtplib',
+  'rtsp': 'rtsplib',
 }
 
 libs_doc = []
