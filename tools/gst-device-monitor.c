@@ -214,8 +214,13 @@ print_device (GstDevice * device, gboolean modified)
   str = get_launch_line (device);
   if (gst_device_has_classes (device, "Source"))
     g_print ("\tgst-launch-1.0 %s ! ...\n", str);
-  if (gst_device_has_classes (device, "Sink"))
+  else if (gst_device_has_classes (device, "Sink"))
     g_print ("\tgst-launch-1.0 ... ! %s\n", str);
+  else if (gst_device_has_classes (device, "CameraSource")) {
+    g_print ("\tgst-launch-1.0 %s.vfsrc name=camerasrc ! ... "
+        "camerasrc.vidsrc ! [video/x-h264] ... \n", str);
+  }
+
   g_free (str);
   g_print ("\n");
 
