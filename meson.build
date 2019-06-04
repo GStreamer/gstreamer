@@ -103,7 +103,7 @@ foreach sp : subprojects
       message('Created symlink to ' + project_name)
     endif
 
-    if build_infos.has_key('build-hotdoc', default: false)
+    if not meson.is_cross_build() and build_infos.has_key('build-hotdoc', default: false)
       if plugins.length() > 0
         plugins_doc_caches += [subproj.get_variable('plugins_doc_dep')]
       endif
