@@ -259,21 +259,13 @@ GstEncodingProfile * gst_encoding_profile_from_discoverer (GstDiscovererInfo *in
 GST_PBUTILS_API
 GstEncodingProfile * gst_encoding_profile_copy (GstEncodingProfile *self);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingAudioProfile, gst_object_unref)
-#endif
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingContainerProfile, gst_object_unref)
-#endif
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingProfile, gst_object_unref)
-#endif
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingVideoProfile, gst_object_unref)
-#endif
 
 G_END_DECLS
 

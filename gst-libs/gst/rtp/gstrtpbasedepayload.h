@@ -128,9 +128,7 @@ void            gst_rtp_base_depayload_set_source_info_enabled (GstRTPBaseDepayl
                                                                 gboolean enable);
 
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstRTPBaseDepayload, gst_object_unref)
-#endif
 
 G_END_DECLS
 

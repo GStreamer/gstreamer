@@ -114,9 +114,7 @@ GST_ALLOCATORS_API
 gboolean       gst_is_dmabuf_memory (GstMemory * mem);
 
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDmaBufAllocator, gst_object_unref)
-#endif
 
 G_END_DECLS
 #endif /* __GST_DMABUF_H__ */

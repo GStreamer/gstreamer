@@ -445,9 +445,7 @@ GST_VIDEO_API
 gboolean       gst_video_info_align       (GstVideoInfo * info, GstVideoAlignment * align);
 
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoInfo, gst_video_info_free)
-#endif
 
 G_END_DECLS
 

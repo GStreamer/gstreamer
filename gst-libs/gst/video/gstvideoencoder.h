@@ -377,9 +377,7 @@ gboolean             gst_video_encoder_is_qos_enabled (GstVideoEncoder * encoder
 GST_VIDEO_API
 GstClockTimeDiff     gst_video_encoder_get_max_encode_time (GstVideoEncoder *encoder, GstVideoCodecFrame * frame);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoEncoder, gst_object_unref)
-#endif
 
 G_END_DECLS
 

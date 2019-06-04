@@ -171,9 +171,7 @@ GList *                 gst_encoding_list_available_categories  (void);
 GST_PBUTILS_API
 GList *                 gst_encoding_list_all_targets           (const gchar * categoryname);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstEncodingTarget, gst_object_unref)
-#endif
 
 G_END_DECLS
 

@@ -93,9 +93,7 @@ gboolean        gst_is_fd_memory        (GstMemory *mem);
 GST_ALLOCATORS_API
 gint            gst_fd_memory_get_fd    (GstMemory *mem);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstFdAllocator, gst_object_unref)
-#endif
 
 G_END_DECLS
 
