@@ -205,3 +205,12 @@
   fun:g_tls_certificate_gnutls_real_copy
   fun:g_tls_server_connection_gnutls_retrieve_function
 }
+
+{
+  <shout leaks through sethostent, ignoring all sethostent leaks as this is using global>
+  Memcheck:Leak
+  match-leak-kinds: definite
+  fun:malloc
+  ...
+  fun:sethostent
+}
