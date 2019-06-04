@@ -12,6 +12,5 @@ libgstrtpmanagerbad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
 	gstrtp-utils.h \
-	gstrtpcaps.h \
 	gstrtpsink.h \
 	gstrtpsrc.h
