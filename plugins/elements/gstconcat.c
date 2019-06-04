@@ -655,6 +655,7 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           GST_DEBUG_OBJECT (self,
               "resetting start offset to 0 after flushing with reset_time = TRUE");
           self->current_start_offset = 0;
+          self->last_stop = GST_CLOCK_TIME_NONE;
         }
         ret = gst_pad_event_default (pad, parent, event);
       } else {
