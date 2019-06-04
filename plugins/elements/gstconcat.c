@@ -430,7 +430,7 @@ gst_concat_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstConcat *self = GST_CONCAT (parent);
   GstConcatPad *spad = GST_CONCAT_PAD (pad);
 
-  GST_LOG_OBJECT (pad, "received buffer %p", buffer);
+  GST_LOG_OBJECT (pad, "received buffer %" GST_PTR_FORMAT, buffer);
 
   if (!gst_concat_pad_wait (spad, self))
     return GST_FLOW_FLUSHING;
@@ -455,7 +455,8 @@ gst_concat_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   ret = gst_pad_push (self->srcpad, buffer);
 
-  GST_LOG_OBJECT (pad, "handled buffer %s", gst_flow_get_name (ret));
+  GST_LOG_OBJECT (pad, "handled buffer %s, last_stop %" GST_TIME_FORMAT,
+      gst_flow_get_name (ret), GST_TIME_ARGS (self->last_stop));
 
   return ret;
 }
@@ -579,12 +580,28 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
           /* Update segment values to be continuous with last stream */
           if (self->format == GST_FORMAT_TIME) {
+            GST_DEBUG_OBJECT (self,
+                "Updating segment base %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT
+                " = %" GST_TIME_FORMAT, GST_TIME_ARGS (segment.base),
+                GST_TIME_ARGS (self->current_start_offset),
+                GST_TIME_ARGS (segment.base + self->current_start_offset));
             segment.base += self->current_start_offset;
           } else {
             /* Shift start/stop byte position */
+            GST_DEBUG_OBJECT (self,
+                "Updating segment start %" G_GUINT64_FORMAT " + %"
+                G_GUINT64_FORMAT " = %" G_GUINT64_FORMAT, segment.start,
+                self->current_start_offset,
+                segment.start + self->current_start_offset);
             segment.start += self->current_start_offset;
-            if (segment.stop != -1)
+            if (segment.stop != -1) {
+              GST_DEBUG_OBJECT (self,
+                  "Updating segment stop %" G_GUINT64_FORMAT " + %"
+                  G_GUINT64_FORMAT " = %" G_GUINT64_FORMAT, segment.stop,
+                  self->current_start_offset,
+                  segment.stop + self->current_start_offset);
               segment.stop += self->current_start_offset;
+            }
           }
         }
         topush = gst_event_new_segment (&segment);
