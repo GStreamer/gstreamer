@@ -535,6 +535,8 @@ GST_START_TEST (test_rate_change_down)
             GST_BUFFER (l->data)), GST_FLOW_OK);
   }
 
+  g_list_free (bufs);
+
   gst_app_src_end_of_stream (GST_APP_SRC (src));
   gst_object_unref (src);
 
