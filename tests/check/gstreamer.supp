@@ -1609,6 +1609,7 @@
    fun:g_slist_prepend
    fun:gst_debug_add_log_function
 }
+
 {
    <We do not care about anything ld related, and don't use library constructors>
    Memcheck:Addr1
@@ -1650,4 +1651,13 @@
    ...
    obj:*/ld-*.so
    ...
+}
+
+{
+   Leak of debug function list item
+   Memcheck:Leak
+   fun:*alloc
+   ...
+   fun:g_slist_copy_deep
+   fun:gst_debug_add_log_function
 }
