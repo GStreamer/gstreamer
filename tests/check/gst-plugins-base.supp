@@ -629,3 +629,10 @@
   fun:_backup_audio_orc_int_bias
   ...
 }
+
+{
+  <valgrind gets confused with value initialized in unconditional scope>
+  Memcheck:Cond
+  fun:_backup_volume_orc_process_controlled_int16_1ch
+  ...
+}
