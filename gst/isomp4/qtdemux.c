@@ -5148,6 +5148,19 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* find keyframe of the target index */
   kf_index = gst_qtdemux_find_keyframe (qtdemux, stream, index, FALSE);
 
+  /* go back two frames to provide lead-in for non-raw audio decoders */
+  if (stream->subtype == FOURCC_soun && !stream->need_clip) {
+    guint32 old_index = kf_index;
+    kf_index = MAX (kf_index, 2) - 2;
+    if (qtdemux_parse_samples (qtdemux, stream, kf_index)) {
+      GST_DEBUG_OBJECT (stream->pad,
+          "Moving backwards %u frames to ensure sufficient sound lead-in",
+          old_index - kf_index);
+    } else {
+      kf_index = old_index;
+    }
+  }
+
   /* if we move forwards, we don't have to go back to the previous
    * keyframe since we already sent that. We can also just jump to
    * the keyframe right before the target index if there is one. */
@@ -5171,9 +5184,9 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
   } else {
     GST_DEBUG_OBJECT (stream->pad,
-        "moving backwards to keyframe at %u "
+        "moving backwards to %sframe at %u "
         "(pts %" GST_TIME_FORMAT " dts %" GST_TIME_FORMAT " )",
-        kf_index,
+        (stream->subtype == FOURCC_soun) ? "audio " : "key", kf_index,
         GST_TIME_ARGS (QTSAMPLE_PTS (stream, &stream->samples[kf_index])),
         GST_TIME_ARGS (QTSAMPLE_DTS (stream, &stream->samples[kf_index])));
     gst_qtdemux_move_stream (qtdemux, stream, kf_index);
