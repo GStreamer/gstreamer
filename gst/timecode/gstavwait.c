@@ -472,7 +472,9 @@ gst_avwait_set_property (GObject * object, guint prop_id,
       seconds = g_ascii_strtoll (parts[2], NULL, 10);
       frames = g_ascii_strtoll (parts[3], NULL, 10);
       g_mutex_lock (&self->mutex);
-      gst_video_time_code_init (self->tc, 0, 1, NULL, 0, hours, minutes,
+      if (self->tc)
+        gst_video_time_code_free (self->tc);
+      self->tc = gst_video_time_code_new (0, 1, NULL, 0, hours, minutes,
           seconds, frames, 0);
       if (GST_VIDEO_INFO_FORMAT (&self->vinfo) != GST_VIDEO_FORMAT_UNKNOWN
           && self->vinfo.fps_n != 0) {
@@ -488,7 +490,7 @@ gst_avwait_set_property (GObject * object, guint prop_id,
       if (self->tc)
         gst_video_time_code_free (self->tc);
       self->tc = g_value_dup_boxed (value);
-      if (self->tc->config.fps_n == 0
+      if (self->tc && self->tc->config.fps_n == 0
           && GST_VIDEO_INFO_FORMAT (&self->vinfo) !=
           GST_VIDEO_FORMAT_UNKNOWN && self->vinfo.fps_n != 0) {
         self->tc->config.fps_n = self->vinfo.fps_n;
@@ -502,7 +504,7 @@ gst_avwait_set_property (GObject * object, guint prop_id,
       if (self->end_tc)
         gst_video_time_code_free (self->end_tc);
       self->end_tc = g_value_dup_boxed (value);
-      if (self->end_tc->config.fps_n == 0
+      if (self->end_tc && self->end_tc->config.fps_n == 0
           && GST_VIDEO_INFO_FORMAT (&self->vinfo) !=
           GST_VIDEO_FORMAT_UNKNOWN && self->vinfo.fps_n != 0) {
         self->end_tc->config.fps_n = self->vinfo.fps_n;
