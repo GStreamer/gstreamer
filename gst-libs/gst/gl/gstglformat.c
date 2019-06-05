@@ -49,6 +49,9 @@
 #ifndef GL_TEXTURE_EXTERNAL_OES
 #define GL_TEXTURE_EXTERNAL_OES 0x8D65
 #endif
+#ifndef GL_UNSIGNED_INT_2_10_10_10_REV
+#define GL_UNSIGNED_INT_2_10_10_10_REV 0x8368
+#endif
 
 static inline guint
 _gl_format_n_components (guint format)
@@ -58,6 +61,7 @@ _gl_format_n_components (guint format)
     case GST_GL_RGBA:
     case GST_GL_RGBA8:
     case GST_GL_RGBA16:
+    case GST_GL_RGB10_A2:
       return 4;
     case GST_VIDEO_GL_TEXTURE_TYPE_RGB:
     case GST_VIDEO_GL_TEXTURE_TYPE_RGB16:
@@ -93,6 +97,8 @@ _gl_type_n_components (guint type)
       return 1;
     case GL_UNSIGNED_SHORT_5_6_5:
       return 3;
+    case GL_UNSIGNED_INT_2_10_10_10_REV:
+      return 4;
     default:
       g_assert_not_reached ();
       return 0;
@@ -108,6 +114,8 @@ _gl_type_n_bytes (guint type)
     case GL_UNSIGNED_SHORT:
     case GL_UNSIGNED_SHORT_5_6_5:
       return 2;
+    case GL_UNSIGNED_INT_2_10_10_10_REV:
+      return 4;
     default:
       g_assert_not_reached ();
       return 0;
@@ -190,6 +198,9 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
     case GST_VIDEO_FORMAT_YV12:
       n_plane_components = 1;
       break;
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+    case GST_VIDEO_FORMAT_RGB10A2_LE:
+      return GST_GL_RGB10_A2;
     default:
       n_plane_components = 4;
       g_assert_not_reached ();
@@ -237,6 +248,8 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
               && !USING_GLES3 (context) ? GST_GL_RGBA : GST_GL_RGBA8;
         case GL_UNSIGNED_SHORT:
           return GST_GL_RGBA16;
+        case GL_UNSIGNED_INT_2_10_10_10_REV:
+          return GST_GL_RGB10_A2;
       }
       break;
     case GST_GL_RGB:
@@ -278,6 +291,7 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
     case GST_GL_ALPHA:
     case GST_GL_DEPTH_COMPONENT16:
     case GST_GL_DEPTH24_STENCIL8:
+    case GST_GL_RGB10_A2:
       return format;
     default:
       g_critical ("Unknown GL format 0x%x type 0x%x provided", format, type);
@@ -344,6 +358,10 @@ gst_gl_format_type_from_sized_gl_format (GstGLFormat format,
     case GST_GL_ALPHA:
       *unsized_format = format;
       *gl_type = GL_UNSIGNED_BYTE;
+      break;
+    case GST_GL_RGB10_A2:
+      *unsized_format = GST_GL_RGBA;
+      *gl_type = GL_UNSIGNED_INT_2_10_10_10_REV;
       break;
     default:
       g_critical ("Unknown GL format 0x%x provided", format);
@@ -412,6 +430,11 @@ gst_gl_format_is_supported (GstGLContext * context, GstGLFormat format)
           "GL_OES_packed_depth_stencil")
           || gst_gl_context_check_feature (context,
           "GL_EXT_packed_depth_stencil");
+    case GST_GL_RGB10_A2:
+      return USING_OPENGL (context) || USING_OPENGL3 (context)
+          || USING_GLES3 (context)
+          || gst_gl_context_check_feature (context,
+          "GL_OES_required_internalformat");
     default:
       g_assert_not_reached ();
       return FALSE;

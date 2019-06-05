@@ -87,10 +87,17 @@ struct _GstGLColorConvertClass
  *
  * The currently supported formats that can be converted
  */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define COLOR_CONVERT_EXT_FORMATS ", BGR10A2_LE, RGB10A2_LE"
+#else
+#define COLOR_CONVERT_EXT_FORMATS ""
+#endif
+
 #define GST_GL_COLOR_CONVERT_FORMATS "{ RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, " \
                                "xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, " \
                                "Y41B, NV12, NV21, YUY2, UYVY, AYUV, VUYA, " \
-                               "GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 }"
+                               "GRAY8, GRAY16_LE, GRAY16_BE, RGB16, BGR16, ARGB64 " \
+                               COLOR_CONVERT_EXT_FORMATS "}"
 
 /**
  * GST_GL_COLOR_CONVERT_VIDEO_CAPS:

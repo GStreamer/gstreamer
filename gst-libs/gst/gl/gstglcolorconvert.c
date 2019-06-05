@@ -950,6 +950,12 @@ _init_supported_formats (GstGLContext * context, gboolean output,
 
   if (!context || gst_gl_format_is_supported (context, GST_GL_RGB565))
     _append_value_string_list (supported_formats, "RGB16", "BGR16", NULL);
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  if (!context || gst_gl_format_is_supported (context, GST_GL_RGB10_A2))
+    _append_value_string_list (supported_formats, "BGR10A2_LE", "RGB10A2_LE",
+        NULL);
+#endif
 }
 
 /* copies the given caps */
@@ -974,7 +980,8 @@ gst_gl_color_convert_caps_transform_format_info (GstGLContext * context,
    */
 
   _init_value_string_list (&rgb_formats, "RGBA", "ARGB", "BGRA", "ABGR", "RGBx",
-      "xRGB", "BGRx", "xBGR", "RGB", "BGR", "ARGB64", NULL);
+      "xRGB", "BGRx", "xBGR", "RGB", "BGR", "ARGB64", "BGR10A2_LE",
+      "RGB10A2_LE", NULL);
   _init_supported_formats (context, output, &supported_formats);
   gst_value_intersect (&supported_rgb_formats, &rgb_formats,
       &supported_formats);
@@ -1438,11 +1445,27 @@ _RGB_pixel_order (const gchar * expected, const gchar * wanted)
     gchar *temp = expect;
     expect = g_strndup (temp, 3);
     g_free (temp);
+  } else if (strcmp (expect, "bgr10a2_le") == 0) {
+    gchar *temp = expect;
+    expect = g_strndup ("bgra", 4);
+    g_free (temp);
+  } else if (strcmp (expect, "rgb10a2_le") == 0) {
+    gchar *temp = expect;
+    expect = g_strndup ("rgba", 4);
+    g_free (temp);
   }
 
   if (strcmp (want, "rgb16") == 0 || strcmp (want, "bgr16") == 0) {
     gchar *temp = want;
     orig_want = want = g_strndup (temp, 3);
+    g_free (temp);
+  } else if (strcmp (want, "bgr10a2_le") == 0) {
+    gchar *temp = want;
+    orig_want = want = g_strndup ("bgra", 4);
+    g_free (temp);
+  } else if (strcmp (want, "rgb10a2_le") == 0) {
+    gchar *temp = want;
+    orig_want = want = g_strndup ("rgba", 4);
     g_free (temp);
   }
 
@@ -1519,6 +1542,8 @@ _get_n_textures (GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_RGB16:
     case GST_VIDEO_FORMAT_BGR16:
     case GST_VIDEO_FORMAT_ARGB64:
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+    case GST_VIDEO_FORMAT_RGB10A2_LE:
       return 1;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:

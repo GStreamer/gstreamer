@@ -70,6 +70,14 @@
 #endif
 #endif
 
+#ifndef DRM_FORMAT_BGRA1010102
+#define DRM_FORMAT_BGRA1010102  fourcc_code('B', 'A', '3', '0')
+#endif
+
+#ifndef DRM_FORMAT_RGBA1010102
+#define DRM_FORMAT_RGBA1010102  fourcc_code('R', 'A', '3', '0')
+#endif
+
 #ifndef EGL_LINUX_DMA_BUF_EXT
 #define EGL_LINUX_DMA_BUF_EXT 0x3270
 #endif
@@ -500,6 +508,14 @@ _drm_rgba_fourcc_from_info (GstVideoInfo * info, int plane,
     case GST_VIDEO_FORMAT_Y444:
       *out_format = GST_GL_RED;
       return DRM_FORMAT_R8;
+
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+      *out_format = GST_GL_RGB10_A2;
+      return DRM_FORMAT_BGRA1010102;
+
+    case GST_VIDEO_FORMAT_RGB10A2_LE:
+      *out_format = GST_GL_RGB10_A2;
+      return DRM_FORMAT_RGBA1010102;
 
     default:
       GST_ERROR ("Unsupported format for DMABuf.");
