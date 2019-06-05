@@ -473,7 +473,7 @@ static GstCaps *_fixate_caps (GstAggregator * agg, GstCaps * caps);
 static gboolean gst_gl_video_mixer_propose_allocation (GstAggregator *
     agg, GstAggregatorPad * agg_pad, GstQuery * decide_query, GstQuery * query);
 static void gst_gl_video_mixer_reset (GstGLMixer * mixer);
-static gboolean gst_gl_video_mixer_init_shader (GstGLMixer * mixer,
+static gboolean gst_gl_video_mixer_set_caps (GstGLMixer * mixer,
     GstCaps * outcaps);
 
 static gboolean gst_gl_video_mixer_process_textures (GstGLMixer * mixer,
@@ -917,7 +917,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
           GST_TYPE_GL_VIDEO_MIXER_BACKGROUND,
           DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_video_mixer_init_shader;
+  GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_video_mixer_set_caps;
   GST_GL_MIXER_CLASS (klass)->reset = gst_gl_video_mixer_reset;
   GST_GL_MIXER_CLASS (klass)->process_textures =
       gst_gl_video_mixer_process_textures;
@@ -1202,36 +1202,35 @@ gst_gl_video_mixer_reset (GstGLMixer * mixer)
 }
 
 static gboolean
-gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
+gst_gl_video_mixer_set_caps (GstGLMixer * mixer, GstCaps * outcaps)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mixer);
-  gchar *frag_str;
-  gboolean ret;
 
-  if (video_mixer->shader)
-    gst_object_unref (video_mixer->shader);
+  g_clear_object (&video_mixer->shader);
 
   /* need reconfigure output geometry */
   video_mixer->output_geo_change = TRUE;
 
-  frag_str =
-      g_strdup_printf ("%s%s",
-      gst_gl_shader_string_get_highest_precision (GST_GL_BASE_MIXER
-          (mixer)->context, GST_GLSL_VERSION_NONE,
-          GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY),
-      video_mixer_f_src);
-
-  ret = gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
-      gst_gl_shader_string_vertex_mat4_vertex_transform,
-      frag_str, &video_mixer->shader);
-  g_free (frag_str);
-  return ret;
+  return TRUE;
 }
 
 static void
 _video_mixer_process_gl (GstGLContext * context, GstGLVideoMixer * video_mixer)
 {
   GstGLMixer *mixer = GST_GL_MIXER (video_mixer);
+
+  if (!video_mixer->shader) {
+    gchar *frag_str = g_strdup_printf ("%s%s",
+        gst_gl_shader_string_get_highest_precision (GST_GL_BASE_MIXER
+            (mixer)->context, GST_GLSL_VERSION_NONE,
+            GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY),
+        video_mixer_f_src);
+
+    gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
+        gst_gl_shader_string_vertex_mat4_vertex_transform,
+        frag_str, &video_mixer->shader);
+    g_free (frag_str);
+  }
 
   gst_gl_framebuffer_draw_to_texture (mixer->fbo, video_mixer->out_tex,
       gst_gl_video_mixer_callback, video_mixer);
