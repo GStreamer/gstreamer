@@ -308,6 +308,10 @@ create_xdg_surface_and_toplevel (GstGLWindowWaylandEGL * window_egl)
 
   /* First create the XDG surface */
   xdg_wm_base = gst_gl_display_wayland_get_xdg_wm_base (display);
+  if (window_egl->window.queue) {
+    wl_proxy_set_queue ((struct wl_proxy *) xdg_wm_base,
+        window_egl->window.queue);
+  }
   xdg_surface = xdg_wm_base_get_xdg_surface (xdg_wm_base,
       window_egl->window.surface);
   if (window_egl->window.queue) {
