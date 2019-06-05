@@ -28,6 +28,100 @@
    fun:clone
 }
 
+### glibc suppressions
+
+{
+   <conditional jump on wim's debian 2/2/06>
+   Memcheck:Cond
+   obj:/lib/ld-2.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.*.so
+   fun:_dlerror_run
+   fun:dlopen
+   fun:g_module_open
+   fun:gst_plugin_load_file
+}
+
+{
+   <Conditional jump>
+   Memcheck:Cond
+   fun:strlen
+   fun:fillin_rpath
+   fun:_dl_init_paths
+   fun:dl_main
+   fun:_dl_sysdep_start
+   fun:_dl_start
+   obj:/lib64/ld-2.*.so
+   obj:*
+   obj:*
+}
+
+{
+   <Conditional jump>
+   Memcheck:Cond
+   fun:_dl_relocate_object
+   fun:dl_main
+   fun:_dl_sysdep_start
+   fun:_dl_start
+}
+
+{
+   <insert a suppression name here>
+   Memcheck:Cond
+   fun:*
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+}
+
+# glibc does not deallocate thread-local storage
+
+{
+   <tls>
+   Memcheck:Leak
+   fun:calloc
+   fun:_dl_allocate_tls
+   fun:pthread_create@@*
+}
+
+{
+   <tls>
+   Memcheck:Leak
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate_tls
+}
+
+# I get an extra stack entry on x86/dapper
+{
+   <tls>
+   Memcheck:Leak
+   fun:calloc
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_allocate_tls
+   fun:pthread_create@@*
+}
+
+
+{
+   <pthread strstr>
+   Memcheck:Cond
+   fun:strstr
+   fun:__pthread_initialize_minimal
+   obj:/lib/libpthread-*.so
+   obj:/lib/libpthread-*.so
+   fun:call_init
+   fun:_dl_init
+   obj:/lib/ld-*.so
+}
+
 # a thread-related free problem in glibc from Edgard
 {
    __libc_freeres_rw_acess
@@ -38,6 +132,215 @@
    obj:*
    obj:*
    fun:__libc_freeres
+}
+
+{
+   <a conditional jump on wim's debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+}
+
+# g_module_open-related problems
+{
+   <started showing up on fc4-quick>
+   Memcheck:Addr2
+   fun:memcpy
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+   fun:gst_plugin_load_file
+   fun:gst_registry_scan_path_level
+   fun:gst_registry_scan_path_level
+   fun:gst_registry_scan_path_level
+   fun:init_post
+   fun:g_option_context_parse
+   fun:gst_init_check
+   fun:gst_init
+   fun:gst_check_init
+   fun:main
+}
+
+{
+   <started showing up on fc4-quick>
+   Memcheck:Addr4
+   fun:memcpy
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+   fun:gst_plugin_load_file
+   fun:gst_registry_scan_path_level
+   fun:gst_registry_scan_path_level
+   fun:gst_registry_scan_path_level
+   fun:init_post
+   fun:g_option_context_parse
+   fun:gst_init_check
+   fun:gst_init
+   fun:gst_check_init
+   fun:main
+}
+
+{
+   <g_module_open on wim's debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:do_sym
+   fun:_dl_sym
+   fun:dlsym_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlsym
+   fun:g_module_symbol
+   fun:g_module_open
+   fun:gst_plugin_load_file
+}
+
+{
+   <g_module_open on wim's debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+   fun:gst_plugin_load_file
+}
+{
+   <g_module_open on wim's debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+   fun:gst_plugin_load_file
+   fun:gst_plugin_load_by_name
+   fun:gst_plugin_feature_load
+}
+
+{
+   <leak on wim's debian in g_module_open>
+   Memcheck:Leak
+   fun:malloc
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+   fun:gst_plugin_load_file
+   fun:gst_plugin_load_by_name
+}
+
+{
+   <invalid read on wim's debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+}
+
+{
+   <invalid read on wim's debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+}
+
+{
+   <invalid read on wim's debian - 2006-02-02>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <invalid read on wim's debian - 2006-02-02>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:dl_open_worker
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   fun:dlopen_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <invalid read on wim's debian - 2006-02-02>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:do_sym
+   fun:_dl_sym
+   fun:dlsym_doit
+   obj:/lib/ld-2.3.*.so
+   fun:_dlerror_run
+   fun:dlsym
+   fun:g_module_symbol
+   fun:g_module_open
 }
 
 {
@@ -56,6 +359,362 @@
    fun:setup_pipe
    fun:setup_messaging_with_key
    fun:setup_messaging
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   fun:_dl_sym
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlsym
+   fun:g_module_symbol
+   fun:g_module_open
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   fun:iconv_open
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   obj:/lib/i686/cmov/libc-2.7.so
+   fun:iconv_open
+}
+
+{
+   <suppression for glibc 2.7 on Ubunty Hardy 64-bit>
+   Memcheck:Addr8
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+   obj:/lib/libc-2.7.so
+   obj:/lib/libc-2.7.so
+   obj:/lib/libc-2.7.so
+   obj:/lib/libc-2.7.so
+   obj:/lib/libc-2.7.so
+   fun:iconv_open
+}
+
+{
+   <suppression for glibc 2.7 on Ubunty Hardy 64-bit>
+   Memcheck:Addr8
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+   obj:/lib/libc-2.7.so
+   obj:/lib/libc-2.7.so
+   obj:/lib/libc-2.7.so
+   obj:/lib/libc-2.7.so
+   obj:/lib/libc-2.7.so
+   fun:iconv_open
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on Ubunty Hardy 64-bit>
+   Memcheck:Addr8
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Cond
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
+}
+
+{
+   <suppression for glibc 2.7 on debian>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/i686/cmov/libdl-2.7.so
+   fun:dlopen
 }
 
 # suppression for a glibc bug:
@@ -77,6 +736,175 @@
    fun:free
    fun:free_mem
    fun:__libc_freeres
+}
+
+# valgrind doesn't allow me to specify a suppression for Addr1, Addr2, Addr4
+# as Addr*, so 3 copies for that; and then 2 of each for that pesky memcpy
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr1
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr2
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr4
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr1
+   fun:memcpy
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr2
+   fun:memcpy
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+{
+   <Invalid read of size 1, 2, 4 on thomas's FC4>
+   Memcheck:Addr4
+   fun:memcpy
+   fun:_dl_signal_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+   fun:g_module_open
+}
+
+{
+   <Addr8 on Andy's AMD64 ubuntu in dl_open>
+   Memcheck:Addr8
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/libc-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   obj:/lib/libdl-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+}
+
+{
+   <Conditional jump on Andy's AMD64 ubuntu>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/libc-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   fun:_dl_open
+   obj:/lib/libdl-2.3.*.so
+   obj:/lib/ld-2.3.*.so
+   obj:/lib/libdl-2.3.*.so
+   fun:dlopen
+   fun:g_module_open
+   fun:gst_plugin_load_file
+   fun:gst_plugin_load_by_name
+   fun:gst_plugin_feature_load
+}
+
+{
+   <Mike's x86 dapper>
+   Memcheck:Addr4
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libc-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   fun:_dl_open
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   fun:dlopen
+}
+
+{
+   <Mike's x86 dapper>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libc-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   fun:_dl_open
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   fun:dlopen
+}
+
+{
+   <Another dapper one>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libc-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   fun:_dl_open
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/tls/i686/cmov/libdl-2.3.6.so
+   fun:dlopen
 }
 
 ### glib suppressions
@@ -151,6 +979,35 @@
 #pthread memleaks
 
 {
+   Thread creation leak
+   Memcheck:Leak
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate*
+   fun:_dl_allocate*
+   fun:__pthread_initialize_minimal
+}
+
+{
+   Thread management leak
+   Memcheck:Leak
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate*
+   fun:_dl_allocate*
+   fun:__pthread_*
+}
+
+{
+   Thread management leak 2
+   Memcheck:Leak
+   fun:memalign
+   fun:_dl_allocate*
+   fun:_dl_allocate*
+   fun:__pthread_*
+}
+
+{
    pthread_create Syscall param write(buf) points to uninitialised byte(s)
    Memcheck:Param
    write(buf)
@@ -183,6 +1040,12 @@
 }
 
 {
+   <annoying read error inside dlopen stuff on Ubuntu Dapper x86_64>
+   Memcheck:Addr8
+   obj:/lib/ld-2.3.6.so
+}
+
+{
    <Ubuntu Dapper x86_64>
    Memcheck:Param
    futex(uaddr2)
@@ -199,6 +1062,103 @@
 }
 
 {
+   <Ubuntu Dapper x86_64 dlopen stuff again>
+   Memcheck:Cond
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   fun:_dl_open
+   obj:/lib/libdl-2.3.6.so
+   obj:/lib/ld-2.3.6.so
+   obj:/lib/libdl-2.3.6.so
+   fun:dlopen
+   fun:g_module_open
+   fun:gst_plugin_load_file
+}
+# this exists in a bunch of different variations, hence the short tail/trace
+{
+   <dlopen invalid read of size 4 suppression on tpm's Ubuntu edgy/x86>
+   Memcheck:Addr4
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+}
+{
+   <and the same for 64bit systems>
+   Memcheck:Addr8
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+}
+
+# More edgy suppressions (Mike)
+{
+   <dlopen Condition jump suppressions for Ubuntu Edgy/x86>
+   Memcheck:Cond
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   fun:dlopen_doit
+   obj:/lib/ld-2.4.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+}
+
+{
+   <dlopen Condition jump suppressions for Ubuntu Edgy/x86>
+   Memcheck:Cond
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   fun:dlopen_doit
+   obj:/lib/ld-2.4.so
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.1
+}
+
+{
+   <dlopen Condition jump suppressions for Ubuntu Edgy/x86>
+   Memcheck:Cond
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   fun:do_sym
+   fun:_dl_sym
+}
+
+# This one's overly general, but there's zero other information in the stack
+# trace - just these five lines!
+{
+   <dlopen Condition jump suppressions for Ubuntu Edgy/x86>
+   Memcheck:Cond
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+   obj:/lib/ld-2.4.so
+}
+
+{
+   <tls leaks on Edgy/x86>
+   Memcheck:Leak
+   fun:calloc
+   obj:/lib/ld-2.4.so
+   fun:_dl_allocate_tls
+   fun:pthread_create@@GLIBC_2.1
+}
+
+# TLS leaks for feisty/x86
+{
+   <tls leaks on Feisty/x86>
+   Memcheck:Leak
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate_tls
+   fun:pthread_create@@GLIBC_2.1
+}
+
+{
    <libcdio 0.76 leak>
    Memcheck:Leak
    fun:calloc
@@ -206,6 +1166,12 @@
    fun:cdio_open_am_linux
    obj:/usr/lib/libcdio.so.6.0.1
    fun:cdio_open_am
+}
+
+{
+   <Addr8 on Jan's AMD64 ubuntu Feisty in dl_open>
+   Memcheck:Addr8
+   obj:/lib/ld-2.5.so
 }
 
 {
@@ -330,6 +1296,14 @@
    ...
    fun:snd_config_update_r
    fun:snd_config_update
+}
+{
+   <alsa leak snd_config_searcha_hooks>
+   Memcheck:Leak
+   fun:*alloc
+   fun:_dl_close_worker
+   ...
+   fun:snd_config_searcha_hooks
 }
 
 {
@@ -732,6 +1706,348 @@
    fun:*alloc
    ...
    fun:FcInitLoadConfig
+}
+
+# Issues with ubuntu Hardy, same crack as for previous ubuntus
+{
+   <tls leak generic ubuntu hardy x86>
+   Memcheck:Leak
+   fun:calloc
+   obj:*
+   fun:_dl_allocate_tls
+   fun:pthread_create@@*
+   obj:/usr/lib/libgthread*
+   fun:g_thread_*
+}
+
+# I've made this version generic, so that it covers future modifications
+# of library names
+{
+   <tls leak generic>
+   Memcheck:Leak
+   fun:calloc
+   obj:*
+   fun:_dl_allocate_tls
+   fun:pthread_create@@*
+   fun:g_thread_*
+}
+
+# series of invalid read of size 4 in g_module_open for ubuntu
+# hardy x86/32bit
+{
+   <invalid read of size 4 within <g_module_open>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+   fun:gst_plugin_load_*
+}
+
+{
+   <invalid read of size 4 within <g_module_open>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+   fun:gst_plugin_load_*
+}
+
+{
+   <invalid read of size 4 within <g_module_open>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+   fun:gst_plugin_load_*
+}
+
+{
+   <invalid read of size 4 within <g_module_open>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+   fun:gst_plugin_load_*
+}
+
+{
+   <invalid read of size 4 within <g_module_open>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+   fun:gst_plugin_load*
+}
+
+{
+   <invalid read of size 4 within <g_module_open>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libc-2.7.so
+   fun:_dl_sym
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libdl-2.7.so
+   fun:dlsym
+   fun:g_module_symbol
+   fun:g_module_open
+   fun:gst_plugin_load_*
+}
+
+# series of invalid read of size 8 in g_module_open for ubuntu
+# hardy x86/64bit
+{
+   <invalid read of size 8 within <g_module_open>
+   Memcheck:Addr8
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+}
+
+{
+   <invalid read of size 8 within <g_module_open>
+   Memcheck:Addr8
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+}
+
+{
+   <invalid read of size 8 within <g_module_open>
+   Memcheck:Addr8
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+}
+
+{
+   <invalid read of size 8 within <g_module_open>
+   Memcheck:Addr8
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+}
+
+{
+   <invalid read of size 8 within <g_module_open>
+   Memcheck:Addr8
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+}
+
+{
+   <invalid read of size 8 within <g_module_open>
+   Memcheck:Addr8
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   fun:dlopen
+   fun:g_module_open
+}
+
+{
+   <invalid read of size 8 within <g_module_open>
+   Memcheck:Addr8
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libc-2.7.so
+   obj:/lib/libdl-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libdl-2.7.so
+   fun:dlsym
+   fun:g_module_symbol
+   fun:g_module_open
+}
+
+{
+   <GLib caching>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+   fun:__nss_lookup_function
+   obj:/lib/tls/i686/cmov/libc-2.7.so
+   fun:__nss_passwd_lookup
+   fun:getpwnam_r
+}
+
+{
+   <GLib caching>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+   fun:__nss_lookup_function
+   obj:/lib/tls/i686/cmov/libc-2.7.so
+   fun:__nss_passwd_lookup
+   fun:getpwnam_r
+}
+
+{
+   <GLib caching>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+   fun:__nss_lookup_function
+   obj:/lib/tls/i686/cmov/libnss_compat-2.7.so
+   fun:_nss_compat_getpwnam_r
+   fun:getpwnam_r
+}
+
+{
+   <GLib caching>
+   Memcheck:Addr4
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/tls/i686/cmov/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+   fun:__nss_lookup_function
+   obj:/lib/tls/i686/cmov/libnss_compat-2.7.so
+   fun:_nss_compat_getpwnam_r
+   fun:getpwnam_r
+}
+
+{
+   <GLib caching>
+   Memcheck:Addr8
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/ld-2.7.so
+   obj:/lib/libc-2.7.so
+   obj:/lib/ld-2.7.so
+   fun:__libc_dlopen_mode
+   fun:__nss_lookup_function
+   obj:/lib/libc-2.7.so
+   fun:getpwnam_r
 }
 
 ## Leaks in ALSA (variations of leak from snd_config_load1)
@@ -1283,6 +2599,155 @@
    fun:gst_pad_set_caps
 }
 
+## Leak/overreads with glibc-2.10
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:do_sym
+   fun:dlsym_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlsym
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:do_sym
+   fun:dlsym_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlsym
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen*
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_relocate_object
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen*
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_check_map_versions
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen*
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen*
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_relocate_object
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen*
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_check_map_versions
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen*
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_map_object*
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen*
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_map_object*
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen*
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_check_caller
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen*
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_check_caller
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen*
+}
+
 {
    <glibc-2.10 overreads/conditionals>
    Memcheck:Value8
@@ -1306,7 +2771,734 @@
    fun:_vgnU_freeres
 }
 
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_fini
+   fun:__run_exit_handlers
+   fun:exit
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_fini
+   fun:__run_exit_handlers
+   fun:exit
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_sort_fini
+   fun:_dl_fini
+   fun:__run_exit_handlers
+   fun:exit
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_sort_fini
+   fun:_dl_fini
+   fun:__run_exit_handlers
+   fun:exit
+}
+
 # glibc-2.10 dl overreads
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_fixup
+   fun:_dl_runtime_resolve
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_fixup
+   fun:_dl_runtime_resolve
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_lookup_symbol_x
+   fun:_dl_fixup
+   fun:_dl_runtime_resolve
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_lookup_symbol_x
+   fun:_dl_fixup
+   fun:_dl_runtime_resolve
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:call_init
+   fun:_dl_init
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_init
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:do_lookup_x
+   fun:_dl_lookup_symbol_x
+   fun:_dl_relocate_object
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:do_lookup_x
+   fun:_dl_lookup_symbol_x
+   fun:_dl_relocate_object
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_lookup_symbol_x
+   fun:_dl_relocate_object
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_relocate_object
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:dl_main
+   fun:_dl_sysdep_start
+   fun:_dl_start
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:dl_main
+   fun:_dl_sysdep_start
+   fun:_dl_start
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:do_lookup_x
+   fun:_dl_lookup_symbol_x
+   fun:_dl_relocate_object
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:do_lookup_x
+   fun:_dl_lookup_symbol_x
+   fun:_dl_relocate_object
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_check_map_versions
+   fun:_dl_check_all_versions
+   fun:version_check_doit
+   fun:_dl_receive_error
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_check_map_versions
+   fun:_dl_check_all_versions
+   fun:version_check_doit
+   fun:_dl_receive_error
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_check_all_versions
+   fun:version_check_doit
+   fun:_dl_receive_error
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_check_all_versions
+   fun:version_check_doit
+   fun:_dl_receive_error
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:_dl_check_map_versions
+   fun:_dl_check_all_versions
+   fun:version_check_doit
+   fun:_dl_receive_error
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:_dl_check_map_versions
+   fun:_dl_check_all_versions
+   fun:version_check_doit
+   fun:_dl_receive_error
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:init_tls
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:init_tls
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_protect_relro
+   fun:_dl_relocate_object
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:do_lookup_x
+   fun:_dl_lookup_symbol_x
+   fun:_dl_relocate_object
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_setup_hash
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:_dl_new_object
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:_dl_new_object
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:openaux
+   fun:_dl_catch_error
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_map_object
+   fun:openaux
+   fun:_dl_catch_error
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_map_object
+   fun:openaux
+   fun:_dl_catch_error
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:_dl_map_object
+   fun:openaux
+   fun:_dl_catch_error
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:open_path
+   fun:_dl_map_object
+   fun:openaux
+   fun:_dl_catch_error
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:open_path
+   fun:_dl_map_object
+   fun:openaux
+   fun:_dl_catch_error
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:_dl_new_object
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_new_object
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_new_object
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:_dl_name_match_p
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:*
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:_dl_name_match_p
+   fun:_dl_check_map_versions
+   fun:_dl_check_all_versions
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:*
+   fun:do_lookup_x
+   fun:_dl_lookup_symbol_x
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:do_lookup_x
+   fun:_dl_lookup_symbol_x
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:do_lookup_x
+   fun:_dl_lookup_symbol_x
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:do_lookup_x
+   fun:_dl_lookup_symbol_x
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:do_lookup_x
+   fun:_dl_lookup_symbol_x
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_name_match_p
+   fun:_dl_map_object
+   fun:dl_open_worker
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_name_match_p
+   fun:_dl_map_object
+   fun:dl_open_worker
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:_dl_name_match_p
+   fun:_dl_map_object
+   fun:dl_open_worker
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:_dl_name_match_p
+   fun:_dl_map_object
+   fun:dl_open_worker
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_lookup_symbol_x
+   fun:_dl_relocate_object
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_lookup_symbol_x
+   fun:_dl_relocate_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:*
+   fun:_dl_check_map_versions
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:_dl_check_map_versions
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:*
+   fun:_dl_check_map_versions
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:_dl_check_map_versions
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:openaux
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_name_match_p
+   fun:_dl_map_object
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_close_worker
+   fun:_dl_close
+   fun:_dl_catch_error
+   fun:dlerror_run
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_close_worker
+   fun:_dl_close
+   fun:_dl_catch_error
+   fun:dlerror_run
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:_dl_close_worker
+   fun:_dl_close
+   fun:_dl_catch_error
+   fun:dlerror_run
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:_dl_close_worker
+   fun:_dl_close
+   fun:_dl_catch_error
+   fun:dlerror_run
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:fillin_rpath
+   fun:_dl_init_paths
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:fillin_rpath
+   fun:_dl_init_paths
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:fillin_rpath
+   fun:_dl_init_paths
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:fillin_rpath
+   fun:_dl_init_paths
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_map_object
+   fun:map_doit
+   fun:_dl_catch_error
+   fun:do_preload
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_map_object
+   fun:map_doit
+   fun:_dl_catch_error
+   fun:do_preload
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Param
+   open(filename)
+   fun:open
+   fun:open_verify
+   fun:_dl_map_object
+   fun:map_doit
+   fun:_dl_catch_error
+   fun:do_preload
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Param
+   stat(file_name)
+   fun:_xstat
+   fun:open_path
+   fun:_dl_map_object
+   fun:openaux
+   fun:_dl_catch_error
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_catch_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:*
+   fun:_dl_map_object_deps
+   fun:dl_main
+}
+
+# glibc-2.10 tls issues
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:init_tls
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:init_tls
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:*
+   fun:init_tls
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:*
+   fun:init_tls
+   fun:dl_main
+}
+
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:_dl_allocate_tls_init
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:_dl_allocate_tls_init
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Cond
+   fun:*
+   fun:_dl_allocate_tls_init
+   fun:dl_main
+}
+{
+   <glibc-2.10 overreads/conditionals>
+   Memcheck:Value8
+   fun:*
+   fun:_dl_allocate_tls_init
+   fun:dl_main
+}
 
 {
    <glibc-2.10 overreads/conditionals>
@@ -1323,8 +3515,93 @@
    arch_prctl(arg2)
    fun:init_tls
 }
+# GLib caching tmp/home directories (glibc-2.10 variants)
+{
+   <glibc-2.10 GLIB leaks>
+   Memcheck:Cond
+   fun:*
+   fun:dl_open_worker
+   fun:*
+   fun:*
+   fun:*
+   fun:_dl_catch_error
+   fun:dlerror_run
+   fun:*
+   fun:__nss_lookup_function
+   fun:__nss_lookup
+   fun:getpwnam*
+}
+{
+   <glibc-2.10 GLIB leaks>
+   Memcheck:Value8
+   fun:*
+   fun:dl_open_worker
+   fun:*
+   fun:*
+   fun:*
+   fun:_dl_catch_error
+   fun:dlerror_run
+   fun:*
+   fun:__nss_lookup_function
+   fun:__nss_lookup
+   fun:getpwnam*
+}
+{
+   <glibc-2.10 GLIB leaks>
+   Memcheck:Cond
+   fun:dl_open_worker
+   fun:*
+   fun:*
+   fun:do_dlopen
+   fun:*
+   fun:dlerror_run
+   fun:*
+   fun:__nss_lookup_function
+   fun:__nss_lookup
+   fun:getpwnam*
+}
+{
+   <glibc-2.10 GLIB leaks>
+   Memcheck:Value8
+   fun:dl_open_worker
+   fun:*
+   fun:*
+   fun:do_dlopen
+   fun:*
+   fun:dlerror_run
+   fun:*
+   fun:__nss_lookup_function
+   fun:__nss_lookup
+   fun:getpwnam*
+}
+
+{
+   <glibc-2.10 GLIB leaks>
+   Memcheck:Value8
+   fun:_dl_add_to_slotinfo
+   fun:dl_main
+}
+{
+   <glibc-2.10 GLIB leaks>
+   Memcheck:Param
+   open(filename)
+   fun:open
+   fun:open_verify
+   fun:open_path
+   fun:_dl_map_object
+}
+
+
 
 # GModule issues with glibc-2.10
+{
+   <glibc-2.10 GLIB leaks>
+   Memcheck:Value8
+   fun:*
+   fun:*
+   fun:dlsym
+   fun:g_module_symbol
+}
 {
    <glibc-2.10 GLIB leaks>
    Memcheck:Value8
@@ -1337,6 +3614,40 @@
    fun:*
    fun:g_module_*
    fun:gst_plugin*
+}
+
+{
+   <glibc-2.10 GLIB leaks>
+   Memcheck:Value8
+   fun:*
+   fun:*
+   fun:dlopen*
+   fun:g_module_open
+}
+{
+   <glibc-2.10 GLIB leaks>
+   Memcheck:Value8
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:dlsym
+   fun:g_module_symbol
+}
+
+{
+   <glibc-2.10 GLIB leaks>
+   Memcheck:Value8
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:*
+   fun:dlopen*
+   fun:g_module_open
 }
 
 # Leak in GSlice
@@ -1355,6 +3666,131 @@
    <insert a suppression name here>
    Memcheck:Value8
    fun:__pthread_initialize_minimal
+}
+
+# glibc 2.11 conditional
+{
+   <glibc-2.11 conditional>
+   Memcheck:Cond
+   fun:_dl_relocate_object
+   fun:dl_main
+   fun:_dl_sysdep_start
+   fun:_dl_start
+   obj:/lib64/ld-2.11.so
+}
+
+# glibc 2.11 Leak
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:*alloc
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:*alloc
+   fun:_dl_*
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:*alloc
+   fun:_dl_*
+   fun:_dl_*
+   fun:_dl_*
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:*alloc
+   fun:*
+   fun:_dl_*
+   fun:openaux
+   fun:_dl_catch_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:*alloc
+   fun:*
+   fun:_dl_map_object
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:*alloc
+   fun:_dl_new_object
+   fun:_dl_map_object_from_fd
+   fun:_dl_map_object
+   fun:openaux
+   fun:_dl_catch_error
+   fun:_dl_map_object_deps
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   fun:*alloc
+   fun:*
+   fun:_dl_*
+   fun:_dl_*
+   fun:_dl_*
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
 }
 
 # glib type leaks
@@ -1388,17 +3824,6 @@
    fun:*
    fun:gst_tag_register
    fun:_gst_tag_initialize
-}
-
-# system-wide tags
-# these tags are registered once
-
-{
-   <insert_a_suppression_name_here>
-   Memcheck:Leak
-   fun:*alloc
-   ...
-   fun:gst_tag_register_static
 }
 
 # system-wide type classes that we keep referenced
@@ -1608,49 +4033,6 @@
    ...
    fun:g_slist_prepend
    fun:gst_debug_add_log_function
-}
-
-{
-   <We do not care about anything ld related, and don't use library constructors>
-   Memcheck:Addr1
-   ...
-   obj:*/ld-*.so
-   ...
-}
-{
-   <We do not care about anything ld related, and don't use library constructors>
-   Memcheck:Addr2
-   ...
-   obj:*/ld-*.so
-   ...
-}
-{
-   <We do not care about anything ld related, and don't use library constructors>
-   Memcheck:Addr4
-   ...
-   obj:*/ld-*.so
-   ...
-}
-{
-   <We do not care about anything ld related, and don't use library constructors>
-   Memcheck:Addr8
-   ...
-   obj:*/ld-*.so
-   ...
-}
-{
-   <We do not care about anything ld related, and don't use library constructors>
-   Memcheck:Leak
-   ...
-   obj:*/ld-*.so
-   ...
-}
-{
-   <We do not care about anything ld related, and don't use library constructors>
-   Memcheck:Cond
-   ...
-   obj:*/ld-*.so
-   ...
 }
 
 {
