@@ -307,10 +307,6 @@ valgrind ges:
     - ln -sf $(pwd) ../../${CI_PROJECT_NAMESPACE}/cerbero
     - rsync -aH /cerbero/ .
     - test -f ${CERBERO_DEPS} && tar -C ${CERBERO_HOME} -xf ${CERBERO_DEPS}
-    - test "x${CERBERO_OVERRIDDEN_DIST_DIR}" != "x"
-          && test -d ${CERBERO_HOME}/dist/${ARCH}
-          && mkdir -p ${CERBERO_OVERRIDDEN_DIST_DIR}
-          && rsync -aH ${CERBERO_HOME}/dist/${ARCH}/ ${CERBERO_OVERRIDDEN_DIST_DIR}
     - echo "home_dir = \"$(pwd)/${CERBERO_HOME}\"" >> localconf.cbc
     - echo "local_sources = \"$(pwd)/${CERBERO_SOURCES}\"" >> localconf.cbc
     - ./cerbero-uninstalled --self-update manifest.xml
@@ -320,6 +316,10 @@ valgrind ges:
     - $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
     - $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
     - $CERBERO $CERBERO_ARGS fetch-cache
+    - test "x${CERBERO_OVERRIDDEN_DIST_DIR}" != "x"
+          && test -d ${CERBERO_HOME}/dist/${ARCH}
+          && mkdir -p ${CERBERO_OVERRIDDEN_DIST_DIR}
+          && rsync -aH ${CERBERO_HOME}/dist/${ARCH}/ ${CERBERO_OVERRIDDEN_DIST_DIR}
     - $CERBERO $CERBERO_ARGS bootstrap --offline --build-tools-only
     - $CERBERO $CERBERO_ARGS package --offline ${CERBERO_PACKAGE_ARGS} -o $(pwd) gstreamer-1.0
     - test "x${HAVE_CCACHE}" = "xyes" && ccache -s || true    # eat the return value from the failing test
