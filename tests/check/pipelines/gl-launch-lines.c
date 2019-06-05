@@ -207,6 +207,25 @@ GST_START_TEST (test_gloverlay)
 }
 
 GST_END_TEST
+GST_START_TEST (test_glmosaic)
+{
+  const gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+
+  s = "videotestsrc num-buffers=10 ! glupload ! glmosaic ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+
+#if GST_GL_HAVE_OPENGL
+  s = "gltestsrc num-buffers=10 ! glmosaic ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+#endif
+}
+
+GST_END_TEST
 #endif
 #endif
 #if GST_GL_HAVE_OPENGL
@@ -282,23 +301,6 @@ GST_START_TEST (test_gldeinterlace)
 }
 
 GST_END_TEST
-GST_START_TEST (test_glmosaic)
-{
-  const gchar *s;
-  GstState target_state = GST_STATE_PLAYING;
-
-  s = "videotestsrc num-buffers=10 ! glupload ! glmosaic ! fakesink";
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN, target_state);
-
-  s = "gltestsrc num-buffers=10 ! glmosaic ! fakesink";
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN, target_state);
-}
-
-GST_END_TEST
 #ifdef HAVE_PNG
 GST_START_TEST (test_gldifferencematte)
 {
@@ -336,6 +338,7 @@ gl_launch_lines_suite (void)
   tcase_add_test (tc_chain, test_gleffects);
   tcase_add_test (tc_chain, test_glshader);
   tcase_add_test (tc_chain, test_glfilterapp);
+  tcase_add_test (tc_chain, test_glmosaic);
 #ifdef HAVE_PNG
 #ifdef HAVE_JPEG
   tcase_add_test (tc_chain, test_gloverlay);
@@ -345,11 +348,6 @@ gl_launch_lines_suite (void)
   tcase_add_test (tc_chain, test_gltestsrc);
   tcase_add_test (tc_chain, test_glfilterglass);
 /*  tcase_add_test (tc_chain, test_glfilterreflectedscreen);*/
-  /* glmosaic is still in -bad because it relies on GstVideoAggregator */
-  if (gst_registry_check_feature_version (gst_registry_get (), "glmosaic", 1, 0,
-          0)) {
-    tcase_add_test (tc_chain, test_glmosaic);
-  }
   tcase_add_test (tc_chain, test_gldeinterlace);
 #ifdef HAVE_PNG
   tcase_add_test (tc_chain, test_gldifferencematte);

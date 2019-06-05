@@ -29,15 +29,13 @@
  *
  * ## Examples
  * |[
- * gst-launch-1.0 videotestsrc ! video/x-raw, format=YUY2 ! queue ! glmosaic name=m ! glimagesink \
- *     videotestsrc pattern=12 ! video/x-raw, format=I420, framerate=5/1, width=100, height=200 ! queue ! m. \
- *     videotestsrc ! video/x-raw, framerate=15/1, width=1500, height=1500 ! gleffects effect=3 ! queue ! m. \
- *     videotestsrc ! gleffects effect=2 ! queue ! m.  \
- *     videotestsrc ! glfiltercube ! queue ! m. \
- *     videotestsrc ! gleffects effect=6 ! queue ! m.
+ * gst-launch-1.0 videotestsrc ! video/x-raw, format=YUY2 ! glupload ! glcolorconvert ! queue ! glmosaic name=m ! glimagesink \
+ *     videotestsrc pattern=12 ! video/x-raw, format=I420, framerate=5/1, width=100, height=200 ! glupload ! glcolorconvert ! queue ! m. \
+ *     videotestsrc ! video/x-raw, framerate=15/1, width=1500, height=1500 ! glupload ! gleffects effect=3 ! queue ! m. \
+ *     videotestsrc ! glupload ! gleffects effect=2 ! queue ! m.  \
+ *     videotestsrc ! glupload ! glfiltercube ! queue ! m. \
+ *     videotestsrc ! glupload ! gleffects effect=6 ! queue ! m.
  * ]|
- * FBO (Frame Buffer Object) is required.
- *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -66,24 +64,18 @@ G_DEFINE_TYPE_WITH_CODE (GstGLMosaic, gst_gl_mosaic, GST_TYPE_GL_MIXER,
         gst_gl_mosaic_child_proxy_init);
     DEBUG_INIT);
 
-static void gst_gl_mosaic_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_gl_mosaic_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static GstPad *gst_gl_mosaic_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * req_name, const GstCaps * caps);
 static void gst_gl_mosaic_release_pad (GstElement * element, GstPad * pad);
 
 static void gst_gl_mosaic_reset (GstGLMixer * mixer);
-static gboolean gst_gl_mosaic_init_shader (GstGLMixer * mixer,
-    GstCaps * outcaps);
+static gboolean gst_gl_mosaic_set_caps (GstGLMixer * mixer, GstCaps * outcaps);
 
 static gboolean gst_gl_mosaic_process_textures (GstGLMixer * mixer,
     GstGLMemory * out_tex);
 static gboolean gst_gl_mosaic_callback (gpointer stuff);
 
-//vertex source
+/* vertex source */
 static const gchar *mosaic_v_src =
     "uniform mat4 u_matrix;                                       \n"
     "uniform float xrot_degree, yrot_degree, zrot_degree;         \n"
@@ -115,27 +107,21 @@ static const gchar *mosaic_v_src =
     "   v_texCoord = a_texCoord;                                  \n"
     "}                                                            \n";
 
-//fragment source
+/* fragment source */
 static const gchar *mosaic_f_src =
     "uniform sampler2D s_texture;                    \n"
     "varying vec2 v_texCoord;                            \n"
     "void main()                                         \n"
     "{                                                   \n"
-    //"  gl_FragColor = vec4( 1.0, 0.5, 1.0, 1.0 );\n"
     "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
     "}                                                   \n";
 
 static void
 gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *element_class;
 
-  gobject_class = (GObjectClass *) klass;
   element_class = GST_ELEMENT_CLASS (klass);
-
-  gobject_class->set_property = gst_gl_mosaic_set_property;
-  gobject_class->get_property = gst_gl_mosaic_get_property;
 
   element_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_gl_mosaic_request_new_pad);
@@ -145,43 +131,18 @@ gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
       "Filter/Effect/Video", "OpenGL mosaic",
       "Julien Isorce <julien.isorce@gmail.com>");
 
-  GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_mosaic_init_shader;
+  GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_mosaic_set_caps;
   GST_GL_MIXER_CLASS (klass)->reset = gst_gl_mosaic_reset;
   GST_GL_MIXER_CLASS (klass)->process_textures = gst_gl_mosaic_process_textures;
-
-  GST_GL_BASE_MIXER_CLASS (klass)->supported_gl_api = GST_GL_API_OPENGL;
 }
 
 static void
 gst_gl_mosaic_init (GstGLMosaic * mosaic)
 {
   mosaic->shader = NULL;
-}
 
-static void
-gst_gl_mosaic_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  //GstGLMosaic *mixer = GST_GL_MOSAIC (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_gl_mosaic_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  //GstGLMosaic* mixer = GST_GL_MOSAIC (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+  mosaic->attr_position_loc = -1;
+  mosaic->attr_texture_loc = -1;
 }
 
 static GstPad *
@@ -227,27 +188,39 @@ gst_gl_mosaic_reset (GstGLMixer * mixer)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mixer);
 
-  //blocking call, wait the opengl thread has destroyed the shader
   if (mosaic->shader)
     gst_object_unref (mosaic->shader);
   mosaic->shader = NULL;
+
+  mosaic->attr_position_loc = -1;
+  mosaic->attr_texture_loc = -1;
 }
 
 static gboolean
-gst_gl_mosaic_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
+gst_gl_mosaic_set_caps (GstGLMixer * mixer, GstCaps * outcaps)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mixer);
 
   g_clear_object (&mosaic->shader);
-  //blocking call, wait the opengl thread has compiled the shader
-  return gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
-      mosaic_v_src, mosaic_f_src, &mosaic->shader);
+  return TRUE;
 }
 
 static void
 _mosaic_render (GstGLContext * context, GstGLMosaic * mosaic)
 {
   GstGLMixer *mixer = GST_GL_MIXER (mosaic);
+
+  if (!mosaic->shader) {
+    gchar *frag_str = g_strdup_printf ("%s%s",
+        gst_gl_shader_string_get_highest_precision (GST_GL_BASE_MIXER
+            (mixer)->context, GST_GLSL_VERSION_NONE,
+            GST_GLSL_PROFILE_ES | GST_GLSL_PROFILE_COMPATIBILITY),
+        mosaic_f_src);
+
+    gst_gl_context_gen_shader (GST_GL_BASE_MIXER (mixer)->context,
+        mosaic_v_src, frag_str, &mosaic->shader);
+    g_free (frag_str);
+  }
 
   gst_gl_framebuffer_draw_to_texture (mixer->fbo, mosaic->out_tex,
       gst_gl_mosaic_callback, mosaic);
@@ -267,6 +240,41 @@ gst_gl_mosaic_process_textures (GstGLMixer * mix, GstGLMemory * out_tex)
   return TRUE;
 }
 
+static void
+_bind_buffer (GstGLMosaic * mosaic)
+{
+  GstGLContext *context = GST_GL_BASE_MIXER (mosaic)->context;
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, mosaic->vbo_indices);
+  gl->BindBuffer (GL_ARRAY_BUFFER, mosaic->vertex_buffer);
+
+  /* Load the vertex position */
+  gl->VertexAttribPointer (mosaic->attr_position_loc, 3, GL_FLOAT,
+      GL_FALSE, 5 * sizeof (GLfloat), (void *) 0);
+
+  /* Load the texture coordinate */
+  gl->VertexAttribPointer (mosaic->attr_texture_loc, 2, GL_FLOAT, GL_FALSE,
+      5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
+
+
+  gl->EnableVertexAttribArray (mosaic->attr_position_loc);
+  gl->EnableVertexAttribArray (mosaic->attr_texture_loc);
+}
+
+static void
+_unbind_buffer (GstGLMosaic * mosaic)
+{
+  GstGLContext *context = GST_GL_BASE_MIXER (mosaic)->context;
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
+  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+
+  gl->DisableVertexAttribArray (mosaic->attr_position_loc);
+  gl->DisableVertexAttribArray (mosaic->attr_texture_loc);
+}
+
 /* opengl scene, params: input texture (not the output mixer->texture) */
 static gboolean
 gst_gl_mosaic_callback (gpointer stuff)
@@ -280,18 +288,11 @@ gst_gl_mosaic_callback (gpointer stuff)
   static GLfloat yrot = 0;
   static GLfloat zrot = 0;
 
-  GLint attr_position_loc = 0;
-  GLint attr_texture_loc = 0;
-
   const GLfloat matrix[] = {
     0.5f, 0.0f, 0.0f, 0.0f,
     0.0f, 0.5f, 0.0f, 0.0f,
     0.0f, 0.0f, 0.5f, 0.0f,
     0.0f, 0.0f, 0.0f, 1.0f
-  };
-  const GLushort indices[] = {
-    0, 1, 2,
-    0, 2, 3
   };
 
   guint count = 0;
@@ -306,17 +307,25 @@ gst_gl_mosaic_callback (gpointer stuff)
 
   gst_gl_shader_use (mosaic->shader);
 
-  attr_position_loc =
-      gst_gl_shader_get_attribute_location (mosaic->shader, "a_position");
-  attr_texture_loc =
-      gst_gl_shader_get_attribute_location (mosaic->shader, "a_texCoord");
+  if (mosaic->attr_position_loc == -1) {
+    mosaic->attr_position_loc =
+        gst_gl_shader_get_attribute_location (mosaic->shader, "a_position");
+  }
+  if (mosaic->attr_texture_loc == -1) {
+    mosaic->attr_texture_loc =
+        gst_gl_shader_get_attribute_location (mosaic->shader, "a_texCoord");
+  }
 
-  GST_OBJECT_LOCK (mosaic);
-  walk = GST_ELEMENT (mosaic)->sinkpads;
-  while (walk) {
-    GstGLMixerPad *pad = walk->data;
+  gst_gl_shader_set_uniform_1i (mosaic->shader, "s_texture", 0);
+  gst_gl_shader_set_uniform_1f (mosaic->shader, "xrot_degree", xrot);
+  gst_gl_shader_set_uniform_1f (mosaic->shader, "yrot_degree", yrot);
+  gst_gl_shader_set_uniform_1f (mosaic->shader, "zrot_degree", zrot);
+  gst_gl_shader_set_uniform_matrix_4fv (mosaic->shader, "u_matrix", 1,
+      GL_FALSE, matrix);
+
+  if (!mosaic->vertex_buffer) {
     /* *INDENT-OFF* */
-    gfloat v_vertices[] = {
+    gfloat vertices[] = {
       /* front face */
        1.0f, 1.0f,-1.0f, 1.0f, 0.0f,
        1.0f,-1.0f,-1.0f, 1.0f, 1.0f,
@@ -348,13 +357,57 @@ gst_gl_mosaic_callback (gpointer stuff)
       -1.0f,-1.0f, 1.0f, 0.0f, 1.0f,
        1.0f,-1.0f, 1.0f, 1.0f, 1.0f
     };
+    const GLushort indices[] = {
+      0, 1, 2,
+      0, 2, 3,
+      4, 5, 6,
+      4, 6, 7,
+      8, 9, 10,
+      8, 10, 11,
+      12, 13, 14,
+      12, 14, 15,
+      16, 17, 18,
+      16, 18, 19,
+      20, 21, 22,
+      20, 22, 23,
+    };
     /* *INDENT-ON* */
+
+    if (gl->GenVertexArrays) {
+      gl->GenVertexArrays (1, &mosaic->vao);
+      gl->BindVertexArray (mosaic->vao);
+    }
+
+    gl->GenBuffers (1, &mosaic->vertex_buffer);
+    gl->BindBuffer (GL_ARRAY_BUFFER, mosaic->vertex_buffer);
+    gl->BufferData (GL_ARRAY_BUFFER, sizeof (vertices), vertices,
+        GL_STATIC_DRAW);
+
+    gl->GenBuffers (1, &mosaic->vbo_indices);
+    gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, mosaic->vbo_indices);
+    gl->BufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (indices), indices,
+        GL_STATIC_DRAW);
+  }
+
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (mosaic->vao);
+  _bind_buffer (mosaic);
+
+  GST_OBJECT_LOCK (mosaic);
+  walk = GST_ELEMENT (mosaic)->sinkpads;
+  while (walk) {
+    GstGLMixerPad *pad = walk->data;
     guint in_tex;
     guint width, height;
 
     in_tex = pad->current_texture;
     width = GST_VIDEO_INFO_WIDTH (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
     height = GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_AGGREGATOR_PAD (pad)->info);
+
+    if (count >= 6) {
+      GST_FIXME_OBJECT (mosaic, "Skipping 7th pad (and all subsequent pads)");
+      break;
+    }
 
     if (!in_tex || width <= 0 || height <= 0) {
       GST_DEBUG ("skipping texture:%u pad:%p width:%u height %u",
@@ -366,25 +419,11 @@ gst_gl_mosaic_callback (gpointer stuff)
 
     GST_TRACE ("processing texture:%u dimensions:%ux%u", in_tex, width, height);
 
-    gl->VertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
-        GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[5 * 4 * count]);
-
-    gl->VertexAttribPointer (attr_texture_loc, 2, GL_FLOAT,
-        GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[5 * 4 * count + 3]);
-
-    gl->EnableVertexAttribArray (attr_position_loc);
-    gl->EnableVertexAttribArray (attr_texture_loc);
-
     gl->ActiveTexture (GL_TEXTURE0);
     gl->BindTexture (GL_TEXTURE_2D, in_tex);
-    gst_gl_shader_set_uniform_1i (mosaic->shader, "s_texture", 0);
-    gst_gl_shader_set_uniform_1f (mosaic->shader, "xrot_degree", xrot);
-    gst_gl_shader_set_uniform_1f (mosaic->shader, "yrot_degree", yrot);
-    gst_gl_shader_set_uniform_1f (mosaic->shader, "zrot_degree", zrot);
-    gst_gl_shader_set_uniform_matrix_4fv (mosaic->shader, "u_matrix", 1,
-        GL_FALSE, matrix);
 
-    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+    gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT,
+        (void *) (6 * sizeof (GLushort) * count));
 
     ++count;
 
@@ -392,8 +431,10 @@ gst_gl_mosaic_callback (gpointer stuff)
   }
   GST_OBJECT_UNLOCK (mosaic);
 
-  gl->DisableVertexAttribArray (attr_position_loc);
-  gl->DisableVertexAttribArray (attr_texture_loc);
+  if (gl->GenVertexArrays)
+    gl->BindVertexArray (0);
+  else
+    _unbind_buffer (mosaic);
 
   gl->BindTexture (GL_TEXTURE_2D, 0);
 
