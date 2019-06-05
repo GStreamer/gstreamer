@@ -44,7 +44,9 @@ def stringify(o):
         raise AssertionError('Did not expect object {!r} to have more than one element'.format(o))
     raise AssertionError('Object {!r} must be a string or a list'.format(o))
 
-def prepend_env_var(env, var, value):
+def prepend_env_var(env, var, value, sysroot):
+    if value.startswith(sysroot):
+        value = value[len(sysroot):]
     # Try not to exceed maximum length limits for env vars on Windows
     if os.name is 'nt':
         value = win32_get_short_path_name(value)
@@ -68,12 +70,16 @@ def get_subprocess_env(options, gst_version):
     env["GST_VALIDATE_APPS_DIR"] = os.path.normpath(
         "%s/subprojects/gst-editing-services/tests/validate" % SCRIPTDIR)
     prepend_env_var(env, "PATH", os.path.normpath(
-        "%s/subprojects/gst-devtools/validate/tools" % options.builddir))
+        "%s/subprojects/gst-devtools/validate/tools" % options.builddir),
+        options.sysroot)
     prepend_env_var(env, "PATH", os.path.normpath(
-        "%s/subprojects/gstreamer/tools" % options.builddir))
+        "%s/subprojects/gstreamer/tools" % options.builddir),
+        options.sysroot)
     prepend_env_var(env, "PATH", os.path.normpath(
-        "%s/subprojects/gst-plugins-base/tools" % options.builddir))
-    prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'meson'))
+        "%s/subprojects/gst-plugins-base/tools" % options.builddir),
+        options.sysroot)
+    prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'meson'),
+        options.sysroot)
     env["GST_VERSION"] = gst_version
     env["GST_ENV"] = 'gst-' + gst_version
     env["GST_PLUGIN_SYSTEM_PATH"] = ""
@@ -95,27 +101,38 @@ def get_subprocess_env(options, gst_version):
         lib_path_envvar = 'LD_LIBRARY_PATH'
 
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(SCRIPTDIR, 'subprojects',
-                                                        'gst-python', 'plugin'))
+                                                        'gst-python', 'plugin'),
+                    options.sysroot)
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(PREFIX_DIR, 'lib',
-                                                        'gstreamer-1.0'))
+                                                        'gstreamer-1.0'),
+                    options.sysroot)
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(options.builddir, 'subprojects',
-        'libnice', 'gst'))
-    prepend_env_var(env, "GST_VALIDATE_SCENARIOS_PATH", os.path.join(
-        PREFIX_DIR, 'share', 'gstreamer-1.0', 'validate', 'scenarios'))
+                                                         'libnice', 'gst'),
+                    options.sysroot)
+    prepend_env_var(env, "GST_VALIDATE_SCENARIOS_PATH",
+                    os.path.join(PREFIX_DIR, 'share', 'gstreamer-1.0',
+                                 'validate', 'scenarios'),
+                    options.sysroot)
     prepend_env_var(env, "GI_TYPELIB_PATH", os.path.join(PREFIX_DIR, 'lib',
-                                                         'lib', 'girepository-1.0'))
-    prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(PREFIX_DIR, 'lib', 'pkgconfig'))
+                                                         'lib', 'girepository-1.0'),
+                    options.sysroot)
+    prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(PREFIX_DIR, 'lib', 'pkgconfig'),
+                    options.sysroot)
 
     # gst-indent
-    prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'gstreamer', 'tools'))
+    prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'gstreamer', 'tools'),
+                    options.sysroot)
 
     # Library and binary search paths
-    prepend_env_var(env, "PATH", os.path.join(PREFIX_DIR, 'bin'))
+    prepend_env_var(env, "PATH", os.path.join(PREFIX_DIR, 'bin'),
+                    options.sysroot)
     if lib_path_envvar != 'PATH':
-        prepend_env_var(env, lib_path_envvar, os.path.join(PREFIX_DIR, 'lib'))
+        prepend_env_var(env, lib_path_envvar, os.path.join(PREFIX_DIR, 'lib'),
+                        options.sysroot)
     elif 'QMAKE' in os.environ:
         # There's no RPATH on Windows, so we need to set PATH for the qt5 DLLs
-        prepend_env_var(env, 'PATH', os.path.dirname(os.environ['QMAKE']))
+        prepend_env_var(env, 'PATH', os.path.dirname(os.environ['QMAKE']),
+                        options.sysroot)
 
     meson = get_meson()
     targets_s = subprocess.check_output(meson + ['introspect', options.builddir, '--targets'])
@@ -126,8 +143,6 @@ def get_subprocess_env(options, gst_version):
     for target in targets:
         filenames = listify(target['filename'])
         for filename in filenames:
-            if filename.startswith(options.sysroot):
-                filename = filename[len(options.sysroot):]
             root = os.path.dirname(filename)
             if srcdir_path / "subprojects/gst-devtools/validate/plugins" in (srcdir_path / root).parents:
                 continue
@@ -135,26 +150,29 @@ def get_subprocess_env(options, gst_version):
                 mono_paths.add(os.path.join(options.builddir, root))
             if typelib_reg.search(filename):
                 prepend_env_var(env, "GI_TYPELIB_PATH",
-                                os.path.join(options.builddir, root))
+                                os.path.join(options.builddir, root),
+                                options.sysroot)
             elif sharedlib_reg.search(filename):
                 if not target['type'].startswith('shared'):
                     continue
                 if target['installed']:
                     if pluginpath_reg.search(os.path.normpath(stringify(target['install_filename']))):
-                        prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(options.builddir, root))
+                        prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(options.builddir, root),
+                                        options.sysroot)
                         continue
 
                 prepend_env_var(env, lib_path_envvar,
-                                os.path.join(options.builddir, root))
+                                os.path.join(options.builddir, root),
+                                options.sysroot)
             elif target['type'] == 'executable' and target['installed']:
                 paths.add(os.path.join(options.builddir, root))
 
     for p in paths:
-        prepend_env_var(env, 'PATH', p)
+        prepend_env_var(env, 'PATH', p, options.sysroot)
 
     if os.name != 'nt':
         for p in mono_paths:
-            prepend_env_var(env, "MONO_PATH", p)
+            prepend_env_var(env, "MONO_PATH", p, options.sysroot)
 
     presets = set()
     encoding_targets = set()
@@ -194,38 +212,41 @@ def get_subprocess_env(options, gst_version):
                     pkg_dirs.add(os.path.dirname(path))
 
             if path.endswith('gstomx.conf'):
-                prepend_env_var(env, 'GST_OMX_CONFIG_DIR', os.path.dirname(path))
+                prepend_env_var(env, 'GST_OMX_CONFIG_DIR', os.path.dirname(path),
+                                options.sysroot)
 
         for p in presets:
-            prepend_env_var(env, 'GST_PRESET_PATH', p)
+            prepend_env_var(env, 'GST_PRESET_PATH', p, options.sysroot)
 
         for t in encoding_targets:
-            prepend_env_var(env, 'GST_ENCODING_TARGET_PATH', t)
+            prepend_env_var(env, 'GST_ENCODING_TARGET_PATH', t, options.sysroot)
 
         for pkg_dir in pkg_dirs:
-            prepend_env_var(env, "PKG_CONFIG_PATH", pkg_dir)
+            prepend_env_var(env, "PKG_CONFIG_PATH", pkg_dir, options.sysroot)
     prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(options.builddir,
                                                          'subprojects',
                                                          'gst-plugins-good',
-                                                         'pkgconfig'))
+                                                         'pkgconfig'),
+                    options.sysroot)
 
     for python_dir in python_dirs:
-        prepend_env_var(env, 'PYTHONPATH', python_dir)
+        prepend_env_var(env, 'PYTHONPATH', python_dir, options.sysroot)
 
     mesonpath = os.path.join(SCRIPTDIR, "meson")
     if os.path.join(mesonpath):
         # Add meson/ into PYTHONPATH if we are using a local meson
-        prepend_env_var(env, 'PYTHONPATH', mesonpath)
+        prepend_env_var(env, 'PYTHONPATH', mesonpath, options.sysroot)
 
     # For devhelp books
     if not 'XDG_DATA_DIRS' in env or not env['XDG_DATA_DIRS']:
         # Preserve default paths when empty
-        prepend_env_var(env, 'XDG_DATA_DIRS', '/usr/local/share/:/usr/share/')
+        prepend_env_var(env, 'XDG_DATA_DIRS', '/usr/local/share/:/usr/share/', '')
 
     prepend_env_var (env, 'XDG_DATA_DIRS', os.path.join(options.builddir,
                                                         'subprojects',
                                                         'gst-docs',
-                                                        'GStreamer-doc'))
+                                                        'GStreamer-doc'),
+                     options.sysroot)
 
     return env
 
