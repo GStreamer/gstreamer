@@ -121,9 +121,7 @@ void gst_insert_bin_remove (GstInsertBin * self, GstElement * element,
     GstInsertBinCallback callback, gpointer user_data);
 
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstInsertBin, gst_object_unref)
-#endif
 
 G_END_DECLS
 #endif /* __GST_INSERT_BIN_H__ */

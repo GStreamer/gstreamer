@@ -65,9 +65,7 @@ GST_WEBRTC_API
 void                        gst_webrtc_rtp_receiver_set_rtcp_transport  (GstWebRTCRTPReceiver * receiver,
                                                                          GstWebRTCDTLSTransport * transport);
 
-#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCRTPReceiver, gst_object_unref)
-#endif
 
 G_END_DECLS
 
