@@ -1661,3 +1661,12 @@
    fun:g_slist_copy_deep
    fun:gst_debug_add_log_function
 }
+
+{
+  <Ignore dlopen errors when parsing launch lines>
+  Memcheck:Leak
+  fun:malloc
+  ...
+  fun:g_module_open
+  fun:_priv_gst_plugin_load_file_for_registry
+}
