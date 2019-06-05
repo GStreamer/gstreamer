@@ -2267,6 +2267,7 @@ _parse_common_stream_info (GstDiscovererStreamInfo * sinfo, GVariant * common,
     if (g_variant_n_children (nextv) > 0) {
       sinfo->next = _parse_discovery (nextv, info);
     }
+    g_variant_unref (nextv);
   }
 
   g_variant_unref (common);
