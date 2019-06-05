@@ -622,3 +622,10 @@
    ...
    obj:*/libpango*.so*
 }
+
+{
+  <valgrind gets confused at orc_int64 widening in orc backup code>
+  Memcheck:Cond
+  fun:_backup_audio_orc_int_bias
+  ...
+}
