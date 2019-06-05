@@ -21,16 +21,15 @@
 
 #include <EGL/egl.h>
 #include <glib.h>
-#include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
-#include <gst/gl/egl/gsteglimage.h>
-#include <gst/gl/egl/gstgldisplay_egl.h>
 #include <wpe/fdo.h>
 #include <wpe/fdo-egl.h>
 #include <wpe/webkit.h>
 #include "gstwpesrc.h"
 
-GST_DEBUG_CATEGORY_EXTERN(wpe_src_debug);
+typedef struct _GstGLContext GstGLContext;
+typedef struct _GstGLDisplay GstGLDisplay;
+typedef struct _GstEGLImage GstEGLImage;
 
 class WPEThreadedView {
 public:

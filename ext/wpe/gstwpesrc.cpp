@@ -60,10 +60,10 @@
 #endif
 
 #include "gstwpesrc.h"
-#include <gst/video/video.h>
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gstglmemoryegl.h>
 #include <gst/gl/wayland/gstgldisplay_wayland.h>
+#include <gst/video/video.h>
 #include <xkbcommon/xkbcommon.h>
 
 #include "WPEThreadedView.h"

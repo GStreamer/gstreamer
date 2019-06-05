@@ -17,12 +17,20 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "WPEThreadedView.h"
+
+#include <gst/gl/gl.h>
+#include <gst/gl/egl/gsteglimage.h>
+#include <gst/gl/egl/gstgldisplay_egl.h>
 
 #include <cstdio>
 #include <mutex>
 
-#define GST_CAT_DEFAULT wpe_src_debug
+GST_DEBUG_CATEGORY_EXTERN (wpe_src_debug);
 
 // -70 is the GLib priority we use internally in WebKit, for WPE.
 #define WPE_GLIB_SOURCE_PRIORITY -70
