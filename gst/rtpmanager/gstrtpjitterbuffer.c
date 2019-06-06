@@ -516,7 +516,7 @@ static GstStructure *gst_rtp_jitter_buffer_create_stats (GstRtpJitterBuffer *
     jitterbuffer);
 
 static void update_rtx_stats (GstRtpJitterBuffer * jitterbuffer,
-    TimerData * timer, GstClockTime dts, gboolean success);
+    const TimerData * timer, GstClockTime dts, gboolean success);
 
 static TimerQueue *timer_queue_new (void);
 static void timer_queue_free (TimerQueue * queue);
@@ -2127,7 +2127,7 @@ unschedule_current_timer (GstRtpJitterBuffer * jitterbuffer)
 }
 
 static GstClockTime
-get_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
+get_timeout (GstRtpJitterBuffer * jitterbuffer, const TimerData * timer)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstClockTime test_timeout;
@@ -2144,7 +2144,7 @@ get_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
 }
 
 static void
-recalculate_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
+recalculate_timer (GstRtpJitterBuffer * jitterbuffer, const TimerData * timer)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
 
@@ -3792,7 +3792,7 @@ update_avg_rtx_rtt (GstRtpJitterBufferPrivate * priv, GstClockTime rtt)
 }
 
 static void
-update_rtx_stats (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
+update_rtx_stats (GstRtpJitterBuffer * jitterbuffer, const TimerData * timer,
     GstClockTime dts, gboolean success)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
