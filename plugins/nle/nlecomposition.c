@@ -199,6 +199,8 @@ struct _NleCompositionPrivate
   gboolean suppress_child_error;
 
   NleUpdateStackReason updating_reason;
+
+  guint seek_seqnum;
 };
 
 #define ACTION_CALLBACK(__action) (((GCClosure*) (__action))->callback)
@@ -582,6 +584,7 @@ _seek_pipeline_func (NleComposition * comp, SeekData * seekd)
 
   priv->next_base_time = 0;
 
+  comp->priv->seek_seqnum = gst_event_get_seqnum (seekd->event);
   seek_handling (seekd->comp, gst_event_get_seqnum (seekd->event),
       COMP_UPDATE_STACK_ON_SEEK);
 
@@ -903,6 +906,7 @@ _add_seek_action (NleComposition * comp, GstEvent * event)
 
   comp->priv->next_eos_seqnum = 0;
   comp->priv->real_eos_seqnum = 0;
+  comp->priv->seek_seqnum = 0;
   _add_action_locked (comp, G_CALLBACK (_seek_pipeline_func), seekd,
       G_PRIORITY_DEFAULT);
 
@@ -1207,6 +1211,7 @@ nle_composition_reset (NleComposition * comp)
   priv->initialized = FALSE;
   priv->send_stream_start = TRUE;
   priv->real_eos_seqnum = 0;
+  priv->seek_seqnum = 0;
   priv->next_eos_seqnum = 0;
   priv->flush_seqnum = 0;
 
@@ -1302,7 +1307,10 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
       comp->priv->next_base_time += rstop - rstart;
 
       event2 = gst_event_new_segment (&copy);
-      GST_EVENT_SEQNUM (event2) = GST_EVENT_SEQNUM (event);
+      if (comp->priv->seek_seqnum)
+        GST_EVENT_SEQNUM (event2) = comp->priv->seek_seqnum;
+      else
+        GST_EVENT_SEQNUM (event2) = GST_EVENT_SEQNUM (event);
 
       GST_PAD_PROBE_INFO_DATA (info) = event2;
       gst_event_unref (event);
@@ -1331,6 +1339,9 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
 
         GST_INFO_OBJECT (comp, "Got EOS for real, seq ID is %i, fowarding it",
             seqnum);
+
+        if (comp->priv->seek_seqnum)
+          GST_EVENT_SEQNUM (event) = comp->priv->seek_seqnum;
 
         return GST_PAD_PROBE_OK;
       }
