@@ -2054,51 +2054,6 @@ AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
   ], [HAVE_DVB="no"])
 ])
 
-dnl *** vdpau ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_VDPAU, true)
-AG_GST_CHECK_FEATURE(VDPAU, [VDPAU], vdpau, [
-  VDPAU_CFLAGS=
-  VDPAU_LIBS=-lvdpau
-  HAVE_VDPAU=no
-
-  PKG_CHECK_MODULES(VDPAU, vdpau, [HAVE_VDPAU="yes"],
-  [
-    if test "$HAVE_VDPAU" = "no"; then
-      saved_CPPFLAGS="$CPPFLAGS"
-      AC_CHECK_HEADER([vdpau/vdpau.h], [HAVE_VDPAU_H=yes])
-
-      if test -z "$HAVE_VDPAU_H"; then
-        dnl Didn't find VDPAU header straight away.
-        dnl Try /usr/include/nvidia. Need to clear caching vars first
-        AC_MSG_NOTICE([VDPAU header not in standard path. Checking /usr/include/nvidia])
-        unset ac_cv_header_vdpau_vdpau_h
-        unset ac_cv_header_vdpau_vdpau_x11_h
-        VDPAU_CFLAGS="-I/usr/include/nvidia"
-        VDPAU_LIBS="-L/usr/lib/nvidia -lvdpau"
-        CPPFLAGS="$VDPAU_CFLAGS $saved_CPPFLAGS"
-        AC_CHECK_HEADER([vdpau/vdpau.h], [HAVE_VDPAU_H=yes])
-      fi
-
-      AC_CHECK_HEADER([vdpau/vdpau_x11.h], [HAVE_VDPAU_X11_H=yes])
-
-      if test "x$HAVE_VDPAU_H" = "xyes" -a "x$HAVE_VDPAU_X11_H" = "xyes"; then
-        dnl Found the headers - look for the lib
-        AC_MSG_NOTICE([VDPAU headers found. Checking libraries])
-        saved_LIBS="$LIBS"
-        LIBS="$VDPAU_LIBS $saved_LIBS"
-        AC_CHECK_LIB(vdpau,vdp_device_create_x11,[HAVE_VDPAU="yes"])
-        LIBS="$saved_LIBS"
-      fi
-    fi
-  ])
-
-  if test "$HAVE_VDPAU" = "yes"; then
-    AC_MSG_NOTICE([Found up to date VDPAU installation])
-    AC_SUBST(VDPAU_CFLAGS)
-    AC_SUBST(VDPAU_LIBS)
-  fi
-])
-
 dnl *** sbc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SBC, true)
 AG_GST_CHECK_FEATURE(SBC, [SBC bluetooth audio codec], sbc, [
@@ -2318,7 +2273,6 @@ AM_CONDITIONAL(USE_SRTP, false)
 AM_CONDITIONAL(USE_SRT, false)
 AM_CONDITIONAL(USE_GME, false)
 AM_CONDITIONAL(USE_DVB, false)
-AM_CONDITIONAL(USE_VDPAU, false)
 AM_CONDITIONAL(USE_SBC, false)
 AM_CONDITIONAL(USE_ZBAR, false)
 AM_CONDITIONAL(USE_RSVG, false)
@@ -2539,7 +2493,6 @@ sys/opensles/Makefile
 sys/shm/Makefile
 sys/tinyalsa/Makefile
 sys/uvch264/Makefile
-sys/vdpau/Makefile
 sys/wasapi/Makefile
 sys/winks/Makefile
 sys/winscreencap/Makefile

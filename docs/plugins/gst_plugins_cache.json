@@ -47188,54 +47188,6 @@
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
-    "vdpau": {
-        "description": "Various elements utilizing VDPAU",
-        "elements": {
-            "vdpaumpegdec": {
-                "author": "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>",
-                "description": "Decode mpeg stream with vdpau",
-                "hierarchy": [
-                    "GstVdpMpegDec",
-                    "GstVdpDecoder",
-                    "GstVideoDecoder",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Decoder",
-                "long-name": "VDPAU Mpeg Decoder",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "video/mpeg:\n    mpegversion: [ 1, 2 ]\n   systemstream: false\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "video/x-raw(memory:VdpVideoSurface):\n         format: { YV12 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { YV12 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "display": {
-                        "blurb": "X Display name",
-                        "construct": true,
-                        "construct-only": false,
-                        "default": "NULL",
-                        "type-name": "gchararray",
-                        "writable": true
-                    }
-                },
-                "rank": "none"
-            }
-        },
-        "filename": "gstvdpau",
-        "license": "LGPL",
-        "package": "GStreamer Bad Plug-ins git",
-        "source": "gst-plugins-bad",
-        "url": "Unknown package origin"
-    },
     "videofiltersbad": {
         "description": "Video filters in gst-plugins-bad",
         "elements": {
