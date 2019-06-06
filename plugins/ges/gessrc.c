@@ -28,16 +28,16 @@
  * The gessrc is a bin that will simply expose the track src pads
  * and implements the GstUriHandler interface using a custom `ges://`
  * uri scheme.
- * 
+ *
  * NOTE: That to use it inside playbin and friends you **need** to
  * set gessrc::timeline property yourself.
- * 
+ *
  * Example with #playbin:
- * 
+ *
  * {{../../examples/c/gessrc.c}}
- * 
+ *
  * Example with #GstPlayer:
- * 
+ *
  * {{../../examples/python/gst-player.py}}
  **/
 
@@ -46,7 +46,7 @@
 #endif
 
 #include <gst/gst.h>
-#include "gessrc.h"
+#include <ges/ges.h>
 
 GST_DEBUG_CATEGORY_STATIC (gessrc);
 #define GST_CAT_DEFAULT gessrc
@@ -62,6 +62,15 @@ static GstStaticPadTemplate audio_src_template =
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/x-raw(ANY);"));
+
+G_DECLARE_FINAL_TYPE (GESSrc, ges_src, GES, SRC, GstBin);
+struct _GESSrc
+{
+  GstBin parent;
+
+  GESTimeline *timeline;
+};
+#define GES_SRC(obj) ((GESSrc*) obj)
 
 enum
 {

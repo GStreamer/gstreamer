@@ -27,18 +27,20 @@
 
 #include <gst/gst.h>
 
-#include "gessrc.h"
-#include "gesdemux.h"
+extern GType ges_demux_get_type ();
+extern GType ges_src_get_type ();
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean res = 1;
 
-  res |= gst_element_register (plugin, "gessrc", GST_RANK_NONE, GES_SRC_TYPE);
+  res |=
+      gst_element_register (plugin, "gessrc", GST_RANK_NONE,
+      ges_src_get_type ());
 
   res |= gst_element_register (plugin, "gesdemux", GST_RANK_PRIMARY,
-      GES_DEMUX_TYPE);
+      ges_demux_get_type ());
 
   return res;
 }

@@ -39,7 +39,9 @@
 #include <gst/gst.h>
 #include <glib/gstdio.h>
 #include <gst/pbutils/pbutils.h>
-#include "gesdemux.h"
+#include <gst/base/gstadapter.h>
+#include <ges/ges.h>
+#include <gst/base/gstflowcombiner.h>
 
 GST_DEBUG_CATEGORY_STATIC (gesdemux);
 #define GST_CAT_DEFAULT gesdemux
@@ -61,7 +63,20 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/xges"));
 
+G_DECLARE_FINAL_TYPE (GESDemux, ges_demux, GES, Demux, GstBin);
+
+struct _GESDemux
+{
+  GstBin parent;
+
+  GESTimeline *timeline;
+  GstPad *sinkpad;
+
+  GstAdapter *input_adapter;
+};
+
 G_DEFINE_TYPE (GESDemux, ges_demux, GST_TYPE_BIN);
+#define GES_DEMUX(obj) ((GESDemux*)obj)
 
 enum
 {
