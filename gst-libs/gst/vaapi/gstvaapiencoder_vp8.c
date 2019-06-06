@@ -445,6 +445,11 @@ error:
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_vp8_flush (GstVaapiEncoder * base_encoder)
 {
+  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8 (base_encoder);
+
+  encoder->frame_num = 0;
+  clear_references (encoder);
+
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
