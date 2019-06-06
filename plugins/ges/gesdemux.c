@@ -73,6 +73,7 @@ struct _GESDemux
   GstPad *sinkpad;
 
   GstAdapter *input_adapter;
+  GstFlowCombiner *flow_combiner;
 };
 
 G_DEFINE_TYPE (GESDemux, ges_demux, GST_TYPE_BIN);
@@ -86,6 +87,24 @@ enum
 };
 
 static GParamSpec *properties[PROP_LAST];
+
+static GstFlowReturn
+gst_demux_src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+{
+  GstFlowReturn result, chain_result;
+  GESDemux *self = GES_DEMUX (GST_OBJECT_PARENT (parent));
+
+  chain_result = gst_proxy_pad_chain_default (pad, GST_OBJECT (self), buffer);
+  result =
+      gst_flow_combiner_update_pad_flow (self->flow_combiner, pad,
+      chain_result);
+
+  if (result == GST_FLOW_FLUSHING) {
+    return chain_result;
+  }
+
+  return result;
+}
 
 static gboolean
 ges_demux_set_timeline (GESDemux * self, GESTimeline * timeline)
@@ -110,12 +129,13 @@ ges_demux_set_timeline (GESDemux * self, GESTimeline * timeline)
 
     return FALSE;
   }
+
   for (tmp = self->timeline->tracks; tmp; tmp = tmp->next) {
     GstPad *gpad;
     gchar *name = NULL;
     GstElement *queue;
     GESTrack *track = GES_TRACK (tmp->data);
-    GstPad *tmppad, *pad =
+    GstPad *proxy_pad, *tmppad, *pad =
         ges_timeline_get_pad_for_track (self->timeline, track);
     GstStaticPadTemplate *template;
 
@@ -159,6 +179,12 @@ ges_demux_set_timeline (GESDemux * self, GESTimeline * timeline)
 
     gst_pad_set_active (gpad, TRUE);
     gst_element_add_pad (GST_ELEMENT (self), gpad);
+
+    proxy_pad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (gpad)));
+    gst_flow_combiner_add_pad (self->flow_combiner, proxy_pad);
+    gst_pad_set_chain_function (proxy_pad,
+        (GstPadChainFunction) gst_demux_src_chain);
+    gst_object_unref (proxy_pad);
     GST_DEBUG_OBJECT (self, "Adding pad: %" GST_PTR_FORMAT, gpad);
   }
 
@@ -202,6 +228,14 @@ ges_demux_dispose (GObject * object)
 }
 
 static void
+ges_demux_finalize (GObject * object)
+{
+  GESDemux *self = GES_DEMUX (object);
+
+  gst_flow_combiner_free (self->flow_combiner);
+}
+
+static void
 ges_demux_class_init (GESDemuxClass * self_class)
 {
   GObjectClass *gclass = G_OBJECT_CLASS (self_class);
@@ -212,6 +246,7 @@ ges_demux_class_init (GESDemuxClass * self_class)
   gclass->get_property = ges_demux_get_property;
   gclass->set_property = ges_demux_set_property;
   gclass->dispose = ges_demux_dispose;
+  gclass->finalize = ges_demux_finalize;
 
   /**
    * GESDemux:timeline:
@@ -377,7 +412,6 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gint f = g_file_open_tmp (NULL, &filename, &err);
         GMainContext *main_context = g_main_context_default ();
 
-        GST_ERROR ("Loading %s", filename);
         if (err) {
           GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE,
               ("Could not open temporary file to write timeline description"),
@@ -432,7 +466,6 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
             ("Could not map buffer containing timeline description"),
             ("Not info"));
       }
-      GST_ERROR_OBJECT (xges_buffer, ":YAY");
     }
     default:
       break;
@@ -462,6 +495,7 @@ ges_demux_init (GESDemux * self)
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->input_adapter = gst_adapter_new ();
+  self->flow_combiner = gst_flow_combiner_new ();
 
   gst_pad_set_chain_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (ges_demux_sink_chain));
