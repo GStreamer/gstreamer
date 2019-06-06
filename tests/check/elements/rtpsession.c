@@ -427,6 +427,10 @@ GST_START_TEST (test_multiple_senders_roundrobin_rbs)
 
   g_object_set (h->internal_session, "internal-ssrc", 0xDEADBEEF, NULL);
 
+  /* this is a hack to prevent the sources from timing out when cranking and
+     hence messing with RTCP-generation, making the test fail 1/1000 times */
+  g_object_set (h->session, "rtcp-min-interval", 20 * GST_SECOND, NULL);
+
   for (i = 0; i < 2; i++) {     /* cycles between RR reports */
     for (j = 0; j < 5; j++) {   /* packets per ssrc */
       gint seq = (i * 5) + j;
@@ -632,6 +636,10 @@ GST_START_TEST (test_internal_sources_timeout)
   g_object_set (h->internal_session, "internal-ssrc", 0xDEADBEEF, NULL);
   g_object_get (h->internal_session, "internal-ssrc", &internal_ssrc, NULL);
   fail_unless_equals_int (0xDEADBEEF, internal_ssrc);
+
+  /* this is a hack to prevent the sources from timing out when cranking and
+     hence messing with RTCP-generation, making the test fail 1/100 times */
+  g_object_set (h->session, "rtcp-min-interval", 20 * GST_SECOND, NULL);
 
   for (i = 1; i < 4; i++) {
     buf = generate_test_buffer (i, 0xBEEFDEAD);
