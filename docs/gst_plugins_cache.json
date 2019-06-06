@@ -1,4 +1,161 @@
 {
+    "ges": {
+        "description": "GStreamer Editing Services Plugin",
+        "device-providers": {},
+        "elements": {
+            "gesdemux": {
+                "author": "Thibault Saunier <tsaunier@igalia.com",
+                "description": "Demuxer for complex timeline file formats using GES.",
+                "hierarchy": [
+                    "GESDemux",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Demux/Editing",
+                "long-name": "GStreamer Editing Services based 'demuxer'",
+                "pad-templates": {
+                    "audio_src": {
+                        "caps": "audio/x-raw(ANY):\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "sink": {
+                        "caps": "application/xges:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "video_src": {
+                        "caps": "video/x-raw(ANY):\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "properties": {
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "timeline": {
+                        "blurb": "Timeline to use in this source.",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GESTimeline",
+                        "writable": false
+                    }
+                },
+                "rank": "primary",
+                "signals": {
+                    "no-more-pads": {
+                        "args": [],
+                        "retval": "void"
+                    },
+                    "pad-added": {
+                        "args": [
+                            "GstPad"
+                        ],
+                        "retval": "void"
+                    },
+                    "pad-removed": {
+                        "args": [
+                            "GstPad"
+                        ],
+                        "retval": "void"
+                    }
+                }
+            },
+            "gessrc": {
+                "author": "Erik Walthinsen <omega@cse.ogi.edu>,Wim Taymans <wim.taymans@gmail.com>",
+                "description": "Simple container object",
+                "hierarchy": [
+                    "GESSrc",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Generic/Bin",
+                "long-name": "Generic bin",
+                "pad-templates": {
+                    "audio_src": {
+                        "caps": "audio/x-raw(ANY):\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    },
+                    "video_src": {
+                        "caps": "video/x-raw(ANY):\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "properties": {
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "timeline": {
+                        "blurb": "Timeline to use in this src.",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GESTimeline",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "no-more-pads": {
+                        "args": [],
+                        "retval": "void"
+                    },
+                    "pad-added": {
+                        "args": [
+                            "GstPad"
+                        ],
+                        "retval": "void"
+                    },
+                    "pad-removed": {
+                        "args": [
+                            "GstPad"
+                        ],
+                        "retval": "void"
+                    }
+                }
+            }
+        },
+        "filename": "gstges",
+        "license": "LGPL",
+        "package": "GStreamer Editing Services",
+        "source": "gst-editing-services",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
     "nle": {
         "description": "GStreamer Non Linear Engine",
         "elements": {
