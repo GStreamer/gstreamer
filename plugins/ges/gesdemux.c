@@ -189,6 +189,7 @@ ges_demux_set_timeline (GESDemux * self, GESTimeline * timeline)
   }
 
   gst_element_sync_state_with_parent (GST_ELEMENT (self->timeline));
+  gst_element_no_more_pads (GST_ELEMENT (self));
 
   return TRUE;
 }
