@@ -129,19 +129,27 @@ struct _RTPJitterBufferClass {
  *   append.
  * @count: amount of seqnum in this item
  * @rtptime: rtp timestamp
+ * @data_free: Function to free @data (optional)
  *
- * An object containing an RTP packet or event.
+ * An object containing an RTP packet or event. First members of this structure
+ * copied from GList so they can be inserted into lists without doing more
+ * allocations.
  */
 struct _RTPJitterBufferItem {
+  /* a GList */
   gpointer data;
   GList *next;
   GList *prev;
+
+  /* item metadata */
   guint type;
   GstClockTime dts;
   GstClockTime pts;
   guint seqnum;
   guint count;
   guint rtptime;
+
+  GDestroyNotify free_data;
 };
 
 GType rtp_jitter_buffer_get_type (void);
@@ -197,5 +205,9 @@ gboolean              rtp_jitter_buffer_can_fast_start   (RTPJitterBuffer * jbuf
 
 gboolean              rtp_jitter_buffer_is_full          (RTPJitterBuffer * jbuf);
 
+RTPJitterBufferItem * rtp_jitter_buffer_alloc_item       (gpointer data, guint type, GstClockTime dts,
+                                                          GstClockTime pts, guint seqnum, guint count,
+                                                          guint rtptime, GDestroyNotify free_data);
+void                  rtp_jitter_buffer_free_item        (RTPJitterBufferItem * item);
 
 #endif /* __RTP_JITTER_BUFFER_H__ */

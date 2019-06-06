@@ -1108,6 +1108,10 @@ rtp_jitter_buffer_pop (RTPJitterBuffer * jbuf, gint * percent)
   else if (percent)
     *percent = -1;
 
+  /* let's clear the pointers so we can ensure we don't free items that are
+   * still in the jitterbuffer */
+  item->next = item->prev = NULL;
+
   return (RTPJitterBufferItem *) item;
 }
 
@@ -1133,7 +1137,7 @@ rtp_jitter_buffer_peek (RTPJitterBuffer * jbuf)
 /**
  * rtp_jitter_buffer_flush:
  * @jbuf: an #RTPJitterBuffer
- * @free_func: function to free each item
+ * @free_func: function to free each item (optional)
  * @user_data: user data passed to @free_func
  *
  * Flush all packets from the jitterbuffer.
@@ -1145,7 +1149,9 @@ rtp_jitter_buffer_flush (RTPJitterBuffer * jbuf, GFunc free_func,
   GList *item;
 
   g_return_if_fail (jbuf != NULL);
-  g_return_if_fail (free_func != NULL);
+
+  if (free_func == NULL)
+    free_func = (GFunc) rtp_jitter_buffer_free_item;
 
   while ((item = g_queue_pop_head_link (jbuf->packets)))
     free_func ((RTPJitterBufferItem *) item, user_data);
@@ -1375,4 +1381,60 @@ rtp_jitter_buffer_is_full (RTPJitterBuffer * jbuf)
 {
   return rtp_jitter_buffer_get_seqnum_diff (jbuf) >= 32765 &&
       rtp_jitter_buffer_num_packets (jbuf) > 10000;
+}
+
+/**
+ * rtp_jitter_buffer_alloc_item:
+ * @data: The data stored in this item
+ * @type: User specific item type
+ * @dts: Decoding Timestamp
+ * @pts: Presentation Timestamp
+ * @seqnum: Sequence number
+ * @count: Number of packet this item represent
+ * @rtptime: The RTP specific timestamp
+ * @free_data: A function to free @data (optional)
+ *
+ * Create an item that can then be stored in the jitter buffer.
+ *
+ * Returns: a newly allocated RTPJitterbufferItem
+ */
+RTPJitterBufferItem *
+rtp_jitter_buffer_alloc_item (gpointer data, guint type, GstClockTime dts,
+    GstClockTime pts, guint seqnum, guint count, guint rtptime,
+    GDestroyNotify free_data)
+{
+  RTPJitterBufferItem *item;
+
+  item = g_slice_new (RTPJitterBufferItem);
+  item->data = data;
+  item->next = NULL;
+  item->prev = NULL;
+  item->type = type;
+  item->dts = dts;
+  item->pts = pts;
+  item->seqnum = seqnum;
+  item->count = count;
+  item->rtptime = rtptime;
+  item->free_data = free_data;
+
+  return item;
+}
+
+/**
+ * rtp_jitter_buffer_free_item:
+ * @item: the item to be freed
+ *
+ * Free the jitter buffer item.
+ */
+void
+rtp_jitter_buffer_free_item (RTPJitterBufferItem * item)
+{
+  g_return_if_fail (item != NULL);
+  /* needs to be unlinked first */
+  g_return_if_fail (item->next == NULL);
+  g_return_if_fail (item->prev == NULL);
+
+  if (item->data && item->free_data)
+    item->free_data (item->data);
+  g_slice_free (RTPJitterBufferItem, item);
 }
