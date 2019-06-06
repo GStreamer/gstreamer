@@ -462,6 +462,10 @@ error:
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_vp9_flush (GstVaapiEncoder * base_encoder)
 {
+  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9 (base_encoder);
+
+  encoder->frame_num = 0;
+
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
