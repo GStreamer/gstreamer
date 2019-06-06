@@ -184,7 +184,6 @@ gint                  rtp_jitter_buffer_get_percent      (RTPJitterBuffer * jbuf
 
 guint                 rtp_jitter_buffer_num_packets      (RTPJitterBuffer *jbuf);
 guint32               rtp_jitter_buffer_get_ts_diff      (RTPJitterBuffer *jbuf);
-guint16               rtp_jitter_buffer_get_seqnum_diff  (RTPJitterBuffer * jbuf);
 
 void                  rtp_jitter_buffer_get_sync         (RTPJitterBuffer *jbuf, guint64 *rtptime,
                                                           guint64 *timestamp, guint32 *clock_rate,
@@ -195,5 +194,8 @@ GstClockTime          rtp_jitter_buffer_calculate_pts    (RTPJitterBuffer * jbuf
                                                           gboolean is_rtx);
 
 gboolean              rtp_jitter_buffer_can_fast_start   (RTPJitterBuffer * jbuf, gint num_packet);
+
+gboolean              rtp_jitter_buffer_is_full          (RTPJitterBuffer * jbuf);
+
 
 #endif /* __RTP_JITTER_BUFFER_H__ */

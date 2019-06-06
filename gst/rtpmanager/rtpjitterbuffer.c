@@ -1259,7 +1259,7 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
 }
 
 
-/**
+/*
  * rtp_jitter_buffer_get_seqnum_diff:
  * @jbuf: an #RTPJitterBuffer
  *
@@ -1268,7 +1268,7 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
  *
  * Returns: The difference expressed in seqnum.
  */
-guint16
+static guint16
 rtp_jitter_buffer_get_seqnum_diff (RTPJitterBuffer * jbuf)
 {
   guint32 high_seqnum, low_seqnum;
@@ -1368,4 +1368,11 @@ rtp_jitter_buffer_can_fast_start (RTPJitterBuffer * jbuf, gint num_packet)
   }
 
   return ret;
+}
+
+gboolean
+rtp_jitter_buffer_is_full (RTPJitterBuffer * jbuf)
+{
+  return rtp_jitter_buffer_get_seqnum_diff (jbuf) >= 32765 &&
+      rtp_jitter_buffer_num_packets (jbuf) > 10000;
 }

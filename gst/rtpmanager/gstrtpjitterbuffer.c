@@ -3155,10 +3155,11 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
    * limit the queue size. But let's not limit it to a number that is
    * too small to avoid emptying it needlessly if there is a spurious huge
    * sequence number, let's allow at least 10k packets in any case. */
-  while (rtp_jitter_buffer_get_seqnum_diff (priv->jbuf) >= 32765 &&
-      rtp_jitter_buffer_num_packets (priv->jbuf) > 10000 &&
-      priv->srcresult == GST_FLOW_OK)
+  while (rtp_jitter_buffer_is_full (priv->jbuf) &&
+      priv->srcresult == GST_FLOW_OK) {
+    JBUF_SIGNAL_EVENT (priv);
     JBUF_WAIT_QUEUE (priv);
+  }
   if (priv->srcresult != GST_FLOW_OK)
     goto out_flushing;
 
@@ -3693,7 +3694,8 @@ handle_next_buffer (GstRtpJitterBuffer * jitterbuffer)
           "Sequence number GAP detected: expected %d instead of %d (%d missing)",
           next_seqnum, seqnum, gap);
       /* if we have reached EOS, just keep processing */
-      if (priv->eos) {
+      /* Also do the same if we block input because the JB is full */
+      if (priv->eos || rtp_jitter_buffer_is_full (priv->jbuf)) {
         result = pop_and_push_next (jitterbuffer, seqnum);
         result = GST_FLOW_OK;
       } else {
