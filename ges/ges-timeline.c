@@ -317,8 +317,6 @@ ges_timeline_finalize (GObject * object)
   G_OBJECT_CLASS (ges_timeline_parent_class)->finalize (object);
 }
 
-
-
 static void
 ges_timeline_handle_message (GstBin * bin, GstMessage * message)
 {
@@ -1434,9 +1432,12 @@ track_element_removed_cb (GESTrack * track,
 
 static GstPadProbeReturn
 _pad_probe_cb (GstPad * mixer_pad, GstPadProbeInfo * info,
-    GESTimeline * timeline)
+    TrackPrivate * tr_priv)
 {
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+  GESTimeline *timeline = tr_priv->timeline;
+  gchar *stream_id;
+
   if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START) {
     LOCK_DYN (timeline);
     if (timeline->priv->stream_start_group_id == -1) {
@@ -1445,7 +1446,9 @@ _pad_probe_cb (GstPad * mixer_pad, GstPadProbeInfo * info,
         timeline->priv->stream_start_group_id = gst_util_group_id_next ();
     }
 
-    info->data = gst_event_make_writable (event);
+    gst_event_unref (event);
+    g_object_get (tr_priv->track, "id", &stream_id, NULL);
+    info->data = gst_event_new_stream_start (stream_id);
     gst_event_set_group_id (GST_PAD_PROBE_INFO_EVENT (info),
         timeline->priv->stream_start_group_id);
     UNLOCK_DYN (timeline);
@@ -1500,7 +1503,7 @@ _ghost_track_srcpad (TrackPrivate * tr_priv)
 
   tr_priv->probe_id = gst_pad_add_probe (pad,
       GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-      (GstPadProbeCallback) _pad_probe_cb, tr_priv->timeline, NULL);
+      (GstPadProbeCallback) _pad_probe_cb, tr_priv, NULL);
 
   UNLOCK_DYN (tr_priv->timeline);
 }

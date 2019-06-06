@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY_STATIC (nlecomposition_debug);
 enum
 {
   PROP_0,
-  PROP_DEACTIVATED_ELEMENTS_STATE,
+  PROP_ID,
   PROP_LAST,
 };
 
@@ -201,6 +201,8 @@ struct _NleCompositionPrivate
   NleUpdateStackReason updating_reason;
 
   guint seek_seqnum;
+
+  gchar *id;
 };
 
 #define ACTION_CALLBACK(__action) (((GCClosure*) (__action))->callback)
@@ -208,6 +210,7 @@ struct _NleCompositionPrivate
 static guint _signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *nleobject_properties[NLEOBJECT_PROP_LAST];
+static GParamSpec *properties[PROP_LAST];
 
 G_DEFINE_TYPE_WITH_CODE (NleComposition, nle_composition, NLE_TYPE_OBJECT,
     G_ADD_PRIVATE (NleComposition)
@@ -971,6 +974,41 @@ drop:
 }
 
 static void
+nle_composition_get_property (GObject * object, guint property_id,
+    GValue * value, GParamSpec * pspec)
+{
+  NleComposition *comp = (NleComposition *) object;
+
+  switch (property_id) {
+    case PROP_ID:
+      GST_OBJECT_LOCK (comp);
+      g_value_set_string (value, comp->priv->id);
+      GST_OBJECT_UNLOCK (comp);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (comp, property_id, pspec);
+  }
+}
+
+static void
+nle_composition_set_property (GObject * object, guint property_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  NleComposition *comp = (NleComposition *) object;
+
+  switch (property_id) {
+    case PROP_ID:
+      GST_OBJECT_LOCK (comp);
+      g_free (comp->priv->id);
+      comp->priv->id = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (comp);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (comp, property_id, pspec);
+  }
+}
+
+static void
 nle_composition_class_init (NleCompositionClass * klass)
 {
   GObjectClass *gobject_class;
@@ -991,6 +1029,10 @@ nle_composition_class_init (NleCompositionClass * klass)
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (nle_composition_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (nle_composition_finalize);
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (nle_composition_get_property);
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (nle_composition_set_property);
 
   gstelement_class->change_state = nle_composition_change_state;
 
@@ -1011,6 +1053,11 @@ nle_composition_class_init (NleCompositionClass * klass)
       g_object_class_find_property (gobject_class, "stop");
   nleobject_properties[NLEOBJECT_PROP_DURATION] =
       g_object_class_find_property (gobject_class, "duration");
+
+  properties[PROP_ID] =
+      g_param_spec_string ("id", "Id", "The stream-id of the composition",
+      NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   _signals[COMMITED_SIGNAL] =
       g_signal_new ("commited", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
@@ -1063,6 +1110,8 @@ nle_composition_init (NleComposition * comp)
 
   nle_composition_reset (comp);
 
+  priv->id = gst_pad_create_stream_id (NLE_OBJECT_SRC (comp),
+      GST_ELEMENT (comp), NULL);
   priv->nle_event_pad_func = GST_PAD_EVENTFUNC (NLE_OBJECT_SRC (comp));
   gst_pad_set_event_function (NLE_OBJECT_SRC (comp),
       GST_DEBUG_FUNCPTR (nle_composition_event_handler));
@@ -1141,6 +1190,7 @@ nle_composition_finalize (GObject * object)
 
   g_mutex_clear (&priv->actions_lock);
   g_cond_clear (&priv->actions_cond);
+  g_free (priv->id);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1273,8 +1323,10 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
     case GST_EVENT_STREAM_START:
       if (g_atomic_int_compare_and_exchange (&priv->send_stream_start, TRUE,
               FALSE)) {
-        /* FIXME: Do we want to create a new stream ID here? */
-        GST_DEBUG_OBJECT (comp, "forward stream-start %p", event);
+
+        gst_event_unref (event);
+        event = info->data = gst_event_new_stream_start (g_strdup (priv->id));
+        GST_INFO_OBJECT (comp, "forward stream-start %p (%s)", event, priv->id);
       } else {
         GST_DEBUG_OBJECT (comp, "dropping stream-start %p", event);
         retval = GST_PAD_PROBE_DROP;

@@ -94,6 +94,7 @@ enum
   ARG_TYPE,
   ARG_DURATION,
   ARG_MIXING,
+  ARG_ID,
   ARG_LAST,
   TRACK_ELEMENT_ADDED,
   TRACK_ELEMENT_REMOVED,
@@ -424,6 +425,9 @@ ges_track_get_property (GObject * object, guint property_id,
     case ARG_MIXING:
       g_value_set_boolean (value, track->priv->mixing);
       break;
+    case ARG_ID:
+      g_object_get_property (G_OBJECT (track->priv->composition), "id", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -447,6 +451,9 @@ ges_track_set_property (GObject * object, guint property_id,
       break;
     case ARG_MIXING:
       ges_track_set_mixing (track, g_value_get_boolean (value));
+      break;
+    case ARG_ID:
+      g_object_set_property (G_OBJECT (track->priv->composition), "id", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -637,6 +644,11 @@ ges_track_class_init (GESTrackClass * klass)
       TRUE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
   g_object_class_install_property (object_class, ARG_MIXING,
       properties[ARG_MIXING]);
+
+  properties[ARG_ID] =
+      g_param_spec_string ("id", "Id", "The stream-id of the composition",
+      NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (object_class, ARG_ID, properties[ARG_ID]);
 
   gst_element_class_add_static_pad_template (gstelement_class,
       &ges_track_src_pad_template);
