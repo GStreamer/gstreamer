@@ -23,19 +23,11 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
-#define GST_TYPE_ALPHA_COLOR \
-  (gst_alpha_color_get_type())
-#define GST_ALPHA_COLOR(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALPHA_COLOR,GstAlphaColor))
-#define GST_ALPHA_COLOR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALPHA_COLOR,GstAlphaColorClass))
-#define GST_IS_ALPHA_COLOR(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALPHA_COLOR))
-#define GST_IS_ALPHA_COLOR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALPHA_COLOR))
+#define GST_TYPE_ALPHA_COLOR (gst_alpha_color_get_type ())
 
-typedef struct _GstAlphaColor GstAlphaColor;
-typedef struct _GstAlphaColorClass GstAlphaColorClass;
+G_DECLARE_FINAL_TYPE (GstAlphaColor, gst_alpha_color,
+    GST, ALPHA_COLOR,
+    GstVideoFilter)
 
 struct _GstAlphaColor
 {
@@ -46,12 +38,5 @@ struct _GstAlphaColor
 
   const gint *matrix;
 };
-
-struct _GstAlphaColorClass
-{
-  GstVideoFilterClass parent_class;
-};
-
-GType gst_alpha_color_get_type (void);
 
 #endif /* _GST_ALPHA_COLOR_H_ */
