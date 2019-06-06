@@ -29,7 +29,7 @@
  * SECTION:element-nleoperation
  *
  * A NleOperation performs a transformation or mixing operation on the
- * data from one or more #NleSources, which is used to implement filters or 
+ * data from one or more #NleSources, which is used to implement filters or
  * effects.
  */
 
@@ -131,7 +131,7 @@ nle_operation_class_init (NleOperationClass * klass)
    *
    * Specifies the number of sink pads the operation should provide.
    * If the sinks property is -1 (the default) pads are only created as
-   * demanded via get_request_pad() calls on the element.
+   * demanded via `get_request_pad()` calls on the element.
    */
   g_object_class_install_property (gobject_class, ARG_SINKS,
       g_param_spec_int ("sinks", "Sinks",
@@ -306,7 +306,7 @@ get_src_pad (GstElement * element)
 }
 
 /* get_nb_static_sinks:
- * 
+ *
  * Returns : The number of static sink pads of the controlled element.
  */
 static guint

@@ -89,17 +89,31 @@ libs_doc = [hotdoc.generate_doc('gst-editing-services',
     disable_incremental_build: true,
 )]
 
-plugins_doc = [hotdoc.generate_doc('nle',
-    project_version: apiversion,
-    extra_assets: [join_paths(meson.current_source_dir(), 'images')],
-    sitemap: 'nle-sitemap.txt',
-    index: 'nle-index.md',
-    dependencies: [nle],
-    disable_incremental_build: true,
-    gst_order_generated_subpages: true,
-    gst_index: 'nle-index.md',
-    gst_c_sources: ['../../plugins/nle/*.[ch]'],
-    gst_smart_index: true,
-    gst_cache_file: plugins_cache,
-    gst_plugin_name: 'nle',
-)]
+plugins_doc = []
+list_plugin_res = run_command(python3, '-c',
+'''
+import sys
+import json
+
+with open("@0@") as f:
+    print(':'.join(json.load(f).keys()), end='')
+'''.format(plugins_cache))
+
+assert(list_plugin_res.returncode() == 0,
+  'Could not list plugins from @0@\n@1@\n@1@'.format(plugins_cache, list_plugin_res.stdout(), list_plugin_res.stderr()))
+
+
+foreach plugin_name: list_plugin_res.stdout().split(':')
+    plugins_doc += [hotdoc.generate_doc(plugin_name,
+        project_version: apiversion,
+        sitemap: 'plugins/sitemap.txt',
+        index: 'plugins/index.md',
+        gst_index: 'plugins/index.md',
+        gst_smart_index: true,
+        gst_c_sources: ['../plugins/*/*.[ch]',],
+        dependencies: [gst_dep, plugins],
+        gst_order_generated_subpages: true,
+        gst_cache_file: plugins_cache,
+        gst_plugin_name: plugin_name,
+    )]
+endforeach

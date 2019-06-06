@@ -20,7 +20,7 @@
  *
 
  **
- * SECTION:gessrc
+ * SECTION:element-gessrc
  * @short_description: A GstBin subclasses use to use GESTimeline
  * as sources inside any GstPipeline.
  * @see_also: #GESTimeline

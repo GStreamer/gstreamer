@@ -173,6 +173,7 @@ foreach extra_arg : warning_flags
   endif
 endforeach
 
+python3 = import('python').find_installation()
 configinc = include_directories('.')
 subdir('ges')
 subdir('plugins')
@@ -209,7 +210,6 @@ else:
         prefix, 'Lib', 'Python%d%d' % (version.major, version.minor),
         'site-packages', 'gi', 'overrides'))
 '''
-python3 = import('python').find_installation()
 pygi_override_dir = get_option('pygi-overrides-dir')
 if pygi_override_dir == ''
     cres = run_command(python3, '-c', override_detector, get_option('prefix'))
