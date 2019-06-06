@@ -1,4 +1,4 @@
-gstges_sources = ['gesplugin.c', 'gessrc.c', 'gesdemux.c']
+gstges_sources = ['gesplugin.c', 'gessrc.c', 'gesdemux.c', 'gesbasebin.c']
 
 gstges = library('gstges', gstges_sources,
   dependencies : [gst_dep, ges_dep],

@@ -36,47 +36,35 @@
 #include "config.h"
 #endif
 
+#include "gesbasebin.h"
+
 #include <gst/gst.h>
 #include <glib/gstdio.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/base/gstadapter.h>
 #include <ges/ges.h>
-#include <gst/base/gstflowcombiner.h>
 
 GST_DEBUG_CATEGORY_STATIC (gesdemux);
 #define GST_CAT_DEFAULT gesdemux
-
-static GstStaticPadTemplate video_src_template =
-GST_STATIC_PAD_TEMPLATE ("video_src",
-    GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("video/x-raw(ANY)"));
-
-static GstStaticPadTemplate audio_src_template =
-    GST_STATIC_PAD_TEMPLATE ("audio_src",
-    GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("audio/x-raw(ANY);"));
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/xges"));
 
-G_DECLARE_FINAL_TYPE (GESDemux, ges_demux, GES, Demux, GstBin);
+G_DECLARE_FINAL_TYPE (GESDemux, ges_demux, GES, Demux, GESBaseBin);
 
 struct _GESDemux
 {
-  GstBin parent;
+  GESBaseBin parent;
 
   GESTimeline *timeline;
   GstPad *sinkpad;
 
   GstAdapter *input_adapter;
-  GstFlowCombiner *flow_combiner;
 };
 
-G_DEFINE_TYPE (GESDemux, ges_demux, GST_TYPE_BIN);
+G_DEFINE_TYPE (GESDemux, ges_demux, ges_base_bin_get_type ());
 #define GES_DEMUX(obj) ((GESDemux*)obj)
 
 enum
@@ -88,112 +76,6 @@ enum
 
 static GParamSpec *properties[PROP_LAST];
 
-static GstFlowReturn
-gst_demux_src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
-{
-  GstFlowReturn result, chain_result;
-  GESDemux *self = GES_DEMUX (GST_OBJECT_PARENT (parent));
-
-  chain_result = gst_proxy_pad_chain_default (pad, GST_OBJECT (self), buffer);
-  result =
-      gst_flow_combiner_update_pad_flow (self->flow_combiner, pad,
-      chain_result);
-
-  if (result == GST_FLOW_FLUSHING) {
-    return chain_result;
-  }
-
-  return result;
-}
-
-static gboolean
-ges_demux_set_timeline (GESDemux * self, GESTimeline * timeline)
-{
-  GList *tmp;
-  guint naudiopad = 0, nvideopad = 0;
-  GstBin *sbin = GST_BIN (self);
-
-  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
-
-  if (self->timeline) {
-    GST_ERROR_OBJECT (self, "Implement changing timeline support");
-
-    return FALSE;
-  }
-
-  GST_INFO_OBJECT (self, "Setting timeline: %" GST_PTR_FORMAT, timeline);
-  self->timeline = gst_object_ref (timeline);
-
-  if (!gst_bin_add (sbin, GST_ELEMENT (self->timeline))) {
-    GST_ERROR_OBJECT (self, "Could not add timeline to myself!");
-
-    return FALSE;
-  }
-
-  for (tmp = self->timeline->tracks; tmp; tmp = tmp->next) {
-    GstPad *gpad;
-    gchar *name = NULL;
-    GstElement *queue;
-    GESTrack *track = GES_TRACK (tmp->data);
-    GstPad *proxy_pad, *tmppad, *pad =
-        ges_timeline_get_pad_for_track (self->timeline, track);
-    GstStaticPadTemplate *template;
-
-    if (!pad) {
-      GST_WARNING_OBJECT (self, "No pad for track: %" GST_PTR_FORMAT, track);
-
-      continue;
-    }
-
-    if (track->type == GES_TRACK_TYPE_AUDIO) {
-      name = g_strdup_printf ("audio_%u", naudiopad++);
-      template = &audio_src_template;
-    } else if (track->type == GES_TRACK_TYPE_VIDEO) {
-      name = g_strdup_printf ("video_%u", nvideopad++);
-      template = &video_src_template;
-    } else {
-      GST_INFO_OBJECT (self, "Track type not handled: %" GST_PTR_FORMAT, track);
-      continue;
-    }
-
-    queue = gst_element_factory_make ("queue", NULL);
-    /* Add queues the same way as in GESPipeline */
-    g_object_set (G_OBJECT (queue), "max-size-buffers", 0,
-        "max-size-bytes", 0, "max-size-time", (gint64) 2 * GST_SECOND, NULL);
-    gst_bin_add (GST_BIN (self), queue);
-    gst_element_sync_state_with_parent (GST_ELEMENT (queue));
-
-    tmppad = gst_element_get_static_pad (queue, "sink");
-    if (gst_pad_link (pad, tmppad) != GST_PAD_LINK_OK) {
-      GST_ERROR_OBJECT (self, "Could not link %s:%s and %s:%s",
-          GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (tmppad));
-
-      gst_object_unref (tmppad);
-      gst_object_unref (queue);
-      continue;
-    }
-
-    tmppad = gst_element_get_static_pad (queue, "src");
-    gpad = gst_ghost_pad_new_from_template (name, tmppad,
-        gst_static_pad_template_get (template));
-
-    gst_pad_set_active (gpad, TRUE);
-    gst_element_add_pad (GST_ELEMENT (self), gpad);
-
-    proxy_pad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (gpad)));
-    gst_flow_combiner_add_pad (self->flow_combiner, proxy_pad);
-    gst_pad_set_chain_function (proxy_pad,
-        (GstPadChainFunction) gst_demux_src_chain);
-    gst_object_unref (proxy_pad);
-    GST_DEBUG_OBJECT (self, "Adding pad: %" GST_PTR_FORMAT, gpad);
-  }
-
-  gst_element_sync_state_with_parent (GST_ELEMENT (self->timeline));
-  gst_element_no_more_pads (GST_ELEMENT (self));
-
-  return TRUE;
-}
-
 static void
 ges_demux_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
@@ -202,7 +84,8 @@ ges_demux_get_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_TIMELINE:
-      g_value_set_object (value, self->timeline);
+      g_value_set_object (value,
+          ges_base_bin_get_timeline (GES_BASE_BIN (self)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -220,23 +103,6 @@ ges_demux_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_demux_dispose (GObject * object)
-{
-  GESDemux *self = GES_DEMUX (object);
-
-  if (self->timeline)
-    gst_clear_object (&self->timeline);
-}
-
-static void
-ges_demux_finalize (GObject * object)
-{
-  GESDemux *self = GES_DEMUX (object);
-
-  gst_flow_combiner_free (self->flow_combiner);
-}
-
-static void
 ges_demux_class_init (GESDemuxClass * self_class)
 {
   GObjectClass *gclass = G_OBJECT_CLASS (self_class);
@@ -246,8 +112,6 @@ ges_demux_class_init (GESDemuxClass * self_class)
 
   gclass->get_property = ges_demux_get_property;
   gclass->set_property = ges_demux_set_property;
-  gclass->dispose = ges_demux_dispose;
-  gclass->finalize = ges_demux_finalize;
 
   /**
    * GESDemux:timeline:
@@ -257,21 +121,15 @@ ges_demux_class_init (GESDemuxClass * self_class)
   properties[PROP_TIMELINE] = g_param_spec_object ("timeline", "Timeline",
       "Timeline to use in this source.",
       GES_TYPE_TIMELINE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_override_property (gclass, PROP_TIMELINE, "timeline");
 
-  g_object_class_install_properties (gclass, PROP_LAST, properties);
-
+  gst_element_class_add_pad_template (gstelement_klass,
+      gst_static_pad_template_get (&sink_template));
   gst_element_class_set_static_metadata (gstelement_klass,
       "GStreamer Editing Services based 'demuxer'",
       "Codec/Demux/Editing",
       "Demuxer for complex timeline file formats using GES.",
       "Thibault Saunier <tsaunier@igalia.com");
-
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&video_src_template));
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&audio_src_template));
 }
 
 typedef struct
@@ -453,7 +311,7 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         GST_INFO_OBJECT (self, "Timeline properly loaded: %" GST_PTR_FORMAT,
             data.timeline);
-        ges_demux_set_timeline (self, data.timeline);
+        ges_base_bin_set_timeline (GES_BASE_BIN (self), data.timeline);
       done:
         g_free (filename);
         g_free (uri);
@@ -496,7 +354,6 @@ ges_demux_init (GESDemux * self)
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->input_adapter = gst_adapter_new ();
-  self->flow_combiner = gst_flow_combiner_new ();
 
   gst_pad_set_chain_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (ges_demux_sink_chain));

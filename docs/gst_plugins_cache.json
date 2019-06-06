@@ -8,6 +8,7 @@
                 "description": "Demuxer for complex timeline file formats using GES.",
                 "hierarchy": [
                     "GESDemux",
+                    "GESBaseBin",
                     "GstBin",
                     "GstElement",
                     "GstObject",
@@ -51,11 +52,11 @@
                         "writable": true
                     },
                     "timeline": {
-                        "blurb": "Timeline to use in this source.",
+                        "blurb": "Timeline to use in this src.",
                         "construct": false,
                         "construct-only": false,
                         "type-name": "GESTimeline",
-                        "writable": false
+                        "writable": true
                     }
                 },
                 "rank": "primary",
@@ -79,18 +80,19 @@
                 }
             },
             "gessrc": {
-                "author": "Erik Walthinsen <omega@cse.ogi.edu>,Wim Taymans <wim.taymans@gmail.com>",
-                "description": "Simple container object",
+                "author": "Thibault Saunier <tsaunier@igalia.com",
+                "description": "Source for GESTimeline.",
                 "hierarchy": [
                     "GESSrc",
+                    "GESBaseBin",
                     "GstBin",
                     "GstElement",
                     "GstObject",
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Generic/Bin",
-                "long-name": "Generic bin",
+                "klass": "Codec/Source/Editing",
+                "long-name": "GStreamer Editing Services based 'source'",
                 "pad-templates": {
                     "audio_src": {
                         "caps": "audio/x-raw(ANY):\n",
