@@ -37,6 +37,11 @@ cuda_versions = [
   ]
 cuda_ver = ''
 
+cuda_dep = dependency('cuda', required:false)
+if cuda_dep.found()
+  cuda_ver = cuda_dep.version()
+endif
+
 # FIXME: use break syntax when we use meson >= '0.49'
 foreach v : cuda_versions
   if cuda_ver == ''
