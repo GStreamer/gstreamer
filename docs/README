@@ -294,7 +294,7 @@ can build simple server applications with it.
  When a client performs a PLAY request, its configured destination UDP ports are
  added to the GstRTSPStream target destinations, at which point data will
  be sent to the client. The corresponding GstRTSPMedia object will be set to the
- PLAYING state if it was not allready in order to send the data to the
+ PLAYING state if it was not already in order to send the data to the
  destination.
 
  The server needs to prepare an RTP-Info header field in the PLAY response,
@@ -320,7 +320,7 @@ can build simple server applications with it.
 * session management
 
  The server has to react to clients that suddenly disappear because of network
- problems or otherwise. It needs to make sure that it can reasonable free the
+ problems or otherwise. It needs to make sure that it can reasonably free the
  resources that are used by the various objects in use for streaming when the
  client appears to be gone.
 
@@ -331,7 +331,7 @@ can build simple server applications with it.
  Various ways exist to detect activity from a client:
 
   - RTSP keepalive requests. When a client is receiving RTP data, the RTSP TCP
-    connection is largely unused. It is the client's responsability to
+    connection is largely unused. It is the client's responsibility to
     periodically send keep-alive requests over the TCP channel.
 
     Whenever a keep-alive request is received by the server (any request that
@@ -359,7 +359,7 @@ can build simple server applications with it.
  expired and call gst_rtsp_session_pool_cleanup() to remove them.
  
  When a session is removed from the sessionpool and its last reference is
- unreffef, all related objects and media are destroyed as if a TEARDOWN happened
+ unreffed, all related objects and media are destroyed as if a TEARDOWN happened
  from the client.
 
 
@@ -397,9 +397,9 @@ can build simple server applications with it.
     to a user.
 
   - GstRTSPPermissions: a generic list of roles and matching permissions. These
-    can be attached to media and facties currently.
+    can be attached to media and factories currently.
 
- An Auth implementation will usually authenticate a user, using method such as
+ An Auth implementation will usually authenticate a user, using a method such as
  Basic authentication or client certificates or perhaps simply use the IP address.
  The result of the authentication of the user will be a GstRTSPToken that is made
  current in the context of the ongoing request.
@@ -477,7 +477,7 @@ GstRTSPAddressPool
 
 GstRTSPThreadPool
  - a pool of threads used for various server tasks such as handling clients and
-   managin media pipelines.
+   managing media pipelines.
 
 
 GstRTSPAuth

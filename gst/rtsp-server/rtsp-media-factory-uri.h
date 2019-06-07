@@ -43,7 +43,7 @@ typedef struct _GstRTSPMediaFactoryURIPrivate GstRTSPMediaFactoryURIPrivate;
 /**
  * GstRTSPMediaFactoryURI:
  *
- * A media factory that creates a pipeline to play and uri.
+ * A media factory that creates a pipeline to play any uri.
  */
 struct _GstRTSPMediaFactoryURI {
   GstRTSPMediaFactory   parent;
