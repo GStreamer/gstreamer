@@ -135,6 +135,8 @@ struct _GESTimelinePrivate
   GCond commited_cond;
 
   GThread *valid_thread;
+
+  GstStreamCollection *stream_collection;
 };
 
 /* private structure to contain our track-related information */
@@ -147,6 +149,7 @@ typedef struct
   GstPad *ghostpad;
 
   gulong probe_id;
+  GstStream *stream;
 } TrackPrivate;
 
 enum
@@ -302,6 +305,7 @@ ges_timeline_dispose (GObject * object)
   g_list_free_full (priv->auto_transitions, gst_object_unref);
 
   g_hash_table_unref (priv->all_elements);
+  gst_object_unref (priv->stream_collection);
 
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
 }
@@ -374,6 +378,63 @@ forward:
   gst_element_post_message (GST_ELEMENT_CAST (bin), message);
 }
 
+static GstStateChangeReturn
+ges_timeline_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn res;
+  GESTimeline *timeline = GES_TIMELINE (element);
+
+  res = GST_ELEMENT_CLASS (ges_timeline_parent_class)->change_state (element,
+      transition);
+
+  if (transition == GST_STATE_CHANGE_READY_TO_PAUSED)
+    gst_element_post_message ((GstElement *) timeline,
+        gst_message_new_stream_collection ((GstObject *) timeline,
+            timeline->priv->stream_collection));
+  return res;
+}
+
+static gboolean
+ges_timeline_send_event (GstElement * element, GstEvent * event)
+{
+  GESTimeline *timeline = GES_TIMELINE (element);
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SELECT_STREAMS) {
+    GList *stream_ids = NULL, *tmp, *to_remove =
+        ges_timeline_get_tracks (timeline);
+
+    gst_event_parse_select_streams (event, &stream_ids);
+    for (tmp = stream_ids; tmp; tmp = tmp->next) {
+      GList *trackit;
+      gchar *stream_id = tmp->data;
+
+      LOCK_DYN (timeline);
+      for (trackit = timeline->priv->priv_tracks; trackit;
+          trackit = trackit->next) {
+        TrackPrivate *tr_priv = trackit->data;
+
+        if (!g_strcmp0 (gst_stream_get_stream_id (tr_priv->stream), stream_id)) {
+          to_remove = g_list_remove (to_remove, tr_priv->track);
+        }
+      }
+      UNLOCK_DYN (timeline);
+    }
+    for (tmp = to_remove; tmp; tmp = tmp->next) {
+      GST_INFO_OBJECT (timeline, "Removed unselected track: %" GST_PTR_FORMAT,
+          tmp->data);
+      ges_timeline_remove_track (timeline, tmp->data);
+    }
+
+    g_list_free_full (stream_ids, g_free);
+    g_list_free (to_remove);
+
+    return TRUE;
+  }
+
+  return GST_ELEMENT_CLASS (ges_timeline_parent_class)->send_event (element,
+      event);
+}
+
 /* we collect the first result */
 static gboolean
 _gst_array_accumulator (GSignalInvocationHint * ihint,
@@ -392,6 +453,7 @@ static void
 ges_timeline_class_init (GESTimelineClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = (GstElementClass *) klass;
   GstBinClass *bin_class = GST_BIN_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (ges_timeline_debug, "gestimeline",
@@ -404,6 +466,9 @@ ges_timeline_class_init (GESTimelineClass * klass)
   object_class->set_property = ges_timeline_set_property;
   object_class->dispose = ges_timeline_dispose;
   object_class->finalize = ges_timeline_finalize;
+
+  element_class->change_state = GST_DEBUG_FUNCPTR (ges_timeline_change_state);
+  element_class->send_event = GST_DEBUG_FUNCPTR (ges_timeline_send_event);
 
   bin_class->handle_message = GST_DEBUG_FUNCPTR (ges_timeline_handle_message);
 
@@ -597,6 +662,7 @@ ges_timeline_init (GESTimeline * self)
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, gst_object_unref);
 
   priv->stream_start_group_id = -1;
+  priv->stream_collection = gst_stream_collection_new (NULL);
 
   g_signal_connect_after (self, "select-tracks-for-object",
       G_CALLBACK (select_tracks_for_object_default), NULL);
@@ -1405,6 +1471,34 @@ layer_object_removed_cb (GESLayer * layer, GESClip * clip,
   GST_DEBUG ("Done");
 }
 
+static gboolean
+update_stream_object (TrackPrivate * tr_priv)
+{
+  gboolean res = FALSE;
+  GstStreamType type = GST_STREAM_TYPE_UNKNOWN;
+  gchar *stream_id;
+
+  g_object_get (tr_priv->track, "id", &stream_id, NULL);
+  if (tr_priv->track->type == GES_TRACK_TYPE_VIDEO)
+    type = GST_STREAM_TYPE_VIDEO;
+  if (tr_priv->track->type == GES_TRACK_TYPE_AUDIO)
+    type = GST_STREAM_TYPE_AUDIO;
+
+  if (!tr_priv->stream ||
+      g_strcmp0 (stream_id, gst_stream_get_stream_id (tr_priv->stream))) {
+    res = TRUE;
+    gst_object_replace ((GstObject **) & tr_priv->stream,
+        (GstObject *) gst_stream_new (stream_id,
+            (GstCaps *) ges_track_get_caps (tr_priv->track),
+            type, GST_STREAM_FLAG_NONE)
+        );
+  }
+
+  g_free (stream_id);
+
+  return res;
+}
+
 static void
 trackelement_start_changed_cb (GESTrackElement * child,
     GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
@@ -1436,7 +1530,6 @@ _pad_probe_cb (GstPad * mixer_pad, GstPadProbeInfo * info,
 {
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
   GESTimeline *timeline = tr_priv->timeline;
-  gchar *stream_id;
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START) {
     LOCK_DYN (timeline);
@@ -1447,10 +1540,10 @@ _pad_probe_cb (GstPad * mixer_pad, GstPadProbeInfo * info,
     }
 
     gst_event_unref (event);
-    g_object_get (tr_priv->track, "id", &stream_id, NULL);
-    info->data = gst_event_new_stream_start (stream_id);
-    gst_event_set_group_id (GST_PAD_PROBE_INFO_EVENT (info),
-        timeline->priv->stream_start_group_id);
+    event = info->data =
+        gst_event_new_stream_start (gst_stream_get_stream_id (tr_priv->stream));
+    gst_event_set_stream (event, tr_priv->stream);
+    gst_event_set_group_id (event, timeline->priv->stream_start_group_id);
     UNLOCK_DYN (timeline);
 
     return GST_PAD_PROBE_REMOVE;
@@ -1898,6 +1991,10 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   tr_priv->timeline = timeline;
   tr_priv->track = track;
 
+  update_stream_object (tr_priv);
+  gst_stream_collection_add_stream (timeline->priv->stream_collection,
+      gst_object_ref (tr_priv->stream));
+
   /* Add the track to the list of tracks we track */
   LOCK_DYN (timeline);
   timeline->priv->priv_tracks = g_list_append (timeline->priv->priv_tracks,
@@ -2174,12 +2271,24 @@ ges_timeline_commit_unlocked (GESTimeline * timeline)
   if (timeline->priv->expected_commited == 0) {
     g_signal_emit (timeline, ges_timeline_signals[COMMITED], 0);
   } else {
+    GstStreamCollection *collection = gst_stream_collection_new (NULL);
+
     for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
+      TrackPrivate *tr_priv =
+          g_list_find_custom (timeline->priv->priv_tracks, tmp->data,
+          (GCompareFunc) custom_find_track)->data;
+
+      update_stream_object (tr_priv);
+      gst_stream_collection_add_stream (collection,
+          gst_object_ref (tr_priv->stream));
       g_signal_connect (tmp->data, "commited", G_CALLBACK (track_commited_cb),
           timeline);
       if (!ges_track_commit (GES_TRACK (tmp->data)))
         res = FALSE;
     }
+
+    gst_object_unref (timeline->priv->stream_collection);
+    timeline->priv->stream_collection = collection;
   }
 
   return res;
@@ -2218,12 +2327,19 @@ gboolean
 ges_timeline_commit (GESTimeline * timeline)
 {
   gboolean ret;
+  GstStreamCollection *pcollection = timeline->priv->stream_collection;
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
 
   LOCK_DYN (timeline);
   ret = ges_timeline_commit_unlocked (timeline);
   UNLOCK_DYN (timeline);
+
+  if (pcollection != timeline->priv->stream_collection) {
+    gst_element_post_message ((GstElement *) timeline,
+        gst_message_new_stream_collection ((GstObject *) timeline,
+            timeline->priv->stream_collection));
+  }
 
   ges_timeline_emit_snapping (timeline, NULL, NULL, GST_CLOCK_TIME_NONE);
   return ret;

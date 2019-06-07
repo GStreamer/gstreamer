@@ -142,6 +142,7 @@ typedef struct
   GCond cond;
   gulong loaded_sigid;
   gulong error_sigid;
+  GESDemux *self;
 } TimelineConstructionData;
 
 static void
@@ -237,6 +238,9 @@ done:
 
   gst_clear_object (&project);
 
+  GST_INFO_OBJECT (data->self, "Timeline properly loaded: %" GST_PTR_FORMAT,
+      data->timeline);
+  ges_base_bin_set_timeline (GES_BASE_BIN (data->self), data->timeline);
   g_cond_broadcast (&data->cond);
   g_mutex_unlock (&data->lock);
 
@@ -290,6 +294,7 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         uri = gst_filename_to_uri (filename, NULL);
         data.uri = uri;
+        data.self = self;
 
         g_main_context_invoke (main_context,
             (GSourceFunc) ges_timeline_new_from_uri_from_main_thread, &data);
@@ -309,9 +314,6 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           goto error;
         }
 
-        GST_INFO_OBJECT (self, "Timeline properly loaded: %" GST_PTR_FORMAT,
-            data.timeline);
-        ges_base_bin_set_timeline (GES_BASE_BIN (self), data.timeline);
       done:
         g_free (filename);
         g_free (uri);

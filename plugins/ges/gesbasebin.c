@@ -144,7 +144,7 @@ ges_base_bin_init (GESBaseBin * self)
 }
 
 static GstFlowReturn
-gst_bin_src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+ges_base_bin_src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstFlowReturn result, chain_result;
   GESBaseBin *self = GES_BASE_BIN (GST_OBJECT_PARENT (parent));
@@ -186,6 +186,7 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
     return FALSE;
   }
 
+  ges_timeline_commit (timeline);
   for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
     GstPad *gpad;
     gchar *name = NULL;
@@ -238,7 +239,7 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
 
     proxy_pad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (gpad)));
     gst_flow_combiner_add_pad (priv->flow_combiner, proxy_pad);
-    gst_pad_set_chain_function (proxy_pad, gst_bin_src_chain);
+    gst_pad_set_chain_function (proxy_pad, ges_base_bin_src_chain);
     gst_object_unref (proxy_pad);
     GST_DEBUG_OBJECT (sbin, "Adding pad: %" GST_PTR_FORMAT, gpad);
   }

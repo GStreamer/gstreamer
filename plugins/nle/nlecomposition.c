@@ -1325,7 +1325,7 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
               FALSE)) {
 
         gst_event_unref (event);
-        event = info->data = gst_event_new_stream_start (g_strdup (priv->id));
+        event = info->data = gst_event_new_stream_start (priv->id);
         GST_INFO_OBJECT (comp, "forward stream-start %p (%s)", event, priv->id);
       } else {
         GST_DEBUG_OBJECT (comp, "dropping stream-start %p", event);

@@ -402,6 +402,43 @@ ges_track_change_state (GstElement * element, GstStateChange transition)
       transition);
 }
 
+static void
+ges_track_handle_message (GstBin * bin, GstMessage * message)
+{
+  GESTrack *track = GES_TRACK (bin);
+
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_COLLECTION) {
+    gint i;
+    GList *selected_streams = NULL;
+    GstStreamCollection *collection;
+
+    gst_message_parse_stream_collection (message, &collection);
+
+    for (i = 0; i < gst_stream_collection_get_size (collection); i++) {
+      GstStream *stream = gst_stream_collection_get_stream (collection, i);
+      GstStreamType stype = gst_stream_get_stream_type (stream);
+
+      if ((track->type == GES_TRACK_TYPE_VIDEO
+              && stype == GST_STREAM_TYPE_VIDEO)
+          || (track->type == GES_TRACK_TYPE_AUDIO
+              && stype == GST_STREAM_TYPE_AUDIO)
+          || (stype == GST_STREAM_TYPE_UNKNOWN)) {
+
+        selected_streams =
+            g_list_append (selected_streams,
+            (gchar *) gst_stream_get_stream_id (stream));
+      }
+    }
+
+    if (selected_streams) {
+      gst_element_send_event (GST_ELEMENT (GST_MESSAGE_SRC (message)),
+          gst_event_new_select_streams (selected_streams));
+      g_list_free (selected_streams);
+    }
+  }
+  gst_element_post_message (GST_ELEMENT_CAST (bin), message);
+}
+
 /* GObject virtual methods */
 static void
 ges_track_get_property (GObject * object, guint property_id,
@@ -567,8 +604,11 @@ ges_track_class_init (GESTrackClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GstBinClass *bin_class = GST_BIN_CLASS (klass);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (ges_track_change_state);
+
+  bin_class->handle_message = GST_DEBUG_FUNCPTR (ges_track_handle_message);
 
   object_class->get_property = ges_track_get_property;
   object_class->set_property = ges_track_set_property;
