@@ -323,6 +323,24 @@ ensure_uri (gchar * location)
     return gst_filename_to_uri (location, NULL);
 }
 
+static gboolean
+get_flags_from_string (GType type, const gchar * str_flags, guint * flags)
+{
+  GValue value = G_VALUE_INIT;
+  g_value_init (&value, type);
+
+  if (!gst_value_deserialize (&value, str_flags)) {
+    g_value_unset (&value);
+
+    return FALSE;
+  }
+
+  *flags = g_value_get_flags (&value);
+  g_value_unset (&value);
+
+  return TRUE;
+}
+
 gboolean
 _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     GError ** error)
@@ -334,18 +352,20 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   const gchar *name;
   const gchar *text;
   const gchar *pattern;
+  const gchar *track_types_str;
   gchar *asset_id = NULL;
   gchar *check_asset_id = NULL;
   const gchar *type_string;
   GType type;
   gboolean res = FALSE;
+  GESTrackType track_types = GES_TRACK_TYPE_UNKNOWN;
 
   GstClockTime duration = 1 * GST_SECOND, inpoint = 0, start =
       GST_CLOCK_TIME_NONE;
 
   const gchar *valid_fields[] =
       { "asset-id", "pattern", "name", "layer-priority", "layer", "type",
-    "start", "inpoint", "duration", "text", NULL
+    "start", "inpoint", "duration", "text", "track-types", NULL
   };
 
   FieldsError fields_error = { valid_fields, NULL };
@@ -365,6 +385,17 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   TRY_GET ("start", GST_TYPE_CLOCK_TIME, &start, GST_CLOCK_TIME_NONE);
   TRY_GET ("inpoint", GST_TYPE_CLOCK_TIME, &inpoint, 0);
   TRY_GET ("duration", GST_TYPE_CLOCK_TIME, &duration, GST_CLOCK_TIME_NONE);
+  TRY_GET_STRING ("track-types", &track_types_str, NULL);
+
+  if (track_types_str) {
+    if (!get_flags_from_string (GES_TYPE_TRACK_TYPE, track_types_str,
+            &track_types)) {
+      *error =
+          g_error_new (GES_ERROR, 0, "Invalid track types: %s",
+          track_types_str);
+    }
+
+  }
 
   if (!(type = g_type_from_name (type_string))) {
     *error = g_error_new (GES_ERROR, 0, "This type doesn't exist : %s",
@@ -408,7 +439,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   }
 
   clip = ges_layer_add_asset (layer, asset, start, inpoint, duration,
-      GES_TRACK_TYPE_UNKNOWN);
+      track_types);
 
   if (clip) {
     res = TRUE;
