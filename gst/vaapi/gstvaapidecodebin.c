@@ -400,7 +400,9 @@ gst_vaapi_decode_bin_init (GstVaapiDecodeBin * vaapidecbin)
 {
   GstPad *pad, *ghostpad;
 
-  vaapidecbin->deinterlace_method = DEFAULT_DEINTERLACE_METHOD;
+  vaapidecbin->max_size_bytes = DEFAULT_QUEUE_MAX_SIZE_BYTES;
+  vaapidecbin->max_size_buffers = DEFAULT_QUEUE_MAX_SIZE_BUFFERS;
+  vaapidecbin->max_size_time = DEFAULT_QUEUE_MAX_SIZE_TIME;
   vaapidecbin->disable_vpp = (g_getenv ("GST_VAAPI_DISABLE_VPP") != NULL);
 
   /* create the decoder */
