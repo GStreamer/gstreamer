@@ -370,8 +370,10 @@ ges_timeline_handle_message (GstBin * bin, GstMessage * message)
       GST_OBJECT_UNLOCK (timeline);
     }
 
-    if (amessage)
+    if (amessage) {
       gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
+      return;
+    }
   }
 
 forward:
