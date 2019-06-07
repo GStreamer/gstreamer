@@ -581,6 +581,7 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
   data.ml = g_main_loop_new (NULL, TRUE);
   g_object_get (previous_discoverer, "timeout", &timeout, NULL);
   klass->discoverer = gst_discoverer_new (timeout, error);
+  g_object_set (klass->discoverer, "use-cache", TRUE, NULL);
   if (!klass->discoverer) {
     klass->discoverer = previous_discoverer;
 

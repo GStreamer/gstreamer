@@ -188,6 +188,7 @@ ges_timeline_new_from_uri_from_main_thread (TimelineConstructionData * data)
    * have the chance to discover the project assets */
   g_mutex_lock (&data->lock);
   klass->discoverer = gst_discoverer_new (timeout, &data->error);
+  g_object_set (klass->discoverer, "use-cache", TRUE, NULL);
   if (data->error) {
     klass->discoverer = previous_discoverer;
     g_mutex_unlock (&data->lock);
