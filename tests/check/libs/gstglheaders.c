@@ -104,7 +104,6 @@ teardown (void)
 GST_START_TEST (test_constructors)
 {
   GstBufferPool *pool = NULL;
-  GstGLShader *shader = NULL;
   GstGLSLStage *stage = NULL;
   GstGLColorConvert *convert = NULL;
   GstGLOverlayCompositor *compositor = NULL;
@@ -113,10 +112,6 @@ GST_START_TEST (test_constructors)
   pool = gst_gl_buffer_pool_new (context);
   fail_if (pool == NULL);
   gst_object_unref (pool);
-
-  shader = gst_gl_shader_new (context);
-  fail_if (shader == NULL);
-  gst_object_unref (shader);
 
   stage = gst_glsl_stage_new_default_fragment (context);
   fail_if (stage == NULL);
@@ -141,10 +136,15 @@ static void
 _construct_with_activated_context (GstGLContext * context, gpointer unused)
 {
   GstGLFramebuffer *framebuffer = NULL;
+  GstGLShader *shader = NULL;
 
   framebuffer = gst_gl_framebuffer_new (context);
   fail_if (framebuffer == NULL);
   gst_object_unref (framebuffer);
+
+  shader = gst_gl_shader_new (context);
+  fail_if (shader == NULL);
+  gst_object_unref (shader);
 }
 
 GST_START_TEST (test_constructors_require_activated_context)

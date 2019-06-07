@@ -68,12 +68,20 @@ GST_START_TEST (test_default_vertex)
 
 GST_END_TEST;
 
+static void
+create_frag_shader (GstGLContext * context, GstGLSLStage ** stage)
+{
+  *stage = gst_glsl_stage_new_default_fragment (context);
+}
+
 GST_START_TEST (test_default_fragment)
 {
   GstGLSLStage *stage;
   GError *error = NULL;
 
-  stage = gst_glsl_stage_new_default_fragment (context);
+  gst_gl_context_thread_add (context,
+      (GstGLContextThreadFunc) create_frag_shader, &stage);
+
   fail_unless (stage != NULL);
   fail_unless (GL_FRAGMENT_SHADER == gst_glsl_stage_get_shader_type (stage));
 
