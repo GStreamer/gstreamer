@@ -108,15 +108,15 @@
  * pre-defined helper application will be called.
  *
  * The exact path of the helper application to be called is set at compile
- * time, usually by the `./configure` script based on the install prefix.
+ * time, usually by the build system based on the install prefix.
  * For a normal package build into the `/usr` prefix, this will usually
  * default to `/usr/libexec/gst-install-plugins-helper` or
  * `/usr/lib/gst-install-plugins-helper`.
  *
  * Vendors/distros who want to support GStreamer plugin installation should
- * either provide such a helper script/application or use the `./configure`
- * option `--with-install-plugins-helper=/path/to/installer` to make
- * GStreamer call an installer of their own directly.
+ * either provide such a helper script/application or use the meson option
+ * `-Dinstall_plugins_helper'=/path/to/installer` to make GStreamer call an
+ * installer of their own directly.
  *
  * It is strongly recommended that vendors provide a small helper
  * application as interlocutor to the real installer though, even more so
