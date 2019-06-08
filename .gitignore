@@ -1,42 +1,5 @@
-aclocal.m4
-autom4te.cache
-config.h
-config.h.in
-config.log
-config.status
-config.guess
-config.sub
-config.rpath
-configure
-libtool
-stamp-h
-stamp-h.in
-stamp-h1
-gst-element-check-*.m4
-ltmain.sh
-missing
-mkinstalldirs
-compile
-install-sh
-depcomp
-autoregen.sh
-ABOUT-NLS
-/INSTALL
-_stdint.h
-gst-plugins-ugly-*.tar.*
-
-.deps
-.libs
-*.lo
-*.la
-*.o
-*~
-/m4
-Makefile.in
-Makefile
 *~
 *.bak
-*.gc??
 
 Build
 *.user
@@ -46,10 +9,7 @@ Build
 *.opensdf
 *.DS_Store
 
-/test-driver
-*.log
-*.trs
-
 # Meson
 /build
+/_build
 /subprojects
