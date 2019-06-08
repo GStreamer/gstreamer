@@ -1526,6 +1526,7 @@ discoverer_collect (GstDiscoverer * dc)
 
     g_file_set_contents (dc->priv->current_info->cachefile,
         g_variant_get_data (variant), g_variant_get_size (variant), NULL);
+    g_variant_unref (variant);
   }
 
   if (dc->priv->async)
@@ -1813,6 +1814,7 @@ _serialized_info_get_path (GstDiscoverer * dc, gchar * uri)
   res = g_build_filename (cache_dir, &checksum[2], NULL);
 
 done:
+  g_checksum_free (cs);
   g_free (cache_dir);
   g_free (location);
   g_free (tmp);
@@ -1842,6 +1844,7 @@ _get_info_from_cachefile (GstDiscoverer * dc, gchar * cachefile)
     }
 
     GST_INFO_OBJECT (dc, "Got info from cache: %p", info);
+    g_free (data);
 
     return info;
   }

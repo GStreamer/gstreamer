@@ -377,6 +377,8 @@ gst_discoverer_info_finalize (GObject * object)
   if (info->toc)
     gst_toc_unref (info->toc);
 
+  g_free (info->cachefile);
+
   g_ptr_array_unref (info->missing_elements_details);
 }
 
