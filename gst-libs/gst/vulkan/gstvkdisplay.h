@@ -51,6 +51,7 @@ typedef struct _GstVulkanDisplayPrivate GstVulkanDisplayPrivate;
  * @GST_VULKAN_DISPLAY_TYPE_WAYLAND: wayland display
  * @GST_VULKAN_DISPLAY_TYPE_COCOA: cocoa display for macOS
  * @GST_VULKAN_DISPLAY_TYPE_IOS: ios display
+ * @GST_VULKAN_DISPLAY_TYPE_WIN32: win32 display
  */
 typedef enum
 {
@@ -59,6 +60,7 @@ typedef enum
   GST_VULKAN_DISPLAY_TYPE_WAYLAND = (1 << 1),
   GST_VULKAN_DISPLAY_TYPE_COCOA = (1 << 2),
   GST_VULKAN_DISPLAY_TYPE_IOS = (1 << 3),
+  GST_VULKAN_DISPLAY_TYPE_WIN32 = (1 << 4),
 
   GST_VULKAN_DISPLAY_TYPE_ANY = G_MAXUINT32
 } GstVulkanDisplayType;

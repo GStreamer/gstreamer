@@ -477,6 +477,16 @@ gst_vulkan_display_choose_type (GstVulkanInstance * instance)
 
 #undef CHOOSE_WINSYS
 
+#if GST_VULKAN_HAVE_WINDOW_WIN32
+  /* CHOOSE_WINSYS macro doesn't work with "WIN32" */
+  if (!type && g_strcmp0 (window_str, "win32") == 0) {
+    type = GST_VULKAN_DISPLAY_TYPE_WIN32;
+  }
+
+  if (!first_supported)
+    first_supported = GST_VULKAN_DISPLAY_TYPE_WIN32;
+#endif
+
   if (type)
     return type;
 
@@ -517,6 +527,10 @@ gst_vulkan_display_type_to_extension_string (GstVulkanDisplayType type)
 #if GST_VULKAN_HAVE_WINDOW_IOS
   if (type & GST_VULKAN_DISPLAY_TYPE_IOS)
     return VK_MVK_IOS_SURFACE_EXTENSION_NAME;
+#endif
+#if GST_VULKAN_HAVE_WINDOW_WIN32
+  if (type & GST_VULKAN_DISPLAY_TYPE_WIN32)
+    return VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
 #endif
 
   return NULL;

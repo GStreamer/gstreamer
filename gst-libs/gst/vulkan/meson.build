@@ -47,6 +47,8 @@ vulkan_windowing = false
 vulkan_objc_args = []
 vulkan_defines = []
 optional_deps = []
+has_vulkan_header = false
+vulkan_dep = dependency('', required: false)
 
 vulkan_conf = configuration_data()
 vulkan_conf_options = [
@@ -54,6 +56,7 @@ vulkan_conf_options = [
     'GST_VULKAN_HAVE_WINDOW_WAYLAND',
     'GST_VULKAN_HAVE_WINDOW_COCOA',
     'GST_VULKAN_HAVE_WINDOW_IOS',
+    'GST_VULKAN_HAVE_WINDOW_WIN32',
 ]
 
 foreach option : vulkan_conf_options
@@ -62,10 +65,36 @@ endforeach
 
 if host_system == 'ios'
   vulkan_dep = cc.find_library('MoltenVK', required : get_option('vulkan'))
+elif host_system == 'windows'
+  vulkan_root = run_command(python3, '-c', 'import os; print(os.environ.get("VK_SDK_PATH"))').stdout().strip()
+  if vulkan_root != '' and vulkan_root != 'None'
+    vulkan_lib_dir = ''
+    if build_machine.cpu_family() == 'x86_64'
+      vulkan_lib_dir = join_paths(vulkan_root, 'Lib')
+    else
+      vulkan_lib_dir = join_paths(vulkan_root, 'Lib32')
+    endif
+
+    vulkan_lib = cc.find_library('vulkan-1', dirs: vulkan_lib_dir,
+                                 required : get_option('vulkan'))
+
+    vulkan_inc_dir = join_paths(vulkan_root, 'Include')
+    has_vulkan_header = cc.has_header('vulkan/vulkan.h',
+                                      args: '-I' + vulkan_inc_dir)
+
+    if vulkan_lib.found() and has_vulkan_header
+      vulkan_dep = declare_dependency(include_directories: include_directories(vulkan_inc_dir),
+                                      dependencies: vulkan_lib)
+    endif
+  endif
 else
   vulkan_dep = cc.find_library('vulkan', required : get_option('vulkan'))
 endif
-has_vulkan_header = cc.has_header('vulkan/vulkan.h')
+
+if host_system != 'windows'
+  has_vulkan_header = cc.has_header('vulkan/vulkan.h')
+endif
+
 if not has_vulkan_header and get_option('vulkan').enabled()
   error('vulkan plugin enabled, but vulkan.h not found')
 endif
@@ -146,6 +175,17 @@ if host_system == 'ios'
   endif
 endif
 
+if host_system == 'windows'
+  gdi_dep = cc.find_library('gdi32', required : get_option('vulkan'))
+
+  if gdi_dep.found()
+    vulkan_sources += ['win32/gstvkwindow_win32.c']
+    optional_deps += [gdi_dep]
+    vulkan_windowing = true
+    vulkan_conf.set10('GST_VULKAN_HAVE_WINDOW_WIN32', 1)
+  endif
+endif
+
 if not vulkan_windowing
   warning('No Windowing system found.  vulkansink will not work')
 endif
@@ -203,7 +243,7 @@ if vulkan_dep.found() and has_vulkan_header
   gstvulkan_dep = declare_dependency(link_with : gstvulkan,
     include_directories : [libsinc],
     sources: gen_sources,
-    dependencies : [gstvideo_dep, gstbase_dep] + optional_deps)
+    dependencies : [gstvideo_dep, gstbase_dep, vulkan_dep] + optional_deps)
 elif get_option('vulkan').enabled()
   error('GStreamer Vulkan integration required via options, but needed dependencies not found.')
 else

@@ -49,6 +49,9 @@
 #if GST_VULKAN_HAVE_WINDOW_IOS
 #include "ios/gstvkwindow_ios.h"
 #endif
+#if GST_VULKAN_HAVE_WINDOW_WIN32
+#include "win32/gstvkwindow_win32.h"
+#endif
 
 #define GST_CAT_DEFAULT gst_vulkan_window_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
@@ -190,6 +193,10 @@ gst_vulkan_window_new (GstVulkanDisplay * display)
 #if GST_VULKAN_HAVE_WINDOW_IOS
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "ios")))
     window = GST_VULKAN_WINDOW (gst_vulkan_window_ios_new (display));
+#endif
+#if GST_VULKAN_HAVE_WINDOW_WIN32
+  if (!window && (!user_choice || g_strstr_len (user_choice, 5, "win32")))
+    window = GST_VULKAN_WINDOW (gst_vulkan_window_win32_new (display));
 #endif
   if (!window) {
     /* subclass returned a NULL window */

@@ -53,6 +53,12 @@
 #endif
 #endif
 
+#if GST_VULKAN_HAVE_WINDOW_WIN32
+#ifndef VK_USE_PLATFORM_WIN32_KHR
+#define VK_USE_PLATFORM_WIN32_KHR
+#endif
+#endif
+
 #include <vulkan/vulkan.h>
 
 #endif /* __GST_VULKAN_API_H__ */
