@@ -438,6 +438,126 @@ GST_START_TEST (test_simple_audiomixer)
 
 GST_END_TEST;
 
+GST_START_TEST (test_seek_on_nested)
+{
+  GstPad *srcpad;
+  GstElement *pipeline;
+  GstElement *comp, *source, *nested_source, *nested_comp, *sink;
+  GstBus *bus;
+  GstMessage *message;
+  gboolean carry_on, ret = FALSE;
+  GstClockTime position;
+
+  ges_init ();
+
+  pipeline = gst_pipeline_new ("test_pipeline");
+  comp =
+      gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
+
+  gst_element_set_state (comp, GST_STATE_READY);
+
+  sink = gst_element_factory_make_or_warn ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
+
+  gst_element_link (comp, sink);
+
+  /*
+     source
+     Start : 0s
+     Duration : 2s
+     Priority : 2
+   */
+
+  source = videotest_nle_src ("source", 0, 2 * GST_SECOND, 2, 2);
+  nested_comp =
+      gst_element_factory_make_or_warn ("nlecomposition", "nested_comp");
+  nle_composition_add (GST_BIN (nested_comp), source);
+
+  nested_source =
+      gst_element_factory_make_or_warn ("nlesource", "nested_source");
+  gst_bin_add (GST_BIN (nested_source), nested_comp);
+  g_object_set (nested_source, "start", 0, "duration", 2 * GST_SECOND, NULL);
+  srcpad = gst_element_get_static_pad (nested_source, "src");
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
+      (GstPadProbeCallback) on_source1_pad_event_cb, NULL, NULL);
+  gst_object_unref (srcpad);
+
+  /* Add nested source */
+  nle_composition_add (GST_BIN (comp), nested_source);
+  commit_and_wait (comp, &ret);
+  check_start_stop_duration (source, 0, 2 * GST_SECOND, 2 * GST_SECOND);
+  check_start_stop_duration (comp, 0, 2 * GST_SECOND, 2 * GST_SECOND);
+
+  bus = gst_element_get_bus (GST_ELEMENT (pipeline));
+
+  GST_DEBUG ("Setting pipeline to PAUSED");
+  ASSERT_OBJECT_REFCOUNT (source, "source", 1);
+
+  fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
+          GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE);
+
+  GST_DEBUG ("Let's poll the bus");
+
+  carry_on = TRUE;
+  while (carry_on) {
+    message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_SECOND / 10);
+    if (message) {
+      switch (GST_MESSAGE_TYPE (message)) {
+        case GST_MESSAGE_ASYNC_DONE:
+        {
+          carry_on = FALSE;
+          GST_DEBUG ("Pipeline reached PAUSED, stopping polling");
+          break;
+        }
+        case GST_MESSAGE_EOS:
+        {
+          GST_WARNING ("Saw EOS");
+
+          fail_if (TRUE);
+        }
+        case GST_MESSAGE_ERROR:
+          GST_DEBUG_BIN_TO_DOT_FILE (GST_BIN (pipeline),
+              GST_DEBUG_GRAPH_SHOW_ALL, "error");
+          fail_error_message (message);
+        default:
+          break;
+      }
+      gst_mini_object_unref (GST_MINI_OBJECT (message));
+    }
+  }
+
+  gst_element_seek_simple (pipeline,
+      GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, 1 * GST_SECOND);
+
+  message = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_ERROR);
+  gst_mini_object_unref (GST_MINI_OBJECT (message));
+
+  ret =
+      gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+      (gint64 *) & position);
+  fail_unless_equals_uint64 (position, 1 * GST_SECOND);
+
+  GST_DEBUG ("Setting pipeline to NULL");
+
+  fail_if (gst_element_set_state (GST_ELEMENT (pipeline),
+          GST_STATE_NULL) == GST_STATE_CHANGE_FAILURE);
+  gst_element_set_state (source, GST_STATE_NULL);
+
+  GST_DEBUG ("Resetted pipeline to NULL");
+
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "main pipeline", 1, 2);
+  gst_check_objects_destroyed_on_unref (pipeline, comp, nested_comp, NULL);
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "main bus", 1, 2);
+  gst_object_unref (bus);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gnonlin_suite (void)
 {
@@ -449,6 +569,7 @@ gnonlin_suite (void)
   tcase_add_test (tc_chain, test_change_object_start_stop_in_current_stack);
   tcase_add_test (tc_chain, test_remove_invalid_object);
   tcase_add_test (tc_chain, test_remove_last_object);
+  tcase_add_test (tc_chain, test_seek_on_nested);
 
   tcase_add_test (tc_chain, test_dispose_on_commit);
 
