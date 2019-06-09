@@ -39,6 +39,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 	<!-- GstPromise fixes -->
 	<attr path="/api/namespace/boxed[@cname='GstPromise']/method[@cname='gst_promise_get_reply']" name="name">RetrieveReply</attr>
+	<attr path="/api/namespace/boxed[@cname='GstPromise']/constructor[@cname='gst_promise_new_with_change_func']/*/*[@name='func']" name="scope">notified</attr>
+	<attr path="/api/namespace/boxed[@cname='GstPromise']/constructor[@cname='gst_promise_new_with_change_func']/*/*[@name='func']" name="closure">1</attr>
+	<attr path="/api/namespace/boxed[@cname='GstPromise']/constructor[@cname='gst_promise_new_with_change_func']/*/*[@name='func']" name="destroy">2</attr>
+
 
 	<!-- GstRTSPMessage fixes -->
 	<attr path="/api/namespace/boxed[@cname='GstRTSPMessage']/method[@cname='gst_rtsp_message_get_body']" name="hidden">true</attr>

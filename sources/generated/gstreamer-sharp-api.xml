@@ -9060,7 +9060,7 @@
       <constructor cname="gst_promise_new" disable_void_ctor="" version="1.14" />
       <constructor cname="gst_promise_new_with_change_func" version="1.14">
         <parameters>
-          <parameter name="func" type="GstPromiseChangeFunc" />
+          <parameter name="func" type="GstPromiseChangeFunc" scope="notified" closure="1" destroy="2" />
           <parameter name="user_data" type="gpointer" />
           <parameter name="notify" type="GDestroyNotify" />
         </parameters>

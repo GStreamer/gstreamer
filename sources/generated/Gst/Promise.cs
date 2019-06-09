@@ -75,9 +75,18 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_promise_new_with_change_func(GstSharp.PromiseChangeFuncNative func, IntPtr user_data, GLib.DestroyNotify notify);
 
-		public Promise (Gst.PromiseChangeFunc func, IntPtr user_data, GLib.DestroyNotify notify) 
+		public Promise (Gst.PromiseChangeFunc func) 
 		{
 			GstSharp.PromiseChangeFuncWrapper func_wrapper = new GstSharp.PromiseChangeFuncWrapper (func);
+			IntPtr user_data;
+			GLib.DestroyNotify notify;
+			if (func == null) {
+				user_data = IntPtr.Zero;
+				notify = null;
+			} else {
+				user_data = (IntPtr) GCHandle.Alloc (func_wrapper);
+				notify = GLib.DestroyHelper.NotifyHandler;
+			}
 			Raw = gst_promise_new_with_change_func(func_wrapper.NativeDelegate, user_data, notify);
 		}
 
