@@ -1,8 +1,0 @@
-*.gcno
-*.c.gcov
-*.c.gcov
-*.c.gcov.out
-*.c.gcov
-*.o
-*.lo
-*.la
