@@ -1335,10 +1335,6 @@ gst_aggregator_flush_start (GstAggregator * self, GstAggregatorPad * aggpad,
     GST_INFO_OBJECT (self, "Flushing, pausing srcpad task");
     gst_aggregator_stop_srcpad_task (self, event);
 
-    GST_INFO_OBJECT (self, "Getting STREAM_LOCK while flushing");
-    GST_PAD_STREAM_LOCK (self->srcpad);
-    GST_LOG_OBJECT (self, "GOT STREAM_LOCK");
-
     event = NULL;
   } else {
     gst_event_unref (event);
@@ -1436,9 +1432,7 @@ gst_aggregator_default_sink_event (GstAggregator * self,
         SRC_BROADCAST (self);
         SRC_UNLOCK (self);
 
-        GST_INFO_OBJECT (self,
-            "Flush stopped, releasing source pad STREAM_LOCK");
-        GST_PAD_STREAM_UNLOCK (self->srcpad);
+        GST_INFO_OBJECT (self, "Flush stopped");
 
         gst_aggregator_start_srcpad_task (self);
       } else {
