@@ -540,59 +540,73 @@ get_rtp_seq_num (GstBuffer * buf)
   return seq;
 }
 
-#define verify_lost_event(h, exp_seq, exp_ts, exp_dur)                         \
-  G_STMT_START {                                                               \
-    GstEvent *_event;                                                          \
-    const GstStructure *_s;                                                    \
-    const GValue *_value;                                                      \
-    guint _seq;                                                                \
-    GstClockTime _ts;                                                          \
-    GstClockTime _dur;                                                         \
-    _event = gst_harness_pull_event (h);                                       \
-    fail_unless (_event != NULL);                                              \
-    _s = gst_event_get_structure (_event);                                     \
-    fail_unless (_s != NULL);                                                  \
-    fail_unless (gst_structure_get_uint (_s, "seqnum", &_seq));                \
-    _value = gst_structure_get_value (_s, "timestamp");                        \
-    fail_unless (_value && G_VALUE_HOLDS_UINT64 (_value));                     \
-    _ts = g_value_get_uint64 (_value);                                         \
-    _value = gst_structure_get_value (_s, "duration");                         \
-    fail_unless (_value && G_VALUE_HOLDS_UINT64 (_value));                     \
-    _dur = g_value_get_uint64 (_value);                                        \
-    fail_unless_equals_int ((guint16)(exp_seq), _seq);                         \
-    fail_unless_equals_uint64 (exp_ts, _ts);                                   \
-    fail_unless_equals_uint64 (exp_dur, _dur);                                 \
-    gst_event_unref (_event);                                                  \
-  } G_STMT_END
+static void
+verify_lost_event (GstHarness * h, guint exp_seq, GstClockTime exp_ts,
+    GstClockTime exp_dur)
+{
+  GstEvent *event;
+  const GstStructure *s;
+  const GValue *value;
+  guint seq;
+  GstClockTime ts;
+  GstClockTime dur;
 
+  event = gst_harness_pull_event (h);
+  fail_unless (event != NULL);
 
-#define verify_rtx_event(h, exp_seq, exp_ts, exp_delay, exp_spacing)           \
-  G_STMT_START {                                                               \
-    GstEvent *_event;                                                          \
-    const GstStructure *_s;                                                    \
-    const GValue *_value;                                                      \
-    guint _seq;                                                                \
-    GstClockTime _ts;                                                          \
-    guint _delay;                                                              \
-    GstClockTime _spacing;                                                     \
-    _event = gst_harness_pull_upstream_event (h);                              \
-    fail_unless (_event != NULL);                                              \
-    _s = gst_event_get_structure (_event);                                     \
-    fail_unless (_s != NULL);                                                  \
-    fail_unless (gst_structure_get_uint (_s, "seqnum", &_seq));                \
-    _value = gst_structure_get_value (_s, "running-time");                     \
-    fail_unless (_value && G_VALUE_HOLDS_UINT64 (_value));                     \
-    _ts = g_value_get_uint64 (_value);                                         \
-    fail_unless (gst_structure_get_uint (_s, "delay", &_delay));               \
-    _value = gst_structure_get_value (_s, "packet-spacing");                   \
-    fail_unless (_value && G_VALUE_HOLDS_UINT64 (_value));                     \
-    _spacing = g_value_get_uint64 (_value);                                    \
-    fail_unless_equals_int ((guint16)(exp_seq), _seq);                         \
-    fail_unless_equals_uint64 (exp_ts, _ts);                                   \
-    fail_unless_equals_int (exp_delay, _delay);                                \
-    fail_unless_equals_uint64 (exp_spacing, _spacing);                         \
-    gst_event_unref (_event);                                                  \
-  } G_STMT_END
+  s = gst_event_get_structure (event);
+  fail_unless (s != NULL);
+  fail_unless (gst_structure_get_uint (s, "seqnum", &seq));
+
+  value = gst_structure_get_value (s, "timestamp");
+  fail_unless (value && G_VALUE_HOLDS_UINT64 (value));
+
+  ts = g_value_get_uint64 (value);
+  value = gst_structure_get_value (s, "duration");
+  fail_unless (value && G_VALUE_HOLDS_UINT64 (value));
+
+  dur = g_value_get_uint64 (value);
+  fail_unless_equals_int ((guint16) exp_seq, seq);
+  fail_unless_equals_uint64 (exp_ts, ts);
+  fail_unless_equals_uint64 (exp_dur, dur);
+
+  gst_event_unref (event);
+}
+
+static void
+verify_rtx_event (GstHarness * h, guint exp_seq, GstClockTime exp_ts,
+    gint exp_delay, GstClockTime exp_spacing)
+{
+  GstEvent *event;
+  const GstStructure *s;
+  const GValue *value;
+  guint seq;
+  GstClockTime ts;
+  guint delay;
+  GstClockTime spacing;
+
+  event = gst_harness_pull_upstream_event (h);
+  fail_unless (event != NULL);
+
+  s = gst_event_get_structure (event);
+  fail_unless (s != NULL);
+  fail_unless (gst_structure_get_uint (s, "seqnum", &seq));
+
+  value = gst_structure_get_value (s, "running-time");
+  fail_unless (value && G_VALUE_HOLDS_UINT64 (value));
+
+  ts = g_value_get_uint64 (value);
+  fail_unless (gst_structure_get_uint (s, "delay", &delay));
+  value = gst_structure_get_value (s, "packet-spacing");
+  fail_unless (value && G_VALUE_HOLDS_UINT64 (value));
+  spacing = g_value_get_uint64 (value);
+  fail_unless_equals_int ((guint16) exp_seq, seq);
+  fail_unless_equals_uint64 (exp_ts, ts);
+  fail_unless_equals_int (exp_delay, delay);
+  fail_unless_equals_uint64 (exp_spacing, spacing);
+
+  gst_event_unref (event);
+}
 
 static gboolean
 verify_jb_stats (GstElement * jb, GstStructure * expected)
