@@ -24,6 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/vulkan/vulkan.h>
+#include "vkfullscreenrender.h"
 
 G_BEGIN_DECLS
 
@@ -38,36 +39,21 @@ typedef struct _GstVulkanImageIdentityClass GstVulkanImageIdentityClass;
 
 struct _GstVulkanImageIdentity
 {
-  GstBaseTransform      parent;
+  GstVulkanFullScreenRender         parent;
 
-  GstVulkanInstance    *instance;
-  GstVulkanDevice      *device;
-  GstVulkanQueue       *queue;
-  GstVulkanCommandPool *cmd_pool;
+  GstVulkanCommandPool             *cmd_pool;
 
-  GstCaps              *caps;
-  GstVideoInfo          v_info;
+  VkSampler                         sampler;
+  VkDescriptorPool                  descriptor_pool;
+  VkDescriptorSet                   descriptor_set;
 
-  VkRenderPass          render_pass;
-  VkPipelineLayout      pipeline_layout;
-  VkPipeline            graphics_pipeline;
-  VkSampler             sampler;
-  VkDescriptorSetLayout descriptor_set_layout;
-  VkDescriptorPool      descriptor_pool;
-  VkDescriptorSet       descriptor_set;
-
-  GstMemory            *vertices;
-  GstMemory            *indices;
-
-  GList                *trash_list;
-  GstVulkanFence       *last_fence;
-
-  GArray               *frames;
+  VkDescriptorSetLayoutBinding      sampler_layout_binding;
+  VkDescriptorSetLayoutCreateInfo   layout_info;
 };
 
 struct _GstVulkanImageIdentityClass
 {
-  GstBaseTransformClass video_sink_class;
+  GstVulkanFullScreenRenderClass parent_class;
 };
 
 GType gst_vulkan_image_identity_get_type(void);
