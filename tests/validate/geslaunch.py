@@ -116,12 +116,13 @@ class XgesProjectDescriptor(MediaDescriptor):
 
 class GESTest(GstValidateTest):
     def __init__(self, classname, options, reporter, project, scenario=None,
-                 combination=None, expected_failures=None):
+                 combination=None, expected_failures=None, nest=False):
 
         super(GESTest, self).__init__(GES_LAUNCH_COMMAND, classname, options, reporter,
                                       scenario=scenario)
 
         self.project = project
+        self.nested = nest
 
     def set_sample_paths(self):
         if not self.options.paths:
@@ -154,13 +155,15 @@ class GESTest(GstValidateTest):
         self.set_sample_paths()
 
         if self.project:
-            self.add_arguments("-l", self.project.get_uri())
-
+            if self.nested:
+                self.add_arguments("+clip", self.project.get_uri())
+            else:
+                self.add_arguments("-l", self.project.get_uri())
 
 class GESPlaybackTest(GESTest):
-    def __init__(self, classname, options, reporter, project, scenario):
+    def __init__(self, classname, options, reporter, project, scenario,nest):
         super(GESPlaybackTest, self).__init__(classname, options, reporter,
-                                      project, scenario=scenario)
+                                      project, scenario=scenario, nest=nest)
 
     def get_current_value(self):
         return self.get_current_position()
@@ -355,8 +358,17 @@ Available options:""")
                                               self.options,
                                               self.reporter,
                                               project,
-                                              scenario=scenario)
-                                  )
+                                              scenario=scenario,
+                                              nest=False))
+                #For nested timelines
+                classname = "playback.nested.%s.%s" % (scenario.name,
+                                                    os.path.basename(proj_uri).replace(".xges", ""))
+                self.add_test(GESPlaybackTest(classname,
+                                              self.options,
+                                              self.reporter,
+                                              project,
+                                              scenario=scenario,
+                                              nest=True))
 
             # And now rendering casses
             for comb in GES_ENCODING_TARGET_COMBINATIONS:
