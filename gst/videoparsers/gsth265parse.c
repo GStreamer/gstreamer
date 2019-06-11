@@ -1379,10 +1379,25 @@ gst_h265_parse_make_codec_data (GstH265Parse * h265parse)
       k++;
     }
   }
-  data[6] |=
-      (pft->progressive_source_flag << 7) | (pft->interlaced_source_flag << 6) |
-      (pft->non_packed_constraint_flag << 5) | (pft->
-      frame_only_constraint_flag << 4);
+
+  data[6] =
+      (pft->progressive_source_flag << 7) |
+      (pft->interlaced_source_flag << 6) |
+      (pft->non_packed_constraint_flag << 5) |
+      (pft->frame_only_constraint_flag << 4) |
+      (pft->max_12bit_constraint_flag << 3) |
+      (pft->max_10bit_constraint_flag << 2) |
+      (pft->max_8bit_constraint_flag << 1) |
+      (pft->max_422chroma_constraint_flag);
+
+  data[7] =
+      (pft->max_420chroma_constraint_flag << 7) |
+      (pft->max_monochrome_constraint_flag << 6) |
+      (pft->intra_constraint_flag << 5) |
+      (pft->one_picture_only_constraint_flag << 4) |
+      (pft->lower_bit_rate_constraint_flag << 3) |
+      (pft->max_14bit_constraint_flag << 2);
+
   data[12] = pft->level_idc;
   /* min_spatial_segmentation_idc */
   GST_WRITE_UINT16_BE (data + 13, min_spatial_segmentation_idc);
