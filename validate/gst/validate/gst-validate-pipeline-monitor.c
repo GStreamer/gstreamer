@@ -126,9 +126,9 @@ print_position (GstValidateMonitor * monitor)
     goto done;
   }
 
-  if (position > duration) {
-    GST_VALIDATE_REPORT (monitor,
-        QUERY_POSITION_SUPERIOR_DURATION,
+  if (GST_CLOCK_TIME_IS_VALID (duration) && GST_CLOCK_TIME_IS_VALID (position)
+      && position > duration) {
+    GST_VALIDATE_REPORT (monitor, QUERY_POSITION_SUPERIOR_DURATION,
         "Reported position %" GST_TIME_FORMAT " > reported duration %"
         GST_TIME_FORMAT, GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
   }
