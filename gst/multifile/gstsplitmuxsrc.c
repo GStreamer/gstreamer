@@ -241,7 +241,7 @@ static void
 gst_splitmux_src_init (GstSplitMuxSrc * splitmux)
 {
   g_mutex_init (&splitmux->lock);
-  g_mutex_init (&splitmux->pads_lock);
+  g_rw_lock_init (&splitmux->pads_rwlock);
   splitmux->total_duration = GST_CLOCK_TIME_NONE;
   gst_segment_init (&splitmux->play_segment, GST_FORMAT_TIME);
 }
@@ -252,7 +252,7 @@ gst_splitmux_src_dispose (GObject * object)
   GstSplitMuxSrc *splitmux = GST_SPLITMUX_SRC (object);
   GList *cur;
 
-  SPLITMUX_SRC_PADS_LOCK (splitmux);
+  SPLITMUX_SRC_PADS_WLOCK (splitmux);
 
   for (cur = g_list_first (splitmux->pads);
       cur != NULL; cur = g_list_next (cur)) {
@@ -262,7 +262,7 @@ gst_splitmux_src_dispose (GObject * object)
   g_list_free (splitmux->pads);
   splitmux->n_pads = 0;
   splitmux->pads = NULL;
-  SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+  SPLITMUX_SRC_PADS_WUNLOCK (splitmux);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -272,7 +272,7 @@ gst_splitmux_src_finalize (GObject * object)
 {
   GstSplitMuxSrc *splitmux = GST_SPLITMUX_SRC (object);
   g_mutex_clear (&splitmux->lock);
-  g_mutex_clear (&splitmux->pads_lock);
+  g_rw_lock_clear (&splitmux->pads_rwlock);
   g_free (splitmux->location);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -771,11 +771,11 @@ gst_splitmux_pad_loop (GstPad * pad)
         guint n_notlinked;
 
         /* Only post not-linked if all pads are not-linked */
-        SPLITMUX_SRC_PADS_LOCK (splitmux);
+        SPLITMUX_SRC_PADS_RLOCK (splitmux);
         n_notlinked = count_not_linked (splitmux);
         post_error = (splitmux->pads_complete
             && n_notlinked == splitmux->n_pads);
-        SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+        SPLITMUX_SRC_PADS_RUNLOCK (splitmux);
 
         if (post_error)
           GST_ELEMENT_FLOW_ERROR (splitmux, ret);
@@ -812,7 +812,7 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
           &splitmux->play_segment, extra_flags))
     return FALSE;
 
-  SPLITMUX_SRC_PADS_LOCK (splitmux);
+  SPLITMUX_SRC_PADS_RLOCK (splitmux);
   for (cur = g_list_first (splitmux->pads);
       cur != NULL; cur = g_list_next (cur)) {
     SplitMuxSrcPad *splitpad = (SplitMuxSrcPad *) (cur->data);
@@ -831,7 +831,7 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
     gst_pad_start_task (GST_PAD (splitpad),
         (GstTaskFunction) gst_splitmux_pad_loop, splitpad, NULL);
   }
-  SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+  SPLITMUX_SRC_PADS_RUNLOCK (splitmux);
 
   return TRUE;
 }
@@ -976,10 +976,10 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
     splitmux->parts[i] = NULL;
   }
 
-  SPLITMUX_SRC_PADS_LOCK (splitmux);
+  SPLITMUX_SRC_PADS_WLOCK (splitmux);
   pads_list = splitmux->pads;
   splitmux->pads = NULL;
-  SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+  SPLITMUX_SRC_PADS_WUNLOCK (splitmux);
 
   SPLITMUX_SRC_UNLOCK (splitmux);
   for (cur = g_list_first (pads_list); cur != NULL; cur = g_list_next (cur)) {
@@ -1038,7 +1038,7 @@ gst_splitmux_find_output_pad (GstSplitMuxPartReader * part, GstPad * pad,
   gboolean is_new_pad = FALSE;
 
   SPLITMUX_SRC_LOCK (splitmux);
-  SPLITMUX_SRC_PADS_LOCK (splitmux);
+  SPLITMUX_SRC_PADS_WLOCK (splitmux);
   for (cur = g_list_first (splitmux->pads);
       cur != NULL; cur = g_list_next (cur)) {
     GstPad *tmp = (GstPad *) (cur->data);
@@ -1065,7 +1065,7 @@ gst_splitmux_find_output_pad (GstSplitMuxPartReader * part, GstPad * pad,
         &splitmux_and_pad);
     is_new_pad = TRUE;
   }
-  SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+  SPLITMUX_SRC_PADS_WUNLOCK (splitmux);
   SPLITMUX_SRC_UNLOCK (splitmux);
 
   g_free (pad_name);
@@ -1096,14 +1096,14 @@ gst_splitmux_push_event (GstSplitMuxSrc * splitmux, GstEvent * e,
     gst_event_set_seqnum (e, seqnum);
   }
 
-  SPLITMUX_SRC_PADS_LOCK (splitmux);
+  SPLITMUX_SRC_PADS_RLOCK (splitmux);
   for (cur = g_list_first (splitmux->pads);
       cur != NULL; cur = g_list_next (cur)) {
     GstPad *pad = GST_PAD_CAST (cur->data);
     gst_event_ref (e);
     gst_pad_push_event (pad, e);
   }
-  SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+  SPLITMUX_SRC_PADS_RUNLOCK (splitmux);
 
   gst_event_unref (e);
 }
@@ -1119,7 +1119,7 @@ gst_splitmux_push_flush_stop (GstSplitMuxSrc * splitmux, guint32 seqnum)
     gst_event_set_seqnum (e, seqnum);
   }
 
-  SPLITMUX_SRC_PADS_LOCK (splitmux);
+  SPLITMUX_SRC_PADS_RLOCK (splitmux);
   for (cur = g_list_first (splitmux->pads);
       cur != NULL; cur = g_list_next (cur)) {
     SplitMuxSrcPad *target = (SplitMuxSrcPad *) (cur->data);
@@ -1130,7 +1130,7 @@ gst_splitmux_push_flush_stop (GstSplitMuxSrc * splitmux, guint32 seqnum)
     target->sent_stream_start = FALSE;
     target->sent_segment = FALSE;
   }
-  SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+  SPLITMUX_SRC_PADS_RUNLOCK (splitmux);
 
   gst_event_unref (e);
 }
@@ -1346,7 +1346,7 @@ splitmux_src_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_splitmux_push_event (splitmux, gst_event_new_flush_start (), seqnum);
 
       /* Stop all parts, which will work because of the flush */
-      SPLITMUX_SRC_PADS_LOCK (splitmux);
+      SPLITMUX_SRC_PADS_RLOCK (splitmux);
       SPLITMUX_SRC_UNLOCK (splitmux);
       for (cur = g_list_first (splitmux->pads);
           cur != NULL; cur = g_list_next (cur)) {
@@ -1362,7 +1362,7 @@ splitmux_src_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GstPad *splitpad = (GstPad *) (cur->data);
         gst_pad_pause_task (GST_PAD (splitpad));
       }
-      SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+      SPLITMUX_SRC_PADS_RUNLOCK (splitmux);
       SPLITMUX_SRC_LOCK (splitmux);
 
       /* Send flush stop */
@@ -1424,11 +1424,11 @@ splitmux_src_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       SplitMuxSrcPad *anypad;
 
       SPLITMUX_SRC_LOCK (splitmux);
-      SPLITMUX_SRC_PADS_LOCK (splitmux);
+      SPLITMUX_SRC_PADS_RLOCK (splitmux);
       anypad = (SplitMuxSrcPad *) (splitmux->pads->data);
       part = splitmux->parts[anypad->cur_part];
       ret = gst_splitmux_part_reader_src_query (part, pad, query);
-      SPLITMUX_SRC_PADS_UNLOCK (splitmux);
+      SPLITMUX_SRC_PADS_RUNLOCK (splitmux);
       SPLITMUX_SRC_UNLOCK (splitmux);
       break;
     }
