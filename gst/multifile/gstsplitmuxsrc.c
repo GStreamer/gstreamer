@@ -731,7 +731,7 @@ gst_splitmux_pad_loop (GstPad * pad)
   SplitMuxSrcPad *splitpad = (SplitMuxSrcPad *) (pad);
   GstSplitMuxSrc *splitmux = (GstSplitMuxSrc *) gst_pad_get_parent (pad);
   GstDataQueueItem *item = NULL;
-  GstSplitMuxPartReader *reader = splitpad->reader;
+  GstSplitMuxPartReader *reader;
   GstPad *part_pad;
   GstFlowReturn ret;
 
@@ -741,6 +741,7 @@ gst_splitmux_pad_loop (GstPad * pad)
     return;
   }
   part_pad = gst_object_ref (splitpad->part_pad);
+  reader = splitpad->reader;
   GST_OBJECT_UNLOCK (splitpad);
 
   GST_LOG_OBJECT (splitpad, "Popping data queue item from %" GST_PTR_FORMAT
@@ -816,6 +817,7 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
   for (cur = g_list_first (splitmux->pads);
       cur != NULL; cur = g_list_next (cur)) {
     SplitMuxSrcPad *splitpad = (SplitMuxSrcPad *) (cur->data);
+    GST_OBJECT_LOCK (splitpad);
     splitpad->cur_part = part;
     splitpad->reader = splitmux->parts[splitpad->cur_part];
     if (splitpad->part_pad)
@@ -823,6 +825,7 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
     splitpad->part_pad =
         gst_splitmux_part_reader_lookup_pad (splitpad->reader,
         (GstPad *) (splitpad));
+    GST_OBJECT_UNLOCK (splitpad);
 
     /* Make sure we start with a DISCONT */
     splitpad->set_next_discont = TRUE;
