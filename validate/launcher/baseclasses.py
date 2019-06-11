@@ -1087,8 +1087,8 @@ class GstValidateTest(Test):
             result = Result.FAILED
 
         if self.criticals:
-            msg += "(critical errors: [%s]) " % ', '.join([c['summary']
-                                                           for c in self.criticals])
+            msg += "(critical errors: [%s]) " % ', '.join(set([c['summary']
+                                                           for c in self.criticals]))
             result = Result.FAILED
 
         if not_found_expected_issues:
