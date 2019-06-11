@@ -513,7 +513,8 @@ gst_uvc_h264_src_init (GstUvcH264Src * self)
       gst_uvc_h264_src_buffer_probe, self, NULL);
   gst_pad_add_probe (self->vfsrc, GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
       gst_uvc_h264_src_event_probe, self, NULL);
-  gst_pad_add_probe (self->vidsrc, GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
+  gst_pad_add_probe (self->vidsrc,
+      GST_PAD_PROBE_TYPE_EVENT_UPSTREAM | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       gst_uvc_h264_src_event_probe, self, NULL);
 
   self->srcpad_event_func = GST_PAD_EVENTFUNC (self->vfsrc);
@@ -1563,6 +1564,14 @@ gst_uvc_h264_src_event_probe (GstPad * pad, GstPadProbeInfo * info,
   GstEvent *event = info->data;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:
+      if (pad == self->vidsrc) {
+        const GstSegment *s;
+
+        gst_event_parse_segment (event, &s);
+        gst_segment_copy_into (s, &self->segment);
+      }
+      break;
     case GST_EVENT_EOS:
       ret = self->reconfiguring ? GST_PAD_PROBE_DROP : GST_PAD_PROBE_OK;
       break;
