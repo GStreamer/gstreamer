@@ -22,6 +22,7 @@ meson/
 subprojects/gst-integration-testsuites
 subprojects/gst-devtools
 subprojects/gst-editing-services
+subprojects/gst-examples
 subprojects/gst-libav
 subprojects/gst-omx
 subprojects/gst-plugins-bad
