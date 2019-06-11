@@ -2459,8 +2459,7 @@ _get_target_element (GstValidateScenario * scenario, GstValidateAction * action)
   return target;
 }
 
-/**
- * _get_target_elements_by_klass:
+/* _get_target_elements_by_klass_or_factory_name:
  * @scenario: a #GstValidateScenario
  * @action: a #GstValidateAction
  *
