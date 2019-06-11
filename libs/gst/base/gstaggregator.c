@@ -1410,13 +1410,7 @@ gst_aggregator_default_sink_event (GstAggregator * self,
       aggpad->priv->last_flush_stop_seqnum = seqnum;
       PAD_UNLOCK (aggpad);
 
-      /* aggregate might be running if this FLUSH_STOP was not
-       * sent following a flushing seek, let's make sure we don't
-       * flush the pad's current buffer before aggregate has returned
-       */
-      GST_PAD_STREAM_LOCK (self->srcpad);
       gst_aggregator_pad_flush (aggpad, self);
-      GST_PAD_STREAM_UNLOCK (self->srcpad);
 
       GST_OBJECT_LOCK (self);
       if (priv->flushing
