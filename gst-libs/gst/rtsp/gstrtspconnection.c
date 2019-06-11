@@ -362,7 +362,8 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
   newconn->url = gst_rtsp_url_copy (url);
   newconn->timer = g_timer_new ();
   newconn->timeout = 60;
-  newconn->cseq = 0;            /* RFC 7826: "it is RECOMMENDED to start at 0." */
+  newconn->cseq = 1;            /* RFC 7826: "it is RECOMMENDED to start at 0.",
+                                   but some servers don't copy values <1 due to bugs. */
 
   newconn->remember_session_id = TRUE;
 
