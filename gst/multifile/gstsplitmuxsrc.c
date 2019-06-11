@@ -1396,6 +1396,17 @@ splitmux_src_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       ret = gst_splitmux_src_activate_part (splitmux, i, flags);
       SPLITMUX_SRC_UNLOCK (splitmux);
     }
+    case GST_EVENT_RECONFIGURE:{
+      GST_DEBUG_OBJECT (splitmux, "reconfigure evnet on pad %" GST_PTR_FORMAT,
+          pad);
+
+      SPLITMUX_SRC_PADS_RLOCK (splitmux);
+      /* Restart the task on this pad */
+      gst_pad_start_task (GST_PAD (pad),
+          (GstTaskFunction) gst_splitmux_pad_loop, pad, NULL);
+      SPLITMUX_SRC_PADS_RUNLOCK (splitmux);
+      break;
+    }
     default:
       break;
   }
