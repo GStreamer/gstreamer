@@ -1345,7 +1345,8 @@ gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
 /**
  * gst_allocator_set_vaapi_negotiated_video_info:
  * @allocator: a #GstAllocator
- * @negotiated_vinfo: the negotiated #GstVideoInfo to store
+ * @negotiated_vinfo: the negotiated #GstVideoInfo to store.  If NULL, then
+ * removes any previously set value.
  *
  * Stores as GObject's qdata the @negotiated_vinfo in the allocator
  * instance.
@@ -1358,11 +1359,13 @@ gst_allocator_set_vaapi_negotiated_video_info (GstAllocator * allocator,
     const GstVideoInfo * negotiated_vinfo)
 {
   g_return_if_fail (allocator && GST_IS_ALLOCATOR (allocator));
-  g_return_if_fail (negotiated_vinfo);
 
-  g_object_set_qdata_full (G_OBJECT (allocator), NEGOTIATED_VINFO_QUARK,
-      gst_video_info_copy (negotiated_vinfo),
-      (GDestroyNotify) gst_video_info_free);
+  if (negotiated_vinfo)
+    g_object_set_qdata_full (G_OBJECT (allocator), NEGOTIATED_VINFO_QUARK,
+        gst_video_info_copy (negotiated_vinfo),
+        (GDestroyNotify) gst_video_info_free);
+  else
+    g_object_set_qdata (G_OBJECT (allocator), NEGOTIATED_VINFO_QUARK, NULL);
 }
 
 /**
