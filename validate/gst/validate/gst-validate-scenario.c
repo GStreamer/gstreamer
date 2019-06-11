@@ -185,6 +185,8 @@ typedef struct KeyFileGroupName
   gchar *group_name;
 } KeyFileGroupName;
 
+#define NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE 1
+
 static GstValidateInterceptionReturn
 gst_validate_scenario_intercept_report (GstValidateReporter * reporter,
     GstValidateReport * report)
@@ -1618,7 +1620,6 @@ _get_position (GstValidateScenario * scenario,
   if (has_pos && has_dur && !priv->got_eos) {
     if (*position > duration) {
       _add_execute_actions_gsource (scenario);
-
       GST_VALIDATE_REPORT (scenario,
           QUERY_POSITION_SUPERIOR_DURATION,
           "Reported position %" GST_TIME_FORMAT " > reported duration %"
@@ -4382,6 +4383,243 @@ error:
   return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
 }
 
+static GstPadProbeReturn
+_check_is_key_unit_cb (GstPad * pad, GstPadProbeInfo * info,
+    GstValidateAction * action)
+{
+  GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
+  GstClockTime target_running_time = GST_CLOCK_TIME_NONE;
+  gint count_bufs = 0;
+
+  gst_validate_action_get_clocktime (scenario, action,
+      "running-time", &target_running_time);
+  if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info))) {
+    if (gst_video_event_is_force_key_unit (GST_PAD_PROBE_INFO_DATA (info)))
+      gst_structure_set (action->structure, "__priv_seen_event", G_TYPE_BOOLEAN,
+          TRUE, NULL);
+    else if (GST_EVENT_TYPE (info->data) == GST_EVENT_SEGMENT
+        && GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
+      const GstSegment *segment = NULL;
+
+      gst_event_parse_segment (info->data, &segment);
+      gst_structure_set (action->structure, "__priv_segment", GST_TYPE_SEGMENT,
+          segment, NULL);
+    }
+  } else if (GST_IS_BUFFER (GST_PAD_PROBE_INFO_DATA (info))
+      && gst_structure_has_field_typed (action->structure, "__priv_seen_event",
+          G_TYPE_BOOLEAN)) {
+    GstSegment *segment = NULL;
+
+    if (GST_CLOCK_TIME_IS_VALID (target_running_time)) {
+      GstClockTime running_time;
+
+      gst_structure_get (action->structure, "__priv_segment", GST_TYPE_SEGMENT,
+          &segment, NULL);
+      running_time =
+          gst_segment_to_running_time (segment, GST_FORMAT_TIME,
+          GST_BUFFER_TIMESTAMP (info->data));
+
+      if (running_time < target_running_time)
+        goto done;
+    }
+
+    gst_structure_get_int (action->structure, "__priv_count_bufs", &count_bufs);
+    if (GST_BUFFER_FLAG_IS_SET (GST_PAD_PROBE_INFO_BUFFER (info),
+            GST_BUFFER_FLAG_DELTA_UNIT)) {
+      if (count_bufs >= NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE) {
+        GST_VALIDATE_REPORT (scenario,
+            SCENARIO_ACTION_EXECUTION_ERROR,
+            "Did not receive a key frame after requested one, "
+            "at running_time %" GST_TIME_FORMAT " (with a %i "
+            "frame tolerance)", GST_TIME_ARGS (target_running_time),
+            NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE);
+
+        gst_validate_action_set_done (action);
+        gst_object_unref (scenario);
+        return GST_PAD_PROBE_REMOVE;
+      }
+
+      gst_structure_set (action->structure, "__priv_count_bufs", G_TYPE_INT,
+          count_bufs++, NULL);
+    } else {
+      GST_INFO_OBJECT (pad,
+          "Properly got keyframe after \"force-keyframe\" event "
+          "with running_time %" GST_TIME_FORMAT " (latency %d frame(s))",
+          GST_TIME_ARGS (target_running_time), count_bufs);
+
+      gst_structure_remove_fields (action->structure, "__priv_count_bufs",
+          "__priv_segment", "__priv_seen_event", NULL);
+      gst_validate_action_set_done (action);
+      gst_object_unref (scenario);
+      return GST_PAD_PROBE_REMOVE;
+    }
+  }
+done:
+  gst_object_unref (scenario);
+
+  return GST_PAD_PROBE_OK;
+}
+
+static gboolean
+_execute_request_key_unit (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  guint count = 0;
+  gboolean all_headers = FALSE;
+  gboolean ret = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+  GstEvent *event = NULL;
+  GstQuery *segment_query;
+  GList *targets = NULL, *tmp;
+  GstElement *video_encoder = NULL;
+  GstPad *pad = NULL, *encoder_srcpad = NULL;
+  GstClockTime running_time = GST_CLOCK_TIME_NONE;
+  GstSegment segment = { 0, };
+  const gchar *direction = gst_structure_get_string (action->structure,
+      "direction"), *pad_name, *srcpad_name;
+
+  DECLARE_AND_GET_PIPELINE (scenario, action);
+
+  if (gst_structure_get_string (action->structure, "target-element-name")) {
+    GstElement *target = _get_target_element (scenario, action);
+    if (target == NULL)
+      return FALSE;
+
+    targets = g_list_append (targets, target);
+  } else {
+    if (!gst_structure_get_string (action->structure,
+            "target-element-klass") &&
+        !gst_structure_get_string (action->structure,
+            "target-element-factory-name")) {
+      gst_structure_set (action->structure, "target-element-klass",
+          G_TYPE_STRING, "Video/Encoder", NULL);
+    }
+
+    targets = _get_target_elements_by_klass_or_factory_name (scenario, action);
+  }
+
+  if (!targets) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Could not find any element from action: %" GST_PTR_FORMAT,
+        action->structure);
+    goto fail;
+  }
+
+  gst_validate_action_get_clocktime (scenario, action,
+      "running-time", &running_time);
+  gst_structure_get_boolean (action->structure, "all-headers", &all_headers);
+  if (!gst_structure_get_uint (action->structure, "count", &count)) {
+    gst_structure_get_int (action->structure, "count", (gint *) & count);
+  }
+  pad_name = gst_structure_get_string (action->structure, "pad");
+  srcpad_name = gst_structure_get_string (action->structure, "srcpad");
+  if (!srcpad_name)
+    srcpad_name = "src";
+
+  for (tmp = targets; tmp; tmp = tmp->next) {
+    video_encoder = tmp->data;
+    encoder_srcpad = gst_element_get_static_pad (video_encoder, srcpad_name);
+    if (!encoder_srcpad) {
+      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+          "Could not find pad %s", srcpad_name);
+
+      goto fail;
+    }
+    if (g_strcmp0 (direction, "upstream") == 0) {
+      event = gst_video_event_new_upstream_force_key_unit (running_time,
+          all_headers, count);
+
+      pad = gst_element_get_static_pad (video_encoder, srcpad_name);
+      if (!pad) {
+        GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+            "Could not find pad %s", srcpad_name);
+
+        goto fail;
+      }
+      GST_ERROR_OBJECT (encoder_srcpad, "Sending RequestKeyUnit event");
+      gst_pad_add_probe (encoder_srcpad,
+          GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
+          (GstPadProbeCallback) _check_is_key_unit_cb,
+          gst_validate_action_ref (action),
+          (GDestroyNotify) gst_validate_action_unref);
+    } else if (g_strcmp0 (direction, "downstream") == 0) {
+      GstClockTime timestamp = GST_CLOCK_TIME_NONE,
+          stream_time = GST_CLOCK_TIME_NONE;
+
+      if (!pad_name)
+        pad_name = "sink";
+
+      pad = gst_element_get_static_pad (video_encoder, pad_name);
+      if (!pad) {
+        GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+            "Could not find pad %s", pad_name);
+
+        goto fail;
+      }
+
+      gst_validate_action_get_clocktime (scenario, action,
+          "timestamp", &timestamp);
+
+      gst_validate_action_get_clocktime (scenario, action,
+          "stream-time", &stream_time);
+
+      event =
+          gst_video_event_new_downstream_force_key_unit (timestamp, stream_time,
+          running_time, all_headers, count);
+
+      gst_pad_add_probe (pad,
+          GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+          (GstPadProbeCallback) _check_is_key_unit_cb,
+          gst_validate_action_ref (action),
+          (GDestroyNotify) gst_validate_action_unref);
+    } else {
+      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+          "request keyunit direction %s invalid (should be in"
+          " [downstrean, upstream]", direction);
+
+      goto fail;
+    }
+
+    gst_validate_printf (action, "Sending a \"force key unit\" event %s\n",
+        direction);
+
+    segment_query = gst_query_new_segment (GST_FORMAT_TIME);
+    gst_pad_query (encoder_srcpad, segment_query);
+
+    gst_query_parse_segment (segment_query, &(segment.rate),
+        &(segment.format), (gint64 *) & (segment.start),
+        (gint64 *) & (segment.stop));
+    gst_structure_set (action->structure, "__priv_segment", GST_TYPE_SEGMENT,
+        &segment, NULL);
+
+    gst_pad_add_probe (encoder_srcpad,
+        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        (GstPadProbeCallback) _check_is_key_unit_cb,
+        gst_validate_action_ref (action),
+        (GDestroyNotify) gst_validate_action_unref);
+
+
+    if (!gst_pad_send_event (pad, event)) {
+      GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+          "Could not send \"force key unit\" event %s", direction);
+      goto fail;
+    }
+
+    gst_clear_object (&pad);
+    gst_clear_object (&encoder_srcpad);
+  }
+
+done:
+  g_list_free_full (targets, gst_object_unref);
+  gst_clear_object (&pad);
+  gst_clear_object (&encoder_srcpad);
+
+  return ret;
+
+fail:
+  ret = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  goto done;
+}
+
 static gboolean
 _action_set_done (GstValidateAction * action)
 {
@@ -5313,6 +5551,84 @@ init_scenarios (void)
       " for example",
       GST_VALIDATE_ACTION_TYPE_INTERLACED);
 
+    REGISTER_ACTION_TYPE ("video-request-key-unit", _execute_request_key_unit,
+      ((GstValidateActionParameter []) {
+        {
+          .name = "direction",
+          .description = "The direction for the event to travel, should be in\n"
+                          "  * [upstream, downstream]",
+          .mandatory = TRUE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "running-time",
+          .description = "The running_time can be set to request a new key unit at a specific running_time.\n"
+                          "If not set, GST_CLOCK_TIME_NONE will be used so upstream elements will produce a new key unit "
+                          "as soon as possible.",
+          .mandatory = FALSE,
+          .types = "double or string",
+          .possible_variables = "position: The current position in the stream\n"
+            "duration: The duration of the stream",
+          NULL
+        },
+        {
+          .name = "all-headers",
+          .description = "TRUE to produce headers when starting a new key unit",
+          .mandatory = FALSE,
+          .def = "FALSE",
+          .types = "boolean",
+          NULL
+        },
+        {
+          .name = "count",
+          .description = "integer that can be used to number key units",
+          .mandatory = FALSE,
+          .def = "0",
+          .types = "int",
+          NULL
+        },
+        {
+          .name = "target-element-name",
+          .description = "The name of the GstElement to send a send force-key-unit to",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "target-element-factory-name",
+          .description = "The factory name of the GstElements to send a send force-key-unit to",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "target-element-klass",
+          .description = "The klass of the GstElements to send a send force-key-unit to",
+          .mandatory = FALSE,
+          .def = "Video/Encoder",
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "pad",
+          .description = "The name of the GstPad to send a send force-key-unit to",
+          .mandatory = FALSE,
+          .def = "sink",
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "srcpad",
+          .description = "The name of the GstPad to send a send force-key-unit to",
+          .mandatory = FALSE,
+          .def = "src",
+          .types = "string",
+          NULL
+        },
+        {NULL}
+      }),
+      "Request a video key unit", FALSE);
   /*  *INDENT-ON* */
 
   for (tmp = gst_validate_plugin_get_config (NULL); tmp; tmp = tmp->next) {
