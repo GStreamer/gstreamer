@@ -1319,6 +1319,12 @@ splitmux_src_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
         SPLITMUX_SRC_UNLOCK (splitmux);
         goto error;
       }
+      if (splitmux->segment_seqnum == seqnum) {
+        GST_DEBUG_OBJECT (splitmux, "Ignoring duplicate seek event");
+        SPLITMUX_SRC_UNLOCK (splitmux);
+        ret = TRUE;
+        goto done;
+      }
 
       gst_segment_copy_into (&splitmux->play_segment, &tmp);
 
@@ -1394,6 +1400,7 @@ splitmux_src_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
   }
 
+done:
   gst_event_unref (event);
 error:
   return ret;
