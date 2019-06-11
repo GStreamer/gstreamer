@@ -603,6 +603,8 @@ gst_vulkan_display_run_context_query (GstElement * element,
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (display != NULL, FALSE);
 
+  _init_debug ();
+
   if (*display && GST_IS_VULKAN_DISPLAY (*display))
     return TRUE;
 

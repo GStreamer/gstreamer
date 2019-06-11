@@ -37,11 +37,21 @@
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
+static void
+_init_debug (void)
+{
+  static volatile gsize init;
+
+  if (g_once_init_enter (&init)) {
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkanqueue", 0, "Vulkan Queue");
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
+    g_once_init_leave (&init, 1);
+  }
+}
+
 #define parent_class gst_vulkan_queue_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanQueue, gst_vulkan_queue, GST_TYPE_OBJECT,
-    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkanqueue", 0,
-        "Vulkan Queue");
-    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT"));
+    _init_debug ());
 
 static void gst_vulkan_queue_dispose (GObject * object);
 
@@ -254,6 +264,8 @@ gst_vulkan_queue_run_context_query (GstElement * element,
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (queue != NULL, FALSE);
+
+  _init_debug ();
 
   if (*queue && GST_IS_VULKAN_QUEUE (*queue))
     return TRUE;

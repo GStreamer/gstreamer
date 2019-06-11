@@ -59,14 +59,25 @@ struct _GstVulkanInstancePrivate
   gboolean opened;
 };
 
+static void
+_init_debug (void)
+{
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkaninstance", 0,
+        "Vulkan Instance");
+    GST_DEBUG_CATEGORY_INIT (GST_VULKAN_DEBUG_CAT, "vulkandebug", 0,
+        "Vulkan Debug");
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
+    g_once_init_leave (&_init, 1);
+  }
+}
+
 #define gst_vulkan_instance_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanInstance, gst_vulkan_instance,
     GST_TYPE_OBJECT, G_ADD_PRIVATE (GstVulkanInstance)
-    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT,
-        "vulkaninstance", 0, "Vulkan Instance");
-    GST_DEBUG_CATEGORY_INIT (GST_VULKAN_DEBUG_CAT,
-        "vulkandebug", 0, "Vulkan Debug");
-    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT"));
+    _init_debug ());
 
 GstVulkanInstance *
 gst_vulkan_instance_new (void)
@@ -577,6 +588,8 @@ gst_vulkan_instance_run_context_query (GstElement * element,
 {
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (instance != NULL, FALSE);
+
+  _init_debug ();
 
   if (*instance && GST_IS_VULKAN_INSTANCE (*instance))
     return TRUE;

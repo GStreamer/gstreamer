@@ -46,12 +46,23 @@ struct _GstVulkanDevicePrivate
   gboolean opened;
 };
 
-#define gst_vulkan_device_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstVulkanDevice, gst_vulkan_device, GST_TYPE_OBJECT,
-    G_ADD_PRIVATE (GstVulkanDevice)
+static void
+_init_debug (void)
+{
+  static volatile gsize init;
+
+  if (g_once_init_enter (&init)) {
     GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkandevice", 0,
         "Vulkan Device");
-    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT"));
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
+    g_once_init_leave (&init, 1);
+  }
+}
+
+#define gst_vulkan_device_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVulkanDevice, gst_vulkan_device, GST_TYPE_OBJECT,
+    G_ADD_PRIVATE (GstVulkanDevice);
+    _init_debug ());
 
 /**
  * gst_vulkan_device_new:
@@ -566,6 +577,8 @@ gst_vulkan_device_run_context_query (GstElement * element,
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (device != NULL, FALSE);
+
+  _init_debug ();
 
   if (*device && GST_IS_VULKAN_DEVICE (*device))
     return TRUE;
