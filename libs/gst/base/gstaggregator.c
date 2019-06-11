@@ -2051,6 +2051,14 @@ gst_aggregator_do_seek (GstAggregator * self, GstEvent * event)
     GST_OBJECT_LOCK (self);
     priv->flushing = FALSE;
     GST_OBJECT_UNLOCK (self);
+
+    /* No flush stop is inbound for us to forward */
+    if (flush) {
+      GstEvent *event = gst_event_new_flush_stop (TRUE);
+
+      gst_event_set_seqnum (event, self->priv->next_seqnum);
+      gst_pad_push_event (self->srcpad, event);
+    }
   }
 
   GST_INFO_OBJECT (self, "seek done, result: %d", evdata.result);
