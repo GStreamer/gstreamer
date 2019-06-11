@@ -1047,8 +1047,10 @@ gst_validate_report_set_master_report (GstValidateReport * report,
   GList *tmp;
   gboolean add_shadow_report = TRUE;
 
-  if (master_report->reporting_level >= GST_VALIDATE_SHOW_MONITOR)
+  if (master_report->reporting_level >= GST_VALIDATE_SHOW_MONITOR &&
+      master_report->reporting_level != GST_VALIDATE_SHOW_SMART) {
     return FALSE;
+  }
 
   report->master_report = master_report;
 
