@@ -111,6 +111,7 @@
 #include "gstrtpjitterbuffer.h"
 #include "rtpjitterbuffer.h"
 #include "rtpstats.h"
+#include "rtptimerqueue.h"
 
 #include <gst/glib-compat-private.h>
 

@@ -68,7 +68,11 @@ good_tests = [
   [ 'elements/rtpbin_buffer_list' ],
   [ 'elements/rtpcollision' ],
   [ 'elements/rtpfunnel' ],
-  [ 'elements/rtpjitterbuffer' ],
+  [ 'elements/rtpjitterbuffer', false, [gstrtp_dep],
+     ['../../gst/rtpmanager/gstrtpjitterbuffer.c',
+      '../../gst/rtpmanager/rtpjitterbuffer.c',
+      '../../gst/rtpmanager/rtpstats.c',
+      '../../gst/rtpmanager/rtptimerqueue.c']],
   [ 'elements/rtpmux' ],
   [ 'elements/rtprtx' ],
   [ 'elements/rtpsession' ],
@@ -188,7 +192,7 @@ foreach t : good_tests
 
     env.set('GST_REGISTRY', join_paths(meson.current_build_dir(), '@0@.registry'.format(test_name)))
     exe = executable(test_name, fname, extra_sources,
-      include_directories : [configinc],
+      include_directories : [configinc, libsinc],
       c_args : ['-DHAVE_CONFIG_H=1' ] + test_defines,
       dependencies : [libm] + test_deps + extra_deps,
     )

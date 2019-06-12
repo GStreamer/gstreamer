@@ -14,6 +14,7 @@ libgstrtpmanager_la_SOURCES = gstrtpmanager.c \
 			      rtpsession.c      \
 			      rtpsource.c      \
 			      rtpstats.c      \
+			      rtptimerqueue.c \
 			      gstrtpsession.c \
 			      gstrtpfunnel.c
 
@@ -30,6 +31,7 @@ noinst_HEADERS = gstrtpbin.h \
 		 rtpsession.h  \
 		 rtpsource.h  \
 		 rtpstats.h  \
+	         rtptimerqueue.h \
 		 gstrtpsession.h \
 		 gstrtpfunnel.h
 
