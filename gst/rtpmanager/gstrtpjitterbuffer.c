@@ -2302,6 +2302,9 @@ get_rtx_delay (GstRtpJitterBufferPrivate * priv)
   GstClockTime delay;
 
   if (priv->rtx_delay == -1) {
+    GstClockTime delay_max = (priv->latency_ns > priv->avg_rtx_rtt) ?
+        priv->latency_ns - priv->avg_rtx_rtt : priv->latency_ns;
+
     if (priv->avg_jitter == 0 && priv->packet_spacing == 0) {
       delay = DEFAULT_AUTO_RTX_DELAY;
     } else {
@@ -2309,6 +2312,8 @@ get_rtx_delay (GstRtpJitterBufferPrivate * priv)
        * packet spacing is a good margin */
       delay = MAX (priv->avg_jitter * 2, priv->packet_spacing / 2);
     }
+
+    delay = MIN (delay_max, delay);
   } else {
     delay = priv->rtx_delay * GST_MSECOND;
   }

@@ -461,12 +461,13 @@ GST_START_TEST (test_clear_pt_map)
 GST_END_TEST;
 
 #define TEST_BUF_CLOCK_RATE 8000
+#define AS_TEST_BUF_RTP_TIME(gst_time) gst_util_uint64_scale_int (TEST_BUF_CLOCK_RATE, gst_time, GST_SECOND)
 #define TEST_BUF_PT 0
 #define TEST_BUF_SSRC 0x01BADBAD
 #define TEST_BUF_MS  20
 #define TEST_BUF_DURATION (TEST_BUF_MS * GST_MSECOND)
 #define TEST_BUF_SIZE (64000 * TEST_BUF_MS / 1000)
-#define TEST_RTP_TS_DURATION (TEST_BUF_CLOCK_RATE * TEST_BUF_MS / 1000)
+#define TEST_RTP_TS_DURATION AS_TEST_BUF_RTP_TIME (TEST_BUF_DURATION)
 
 static GstCaps *
 generate_caps (void)
@@ -2082,6 +2083,147 @@ GST_START_TEST (test_rtx_timer_reuse)
 
 GST_END_TEST;
 
+
+static void
+start_test_rtx_large_packet_spacing (GstHarness * h,
+    gint latency_ms, gint frame_dur_ms, gint rtx_rtt_ms,
+    guint16 * dst_lost_seq, GstClockTime * dst_now)
+{
+  gint i, seq, frame;
+  GstBuffer *buffer;
+  GstClockTime now, lost_packet_time;
+  GstClockTime frame_dur = frame_dur_ms * GST_MSECOND;
+
+  gst_harness_set_src_caps (h, generate_caps ());
+  g_object_set (h->element,
+      "do-lost", TRUE, "latency", latency_ms, "do-retransmission", TRUE, NULL);
+
+  /* Pushing 2 frames @frame_dur_ms ms apart from each other to initialize
+   * packet_spacing and avg jitter */
+  for (frame = 0, seq = 0, now = 0; frame < 2;
+      frame++, seq += 2, now += frame_dur) {
+    gst_harness_set_time (h, now);
+    gst_harness_push (h, generate_test_buffer_full (now, seq,
+            AS_TEST_BUF_RTP_TIME (now)));
+    gst_harness_push (h, generate_test_buffer_full (now, seq + 1,
+            AS_TEST_BUF_RTP_TIME (now)));
+
+    if (frame == 0)
+      /* deadline for buffer 0 expires */
+      gst_harness_crank_single_clock_wait (h);
+
+    gst_buffer_unref (gst_harness_pull (h));
+    gst_buffer_unref (gst_harness_pull (h));
+  }
+
+  /* drop GstEventStreamStart & GstEventCaps & GstEventSegment */
+  for (i = 0; i < 3; i++)
+    gst_event_unref (gst_harness_pull_event (h));
+  /* drop reconfigure event */
+  gst_event_unref (gst_harness_pull_upstream_event (h));
+
+  /* The first packet (#@seq) of the 3rd frame is lost */
+  lost_packet_time = now;
+  gst_harness_set_time (h, now);
+  gst_harness_push (h, generate_test_buffer_full (now, seq + 1,
+          AS_TEST_BUF_RTP_TIME (now)));
+
+  /* RTX delay calculated as:
+   *     MIN(rtx_delay_max, MAX(2*avg_jitter, 0.5 * packet_spacing)).
+   * Where rtx_delay_max:
+   *     rtx_delay_max = latency - rtx_rtt.
+   * We have not used RTX yet, so rtx_rtt = 0, rtx_delay_max = latency.
+   * Thus we expect the first RTX event to be sent in @latency_ms ms */
+  gst_harness_crank_single_clock_wait (h);
+  fail_unless_equals_int64 (now + latency_ms * GST_MSECOND,
+      gst_clock_get_time (GST_ELEMENT_CLOCK (h->element)));
+  verify_rtx_event (h, seq, now, latency_ms, frame_dur);
+  verify_lost_event (h, seq, now, 0);
+  gst_buffer_unref (gst_harness_pull (h));
+  now += latency_ms * GST_MSECOND;
+
+  /* Sending lost packet as RTX to initialize rtx_rtt */
+  now += rtx_rtt_ms * GST_MSECOND;
+  gst_harness_set_time (h, now);
+  buffer =
+      generate_test_buffer_full (now, seq,
+      AS_TEST_BUF_RTP_TIME (lost_packet_time));
+  GST_BUFFER_FLAG_SET (buffer, GST_RTP_BUFFER_FLAG_RETRANSMISSION);
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buffer));
+
+  /* No buffers should be pushed through, as lost packet arrived too late */
+  fail_unless_equals_int (0, gst_harness_buffers_in_queue (h));
+
+  seq += 2;
+  frame += 1;
+  now = frame * frame_dur;
+  gst_harness_set_time (h, now);
+
+  /* The first packet (#@seq) of the 4th frame is lost */
+  gst_harness_push (h, generate_test_buffer_full (now, seq + 1,
+          AS_TEST_BUF_RTP_TIME (now)));
+  *dst_lost_seq = seq;
+  *dst_now = now;
+}
+
+GST_START_TEST (test_rtx_large_packet_spacing_and_small_rtt)
+{
+  GstClockTime now;
+  guint16 lost_seq;
+  gint latency_ms = 20;
+  gint frame_dur_ms = 50;
+  gint rtx_rtt_ms = 5;
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+
+  start_test_rtx_large_packet_spacing (h, latency_ms, frame_dur_ms, rtx_rtt_ms,
+      &lost_seq, &now);
+
+  /* With small rtx_rtt, RTX event expected to be sent in
+     (@latency_ms - @rtx_rtt_ms) ms */
+  gst_harness_crank_single_clock_wait (h);
+  fail_unless_equals_int64 (now + (latency_ms - rtx_rtt_ms) * GST_MSECOND,
+      gst_clock_get_time (GST_ELEMENT_CLOCK (h->element)));
+  verify_rtx_event (h, lost_seq, now, (latency_ms - rtx_rtt_ms),
+      frame_dur_ms * GST_MSECOND);
+
+  /* After @latency ms the packet should be considered lost */
+  gst_harness_crank_single_clock_wait (h);
+  fail_unless_equals_int64 (now + latency_ms * GST_MSECOND,
+      gst_clock_get_time (GST_ELEMENT_CLOCK (h->element)));
+  verify_lost_event (h, lost_seq, now, 0);
+  gst_buffer_unref (gst_harness_pull (h));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtx_large_packet_spacing_and_large_rtt)
+{
+  GstClockTime now;
+  guint16 lost_seq;
+  gint latency_ms = 20;
+  gint frame_dur_ms = 50;
+  gint rtx_rtt_ms = 30;
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+
+  start_test_rtx_large_packet_spacing (h, latency_ms, frame_dur_ms, rtx_rtt_ms,
+      &lost_seq, &now);
+
+  /* With large rtx_rtt, RTX event expected to be sent in @latency_ms ms.
+     The buffer considered lost. */
+  gst_harness_crank_single_clock_wait (h);
+  fail_unless_equals_int64 (now + latency_ms * GST_MSECOND,
+      gst_clock_get_time (GST_ELEMENT_CLOCK (h->element)));
+  verify_rtx_event (h, lost_seq, now, latency_ms, frame_dur_ms * GST_MSECOND);
+  verify_lost_event (h, lost_seq, now, 0);
+  gst_buffer_unref (gst_harness_pull (h));
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_deadline_ts_offset)
 {
   GstHarness *h = gst_harness_new ("rtpjitterbuffer");
@@ -2440,6 +2582,8 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_rtx_same_delay_and_retry_timeout);
   tcase_add_test (tc_chain, test_rtx_with_backwards_rtptime);
   tcase_add_test (tc_chain, test_rtx_timer_reuse);
+  tcase_add_test (tc_chain, test_rtx_large_packet_spacing_and_small_rtt);
+  tcase_add_test (tc_chain, test_rtx_large_packet_spacing_and_large_rtt);
 
   tcase_add_test (tc_chain, test_deadline_ts_offset);
   tcase_add_test (tc_chain, test_big_gap_seqnum);
