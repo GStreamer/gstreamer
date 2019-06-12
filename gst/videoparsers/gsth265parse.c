@@ -1517,6 +1517,8 @@ get_profile_string (GstH265Profile profile)
       return "main-still-picture";
     case GST_H265_PROFILE_MONOCHROME:
       return "monochrome";
+    case GST_H265_PROFILE_MONOCHROME_10:
+      return "monochrome-10";
     case GST_H265_PROFILE_MONOCHROME_12:
       return "monochrome-12";
     case GST_H265_PROFILE_MONOCHROME_16:
@@ -1555,6 +1557,44 @@ get_profile_string (GstH265Profile profile)
       return "main-444-still-picture";
     case GST_H265_PROFILE_MAIN_444_16_STILL_PICTURE:
       return "main-444-16-still-picture";
+    case GST_H265_PROFILE_HIGH_THROUGHPUT_444:
+      return "high-throughput-444";
+    case GST_H265_PROFILE_HIGH_THROUGHPUT_444_10:
+      return "high-throughput-444-10";
+    case GST_H265_PROFILE_HIGH_THROUGHPUT_444_14:
+      return "high-throughput-444-14";
+    case GST_H265_PROFILE_HIGH_THROUGHPUT_444_16_INTRA:
+      return "high-throughput-444-16-intra";
+    case GST_H265_PROFILE_SCREEN_EXTENDED_MAIN:
+      return "screen-extended-main";
+    case GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10:
+      return "screen-extended-main-10";
+    case GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444:
+      return "screen-extended-main-444";
+    case GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10:
+      return "screen-extended-main-444-10";
+    case GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444:
+      return "screen-extended-high-throughput-444";
+    case GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10:
+      return "screen-extended-high-throughput-444-10";
+    case GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14:
+      return "screen-extended-high-throughput-444-14";
+    case GST_H265_PROFILE_MULTIVIEW_MAIN:
+      return "multiview-main";
+    case GST_H265_PROFILE_SCALABLE_MAIN:
+      return "scalable-main";
+    case GST_H265_PROFILE_SCALABLE_MAIN_10:
+      return "scalable-main-10";
+    case GST_H265_PROFILE_SCALABLE_MONOCHROME:
+      return "scalable-monochrome";
+    case GST_H265_PROFILE_SCALABLE_MONOCHROME_12:
+      return "scalable-monochrome-12";
+    case GST_H265_PROFILE_SCALABLE_MONOCHROME_16:
+      return "scalable-monochrome-16";
+    case GST_H265_PROFILE_SCALABLE_MAIN_444:
+      return "scalable-main-444";
+    case GST_H265_PROFILE_3D_MAIN:
+      return "3d-main";
     default:
       break;
   }
