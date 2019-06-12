@@ -31,9 +31,15 @@
 #include <mutex>
 
 GST_DEBUG_CATEGORY_EXTERN (wpe_src_debug);
+#define GST_CAT_DEFAULT wpe_src_debug
 
-// -70 is the GLib priority we use internally in WebKit, for WPE.
+#if defined(WPE_FDO_CHECK_VERSION) && WPE_FDO_CHECK_VERSION(1, 3, 0)
+#define USE_DEPRECATED_FDO_EGL_IMAGE 0
+#define WPE_GLIB_SOURCE_PRIORITY G_PRIORITY_DEFAULT
+#else
+#define USE_DEPRECATED_FDO_EGL_IMAGE 1
 #define WPE_GLIB_SOURCE_PRIORITY -70
+#endif
 
 class GMutexHolder {
 public:
@@ -382,7 +388,7 @@ void WPEThreadedView::loadUri(const gchar* uri)
 
 void WPEThreadedView::setDrawBackground(gboolean drawsBackground)
 {
-#if WEBKIT_CHECK_VERSION(2, 23, 0)
+#if WEBKIT_CHECK_VERSION(2, 24, 0)
     GST_DEBUG("%s background rendering", drawsBackground ? "Enabling" : "Disabling");
     WebKitColor color;
     webkit_color_parse(&color, drawsBackground ? "white" : "transparent");
@@ -392,12 +398,12 @@ void WPEThreadedView::setDrawBackground(gboolean drawsBackground)
 #endif
 }
 
-void WPEThreadedView::releaseImage(EGLImageKHR image)
+void WPEThreadedView::releaseImage(gpointer imagePointer)
 {
     struct ReleaseImageContext {
         WPEThreadedView& view;
-        EGLImageKHR image;
-    } releaseImageContext{ *this, image };
+        gpointer imagePointer;
+    } releaseImageContext{ *this, imagePointer };
 
     GSource* source = g_idle_source_new();
     g_source_set_callback(source,
@@ -406,9 +412,14 @@ void WPEThreadedView::releaseImage(EGLImageKHR image)
             auto& view = releaseImageContext.view;
             GMutexHolder lock(view.threading.mutex);
 
-            wpe_view_backend_exportable_fdo_egl_dispatch_release_image(
-                releaseImageContext.view.wpe.exportable, releaseImageContext.image);
-
+            GST_DEBUG("Dispatch release exported image");
+#if USE_DEPRECATED_FDO_EGL_IMAGE
+            wpe_view_backend_exportable_fdo_egl_dispatch_release_image(releaseImageContext.view.wpe.exportable,
+                static_cast<EGLImageKHR>(releaseImageContext.imagePointer));
+#else
+            wpe_view_backend_exportable_fdo_egl_dispatch_release_exported_image(releaseImageContext.view.wpe.exportable,
+                static_cast<struct wpe_fdo_egl_exported_image*>(releaseImageContext.imagePointer));
+#endif
             g_cond_signal(&view.threading.cond);
             return G_SOURCE_REMOVE;
         },
@@ -424,23 +435,51 @@ void WPEThreadedView::releaseImage(EGLImageKHR image)
     g_source_unref(source);
 }
 
+struct ImageContext {
+    WPEThreadedView* view;
+    gpointer image;
+};
+
+void WPEThreadedView::handleExportedImage(gpointer image)
+{
+    ImageContext* imageContext = g_slice_new(ImageContext);
+    imageContext->view = this;
+    imageContext->image = static_cast<gpointer>(image);
+    EGLImageKHR eglImage;
+#if USE_DEPRECATED_FDO_EGL_IMAGE
+    eglImage = static_cast<EGLImageKHR>(image);
+#else
+    eglImage = wpe_fdo_egl_exported_image_get_egl_image(static_cast<struct wpe_fdo_egl_exported_image*>(image));
+#endif
+
+    auto* gstImage = gst_egl_image_new_wrapped(gst.context, eglImage, GST_GL_RGBA, imageContext, s_releaseImage);
+    GMutexHolder lock(images.mutex);
+    images.pending = gstImage;
+}
+
 struct wpe_view_backend_exportable_fdo_egl_client WPEThreadedView::s_exportableClient = {
-    // export_buffer_resource
+#if USE_DEPRECATED_FDO_EGL_IMAGE
+    // export_egl_image
     [](void* data, EGLImageKHR image) {
         auto& view = *static_cast<WPEThreadedView*>(data);
-        auto* gstImage = gst_egl_image_new_wrapped(view.gst.context, image,
-            GST_GL_RGBA, &view, s_releaseImage);
-        GMutexHolder lock(view.images.mutex);
-
-        view.images.pending = gstImage;
+        view.handleExportedImage(static_cast<gpointer>(image));
     },
+    nullptr,
+#else
+    // export_egl_image
+    nullptr,
+    [](void* data, struct wpe_fdo_egl_exported_image* image) {
+        auto& view = *static_cast<WPEThreadedView*>(data);
+        view.handleExportedImage(static_cast<gpointer>(image));
+    },
+#endif
     // padding
-    nullptr, nullptr, nullptr, nullptr
+    nullptr, nullptr, nullptr
 };
 
 void WPEThreadedView::s_releaseImage(GstEGLImage* image, gpointer data)
 {
-    auto& view = *static_cast<WPEThreadedView*>(data);
-    GST_DEBUG("view %p image %" GST_PTR_FORMAT, &view, image);
-    view.releaseImage(gst_egl_image_get_image(image));
+    ImageContext* context = static_cast<ImageContext*>(data);
+    context->view->releaseImage(context->image);
+    g_slice_free(ImageContext, context);
 }

@@ -46,10 +46,14 @@ public:
 
     struct wpe_view_backend* backend() const;
 
+protected:
+    void handleExportedImage(gpointer);
+
 private:
     void frameComplete();
-    void releaseImage(EGLImageKHR);
     void loadUriUnlocked(const gchar*);
+
+    void releaseImage(gpointer);
 
     static void s_loadEvent(WebKitWebView*, WebKitLoadEvent, gpointer);
 
