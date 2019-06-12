@@ -724,9 +724,9 @@ gst_avdtp_connection_get_caps (GstAvdtpConnection * conn)
 
 void
 gst_avdtp_connection_notify_volume (GstAvdtpConnection * conn,
-    GObject * target, const gchar * property)
+    GObject * source, const gchar * property)
 {
-  g_object_bind_property (conn->data.conn, "volume", target, property,
+  g_object_bind_property (source, property, conn->data.conn, "volume",
       G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
 }
 
