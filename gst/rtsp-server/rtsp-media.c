@@ -2797,6 +2797,7 @@ gst_rtsp_media_seek_trickmode (GstRTSPMedia * media,
       res = TRUE;
     } else {
       GstEvent *seek_event;
+      gboolean unblock = FALSE;
 
       gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARING);
 
@@ -2815,7 +2816,20 @@ gst_rtsp_media_seek_trickmode (GstRTSPMedia * media,
 
       gst_event_set_seek_trickmode_interval (seek_event, trickmode_interval);
 
+      if (!media->priv->blocked) {
+        /* Prevent a race condition with multiple streams,
+         * where one stream may have time to preroll before others
+         * have even started flushing, causing async-done to be
+         * posted too early.
+         */
+        media_streams_set_blocked (media, TRUE);
+        unblock = TRUE;
+      }
+
       res = gst_element_send_event (priv->pipeline, seek_event);
+
+      if (unblock)
+        media_streams_set_blocked (media, FALSE);
 
       /* and block for the seek to complete */
       GST_INFO ("done seeking %d", res);
