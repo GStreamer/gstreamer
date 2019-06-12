@@ -1374,6 +1374,44 @@ GST_START_TEST (rtp_base_depayload_source_info_test)
 
 GST_END_TEST;
 
+/* verify that if a buffer arriving in the depayloader already has source-info
+   meta on it, that this does not affect the source-info coming out of the
+   depayloder, which should be all derived from the rtp-header */
+GST_START_TEST (rtp_base_depayload_source_info_from_rtp_only)
+{
+  GstHarness *h;
+  GstRtpDummyDepay *depay;
+  GstBuffer *buffer;
+  GstRTPSourceMeta *meta;
+  guint rtp_ssrc = 0x11;
+  guint rtp_csrc = 0x22;
+  guint32 meta_ssrc = 0x55;
+  guint32 meta_csrc = 0x66;
+
+  depay = rtp_dummy_depay_new ();
+  h = gst_harness_new_with_element (GST_ELEMENT_CAST (depay), "sink", "src");
+  gst_harness_set_src_caps_str (h, "application/x-rtp");
+
+  g_object_set (depay, "source-info", TRUE, NULL);
+  buffer = gst_rtp_buffer_new_allocate (0, 0, 1);
+  rtp_buffer_set (buffer, "seq", 0, "ssrc", rtp_ssrc, "csrc", 0, rtp_csrc,
+      NULL);
+  meta = gst_buffer_add_rtp_source_meta (buffer, &meta_ssrc, &meta_csrc, 1);
+
+  buffer = gst_harness_push_and_pull (h, buffer);
+  fail_unless ((meta = gst_buffer_get_rtp_source_meta (buffer)));
+  fail_unless (meta->ssrc_valid);
+  fail_unless_equals_int (meta->ssrc, rtp_ssrc);
+  fail_unless_equals_int (meta->csrc_count, 1);
+  fail_unless_equals_int (meta->csrc[0], rtp_csrc);
+  gst_buffer_unref (buffer);
+
+  g_object_unref (depay);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 rtp_basepayloading_suite (void)
@@ -1406,6 +1444,7 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_depayload_clock_base_test);
 
   tcase_add_test (tc_chain, rtp_base_depayload_source_info_test);
+  tcase_add_test (tc_chain, rtp_base_depayload_source_info_from_rtp_only);
 
   return s;
 }

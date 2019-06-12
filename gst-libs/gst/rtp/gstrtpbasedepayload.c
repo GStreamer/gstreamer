@@ -750,17 +750,35 @@ create_segment_event (GstRTPBaseDepayload * filter, guint rtptime,
   return event;
 }
 
+static gboolean
+foreach_metadata_drop (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
+{
+  GType drop_api_type = (GType) user_data;
+  const GstMetaInfo *info = (*meta)->info;
+
+  if (info->api == drop_api_type)
+    *meta = NULL;
+
+  return TRUE;
+}
+
 static void
 add_rtp_source_meta (GstBuffer * outbuf, GstBuffer * rtpbuf)
 {
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   GstRTPSourceMeta *meta;
   guint32 ssrc;
+  GType source_meta_api = gst_rtp_source_meta_api_get_type ();
 
   if (!gst_rtp_buffer_map (rtpbuf, GST_MAP_READ, &rtp))
     return;
 
   ssrc = gst_rtp_buffer_get_ssrc (&rtp);
+
+  /* remove any pre-existing source-meta */
+  gst_buffer_foreach_meta (outbuf, foreach_metadata_drop,
+      (gpointer) source_meta_api);
+
   meta = gst_buffer_add_rtp_source_meta (outbuf, &ssrc, NULL, 0);
   if (meta != NULL) {
     gint i;
