@@ -154,6 +154,7 @@ static const GstRTPPayloadInfo info[] = {
   {G_MAXUINT8, "audio", "ILBC", 8000, NULL, 0},
   {G_MAXUINT8, "audio", "MPEG4-GENERIC", 0, NULL, 0},
   {G_MAXUINT8, "audio", "SPEEX", 0, NULL, 0},
+  {G_MAXUINT8, "audio", "OPUS", 48000, NULL, 0},
 
   {G_MAXUINT8, "application", "MPEG4-GENERIC", 0, NULL, 0},
 
@@ -164,6 +165,8 @@ static const GstRTPPayloadInfo info[] = {
   {G_MAXUINT8, "video", "VORBIS", 0, NULL, 0},
   {G_MAXUINT8, "video", "X-SV3V-ES", 90000, NULL, 0},
   {G_MAXUINT8, "video", "X-SORENSON-VIDEO", 90000, NULL, 0},
+  {G_MAXUINT8, "video", "VP8", 90000, NULL, 0},
+  {G_MAXUINT8, "video", "VP9", 90000, NULL, 0},
 
   /* real stuff */
   {G_MAXUINT8, "video", "x-pn-realvideo", 1000, NULL, 0},
