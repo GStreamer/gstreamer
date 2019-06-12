@@ -8,7 +8,8 @@ dnf install -y \
     make \
     pkg-config \
     unzip \
-    which
+    which \
+    xz
 
 mkdir -p /android/sources
 
@@ -21,8 +22,6 @@ curl -o /android/sources/android-sdk-tools.zip https://dl.google.com/android/rep
 unzip /android/sources/android-sdk-tools.zip -d ${ANDROID_HOME}/
 mkdir -p ${ANDROID_HOME}/licenses
 
-rm -rf /android/sources
-
 # Accept licenses. Values taken from:
 # ANDROID_HOME=/path/to/android/sdk-tools $ANDROID_HOME/tools/bin/sdkmanager --licenses
 echo "601085b94cd77f0b54ff86406957099ebe79c4d6" > ${ANDROID_HOME}/licenses/android-googletv-license
@@ -30,3 +29,22 @@ echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > ${ANDROID_HOME}/licenses/andro
 echo "84831b9409646a918e30573bab4c9c91346d8abd" > ${ANDROID_HOME}/licenses/android-sdk-preview-license
 echo "33b6a2b64607f11b759f320ef9dff4ae5c47d97a" > ${ANDROID_HOME}/licenses/google-gdk-license
 echo "e9acab5b5fbb560a72cfaecce8946896ff6aab9d" > ${ANDROID_HOME}/licenses/mips-android-sysimage-license
+
+# pre-cache deps
+export GSTREAMER_ROOT_ANDROID=/android/sources/gstreamer-android
+curl -o /android/sources/gstreamer-android.tar.xz https://gstreamer.freedesktop.org/data/pkg/android/1.16.0/gstreamer-1.0-android-universal-1.16.0.tar.xz
+mkdir $GSTREAMER_ROOT_ANDROID
+tar -xvf /android/sources/gstreamer-android.tar.xz -C $GSTREAMER_ROOT_ANDROID
+ls $GSTREAMER_ROOT_ANDROID
+
+git clone https://gitlab.freedesktop.org/gstreamer/gst-examples.git /android/sources/gst-examples
+chmod +x /android/sources/gst-examples/playback/player/android/gradlew
+/android/sources/gst-examples/playback/player/android/gradlew --no-search-upward --no-daemon --project-dir /android/sources/gst-examples/playback/player/android dependencies --refresh-dependencies
+
+git clone https://gitlab.freedesktop.org/gstreamer/gst-docs.git /android/sources/gst-docs
+chmod +x /android/sources/gst-docs/examples/tutorials/android/gradlew
+/android/sources/gst-docs/examples/tutorials/android/gradlew --no-search-upward --no-daemon --project-dir /android/sources/gst-docs/examples/tutorials/android dependencies --refresh-dependencies
+
+unset GSTREAMER_ROOT_ANDROID
+
+rm -rf /android/sources
