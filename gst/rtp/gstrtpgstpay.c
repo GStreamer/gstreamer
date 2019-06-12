@@ -421,8 +421,17 @@ gst_rtp_gst_pay_send_caps (GstRtpGSTPay * rtpgstpay, guint8 cv, GstCaps * caps)
   guint capslen;
   GstBuffer *outbuf;
 
-  if (rtpgstpay->flags & (1 << 7))
+  if (rtpgstpay->flags == ((1 << 7) | (cv << 4))) {
+    /* If caps for the current CV are pending in the adapter already, do
+     * nothing at all here
+     */
     return;
+  } else if (rtpgstpay->flags & (1 << 7)) {
+    /* Create a new standalone caps packet if caps were already pending.
+     * The next caps are going to be merged with the following buffer or
+     * sent standalone if another event is sent first */
+    gst_rtp_gst_pay_create_from_adapter (rtpgstpay, GST_CLOCK_TIME_NONE);
+  }
 
   capsstr = gst_caps_to_string (caps);
   capslen = strlen (capsstr);
