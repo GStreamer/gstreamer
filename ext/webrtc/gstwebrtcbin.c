@@ -2794,13 +2794,6 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
             "for webrtc-datachannel");
         goto rejected;
       }
-      if (g_strcmp0 (gst_sdp_media_get_format (offer_media, 0),
-              "webrtc-datachannel") != 0) {
-        GST_WARNING_OBJECT (webrtc,
-            "format field of data channel m= line "
-            "is not \'webrtc-datachannel\'");
-        goto rejected;
-      }
       sctp_port = _get_sctp_port_from_media (offer_media);
       if (sctp_port == -1) {
         GST_WARNING_OBJECT (webrtc, "media does not contain a sctp port");

@@ -712,21 +712,56 @@ _generate_ice_credentials (gchar ** ufrag, gchar ** password)
 int
 _get_sctp_port_from_media (const GstSDPMedia * media)
 {
-  int sctpmap = -1, i;
+  int i;
+  const gchar *format;
+  gchar *endptr;
 
-  for (i = 0; i < gst_sdp_media_attributes_len (media); i++) {
-    const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, i);
+  if (gst_sdp_media_formats_len (media) != 1) {
+    /* only exactly one format is supported */
+    return -1;
+  }
 
-    if (g_strcmp0 (attr->key, "sctp-port") == 0) {
-      return atoi (attr->value);
-    } else if (g_strcmp0 (attr->key, "sctpmap") == 0) {
-      sctpmap = atoi (attr->value);
+  format = gst_sdp_media_get_format (media, 0);
+
+  if (g_strcmp0 (format, "webrtc-datachannel") == 0) {
+    /* draft-ietf-mmusic-sctp-sdp-21, e.g. Firefox 63 and later */
+
+    for (i = 0; i < gst_sdp_media_attributes_len (media); i++) {
+      const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, i);
+
+      if (g_strcmp0 (attr->key, "sctp-port") == 0) {
+        gint64 port = g_ascii_strtoll (attr->value, &endptr, 10);
+        if (endptr == attr->value) {
+          /* conversion error */
+          return -1;
+        }
+        return port;
+      }
+    }
+  } else {
+    /* draft-ietf-mmusic-sctp-sdp-05, e.g. Chrome as recent as 75 */
+    gint64 port = g_ascii_strtoll (format, &endptr, 10);
+    if (endptr == format) {
+      /* conversion error */
+      return -1;
+    }
+
+    for (i = 0; i < gst_sdp_media_attributes_len (media); i++) {
+      const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, i);
+
+      if (g_strcmp0 (attr->key, "sctpmap") == 0 && atoi (attr->value) == port) {
+        /* a=sctpmap:5000 webrtc-datachannel 256 */
+        gchar **parts = g_strsplit (attr->value, " ", 3);
+        if (!parts[1] || g_strcmp0 (parts[1], "webrtc-datachannel") != 0) {
+          port = -1;
+        }
+        g_strfreev (parts);
+        return port;
+      }
     }
   }
 
-  if (sctpmap >= 0)
-    GST_LOG ("no sctp-port attribute in media");
-  return sctpmap;
+  return -1;
 }
 
 guint64
