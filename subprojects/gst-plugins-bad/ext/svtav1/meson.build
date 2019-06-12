@@ -40,15 +40,15 @@ ldflags = [
    '-Wl,-z,noexecstack',
 ]
 foreach lflag : ldflags
-	add_global_link_arguments(lflag, language : 'c')
+    add_global_link_arguments(lflag, language : 'c')
 endforeach
 
 
 if svtav1enc_dep.found()
-	gstsvtav1enc = library('gstsvtav1enc',
-		'gstsvtav1enc.c',
-		dependencies: [gstbase_dep, gstvideo_dep, svtav1enc_dep],
-		install: true,
-		install_dir: plugins_install_dir,
-	)
+    gstsvtav1enc = library('gstsvtav1enc',
+        'gstsvtav1enc.c',
+        dependencies: [gstbase_dep, gstvideo_dep, svtav1enc_dep],
+        install: true,
+        install_dir: plugins_install_dir,
+    )
 endif
