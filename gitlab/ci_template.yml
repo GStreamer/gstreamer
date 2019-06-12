@@ -1,14 +1,10 @@
 stages:
   - 'preparation'
-  # Test just one basic build, if it succeeds proceed to test the rest
+  - 'pre-build'
   - 'build'
   - 'test'
-  # Run multiple builds and tests, multi-distro, multi-arch
-  - 'full builds'
-  - 'full tests'
-  # build some apps to check that cross-platform binaries are usable
-  - 'apps'
-  - 'deploy'
+  # Use the resulting binaries
+  - 'integrate'
 
 variables:
   ANDROID_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/android:2019-06-12-354260'
@@ -81,7 +77,7 @@ gst indent:
       - $CI_PROJECT_NAME == "gst-docs"
 
 .build:
-  stage: 'full builds'
+  stage: 'build'
   dependencies:
     - "manifest"
   variables:
@@ -225,7 +221,7 @@ integration testsuites fedora:
 # Valgrind
 .valgrind fedora x86_64:
   extends: '.test fedora x86_64'
-  stage: 'full tests'
+  stage: 'test'
   variables:
     EXTRA_VALIDATE_ARGS: "--valgrind"
   # Some suppression files are missing a newline at the end which messes things
@@ -290,7 +286,7 @@ valgrind ges:
 #
 # Produces runtime and devel tarball packages for linux/android or .pkg for macos
 .cerbero:
-  stage: "full builds"
+  stage: "build"
   image: $CERBERO_IMAGE
   dependencies:
     - "manifest"
@@ -365,7 +361,7 @@ valgrind ges:
 # with the associated build-tools.
 .cerbero deps:
   extends: .cerbero
-  stage: "build"
+  stage: "pre-build"
   script:
     - $CERBERO $CERBERO_ARGS show-config
     - $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
@@ -527,7 +523,7 @@ build cerbero cross win64:
 #
 .android universal examples:
   image: $ANDROID_IMAGE
-  stage: 'apps'
+  stage: 'integrate'
   variables:
     EXAMPLES_HOME: ${CI_PROJECT_DIR}/examples
     GSTREAMER_ROOT_ANDROID: ${CI_PROJECT_DIR}/examples/cerbero-android-universal
@@ -590,7 +586,6 @@ cerbero android universal examples:
 #
 cerbero deps macos x86_64:
   extends: '.cerbero deps'
-  stage: "build"
   variables:
     ARCH: "darwin_x86_64"
     CONFIG: "osx-x86-64.cbc"
@@ -645,7 +640,7 @@ documentation:
   image: $FEDORA30_IMAGE
   dependencies:
     - 'build nodebug fedora x86_64'
-  stage: deploy
+  stage: integrate
 
   script:
   - pip3 install --upgrade git+https://github.com/hotdoc/hotdoc.git

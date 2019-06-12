@@ -1,16 +1,11 @@
 stages:
   - "build docker"
   - "preparation"
-  # Test just one basic build, if succeds procced to test the rest
+  - "pre-build"
   - "build"
   - "test"
-  # Run multiple builds and tests, multi-distro, multi-arch
-  - "full builds"
-  - "full tests"
-  # build some apps to check that cross-platform binaries are usable
-  - "apps"
-  # Deploy the documentation
-  - "deploy"
+  # use the binaries in some way
+  - "integrate"
 
 test manifest:
   variables:
