@@ -546,7 +546,7 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     };
 
     buffer_memory_barrier = (VkBufferMemoryBarrier) {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
         .pNext = NULL,
         .srcAccessMask = buf_mem->barrier.parent.access_flags,
         .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
