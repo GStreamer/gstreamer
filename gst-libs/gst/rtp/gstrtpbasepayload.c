@@ -1210,7 +1210,7 @@ map_failed:
 static gboolean
 foreach_metadata_drop (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
 {
-  GType drop_api_type = (GType) GPOINTER_TO_INT (user_data);
+  GType drop_api_type = (GType) user_data;
   const GstMetaInfo *info = (*meta)->info;
 
   if (info->api == drop_api_type)
@@ -1223,7 +1223,7 @@ static gboolean
 filter_meta (GstBuffer ** buffer, guint idx, gpointer user_data)
 {
   return gst_buffer_foreach_meta (*buffer, foreach_metadata_drop,
-      GINT_TO_POINTER (GST_RTP_SOURCE_META_API_TYPE));
+      (gpointer) GST_RTP_SOURCE_META_API_TYPE);
 }
 
 /* Updates the SSRC, payload type, seqnum and timestamp of the RTP buffer
