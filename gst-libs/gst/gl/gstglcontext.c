@@ -1095,8 +1095,7 @@ _create_context_info (GstGLContext * context, GstGLAPI gl_api, gint * gl_major,
   }
 
   opengl_version = (const gchar *) gl->GetString (GL_VERSION);
-  if (opengl_version && gl_api & GST_GL_API_GLES2)
-    /* gles starts with "OpenGL ES " */
+  if (opengl_version && g_str_has_prefix (opengl_version, "OpenGL ES "))
     opengl_version = &opengl_version[10];
 
   if (opengl_version)
