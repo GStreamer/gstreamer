@@ -11,7 +11,7 @@ stages:
   - 'deploy'
 
 variables:
-  ANDROID_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/android:2019-03-26-196225'
+  ANDROID_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/android:2019-06-12-354260'
   CERBERO_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/cerbero-fedora:2019-06-06-343857'
   FEDORA_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:2019-03-26-196223'
   FEDORA30_IMAGE: 'registry.freedesktop.org/gstreamer/gst-ci/amd64/fedora:2019-05-29-324578'
