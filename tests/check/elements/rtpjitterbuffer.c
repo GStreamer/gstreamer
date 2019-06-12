@@ -61,7 +61,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static void
-buffer_dropped (gpointer data, GstMiniObject * obj)
+buffer_dropped (G_GNUC_UNUSED gpointer data, GstMiniObject * obj)
 {
   GST_DEBUG ("dropping buffer %p", obj);
   num_dropped++;
@@ -175,7 +175,7 @@ cleanup_jitterbuffer (GstElement * jitterbuffer)
 }
 
 static void
-check_jitterbuffer_results (GstElement * jitterbuffer, gint num_buffers)
+check_jitterbuffer_results (gint num_buffers)
 {
   GstBuffer *buffer;
   GList *node;
@@ -234,7 +234,7 @@ GST_START_TEST (test_push_forward_seq)
   }
 
   /* check the buffer list */
-  check_jitterbuffer_results (jitterbuffer, num_buffers);
+  check_jitterbuffer_results (num_buffers);
 
   /* cleanup */
   cleanup_jitterbuffer (jitterbuffer);
@@ -263,7 +263,7 @@ GST_START_TEST (test_push_backward_seq)
   }
 
   /* check the buffer list */
-  check_jitterbuffer_results (jitterbuffer, num_buffers);
+  check_jitterbuffer_results (num_buffers);
 
   /* cleanup */
   cleanup_jitterbuffer (jitterbuffer);
@@ -292,7 +292,7 @@ GST_START_TEST (test_push_unordered)
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
 
   /* check the buffer list */
-  check_jitterbuffer_results (jitterbuffer, num_buffers);
+  check_jitterbuffer_results (num_buffers);
 
   /* cleanup */
   cleanup_jitterbuffer (jitterbuffer);
@@ -303,7 +303,8 @@ GST_END_TEST;
 gboolean is_eos;
 
 static gboolean
-eos_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
+eos_event_function (G_GNUC_UNUSED GstPad * pad,
+    G_GNUC_UNUSED GstObject * parent, GstEvent * event)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     g_mutex_lock (&check_mutex);
@@ -413,7 +414,7 @@ GST_START_TEST (test_basetime)
 GST_END_TEST;
 
 static GstCaps *
-request_pt_map (GstElement * jitterbuffer, guint pt)
+request_pt_map (G_GNUC_UNUSED GstElement * jitterbuffer, guint pt)
 {
   fail_unless (pt == 0);
 
@@ -451,7 +452,7 @@ GST_START_TEST (test_clear_pt_map)
   }
 
   /* check the buffer list */
-  check_jitterbuffer_results (jitterbuffer, num_buffers);
+  check_jitterbuffer_results (num_buffers);
 
   /* cleanup */
   cleanup_jitterbuffer (jitterbuffer);
