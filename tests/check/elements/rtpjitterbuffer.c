@@ -2289,6 +2289,90 @@ GST_START_TEST (test_rtx_large_packet_spacing_does_not_reset_jitterbuffer)
 
 GST_END_TEST;
 
+GST_START_TEST (test_minor_reorder_does_not_skew)
+{
+  gint latency_ms = 20;
+  gint frame_dur_ms = 50;
+  guint rtx_min_delay_ms = 110;
+  gint hickup_ms = 2;
+  gint i, seq;
+  GstBuffer *buffer;
+  GstClockTime now;
+  GstClockTime frame_dur = frame_dur_ms * GST_MSECOND;
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+
+  gst_harness_set_src_caps (h, generate_caps ());
+  g_object_set (h->element,
+      "do-lost", TRUE, "latency", latency_ms, "do-retransmission", TRUE,
+      "rtx-min-delay", rtx_min_delay_ms, NULL);
+
+  /* Pushing 2 frames @frame_dur_ms ms apart from each other to initialize
+   * packet_spacing and avg jitter */
+  for (seq = 0, now = 0; seq < 2; ++seq, now += frame_dur) {
+    gst_harness_set_time (h, now);
+    gst_harness_push (h, generate_test_buffer_full (now, seq,
+            AS_TEST_BUF_RTP_TIME (now)));
+    if (seq == 0)
+      gst_harness_crank_single_clock_wait (h);
+    buffer = gst_harness_pull (h);
+    fail_unless_equals_int64 (now, GST_BUFFER_PTS (buffer));
+    gst_buffer_unref (buffer);
+  }
+
+  /* drop GstEventStreamStart & GstEventCaps & GstEventSegment */
+  for (i = 0; i < 3; i++)
+    gst_event_unref (gst_harness_pull_event (h));
+  /* drop reconfigure event */
+  gst_event_unref (gst_harness_pull_upstream_event (h));
+
+  /* Pushing packet #4 before #3, shortly after #3 would have arrived normally */
+  gst_harness_set_time (h, now + hickup_ms * GST_MSECOND);
+  gst_harness_push (h, generate_test_buffer_full (now + hickup_ms * GST_MSECOND,
+          seq + 1, AS_TEST_BUF_RTP_TIME (now + frame_dur)));
+
+  /* Pushing packet #3 after #4 when #4 would have normally arrived */
+  gst_harness_set_time (h, now + frame_dur);
+  gst_harness_push (h, generate_test_buffer_full (now + frame_dur, seq,
+          AS_TEST_BUF_RTP_TIME (now)));
+
+  /* Pulling should be retrieving #3 first */
+  buffer = gst_harness_pull (h);
+  fail_unless_equals_int64 (now, GST_BUFFER_PTS (buffer));
+  gst_buffer_unref (buffer);
+
+  /* Pulling should be retrieving #4 second */
+  buffer = gst_harness_pull (h);
+  fail_unless_equals_int64 (now + frame_dur, GST_BUFFER_PTS (buffer));
+  gst_buffer_unref (buffer);
+
+  now += 2 * frame_dur;
+  seq += 2;
+
+  /* Pushing packet #5 normal again */
+  gst_harness_set_time (h, now);
+  gst_harness_push (h, generate_test_buffer_full (now, seq,
+          AS_TEST_BUF_RTP_TIME (now)));
+  buffer = gst_harness_pull (h);
+  fail_unless_equals_int64 (now, GST_BUFFER_PTS (buffer));
+  gst_buffer_unref (buffer);
+
+  seq++;
+  now += frame_dur;
+
+  /* Pushing packet #6 half a frame early to trigger clock skew */
+  gst_harness_set_time (h, now);
+  gst_harness_push (h, generate_test_buffer_full (now, seq,
+          AS_TEST_BUF_RTP_TIME (now + frame_dur / 2)));
+  buffer = gst_harness_pull (h);
+  fail_unless (now + frame_dur / 2 > GST_BUFFER_PTS (buffer),
+      "pts should have been adjusted due to clock skew");
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_deadline_ts_offset)
 {
   GstHarness *h = gst_harness_new ("rtpjitterbuffer");
@@ -2651,6 +2735,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_rtx_large_packet_spacing_and_large_rtt);
   tcase_add_test (tc_chain,
       test_rtx_large_packet_spacing_does_not_reset_jitterbuffer);
+  tcase_add_test (tc_chain, test_minor_reorder_does_not_skew);
 
   tcase_add_test (tc_chain, test_deadline_ts_offset);
   tcase_add_test (tc_chain, test_big_gap_seqnum);

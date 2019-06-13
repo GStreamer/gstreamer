@@ -176,6 +176,8 @@ chain_rtp_packet (GstPad * pad, CleanupData * data)
   data->seqnum++;
   gst_buffer_unmap (buffer, &map);
 
+  GST_BUFFER_DTS (buffer) = 0;
+
   res = gst_pad_chain (pad, buffer);
 
   return res;

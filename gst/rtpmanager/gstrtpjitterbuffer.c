@@ -3028,7 +3028,13 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     /* calculate a pts based on rtptime and arrival time (dts) */
     pts =
         rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, estimated_dts,
-        rtptime, gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)));
+        rtptime, gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)),
+        0, GST_BUFFER_IS_RETRANSMISSION (buffer));
+
+    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (pts))) {
+      /* A valid timestamp cannot be calculated, discard packet */
+      goto discard_invalid;
+    }
 
     /* we don't know what the next_in_seqnum should be, wait for the last
      * possible moment to push this buffer, maybe we get an earlier seqnum
@@ -3080,13 +3086,16 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
 
     /* calculate a pts based on rtptime and arrival time (dts) */
     /* If we estimated the DTS, don't consider it in the clock skew calculations */
-    if (gap >= 0) {
-      pts =
-          rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, estimated_dts,
-          rtptime, gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)));
+    pts =
+        rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, estimated_dts,
+        rtptime, gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)),
+        gap, GST_BUFFER_IS_RETRANSMISSION (buffer));
+
+    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (pts))) {
+      /* A valid timestamp cannot be calculated, discard packet */
+      goto discard_invalid;
     }
-    /* else gap < 0 then we will drop the buffer anyway, so we don't need to
-       calculate it's pts */
+
     if (G_LIKELY (gap == 0)) {
       /* packet is expected */
       calculate_packet_spacing (jitterbuffer, rtptime, pts);
@@ -3305,6 +3314,14 @@ rtx_duplicate:
     GST_DEBUG_OBJECT (jitterbuffer,
         "Duplicate RTX packet #%d detected, dropping", seqnum);
     priv->num_duplicates++;
+    gst_buffer_unref (buffer);
+    goto finished;
+  }
+discard_invalid:
+  {
+    GST_DEBUG_OBJECT (jitterbuffer,
+        "cannot calculate a valid pts for #%d (rtx: %d), discard",
+        seqnum, GST_BUFFER_IS_RETRANSMISSION (buffer));
     gst_buffer_unref (buffer);
     goto finished;
   }
