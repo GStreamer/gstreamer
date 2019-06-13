@@ -132,6 +132,10 @@ static GstStateChangeReturn gst_rtp_h265_pay_change_state (GstElement *
 static GstFlowReturn gst_rtp_h265_pay_payload_nal_single (GstRTPBasePayload *
     basepayload, GstBuffer * paybuf, GstClockTime dts, GstClockTime pts,
     gboolean marker);
+static GstFlowReturn gst_rtp_h265_pay_payload_nal_fragment (GstRTPBasePayload *
+    basepayload, GstBuffer * paybuf, GstClockTime dts, GstClockTime pts,
+    gboolean marker, guint mtu, guint8 nal_type, const guint8 * nal_header,
+    int size);
 
 #define gst_rtp_h265_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpH265Pay, gst_rtp_h265_pay, GST_TYPE_RTP_BASE_PAYLOAD);
@@ -893,13 +897,9 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
   for (i = 0; i < paybufs->len; i++) {
     guint8 nal_header[2];
     guint8 nal_type;
-    guint packet_len, payload_len;
+    guint packet_len;
     GstBuffer *paybuf;
-    GstBuffer *outbuf;
-    guint8 *payload;
-    GstBufferList *outlist = NULL;
     gboolean send_ps;
-    GstRTPBuffer rtp = { NULL };
     guint size;
     gboolean marker;
 
@@ -1004,73 +1004,15 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
           marker);
     } else {
       /* fragmentation Units */
-      guint fragment_size;
-      int ii = 0, start = 1, end = 0, pos = 0;
 
       GST_DEBUG_OBJECT (basepayload,
           "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", size, mtu);
 
-      pos += 2;
-      size -= 2;
-
       GST_DEBUG_OBJECT (basepayload, "Using FU fragmentation for data size=%d",
-          size);
+          size - 2);
 
-      /* We keep 3 bytes for PayloadHdr and FU Header */
-      payload_len = gst_rtp_buffer_calc_payload_len (mtu - 3, 0, 0);
-
-      outlist = gst_buffer_list_new ();
-
-      while (end == 0) {
-        fragment_size = size < payload_len ? size : payload_len;
-        GST_DEBUG_OBJECT (basepayload,
-            "Inside  FU fragmentation fragment_size=%d iteration=%d",
-            fragment_size, ii);
-
-        /* use buffer lists
-         * create buffer without payload containing only the RTP header
-         * (memory block at index 0), and with space for PayloadHdr and FU header */
-        outbuf = gst_rtp_buffer_new_allocate (3, 0, 0);
-
-        gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
-
-        GST_BUFFER_DTS (outbuf) = dts;
-        GST_BUFFER_PTS (outbuf) = pts;
-        payload = gst_rtp_buffer_get_payload (&rtp);
-
-        if (fragment_size == size) {
-          GST_DEBUG_OBJECT (basepayload, "end size=%d iteration=%d", size, ii);
-          end = 1;
-        }
-
-        /* PayloadHdr (type = FU_TYPE_ID (49)) */
-        payload[0] = (nal_header[0] & 0x81) | (FU_TYPE_ID << 1);
-        payload[1] = nal_header[1];
-
-        /* If it's the last fragment and the end of this au, mark the end of
-         * slice */
-        gst_rtp_buffer_set_marker (&rtp, end && marker);
-
-        /* FU Header */
-        payload[2] = (start << 7) | (end << 6) | (nal_type & 0x3f);
-
-        gst_rtp_buffer_unmap (&rtp);
-
-        /* insert payload memory block */
-        gst_rtp_copy_video_meta (rtph265pay, outbuf, paybuf);
-        gst_buffer_copy_into (outbuf, paybuf, GST_BUFFER_COPY_MEMORY, pos,
-            fragment_size);
-        /* add the buffer to the buffer list */
-        gst_buffer_list_add (outlist, outbuf);
-
-        size -= fragment_size;
-        pos += fragment_size;
-        ii++;
-        start = 0;
-      }
-
-      ret = gst_rtp_base_payload_push_list (basepayload, outlist);
-      gst_buffer_unref (paybuf);
+      ret = gst_rtp_h265_pay_payload_nal_fragment (basepayload, paybuf, dts,
+          pts, marker, mtu, nal_type, nal_header, size);
     }
   }
 
@@ -1116,6 +1058,82 @@ gst_rtp_h265_pay_payload_nal_single (GstRTPBasePayload * basepayload,
   return gst_rtp_base_payload_push_list (basepayload, outlist);
 }
 
+static GstFlowReturn
+gst_rtp_h265_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
+    GstBuffer * paybuf, GstClockTime dts, GstClockTime pts, gboolean marker,
+    guint mtu, guint8 nal_type, const guint8 * nal_header, int size)
+{
+  GstRtpH265Pay *rtph265pay = (GstRtpH265Pay *) basepayload;
+  GstFlowReturn ret;
+  guint payload_len;
+  GstBuffer *outbuf;
+  GstBufferList *outlist = NULL;
+  guint fragment_size;
+  int ii = 0, start = 1, end = 0, pos = 0;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint8 *payload;
+
+  pos += 2;
+  size -= 2;
+
+  /* We keep 3 bytes for PayloadHdr and FU Header */
+  payload_len = gst_rtp_buffer_calc_payload_len (mtu - 3, 0, 0);
+
+  outlist = gst_buffer_list_new ();
+
+  while (end == 0) {
+    fragment_size = size < payload_len ? size : payload_len;
+    GST_DEBUG_OBJECT (basepayload,
+        "Inside  FU fragmentation fragment_size=%d iteration=%d",
+        fragment_size, ii);
+
+    /* use buffer lists
+     * create buffer without payload containing only the RTP header
+     * (memory block at index 0), and with space for PayloadHdr and FU header */
+    outbuf = gst_rtp_buffer_new_allocate (3, 0, 0);
+
+    gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+
+    GST_BUFFER_DTS (outbuf) = dts;
+    GST_BUFFER_PTS (outbuf) = pts;
+    payload = gst_rtp_buffer_get_payload (&rtp);
+
+    if (fragment_size == size) {
+      GST_DEBUG_OBJECT (basepayload, "end size=%d iteration=%d", size, ii);
+      end = 1;
+    }
+
+    /* PayloadHdr (type = FU_TYPE_ID (49)) */
+    payload[0] = (nal_header[0] & 0x81) | (FU_TYPE_ID << 1);
+    payload[1] = nal_header[1];
+
+    /* If it's the last fragment and the end of this au, mark the end of
+     * slice */
+    gst_rtp_buffer_set_marker (&rtp, end && marker);
+
+    /* FU Header */
+    payload[2] = (start << 7) | (end << 6) | (nal_type & 0x3f);
+
+    gst_rtp_buffer_unmap (&rtp);
+
+    /* insert payload memory block */
+    gst_rtp_copy_video_meta (rtph265pay, outbuf, paybuf);
+    gst_buffer_copy_into (outbuf, paybuf, GST_BUFFER_COPY_MEMORY, pos,
+        fragment_size);
+    /* add the buffer to the buffer list */
+    gst_buffer_list_add (outlist, outbuf);
+
+    size -= fragment_size;
+    pos += fragment_size;
+    ii++;
+    start = 0;
+  }
+
+  ret = gst_rtp_base_payload_push_list (basepayload, outlist);
+  gst_buffer_unref (paybuf);
+
+  return ret;
+}
 
 
 static GstFlowReturn
