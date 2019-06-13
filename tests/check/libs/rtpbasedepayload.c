@@ -1412,6 +1412,59 @@ GST_START_TEST (rtp_base_depayload_source_info_from_rtp_only)
 
 GST_END_TEST;
 
+/* Test max-reorder property. Reordered packets with a gap less than
+ * max-reordered will be dropped, reordered packets with gap larger than
+ * max-reorder is considered coming fra a restarted sender and should not be
+ * dropped. */
+GST_START_TEST (rtp_base_depayload_max_reorder)
+{
+  GstHarness *h;
+  GstRtpDummyDepay *depay;
+  guint seq = 1000;
+
+  depay = rtp_dummy_depay_new ();
+  h = gst_harness_new_with_element (GST_ELEMENT_CAST (depay), "sink", "src");
+  gst_harness_set_src_caps_str (h, "application/x-rtp");
+
+#define PUSH_AND_CHECK(seqnum, pushed) G_STMT_START {                   \
+    GstBuffer *buffer = gst_rtp_buffer_new_allocate (0, 0, 0);          \
+    rtp_buffer_set (buffer, "seq", seqnum, "ssrc", 0x11, NULL);         \
+    fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (h, buffer)); \
+    fail_unless_equals_int (gst_harness_buffers_in_queue (h), pushed);  \
+    if (pushed)                                                         \
+      gst_buffer_unref (gst_harness_pull (h));                          \
+  } G_STMT_END;
+
+  /* By default some reordering is accepted. Old seqnums should be
+   * dropped, but not too old */
+  PUSH_AND_CHECK (seq, TRUE);
+  PUSH_AND_CHECK (seq - 50, FALSE);
+  PUSH_AND_CHECK (seq - 100, TRUE);
+
+  /* Update property to allow less reordering */
+  g_object_set (depay, "max-reorder", 3, NULL);
+
+  /* Gaps up to max allowed reordering is dropped. */
+  PUSH_AND_CHECK (seq, TRUE);
+  PUSH_AND_CHECK (seq - 2, FALSE);
+  PUSH_AND_CHECK (seq - 3, TRUE);
+
+  /* After a push the initial state should be reset, so a duplicate of the
+   * last packet should be dropped */
+  PUSH_AND_CHECK (seq - 3, FALSE);
+
+  /* Update property to minimum value. Should never drop buffers. */
+  g_object_set (depay, "max-reorder", 0, NULL);
+
+  /* Duplicate buffer should now be pushed. */
+  PUSH_AND_CHECK (seq, TRUE);
+  PUSH_AND_CHECK (seq, TRUE);
+
+  g_object_unref (depay);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
 
 static Suite *
 rtp_basepayloading_suite (void)
@@ -1445,6 +1498,7 @@ rtp_basepayloading_suite (void)
 
   tcase_add_test (tc_chain, rtp_base_depayload_source_info_test);
   tcase_add_test (tc_chain, rtp_base_depayload_source_info_from_rtp_only);
+  tcase_add_test (tc_chain, rtp_base_depayload_max_reorder);
 
   return s;
 }

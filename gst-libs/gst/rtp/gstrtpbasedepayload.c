@@ -52,6 +52,7 @@ struct _GstRTPBaseDepayloadPrivate
   guint32 last_seqnum;
   guint32 last_rtptime;
   guint32 next_seqnum;
+  gint max_reorder;
 
   gboolean negotiated;
 
@@ -71,12 +72,14 @@ enum
 };
 
 #define DEFAULT_SOURCE_INFO FALSE
+#define DEFAULT_MAX_REORDER 100
 
 enum
 {
   PROP_0,
   PROP_STATS,
   PROP_SOURCE_INFO,
+  PROP_MAX_REORDER,
   PROP_LAST
 };
 
@@ -202,6 +205,21 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
           "Add RTP source information as buffer meta",
           DEFAULT_SOURCE_INFO, G_PARAM_READWRITE));
 
+  /**
+   * GstRTPBaseDepayload:max-reorder:
+   *
+   * Max seqnum reorder before the sender is assumed to have restarted.
+   *
+   * When max-reorder is set to 0 all reordered/duplicate packets are
+   * considered coming from a restarted sender.
+   *
+   * Since: 1.18
+   **/
+  g_object_class_install_property (gobject_class, PROP_MAX_REORDER,
+      g_param_spec_int ("max-reorder", "Max Reorder",
+          "Max seqnum reorder before assuming sender has restarted",
+          0, G_MAXINT, DEFAULT_MAX_REORDER, G_PARAM_READWRITE));
+
   gstelement_class->change_state = gst_rtp_base_depayload_change_state;
 
   klass->packet_lost = gst_rtp_base_depayload_packet_lost;
@@ -251,6 +269,7 @@ gst_rtp_base_depayload_init (GstRTPBaseDepayload * filter,
   priv->pts = -1;
   priv->duration = -1;
   priv->source_info = DEFAULT_SOURCE_INFO;
+  priv->max_reorder = DEFAULT_MAX_REORDER;
 
   gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
 }
@@ -417,15 +436,19 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
           GST_LOG_OBJECT (filter, "%d missing packets", gap);
           discont = TRUE;
         } else {
-          /* seqnum < next_seqnum, we have seen this packet before or the sender
-           * could be restarted. If the packet is not too old, we throw it away as
-           * a duplicate, otherwise we mark discont and continue. 100 misordered
-           * packets is a good threshold. See also RFC 4737. */
-          if (gap < 100)
+          /* seqnum < next_seqnum, we have seen this packet before, have a
+           * reordered packet or the sender could be restarted. If the packet
+           * is not too old, we throw it away as a duplicate. Otherwise we
+           * mark discont and continue assuming the sender has restarted. See
+           * also RFC 4737. */
+          GST_WARNING ("gap %d <= priv->max_reorder %d -> dropping %d",
+              gap, priv->max_reorder, gap <= priv->max_reorder);
+          if (gap <= priv->max_reorder)
             goto dropping;
 
           GST_LOG_OBJECT (filter,
-              "%d > 100, packet too old, sender likely restarted", gap);
+              "%d > %d, packet too old, sender likely restarted", gap,
+              priv->max_reorder);
           discont = TRUE;
         }
       }
@@ -510,7 +533,8 @@ invalid_buffer:
 dropping:
   {
     gst_rtp_buffer_unmap (&rtp);
-    GST_WARNING_OBJECT (filter, "%d <= 100, dropping old packet", gap);
+    GST_WARNING_OBJECT (filter, "%d <= %d, dropping old packet", gap,
+        priv->max_reorder);
     gst_buffer_unref (in);
     return GST_FLOW_OK;
   }
@@ -1037,13 +1061,18 @@ gst_rtp_base_depayload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstRTPBaseDepayload *depayload;
+  GstRTPBaseDepayloadPrivate *priv;
 
   depayload = GST_RTP_BASE_DEPAYLOAD (object);
+  priv = depayload->priv;
 
   switch (prop_id) {
     case PROP_SOURCE_INFO:
       gst_rtp_base_depayload_set_source_info_enabled (depayload,
           g_value_get_boolean (value));
+      break;
+    case PROP_MAX_REORDER:
+      priv->max_reorder = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1056,8 +1085,10 @@ gst_rtp_base_depayload_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstRTPBaseDepayload *depayload;
+  GstRTPBaseDepayloadPrivate *priv;
 
   depayload = GST_RTP_BASE_DEPAYLOAD (object);
+  priv = depayload->priv;
 
   switch (prop_id) {
     case PROP_STATS:
@@ -1067,6 +1098,9 @@ gst_rtp_base_depayload_get_property (GObject * object, guint prop_id,
     case PROP_SOURCE_INFO:
       g_value_set_boolean (value,
           gst_rtp_base_depayload_is_source_info_enabled (depayload));
+      break;
+    case PROP_MAX_REORDER:
+      g_value_set_int (value, priv->max_reorder);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
