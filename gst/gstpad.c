@@ -3160,11 +3160,17 @@ gst_pad_query_accept_caps_default (GstPad * pad, GstQuery * query)
           GST_PTR_FORMAT, allowed, caps);
       result = gst_caps_is_subset (caps, allowed);
     }
+    if (!result) {
+      GST_CAT_WARNING_OBJECT (GST_CAT_CAPS, pad, "caps: %" GST_PTR_FORMAT
+          " were not compatible with: %" GST_PTR_FORMAT, caps, allowed);
+    }
     gst_caps_unref (allowed);
   } else {
-    GST_DEBUG_OBJECT (pad, "no compatible caps allowed on the pad");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "no compatible caps allowed on the pad");
     result = FALSE;
   }
+
   gst_query_set_accept_caps_result (query, result);
 
 done:
@@ -5621,7 +5627,7 @@ pre_eventfunc_check (GstPad * pad, GstEvent * event)
   /* ERRORS */
 not_accepted:
   {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+    GST_CAT_WARNING_OBJECT (GST_CAT_CAPS, pad,
         "caps %" GST_PTR_FORMAT " not accepted", caps);
     return GST_FLOW_NOT_NEGOTIATED;
   }
