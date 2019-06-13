@@ -886,8 +886,8 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
   ret = GST_FLOW_OK;
   sent_ps = FALSE;
   for (i = 0; i < paybufs->len; i++) {
-    guint8 nalHeader[2];
-    guint8 nalType;
+    guint8 nal_header[2];
+    guint8 nal_type;
     guint packet_len, payload_len;
     GstBuffer *paybuf;
     GstBuffer *outbuf;
@@ -909,29 +909,29 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
     marker = GST_BUFFER_FLAG_IS_SET (paybuf, GST_BUFFER_FLAG_MARKER);
 
     size = gst_buffer_get_size (paybuf);
-    gst_buffer_extract (paybuf, 0, nalHeader, 2);
-    nalType = (nalHeader[0] >> 1) & 0x3f;
+    gst_buffer_extract (paybuf, 0, nal_header, 2);
+    nal_type = (nal_header[0] >> 1) & 0x3f;
 
     GST_DEBUG_OBJECT (rtph265pay, "Processing Buffer with NAL TYPE=%d",
-        nalType);
+        nal_type);
 
     send_ps = FALSE;
 
     /* check if we need to emit an VPS/SPS/PPS now */
-    if ((nalType == GST_H265_NAL_SLICE_TRAIL_N)
-        || (nalType == GST_H265_NAL_SLICE_TRAIL_R)
-        || (nalType == GST_H265_NAL_SLICE_TSA_N)
-        || (nalType == GST_H265_NAL_SLICE_TSA_R)
-        || (nalType == GST_H265_NAL_SLICE_STSA_N)
-        || (nalType == GST_H265_NAL_SLICE_STSA_R)
-        || (nalType == GST_H265_NAL_SLICE_RASL_N)
-        || (nalType == GST_H265_NAL_SLICE_RASL_R)
-        || (nalType == GST_H265_NAL_SLICE_BLA_W_LP)
-        || (nalType == GST_H265_NAL_SLICE_BLA_W_RADL)
-        || (nalType == GST_H265_NAL_SLICE_BLA_N_LP)
-        || (nalType == GST_H265_NAL_SLICE_IDR_W_RADL)
-        || (nalType == GST_H265_NAL_SLICE_IDR_N_LP)
-        || (nalType == GST_H265_NAL_SLICE_CRA_NUT)) {
+    if ((nal_type == GST_H265_NAL_SLICE_TRAIL_N)
+        || (nal_type == GST_H265_NAL_SLICE_TRAIL_R)
+        || (nal_type == GST_H265_NAL_SLICE_TSA_N)
+        || (nal_type == GST_H265_NAL_SLICE_TSA_R)
+        || (nal_type == GST_H265_NAL_SLICE_STSA_N)
+        || (nal_type == GST_H265_NAL_SLICE_STSA_R)
+        || (nal_type == GST_H265_NAL_SLICE_RASL_N)
+        || (nal_type == GST_H265_NAL_SLICE_RASL_R)
+        || (nal_type == GST_H265_NAL_SLICE_BLA_W_LP)
+        || (nal_type == GST_H265_NAL_SLICE_BLA_W_RADL)
+        || (nal_type == GST_H265_NAL_SLICE_BLA_N_LP)
+        || (nal_type == GST_H265_NAL_SLICE_IDR_W_RADL)
+        || (nal_type == GST_H265_NAL_SLICE_IDR_N_LP)
+        || (nal_type == GST_H265_NAL_SLICE_CRA_NUT)) {
       if (rtph265pay->vps_sps_pps_interval > 0) {
         if (rtph265pay->last_vps_sps_pps != -1) {
           guint64 diff;
@@ -966,8 +966,8 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
           send_ps = TRUE;
         }
       } else if (rtph265pay->vps_sps_pps_interval == -1
-          && (nalType == GST_H265_NAL_SLICE_IDR_W_RADL
-              || nalType == GST_H265_NAL_SLICE_IDR_N_LP)) {
+          && (nal_type == GST_H265_NAL_SLICE_IDR_W_RADL
+              || nal_type == GST_H265_NAL_SLICE_IDR_N_LP)) {
         /* send VPS/SPS/PPS before every IDR frame */
         send_ps = TRUE;
       }
@@ -1024,7 +1024,7 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
       ret = gst_rtp_base_payload_push_list (basepayload, outlist);
     } else {
       /* fragmentation Units */
-      guint limitedSize;
+      guint fragment_size;
       int ii = 0, start = 1, end = 0, pos = 0;
 
       GST_DEBUG_OBJECT (basepayload,
@@ -1042,10 +1042,10 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
       outlist = gst_buffer_list_new ();
 
       while (end == 0) {
-        limitedSize = size < payload_len ? size : payload_len;
+        fragment_size = size < payload_len ? size : payload_len;
         GST_DEBUG_OBJECT (basepayload,
-            "Inside  FU fragmentation limitedSize=%d iteration=%d", limitedSize,
-            ii);
+            "Inside  FU fragmentation fragment_size=%d iteration=%d",
+            fragment_size, ii);
 
         /* use buffer lists
          * create buffer without payload containing only the RTP header
@@ -1058,33 +1058,33 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
         GST_BUFFER_PTS (outbuf) = pts;
         payload = gst_rtp_buffer_get_payload (&rtp);
 
-        if (limitedSize == size) {
+        if (fragment_size == size) {
           GST_DEBUG_OBJECT (basepayload, "end size=%d iteration=%d", size, ii);
           end = 1;
         }
 
         /* PayloadHdr (type = 49) */
-        payload[0] = (nalHeader[0] & 0x81) | (49 << 1);
-        payload[1] = nalHeader[1];
+        payload[0] = (nal_header[0] & 0x81) | (49 << 1);
+        payload[1] = nal_header[1];
 
         /* If it's the last fragment and the end of this au, mark the end of
          * slice */
         gst_rtp_buffer_set_marker (&rtp, end && marker);
 
         /* FU Header */
-        payload[2] = (start << 7) | (end << 6) | (nalType & 0x3f);
+        payload[2] = (start << 7) | (end << 6) | (nal_type & 0x3f);
 
         gst_rtp_buffer_unmap (&rtp);
 
         /* insert payload memory block */
         gst_rtp_copy_video_meta (rtph265pay, outbuf, paybuf);
         gst_buffer_copy_into (outbuf, paybuf, GST_BUFFER_COPY_MEMORY, pos,
-            limitedSize);
+            fragment_size);
         /* add the buffer to the buffer list */
         gst_buffer_list_add (outlist, outbuf);
 
-        size -= limitedSize;
-        pos += limitedSize;
+        size -= fragment_size;
+        pos += fragment_size;
         ii++;
         start = 0;
       }
