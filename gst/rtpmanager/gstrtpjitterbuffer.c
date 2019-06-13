@@ -2302,6 +2302,12 @@ get_rtx_delay (GstRtpJitterBufferPrivate * priv)
   GstClockTime delay;
 
   if (priv->rtx_delay == -1) {
+    /* the maximum delay for any RTX-packet is given by the latency, since
+       anything after that is considered lost. For various calulcations,
+       (given large avg_jitter and/or packet_spacing), the resuling delay
+       could exceed the configured latency, ending up issuing an RTX-request
+       that would never arrive in time. To help this we cap the delay
+       for any RTX with the last possible time it could still arrive in time. */
     GstClockTime delay_max = (priv->latency_ns > priv->avg_rtx_rtt) ?
         priv->latency_ns - priv->avg_rtx_rtt : priv->latency_ns;
 
@@ -3074,10 +3080,13 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
 
     /* calculate a pts based on rtptime and arrival time (dts) */
     /* If we estimated the DTS, don't consider it in the clock skew calculations */
-    pts =
-        rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, estimated_dts,
-        rtptime, gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)));
-
+    if (gap >= 0) {
+      pts =
+          rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, estimated_dts,
+          rtptime, gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)));
+    }
+    /* else gap < 0 then we will drop the buffer anyway, so we don't need to
+       calculate it's pts */
     if (G_LIKELY (gap == 0)) {
       /* packet is expected */
       calculate_packet_spacing (jitterbuffer, rtptime, pts);
