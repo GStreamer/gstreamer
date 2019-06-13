@@ -231,7 +231,6 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->bidirectional = FALSE;
   h264parse->header = FALSE;
   h264parse->frame_start = FALSE;
-  h264parse->aud_insert = FALSE;
   h264parse->have_sps_in_frame = FALSE;
   h264parse->have_pps_in_frame = FALSE;
   gst_adapter_clear (h264parse->frame_out);
@@ -323,6 +322,8 @@ gst_h264_parse_start (GstBaseParse * parse)
   h264parse->sei_pic_struct_pres_flag = FALSE;
   h264parse->sei_pic_struct = 0;
   h264parse->field_pic_flag = 0;
+  h264parse->aud_needed = TRUE;
+  h264parse->aud_insert = FALSE;
 
   gst_base_parse_set_min_frame_size (parse, 4);
 
@@ -1511,6 +1512,13 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
       h264parse->aud_insert = TRUE;
       h264parse->aud_needed = FALSE;
     }
+
+    /* Do not push immediatly if we don't have all headers. This ensure that
+     * our caps are complete, avoiding a renegotiation */
+    if (h264parse->align == GST_H264_PARSE_ALIGN_NAL &&
+        !GST_H264_PARSE_STATE_VALID (h264parse,
+            GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS))
+      frame->flags |= GST_BASE_PARSE_FRAME_FLAG_QUEUE;
 
     /* if no next nal, we reached the end of this buffer */
     if (nonext) {
@@ -3050,6 +3058,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   } else {
     buffer = frame->buffer;
   }
+  h264parse->aud_insert = FALSE;
 
   if ((event = check_pending_key_unit_event (h264parse->force_key_unit_event,
               &parse->segment, GST_BUFFER_TIMESTAMP (buffer),
