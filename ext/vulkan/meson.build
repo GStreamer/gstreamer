@@ -10,6 +10,7 @@ subdir('shaders')
 
 vulkan_sources = [
   'gstvulkan.c',
+  'vkcolorconvert.c',
   'vkdownload.c',
   'vkfullscreenrender.c',
   'vkimageidentity.c',

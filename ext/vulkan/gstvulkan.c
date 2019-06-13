@@ -32,6 +32,7 @@
 #include "vksink.h"
 #include "vkupload.h"
 #include "vkimageidentity.h"
+#include "vkcolorconvert.h"
 #include "vkdownload.h"
 
 #define GST_CAT_DEFAULT gst_vulkan_debug
@@ -54,6 +55,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "vulkandownload",
           GST_RANK_NONE, GST_TYPE_VULKAN_DOWNLOAD)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "vulkancolorconvert",
+          GST_RANK_NONE, GST_TYPE_VULKAN_COLOR_CONVERT)) {
     return FALSE;
   }
 
