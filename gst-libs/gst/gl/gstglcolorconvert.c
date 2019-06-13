@@ -956,6 +956,14 @@ _init_supported_formats (GstGLContext * context, gboolean output,
     _append_value_string_list (supported_formats, "BGR10A2_LE", "RGB10A2_LE",
         NULL);
 #endif
+
+  if (!context || (gst_gl_format_is_supported (context, GST_GL_R16) &&
+          gst_gl_format_is_supported (context, GST_GL_RG16)))
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    _append_value_string_list (supported_formats, "P010_10LE", NULL);
+#else
+    _append_value_string_list (supported_formats, "P010_10BE", NULL);
+#endif
 }
 
 /* copies the given caps */
@@ -1547,6 +1555,8 @@ _get_n_textures (GstVideoFormat v_format)
       return 1;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P010_10BE:
       return 2;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_Y444:
@@ -1700,6 +1710,17 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         info->templ = &templ_SEMI_PLANAR_to_RGB;
         info->frag_body =
             g_strdup_printf (templ_SEMI_PLANAR_to_RGB_BODY, val2, 'r',
+            pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
+        info->shader_tex_names[0] = "Ytex";
+        info->shader_tex_names[1] = "UVtex";
+        break;
+      }
+      case GST_VIDEO_FORMAT_P010_10LE:
+      case GST_VIDEO_FORMAT_P010_10BE:
+      {
+        info->templ = &templ_SEMI_PLANAR_to_RGB;
+        info->frag_body =
+            g_strdup_printf (templ_SEMI_PLANAR_to_RGB_BODY, 'r', 'g',
             pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
         info->shader_tex_names[0] = "Ytex";
         info->shader_tex_names[1] = "UVtex";

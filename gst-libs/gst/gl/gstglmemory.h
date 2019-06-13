@@ -51,9 +51,9 @@ GType gst_gl_memory_allocator_get_type(void);
  * List of video formats that are supported by #GstGLMemory
  */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define MEMORY_VIDEO_EXT_FORMATS ", BGR10A2_LE, RGB10A2_LE"
+#define MEMORY_VIDEO_EXT_FORMATS ", BGR10A2_LE, RGB10A2_LE, P010_10LE"
 #else
-#define MEMORY_VIDEO_EXT_FORMATS ""
+#define MEMORY_VIDEO_EXT_FORMATS ", P010_10BE"
 #endif
 
 #define GST_GL_MEMORY_VIDEO_FORMATS_STR \

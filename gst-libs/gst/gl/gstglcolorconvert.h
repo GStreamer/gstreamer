@@ -88,9 +88,9 @@ struct _GstGLColorConvertClass
  * The currently supported formats that can be converted
  */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define COLOR_CONVERT_EXT_FORMATS ", BGR10A2_LE, RGB10A2_LE"
+#define COLOR_CONVERT_EXT_FORMATS ", BGR10A2_LE, RGB10A2_LE, P010_10LE"
 #else
-#define COLOR_CONVERT_EXT_FORMATS ""
+#define COLOR_CONVERT_EXT_FORMATS ", P010_10BE"
 #endif
 
 #define GST_GL_COLOR_CONVERT_FORMATS "{ RGBA, RGB, RGBx, BGR, BGRx, BGRA, xRGB, " \

@@ -75,6 +75,7 @@ _gl_format_n_components (guint format)
     case GST_GL_LUMINANCE_ALPHA:
     case GST_GL_RG:
     case GST_GL_RG8:
+    case GST_GL_RG16:
       return 2;
     case GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE:
     case GST_VIDEO_GL_TEXTURE_TYPE_R:
@@ -82,6 +83,7 @@ _gl_format_n_components (guint format)
     case GST_GL_ALPHA:
     case GST_GL_RED:
     case GST_GL_R8:
+    case GST_GL_R16:
       return 1;
     default:
       return 0;
@@ -201,6 +203,9 @@ gst_gl_format_from_video_info (GstGLContext * context, GstVideoInfo * vinfo,
     case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_RGB10A2_LE:
       return GST_GL_RGB10_A2;
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P010_10BE:
+      return plane == 0 ? GST_GL_R16 : GST_GL_RG16;
     default:
       n_plane_components = 4;
       g_assert_not_reached ();
@@ -269,6 +274,8 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
           if (!USING_GLES3 (context) && USING_GLES2 (context) && ext_texture_rg)
             return GST_GL_RG;
           return GST_GL_RG8;
+        case GL_UNSIGNED_SHORT:
+          return GST_GL_RG16;
       }
       break;
     case GST_GL_RED:
@@ -277,6 +284,8 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
           if (!USING_GLES3 (context) && USING_GLES2 (context) && ext_texture_rg)
             return GST_GL_RED;
           return GST_GL_R8;
+        case GL_UNSIGNED_SHORT:
+          return GST_GL_R16;
       }
       break;
     case GST_GL_RGBA8:
@@ -292,6 +301,8 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
     case GST_GL_DEPTH_COMPONENT16:
     case GST_GL_DEPTH24_STENCIL8:
     case GST_GL_RGB10_A2:
+    case GST_GL_R16:
+    case GST_GL_RG16:
       return format;
     default:
       g_critical ("Unknown GL format 0x%x type 0x%x provided", format, type);
@@ -362,6 +373,14 @@ gst_gl_format_type_from_sized_gl_format (GstGLFormat format,
     case GST_GL_RGB10_A2:
       *unsized_format = GST_GL_RGBA;
       *gl_type = GL_UNSIGNED_INT_2_10_10_10_REV;
+      break;
+    case GST_GL_R16:
+      *unsized_format = GST_GL_RED;
+      *gl_type = GL_UNSIGNED_SHORT;
+      break;
+    case GST_GL_RG16:
+      *unsized_format = GST_GL_RG;
+      *gl_type = GL_UNSIGNED_SHORT;
       break;
     default:
       g_critical ("Unknown GL format 0x%x provided", format);
@@ -435,6 +454,12 @@ gst_gl_format_is_supported (GstGLContext * context, GstGLFormat format)
           || USING_GLES3 (context)
           || gst_gl_context_check_feature (context,
           "GL_OES_required_internalformat");
+    case GST_GL_R16:
+    case GST_GL_RG16:
+      return gst_gl_context_check_gl_version (context,
+          GST_GL_API_OPENGL | GST_GL_API_OPENGL3, 3, 0)
+          || (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 1)
+          && gst_gl_context_check_feature (context, "GL_EXT_texture_norm16"));
     default:
       g_assert_not_reached ();
       return FALSE;

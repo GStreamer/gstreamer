@@ -98,6 +98,8 @@ G_BEGIN_DECLS
  *                           a 8-bit component for stencil informat.
  * @GST_GL_RGBA10_A2: Four components of bit depth 10, 10, 10 and 2 stored in the
  *                    R, G, B and A texture components respectively.
+ * @GST_GL_R16: Single 16-bit component stored in the R texture component
+ * @GST_GL_RG16: Two 16-bit components stored in the R and G texture components
  */
 typedef enum
 {
@@ -128,6 +130,9 @@ typedef enum
   GST_GL_DEPTH24_STENCIL8               = 0x88F0,
 
   GST_GL_RGB10_A2                       = 0x8059,
+
+  GST_GL_R16                            = 0x822A,
+  GST_GL_RG16                           = 0x822C,
 } GstGLFormat;
 
 GST_GL_API
