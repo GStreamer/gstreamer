@@ -129,6 +129,9 @@ static gboolean gst_rtp_h265_pay_sink_event (GstRTPBasePayload * payload,
     GstEvent * event);
 static GstStateChangeReturn gst_rtp_h265_pay_change_state (GstElement *
     element, GstStateChange transition);
+static GstFlowReturn gst_rtp_h265_pay_payload_nal_single (GstRTPBasePayload *
+    basepayload, GstBuffer * paybuf, GstClockTime dts, GstClockTime pts,
+    gboolean marker);
 
 #define gst_rtp_h265_pay_parent_class parent_class
 G_DEFINE_TYPE (GstRtpH265Pay, gst_rtp_h265_pay, GST_TYPE_RTP_BASE_PAYLOAD);
@@ -997,33 +1000,8 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
           "NAL Unit fit in one packet datasize=%d mtu=%d", size, mtu);
       /* will fit in one packet */
 
-      /* use buffer lists
-       * create buffer without payload containing only the RTP header
-       * (memory block at index 0) */
-      outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
-
-      gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
-
-      /* Mark the end of a frame */
-      gst_rtp_buffer_set_marker (&rtp, marker);
-
-      /* timestamp the outbuffer */
-      GST_BUFFER_PTS (outbuf) = pts;
-      GST_BUFFER_DTS (outbuf) = dts;
-
-      /* insert payload memory block */
-      gst_rtp_copy_video_meta (rtph265pay, outbuf, paybuf);
-      outbuf = gst_buffer_append (outbuf, paybuf);
-
-      outlist = gst_buffer_list_new ();
-
-      /* add the buffer to the buffer list */
-      gst_buffer_list_add (outlist, outbuf);
-
-      gst_rtp_buffer_unmap (&rtp);
-
-      /* push the list to the next element in the pipe */
-      ret = gst_rtp_base_payload_push_list (basepayload, outlist);
+      ret = gst_rtp_h265_pay_payload_nal_single (basepayload, paybuf, dts, pts,
+          marker);
     } else {
       /* fragmentation Units */
       guint fragment_size;
@@ -1100,6 +1078,45 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
 
   return ret;
 }
+
+static GstFlowReturn
+gst_rtp_h265_pay_payload_nal_single (GstRTPBasePayload * basepayload,
+    GstBuffer * paybuf, GstClockTime dts, GstClockTime pts, gboolean marker)
+{
+  GstBufferList *outlist;
+  GstBuffer *outbuf;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  /* use buffer lists
+   * create buffer without payload containing only the RTP header
+   * (memory block at index 0) */
+  outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+
+  gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
+
+  /* Mark the end of a frame */
+  gst_rtp_buffer_set_marker (&rtp, marker);
+
+  /* timestamp the outbuffer */
+  GST_BUFFER_PTS (outbuf) = pts;
+  GST_BUFFER_DTS (outbuf) = dts;
+
+  /* insert payload memory block */
+  gst_rtp_copy_video_meta (basepayload, outbuf, paybuf);
+  outbuf = gst_buffer_append (outbuf, paybuf);
+
+  outlist = gst_buffer_list_new ();
+
+  /* add the buffer to the buffer list */
+  gst_buffer_list_add (outlist, outbuf);
+
+  gst_rtp_buffer_unmap (&rtp);
+
+  /* push the list to the next element in the pipe */
+  return gst_rtp_base_payload_push_list (basepayload, outlist);
+}
+
+
 
 static GstFlowReturn
 gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
