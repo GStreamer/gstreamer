@@ -387,6 +387,10 @@ gst_gl_context_new (GstGLDisplay * display)
  * represented by @handle stays alive while the returned #GstGLContext is
  * active.
  *
+ * @context_type must not be %GST_GL_PLATFORM_NONE or %GST_GL_PLATFORM_ANY
+ *
+ * @available_apis must not be %GST_GL_API_NONE or %GST_GL_API_ANY
+ *
  * Returns: (transfer full): a #GstGLContext wrapping @handle
  *
  * Since: 1.4
@@ -401,6 +405,13 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
   GstGLAPI display_api;
 
   _init_debug ();
+
+  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
+  g_return_val_if_fail (handle != 0, NULL);
+  g_return_val_if_fail (available_apis != GST_GL_API_ANY, NULL);
+  g_return_val_if_fail (available_apis != GST_GL_API_NONE, NULL);
+  g_return_val_if_fail (context_type != GST_GL_PLATFORM_NONE, NULL);
+  g_return_val_if_fail (context_type != GST_GL_PLATFORM_ANY, NULL);
 
   display_api = gst_gl_display_get_gl_api (display);
   g_return_val_if_fail ((display_api & available_apis) != GST_GL_API_NONE,
