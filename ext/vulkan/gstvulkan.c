@@ -32,6 +32,7 @@
 #include "vksink.h"
 #include "vkupload.h"
 #include "vkimageidentity.h"
+#include "vkdownload.h"
 
 #define GST_CAT_DEFAULT gst_vulkan_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -48,6 +49,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "vulkanupload",
           GST_RANK_NONE, GST_TYPE_VULKAN_UPLOAD)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "vulkandownload",
+          GST_RANK_NONE, GST_TYPE_VULKAN_DOWNLOAD)) {
     return FALSE;
   }
 
