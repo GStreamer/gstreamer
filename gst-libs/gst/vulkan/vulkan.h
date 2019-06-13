@@ -30,6 +30,7 @@
 #include <gst/vulkan/gstvkdevice.h>
 #include <gst/vulkan/gstvkqueue.h>
 #include <gst/vulkan/gstvkfence.h>
+#include <gst/vulkan/gstvkformat.h>
 #include <gst/vulkan/gstvkdisplay.h>
 #include <gst/vulkan/gstvkwindow.h>
 #include <gst/vulkan/gstvkmemory.h>
