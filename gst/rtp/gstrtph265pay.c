@@ -35,6 +35,8 @@
 #include "gstrtph265pay.h"
 #include "gstrtputils.h"
 
+#define FU_TYPE_ID  49
+
 GST_DEBUG_CATEGORY_STATIC (rtph265pay_debug);
 #define GST_CAT_DEFAULT (rtph265pay_debug)
 
@@ -1063,8 +1065,8 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
           end = 1;
         }
 
-        /* PayloadHdr (type = 49) */
-        payload[0] = (nal_header[0] & 0x81) | (49 << 1);
+        /* PayloadHdr (type = FU_TYPE_ID (49)) */
+        payload[0] = (nal_header[0] & 0x81) | (FU_TYPE_ID << 1);
         payload[1] = nal_header[1];
 
         /* If it's the last fragment and the end of this au, mark the end of
