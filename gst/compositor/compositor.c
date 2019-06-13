@@ -861,19 +861,20 @@ _should_draw_background (GstVideoAggregator * vagg, gboolean bg_transparent)
   return draw;
 }
 
-static BlendFunction
-_draw_background (GstVideoAggregator * vagg, GstVideoFrame * outframe)
+static gboolean
+_draw_background (GstVideoAggregator * vagg, GstVideoFrame * outframe,
+    BlendFunction * composite)
 {
   GstCompositor *comp = GST_COMPOSITOR (vagg);
-  BlendFunction composite = comp->blend;
 
+  *composite = comp->blend;
   /* If one of the frames to be composited completely obscures the background,
    * don't bother drawing the background at all. We can also always use the
    * 'blend' BlendFunction in that case because it only changes if we have to
    * overlay on top of a transparent background. */
   if (!_should_draw_background (vagg,
           comp->background == COMPOSITOR_BACKGROUND_TRANSPARENT))
-    return composite;
+    return FALSE;
 
   switch (comp->background) {
     case COMPOSITOR_BACKGROUND_CHECKER:
@@ -905,12 +906,24 @@ _draw_background (GstVideoAggregator * vagg, GstVideoFrame * outframe)
         }
       }
       /* use overlay to keep background transparent */
-      composite = comp->overlay;
+      *composite = comp->overlay;
       break;
     }
   }
 
-  return composite;
+  return TRUE;
+}
+
+static gboolean
+frames_can_copy (const GstVideoFrame * frame1, const GstVideoFrame * frame2)
+{
+  if (GST_VIDEO_FRAME_FORMAT (frame1) != GST_VIDEO_FRAME_FORMAT (frame2))
+    return FALSE;
+  if (GST_VIDEO_FRAME_HEIGHT (frame1) != GST_VIDEO_FRAME_HEIGHT (frame2))
+    return FALSE;
+  if (GST_VIDEO_FRAME_WIDTH (frame1) != GST_VIDEO_FRAME_WIDTH (frame2))
+    return FALSE;
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -919,6 +932,8 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   GList *l;
   BlendFunction composite;
   GstVideoFrame out_frame, *outframe;
+  gboolean drew_background;
+  guint drawn_pads = 0;
 
   if (!gst_video_frame_map (&out_frame, &vagg->info, outbuf, GST_MAP_WRITE)) {
     GST_WARNING_OBJECT (vagg, "Could not map output buffer");
@@ -926,7 +941,7 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
   }
 
   outframe = &out_frame;
-  composite = _draw_background (vagg, outframe);
+  drew_background = _draw_background (vagg, outframe, &composite);
 
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
@@ -952,9 +967,18 @@ gst_compositor_aggregate_frames (GstVideoAggregator * vagg, GstBuffer * outbuf)
     }
 
     if (prepared_frame != NULL) {
-      composite (prepared_frame,
-          compo_pad->xpos,
-          compo_pad->ypos, compo_pad->alpha, outframe, blend_mode);
+      /* If this is the first pad we're drawing, and we didn't draw the
+       * background, and @prepared_frame has the same format, height, and width
+       * as @outframe, then we can just copy it as-is. Subsequent pads (if any)
+       * will be composited on top of it. */
+      if (drawn_pads == 0 && !drew_background &&
+          frames_can_copy (prepared_frame, outframe))
+        gst_video_frame_copy (outframe, prepared_frame);
+      else
+        composite (prepared_frame,
+            compo_pad->xpos,
+            compo_pad->ypos, compo_pad->alpha, outframe, blend_mode);
+      drawn_pads++;
     }
   }
   GST_OBJECT_UNLOCK (vagg);
