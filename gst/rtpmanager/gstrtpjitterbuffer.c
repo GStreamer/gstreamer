@@ -3534,6 +3534,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
           seqnum, GST_TIME_ARGS (GST_BUFFER_DTS (outbuf)),
           GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)));
       priv->num_pushed++;
+      GST_BUFFER_DTS (outbuf) = GST_CLOCK_TIME_NONE;
       result = gst_pad_push (priv->srcpad, outbuf);
 
       JBUF_LOCK_CHECK (priv, out_flushing);

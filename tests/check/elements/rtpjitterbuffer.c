@@ -198,7 +198,6 @@ check_jitterbuffer_results (gint num_buffers)
   for (node = buffers; node; node = g_list_next (node)) {
     fail_if ((buffer = (GstBuffer *) node->data) == NULL);
     fail_if (GST_BUFFER_PTS (buffer) != ts);
-    fail_if (GST_BUFFER_DTS (buffer) != ts);
     gst_buffer_map (buffer, &map, GST_MAP_READ);
     cur_sn = ((guint16) map.data[2] << 8) | map.data[3];
     cur_ts = ((guint32) map.data[4] << 24) | ((guint32) map.data[5] << 16) |
@@ -784,7 +783,6 @@ GST_START_TEST (test_only_one_lost_event_on_large_gaps)
   out_buf = gst_harness_pull (h);
   fail_unless (GST_BUFFER_FLAG_IS_SET (out_buf, GST_BUFFER_FLAG_DISCONT));
   fail_unless_equals_int (500, get_rtp_seq_num (out_buf));
-  fail_unless_equals_uint64 (10 * GST_SECOND, GST_BUFFER_DTS (out_buf));
   fail_unless_equals_uint64 (10 * GST_SECOND, GST_BUFFER_PTS (out_buf));
   gst_buffer_unref (out_buf);
 
@@ -1089,7 +1087,6 @@ GST_START_TEST (test_all_packets_are_timestamped_zero)
 
     /* check for the buffer coming out that was pushed in */
     out_buf = gst_harness_pull (h);
-    fail_unless_equals_uint64 (0, GST_BUFFER_DTS (out_buf));
     fail_unless_equals_uint64 (0, GST_BUFFER_PTS (out_buf));
     gst_buffer_unref (out_buf);
   }
