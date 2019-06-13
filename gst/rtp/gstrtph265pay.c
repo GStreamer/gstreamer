@@ -101,12 +101,13 @@ GST_STATIC_PAD_TEMPLATE ("src",
     /* "dec-parallel-cap = (string) ANY, " */
     );
 
-#define DEFAULT_CONFIG_INTERVAL		      0
+#define DEFAULT_CONFIG_INTERVAL         0
+
 
 enum
 {
   PROP_0,
-  PROP_CONFIG_INTERVAL
+  PROP_CONFIG_INTERVAL,
 };
 
 static void gst_rtp_h265_pay_finalize (GObject * object);
@@ -1157,7 +1158,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   /* now loop over all NAL units and put them in a packet
    * FIXME, we should really try to pack multiple NAL units into one RTP packet
-   * if we can, especially for the config packets that wont't cause decoder
+   * if we can, especially for the config packets that won't cause decoder
    * latency. */
   if (hevc) {
     guint nal_length_size;
