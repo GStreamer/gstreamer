@@ -897,7 +897,6 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
   for (i = 0; i < paybufs->len; i++) {
     guint8 nal_header[2];
     guint8 nal_type;
-    guint packet_len;
     GstBuffer *paybuf;
     gboolean send_ps;
     guint size;
@@ -917,8 +916,8 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
     gst_buffer_extract (paybuf, 0, nal_header, 2);
     nal_type = (nal_header[0] >> 1) & 0x3f;
 
-    GST_DEBUG_OBJECT (rtph265pay, "Processing Buffer with NAL TYPE=%d",
-        nal_type);
+    GST_DEBUG_OBJECT (rtph265pay, "payloading NAL Unit: datasize=%u type=%d"
+        " pts=%" GST_TIME_FORMAT, size, nal_type, GST_TIME_ARGS (pts));
 
     send_ps = FALSE;
 
@@ -993,27 +992,8 @@ gst_rtp_h265_pay_payload_nal (GstRTPBasePayload * basepayload,
       }
     }
 
-    packet_len = gst_rtp_buffer_calc_packet_len (size, 0, 0);
-
-    if (packet_len < mtu) {
-      GST_DEBUG_OBJECT (rtph265pay,
-          "NAL Unit fit in one packet datasize=%d mtu=%d", size, mtu);
-      /* will fit in one packet */
-
-      ret = gst_rtp_h265_pay_payload_nal_single (basepayload, paybuf, dts, pts,
-          marker);
-    } else {
-      /* fragmentation Units */
-
-      GST_DEBUG_OBJECT (basepayload,
-          "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", size, mtu);
-
-      GST_DEBUG_OBJECT (basepayload, "Using FU fragmentation for data size=%d",
-          size - 2);
-
-      ret = gst_rtp_h265_pay_payload_nal_fragment (basepayload, paybuf, dts,
-          pts, marker, mtu, nal_type, nal_header, size);
-    }
+    ret = gst_rtp_h265_pay_payload_nal_fragment (basepayload, paybuf, dts,
+        pts, marker, mtu, nal_type, nal_header, size);
   }
 
   g_ptr_array_free (paybufs, TRUE);
@@ -1073,8 +1053,22 @@ gst_rtp_h265_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   guint8 *payload;
 
+  if (gst_rtp_buffer_calc_packet_len (size, 0, 0) < mtu) {
+    GST_DEBUG_OBJECT (rtph265pay,
+        "NAL Unit fit in one packet datasize=%d mtu=%d", size, mtu);
+    /* will fit in one packet */
+    return gst_rtp_h265_pay_payload_nal_single (basepayload, paybuf, dts, pts,
+        marker);
+  }
+
+  GST_DEBUG_OBJECT (basepayload,
+      "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", size, mtu);
+
   pos += 2;
   size -= 2;
+
+  GST_DEBUG_OBJECT (basepayload, "Using FU fragmentation for data size=%d",
+      size);
 
   /* We keep 3 bytes for PayloadHdr and FU Header */
   payload_len = gst_rtp_buffer_calc_payload_len (mtu - 3, 0, 0);
