@@ -1670,7 +1670,7 @@ gst_queue_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
           && queue->leaky == GST_QUEUE_NO_LEAK)
         max += queue->max_size.time;
       else if (queue->max_size.time > 0 && queue->leaky != GST_QUEUE_NO_LEAK)
-        max = MIN (queue->max_size.time, max);
+        max = MAX (queue->max_size.time, max);
       else
         max = -1;
 
