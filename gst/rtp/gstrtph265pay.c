@@ -1045,11 +1045,9 @@ gst_rtp_h265_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
 {
   GstRtpH265Pay *rtph265pay = (GstRtpH265Pay *) basepayload;
   GstFlowReturn ret;
-  guint max_fragment_size;
+  guint max_fragment_size, ii, pos;
   GstBuffer *outbuf;
   GstBufferList *outlist = NULL;
-  guint fragment_size;
-  int ii = 0, start = 1, end = 0, pos = 0;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   guint8 *payload;
 
@@ -1064,22 +1062,27 @@ gst_rtp_h265_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
   GST_DEBUG_OBJECT (basepayload,
       "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", size, mtu);
 
-  pos += 2;
-  size -= 2;
-
   GST_DEBUG_OBJECT (basepayload, "Using FU fragmentation for data size=%d",
-      size);
+      size - 2);
 
   /* We keep 3 bytes for PayloadHdr and FU Header */
   max_fragment_size = gst_rtp_buffer_calc_payload_len (mtu - 3, 0, 0);
 
   outlist = gst_buffer_list_new ();
 
-  while (end == 0) {
-    fragment_size = size < max_fragment_size ? size : max_fragment_size;
+  for (pos = 2, ii = 0; pos < size; pos += max_fragment_size, ii++) {
+    guint remaining, fragment_size;
+    gboolean first_fragment, last_fragment;
+
+    remaining = size - pos;
+    fragment_size = MIN (remaining, max_fragment_size);
+    first_fragment = (pos == 2);
+    last_fragment = (remaining <= max_fragment_size);
+
     GST_DEBUG_OBJECT (basepayload,
-        "Inside  FU fragmentation fragment_size=%d iteration=%d",
-        fragment_size, ii);
+        "Inside  FU fragmentation fragment_size=%u iteration=%d %s%s",
+        fragment_size, ii, first_fragment ? "first" : "",
+        last_fragment ? "last" : "");
 
     /* use buffer lists
      * create buffer without payload containing only the RTP header
@@ -1092,21 +1095,17 @@ gst_rtp_h265_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
     GST_BUFFER_PTS (outbuf) = pts;
     payload = gst_rtp_buffer_get_payload (&rtp);
 
-    if (fragment_size == size) {
-      GST_DEBUG_OBJECT (basepayload, "end size=%d iteration=%d", size, ii);
-      end = 1;
-    }
-
     /* PayloadHdr (type = FU_TYPE_ID (49)) */
     payload[0] = (nal_header[0] & 0x81) | (FU_TYPE_ID << 1);
     payload[1] = nal_header[1];
 
     /* If it's the last fragment and the end of this au, mark the end of
      * slice */
-    gst_rtp_buffer_set_marker (&rtp, end && marker);
+    gst_rtp_buffer_set_marker (&rtp, last_fragment && marker);
 
     /* FU Header */
-    payload[2] = (start << 7) | (end << 6) | (nal_type & 0x3f);
+    payload[2] = (first_fragment << 7) | (last_fragment << 6) |
+        (nal_type & 0x3f);
 
     gst_rtp_buffer_unmap (&rtp);
 
@@ -1116,11 +1115,6 @@ gst_rtp_h265_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
         fragment_size);
     /* add the buffer to the buffer list */
     gst_buffer_list_add (outlist, outbuf);
-
-    size -= fragment_size;
-    pos += fragment_size;
-    ii++;
-    start = 0;
   }
 
   ret = gst_rtp_base_payload_push_list (basepayload, outlist);

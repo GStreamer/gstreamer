@@ -1340,10 +1340,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   ret = GST_FLOW_OK;
 
-  /* now loop over all NAL units and put them in a packet
-   * FIXME, we should really try to pack multiple NAL units into one RTP packet
-   * if we can, especially for the config packets that wont't cause decoder
-   * latency. */
+  /* now loop over all NAL units and put them in a packet */
   if (avc) {
     guint nal_length_size;
     gsize offset = 0;
