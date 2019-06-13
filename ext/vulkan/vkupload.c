@@ -683,6 +683,9 @@ struct RawToImageUpload
   GstBufferPool *pool;
   gboolean pool_active;
 
+  GstBufferPool *in_pool;
+  gboolean in_pool_active;
+
   GstVulkanCommandPool *cmd_pool;
   GList *trash_list;
 };
@@ -743,6 +746,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 {
   struct RawToImageUpload *raw = impl;
   GstFlowReturn ret;
+  GstBuffer *in_vk_copy = NULL;
   GError *error = NULL;
   VkResult err;
   VkCommandBuffer cmd;
@@ -804,11 +808,67 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     VkBufferMemoryBarrier buffer_memory_barrier;
 
     in_mem = gst_buffer_peek_memory (inbuf, i);
-    if (!gst_is_vulkan_buffer_memory (in_mem)) {
-      GST_WARNING_OBJECT (raw->upload, "Input is not a GstVulkanBufferMemory");
-      goto error;
+    if (gst_is_vulkan_buffer_memory (in_mem)) {
+      GST_TRACE_OBJECT (raw->upload, "Input is a GstVulkanBufferMemory");
+      buf_mem = (GstVulkanBufferMemory *) in_mem;
+    } else if (in_vk_copy) {
+      GST_TRACE_OBJECT (raw->upload,
+          "Have buffer copy of GstVulkanBufferMemory");
+      in_mem = gst_buffer_peek_memory (in_vk_copy, i);
+      g_assert (gst_is_vulkan_buffer_memory (in_mem));
+      buf_mem = (GstVulkanBufferMemory *) in_mem;
+    } else {
+      GstVideoFrame in_frame, out_frame;
+
+      GST_TRACE_OBJECT (raw->upload,
+          "Copying input to a new GstVulkanBufferMemory");
+      if (!raw->in_pool) {
+        GstStructure *config;
+        guint min = 0, max = 0;
+        gsize size = 1;
+
+        raw->in_pool = gst_vulkan_buffer_pool_new (raw->upload->device);
+        config = gst_buffer_pool_get_config (raw->pool);
+        gst_buffer_pool_config_set_params (config, raw->upload->in_caps, size,
+            min, max);
+        gst_buffer_pool_set_config (raw->in_pool, config);
+      }
+      if (!raw->in_pool_active) {
+        gst_buffer_pool_set_active (raw->in_pool, TRUE);
+        raw->in_pool_active = TRUE;
+      }
+
+      if ((ret =
+              gst_buffer_pool_acquire_buffer (raw->in_pool, &in_vk_copy,
+                  NULL)) != GST_FLOW_OK) {
+        goto out;
+      }
+
+      if (!gst_video_frame_map (&in_frame, &raw->in_info, inbuf, GST_MAP_READ)) {
+        GST_WARNING_OBJECT (raw->upload, "Failed to map input buffer");
+        goto error;
+      }
+
+      if (!gst_video_frame_map (&out_frame, &raw->in_info, in_vk_copy,
+              GST_MAP_WRITE)) {
+        gst_video_frame_unmap (&in_frame);
+        GST_WARNING_OBJECT (raw->upload, "Failed to map input buffer");
+        goto error;
+      }
+
+      if (!gst_video_frame_copy (&out_frame, &in_frame)) {
+        gst_video_frame_unmap (&in_frame);
+        gst_video_frame_unmap (&out_frame);
+        GST_WARNING_OBJECT (raw->upload, "Failed to copy input buffer");
+        goto error;
+      }
+
+      gst_video_frame_unmap (&in_frame);
+      gst_video_frame_unmap (&out_frame);
+
+      in_mem = gst_buffer_peek_memory (in_vk_copy, i);
+      buf_mem = (GstVulkanBufferMemory *) in_mem;
     }
-    buf_mem = (GstVulkanBufferMemory *) in_mem;
 
     out_mem = gst_buffer_peek_memory (*outbuf, i);
     if (!gst_is_vulkan_image_memory (out_mem)) {
@@ -881,8 +941,9 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   }
 
   err = vkEndCommandBuffer (cmd);
-  if (gst_vulkan_error_to_g_error (err, &error, "vkEndCommandBuffer") < 0)
-    return FALSE;
+  if (gst_vulkan_error_to_g_error (err, &error, "vkEndCommandBuffer") < 0) {
+    goto error;
+  }
 
   {
     VkSubmitInfo submit_info = { 0, };
@@ -921,6 +982,9 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   ret = GST_FLOW_OK;
 
 out:
+  if (in_vk_copy)
+    gst_buffer_unref (in_vk_copy);
+
   return ret;
 
 error:
@@ -946,6 +1010,15 @@ _raw_to_image_free (gpointer impl)
     raw->pool_active = FALSE;
     gst_object_unref (raw->pool);
     raw->pool = NULL;
+  }
+
+  if (raw->in_pool) {
+    if (raw->in_pool_active) {
+      gst_buffer_pool_set_active (raw->in_pool, FALSE);
+    }
+    raw->in_pool_active = FALSE;
+    gst_object_unref (raw->in_pool);
+    raw->in_pool = NULL;
   }
 
   if (raw->cmd_pool)
