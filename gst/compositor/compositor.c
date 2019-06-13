@@ -282,7 +282,8 @@ _mixer_pad_get_output_size (GstCompositorPad * comp_pad, gint out_par_n,
 
 /* Test whether rectangle2 contains rectangle 1 (geometrically) */
 static gboolean
-is_rectangle_contained (GstVideoRectangle rect1, GstVideoRectangle rect2)
+is_rectangle_contained (const GstVideoRectangle rect1,
+    const GstVideoRectangle rect2)
 {
   if ((rect2.x <= rect1.x) && (rect2.y <= rect1.y) &&
       ((rect2.x + rect2.w) >= (rect1.x + rect1.w)) &&
@@ -314,7 +315,7 @@ clamp_rectangle (gint x, gint y, gint w, gint h, gint outer_width,
 /* Call this with the lock taken */
 static gboolean
 _pad_obscures_rectangle (GstVideoAggregator * vagg, GstVideoAggregatorPad * pad,
-    GstVideoRectangle rect, gboolean rect_transparent)
+    const GstVideoRectangle rect, gboolean rect_transparent)
 {
   GstVideoRectangle pad_rect;
   GstCompositorPad *cpad = GST_COMPOSITOR_PAD (pad);
