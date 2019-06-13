@@ -1045,7 +1045,7 @@ gst_rtp_h265_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
 {
   GstRtpH265Pay *rtph265pay = (GstRtpH265Pay *) basepayload;
   GstFlowReturn ret;
-  guint payload_len;
+  guint max_fragment_size;
   GstBuffer *outbuf;
   GstBufferList *outlist = NULL;
   guint fragment_size;
@@ -1071,12 +1071,12 @@ gst_rtp_h265_pay_payload_nal_fragment (GstRTPBasePayload * basepayload,
       size);
 
   /* We keep 3 bytes for PayloadHdr and FU Header */
-  payload_len = gst_rtp_buffer_calc_payload_len (mtu - 3, 0, 0);
+  max_fragment_size = gst_rtp_buffer_calc_payload_len (mtu - 3, 0, 0);
 
   outlist = gst_buffer_list_new ();
 
   while (end == 0) {
-    fragment_size = size < payload_len ? size : payload_len;
+    fragment_size = size < max_fragment_size ? size : max_fragment_size;
     GST_DEBUG_OBJECT (basepayload,
         "Inside  FU fragmentation fragment_size=%d iteration=%d",
         fragment_size, ii);
