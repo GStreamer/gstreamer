@@ -57,7 +57,7 @@ void
 gst_omx_video_negotiation_map_free (GstOMXVideoNegotiationMap * m);
 
 GstVideoCodecFrame *
-gst_omx_video_find_nearest_frame (GstOMXBuffer * buf, GList * frames);
+gst_omx_video_find_nearest_frame (GstElement * element, GstOMXBuffer * buf, GList * frames);
 
 OMX_U32 gst_omx_video_calculate_framerate_q16 (GstVideoInfo * info);
 

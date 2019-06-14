@@ -181,7 +181,8 @@ gst_omx_video_negotiation_map_free (GstOMXVideoNegotiationMap * m)
 }
 
 GstVideoCodecFrame *
-gst_omx_video_find_nearest_frame (GstOMXBuffer * buf, GList * frames)
+gst_omx_video_find_nearest_frame (GstElement * element, GstOMXBuffer * buf,
+    GList * frames)
 {
   GstVideoCodecFrame *best = NULL;
   GstClockTimeDiff best_diff = G_MAXINT64;
@@ -192,9 +193,16 @@ gst_omx_video_find_nearest_frame (GstOMXBuffer * buf, GList * frames)
       gst_util_uint64_scale (GST_OMX_GET_TICKS (buf->omx_buf->nTimeStamp),
       GST_SECOND, OMX_TICKS_PER_SECOND);
 
+  GST_LOG_OBJECT (element, "look for ts %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
   for (l = frames; l; l = l->next) {
     GstVideoCodecFrame *tmp = l->data;
     GstClockTimeDiff diff = ABS (GST_CLOCK_DIFF (timestamp, tmp->pts));
+
+    GST_LOG_OBJECT (element,
+        "  frame %u diff %" G_GINT64_FORMAT " ts %" GST_TIME_FORMAT,
+        tmp->system_frame_number, diff, GST_TIME_ARGS (tmp->pts));
 
     if (diff < best_diff) {
       best = tmp;

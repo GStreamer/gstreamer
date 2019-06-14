@@ -1543,7 +1543,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
       gst_omx_buffer_flags_to_string (buf->omx_buf->nFlags),
       (guint64) GST_OMX_GET_TICKS (buf->omx_buf->nTimeStamp));
 
-  frame = gst_omx_video_find_nearest_frame (buf,
+  frame = gst_omx_video_find_nearest_frame (GST_ELEMENT_CAST (self), buf,
       gst_video_encoder_get_frames (GST_VIDEO_ENCODER (self)));
 
   g_assert (klass->handle_output_frame);

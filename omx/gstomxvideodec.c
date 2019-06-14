@@ -1716,7 +1716,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       gst_omx_buffer_flags_to_string (buf->omx_buf->nFlags),
       (guint64) GST_OMX_GET_TICKS (buf->omx_buf->nTimeStamp));
 
-  frame = gst_omx_video_find_nearest_frame (buf,
+  frame = gst_omx_video_find_nearest_frame (GST_ELEMENT_CAST (self), buf,
       gst_video_decoder_get_frames (GST_VIDEO_DECODER (self)));
 
   /* So we have a timestamped OMX buffer and get, or not, corresponding frame.
