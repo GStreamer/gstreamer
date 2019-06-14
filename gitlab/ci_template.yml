@@ -321,7 +321,7 @@ valgrind ges:
     - $CERBERO $CERBERO_ARGS show-config
     - $CERBERO $CERBERO_ARGS fetch-bootstrap --build-tools-only
     - $CERBERO $CERBERO_ARGS fetch-package --deps gstreamer-1.0
-    - $CERBERO $CERBERO_ARGS fetch-cache
+    - $CERBERO $CERBERO_ARGS fetch-cache --branch ${GST_UPSTREAM_BRANCH}
     - test "x${CERBERO_OVERRIDDEN_DIST_DIR}" != "x"
           && test -d ${CERBERO_HOME}/dist/${ARCH}
           && mkdir -p ${CERBERO_OVERRIDDEN_DIST_DIR}
@@ -371,7 +371,7 @@ valgrind ges:
           gstreamer-1.0 gst-plugins-base-1.0 gst-plugins-good-1.0
           gst-plugins-bad-1.0 gst-plugins-ugly-1.0 gst-rtsp-server-1.0
           gst-libav-1.0 gst-validate gst-editing-services-1.0 libnice
-    - $CERBERO $CERBERO_ARGS fetch-cache --skip-fetch --job-id=${CI_JOB_ID}
+    - $CERBERO $CERBERO_ARGS fetch-cache --branch ${GST_UPSTREAM_BRANCH} --skip-fetch --job-id=${CI_JOB_ID}
     - test "x${CERBERO_OVERRIDDEN_DIST_DIR}" != "x"
           && mkdir -p ${CERBERO_HOME}/dist/${ARCH}
           && rsync -aH ${CERBERO_OVERRIDDEN_DIST_DIR}/ ${CERBERO_HOME}/dist/${ARCH}
