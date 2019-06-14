@@ -46,7 +46,7 @@
  *
  * The message's structure contains these fields:
  *
- * * #gchar *`filename`: the filename where the buffer was written.
+ * * #gchararray `filename`: the filename where the buffer was written.
  * * #gint `index`: index of the buffer.
  * * #GstClockTime `timestamp`: the timestamp of the buffer.
  * * #GstClockTime `stream-time`: the stream time of the buffer.
