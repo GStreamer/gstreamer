@@ -235,7 +235,6 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
         case GL_UNSIGNED_BYTE:
           return USING_GLES2 (context)
               && !USING_GLES3 (context) ? GST_GL_RGBA : GST_GL_RGBA8;
-          break;
         case GL_UNSIGNED_SHORT:
           return GST_GL_RGBA16;
       }
@@ -245,7 +244,6 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
         case GL_UNSIGNED_BYTE:
           return USING_GLES2 (context)
               && !USING_GLES3 (context) ? GST_GL_RGB : GST_GL_RGB8;
-          break;
         case GL_UNSIGNED_SHORT_5_6_5:
           return GST_GL_RGB565;
         case GL_UNSIGNED_SHORT:
@@ -258,7 +256,6 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
           if (!USING_GLES3 (context) && USING_GLES2 (context) && ext_texture_rg)
             return GST_GL_RG;
           return GST_GL_RG8;
-          break;
       }
       break;
     case GST_GL_RED:
@@ -267,7 +264,6 @@ gst_gl_sized_gl_format_from_gl_format_type (GstGLContext * context,
           if (!USING_GLES3 (context) && USING_GLES2 (context) && ext_texture_rg)
             return GST_GL_RED;
           return GST_GL_R8;
-          break;
       }
       break;
     case GST_GL_RGBA8:
