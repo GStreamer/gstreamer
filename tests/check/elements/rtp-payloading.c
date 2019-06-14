@@ -63,7 +63,7 @@ rtp_pipeline_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
   len = gst_buffer_list_length (list);
   GST_LOG ("list length %u", len);
 
-  /* Loop through all groups */
+  /* Loop through all buffers */
   for (i = 0; i < len; i++) {
     GstBuffer *paybuf;
     GstMemory *mem;
