@@ -213,8 +213,19 @@ gst_omx_video_find_nearest_frame (GstElement * element, GstOMXBuffer * buf,
     }
   }
 
-  if (best)
+  if (best) {
     gst_video_codec_frame_ref (best);
+
+    /* OMX timestamps are in microseconds while gst ones are in nanoseconds.
+     * So if the difference between them is higher than 1 microsecond we likely
+     * picked the wrong frame. */
+    if (best_diff >= GST_USECOND)
+      GST_WARNING_OBJECT (element,
+          "Difference between ts (%" GST_TIME_FORMAT ") and frame %u (%"
+          GST_TIME_FORMAT ") seems too high (%" GST_TIME_FORMAT ")",
+          GST_TIME_ARGS (timestamp), best->system_frame_number,
+          GST_TIME_ARGS (best->pts), GST_TIME_ARGS (best_diff));
+  }
 
   g_list_foreach (frames, (GFunc) gst_video_codec_frame_unref, NULL);
   g_list_free (frames);
