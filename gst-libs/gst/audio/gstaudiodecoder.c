@@ -273,6 +273,10 @@ struct _GstAudioDecoderPrivate
   gboolean use_default_pad_acceptcaps;
 };
 
+/* cached quark to avoid contention on the global quark table lock */
+#define META_TAG_AUDIO meta_tag_audio_quark
+static GQuark meta_tag_audio_quark;
+
 static void gst_audio_decoder_finalize (GObject * object);
 static void gst_audio_decoder_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -440,6 +444,8 @@ gst_audio_decoder_class_init (GstAudioDecoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_decoder_src_query_default);
   audiodecoder_class->transform_meta =
       GST_DEBUG_FUNCPTR (gst_audio_decoder_transform_meta_default);
+
+  meta_tag_audio_quark = g_quark_from_static_string (GST_META_TAG_AUDIO_STR);
 }
 
 static void
@@ -1206,8 +1212,7 @@ gst_audio_decoder_transform_meta_default (GstAudioDecoder *
   tags = gst_meta_api_type_get_tags (info->api);
 
   if (!tags || (g_strv_length ((gchar **) tags) == 1
-          && gst_meta_api_type_has_tag (info->api,
-              g_quark_from_string (GST_META_TAG_AUDIO_STR))))
+          && gst_meta_api_type_has_tag (info->api, META_TAG_AUDIO)))
     return TRUE;
 
   return FALSE;

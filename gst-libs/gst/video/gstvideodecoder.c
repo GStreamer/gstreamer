@@ -426,6 +426,10 @@ struct _GstVideoDecoderPrivate
 static GstElementClass *parent_class = NULL;
 static gint private_offset = 0;
 
+/* cached quark to avoid contention on the global quark table lock */
+#define META_TAG_VIDEO meta_tag_video_quark
+static GQuark meta_tag_video_quark;
+
 static void gst_video_decoder_class_init (GstVideoDecoderClass * klass);
 static void gst_video_decoder_init (GstVideoDecoder * dec,
     GstVideoDecoderClass * klass);
@@ -589,6 +593,8 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
           "Max consecutive decoder errors before returning flow error",
           -1, G_MAXINT, DEFAULT_MAX_ERRORS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  meta_tag_video_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
 }
 
 static void
@@ -3030,8 +3036,7 @@ gst_video_decoder_transform_meta_default (GstVideoDecoder *
   tags = gst_meta_api_type_get_tags (info->api);
 
   if (!tags || (g_strv_length ((gchar **) tags) == 1
-          && gst_meta_api_type_has_tag (info->api,
-              g_quark_from_string (GST_META_TAG_VIDEO_STR))))
+          && gst_meta_api_type_has_tag (info->api, META_TAG_VIDEO)))
     return TRUE;
 
   return FALSE;

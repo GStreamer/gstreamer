@@ -97,6 +97,10 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (SUPPORTED_CAPS));
 
+/* cached quark to avoid contention on the global quark table lock */
+#define META_TAG_AUDIO meta_tag_audio_quark
+static GQuark meta_tag_audio_quark;
+
 static void gst_audio_resample_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_audio_resample_get_property (GObject * object,
@@ -215,6 +219,8 @@ gst_audio_resample_class_init (GstAudioResampleClass * klass)
   gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_RESAMPLER_FILTER_INTERPOLATION,
       0);
   gst_type_mark_as_plugin_api (GST_TYPE_AUDIO_RESAMPLER_FILTER_MODE, 0);
+
+  meta_tag_audio_quark = g_quark_from_static_string (GST_META_TAG_AUDIO_STR);
 }
 
 static void
@@ -943,8 +949,7 @@ gst_audio_resample_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
   tags = gst_meta_api_type_get_tags (info->api);
 
   if (!tags || (g_strv_length ((gchar **) tags) == 1
-          && gst_meta_api_type_has_tag (info->api,
-              g_quark_from_string (GST_META_TAG_AUDIO_STR))))
+          && gst_meta_api_type_has_tag (info->api, META_TAG_AUDIO)))
     return TRUE;
 
   return FALSE;

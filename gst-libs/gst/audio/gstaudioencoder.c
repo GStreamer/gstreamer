@@ -245,6 +245,10 @@ struct _GstAudioEncoderPrivate
 static GstElementClass *parent_class = NULL;
 static gint private_offset = 0;
 
+/* cached quark to avoid contention on the global quark table lock */
+#define META_TAG_AUDIO meta_tag_audio_quark
+static GQuark meta_tag_audio_quark;
+
 static void gst_audio_encoder_class_init (GstAudioEncoderClass * klass);
 static void gst_audio_encoder_init (GstAudioEncoder * parse,
     GstAudioEncoderClass * klass);
@@ -391,6 +395,8 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
   klass->decide_allocation = gst_audio_encoder_decide_allocation_default;
   klass->negotiate = gst_audio_encoder_negotiate_default;
   klass->transform_meta = gst_audio_encoder_transform_meta_default;
+
+  meta_tag_audio_quark = g_quark_from_static_string (GST_META_TAG_AUDIO_STR);
 }
 
 static void
@@ -668,8 +674,7 @@ gst_audio_encoder_transform_meta_default (GstAudioEncoder *
   tags = gst_meta_api_type_get_tags (info->api);
 
   if (!tags || (g_strv_length ((gchar **) tags) == 1
-          && gst_meta_api_type_has_tag (info->api,
-              g_quark_from_string (GST_META_TAG_AUDIO_STR))))
+          && gst_meta_api_type_has_tag (info->api, META_TAG_AUDIO)))
     return TRUE;
 
   return FALSE;
