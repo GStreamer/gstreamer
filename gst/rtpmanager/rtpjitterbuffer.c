@@ -103,8 +103,11 @@ rtp_jitter_buffer_finalize (GObject * object)
   if (jbuf->media_clock_synced_id)
     g_signal_handler_disconnect (jbuf->media_clock,
         jbuf->media_clock_synced_id);
-  if (jbuf->media_clock)
+  if (jbuf->media_clock) {
+    /* Make sure to clear any clock master before releasing the clock */
+    gst_clock_set_master (jbuf->media_clock, NULL);
     gst_object_unref (jbuf->media_clock);
+  }
 
   if (jbuf->pipeline_clock)
     gst_object_unref (jbuf->pipeline_clock);
