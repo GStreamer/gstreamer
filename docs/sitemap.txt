@@ -6,6 +6,7 @@ index.md
 	gst-validate-scenarios.md
 	gst-validate-environment-variables.md
 	gst-validate-action-types.md
+	ges-validate-action-types.md
 	gi-index
 	plugins/index.md
 		plugins/ssim.md

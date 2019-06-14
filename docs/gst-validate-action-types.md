@@ -1,4 +1,5 @@
 # GstValidate action types
+
 ## description
 
 
@@ -478,7 +479,7 @@ Changes the state of the pipeline to any GstState
 
   Default: 0.0
 
-* `state`:(mandatory): A GstState as a string, should be in: 
+* `state`:(mandatory): A GstState as a string, should be in:
     * ['null', 'ready', 'paused', 'playing']
 
   Possible types: `string`
