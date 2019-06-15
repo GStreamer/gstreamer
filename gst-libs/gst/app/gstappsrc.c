@@ -75,7 +75,7 @@
  *
  * The pull mode, in which the need-data signal triggers the next push-buffer call.
  * This mode is typically used in the "random-access" stream-type. Use this
- * mode for file access or other randomly accessable sources. In this mode, a
+ * mode for file access or other randomly accessible sources. In this mode, a
  * buffer of exactly the amount of bytes given by the need-data signal should be
  * pushed into appsrc.
  *
