@@ -135,25 +135,19 @@ ges_demux_class_init (GESDemuxClass * self_class)
 typedef struct
 {
   GESTimeline *timeline;
-  gchar *uri;
   GMainLoop *ml;
   GError *error;
-  GMutex lock;
-  GCond cond;
   gulong loaded_sigid;
   gulong error_sigid;
-  GESDemux *self;
 } TimelineConstructionData;
 
 static void
 project_loaded_cb (GESProject * project, GESTimeline * timeline,
     TimelineConstructionData * data)
 {
-  g_mutex_lock (&data->lock);
   data->timeline = timeline;
   g_signal_handler_disconnect (project, data->loaded_sigid);
   data->loaded_sigid = 0;
-  g_mutex_unlock (&data->lock);
 
   g_main_loop_quit (data->ml);
 }
@@ -162,69 +156,55 @@ static void
 error_loading_asset_cb (GESProject * project, GError * error, gchar * id,
     GType extractable_type, TimelineConstructionData * data)
 {
-  g_mutex_lock (&data->lock);
   data->error = g_error_copy (error);
   g_signal_handler_disconnect (project, data->error_sigid);
   data->error_sigid = 0;
-  g_mutex_unlock (&data->lock);
 
   g_main_loop_quit (data->ml);
 }
 
 static gboolean
-ges_timeline_new_from_uri_from_main_thread (TimelineConstructionData * data)
+ges_demux_create_timeline (GESDemux * self, gchar * uri, GError ** error)
 {
-  GESProject *project = ges_project_new (data->uri);
+  GESProject *project = ges_project_new (uri);
   G_GNUC_UNUSED void *unused;
+  TimelineConstructionData data = { 0, };
+  GMainContext *ctx = g_main_context_new ();
 
-  g_mutex_lock (&data->lock);
-  klass->discoverer = gst_discoverer_new (timeout, &data->error);
-  g_object_set (klass->discoverer, "use-cache", TRUE, NULL);
-  if (data->error) {
-    g_mutex_unlock (&data->lock);
+  g_main_context_push_thread_default (ctx);
+  data.ml = g_main_loop_new (ctx, TRUE);
 
-    goto done;
-  }
-  g_signal_connect (klass->discoverer, "discovered",
-      G_CALLBACK (klass->discovered), NULL);
-  gst_discoverer_start (klass->discoverer);
-
-  data->ml = g_main_loop_new (NULL, TRUE);
-  data->loaded_sigid =
+  data.loaded_sigid =
       g_signal_connect (project, "loaded", G_CALLBACK (project_loaded_cb),
-      data);
-  data->error_sigid =
-      g_signal_connect (project, "error-loading-asset",
-      G_CALLBACK (error_loading_asset_cb), data);
+      &data);
+  data.error_sigid =
+      g_signal_connect_after (project, "error-loading-asset",
+      G_CALLBACK (error_loading_asset_cb), &data);
 
-  unused = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &data->error));
-  if (data->error) {
-    g_mutex_unlock (&data->lock);
+  unused = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &data.error));
+  if (data.error) {
+    *error = data.error;
 
     goto done;
   }
-  g_mutex_unlock (&data->lock);
 
-  g_main_loop_run (data->ml);
-  g_main_loop_unref (data->ml);
+  g_main_loop_run (data.ml);
+  g_main_loop_unref (data.ml);
 
 done:
+  if (data.loaded_sigid)
+    g_signal_handler_disconnect (project, data.loaded_sigid);
 
-  g_mutex_lock (&data->lock);
+  if (data.error_sigid)
+    g_signal_handler_disconnect (project, data.error_sigid);
 
-  if (data->loaded_sigid)
-    g_signal_handler_disconnect (project, data->loaded_sigid);
+  g_clear_object (&project);
 
-  if (data->error_sigid)
-    g_signal_handler_disconnect (project, data->error_sigid);
+  GST_INFO_OBJECT (self, "Timeline properly loaded: %" GST_PTR_FORMAT,
+      data.timeline);
+  ges_base_bin_set_timeline (GES_BASE_BIN (self), data.timeline);
 
-  gst_clear_object (&project);
-
-  GST_INFO_OBJECT (data->self, "Timeline properly loaded: %" GST_PTR_FORMAT,
-      data->timeline);
-  ges_base_bin_set_timeline (GES_BASE_BIN (data->self), data->timeline);
-  g_cond_broadcast (&data->cond);
-  g_mutex_unlock (&data->lock);
+  g_main_context_pop_thread_default (ctx);
 
   return G_SOURCE_REMOVE;
 }
@@ -253,9 +233,8 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       if (gst_buffer_map (xges_buffer, &map, GST_MAP_READ)) {
         GError *err = NULL;
         gchar *filename = NULL, *uri = NULL;
-        TimelineConstructionData data = { 0, };
+        GError *error = NULL;
         gint f = g_file_open_tmp (NULL, &filename, &err);
-        GMainContext *main_context = g_main_context_default ();
 
         if (err) {
           GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE,
@@ -275,34 +254,25 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
 
         uri = gst_filename_to_uri (filename, NULL);
-        data.uri = uri;
-        data.self = self;
+        GST_INFO_OBJECT (self, "Pre loading the timeline.");
 
-        g_main_context_invoke (main_context,
-            (GSourceFunc) ges_timeline_new_from_uri_from_main_thread, &data);
-        g_mutex_lock (&data.lock);
-        while (!data.error && !data.timeline)
-          g_cond_wait (&data.cond, &data.lock);
-        data.loaded_sigid = 0;
-        data.error_sigid = 0;
-        g_mutex_unlock (&data.lock);
-
-        if (data.error) {
-          GST_ELEMENT_ERROR (self, STREAM, DEMUX,
-              ("Could not create timeline from description"),
-              ("%s", data.error->message));
-          g_clear_error (&data.error);
-
+        ges_demux_create_timeline (self, uri, &error);
+        if (error)
           goto error;
-        }
 
       done:
         g_free (filename);
         g_free (uri);
         g_close (f, NULL);
         return ret;
+
       error:
         ret = FALSE;
+        gst_element_post_message (GST_ELEMENT (self),
+            gst_message_new_error (parent, error,
+                "Could not create timeline from description"));
+        g_clear_error (&error);
+
         goto done;
       } else {
         GST_ELEMENT_ERROR (self, RESOURCE, READ,
