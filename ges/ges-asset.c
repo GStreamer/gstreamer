@@ -756,13 +756,20 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
         (gpointer) ges_asset_get_id (proxy));
 
     if (!entry) {
-      GST_DEBUG_OBJECT (asset, "Not proxying any asset");
+      GST_DEBUG_OBJECT (asset, "Not proxying any asset %s", proxy->priv->id);
       return FALSE;
     }
 
     asset = entry->asset;
     while (asset->priv->proxies)
       asset = asset->priv->proxies->data;
+
+    if (asset == proxy)
+      return FALSE;
+
+    GST_INFO_OBJECT (asset, "%s Making sure the proxy chain is fully set.",
+        ges_asset_get_id (entry->asset));
+    ges_asset_set_proxy (NULL, asset);
   }
 
   if (proxy->priv->proxy_target) {
