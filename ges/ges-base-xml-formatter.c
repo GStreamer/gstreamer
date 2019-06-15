@@ -36,60 +36,12 @@ GST_DEBUG_CATEGORY_STATIC (base_xml_formatter);
 
 static gboolean _loading_done_cb (GESFormatter * self);
 
-typedef struct PendingEffects
-{
-  gchar *track_id;
-  GESTrackElement *trackelement;
-  GstStructure *children_properties;
-  GstStructure *properties;
-
-} PendingEffects;
-
-typedef struct PendingBinding
-{
-  gchar *track_id;
-  GstControlSource *source;
-  gchar *propname;
-  gchar *binding_type;
-} PendingBinding;
-
-typedef struct PendingChildProperties
-{
-  gchar *track_id;
-  GstStructure *structure;
-} PendingChildProperties;
-
 typedef struct PendingGroup
 {
   GESGroup *group;
 
   GList *pending_children;
 } PendingGroup;
-
-typedef struct PendingClip
-{
-  gchar *id;
-  guint layer_prio;
-  GstClockTime start;
-  GstClockTime inpoint;
-  GESAsset *asset;
-  GstClockTime duration;
-  GESTrackType track_types;
-  GESLayer *layer;
-
-  GstStructure *properties;
-  GstStructure *children_properties;
-  gchar *metadatas;
-
-  GList *effects;
-
-  GList *pending_bindings;
-
-  GList *children_props;
-
-  /* TODO Implement asset effect management
-   * PendingTrackElements *track_elements; */
-} PendingClip;
 
 typedef struct LayerEntry
 {
@@ -114,12 +66,6 @@ struct _GESBaseXmlFormatterPrivate
   gsize xmlsize;
   gboolean check_only;
 
-  /* Asset.id -> PendingClip */
-  GHashTable *assetid_pendingclips;
-
-  /* Clip.ID -> Pending */
-  GHashTable *clipid_pendings;
-
   /* Clip.ID -> Clip */
   GHashTable *containers;
 
@@ -136,7 +82,6 @@ struct _GESBaseXmlFormatterPrivate
   GESTrackElement *current_track_element;
 
   GESClip *current_clip;
-  PendingClip *current_pending_clip;
 
   gboolean timeline_auto_transition;
 
@@ -157,9 +102,6 @@ static void new_asset_cb (GESAsset * source, GAsyncResult * res,
 
 
 static void
-_free_pending_clip (GESBaseXmlFormatterPrivate * priv, PendingClip * pend);
-
-static void
 _free_layer_entry (LayerEntry * entry)
 {
   gst_object_unref (entry->layer);
@@ -174,21 +116,6 @@ _free_pending_group (PendingGroup * pgroup)
   g_list_free_full (pgroup->pending_children, g_free);
   g_slice_free (PendingGroup, pgroup);
 }
-
-/*
-enum
-{
-  PROP_0,
-  PROP_LAST
-};
-static GParamSpec *properties[PROP_LAST];
-
-enum
-{
-  LAST_SIGNAL
-};
-static guint signals[LAST_SIGNAL];
-*/
 
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESBaseXmlFormatter,
     ges_base_xml_formatter, GES_TYPE_FORMATTER);
@@ -333,8 +260,7 @@ _load_from_uri (GESFormatter * self, GESTimeline * timeline, const gchar * uri,
   if (!priv->parsecontext)
     return FALSE;
 
-  if (g_hash_table_size (priv->assetid_pendingclips) == 0 &&
-      priv->pending_assets == NULL)
+  if (priv->pending_assets == NULL)
     g_idle_add ((GSourceFunc) _loading_done_cb, g_object_ref (self));
 
   return TRUE;
@@ -421,16 +347,8 @@ static void
 _dispose (GObject * object)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (object);
-  GList *pendings, *pending_clips_lists;
 
-  pending_clips_lists = g_hash_table_get_values (priv->assetid_pendingclips);
-  for (pendings = pending_clips_lists; pendings; pendings = pendings->next)
-    g_list_free_full (pendings, (GDestroyNotify) _free_pending_clip);
-  g_list_free (pending_clips_lists);
-
-  g_clear_pointer (&priv->assetid_pendingclips, g_hash_table_unref);
   g_clear_pointer (&priv->containers, g_hash_table_unref);
-  g_clear_pointer (&priv->clipid_pendings, g_hash_table_unref);
   g_clear_pointer (&priv->tracks, g_hash_table_unref);
   g_clear_pointer (&priv->layers, g_hash_table_unref);
 
@@ -465,11 +383,6 @@ ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
   priv->parsecontext = NULL;
   priv->pending_assets = NULL;
 
-  /* The PendingClip are owned by the assetid_pendingclips table */
-  priv->assetid_pendingclips = g_hash_table_new_full (g_str_hash,
-      g_str_equal, g_free, NULL);
-  priv->clipid_pendings = g_hash_table_new_full (g_str_hash,
-      g_str_equal, g_free, NULL);
   priv->containers = g_hash_table_new_full (g_str_hash,
       g_str_equal, g_free, gst_object_unref);
   priv->tracks = g_hash_table_new_full (g_str_hash,
@@ -478,7 +391,6 @@ ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
       g_direct_equal, NULL, (GDestroyNotify) _free_layer_entry);
   priv->current_track_element = NULL;
   priv->current_clip = NULL;
-  priv->current_pending_clip = NULL;
   priv->timeline_auto_transition = FALSE;
 }
 
@@ -573,8 +485,7 @@ _loading_done (GESFormatter * self)
   if (priv->first_pass) {
     GST_INFO_OBJECT (self, "Assets cached... now loading the timeline.");
     _parse (GES_BASE_XML_FORMATTER (self), NULL, FALSE);
-    g_assert (g_hash_table_size (priv->assetid_pendingclips) == 0
-        && priv->pending_assets == NULL);
+    g_assert (priv->pending_assets == NULL);
   }
 
   _add_all_groups (self);
@@ -690,51 +601,6 @@ _add_track_element (GESFormatter * self, GESClip * clip,
 }
 
 static void
-_free_pending_children_props (PendingChildProperties * pend)
-{
-  g_free (pend->track_id);
-  if (pend->structure)
-    gst_structure_free (pend->structure);
-}
-
-static void
-_free_pending_binding (PendingBinding * pend)
-{
-  g_free (pend->propname);
-  g_free (pend->binding_type);
-  g_free (pend->track_id);
-}
-
-static void
-_free_pending_effect (PendingEffects * pend)
-{
-  g_free (pend->track_id);
-  gst_object_unref (pend->trackelement);
-  if (pend->children_properties)
-    gst_structure_free (pend->children_properties);
-  if (pend->properties)
-    gst_structure_free (pend->properties);
-
-  g_slice_free (PendingEffects, pend);
-}
-
-static void
-_free_pending_clip (GESBaseXmlFormatterPrivate * priv, PendingClip * pend)
-{
-  gst_object_unref (pend->layer);
-  if (pend->properties)
-    gst_structure_free (pend->properties);
-  g_list_free_full (pend->effects, (GDestroyNotify) _free_pending_effect);
-  g_list_free_full (pend->pending_bindings,
-      (GDestroyNotify) _free_pending_binding);
-  g_list_free_full (pend->children_props,
-      (GDestroyNotify) _free_pending_children_props);
-  g_hash_table_remove (priv->clipid_pendings, pend->id);
-  g_free (pend->id);
-  g_slice_free (PendingClip, pend);
-}
-
-static void
 _free_pending_asset (GESBaseXmlFormatterPrivate * priv, PendingAsset * passet)
 {
   g_free (passet->metadatas);
@@ -748,44 +614,10 @@ _free_pending_asset (GESBaseXmlFormatterPrivate * priv, PendingAsset * passet)
 }
 
 static void
-_add_children_properties (GESBaseXmlFormatterPrivate * priv, GList * childprops,
-    GESClip * clip)
-{
-  GList *tmpchildprops;
-
-  for (tmpchildprops = childprops; tmpchildprops;
-      tmpchildprops = tmpchildprops->next) {
-    PendingChildProperties *pchildprops = tmpchildprops->data;
-    GESTrackElement *element =
-        _get_element_by_track_id (priv, pchildprops->track_id, clip);
-    if (element && pchildprops->structure)
-      gst_structure_foreach (pchildprops->structure,
-          (GstStructureForeachFunc) _set_child_property, element);
-  }
-}
-
-static void
-_add_pending_bindings (GESBaseXmlFormatterPrivate * priv, GList * bindings,
-    GESClip * clip)
-{
-  GList *tmpbinding;
-
-  for (tmpbinding = bindings; tmpbinding; tmpbinding = tmpbinding->next) {
-    PendingBinding *pbinding = tmpbinding->data;
-    GESTrackElement *element =
-        _get_element_by_track_id (priv, pbinding->track_id, clip);
-    if (element)
-      ges_track_element_set_control_source (element,
-          pbinding->source, pbinding->propname, pbinding->binding_type);
-  }
-}
-
-static void
 new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
 {
   GError *error = NULL;
   gchar *possible_id = NULL;
-  GList *tmp, *pendings = NULL;
   GESFormatter *self = passet->formatter;
   const gchar *id = ges_asset_get_id (source);
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
@@ -811,27 +643,16 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
           "- Error: %s", g_type_name (G_OBJECT_TYPE (source)), id,
           error->message);
 
-      pendings = g_hash_table_lookup (priv->assetid_pendingclips, id);
       _free_pending_asset (priv, passet);
       goto done;
     }
 
-    /* We got a possible ID replacement for that asset, create it, and
-     * make sure the assetid_pendingclips will use it */
+    /* We got a possible ID replacement for that asset, create it */
     ges_asset_request_async (ges_asset_get_extractable_type (source),
         possible_id, NULL, (GAsyncReadyCallback) new_asset_cb, passet);
     ges_project_add_loading_asset (GES_FORMATTER (self)->project,
         ges_asset_get_extractable_type (source), possible_id);
 
-    pendings = g_hash_table_lookup (priv->assetid_pendingclips, id);
-    if (pendings) {
-      g_hash_table_remove (priv->assetid_pendingclips, id);
-      g_hash_table_insert (priv->assetid_pendingclips,
-          g_strdup (possible_id), pendings);
-
-      /* pendings should no be freed */
-      pendings = NULL;
-    }
     goto done;
   }
 
@@ -840,37 +661,6 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
      * this will finally be set as the proxy when we
      * are done loading all assets */
     ges_asset_try_proxy (asset, passet->proxy_id);
-  }
-
-  /* now that we have the GESAsset, we create the GESClips */
-  pendings = g_hash_table_lookup (priv->assetid_pendingclips, id);
-  GST_DEBUG_OBJECT (self, "Asset created with ID %s, now creating pending "
-      " Clips, nb pendings: %i", id, g_list_length (pendings));
-  for (tmp = pendings; tmp; tmp = tmp->next) {
-    GList *tmpeffect;
-    GESClip *clip;
-    PendingClip *pend = (PendingClip *) tmp->data;
-
-    clip =
-        _add_object_to_layer (priv, pend->id, pend->layer, asset,
-        pend->start, pend->inpoint, pend->duration, pend->track_types,
-        pend->metadatas, pend->properties, pend->children_properties);
-
-    if (clip == NULL)
-      continue;
-
-    _add_children_properties (priv, pend->children_props, clip);
-    _add_pending_bindings (priv, pend->pending_bindings, clip);
-
-    GST_DEBUG_OBJECT (self, "Adding %i effect to new object",
-        g_list_length (pend->effects));
-    for (tmpeffect = pend->effects; tmpeffect; tmpeffect = tmpeffect->next) {
-      PendingEffects *peffect = (PendingEffects *) tmpeffect->data;
-
-      /* We keep a ref as _free_pending_effect unrefs it */
-      _add_track_element (self, clip, gst_object_ref (peffect->trackelement),
-          peffect->track_id, peffect->children_properties, peffect->properties);
-    }
   }
 
   /* And now add to the project */
@@ -887,15 +677,7 @@ done:
 
   g_clear_error (&error);
 
-  if (pendings) {
-    for (tmp = pendings; tmp; tmp = tmp->next)
-      _free_pending_clip (priv, tmp->data);
-    g_hash_table_remove (priv->assetid_pendingclips, id);
-    g_list_free (pendings);
-  }
-
-  if (g_hash_table_size (priv->assetid_pendingclips) == 0 &&
-      priv->pending_assets == NULL)
+  if (priv->pending_assets == NULL)
     _loading_done (self);
 }
 
@@ -1241,26 +1023,8 @@ ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
 
   if (track_id[0] != '-' && priv->current_clip)
     element = _get_element_by_track_id (priv, track_id, priv->current_clip);
-
-  else if (track_id[0] != '-' && priv->current_pending_clip) {
-    PendingBinding *pbinding;
-
-    pbinding = g_slice_new0 (PendingBinding);
-    pbinding->source = gst_interpolation_control_source_new ();
-    g_object_set (pbinding->source, "mode", mode, NULL);
-    gst_timed_value_control_source_set_from_list (GST_TIMED_VALUE_CONTROL_SOURCE
-        (pbinding->source), timed_values);
-    pbinding->propname = g_strdup (property_name);
-    pbinding->binding_type = g_strdup (binding_type);
-    pbinding->track_id = g_strdup (track_id);
-    priv->current_pending_clip->pending_bindings =
-        g_list_append (priv->current_pending_clip->pending_bindings, pbinding);
-    return;
-  }
-
-  else {
+  else
     element = priv->current_track_element;
-  }
 
   if (element == NULL) {
     GST_WARNING ("No current track element to which we can append a binding");
@@ -1296,20 +1060,8 @@ ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
 
   if (track_id[0] != '-' && priv->current_clip)
     element = _get_element_by_track_id (priv, track_id, priv->current_clip);
-
-  else if (track_id[0] != '-' && priv->current_pending_clip) {
-    PendingChildProperties *pchildprops;
-
-    pchildprops = g_slice_new0 (PendingChildProperties);
-    pchildprops->track_id = g_strdup (track_id);
-    pchildprops->structure = children_properties ?
-        gst_structure_copy (children_properties) : NULL;
-    priv->current_pending_clip->children_props =
-        g_list_append (priv->current_pending_clip->children_props, pchildprops);
-    return;
-  } else {
+  else
     element = priv->current_track_element;
-  }
 
   if (element == NULL) {
     GST_WARNING
@@ -1370,29 +1122,8 @@ ges_base_xml_formatter_add_track_element (GESBaseXmlFormatter * self,
           (trackelement), metadatas);
 
     clip = g_hash_table_lookup (priv->containers, timeline_obj_id);
-    if (clip) {
-      _add_track_element (GES_FORMATTER (self), clip, trackelement, track_id,
-          children_properties, properties);
-    } else {
-      PendingEffects *peffect;
-      PendingClip *pend = g_hash_table_lookup (priv->clipid_pendings,
-          timeline_obj_id);
-      if (pend == NULL) {
-        GST_WARNING_OBJECT (self, "No Clip with id: %s can not "
-            "add TrackElement", timeline_obj_id);
-        goto out;
-      }
-
-      peffect = g_slice_new0 (PendingEffects);
-
-      peffect->trackelement = trackelement;
-      peffect->track_id = g_strdup (track_id);
-      peffect->properties = properties ? gst_structure_copy (properties) : NULL;
-      peffect->children_properties = children_properties ?
-          gst_structure_copy (children_properties) : NULL;
-
-      pend->effects = g_list_append (pend->effects, peffect);
-    }
+    _add_track_element (GES_FORMATTER (self), clip, trackelement, track_id,
+        children_properties, properties);
     priv->current_track_element = trackelement;
   }
 
