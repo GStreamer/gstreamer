@@ -59,12 +59,24 @@ typedef struct PendingAsset
   gchar *id;
 } PendingAsset;
 
+/* @STATE_CHECK_LOADABLE: Quickly check if XML is valid
+ * @STATE_ASSETS: start loading all assets asynchronously
+ * and setup all elements that are synchronously loadable (tracks, and layers basically).
+ * @STATE_LOADING_CLIPS: adding clips and groups to the timeline
+ */
+typedef enum
+{
+  STATE_CHECK_LOADABLE,
+  STATE_LOADING_ASSETS_AND_SYNC,
+  STATE_LOADING_CLIPS,
+} LoadingState;
+
 struct _GESBaseXmlFormatterPrivate
 {
   GMarkupParseContext *parsecontext;
   gchar *xmlcontent;
   gsize xmlsize;
-  gboolean check_only;
+  LoadingState state;
 
   /* Clip.ID -> Clip */
   GHashTable *containers;
@@ -86,19 +98,25 @@ struct _GESBaseXmlFormatterPrivate
   gboolean timeline_auto_transition;
 
   GList *groups;
-
-  /* %TRUE if running the first pass, %FALSE otherwise.
-
-   * During the first pass we start loading all assets asynchronously
-   * and setup all elements that are synchronously loadable (tracks, and layers basically).
-   *
-   * In the second pass we add clips and groups o the timeline
-   */
-  gboolean first_pass;
 };
 
 static void new_asset_cb (GESAsset * source, GAsyncResult * res,
     PendingAsset * passet);
+
+static const gchar *
+loading_state_name (LoadingState state)
+{
+  switch (state) {
+    case STATE_CHECK_LOADABLE:
+      return "check-loadable";
+    case STATE_LOADING_ASSETS_AND_SYNC:
+      return "loading-assets-and-sync";
+    case STATE_LOADING_CLIPS:
+      return "loading-clips";
+  }
+
+  return "??";
+}
 
 
 static void
@@ -132,7 +150,7 @@ compare_assets_for_loading (PendingAsset * a, PendingAsset * b)
 }
 
 static GMarkupParseContext *
-_parse (GESBaseXmlFormatter * self, GError ** error, gboolean first_pass)
+_parse (GESBaseXmlFormatter * self, GError ** error, LoadingState state)
 {
   GError *err = NULL;
   GMarkupParseContext *parsecontext = NULL;
@@ -150,8 +168,8 @@ _parse (GESBaseXmlFormatter * self, GError ** error, gboolean first_pass)
   parsecontext = g_markup_parse_context_new (&self_class->content_parser,
       G_MARKUP_TREAT_CDATA_AS_TEXT, self, NULL);
 
-  priv->first_pass = first_pass;
-  GST_DEBUG_OBJECT (self, "Running %s pass", first_pass ? "first" : "second");
+  priv->state = state;
+  GST_DEBUG_OBJECT (self, "Running %s pass", loading_state_name (state));
   if (!g_markup_parse_context_parse (parsecontext, priv->xmlcontent,
           priv->xmlsize, &err))
     goto failed;
@@ -191,7 +209,7 @@ failed:
 
 static GMarkupParseContext *
 _load_and_parse (GESBaseXmlFormatter * self, const gchar * uri, GError ** error,
-    gboolean first_pass)
+    LoadingState state)
 {
   GFile *file = NULL;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
@@ -213,7 +231,7 @@ _load_and_parse (GESBaseXmlFormatter * self, const gchar * uri, GError ** error,
           NULL, &err))
     goto failed;
 
-  return _parse (self, error, first_pass);
+  return _parse (self, error, state);
 
 failed:
   GST_WARNING ("failed to load contents from \"%s\"", uri);
@@ -234,11 +252,7 @@ _can_load_uri (GESFormatter * dummy_formatter, const gchar * uri,
   GMarkupParseContext *ctx;
   GESBaseXmlFormatter *self = GES_BASE_XML_FORMATTER (dummy_formatter);
 
-  /* we create a temporary object so we can use it as a context */
-  _GET_PRIV (self)->check_only = TRUE;
-
-
-  ctx = _load_and_parse (self, uri, error, TRUE);
+  ctx = _load_and_parse (self, uri, error, STATE_CHECK_LOADABLE);
   if (!ctx)
     return FALSE;
 
@@ -255,7 +269,8 @@ _load_from_uri (GESFormatter * self, GESTimeline * timeline, const gchar * uri,
   ges_timeline_set_auto_transition (timeline, FALSE);
 
   priv->parsecontext =
-      _load_and_parse (GES_BASE_XML_FORMATTER (self), uri, error, TRUE);
+      _load_and_parse (GES_BASE_XML_FORMATTER (self), uri, error,
+      STATE_LOADING_ASSETS_AND_SYNC);
 
   if (!priv->parsecontext)
     return FALSE;
@@ -379,7 +394,6 @@ ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
 
   priv = self->priv;
 
-  priv->check_only = FALSE;
   priv->parsecontext = NULL;
   priv->pending_assets = NULL;
 
@@ -482,9 +496,9 @@ _loading_done (GESFormatter * self)
   }
   g_list_free_full (assets, g_object_unref);
 
-  if (priv->first_pass) {
+  if (priv->state == STATE_LOADING_ASSETS_AND_SYNC) {
     GST_INFO_OBJECT (self, "Assets cached... now loading the timeline.");
-    _parse (GES_BASE_XML_FORMATTER (self), NULL, FALSE);
+    _parse (GES_BASE_XML_FORMATTER (self), NULL, STATE_LOADING_CLIPS);
     g_assert (priv->pending_assets == NULL);
   }
 
@@ -803,14 +817,12 @@ ges_base_xml_formatter_add_asset (GESBaseXmlFormatter * self,
   PendingAsset *passet;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
-  if (!priv->first_pass) {
-    GST_INFO ("Already parsed assets");
+  if (priv->state != STATE_LOADING_ASSETS_AND_SYNC) {
+    GST_INFO ("Not parsing assets in %s state",
+        loading_state_name (priv->state));
 
     return;
   }
-
-  if (priv->check_only)
-    return;
 
   passet = g_slice_new0 (PendingAsset);
   passet->metadatas = g_strdup (metadatas);
@@ -836,13 +848,11 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
   LayerEntry *entry;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
-  if (priv->first_pass) {
-    GST_DEBUG_OBJECT (self, "First pass, not adding clip related objects");
+  if (priv->state != STATE_LOADING_CLIPS) {
+    GST_DEBUG_OBJECT (self, "Not adding clip in %s state.",
+        loading_state_name (priv->state));
     return;
   }
-
-  if (priv->check_only)
-    return;
 
   entry = g_hash_table_lookup (priv->layers, GINT_TO_POINTER (layer_prio));
   if (entry == NULL) {
@@ -917,13 +927,11 @@ ges_base_xml_formatter_add_layer (GESBaseXmlFormatter * self,
   gboolean auto_transition = FALSE;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
-  if (!priv->first_pass) {
-    GST_INFO_OBJECT (self, "Second pass, layers are already loaded.");
+  if (priv->state != STATE_LOADING_ASSETS_AND_SYNC) {
+    GST_INFO_OBJECT (self, "Not loading layer in %s state.",
+        loading_state_name (priv->state));
     return;
   }
-
-  if (priv->check_only)
-    return;
 
   if (extractable_type == G_TYPE_NONE)
     layer = ges_layer_new ();
@@ -971,12 +979,9 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
   GESTrack *track;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
-  if (!priv->first_pass) {
-    GST_DEBUG_OBJECT (self, "Second pass, tracks are already set.");
-    return;
-  }
-
-  if (priv->check_only) {
+  if (priv->state != STATE_LOADING_ASSETS_AND_SYNC) {
+    GST_INFO_OBJECT (self, "Not loading track in %s state.",
+        loading_state_name (priv->state));
     return;
   }
 
@@ -1016,8 +1021,9 @@ ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
   GESTrackElement *element = NULL;
 
-  if (priv->first_pass) {
-    GST_DEBUG_OBJECT (self, "First pass, not adding clip related objects");
+  if (priv->state != STATE_LOADING_CLIPS) {
+    GST_DEBUG_OBJECT (self, "Not loading control bindings in %s state.",
+        loading_state_name (priv->state));
     return;
   }
 
@@ -1053,8 +1059,9 @@ ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
   GESTrackElement *element = NULL;
 
-  if (priv->first_pass) {
-    GST_DEBUG_OBJECT (self, "First pass, not adding clip related objects");
+  if (priv->state == STATE_LOADING_CLIPS) {
+    GST_DEBUG_OBJECT (self, "Not loading source elements in %s state.",
+        loading_state_name (priv->state));
     return;
   }
 
@@ -1085,13 +1092,11 @@ ges_base_xml_formatter_add_track_element (GESBaseXmlFormatter * self,
   GESAsset *asset = NULL;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
-  if (priv->first_pass) {
-    GST_INFO_OBJECT (self, "First pass, not adding clip related objects");
+  if (priv->state != STATE_LOADING_CLIPS) {
+    GST_DEBUG_OBJECT (self, "Not loading track elements in %s state.",
+        loading_state_name (priv->state));
     return;
   }
-
-  if (priv->check_only)
-    return;
 
   if (g_type_is_a (track_element_type, GES_TYPE_TRACK_ELEMENT) == FALSE) {
     GST_DEBUG_OBJECT (self, "%s is not a TrackElement, can not create it",
@@ -1152,14 +1157,11 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
   GstEncodingContainerProfile *parent_profile = NULL;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
-  if (!priv->first_pass) {
-    GST_DEBUG_OBJECT (self,
-        "Second pass, encoding profiles are already ready.");
+  if (priv->state != STATE_LOADING_ASSETS_AND_SYNC) {
+    GST_DEBUG_OBJECT (self, "Not loading encoding profiles in %s state.",
+        loading_state_name (priv->state));
     return;
   }
-
-  if (priv->check_only)
-    goto done;
 
   if (parent == NULL) {
     profile =
@@ -1220,13 +1222,11 @@ ges_base_xml_formatter_add_group (GESBaseXmlFormatter * self,
   PendingGroup *pgroup;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
-  if (!priv->first_pass) {
-    GST_DEBUG_OBJECT (self, "First pass, not adding clip related objects");
+  if (priv->state != STATE_LOADING_ASSETS_AND_SYNC) {
+    GST_DEBUG_OBJECT (self, "Not loading groups in %s state.",
+        loading_state_name (priv->state));
     return;
   }
-
-  if (priv->check_only)
-    return;
 
   pgroup = g_slice_new0 (PendingGroup);
   pgroup->group = ges_group_new ();
@@ -1249,13 +1249,12 @@ ges_base_xml_formatter_last_group_add_child (GESBaseXmlFormatter * self,
   PendingGroup *pgroup;
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
-  if (priv->first_pass) {
-    GST_DEBUG_OBJECT (self, "First pass, not adding clip related objects");
+  if (priv->state != STATE_LOADING_CLIPS) {
+    GST_DEBUG_OBJECT (self, "Not adding children to groups in %s state.",
+        loading_state_name (priv->state));
+
     return;
   }
-
-  if (priv->check_only)
-    return;
 
   g_return_if_fail (priv->groups);
 
