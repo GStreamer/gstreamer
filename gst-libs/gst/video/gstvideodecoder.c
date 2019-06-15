@@ -90,7 +90,7 @@
  *
  * The subclass is responsible for providing pad template caps for
  * source and sink pads. The pads need to be named "sink" and "src". It also
- * needs to provide information about the ouptput caps, when they are known.
+ * needs to provide information about the output caps, when they are known.
  * This may be when the base class calls the subclass' @set_format function,
  * though it might be during decoding, before calling
  * @gst_video_decoder_finish_frame. This is done via
