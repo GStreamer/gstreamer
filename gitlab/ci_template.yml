@@ -678,6 +678,7 @@ cerbero ios universal:
 
 build cerbero ios universal:
   extends: '.cerbero ios universal'
+  when: 'manual'
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
