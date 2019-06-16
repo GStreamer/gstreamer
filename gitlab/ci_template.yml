@@ -676,9 +676,7 @@ cerbero ios universal:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
 
-# Disabled until the cerbero/ master CI succeed uploading deps
-# see #29
-.build cerbero ios universal:
+build cerbero ios universal:
   extends: '.cerbero ios universal'
   except:
     variables:
