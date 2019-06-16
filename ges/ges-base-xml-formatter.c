@@ -30,8 +30,7 @@ GST_DEBUG_CATEGORY_STATIC (base_xml_formatter);
 
 #define parent_class ges_base_xml_formatter_parent_class
 
-#define _GET_PRIV(o)\
-  (((GESBaseXmlFormatter*) o)->priv)
+#define _GET_PRIV(o) (((GESBaseXmlFormatter*) o)->priv)
 
 
 static gboolean _loading_done_cb (GESFormatter * self);
@@ -230,10 +229,12 @@ _load_and_parse (GESBaseXmlFormatter * self, const gchar * uri, GError ** error,
   if (!g_file_load_contents (file, NULL, &priv->xmlcontent, &priv->xmlsize,
           NULL, &err))
     goto failed;
+  g_object_unref (file);
 
   return _parse (self, error, state);
 
 failed:
+  g_object_unref (file);
   GST_WARNING ("failed to load contents from \"%s\"", uri);
   g_propagate_error (error, err);
   return NULL;
@@ -498,7 +499,8 @@ _loading_done (GESFormatter * self)
 
   if (priv->state == STATE_LOADING_ASSETS_AND_SYNC) {
     GST_INFO_OBJECT (self, "Assets cached... now loading the timeline.");
-    _parse (GES_BASE_XML_FORMATTER (self), NULL, STATE_LOADING_CLIPS);
+    g_markup_parse_context_free (_parse (GES_BASE_XML_FORMATTER (self), NULL,
+            STATE_LOADING_CLIPS));
     g_assert (priv->pending_assets == NULL);
   }
 
@@ -881,6 +883,7 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
       asset, start, inpoint, duration, track_types, metadatas, properties,
       children_properties);
 
+  gst_object_unref (asset);
   if (!nclip)
     return;
 
@@ -1160,7 +1163,7 @@ ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
   if (priv->state != STATE_LOADING_ASSETS_AND_SYNC) {
     GST_DEBUG_OBJECT (self, "Not loading encoding profiles in %s state.",
         loading_state_name (priv->state));
-    return;
+    goto done;
   }
 
   if (parent == NULL) {

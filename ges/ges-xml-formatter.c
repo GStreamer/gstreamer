@@ -167,6 +167,7 @@ _parse_encoding_profile (GMarkupParseContext * context,
   if (str_preset_properties) {
     preset_properties = gst_structure_from_string (str_preset_properties, NULL);
     if (preset_properties == NULL) {
+      gst_caps_unref (capsformat);
       g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
           "element '%s', Wrong preset-properties format.", element_name);
       return;
