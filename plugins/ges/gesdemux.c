@@ -171,26 +171,16 @@ error_loading_asset_cb (GESProject * project, GError * error, gchar * id,
   g_main_loop_quit (data->ml);
 }
 
-/* TODO: Add a way to run a function in the right GES thread */
 static gboolean
 ges_timeline_new_from_uri_from_main_thread (TimelineConstructionData * data)
 {
   GESProject *project = ges_project_new (data->uri);
-  GESUriClipAssetClass *klass = g_type_class_peek (GES_TYPE_URI_CLIP_ASSET);
-  GstDiscoverer *previous_discoverer = klass->discoverer;
-  GstClockTime timeout;
   G_GNUC_UNUSED void *unused;
 
-  g_object_get (previous_discoverer, "timeout", &timeout, NULL);
-
-  /* Make sure to use a new discoverer in case we are being discovered,
-   * as discovering is done one by one, and the global discoverer won't
-   * have the chance to discover the project assets */
   g_mutex_lock (&data->lock);
   klass->discoverer = gst_discoverer_new (timeout, &data->error);
   g_object_set (klass->discoverer, "use-cache", TRUE, NULL);
   if (data->error) {
-    klass->discoverer = previous_discoverer;
     g_mutex_unlock (&data->lock);
 
     goto done;
@@ -221,15 +211,6 @@ ges_timeline_new_from_uri_from_main_thread (TimelineConstructionData * data)
 done:
 
   g_mutex_lock (&data->lock);
-
-  /* Set previous discoverer back! */
-
-  if (klass->discoverer)
-    gst_object_unref (klass->discoverer);
-  klass->discoverer = previous_discoverer;
-
-  if (data->timeline)
-    ges_timeline_commit (data->timeline);
 
   if (data->loaded_sigid)
     g_signal_handler_disconnect (project, data->loaded_sigid);

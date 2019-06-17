@@ -62,11 +62,13 @@ struct _GESUriClipAssetClass
   GESClipAssetClass parent_class;
 
   /* <private> */
-  GstDiscoverer *discoverer;
-  GstDiscoverer *sync_discoverer;
+  GstDiscoverer *discoverer; /* Unused */
+  GstDiscoverer *sync_discoverer; /* Unused */
 
-  void (*discovered) (GstDiscoverer * discoverer, GstDiscovererInfo * info,
-                     GError * err, gpointer user_data);
+  void (*discovered) (GstDiscoverer * discoverer, /* Unused */
+                      GstDiscovererInfo * info,
+                      GError * err,
+                      gpointer user_data);
 
   gpointer _ges_reserved[GES_PADDING -1];
 };
