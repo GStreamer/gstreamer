@@ -1308,16 +1308,25 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
         event = gst_event_new_flush_stop (TRUE);
         GST_PAD_PROBE_INFO_DATA (info) = event;
         gst_event_set_seqnum (event, comp->priv->flush_seqnum);
+        if (comp->priv->seek_seqnum) {
+          GST_EVENT_SEQNUM (event) = comp->priv->seek_seqnum;
+          GST_INFO_OBJECT (comp, "Setting FLUSH_START seqnum: %d",
+              comp->priv->seek_seqnum);
+        }
         comp->priv->flush_seqnum = 0;
       }
       break;
     case GST_EVENT_FLUSH_START:
       if (gst_event_get_seqnum (event) != comp->priv->flush_seqnum) {
-        GST_INFO_OBJECT (comp, "Dropping flush start");
+        GST_INFO_OBJECT (comp, "Dropping flush start %d != %d",
+            gst_event_get_seqnum (event), comp->priv->flush_seqnum);
         retval = GST_PAD_PROBE_DROP;
       } else {
-        GST_INFO_OBJECT (comp, "Forwarding our flush start with seqnum %i",
-            comp->priv->flush_seqnum);
+        if (comp->priv->seek_seqnum) {
+          GST_EVENT_SEQNUM (event) = comp->priv->seek_seqnum;
+          GST_INFO_OBJECT (comp, "Setting FLUSH_START seqnum: %d",
+              comp->priv->seek_seqnum);
+        }
       }
       break;
     case GST_EVENT_STREAM_START:
