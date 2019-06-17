@@ -326,6 +326,17 @@ ges_timeline_handle_message (GstBin * bin, GstMessage * message)
 {
   GESTimeline *timeline = GES_TIMELINE (bin);
 
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ASYNC_START) {
+    GST_INFO_OBJECT (timeline, "Dropping %" GST_PTR_FORMAT, message);
+    return;
+  }
+
+  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ASYNC_DONE) {
+    GST_INFO_OBJECT (timeline, "Dropping %" GST_PTR_FORMAT, message);
+
+    return;
+  }
+
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) {
     GstMessage *amessage = NULL;
     const GstStructure *mstructure = gst_message_get_structure (message);
