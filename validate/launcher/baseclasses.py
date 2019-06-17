@@ -214,12 +214,15 @@ class Test(Loggable):
     @property
     def _env_variable(self):
         res = ""
-        for var in set(self.__env_variable):
-            if res:
-                res += " "
-            value = self.proc_env.get(var, None)
-            if value is not None:
-                res += "%s='%s'" % (var, value)
+        if not self.options.verbose or self.options.verbose > 1:
+            for var in set(self.__env_variable):
+                if res:
+                    res += " "
+                value = self.proc_env.get(var, None)
+                if value is not None:
+                    res += "%s='%s'" % (var, value)
+        else:
+            res += "[Not displaying environment variables, rerun with -vv for the full command]"
 
         return res
 

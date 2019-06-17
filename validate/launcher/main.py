@@ -520,7 +520,7 @@ class LauncherConfig(Loggable):
         dir_group.add_argument("-rl", "--redirect-logs", dest="redirect_logs",
                                help="Redirect logs to 'stdout' or 'sdterr'.")
         dir_group.add_argument("-v", "--verbose", dest="verbose",
-                               default=False, action='store_true',
+                               action='count',
                                help="Redirect logs to stdout.")
         dir_group.add_argument("-j", "--jobs", dest="num_jobs",
                                help="Number of tests to execute simultaneously"
