@@ -45,8 +45,34 @@
 GST_DEBUG_CATEGORY_STATIC (rtph264pay_debug);
 #define GST_CAT_DEFAULT (rtph264pay_debug)
 
+#define GST_TYPE_RTP_H264_AGGREGATE_MODE \
+  (gst_rtp_h264_aggregate_mode_get_type ())
+
+
+static GType
+gst_rtp_h264_aggregate_mode_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue values[] = {
+    {GST_RTP_H264_AGGREGATE_NONE, "Do not aggregate NAL units", "none"},
+    {GST_RTP_H264_AGGREGATE_ZERO_LATENCY, "Aggregate all that arrive together",
+        "zero-latency"},
+    {GST_RTP_H264_AGGREGATE_MAX_STAP,
+        "Aggregate all NAL units with the same timestamp (adds one frame of"
+          " latency)", "max-stap"},
+    {0, NULL, NULL},
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstRtpH264AggregateMode", values);
+  }
+  return type;
+}
+
+
+
 /* references:
- *
+*
  * RFC 3984
  */
 
@@ -72,14 +98,14 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 #define DEFAULT_SPROP_PARAMETER_SETS    NULL
 #define DEFAULT_CONFIG_INTERVAL         0
-#define DEFAULT_DO_AGGREGATE            TRUE
+#define DEFAULT_AGGREGATE_MODE          GST_RTP_H264_AGGREGATE_ZERO_LATENCY
 
 enum
 {
   PROP_0,
   PROP_SPROP_PARAMETER_SETS,
   PROP_CONFIG_INTERVAL,
-  PROP_DO_AGGREGATE,
+  PROP_AGGREGATE_MODE,
 };
 
 static void gst_rtp_h264_pay_finalize (GObject * object);
@@ -139,12 +165,13 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
       );
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_DO_AGGREGATE,
-      g_param_spec_boolean ("do-aggregate",
+      PROP_AGGREGATE_MODE,
+      g_param_spec_enum ("aggregate-mode",
           "Attempt to use aggregate packets",
           "Bundle suitable SPS/PPS NAL units into STAP-A "
           "aggregate packets. ",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
+          GST_TYPE_RTP_H264_AGGREGATE_MODE,
+          DEFAULT_AGGREGATE_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
   gobject_class->finalize = gst_rtp_h264_pay_finalize;
@@ -182,7 +209,7 @@ gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay)
       (GDestroyNotify) gst_buffer_unref);
   rtph264pay->last_spspps = -1;
   rtph264pay->spspps_interval = DEFAULT_CONFIG_INTERVAL;
-  rtph264pay->do_aggregate = DEFAULT_DO_AGGREGATE;
+  rtph264pay->aggregate_mode = DEFAULT_AGGREGATE_MODE;
   rtph264pay->delta_unit = FALSE;
   rtph264pay->discont = FALSE;
 
@@ -915,7 +942,7 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     discont = FALSE;
   }
 
-  if (rtph264pay->do_aggregate)
+  if (rtph264pay->aggregate_mode != GST_RTP_H264_AGGREGATE_NONE)
     return gst_rtp_h264_pay_payload_nal_bundle (basepayload, paybuf, dts, pts,
         end_of_au, delta_unit, discont, nal_header);
 
@@ -1066,6 +1093,7 @@ gst_rtp_h264_pay_reset_bundle (GstRtpH264Pay * rtph264pay)
 {
   g_clear_pointer (&rtph264pay->bundle, gst_buffer_list_unref);
   rtph264pay->bundle_size = 0;
+  rtph264pay->bundle_contains_vcl = FALSE;
 }
 
 static GstFlowReturn
@@ -1175,9 +1203,6 @@ gst_rtp_h264_pay_payload_nal_bundle (GstRTPBasePayload * basepayload,
     } else if (discont) {
       GST_DEBUG_OBJECT (rtph264pay, "found discont");
       start_of_au = TRUE;
-    } else if (!delta_unit) {
-      GST_DEBUG_OBJECT (rtph264pay, "found !delta_unit");
-      start_of_au = TRUE;
     } else if (GST_BUFFER_PTS (first) != pts || GST_BUFFER_DTS (first) != dts) {
       GST_DEBUG_OBJECT (rtph264pay, "found timestamp mismatch");
       start_of_au = TRUE;
@@ -1225,6 +1250,7 @@ gst_rtp_h264_pay_payload_nal_bundle (GstRTPBasePayload * basepayload,
     GST_DEBUG_OBJECT (rtph264pay, "creating new STAP-A aggregate");
     bundle = rtph264pay->bundle = gst_buffer_list_new ();
     bundle_size = rtph264pay->bundle_size = 1;
+    rtph264pay->bundle_contains_vcl = FALSE;
   }
 
   GST_DEBUG_OBJECT (rtph264pay,
@@ -1248,6 +1274,10 @@ gst_rtp_h264_pay_payload_nal_bundle (GstRTPBasePayload * basepayload,
   gst_buffer_list_add (bundle, gst_buffer_ref (paybuf));
   rtph264pay->bundle_size += pay_size;
   ret = GST_FLOW_OK;
+
+  if ((nal_type >= 1 && nal_type <= 5) || nal_type == 14 ||
+      (nal_type >= 20 && nal_type <= 23))
+    rtph264pay->bundle_contains_vcl = TRUE;
 
   if (end_of_au) {
     GST_DEBUG_OBJECT (rtph264pay, "sending bundle at end of AU");
@@ -1554,6 +1584,13 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
     g_array_set_size (nal_queue, 0);
   }
 
+  if (ret == GST_FLOW_OK &&
+      rtph264pay->aggregate_mode == GST_RTP_H264_AGGREGATE_ZERO_LATENCY) {
+    GST_DEBUG_OBJECT (rtph264pay, "sending bundle at end incoming packet");
+    ret = gst_rtp_h264_pay_send_bundle (rtph264pay, FALSE);
+  }
+
+
 done:
   if (avc) {
     gst_buffer_unmap (buffer, &map);
@@ -1669,8 +1706,8 @@ gst_rtp_h264_pay_set_property (GObject * object, guint prop_id,
     case PROP_CONFIG_INTERVAL:
       rtph264pay->spspps_interval = g_value_get_int (value);
       break;
-    case PROP_DO_AGGREGATE:
-      rtph264pay->do_aggregate = g_value_get_boolean (value);
+    case PROP_AGGREGATE_MODE:
+      rtph264pay->aggregate_mode = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1693,8 +1730,8 @@ gst_rtp_h264_pay_get_property (GObject * object, guint prop_id,
     case PROP_CONFIG_INTERVAL:
       g_value_set_int (value, rtph264pay->spspps_interval);
       break;
-    case PROP_DO_AGGREGATE:
-      g_value_set_boolean (value, rtph264pay->do_aggregate);
+    case PROP_AGGREGATE_MODE:
+      g_value_set_enum (value, rtph264pay->aggregate_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
