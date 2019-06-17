@@ -444,6 +444,8 @@ _start_task (NleComposition * comp)
     gst_task_set_lock (task, GET_TASK_LOCK (comp));
     GST_DEBUG_OBJECT (comp, "created task %p", task);
     comp->task = task;
+    gst_object_set_parent (GST_OBJECT (task), GST_OBJECT (comp));
+    gst_object_unref (task);
     g_free (taskname);
   }
 
@@ -479,7 +481,7 @@ _stop_task (NleComposition * comp)
   if (!gst_task_join (task))
     goto join_failed;
 
-  gst_object_unref (task);
+  gst_object_unparent (GST_OBJECT (task));
 
   return res;
 
