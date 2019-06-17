@@ -4058,13 +4058,18 @@ update_text_offset (GstPlaySink * playsink)
 {
   gint64 text_offset;
   GstPlayTextChain *tchain;
+  GstElement *elem;
 
   text_offset = playsink->text_offset;
   tchain = (GstPlayTextChain *) playsink->textchain;
 
   if (tchain) {
     if (tchain->sink) {
-      g_object_set (tchain->sink, "ts-offset", text_offset, NULL);
+      elem =
+          gst_play_sink_find_property_sinks (playsink, tchain->sink,
+          "ts-offset", G_TYPE_INT64);
+      if (elem)
+        g_object_set (elem, "ts-offset", text_offset, NULL);
     } else if (tchain->overlay) {
       g_object_set (tchain->overlay, "subtitle-ts-offset", text_offset, NULL);
     }
