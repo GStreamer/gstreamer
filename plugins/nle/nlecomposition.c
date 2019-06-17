@@ -2501,6 +2501,16 @@ _update_pipeline_func (NleComposition * comp, UpdateCompositionData * ucompo)
   _post_start_composition_update_done (comp, ucompo->seqnum, ucompo->reason);
 }
 
+/* Never call when ->task runs! */
+static void
+_set_all_children_state (NleComposition * comp, GstState state)
+{
+  GList *tmp;
+
+  for (tmp = comp->priv->objects_start; tmp; tmp = tmp->next)
+    gst_element_set_state (tmp->data, state);
+}
+
 static GstStateChangeReturn
 nle_composition_change_state (GstElement * element, GstStateChange transition)
 {
@@ -2513,6 +2523,7 @@ nle_composition_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      _set_all_children_state (comp, GST_STATE_READY);
       _start_task (comp);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -2536,6 +2547,7 @@ nle_composition_change_state (GstElement * element, GstStateChange transition)
 
       _remove_update_actions (comp);
       _remove_seek_actions (comp);
+      _set_all_children_state (comp, GST_STATE_NULL);
       comp->priv->tearing_down_stack = TRUE;
       break;
     default:
