@@ -1033,7 +1033,7 @@ static const guint8 rtp_h265_list_lt_mtu_frame_data_hvc1[] = {
 };
 
 /* length size is 3 bytes */
-static int rtp_h265_list_lt_mtu_bytes_sent_hvc1 = 2 * (16 - 2 * 3);
+static int rtp_h265_list_lt_mtu_bytes_sent_hvc1 = 4 + 9;
 
 
 GST_START_TEST (rtp_h265_list_lt_mtu_hvc1)

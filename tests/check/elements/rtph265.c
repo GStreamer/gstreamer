@@ -539,7 +539,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtph265pay_marker_for_au)
 {
-  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123");
+  GstHarness *h = gst_harness_new_parse
+      ("rtph265pay timestamp-offset=123 aggregate-mode=none");
   GstFlowReturn ret;
   GstBuffer *slice1, *slice2, *buffer;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
