@@ -106,7 +106,7 @@ set_print_stack_trace_from_string (GstLeaksTracer * self, const gchar * str)
   if (g_strcmp0 (str, "full") == 0)
     self->trace_flags = GST_STACK_TRACE_SHOW_FULL;
   else
-    self->trace_flags = 0;
+    self->trace_flags = GST_STACK_TRACE_SHOW_NONE;
 }
 
 static void

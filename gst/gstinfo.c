@@ -2885,8 +2885,8 @@ done:
 
 /**
  * gst_debug_get_stack_trace:
- * @flags: A set of #GstStackTraceFlags to determine how the stack
- * trace should look like. Pass 0 to retrieve a minimal backtrace.
+ * @flags: A set of #GstStackTraceFlags to determine how the stack trace should
+ * look like. Pass #GST_STACK_TRACE_SHOW_NONE to retrieve a minimal backtrace.
  *
  * Returns: (nullable): a stack trace, if libunwind or glibc backtrace are
  * present, else %NULL.
