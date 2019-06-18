@@ -523,7 +523,7 @@ _replace_variables_in_string (GstValidateScenario * scenario,
     gchar *tmp, *varname, *pvarname = g_match_info_fetch (match_info, 0);
 
     varname_len = strlen (pvarname);
-    varname = g_malloc (sizeof (gchar) * varname_len - 3);
+    varname = g_malloc (sizeof (gchar) * varname_len - 2);
     strncpy (varname, &pvarname[2], varname_len - 3);
     varname[varname_len - 3] = '\0';
 
@@ -542,6 +542,7 @@ _replace_variables_in_string (GstValidateScenario * scenario,
 
     tmp = g_strdup_printf ("\\$\\(%s\\)", varname);
     replace_regex = g_regex_new (tmp, 0, 0, NULL);
+    g_free (tmp);
     tmpstring = string;
     string = g_regex_replace (replace_regex, string, -1, 0, var_value, 0, NULL);
 
@@ -549,6 +550,7 @@ _replace_variables_in_string (GstValidateScenario * scenario,
     g_free (tmpstring);
     g_regex_unref (replace_regex);
     g_free (pvarname);
+    g_free (varname);
 
     g_match_info_next (match_info, NULL);
   }
@@ -3544,6 +3546,7 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
     gchar *tmp_scenarios_path =
         g_strdup_printf ("%s%c%s", scenarios_path, G_SEARCHPATH_SEPARATOR,
         relative_dir);
+    g_free (relative_dir);
 
     g_free (scenarios_path);
     scenarios_path = tmp_scenarios_path;
@@ -3995,10 +3998,12 @@ static gboolean
 _add_description (GQuark field_id, const GValue * value, KeyFileGroupName * kfg)
 {
   gchar *tmp = gst_value_serialize (value);
+  gchar *tmpcompress = g_strcompress (tmp);
 
   g_key_file_set_string (kfg->kf, kfg->group_name,
-      g_quark_to_string (field_id), g_strcompress (tmp));
+      g_quark_to_string (field_id), tmpcompress);
 
+  g_free (tmpcompress);
   g_free (tmp);
 
   return TRUE;
@@ -4098,6 +4103,7 @@ gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
       "gstreamer-" GST_API_VERSION, "validate", GST_VALIDATE_SCENARIO_DIRECTORY,
       NULL);
   GFile *dir = g_file_new_for_path (tldir);
+  g_free (tldir);
 
   kf = g_key_file_new ();
   if (num_scenarios > 0) {
@@ -4123,7 +4129,6 @@ gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
 
   _list_scenarios_in_dir (dir, kf);
   g_object_unref (dir);
-  g_free (tldir);
 
   tldir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
       "validate", GST_VALIDATE_SCENARIO_DIRECTORY, NULL);
@@ -4151,10 +4156,13 @@ done:
   result = g_key_file_to_data (kf, &datalength, &err);
   g_print ("All scenarios available:\n%s", result);
 
-  if (output_file && !err)
+  if (output_file && !err) {
     if (!g_file_set_contents (output_file, result, datalength, &err)) {
       GST_WARNING ("Error writing to file '%s'", output_file);
     }
+  }
+
+  g_free (result);
 
   if (env_scenariodir)
     g_strfreev (env_scenariodir);

@@ -397,6 +397,7 @@ main (int argc, gchar ** argv)
   gst_validate_init ();
 
   if (list_scenarios || output_file) {
+    g_option_context_free (ctx);
     if (gst_validate_list_scenarios (argv + 1, argc - 1, output_file))
       return 1;
     return 0;
