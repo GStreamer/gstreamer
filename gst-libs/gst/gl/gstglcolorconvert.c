@@ -319,8 +319,8 @@ static const struct shader_templ templ_RGB_to_PLANAR_YUV =
     GST_GL_TEXTURE_TARGET_2D
   };
 
-/* NV12/NV21 to RGB conversion */
-static const gchar templ_NV12_NV21_to_RGB_BODY[] =
+/* semi-planar to RGB conversion */
+static const gchar templ_SEMI_PLANAR_to_RGB_BODY[] =
     "vec4 rgba;\n"
     "vec3 yuv;\n"
     /* FIXME: should get the sampling right... */
@@ -330,7 +330,7 @@ static const gchar templ_NV12_NV21_to_RGB_BODY[] =
     "rgba.a = 1.0;\n"
     "gl_FragColor=vec4(rgba.%c,rgba.%c,rgba.%c,rgba.%c);\n";
 
-static const struct shader_templ templ_NV12_NV21_to_RGB =
+static const struct shader_templ templ_SEMI_PLANAR_to_RGB =
   { NULL,
     DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, UVtex;\n",
     { glsl_func_yuv_to_rgb, NULL, },
@@ -1686,9 +1686,9 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       case GST_VIDEO_FORMAT_NV12:
       {
         char val2 = convert->priv->in_tex_formats[1] == GST_GL_RG ? 'g' : 'a';
-        info->templ = &templ_NV12_NV21_to_RGB;
+        info->templ = &templ_SEMI_PLANAR_to_RGB;
         info->frag_body =
-            g_strdup_printf (templ_NV12_NV21_to_RGB_BODY, 'r', val2,
+            g_strdup_printf (templ_SEMI_PLANAR_to_RGB_BODY, 'r', val2,
             pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
         info->shader_tex_names[0] = "Ytex";
         info->shader_tex_names[1] = "UVtex";
@@ -1697,9 +1697,9 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       case GST_VIDEO_FORMAT_NV21:
       {
         char val2 = convert->priv->in_tex_formats[1] == GST_GL_RG ? 'g' : 'a';
-        info->templ = &templ_NV12_NV21_to_RGB;
+        info->templ = &templ_SEMI_PLANAR_to_RGB;
         info->frag_body =
-            g_strdup_printf (templ_NV12_NV21_to_RGB_BODY, val2, 'r',
+            g_strdup_printf (templ_SEMI_PLANAR_to_RGB_BODY, val2, 'r',
             pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
         info->shader_tex_names[0] = "Ytex";
         info->shader_tex_names[1] = "UVtex";
