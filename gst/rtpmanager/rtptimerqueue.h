@@ -59,9 +59,6 @@ typedef struct
   GList list;
   gboolean queued;
 
-  /* FIXME remove */
-  guint idx;
-
   guint16 seqnum;
   guint num;
   RtpTimerType type;
