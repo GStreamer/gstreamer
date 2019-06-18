@@ -125,6 +125,8 @@ static gboolean gst_rtp_h264_pay_sink_event (GstRTPBasePayload * payload,
     GstEvent * event);
 static GstStateChangeReturn gst_rtp_h264_pay_change_state (GstElement *
     element, GstStateChange transition);
+static gboolean gst_rtp_h264_pay_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static void gst_rtp_h264_pay_reset_bundle (GstRtpH264Pay * rtph264pay);
 
@@ -214,6 +216,9 @@ gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay)
   rtph264pay->discont = FALSE;
 
   rtph264pay->adapter = gst_adapter_new ();
+
+  gst_pad_set_query_function (GST_RTP_BASE_PAYLOAD_SRCPAD (rtph264pay),
+      gst_rtp_h264_pay_src_query);
 }
 
 static void
@@ -398,6 +403,42 @@ done:
   return caps;
 }
 
+static gboolean
+gst_rtp_h264_pay_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstRtpH264Pay *rtph264pay = GST_RTP_H264_PAY (parent);
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY) {
+    gboolean retval;
+    gboolean live;
+    GstClockTime min_latency, max_latency;
+
+    retval = gst_pad_query_default (pad, parent, query);
+    if (!retval)
+      return retval;
+
+    if (rtph264pay->stream_format == GST_H264_STREAM_FORMAT_UNKNOWN ||
+        rtph264pay->alignment == GST_H264_ALIGNMENT_UNKNOWN)
+      return FALSE;
+
+    gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+
+    if (rtph264pay->aggregate_mode == GST_RTP_H264_AGGREGATE_MAX_STAP &&
+        rtph264pay->alignment != GST_H264_ALIGNMENT_AU && rtph264pay->fps_num) {
+      GstClockTime one_frame = gst_util_uint64_scale_int (GST_SECOND,
+          rtph264pay->fps_denum, rtph264pay->fps_num);
+
+      min_latency += one_frame;
+      max_latency += one_frame;
+      gst_query_set_latency (query, live, min_latency, max_latency);
+    }
+    return TRUE;
+  }
+
+  return gst_pad_query_default (pad, parent, query);
+}
+
+
 /* take the currently configured SPS and PPS lists and set them on the caps as
  * sprop-parameter-sets */
 static gboolean
@@ -503,6 +544,10 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
     if (g_str_equal (stream_format, "byte-stream"))
       rtph264pay->stream_format = GST_H264_STREAM_FORMAT_BYTESTREAM;
   }
+
+  if (!gst_structure_get_fraction (str, "framerate", &rtph264pay->fps_num,
+          &rtph264pay->fps_denum))
+    rtph264pay->fps_num = rtph264pay->fps_denum = 0;
 
   /* packetized AVC video has a codec_data */
   if ((value = gst_structure_get_value (str, "codec_data"))) {

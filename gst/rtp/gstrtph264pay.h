@@ -82,6 +82,9 @@ struct _GstRtpH264Pay
   gboolean send_spspps;
   GstClockTime last_spspps;
 
+  gint fps_num;
+  gint fps_denum;
+
   /* TRUE if the next NALU processed should have the DELTA_UNIT flag */
   gboolean delta_unit;
   /* TRUE if the next NALU processed should have the DISCONT flag */
