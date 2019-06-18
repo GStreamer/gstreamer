@@ -74,6 +74,9 @@ void gst_tracing_register_hook (GstTracer *tracer, const gchar *detail,
 GST_API
 gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type);
 
+GST_API
+GList* gst_tracing_get_active_tracers (void);
+
 #endif
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstTracer, gst_object_unref)
