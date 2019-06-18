@@ -1141,7 +1141,8 @@ gst_video_afd_meta_api_get_type (void)
     static const gchar *tags[] = {
       GST_META_TAG_VIDEO_SIZE_STR,
       GST_META_TAG_VIDEO_ORIENTATION_STR,
-      GST_META_TAG_VIDEO_STR
+      GST_META_TAG_VIDEO_STR,
+      NULL
     };
     GType _type = gst_meta_api_type_register ("GstVideoAFDMetaAPI", tags);
     g_once_init_leave (&type, _type);
@@ -1232,7 +1233,8 @@ gst_video_bar_meta_api_get_type (void)
     static const gchar *tags[] = {
       GST_META_TAG_VIDEO_SIZE_STR,
       GST_META_TAG_VIDEO_ORIENTATION_STR,
-      GST_META_TAG_VIDEO_STR
+      GST_META_TAG_VIDEO_STR,
+      NULL
     };
     GType _type = gst_meta_api_type_register ("GstVideoBarMetaAPI", tags);
     g_once_init_leave (&type, _type);
