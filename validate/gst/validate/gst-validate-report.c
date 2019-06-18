@@ -969,14 +969,11 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
         g_string_append_printf (string, "\n\n### Parameters");
 
       if (!IS_CONFIG_ACTION_TYPE (type->flags)) {
-        g_string_append_printf (string, "\n\n  Parameters:");
         print_action_parameter (string, type, &playback_time_param);
         print_action_parameter (string, type, &on_message_param);
       }
 
       if (type->parameters) {
-        if (IS_CONFIG_ACTION_TYPE (type->flags))
-          g_string_append_printf (string, "\n\n  Parameters:");
         has_parameters = TRUE;
         for (i = 0; type->parameters[i].name; i++) {
           print_action_parameter (string, type, &type->parameters[i]);

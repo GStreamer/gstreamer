@@ -523,7 +523,7 @@ _replace_variables_in_string (GstValidateScenario * scenario,
     gchar *tmp, *varname, *pvarname = g_match_info_fetch (match_info, 0);
 
     varname_len = strlen (pvarname);
-    varname = g_malloc (sizeof (gchar) * varname_len - 2);
+    varname = g_malloc (sizeof (gchar) * (varname_len - 2));
     strncpy (varname, &pvarname[2], varname_len - 3);
     varname[varname_len - 3] = '\0';
 
@@ -5405,7 +5405,7 @@ init_scenarios (void)
           {NULL}
         }),
       "Include a sub scenario file.",
-      GST_VALIDATE_ACTION_TYPE_NONE);
+      GST_VALIDATE_ACTION_TYPE_CONFIG);
 
   REGISTER_ACTION_TYPE ("emit-signal", _execute_emit_signal,
       ((GstValidateActionParameter [])
