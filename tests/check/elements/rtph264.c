@@ -756,6 +756,298 @@ GST_START_TEST (test_rtph264pay_marker_for_fragmented_au)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtph264pay_aggregate_two_slices_per_buffer)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123"
+      " name=p");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  GstElement *e = gst_bin_get_by_name (GST_BIN (h->element), "p");
+  gint i;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h264,alignment=nal,stream-format=byte-stream");
+
+  /* No aggregation latency mode */
+
+  g_object_set (e, "aggregate-mode", 0, NULL);
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), 0);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_idr_slice_2, sizeof (h264_idr_slice_2),
+          0));
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), 0);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_idr_slice_2, sizeof (h264_idr_slice_2),
+          0));
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 4);
+
+  for (i = 0; i < 4; i++) {
+    buffer = gst_harness_pull (h);
+    fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+    fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+    fail_unless_equals_int (gst_buffer_get_size (buffer), 12 +
+        ((i % 2) ? sizeof (h264_idr_slice_2) : sizeof (h264_idr_slice_1)) - 4);
+    gst_rtp_buffer_unmap (&rtp);
+    gst_buffer_unref (buffer);
+  }
+
+  /* Zero latency mode */
+  g_object_set (e, "aggregate-mode", 1, NULL);
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), 0);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_idr_slice_2, sizeof (h264_idr_slice_2),
+          0));
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), 0);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_idr_slice_2, sizeof (h264_idr_slice_2),
+          0));
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
+
+  for (i = 0; i < 2; i++) {
+    buffer = gst_harness_pull (h);
+    fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+    fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+    /* RTP header = 12,  STAP header = 1, 2 bytes length per NAL */
+    fail_unless_equals_int (gst_buffer_get_size (buffer), 12 + 1 +
+        (2 + sizeof (h264_idr_slice_2) - 4) +
+        (2 + sizeof (h264_idr_slice_1) - 4));
+    gst_rtp_buffer_unmap (&rtp);
+    gst_buffer_unref (buffer);
+  }
+
+  /* Max aggregation */
+  g_object_set (e, "aggregate-mode", 2, NULL);
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), 0);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_idr_slice_2, sizeof (h264_idr_slice_2),
+          0));
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), 0);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_idr_slice_2, sizeof (h264_idr_slice_2),
+          0));
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+
+  /* Push EOS to send it out */
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+  /* RTP header = 12,  STAP header = 1, 2 bytes length per NAL */
+  fail_unless_equals_int (gst_buffer_get_size (buffer), 12 + 1 +
+      2 * (2 + sizeof (h264_idr_slice_2) - 4) +
+      2 * (2 + sizeof (h264_idr_slice_1) - 4));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+
+  g_object_unref (e);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_rtph264pay_aggregate_with_aud)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h264,alignment=nal,stream-format=byte-stream");
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), 0);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_aud, sizeof (h264_aud), 0));
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_idr_slice_1, sizeof (h264_idr_slice_1),
+          0));
+
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+  /* RTP header = 12 */
+  fail_unless_equals_int (gst_buffer_get_size (buffer), 12 +
+      (sizeof (h264_idr_slice_1) - 4));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+  /* RTP header = 12,  STAP header = 1, 2 bytes length per NAL */
+  fail_unless_equals_int (gst_buffer_get_size (buffer), 12 + 1 +
+      (2 + sizeof (h264_aud) - 4) + (2 + sizeof (h264_idr_slice_1) - 4));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtph264pay_aggregate_with_ts_change)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123 "
+      "aggregate-mode=max-stap");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h264,alignment=nal,stream-format=byte-stream");
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), 0);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_idr_slice_2, sizeof (h264_idr_slice_2),
+          0));
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), GST_SECOND);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_idr_slice_2, sizeof (h264_idr_slice_2),
+          GST_SECOND));
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  /* Push EOS to send the second one out */
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+  /* RTP header = 12,  STAP header = 1, 2 bytes length per NAL */
+  fail_unless_equals_int (gst_buffer_get_size (buffer), 12 + 1 +
+      (2 + sizeof (h264_idr_slice_1) - 4) +
+      (2 + sizeof (h264_idr_slice_2) - 4));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), GST_SECOND);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123 + 90000);
+  /* RTP header = 12,  STAP header = 1, 2 bytes length per NAL */
+  fail_unless_equals_int (gst_buffer_get_size (buffer), 12 + 1 +
+      (2 + sizeof (h264_idr_slice_1) - 4) +
+      (2 + sizeof (h264_idr_slice_2) - 4));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtph264pay_aggregate_with_discont)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h264,alignment=nal,stream-format=byte-stream");
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), 0);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_idr_slice_2, sizeof (h264_idr_slice_2),
+          0));
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), 0);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer_with_pts (h264_idr_slice_2, sizeof (h264_idr_slice_2),
+          0));
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 2);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+  /* RTP header = 12,  STAP header = 1, 2 bytes length per NAL */
+  fail_unless_equals_int (gst_buffer_get_size (buffer), 12 + 1 +
+      (2 + sizeof (h264_idr_slice_1) - 4) +
+      (2 + sizeof (h264_idr_slice_2) - 4));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123 + 0);
+  /* RTP header = 12,  STAP header = 1, 2 bytes length per NAL */
+  fail_unless_equals_int (gst_buffer_get_size (buffer), 12 + 1 +
+      (2 + sizeof (h264_idr_slice_1) - 4) +
+      (2 + sizeof (h264_idr_slice_2) - 4));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
 
 static Suite *
 rtph264_suite (void)
@@ -777,6 +1069,10 @@ rtph264_suite (void)
   tcase_add_test (tc_chain, test_rtph264pay_marker_for_flag);
   tcase_add_test (tc_chain, test_rtph264pay_marker_for_au);
   tcase_add_test (tc_chain, test_rtph264pay_marker_for_fragmented_au);
+  tcase_add_test (tc_chain, test_rtph264pay_aggregate_two_slices_per_buffer);
+  tcase_add_test (tc_chain, test_rtph264pay_aggregate_with_aud);
+  tcase_add_test (tc_chain, test_rtph264pay_aggregate_with_ts_change);
+  tcase_add_test (tc_chain, test_rtph264pay_aggregate_with_discont);
 
   return s;
 }
