@@ -350,19 +350,32 @@ unwind_dep = dependency('libunwind', required : get_option('libunwind'))
 dw_dep = dependency('libdw', required: get_option('libdw'))
 dbghelp_dep = dependency('DbgHelp', required : get_option('dbghelp'))
 backtrace_deps = [unwind_dep, dw_dep, dbghelp_dep]
-if unwind_dep.found()
+backtrace_source_info = false
+backtrace_minimal = false
+# MSVC debug stack trace support
+if host_system == 'windows' and dbghelp_dep.found()
+  cdata.set('HAVE_DBGHELP', 1)
+  backtrace_source_info = true
+# DWARF stack trace support with libunwind and elf-utils
+elif unwind_dep.found()
   cdata.set('HAVE_UNWIND', 1)
   if dw_dep.found()
     cdata.set('HAVE_DW', 1)
-  else
-    message('Support for backtraces is partial only.')
+    backtrace_source_info = true
   endif
+  backtrace_minimal = true
+# Basic backtrace() stack trace support
 elif cc.has_function('backtrace')
   cdata.set('HAVE_BACKTRACE', 1)
-elif dbghelp_dep.found()
-  cdata.set('HAVE_DBGHELP', 1)
-else
-  message('NO backtraces support.')
+  backtrace_minimal = true
+endif
+# Print messages about what was enabled
+if not backtrace_source_info
+  if not backtrace_minimal
+    message('NO support for stack traces.')
+  else
+    message('Minimal support for stack traces, no source info.')
+  endif
 endif
 
 if cc.has_header('execinfo.h')

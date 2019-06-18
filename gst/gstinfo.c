@@ -2906,9 +2906,7 @@ gst_debug_get_stack_trace (GstStackTraceFlags flags)
 #ifdef HAVE_UNWIND
   if ((flags & GST_STACK_TRACE_SHOW_FULL) || !have_backtrace)
     trace = generate_unwind_trace (flags);
-#endif /* HAVE_UNWIND */
-
-#ifdef HAVE_DBGHELP
+#elif defined(HAVE_DBGHELP)
   trace = generate_dbghelp_trace ();
 #endif
 
