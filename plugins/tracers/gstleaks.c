@@ -22,11 +22,25 @@
  * SECTION:tracer-leaks
  * @short_description: detect GstObject and GstMiniObject leaks
  *
- * A tracing module tracking the lifetime of objects by logging those still
- * alive when program is exiting and raising a warning.
- * The type of objects tracked can be filtered using the parameters of the
- * tracer, for example:
+ * This tracing module tracks the lifetimes of #GstObject and #GstMiniObject
+ * objects and prints a list of leaks to the debug log under `GST_TRACER:7` when
+ * gst_deinit() is called, and also prints a g_warning().
  *
+ * You can activate this tracer in the usual way by adding the string 'leaks'
+ * to the environment variable `GST_TRACERS`. Such as: `GST_TRACERS=leaks`
+ *
+ * Note that the values are separated by semicolon (`;`), such as:
+ * `GST_TRACERS=leaks;latency`, and multiple instances of the same tracer can be
+ * active at the same time.
+ *
+ * Parameters can also be passed to each tracer. The leaks tracer currently
+ * accepts three params:
+ * 1. filters: to filter which objects to record
+ * 2. check-refs: whether to record every location where a leaked object was
+ *    reffed and unreffed
+ * 3. stack-traces-flags: full or none; see: #GstStackTraceFlags
+ *
+ * Examples:
  * ```
  * GST_TRACERS=leaks(filters="GstEvent,GstMessage",stack-traces-flags=full)
  * ```
@@ -620,7 +634,7 @@ gst_leaks_tracer_finalize (GObject * object)
   g_queue_remove (&instances, self);
 
   if (leaks)
-    g_warning ("Leaks detected");
+    g_warning ("Leaks detected and logged under GST_DEBUG=GST_TRACER:7");
 
   ((GObjectClass *) gst_leaks_tracer_parent_class)->finalize (object);
 }
