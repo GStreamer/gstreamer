@@ -34,15 +34,19 @@
  * active at the same time.
  *
  * Parameters can also be passed to each tracer. The leaks tracer currently
- * accepts three params:
+ * accepts four params:
  * 1. filters: to filter which objects to record
  * 2. check-refs: whether to record every location where a leaked object was
  *    reffed and unreffed
  * 3. stack-traces-flags: full or none; see: #GstStackTraceFlags
+ * 4. name: set a name for the tracer object itself
  *
  * Examples:
  * ```
- * GST_TRACERS=leaks(filters="GstEvent,GstMessage",stack-traces-flags=full)
+ * GST_TRACERS='leaks(filters="GstEvent,GstMessage",stack-traces-flags=none)'
+ * ```
+ * ```
+ * GST_TRACERS='leaks(filters="GstBuffer",stack-traces-flags=full,check-refs=true);leaks(name=all-leaks)'
  * ```
  */
 
@@ -176,10 +180,16 @@ set_filters (GstLeaksTracer * self, const gchar * filters)
 static void
 set_params_from_structure (GstLeaksTracer * self, GstStructure * params)
 {
-  const gchar *filters = gst_structure_get_string (params, "filters");
+  const gchar *filters, *name;
 
+  filters = gst_structure_get_string (params, "filters");
   if (filters)
     set_filters (self, filters);
+
+  name = gst_structure_get_string (params, "name");
+  if (name)
+    gst_object_set_name (GST_OBJECT (self), name);
+
   gst_structure_get_boolean (params, "check-refs", &self->check_refs);
 }
 

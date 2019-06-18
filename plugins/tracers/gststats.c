@@ -521,8 +521,38 @@ do_query_post (GstStatsTracer * self, guint64 ts, GstPad * this_pad,
 /* tracer class */
 
 static void
+gst_stats_tracer_constructed (GObject * object)
+{
+  GstStatsTracer *self = GST_STATS_TRACER (object);
+  gchar *params, *tmp;
+  const gchar *name;
+  GstStructure *params_struct = NULL;
+
+  g_object_get (self, "params", &params, NULL);
+
+  if (!params)
+    return;
+
+  tmp = g_strdup_printf ("stats,%s", params);
+  params_struct = gst_structure_from_string (tmp, NULL);
+  g_free (tmp);
+  if (!params_struct)
+    return;
+
+  /* Set the name if assigned */
+  name = gst_structure_get_string (params_struct, "name");
+  if (name)
+    gst_object_set_name (GST_OBJECT (self), name);
+  gst_structure_free (params_struct);
+}
+
+static void
 gst_stats_tracer_class_init (GstStatsTracerClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->constructed = gst_stats_tracer_constructed;
+
   /* announce trace formats */
   /* *INDENT-OFF* */
   tr_buffer = gst_tracer_record_new ("buffer.class",

@@ -310,8 +310,37 @@ do_pad_unlink_post (GstTracer * self, guint64 ts, GstPad * src,
 /* tracer class */
 
 static void
+gst_log_tracer_constructed (GObject * object)
+{
+  GstLogTracer *self = GST_LOG_TRACER (object);
+  gchar *params, *tmp;
+  const gchar *name;
+  GstStructure *params_struct = NULL;
+
+  g_object_get (self, "params", &params, NULL);
+
+  if (!params)
+    return;
+
+  tmp = g_strdup_printf ("log,%s", params);
+  params_struct = gst_structure_from_string (tmp, NULL);
+  g_free (tmp);
+  if (!params_struct)
+    return;
+
+  /* Set the name if assigned */
+  name = gst_structure_get_string (params_struct, "name");
+  if (name)
+    gst_object_set_name (GST_OBJECT (self), name);
+  gst_structure_free (params_struct);
+}
+
+static void
 gst_log_tracer_class_init (GstLogTracerClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->constructed = gst_log_tracer_constructed;
 }
 
 static void
