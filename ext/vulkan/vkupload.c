@@ -730,6 +730,15 @@ _raw_to_image_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
   if (!gst_video_info_from_caps (&raw->out_info, out_caps))
     return FALSE;
 
+  if (raw->in_pool) {
+    if (raw->in_pool_active) {
+      gst_buffer_pool_set_active (raw->in_pool, FALSE);
+    }
+    raw->in_pool_active = FALSE;
+    gst_object_unref (raw->in_pool);
+    raw->in_pool = NULL;
+  }
+
   return TRUE;
 }
 
@@ -906,7 +915,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         .dstQueueFamilyIndex = 0,
         .buffer = buf_mem->buffer,
         .offset = region.bufferOffset,
-        .size = region.bufferRowLength * region.bufferImageHeight
+        .size = region.bufferRowLength * region.bufferImageHeight,
     };
 
     image_memory_barrier = (VkImageMemoryBarrier) {
@@ -920,7 +929,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         .srcQueueFamilyIndex = 0,
         .dstQueueFamilyIndex = 0,
         .image = img_mem->image,
-        .subresourceRange = img_mem->barrier.subresource_range
+        .subresourceRange = img_mem->barrier.subresource_range,
     };
     /* *INDENT-ON* */
 

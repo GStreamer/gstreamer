@@ -113,8 +113,7 @@ GST_START_TEST (test_vulkan_color_convert_rgba_reorder)
       outbuf = gst_harness_push_and_pull (h, inbuf);
 
       fail_unless (gst_buffer_map (outbuf, &map_info, GST_MAP_READ));
-      /* FIXME: wrong size! */
-      fail_unless (map_info.size >= out_info.size);
+      fail_unless (map_info.size == out_info.size);
 
       for (k = 0; k < out_info.size; k++) {
         if (test_rgba_reorder[j].data[0][k] != IGNORE_MAGIC

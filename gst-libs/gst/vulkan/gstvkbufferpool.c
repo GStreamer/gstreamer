@@ -97,28 +97,10 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   /* get the size of the buffer to allocate */
   priv->v_info.size = 0;
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
-    GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&priv->v_info);
-    GstVulkanImageMemory *img_mem;
-    guint width, height;
-    VkFormat vk_format;
-
-    vk_format = gst_vulkan_format_from_video_format (v_format, i);
-    width = GST_VIDEO_INFO_PLANE_STRIDE (&priv->v_info, i);
-    height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i);
-
-    img_mem = (GstVulkanImageMemory *)
-        gst_vulkan_image_memory_alloc (vk_pool->device, vk_format, width,
-        height, VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT |
-        VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-    priv->alloc_sizes[i] = img_mem->requirements.size;
+    priv->alloc_sizes[i] = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i) *
+        GST_VIDEO_INFO_PLANE_STRIDE (&priv->v_info, i);
     priv->v_info.offset[i] = priv->v_info.size;
     priv->v_info.size += priv->alloc_sizes[i];
-
-    gst_memory_unref (GST_MEMORY_CAST (img_mem));
   }
 
   priv->add_videometa = gst_buffer_pool_config_has_option (config,
@@ -173,7 +155,7 @@ gst_vulkan_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
         vk_format, priv->alloc_sizes[i],
         /* FIXME: choose from outside */
         VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        /* FIXME: choosefrom outside */
+        /* FIXME: choose from outside */
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
     if (!mem) {
       gst_buffer_unref (buf);
@@ -182,6 +164,13 @@ gst_vulkan_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 
     gst_buffer_append_memory (buf, mem);
   }
+
+  gst_buffer_add_video_meta_full (buf, 0,
+      GST_VIDEO_INFO_FORMAT (&priv->v_info),
+      GST_VIDEO_INFO_WIDTH (&priv->v_info),
+      GST_VIDEO_INFO_HEIGHT (&priv->v_info),
+      GST_VIDEO_INFO_N_PLANES (&priv->v_info), priv->v_info.offset,
+      priv->v_info.stride);
 
   *buffer = buf;
 

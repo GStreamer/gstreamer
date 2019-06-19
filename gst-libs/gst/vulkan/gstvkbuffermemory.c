@@ -150,8 +150,8 @@ _vk_buffer_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   }
 
   params.align = mem->requirements.alignment - 1;
-  _vk_buffer_mem_init (mem, allocator, parent, device, usage, &params,
-      mem->requirements.size, user_data, notify);
+  _vk_buffer_mem_init (mem, allocator, parent, device, usage, &params, size,
+      user_data, notify);
   mem->buffer = buffer;
 
   if (!gst_vulkan_memory_find_memory_type_index_with_type_properties (device,
