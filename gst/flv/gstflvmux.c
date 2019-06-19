@@ -1486,10 +1486,15 @@ gst_flv_mux_write_header (GstFlvMux * mux)
       caps = gst_flv_mux_prepare_src_caps (mux,
           &header, &metadata, &video_codec_data, &audio_codec_data);
     } else {
+      GstBuffer **video_codec_data_p = NULL, **audio_codec_data_p = NULL;
+
+      if (mux->video_pad && mux->video_pad->info_changed)
+        video_codec_data_p = &video_codec_data;
+      if (mux->audio_pad && mux->audio_pad->info_changed)
+        audio_codec_data_p = &audio_codec_data;
+
       caps = gst_flv_mux_prepare_src_caps (mux,
-          NULL, NULL,
-          (mux->video_pad->info_changed ? &video_codec_data : NULL),
-          (mux->audio_pad->info_changed ? &audio_codec_data : NULL));
+          NULL, NULL, video_codec_data_p, audio_codec_data_p);
     }
   }
 
