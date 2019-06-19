@@ -1083,6 +1083,43 @@ gst_test_clock_timed_wait_for_multiple_pending_ids (GstTestClock * test_clock,
   return ret;
 }
 
+
+/**
+ * gst_test_clock_process_id:
+ * @test_clock: #GstTestClock for which to process the pending IDs
+ * @pending_id: (transfer full): #GstClockID
+ *
+ * Processes and releases the pending ID.
+ *
+ * MT safe.
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_test_clock_process_id (GstTestClock * test_clock, GstClockID pending_id)
+{
+  GstClockEntryContext *ctx;
+
+  gboolean result = FALSE;
+
+  g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), FALSE);
+
+  GST_OBJECT_LOCK (test_clock);
+
+  ctx = gst_test_clock_lookup_entry_context (test_clock, pending_id);
+  g_assert (ctx);
+
+  if (ctx) {
+    process_entry_context_unlocked (test_clock, ctx);
+    result = TRUE;
+    gst_clock_id_unref (pending_id);
+  }
+
+  GST_OBJECT_UNLOCK (test_clock);
+
+  return result;
+}
+
 /**
  * gst_test_clock_process_id_list:
  * @test_clock: #GstTestClock for which to process the pending IDs
