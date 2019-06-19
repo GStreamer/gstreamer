@@ -291,11 +291,26 @@ gst_zbar_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
       GstStructure *s;
       GstSample *sample;
       GstCaps *sample_caps;
+      GstClockTime timestamp, running_time, stream_time, duration;
+
+      timestamp = GST_BUFFER_TIMESTAMP (frame->buffer);
+      duration = GST_BUFFER_DURATION (frame->buffer);
+      running_time =
+          gst_segment_to_running_time (&GST_BASE_TRANSFORM (zbar)->segment,
+          GST_FORMAT_TIME, timestamp);
+      stream_time =
+          gst_segment_to_stream_time (&GST_BASE_TRANSFORM (zbar)->segment,
+          GST_FORMAT_TIME, timestamp);
 
       s = gst_structure_new ("barcode",
-          "timestamp", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (frame->buffer),
+          "timestamp", G_TYPE_UINT64, timestamp,
+          "stream-time", G_TYPE_UINT64, stream_time,
+          "running-time", G_TYPE_UINT64, running_time,
           "type", G_TYPE_STRING, zbar_get_symbol_name (typ),
           "symbol", G_TYPE_STRING, data, "quality", G_TYPE_INT, quality, NULL);
+
+      if (GST_CLOCK_TIME_IS_VALID (duration))
+        gst_structure_set (s, "duration", G_TYPE_UINT64, duration, NULL);
 
       if (zbar->attach_frame) {
         /* create a sample from image */
