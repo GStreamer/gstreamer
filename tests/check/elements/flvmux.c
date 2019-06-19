@@ -459,10 +459,12 @@ flvdemux_pad_added (GstElement * flvdemux, GstPad * srcpad, DemuxHarnesses * h)
   GstCaps *caps = gst_pad_get_current_caps (srcpad);
   const gchar *name = gst_structure_get_name (gst_caps_get_structure (caps, 0));
 
-  if (g_ascii_strncasecmp ("audio", name, 5) == 0)
+  if (h->a_sink && g_ascii_strncasecmp ("audio", name, 5) == 0)
     gst_harness_add_element_src_pad (h->a_sink, srcpad);
-  else
+  else if (h->v_sink && g_ascii_strncasecmp ("video", name, 5) == 0)
     gst_harness_add_element_src_pad (h->v_sink, srcpad);
+  else
+    ck_abort_msg ("Unexpected demux pad: %s", GST_STR_NULL (name));
 
   gst_caps_unref (caps);
 }
@@ -763,6 +765,173 @@ GST_START_TEST (test_audio_caps_change_streamable)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_caps_change_streamable_single)
+{
+  GstEvent *event;
+  GstCaps *v_caps1, *v_caps2, *ret_caps;
+  GstHarness *mux = gst_harness_new_with_padnames ("flvmux", NULL, "src");
+  GstHarness *v_src =
+      gst_harness_new_with_element (mux->element, "video", NULL);
+  GstHarness *demux = gst_harness_new_with_padnames ("flvdemux", "sink", NULL);
+  GstHarness *v_sink =
+      gst_harness_new_with_element (demux->element, NULL, NULL);
+  DemuxHarnesses harnesses = { NULL, v_sink };
+
+  const GstClockTime base_time = 123456789;
+  const GstClockTime duration_ms = 20;
+  const GstClockTime duration = duration_ms * GST_MSECOND;
+
+  g_object_set (mux->element, "streamable", TRUE, NULL);
+
+  g_signal_connect (demux->element, "pad-added",
+      G_CALLBACK (flvdemux_pad_added), &harnesses);
+  gst_harness_add_sink_harness (mux, demux);
+
+  v_caps1 = gst_caps_from_string ("video/x-h264, stream-format=(string)avc, "
+      "codec_data=(buffer)0142c00cffe1000b6742c00c95a7201e1108d401000468ce3c80");
+
+  gst_harness_set_src_caps (v_src, gst_caps_ref (v_caps1));
+
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (v_src,
+          create_buffer (h264_buf, sizeof (h264_buf), base_time, duration)));
+
+  /* push from flvmux to demux */
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 4));
+
+  /* should accept without the constraint */
+  while ((event = gst_harness_try_pull_event (v_sink))) {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
+      gst_event_parse_caps (event, &ret_caps);
+      GST_LOG ("v_caps1 %" GST_PTR_FORMAT ", ret caps %" GST_PTR_FORMAT,
+          v_caps1, ret_caps);
+      fail_unless (gst_caps_is_equal (v_caps1, ret_caps));
+    }
+    gst_event_unref (event);
+  }
+
+  /* caps change */
+  v_caps2 = gst_caps_from_string ("video/x-h264, stream-format=(string)avc, "
+      "codec_data=(buffer)0164001fffe1001c6764001facd9405005bb016a02020280000003008000001e478c18cb01000568ebecb22c");
+
+  gst_harness_set_src_caps (v_src, gst_caps_ref (v_caps2));
+
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (v_src,
+          create_buffer (h264_buf, sizeof (h264_buf), base_time + duration,
+              duration)));
+
+  /* push from flvmux to demux */
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 2));
+
+  /* should accept without the constraint */
+  while ((event = gst_harness_try_pull_event (v_sink))) {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
+      gst_event_parse_caps (event, &ret_caps);
+      GST_LOG ("v_caps2 %" GST_PTR_FORMAT ", ret caps %" GST_PTR_FORMAT,
+          v_caps2, ret_caps);
+      fail_unless (gst_caps_is_equal (v_caps2, ret_caps));
+    }
+    gst_event_unref (event);
+  }
+
+  /* verify we got 2x video buffers out of flvdemux */
+  gst_buffer_unref (gst_harness_pull (v_sink));
+  gst_buffer_unref (gst_harness_pull (v_sink));
+  gst_caps_unref (v_caps1);
+  gst_caps_unref (v_caps2);
+
+  gst_harness_teardown (v_src);
+  gst_harness_teardown (mux);
+  gst_harness_teardown (v_sink);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_audio_caps_change_streamable_single)
+{
+  GstEvent *event;
+  GstCaps *a_caps1, *a_caps2, *ret_caps;
+  GstHarness *mux = gst_harness_new_with_padnames ("flvmux", NULL, "src");
+  GstHarness *a_src =
+      gst_harness_new_with_element (mux->element, "audio", NULL);
+  GstHarness *demux = gst_harness_new_with_padnames ("flvdemux", "sink", NULL);
+  GstHarness *a_sink =
+      gst_harness_new_with_element (demux->element, NULL, NULL);
+  DemuxHarnesses harnesses = { a_sink, NULL };
+
+  const GstClockTime base_time = 123456789;
+  const GstClockTime duration_ms = 20;
+  const GstClockTime duration = duration_ms * GST_MSECOND;
+
+  g_object_set (mux->element, "streamable", TRUE, NULL);
+
+  g_signal_connect (demux->element, "pad-added",
+      G_CALLBACK (flvdemux_pad_added), &harnesses);
+  gst_harness_add_sink_harness (mux, demux);
+
+  a_caps1 =
+      gst_caps_from_string
+      ("audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, "
+      "rate=(int)44100, channels=(int)1, codec_data=(buffer)1208");
+
+  gst_harness_set_src_caps (a_src, gst_caps_ref (a_caps1));
+
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (a_src,
+          create_buffer (raw_frame_short, sizeof (raw_frame_short), base_time,
+              duration)));
+
+  /* push from flvmux to demux */
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 4));
+
+  /* should accept without the constraint */
+  while ((event = gst_harness_try_pull_event (a_sink))) {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
+      gst_event_parse_caps (event, &ret_caps);
+      GST_LOG ("a_caps1 %" GST_PTR_FORMAT ", ret caps %" GST_PTR_FORMAT,
+          a_caps1, ret_caps);
+      fail_unless (gst_caps_is_equal (a_caps1, ret_caps));
+    }
+    gst_event_unref (event);
+  }
+
+  /* caps change */
+  a_caps2 =
+      gst_caps_from_string
+      ("audio/mpeg, mpegversion=(int)4, framed=(boolean)true, stream-format=(string)raw, "
+      "rate=(int)22050, channels=(int)1, codec_data=(buffer)1388");
+
+  gst_harness_set_src_caps (a_src, gst_caps_ref (a_caps2));
+
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_push (a_src,
+          create_buffer (raw_frame_short, sizeof (raw_frame_short),
+              base_time + duration, duration)));
+
+  /* push from flvmux to demux */
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 2));
+
+  /* should accept without the constraint */
+  while ((event = gst_harness_try_pull_event (a_sink))) {
+    if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
+      gst_event_parse_caps (event, &ret_caps);
+      GST_LOG ("a_caps2 %" GST_PTR_FORMAT ", ret caps %" GST_PTR_FORMAT,
+          a_caps2, ret_caps);
+      fail_unless (gst_caps_is_equal (a_caps2, ret_caps));
+    }
+    gst_event_unref (event);
+  }
+
+  /* verify we got 2x audio out of flvdemux */
+  gst_buffer_unref (gst_harness_pull (a_sink));
+  gst_buffer_unref (gst_harness_pull (a_sink));
+  gst_caps_unref (a_caps1);
+  gst_caps_unref (a_caps2);
+
+  gst_harness_teardown (a_src);
+  gst_harness_teardown (mux);
+  gst_harness_teardown (a_sink);
+}
+
+GST_END_TEST;
+
 typedef struct
 {
   guint media_type;
@@ -887,6 +1056,8 @@ flvmux_suite (void)
   tcase_add_test (tc_chain, test_video_caps_late);
   tcase_add_test (tc_chain, test_audio_caps_change_streamable);
   tcase_add_test (tc_chain, test_video_caps_change_streamable);
+  tcase_add_test (tc_chain, test_audio_caps_change_streamable_single);
+  tcase_add_test (tc_chain, test_video_caps_change_streamable_single);
   tcase_add_test (tc_chain, test_incrementing_timestamps);
 
   return s;
