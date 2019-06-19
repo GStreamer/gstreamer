@@ -8,6 +8,23 @@ gst_vulkan_shader_sources = [
 
 bin2array = find_program('bin2array.py')
 
+# FIXME: meson compiler class instead?
+glslc_build_options = []
+optimization = get_option('optimization')
+buildtype = get_option('buildtype')
+if get_option('debug') or optimization == 'g' or ['debug', 'debugoptimized'].contains(buildtype)
+  glslc_build_options += ['-g']
+endif
+if get_option('werror')
+  glslc_build_options += ['-Werror']
+endif
+if buildtype == 'minsize' or optimization == 's'
+  glslc_build_options += ['-Os']
+endif
+if ['release', 'debugoptimized'].contains(buildtype) or ['1', '2', '3'].contains(optimization)
+  glslc_build_options += ['-O']
+endif
+
 vulkan_compiled_shader_sources = []
 foreach shader: gst_vulkan_shader_sources
   basefn = shader.split('.').get(0)
@@ -22,9 +39,11 @@ foreach shader: gst_vulkan_shader_sources
   compiled_shader = custom_target(spv_shader,
                                   input: shader,
                                   output: spv_shader,
-                                  command: [
-                                    glslc,
+                                  depfile: '@PLAINNAME@.d',
+                                  command: [glslc] + glslc_build_options + [
                                     stage_arg,
+                                    '--target-env=vulkan1.0',
+                                    '-MD', '-MF', '@DEPFILE@',
                                     '@INPUT@',
                                     '-o', '@OUTPUT@'
                                   ])
