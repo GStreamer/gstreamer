@@ -560,9 +560,12 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
 
   if (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegenc->input_state->info)) {
     picture->interlaced_frame = TRUE;
-    /* if this is not the case, a filter element should be used to swap fields */
     picture->top_field_first =
-        GST_BUFFER_FLAG_IS_SET (frame->input_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+        GST_BUFFER_FLAG_IS_SET (frame->input_buffer, GST_VIDEO_BUFFER_FLAG_TFF)
+        || GST_VIDEO_INFO_FIELD_ORDER (&ffmpegenc->input_state->info) ==
+        GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+    picture->repeat_pict =
+        GST_BUFFER_FLAG_IS_SET (frame->input_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
   }
 
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (info) != GST_VIDEO_MULTIVIEW_MODE_NONE) {
