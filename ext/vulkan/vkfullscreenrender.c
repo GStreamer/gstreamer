@@ -278,7 +278,8 @@ _create_pipeline (GstVulkanFullScreenRender * render)
   VkPipelineViewportStateCreateInfo viewport_state;
   VkPipelineRasterizationStateCreateInfo rasterizer;
   VkPipelineMultisampleStateCreateInfo multisampling;
-  VkPipelineColorBlendAttachmentState color_blend_attachment;
+  VkPipelineColorBlendAttachmentState
+      color_blend_attachments[GST_VIDEO_MAX_PLANES];
   VkPipelineColorBlendStateCreateInfo color_blending;
   VkGraphicsPipelineCreateInfo pipeline_info;
   VkPipeline pipeline;
@@ -364,7 +365,19 @@ _create_pipeline (GstVulkanFullScreenRender * render)
       .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT
   };
 
-  color_blend_attachment = (VkPipelineColorBlendAttachmentState) {
+  color_blend_attachments[0] = (VkPipelineColorBlendAttachmentState) {
+      .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+      .blendEnable = VK_FALSE
+  };
+  color_blend_attachments[1] = (VkPipelineColorBlendAttachmentState) {
+      .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+      .blendEnable = VK_FALSE
+  };
+  color_blend_attachments[2] = (VkPipelineColorBlendAttachmentState) {
+      .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+      .blendEnable = VK_FALSE
+  };
+  color_blend_attachments[3] = (VkPipelineColorBlendAttachmentState) {
       .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
       .blendEnable = VK_FALSE
   };
@@ -374,8 +387,8 @@ _create_pipeline (GstVulkanFullScreenRender * render)
       .pNext = NULL,
       .logicOpEnable = VK_FALSE,
       .logicOp = VK_LOGIC_OP_COPY,
-      .attachmentCount = 1,
-      .pAttachments = &color_blend_attachment,
+      .attachmentCount = GST_VIDEO_INFO_N_PLANES (&render->out_info),
+      .pAttachments = color_blend_attachments,
       .blendConstants = { 0.0f, 0.0f, 0.0f, 0.0f }
   };
 
@@ -832,6 +845,9 @@ gst_vulkan_full_screen_render_fill_command_buffer (GstVulkanFullScreenRender *
 {
   /* *INDENT-OFF* */
   VkClearValue clearColor = {{{ 0.0f, 0.0f, 0.0f, 1.0f }}};
+  VkClearValue clearColors[GST_VIDEO_MAX_PLANES] = {
+    clearColor, clearColor, clearColor, clearColor,
+  };
   VkRenderPassBeginInfo render_pass_info = {
       .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
       .renderPass = render->render_pass,
@@ -841,8 +857,8 @@ gst_vulkan_full_screen_render_fill_command_buffer (GstVulkanFullScreenRender *
           GST_VIDEO_INFO_WIDTH (&render->out_info),
           GST_VIDEO_INFO_HEIGHT (&render->out_info)
       },
-      .clearValueCount = 1,
-      .pClearValues = &clearColor
+      .clearValueCount = GST_VIDEO_INFO_N_PLANES (&render->out_info),
+      .pClearValues = clearColors,
   };
   /* *INDENI-ON* */
   VkDeviceSize offsets[] = { 0 };

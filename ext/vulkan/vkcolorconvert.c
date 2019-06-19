@@ -39,13 +39,15 @@
 #include "shaders/swizzle_and_clobber_alpha.frag.h"
 #include "shaders/yuy2_to_rgb.frag.h"
 #include "shaders/ayuv_to_rgb.frag.h"
+#include "shaders/nv12_to_rgb.frag.h"
 #include "shaders/rgb_to_ayuv.frag.h"
 #include "shaders/rgb_to_yuy2.frag.h"
+#include "shaders/rgb_to_nv12.frag.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_color_convert);
 #define GST_CAT_DEFAULT gst_debug_vulkan_color_convert
 
-#define N_SHADER_INFO (8*14)
+#define N_SHADER_INFO (8*16)
 static shader_info shader_infos[N_SHADER_INFO];
 
 #define PUSH_CONSTANT_RANGE_NULL_INIT (VkPushConstantRange) { \
@@ -492,23 +494,26 @@ convert_info_new (GstVideoInfo * in_info, GstVideoInfo * out_info)
 }
 
 static void
-update_descriptor_set (GstVulkanColorConvert * conv, VkImageView view)
+update_descriptor_set (GstVulkanColorConvert * conv, VkImageView * views,
+    guint n_views)
 {
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (conv);
   VkDescriptorBufferInfo buffer_info;
+  VkDescriptorImageInfo image_info[GST_VIDEO_MAX_PLANES];
   VkWriteDescriptorSet writes[5];
   guint i = 0;
 
-  /* *INDENT-OFF* */
-  VkDescriptorImageInfo image_info = {
-      .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-      .imageView = view,
-      .sampler = conv->sampler
-  };
-  /* *INDENT-ON* */
-
   for (; i < GST_VIDEO_INFO_N_PLANES (&render->in_info); i++) {
     /* *INDENT-OFF* */
+    image_info[i] = (VkDescriptorImageInfo) {
+        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+        .imageView = views[i],
+        .sampler = conv->sampler
+    };
+
+    g_assert (i < n_views);
+    g_assert (i < GST_VIDEO_MAX_PLANES);
+
     writes[i] = (VkWriteDescriptorSet) {
         .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
         .pNext = NULL,
@@ -517,7 +522,7 @@ update_descriptor_set (GstVulkanColorConvert * conv, VkImageView view)
         .dstArrayElement = 0,
         .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
         .descriptorCount = 1,
-        .pImageInfo = &image_info
+        .pImageInfo = &image_info[i]
     };
     /* *INDENT-ON* */
   }
@@ -573,6 +578,12 @@ video_format_to_reorder (GstVideoFormat v_format, gint * reorder,
       reorder[1] = 1;
       reorder[2] = 0;
       reorder[3] = input ? 3 : 2;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      reorder[0] = 0;
+      reorder[1] = 1;
+      reorder[2] = 2;
+      reorder[3] = 0;
       break;
     default:
       g_assert_not_reached ();
@@ -703,7 +714,7 @@ swizzle_rgb_update_command_state (GstVulkanColorConvert * conv,
   vkCmdPushConstants (cmd, render->pipeline_layout,
       VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof (reorder),
       (const void *) reorder);
-  update_descriptor_set (conv, in_mems[0]->view);
+  update_descriptor_set (conv, &in_mems[0]->view, 1);
   vkCmdBindDescriptorSets (cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
       render->pipeline_layout, 0, 1, &conv->descriptor_set, 0, NULL);
 
@@ -738,6 +749,8 @@ yuv_to_rgb_update_command_state (GstVulkanColorConvert * conv,
     struct YUVUpdateData data;
     ConvertInfo *conv_info;
     GstMapInfo map_info;
+    VkImageView views[GST_VIDEO_MAX_PLANES];
+    int i;
 
     calculate_reorder_indexes (GST_VIDEO_INFO_FORMAT (&render->in_info),
         in_mems, GST_VIDEO_INFO_FORMAT (&render->out_info),
@@ -759,7 +772,11 @@ yuv_to_rgb_update_command_state (GstVulkanColorConvert * conv,
     memcpy (map_info.data, &data, sizeof (data));
     gst_memory_unmap (conv->uniform, &map_info);
 
-    update_descriptor_set (conv, in_mems[0]->view);
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->in_info); i++)
+      views[i] = in_mems[i]->view;
+
+    update_descriptor_set (conv, views,
+        GST_VIDEO_INFO_N_PLANES (&render->in_info));
     sinfo->user_data = GINT_TO_POINTER (1);
   }
   vkCmdBindDescriptorSets (cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -806,7 +823,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
-            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, UYVY }")));
+            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, UYVY, NV12 }")));
 
 static GstStaticPadTemplate gst_vulkan_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -814,7 +831,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE,
-            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, UYVY }")));
+            "{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV, YUY2, UYVY, NV12 }")));
 
 enum
 {
@@ -858,6 +875,8 @@ fill_shader_info (void)
         rgb_to_yuy2_frag, rgb_to_yuy2_frag_size},
     {GST_VIDEO_FORMAT_UYVY, yuy2_to_rgb_frag, yuy2_to_rgb_frag_size,
         rgb_to_yuy2_frag, rgb_to_yuy2_frag_size},
+    {GST_VIDEO_FORMAT_NV12, nv12_to_rgb_frag, nv12_to_rgb_frag_size,
+        rgb_to_nv12_frag, rgb_to_nv12_frag_size},
   };
   guint info_i = 0;
   guint i, j;
@@ -1028,7 +1047,8 @@ _init_supported_formats (GstVulkanDevice * device, gboolean output,
   _init_value_string_list (supported_formats, "RGBA", "RGB", "RGBx", "BGR",
       "BGRx", "BGRA", "xRGB", "xBGR", "ARGB", "ABGR", NULL);
 
-  _append_value_string_list (supported_formats, "AYUV", "YUY2", "UYVY", NULL);
+  _append_value_string_list (supported_formats, "AYUV", "YUY2", "UYVY", "NV12",
+      NULL);
 }
 
 /* copies the given caps */
@@ -1285,7 +1305,7 @@ static VkAttachmentReference
   VkAttachmentReference *attachments;
   int i;
 
-  *n_attachments = GST_VIDEO_INFO_N_PLANES (&render->in_info);
+  *n_attachments = GST_VIDEO_INFO_N_PLANES (&render->out_info);
   attachments = g_new0 (VkAttachmentReference, *n_attachments);
 
   for (i = 0; i < *n_attachments; i++) {
@@ -1307,7 +1327,7 @@ static VkAttachmentDescription
   VkAttachmentDescription *color_attachments;
   int i;
 
-  *n_descriptions = GST_VIDEO_INFO_N_PLANES (&render->in_info);
+  *n_descriptions = GST_VIDEO_INFO_N_PLANES (&render->out_info);
   color_attachments = g_new0 (VkAttachmentDescription, *n_descriptions);
   for (i = 0; i < *n_descriptions; i++) {
     /* *INDENT-OFF* */
@@ -1637,7 +1657,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 {
   GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (bt);
   GstVulkanColorConvert *conv = GST_VULKAN_COLOR_CONVERT (bt);
-  GstVulkanImageMemory *in_img_mems[4] = { NULL, };
+  GstVulkanImageMemory *in_img_mems[GST_VIDEO_MAX_PLANES] = { NULL, };
+  GstVulkanImageMemory *render_img_mems[GST_VIDEO_MAX_PLANES] = { NULL, };
   GstVulkanImageMemory *out_img_mems[4] = { NULL, };
   GstVulkanFence *fence = NULL;
   VkFramebuffer framebuffer;
@@ -1674,20 +1695,6 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 
   if (!(cmd = gst_vulkan_command_pool_create (conv->cmd_pool, &error)))
     goto error;
-
-  {
-    VkImageView attachments[4] = { 0, };
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->out_info); i++) {
-      attachments[i] = out_img_mems[i]->view;
-    }
-
-    if (!(framebuffer = _create_framebuffer (conv,
-                GST_VIDEO_INFO_N_PLANES (&render->out_info), attachments))) {
-      g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
-          "Failed to create framebuffer");
-      goto error;
-    }
-  }
 
   fence = gst_vulkan_fence_new (render->device, 0, &error);
   if (!fence)
@@ -1738,39 +1745,174 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     in_img_mems[i]->barrier.image_layout = in_image_memory_barrier.newLayout;
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->in_info); i++) {
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->out_info); i++) {
+    VkImageMemoryBarrier render_image_memory_barrier;
+
+    if (GST_VIDEO_INFO_WIDTH (&render->out_info) ==
+        GST_VIDEO_INFO_COMP_WIDTH (&render->out_info, i)) {
+      render_img_mems[i] = out_img_mems[i];
+    } else {
+      /* we need a scratch buffer because framebuffers can only output to
+       * attachments of at least the same size which means no sub-sampled
+       * rendering */
+      GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&render->out_info);
+      VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
+      VkFormat vk_format;
+      GstMemory *mem;
+
+      vk_format = gst_vulkan_format_from_video_format (v_format, i);
+
+      mem = gst_vulkan_image_memory_alloc (render->device,
+          vk_format, GST_VIDEO_INFO_WIDTH (&render->out_info),
+          GST_VIDEO_INFO_HEIGHT (&render->out_info), tiling,
+          VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      render_img_mems[i] = (GstVulkanImageMemory *) mem;
+    }
+
     /* *INDENT-OFF* */
-    VkImageMemoryBarrier out_image_memory_barrier = {
+    render_image_memory_barrier = (VkImageMemoryBarrier) {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
         .pNext = NULL,
-        .srcAccessMask = out_img_mems[i]->barrier.parent.access_flags,
+        .srcAccessMask = render_img_mems[i]->barrier.parent.access_flags,
         .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-        .oldLayout = out_img_mems[i]->barrier.image_layout,
+        .oldLayout = render_img_mems[i]->barrier.image_layout,
         .newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
         /* FIXME: implement exclusive transfers */
         .srcQueueFamilyIndex = 0,
         .dstQueueFamilyIndex = 0,
-        .image = out_img_mems[i]->image,
-        .subresourceRange = out_img_mems[i]->barrier.subresource_range
+        .image = render_img_mems[i]->image,
+        .subresourceRange = render_img_mems[i]->barrier.subresource_range
     };
     /* *INDENT-ON* */
 
-    vkCmdPipelineBarrier (cmd, out_img_mems[i]->barrier.parent.pipeline_stages,
+    vkCmdPipelineBarrier (cmd,
+        render_img_mems[i]->barrier.parent.pipeline_stages,
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, NULL, 0, NULL, 1,
-        &out_image_memory_barrier);
+        &render_image_memory_barrier);
 
-    out_img_mems[i]->barrier.parent.pipeline_stages =
+    render_img_mems[i]->barrier.parent.pipeline_stages =
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    out_img_mems[i]->barrier.parent.access_flags =
-        out_image_memory_barrier.dstAccessMask;
-    out_img_mems[i]->barrier.image_layout = out_image_memory_barrier.newLayout;
+    render_img_mems[i]->barrier.parent.access_flags =
+        render_image_memory_barrier.dstAccessMask;
+    render_img_mems[i]->barrier.image_layout =
+        render_image_memory_barrier.newLayout;
+  }
+
+  {
+    VkImageView attachments[4] = { 0, };
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->out_info); i++) {
+      attachments[i] = render_img_mems[i]->view;
+    }
+
+    if (!(framebuffer = _create_framebuffer (conv,
+                GST_VIDEO_INFO_N_PLANES (&render->out_info), attachments))) {
+      g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
+          "Failed to create framebuffer");
+      goto error;
+    }
   }
 
   conv->current_shader->cmd_state_update (conv, cmd, conv->current_shader,
-      in_img_mems, out_img_mems);
+      in_img_mems, render_img_mems);
   if (!gst_vulkan_full_screen_render_fill_command_buffer (render, cmd,
           framebuffer))
     return GST_FLOW_ERROR;
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&render->out_info); i++) {
+    if (render_img_mems[i] != out_img_mems[i]) {
+      VkImageMemoryBarrier out_image_memory_barrier;
+      VkImageMemoryBarrier render_image_memory_barrier;
+      VkImageBlit blit;
+
+      /* *INDENT-OFF* */
+      render_image_memory_barrier = (VkImageMemoryBarrier) {
+          .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+          .pNext = NULL,
+          .srcAccessMask = render_img_mems[i]->barrier.parent.access_flags,
+          .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
+          .oldLayout = render_img_mems[i]->barrier.image_layout,
+          .newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+          /* FIXME: implement exclusive transfers */
+          .srcQueueFamilyIndex = 0,
+          .dstQueueFamilyIndex = 0,
+          .image = render_img_mems[i]->image,
+          .subresourceRange = render_img_mems[i]->barrier.subresource_range
+      };
+      out_image_memory_barrier = (VkImageMemoryBarrier) {
+          .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+          .pNext = NULL,
+          .srcAccessMask = out_img_mems[i]->barrier.parent.access_flags,
+          .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+          .oldLayout = out_img_mems[i]->barrier.image_layout,
+          .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          /* FIXME: implement exclusive transfers */
+          .srcQueueFamilyIndex = 0,
+          .dstQueueFamilyIndex = 0,
+          .image = out_img_mems[i]->image,
+          .subresourceRange = out_img_mems[i]->barrier.subresource_range
+      };
+      blit = (VkImageBlit) {
+          .srcSubresource = {
+              .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+              .mipLevel = 0,
+              .baseArrayLayer = 0,
+              .layerCount = 1,
+          },
+          .srcOffsets = {
+              {0, 0, 0},
+              {GST_VIDEO_INFO_COMP_WIDTH (&render->out_info, i), GST_VIDEO_INFO_COMP_HEIGHT (&render->out_info, i), 1},
+          },
+          .dstSubresource = {
+              .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+              .mipLevel = 0,
+              .baseArrayLayer = 0,
+              .layerCount = 1,
+          },
+          .dstOffsets = {
+              {0, 0, 0},
+              {GST_VIDEO_INFO_COMP_WIDTH (&render->out_info, i), GST_VIDEO_INFO_COMP_HEIGHT (&render->out_info, i), 1},
+          },
+      };
+      /* *INDENT-ON* */
+
+      vkCmdPipelineBarrier (cmd,
+          render_img_mems[i]->barrier.parent.pipeline_stages,
+          VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
+          &render_image_memory_barrier);
+
+      render_img_mems[i]->barrier.parent.pipeline_stages =
+          VK_PIPELINE_STAGE_TRANSFER_BIT;
+      render_img_mems[i]->barrier.parent.access_flags =
+          render_image_memory_barrier.dstAccessMask;
+      render_img_mems[i]->barrier.image_layout =
+          render_image_memory_barrier.newLayout;
+
+      vkCmdPipelineBarrier (cmd,
+          out_img_mems[i]->barrier.parent.pipeline_stages,
+          VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
+          &out_image_memory_barrier);
+
+      out_img_mems[i]->barrier.parent.pipeline_stages =
+          VK_PIPELINE_STAGE_TRANSFER_BIT;
+      out_img_mems[i]->barrier.parent.access_flags =
+          out_image_memory_barrier.dstAccessMask;
+      out_img_mems[i]->barrier.image_layout =
+          out_image_memory_barrier.newLayout;
+
+      /* XXX: This is mostly right for a downsampling pass however if
+       * anything is more complicated, then we will need a new render pass */
+      vkCmdBlitImage (cmd, render_img_mems[i]->image,
+          render_img_mems[i]->barrier.image_layout, out_img_mems[i]->image,
+          out_img_mems[i]->barrier.image_layout, 1, &blit, VK_FILTER_LINEAR);
+
+      /* XXX: try to reuse this image later */
+      render->trash_list =
+          g_list_prepend (render->trash_list,
+          gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
+              (GstMiniObject *) render_img_mems[i]));
+    }
+  }
 
   err = vkEndCommandBuffer (cmd);
   if (gst_vulkan_error_to_g_error (err, &error, "vkEndCommandBuffer") < 0)
