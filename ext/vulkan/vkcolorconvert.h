@@ -37,15 +37,23 @@ G_BEGIN_DECLS
 typedef struct _GstVulkanColorConvert GstVulkanColorConvert;
 typedef struct _GstVulkanColorConvertClass GstVulkanColorConvertClass;
 
-typedef gboolean (*CommandStateUpdate) (GstVulkanColorConvert * conv, VkCommandBuffer cmd, GstVulkanImageMemory ** src_mems, GstVulkanImageMemory ** dest_mems);
+#define MAX_PUSH_CONSTANTS 4
 
-struct shader_info
+typedef struct _shader_info shader_info;
+
+typedef gboolean (*CommandStateUpdate) (GstVulkanColorConvert * conv, VkCommandBuffer cmd, shader_info * sinfo, GstVulkanImageMemory ** src_mems, GstVulkanImageMemory ** dest_mems);
+
+struct _shader_info
 {
   GstVideoFormat from;
   GstVideoFormat to;
   CommandStateUpdate cmd_state_update;
   gchar *frag_code;
   gsize frag_size;
+  VkPushConstantRange push_constant_ranges[MAX_PUSH_CONSTANTS];
+  gsize uniform_size;
+  GDestroyNotify notify;
+  gpointer user_data;
 };
 
 struct _GstVulkanColorConvert
@@ -64,7 +72,8 @@ struct _GstVulkanColorConvert
   VkDescriptorSetLayoutBinding      sampler_layout_binding;
   VkDescriptorSetLayoutCreateInfo   layout_info;
 
-  struct shader_info               *current_shader;
+  shader_info                      *current_shader;
+  GstMemory                        *uniform;
 };
 
 struct _GstVulkanColorConvertClass

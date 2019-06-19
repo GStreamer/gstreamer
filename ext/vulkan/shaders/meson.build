@@ -4,6 +4,10 @@ gst_vulkan_shader_sources = [
   'identity.vert',
   'swizzle.frag',
   'swizzle_and_clobber_alpha.frag',
+  'yuy2_to_rgb.frag',
+  'rgb_to_yuy2.frag',
+  'ayuv_to_rgb.frag',
+  'rgb_to_ayuv.frag',
 ]
 
 bin2array = find_program('bin2array.py')
