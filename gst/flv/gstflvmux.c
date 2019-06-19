@@ -1478,24 +1478,19 @@ gst_flv_mux_write_header (GstFlvMux * mux)
     gst_query_unref (query);
   }
 
-  if (!mux->streamable) {
+  if (mux->streamable && mux->sent_header) {
+    GstBuffer **video_codec_data_p = NULL, **audio_codec_data_p = NULL;
+
+    if (mux->video_pad && mux->video_pad->info_changed)
+      video_codec_data_p = &video_codec_data;
+    if (mux->audio_pad && mux->audio_pad->info_changed)
+      audio_codec_data_p = &audio_codec_data;
+
+    caps = gst_flv_mux_prepare_src_caps (mux,
+        NULL, NULL, video_codec_data_p, audio_codec_data_p);
+  } else {
     caps = gst_flv_mux_prepare_src_caps (mux,
         &header, &metadata, &video_codec_data, &audio_codec_data);
-  } else {
-    if (!mux->sent_header) {
-      caps = gst_flv_mux_prepare_src_caps (mux,
-          &header, &metadata, &video_codec_data, &audio_codec_data);
-    } else {
-      GstBuffer **video_codec_data_p = NULL, **audio_codec_data_p = NULL;
-
-      if (mux->video_pad && mux->video_pad->info_changed)
-        video_codec_data_p = &video_codec_data;
-      if (mux->audio_pad && mux->audio_pad->info_changed)
-        audio_codec_data_p = &audio_codec_data;
-
-      caps = gst_flv_mux_prepare_src_caps (mux,
-          NULL, NULL, video_codec_data_p, audio_codec_data_p);
-    }
   }
 
   gst_aggregator_set_src_caps (GST_AGGREGATOR_CAST (mux), caps);
