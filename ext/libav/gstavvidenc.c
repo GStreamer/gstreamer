@@ -254,6 +254,10 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   /* additional avcodec settings */
   gst_ffmpeg_cfg_fill_context (G_OBJECT (ffmpegenc), ffmpegenc->context);
 
+  if (GST_VIDEO_INFO_IS_INTERLACED (&state->info))
+    ffmpegenc->context->flags |=
+        AV_CODEC_FLAG_INTERLACED_DCT | AV_CODEC_FLAG_INTERLACED_ME;
+
   /* and last but not least the pass; CBR, 2-pass, etc */
   ffmpegenc->context->flags |= ffmpegenc->pass;
   switch (ffmpegenc->pass) {
@@ -554,8 +558,7 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
 
   gst_ffmpegvidenc_add_cc (frame->input_buffer, picture);
 
-  if (ffmpegenc->context->flags & (AV_CODEC_FLAG_INTERLACED_DCT |
-          AV_CODEC_FLAG_INTERLACED_ME)) {
+  if (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegenc->input_state->info)) {
     picture->interlaced_frame = TRUE;
     /* if this is not the case, a filter element should be used to swap fields */
     picture->top_field_first =
