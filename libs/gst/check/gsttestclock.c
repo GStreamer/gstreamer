@@ -1153,7 +1153,8 @@ gst_test_clock_id_list_get_latest_time (const GList * pending_list)
  *
  * A "crank" consists of three steps:
  * 1: Wait for a #GstClockID to be registered with the #GstTestClock.
- * 2: Advance the #GstTestClock to the time the #GstClockID is waiting for.
+ * 2: Advance the #GstTestClock to the time the #GstClockID is waiting, unless
+ *    the clock time is already passed the clock id (Since 1.18).
  * 3: Release the #GstClockID wait.
  * A "crank" can be though of as the notion of
  * manually driving the clock forward to its next logical step.
@@ -1168,10 +1169,13 @@ gboolean
 gst_test_clock_crank (GstTestClock * test_clock)
 {
   GstClockID res, pending;
+  GstClockTime now;
   gboolean result;
 
   gst_test_clock_wait_for_next_pending_id (test_clock, &pending);
-  gst_test_clock_set_time (test_clock, gst_clock_id_get_time (pending));
+  now = gst_clock_get_time (GST_CLOCK (test_clock));
+  if (gst_clock_id_get_time (pending) > now)
+    gst_test_clock_set_time (test_clock, gst_clock_id_get_time (pending));
   res = gst_test_clock_process_next_clock_id (test_clock);
   if (G_LIKELY (res == pending)) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_TEST_CLOCK, test_clock,

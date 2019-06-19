@@ -1043,6 +1043,45 @@ GST_START_TEST (test_crank)
 
 GST_END_TEST;
 
+GST_START_TEST (test_late_crank)
+{
+  GstClock *clock;
+  GstTestClock *test_clock;
+  GstClockID clock_id;
+  SyncClockWaitContext context;
+  GThread *worker_thread;
+
+  clock = gst_test_clock_new_with_start_time (GST_SECOND);
+  test_clock = GST_TEST_CLOCK (clock);
+
+  /* register a wait for 5 seconds */
+  clock_id = gst_clock_new_single_shot_id (clock, 5 * GST_SECOND);
+  context.clock_id = gst_clock_id_ref (clock_id);
+  context.jitter = 0;
+  worker_thread =
+      g_thread_new ("worker_thread_a",
+      test_wait_pending_single_shot_id_sync_worker, &context);
+
+  /* crank the clock while the pending clock id is in the past */
+  gst_test_clock_set_time (test_clock, 6 * GST_SECOND);
+  gst_test_clock_crank (test_clock);
+
+  /* the clock should have advanced and the wait released */
+  g_thread_join (worker_thread);
+
+  /* the pending entry was schedule 1 second before waiting */
+  fail_unless_equals_int64 (1 * GST_SECOND, context.jitter);
+
+  /* and the clock is still 5 seconds as configured */
+  fail_unless_equals_int64 (6 * GST_SECOND, gst_clock_get_time (clock));
+
+  gst_clock_id_unref (context.clock_id);
+  gst_clock_id_unref (clock_id);
+  gst_object_unref (clock);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_test_clock_suite (void)
 {
@@ -1075,6 +1114,7 @@ gst_test_clock_suite (void)
   tcase_add_test (tc_chain, test_periodic_async);
   tcase_add_test (tc_chain, test_periodic_uniqueness);
   tcase_add_test (tc_chain, test_crank);
+  tcase_add_test (tc_chain, test_late_crank);
 
   return s;
 }
