@@ -500,6 +500,41 @@ _create_render_pass (GstVulkanFullScreenRender * render)
   return render_pass;
 }
 
+static VkDescriptorSetLayout
+_create_descriptor_set_layout (GstVulkanFullScreenRender * render)
+{
+  GstVulkanFullScreenRenderClass *render_class =
+      GST_VULKAN_FULL_SCREEN_RENDER_GET_CLASS (render);
+  guint n_bindings;
+  VkDescriptorSetLayoutBinding *bindings =
+      render_class->descriptor_set_layout_bindings (render, &n_bindings);
+
+  /* *INDENT-OFF* */
+  VkDescriptorSetLayoutCreateInfo layout_info = {
+      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+      .pNext = NULL,
+      .bindingCount = n_bindings,
+      .pBindings = bindings
+  };
+  /* *INDENT-ON* */
+  VkDescriptorSetLayout descriptor_set_layout;
+  VkResult err;
+  GError *error = NULL;
+
+  err =
+      vkCreateDescriptorSetLayout (render->device->device, &layout_info,
+      NULL, &descriptor_set_layout);
+  g_free (bindings);
+  if (gst_vulkan_error_to_g_error (err, &error,
+          "vkCreateDescriptorSetLayout") < 0) {
+    GST_ERROR_OBJECT (render, "Failed to create renderpass: %s",
+        error->message);
+    return NULL;
+  }
+
+  return descriptor_set_layout;
+}
+
 static gboolean
 gst_vulkan_full_screen_render_set_caps (GstBaseTransform * bt,
     GstCaps * in_caps, GstCaps * out_caps)
@@ -514,22 +549,58 @@ gst_vulkan_full_screen_render_set_caps (GstBaseTransform * bt,
   gst_caps_replace (&render->in_caps, in_caps);
   gst_caps_replace (&render->out_caps, out_caps);
 
-  if (render->render_pass) {
-    render->trash_list = g_list_prepend (render->trash_list,
-        gst_vulkan_trash_new_free_render_pass (gst_vulkan_fence_ref
-            (render->last_fence), render->render_pass));
+  if (render->last_fence) {
+    if (render->descriptor_set_layout) {
+      render->trash_list = g_list_prepend (render->trash_list,
+          gst_vulkan_trash_new_free_descriptor_set_layout (gst_vulkan_fence_ref
+              (render->last_fence), render->descriptor_set_layout));
+      render->descriptor_set_layout = NULL;
+    }
+    if (render->pipeline_layout) {
+      render->trash_list = g_list_prepend (render->trash_list,
+          gst_vulkan_trash_new_free_pipeline_layout (gst_vulkan_fence_ref
+              (render->last_fence), render->pipeline_layout));
+      render->pipeline_layout = NULL;
+    }
+    if (render->render_pass) {
+      render->trash_list = g_list_prepend (render->trash_list,
+          gst_vulkan_trash_new_free_render_pass (gst_vulkan_fence_ref
+              (render->last_fence), render->render_pass));
+      render->render_pass = NULL;
+    }
+    if (render->graphics_pipeline) {
+      render->trash_list = g_list_prepend (render->trash_list,
+          gst_vulkan_trash_new_free_pipeline (gst_vulkan_fence_ref
+              (render->last_fence), render->graphics_pipeline));
+      render->graphics_pipeline = NULL;
+    }
+  } else {
+    if (render->graphics_pipeline)
+      vkDestroyPipeline (render->device->device,
+          render->graphics_pipeline, NULL);
+    render->graphics_pipeline = NULL;
+
+    if (render->pipeline_layout)
+      vkDestroyPipelineLayout (render->device->device,
+          render->pipeline_layout, NULL);
+    render->pipeline_layout = NULL;
+
+    if (render->render_pass)
+      vkDestroyRenderPass (render->device->device, render->render_pass, NULL);
     render->render_pass = NULL;
+
+    if (render->descriptor_set_layout)
+      vkDestroyDescriptorSetLayout (render->device->device,
+          render->descriptor_set_layout, NULL);
+    render->descriptor_set_layout = NULL;
   }
 
+  if (!(render->descriptor_set_layout = _create_descriptor_set_layout (render)))
+    return FALSE;
+  if (!(render->pipeline_layout = _create_pipeline_layout (render)))
+    return FALSE;
   if (!(render->render_pass = _create_render_pass (render)))
     return FALSE;
-
-  if (render->graphics_pipeline) {
-    render->trash_list = g_list_prepend (render->trash_list,
-        gst_vulkan_trash_new_free_pipeline (gst_vulkan_fence_ref
-            (render->last_fence), render->graphics_pipeline));
-    render->graphics_pipeline = NULL;
-  }
   if (!(render->graphics_pipeline = _create_pipeline (render)))
     return FALSE;
 
@@ -596,41 +667,6 @@ gst_vulkan_full_screen_render_decide_allocation (GstBaseTransform * bt,
   gst_object_unref (pool);
 
   return TRUE;
-}
-
-static VkDescriptorSetLayout
-_create_descriptor_set_layout (GstVulkanFullScreenRender * render)
-{
-  GstVulkanFullScreenRenderClass *render_class =
-      GST_VULKAN_FULL_SCREEN_RENDER_GET_CLASS (render);
-  guint n_bindings;
-  VkDescriptorSetLayoutBinding *bindings =
-      render_class->descriptor_set_layout_bindings (render, &n_bindings);
-
-  /* *INDENT-OFF* */
-  VkDescriptorSetLayoutCreateInfo layout_info = {
-      .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-      .pNext = NULL,
-      .bindingCount = n_bindings,
-      .pBindings = bindings
-  };
-  /* *INDENT-ON* */
-  VkDescriptorSetLayout descriptor_set_layout;
-  VkResult err;
-  GError *error = NULL;
-
-  err =
-      vkCreateDescriptorSetLayout (render->device->device, &layout_info,
-      NULL, &descriptor_set_layout);
-  g_free (bindings);
-  if (gst_vulkan_error_to_g_error (err, &error,
-          "vkCreateDescriptorSetLayout") < 0) {
-    GST_ERROR_OBJECT (render, "Failed to create renderpass: %s",
-        error->message);
-    return NULL;
-  }
-
-  return descriptor_set_layout;
 }
 
 static gboolean
@@ -703,11 +739,6 @@ gst_vulkan_full_screen_render_start (GstBaseTransform * bt)
     render->queue = _find_graphics_queue (render);
   }
   if (!render->queue)
-    return FALSE;
-
-  if (!(render->descriptor_set_layout = _create_descriptor_set_layout (render)))
-    return FALSE;
-  if (!(render->pipeline_layout = _create_pipeline_layout (render)))
     return FALSE;
 
   if (!_create_vertex_buffers (render))

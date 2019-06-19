@@ -47,6 +47,8 @@ static GstCaps *gst_vulkan_image_identity_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstFlowReturn gst_vulkan_image_identity_transform (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_vulkan_image_identity_set_caps (GstBaseTransform * bt,
+    GstCaps * in_caps, GstCaps * out_caps);
 
 static VkAttachmentReference
     * gst_vulkan_image_identity_render_pass_attachment_references
@@ -124,6 +126,7 @@ gst_vulkan_image_identity_class_init (GstVulkanImageIdentityClass * klass)
       GST_DEBUG_FUNCPTR (gst_vulkan_image_identity_stop);
   gstbasetransform_class->transform_caps =
       gst_vulkan_image_identity_transform_caps;
+  gstbasetransform_class->set_caps = gst_vulkan_image_identity_set_caps;
   gstbasetransform_class->transform = gst_vulkan_image_identity_transform;
 
   fullscreenrender_class->render_pass_attachment_references =
@@ -340,6 +343,38 @@ _create_descriptor_set (GstVulkanImageIdentity * vk_identity)
   return descriptor;
 }
 
+static gboolean
+gst_vulkan_image_identity_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
+    GstCaps * out_caps)
+{
+  GstVulkanImageIdentity *vk_identity = GST_VULKAN_IMAGE_IDENTITY (bt);
+  GstVulkanFullScreenRender *render = GST_VULKAN_FULL_SCREEN_RENDER (bt);
+
+  if (!GST_BASE_TRANSFORM_CLASS (parent_class)->set_caps (bt, in_caps,
+          out_caps))
+    return FALSE;
+
+  if (render->last_fence) {
+    render->trash_list = g_list_prepend (render->trash_list,
+        gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
+            (render->last_fence), vk_identity->descriptor_pool));
+    vk_identity->descriptor_set = NULL;
+    vk_identity->descriptor_pool = NULL;
+  } else {
+    vkDestroyDescriptorPool (render->device->device,
+        vk_identity->descriptor_pool, NULL);
+    vk_identity->descriptor_set = NULL;
+    vk_identity->descriptor_pool = NULL;
+  }
+
+  if (!(vk_identity->descriptor_pool = _create_descriptor_pool (vk_identity)))
+    return FALSE;
+  if (!(vk_identity->descriptor_set = _create_descriptor_set (vk_identity)))
+    return FALSE;
+
+  return TRUE;
+}
+
 static VkSampler
 _create_sampler (GstVulkanImageIdentity * vk_identity)
 {
@@ -390,10 +425,6 @@ gst_vulkan_image_identity_start (GstBaseTransform * bt)
     return FALSE;
 
   if (!(vk_identity->sampler = _create_sampler (vk_identity)))
-    return FALSE;
-  if (!(vk_identity->descriptor_pool = _create_descriptor_pool (vk_identity)))
-    return FALSE;
-  if (!(vk_identity->descriptor_set = _create_descriptor_set (vk_identity)))
     return FALSE;
 
   return TRUE;
