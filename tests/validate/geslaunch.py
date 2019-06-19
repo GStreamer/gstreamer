@@ -143,6 +143,7 @@ class GESTest(GstValidateTest):
             path = path.replace("\\", "/")
             if not self.options.disable_recurse:
                 self.add_arguments("--ges-sample-path-recurse", quote_uri(path))
+                self.add_arguments("--ges-sample-path-recurse", quote_uri(self.options.projects_paths))
             else:
                 self.add_arguments("--ges-sample-paths", quote_uri(path))
 
