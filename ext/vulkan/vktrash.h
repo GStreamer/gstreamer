@@ -67,6 +67,8 @@ GstVulkanTrash *    gst_vulkan_trash_new_free_descriptor_set        (GstVulkanFe
 
 GstVulkanTrash *    gst_vulkan_trash_new_object_unref               (GstVulkanFence * fence,
                                                                      GstObject * object);
+GstVulkanTrash *    gst_vulkan_trash_new_mini_object_unref          (GstVulkanFence * fence,
+                                                                     GstMiniObject * object);
 
 void                gst_vulkan_trash_free                           (GstVulkanTrash * trash);
 
