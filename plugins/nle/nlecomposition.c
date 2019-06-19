@@ -264,7 +264,7 @@ static gboolean _nle_composition_add_object (NleComposition * comp,
 static gboolean _nle_composition_remove_object (NleComposition * comp,
     NleObject * object);
 static void _deactivate_stack (NleComposition * comp,
-    gboolean flush_downstream);
+    NleUpdateStackReason reason);
 static gboolean _set_real_eos_seqnum_from_seek (NleComposition * comp,
     GstEvent * event);
 static void _emit_commited_signal_func (NleComposition * comp, gpointer udata);
@@ -589,7 +589,8 @@ _seek_pipeline_func (NleComposition * comp, SeekData * seekd)
 
   priv->next_base_time = 0;
 
-  comp->priv->seek_seqnum = gst_event_get_seqnum (seekd->event);
+  comp->priv->flush_seqnum = comp->priv->seek_seqnum =
+      gst_event_get_seqnum (seekd->event);
   seek_handling (seekd->comp, gst_event_get_seqnum (seekd->event),
       COMP_UPDATE_STACK_ON_SEEK);
 
@@ -599,7 +600,7 @@ _seek_pipeline_func (NleComposition * comp, SeekData * seekd)
 
 /*  Must be called with OBJECTS_LOCK taken */
 static void
-_process_pending_entries (NleComposition * comp)
+_process_pending_entries (NleComposition * comp, NleUpdateStackReason reason)
 {
   NleObject *object;
   GHashTableIter iter;
@@ -615,7 +616,7 @@ _process_pending_entries (NleComposition * comp)
           deactivated_stack == FALSE) {
         deactivated_stack = TRUE;
 
-        _deactivate_stack (comp, TRUE);
+        _deactivate_stack (comp, reason);
       }
 
       _nle_composition_remove_object (comp, object);
@@ -649,13 +650,13 @@ _commit_values (NleComposition * comp)
 }
 
 static gboolean
-_commit_all_values (NleComposition * comp)
+_commit_all_values (NleComposition * comp, NleUpdateStackReason reason)
 {
   NleCompositionPrivate *priv = comp->priv;
 
   priv->next_base_time = 0;
 
-  _process_pending_entries (comp);
+  _process_pending_entries (comp, reason);
 
   if (_commit_values (comp) == FALSE) {
 
@@ -679,7 +680,7 @@ _initialize_stack_func (NleComposition * comp, UpdateCompositionData * ucompo)
 
   _post_start_composition_update (comp, ucompo->seqnum, ucompo->reason);
 
-  _commit_all_values (comp);
+  _commit_all_values (comp, ucompo->reason);
   update_start_stop_duration (comp);
   comp->priv->next_base_time = 0;
   /* set ghostpad target */
@@ -2276,7 +2277,7 @@ _drop_all_cb (GstPad * pad G_GNUC_UNUSED,
 
 /*  Must be called with OBJECTS_LOCK taken */
 static void
-_set_current_bin_to_ready (NleComposition * comp, gboolean flush_downstream)
+_set_current_bin_to_ready (NleComposition * comp, NleUpdateStackReason reason)
 {
   gint probe_id = -1;
   GstPad *ptarget = NULL;
@@ -2284,7 +2285,7 @@ _set_current_bin_to_ready (NleComposition * comp, gboolean flush_downstream)
   GstEvent *flush_event;
 
   comp->priv->tearing_down_stack = TRUE;
-  if (flush_downstream) {
+  if (_have_to_flush_downstream (reason)) {
     ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (NLE_OBJECT_SRC (comp)));
     if (ptarget) {
 
@@ -2299,7 +2300,11 @@ _set_current_bin_to_ready (NleComposition * comp, gboolean flush_downstream)
       GST_DEBUG_OBJECT (comp, "added event probe %lu", priv->ghosteventprobe);
 
       flush_event = gst_event_new_flush_start ();
-      priv->flush_seqnum = gst_event_get_seqnum (flush_event);
+      if (reason != COMP_UPDATE_STACK_ON_SEEK)
+        priv->flush_seqnum = gst_event_get_seqnum (flush_event);
+      else
+        gst_event_set_seqnum (flush_event, priv->seek_seqnum);
+
       GST_INFO_OBJECT (comp, "sending flushes downstream with seqnum %d",
           priv->flush_seqnum);
       gst_pad_push_event (ptarget, flush_event);
@@ -2312,8 +2317,9 @@ _set_current_bin_to_ready (NleComposition * comp, gboolean flush_downstream)
   gst_element_set_state (priv->current_bin, GST_STATE_READY);
 
   if (ptarget) {
-    if (flush_downstream) {
+    if (_have_to_flush_downstream (reason)) {
       flush_event = gst_event_new_flush_stop (TRUE);
+
       gst_event_set_seqnum (flush_event, priv->flush_seqnum);
 
       /* Force ad activation so that the event can actually travel.
@@ -2409,7 +2415,7 @@ _commit_func (NleComposition * comp, UpdateCompositionData * ucompo)
    * before commiting children */
   curpos = get_current_position (comp);
 
-  if (!_commit_all_values (comp)) {
+  if (!_commit_all_values (comp, ucompo->reason)) {
     GST_DEBUG_OBJECT (comp, "Nothing to commit, leaving");
 
     g_signal_emit (comp, _signals[COMMITED_SIGNAL], 0, FALSE);
@@ -2864,13 +2870,13 @@ _relink_single_node (NleComposition * comp, GNode * node,
  */
 
 static void
-_deactivate_stack (NleComposition * comp, gboolean flush_downstream)
+_deactivate_stack (NleComposition * comp, NleUpdateStackReason reason)
 {
   GstPad *ptarget;
 
-  GST_INFO_OBJECT (comp, "Deactivating current stack (flushing downstream: %d)",
-      flush_downstream);
-  _set_current_bin_to_ready (comp, flush_downstream);
+  GST_INFO_OBJECT (comp, "Deactivating current stack (reason: %s)",
+      UPDATE_PIPELINE_REASONS[reason]);
+  _set_current_bin_to_ready (comp, reason);
 
   ptarget = gst_ghost_pad_get_target (GST_GHOST_PAD (NLE_OBJECT_SRC (comp)));
   _empty_bin (GST_BIN_CAST (comp->priv->current_bin));
@@ -3196,7 +3202,7 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
   /* If stacks are different, unlink/relink objects */
   if (!samestack) {
     _dump_stack (comp, stack);
-    _deactivate_stack (comp, _have_to_flush_downstream (update_reason));
+    _deactivate_stack (comp, update_reason);
     _relink_new_stack (comp, stack, toplevel_seek);
   }
 
