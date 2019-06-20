@@ -360,7 +360,6 @@ valgrind ges:
 
     CERBERO_HOME: "cerbero-build"
     CERBERO_SOURCES: "cerbero-sources"
-    CERBERO_DEPS: "cerbero-deps.tar.gz"
     CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS}"
     CERBERO: "./cerbero-uninstalled -c config/${CONFIG} -c localconf.cbc -m manifest.xml"
     CERBERO_PACKAGE_ARGS: "-t"
@@ -380,7 +379,15 @@ valgrind ges:
     - mkdir -p ../../${CI_PROJECT_NAMESPACE}
     - ln -sf $(pwd) ../../${CI_PROJECT_NAMESPACE}/cerbero
     - rsync -aH ${CERBERO_HOST_DIR} .
-    - test -f ${CERBERO_DEPS} && tar -C ${CERBERO_HOME} -xf ${CERBERO_DEPS}
+    - |
+      if test -f cerbero-deps.tar.xz ; then
+          echo "Extracting xz deps tarball"
+          export XZ_OPT="--threads=0" # pushing a command through sh variable and into tar correctly seems impossible
+          time tar -C ${CERBERO_HOME} --use-compress-program=xzcat -xf cerbero-deps.tar.xz
+      elif test -f cerbero-deps.tar.gz; then
+          echo "Extracting gz deps tarball"
+          time tar -C ${CERBERO_HOME} -xf cerbero-deps.tar.gz
+      fi
     - echo "home_dir = \"$(pwd)/${CERBERO_HOME}\"" >> localconf.cbc
     - echo "local_sources = \"$(pwd)/${CERBERO_SOURCES}\"" >> localconf.cbc
     - ./cerbero-uninstalled --self-update manifest.xml
@@ -413,7 +420,7 @@ valgrind ges:
     paths:
       - "manifest.xml"
       - "${CERBERO_HOME}/logs"
-      - "*.tar.bz2"
+      - "*.tar.*"
 
 .build windows:
   image: $WINDOWS_IMAGE
@@ -555,7 +562,9 @@ build msys2 :
     - test "x${CERBERO_OVERRIDDEN_DIST_DIR}" != "x"
           && mkdir -p ${CERBERO_HOME}/dist/${ARCH}
           && rsync -aH ${CERBERO_OVERRIDDEN_DIST_DIR}/ ${CERBERO_HOME}/dist/${ARCH}
-    - tar -C ${CERBERO_HOME} --exclude=var/tmp -czf $CERBERO_DEPS
+    - export CERBERO_DEPS="cerbero-deps.tar.xz"
+    - export XZ_OPT="--threads=0" # pushing a command through sh variable and into tar correctly seems impossible
+    - time tar -C ${CERBERO_HOME} --exclude=var/tmp --use-compress-program=xz -cf $CERBERO_DEPS
               build-tools build-tools.cache
               dist/${ARCH} ${ARCH}.cache
   artifacts:
@@ -566,7 +575,7 @@ build msys2 :
       - "manifest.xml"
       - "${CERBERO_HOME}/logs"
       - "${CERBERO_HOME}/cerbero-deps.log"
-      - "${CERBERO_DEPS}"
+      - "cerbero-deps.tar.*"
 
 #
 # Cerbero Linux X86_64 build
@@ -612,7 +621,7 @@ cerbero deps cross-android universal:
     paths:
       - "manifest.xml"
       - "${CERBERO_HOME}/logs"
-      - "*[0-9].tar.bz2"
+      - "*[0-9].tar.*"
 
 cerbero cross-android universal:
   extends: '.cerbero cross-android universal'
