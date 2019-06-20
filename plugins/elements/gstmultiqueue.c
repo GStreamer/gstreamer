@@ -2049,7 +2049,7 @@ next:
 
 out_flushing:
   {
-    if (object)
+    if (object && !GST_IS_QUERY (object))
       gst_mini_object_unref (object);
 
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
