@@ -169,7 +169,7 @@ gst_memory_is_type (GstMemory * mem, const gchar * mem_type)
  *
  * Get the current @size, @offset and @maxsize of @mem.
  *
- * Returns: the current sizes of @mem
+ * Returns: the current size of @mem
  */
 gsize
 gst_memory_get_sizes (GstMemory * mem, gsize * offset, gsize * maxsize)

@@ -3965,7 +3965,7 @@ gst_pad_create_stream_id_internal (GstPad * pad, GstElement * parent,
     gst_object_unref (sinkpad);
   }
 
-  /* The only case where we don't have an upstream start-start event
+  /* The only case where we don't have an upstream stream-start event
    * here is for source elements */
   if (!upstream_stream_id) {
     GstQuery *query;

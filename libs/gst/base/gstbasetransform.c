@@ -636,7 +636,7 @@ gst_base_transform_query_caps (GstBaseTransform * trans, GstPad * pad,
   templ = gst_pad_get_pad_template_caps (pad);
   otempl = gst_pad_get_pad_template_caps (otherpad);
 
-  /* first prepare the filter to be send onwards. We need to filter and
+  /* first prepare the filter to be sent onwards. We need to filter and
    * transform it to valid caps for the otherpad. */
   if (filter) {
     GST_DEBUG_OBJECT (pad, "filter caps  %" GST_PTR_FORMAT, filter);
@@ -2547,7 +2547,7 @@ gst_base_transform_set_passthrough (GstBaseTransform * trans,
  *
  * See if @trans is configured as a passthrough transform.
  *
- * Returns: %TRUE is the transform is configured in passthrough mode.
+ * Returns: %TRUE if the transform is configured in passthrough mode.
  *
  * MT safe.
  */
@@ -2611,7 +2611,7 @@ gst_base_transform_set_in_place (GstBaseTransform * trans, gboolean in_place)
  *
  * See if @trans is configured as a in_place transform.
  *
- * Returns: %TRUE is the transform is configured in in_place mode.
+ * Returns: %TRUE if the transform is configured in in_place mode.
  *
  * MT safe.
  */
@@ -2800,7 +2800,7 @@ gst_base_transform_reconfigure_src (GstBaseTransform * trans)
  * @trans: a #GstBaseTransform
  *
  * Returns: (transfer full): the instance of the #GstBufferPool used
- * by @trans; free it after use it
+ * by @trans; free it after use
  */
 GstBufferPool *
 gst_base_transform_get_buffer_pool (GstBaseTransform * trans)
@@ -2821,10 +2821,10 @@ gst_base_transform_get_buffer_pool (GstBaseTransform * trans)
  * @params: (out) (allow-none) (transfer full): the
  * #GstAllocationParams of @allocator
  *
- * Lets #GstBaseTransform sub-classes to know the memory @allocator
+ * Lets #GstBaseTransform sub-classes know the memory @allocator
  * used by the base class and its @params.
  *
- * Unref the @allocator after use it.
+ * Unref the @allocator after use.
  */
 void
 gst_base_transform_get_allocator (GstBaseTransform * trans,
@@ -2846,13 +2846,13 @@ gst_base_transform_get_allocator (GstBaseTransform * trans,
  * @updated_caps: An updated version of the srcpad caps to be pushed
  * downstream
  *
- * Updates the srcpad caps and send the caps downstream. This function
+ * Updates the srcpad caps and sends the caps downstream. This function
  * can be used by subclasses when they have already negotiated their caps
  * but found a change in them (or computed new information). This way,
  * they can notify downstream about that change without losing any
  * buffer.
  *
- * Returns: %TRUE if the caps could be send downstream %FALSE otherwise
+ * Returns: %TRUE if the caps could be sent downstream %FALSE otherwise
  *
  * Since: 1.6
  */

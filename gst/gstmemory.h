@@ -255,7 +255,7 @@ typedef gpointer    (*GstMemoryMapFullFunction)       (GstMemory *mem, GstMapInf
  * GstMemoryUnmapFunction:
  * @mem: a #GstMemory
  *
- * Return the pointer previously retrieved with gst_memory_map().
+ * Release the pointer previously retrieved with gst_memory_map().
  */
 typedef void        (*GstMemoryUnmapFunction)     (GstMemory *mem);
 
@@ -264,7 +264,7 @@ typedef void        (*GstMemoryUnmapFunction)     (GstMemory *mem);
  * @mem: a #GstMemory
  * @info: a #GstMapInfo
  *
- * Return the pointer previously retrieved with gst_memory_map() with @info.
+ * Release the pointer previously retrieved with gst_memory_map() with @info.
  */
 typedef void        (*GstMemoryUnmapFullFunction)     (GstMemory *mem, GstMapInfo * info);
 
@@ -338,7 +338,7 @@ gst_memory_ref (GstMemory * memory)
  * gst_memory_unref: (skip)
  * @memory: (transfer full): the memory to refcount
  *
- * Decrease the refcount of an memory, freeing it if the refcount reaches 0.
+ * Decrease the refcount of a memory, freeing it if the refcount reaches 0.
  */
 static inline void gst_memory_unref(GstMemory* memory);
 static inline void
