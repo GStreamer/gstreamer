@@ -64,9 +64,9 @@ gst_buffer_get_flags_string (GstBuffer * buffer)
   static const char flag_strings[] =
       "\000\000\000\000live\000decode-only\000discont\000resync\000corrupted\000"
       "marker\000header\000gap\000droppable\000delta-unit\000tag-memory\000"
-      "FIXME";
+      "sync-after\000non-droppable\000FIXME";
   static const guint8 flag_idx[] = { 0, 1, 2, 3, 4, 9, 21, 29, 36, 46, 53,
-    60, 64, 74, 85, 96
+    60, 64, 74, 85, 96, 107, 121,
   };
   int i, max_bytes;
   char *flag_str, *end;
