@@ -1036,8 +1036,11 @@ private:
     if (!m_buffers)
         return;
 
-    while ((buf = (uint8_t *) gst_queue_array_pop_head (m_buffers)))
-      g_free (buf - 128);
+    while ((buf = (uint8_t *) gst_queue_array_pop_head (m_buffers))) {
+      uint8_t offset = *(buf - 1);
+      void *alloc_buf = buf - 128 + offset;
+      g_free (alloc_buf);
+    }
   }
 
 public:
@@ -1097,6 +1100,7 @@ public:
       AllocateBuffer (uint32_t bufferSize, void **allocatedBuffer)
   {
     uint8_t *buf;
+    uint8_t offset = 0;
 
     g_mutex_lock (&m_mutex);
 
@@ -1110,8 +1114,23 @@ public:
     if (!(buf = (uint8_t *) gst_queue_array_pop_head (m_buffers))) {
       /* If not, alloc a new one */
       buf = (uint8_t *) g_malloc (bufferSize + 128);
+
+      /* The Decklink SDK requires 16 byte aligned memory at least but for us
+       * to work nicely let's align to 64 bytes (512 bits) as this allows
+       * aligned AVX2 operations for example */
+      if (((guintptr) buf) % 64 != 0) {
+        offset = ((guintptr) buf) % 64;
+      }
+
+      /* Write the allocation size at the very beginning. It's guaranteed by
+       * malloc() to be allocated aligned enough for doing this. */
       *((uint32_t *) buf) = bufferSize;
-      buf += 128;
+
+      /* Align our buffer */
+      buf += 128 - offset;
+
+      /* And write the alignment offset right before the buffer */
+      *(buf - 1) = offset;
     }
     *allocatedBuffer = (void *) buf;
 
@@ -1119,8 +1138,10 @@ public:
      * remove one of them every fifth call */
     if (gst_queue_array_get_length (m_buffers) > 0) {
       if (++m_nonEmptyCalls >= 5) {
-        buf = (uint8_t *) gst_queue_array_pop_head (m_buffers) - 128;
-        g_free (buf);
+        buf = (uint8_t *) gst_queue_array_pop_head (m_buffers);
+        uint8_t offset = *(buf - 1);
+        void *alloc_buf = buf - 128 + offset;
+        g_free (alloc_buf);
         m_nonEmptyCalls = 0;
       }
     } else {
@@ -1137,11 +1158,13 @@ public:
     g_mutex_lock (&m_mutex);
 
     /* Put the buffer back to the pool if size matches with current pool */
-    uint32_t size = *(uint32_t *) ((uint8_t *) buffer - 128);
+    uint8_t offset = *(((uint8_t *) buffer) - 1);
+    uint8_t *alloc_buffer = ((uint8_t *) buffer) - 128 + offset;
+    uint32_t size = *(uint32_t *) alloc_buffer;
     if (size == m_lastBufferSize) {
       gst_queue_array_push_tail (m_buffers, buffer);
     } else {
-      g_free (((uint8_t *) buffer) - 128);
+      g_free (alloc_buffer);
     }
 
     g_mutex_unlock (&m_mutex);
