@@ -22,5 +22,5 @@ void main()
   vec4 rgba = vec4(1.0);
   rgba.a = yuva.a;
   rgba.rgb = color_convert_texel (yuva.xyz, matrices);
-  outColor0 = /*vec4(yuv.x * 0.0, yuv.y * 0.0, yuv.z * 1.0, 1.0);*/swizzle(rgba, out_reorder_idx);
+  outColor0 = swizzle(rgba, out_reorder_idx);
 }
