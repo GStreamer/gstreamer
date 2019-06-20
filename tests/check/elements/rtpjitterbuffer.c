@@ -2047,8 +2047,13 @@ GST_START_TEST (test_rtx_with_backwards_rtptime)
   gst_buffer_unref (gst_harness_pull (h));
 
   /* crank to time-out the rtx-request for seqnum 6, the point here
-     being that the backwards rtptime did not mess up the timeout for
-     the rtx event */
+   * being that the backwards rtptime did not mess up the timeout for
+   * the rtx event.
+   *
+   * Note: the jitterbuffer no longer update early timers, as a result
+   * we need to advance the clock to the expected point
+   */
+  gst_harness_set_time (h, 6 * TEST_BUF_DURATION + 15 * GST_MSECOND);
   gst_harness_crank_single_clock_wait (h);
   verify_rtx_event (h, 6, 5 * TEST_BUF_DURATION + 15 * GST_MSECOND,
       17, 35 * GST_MSECOND);

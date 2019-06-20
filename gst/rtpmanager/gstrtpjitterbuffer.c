@@ -3009,13 +3009,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     /* signal addition of new buffer when the _loop is waiting. */
     if (G_LIKELY (priv->active))
       JBUF_SIGNAL_EVENT (priv);
-
-    /* let's unschedule and unblock any waiting buffers. We only want to do this
-     * when the head buffer changed */
-    if (G_UNLIKELY (priv->clock_id)) {
-      GST_DEBUG_OBJECT (jitterbuffer, "Unscheduling waiting new buffer");
-      unschedule_current_timer (jitterbuffer);
-    }
   }
 
   GST_DEBUG_OBJECT (jitterbuffer,
