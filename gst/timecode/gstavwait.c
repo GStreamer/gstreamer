@@ -609,12 +609,45 @@ gst_avwait_vsink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_GAP:
       gst_event_unref (event);
       return TRUE;
-    case GST_EVENT_EOS:
+    case GST_EVENT_EOS:{
+      GstClockTime running_time;
+
       g_mutex_lock (&self->mutex);
       self->video_eos_flag = TRUE;
+
+      /* If we were recording then we'd be done with it at EOS of the video
+       * pad once the audio has caught up, if it has to */
+      running_time = self->last_seen_video_running_time;
+      if (self->was_recording) {
+        GST_INFO_OBJECT (self, "Recording stopped at EOS at %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (running_time));
+
+        if (running_time > self->running_time_to_wait_for
+            && running_time <= self->running_time_to_end_at) {
+          /* We just stopped recording: synchronise the audio */
+          self->audio_running_time_to_end_at = running_time;
+          self->must_send_end_message |= END_MESSAGE_STREAM_ENDED;
+        } else if (running_time < self->running_time_to_wait_for
+            && self->running_time_to_wait_for != GST_CLOCK_TIME_NONE) {
+          self->audio_running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+        }
+      }
+
       g_cond_signal (&self->cond);
-      g_mutex_unlock (&self->mutex);
+
+      if (self->must_send_end_message & END_MESSAGE_AUDIO_PUSHED) {
+        self->must_send_end_message = END_MESSAGE_NORMAL;
+        g_mutex_unlock (&self->mutex);
+        gst_avwait_send_element_message (self, TRUE,
+            self->audio_running_time_to_end_at);
+      } else if (self->must_send_end_message & END_MESSAGE_STREAM_ENDED) {
+        self->must_send_end_message |= END_MESSAGE_VIDEO_PUSHED;
+        g_mutex_unlock (&self->mutex);
+      } else {
+        g_mutex_unlock (&self->mutex);
+      }
       break;
+    }
     case GST_EVENT_FLUSH_START:
       g_mutex_lock (&self->mutex);
       self->video_flush_flag = TRUE;
@@ -692,13 +725,25 @@ gst_avwait_asink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       g_cond_signal (&self->cond);
       g_mutex_unlock (&self->mutex);
       break;
-    case GST_EVENT_EOS:
+    case GST_EVENT_EOS:{
       g_mutex_lock (&self->mutex);
       self->audio_eos_flag = TRUE;
-      self->must_send_end_message = END_MESSAGE_NORMAL;
       g_cond_signal (&self->audio_cond);
-      g_mutex_unlock (&self->mutex);
+
+      if ((self->must_send_end_message & END_MESSAGE_VIDEO_PUSHED)) {
+        self->must_send_end_message = END_MESSAGE_NORMAL;
+        g_mutex_unlock (&self->mutex);
+        gst_avwait_send_element_message (self, TRUE,
+            self->audio_running_time_to_end_at);
+      } else if (self->must_send_end_message & END_MESSAGE_STREAM_ENDED) {
+        self->must_send_end_message |= END_MESSAGE_AUDIO_PUSHED;
+        g_mutex_unlock (&self->mutex);
+      } else {
+        self->must_send_end_message = END_MESSAGE_NORMAL;
+        g_mutex_unlock (&self->mutex);
+      }
       break;
+    }
     case GST_EVENT_FLUSH_STOP:
       g_mutex_lock (&self->mutex);
       self->audio_flush_flag = FALSE;
