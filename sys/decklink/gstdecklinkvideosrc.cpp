@@ -190,7 +190,8 @@ typedef struct
 static void
 capture_frame_clear (CaptureFrame * frame)
 {
-  frame->frame->Release ();
+  if (frame->frame)
+    frame->frame->Release ();
   if (frame->tc)
     gst_video_time_code_free (frame->tc);
   memset (frame, 0, sizeof (*frame));
@@ -823,9 +824,6 @@ gst_decklink_video_src_got_frame (GstElement * element,
       GST_TIME_FORMAT "), no signal: %d", GST_TIME_ARGS (capture_time),
       GST_TIME_ARGS (stream_time), GST_TIME_ARGS (stream_duration), no_signal);
 
-  if (self->drop_no_signal_frames && no_signal)
-    return;
-
   g_mutex_lock (&self->lock);
   if (self->first_time == GST_CLOCK_TIME_NONE)
     self->first_time = stream_time;
@@ -837,6 +835,18 @@ gst_decklink_video_src_got_frame (GstElement * element,
         "Skipping frame as requested: %" GST_TIME_FORMAT " < %" GST_TIME_FORMAT,
         GST_TIME_ARGS (stream_time),
         GST_TIME_ARGS (self->skip_first_time + self->first_time));
+    return;
+  }
+
+  if (self->drop_no_signal_frames && no_signal) {
+    CaptureFrame f;
+    memset (&f, 0, sizeof (f));
+
+    /* Notify the streaming thread about the signal loss */
+    gst_queue_array_push_tail_struct (self->current_frames, &f);
+    g_cond_signal (&self->cond);
+    g_mutex_unlock (&self->lock);
+
     return;
   }
 
@@ -871,10 +881,12 @@ gst_decklink_video_src_got_frame (GstElement * element,
         self->buffer_size) {
       CaptureFrame *tmp = (CaptureFrame *)
           gst_queue_array_pop_head_struct (self->current_frames);
-      if (skipped_frames == 0)
-        from_timestamp = tmp->timestamp;
-      skipped_frames++;
-      to_timestamp = tmp->timestamp;
+      if (tmp->frame) {
+        if (skipped_frames == 0)
+          from_timestamp = tmp->timestamp;
+        skipped_frames++;
+        to_timestamp = tmp->timestamp;
+      }
       capture_frame_clear (tmp);
     }
 
@@ -1198,6 +1210,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
       GST_STATIC_CAPS ("timestamp/x-decklink-hardware");
 
   g_mutex_lock (&self->lock);
+retry:
   while (gst_queue_array_is_empty (self->current_frames) && !self->flushing) {
     g_cond_wait (&self->cond, &self->lock);
   }
@@ -1209,11 +1222,33 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   }
 
   f = *(CaptureFrame *) gst_queue_array_pop_head_struct (self->current_frames);
-  g_mutex_unlock (&self->lock);
+
+  // We will have no frame if frames without signal are dropped immediately
+  // but we still have to signal that it's lost here.
+  if (f.no_signal || !f.frame) {
+    if (!self->no_signal) {
+      self->no_signal = TRUE;
+      g_object_notify (G_OBJECT (self), "signal");
+      GST_ELEMENT_WARNING (GST_ELEMENT (self), RESOURCE, READ, ("No signal"),
+          ("No input source was detected - video frames invalid"));
+    }
+    // If we have no frame here, simply retry until we got one
+    if (!f.frame) {
+      capture_frame_clear (&f);
+      goto retry;
+    }
+  } else {
+    if (self->no_signal) {
+      self->no_signal = FALSE;
+      g_object_notify (G_OBJECT (self), "signal");
+      GST_ELEMENT_INFO (GST_ELEMENT (self), RESOURCE, READ, ("Signal found"),
+          ("Input source detected"));
+    }
+  }
+
   // If we're not flushing, we should have a valid frame from the queue
   g_assert (f.frame != NULL);
 
-  g_mutex_lock (&self->lock);
   if (self->caps_mode != f.mode) {
     if (self->mode == GST_DECKLINK_MODE_AUTO) {
       GST_DEBUG_OBJECT (self, "Mode changed from %d to %d", self->caps_mode,
@@ -1303,22 +1338,6 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   f.frame->AddRef ();
   vf->input = self->input->input;
   vf->input->AddRef ();
-
-  if (f.no_signal) {
-    if (!self->no_signal) {
-      self->no_signal = TRUE;
-      g_object_notify (G_OBJECT (self), "signal");
-      GST_ELEMENT_WARNING (GST_ELEMENT (self), RESOURCE, READ, ("No signal"),
-          ("No input source was detected - video frames invalid"));
-    }
-  } else {
-    if (self->no_signal) {
-      self->no_signal = FALSE;
-      g_object_notify (G_OBJECT (self), "signal");
-      GST_ELEMENT_INFO (GST_ELEMENT (self), RESOURCE, READ, ("Signal found"),
-          ("Input source detected"));
-    }
-  }
 
   mode = gst_decklink_get_mode (self->mode);
 
