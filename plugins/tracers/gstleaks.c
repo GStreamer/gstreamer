@@ -642,33 +642,26 @@ gst_leaks_tracer_finalize (GObject * object)
 #define RECORD_FIELD_TYPE_TS \
     "ts", GST_TYPE_STRUCTURE, gst_structure_new ("value", \
         "type", G_TYPE_GTYPE, GST_TYPE_CLOCK_TIME, \
-        "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS, \
         NULL)
 #define RECORD_FIELD_TYPE_NAME \
     "type-name", GST_TYPE_STRUCTURE, gst_structure_new ("value", \
         "type", G_TYPE_GTYPE, G_TYPE_STRING, \
-        "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS, \
         NULL)
 #define RECORD_FIELD_ADDRESS \
     "address", GST_TYPE_STRUCTURE, gst_structure_new ("value", \
         "type", G_TYPE_GTYPE, G_TYPE_POINTER, \
-        "related-to", GST_TYPE_TRACER_VALUE_SCOPE, \
-        GST_TRACER_VALUE_SCOPE_PROCESS, \
         NULL)
 #define RECORD_FIELD_DESC \
     "description", GST_TYPE_STRUCTURE, gst_structure_new ("value", \
         "type", G_TYPE_GTYPE, G_TYPE_STRING, \
-        "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS, \
         NULL)
 #define RECORD_FIELD_REF_COUNT \
     "ref-count", GST_TYPE_STRUCTURE, gst_structure_new ("value", \
         "type", G_TYPE_GTYPE, G_TYPE_UINT, \
-        "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS, \
         NULL)
 #define RECORD_FIELD_TRACE \
     "trace", GST_TYPE_STRUCTURE, gst_structure_new ("value", \
         "type", G_TYPE_GTYPE, G_TYPE_STRING, \
-        "related-to", GST_TYPE_TRACER_VALUE_SCOPE, GST_TRACER_VALUE_SCOPE_PROCESS, \
         NULL)
 
 #ifdef G_OS_UNIX
