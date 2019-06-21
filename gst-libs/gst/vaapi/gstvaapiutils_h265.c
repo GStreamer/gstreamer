@@ -200,19 +200,18 @@ gst_vaapi_utils_h265_get_profile_idc (GstVaapiProfile profile)
 
   switch (profile) {
     case GST_VAAPI_PROFILE_H265_MAIN:
-      profile_idc = GST_H265_PROFILE_MAIN;
+      profile_idc = GST_H265_PROFILE_IDC_MAIN;
       break;
     case GST_VAAPI_PROFILE_H265_MAIN10:
-      profile_idc = GST_H265_PROFILE_MAIN_10;
+      profile_idc = GST_H265_PROFILE_IDC_MAIN_10;
       break;
     case GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE:
-      profile_idc = GST_H265_PROFILE_MAIN_STILL_PICTURE;
+      profile_idc = GST_H265_PROFILE_IDC_MAIN_STILL_PICTURE;
       break;
     case GST_VAAPI_PROFILE_H265_MAIN_422_10:
-      profile_idc = GST_H265_PROFILE_MAIN_422_10;
-      break;
+      /* Fall through */
     case GST_VAAPI_PROFILE_H265_MAIN_444:
-      profile_idc = GST_H265_PROFILE_MAIN_444;
+      profile_idc = GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION;
       break;
     default:
       GST_DEBUG ("unsupported GstVaapiProfile value");
