@@ -2,6 +2,7 @@
 
 import argparse
 import contextlib
+import glob
 import json
 import os
 import platform
@@ -134,6 +135,40 @@ def get_wine_subprocess_env(options, env):
     env['WINEDEBUG'] = 'fixme-all'
 
     return env
+
+def setup_gdb(options):
+    bdir = os.path.realpath(options.builddir)
+    python_paths = set()
+    for libpath, gdb_path in [
+            ("subprojects/gstreamer/gst/", "subprojects/gstreamer/libs/gst/helpers/"),
+            ("subprojects/glib/gobject", None),
+            ("subprojects/glib/glib", None)]:
+
+        if not gdb_path:
+            gdb_path = libpath
+
+        autoload_path = os.path.join(bdir, "gdb-auto-load/", bdir[1:], libpath)
+        os.makedirs(autoload_path, exist_ok=True)
+        for gdb_helper in glob.glob(os.path.join(bdir, gdb_path, "*-gdb.py")):
+            python_paths.add(os.path.join(bdir, gdb_path))
+            python_paths.add(os.path.join(options.srcdir, gdb_path))
+            try:
+                os.symlink(gdb_helper, os.path.join(autoload_path, os.path.basename(gdb_helper)))
+            except FileExistsError:
+                pass
+
+    gdbinit_line = 'add-auto-load-scripts-directory %s' % os.path.join(bdir, 'gdb-auto-load\n')
+    try:
+        with open(os.path.join(options.srcdir, '.gdbinit'), 'r') as f:
+            if gdbinit_line in f.readlines():
+                return python_paths
+    except FileNotFoundError:
+        pass
+
+    with open(os.path.join(options.srcdir, '.gdbinit'), 'a') as f:
+        f.write(gdbinit_line)
+
+    return python_paths
 
 
 def get_subprocess_env(options, gst_version):
@@ -269,7 +304,7 @@ def get_subprocess_env(options, gst_version):
     presets = set()
     encoding_targets = set()
     pkg_dirs = set()
-    python_dirs = set(["%s/subprojects/gstreamer/libs/gst/helpers/" % options.srcdir])
+    python_dirs = setup_gdb(options)
     if '--installed' in subprocess.check_output(meson + ['introspect', '-h']).decode():
         installed_s = subprocess.check_output(meson + ['introspect', options.builddir, '--installed'])
         for path, installpath in json.loads(installed_s.decode()).items():
@@ -371,7 +406,7 @@ if __name__ == "__main__":
                         help="Build a wine env based on specified wine command")
     parser.add_argument("--winepath",
                         default='',
-                        help="Exra path to set to WINEPATH.")
+                        help="Extra path to set to WINEPATH.")
     parser.add_argument("--only-environment",
                         action='store_true',
                         default=False,
