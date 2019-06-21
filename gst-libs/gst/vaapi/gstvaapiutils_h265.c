@@ -40,6 +40,7 @@ static const struct map gst_vaapi_h265_profile_map[] = {
   { GST_VAAPI_PROFILE_H265_MAIN,                 "main"                 },
   { GST_VAAPI_PROFILE_H265_MAIN10,               "main-10"              },
   { GST_VAAPI_PROFILE_H265_MAIN_STILL_PICTURE,   "main-still-picture"   },
+  { GST_VAAPI_PROFILE_H265_MAIN_444,             "main-444"             },
   { 0, NULL }
 /* *INDENT-ON* */
 };

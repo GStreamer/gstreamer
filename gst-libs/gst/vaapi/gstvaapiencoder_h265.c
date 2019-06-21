@@ -1082,6 +1082,8 @@ ensure_profile (GstVaapiEncoderH265 * encoder)
 
   if (format == GST_VIDEO_FORMAT_P010_10LE)
     profile = GST_VAAPI_PROFILE_H265_MAIN10;
+  else if (format == GST_VIDEO_FORMAT_VUYA)
+    profile = GST_VAAPI_PROFILE_H265_MAIN_444;
 
   encoder->profile = profile;
   encoder->profile_idc = gst_vaapi_utils_h265_get_profile_idc (profile);
