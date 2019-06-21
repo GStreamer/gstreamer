@@ -98,6 +98,9 @@
 #include "gst_private.h"
 #include "gstdevicemonitor.h"
 
+GST_DEBUG_CATEGORY_STATIC (devicemonitor_debug);
+#define GST_CAT_DEFAULT devicemonitor_debug
+
 struct _GstDeviceMonitorPrivate
 {
   gboolean started;
@@ -187,6 +190,8 @@ gst_device_monitor_class_init (GstDeviceMonitorClass * klass)
   object_class->set_property = gst_device_monitor_set_property;
   object_class->dispose = gst_device_monitor_dispose;
 
+  GST_DEBUG_CATEGORY_INIT (devicemonitor_debug, "devicemonitor", 0,
+      "debugging info for the device monitor");
   g_object_class_install_property (object_class, PROP_SHOW_ALL,
       g_param_spec_boolean ("show-all", "Show All",
           "Show all devices, even those from hidden providers",
