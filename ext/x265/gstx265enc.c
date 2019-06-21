@@ -45,6 +45,12 @@
 GST_DEBUG_CATEGORY_STATIC (x265_enc_debug);
 #define GST_CAT_DEFAULT x265_enc_debug
 
+static x265_api default_vtable;
+
+static const x265_api *vtable_8bit = NULL;
+static const x265_api *vtable_10bit = NULL;
+static const x265_api *vtable_12bit = NULL;
+
 enum
 {
   PROP_0,
@@ -64,12 +70,6 @@ enum
 #define PROP_SPEED_PRESET_DEFAULT        6      /* Medium */
 #define PROP_TUNE_DEFAULT                2      /* SSIM   */
 #define PROP_KEY_INT_MAX_DEFAULT         0      /* x265 lib default */
-
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS "I420, Y444, I420_10LE, Y444_10LE"
-#else
-#define FORMATS "I420, Y444, I420_10BE, Y444_10BE"
-#endif
 
 #define GST_X265_ENC_LOG_LEVEL_TYPE (gst_x265_enc_log_level_get_type())
 static GType
@@ -157,15 +157,6 @@ gst_x265_enc_tune_get_type (void)
   return tune;
 }
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { " FORMATS " }, "
-        "framerate = (fraction) [0, MAX], "
-        "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ]")
-    );
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -173,7 +164,13 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ], "
         "stream-format = (string) byte-stream, "
-        "alignment = (string) au, " "profile = (string) { main }")
+        "alignment = (string) au, "
+        "profile = (string) { main, main-still-picture, main-intra, main-444,"
+        " main-444-intra, main-444-still-picture,"
+        " main-10, main-10-intra, main-422-10, main-422-10-intra,"
+        " main-444-10, main-444-10-intra,"
+        " main-12, main-12-intra, main-422-12, main-422-12-intra,"
+        " main-444-12, main-444-12-intra }")
     );
 
 static void gst_x265_enc_finalize (GObject * object);
@@ -205,109 +202,117 @@ static void gst_x265_enc_get_property (GObject * object, guint prop_id,
 G_DEFINE_TYPE_WITH_CODE (GstX265Enc, gst_x265_enc, GST_TYPE_VIDEO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
 
-static void
-set_value (GValue * val, gint count, ...)
-{
-  const gchar *fmt = NULL;
-  GValue sval = G_VALUE_INIT;
-  va_list ap;
-  gint i;
-
-  g_value_init (&sval, G_TYPE_STRING);
-
-  if (count > 1)
-    g_value_init (val, GST_TYPE_LIST);
-
-  va_start (ap, count);
-  for (i = 0; i < count; i++) {
-    fmt = va_arg (ap, const gchar *);
-    g_value_set_string (&sval, fmt);
-    if (count > 1) {
-      gst_value_list_append_value (val, &sval);
-    }
-  }
-  va_end (ap);
-
-  if (count == 1)
-    *val = sval;
-  else
-    g_value_unset (&sval);
-}
-
-static void
+static gboolean
 gst_x265_enc_add_x265_chroma_format (GstStructure * s,
-    int x265_chroma_format_local)
+    gboolean allow_420, gboolean allow_422, gboolean allow_444,
+    gboolean allow_8bit, gboolean allow_10bit, gboolean allow_12bit)
 {
+  GValue fmts = G_VALUE_INIT;
   GValue fmt = G_VALUE_INIT;
+  gboolean ret = FALSE;
 
-  if (x265_max_bit_depth >= 10) {
-    GST_INFO ("This x265 build supports %d-bit depth", x265_max_bit_depth);
-    if (x265_chroma_format_local == 0) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      set_value (&fmt, 4, "I420", "Y444", "I420_10LE", "Y444_10LE");
-#else
-      set_value (&fmt, 4, "I420", "Y444", "I420_10BE", "Y444_10BE");
-#endif
-    } else if (x265_chroma_format_local == X265_CSP_I444) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      set_value (&fmt, 2, "Y444", "Y444_10LE");
-#else
-      set_value (&fmt, 2, "Y444", "Y444_10BE");
-#endif
-    } else if (x265_chroma_format_local == X265_CSP_I420) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      set_value (&fmt, 2, "I420", "I420_10LE");
-#else
-      set_value (&fmt, 2, "I420", "I420_10BE");
-#endif
-    } else {
-      GST_ERROR ("Unsupported chroma format %d", x265_chroma_format_local);
+  g_value_init (&fmts, GST_TYPE_LIST);
+  g_value_init (&fmt, G_TYPE_STRING);
+
+  if (allow_8bit) {
+    if (allow_444) {
+      g_value_set_string (&fmt, "Y444");
+      gst_value_list_append_value (&fmts, &fmt);
     }
-  } else if (x265_max_bit_depth == 8) {
-    GST_INFO ("This x265 build supports 8-bit depth");
-    if (x265_chroma_format_local == 0) {
-      set_value (&fmt, 2, "I420", "Y444");
-    } else if (x265_chroma_format_local == X265_CSP_I444) {
-      set_value (&fmt, 1, "Y444");
-    } else if (x265_chroma_format_local == X265_CSP_I420) {
-      set_value (&fmt, 1, "I420");
-    } else {
-      GST_ERROR ("Unsupported chroma format %d", x265_chroma_format_local);
+
+    if (allow_422) {
+      g_value_set_string (&fmt, "Y42B");
+      gst_value_list_append_value (&fmts, &fmt);
+    }
+
+    if (allow_420) {
+      g_value_set_string (&fmt, "I420");
+      gst_value_list_append_value (&fmts, &fmt);
     }
   }
 
-  if (G_VALUE_TYPE (&fmt) != G_TYPE_INVALID)
-    gst_structure_take_value (s, "format", &fmt);
-}
+  if (allow_10bit) {
+    if (allow_444) {
+      if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+        g_value_set_string (&fmt, "Y444_10LE");
+      else
+        g_value_set_string (&fmt, "Y444_10BE");
 
-static GstCaps *
-gst_x265_enc_get_supported_input_caps (void)
-{
-  GstCaps *caps;
-  int x265_chroma_format = 0;
+      gst_value_list_append_value (&fmts, &fmt);
+    }
 
-  caps = gst_caps_new_simple ("video/x-raw",
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
-      "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
+    if (allow_422) {
+      if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+        g_value_set_string (&fmt, "I422_10LE");
+      else
+        g_value_set_string (&fmt, "I422_10BE");
 
-  gst_x265_enc_add_x265_chroma_format (gst_caps_get_structure (caps, 0),
-      x265_chroma_format);
+      gst_value_list_append_value (&fmts, &fmt);
+    }
 
-  GST_DEBUG ("returning %" GST_PTR_FORMAT, caps);
-  return caps;
+    if (allow_420) {
+      if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+        g_value_set_string (&fmt, "I420_10LE");
+      else
+        g_value_set_string (&fmt, "I420_10BE");
+
+      gst_value_list_append_value (&fmts, &fmt);
+    }
+  }
+
+  if (allow_12bit) {
+    if (allow_444) {
+      if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+        g_value_set_string (&fmt, "Y444_12LE");
+      else
+        g_value_set_string (&fmt, "Y444_12BE");
+
+      gst_value_list_append_value (&fmts, &fmt);
+    }
+
+    if (allow_422) {
+      if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+        g_value_set_string (&fmt, "I422_12LE");
+      else
+        g_value_set_string (&fmt, "I422_12BE");
+
+      gst_value_list_append_value (&fmts, &fmt);
+    }
+
+    if (allow_420) {
+      if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+        g_value_set_string (&fmt, "I420_12LE");
+      else
+        g_value_set_string (&fmt, "I420_12BE");
+
+      gst_value_list_append_value (&fmts, &fmt);
+    }
+  }
+
+  if (gst_value_list_get_size (&fmts) != 0) {
+    gst_structure_take_value (s, "format", &fmts);
+    ret = TRUE;
+  } else {
+    g_value_unset (&fmts);
+  }
+
+  g_value_unset (&fmt);
+
+  return ret;
 }
 
 static gboolean
 gst_x265_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
 {
+  GstPad *pad = GST_VIDEO_ENCODER_SINK_PAD (enc);
   gboolean res;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ACCEPT_CAPS:{
       GstCaps *acceptable, *caps;
 
-      acceptable = gst_x265_enc_get_supported_input_caps ();
+      acceptable = gst_pad_get_pad_template_caps (pad);
+
       gst_query_parse_accept_caps (query, &caps);
 
       gst_query_set_accept_caps_result (query,
@@ -324,18 +329,123 @@ gst_x265_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
   return res;
 }
 
+static void
+check_formats (const gchar * str, guint * max_chroma, guint * max_bit_minus_8)
+{
+  if (!str)
+    return;
+
+  if (g_strrstr (str, "-444"))
+    *max_chroma = 2;
+  else if (g_strrstr (str, "-422") && *max_chroma < 1)
+    *max_chroma = 1;
+
+  if (g_strrstr (str, "-12"))
+    *max_bit_minus_8 = 4;
+  else if (g_strrstr (str, "-10") && *max_bit_minus_8 < 2)
+    *max_bit_minus_8 = 2;
+}
+
 static GstCaps *
 gst_x265_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
 {
-  GstCaps *supported_incaps;
-  GstCaps *ret;
+  GstCaps *templ_caps, *supported_incaps;
+  GstCaps *allowed;
+  GstCaps *fcaps;
+  gint i, j;
+  gboolean has_profile = FALSE;
+  guint max_chroma_index = 0;
+  guint max_bit_minus_8 = 0;
 
-  supported_incaps = gst_x265_enc_get_supported_input_caps ();
+  templ_caps = gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SINK_PAD (enc));
+  allowed = gst_pad_get_allowed_caps (enc->srcpad);
 
-  ret = gst_video_encoder_proxy_getcaps (enc, supported_incaps, filter);
-  if (supported_incaps)
-    gst_caps_unref (supported_incaps);
-  return ret;
+  GST_LOG_OBJECT (enc, "template caps %" GST_PTR_FORMAT, templ_caps);
+  GST_LOG_OBJECT (enc, "allowed caps %" GST_PTR_FORMAT, allowed);
+
+  if (!allowed) {
+    /* no peer */
+    supported_incaps = templ_caps;
+    goto done;
+  } else if (gst_caps_is_empty (allowed)) {
+    /* cannot negotiate, return empty caps */
+    gst_caps_unref (templ_caps);
+    return allowed;
+  }
+
+  /* fill format based on requested profile */
+  for (i = 0; i < gst_caps_get_size (allowed); i++) {
+    const GstStructure *allowed_s = gst_caps_get_structure (allowed, i);
+    const GValue *val;
+
+    if ((val = gst_structure_get_value (allowed_s, "profile"))) {
+      if (G_VALUE_HOLDS_STRING (val)) {
+        check_formats (g_value_get_string (val), &max_chroma_index,
+            &max_bit_minus_8);
+        has_profile = TRUE;
+      } else if (GST_VALUE_HOLDS_LIST (val)) {
+        for (j = 0; j < gst_value_list_get_size (val); j++) {
+          const GValue *vlist = gst_value_list_get_value (val, j);
+
+          if (G_VALUE_HOLDS_STRING (vlist)) {
+            check_formats (g_value_get_string (vlist), &max_chroma_index,
+                &max_bit_minus_8);
+            has_profile = TRUE;
+          }
+        }
+      }
+    }
+  }
+
+  if (!has_profile) {
+    /* downstream did not request profile */
+    supported_incaps = templ_caps;
+  } else {
+    GstStructure *s;
+    gboolean has_12bit = FALSE;
+    gboolean has_10bit = FALSE;
+    gboolean has_8bit = TRUE;
+    gboolean has_444 = FALSE;
+    gboolean has_422 = FALSE;
+    gboolean has_420 = TRUE;
+
+    supported_incaps = gst_caps_new_simple ("video/x-raw",
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+        "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
+        "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
+
+    /* NOTE: 12bits profiles can accept 8bits and 10bits format */
+    if (max_bit_minus_8 >= 4)
+      has_12bit = TRUE;
+    if (max_bit_minus_8 >= 2)
+      has_10bit = TRUE;
+
+    has_8bit &= ! !vtable_8bit;
+    has_10bit &= ! !vtable_10bit;
+    has_12bit &= ! !vtable_12bit;
+
+    /* 4:4:4 profiles can handle 4:2:2 and 4:2:0 */
+    if (max_chroma_index >= 2)
+      has_444 = TRUE;
+    if (max_chroma_index >= 1)
+      has_422 = TRUE;
+
+    s = gst_caps_get_structure (supported_incaps, 0);
+    gst_x265_enc_add_x265_chroma_format (s, has_420, has_422, has_444,
+        has_8bit, has_10bit, has_12bit);
+
+    gst_caps_unref (templ_caps);
+  }
+
+done:
+  GST_LOG_OBJECT (enc, "supported caps %" GST_PTR_FORMAT, supported_incaps);
+  fcaps = gst_video_encoder_proxy_getcaps (enc, supported_incaps, filter);
+  gst_clear_caps (&supported_incaps);
+  gst_clear_caps (&allowed);
+
+  GST_LOG_OBJECT (enc, "proxy caps %" GST_PTR_FORMAT, fcaps);
+
+  return fcaps;
 }
 
 static void
@@ -344,6 +454,8 @@ gst_x265_enc_class_init (GstX265EncClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstVideoEncoderClass *gstencoder_class;
+  GstPadTemplate *sink_templ;
+  GstCaps *supported_sinkcaps;
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
@@ -414,7 +526,21 @@ gst_x265_enc_class_init (GstX265EncClass * klass)
       "x265enc", "Codec/Encoder/Video", "H265 Encoder",
       "Thijs Vermeir <thijs.vermeir@barco.com>");
 
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
+  supported_sinkcaps = gst_caps_new_simple ("video/x-raw",
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+      "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
+
+  gst_x265_enc_add_x265_chroma_format (gst_caps_get_structure
+      (supported_sinkcaps, 0), TRUE, TRUE, TRUE, ! !vtable_8bit,
+      ! !vtable_10bit, ! !vtable_12bit);
+
+  sink_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, supported_sinkcaps);
+
+  gst_caps_unref (supported_sinkcaps);
+
+  gst_element_class_add_pad_template (element_class, sink_templ);
   gst_element_class_add_static_pad_template (element_class, &src_factory);
 }
 
@@ -426,8 +552,6 @@ gst_x265_enc_class_init (GstX265EncClass * klass)
 static void
 gst_x265_enc_init (GstX265Enc * encoder)
 {
-  x265_param_default (&encoder->x265param);
-
   encoder->push_header = TRUE;
 
   encoder->bitrate = PROP_BITRATE_DEFAULT;
@@ -437,6 +561,9 @@ gst_x265_enc_init (GstX265Enc * encoder)
   encoder->speed_preset = PROP_SPEED_PRESET_DEFAULT;
   encoder->tune = PROP_TUNE_DEFAULT;
   encoder->keyintmax = PROP_KEY_INT_MAX_DEFAULT;
+  encoder->api = &default_vtable;
+
+  encoder->api->param_default (&encoder->x265param);
 }
 
 typedef struct
@@ -565,15 +692,27 @@ gst_x265_enc_gst_to_x265_video_format (GstVideoFormat format, gint * nplanes)
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_I420_10LE:
     case GST_VIDEO_FORMAT_I420_10BE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I420_12BE:
       if (nplanes)
         *nplanes = 3;
       return X265_CSP_I420;
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_Y444_10BE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_Y444_12BE:
       if (nplanes)
         *nplanes = 3;
       return X265_CSP_I444;
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_I422_10BE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_I422_12BE:
+      if (nplanes)
+        *nplanes = 3;
+      return X265_CSP_I422;
     default:
       g_return_val_if_reached (GST_VIDEO_FORMAT_UNKNOWN);
   }
@@ -594,6 +733,9 @@ gst_x265_enc_parse_options (GstX265Enc * encoder, const gchar * str)
   guint npairs, i;
   gint parse_result = 0, ret = 0;
   gchar *options = (gchar *) str;
+  const x265_api *api = encoder->api;
+
+  g_assert (api != NULL);
 
   while (*options == ':')
     options++;
@@ -605,7 +747,7 @@ gst_x265_enc_parse_options (GstX265Enc * encoder, const gchar * str)
     GStrv key_val = g_strsplit (kvpairs[i], "=", 2);
 
     parse_result =
-        x265_param_parse (&encoder->x265param, key_val[0], key_val[1]);
+        api->param_parse (&encoder->x265param, key_val[0], key_val[1]);
 
     if (parse_result == X265_PARAM_BAD_NAME) {
       GST_ERROR_OBJECT (encoder, "Bad name for option %s=%s",
@@ -638,6 +780,7 @@ static gboolean
 gst_x265_enc_init_encoder (GstX265Enc * encoder)
 {
   GstVideoInfo *info;
+  guint bitdepth;
 
   if (!encoder->input_state) {
     GST_DEBUG_OBJECT (encoder, "Have no input state yet");
@@ -650,8 +793,38 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
   gst_x265_enc_close_encoder (encoder);
 
   GST_OBJECT_LOCK (encoder);
+  bitdepth = GST_VIDEO_INFO_COMP_DEPTH (info, 0);
+  encoder->api = NULL;
 
-  if (x265_param_default_preset (&encoder->x265param,
+  switch (bitdepth) {
+    case 8:
+      if (vtable_8bit)
+        encoder->api = vtable_8bit;
+      else if (vtable_10bit)
+        encoder->api = vtable_10bit;
+      else
+        encoder->api = vtable_12bit;
+      break;
+    case 10:
+      if (vtable_10bit)
+        encoder->api = vtable_10bit;
+      else
+        encoder->api = vtable_12bit;
+      break;
+    case 12:
+      encoder->api = vtable_12bit;
+      break;
+    default:
+      break;
+  }
+
+  if (!encoder->api) {
+    GST_ERROR_OBJECT (encoder, "no %d bitdepth vtable available", bitdepth);
+    GST_OBJECT_UNLOCK (encoder);
+    return FALSE;
+  }
+
+  if (encoder->api->param_default_preset (&encoder->x265param,
           x265_preset_names[encoder->speed_preset - 1],
           x265_tune_names[encoder->tune - 1]) < 0) {
     GST_DEBUG_OBJECT (encoder, "preset or tune unrecognized");
@@ -715,7 +888,26 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
     encoder->x265param.rc.rateControlMode = X265_RC_ABR;
   }
 
-  if (encoder->keyintmax > 0) {
+  if (encoder->peer_profile) {
+    GST_DEBUG_OBJECT (encoder, "Apply peer profile %s", encoder->peer_profile);
+    if (encoder->api->param_apply_profile (&encoder->x265param,
+            encoder->peer_profile) < 0) {
+      GST_ERROR_OBJECT (encoder, "Failed to apply profile %s",
+          encoder->peer_profile);
+
+      return FALSE;
+    }
+
+    /* libx265 chooses still-picture profile only if x265_param::totalFrames
+     * equals to one (otherwise, -intra profile will be chosen) */
+    if (g_strrstr (encoder->peer_profile, "stillpicture")) {
+      encoder->x265param.totalFrames = 1;
+    }
+  }
+
+  if (encoder->peer_intra_profile) {
+    encoder->x265param.keyframeMax = 1;
+  } else if (encoder->keyintmax > 0) {
     encoder->x265param.keyframeMax = encoder->keyintmax;
   }
 #if (X265_BUILD >= 79)
@@ -812,7 +1004,7 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
 
   GST_OBJECT_UNLOCK (encoder);
 
-  encoder->x265enc = x265_encoder_open (&encoder->x265param);
+  encoder->x265enc = encoder->api->encoder_open (&encoder->x265param);
   if (!encoder->x265enc) {
     GST_ELEMENT_ERROR (encoder, STREAM, ENCODE,
         ("Can not initialize x265 encoder."), (NULL));
@@ -833,7 +1025,9 @@ static void
 gst_x265_enc_close_encoder (GstX265Enc * encoder)
 {
   if (encoder->x265enc != NULL) {
-    x265_encoder_close (encoder->x265enc);
+    g_assert (encoder->api != NULL);
+
+    encoder->api->encoder_close (encoder->x265enc);
     encoder->x265enc = NULL;
   }
 }
@@ -880,11 +1074,18 @@ gst_x265_enc_set_level_tier_and_profile (GstX265Enc * encoder, GstCaps * caps)
   x265_nal *nal, *vps_nal;
   guint32 i_nal;
   int header_return;
-  gboolean ret = TRUE;
+  const x265_api *api = encoder->api;
+  GstStructure *s;
+  const gchar *profile;
+  GstCaps *allowed_caps;
+  GstStructure *s2;
+  const gchar *allowed_profile;
 
   GST_DEBUG_OBJECT (encoder, "set profile, level and tier");
 
-  header_return = x265_encoder_headers (encoder->x265enc, &nal, &i_nal);
+  g_assert (api != NULL);
+
+  header_return = api->encoder_headers (encoder->x265enc, &nal, &i_nal);
   if (header_return < 0) {
     GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, ("Encode x265 header failed."),
         ("x265_encoder_headers return code=%d", header_return));
@@ -898,16 +1099,48 @@ gst_x265_enc_set_level_tier_and_profile (GstX265Enc * encoder, GstCaps * caps)
 
   GST_MEMDUMP ("VPS", vps_nal->payload, vps_nal->sizeBytes);
 
-  if (!gst_codec_utils_h265_caps_set_level_tier_and_profile (caps,
-          vps_nal->payload + 6, vps_nal->sizeBytes - 6)) {
-    GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, ("Encode x265 failed."),
-        ("Failed to find correct level, tier or profile in VPS"));
-    ret = FALSE;
-  }
-
+  gst_codec_utils_h265_caps_set_level_tier_and_profile (caps,
+      vps_nal->payload + 6, vps_nal->sizeBytes - 6);
   x265_nal_free (vps_nal);
 
-  return ret;
+  /* relaxing the profile condition since libx265 can select lower profile than
+   * requested one via param_apply_profile()
+   */
+  s = gst_caps_get_structure (caps, 0);
+  profile = gst_structure_get_string (s, "profile");
+
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
+
+  if (allowed_caps == NULL)
+    goto no_peer;
+
+  if (!gst_caps_can_intersect (allowed_caps, caps)) {
+    guint peer_bitdepth = 0;
+    guint peer_chroma_format = 0;
+    guint bitdepth = 0;
+    guint chroma_format = 0;
+
+    allowed_caps = gst_caps_make_writable (allowed_caps);
+    allowed_caps = gst_caps_truncate (allowed_caps);
+    s2 = gst_caps_get_structure (allowed_caps, 0);
+    gst_structure_fixate_field_string (s2, "profile", profile);
+    allowed_profile = gst_structure_get_string (s2, "profile");
+
+    check_formats (allowed_profile, &peer_chroma_format, &peer_bitdepth);
+    check_formats (profile, &chroma_format, &bitdepth);
+
+    if (chroma_format <= peer_chroma_format && bitdepth <= peer_bitdepth) {
+      GST_INFO_OBJECT (encoder, "downstream requested %s profile, but "
+          "encoder will now output %s profile (which is a subset), due "
+          "to how it's been configured", allowed_profile, profile);
+      gst_structure_set (s, "profile", G_TYPE_STRING, allowed_profile, NULL);
+    }
+  }
+  gst_caps_unref (allowed_caps);
+
+no_peer:
+
+  return TRUE;
 }
 
 static GstBuffer *
@@ -919,8 +1152,11 @@ gst_x265_enc_get_header_buffer (GstX265Enc * encoder)
   int header_return;
   GstBuffer *buf;
   gsize header_size = 0;
+  const x265_api *api = encoder->api;
 
-  header_return = x265_encoder_headers (encoder->x265enc, &nal, &i_nal);
+  g_assert (api != NULL);
+
+  header_return = api->encoder_headers (encoder->x265enc, &nal, &i_nal);
   if (header_return < 0) {
     GST_ELEMENT_ERROR (encoder, STREAM, ENCODE, ("Encode x265 header failed."),
         ("x265_encoder_headers return code=%d", header_return));
@@ -1044,12 +1280,20 @@ gst_x265_enc_set_latency (GstX265Enc * encoder)
   gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder), latency, latency);
 }
 
+typedef struct
+{
+  const gchar *gst_profile;
+  const gchar *x265_profile;
+} GstX265EncProfileTable;
+
 static gboolean
 gst_x265_enc_set_format (GstVideoEncoder * video_enc,
     GstVideoCodecState * state)
 {
   GstX265Enc *encoder = GST_X265_ENC (video_enc);
   GstVideoInfo *info = &state->info;
+  GstCaps *template_caps;
+  GstCaps *allowed_caps = NULL;
 
   /* If the encoder is initialized, do not reinitialize it again if not
    * necessary */
@@ -1072,6 +1316,74 @@ gst_x265_enc_set_format (GstVideoEncoder * video_enc,
   if (encoder->input_state)
     gst_video_codec_state_unref (encoder->input_state);
   encoder->input_state = gst_video_codec_state_ref (state);
+
+  encoder->peer_profile = NULL;
+  encoder->peer_intra_profile = FALSE;
+
+  template_caps = gst_static_pad_template_get_caps (&src_factory);
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
+
+  /* allowed != template is meaning that downstream has some restriction
+   * so we need check whether there is requested profile or not */
+  if (allowed_caps && !gst_caps_is_equal (allowed_caps, template_caps)) {
+    GstStructure *s;
+    const gchar *profile;
+    gint i;
+    static const GstX265EncProfileTable profile_table[] = {
+      /* 8 bits */
+      {"main", "main"},
+      {"main-still-picture", "mainstillpicture"},
+      {"main-intra", "main-intra"},
+      {"main-444", "main444-8"},
+      {"main-444-intra", "main444-intra"},
+      {"main-444-still-picture", "main444-stillpicture"},
+      /* 10 bits */
+      {"main-10", "main10"},
+      {"main-10-intra", "main10-intra"},
+      {"main-422-10", "main422-10"},
+      {"main-422-10-intra", "main422-10-intra"},
+      {"main-444-10", "main444-10"},
+      {"main-444-10-intra", "main444-10-intra"},
+      /* 12 bits */
+      {"main-12", "main12"},
+      {"main-12-intra", "main12-intra"},
+      {"main-422-12", "main422-12"},
+      {"main-422-12-intra", "main422-12-intra"},
+      {"main-444-12", "main444-12"},
+      {"main-444-12-intra", "main444-12-intra"},
+    };
+
+    if (gst_caps_is_empty (allowed_caps)) {
+      gst_caps_unref (allowed_caps);
+      gst_caps_unref (template_caps);
+      return FALSE;
+    }
+
+    allowed_caps = gst_caps_make_writable (allowed_caps);
+    allowed_caps = gst_caps_fixate (allowed_caps);
+    s = gst_caps_get_structure (allowed_caps, 0);
+
+    profile = gst_structure_get_string (s, "profile");
+    if (profile) {
+      if (g_str_has_suffix (profile, "-intra")) {
+        encoder->peer_intra_profile = TRUE;
+      }
+
+      for (i = 0; G_N_ELEMENTS (profile_table); i++) {
+        if (!strcmp (profile, profile_table[i].gst_profile)) {
+          encoder->peer_profile = profile_table[i].x265_profile;
+          break;
+        }
+      }
+
+      if (!encoder->peer_profile)
+        GST_WARNING_OBJECT (encoder, "Unknown peer profile %s", profile);
+    }
+  }
+
+  gst_clear_caps (&allowed_caps);
+  gst_caps_unref (template_caps);
+
 
   if (!gst_x265_enc_init_encoder (encoder))
     return FALSE;
@@ -1119,12 +1431,15 @@ gst_x265_enc_handle_frame (GstVideoEncoder * video_enc,
   guint32 i_nal, i;
   FrameData *fdata;
   gint nplanes = 0;
+  const x265_api *api = encoder->api;
+
+  g_assert (api != NULL);
 
   if (G_UNLIKELY (encoder->x265enc == NULL))
     goto not_inited;
 
   /* set up input picture */
-  x265_picture_init (&encoder->x265param, &pic_in);
+  api->picture_init (&encoder->x265param, &pic_in);
 
   fdata = gst_x265_enc_queue_frame (encoder, frame, info);
   if (!fdata)
@@ -1173,12 +1488,16 @@ gst_x265_enc_encode_frame (GstX265Enc * encoder, x265_picture * pic_in,
   int encoder_return;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean update_latency = FALSE;
+  const x265_api *api;
 
   if (G_UNLIKELY (encoder->x265enc == NULL)) {
     if (input_frame)
       gst_video_codec_frame_unref (input_frame);
     return GST_FLOW_NOT_NEGOTIATED;
   }
+
+  api = encoder->api;
+  g_assert (api != NULL);
 
   GST_OBJECT_LOCK (encoder);
   if (encoder->reconfig) {
@@ -1198,7 +1517,7 @@ gst_x265_enc_encode_frame (GstX265Enc * encoder, x265_picture * pic_in,
   if (G_UNLIKELY (update_latency))
     gst_x265_enc_set_latency (encoder);
 
-  encoder_return = x265_encoder_encode (encoder->x265enc,
+  encoder_return = api->encoder_encode (encoder->x265enc,
       &nal, i_nal, pic_in, &pic_out);
 
   GST_DEBUG_OBJECT (encoder, "encoder result (%d) with %u nal units",
@@ -1396,6 +1715,36 @@ plugin_init (GstPlugin * plugin)
       "h265 encoding element");
 
   GST_INFO ("x265 build: %u", X265_BUILD);
+
+  default_vtable = *x265_api_get (0);
+
+  GST_INFO ("x265 default bitdepth: %u", default_vtable.bit_depth);
+
+  switch (default_vtable.bit_depth) {
+    case 8:
+      vtable_8bit = &default_vtable;
+      break;
+    case 10:
+      vtable_10bit = &default_vtable;
+      break;
+    case 12:
+      vtable_12bit = &default_vtable;
+      break;
+    default:
+      GST_WARNING ("Unknown default bitdepth %d", default_vtable.bit_depth);
+      break;
+  }
+
+  if (!vtable_8bit && (vtable_8bit = x265_api_get (8)))
+    GST_INFO ("x265 8bit api available");
+
+  if (!vtable_10bit && (vtable_10bit = x265_api_get (10)))
+    GST_INFO ("x265 10bit api available");
+
+#if (X265_BUILD >= 68)
+  if (!vtable_12bit && (vtable_12bit = x265_api_get (12)))
+    GST_INFO ("x265 12bit api available");
+#endif
 
   return gst_element_register (plugin, "x265enc",
       GST_RANK_PRIMARY, GST_TYPE_X265_ENC);
