@@ -1937,6 +1937,42 @@ check_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint percent)
   return message;
 }
 
+static inline GstClockTimeDiff
+timeout_offset (GstRtpJitterBuffer * jitterbuffer)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  return priv->ts_offset + priv->out_offset + priv->latency_ns;
+}
+
+static inline GstClockTime
+get_pts_timeout (const RtpTimer * timer)
+{
+  if (timer->timeout == -1)
+    return -1;
+
+  return timer->timeout - timer->offset;
+}
+
+static void
+update_timer_offsets (GstRtpJitterBuffer * jitterbuffer)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  RtpTimer *test = rtp_timer_queue_peek_earliest (priv->timers);
+
+  while (test) {
+    if (test->type != RTP_TIMER_EXPECTED) {
+      GstClockTimeDiff new_offset = timeout_offset (jitterbuffer);
+
+      test->timeout = get_pts_timeout (test) + new_offset;
+      test->offset = new_offset;
+
+      rtp_timer_queue_reschedule (priv->timers, test);
+    }
+
+    test = rtp_timer_get_next (test);
+  }
+}
+
 static void
 update_offset (GstRtpJitterBuffer * jitterbuffer)
 {
@@ -1960,6 +1996,8 @@ update_offset (GstRtpJitterBuffer * jitterbuffer)
       priv->ts_offset += priv->ts_offset_remainder;
       priv->ts_offset_remainder = 0;
     }
+
+    update_timer_offsets (jitterbuffer);
   }
 }
 
@@ -1981,13 +2019,6 @@ apply_offset (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
   return timestamp;
 }
 
-static GstClockTimeDiff
-timeout_offset (GstRtpJitterBuffer * jitterbuffer)
-{
-  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  return priv->ts_offset + priv->out_offset + priv->latency_ns;
-}
-
 static void
 unschedule_current_timer (GstRtpJitterBuffer * jitterbuffer)
 {
@@ -1998,15 +2029,6 @@ unschedule_current_timer (GstRtpJitterBuffer * jitterbuffer)
     gst_clock_id_unschedule (priv->clock_id);
     priv->clock_id = NULL;
   }
-}
-
-static GstClockTime
-get_pts_timeout (const RtpTimer * timer)
-{
-  if (timer->timeout == -1)
-    return -1;
-
-  return timer->timeout - timer->offset;
 }
 
 static void
@@ -2081,14 +2103,16 @@ already_lost (GstRtpJitterBuffer * jitterbuffer, GstClockTime pts,
     guint16 seqnum)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  RtpTimer *test;
 
-  RtpTimer *test = rtp_timer_queue_peek_earliest (priv->timers);
-  while (test && test->timeout <= pts) {
+  test = rtp_timer_queue_peek_earliest (priv->timers);
+  while (test && get_pts_timeout (test) <= pts) {
     gint gap = gst_rtp_buffer_compare_seqnum (test->seqnum, seqnum);
 
     if (test->num > 1 && test->type == RTP_TIMER_LOST && gap >= 0 &&
         gap < test->num) {
-      GST_DEBUG ("seqnum #%d already considered definitely lost (#%d->#%d)",
+      GST_DEBUG_OBJECT (jitterbuffer,
+          "seqnum #%d already considered definitely lost (#%d->#%d)",
           seqnum, test->seqnum, (test->seqnum + test->num - 1) & 0xffff);
       return TRUE;
     }
@@ -3901,7 +3925,7 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
 
       GST_DEBUG_OBJECT (jitterbuffer, "timer #%i sync to timestamp %"
           GST_TIME_FORMAT " with sync time %" GST_TIME_FORMAT, timer->seqnum,
-          GST_TIME_ARGS (timer->timeout), GST_TIME_ARGS (sync_time));
+          GST_TIME_ARGS (get_pts_timeout (timer)), GST_TIME_ARGS (sync_time));
 
       /* create an entry for the clock */
       id = priv->clock_id = gst_clock_new_single_shot_id (clock, sync_time);
@@ -4385,6 +4409,7 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       } else {
         priv->ts_offset = g_value_get_int64 (value);
         priv->ts_offset_remainder = 0;
+        update_timer_offsets (jitterbuffer);
       }
       priv->ts_discont = TRUE;
       JBUF_UNLOCK (priv);
