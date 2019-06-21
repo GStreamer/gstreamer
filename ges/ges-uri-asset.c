@@ -455,6 +455,7 @@ asset_ready_cb (GESAsset * source, GAsyncResult * res, RequestSyncData * data)
     gchar *possible_uri = ges_uri_asset_try_update_id (data->error, source);
 
     if (possible_uri) {
+      ges_asset_try_proxy (source, possible_uri);
       g_clear_error (&data->error);
       ges_asset_request_async (GES_TYPE_URI_CLIP, possible_uri, NULL,
           (GAsyncReadyCallback) asset_ready_cb, data);

@@ -31,13 +31,14 @@ from gi.repository import GES  # noqa
 import unittest  # noqa
 from unittest import mock
 
+from . import common
 from .common import GESSimpleTimelineTest  # noqa
 
 Gst.init(None)
 GES.init()
 
 
-class TestTimeline(unittest.TestCase):
+class TestTimeline(GESSimpleTimelineTest):
 
     def test_request_relocated_assets_sync(self):
         path = os.path.join(__file__, "../../../", "png.png")
@@ -48,3 +49,14 @@ class TestTimeline(unittest.TestCase):
         path = os.path.join(__file__, "../../", "png.png")
         self.assertEqual(GES.UriClipAsset.request_sync(Gst.filename_to_uri(path)).props.id,
             Gst.filename_to_uri(os.path.join(__file__, "../../assets/png.png")))
+
+    def test_request_relocated_twice(self):
+        mainloop = common.create_main_loop()
+
+        GES.add_missing_uri_relocation_uri(Gst.filename_to_uri(os.path.join(__file__, "../../")), True)
+        proj = GES.Project.new()
+
+        asset = proj.create_asset_sync("file:///png.png", GES.UriClip)
+        self.assertIsNotNone(asset)
+        asset = proj.create_asset_sync("file:///png.png", GES.UriClip)
+        self.assertIsNotNone(asset)
