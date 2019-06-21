@@ -27,6 +27,9 @@
 #include <gst/rtp/rtp.h>
 #include <gio/gio.h>
 
+/* UDP/IP is assumed for bandwidth calculation */
+#define UDP_IP_HEADER_OVERHEAD 28
+
 /**
  * RTPSenderReport:
  *

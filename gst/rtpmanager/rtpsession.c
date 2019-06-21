@@ -673,7 +673,7 @@ rtp_session_init (RTPSession * sess)
   sess->rtcp_rs_bandwidth = DEFAULT_RTCP_RS_BANDWIDTH;
 
   /* default UDP header length */
-  sess->header_len = 28;
+  sess->header_len = UDP_IP_HEADER_OVERHEAD;
   sess->mtu = DEFAULT_RTCP_MTU;
 
   sess->probation = DEFAULT_PROBATION;

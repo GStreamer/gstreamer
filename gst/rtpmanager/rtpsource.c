@@ -1188,8 +1188,8 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo,
   src->stats.octets_received += pinfo->payload_len;
   src->stats.bytes_received += pinfo->bytes;
   src->stats.packets_received += pinfo->packets;
-  /* for the bitrate estimation */
-  src->bytes_received += pinfo->payload_len;
+  /* for the bitrate estimation consider all lower level headers */
+  src->bytes_received += pinfo->bytes;
 
   GST_LOG ("seq %u, PC: %" G_GUINT64_FORMAT ", OC: %" G_GUINT64_FORMAT,
       seqnr, src->stats.packets_received, src->stats.octets_received);
@@ -1319,7 +1319,7 @@ rtp_source_send_rtp (RTPSource * src, RTPPacketInfo * pinfo)
   /* update stats for the SR */
   src->stats.packets_sent += pinfo->packets;
   src->stats.octets_sent += pinfo->payload_len;
-  src->bytes_sent += pinfo->payload_len;
+  src->bytes_sent += pinfo->bytes;
 
   running_time = pinfo->running_time;
 
