@@ -290,8 +290,10 @@ ges_timeline_dispose (GObject * object)
    * objects aren't notified that their nleobjects have been destroyed.
    */
 
+  LOCK_DYN (tl);
   while (tl->tracks)
     ges_timeline_remove_track (GES_TIMELINE (object), tl->tracks->data);
+  UNLOCK_DYN (tl);
 
   groups = g_list_copy (priv->groups);
   for (tmp = groups; tmp; tmp = tmp->next) {
@@ -354,7 +356,9 @@ ges_timeline_handle_message (GstBin * bin, GstMessage * message)
       GST_OBJECT_LOCK (timeline);
       if (timeline->priv->expected_async_done == 0) {
         amessage = gst_message_new_async_start (GST_OBJECT_CAST (bin));
+        LOCK_DYN (timeline);
         timeline->priv->expected_async_done = g_list_length (timeline->tracks);
+        UNLOCK_DYN (timeline);
         GST_INFO_OBJECT (timeline, "Posting ASYNC_START %s",
             gst_structure_get_string (mstructure, "reason"));
       }
@@ -1176,6 +1180,7 @@ select_tracks_for_object_default (GESTimeline * timeline,
 
   result = g_ptr_array_new ();
 
+  LOCK_DYN (timeline);
   for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
     GESTrack *track = GES_TRACK (tmp->data);
 
@@ -1184,6 +1189,7 @@ select_tracks_for_object_default (GESTimeline * timeline,
       g_ptr_array_add (result, track);
     }
   }
+  UNLOCK_DYN (timeline);
 
   return result;
 }
@@ -1205,6 +1211,7 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip, GESTrack * track)
     types = track->type;
   }
 
+  LOCK_DYN (timeline);
   for (i = 0, tmp = timeline->tracks; tmp; tmp = tmp->next, i++) {
     GESTrack *track = GES_TRACK (tmp->data);
 
@@ -1214,6 +1221,7 @@ add_object_to_tracks (GESTimeline * timeline, GESClip * clip, GESTrack * track)
     list = ges_clip_create_track_elements (clip, track->type);
     g_list_free (list);
   }
+  UNLOCK_DYN (timeline);
 }
 
 static void
@@ -1653,9 +1661,11 @@ timeline_fill_gaps (GESTimeline * timeline)
 {
   GList *tmp;
 
+  LOCK_DYN (timeline);
   for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
     track_resort_and_fill_gaps (tmp->data);
   }
+  UNLOCK_DYN (timeline);
 }
 
 GNode *
@@ -1988,7 +1998,9 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
   /* make sure we don't already control it */
+  LOCK_DYN (timeline);
   if (G_UNLIKELY (g_list_find (timeline->tracks, (gconstpointer) track))) {
+    UNLOCK_DYN (timeline);
     GST_WARNING ("Track is already controlled by this timeline");
     return FALSE;
   }
@@ -1996,6 +2008,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   /* Add the track to ourself (as a GstBin)
    * Reference is stolen ! */
   if (G_UNLIKELY (!gst_bin_add (GST_BIN (timeline), GST_ELEMENT (track)))) {
+    UNLOCK_DYN (timeline);
     GST_WARNING ("Couldn't add track to ourself (GST)");
     return FALSE;
   }
@@ -2009,10 +2022,8 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
       gst_object_ref (tr_priv->stream));
 
   /* Add the track to the list of tracks we track */
-  LOCK_DYN (timeline);
   timeline->priv->priv_tracks = g_list_append (timeline->priv->priv_tracks,
       tr_priv);
-  UNLOCK_DYN (timeline);
   timeline->tracks = g_list_append (timeline->tracks, track);
 
   /* Inform the track that it's currently being used by ourself */
@@ -2021,6 +2032,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   GST_DEBUG ("Done adding track, emitting 'track-added' signal");
 
   _ghost_track_srcpad (tr_priv);
+  UNLOCK_DYN (timeline);
 
   /* emit 'track-added' */
   g_signal_emit (timeline, ges_timeline_signals[TRACK_ADDED], 0, track);
@@ -2080,7 +2092,6 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
-  CHECK_THREAD (timeline);
 
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
@@ -2212,10 +2223,14 @@ ges_timeline_get_pad_for_track (GESTimeline * timeline, GESTrack * track)
 GList *
 ges_timeline_get_tracks (GESTimeline * timeline)
 {
+  GList *res = NULL;
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
-  CHECK_THREAD (timeline);
 
-  return g_list_copy_deep (timeline->tracks, (GCopyFunc) gst_object_ref, NULL);
+  LOCK_DYN (timeline);
+  res = g_list_copy_deep (timeline->tracks, (GCopyFunc) gst_object_ref, NULL);
+  UNLOCK_DYN (timeline);
+
+  return res;
 }
 
 /**
@@ -2286,6 +2301,7 @@ ges_timeline_commit_unlocked (GESTimeline * timeline)
   } else {
     GstStreamCollection *collection = gst_stream_collection_new (NULL);
 
+    LOCK_DYN (timeline);
     for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
       TrackPrivate *tr_priv =
           g_list_find_custom (timeline->priv->priv_tracks, tmp->data,
@@ -2302,6 +2318,7 @@ ges_timeline_commit_unlocked (GESTimeline * timeline)
 
     gst_object_unref (timeline->priv->stream_collection);
     timeline->priv->stream_collection = collection;
+    UNLOCK_DYN (timeline);
   }
 
   return res;
