@@ -353,6 +353,7 @@ gst_system_clock_obtain (void)
 
     /* Clear floating flag */
     gst_object_ref_sink (clock);
+    GST_OBJECT_FLAG_SET (clock, GST_OBJECT_FLAG_MAY_BE_LEAKED);
     _the_system_clock = clock;
     g_mutex_unlock (&_gst_sysclock_mutex);
   } else {
