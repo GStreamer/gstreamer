@@ -78,8 +78,12 @@ struct _GstLeaksTracerClass {
   GstTracerClass parent_class;
 
   /* actions */
-  GstStructure * (*get_live_objects)     (GstLeaksTracer *tracer);
-  void           (*log_live_objects)     (GstLeaksTracer *tracer);
+  GstStructure * (*get_live_objects)            (GstLeaksTracer *tracer);
+  void           (*log_live_objects)            (GstLeaksTracer *tracer);
+  void           (*activity_start_tracking)     (GstLeaksTracer *tracer);
+  GstStructure * (*activity_get_checkpoint)     (GstLeaksTracer *tracer);
+  void           (*activity_log_checkpoint)     (GstLeaksTracer *tracer);
+  void           (*activity_stop_tracking)      (GstLeaksTracer *tracer);
 };
 
 G_GNUC_INTERNAL GType gst_leaks_tracer_get_type (void);

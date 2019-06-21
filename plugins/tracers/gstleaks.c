@@ -75,6 +75,10 @@ enum
   /* actions */
   SIGNAL_GET_LIVE_OBJECTS,
   SIGNAL_LOG_LIVE_OBJECTS,
+  SIGNAL_ACTIVITY_START_TRACKING,
+  SIGNAL_ACTIVITY_GET_CHECKPOINT,
+  SIGNAL_ACTIVITY_LOG_CHECKPOINT,
+  SIGNAL_ACTIVITY_STOP_TRACKING,
 
   LAST_SIGNAL
 };
@@ -89,13 +93,16 @@ G_DEFINE_TYPE_WITH_CODE (GstLeaksTracer, gst_leaks_tracer,
 
 static GstStructure *gst_leaks_tracer_get_live_objects (GstLeaksTracer * self);
 static void gst_leaks_tracer_log_live_objects (GstLeaksTracer * self);
+static void gst_leaks_tracer_activity_start_tracking (GstLeaksTracer * self);
+static GstStructure *gst_leaks_tracer_activity_get_checkpoint (GstLeaksTracer *
+    self);
+static void gst_leaks_tracer_activity_log_checkpoint (GstLeaksTracer * self);
+static void gst_leaks_tracer_activity_stop_tracking (GstLeaksTracer * self);
 
 static GstTracerRecord *tr_alive;
 static GstTracerRecord *tr_refings;
-#ifdef G_OS_UNIX
 static GstTracerRecord *tr_added = NULL;
 static GstTracerRecord *tr_removed = NULL;
-#endif /* G_OS_UNIX */
 static GQueue instances = G_QUEUE_INIT;
 static guint gst_leaks_tracer_signals[LAST_SIGNAL] = { 0 };
 
@@ -292,7 +299,6 @@ should_handle_object_type (GstLeaksTracer * self, GType object_type)
   return FALSE;
 }
 
-#ifdef G_OS_UNIX
 /* The object may be destroyed when we log it using the checkpointing system so
  * we have to save its type name */
 typedef struct
@@ -321,7 +327,6 @@ object_log_free (ObjectLog * obj)
 {
   g_free (obj);
 }
-#endif /* G_OS_UNIX */
 
 static void
 handle_object_destroyed (GstLeaksTracer * self, gpointer object)
@@ -335,10 +340,8 @@ handle_object_destroyed (GstLeaksTracer * self, gpointer object)
   }
 
   g_hash_table_remove (self->objects, object);
-#ifdef G_OS_UNIX
   if (self->removed)
     g_hash_table_add (self->removed, object_log_new (object));
-#endif /* G_OS_UNIX */
 out:
   GST_OBJECT_UNLOCK (self);
 }
@@ -382,10 +385,8 @@ handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
 
   g_hash_table_insert (self->objects, object, infos);
 
-#ifdef G_OS_UNIX
   if (self->added)
     g_hash_table_add (self->added, object_log_new (object));
-#endif /* G_OS_UNIX */
   GST_OBJECT_UNLOCK (self);
 }
 
@@ -763,50 +764,16 @@ sig_usr1_handler (G_GNUC_UNUSED int signal)
 }
 
 static void
-log_checkpoint (GHashTable * hash, GstTracerRecord * record)
-{
-  GHashTableIter iter;
-  gpointer o;
-
-  g_hash_table_iter_init (&iter, hash);
-  while (g_hash_table_iter_next (&iter, &o, NULL)) {
-    ObjectLog *obj = o;
-
-    gst_tracer_record_log (record, obj->type_name, obj->object);
-  }
-}
-
-static void
-do_checkpoint (GstLeaksTracer * self)
-{
-  GST_TRACE_OBJECT (self, "listing objects created since last checkpoint");
-  log_checkpoint (self->added, tr_added);
-  GST_TRACE_OBJECT (self, "listing objects removed since last checkpoint");
-  log_checkpoint (self->removed, tr_removed);
-
-  g_hash_table_remove_all (self->added);
-  g_hash_table_remove_all (self->removed);
-}
-
-static void
 sig_usr2_handler_foreach (gpointer data, gpointer user_data)
 {
   GstLeaksTracer *tracer = data;
 
-  GST_OBJECT_LOCK (tracer);
-
   if (!tracer->added) {
     GST_TRACE_OBJECT (tracer, "First checkpoint, start tracking objects");
-
-    tracer->added = g_hash_table_new_full (NULL, NULL,
-        (GDestroyNotify) object_log_free, NULL);
-    tracer->removed = g_hash_table_new_full (NULL, NULL,
-        (GDestroyNotify) object_log_free, NULL);
+    gst_leaks_tracer_activity_start_tracking (tracer);
   } else {
-    do_checkpoint (tracer);
+    gst_leaks_tracer_activity_log_checkpoint (tracer);
   }
-
-  GST_OBJECT_UNLOCK (tracer);
 }
 
 static void
@@ -818,14 +785,6 @@ sig_usr2_handler (G_GNUC_UNUSED int signal)
 static void
 setup_signals (void)
 {
-  tr_added = gst_tracer_record_new ("object-added.class",
-      RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, NULL);
-  GST_OBJECT_FLAG_SET (tr_added, GST_OBJECT_FLAG_MAY_BE_LEAKED);
-
-  tr_removed = gst_tracer_record_new ("object-removed.class",
-      RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, NULL);
-  GST_OBJECT_FLAG_SET (tr_removed, GST_OBJECT_FLAG_MAY_BE_LEAKED);
-
   signal (SIGUSR1, sig_usr1_handler);
   signal (SIGUSR2, sig_usr2_handler);
 }
@@ -860,6 +819,102 @@ gst_leaks_tracer_log_live_objects (GstLeaksTracer * self)
 }
 
 static void
+gst_leaks_tracer_activity_start_tracking (GstLeaksTracer * self)
+{
+  GST_OBJECT_LOCK (self);
+  if (self->added) {
+    GST_ERROR_OBJECT (self, "tracking is already in progress");
+    return;
+  }
+
+  self->added = g_hash_table_new_full (NULL, NULL,
+      (GDestroyNotify) object_log_free, NULL);
+  self->removed = g_hash_table_new_full (NULL, NULL,
+      (GDestroyNotify) object_log_free, NULL);
+  GST_OBJECT_UNLOCK (self);
+}
+
+/* When @ret is %NULL, this simply logs the activities */
+static void
+process_checkpoint (GstTracerRecord * record, const gchar * record_type,
+    GHashTable * hash, GValue * ret)
+{
+  GHashTableIter iter;
+  gpointer o;
+
+  g_hash_table_iter_init (&iter, hash);
+  while (g_hash_table_iter_next (&iter, &o, NULL)) {
+    ObjectLog *obj = o;
+
+    if (!ret) {
+      /* log to the debug log */
+      gst_tracer_record_log (record, obj->type_name, obj->object);
+    } else {
+      GValue s_value = G_VALUE_INIT;
+      GValue addr_value = G_VALUE_INIT;
+      gchar *address = g_strdup_printf ("%p", obj->object);
+      GstStructure *s = gst_structure_new_empty (record_type);
+      /* copy type_name because it's owned by @obj */
+      gst_structure_set (s, "type-name", G_TYPE_STRING, obj->type_name, NULL);
+      /* avoid copy of @address */
+      g_value_init (&addr_value, G_TYPE_STRING);
+      g_value_take_string (&addr_value, address);
+      gst_structure_take_value (s, "address", &addr_value);
+      /* avoid copy of the structure */
+      g_value_init (&s_value, GST_TYPE_STRUCTURE);
+      g_value_take_boxed (&s_value, s);
+      gst_value_list_append_and_take_value (ret, &s_value);
+    }
+  }
+}
+
+static GstStructure *
+gst_leaks_tracer_activity_get_checkpoint (GstLeaksTracer * self)
+{
+  GValue added = G_VALUE_INIT;
+  GValue removed = G_VALUE_INIT;
+  GstStructure *s = gst_structure_new_empty ("activity-checkpoint");
+
+  g_value_init (&added, GST_TYPE_LIST);
+  g_value_init (&removed, GST_TYPE_LIST);
+
+  GST_OBJECT_LOCK (self);
+  process_checkpoint (tr_added, "objects-created", self->added, &added);
+  process_checkpoint (tr_removed, "objects-removed", self->removed, &removed);
+
+  g_hash_table_remove_all (self->added);
+  g_hash_table_remove_all (self->removed);
+  GST_OBJECT_UNLOCK (self);
+
+  gst_structure_take_value (s, "objects-created-list", &added);
+  gst_structure_take_value (s, "objects-removed-list", &removed);
+
+  return s;
+}
+
+static void
+gst_leaks_tracer_activity_log_checkpoint (GstLeaksTracer * self)
+{
+  GST_OBJECT_LOCK (self);
+  GST_TRACE_OBJECT (self, "listing objects created since last checkpoint");
+  process_checkpoint (tr_added, NULL, self->added, NULL);
+  GST_TRACE_OBJECT (self, "listing objects removed since last checkpoint");
+  process_checkpoint (tr_removed, NULL, self->removed, NULL);
+  g_hash_table_remove_all (self->added);
+  g_hash_table_remove_all (self->removed);
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
+gst_leaks_tracer_activity_stop_tracking (GstLeaksTracer * self)
+{
+  GST_OBJECT_LOCK (self);
+  g_clear_pointer (&self->added, g_hash_table_destroy);
+  g_clear_pointer (&self->removed, g_hash_table_destroy);
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
 gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -876,6 +931,14 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
       RECORD_FIELD_TYPE_TS, RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS,
       RECORD_FIELD_DESC, RECORD_FIELD_REF_COUNT, RECORD_FIELD_TRACE, NULL);
   GST_OBJECT_FLAG_SET (tr_alive, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  tr_added = gst_tracer_record_new ("object-added.class",
+      RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, NULL);
+  GST_OBJECT_FLAG_SET (tr_added, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  tr_removed = gst_tracer_record_new ("object-removed.class",
+      RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, NULL);
+  GST_OBJECT_FLAG_SET (tr_removed, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 
   if (g_getenv ("GST_LEAKS_TRACER_SIG"))
     setup_signals ();
@@ -934,6 +997,94 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstLeaksTracerClass,
           log_live_objects), NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
+  /**
+   * GstLeaksTracer:::activity-start-tracking
+   * @leakstracer: the leaks tracer object to emit this signal on
+   *
+   * Start storing information about all objects that are being created or
+   * removed. Call `stop-tracking` to stop.
+   *
+   * NOTE: You do not need to call this to use the *-live-objects action
+   * signals listed above.
+   *
+   * Since: 1.18
+   */
+  gst_leaks_tracer_signals[SIGNAL_ACTIVITY_START_TRACKING] =
+      g_signal_new ("activity-start-tracking", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstLeaksTracerClass,
+          activity_start_tracking), NULL, NULL, NULL, G_TYPE_NONE, 0,
+      G_TYPE_NONE);
+
+  /**
+   * GstLeaksTracer:::activity-get-checkpoint
+   * @leakstracer: the leaks tracer object to emit this signal on
+   *
+   * You must call this after calling `activity-start-tracking` and you should
+   * call `activity-stop-tracking` when you are done tracking.
+   *
+   * Returns a #GstStructure with two fields: `"objects-created-list"` and
+   * `"objects-removed-list"`, each of which is a #GValue of type #GST_TYPE_LIST
+   * containing all objects that were created/removed since the last
+   * checkpoint, or since tracking started if this is the first checkpoint.
+   *
+   * The list elements are in order of creation/removal. Each list element is
+   * a #GValue containing a #GstStructure with the following fields:
+   *
+   * `type-name`: a string representing the type of the object
+   * `address`: a string representing the address of the object; the object
+   *            itself cannot be returned since we don't own it and it may be
+   *            freed at any moment, or it may already have been freed
+   *
+   * Returns: (transfer full): a newly-allocated #GstStructure
+   *
+   * Since: 1.18
+   */
+  gst_leaks_tracer_signals[SIGNAL_ACTIVITY_GET_CHECKPOINT] =
+      g_signal_new ("activity-get-checkpoint", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstLeaksTracerClass,
+          activity_get_checkpoint), NULL, NULL, NULL, GST_TYPE_STRUCTURE, 0,
+      G_TYPE_NONE);
+
+  /**
+   * GstLeaksTracer:::activity-log-checkpoint
+   * @leakstracer: the leaks tracer object to emit this signal on
+   *
+   * You must call this after calling `activity-start-tracking` and you should
+   * call `activity-stop-tracking` when you are done tracking.
+   *
+   * List all objects that were created or removed since the last checkpoint,
+   * or since tracking started if this is the first checkpoint.
+   *
+   * This action signal is equivalent to `activity-get-checkpoint` except that
+   * the checkpoint data will be printed to the debug log under `GST_TRACER:7`.
+   *
+   * Since: 1.18
+   */
+  gst_leaks_tracer_signals[SIGNAL_ACTIVITY_LOG_CHECKPOINT] =
+      g_signal_new ("activity-log-checkpoint", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstLeaksTracerClass,
+          activity_log_checkpoint), NULL, NULL, NULL, G_TYPE_NONE, 0,
+      G_TYPE_NONE);
+
+  /**
+   * GstLeaksTracer:::activity-stop-tracking
+   * @leakstracer: the leaks tracer object to emit this signal on
+   *
+   * Stop tracking all objects that are being created or removed, undoes the
+   * effects of the `start-tracking` signal.
+   *
+   * Since: 1.18
+   */
+  gst_leaks_tracer_signals[SIGNAL_ACTIVITY_STOP_TRACKING] =
+      g_signal_new ("activity-stop-tracking", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstLeaksTracerClass,
+          activity_stop_tracking), NULL, NULL, NULL, G_TYPE_NONE, 0,
+      G_TYPE_NONE);
+
   klass->get_live_objects = gst_leaks_tracer_get_live_objects;
   klass->log_live_objects = gst_leaks_tracer_log_live_objects;
+  klass->activity_start_tracking = gst_leaks_tracer_activity_start_tracking;
+  klass->activity_get_checkpoint = gst_leaks_tracer_activity_get_checkpoint;
+  klass->activity_log_checkpoint = gst_leaks_tracer_activity_log_checkpoint;
+  klass->activity_stop_tracking = gst_leaks_tracer_activity_stop_tracking;
 }
