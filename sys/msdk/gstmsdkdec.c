@@ -926,6 +926,11 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       goto done;
     }
 
+    if (!klass->post_configure (thiz)) {
+      flow = GST_FLOW_ERROR;
+      goto error;
+    }
+
     if (!thiz->initialized)
       hard_reset = TRUE;
     else if (thiz->allocation_caps) {
@@ -1454,6 +1459,13 @@ gst_msdkdec_finalize (GObject * object)
 }
 
 static gboolean
+gst_msdkdec_post_configure (GstMsdkDec * decoder)
+{
+  /* Do nothing */
+  return TRUE;
+}
+
+static gboolean
 gst_msdkdec_preinit_decoder (GstMsdkDec * decoder)
 {
   decoder->param.mfx.FrameInfo.Width =
@@ -1503,6 +1515,7 @@ gst_msdkdec_class_init (GstMsdkDecClass * klass)
   decoder_class->flush = GST_DEBUG_FUNCPTR (gst_msdkdec_flush);
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_msdkdec_drain);
 
+  klass->post_configure = GST_DEBUG_FUNCPTR (gst_msdkdec_post_configure);
   klass->preinit_decoder = GST_DEBUG_FUNCPTR (gst_msdkdec_preinit_decoder);
   klass->postinit_decoder = GST_DEBUG_FUNCPTR (gst_msdkdec_postinit_decoder);
 
