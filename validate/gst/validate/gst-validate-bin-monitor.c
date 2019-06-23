@@ -285,7 +285,7 @@ gst_validate_bin_monitor_setup (GstValidateMonitor * monitor)
   gst_iterator_free (iterator);
   gst_object_unref (bin);
 
-  return TRUE;
+  return GST_VALIDATE_MONITOR_CLASS (parent_class)->setup (monitor);
 
 fail:
   if (bin)

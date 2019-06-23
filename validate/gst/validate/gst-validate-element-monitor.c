@@ -278,7 +278,8 @@ gst_validate_element_monitor_do_setup (GstValidateMonitor * monitor)
     return FALSE;
   }
 
-  gst_validate_element_monitor_inspect (elem_monitor);
+  if (!GST_IS_BIN (element))
+    gst_validate_element_monitor_inspect (elem_monitor);
 
   elem_monitor->pad_added_id = g_signal_connect (element, "pad-added",
       G_CALLBACK (_validate_element_pad_added), monitor);

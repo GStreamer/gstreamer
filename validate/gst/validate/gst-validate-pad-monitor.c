@@ -129,21 +129,25 @@ typedef struct
 static GstPad *
 _get_actual_pad (GstPad * pad)
 {
-  GstPad *tmp_pad;
-
-  gst_object_ref (pad);
-
-  /* We don't monitor ghost pads */
-  while (GST_IS_GHOST_PAD (pad)) {
-    tmp_pad = pad;
-    pad = gst_ghost_pad_get_target ((GstGhostPad *) pad);
-    gst_object_unref (tmp_pad);
-  }
+  pad = gst_object_ref (pad);
 
   while (GST_IS_PROXY_PAD (pad)) {
-    tmp_pad = pad;
-    pad = gst_pad_get_peer (pad);
-    gst_object_unref (tmp_pad);
+    GstPad *next_pad;
+
+    if (GST_PAD_IS_SINK (pad)) {
+      if (GST_IS_GHOST_PAD (pad))
+        next_pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
+      else
+        next_pad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (pad)));
+    } else {
+      next_pad = gst_pad_get_peer (pad);
+    }
+
+    gst_object_unref (pad);
+    if (!next_pad)
+      return NULL;
+
+    pad = next_pad;
   }
 
   return pad;
@@ -1184,6 +1188,9 @@ static void
         GST_DEBUG_OBJECT (pad, "Checking pad %s:%s input timestamps",
             GST_DEBUG_PAD_NAME (otherpad));
         othermonitor = _GET_PAD_MONITOR (otherpad);
+        if (!othermonitor)
+          continue;
+
         GST_VALIDATE_MONITOR_LOCK (othermonitor);
         if (gst_validate_pad_monitor_timestamp_is_in_received_range
             (othermonitor, ts, tolerance)
@@ -1633,6 +1640,8 @@ gst_validate_pad_monitor_add_expected_newsegment (GstValidatePadMonitor *
         if (!otherpad)
           continue;
         othermonitor = _GET_PAD_MONITOR (otherpad);
+        if (!othermonitor)
+          continue;
         GST_VALIDATE_MONITOR_LOCK (othermonitor);
         gst_event_replace (&othermonitor->expected_segment, event);
         GST_VALIDATE_MONITOR_UNLOCK (othermonitor);
