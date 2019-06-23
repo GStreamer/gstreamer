@@ -53,10 +53,16 @@ static gboolean
 _serialize_project (GstValidateScenario * scenario, GstValidateAction * action)
 {
   const gchar *uri = gst_structure_get_string (action->structure, "uri");
+  gchar *location = gst_uri_get_location (uri),
+      *dir = g_path_get_dirname (location);
   gboolean res;
   DECLARE_AND_GET_TIMELINE (scenario, action);
 
   gst_validate_printf (action, "Saving project to %s", uri);
+
+  g_mkdir_with_parents (dir, 0755);
+  g_free (location);
+  g_free (dir);
 
   res = ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, NULL);
 
