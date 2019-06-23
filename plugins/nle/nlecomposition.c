@@ -1293,7 +1293,7 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
 
   event = GST_PAD_PROBE_INFO_EVENT (info);
 
-  GST_DEBUG_OBJECT (comp, "event: %s", GST_EVENT_TYPE_NAME (event));
+  GST_LOG_OBJECT (comp, "event: %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
@@ -1301,30 +1301,33 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
         _restart_task (comp);
 
       if (gst_event_get_seqnum (event) != comp->priv->flush_seqnum) {
-        GST_INFO_OBJECT (comp, "Dropping flush stop %d -- %d",
-            gst_event_get_seqnum (event), priv->seqnum_to_restart_task);
+        GST_INFO_OBJECT (comp, "Dropping FLUSH_STOP %d -- %d",
+            gst_event_get_seqnum (event), priv->flush_seqnum);
         retval = GST_PAD_PROBE_DROP;
       } else {
-        GST_INFO_OBJECT (comp, "Forwarding our flush stop with seqnum %i",
+        GST_INFO_OBJECT (comp, "Forwarding FLUSH_STOP with seqnum %i",
             comp->priv->flush_seqnum);
         gst_event_unref (event);
         event = gst_event_new_flush_stop (TRUE);
         GST_PAD_PROBE_INFO_DATA (info) = event;
-        gst_event_set_seqnum (event, comp->priv->flush_seqnum);
         if (comp->priv->seek_seqnum) {
           GST_EVENT_SEQNUM (event) = comp->priv->seek_seqnum;
-          GST_INFO_OBJECT (comp, "Setting FLUSH_START seqnum: %d",
-              comp->priv->seek_seqnum);
+        } else {
+          GST_EVENT_SEQNUM (event) = comp->priv->flush_seqnum;
         }
+        GST_INFO_OBJECT (comp, "Set FLUSH_STOP seqnum: %d",
+            GST_EVENT_SEQNUM (event));
         comp->priv->flush_seqnum = 0;
       }
       break;
     case GST_EVENT_FLUSH_START:
       if (gst_event_get_seqnum (event) != comp->priv->flush_seqnum) {
-        GST_INFO_OBJECT (comp, "Dropping flush start %d != %d",
+        GST_INFO_OBJECT (comp, "Dropping FLUSH_START %d != %d",
             gst_event_get_seqnum (event), comp->priv->flush_seqnum);
         retval = GST_PAD_PROBE_DROP;
       } else {
+        GST_INFO_OBJECT (comp, "Forwarding FLUSH_START with seqnum %d",
+            comp->priv->flush_seqnum);
         if (comp->priv->seek_seqnum) {
           GST_EVENT_SEQNUM (event) = comp->priv->seek_seqnum;
           GST_INFO_OBJECT (comp, "Setting FLUSH_START seqnum: %d",
