@@ -31,7 +31,7 @@ gchar* validate_flow_format_segment (const GstSegment *segment);
 
 gchar* validate_flow_format_caps (const GstCaps* caps, const gchar * const *keys_to_print);
 
-gchar* validate_flow_format_buffer (GstBuffer *buffer);
+gchar* validate_flow_format_buffer (GstBuffer *buffer, gboolean add_checksum);
 
 gchar* validate_flow_format_event (GstEvent *event, const gchar * const *caps_properties, GstStructure *ignored_event_fields);
 

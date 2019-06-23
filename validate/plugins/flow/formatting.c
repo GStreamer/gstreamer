@@ -191,11 +191,25 @@ buffer_get_meta_string (GstBuffer * buffer)
 }
 
 gchar *
-validate_flow_format_buffer (GstBuffer * buffer)
+validate_flow_format_buffer (GstBuffer * buffer, gboolean add_checksum)
 {
   gchar *flags_str, *meta_str, *buffer_str;
-  gchar *buffer_parts[6];
+  gchar *buffer_parts[7];
   int buffer_parts_index = 0;
+  gchar *sum;
+  GstMapInfo map;
+
+  if (add_checksum) {
+    if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+      GST_ERROR ("Buffer could not be mapped.");
+    } else {
+      sum = g_compute_checksum_for_data (G_CHECKSUM_SHA1, map.data, map.size);
+      gst_buffer_unmap (buffer, &map);
+
+      buffer_parts[buffer_parts_index++] = g_strdup_printf ("checksum=%s", sum);
+      g_free (sum);
+    }
+  }
 
   if (GST_CLOCK_TIME_IS_VALID (buffer->dts)) {
     gchar time_str[32];

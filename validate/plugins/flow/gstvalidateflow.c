@@ -52,6 +52,7 @@ typedef struct _ValidateFlowOverride
 
   const gchar *pad_name;
   gboolean record_buffers;
+  gboolean buffers_checksum;
   gchar *expectations_dir;
   gchar *actual_results_dir;
   gboolean error_writing_file;
@@ -166,7 +167,7 @@ validate_flow_override_buffer_handler (GstValidateOverride * override,
   if (flow->error_writing_file || !flow->record_buffers)
     return;
 
-  buffer_str = validate_flow_format_buffer (buffer);
+  buffer_str = validate_flow_format_buffer (buffer, flow->buffers_checksum);
   validate_flow_override_printf (flow, "buffer: %s\n", buffer_str);
   g_free (buffer_str);
 }
@@ -217,6 +218,13 @@ validate_flow_override_new (GstStructure * config)
   /* record-buffers: Whether buffers will be written to the expectation log. */
   flow->record_buffers = FALSE;
   gst_structure_get_boolean (config, "record-buffers", &flow->record_buffers);
+
+  flow->buffers_checksum = FALSE;
+  gst_structure_get_boolean (config, "buffers-checksum",
+      &flow->buffers_checksum);
+
+  if (flow->buffers_checksum)
+    flow->record_buffers = TRUE;
 
   /* caps-properties: Caps events can include many dfferent properties, but
    * many of these may be irrelevant for some tests. If this option is set,
