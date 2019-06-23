@@ -20,10 +20,10 @@ set them in [gst-validate-scenarios](gst-validate-scenarios.md).
 
 Defaults variables are:
 
-- `$(TMPDIR)`: The default temporary directory as returned by
-  [g_get_tmp_dir()](g_get_tmp_dir).
+- `$(TMPDIR)`: The default temporary directory as returned by `g_get_tmp_dir`.
 - `$(CONFIG_PATH)`: The path of the running scenario.
 - `$(CONFIG_DIR)`: The directory the running scenario is in.
+- `$(CONFIG_NAME)`: The name of the config file
 - `$(LOGSDIR)`: The directory where to place log files. This uses the
    `GST_VALIDATE_LOGSDIR` environment variable if avalaible or `$(TMPDIR)`
    if the variables hasn't been set. (Note that the

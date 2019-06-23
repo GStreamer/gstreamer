@@ -101,10 +101,10 @@ Any action can use the default variables:
   [gst_element_query_position()](gst_element_query_position)
 - `$(duration)`: The current duration of the pipeline as reported by
   [gst_element_query_duration()](gst_element_query_duration)
-- `$(TMPDIR)`: The default temporary directory as returned by
-  [g_get_tmp_dir()](g_get_tmp_dir).
+- `$(TMPDIR)`: The default temporary directory as returned by `g_get_tmp_dir`.
 - `$(SCENARIO_PATH)`: The path of the running scenario.
 - `$(SCENARIO_DIR)`: The directory the running scenario is in.
+- `$(SCENARIO_NAME)`: The name the running scenario
 
 
 It is also possible to set variables in scenario with the `set-vars` action.

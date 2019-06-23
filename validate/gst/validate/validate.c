@@ -171,12 +171,18 @@ create_config (const gchar * config, const gchar * suffix)
 
   if (config_file) {
     gchar *config_dir = g_path_get_dirname (config_file);
+    gchar *config_fname = g_path_get_basename (config_file);
+    gchar **config_name =
+        g_regex_split_simple ("\\.config", config_fname, 0, 0);
 
     gst_structure_set (local_vars,
         "CONFIG_DIR", G_TYPE_STRING, config_dir,
+        "CONFIG_NAME", G_TYPE_STRING, config_name[0],
         "CONFIG_PATH", G_TYPE_STRING, config_file, NULL);
 
     g_free (config_dir);
+    g_free (config_fname);
+    g_strfreev (config_name);
   }
 
   g_free (config_file);

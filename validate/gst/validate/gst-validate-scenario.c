@@ -2918,6 +2918,7 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   GstValidateActionType *type = gst_validate_get_action_type (action->type);
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
+  _update_well_known_vars (scenario);
   gst_validate_structure_resolve_variables (action->structure,
       scenario->priv->vars);
   for (i = 0; type->parameters[i].name; i++) {
@@ -3546,12 +3547,18 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   check_scenario:
     if (!is_config) {
       gchar *scenario_dir = g_path_get_dirname (scenario_file);
+      gchar *scenario_fname = g_path_get_basename (scenario_file);
+      gchar **scenario_name =
+          g_regex_split_simple ("\\.scenario", scenario_fname, 0, 0);
 
       gst_structure_set (scenario->priv->vars,
           "SCENARIO_DIR", G_TYPE_STRING, scenario_dir,
+          "SCENARIO_NAME", G_TYPE_STRING, scenario_name[0],
           "SCENARIO_PATH", G_TYPE_STRING, scenario_file, NULL);
 
       g_free (scenario_dir);
+      g_free (scenario_fname);
+      g_strfreev (scenario_name);
     }
 
     g_free (tldir);
