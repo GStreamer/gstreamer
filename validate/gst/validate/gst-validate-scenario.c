@@ -505,61 +505,6 @@ _update_well_known_vars (GstValidateScenario * scenario)
   }
 }
 
-static gchar *
-_replace_variables_in_string (GstValidateScenario * scenario,
-    GstValidateAction * action, const gchar * in_string)
-{
-  GRegex *regex;
-  gint varname_len;
-  GMatchInfo *match_info;
-  const gchar *var_value;
-  gchar *tmpstring, *string = g_strdup (in_string);
-
-  _update_well_known_vars (scenario);
-  regex = g_regex_new ("\\$\\((\\w+)\\)", 0, 0, NULL);
-  g_regex_match (regex, string, 0, &match_info);
-  while (g_match_info_matches (match_info)) {
-    GRegex *replace_regex;
-    gchar *tmp, *varname, *pvarname = g_match_info_fetch (match_info, 0);
-
-    varname_len = strlen (pvarname);
-    varname = g_malloc (sizeof (gchar) * (varname_len - 2));
-    strncpy (varname, &pvarname[2], varname_len - 3);
-    varname[varname_len - 3] = '\0';
-
-    if (gst_structure_has_field_typed (scenario->priv->vars, varname,
-            G_TYPE_DOUBLE)) {
-      var_value = varname;
-    } else {
-      var_value = gst_structure_get_string (scenario->priv->vars, varname);
-      if (!var_value) {
-        g_error ("Trying to use undefined variable : %s (%s)", varname,
-            gst_structure_to_string (scenario->priv->vars));
-
-        return NULL;
-      }
-    }
-
-    tmp = g_strdup_printf ("\\$\\(%s\\)", varname);
-    replace_regex = g_regex_new (tmp, 0, 0, NULL);
-    g_free (tmp);
-    tmpstring = string;
-    string = g_regex_replace (replace_regex, string, -1, 0, var_value, 0, NULL);
-
-    GST_INFO_OBJECT (action, "Setting variable %s to %s", varname, var_value);
-    g_free (tmpstring);
-    g_regex_unref (replace_regex);
-    g_free (pvarname);
-    g_free (varname);
-
-    g_match_info_next (match_info, NULL);
-  }
-  g_match_info_free (match_info);
-  g_regex_unref (regex);
-
-  return string;
-}
-
 static gboolean
 _set_variable_func (const gchar * name, double *value, gpointer user_data)
 {
@@ -635,7 +580,10 @@ gst_validate_action_get_clocktime (GstValidateScenario * scenario,
       return -1;
     }
 
-    strval = _replace_variables_in_string (scenario, action, tmpvalue);
+    _update_well_known_vars (scenario);
+    strval =
+        gst_validate_replace_variables_in_string (scenario->priv->vars,
+        tmpvalue);
     if (!strval)
       return FALSE;
 
@@ -2974,8 +2922,7 @@ _structure_set_variables (GQuark field_id, GValue * value,
   if (!scenario)
     return TRUE;
 
-  str =
-      _replace_variables_in_string (scenario, action,
+  str = gst_validate_replace_variables_in_string (scenario->priv->vars,
       g_value_get_string (value));
   if (str) {
     g_value_set_string (value, str);

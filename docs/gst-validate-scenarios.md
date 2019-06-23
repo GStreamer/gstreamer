@@ -93,3 +93,16 @@ action types in the [`GstValidateScenario` section].
   [`GST_STATE_NULL`]: GST_STATE_NULL
   [`GstValidateScenario` section]: GstValidateScenario
 
+## Default variables
+
+Any action can use the default variables:
+
+- `$(position)`: The current position in the pipeline as reported by
+  [gst_element_query_position()](gst_element_query_position)
+- `$(duration)`: The current duration of the pipeline as reported by
+  [gst_element_query_duration()](gst_element_query_duration)
+- `$(TMPDIR)`: The default temporary directory as returned by
+  [g_get_tmp_dir()](g_get_tmp_dir).
+
+
+It is also possible to set variables in scenario with the `set-vars` action.

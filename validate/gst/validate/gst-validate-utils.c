@@ -46,6 +46,8 @@
 #define PARSER_MAX_ARGUMENT_COUNT 10
 
 static GRegex *_clean_structs_lines = NULL;
+static GRegex *_variables_regex = NULL;
+static GstStructure *global_vars = NULL;
 
 typedef struct
 {
@@ -938,4 +940,71 @@ gst_validate_element_matches_target (GstElement * element, GstStructure * s)
     return TRUE;
 
   return FALSE;
+}
+
+gchar *
+gst_validate_replace_variables_in_string (GstStructure * local_vars,
+    const gchar * in_string)
+{
+  gint varname_len;
+  GMatchInfo *match_info;
+  const gchar *var_value = NULL;
+  gchar *tmpstring, *string = g_strdup (in_string);
+
+  if (!_variables_regex)
+    _variables_regex = g_regex_new ("\\$\\((\\w+)\\)", 0, 0, NULL);
+
+  if (!global_vars) {
+    global_vars =
+        gst_structure_new ("vars", "TMPDIR", G_TYPE_STRING, g_get_tmp_dir (),
+        NULL);
+  }
+
+  g_regex_match (_variables_regex, string, 0, &match_info);
+  while (g_match_info_matches (match_info)) {
+    GRegex *replace_regex;
+    gchar *tmp, *varname, *pvarname = g_match_info_fetch (match_info, 0);
+
+    varname_len = strlen (pvarname);
+    varname = g_malloc (sizeof (gchar) * (varname_len - 2));
+    strncpy (varname, &pvarname[2], varname_len - 3);
+    varname[varname_len - 3] = '\0';
+
+    if (local_vars && gst_structure_has_field_typed (local_vars, varname,
+            G_TYPE_DOUBLE)) {
+      var_value = varname;
+    } else {
+      if (local_vars)
+        var_value = gst_structure_get_string (local_vars, varname);
+
+      if (!var_value)
+        var_value = gst_structure_get_string (global_vars, varname);
+
+      if (!var_value) {
+        g_error
+            ("Trying to use undefined variable : %s (\nlocals: %s\nglobals: %s\n)",
+            varname, gst_structure_to_string (local_vars),
+            gst_structure_to_string (global_vars));
+
+        return NULL;
+      }
+    }
+
+    tmp = g_strdup_printf ("\\$\\(%s\\)", varname);
+    replace_regex = g_regex_new (tmp, 0, 0, NULL);
+    g_free (tmp);
+    tmpstring = string;
+    string = g_regex_replace (replace_regex, string, -1, 0, var_value, 0, NULL);
+
+    GST_INFO ("Setting variable %s to %s", varname, var_value);
+    g_free (tmpstring);
+    g_regex_unref (replace_regex);
+    g_free (pvarname);
+    g_free (varname);
+
+    g_match_info_next (match_info, NULL);
+  }
+  g_match_info_free (match_info);
+
+  return string;
 }
