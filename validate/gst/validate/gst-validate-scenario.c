@@ -4292,12 +4292,17 @@ _execute_check_last_sample (GstValidateScenario * scenario,
         if (_sink_matches_last_sample_specs (tmpelement, name, factory_name,
                 caps)) {
           if (sink) {
+            if (!gst_object_has_as_ancestor (GST_OBJECT (tmpelement),
+                    GST_OBJECT (sink))) {
+              gchar *tmp = gst_structure_to_string (action->structure);
 
-            GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
-                "Could not \"check-last-sample\" as several elements were found "
-                "from describing string: '%" GST_PTR_FORMAT
-                "' (%s and %s match)", action->structure,
-                GST_OBJECT_NAME (sink), GST_OBJECT_NAME (tmpelement));
+              GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+                  "Could not \"check-last-sample\" as several elements were found "
+                  "from describing string: '%s' (%s and %s match)",
+                  tmp, GST_OBJECT_NAME (sink), GST_OBJECT_NAME (tmpelement));
+
+              g_free (tmp);
+            }
 
             gst_object_unref (sink);
           }
