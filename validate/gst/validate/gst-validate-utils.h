@@ -47,7 +47,8 @@ gboolean gst_validate_utils_enum_from_str   (GType type,
                                              guint * enum_value);
 
 GST_VALIDATE_API
-GList * gst_validate_utils_structs_parse_from_filename         (const gchar * scenario_file);
+GList * gst_validate_utils_structs_parse_from_filename         (const gchar * scenario_file,
+                                                                gchar **file_path);
 GST_VALIDATE_API
 GList * gst_validate_structs_parse_from_gfile            (GFile * scenario_file);
 
@@ -70,5 +71,7 @@ void gst_validate_spin_on_fault_signals (void);
 GST_VALIDATE_API
 gboolean gst_validate_element_matches_target (GstElement * element, GstStructure * s);
 gchar * gst_validate_replace_variables_in_string (GstStructure * local_vars, const gchar * in_string);
+void gst_validate_structure_resolve_variables (GstStructure *structure, GstStructure *local_variables);
+void gst_validate_set_globals (GstStructure *structure);
 
 #endif

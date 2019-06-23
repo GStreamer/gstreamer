@@ -2909,31 +2909,6 @@ gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
 }
 
 static gboolean
-_structure_set_variables (GQuark field_id, GValue * value,
-    GstValidateAction * action)
-{
-  gchar *str;
-  GstValidateScenario *scenario;
-
-  if (!G_VALUE_HOLDS_STRING (value))
-    return TRUE;
-
-  scenario = gst_validate_action_get_scenario (action);
-  if (!scenario)
-    return TRUE;
-
-  str = gst_validate_replace_variables_in_string (scenario->priv->vars,
-      g_value_get_string (value));
-  if (str) {
-    g_value_set_string (value, str);
-    g_free (str);
-  }
-  gst_object_unref (scenario);
-
-  return TRUE;
-}
-
-static gboolean
 gst_validate_action_default_prepare_func (GstValidateAction * action)
 {
   gint i;
@@ -2943,9 +2918,8 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   GstValidateActionType *type = gst_validate_get_action_type (action->type);
   GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
 
-  gst_structure_filter_and_map_in_place (action->structure,
-      (GstStructureFilterMapFunc) _structure_set_variables, action);
-
+  gst_validate_structure_resolve_variables (action->structure,
+      scenario->priv->vars);
   for (i = 0; type->parameters[i].name; i++) {
     if (g_str_has_suffix (type->parameters[i].types, "(GstClockTime)"))
       gst_validate_action_get_clocktime (scenario, action,
@@ -3370,7 +3344,8 @@ _load_scenario_file (GstValidateScenario * scenario,
 
   *is_config = FALSE;
 
-  structures = gst_validate_utils_structs_parse_from_filename (scenario_file);
+  structures =
+      gst_validate_utils_structs_parse_from_filename (scenario_file, NULL);
   if (structures == NULL)
     goto failed;
 

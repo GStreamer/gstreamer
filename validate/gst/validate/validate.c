@@ -55,6 +55,7 @@ static GstRegistry *_gst_validate_registry_default = NULL;
 
 static GList *core_config = NULL;
 static gboolean validate_initialized = FALSE;
+static gboolean loaded_globals = FALSE;
 GstClockTime _priv_start_time;
 
 GQuark _Q_VALIDATE_MONITOR;
@@ -125,17 +126,28 @@ gst_structure_validate_name (const gchar * name)
   return TRUE;
 }
 
+static gboolean
+_set_vars_func (GQuark field_id, const GValue * value, GstStructure * vars)
+{
+  gst_structure_id_set_value (vars, field_id, value);
+
+  return TRUE;
+}
+
 static GList *
 create_config (const gchar * config, const gchar * suffix)
 {
+  GstStructure *local_vars = gst_structure_new_empty ("vars");
   GList *structures = NULL, *tmp, *result = NULL;
+  gchar *config_file = NULL;
 
   if (!suffix) {
     GST_WARNING ("suffix is NULL");
     return NULL;
   }
 
-  structures = gst_validate_utils_structs_parse_from_filename (config);
+  structures =
+      gst_validate_utils_structs_parse_from_filename (config, &config_file);
   if (!structures) {
     GstCaps *confs = NULL;
 
@@ -157,16 +169,42 @@ create_config (const gchar * config, const gchar * suffix)
     }
   }
 
+  if (config_file) {
+    gchar *config_dir = g_path_get_dirname (config_file);
+
+    gst_structure_set (local_vars,
+        "CONFIG_DIR", G_TYPE_STRING, config_dir,
+        "CONFIG_PATH", G_TYPE_STRING, config_file, NULL);
+
+    g_free (config_dir);
+  }
+
+  g_free (config_file);
+
   for (tmp = structures; tmp; tmp = tmp->next) {
     GstStructure *structure = tmp->data;
 
-    if (gst_structure_has_name (structure, suffix))
-      result = g_list_append (result, structure);
-    else
+    if (gst_structure_has_name (structure, suffix)) {
+      if (gst_structure_has_field (structure, "set-vars")) {
+        gst_structure_remove_field (structure, "set-vars");
+        gst_structure_foreach (structure,
+            (GstStructureForeachFunc) _set_vars_func, local_vars);
+      } else {
+        gst_validate_structure_resolve_variables (structure, local_vars);
+        result = g_list_append (result, structure);
+      }
+    } else {
+      if (!loaded_globals && gst_structure_has_name (structure, "set-globals")) {
+        gst_validate_structure_resolve_variables (structure, local_vars);
+        gst_validate_set_globals (structure);
+      }
       gst_structure_free (structure);
+    }
   }
 
+  loaded_globals = TRUE;
   g_list_free (structures);
+  gst_structure_free (local_vars);
   return result;
 }
 

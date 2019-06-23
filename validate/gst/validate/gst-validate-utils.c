@@ -578,7 +578,7 @@ _file_get_lines (GFile * file)
 }
 
 static gchar **
-_get_lines (const gchar * scenario_file)
+_get_lines (const gchar * scenario_file, gchar ** file_path)
 {
   GFile *file = NULL;
   gchar **lines = NULL;
@@ -588,6 +588,9 @@ _get_lines (const gchar * scenario_file)
     GST_WARNING ("%s wrong uri", scenario_file);
     return NULL;
   }
+
+  if (file_path)
+    *file_path = g_file_get_path (file);
 
   lines = _file_get_lines (file);
 
@@ -638,11 +641,12 @@ failed:
  * gst_validate_utils_structs_parse_from_filename: (skip):
  */
 GList *
-gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file)
+gst_validate_utils_structs_parse_from_filename (const gchar * scenario_file,
+    gchar ** file_path)
 {
   gchar **lines;
 
-  lines = _get_lines (scenario_file);
+  lines = _get_lines (scenario_file, file_path);
 
   if (lines == NULL) {
     GST_DEBUG ("Got no line for file: %s", scenario_file);
@@ -954,11 +958,7 @@ gst_validate_replace_variables_in_string (GstStructure * local_vars,
   if (!_variables_regex)
     _variables_regex = g_regex_new ("\\$\\((\\w+)\\)", 0, 0, NULL);
 
-  if (!global_vars) {
-    global_vars =
-        gst_structure_new ("vars", "TMPDIR", G_TYPE_STRING, g_get_tmp_dir (),
-        NULL);
-  }
+  gst_validate_set_globals (NULL);
 
   g_regex_match (_variables_regex, string, 0, &match_info);
   while (g_match_info_matches (match_info)) {
@@ -1007,4 +1007,60 @@ gst_validate_replace_variables_in_string (GstStructure * local_vars,
   g_match_info_free (match_info);
 
   return string;
+}
+
+static gboolean
+_structure_set_variables (GQuark field_id, GValue * value,
+    GstStructure * local_variables)
+{
+  gchar *str;
+
+  if (!G_VALUE_HOLDS_STRING (value))
+    return TRUE;
+
+  str = gst_validate_replace_variables_in_string (local_variables,
+      g_value_get_string (value));
+  if (str) {
+    g_value_set_string (value, str);
+    g_free (str);
+  }
+
+  return TRUE;
+}
+
+void
+gst_validate_structure_resolve_variables (GstStructure * structure,
+    GstStructure * local_variables)
+{
+  gst_structure_filter_and_map_in_place (structure,
+      (GstStructureFilterMapFunc) _structure_set_variables, local_variables);
+}
+
+static gboolean
+_set_vars_func (GQuark field_id, const GValue * value, GstStructure * vars)
+{
+  gst_structure_id_set_value (vars, field_id, value);
+
+  return TRUE;
+}
+
+void
+gst_validate_set_globals (GstStructure * structure)
+{
+  if (!global_vars) {
+    const gchar *logsdir = g_getenv ("GST_VALIDATE_LOGSDIR");
+
+    if (!logsdir)
+      logsdir = g_get_tmp_dir ();
+
+    global_vars =
+        gst_structure_new ("vars", "TMPDIR", G_TYPE_STRING, g_get_tmp_dir (),
+        "LOGSDIR", G_TYPE_STRING, logsdir, NULL);
+  }
+
+  if (!structure)
+    return;
+
+  gst_structure_foreach (structure,
+      (GstStructureForeachFunc) _set_vars_func, global_vars);
 }

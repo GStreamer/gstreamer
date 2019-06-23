@@ -867,6 +867,7 @@ class GstValidateTest(Test):
         subproc_env = os.environ.copy()
 
         subproc_env["GST_VALIDATE_UUID"] = self.get_uuid()
+        subproc_env["GST_VALIDATE_LOGSDIR"] = self.options.logsdir
 
         if 'GST_DEBUG' in os.environ and not self.options.redirect_logs:
             gstlogsfile = os.path.splitext(self.logfile)[0] + '.gstdebug'
