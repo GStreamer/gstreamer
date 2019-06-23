@@ -3510,15 +3510,17 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   scenarios = g_strsplit (scenario_name, ":", -1);
 
   for (i = 0; scenarios[i]; i++) {
-    gchar *lfilename = NULL, *tldir = NULL;
+    gchar *lfilename = NULL, *tldir = NULL, *scenario_file = NULL;
 
     /* First check if the scenario name is not a full path to the
      * actual scenario */
     if (g_file_test (scenarios[i], G_FILE_TEST_IS_REGULAR)) {
       GST_DEBUG_OBJECT (scenario, "Scenario: %s is a full path to a scenario. "
           "Trying to load it", scenarios[i]);
-      if ((ret = _load_scenario_file (scenario, scenarios[i], &is_config)))
+      if ((ret = _load_scenario_file (scenario, scenarios[i], &is_config))) {
+        scenario_file = scenarios[i];
         goto check_scenario;
+      }
     }
 
     if (g_str_has_suffix (scenarios[i], GST_VALIDATE_SCENARIO_SUFFIX))
@@ -3532,16 +3534,20 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
 
       for (i = 0; env_scenariodir[i]; i++) {
         tldir = g_build_filename (env_scenariodir[i], lfilename, NULL);
-        if ((ret = _load_scenario_file (scenario, tldir, &is_config)))
+        if ((ret = _load_scenario_file (scenario, tldir, &is_config))) {
+          scenario_file = tldir;
           goto check_scenario;
+        }
         g_free (tldir);
       }
     }
 
     tldir = g_build_filename ("data", "scenarios", lfilename, NULL);
 
-    if ((ret = _load_scenario_file (scenario, tldir, &is_config)))
+    if ((ret = _load_scenario_file (scenario, tldir, &is_config))) {
+      scenario_file = tldir;
       goto check_scenario;
+    }
 
     g_free (tldir);
 
@@ -3563,6 +3569,16 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
     }
     /* else check scenario */
   check_scenario:
+    if (!is_config) {
+      gchar *scenario_dir = g_path_get_dirname (scenario_file);
+
+      gst_structure_set (scenario->priv->vars,
+          "SCENARIO_DIR", G_TYPE_STRING, scenario_dir,
+          "SCENARIO_PATH", G_TYPE_STRING, scenario_file, NULL);
+
+      g_free (scenario_dir);
+    }
+
     g_free (tldir);
     g_free (lfilename);
 
