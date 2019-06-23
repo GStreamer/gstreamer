@@ -311,7 +311,7 @@ Available options:""")
 
     def register_defaults(self, project_paths=None, scenarios_path=None):
         projects = list()
-        all_scenarios = list()
+        all_scenarios = {}
         if not self.args:
             if project_paths == None:
                 path = self.options.projects_paths
@@ -332,7 +332,11 @@ Available options:""")
                     for f in files:
                         if not f.endswith(".scenario"):
                             continue
-                        all_scenarios.append(os.path.join(root, f))
+                        f = os.path.join(root, f)
+                        config = f + ".config"
+                        if not os.path.exists(config):
+                            config = None
+                        all_scenarios[f] = config
         else:
             for proj_uri in self.args:
                 if not utils.isuri(proj_uri):
@@ -387,9 +391,10 @@ Available options:""")
                                             combination=comb)
                                   )
         if all_scenarios:
-            for scenario in self._scenarios.discover_scenarios(all_scenarios):
+            for scenario in self._scenarios.discover_scenarios(list(all_scenarios.keys())):
+                config = all_scenarios[scenario.path]
                 classname = "scenario.%s" % scenario.name
-                self.add_test(GESScenarioTest(classname,
-                                            self.options,
-                                            self.reporter,
-                                            scenario=scenario))
+                test = GESScenarioTest(classname, self.options, self.reporter, scenario=scenario)
+                if config:
+                    test.add_validate_config(config)
+                self.add_test(test)

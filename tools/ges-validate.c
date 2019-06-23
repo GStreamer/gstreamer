@@ -61,7 +61,6 @@ bin_element_added (GstTracer * runner, GstClockTime ts,
   if (!monitor->is_decoder)
     return;
 
-
   parent = gst_object_get_parent (GST_OBJECT (element));
   do {
     if (GES_IS_TRACK (parent)) {
