@@ -150,7 +150,15 @@ class GESTest(GstValidateTest):
         GstValidateTest.build_arguments(self)
 
         if self.options.mute:
-            self.add_arguments("--mute")
+            needs_clock = self.scenario.needs_clock_sync() \
+                if self.scenario else False
+            audiosink = utils.get_fakesink_for_media_type("audio", needs_clock)
+            videosink = utils.get_fakesink_for_media_type("video", needs_clock)
+        else:
+            audiosink = 'autoaudiosink'
+            videosink = 'autovideosink'
+        self.add_arguments("--videosink", videosink + " name=videosink")
+        self.add_arguments("--audiosink", audiosink + " name=audiosink")
 
         self.set_sample_paths()
 
