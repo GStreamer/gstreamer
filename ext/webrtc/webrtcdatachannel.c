@@ -1272,7 +1272,7 @@ gst_webrtc_data_channel_class_init (GstWebRTCDataChannelClass * klass)
   /**
    * GstWebRTCDataChannel::send-string:
    * @object: the #GstWebRTCDataChannel
-   * @data: (nullable): a #GBytes with the data
+   * @data: (nullable): the data to send as a string
    */
   gst_webrtc_data_channel_signals[SIGNAL_SEND_STRING] =
       g_signal_new_class_handler ("send-string", G_TYPE_FROM_CLASS (klass),
