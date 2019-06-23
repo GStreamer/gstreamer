@@ -640,3 +640,16 @@ def format_config_template(extra_data, config_text, test_name):
         extra_vars['validateflow'] = "validateflow, expectations-dir=\"%s\", actual-results-dir=\"%s\"" % (expectations_dir, actual_results_dir)
 
     return config_text % extra_vars
+
+
+def get_fakesink_for_media_type(media_type, needs_clock=False):
+    if media_type == "video":
+        if needs_clock:
+            return 'fakevideosink qos=true max-lateness=20000000'
+
+        return "fakevideosink sync=false"
+
+    if needs_clock:
+        return "fakesink sync=true"
+
+    return "fakesink"
