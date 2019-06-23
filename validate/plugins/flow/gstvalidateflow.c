@@ -310,6 +310,7 @@ validate_flow_override_new (GstStructure * config)
   gst_validate_override_register_by_name (flow->pad_name, override);
 
   override->buffer_handler = validate_flow_override_buffer_handler;
+  override->buffer_probe_handler = validate_flow_override_buffer_handler;
   override->event_handler = validate_flow_override_event_handler;
 
   g_signal_connect (flow, "notify::validate-runner",
