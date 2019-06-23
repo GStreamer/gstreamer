@@ -702,8 +702,10 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
 
     /* check if one is cached */
     dmabuf->eglimage[i] = _get_cached_eglimage (mems[i], cache_id);
-    if (dmabuf->eglimage[i])
+    if (dmabuf->eglimage[i]) {
+      dmabuf->formats[i] = dmabuf->eglimage[i]->format;
       continue;
+    }
 
     /* otherwise create one and cache it */
     if (dmabuf->direct)
