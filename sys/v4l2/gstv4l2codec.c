@@ -106,11 +106,13 @@ gst_v4l2_codec_probe_levels (const GstV4l2Codec * codec, gint video_fd)
       query_menu.index = query_ctrl.maximum;
 
       if (ioctl (video_fd, VIDIOC_QUERYMENU, &query_menu) >= 0) {
+        gint32 i;
+
         controls = g_new0 (GValue, 1);
         g_value_init (controls, GST_TYPE_LIST);
 
         /* Assume that all levels below the highest one reported by the driver are supported. */
-        for (gint32 i = query_ctrl.minimum; i <= query_ctrl.maximum; i++) {
+        for (i = query_ctrl.minimum; i <= query_ctrl.maximum; i++) {
           GValue value = G_VALUE_INIT;
 
           g_value_init (&value, G_TYPE_STRING);
