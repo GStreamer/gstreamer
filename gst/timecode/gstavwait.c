@@ -909,8 +909,11 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
               self->must_send_end_message |= END_MESSAGE_STREAM_ENDED;
             }
           }
-          gst_buffer_unref (inbuf);
-          inbuf = NULL;
+
+          if (inbuf) {
+            gst_buffer_unref (inbuf);
+            inbuf = NULL;
+          }
         } else if (emit_passthrough_signal && self->recording) {
           gst_avwait_send_element_message (self, FALSE,
               self->running_time_to_wait_for);
@@ -945,8 +948,11 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
           self->audio_running_time_to_end_at = self->running_time_to_end_at;
           self->must_send_end_message |= END_MESSAGE_STREAM_ENDED;
         }
-        gst_buffer_unref (inbuf);
-        inbuf = NULL;
+
+        if (inbuf) {
+          gst_buffer_unref (inbuf);
+          inbuf = NULL;
+        }
       }
       break;
     }
@@ -1021,8 +1027,10 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
          * we can catch up with it. (In timecode mode and running-time mode, we
          * don't care about when the audio starts, we start as soon as the
          * target timecode or running time has been reached) */
-        gst_buffer_unref (inbuf);
-        inbuf = NULL;
+        if (inbuf) {
+          gst_buffer_unref (inbuf);
+          inbuf = NULL;
+        }
         retry = TRUE;
       }
     }
