@@ -1508,6 +1508,7 @@ gst_flv_mux_write_header (GstFlvMux * mux)
     ret = gst_flv_mux_push (mux, metadata);
     if (ret != GST_FLOW_OK)
       goto failure_metadata;
+    mux->new_tags = FALSE;
   }
   if (video_codec_data != NULL) {
     ret = gst_flv_mux_push (mux, video_codec_data);
