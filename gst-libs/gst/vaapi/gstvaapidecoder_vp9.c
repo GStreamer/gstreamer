@@ -536,12 +536,6 @@ decode_picture (GstVaapiDecoderVp9 * decoder, const guchar * buf,
     crop_width = frame_hdr->width;
     crop_height = frame_hdr->height;
   }
-  if (frame_hdr->display_size_enabled &&
-      (frame_hdr->width > frame_hdr->display_width
-          || frame_hdr->height > frame_hdr->display_height)) {
-    crop_width = frame_hdr->display_width;
-    crop_height = frame_hdr->display_height;
-  }
   if (crop_width || crop_height) {
     GstVaapiRectangle crop_rect;
     crop_rect.x = 0;
