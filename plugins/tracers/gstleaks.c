@@ -271,7 +271,7 @@ typedef struct
 static ObjectLog *
 object_log_new (gpointer obj)
 {
-  ObjectLog *o = g_slice_new (ObjectLog);
+  ObjectLog *o = g_new (ObjectLog, 1);
 
   o->object = obj;
 
@@ -286,7 +286,7 @@ object_log_new (gpointer obj)
 static void
 object_log_free (ObjectLog * obj)
 {
-  g_slice_free (ObjectLog, obj);
+  g_free (obj);
 }
 #endif /* G_OS_UNIX */
 
@@ -496,7 +496,7 @@ typedef struct
 static Leak *
 leak_new (gpointer obj, GType type, guint ref_count, ObjectRefingInfos * infos)
 {
-  Leak *leak = g_slice_new (Leak);
+  Leak *leak = g_new (Leak, 1);
 
   leak->obj = obj;
   leak->type_name = g_type_name (type);
@@ -511,7 +511,7 @@ static void
 leak_free (Leak * leak)
 {
   g_free (leak->desc);
-  g_slice_free (Leak, leak);
+  g_free (leak);
 }
 
 static gint
