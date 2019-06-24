@@ -1401,7 +1401,14 @@ gst_msdkenc_start (GstVideoEncoder * encoder)
     GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
         thiz->context);
 
-    if (gst_msdk_context_get_job_type (thiz->context) & GST_MSDK_JOB_ENCODER) {
+    /* Check GST_MSDK_JOB_VPP and GST_MSDK_JOB_ENCODER together to avoid sharing context
+     * between VPP and ENCODER
+     * Example:
+     * gst-launch-1.0 videotestsrc ! video/x-raw,format=I420 ! msdkh264enc ! \
+     * msdkh264dec ! msdkvpp ! video/x-raw,format=YUY2 ! fakesink
+     */
+    if (gst_msdk_context_get_job_type (thiz->context) & (GST_MSDK_JOB_VPP |
+            GST_MSDK_JOB_ENCODER)) {
       GstMsdkContext *parent_context, *msdk_context;
 
       parent_context = thiz->context;

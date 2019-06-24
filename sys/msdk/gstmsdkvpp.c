@@ -162,7 +162,13 @@ ensure_context (GstBaseTransform * trans)
     GST_INFO_OBJECT (thiz, "Found context from neighbour %" GST_PTR_FORMAT,
         thiz->context);
 
-    if (gst_msdk_context_get_job_type (thiz->context) & GST_MSDK_JOB_VPP) {
+    /* Check GST_MSDK_JOB_VPP and GST_MSDK_JOB_ENCODER together to avoid sharing context
+     * between VPP and ENCODER
+     * Example:
+     * gst-launch-1.0 videotestsrc ! msdkvpp ! video/x-raw,format=YUY2 ! msdkh264enc ! fakesink
+     */
+    if (gst_msdk_context_get_job_type (thiz->context) & (GST_MSDK_JOB_ENCODER |
+            GST_MSDK_JOB_VPP)) {
       GstMsdkContext *parent_context, *msdk_context;
 
       parent_context = thiz->context;
