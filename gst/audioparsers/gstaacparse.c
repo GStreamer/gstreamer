@@ -1480,6 +1480,8 @@ gst_aac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         gst_buffer_get_size (frame->out_buffer) - header_size);
   }
 
+  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
+
   return GST_FLOW_OK;
 }
 

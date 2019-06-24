@@ -704,5 +704,7 @@ gst_wavpack_parse_pre_push_frame (GstBaseParse * parse,
     wavpackparse->sent_codec_tag = TRUE;
   }
 
+  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
+
   return GST_FLOW_OK;
 }
