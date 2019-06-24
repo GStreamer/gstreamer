@@ -844,6 +844,8 @@ _should_draw_background (GstVideoAggregator * vagg, gboolean bg_transparent)
 {
   GstVideoRectangle bg_rect;
   gboolean draw = TRUE;
+  GList *l;
+
   bg_rect.x = bg_rect.y = 0;
 
   GST_OBJECT_LOCK (vagg);
@@ -851,7 +853,7 @@ _should_draw_background (GstVideoAggregator * vagg, gboolean bg_transparent)
   bg_rect.h = GST_VIDEO_INFO_HEIGHT (&vagg->info);
   /* Check if the background is completely obscured by a pad
    * TODO: Also skip if it's obscured by a combination of pads */
-  for (GList * l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
+  for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
     if (_pad_obscures_rectangle (vagg, l->data, bg_rect, bg_transparent)) {
       draw = FALSE;
       break;
