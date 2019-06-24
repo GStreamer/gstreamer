@@ -515,9 +515,6 @@ gst_vulkan_swapper_get_supported_caps (GstVulkanSwapper * swapper,
         G_MAXINT, 1, NULL);
   }
 
-  gst_caps_append_structure_full (caps, gst_structure_copy (s),
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VULKAN_BUFFER));
-
   GST_INFO_OBJECT (swapper, "Probed the following caps %" GST_PTR_FORMAT, caps);
 
   return caps;
@@ -816,49 +813,7 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
       dst.w, dst.h);
 
   in_mem = gst_buffer_peek_memory (buffer, 0);
-  if (gst_is_vulkan_buffer_memory (in_mem)) {
-    GstVulkanBufferMemory *buf_mem = (GstVulkanBufferMemory *) in_mem;
-    /* *INDENT-OFF* */
-    VkBufferImageCopy region = {
-        .bufferOffset = 0,
-        .bufferRowLength = src.w,
-        .bufferImageHeight = src.h,
-        .imageSubresource = {
-            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-            .mipLevel = 0,
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        },
-        .imageOffset = { .x = rslt.x, .y = rslt.y, .z = 0, },
-        .imageExtent = {
-            .width = rslt.w,
-            .height = rslt.h,
-            .depth = 1,
-        }
-    };
-    VkBufferMemoryBarrier buffer_memory_barrier = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
-        .pNext = NULL,
-        .srcAccessMask = buf_mem->barrier.parent.access_flags,
-        .dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT,
-        /* FIXME: implement exclusive transfers */
-        .srcQueueFamilyIndex = 0,
-        .dstQueueFamilyIndex = 0,
-        .buffer = buf_mem->buffer,
-        .offset = region.bufferOffset,
-        .size = region.bufferRowLength * region.bufferImageHeight
-    };
-    /* *INDENT-ON* */
-    vkCmdPipelineBarrier (cmd, buf_mem->barrier.parent.pipeline_stages,
-        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 1, &buffer_memory_barrier,
-        0, NULL);
-
-    buf_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    buf_mem->barrier.parent.access_flags = buffer_memory_barrier.dstAccessMask;
-
-    vkCmdCopyBufferToImage (cmd, buf_mem->buffer, swap_img->image,
-        swap_img->barrier.image_layout, 1, &region);
-  } else if (gst_is_vulkan_image_memory (in_mem)) {
+  {
     GstVulkanImageMemory *img_mem = (GstVulkanImageMemory *) in_mem;
     /* FIXME: should really be a blit to resize to the output dimensions */
     /* *INDENT-OFF* */
@@ -1127,7 +1082,7 @@ gst_vulkan_swapper_render_buffer (GstVulkanSwapper * swapper,
         "Buffer has no memory");
     return FALSE;
   }
-  if (!gst_is_vulkan_buffer_memory (mem) && !gst_is_vulkan_image_memory (mem)) {
+  if (!gst_is_vulkan_image_memory (mem)) {
     g_set_error_literal (error, GST_VULKAN_ERROR, VK_ERROR_FORMAT_NOT_SUPPORTED,
         "Incorrect memory type");
     return FALSE;
