@@ -276,6 +276,9 @@ GST_BASE_API
 gboolean        gst_base_src_is_async         (GstBaseSrc *src);
 
 GST_BASE_API
+gboolean        gst_base_src_negotiate        (GstBaseSrc *src);
+
+GST_BASE_API
 void            gst_base_src_start_complete   (GstBaseSrc * basesrc, GstFlowReturn ret);
 
 GST_BASE_API

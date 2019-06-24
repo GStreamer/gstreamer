@@ -909,6 +909,8 @@ typedef struct
   GstBaseSrc parent;
   GstSegment *segment;
   gboolean n_output_buffers;
+  gsize num_times_negotiate_called;
+  gboolean do_renegotiate;
 } TimeSrc;
 
 typedef GstBaseSrcClass TimeSrcClass;
@@ -923,6 +925,8 @@ time_src_init (TimeSrc * src)
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_automatic_eos (GST_BASE_SRC (src), FALSE);
   src->n_output_buffers = 0;
+  src->num_times_negotiate_called = 0;
+  src->do_renegotiate = FALSE;
 }
 
 /* This test src outputs a compressed format, with a single GOP
@@ -940,6 +944,11 @@ time_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
 
   if (src->segment->position >= src->segment->stop)
     return GST_FLOW_EOS;
+
+  if (src->do_renegotiate) {
+    gst_base_src_negotiate (bsrc);
+    src->do_renegotiate = FALSE;
+  }
 
   *p_buf = gst_buffer_new ();
   GST_BUFFER_PTS (*p_buf) = src->segment->position;
@@ -973,6 +982,14 @@ time_src_is_seekable (GstBaseSrc * bsrc)
   return TRUE;
 }
 
+static gboolean
+time_src_negotiate (GstBaseSrc * bsrc)
+{
+  TimeSrc *src = (TimeSrc *) bsrc;
+  src->num_times_negotiate_called++;
+  return GST_BASE_SRC_CLASS (time_src_parent_class)->negotiate (bsrc);
+}
+
 static void
 time_src_class_init (TimeSrcClass * klass)
 {
@@ -984,6 +1001,7 @@ time_src_class_init (TimeSrcClass * klass)
   gstbasesrc_class->create = time_src_create;
   gstbasesrc_class->do_seek = time_src_do_seek;
   gstbasesrc_class->is_seekable = time_src_is_seekable;
+  gstbasesrc_class->negotiate = time_src_negotiate;
 }
 
 GST_START_TEST (basesrc_time_automatic_eos)
@@ -1033,6 +1051,63 @@ GST_START_TEST (basesrc_time_automatic_eos)
 
 GST_END_TEST;
 
+GST_START_TEST (basesrc_negotiate)
+{
+  GstElement *src, *sink;
+  GstElement *pipe;
+  GstSegment seg;
+
+  src = g_object_new (time_src_get_type (), NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+
+  pipe = gst_pipeline_new (NULL);
+
+  gst_bin_add (GST_BIN (pipe), src);
+  gst_bin_add (GST_BIN (pipe), sink);
+
+  gst_element_link (src, sink);
+
+  /* Use some default segment to get the stream going. */
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  ((TimeSrc *) src)->segment = gst_segment_copy (&seg);
+
+  /* Check that gst_base_src_negotiate () actually ends up calling
+   * the negotiate () vmethod by first running the test pipeline
+   * normally, and then running it with a gst_base_src_negotiate ()
+   * call, and checking how many times negotiate () was called in
+   * both cases. */
+
+  /* Run pipeline, keep do_renegotiate at FALSE, so
+   * gst_base_src_negotiate () won't be called. negotiate () still
+   * will be called once, as part of the regular caps negotiation
+   * sequence. */
+  fail_unless (((TimeSrc *) src)->num_times_negotiate_called == 0);
+  gst_element_set_state (pipe, GST_STATE_PLAYING);
+  gst_element_get_state (pipe, NULL, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless (((TimeSrc *) src)->num_times_negotiate_called == 1);
+  gst_element_set_state (pipe, GST_STATE_NULL);
+
+  ((TimeSrc *) src)->num_times_negotiate_called = 0;
+
+  /* Run pipeline, set do_renegotiate to TRUE. This will cause
+   * negotiate () to be called twice: Once during caps negotiation,
+   * and once by the gst_base_src_negotiate () call in the
+   * time_src_create () function. */
+  ((TimeSrc *) src)->do_renegotiate = TRUE;
+  fail_unless (((TimeSrc *) src)->num_times_negotiate_called == 0);
+  gst_element_set_state (pipe, GST_STATE_PLAYING);
+  gst_element_get_state (pipe, NULL, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless (((TimeSrc *) src)->num_times_negotiate_called == 2);
+  gst_element_set_state (pipe, GST_STATE_NULL);
+
+  if (((TimeSrc *) src)->segment)
+    gst_segment_free (((TimeSrc *) src)->segment);
+
+  gst_object_unref (pipe);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_basesrc_suite (void)
 {
@@ -1050,6 +1125,7 @@ gst_basesrc_suite (void)
   tcase_add_test (tc, basesrc_seek_on_last_buffer);
   tcase_add_test (tc, basesrc_create_bufferlist);
   tcase_add_test (tc, basesrc_time_automatic_eos);
+  tcase_add_test (tc, basesrc_negotiate);
 
   return s;
 }

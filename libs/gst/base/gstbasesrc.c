@@ -360,7 +360,7 @@ static GstFlowReturn gst_base_src_getrange (GstPad * pad, GstObject * parent,
 static GstFlowReturn gst_base_src_get_range (GstBaseSrc * src, guint64 offset,
     guint length, GstBuffer ** buf);
 static gboolean gst_base_src_seekable (GstBaseSrc * src);
-static gboolean gst_base_src_negotiate (GstBaseSrc * basesrc);
+static gboolean gst_base_src_negotiate_unlocked (GstBaseSrc * basesrc);
 static gboolean gst_base_src_update_length (GstBaseSrc * src, guint64 offset,
     guint * length, gboolean force);
 
@@ -2804,7 +2804,7 @@ gst_base_src_loop (GstPad * pad)
 
   /* check if we need to renegotiate */
   if (gst_pad_check_reconfigure (pad)) {
-    if (!gst_base_src_negotiate (src)) {
+    if (!gst_base_src_negotiate_unlocked (src)) {
       gst_pad_mark_reconfigure (pad);
       if (GST_PAD_IS_FLUSHING (pad)) {
         GST_LIVE_LOCK (src);
@@ -3374,7 +3374,7 @@ no_caps:
 }
 
 static gboolean
-gst_base_src_negotiate (GstBaseSrc * basesrc)
+gst_base_src_negotiate_unlocked (GstBaseSrc * basesrc)
 {
   GstBaseSrcClass *bclass;
   gboolean result;
@@ -3399,6 +3399,39 @@ gst_base_src_negotiate (GstBaseSrc * basesrc)
       gst_caps_unref (caps);
   }
   return result;
+}
+
+/**
+ * gst_base_src_negotiate:
+ * @basesrc: base source instance
+ *
+ * Negotiates src pad caps with downstream elements.
+ * Unmarks GST_PAD_FLAG_NEED_RECONFIGURE in any case. But marks it again
+ * if #GstBaseSrcClass.negotiate() fails.
+ *
+ * Do not call this in the #GstBaseSrcClass.fill() vmethod. Call this in
+ * #GstBaseSrcClass.create() or in #GstBaseSrcClass.alloc(), _before_ any
+ * buffer is allocated.
+ *
+ * Returns: %TRUE if the negotiation succeeded, else %FALSE.
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_base_src_negotiate (GstBaseSrc * src)
+{
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (GST_IS_BASE_SRC (src), FALSE);
+
+  GST_PAD_STREAM_LOCK (src->srcpad);
+  gst_pad_check_reconfigure (src->srcpad);
+  ret = gst_base_src_negotiate_unlocked (src);
+  if (!ret)
+    gst_pad_mark_reconfigure (src->srcpad);
+  GST_PAD_STREAM_UNLOCK (src->srcpad);
+
+  return ret;
 }
 
 static gboolean
