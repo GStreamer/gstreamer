@@ -84,6 +84,11 @@ struct _GstVulkanSwapper
   gulong close_id;
   gulong draw_id;
 
+  /* properties */
+  gboolean force_aspect_ratio;
+  gint par_n;
+  gint par_d;
+
   GstVulkanSwapperPrivate *priv;
 };
 

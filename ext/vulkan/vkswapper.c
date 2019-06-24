@@ -39,7 +39,22 @@ struct _GstVulkanSwapperPrivate
   GMutex render_lock;
 
   GList *trash_list;
+
+  /* source sizes accounting for all aspect ratios */
+  guint dar_width;
+  guint dar_height;
 };
+
+enum
+{
+  PROP_0,
+  PROP_FORCE_ASPECT_RATIO,
+  PROP_PIXEL_ASPECT_RATIO,
+};
+
+#define DEFAULT_FORCE_ASPECT_RATIO TRUE
+#define DEFAULT_PIXEL_ASPECT_RATIO_N 0
+#define DEFAULT_PIXEL_ASPECT_RATIO_D 1
 
 #define gst_vulkan_swapper_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVulkanSwapper, gst_vulkan_swapper,
@@ -373,6 +388,45 @@ _on_window_close (GstVulkanWindow * window, GstVulkanSwapper * swapper)
 }
 
 static void
+gst_vulkan_swapper_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVulkanSwapper *swapper = GST_VULKAN_SWAPPER (object);
+
+  switch (prop_id) {
+    case PROP_FORCE_ASPECT_RATIO:
+      swapper->force_aspect_ratio = g_value_get_boolean (value);
+      break;
+    case PROP_PIXEL_ASPECT_RATIO:
+      swapper->par_n = gst_value_get_fraction_numerator (value);
+      swapper->par_d = gst_value_get_fraction_denominator (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_vulkan_swapper_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVulkanSwapper *swapper = GST_VULKAN_SWAPPER (object);
+
+  switch (prop_id) {
+    case PROP_FORCE_ASPECT_RATIO:
+      g_value_set_boolean (value, swapper->force_aspect_ratio);
+      break;
+    case PROP_PIXEL_ASPECT_RATIO:
+      gst_value_set_fraction (value, swapper->par_n, swapper->par_d);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_vulkan_swapper_finalize (GObject * object)
 {
   GstVulkanSwapper *swapper = GST_VULKAN_SWAPPER (object);
@@ -439,12 +493,31 @@ gst_vulkan_swapper_init (GstVulkanSwapper * swapper)
   swapper->priv = gst_vulkan_swapper_get_instance_private (swapper);
 
   g_mutex_init (&swapper->priv->render_lock);
+
+  swapper->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
+  swapper->par_n = DEFAULT_PIXEL_ASPECT_RATIO_N;
+  swapper->par_d = DEFAULT_PIXEL_ASPECT_RATIO_D;
 }
 
 static void
 gst_vulkan_swapper_class_init (GstVulkanSwapperClass * klass)
 {
-  G_OBJECT_CLASS (klass)->finalize = gst_vulkan_swapper_finalize;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  gobject_class->set_property = gst_vulkan_swapper_set_property;
+  gobject_class->get_property = gst_vulkan_swapper_get_property;
+  gobject_class->finalize = gst_vulkan_swapper_finalize;
+
+  g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
+      g_param_spec_boolean ("force-aspect-ratio", "Force aspect ratio",
+          "When enabled, scaling will respect original aspect ratio",
+          DEFAULT_FORCE_ASPECT_RATIO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_PIXEL_ASPECT_RATIO,
+      gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
+          "The pixel aspect ratio of the device", 0, 1, G_MAXINT, 1, 1, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 GstVulkanSwapper *
@@ -725,14 +798,82 @@ _swapchain_resize (GstVulkanSwapper * swapper, GError ** error)
   return _allocate_swapchain (swapper, swapper->caps, error);
 }
 
+
+static gboolean
+configure_display_from_info (GstVulkanSwapper * swapper, GstVideoInfo * vinfo)
+{
+  gint width;
+  gint height;
+  gboolean ok;
+  gint par_n, par_d;
+  gint display_par_n, display_par_d;
+  guint display_ratio_num, display_ratio_den;
+
+  width = GST_VIDEO_INFO_WIDTH (vinfo);
+  height = GST_VIDEO_INFO_HEIGHT (vinfo);
+
+  par_n = GST_VIDEO_INFO_PAR_N (vinfo);
+  par_d = GST_VIDEO_INFO_PAR_D (vinfo);
+
+  if (!par_n)
+    par_n = 1;
+
+  /* get display's PAR */
+  if (swapper->par_n != 0 && swapper->par_d != 0) {
+    display_par_n = swapper->par_n;
+    display_par_d = swapper->par_d;
+  } else {
+    display_par_n = 1;
+    display_par_d = 1;
+  }
+
+  ok = gst_video_calculate_display_ratio (&display_ratio_num,
+      &display_ratio_den, width, height, par_n, par_d, display_par_n,
+      display_par_d);
+
+  if (!ok)
+    return FALSE;
+
+  GST_TRACE_OBJECT (swapper, "PAR: %u/%u DAR:%u/%u", par_n, par_d,
+      display_par_n, display_par_d);
+
+  if (height % display_ratio_den == 0) {
+    GST_DEBUG_OBJECT (swapper, "keeping video height");
+    swapper->priv->dar_width = (guint)
+        gst_util_uint64_scale_int (height, display_ratio_num,
+        display_ratio_den);
+    swapper->priv->dar_height = height;
+  } else if (width % display_ratio_num == 0) {
+    GST_DEBUG_OBJECT (swapper, "keeping video width");
+    swapper->priv->dar_width = width;
+    swapper->priv->dar_height = (guint)
+        gst_util_uint64_scale_int (width, display_ratio_den, display_ratio_num);
+  } else {
+    GST_DEBUG_OBJECT (swapper, "approximating while keeping video height");
+    swapper->priv->dar_width = (guint)
+        gst_util_uint64_scale_int (height, display_ratio_num,
+        display_ratio_den);
+    swapper->priv->dar_height = height;
+  }
+  GST_DEBUG_OBJECT (swapper, "scaling to %dx%d", swapper->priv->dar_width,
+      swapper->priv->dar_height);
+
+  return TRUE;
+}
+
 gboolean
 gst_vulkan_swapper_set_caps (GstVulkanSwapper * swapper, GstCaps * caps,
     GError ** error)
 {
   if (!gst_video_info_from_caps (&swapper->v_info, caps)) {
     g_set_error (error, GST_VULKAN_ERROR,
-        VK_ERROR_INITIALIZATION_FAILED,
-        "Failed to geto GstVideoInfo from caps");
+        VK_ERROR_INITIALIZATION_FAILED, "Failed to get GstVideoInfo from caps");
+    return FALSE;
+  }
+
+  if (!configure_display_from_info (swapper, &swapper->v_info)) {
+    g_set_error (error, GST_VULKAN_ERROR,
+        VK_ERROR_INITIALIZATION_FAILED, "Failed to configure display sizes");
     return FALSE;
   }
 
@@ -799,14 +940,14 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   }
 
   src.x = src.y = 0;
-  src.w = GST_VIDEO_INFO_WIDTH (&swapper->v_info);
-  src.h = GST_VIDEO_INFO_HEIGHT (&swapper->v_info);
+  src.w = swapper->priv->dar_width;
+  src.h = swapper->priv->dar_height;
 
   dst.x = dst.y = 0;
   dst.w = gst_vulkan_image_memory_get_width (swap_img);
   dst.h = gst_vulkan_image_memory_get_height (swap_img);
 
-  gst_video_sink_center_rect (src, dst, &rslt, FALSE);
+  gst_video_sink_center_rect (src, dst, &rslt, swapper->force_aspect_ratio);
 
   GST_TRACE_OBJECT (swapper, "rendering into result rectangle %ux%u+%u,%u "
       "src %ux%u dst %ux%u", rslt.w, rslt.h, rslt.x, rslt.y, src.w, src.h,
@@ -815,24 +956,28 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   in_mem = gst_buffer_peek_memory (buffer, 0);
   {
     GstVulkanImageMemory *img_mem = (GstVulkanImageMemory *) in_mem;
-    /* FIXME: should really be a blit to resize to the output dimensions */
     /* *INDENT-OFF* */
-    VkImageCopy region = {
+    VkImageBlit blit = {
         .srcSubresource = {
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .mipLevel = 0,
             .baseArrayLayer = 0,
             .layerCount = 1,
         },
-        .srcOffset = { src.x, src.y, 0 },
+        .srcOffsets = {
+            {0, 0, 0},
+            {GST_VIDEO_INFO_WIDTH (&swapper->v_info), GST_VIDEO_INFO_HEIGHT (&swapper->v_info), 1},
+        },
         .dstSubresource = {
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .mipLevel = 0,
             .baseArrayLayer = 0,
             .layerCount = 1,
         },
-        .dstOffset = { rslt.x, rslt.y, 0 },
-        .extent = { rslt.w, rslt.h, 1 }
+        .dstOffsets = {
+            {rslt.x, rslt.y, 0},
+            {rslt.x + rslt.w, rslt.y + rslt.h, 1},
+        },
     };
     VkImageMemoryBarrier image_memory_barrier = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -847,6 +992,14 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
         .image = img_mem->image,
         .subresourceRange = img_mem->barrier.subresource_range
     };
+    VkClearColorValue clear = {{0.0, 0.0, 0.0, 1.0}};
+    VkImageSubresourceRange clear_range = {
+        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+        .baseMipLevel = 0,
+        .levelCount = 1,
+        .baseArrayLayer = 0,
+        .layerCount = 1,
+    };
     /* *INDENT-ON* */
 
     vkCmdPipelineBarrier (cmd, img_mem->barrier.parent.pipeline_stages,
@@ -857,10 +1010,12 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
     img_mem->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
     img_mem->barrier.image_layout = image_memory_barrier.newLayout;
 
-    vkCmdCopyImage (cmd, img_mem->image, img_mem->barrier.image_layout,
-        swap_img->image, swap_img->barrier.image_layout, 1, &region);
+    vkCmdClearColorImage (cmd, swap_img->image, swap_img->barrier.image_layout,
+        &clear, 1, &clear_range);
+    vkCmdBlitImage (cmd, img_mem->image, img_mem->barrier.image_layout,
+        swap_img->image, swap_img->barrier.image_layout, 1, &blit,
+        VK_FILTER_LINEAR);
   }
-
   {
     /* *INDENT-OFF* */
     VkImageMemoryBarrier image_memory_barrier = {

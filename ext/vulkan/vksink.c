@@ -178,10 +178,16 @@ gst_vulkan_sink_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_FORCE_ASPECT_RATIO:
       vk_sink->force_aspect_ratio = g_value_get_boolean (value);
+      if (vk_sink->swapper)
+        g_object_set_property (G_OBJECT (vk_sink->swapper),
+            "force-aspect-ratio", value);
       break;
     case PROP_PIXEL_ASPECT_RATIO:
       vk_sink->par_n = gst_value_get_fraction_numerator (value);
       vk_sink->par_d = gst_value_get_fraction_denominator (value);
+      if (vk_sink->swapper)
+        g_object_set_property (G_OBJECT (vk_sink->swapper),
+            "pixel-aspect-ratio", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -299,6 +305,10 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
             ("Failed to create a swapper"), (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
+
+      g_object_set (vk_sink->swapper, "force_aspect-ratio",
+          vk_sink->force_aspect_ratio, "pixel-aspect-ratio", vk_sink->par_n,
+          vk_sink->par_d, NULL);
 
       {
         GstVulkanQueue *queue = NULL;
