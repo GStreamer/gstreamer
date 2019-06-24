@@ -28,25 +28,6 @@
 #include <gst/check/gstharness.h>
 #include <gst/vulkan/vulkan.h>
 
-static GstVulkanInstance *instance;
-static GstVulkanDevice *device;
-
-static void
-setup (void)
-{
-  instance = gst_vulkan_instance_new ();
-  fail_unless (gst_vulkan_instance_open (instance, NULL));
-  device = gst_vulkan_device_new (instance);
-  fail_unless (gst_vulkan_device_open (device, NULL));
-}
-
-static void
-teardown (void)
-{
-  gst_object_unref (instance);
-  gst_object_unref (device);
-}
-
 typedef struct _TestFrame
 {
   gint width;
@@ -139,10 +120,10 @@ vkcolorconvert_suite (void)
 {
   Suite *s = suite_create ("vkcolorconvert");
   TCase *tc_basic = tcase_create ("general");
+  GstVulkanInstance *instance;
   gboolean have_instance;
 
   suite_add_tcase (s, tc_basic);
-  tcase_add_checked_fixture (tc_basic, setup, teardown);
 
   /* FIXME: CI doesn't have a software vulkan renderer (and none exists currently) */
   instance = gst_vulkan_instance_new ();
