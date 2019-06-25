@@ -331,9 +331,7 @@ gst_rtsp_onvif_media_factory_finalize (GObject * object)
 
   g_mutex_clear (&factory->priv->lock);
 
-  return
-      G_OBJECT_CLASS (gst_rtsp_onvif_media_factory_parent_class)->finalize
-      (object);
+  G_OBJECT_CLASS (gst_rtsp_onvif_media_factory_parent_class)->finalize (object);
 }
 
 static void

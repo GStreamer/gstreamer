@@ -222,7 +222,7 @@ gst_rtsp_onvif_media_finalize (GObject * object)
 
   g_mutex_clear (&media->priv->lock);
 
-  return G_OBJECT_CLASS (gst_rtsp_onvif_media_parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_rtsp_onvif_media_parent_class)->finalize (object);
 }
 
 static void
