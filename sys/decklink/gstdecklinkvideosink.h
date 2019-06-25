@@ -52,7 +52,7 @@ struct _GstDecklinkVideoSink
   GstDecklinkModeEnum mode;
   gint device_number;
   GstDecklinkVideoFormat video_format;
-  BMDDuplexMode duplex_mode;
+  BMDProfileID profile_id;
   BMDTimecodeFormat timecode_format;
   BMDKeyerMode keyer_mode;
   gint keyer_level;

@@ -1,5 +1,5 @@
 /* -LICENSE-START-
-** Copyright (c) 2018 Blackmagic Design
+** Copyright (c) 2019 Blackmagic Design
 **
 ** Permission is hereby granted, free of charge, to any person or organization
 ** obtaining a copy of the software and accompanying documentation covered by
@@ -59,13 +59,16 @@ enum _BMDTimecodeFlags {
     bmdTimecodeFlagDefault                                       = 0,
     bmdTimecodeIsDropFrame                                       = 1 << 0,
     bmdTimecodeFieldMark                                         = 1 << 1,
-    bmdTimecodeColorFrame                                        = 1 << 2
+    bmdTimecodeColorFrame                                        = 1 << 2,
+    bmdTimecodeEmbedRecordingTrigger                             = 1 << 3,	// On SDI recording trigger utilises a user-bit
+    bmdTimecodeRecordingTriggered                                = 1 << 4
 };
 
 /* Enum BMDVideoConnection - Video connection types */
 
 typedef uint32_t BMDVideoConnection;
 enum _BMDVideoConnection {
+    bmdVideoConnectionUnspecified                                = 0,
     bmdVideoConnectionSDI                                        = 1 << 0,
     bmdVideoConnectionHDMI                                       = 1 << 1,
     bmdVideoConnectionOpticalSDI                                 = 1 << 2,

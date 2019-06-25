@@ -157,17 +157,20 @@ gst_decklink_video_format_get_type (void)
 }
 
 GType
-gst_decklink_duplex_mode_get_type (void)
+gst_decklink_profile_id_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue types[] = {
-    {GST_DECKLINK_DUPLEX_MODE_HALF, "Half-Duplex", "half"},
-    {GST_DECKLINK_DUPLEX_MODE_FULL, "Full-Duplex", "full"},
+    {GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX, "One sub-device, Full-Duplex", "one-sub-device-full"},
+    {GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_HALF_DUPLEX, "One sub-device, Half-Duplex", "one-sub-device-half"},
+    {GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_FULL_DUPLEX, "Two sub-devices, Full-Duplex", "two-sub-devices-full"},
+    {GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_HALF_DUPLEX, "Two sub-devices, Half-Duplex", "two-sub-devices-half"},
+    {GST_DECKLINK_PROFILE_ID_FOUR_SUB_DEVICES_HALF_DUPLEX, "Four sub-devices, Half-Duplex", "four-sub-devices-half"},
     {0, NULL, NULL}
   };
 
   if (g_once_init_enter (&id)) {
-    GType tmp = g_enum_register_static ("GstDecklinkDuplexMode", types);
+    GType tmp = g_enum_register_static ("GstDecklinkProfileId", types);
     g_once_init_leave (&id, tmp);
   }
 
@@ -353,13 +356,23 @@ static const struct
 
 static const struct
 {
-  BMDDuplexMode mode;
-  GstDecklinkDuplexMode gstmode;
-} duplex_modes[] = {
+  BMDProfileID profile;
+  GstDecklinkProfileId gstprofile;
+} profiles[] = {
   /* *INDENT-OFF* */
-  {bmdDuplexModeHalf, GST_DECKLINK_DUPLEX_MODE_HALF},
-  {bmdDuplexModeFull, GST_DECKLINK_DUPLEX_MODE_FULL},
+  {bmdProfileOneSubDeviceFullDuplex, GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX},
+  {bmdProfileOneSubDeviceHalfDuplex, GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_HALF_DUPLEX},
+  {bmdProfileTwoSubDevicesFullDuplex, GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_FULL_DUPLEX},
+  {bmdProfileTwoSubDevicesHalfDuplex, GST_DECKLINK_PROFILE_ID_TWO_SUB_DEVICES_HALF_DUPLEX},
+  {bmdProfileFourSubDevicesHalfDuplex, GST_DECKLINK_PROFILE_ID_FOUR_SUB_DEVICES_HALF_DUPLEX},
   /* *INDENT-ON* */
+};
+
+enum ProfileSetOperationResult
+{
+  PROFILE_SET_UNSUPPORTED,
+  PROFILE_SET_SUCCESS,
+  PROFILE_SET_FAILURE
 };
 
 enum DuplexModeSetOperationResult
@@ -589,23 +602,23 @@ gst_decklink_timecode_format_to_enum (BMDTimecodeFormat f)
   return GST_DECKLINK_TIMECODE_FORMAT_RP188ANY;
 }
 
-const BMDDuplexMode
-gst_decklink_duplex_mode_from_enum (GstDecklinkDuplexMode m)
+const BMDProfileID
+gst_decklink_profile_id_from_enum (GstDecklinkProfileId p)
 {
-  return duplex_modes[m].mode;
+  return profiles[p].profile;
 }
 
-const GstDecklinkDuplexMode
-gst_decklink_duplex_mode_to_enum (BMDDuplexMode m)
+const GstDecklinkProfileId
+gst_decklink_profile_id_to_enum (BMDProfileID p)
 {
   guint i;
 
-  for (i = 0; i < G_N_ELEMENTS (duplex_modes); i++) {
-    if (duplex_modes[i].mode == m)
-      return duplex_modes[i].gstmode;
+  for (i = 0; i < G_N_ELEMENTS (profiles); i++) {
+    if (profiles[i].profile == p)
+      return profiles[i].gstprofile;
   }
   g_assert_not_reached ();
-  return GST_DECKLINK_DUPLEX_MODE_HALF;
+  return GST_DECKLINK_PROFILE_ID_ONE_SUB_DEVICE_FULL_DUPLEX;
 }
 
 const BMDKeyerMode
@@ -859,11 +872,9 @@ struct _Device
   GstDecklinkDevice *devices[4];
 };
 
-DuplexModeSetOperationResult gst_decklink_configure_duplex_mode (Device *
-    device, BMDDuplexMode duplex_mode);
-DuplexModeSetOperationResult
-gst_decklink_configure_duplex_mode_pair_device (Device * device,
-    BMDDuplexMode duplex_mode);
+ProfileSetOperationResult gst_decklink_configure_profile (Device * device,
+    BMDProfileID profile_id);
+
 Device *gst_decklink_find_device_by_persistent_id (int64_t persistent_id);
 gboolean gst_decklink_device_has_persistent_id (Device * device,
     int64_t persistent_id);
@@ -1546,7 +1557,7 @@ init_devices (gpointer data)
       }
     }
 
-    ret = decklink->QueryInterface (IID_IDeckLinkAttributes,
+    ret = decklink->QueryInterface (IID_IDeckLinkProfileAttributes,
         (void **) &dev->input.attributes);
     dev->output.attributes = dev->input.attributes;
     if (ret != S_OK) {
@@ -1677,8 +1688,8 @@ gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio)
 
   if (!is_audio) {
     GstDecklinkVideoSink *videosink = (GstDecklinkVideoSink *) (sink);
-    if (gst_decklink_configure_duplex_mode (device,
-            videosink->duplex_mode) == DUPLEX_MODE_SET_FAILURE) {
+    if (gst_decklink_configure_profile (device,
+            videosink->profile_id) == PROFILE_SET_FAILURE) {
       return NULL;
     }
   }
@@ -1751,11 +1762,12 @@ gst_decklink_acquire_nth_input (gint n, GstElement * src, gboolean is_audio)
 
   if (!is_audio) {
     GstDecklinkVideoSrc *videosrc = (GstDecklinkVideoSrc *) (src);
-    if (gst_decklink_configure_duplex_mode (device,
-            videosrc->duplex_mode) == DUPLEX_MODE_SET_FAILURE) {
+    if (gst_decklink_configure_profile (device,
+            videosrc->profile_id) == PROFILE_SET_FAILURE) {
       return NULL;
     }
   }
+
   g_mutex_lock (&input->lock);
   input->input->SetVideoInputFrameMemoryAllocator (new
       GStreamerDecklinkMemoryAllocator);
@@ -1768,6 +1780,7 @@ gst_decklink_acquire_nth_input (gint n, GstElement * src, gboolean is_audio)
     g_mutex_unlock (&input->lock);
     return input;
   }
+
   g_mutex_unlock (&input->lock);
 
   GST_ERROR ("Input device %d (audio: %d) in use already", n, is_audio);
@@ -1804,115 +1817,40 @@ gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio)
   g_mutex_unlock (&input->lock);
 }
 
-/*
- * Probes if duplex-mode is supported and sets it accordingly. I duplex-mode is not supported
- * but this device is part of a pair (Duo2- and Quad2-Cards) and Half-Dupley-Mode is requested,
- * the parent device is also checked and configured accordingly.
- *
- * If
- *  - full-duplex-mode is requested and the device does not support it *or*
- *  - half-duplex-mode is requested and there is not parent-device *or*
- *  - half-duplex-mode is requested and neither the device nor the parent device does support setting
- *    the duplex-mode, DUPLEX_MODE_SET_UNSUPPORTED is returnded.
- * If the device does support duplex-mode and setting it succeeded, DUPLEX_MODE_SET_SUCCESS is rerturned.
- * If
- *  - the device does support duplex-mode and setting it failed *or*
- *  - the Device reported a pair-device that does not exist in the system,
- *    DUPLEX_MODE_SET_FAILURE is returned.
- */
-DuplexModeSetOperationResult
-gst_decklink_configure_duplex_mode (Device * device, BMDDuplexMode duplex_mode)
+ProfileSetOperationResult
+gst_decklink_configure_profile (Device * device, BMDProfileID profile_id)
 {
-  HRESULT result;
-  bool duplex_supported;
-  int64_t paired_device_id;
+  HRESULT res;
 
   GstDecklinkInput *input = &device->input;
+  IDeckLink *decklink = input->device;
 
-  result =
-      input->attributes->GetFlag (BMDDeckLinkSupportsDuplexModeConfiguration,
-      &duplex_supported);
-  if (result != S_OK) {
-    duplex_supported = false;
-  }
+  IDeckLinkProfileManager *manager = NULL;
+  if (decklink->QueryInterface(IID_IDeckLinkProfileManager, (void **)&manager) == S_OK) {
 
-  if (!duplex_supported) {
-    if (duplex_mode == bmdDuplexModeFull) {
-      GST_DEBUG ("Device does not support Full-Duplex-Mode");
-      return DUPLEX_MODE_SET_UNSUPPORTED;
-    } else if (duplex_mode == bmdDuplexModeHalf) {
-      result =
-          input->attributes->GetInt (BMDDeckLinkPairedDevicePersistentID,
-          &paired_device_id);
+    IDeckLinkProfile *profile = NULL;
+    res = manager->GetProfile(profile_id, &profile);
 
-      if (result == S_OK) {
-        GST_DEBUG ("Device does not support Half-Duplex-Mode but the Device is "
-            "a Part of a Device-Pair, trying to set Half-Duplex-Mode "
-            "on the Parent-Device");
-
-        Device *pair_device =
-            gst_decklink_find_device_by_persistent_id (paired_device_id);
-        if (pair_device == NULL) {
-          GST_ERROR ("Device reported as Pair-Device does not exist");
-          return DUPLEX_MODE_SET_FAILURE;
-        }
-        return gst_decklink_configure_duplex_mode_pair_device (pair_device,
-            duplex_mode);
-      } else {
-        GST_DEBUG ("Device does not support Half-Duplex-Mode");
-        return DUPLEX_MODE_SET_SUCCESS;
-      }
-    } else {
-      GST_ERROR ("duplex_mode=%d", duplex_mode);
-      g_assert_not_reached ();
+    if (res == S_OK) {
+      res = profile->SetActive();
+      profile->Release();
     }
-  } else {
-    GST_DEBUG ("Setting duplex-mode of Device");
-    result = input->config->SetInt (bmdDeckLinkConfigDuplexMode, duplex_mode);
 
-    if (result == S_OK) {
-      GST_DEBUG ("Duplex mode set successful");
-      return DUPLEX_MODE_SET_SUCCESS;
-    } else {
-      GST_ERROR ("Setting duplex mode failed");
-      return DUPLEX_MODE_SET_FAILURE;
+    manager->Release();
+
+    if (res == S_OK) {
+      GST_DEBUG("Successfully set profile.\n");
+      return PROFILE_SET_SUCCESS;
+    }
+    else {
+      GST_ERROR("Failed to set profile.\n");
+      return PROFILE_SET_FAILURE;
     }
   }
+  else {
 
-  g_assert_not_reached ();
-  return DUPLEX_MODE_SET_FAILURE;
-}
-
-DuplexModeSetOperationResult
-gst_decklink_configure_duplex_mode_pair_device (Device * device,
-    BMDDuplexMode duplex_mode)
-{
-  HRESULT result;
-  bool duplex_supported;
-
-  GstDecklinkInput *input = &device->input;
-
-  result =
-      input->attributes->GetFlag (BMDDeckLinkSupportsDuplexModeConfiguration,
-      &duplex_supported);
-  if (result != S_OK) {
-    duplex_supported = false;
-  }
-
-  if (!duplex_supported) {
-    GST_DEBUG ("Pair-Device does not support Duplex-Mode");
-    return DUPLEX_MODE_SET_UNSUPPORTED;
-  }
-
-  GST_DEBUG ("Setting duplex-mode of Pair-Device");
-  result = input->config->SetInt (bmdDeckLinkConfigDuplexMode, duplex_mode);
-
-  if (result == S_OK) {
-    GST_DEBUG ("Duplex mode set successful");
-    return DUPLEX_MODE_SET_SUCCESS;
-  } else {
-    GST_ERROR ("Setting duplex mode failed");
-    return DUPLEX_MODE_SET_FAILURE;
+    GST_DEBUG("Device has only one profile.\n");
+    return PROFILE_SET_UNSUPPORTED;
   }
 }
 
@@ -2057,7 +1995,7 @@ plugin_init (GstPlugin * plugin)
 
   gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CHANNELS, (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_AUDIO_CONNECTION, (GstPluginAPIFlags) 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_DUPLEX_MODE, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_PROFILE_ID, (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_KEYER_MODE, (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_MODE, (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_DECKLINK_TIMECODE_FORMAT, (GstPluginAPIFlags) 0);
