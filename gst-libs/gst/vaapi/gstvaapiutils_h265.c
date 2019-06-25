@@ -326,37 +326,48 @@ gst_vaapi_utils_h265_get_level_limits_table (guint * out_length_ptr)
 /** Returns GstVaapiChromaType from H.265 chroma_format_idc value */
 GstVaapiChromaType
 gst_vaapi_utils_h265_get_chroma_type (guint chroma_format_idc,
-    guint luma_bit_depth)
+    guint luma_bit_depth, guint chroma_bit_depth)
 {
   GstVaapiChromaType chroma_type = (GstVaapiChromaType) 0;
+  guint depth = 0;
+
+  if (luma_bit_depth < 8 || chroma_bit_depth < 8 ||
+      luma_bit_depth > 16 || chroma_bit_depth > 16) {
+    GST_WARNING ("invalid luma_bit_depth or chroma_bit_depth value");
+    return chroma_type;
+  }
+
+  depth = MAX (luma_bit_depth, chroma_bit_depth);
 
   switch (chroma_format_idc) {
     case 0:
       chroma_type = GST_VAAPI_CHROMA_TYPE_YUV400;
       break;
     case 1:
-      if (luma_bit_depth == 8)
+      if (depth == 8)
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
-      else if (luma_bit_depth > 8)
+      else if (depth > 8 && depth <= 10)
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
       break;
     case 2:
-      if (luma_bit_depth == 8)
+      if (depth == 8)
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422;
-      else if (luma_bit_depth > 8)
+      else if (depth > 8 && depth <= 10)
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_10BPP;
       break;
     case 3:
-      if (luma_bit_depth == 8)
+      if (depth == 8)
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444;
-      else if (luma_bit_depth > 8)
+      else if (depth > 8 && depth <= 10)
         chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444_10BPP;
       break;
     default:
-      GST_DEBUG ("unsupported chroma_format_idc value");
-      chroma_type = (GstVaapiChromaType) 0;
       break;
   }
+
+  if (chroma_type == (GstVaapiChromaType) 0)
+    GST_DEBUG ("unsupported chroma_format_idc value");
+
   return chroma_type;
 }
 
