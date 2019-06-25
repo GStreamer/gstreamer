@@ -11,6 +11,20 @@ glib_req = '>= 2.40.0'
 build_system = build_machine.system()
 cc = meson.get_compiler('c')
 
+python3 = import('python').find_installation()
+# Ensure that we're not being run from inside the gst-uninstalled env
+# because that will confuse meson, and it might find the already-built
+# gstreamer. It's fine if people run `ninja` as long as it doesn't run
+# reconfigure because ninja doesn't care about the env.
+ensure_not_uninstalled = '''
+import os
+assert('GST_ENV' not in os.environ)
+'''
+cmdres = run_command(python3, '-c', ensure_not_uninstalled)
+if cmdres.returncode() != 0
+  error('Do not run `ninja` or `meson` for gst-build inside the uninstalled environment, you will run into problems')
+endif
+
 # Make it possible to use msys2 built zlib which fails
 # when not using the mingw toolchain as it uses unistd.h
 if not meson.is_subproject() and cc.get_id() == 'msvc'
@@ -50,7 +64,6 @@ subprojects = [
   ['gst-python', { 'option': get_option('python') }],
 ]
 
-python3 = import('python').find_installation()
 symlink = '''
 import os
 
