@@ -93,7 +93,8 @@ gst_vaapi_utils_h265_get_level_limits_table (guint * out_length_ptr);
 /* Returns GstVaapiChromaType from H.265 chroma_format_idc value */
 G_GNUC_INTERNAL
 GstVaapiChromaType
-gst_vaapi_utils_h265_get_chroma_type (guint chroma_format_idc, guint luma_bit_depth);
+gst_vaapi_utils_h265_get_chroma_type (guint chroma_format_idc,
+    guint luma_bit_depth, guint chroma_bit_depth);
 
 /* Returns H.265 chroma_format_idc value from GstVaapiChromaType */
 G_GNUC_INTERNAL

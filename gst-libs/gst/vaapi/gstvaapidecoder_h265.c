@@ -1131,7 +1131,7 @@ ensure_context (GstVaapiDecoderH265 * decoder, GstH265SPS * sps)
 
   chroma_type =
       gst_vaapi_utils_h265_get_chroma_type (sps->chroma_format_idc,
-      sps->bit_depth_luma_minus8 + 8);
+      sps->bit_depth_luma_minus8 + 8, sps->bit_depth_chroma_minus8 + 8);
   if (!chroma_type) {
     GST_ERROR ("unsupported chroma_format_idc %u", sps->chroma_format_idc);
     return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
