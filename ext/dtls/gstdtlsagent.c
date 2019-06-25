@@ -214,6 +214,8 @@ gst_dtls_agent_finalize (GObject * gobject)
   SSL_CTX_free (priv->ssl_context);
   priv->ssl_context = NULL;
 
+  g_clear_object (&priv->certificate);
+
   GST_DEBUG_OBJECT (gobject, "finalized");
 
   G_OBJECT_CLASS (gst_dtls_agent_parent_class)->finalize (gobject);
