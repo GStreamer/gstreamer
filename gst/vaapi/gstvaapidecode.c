@@ -413,9 +413,14 @@ is_surface_resolution_changed (GstVaapiDecode * decode,
     surface_format = gst_vaapi_surface_get_format (surface);
 
     /* if the VA context delivers a currently unrecognized format
-     * (ICM3, e.g.), we can assume NV12 "safely" */
+     * (ICM3, e.g.), we can assume one according surface chroma
+     * type. If fail, then use NV12 "safely" */
     if (surface_format == GST_VIDEO_FORMAT_UNKNOWN
         || surface_format == GST_VIDEO_FORMAT_ENCODED)
+      surface_format =
+          gst_vaapi_video_format_from_chroma (gst_vaapi_surface_get_chroma_type
+          (surface));
+    if (surface_format == GST_VIDEO_FORMAT_UNKNOWN)
       surface_format = GST_VIDEO_FORMAT_NV12;
   }
 
