@@ -587,9 +587,12 @@ get_agent_by_pem (const gchar * pem)
   if (!pem) {
     if (g_once_init_enter (&generated_cert_agent)) {
       GstDtlsAgent *new_agent;
+      GObject *certificate;
 
+      certificate = g_object_new (GST_TYPE_DTLS_CERTIFICATE, NULL);
       new_agent = g_object_new (GST_TYPE_DTLS_AGENT, "certificate",
-          g_object_new (GST_TYPE_DTLS_CERTIFICATE, NULL), NULL);
+          certificate, NULL);
+      g_object_unref (certificate);
 
       GST_DEBUG_OBJECT (generated_cert_agent,
           "no agent with generated cert found, creating new");
@@ -612,9 +615,12 @@ get_agent_by_pem (const gchar * pem)
     agent = GST_DTLS_AGENT (g_hash_table_lookup (agent_table, pem));
 
     if (!agent) {
-      agent = g_object_new (GST_TYPE_DTLS_AGENT,
-          "certificate", g_object_new (GST_TYPE_DTLS_CERTIFICATE, "pem", pem,
-              NULL), NULL);
+      GObject *certificate;
+
+      certificate = g_object_new (GST_TYPE_DTLS_CERTIFICATE, "pem", pem, NULL);
+      agent = g_object_new (GST_TYPE_DTLS_AGENT, "certificate", certificate,
+          NULL);
+      g_object_unref (certificate);
 
       g_object_weak_ref (G_OBJECT (agent), (GWeakNotify) agent_weak_ref_notify,
           (gpointer) g_strdup (pem));
