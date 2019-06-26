@@ -534,7 +534,7 @@ gst_rtp_sink_init (GstRtpSink * self)
   g_mutex_init (&self->lock);
 }
 
-static guint
+static GstURIType
 gst_rtp_sink_uri_get_type (GType type)
 {
   return GST_URI_SINK;
