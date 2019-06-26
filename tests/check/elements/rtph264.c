@@ -531,7 +531,7 @@ static guint8 h264_idr_slice_2[] = {
  * such a NAL from the outside gets ignored properly. */
 GST_START_TEST (test_rtph264pay_reserved_nals)
 {
-  GstHarness *h = gst_harness_new ("rtph264pay");
+  GstHarness *h = gst_harness_new_parse ("rtph264pay aggregate-mode=none");
   /* we simply hack an AUD with the reserved nal types */
   guint8 nal_24[sizeof (h264_aud)];
   guint8 nal_25[sizeof (h264_aud)];
@@ -1049,6 +1049,49 @@ GST_START_TEST (test_rtph264pay_aggregate_with_discont)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtph264pay_aggregate_until_vcl)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123"
+      " name=p");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h264,alignment=nal,stream-format=byte-stream");
+
+  buffer = wrap_static_buffer_with_pts (h264_sps, sizeof (h264_sps), 0);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer = wrap_static_buffer_with_pts (h264_pps, sizeof (h264_pps), 0);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer = wrap_static_buffer_with_pts (h264_idr_slice_1,
+      sizeof (h264_idr_slice_1), 0);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+  /* RTP header = 12,  STAP header = 1, 2 bytes length per NAL */
+  fail_unless_equals_int (gst_buffer_get_size (buffer), 12 + 1 +
+      (2 + sizeof (h264_sps) - 4) +
+      (2 + sizeof (h264_pps) - 4) + (2 + sizeof (h264_idr_slice_1) - 4));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtph264_suite (void)
 {
@@ -1073,6 +1116,7 @@ rtph264_suite (void)
   tcase_add_test (tc_chain, test_rtph264pay_aggregate_with_aud);
   tcase_add_test (tc_chain, test_rtph264pay_aggregate_with_ts_change);
   tcase_add_test (tc_chain, test_rtph264pay_aggregate_with_discont);
+  tcase_add_test (tc_chain, test_rtph264pay_aggregate_until_vcl);
 
   return s;
 }

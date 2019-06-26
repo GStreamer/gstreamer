@@ -51,7 +51,8 @@ gst_rtp_h265_aggregate_mode_get_type (void)
   static GType type = 0;
   static const GEnumValue values[] = {
     {GST_RTP_H265_AGGREGATE_NONE, "Do not aggregate NAL units", "none"},
-    {GST_RTP_H265_AGGREGATE_ZERO_LATENCY, "Aggregate all that arrive together",
+    {GST_RTP_H265_AGGREGATE_ZERO_LATENCY,
+          "Aggregate NAL units until a VCL or suffix unit is included",
         "zero-latency"},
     {GST_RTP_H265_AGGREGATE_MAX,
         "Aggregate all NAL units with the same timestamp (adds one frame of"
@@ -1648,7 +1649,8 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
   }
 
   if (ret == GST_FLOW_OK &&
-      rtph265pay->aggregate_mode == GST_RTP_H265_AGGREGATE_ZERO_LATENCY) {
+      rtph265pay->aggregate_mode == GST_RTP_H265_AGGREGATE_ZERO_LATENCY &&
+      rtph265pay->bundle_contains_vcl) {
     GST_DEBUG_OBJECT (rtph265pay, "sending bundle at end incoming packet");
     ret = gst_rtp_h265_pay_send_bundle (rtph265pay, FALSE);
   }

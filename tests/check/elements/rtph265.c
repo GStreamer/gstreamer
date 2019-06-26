@@ -417,6 +417,28 @@ GST_END_TEST;
  *     ! fakesink dump=1
  */
 
+static guint8 h265_vps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x40, 0x01, 0x0c, 0x01,
+  0xff, 0xff, 0x01, 0x60, 0x00, 0x00, 0x03, 0x00,
+  0x90, 0x00, 0x00, 0x03, 0x00, 0x00, 0x03, 0x00,
+  0x3f, 0x95, 0x98, 0x09
+};
+
+static guint8 h265_sps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x42, 0x01, 0x01, 0x01,
+  0x60, 0x00, 0x00, 0x03, 0x00, 0x90, 0x00, 0x00,
+  0x03, 0x00, 0x00, 0x03, 0x00, 0x3f, 0xa0, 0x08,
+  0x08, 0x04, 0x05, 0x96, 0x56, 0x69, 0x24, 0xca,
+  0xff, 0xf0, 0x00, 0x10, 0x00, 0x10, 0x10, 0x00,
+  0x00, 0x03, 0x00, 0x10, 0x00, 0x00, 0x03, 0x01,
+  0xe0, 0x80
+};
+
+static guint8 h265_pps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x44, 0x01, 0xc1, 0x72,
+  0xb4, 0x42, 0x40
+};
+
 /* IDR Slice 1 */
 static guint8 h265_idr_slice_1[] = {
   0x00, 0x00, 0x00, 0x01, 0x28, 0x01, 0xaf, 0x08,
@@ -906,6 +928,57 @@ GST_START_TEST (test_rtph265pay_aggregate_with_discont)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_rtph265pay_aggregate_until_vcl)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123"
+      " name=p");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h265,alignment=nal,stream-format=byte-stream");
+
+  buffer = wrap_static_buffer_with_pts (h265_vps, sizeof (h265_vps), 0);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer = wrap_static_buffer_with_pts (h265_sps, sizeof (h265_sps), 0);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer = wrap_static_buffer_with_pts (h265_pps, sizeof (h265_pps), 0);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer = wrap_static_buffer_with_pts (h265_idr_slice_1,
+      sizeof (h265_idr_slice_1), 0);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+  /* RTP header = 12,  STAP header = 2, 2 bytes length per NAL */
+  fail_unless_equals_int (gst_buffer_get_size (buffer), 12 + 2 +
+      (2 + sizeof (h265_vps) - 4) +
+      (2 + sizeof (h265_sps) - 4) +
+      (2 + sizeof (h265_pps) - 4) + (2 + sizeof (h265_idr_slice_1) - 4));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
+
 static Suite *
 rtph265_suite (void)
 {
@@ -930,6 +1003,7 @@ rtph265_suite (void)
   tcase_add_test (tc_chain, test_rtph265pay_aggregate_with_aud);
   tcase_add_test (tc_chain, test_rtph265pay_aggregate_with_ts_change);
   tcase_add_test (tc_chain, test_rtph265pay_aggregate_with_discont);
+  tcase_add_test (tc_chain, test_rtph265pay_aggregate_until_vcl);
 
   return s;
 }

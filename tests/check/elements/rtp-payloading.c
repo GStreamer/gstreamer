@@ -857,7 +857,7 @@ static int rtp_h264_list_lt_mtu_frame_count = 2;
 
 /* NAL = 4 bytes */
 /* also 2 bytes FU-A header each time */
-static int rtp_h264_list_lt_mtu_bytes_sent = 2 * (16 - 4);
+static int rtp_h264_list_lt_mtu_bytes_sent = (16 - 4);
 
 static int rtp_h264_list_lt_mtu_mtu_size = 1024;
 
