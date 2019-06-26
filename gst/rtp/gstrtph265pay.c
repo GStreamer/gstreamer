@@ -1648,7 +1648,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
     g_array_set_size (nal_queue, 0);
   }
 
-  if (ret == GST_FLOW_OK &&
+  if (ret == GST_FLOW_OK && rtph265pay->bundle_size > 0 &&
       rtph265pay->aggregate_mode == GST_RTP_H265_AGGREGATE_ZERO_LATENCY &&
       rtph265pay->bundle_contains_vcl) {
     GST_DEBUG_OBJECT (rtph265pay, "sending bundle at end incoming packet");
