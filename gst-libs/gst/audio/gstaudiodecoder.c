@@ -2225,6 +2225,7 @@ gst_audio_decoder_handle_gap (GstAudioDecoder * dec, GstEvent * event)
       GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
       GST_ELEMENT_ERROR (dec, STREAM, FORMAT, (NULL),
           ("Decoder output not negotiated before GAP event."));
+      gst_event_unref (event);
       return FALSE;
     }
     needs_reconfigure = TRUE;
@@ -2273,6 +2274,7 @@ gst_audio_decoder_handle_gap (GstAudioDecoder * dec, GstEvent * event)
       ret = gst_audio_decoder_push_event (dec, event);
     } else {
       ret = FALSE;
+      gst_event_unref (event);
     }
   }
   return ret;
