@@ -80,6 +80,10 @@ static const ColorimetryInfo colorimetry[] = {
   MAKE_COLORIMETRY (NONAME, _UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN),
 };
 
+/* Ensure that DEFAULT_UNKNOWN is indeed updated */
+G_STATIC_ASSERT (sizeof (colorimetry) ==
+    (sizeof (gchar *) + sizeof (GstVideoColorimetry)) * (DEFAULT_UNKNOWN + 1));
+
 static const ColorimetryInfo *
 gst_video_get_colorimetry (const gchar * s)
 {
