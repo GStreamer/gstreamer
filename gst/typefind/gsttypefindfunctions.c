@@ -2159,11 +2159,26 @@ static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
 #define IS_MPEG_PES_HEADER(data)        (IS_MPEG_HEADER (data) &&            \
                                          IS_MPEG_PES_CODE (((guint8 *)(data))[3]))
 
+#define MPEG_MIN_PROBE_LENGTH (4 * 1024)        /* Examine at least 4kB of data to
+                                                 * give the various MPEG formats enough
+                                                 * data to avoid mis-detections. */
+
 #define MPEG2_MAX_PROBE_LENGTH (128 * 1024)     /* 128kB should be 64 packs of the
                                                  * most common 2kB pack size. */
 
 #define MPEG2_MIN_SYS_HEADERS 2
 #define MPEG2_MAX_SYS_HEADERS 5
+
+static gboolean
+mpeg_should_suggest (GstTypeFind * tf, GstTypeFindProbability prob, guint size)
+{
+  /* only suggest if we probed at least a certain amount of data, if
+   * we have a high confindence, or when we reached eos. This gives
+   * various MPEG based formats a better chance of correctly identifying
+   * the data. */
+  return prob > GST_TYPE_FIND_LIKELY || size >= MPEG_MIN_PROBE_LENGTH ||
+      gst_type_find_is_eos (tf);
+}
 
 static gboolean
 mpeg_sys_is_valid_pack (GstTypeFind * tf, const guint8 * data, guint len,
@@ -2407,6 +2422,9 @@ suggest:
     if (data0 != first_sync && prob >= 10)
       prob -= 10;
 
+    if (!mpeg_should_suggest (tf, prob, end - data0))
+      return;
+
     GST_LOG ("Suggesting MPEG %d system stream, %d packs, %d pes, prob %u%%",
         mpegversion, pack_headers, pes_headers, prob);
 
@@ -2504,6 +2522,9 @@ mpeg_ts_type_find (GstTypeFind * tf, gpointer unused)
            * Arbitrarily, I assigned 10% probability for each header we
            * found, 40% -> 100% */
           probability = MIN (10 * found, GST_TYPE_FIND_MAXIMUM);
+
+          if (!mpeg_should_suggest (tf, probability, size))
+            return;
 
           gst_type_find_suggest_simple (tf, probability, "video/mpegts",
               "systemstream", G_TYPE_BOOLEAN, TRUE,
@@ -2664,7 +2685,8 @@ mpeg4_video_type_find (GstTypeFind * tf, gpointer unused)
     else if (seen_vos && seen_vol)
       probability = GST_TYPE_FIND_POSSIBLE - 20;
 
-    gst_type_find_suggest (tf, probability, MPEG4_VIDEO_CAPS);
+    if (mpeg_should_suggest (tf, probability, c.size))
+      gst_type_find_suggest (tf, probability, MPEG4_VIDEO_CAPS);
   }
 }
 
@@ -2807,7 +2829,8 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
       GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, idr:%d ssps:%d", good, bad,
           seen_pps, seen_sps, seen_idr, seen_ssps);
 
-      if (seen_sps && seen_pps && seen_idr && good >= 10 && bad < 4) {
+      if (seen_sps && seen_pps && seen_idr && good >= 10 && bad < 4
+          && mpeg_should_suggest (tf, GST_TYPE_FIND_LIKELY, c.size)) {
         gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, H264_VIDEO_CAPS);
         return;
       }
@@ -2820,7 +2843,8 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
   GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, idr:%d ssps=%d", good, bad,
       seen_pps, seen_sps, seen_idr, seen_ssps);
 
-  if (good >= 2 && bad == 0) {
+  if (good >= 2 && bad == 0
+      && mpeg_should_suggest (tf, GST_TYPE_FIND_POSSIBLE, c.size)) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, H264_VIDEO_CAPS);
   }
 }
@@ -2900,7 +2924,8 @@ h265_video_type_find (GstTypeFind * tf, gpointer unused)
       GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, vps:%d, irap:%d", good, bad,
           seen_pps, seen_sps, seen_vps, seen_irap);
 
-      if (seen_sps && seen_pps && seen_irap && good >= 10 && bad < 4) {
+      if (seen_sps && seen_pps && seen_irap && good >= 10 && bad < 4
+          && mpeg_should_suggest (tf, GST_TYPE_FIND_LIKELY, c.size)) {
         gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, H265_VIDEO_CAPS);
         return;
       }
@@ -2913,7 +2938,8 @@ h265_video_type_find (GstTypeFind * tf, gpointer unused)
   GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, vps:%d, irap:%d", good, bad,
       seen_pps, seen_sps, seen_vps, seen_irap);
 
-  if (good >= 2 && bad == 0) {
+  if (good >= 2 && bad == 0
+      && mpeg_should_suggest (tf, GST_TYPE_FIND_POSSIBLE, c.size)) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, H265_VIDEO_CAPS);
   }
 }
@@ -3020,9 +3046,11 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
     else if (seen_seq)
       probability = GST_TYPE_FIND_POSSIBLE - 20;
 
-    gst_type_find_suggest_simple (tf, probability, "video/mpeg",
-        "systemstream", G_TYPE_BOOLEAN, FALSE,
-        "mpegversion", G_TYPE_INT, 1, "parsed", G_TYPE_BOOLEAN, FALSE, NULL);
+    if (mpeg_should_suggest (tf, probability, c.size)) {
+      gst_type_find_suggest_simple (tf, probability, "video/mpeg",
+          "systemstream", G_TYPE_BOOLEAN, FALSE,
+          "mpegversion", G_TYPE_INT, 1, "parsed", G_TYPE_BOOLEAN, FALSE, NULL);
+    }
   }
 }
 
