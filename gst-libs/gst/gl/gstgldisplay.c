@@ -94,6 +94,8 @@ static guint gst_gl_display_signals[LAST_SIGNAL] = { 0 };
 static void gst_gl_display_dispose (GObject * object);
 static void gst_gl_display_finalize (GObject * object);
 static guintptr gst_gl_display_default_get_handle (GstGLDisplay * display);
+static gboolean gst_gl_display_default_get_foreign_display (GstGLDisplay *
+    display);
 static GstGLWindow *gst_gl_display_default_create_window (GstGLDisplay *
     display);
 
@@ -173,6 +175,7 @@ gst_gl_display_class_init (GstGLDisplayClass * klass)
       GST_TYPE_GL_CONTEXT, 1, GST_TYPE_GL_CONTEXT);
 
   klass->get_handle = gst_gl_display_default_get_handle;
+  klass->get_foreign_display = gst_gl_display_default_get_foreign_display;
   klass->create_window = gst_gl_display_default_create_window;
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_display_finalize;
@@ -358,6 +361,32 @@ static guintptr
 gst_gl_display_default_get_handle (GstGLDisplay * display)
 {
   return 0;
+}
+
+/**
+ * gst_gl_display_get_foreign_display:
+ * @context: a #GstGLDisplay
+ *
+ * Returns: whether the context belongs to a foreign display
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_gl_display_get_foreign_display (GstGLDisplay * display)
+{
+  GstGLDisplayClass *klass;
+
+  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), FALSE);
+  klass = GST_GL_DISPLAY_GET_CLASS (display);
+  g_return_val_if_fail (klass->get_foreign_display != NULL, 0);
+
+  return klass->get_foreign_display (display);
+}
+
+static gboolean
+gst_gl_display_default_get_foreign_display (GstGLDisplay * display)
+{
+  return FALSE;
 }
 
 /**
