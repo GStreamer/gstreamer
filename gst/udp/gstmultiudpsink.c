@@ -37,6 +37,10 @@
 
 #include <string.h>
 
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
 #include "gst/net/net.h"
 #include "gst/glib-compat-private.h"
 
