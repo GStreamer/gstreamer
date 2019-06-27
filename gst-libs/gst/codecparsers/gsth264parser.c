@@ -964,10 +964,13 @@ static GstH264ParserResult
 gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
     GstH264PicTiming * tim, NalReader * nr)
 {
+  GstH264ParserResult error = GST_H264_PARSER_ERROR;
+
   GST_DEBUG ("parsing \"Picture timing\"");
   if (!nalparser->last_sps || !nalparser->last_sps->valid) {
-    GST_WARNING ("didn't get the associated sequence paramater set for the "
+    GST_WARNING ("didn't get the associated sequence parameter set for the "
         "current access unit");
+    error = GST_H264_PARSER_BROKEN_LINK;
     goto error;
   }
 
@@ -1013,7 +1016,7 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
 
 error:
   GST_WARNING ("error parsing \"Picture timing\"");
-  return GST_H264_PARSER_ERROR;
+  return error;
 }
 
 static GstH264ParserResult
