@@ -114,10 +114,12 @@ typedef enum {
  * @GST_MPEG_VIDEO_LEVEL_MAIN: Main level (ML)
  * @GST_MPEG_VIDEO_LEVEL_HIGH_1440: High 1440 level (H-14)
  * @GST_MPEG_VIDEO_LEVEL_HIGH: High level (HL)
+ * @GST_MPEG_VIDEO_LEVEL_HIGH_P: High-P level (HL Progressive)
  *
  * Mpeg-2 Levels.
  **/
 typedef enum {
+ GST_MPEG_VIDEO_LEVEL_HIGH_P    = 0x02,
  GST_MPEG_VIDEO_LEVEL_HIGH      = 0x04,
  GST_MPEG_VIDEO_LEVEL_HIGH_1440 = 0x06,
  GST_MPEG_VIDEO_LEVEL_MAIN      = 0x08,
@@ -211,7 +213,7 @@ typedef struct _GstMpegVideoPacket          GstMpegVideoPacket;
  * @fps_d: Calculated Framerate denominator
  * @bitrate_value: Value of the bitrate as is in the stream (400bps unit)
  * @bitrate: the real bitrate of the Mpeg video stream in bits per second, 0 if VBR stream
- * @constrained_parameters_flag: %TRUE if this stream uses contrained parameters.
+ * @constrained_parameters_flag: %TRUE if this stream uses constrained parameters.
  * @load_intra_quantiser_matrix: %TRUE indicates the presence of intra_quantiser_matrix
  * @intra_quantizer_matrix: intra-quantization table, in zigzag scan order
  * @load_non_intra_quantiser_matrix: %TRUE indicates the presence of non_intra_quantiser_matrix
@@ -249,7 +251,7 @@ struct _GstMpegVideoSequenceHdr
  * @horiz_size_ext: Horizontal size
  * @vert_size_ext: Vertical size
  * @bitrate_ext: The bitrate
- * @vbv_buffer_size_extension: VBV vuffer size
+ * @vbv_buffer_size_extension: VBV buffer size
  * @low_delay: %TRUE if the sequence doesn't contain any B-pictures, %FALSE
  * otherwise
  * @fps_n_ext: Framerate nominator code
@@ -282,8 +284,13 @@ struct _GstMpegVideoSequenceExt
 
 /**
  * GstMpegVideoSequenceDisplayExt:
- * @profile: mpeg2 decoder profil
-
+ * @video_format: 3-bit video_format field indicating PAL/NTSC etc.
+ * @colour_description_flag: %TRUE if colour information was provided
+ * @colour_primaries: Valid if colour_description_flag is set
+ * @transfer_characteristics: Valid if colour_description_flag is set
+ * @matrix_coefficients: Valid if colour_description_flag is set
+ * @display_horizontal_size: width of decoded frame sub-region to display
+ * @display_vertical_size: height of decoded frame sub-region to display
  */
 struct _GstMpegVideoSequenceDisplayExt
 {
