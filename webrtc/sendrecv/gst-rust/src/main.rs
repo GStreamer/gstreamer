@@ -354,7 +354,7 @@ impl App {
             &queue2,
         ])?;
 
-        queue2.link_filtered(&self.0.webrtcbin, &*RTP_CAPS_VP8)?;
+        queue2.link_filtered(&self.0.webrtcbin, Some(&*RTP_CAPS_VP8))?;
 
         Ok(())
     }
@@ -398,7 +398,7 @@ impl App {
             &queue3,
         ])?;
 
-        queue3.link_filtered(&self.0.webrtcbin, &*RTP_CAPS_OPUS)?;
+        queue3.link_filtered(&self.0.webrtcbin, Some(&*RTP_CAPS_OPUS))?;
 
         Ok(())
     }
@@ -676,7 +676,7 @@ fn main() {
                 println!("connected");
 
                 // Create basic pipeline
-                let pipeline = gst::Pipeline::new("main");
+                let pipeline = gst::Pipeline::new(Some("main"));
                 let webrtcbin = gst::ElementFactory::make("webrtcbin", None).unwrap();
                 pipeline.add(&webrtcbin).unwrap();
 
