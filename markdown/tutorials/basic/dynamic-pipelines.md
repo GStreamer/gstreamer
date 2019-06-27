@@ -454,14 +454,13 @@ start until you bring the pipeline to the `PLAYING` state. We will
 introduce here the rest of states and their meaning. There are 4 states
 in GStreamer:
 
-```
 | State     | Description |
 |-----------|--------------------|
 | `NULL`    | the NULL state or initial state of an element. |
 | `READY`   | the element is ready to go to PAUSED. |
 | `PAUSED`  | the element is PAUSED, it is ready to accept and process data. Sink elements however only accept one buffer and then block. |
 | `PLAYING` | the element is PLAYING, the clock is running and the data is flowing. |
-```
+
 
 You can only move between adjacent ones, this is, you can't go from `NULL`
 to `PLAYING`, you have to go through the intermediate `READY` and `PAUSED`
