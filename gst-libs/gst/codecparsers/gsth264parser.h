@@ -390,15 +390,23 @@ struct _GstH264NalUnitExtensionMVC
  * @type: A #GstH264NalUnitType
  * @idr_pic_flag: calculated idr_pic_flag
  * @size: The size of the NAL unit starting from @offset, thus
- *  including the header bytes. e.g. @type (nal_unit_type)
- * @offset: The offset of the actual start of the NAL unit, thus
- *  including the header bytes
- * @sc_offset: The offset of the start code of the NAL unit
+ *  including the header bytes. e.g. @type (nal_unit_type),
+ *  but not the start code.
+ * @offset: The offset of the first byte of the NAL unit header,
+ *  just after the start code.
+ * @sc_offset: The offset of the first byte of the start code of
+ *  the NAL unit.
  * @valid: If the NAL unit is valid, which means it has
- * already been parsed
- * @data: The data from which the NAL unit has been parsed
- * @header_bytes: The size of the NALU header in bytes (Since: 1.6)
- * @extension_type: the extension type (Since: 1.6)
+ *  already been parsed
+ * @data: The data array from which the NAL unit has been parsed,
+ *  into which the offset and sc_offset apply.
+ * @header_bytes: The size of the NALU header in bytes. The NALU
+ *  header is the 1-byte type code, and for extension / prefix NALs
+ *  includes the extension header bytes. @offset + @header_bytes is
+ *  therefore the first byte of the actual packet payload.
+ *  (Since: 1.6)
+ * @extension_type: the extension type for prefix NAL/MVC/SVC
+ *  (Since: 1.6)
  *
  * Structure defining the NAL unit headers
  */
