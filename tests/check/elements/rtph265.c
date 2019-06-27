@@ -459,6 +459,7 @@ static guint8 h265_idr_slice_2[] = {
   0x00, 0x3e, 0x40, 0x92, 0x0c, 0x78
 };
 
+
 GST_START_TEST (test_rtph265pay_two_slices_timestamp)
 {
   GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123");
@@ -928,6 +929,11 @@ GST_START_TEST (test_rtph265pay_aggregate_with_discont)
 
 GST_END_TEST;
 
+/* EOS */
+static guint8 h265_eos[] = {
+  0x00, 0x00, 0x00, 0x01, (36 << 1), 0x00
+};
+
 
 GST_START_TEST (test_rtph265pay_aggregate_until_vcl)
 {
@@ -957,7 +963,6 @@ GST_START_TEST (test_rtph265pay_aggregate_until_vcl)
   ret = gst_harness_push (h, buffer);
   fail_unless_equals_int (ret, GST_FLOW_OK);
 
-
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
 
   buffer = gst_harness_pull (h);
@@ -969,6 +974,23 @@ GST_START_TEST (test_rtph265pay_aggregate_until_vcl)
       (2 + sizeof (h265_vps) - 4) +
       (2 + sizeof (h265_sps) - 4) +
       (2 + sizeof (h265_pps) - 4) + (2 + sizeof (h265_idr_slice_1) - 4));
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buffer);
+
+  /* Push EOS now */
+
+  buffer = wrap_static_buffer_with_pts (h265_eos, sizeof (h265_eos), 0);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  fail_unless_equals_int (gst_harness_buffers_in_queue (h), 1);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+  fail_unless_equals_uint64 (GST_BUFFER_PTS (buffer), 0);
+  fail_unless_equals_uint64 (gst_rtp_buffer_get_timestamp (&rtp), 123);
+  fail_unless_equals_int (gst_buffer_get_size (buffer), 12 +
+      sizeof (h265_eos) - 4);
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (buffer);
 

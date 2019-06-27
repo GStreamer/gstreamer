@@ -76,7 +76,7 @@ struct _GstRtpH265Pay
   /* aggregate buffers with AP */
   GstBufferList *bundle;
   guint bundle_size;
-  gboolean bundle_contains_vcl;
+  gboolean bundle_contains_vcl_or_suffix;
   GstRTPH265AggregateMode aggregate_mode;
 };
 

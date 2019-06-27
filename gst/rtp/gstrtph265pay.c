@@ -969,7 +969,7 @@ gst_rtp_h265_pay_reset_bundle (GstRtpH265Pay * rtph265pay)
 {
   g_clear_pointer (&rtph265pay->bundle, gst_buffer_list_unref);
   rtph265pay->bundle_size = 0;
-  rtph265pay->bundle_contains_vcl = FALSE;
+  rtph265pay->bundle_contains_vcl_or_suffix = FALSE;
 }
 
 static GstFlowReturn
@@ -1385,7 +1385,7 @@ gst_rtp_h265_pay_payload_nal_bundle (GstRTPBasePayload * basepayload,
     GST_DEBUG_OBJECT (rtph265pay, "creating new AP aggregate");
     bundle = rtph265pay->bundle = gst_buffer_list_new ();
     bundle_size = rtph265pay->bundle_size = 2;
-    rtph265pay->bundle_contains_vcl = FALSE;
+    rtph265pay->bundle_contains_vcl_or_suffix = FALSE;
   }
 
   GST_DEBUG_OBJECT (rtph265pay,
@@ -1401,8 +1401,10 @@ gst_rtp_h265_pay_payload_nal_bundle (GstRTPBasePayload * basepayload,
   ret = GST_FLOW_OK;
 
   /* In H.265, all VCL NAL units are < 32 */
-  if (nal_type < 32)
-    rtph265pay->bundle_contains_vcl = TRUE;
+  if (nal_type < 32 || nal_type == GST_H265_NAL_EOS ||
+      nal_type == GST_H265_NAL_EOB || nal_type == GST_H265_NAL_SUFFIX_SEI ||
+      (nal_type >= 45 && nal_type <= 47) || (nal_type >= 56 && nal_type < 63))
+    rtph265pay->bundle_contains_vcl_or_suffix = TRUE;
 
   if (marker) {
     GST_DEBUG_OBJECT (rtph265pay, "sending bundle at marker");
@@ -1650,7 +1652,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   if (ret == GST_FLOW_OK && rtph265pay->bundle_size > 0 &&
       rtph265pay->aggregate_mode == GST_RTP_H265_AGGREGATE_ZERO_LATENCY &&
-      rtph265pay->bundle_contains_vcl) {
+      rtph265pay->bundle_contains_vcl_or_suffix) {
     GST_DEBUG_OBJECT (rtph265pay, "sending bundle at end incoming packet");
     ret = gst_rtp_h265_pay_send_bundle (rtph265pay, FALSE);
   }
