@@ -6,14 +6,14 @@ short-description: GstValidate configuration
 # GstValidate Configuration
 
 GstValidate comes with some possible configuration files
-to setup its plugins and core behaviour, The config format is very similar
+to setup its plugins and core behaviour. The config format is very similar
 to the [scenario](gst-validate-scenarios.md) file format.
 
 You can check the [ssim plugin](plugins/ssim.md)
 and the [validate flow plugin](plugins/validateflow.md)
 for examples.
 
-## Core settings parametters
+## Core settings parameters
 
 Config name should be `core`.
 
@@ -57,7 +57,7 @@ an `config::latency-too-high` issue.
 
 Default: `GST_CLOCK_TIME_NONE` - disabled
 
-The maximum number of dropped buffer, a `config::too-many-buffers-dropped` issue will be reported
+The maximum number of dropped buffers, a `config::too-many-buffers-dropped` issue will be reported
 if that limit is reached.
 
 ## Variables
