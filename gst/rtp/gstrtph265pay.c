@@ -1617,7 +1617,7 @@ gst_rtp_h265_pay_handle_buffer (GstRTPBasePayload * basepayload,
       size = nal_len;
       data = gst_adapter_map (rtph265pay->adapter, size);
       if (i + 1 != nal_queue->len || !draining)
-        for (; size > 1 && data[size - 1] == 0x0; size--)
+        for (; size > 2 && data[size - 1] == 0x0; size--)
           /* skip */ ;
 
       paybuf = gst_adapter_take_buffer (rtph265pay->adapter, size);
