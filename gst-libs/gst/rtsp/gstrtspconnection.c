@@ -3871,7 +3871,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
           GstMemory *mem = gst_buffer_peek_memory (msg->body_buffer, m);
 
           /* Skip all memories we already wrote */
-          if (offset + mem->size < msg->body_offset) {
+          if (offset + mem->size <= msg->body_offset) {
             offset += mem->size;
             continue;
           }
