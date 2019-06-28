@@ -1604,7 +1604,9 @@ gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps)
       sps->profile_idc == 122 || sps->profile_idc == 244 ||
       sps->profile_idc == 44 || sps->profile_idc == 83 ||
       sps->profile_idc == 86 || sps->profile_idc == 118 ||
-      sps->profile_idc == 128) {
+      sps->profile_idc == 128 || sps->profile_idc == 138 ||
+      sps->profile_idc == 139 || sps->profile_idc == 134 ||
+      sps->profile_idc == 135) {
     READ_UE_MAX (nr, sps->chroma_format_idc, 3);
     if (sps->chroma_format_idc == 3)
       READ_UINT8 (nr, sps->separate_colour_plane_flag, 1);
