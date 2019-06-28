@@ -965,6 +965,8 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
     GstH264PicTiming * tim, NalReader * nr)
 {
   GstH264ParserResult error = GST_H264_PARSER_ERROR;
+  gboolean CpbDpbDelaysPresentFlag = FALSE;
+  gboolean pic_struct_present_flag = FALSE;
 
   GST_DEBUG ("parsing \"Picture timing\"");
   if (!nalparser->last_sps || !nalparser->last_sps->valid) {
@@ -976,6 +978,11 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
 
   if (nalparser->last_sps->vui_parameters_present_flag) {
     GstH264VUIParams *vui = &nalparser->last_sps->vui_parameters;
+
+    CpbDpbDelaysPresentFlag = vui->nal_hrd_parameters_present_flag
+        || vui->vcl_hrd_parameters_present_flag;
+    tim->pic_struct_present_flag = pic_struct_present_flag =
+        vui->pic_struct_present_flag;
 
     if (vui->nal_hrd_parameters_present_flag) {
       READ_UINT32 (nr, tim->cpb_removal_delay,
@@ -989,14 +996,13 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
           vui->vcl_hrd_parameters.dpb_output_delay_length_minus1 + 1);
     }
 
-    if (vui->pic_struct_present_flag) {
+    if (pic_struct_present_flag) {
       const guint8 num_clock_ts_table[9] = {
         1, 1, 1, 2, 2, 3, 3, 2, 3
       };
       guint8 num_clock_num_ts;
       guint i;
 
-      tim->pic_struct_present_flag = TRUE;
       READ_UINT8 (nr, tim->pic_struct, 4);
       CHECK_ALLOWED ((gint8) tim->pic_struct, 0, 8);
 
@@ -1010,6 +1016,12 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
         }
       }
     }
+  }
+
+  if (!CpbDpbDelaysPresentFlag && !pic_struct_present_flag) {
+    GST_WARNING
+        ("Invalid pic_timing SEI NAL with neither CpbDpbDelays nor pic_struct");
+    return GST_H264_PARSER_BROKEN_DATA;
   }
 
   return GST_H264_PARSER_OK;
