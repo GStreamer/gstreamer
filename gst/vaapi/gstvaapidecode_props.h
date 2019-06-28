@@ -34,6 +34,7 @@ struct _GstVaapiDecodeH264Private
 {
   gboolean is_low_latency;
   gboolean base_only;
+  gboolean baseline_as_constrained;
 };
 
 void

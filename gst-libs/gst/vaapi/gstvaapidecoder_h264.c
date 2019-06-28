@@ -537,6 +537,7 @@ struct _GstVaapiDecoderH264Private
 
   gboolean force_low_latency;
   gboolean base_only;
+  gboolean baseline_as_constrained;
 };
 
 /**
@@ -1473,7 +1474,7 @@ get_profile (GstVaapiDecoderH264 * decoder, GstH264SPS * sps, guint dpb_size)
   fill_profiles (profiles, &n_profiles, profile);
   switch (profile) {
     case GST_VAAPI_PROFILE_H264_BASELINE:
-      if (sps->constraint_set1_flag) {  // A.2.2 (main profile)
+      if (priv->baseline_as_constrained || sps->constraint_set1_flag) { // A.2.2 (main profile)
         fill_profiles (profiles, &n_profiles,
             GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE);
         fill_profiles (profiles, &n_profiles, GST_VAAPI_PROFILE_H264_MAIN);
@@ -4798,6 +4799,24 @@ gst_vaapi_decoder_h264_set_base_only (GstVaapiDecoderH264 * decoder,
   g_return_if_fail (decoder != NULL);
 
   decoder->priv.base_only = base_only;
+}
+
+/**
+ * gst_vaapi_decoder_h264_set_baseline_as_constrained:
+ * @decoder: a #GstVaapiDecoderH264
+ * @baseline_as_constrained: %TRUE to assume all baseline is constrained
+ *
+ * This is a small hack that makes the decoder assumes that baseline contents
+ * is already constrained. This may allow decoding some streams that would
+ * otherwise fails to negotiation.
+ */
+void
+gst_vaapi_decoder_h264_set_baseline_as_constrained (GstVaapiDecoderH264 *
+    decoder, gboolean baseline_as_constrained)
+{
+  g_return_if_fail (decoder != NULL);
+
+  decoder->priv.baseline_as_constrained = baseline_as_constrained;
 }
 
 /**
