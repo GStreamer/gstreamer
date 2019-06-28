@@ -3,6 +3,7 @@ plugin_LTLIBRARIES = libgstuvch264.la
 libgstuvch264_la_SOURCES = gstuvch264.c \
 			   gstuvch264_mjpgdemux.c \
 			   gstuvch264_src.c \
+				 gstuvch264deviceprovider.c \
 			   uvc_h264.c
 
 libgstuvch264_la_CFLAGS =   $(GST_PLUGINS_BAD_CFLAGS) \
