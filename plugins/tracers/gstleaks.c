@@ -74,6 +74,7 @@ enum
 {
   /* actions */
   SIGNAL_GET_LIVE_OBJECTS,
+  SIGNAL_LOG_LIVE_OBJECTS,
 
   LAST_SIGNAL
 };
@@ -87,6 +88,7 @@ G_DEFINE_TYPE_WITH_CODE (GstLeaksTracer, gst_leaks_tracer,
     GST_TYPE_TRACER, _do_init);
 
 static GstStructure *gst_leaks_tracer_get_live_objects (GstLeaksTracer * self);
+static void gst_leaks_tracer_log_live_objects (GstLeaksTracer * self);
 
 static GstTracerRecord *tr_alive;
 static GstTracerRecord *tr_refings;
@@ -755,19 +757,9 @@ gst_leaks_tracer_finalize (GObject * object)
 
 #ifdef G_OS_UNIX
 static void
-sig_usr1_handler_foreach (gpointer data, gpointer user_data)
-{
-  GstLeaksTracer *tracer = data;
-
-  GST_OBJECT_LOCK (tracer);
-  process_leaks (tracer, NULL);
-  GST_OBJECT_UNLOCK (tracer);
-}
-
-static void
 sig_usr1_handler (G_GNUC_UNUSED int signal)
 {
-  g_queue_foreach (&instances, sig_usr1_handler_foreach, NULL);
+  g_queue_foreach (&instances, (GFunc) gst_leaks_tracer_log_live_objects, NULL);
 }
 
 static void
@@ -860,6 +852,14 @@ gst_leaks_tracer_get_live_objects (GstLeaksTracer * self)
 }
 
 static void
+gst_leaks_tracer_log_live_objects (GstLeaksTracer * self)
+{
+  GST_OBJECT_LOCK (self);
+  process_leaks (self, NULL);
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
 gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -920,5 +920,20 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
           get_live_objects), NULL, NULL, NULL, GST_TYPE_STRUCTURE, 0,
       G_TYPE_NONE);
 
+  /**
+   * GstLeaksTracer::log-live-objects:
+   * @leakstracer: the leaks tracer object to emit this signal on
+   *
+   * Logs all objects that are still alive to the debug log in the same format
+   * as the logging during gst_deinit().
+   *
+   * Since: 1.18
+   */
+  gst_leaks_tracer_signals[SIGNAL_LOG_LIVE_OBJECTS] =
+      g_signal_new ("log-live-objects", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstLeaksTracerClass,
+          log_live_objects), NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
+
   klass->get_live_objects = gst_leaks_tracer_get_live_objects;
+  klass->log_live_objects = gst_leaks_tracer_log_live_objects;
 }

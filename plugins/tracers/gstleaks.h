@@ -79,6 +79,7 @@ struct _GstLeaksTracerClass {
 
   /* actions */
   GstStructure * (*get_live_objects)     (GstLeaksTracer *tracer);
+  void           (*log_live_objects)     (GstLeaksTracer *tracer);
 };
 
 G_GNUC_INTERNAL GType gst_leaks_tracer_get_type (void);
