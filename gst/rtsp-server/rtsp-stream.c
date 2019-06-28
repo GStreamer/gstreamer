@@ -5062,6 +5062,11 @@ set_blocked (GstRTSPStream * stream, gboolean blocked)
   priv = stream->priv;
 
   if (blocked) {
+    /* if receiver */
+    if (priv->sinkpad) {
+      priv->blocking = TRUE;
+      return;
+    }
     for (i = 0; i < 2; i++) {
       if (priv->blocked_id[i] != 0)
         continue;
