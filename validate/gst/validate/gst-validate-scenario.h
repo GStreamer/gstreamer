@@ -271,12 +271,13 @@ struct _GstValidateScenario
   GstObject parent;
 
   /*< public >*/
+  GstStructure *description;
 
   /*< private >*/
   GstValidateScenarioPrivate *priv;
 
   union {
-    gpointer _gst_reserved[GST_PADDING + 1];
+    gpointer _gst_reserved[GST_PADDING];
     struct {
       GMutex eos_handling_lock;
     } abi;

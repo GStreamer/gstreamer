@@ -3378,6 +3378,7 @@ _load_scenario_file (GstValidateScenario * scenario,
           &priv->max_latency);
 
       gst_structure_get_int (structure, "max-dropped", &priv->max_dropped);
+      scenario->description = gst_structure_copy (structure);
 
       continue;
     } else if (!g_strcmp0 (type, "include")) {
@@ -3736,7 +3737,8 @@ gst_validate_scenario_dispose (GObject * object)
 static void
 gst_validate_scenario_finalize (GObject * object)
 {
-  GstValidateScenarioPrivate *priv = GST_VALIDATE_SCENARIO (object)->priv;
+  GstValidateScenario *self = GST_VALIDATE_SCENARIO (object);
+  GstValidateScenarioPrivate *priv = self->priv;
 
   /* Because g_object_add_weak_pointer() is used, this MUST be on the
    * main thread. */
@@ -3750,6 +3752,8 @@ gst_validate_scenario_finalize (GObject * object)
       (GDestroyNotify) gst_mini_object_unref);
   g_free (priv->pipeline_name);
   gst_structure_free (priv->vars);
+  if (self->description)
+    gst_structure_free (self->description);
   g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->finalize (object);
