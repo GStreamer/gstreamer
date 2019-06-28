@@ -45,7 +45,7 @@ GStreamer and helper libraries.
 Features
 --------
 
-  * VA-API support from 0.29 to 0.38
+  * VA-API support from 0.39
   * JPEG, MPEG-2, MPEG-4, H.264 AVC, H.264 MVC, VP8, VC-1, HEVC and
     VP9 ad-hoc decoders
   * MPEG-2, H.264 AVC,H.264 MVC, JPEG, VP8 and HEVC ad-hoc encoders
@@ -127,12 +127,12 @@ Sources
   Stable source code releases can be found at:
   <https://gstreamer.freedesktop.org/src/gstreamer-vaapi/>
 
-  Git repository for work-in-progress changes is available at:
-  <https://cgit.freedesktop.org/gstreamer/gstreamer-vaapi>
+  GitLab repository for work-in-progress changes is available at:
+  <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi>
 
 
 Reporting Bugs
 --------------
 
-  Bugs can be reported in the GNOME Bugzilla system at:
-  <https://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer&component=gstreamer-vaapi>
+  Bugs can be reported in the GStreamer's GitLab system at:
+  <https://gitlab.freedesktop.org/gstreamer/gstreamer-vaapi/issues>
