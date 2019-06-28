@@ -206,15 +206,16 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
   }
 
   project_uri = ges_project_get_uri (project);
-  _timeline_set_user_options (self, timeline, project_uri);
 
   if (self->priv->parsed_options.load_path && project_uri
       && ges_validate_activate (GST_PIPELINE (self->priv->pipeline),
-          opts->scenario, &opts->needs_set_state) == FALSE) {
+          &opts->track_types, opts->scenario,
+          &opts->needs_set_state) == FALSE) {
     g_error ("Could not activate scenario %s", opts->scenario);
     self->priv->seenerrors = TRUE;
     g_application_quit (G_APPLICATION (self));
   }
+  _timeline_set_user_options (self, timeline, project_uri);
 
   g_free (project_uri);
 
@@ -414,7 +415,8 @@ _run_pipeline (GESLauncher * self)
 
   if (!opts->load_path) {
     if (ges_validate_activate (GST_PIPELINE (self->priv->pipeline),
-            opts->scenario, &opts->needs_set_state) == FALSE) {
+            &opts->track_types, opts->scenario,
+            &opts->needs_set_state) == FALSE) {
       g_error ("Could not activate scenario %s", opts->scenario);
       return FALSE;
     }

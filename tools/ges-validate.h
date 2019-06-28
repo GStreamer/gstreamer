@@ -23,11 +23,13 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include <gst/gst.h>
+#include <ges/ges.h>
 
 G_BEGIN_DECLS
 
 gboolean
-ges_validate_activate (GstPipeline *pipeline, const gchar *scenario, gboolean *needs_set_state);
+ges_validate_activate (GstPipeline *pipeline, GESTrackType *track_types,
+                       const gchar *scenario, gboolean *needs_set_state);
 void ges_launch_validate_uri (const gchar *nid);
 
 gint

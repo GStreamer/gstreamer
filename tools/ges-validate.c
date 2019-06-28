@@ -22,16 +22,17 @@
 #include "config.h"
 #endif
 
+#include "utils.h"
 #include "ges-validate.h"
 
 #include <string.h>
-#include <ges/ges.h>
 
 #ifdef HAVE_GST_VALIDATE
 #include <gst/validate/gst-validate-scenario.h>
 #include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-utils.h>
 #include <gst/validate/gst-validate-element-monitor.h>
+#include <gst/validate/gst-validate-bin-monitor.h>
 
 #define MONITOR_ON_PIPELINE "validate-monitor"
 #define RUNNER_ON_PIPELINE "runner-monitor"
@@ -99,10 +100,9 @@ ges_validate_register_issues (void)
           " in a Video track).", GST_VALIDATE_REPORT_LEVEL_CRITICAL));
 }
 
-
 gboolean
-ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
-    gboolean * needs_setting_state)
+ges_validate_activate (GstPipeline * pipeline, GESTrackType * track_types,
+    const gchar * scenario, gboolean * needs_setting_state)
 {
   GstValidateRunner *runner = NULL;
   GstValidateMonitor *monitor = NULL;
@@ -126,6 +126,24 @@ ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
       NULL);
+  if (GST_VALIDATE_BIN_MONITOR (monitor)->scenario) {
+    GstStructure *metas =
+        GST_VALIDATE_BIN_MONITOR (monitor)->scenario->description;
+
+    if (metas) {
+      const gchar *track_types_str;
+
+      if ((track_types_str =
+              gst_structure_get_string (metas, "ges-track-types"))) {
+        if (!get_flags_from_string (GES_TYPE_TRACK_TYPE, track_types_str,
+                track_types)) {
+          GST_ERROR_OBJECT (pipeline, "Scenario track types: %s no valid",
+              track_types_str);
+          return FALSE;
+        }
+      }
+    }
+  }
 
   gst_validate_reporter_set_handle_g_logs (GST_VALIDATE_REPORTER (monitor));
 
@@ -208,8 +226,8 @@ _print_position (GstElement * pipeline)
 }
 
 gboolean
-ges_validate_activate (GstPipeline * pipeline, const gchar * scenario,
-    gboolean * needs_setting_state)
+ges_validate_activate (GstPipeline * pipeline, GESTrackType * track_types,
+    const gchar * scenario, gboolean * needs_setting_state)
 {
   if (scenario) {
     GST_WARNING ("Trying to run scenario %s, but gst-validate not supported",
