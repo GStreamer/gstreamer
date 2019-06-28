@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2016 Collabora Ltd. <guillaume.desmottes@collabora.co.uk>
+ * Copyright (C) 2019 Nirbheek Chauhan <nirbheek@centricular.com>
  *
  * gstleaks.c: tracing module detecting object leaks
  *
@@ -26,6 +27,10 @@
  * objects and prints a list of leaks to the debug log under `GST_TRACER:7` when
  * gst_deinit() is called, and also prints a g_warning().
  *
+ * Starting with GStreamer 1.18, you can also use action signals on the tracer
+ * object to fetch leak information. Use gst_tracing_get_active_tracers() to
+ * get a list of all active tracers and find the right one by name.
+ *
  * You can activate this tracer in the usual way by adding the string 'leaks'
  * to the environment variable `GST_TRACERS`. Such as: `GST_TRACERS=leaks`
  *
@@ -34,12 +39,14 @@
  * active at the same time.
  *
  * Parameters can also be passed to each tracer. The leaks tracer currently
- * accepts four params:
- * 1. filters: to filter which objects to record
- * 2. check-refs: whether to record every location where a leaked object was
- *    reffed and unreffed
- * 3. stack-traces-flags: full or none; see: #GstStackTraceFlags
- * 4. name: set a name for the tracer object itself
+ * accepts five params:
+ * 1. filters: (string) to filter which objects to record
+ * 2. check-refs: (boolean) whether to record every location where a leaked
+ *    object was reffed and unreffed
+ * 3. stack-traces-flags: (string) full or none; see: #GstStackTraceFlags
+ * 4. name: (string) set a name for the tracer object itself
+ * 5. log-leaks-on-deinit: (boolean) whether to report all leaks on
+ *    gst_deinit() by printing them in the debug log; "true" by default
  *
  * Examples:
  * ```
@@ -63,11 +70,23 @@
 GST_DEBUG_CATEGORY_STATIC (gst_leaks_debug);
 #define GST_CAT_DEFAULT gst_leaks_debug
 
+enum
+{
+  /* actions */
+  SIGNAL_GET_LIVE_OBJECTS,
+
+  LAST_SIGNAL
+};
+
+#define DEFAULT_LOG_LEAKS TRUE  /* for backwards-compat */
+
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_leaks_debug, "leaks", 0, "leaks tracer");
 #define gst_leaks_tracer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstLeaksTracer, gst_leaks_tracer,
     GST_TYPE_TRACER, _do_init);
+
+static GstStructure *gst_leaks_tracer_get_live_objects (GstLeaksTracer * self);
 
 static GstTracerRecord *tr_alive;
 static GstTracerRecord *tr_refings;
@@ -76,6 +95,7 @@ static GstTracerRecord *tr_added = NULL;
 static GstTracerRecord *tr_removed = NULL;
 #endif /* G_OS_UNIX */
 static GQueue instances = G_QUEUE_INIT;
+static guint gst_leaks_tracer_signals[LAST_SIGNAL] = { 0 };
 
 typedef struct
 {
@@ -191,6 +211,7 @@ set_params_from_structure (GstLeaksTracer * self, GstStructure * params)
     gst_object_set_name (GST_OBJECT (self), name);
 
   gst_structure_get_boolean (params, "check-refs", &self->check_refs);
+  gst_structure_get_boolean (params, "log-leaks-on-deinit", &self->log_leaks);
 }
 
 static void
@@ -455,6 +476,7 @@ mini_object_unreffed_cb (GstTracer * tracer, GstClockTime ts,
 static void
 gst_leaks_tracer_init (GstLeaksTracer * self)
 {
+  self->log_leaks = DEFAULT_LOG_LEAKS;
   self->objects = g_hash_table_new_full (NULL, NULL, NULL,
       (GDestroyNotify) object_refing_infos_free);
 
@@ -495,7 +517,7 @@ gst_leaks_tracer_constructed (GObject * object)
 typedef struct
 {
   gpointer obj;
-  const gchar *type_name;
+  GType type;
   guint ref_count;
   gchar *desc;
   ObjectRefingInfos *infos;
@@ -509,7 +531,7 @@ leak_new (gpointer obj, GType type, guint ref_count, ObjectRefingInfos * infos)
   Leak *leak = g_new (Leak, 1);
 
   leak->obj = obj;
-  leak->type_name = g_type_name (type);
+  leak->type = type;
   leak->ref_count = ref_count;
   leak->desc = gst_info_strdup_printf ("%" GST_PTR_FORMAT, obj);
   leak->infos = infos;
@@ -529,7 +551,7 @@ sort_leaks (gconstpointer _a, gconstpointer _b)
 {
   const Leak *a = _a, *b = _b;
 
-  return g_strcmp0 (a->type_name, b->type_name);
+  return g_strcmp0 (g_type_name (a->type), g_type_name (b->type));
 }
 
 static GList *
@@ -565,47 +587,103 @@ create_leaks_list (GstLeaksTracer * self)
    * easier to read */
   l = g_list_sort (l, sort_leaks);
 
-  return l;
+  /* Reverse list to sort objects by creation time; this is needed because we
+   * prepended objects into this list earlier, and because g_list_sort() above
+   * is stable so the creation order is preserved when sorting by type name. */
+  return g_list_reverse (l);
 }
 
-/* Return TRUE if at least one leaked object has been logged */
-static gboolean
-log_leaked (GstLeaksTracer * self)
+static void
+process_leak (Leak * leak, GValue * ret_leaks)
 {
-  GList *ref, *leaks, *l;
+  GstStructure *r, *s = NULL;
+  GList *ref;
+  GValue refings = G_VALUE_INIT;
+
+  if (!ret_leaks) {
+    /* log to the debug log */
+    gst_tracer_record_log (tr_alive, g_type_name (leak->type), leak->obj,
+        leak->desc, leak->ref_count,
+        leak->infos->creation_trace ? leak->infos->creation_trace : "");
+  } else {
+    GValue s_value = G_VALUE_INIT;
+    GValue obj_value = G_VALUE_INIT;
+    /* for leaked objects, we take ownership of the object instead of
+     * reffing ("collecting") it to avoid deadlocks */
+    g_value_init (&obj_value, leak->type);
+    if (GST_IS_OBJECT (leak->obj))
+      g_value_take_object (&obj_value, leak->obj);
+    else
+      /* mini objects */
+      g_value_take_boxed (&obj_value, leak->obj);
+    s = gst_structure_new_empty ("object-alive");
+    gst_structure_take_value (s, "object", &obj_value);
+    gst_structure_set (s, "ref-count", G_TYPE_UINT, leak->ref_count,
+        "trace", G_TYPE_STRING, leak->infos->creation_trace, NULL);
+    /* avoid copy of structure */
+    g_value_init (&s_value, GST_TYPE_STRUCTURE);
+    g_value_take_boxed (&s_value, s);
+    gst_value_list_append_and_take_value (ret_leaks, &s_value);
+  }
+
+  /* store refinfo if available */
+  if (leak->infos->refing_infos)
+    g_value_init (&refings, GST_TYPE_LIST);
+
+  /* iterate the list from last to first to correct the order */
+  for (ref = g_list_last (leak->infos->refing_infos); ref; ref = ref->prev) {
+    ObjectRefingInfo *refinfo = (ObjectRefingInfo *) ref->data;
+
+    if (!ret_leaks) {
+      /* log to the debug log */
+      gst_tracer_record_log (tr_refings, refinfo->ts, g_type_name (leak->type),
+          leak->obj, refinfo->reffed ? "reffed" : "unreffed",
+          refinfo->new_refcount, refinfo->trace ? refinfo->trace : "");
+    } else {
+      GValue r_value;
+      r = gst_structure_new_empty ("object-refings");
+      gst_structure_set (r, "ts", GST_TYPE_CLOCK_TIME, refinfo->ts,
+          "desc", G_TYPE_STRING, refinfo->reffed ? "reffed" : "unreffed",
+          "ref-count", G_TYPE_UINT, refinfo->new_refcount,
+          "trace", G_TYPE_STRING, refinfo->trace, NULL);
+      /* avoid copy of structure */
+      g_value_init (&r_value, GST_TYPE_STRUCTURE);
+      g_value_take_boxed (&r_value, r);
+      gst_value_list_append_and_take_value (&refings, &r_value);
+    }
+  }
+
+  if (ret_leaks && leak->infos->refing_infos)
+    gst_structure_take_value (s, "ref-infos", &refings);
+}
+
+/* Return TRUE if at least one leaked object was found */
+static gboolean
+process_leaks (GstLeaksTracer * self, GValue * ret_leaks)
+{
+  GList *leaks, *l;
   gboolean ret = FALSE;
 
-  GST_TRACE_OBJECT (self, "start listing currently alive objects");
+  if (!ret_leaks)
+    GST_TRACE_OBJECT (self, "start listing currently alive objects");
 
   leaks = create_leaks_list (self);
   if (!leaks) {
-    GST_TRACE_OBJECT (self, "No objects alive currently");
+    if (!ret_leaks)
+      GST_TRACE_OBJECT (self, "No objects alive currently");
     goto done;
   }
 
-  for (l = leaks; l != NULL; l = g_list_next (l)) {
-    Leak *leak = l->data;
-
-    gst_tracer_record_log (tr_alive, leak->type_name, leak->obj, leak->desc,
-        leak->ref_count,
-        leak->infos->creation_trace ? leak->infos->creation_trace : "");
-
-    leak->infos->refing_infos = g_list_reverse (leak->infos->refing_infos);
-    for (ref = leak->infos->refing_infos; ref; ref = ref->next) {
-      ObjectRefingInfo *refinfo = (ObjectRefingInfo *) ref->data;
-
-      gst_tracer_record_log (tr_refings, refinfo->ts, leak->type_name,
-          leak->obj, refinfo->reffed ? "reffed" : "unreffed",
-          refinfo->new_refcount, refinfo->trace ? refinfo->trace : "");
-    }
-  }
+  for (l = leaks; l; l = l->next)
+    process_leak (l->data, ret_leaks);
 
   g_list_free_full (leaks, (GDestroyNotify) leak_free);
 
   ret = TRUE;
 
 done:
-  GST_TRACE_OBJECT (self, "done listing currently alive objects");
+  if (!ret_leaks)
+    GST_TRACE_OBJECT (self, "done listing currently alive objects");
 
   return ret;
 }
@@ -614,7 +692,7 @@ static void
 gst_leaks_tracer_finalize (GObject * object)
 {
   GstLeaksTracer *self = GST_LEAKS_TRACER (object);
-  gboolean leaks;
+  gboolean leaks = FALSE;
   GHashTableIter iter;
   gpointer obj;
 
@@ -622,7 +700,8 @@ gst_leaks_tracer_finalize (GObject * object)
 
   /* Tracers are destroyed as part of gst_deinit() so now is a good time to
    * report all the objects which are still alive. */
-  leaks = log_leaked (self);
+  if (self->log_leaks)
+    leaks = process_leaks (self, NULL);
 
   /* Remove weak references */
   g_hash_table_iter_init (&iter, self->objects);
@@ -681,7 +760,7 @@ sig_usr1_handler_foreach (gpointer data, gpointer user_data)
   GstLeaksTracer *tracer = data;
 
   GST_OBJECT_LOCK (tracer);
-  log_leaked (tracer);
+  process_leaks (tracer, NULL);
   GST_OBJECT_UNLOCK (tracer);
 }
 
@@ -758,7 +837,27 @@ setup_signals (void)
   signal (SIGUSR1, sig_usr1_handler);
   signal (SIGUSR2, sig_usr2_handler);
 }
+#else
+#define setup_signals() g_warning ("System doesn't support POSIX signals");
 #endif /* G_OS_UNIX */
+
+static GstStructure *
+gst_leaks_tracer_get_live_objects (GstLeaksTracer * self)
+{
+  GstStructure *info;
+  GValue live_objects = G_VALUE_INIT;
+
+  g_value_init (&live_objects, GST_TYPE_LIST);
+
+  GST_OBJECT_LOCK (self);
+  process_leaks (self, &live_objects);
+  GST_OBJECT_UNLOCK (self);
+
+  info = gst_structure_new_empty ("live-objects-info");
+  gst_structure_take_value (info, "live-objects-list", &live_objects);
+
+  return info;
+}
 
 static void
 gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
@@ -778,11 +877,48 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
       RECORD_FIELD_DESC, RECORD_FIELD_REF_COUNT, RECORD_FIELD_TRACE, NULL);
   GST_OBJECT_FLAG_SET (tr_alive, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 
-  if (g_getenv ("GST_LEAKS_TRACER_SIG")) {
-#ifdef G_OS_UNIX
+  if (g_getenv ("GST_LEAKS_TRACER_SIG"))
     setup_signals ();
-#else
-    g_warning ("System doesn't support POSIX signals");
-#endif /* G_OS_UNIX */
-  }
+
+  /**
+   * GstLeaksTracer::get-live-objects:
+   * @leakstracer: the leaks tracer object to emit this signal on
+   *
+   * Returns a #GstStructure containing a #GValue of type #GST_TYPE_LIST which
+   * is a list of #GstStructure objects containing information about the
+   * objects that are still alive, which is useful for detecting leaks. Each
+   * #GstStructure object has the following fields:
+   *
+   * `object`: containing the leaked object itself
+   * `ref-count`: the current reference count of the object
+   * `trace`: the allocation stack trace for the object, only available if the
+   *          `stack-traces-flags` param is set to `full`
+   * `ref-infos`: a #GValue of type #GST_TYPE_LIST which is a list of
+   *             #GstStructure objects containing information about the
+   *             ref/unref history of the object; only available if the
+   *             `check-refs` param is set to `true`
+   *
+   * Each `ref-infos` #GstStructure has the following fields:
+   *
+   * `ts`: the timestamp for the ref/unref
+   * `desc`: either "reffed" or "unreffed"
+   * `ref-count`: the reference count after the ref/unref
+   * `trace`: the stack trace for the ref/unref
+   *
+   * NOTE: Ownership of the leaked objects is transferred to you assuming that
+   *       no other code still retains references to them. If that's not true,
+   *       these objects may become invalid if your application continues
+   *       execution after receiving this leak information.
+   *
+   * Returns: (transfer full): a newly-allocated #GstStructure
+   *
+   * Since: 1.18
+   */
+  gst_leaks_tracer_signals[SIGNAL_GET_LIVE_OBJECTS] =
+      g_signal_new ("get-live-objects", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstLeaksTracerClass,
+          get_live_objects), NULL, NULL, NULL, GST_TYPE_STRUCTURE, 0,
+      G_TYPE_NONE);
+
+  klass->get_live_objects = gst_leaks_tracer_get_live_objects;
 }
