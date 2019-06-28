@@ -1766,7 +1766,7 @@ parse_sps (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
      standard but that should get a default value anyway */
   sps->log2_max_pic_order_cnt_lsb_minus4 = 0;
 
-  result = gst_h264_parser_parse_sps (priv->parser, &pi->nalu, sps, TRUE);
+  result = gst_h264_parser_parse_sps (priv->parser, &pi->nalu, sps);
   if (result != GST_H264_PARSER_OK)
     return get_status (result);
 
@@ -1788,8 +1788,7 @@ parse_subset_sps (GstVaapiDecoderH264 * decoder, GstVaapiDecoderUnit * unit)
      standard but that should get a default value anyway */
   sps->log2_max_pic_order_cnt_lsb_minus4 = 0;
 
-  result = gst_h264_parser_parse_subset_sps (priv->parser, &pi->nalu, sps,
-      TRUE);
+  result = gst_h264_parser_parse_subset_sps (priv->parser, &pi->nalu, sps);
   if (result != GST_H264_PARSER_OK)
     return get_status (result);
 
