@@ -1177,10 +1177,10 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
 {
   guint32 payloadSize;
   guint8 payload_type_byte, payload_size_byte;
-  guint remaining, payload_size;
+  guint remaining, payload_size, next;
   GstH264ParserResult res;
 
-  GST_DEBUG ("parsing \"Sei message\"");
+  GST_DEBUG ("parsing \"SEI message\"");
 
   memset (sei, 0, sizeof (*sei));
 
@@ -1198,6 +1198,7 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
 
   remaining = nal_reader_get_remaining (nr);
   payload_size = payloadSize * 8 < remaining ? payloadSize * 8 : remaining;
+  next = nal_reader_get_pos (nr) + payload_size;
 
   GST_DEBUG ("SEI message received: payloadType  %u, payloadSize = %u bits",
       sei->payloadType, payload_size);
@@ -1253,6 +1254,15 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
       if (bit_equal_to_zero)
         GST_WARNING ("Bit non equal to zero.");
     }
+  }
+
+  /* Always make sure all the advertised SEI bits
+   * were consumed during parsing */
+  if (next > nal_reader_get_pos (nr)) {
+    GST_LOG ("Skipping %u unused SEI bits", next - nal_reader_get_pos (nr));
+
+    if (!nal_reader_skip_long (nr, next - nal_reader_get_pos (nr)))
+      goto error;
   }
 
   return res;
