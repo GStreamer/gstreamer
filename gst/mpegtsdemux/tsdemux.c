@@ -75,6 +75,13 @@
 /* latency in nsecs */
 #define TS_LATENCY (700 * GST_MSECOND)
 
+/* Limit PES packet collection to a maximum of 32MB
+ * which is more than large enough to support an H264 frame at
+ * maximum profile/level/bitrate at 30fps or above.
+ * PES bigger than this limit will be output in buffers of
+ * up to this size */
+#define MAX_PES_PAYLOAD (32 * 1024 * 1024)
+
 GST_DEBUG_CATEGORY_STATIC (ts_demux_debug);
 #define GST_CAT_DEFAULT ts_demux_debug
 
@@ -2438,7 +2445,7 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
       if (G_UNLIKELY (stream->current_size + size > stream->allocated_size)) {
         GST_LOG ("resizing buffer");
         do {
-          stream->allocated_size *= 2;
+          stream->allocated_size = MAX (8192, 2 * stream->allocated_size);
         } while (stream->current_size + size > stream->allocated_size);
         stream->data = g_realloc (stream->data, stream->allocated_size);
       }
@@ -3131,11 +3138,17 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
   }
 
 beach:
-  /* Reset everything */
-  GST_LOG ("Resetting to EMPTY, returning %s", gst_flow_get_name (res));
-  stream->state = PENDING_PACKET_EMPTY;
+  /* Reset the PES payload collection, but don't clear the state,
+   * we might want to keep collecting this PES */
+  GST_LOG ("Cleared PES data. returning %s", gst_flow_get_name (res));
+  if (stream->expected_size) {
+    if (stream->current_size > stream->expected_size)
+      stream->expected_size = 0;
+    else
+      stream->expected_size -= stream->current_size;
+  }
   stream->data = NULL;
-  stream->expected_size = 0;
+  stream->allocated_size = 0;
   stream->current_size = 0;
 
   return res;
@@ -3152,18 +3165,23 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
       FLAGS_CONTINUITY_COUNTER (packet->scram_afc_cc), packet->payload);
 
   if (G_UNLIKELY (packet->payload_unit_start_indicator) &&
-      FLAGS_HAS_PAYLOAD (packet->scram_afc_cc))
+      FLAGS_HAS_PAYLOAD (packet->scram_afc_cc)) {
     /* Flush previous data */
     res = gst_ts_demux_push_pending_data (demux, stream, NULL);
+    /* Tell the data collecting to expect this header */
+    stream->state = PENDING_PACKET_HEADER;
+  }
 
   if (packet->payload && (res == GST_FLOW_OK || res == GST_FLOW_NOT_LINKED)
       && stream->pad) {
     gst_ts_demux_queue_data (demux, stream, packet);
     GST_LOG ("current_size:%d, expected_size:%d",
         stream->current_size, stream->expected_size);
-    /* Finally check if the data we queued completes a packet */
-    if (stream->expected_size && stream->current_size == stream->expected_size) {
-      GST_LOG ("pushing complete packet");
+    /* Finally check if the data we queued completes a packet, or got too
+     * large and needs output now */
+    if ((stream->expected_size && stream->current_size >= stream->expected_size)
+        || (stream->current_size >= MAX_PES_PAYLOAD)) {
+      GST_LOG ("pushing packet of size %u", stream->current_size);
       res = gst_ts_demux_push_pending_data (demux, stream, NULL);
     }
   }
