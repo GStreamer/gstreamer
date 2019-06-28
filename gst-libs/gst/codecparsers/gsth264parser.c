@@ -1532,7 +1532,7 @@ gst_h264_parser_parse_nal (GstH264NalParser * nalparser, GstH264NalUnit * nalu)
 
   switch (nalu->type) {
     case GST_H264_NAL_SPS:
-      return gst_h264_parser_parse_sps (nalparser, nalu, &sps, FALSE);
+      return gst_h264_parser_parse_sps (nalparser, nalu, &sps);
       break;
     case GST_H264_NAL_PPS:
       return gst_h264_parser_parse_pps (nalparser, nalu, &pps);
@@ -1546,7 +1546,6 @@ gst_h264_parser_parse_nal (GstH264NalParser * nalparser, GstH264NalUnit * nalu)
  * @nalparser: a #GstH264NalParser
  * @nalu: The #GST_H264_NAL_SPS #GstH264NalUnit to parse
  * @sps: The #GstH264SPS to fill.
- * @parse_vui_params: Whether to parse the vui_params or not
  *
  * Parses @nalu containing a Sequence Parameter Set, and fills @sps.
  *
@@ -1554,9 +1553,9 @@ gst_h264_parser_parse_nal (GstH264NalParser * nalparser, GstH264NalUnit * nalu)
  */
 GstH264ParserResult
 gst_h264_parser_parse_sps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
-    GstH264SPS * sps, gboolean parse_vui_params)
+    GstH264SPS * sps)
 {
-  GstH264ParserResult res = gst_h264_parse_sps (nalu, sps, parse_vui_params);
+  GstH264ParserResult res = gst_h264_parse_sps (nalu, sps);
 
   if (res == GST_H264_PARSER_OK) {
     GST_DEBUG ("adding sequence parameter set with id: %d to array", sps->id);
@@ -1570,8 +1569,7 @@ gst_h264_parser_parse_sps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
 
 /* Parse seq_parameter_set_data() */
 static gboolean
-gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps,
-    gboolean parse_vui_params)
+gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps)
 {
   gint width, height;
   guint subwc[] = { 1, 2, 2, 1 };
@@ -1666,10 +1664,9 @@ gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps,
   }
 
   READ_UINT8 (nr, sps->vui_parameters_present_flag, 1);
-  if (sps->vui_parameters_present_flag && parse_vui_params) {
+  if (sps->vui_parameters_present_flag)
     if (!gst_h264_parse_vui_parameters (sps, nr))
       goto error;
-  }
 
   /* calculate ChromaArrayType */
   if (!sps->separate_colour_plane_flag)
@@ -1719,8 +1716,7 @@ error:
 
 /* Parse subset_seq_parameter_set() data for MVC */
 static gboolean
-gst_h264_parse_sps_mvc_data (NalReader * nr, GstH264SPS * sps,
-    gboolean parse_vui_params)
+gst_h264_parse_sps_mvc_data (NalReader * nr, GstH264SPS * sps)
 {
   GstH264SPSExtMVC *const mvc = &sps->extension.mvc;
   guint8 bit_equal_to_one;
@@ -1820,15 +1816,13 @@ error:
  * gst_h264_parse_sps:
  * @nalu: The #GST_H264_NAL_SPS #GstH264NalUnit to parse
  * @sps: The #GstH264SPS to fill.
- * @parse_vui_params: Whether to parse the vui_params or not
  *
  * Parses @data, and fills the @sps structure.
  *
  * Returns: a #GstH264ParserResult
  */
 GstH264ParserResult
-gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
-    gboolean parse_vui_params)
+gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps)
 {
   NalReader nr;
 
@@ -1837,7 +1831,7 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
       nalu->size - nalu->header_bytes);
 
-  if (!gst_h264_parse_sps_data (&nr, sps, parse_vui_params))
+  if (!gst_h264_parse_sps_data (&nr, sps))
     goto error;
 
   sps->valid = TRUE;
@@ -1855,7 +1849,6 @@ error:
  * @nalparser: a #GstH264NalParser
  * @nalu: The #GST_H264_NAL_SUBSET_SPS #GstH264NalUnit to parse
  * @sps: The #GstH264SPS to fill.
- * @parse_vui_params: Whether to parse the vui_params or not
  *
  * Parses @data, and fills in the @sps structure.
  *
@@ -1874,11 +1867,11 @@ error:
  */
 GstH264ParserResult
 gst_h264_parser_parse_subset_sps (GstH264NalParser * nalparser,
-    GstH264NalUnit * nalu, GstH264SPS * sps, gboolean parse_vui_params)
+    GstH264NalUnit * nalu, GstH264SPS * sps)
 {
   GstH264ParserResult res;
 
-  res = gst_h264_parse_subset_sps (nalu, sps, parse_vui_params);
+  res = gst_h264_parse_subset_sps (nalu, sps);
   if (res == GST_H264_PARSER_OK) {
     GST_DEBUG ("adding sequence parameter set with id: %d to array", sps->id);
 
@@ -1895,7 +1888,6 @@ gst_h264_parser_parse_subset_sps (GstH264NalParser * nalparser,
  * gst_h264_parse_subset_sps:
  * @nalu: The #GST_H264_NAL_SUBSET_SPS #GstH264NalUnit to parse
  * @sps: The #GstH264SPS to fill.
- * @parse_vui_params: Whether to parse the vui_params or not
  *
  * Parses @data, and fills in the @sps structure.
  *
@@ -1913,8 +1905,7 @@ gst_h264_parser_parse_subset_sps (GstH264NalParser * nalparser,
  * Since: 1.6
  */
 GstH264ParserResult
-gst_h264_parse_subset_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
-    gboolean parse_vui_params)
+gst_h264_parse_subset_sps (GstH264NalUnit * nalu, GstH264SPS * sps)
 {
   NalReader nr;
 
@@ -1923,12 +1914,12 @@ gst_h264_parse_subset_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
       nalu->size - nalu->header_bytes);
 
-  if (!gst_h264_parse_sps_data (&nr, sps, TRUE))
+  if (!gst_h264_parse_sps_data (&nr, sps))
     goto error;
 
   if (sps->profile_idc == GST_H264_PROFILE_MULTIVIEW_HIGH ||
       sps->profile_idc == GST_H264_PROFILE_STEREO_HIGH) {
-    if (!gst_h264_parse_sps_mvc_data (&nr, sps, parse_vui_params))
+    if (!gst_h264_parse_sps_mvc_data (&nr, sps))
       goto error;
   }
 

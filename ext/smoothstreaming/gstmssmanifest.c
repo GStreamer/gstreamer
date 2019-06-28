@@ -637,7 +637,7 @@ _gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
   nalu.header_bytes = 0;
   nalu.extension_type = GST_H264_NAL_EXTENSION_NONE;
 
-  parseres = gst_h264_parse_sps (&nalu, &sps_struct, TRUE);
+  parseres = gst_h264_parse_sps (&nalu, &sps_struct);
   if (parseres == GST_H264_PARSER_OK) {
     gint fps_num, fps_den;
 

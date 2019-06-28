@@ -1092,11 +1092,11 @@ GstH264ParserResult gst_h264_parser_parse_slice_hdr   (GstH264NalParser *nalpars
 
 GST_CODEC_PARSERS_API
 GstH264ParserResult gst_h264_parser_parse_subset_sps  (GstH264NalParser *nalparser, GstH264NalUnit *nalu,
-                                                       GstH264SPS *sps, gboolean parse_vui_params);
+                                                       GstH264SPS *sps);
 
 GST_CODEC_PARSERS_API
 GstH264ParserResult gst_h264_parser_parse_sps         (GstH264NalParser *nalparser, GstH264NalUnit *nalu,
-                                                       GstH264SPS *sps, gboolean parse_vui_params);
+                                                       GstH264SPS *sps);
 
 GST_CODEC_PARSERS_API
 GstH264ParserResult gst_h264_parser_parse_pps         (GstH264NalParser *nalparser,
@@ -1111,11 +1111,11 @@ void gst_h264_nal_parser_free                         (GstH264NalParser *nalpars
 
 GST_CODEC_PARSERS_API
 GstH264ParserResult gst_h264_parse_subset_sps         (GstH264NalUnit *nalu,
-                                                       GstH264SPS *sps, gboolean parse_vui_params);
+                                                       GstH264SPS *sps);
 
 GST_CODEC_PARSERS_API
 GstH264ParserResult gst_h264_parse_sps                (GstH264NalUnit *nalu,
-                                                       GstH264SPS *sps, gboolean parse_vui_params);
+                                                       GstH264SPS *sps);
 
 GST_CODEC_PARSERS_API
 GstH264ParserResult gst_h264_parse_pps                (GstH264NalParser *nalparser,
