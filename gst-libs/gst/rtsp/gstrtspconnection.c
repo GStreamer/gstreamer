@@ -4007,7 +4007,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
           }
         } else {
           /* Need to continue sending from the data of this message */
-          msg->data_offset = bytes_written;
+          msg->data_offset += bytes_written;
           bytes_written = 0;
         }
       }
