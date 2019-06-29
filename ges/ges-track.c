@@ -744,6 +744,7 @@ ges_track_init (GESTrack * self)
   self->priv->gaps = NULL;
   self->priv->mixing = TRUE;
   self->priv->restriction_caps = NULL;
+  self->priv->last_gap_disabled = TRUE;
 
   g_signal_connect (G_OBJECT (self->priv->composition), "notify::duration",
       G_CALLBACK (composition_duration_cb), self);
