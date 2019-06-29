@@ -239,6 +239,7 @@ enum
   PROP_MAX_DROPOUT_TIME,
   PROP_MAX_MISORDER_TIME,
   PROP_STATS,
+  PROP_TWCC_STATS,
   PROP_RTP_PROFILE,
   PROP_NTP_TIME_SOURCE,
   PROP_RTCP_SYNC_SEND_TIME
@@ -277,6 +278,8 @@ struct _GstRtpSessionPrivate
   guint recv_rtx_req_count;
   guint sent_rtx_req_count;
 
+  GstStructure *last_twcc_stats;
+
   /*
    * This is the list of processed packets in the receive path when upstream
    * pushed a buffer list.
@@ -302,6 +305,8 @@ static GstClockTime gst_rtp_session_request_time (RTPSession * session,
     gpointer user_data);
 static void gst_rtp_session_notify_nack (RTPSession * sess,
     guint16 seqnum, guint16 blp, guint32 ssrc, gpointer user_data);
+static void gst_rtp_session_notify_twcc (RTPSession * sess,
+    GstStructure * twcc_packets, GstStructure * twcc_stats, gpointer user_data);
 static void gst_rtp_session_reconfigure (RTPSession * sess, gpointer user_data);
 static void gst_rtp_session_notify_early_rtcp (RTPSession * sess,
     gpointer user_data);
@@ -326,6 +331,7 @@ static RTPSessionCallbacks callbacks = {
   gst_rtp_session_request_key_unit,
   gst_rtp_session_request_time,
   gst_rtp_session_notify_nack,
+  gst_rtp_session_notify_twcc,
   gst_rtp_session_reconfigure,
   gst_rtp_session_notify_early_rtcp
 };
@@ -754,6 +760,30 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           "Various statistics", GST_TYPE_STRUCTURE,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpSession::twcc-stats:
+   *
+   * Various statistics derived from TWCC. This property returns a GstStructure
+   * with name RTPTWCCStats with the following fields:
+   *
+   *  "bitrate-sent"     G_TYPE_UINT    The actual sent bitrate of TWCC packets
+   *  "bitrate-recv"     G_TYPE_UINT    The estimated bitrate for the receiver.
+   *  "packets-sent"     G_TYPE_UINT    Number of packets sent
+   *  "packets-recv"     G_TYPE_UINT    Number of packets reported recevied
+   *  "packet-loss-pct"  G_TYPE_DOUBLE  Packetloss percentage, based on
+          packets reported as lost from the recevier.
+   *  "avg-delta-of-delta", G_TYPE_INT64 In nanoseconds, a moving window
+          average of the difference in inter-packet spacing between
+          sender and receiver. A sudden increase in this number can indicate
+          network congestion.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_TWCC_STATS,
+      g_param_spec_boxed ("twcc-stats", "TWCC Statistics",
+          "Various statistics from TWCC", GST_TYPE_STRUCTURE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_RTP_PROFILE,
       g_param_spec_enum ("rtp-profile", "RTP Profile",
           "RTP profile to use", GST_TYPE_RTP_PROFILE, DEFAULT_RTP_PROFILE,
@@ -880,6 +910,8 @@ gst_rtp_session_finalize (GObject * object)
   g_cond_clear (&rtpsession->priv->cond);
   g_object_unref (rtpsession->priv->sysclock);
   g_object_unref (rtpsession->priv->session);
+  if (rtpsession->priv->last_twcc_stats)
+    gst_structure_free (rtpsession->priv->last_twcc_stats);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1003,6 +1035,11 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_STATS:
       g_value_take_boxed (value, gst_rtp_session_create_stats (rtpsession));
+      break;
+    case PROP_TWCC_STATS:
+      GST_RTP_SESSION_LOCK (rtpsession);
+      g_value_set_boxed (value, priv->last_twcc_stats);
+      GST_RTP_SESSION_UNLOCK (rtpsession);
       break;
     case PROP_RTP_PROFILE:
       g_object_get_property (G_OBJECT (priv->session), "rtp-profile", value);
@@ -1563,11 +1600,14 @@ gst_rtp_session_cache_caps (GstRtpSession * rtpsession, GstCaps * caps)
   GST_DEBUG_OBJECT (rtpsession, "parsing caps");
 
   s = gst_caps_get_structure (caps, 0);
+
   if (!gst_structure_get_int (s, "payload", &payload))
     return;
 
   if (g_hash_table_lookup (priv->ptmap, GINT_TO_POINTER (payload)))
     return;
+
+  rtp_session_update_recv_caps_structure (rtpsession->priv->session, s);
 
   g_hash_table_insert (priv->ptmap, GINT_TO_POINTER (payload),
       gst_caps_ref (caps));
@@ -2799,6 +2839,31 @@ gst_rtp_session_notify_nack (RTPSession * sess, guint16 seqnum,
     }
     gst_object_unref (send_rtp_sink);
   }
+}
+
+static void
+gst_rtp_session_notify_twcc (RTPSession * sess,
+    GstStructure * twcc_packets, GstStructure * twcc_stats, gpointer user_data)
+{
+  GstRtpSession *rtpsession = GST_RTP_SESSION (user_data);
+  GstEvent *event;
+  GstPad *send_rtp_sink;
+
+  GST_RTP_SESSION_LOCK (rtpsession);
+  if ((send_rtp_sink = rtpsession->send_rtp_sink))
+    gst_object_ref (send_rtp_sink);
+  if (rtpsession->priv->last_twcc_stats)
+    gst_structure_free (rtpsession->priv->last_twcc_stats);
+  rtpsession->priv->last_twcc_stats = twcc_stats;
+  GST_RTP_SESSION_UNLOCK (rtpsession);
+
+  if (send_rtp_sink) {
+    event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, twcc_packets);
+    gst_pad_push_event (send_rtp_sink, event);
+    gst_object_unref (send_rtp_sink);
+  }
+
+  g_object_notify (G_OBJECT (rtpsession), "twcc-stats");
 }
 
 static void

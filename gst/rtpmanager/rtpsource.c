@@ -920,8 +920,8 @@ push_packet (RTPSource * src, GstBuffer * buffer)
   return ret;
 }
 
-static gint
-get_clock_rate (RTPSource * src, guint8 payload)
+static void
+fetch_clock_rate_from_payload (RTPSource * src, guint8 payload)
 {
   if (src->payload == -1) {
     /* first payload received, nothing was in the caps, lock on to this payload */
@@ -946,7 +946,6 @@ get_clock_rate (RTPSource * src, guint8 payload)
     src->clock_rate = clock_rate;
     gst_rtp_packet_rate_ctx_reset (&src->packet_rate_ctx, clock_rate);
   }
-  return src->clock_rate;
 }
 
 /* Jitter is the variation in the delay of received packets in a flow. It is
@@ -960,26 +959,23 @@ calculate_jitter (RTPSource * src, RTPPacketInfo * pinfo)
   GstClockTime running_time;
   guint32 rtparrival, transit, rtptime;
   gint32 diff;
-  gint clock_rate;
-  guint8 pt;
 
   /* get arrival time */
   if ((running_time = pinfo->running_time) == GST_CLOCK_TIME_NONE)
     goto no_time;
 
-  pt = pinfo->pt;
+  GST_LOG ("SSRC %08x got payload %d", src->ssrc, pinfo->pt);
 
-  GST_LOG ("SSRC %08x got payload %d", src->ssrc, pt);
-
-  /* get clockrate */
-  if ((clock_rate = get_clock_rate (src, pt)) == -1)
+  /* check if clock-rate is valid */
+  if (src->clock_rate == -1)
     goto no_clock_rate;
 
   rtptime = pinfo->rtptime;
 
   /* convert arrival time to RTP timestamp units, truncate to 32 bits, we don't
    * care about the absolute value, just the difference. */
-  rtparrival = gst_util_uint64_scale_int (running_time, clock_rate, GST_SECOND);
+  rtparrival =
+      gst_util_uint64_scale_int (running_time, src->clock_rate, GST_SECOND);
 
   /* transit time is difference with RTP timestamp */
   transit = rtparrival - rtptime;
@@ -1002,7 +998,7 @@ calculate_jitter (RTPSource * src, RTPPacketInfo * pinfo)
   src->stats.last_rtptime = rtparrival;
 
   GST_LOG ("rtparrival %u, rtptime %u, clock-rate %d, diff %d, jitter: %f",
-      rtparrival, rtptime, clock_rate, diff, (src->stats.jitter) / 16.0);
+      rtparrival, rtptime, src->clock_rate, diff, (src->stats.jitter) / 16.0);
 
   return;
 
@@ -1014,7 +1010,7 @@ no_time:
   }
 no_clock_rate:
   {
-    GST_WARNING ("cannot get clock-rate for pt %d", pt);
+    GST_WARNING ("cannot get clock-rate for pt %d", pinfo->pt);
     return;
   }
 }
@@ -1264,6 +1260,8 @@ rtp_source_process_rtp (RTPSource * src, RTPPacketInfo * pinfo)
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (pinfo != NULL, GST_FLOW_ERROR);
+
+  fetch_clock_rate_from_payload (src, pinfo->pt);
 
   if (!update_receiver_stats (src, pinfo, TRUE))
     return GST_FLOW_OK;
@@ -1553,7 +1551,7 @@ rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
   if (src->clock_rate == -1 && src->pt_set) {
     GST_INFO ("no clock-rate, getting for pt %u and SSRC %u", src->pt,
         src->ssrc);
-    get_clock_rate (src, src->pt);
+    fetch_clock_rate_from_payload (src, src->pt);
   }
 
   if (src->clock_rate != -1) {
