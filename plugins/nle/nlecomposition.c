@@ -1347,6 +1347,13 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
         retval = GST_PAD_PROBE_DROP;
       }
       break;
+    case GST_EVENT_STREAM_GROUP_DONE:
+      if (GST_EVENT_SEQNUM (event) != comp->priv->real_eos_seqnum) {
+        GST_INFO_OBJECT (comp, "Dropping STREAM_GROUP_DONE %d != %d",
+            GST_EVENT_SEQNUM (event), comp->priv->real_eos_seqnum);
+        retval = GST_PAD_PROBE_DROP;
+      }
+      break;
     case GST_EVENT_SEGMENT:
     {
       guint64 rstart, rstop;
