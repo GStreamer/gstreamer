@@ -1222,8 +1222,11 @@ default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
   GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET_NONE;
 
   /* if the memory is intact reset the size to the full size */
-  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY))
-    gst_buffer_resize (buffer, 0, pool->priv->size);
+  if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY)) {
+    gsize offset;
+    gst_buffer_get_sizes (buffer, &offset, NULL);
+    gst_buffer_resize (buffer, -offset, pool->priv->size);
+  }
 
   /* remove all metadata without the POOLED flag */
   gst_buffer_foreach_meta (buffer, remove_meta_unpooled, pool);

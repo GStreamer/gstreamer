@@ -190,7 +190,7 @@ GST_START_TEST (test_buffer_modify_discard)
   gst_buffer_pool_acquire_buffer (pool, &buf, NULL);
   buffer_track_destroy (buf, &dcount);
   /* do resize, as we didn't modify the memory, pool should reuse this buffer */
-  gst_buffer_resize (buf, 5, 2);
+  gst_buffer_resize (buf, 8, 2);
   gst_buffer_unref (buf);
 
   /* buffer should've gone back into pool */
