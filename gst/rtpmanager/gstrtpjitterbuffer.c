@@ -3023,13 +3023,19 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
 
   /* now check against our expected seqnum */
   if (G_UNLIKELY (expected == -1)) {
+    if (G_UNLIKELY (GST_BUFFER_IS_RETRANSMISSION (buffer))) {
+      /* If the first buffer is an (old) rtx, e.g. from before a reset,
+       * ignore it. */
+      goto unsolicited_rtx;
+    }
+
     GST_DEBUG_OBJECT (jitterbuffer, "First buffer #%d", seqnum);
 
     /* calculate a pts based on rtptime and arrival time (dts) */
     pts =
         rtp_jitter_buffer_calculate_pts (priv->jbuf, dts, estimated_dts,
         rtptime, gst_element_get_base_time (GST_ELEMENT_CAST (jitterbuffer)),
-        0, GST_BUFFER_IS_RETRANSMISSION (buffer));
+        0, FALSE);
 
     if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (pts))) {
       /* A valid timestamp cannot be calculated, discard packet */
@@ -3052,6 +3058,19 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     gap = gst_rtp_buffer_compare_seqnum (expected, seqnum);
     GST_DEBUG_OBJECT (jitterbuffer, "expected #%d, got #%d, gap of %d",
         expected, seqnum, gap);
+
+    if (G_UNLIKELY (GST_BUFFER_IS_RETRANSMISSION (buffer))) {
+      if (G_UNLIKELY (!priv->do_retransmission))
+        goto unsolicited_rtx;
+
+      /* If this packet is a rtx that we may have actually requested,
+       * make sure we actually did, or whether we still need it. */
+      timer = find_timer (jitterbuffer, seqnum);
+      if (!timer)
+        timer = timer_queue_find (priv->rtx_stats_timers, seqnum);
+      if (!timer)
+        goto unsolicited_rtx;
+    }
 
     if (G_UNLIKELY (gap > 0 && priv->timers->len >= max_dropout)) {
       /* If we have timers for more than RTP_MAX_DROPOUT packets
@@ -3314,6 +3333,13 @@ rtx_duplicate:
     GST_DEBUG_OBJECT (jitterbuffer,
         "Duplicate RTX packet #%d detected, dropping", seqnum);
     priv->num_duplicates++;
+    gst_buffer_unref (buffer);
+    goto finished;
+  }
+unsolicited_rtx:
+  {
+    GST_DEBUG_OBJECT (jitterbuffer,
+        "Unsolicited RTX packet #%d detected, dropping", seqnum);
     gst_buffer_unref (buffer);
     goto finished;
   }

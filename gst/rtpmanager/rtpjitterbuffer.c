@@ -530,7 +530,7 @@ update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
  */
 static GstClockTime
 calculate_skew (RTPJitterBuffer * jbuf, guint64 ext_rtptime,
-    GstClockTime gstrtptime, GstClockTime time, gint gap)
+    GstClockTime gstrtptime, GstClockTime time, gint gap, gboolean is_rtx)
 {
   guint64 send_diff, recv_diff;
   gint64 delta;
@@ -544,7 +544,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint64 ext_rtptime,
 
   /* we don't have an arrival timestamp so we can't do skew detection. we
    * should still apply a timestamp based on RTP timestamp and base_time */
-  if (time == -1 || jbuf->base_time == -1)
+  if (time == -1 || jbuf->base_time == -1 || is_rtx)
     goto no_skew;
 
   /* elapsed time at receiver, includes the jitter */
@@ -925,7 +925,7 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
 
     /* do skew calculation by measuring the difference between rtptime and the
      * receive dts, this function will return the skew corrected rtptime. */
-    pts = calculate_skew (jbuf, ext_rtptime, gstrtptime, dts, gap);
+    pts = calculate_skew (jbuf, ext_rtptime, gstrtptime, dts, gap, is_rtx);
   }
 
   /* check if timestamps are not going backwards, we can only check this if we
