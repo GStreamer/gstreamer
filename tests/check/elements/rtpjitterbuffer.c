@@ -2689,6 +2689,55 @@ GST_START_TEST (test_fill_queue)
 
 GST_END_TEST;
 
+typedef struct
+{
+  gint64 dts_skew;
+  gint16 seqnum_skew;
+} RtxSkewCtx;
+
+static const RtxSkewCtx rtx_does_not_affect_pts_calculation_input[] = {
+  {0, 0},
+  {20 * GST_MSECOND, -100},
+  {20 * GST_MSECOND, 100},
+  {-10 * GST_MSECOND, 1},
+  {100 * GST_MSECOND, 0},
+};
+
+GST_START_TEST (test_rtx_does_not_affect_pts_calculation)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstBuffer *buffer;
+  guint next_seqnum;
+  guint rtx_seqnum;
+  GstClockTime now;
+  const RtxSkewCtx *ctx = &rtx_does_not_affect_pts_calculation_input[__i__];
+
+  /* set up a deterministic state and take the time on the clock */
+  g_object_set (h->element, "do-retransmission", TRUE, "do-lost", TRUE, NULL);
+  next_seqnum = construct_deterministic_initial_state (h, 3000);
+  now = gst_clock_get_time (GST_ELEMENT_CLOCK (h->element));
+
+  /* push in a "bad" RTX buffer, arriving at various times / seqnums */
+  rtx_seqnum = next_seqnum + ctx->seqnum_skew;
+  buffer = generate_test_buffer_full (now + ctx->dts_skew, rtx_seqnum,
+      rtx_seqnum * TEST_RTP_TS_DURATION);
+  GST_BUFFER_FLAG_SET (buffer, GST_RTP_BUFFER_FLAG_RETRANSMISSION);
+  gst_harness_push (h, buffer);
+
+  /* now push in the next regular buffer at its ideal time, and verify the
+     rouge RTX-buffer did not mess things up */
+  push_test_buffer (h, next_seqnum);
+  now = gst_clock_get_time (GST_ELEMENT_CLOCK (h->element));
+  buffer = gst_harness_pull (h);
+  fail_unless_equals_int64 (now, GST_BUFFER_PTS (buffer));
+
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpjitterbuffer_suite (void)
 {
@@ -2736,6 +2785,8 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain,
       test_rtx_large_packet_spacing_does_not_reset_jitterbuffer);
   tcase_add_test (tc_chain, test_minor_reorder_does_not_skew);
+  tcase_add_loop_test (tc_chain, test_rtx_does_not_affect_pts_calculation, 0,
+      G_N_ELEMENTS (rtx_does_not_affect_pts_calculation_input));
 
   tcase_add_test (tc_chain, test_deadline_ts_offset);
   tcase_add_test (tc_chain, test_big_gap_seqnum);
