@@ -472,7 +472,8 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
                   key = GST_PLAY_KB_ARROW_UP;
                 else if (strcmp (key, "Down") == 0)
                   key = GST_PLAY_KB_ARROW_DOWN;
-                else if (strcmp (key, "space") == 0)
+                else if (strcmp (key, "space") == 0 ||
+                    strcmp (key, "Space") == 0)
                   key = " ";
                 else if (strlen (key) > 1)
                   break;
