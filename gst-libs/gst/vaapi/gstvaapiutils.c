@@ -335,20 +335,16 @@ string_of_VARateControl (guint rate_control)
   switch (rate_control) {
     case VA_RC_NONE:
       return "None";
-#ifdef VA_RC_CQP
     case VA_RC_CQP:
       return "CQP";
-#endif
     case VA_RC_CBR:
       return "CBR";
     case VA_RC_VCM:
       return "VCM";
     case VA_RC_VBR:
       return "VBR";
-#ifdef VA_RC_VBR_CONSTRAINED
     case VA_RC_VBR_CONSTRAINED:
       return "VBR-Constrained";
-#endif
     default:
       break;
   }
@@ -704,21 +700,17 @@ from_GstVaapiRateControl (guint value)
   switch (value) {
     case GST_VAAPI_RATECONTROL_NONE:
       return VA_RC_NONE;
-#ifdef VA_RC_CQP
     case GST_VAAPI_RATECONTROL_CQP:
       return VA_RC_CQP;
-#endif
     case GST_VAAPI_RATECONTROL_CBR:
       return VA_RC_CBR;
     case GST_VAAPI_RATECONTROL_VCM:
       return VA_RC_VCM;
     case GST_VAAPI_RATECONTROL_VBR:
       return VA_RC_VBR;
-#ifdef VA_RC_VBR_CONSTRAINED
     case GST_VAAPI_RATECONTROL_VBR_CONSTRAINED:
       return VA_RC_VBR_CONSTRAINED;
-#endif
-#ifdef VA_RC_MB
+#if VA_CHECK_VERSION(0,39,1)
     case GST_VAAPI_RATECONTROL_MB:
       return VA_RC_MB;
 #endif
@@ -733,21 +725,17 @@ to_GstVaapiRateControl (guint value)
   switch (value) {
     case VA_RC_NONE:
       return GST_VAAPI_RATECONTROL_NONE;
-#ifdef VA_RC_CQP
     case VA_RC_CQP:
       return GST_VAAPI_RATECONTROL_CQP;
-#endif
     case VA_RC_CBR:
       return GST_VAAPI_RATECONTROL_CBR;
     case VA_RC_VCM:
       return GST_VAAPI_RATECONTROL_VCM;
     case VA_RC_VBR:
       return GST_VAAPI_RATECONTROL_VBR;
-#ifdef VA_RC_VBR_CONSTRAINED
     case VA_RC_VBR_CONSTRAINED:
       return GST_VAAPI_RATECONTROL_VBR_CONSTRAINED;
-#endif
-#ifdef VA_RC_MB
+#if VA_CHECK_VERSION(0,39,1)
     case VA_RC_MB:
       return GST_VAAPI_RATECONTROL_MB;
 #endif
