@@ -2170,6 +2170,13 @@ AG_GST_CHECK_FEATURE(SCTP, [sctp plug-in], sctp, [
   ])
 ])
 
+dnl *** libltc ***
+PKG_CHECK_MODULES(LIBLTC, ltc >= 1.1.4, HAVE_LTC=yes, HAVE_LTC=no)
+if test "x$HAVE_LTC" = "xyes"; then
+  LIBS="$LIBS -lltc"
+  AC_DEFINE(HAVE_LTC, 1, [Use libltc])
+fi
+
 else
 
 dnl not building plugins with external dependencies,

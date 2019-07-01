@@ -27,6 +27,10 @@
 #include <gst/video/video.h>
 #include <gst/audio/audio.h>
 
+#if HAVE_LTC
+#include <ltc.h>
+#endif
+
 #define GST_TYPE_TIME_CODE_STAMPER            (gst_timecodestamper_get_type())
 #define GST_TIME_CODE_STAMPER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_TIME_CODE_STAMPER,GstTimeCodeStamper))
 #define GST_TIME_CODE_STAMPER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_TIME_CODE_STAMPER,GstTimeCodeStamperClass))
@@ -45,6 +49,7 @@ typedef enum GstTimeCodeStamperSource
   GST_TIME_CODE_STAMPER_SOURCE_INTERNAL,
   GST_TIME_CODE_STAMPER_SOURCE_ZERO,
   GST_TIME_CODE_STAMPER_SOURCE_LAST_KNOWN,
+  GST_TIME_CODE_STAMPER_SOURCE_LTC,
   GST_TIME_CODE_STAMPER_SOURCE_RTC,
 } GstTimeCodeStamperSource;
 
@@ -87,6 +92,46 @@ struct _GstTimeCodeStamper
 
   /* Internal state */
   GstVideoInfo vinfo; /* protected by object lock, changed only from video streaming thread */
+
+  /* LTC specific fields */
+#if HAVE_LTC
+  GMutex mutex;
+  GCond ltc_cond_video;
+  GCond ltc_cond_audio;
+
+  /* Only accessed from audio streaming thread */
+  GstAudioInfo ainfo;
+  GstAudioStreamAlign *stream_align;
+  GstSegment ltc_segment;
+  /* Running time of the first audio buffer passed to the LTC decoder */
+  GstClockTime ltc_first_running_time;
+  /* Running time of the last sample we passed to the LTC decoder so far */
+  GstClockTime ltc_current_running_time;
+
+  /* Protected by object lock */
+  /* Current LTC timecode that we last read close
+   * to our video running time */
+  GstVideoTimeCode *ltc_current_tc;
+  GstClockTime ltc_current_tc_running_time;
+
+  /* LTC timecode we last synced to and potentially incremented manually since
+   * then */
+  GstVideoTimeCode *ltc_internal_tc;
+
+  /* Protected by mutex above */
+  LTCDecoder *ltc_dec;
+  ltc_off_t ltc_total;
+
+  /* Protected by mutex above */
+  gboolean video_flushing;
+  gboolean video_eos;
+
+  /* Protected by mutex above */
+  gboolean ltc_flushing;
+  gboolean ltc_eos;
+
+  GstPadActivateModeFunction video_activatemode_default;
+#endif
 };
 
 struct _GstTimeCodeStamperClass
