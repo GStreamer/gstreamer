@@ -4052,3 +4052,25 @@
   fun:g_module_open
   fun:_priv_gst_plugin_load_file_for_registry
 }
+
+# fixed in https://github.com/libunwind/libunwind/commit/b256722d49a63719c69c0416eba9163a4d069584
+{
+  debian libunwind invalid file descriptor -1 in syscall close()
+  Memcheck:Param
+  msync(start)
+  ...
+  fun:_ULx86_64_step
+  fun:generate_unwind_trace
+  fun:gst_debug_get_stack_trace
+}
+
+# fixed in https://github.com/libunwind/libunwind/commit/b256722d49a63719c69c0416eba9163a4d069584
+{
+  fedora libunwind invalid file descriptor -1 in syscall close()
+  Memcheck:Param
+  write(buf)
+  ...
+  fun:_ULx86_64_step
+  fun:generate_unwind_trace
+  fun:gst_debug_get_stack_trace
+}

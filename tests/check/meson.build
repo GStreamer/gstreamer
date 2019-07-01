@@ -87,6 +87,7 @@ core_tests = [
   [ 'elements/filesrc.c', not gst_registry ],
   [ 'elements/funnel.c', not gst_registry ],
   [ 'elements/identity.c', not gst_registry or not gst_parse ],
+  [ 'elements/leaks.c' ],
   [ 'elements/multiqueue.c', not gst_registry ],
   [ 'elements/selector.c', not gst_registry ],
   [ 'elements/streamiddemux.c', not gst_registry ],
