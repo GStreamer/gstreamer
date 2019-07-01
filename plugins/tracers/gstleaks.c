@@ -968,10 +968,24 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
    * `ref-count`: the reference count after the ref/unref
    * `trace`: the stack trace for the ref/unref
    *
-   * NOTE: Ownership of the leaked objects is transferred to you assuming that
-   *       no other code still retains references to them. If that's not true,
-   *       these objects may become invalid if your application continues
-   *       execution after receiving this leak information.
+   * **Notes on usage**: This action signal is supposed to be called at the
+   * end of an application before it exits, or at the end of an execution run
+   * when all streaming has stopped and all pipelines have been freed. It is
+   * assumed that at this point any GStreamer object that is still alive is
+   * leaked, and there are no legitimate owners any more. As such, ownership
+   * of the leaked objects is transferred to you then, assuming no other code
+   * still retrains references to them.
+   *
+   * If that's not the case, and there is code somewhere still holding
+   * a reference, then the application behaviour is undefined after this
+   * function is called, since we will have stolen some other code's valid
+   * reference and when the returned #GstStructure is freed that code will be
+   * holding a reference to an invalid object, which will most likely crash
+   * sooner or later.
+   *
+   * If you don't want to just check for leaks at the end of a program, the
+   * activity checkpoint action signals might be a better fit for your use
+   * case.
    *
    * Returns: (transfer full): a newly-allocated #GstStructure
    *
