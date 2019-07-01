@@ -26,16 +26,16 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h265, "
-        "width = (int) [1, MAX], "
-        "height = (int) [1, MAX], " "framerate = (fraction) [0, MAX]"));
+        "width = (int) [16, MAX], "
+        "height = (int) [16, MAX], " "framerate = (fraction) [0, MAX]"));
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, "
         "format = (string) I420, "
-        "width = (int) [1, MAX], "
-        "height = (int) [1, MAX], " "framerate = (fraction) [0, MAX]"));
+        "width = (int) [16, MAX], "
+        "height = (int) [16, MAX], " "framerate = (fraction) [0, MAX]"));
 
 static GstPad *sinkpad, *srcpad;
 

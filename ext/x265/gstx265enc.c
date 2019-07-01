@@ -163,7 +163,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-raw, "
         "format = (string) { " FORMATS " }, "
         "framerate = (fraction) [0, MAX], "
-        "width = (int) [ 4, MAX ], " "height = (int) [ 4, MAX ]")
+        "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ]")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -171,7 +171,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h265, "
         "framerate = (fraction) [0/1, MAX], "
-        "width = (int) [ 4, MAX ], " "height = (int) [ 4, MAX ], "
+        "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ], "
         "stream-format = (string) byte-stream, "
         "alignment = (string) au, " "profile = (string) { main }")
     );
@@ -288,8 +288,8 @@ gst_x265_enc_get_supported_input_caps (void)
 
   caps = gst_caps_new_simple ("video/x-raw",
       "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
-      "width", GST_TYPE_INT_RANGE, 4, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 4, G_MAXINT, NULL);
+      "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
 
   gst_x265_enc_add_x265_chroma_format (gst_caps_get_structure (caps, 0),
       x265_chroma_format);
@@ -670,6 +670,18 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
   }
   encoder->x265param.sourceWidth = info->width;
   encoder->x265param.sourceHeight = info->height;
+
+  /* x265 does not allow user to configure a picture size smaller than
+   * at least one CU size, and maxCUSize must be 16, 32, or 64.
+   * Therefore, we should be set the CU size according to the input resolution.
+   */
+  if (encoder->x265param.sourceWidth < 64
+      || encoder->x265param.sourceHeight < 64)
+    encoder->x265param.maxCUSize = 32;
+  if (encoder->x265param.sourceWidth < 32
+      || encoder->x265param.sourceHeight < 32)
+    encoder->x265param.maxCUSize = 16;
+
   if (info->par_d > 0) {
     encoder->x265param.vui.aspectRatioIdc = X265_EXTENDED_SAR;
     encoder->x265param.vui.sarWidth = info->par_n;
