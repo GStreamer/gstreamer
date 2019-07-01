@@ -345,6 +345,10 @@ string_of_VARateControl (guint rate_control)
       return "VBR";
     case VA_RC_VBR_CONSTRAINED:
       return "VBR-Constrained";
+#if VA_CHECK_VERSION(0,39,1)
+    case VA_RC_MB:
+      return "MB";
+#endif
     default:
       break;
   }
