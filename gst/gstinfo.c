@@ -2730,7 +2730,7 @@ generate_unwind_trace (GstStackTraceFlags flags)
 
       unret = unw_get_reg (&cursor, UNW_REG_IP, &ip);
       if (unret) {
-        GST_DEBUG ("libunwind could read frame info (%d)", unret);
+        GST_DEBUG ("libunwind could not read frame info (%d)", unret);
 
         goto done;
       }
