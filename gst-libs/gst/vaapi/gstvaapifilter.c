@@ -1392,7 +1392,7 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
   guint i, num_filters = 0;
   VAStatus va_status;
   VARectangle src_rect, dst_rect;
-  guint va_mirror = from_GstVideoOrientationMethod (filter->video_direction);
+  guint va_mirror = 0, va_rotation = 0;
 
   if (!ensure_operations (filter))
     return GST_VAAPI_FILTER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -1475,8 +1475,12 @@ gst_vaapi_filter_process_unlocked (GstVaapiFilter * filter,
   pipeline_param->filters = filters;
   pipeline_param->num_filters = num_filters;
 
+  from_GstVideoOrientationMethod (filter->video_direction, &va_mirror,
+      &va_rotation);
+
 #if VA_CHECK_VERSION(1,1,0)
   pipeline_param->mirror_state = va_mirror;
+  pipeline_param->rotation_state = va_rotation;
 #endif
 
   // Reference frames for advanced deinterlacing
@@ -1893,20 +1897,38 @@ gst_vaapi_filter_set_video_direction (GstVaapiFilter * filter,
       break;
     case GST_VIDEO_ORIENTATION_HORIZ:
     case GST_VIDEO_ORIENTATION_VERT:
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_180:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+    case GST_VIDEO_ORIENTATION_UR_LL:
     {
 #if VA_CHECK_VERSION(1,1,0)
       VAProcPipelineCaps pipeline_caps;
-      guint va_mirror = from_GstVideoOrientationMethod (method);
+      guint va_mirror = VA_MIRROR_NONE;
+      guint va_rotation = VA_ROTATION_NONE;
 
       VAStatus va_status = vaQueryVideoProcPipelineCaps (filter->va_display,
           filter->va_context, NULL, 0, &pipeline_caps);
       if (!vaapi_check_status (va_status, "vaQueryVideoProcPipelineCaps()"))
         return FALSE;
 
-      if (!(pipeline_caps.mirror_flags & va_mirror)) {
-        GST_WARNING ("%s video-direction unsupported",
-            gst_vaapi_get_video_direction_nick (method));
-        return TRUE;
+      from_GstVideoOrientationMethod (method, &va_mirror, &va_rotation);
+
+      if (va_mirror != VA_MIRROR_NONE) {
+        if (!(pipeline_caps.mirror_flags & va_mirror)) {
+          GST_WARNING ("%s video-direction unsupported",
+              gst_vaapi_get_video_direction_nick (method));
+          return TRUE;
+        }
+      }
+
+      if (va_rotation != VA_ROTATION_NONE) {
+        if (!(pipeline_caps.rotation_flags & (1 << va_rotation))) {
+          GST_WARNING ("%s video-direction unsupported",
+              gst_vaapi_get_video_direction_nick (method));
+          return TRUE;
+        }
       }
 #else
       GST_WARNING ("%s video-direction unsupported",

@@ -177,6 +177,17 @@ _fixate_frame_size (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
     from_w = GST_VIDEO_INFO_WIDTH (vinfo);
     from_h = GST_VIDEO_INFO_HEIGHT (vinfo);
 
+    /* compensate for rotation if needed */
+    switch (postproc->video_direction) {
+      case GST_VIDEO_ORIENTATION_90R:
+      case GST_VIDEO_ORIENTATION_90L:
+      case GST_VIDEO_ORIENTATION_UL_LR:
+      case GST_VIDEO_ORIENTATION_UR_LL:
+        G_PRIMITIVE_SWAP (gint, from_w, from_h);
+      default:
+        break;
+    }
+
     gst_structure_get_int (outs, "width", &w);
     gst_structure_get_int (outs, "height", &h);
 

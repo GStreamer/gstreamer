@@ -821,26 +821,50 @@ to_GstVaapiScaleMethod (guint flags)
   return method;
 }
 
-/* VPP: translate GstVideoOrientationMethod into VA mirror flags */
-guint
-from_GstVideoOrientationMethod (guint value)
+/* VPP: translate GstVideoOrientationMethod into VA mirror/rotation flags */
+void
+from_GstVideoOrientationMethod (guint value, guint * va_mirror,
+    guint * va_rotation)
 {
-  guint va_flags = 0;
+  *va_mirror = 0;
+  *va_rotation = 0;
 
   switch (value) {
 #if VA_CHECK_VERSION(1,1,0)
     case GST_VIDEO_ORIENTATION_IDENTITY:
-      va_flags = VA_MIRROR_NONE;
+      *va_mirror = VA_MIRROR_NONE;
+      *va_rotation = VA_ROTATION_NONE;
       break;
     case GST_VIDEO_ORIENTATION_HORIZ:
-      va_flags = VA_MIRROR_HORIZONTAL;
+      *va_mirror = VA_MIRROR_HORIZONTAL;
+      *va_rotation = VA_ROTATION_NONE;
       break;
     case GST_VIDEO_ORIENTATION_VERT:
-      va_flags = VA_MIRROR_VERTICAL;
+      *va_mirror = VA_MIRROR_VERTICAL;
+      *va_rotation = VA_ROTATION_NONE;
+      break;
+    case GST_VIDEO_ORIENTATION_90R:
+      *va_mirror = VA_MIRROR_NONE;
+      *va_rotation = VA_ROTATION_90;
+      break;
+    case GST_VIDEO_ORIENTATION_180:
+      *va_mirror = VA_MIRROR_NONE;
+      *va_rotation = VA_ROTATION_180;
+      break;
+    case GST_VIDEO_ORIENTATION_90L:
+      *va_mirror = VA_MIRROR_NONE;
+      *va_rotation = VA_ROTATION_270;
+      break;
+    case GST_VIDEO_ORIENTATION_UL_LR:
+      *va_mirror = VA_MIRROR_HORIZONTAL;
+      *va_rotation = VA_ROTATION_90;
+      break;
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      *va_mirror = VA_MIRROR_VERTICAL;
+      *va_rotation = VA_ROTATION_90;
       break;
 #endif
     default:
       break;
   }
-  return va_flags;
 }
