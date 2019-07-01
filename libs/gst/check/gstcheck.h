@@ -428,7 +428,7 @@ G_STMT_START {								\
  * @a: a string literal or expression
  * @b: a string literal or expression
  *
- * This macro checks that @a and @b are equal (as per strcmp) and aborts if
+ * This macro checks that @a and @b are equal (as per g_strcmp0()) and aborts if
  * this is not the case, printing both expressions and the values they
  * evaluated to. This macro is for use in unit tests.
  */
@@ -444,7 +444,7 @@ G_STMT_START {                                                      \
  * @a: a string literal or expression
  * @b: a string literal or expression
  *
- * This macro checks that @a and @b are equal (as per strcmp) and aborts if
+ * This macro checks that @a and @b are equal (as per g_strcmp0()) and aborts if
  * this is not the case, printing both expressions and the values they
  * evaluated to. This macro is for use in unit tests.
  */
