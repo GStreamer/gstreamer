@@ -185,6 +185,7 @@ on_incoming_stream (GstElement * webrtc, GstPad * pad, GstElement * pipe)
 
   sinkpad = gst_element_get_static_pad (decodebin, "sink");
   gst_pad_link (pad, sinkpad);
+  gst_object_unref (sinkpad);
 }
 
 static void
