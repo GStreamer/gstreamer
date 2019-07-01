@@ -8964,6 +8964,7 @@ gst_rtspsrc_send_event (GstElement * element, GstEvent * event)
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
     res = gst_rtspsrc_perform_seek (rtspsrc, event);
+    gst_event_unref (event);
   } else if (GST_EVENT_IS_DOWNSTREAM (event)) {
     res = gst_rtspsrc_push_event (rtspsrc, event);
   } else {
