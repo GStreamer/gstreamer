@@ -321,16 +321,170 @@ GST_START_TEST (test_get_live_objects_filtered_detailed)
 
 GST_END_TEST;
 
+/* Just start and stop tracking without any checkpoints */
+GST_START_TEST (test_activity_start_stop)
+{
+  GstElement *pipe, *src, *sink;
+  GstMessage *m;
+  GstTracer *tracer = get_tracer_by_name ("plain");
+
+  g_signal_emit_by_name (tracer, "activity-start-tracking");
+
+  pipe = gst_pipeline_new ("pipeline");
+  fail_unless (pipe);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_unless (src);
+  g_object_set (src, "num-buffers", NUM_BUFFERS, NULL);
+
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (sink);
+
+  gst_bin_add_many (GST_BIN (pipe), src, sink, NULL);
+  fail_unless (gst_element_link (src, sink));
+
+  GST_DEBUG ("Setting pipeline to PLAYING");
+  fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  m = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipe), -1, GST_MESSAGE_EOS);
+  gst_message_unref (m);
+
+  fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pipe);
+
+  g_signal_emit_by_name (tracer, "activity-stop-tracking");
+  gst_object_unref (tracer);
+}
+
+GST_END_TEST;
+
+/* Track objects, and checkpoint twice */
+GST_START_TEST (test_activity_log_checkpoint)
+{
+  GstElement *pipe, *src, *sink;
+  GstMessage *m;
+  GstTracer *tracer = get_tracer_by_name ("plain");
+
+  g_signal_emit_by_name (tracer, "activity-start-tracking");
+
+  pipe = gst_pipeline_new ("pipeline");
+  fail_unless (pipe);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_unless (src);
+  g_object_set (src, "num-buffers", NUM_BUFFERS, NULL);
+
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (sink);
+
+  gst_bin_add_many (GST_BIN (pipe), src, sink, NULL);
+  fail_unless (gst_element_link (src, sink));
+
+  g_signal_emit_by_name (tracer, "activity-log-checkpoint");
+
+  GST_DEBUG ("Setting pipeline to PLAYING");
+  fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  m = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipe), -1, GST_MESSAGE_EOS);
+  gst_message_unref (m);
+
+  fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pipe);
+
+  g_signal_emit_by_name (tracer, "activity-log-checkpoint");
+  g_signal_emit_by_name (tracer, "activity-stop-tracking");
+  gst_object_unref (tracer);
+}
+
+GST_END_TEST;
+
+/* Track objects, checkpoint once, and assert the format of the data */
+GST_START_TEST (test_activity_get_checkpoint)
+{
+  GstElement *pipe, *src, *sink;
+  GstMessage *m;
+  GstTracer *tracer = get_tracer_by_name ("more");
+
+  g_signal_emit_by_name (tracer, "activity-start-tracking");
+
+  pipe = gst_pipeline_new ("pipeline");
+  fail_unless (pipe);
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_unless (src);
+  g_object_set (src, "num-buffers", NUM_BUFFERS, NULL);
+
+  sink = gst_element_factory_make ("fakesink", NULL);
+  fail_unless (sink);
+
+  gst_bin_add_many (GST_BIN (pipe), src, sink, NULL);
+  fail_unless (gst_element_link (src, sink));
+
+  GST_DEBUG ("Setting pipeline to PLAYING");
+  fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  m = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipe), -1, GST_MESSAGE_EOS);
+  gst_message_unref (m);
+
+  fail_unless_equals_int (gst_element_set_state (pipe, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pipe);
+
+  {
+    GstStructure *cpoint;
+    const GstStructure *cs, *rs;
+    const GValue *created, *removed;
+
+    g_signal_emit_by_name (tracer, "activity-get-checkpoint", &cpoint);
+    fail_unless_equals_int (gst_structure_n_fields (cpoint), 2);
+
+    created = gst_structure_get_value (cpoint, "objects-created-list");
+    fail_unless (G_VALUE_HOLDS (created, GST_TYPE_LIST));
+    created = gst_value_list_get_value (created, 0);
+    fail_unless (G_VALUE_HOLDS (created, GST_TYPE_STRUCTURE));
+    cs = gst_value_get_structure (created);
+    fail_unless (gst_structure_has_field_typed (cs, "type-name",
+            G_TYPE_STRING));
+    fail_unless (gst_structure_get_string (cs, "type-name"));
+    fail_unless (gst_structure_has_field_typed (cs, "address", G_TYPE_STRING));
+    fail_unless (gst_structure_get_string (cs, "address"));
+
+    removed = gst_structure_get_value (cpoint, "objects-removed-list");
+    fail_unless (G_VALUE_HOLDS (removed, GST_TYPE_LIST));
+    removed = gst_value_list_get_value (removed, 0);
+    fail_unless (G_VALUE_HOLDS (removed, GST_TYPE_STRUCTURE));
+    rs = gst_value_get_structure (removed);
+    fail_unless (gst_structure_has_field_typed (rs, "type-name",
+            G_TYPE_STRING));
+    fail_unless (gst_structure_get_string (rs, "type-name"));
+    fail_unless (gst_structure_has_field_typed (rs, "address", G_TYPE_STRING));
+    fail_unless (gst_structure_get_string (rs, "address"));
+    gst_structure_free (cpoint);
+  }
+  g_signal_emit_by_name (tracer, "activity-stop-tracking");
+  gst_object_unref (tracer);
+}
+
+GST_END_TEST;
+
 static Suite *
 leakstracer_suite (void)
 {
   Suite *s = suite_create ("leakstracer");
   TCase *tc_chain_1 = tcase_create ("live-objects");
+  TCase *tc_chain_2 = tcase_create ("activity-tracking");
 
   suite_add_tcase (s, tc_chain_1);
   tcase_add_test (tc_chain_1, test_log_live_objects);
   tcase_add_test (tc_chain_1, test_get_live_objects);
   tcase_add_test (tc_chain_1, test_get_live_objects_filtered_detailed);
+
+  suite_add_tcase (s, tc_chain_2);
+  tcase_add_test (tc_chain_2, test_activity_start_stop);
+  tcase_add_test (tc_chain_2, test_activity_log_checkpoint);
+  tcase_add_test (tc_chain_2, test_activity_get_checkpoint);
 
   return s;
 }
