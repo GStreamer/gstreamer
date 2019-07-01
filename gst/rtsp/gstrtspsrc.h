@@ -207,7 +207,7 @@ struct _GstRTSPSrc {
   GstSegment       segment;
   gboolean         running;
   gboolean         need_range;
-  gboolean         skip;
+  gboolean         server_side_trickmode;
   gint             free_channel;
   gboolean         need_segment;
   GstClockTime     base_time;

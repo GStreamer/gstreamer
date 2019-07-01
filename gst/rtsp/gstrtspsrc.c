@@ -2683,7 +2683,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   GstSeekFlags flags;
   GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type;
   gint64 cur, stop;
-  gboolean flush, skip;
+  gboolean flush, server_side_trickmode;
   gboolean update;
   gboolean playing;
   GstSegment seeksegment = { 0, };
@@ -2694,10 +2694,6 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
-
-  /* no negative rates yet */
-  if (rate < 0.0)
-    goto negative_rate;
 
   /* we need TIME format */
   if (format != src->segment.format)
@@ -2716,7 +2712,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 
   /* get flush flag */
   flush = flags & GST_SEEK_FLAG_FLUSH;
-  skip = flags & GST_SEEK_FLAG_SKIP;
+  server_side_trickmode = flags & GST_SEEK_FLAG_TRICKMODE;
 
   /* now we need to make sure the streaming thread is stopped. We do this by
    * either sending a FLUSH_START event downstream which will cause the
@@ -2764,7 +2760,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     gst_rtspsrc_get_position (src);
     gst_rtspsrc_pause (src, FALSE);
   }
-  src->skip = skip;
+  src->server_side_trickmode = server_side_trickmode;
 
   src->state = GST_RTSP_STATE_SEEKING;
 
@@ -2826,11 +2822,6 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   return TRUE;
 
   /* ERRORS */
-negative_rate:
-  {
-    GST_DEBUG_OBJECT (src, "negative playback rates are not supported yet.");
-    return FALSE;
-  }
 no_format:
   {
     GST_DEBUG_OBJECT (src, "unsupported format given, seek aborted.");
@@ -7665,7 +7656,7 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
 
   /* reset our state */
   src->need_range = TRUE;
-  src->skip = FALSE;
+  src->server_side_trickmode = FALSE;
 
   src->state = GST_RTSP_STATE_READY;
 
@@ -8317,13 +8308,24 @@ restart:
     }
 
     if (segment->rate != 1.0) {
-      gchar hval[G_ASCII_DTOSTR_BUF_SIZE];
+      gchar scale_val[G_ASCII_DTOSTR_BUF_SIZE];
+      gchar speed_val[G_ASCII_DTOSTR_BUF_SIZE];
 
-      g_ascii_dtostr (hval, sizeof (hval), segment->rate);
-      if (src->skip)
-        gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SCALE, hval);
-      else
-        gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, hval);
+      if (src->server_side_trickmode) {
+        g_ascii_dtostr (scale_val, sizeof (scale_val), segment->rate);
+        gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SCALE, scale_val);
+      } else if (segment->rate < 0.0) {
+        g_ascii_dtostr (scale_val, sizeof (scale_val), -1.0);
+        gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SCALE, scale_val);
+
+        if (ABS (segment->rate) != 1.0) {
+          g_ascii_dtostr (speed_val, sizeof (speed_val), ABS (segment->rate));
+          gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, speed_val);
+        }
+      } else {
+        g_ascii_dtostr (speed_val, sizeof (speed_val), segment->rate);
+        gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, speed_val);
+      }
     }
 
     if (seek_style)
