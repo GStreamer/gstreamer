@@ -26,7 +26,6 @@
 #include <gst/base/gstbaseparse.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_IRTSP_PARSE \
   (gst_irtsp_parse_get_type())
 #define GST_IRTSP_PARSE(obj) \
@@ -37,20 +36,32 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_IRTSP_PARSE))
 #define GST_IS_IRTSP_PARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_IRTSP_PARSE))
-
 typedef struct _GstIRTSPParse GstIRTSPParse;
 typedef struct _GstIRTSPParseClass GstIRTSPParseClass;
+
+typedef enum
+{
+  IRTSP_SEARCH_FRAME,
+  IRTSP_PARSE_FRAME,
+  IRTSP_FLUSH_FRAME,
+  IRTSP_SKIP_FRAME
+} RtspParserState;
 
 /**
  * GstIRTSPParse:
  *
  * The opaque GstIRTSPParse object
  */
-struct _GstIRTSPParse {
+struct _GstIRTSPParse
+{
   GstBaseParse baseparse;
 
-  guint8 channel_id;
-  /*< private >*/
+  guint8 target_channel_id;
+  /*< private > */
+  RtspParserState state;
+  guint16 frame_size;
+  guint current_offset;
+  gboolean discont;
 };
 
 /**
@@ -59,12 +70,12 @@ struct _GstIRTSPParse {
  *
  * The opaque GstIRTSPParseClass data structure.
  */
-struct _GstIRTSPParseClass {
+struct _GstIRTSPParseClass
+{
   GstBaseParseClass baseparse_class;
 };
 
 GType gst_irtsp_parse_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_IRTSP_PARSE_H__ */
