@@ -2139,6 +2139,10 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     gboolean is_rtx, RtpTimer * timer)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  gboolean is_stats_timer = FALSE;
+
+  if (timer && rtp_timer_queue_find (priv->rtx_stats_timers, timer->seqnum))
+    is_stats_timer = TRUE;
 
   /* schedule immediatly expected timer which exceed the maximum RTX delay
    * reorder configuration */
@@ -2187,7 +2191,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
         do_next_seqnum = FALSE;
       }
 
-      if (!is_rtx || timer->num_rtx_retry > 1) {
+      if (!is_stats_timer && (!is_rtx || timer->num_rtx_retry > 1)) {
         RtpTimer *stats_timer = rtp_timer_dup (timer);
         /* Store timer in order to record stats when/if the retransmitted
          * packet arrives. We should also store timer information if we've
@@ -2216,7 +2220,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
         GST_TIME_ARGS (expected), GST_TIME_ARGS (delay),
         GST_TIME_ARGS (priv->packet_spacing), GST_TIME_ARGS (priv->avg_jitter));
 
-    if (timer) {
+    if (timer && !is_stats_timer) {
       timer->type = RTP_TIMER_EXPECTED;
       rtp_timer_queue_update_timer (priv->timers, timer, priv->next_in_seqnum,
           expected, delay, 0, TRUE);
@@ -2224,7 +2228,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
       rtp_timer_queue_set_expected (priv->timers, priv->next_in_seqnum,
           expected, delay, priv->packet_spacing);
     }
-  } else if (timer && timer->type != RTP_TIMER_DEADLINE) {
+  } else if (timer && timer->type != RTP_TIMER_DEADLINE && !is_stats_timer) {
     /* if we had a timer, remove it, we don't know when to expect the next
      * packet. */
     rtp_timer_queue_unschedule (priv->timers, timer);
