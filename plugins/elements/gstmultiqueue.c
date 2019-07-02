@@ -394,7 +394,8 @@ gst_multiqueue_pad_finalize (GObject * object)
 {
   GstMultiQueuePad *pad = GST_MULTIQUEUE_PAD (object);
 
-  gst_single_queue_unref (pad->sq);
+  if (pad->sq)
+    gst_single_queue_unref (pad->sq);
 
   G_OBJECT_CLASS (gst_multiqueue_pad_parent_class)->finalize (object);
 }

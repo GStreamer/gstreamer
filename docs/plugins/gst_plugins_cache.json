@@ -2017,6 +2017,27 @@
                     "src_%%u": {
                         "caps": "ANY",
                         "direction": "src",
+                        "object-type": {
+                            "hierarchy": [
+                                "GstMultiQueuePad",
+                                "GstPad",
+                                "GstObject",
+                                "GInitiallyUnowned",
+                                "GObject"
+                            ],
+                            "properties": {
+                                "group-id": {
+                                    "blurb": "Group to which this pad belongs",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "default": "0",
+                                    "max": "-1",
+                                    "min": "0",
+                                    "type-name": "guint",
+                                    "writable": true
+                                }
+                            }
+                        },
                         "presence": "sometimes"
                     }
                 },
