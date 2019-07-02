@@ -1647,24 +1647,19 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   GstEvent *flush_event;
   gboolean ret;
 
-  if (event) {
-    GST_DEBUG_OBJECT (qtdemux, "doing seek with event");
+  GST_DEBUG_OBJECT (qtdemux, "doing seek with event");
 
-    gst_event_parse_seek (event, &rate, &format, &flags,
-        &cur_type, &cur, &stop_type, &stop);
-    seqnum = gst_event_get_seqnum (event);
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
+  seqnum = gst_event_get_seqnum (event);
 
-    /* we have to have a format as the segment format. Try to convert
-     * if not. */
-    if (!gst_qtdemux_convert_seek (pad, &format, cur_type, &cur,
-            stop_type, &stop))
-      goto no_format;
+  /* we have to have a format as the segment format. Try to convert
+   * if not. */
+  if (!gst_qtdemux_convert_seek (pad, &format, cur_type, &cur,
+          stop_type, &stop))
+    goto no_format;
 
-    GST_DEBUG_OBJECT (qtdemux, "seek format %s", gst_format_get_name (format));
-  } else {
-    GST_DEBUG_OBJECT (qtdemux, "doing seek without event");
-    flags = 0;
-  }
+  GST_DEBUG_OBJECT (qtdemux, "seek format %s", gst_format_get_name (format));
 
   flush = flags & GST_SEEK_FLAG_FLUSH;
 
@@ -1689,17 +1684,12 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
    * segment when we close the current segment. */
   memcpy (&seeksegment, &qtdemux->segment, sizeof (GstSegment));
 
-  if (event) {
-    /* configure the segment with the seek variables */
-    GST_DEBUG_OBJECT (qtdemux, "configuring seek");
-    if (!gst_segment_do_seek (&seeksegment, rate, format, flags,
-            cur_type, cur, stop_type, stop, &update)) {
-      ret = FALSE;
-      GST_ERROR_OBJECT (qtdemux, "inconsistent seek values, doing nothing");
-    } else {
-      /* now do the seek */
-      ret = gst_qtdemux_perform_seek (qtdemux, &seeksegment, seqnum, flags);
-    }
+  /* configure the segment with the seek variables */
+  GST_DEBUG_OBJECT (qtdemux, "configuring seek");
+  if (!gst_segment_do_seek (&seeksegment, rate, format, flags,
+          cur_type, cur, stop_type, stop, &update)) {
+    ret = FALSE;
+    GST_ERROR_OBJECT (qtdemux, "inconsistent seek values, doing nothing");
   } else {
     /* now do the seek */
     ret = gst_qtdemux_perform_seek (qtdemux, &seeksegment, seqnum, flags);
