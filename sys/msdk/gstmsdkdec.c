@@ -589,6 +589,22 @@ _find_msdk_surface (gconstpointer msdk_surface, gconstpointer comp_surface)
   return cached_surface ? cached_surface->surface != _surface : -1;
 }
 
+static void
+gst_msdkdec_free_unlocked_msdk_surfaces (GstMsdkDec * thiz,
+    MsdkSurface * curr_surface)
+{
+  GList *l;
+  MsdkSurface *surface;
+
+  for (l = thiz->decoded_msdk_surfaces; l;) {
+    surface = l->data;
+    l = l->next;
+
+    if (surface != curr_surface && surface->surface->Data.Locked == 0)
+      free_surface (thiz, surface);
+  }
+}
+
 static GstFlowReturn
 gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
 {
@@ -632,7 +648,8 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
       }
     }
 
-    free_surface (thiz, surface);
+    if (!thiz->postpone_free_surface)
+      free_surface (thiz, surface);
     task->sync_point = NULL;
     task->surface = NULL;
     task->decode_only = FALSE;
@@ -995,6 +1012,8 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   }
 
   for (;;) {
+    if (thiz->postpone_free_surface)
+      gst_msdkdec_free_unlocked_msdk_surfaces (thiz, surface);
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
     flow = gst_msdkdec_finish_task (thiz, task);
     if (flow != GST_FLOW_OK)
@@ -1376,6 +1395,8 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
   session = gst_msdk_context_get_session (thiz->context);
 
   for (;;) {
+    if (thiz->postpone_free_surface)
+      gst_msdkdec_free_unlocked_msdk_surfaces (thiz, surface);
     task = &g_array_index (thiz->tasks, MsdkDecTask, thiz->next_task);
     if ((flow = gst_msdkdec_finish_task (thiz, task)) != GST_FLOW_OK) {
       if (flow != GST_FLOW_FLUSHING)
@@ -1599,5 +1620,6 @@ gst_msdkdec_init (GstMsdkDec * thiz)
   thiz->do_renego = TRUE;
   thiz->do_realloc = TRUE;
   thiz->force_reset_on_res_change = TRUE;
+  thiz->postpone_free_surface = FALSE;
   thiz->adapter = gst_adapter_new ();
 }

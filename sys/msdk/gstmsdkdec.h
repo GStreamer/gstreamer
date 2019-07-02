@@ -86,6 +86,8 @@ struct _GstMsdkDec
    * include downstream requirement, msdk suggestion and extra
    * surface allocation for smooth display in render pipeline */
   guint min_prealloc_buffers;
+  /* postpone surface free */
+  gboolean postpone_free_surface;
 
   /* MFX context */
   GstMsdkContext *context;

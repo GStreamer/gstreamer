@@ -82,6 +82,7 @@ gst_msdkvc1dec_configure (GstMsdkDec * decoder)
   if (!structure)
     return FALSE;
 
+  decoder->postpone_free_surface = TRUE;
   decoder->param.mfx.CodecId = MFX_CODEC_VC1;
 
   profile_str = gst_structure_get_string (structure, "profile");
