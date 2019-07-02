@@ -207,7 +207,7 @@ struct _GstAdaptiveDemux
   /*< private >*/
   GstBin     bin;
 
-  gboolean running;
+  gint running;
 
   gsize stream_struct_size;
 
@@ -528,6 +528,9 @@ GstClockTime gst_adaptive_demux_get_monotonic_time (GstAdaptiveDemux * demux);
 
 GST_ADAPTIVE_DEMUX_API
 GDateTime *gst_adaptive_demux_get_client_now_utc (GstAdaptiveDemux * demux);
+
+GST_ADAPTIVE_DEMUX_API
+gboolean gst_adaptive_demux_is_running (GstAdaptiveDemux * demux);
 
 G_END_DECLS
 
