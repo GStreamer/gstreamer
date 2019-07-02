@@ -5141,8 +5141,20 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   /* go back two frames to provide lead-in for non-raw audio decoders */
   if (stream->subtype == FOURCC_soun && !stream->need_clip) {
+    guint32 lead_in = 2;
     guint32 old_index = kf_index;
-    kf_index = MAX (kf_index, 2) - 2;
+    GstStructure *s = gst_caps_get_structure (CUR_STREAM (stream)->caps, 0);
+
+    if (gst_structure_has_name (s, "audio/mpeg")) {
+      gint mpegversion;
+      if (gst_structure_get_int (s, "mpegversion", &mpegversion)
+          && mpegversion == 1) {
+        /* mp3 could need up to 30 frames of lead-in per mpegaudioparse */
+        lead_in = 30;
+      }
+    }
+
+    kf_index = MAX (kf_index, lead_in) - lead_in;
     if (qtdemux_parse_samples (qtdemux, stream, kf_index)) {
       GST_DEBUG_OBJECT (stream->pad,
           "Moving backwards %u frames to ensure sufficient sound lead-in",
