@@ -167,7 +167,7 @@ enum
 struct _GstAdaptiveDemuxPrivate
 {
   GstAdapter *input_adapter;    /* protected by manifest_lock */
-  gboolean have_manifest;       /* protected by manifest_lock */
+  gint have_manifest;           /* MT safe */
 
   GList *old_streams;           /* protected by manifest_lock */
 
@@ -565,25 +565,31 @@ gst_adaptive_demux_change_state (GstElement * element,
   GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX_CAST (element);
   GstStateChangeReturn result = GST_STATE_CHANGE_FAILURE;
 
-  GST_API_LOCK (demux);
-
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (g_atomic_int_compare_and_exchange (&demux->running, TRUE, FALSE))
+        GST_DEBUG_OBJECT (demux, "demuxer has stopped running");
+      gst_uri_downloader_cancel (demux->downloader);
+
+      GST_API_LOCK (demux);
       GST_MANIFEST_LOCK (demux);
-      demux->running = FALSE;
       gst_adaptive_demux_reset (demux);
       GST_MANIFEST_UNLOCK (demux);
+      GST_API_UNLOCK (demux);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_API_LOCK (demux);
       GST_MANIFEST_LOCK (demux);
       gst_adaptive_demux_reset (demux);
       /* Clear "cancelled" flag in uridownloader since subclass might want to
        * use uridownloader to fetch another manifest */
       gst_uri_downloader_reset (demux->downloader);
-      if (demux->priv->have_manifest)
+      if (g_atomic_int_get (&demux->priv->have_manifest))
         gst_adaptive_demux_start_manifest_update_task (demux);
-      demux->running = TRUE;
       GST_MANIFEST_UNLOCK (demux);
+      GST_API_UNLOCK (demux);
+      if (g_atomic_int_compare_and_exchange (&demux->running, FALSE, TRUE))
+        GST_DEBUG_OBJECT (demux, "demuxer has started running");
       break;
     default:
       break;
@@ -596,7 +602,6 @@ gst_adaptive_demux_change_state (GstElement * element,
    */
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  GST_API_UNLOCK (demux);
   return result;
 }
 
@@ -687,7 +692,7 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
             (NULL));
         ret = FALSE;
       } else {
-        demux->priv->have_manifest = TRUE;
+        g_atomic_int_set (&demux->priv->have_manifest, TRUE);
       }
       gst_buffer_unref (manifest_buffer);
 
@@ -830,7 +835,7 @@ gst_adaptive_demux_reset (GstAdaptiveDemux * demux)
   demux->manifest_base_uri = NULL;
 
   gst_adapter_clear (demux->priv->input_adapter);
-  demux->priv->have_manifest = FALSE;
+  g_atomic_int_set (&demux->priv->have_manifest, FALSE);
 
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 
@@ -1052,7 +1057,7 @@ gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
   demux->prepared_streams = demux->next_streams;
   demux->next_streams = NULL;
 
-  if (!demux->running) {
+  if (!gst_adaptive_demux_is_running (demux)) {
     GST_DEBUG_OBJECT (demux, "Not exposing pads due to shutdown");
     return TRUE;
   }
@@ -1844,7 +1849,7 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
       stream = gst_adaptive_demux_find_stream_for_pad (demux, pad);
 
       if (stream) {
-        if (!stream->cancelled && demux->running &&
+        if (!stream->cancelled && gst_adaptive_demux_is_running (demux) &&
             stream->last_ret == GST_FLOW_NOT_LINKED) {
           stream->last_ret = GST_FLOW_OK;
           stream->restart_download = TRUE;
@@ -1917,9 +1922,8 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
 
       gst_query_parse_duration (query, &fmt, NULL);
 
-      GST_MANIFEST_LOCK (demux);
-
-      if (fmt == GST_FORMAT_TIME && demux->priv->have_manifest) {
+      if (fmt == GST_FORMAT_TIME
+          && g_atomic_int_get (&demux->priv->have_manifest)) {
         duration = demux_class->get_duration (demux);
 
         if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0) {
@@ -1927,8 +1931,6 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
           ret = TRUE;
         }
       }
-
-      GST_MANIFEST_UNLOCK (demux);
 
       GST_LOG_OBJECT (demux, "GST_QUERY_DURATION returns %s with duration %"
           GST_TIME_FORMAT, ret ? "TRUE" : "FALSE", GST_TIME_ARGS (duration));
@@ -1944,14 +1946,13 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
       gint64 stop = -1;
       gint64 start = 0;
 
-      GST_MANIFEST_LOCK (demux);
-
-      if (!demux->priv->have_manifest) {
-        GST_MANIFEST_UNLOCK (demux);
+      if (!g_atomic_int_get (&demux->priv->have_manifest)) {
         GST_INFO_OBJECT (demux,
             "Don't have manifest yet, can't answer seeking query");
         return FALSE;           /* can't answer without manifest */
       }
+
+      GST_MANIFEST_LOCK (demux);
 
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
       GST_INFO_OBJECT (demux, "Received GST_QUERY_SEEKING with format %d", fmt);
@@ -2014,7 +2015,7 @@ gst_adaptive_demux_start_tasks (GstAdaptiveDemux * demux,
 {
   GList *iter;
 
-  if (!demux->running) {
+  if (!gst_adaptive_demux_is_running (demux)) {
     GST_DEBUG_OBJECT (demux, "Not starting tasks due to shutdown");
     return;
   }
@@ -4486,6 +4487,20 @@ gst_adaptive_demux_get_client_now_utc (GstAdaptiveDemux * demux)
   gtv.tv_sec = utc_now / G_TIME_SPAN_SECOND;
   gtv.tv_usec = utc_now % G_TIME_SPAN_SECOND;
   return g_date_time_new_from_timeval_utc (&gtv);
+}
+
+/**
+ * gst_adaptive_demux_is_running
+ * @demux: #GstAdaptiveDemux
+ * Returns: whether the demuxer is processing data
+ *
+ * Returns FALSE if shutdown has started (transitioning down from
+ * PAUSED), otherwise TRUE.
+ */
+gboolean
+gst_adaptive_demux_is_running (GstAdaptiveDemux * demux)
+{
+  return g_atomic_int_get (&demux->running);
 }
 
 static GstAdaptiveDemuxTimer *

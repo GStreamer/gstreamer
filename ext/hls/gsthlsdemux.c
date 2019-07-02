@@ -73,6 +73,7 @@ static gboolean gst_hls_demux_update_playlist (GstHLSDemux * demux,
     gboolean update, GError ** err);
 static gchar *gst_hls_src_buf_to_utf8_playlist (GstBuffer * buf);
 
+/* FIXME: the return value is never used? */
 static gboolean gst_hls_demux_change_playlist (GstHLSDemux * demux,
     guint max_bitrate, gboolean * changed);
 static GstBuffer *gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
@@ -1158,6 +1159,8 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
 {
   GstHLSDemux *demux = GST_HLS_DEMUX_CAST (ademux);
 
+  GST_DEBUG_OBJECT (demux, "resetting");
+
   GST_M3U8_CLIENT_LOCK (hlsdemux->client);
   if (demux->master) {
     gst_hls_master_playlist_unref (demux->master);
@@ -1379,7 +1382,8 @@ retry:
   if (download == NULL) {
     gchar *base_uri;
 
-    if (!update || main_checked || demux->master->is_simple) {
+    if (!update || main_checked || demux->master->is_simple
+        || !gst_adaptive_demux_is_running (GST_ADAPTIVE_DEMUX_CAST (demux))) {
       g_free (uri);
       return FALSE;
     }
@@ -1612,7 +1616,7 @@ retry_failover_protection:
     if (changed)
       *changed = TRUE;
     stream->discont = TRUE;
-  } else {
+  } else if (gst_adaptive_demux_is_running (GST_ADAPTIVE_DEMUX_CAST (demux))) {
     GstHLSVariantStream *failover_variant = NULL;
     GList *failover;
 
