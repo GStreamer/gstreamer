@@ -164,6 +164,46 @@ error_loading_asset_cb (GESProject * project, GError * error, gchar * id,
 }
 
 static gboolean
+ges_demux_src_probe (GstPad * pad, GstPadProbeInfo * info, GstElement * parent)
+{
+  GstEvent *event = info->data;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+    {
+      const gchar *stream_id;
+      gchar *new_stream_id;
+      guint stream_group;
+
+      gst_event_parse_stream_start (event, &stream_id);
+      gst_event_parse_group_id (event, &stream_group);
+      new_stream_id =
+          gst_pad_create_stream_id (pad, GST_ELEMENT (parent), stream_id);
+      gst_event_unref (event);
+
+      event = gst_event_new_stream_start (new_stream_id);
+      gst_event_set_group_id (event, stream_group);
+      g_free (new_stream_id);
+      break;
+    }
+    default:
+      break;
+  }
+  info->data = event;
+
+  return GST_PAD_PROBE_OK;
+}
+
+static gboolean
+ges_demux_set_srcpad_probe (GstElement * element, GstPad * pad,
+    gpointer user_data)
+{
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      (GstPadProbeCallback) ges_demux_src_probe, element, NULL);
+  return TRUE;
+}
+
+static gboolean
 ges_demux_create_timeline (GESDemux * self, gchar * uri, GError ** error)
 {
   GESProject *project = ges_project_new (uri);
@@ -203,6 +243,8 @@ done:
   GST_INFO_OBJECT (self, "Timeline properly loaded: %" GST_PTR_FORMAT,
       data.timeline);
   ges_base_bin_set_timeline (GES_BASE_BIN (self), data.timeline);
+  gst_element_foreach_src_pad (GST_ELEMENT (self), ges_demux_set_srcpad_probe,
+      NULL);
 
   g_main_context_pop_thread_default (ctx);
 
