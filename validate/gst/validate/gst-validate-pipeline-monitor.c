@@ -37,6 +37,12 @@
 
 static gboolean output_is_tty = TRUE;
 
+enum
+{
+  PROP_0,
+  PROP_VERBOSITY,
+};
+
 /**
  * SECTION:gst-validate-pipeline-monitor
  * @title: GstValidatePipelineMonitor
@@ -78,12 +84,64 @@ gst_validate_pipeline_monitor_dispose (GObject * object)
 }
 
 static void
+gst_validate_pipeline_monitor_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstElement *pipeline = NULL;
+  GstValidateMonitor *monitor = GST_VALIDATE_MONITOR_CAST (object);
+  GstValidatePipelineMonitor *self = GST_VALIDATE_PIPELINE_MONITOR (object);
+
+  switch (prop_id) {
+    case PROP_VERBOSITY:
+      pipeline = GST_ELEMENT (gst_validate_monitor_get_pipeline (monitor));
+      monitor->verbosity = g_value_get_flags (value);
+      if (monitor->verbosity & GST_VALIDATE_VERBOSITY_PROPS_CHANGES) {
+        if (pipeline && !self->deep_notify_id) {
+          self->deep_notify_id =
+              gst_element_add_property_deep_notify_watch (pipeline, NULL, TRUE);
+        }
+      } else if (pipeline && self->deep_notify_id) {
+        gst_element_remove_property_notify_watch (pipeline,
+            self->deep_notify_id);
+        self->deep_notify_id = 0;
+      }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  gst_clear_object (&pipeline);
+}
+
+static void
+gst_validate_pipeline_monitor_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstValidateMonitor *monitor = GST_VALIDATE_MONITOR_CAST (object);
+
+  switch (prop_id) {
+    case PROP_VERBOSITY:
+      g_value_set_flags (value, monitor->verbosity);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+}
+
+static void
 gst_validate_pipeline_monitor_class_init (GstValidatePipelineMonitorClass *
     klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->dispose = gst_validate_pipeline_monitor_dispose;
+  object_class->set_property = gst_validate_pipeline_monitor_set_property;
+  object_class->get_property = gst_validate_pipeline_monitor_get_property;
+
+  g_object_class_override_property (object_class, PROP_VERBOSITY, "verbosity");
 
 #ifdef HAVE_UNISTD_H
   output_is_tty = isatty (1);
@@ -792,9 +850,12 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
   gst_bus_enable_sync_message_emission (bus);
   g_signal_connect (bus, "sync-message", (GCallback) _bus_handler, monitor);
 
-  monitor->deep_notify_id =
-      gst_element_add_property_deep_notify_watch ((GstElement *) pipeline, NULL,
-      TRUE);
+  if (GST_VALIDATE_MONITOR_CAST (monitor)->verbosity &
+      GST_VALIDATE_VERBOSITY_PROPS_CHANGES) {
+    monitor->deep_notify_id =
+        gst_element_add_property_deep_notify_watch ((GstElement *) pipeline,
+        NULL, TRUE);
+  }
 
   gst_object_unref (bus);
 
