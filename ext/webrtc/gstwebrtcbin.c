@@ -2040,7 +2040,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
    * dtls fingerprints
    * multiple dtls fingerprints https://tools.ietf.org/html/draft-ietf-mmusic-4572-update-05
    */
-  GstSDPMessage *last_offer = _get_latest_offer (webrtc);
+  GstSDPMessage *last_offer = _get_latest_self_generated_sdp (webrtc);
   gchar *direction, *sdp_mid, *ufrag, *pwd;
   gboolean bundle_only;
   GstCaps *caps;
@@ -2239,7 +2239,7 @@ _add_data_channel_offer (GstWebRTCBin * webrtc, GstSDPMessage * msg,
     GstSDPMedia * media, GString * bundled_mids, guint bundle_idx,
     gchar * bundle_ufrag, gchar * bundle_pwd)
 {
-  GstSDPMessage *last_offer = _get_latest_offer (webrtc);
+  GstSDPMessage *last_offer = _get_latest_self_generated_sdp (webrtc);
   gchar *ufrag, *pwd, *sdp_mid;
   gboolean bundle_only = bundled_mids
       && webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE
@@ -2330,7 +2330,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
   gchar *bundle_ufrag = NULL;
   gchar *bundle_pwd = NULL;
   GArray *reserved_pts = NULL;
-  GstSDPMessage *last_offer = _get_latest_offer (webrtc);
+  GstSDPMessage *last_offer = _get_latest_self_generated_sdp (webrtc);
   GList *seen_transceivers = NULL;
   guint media_idx = 0;
   int i;
@@ -2524,6 +2524,18 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options)
 
   g_list_free (seen_transceivers);
 
+  if (webrtc->priv->last_generated_answer)
+    gst_webrtc_session_description_free (webrtc->priv->last_generated_answer);
+  webrtc->priv->last_generated_answer = NULL;
+  if (webrtc->priv->last_generated_offer)
+    gst_webrtc_session_description_free (webrtc->priv->last_generated_offer);
+  {
+    GstSDPMessage *copy;
+    gst_sdp_message_copy (ret, &copy);
+    webrtc->priv->last_generated_offer =
+        gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_OFFER, copy);
+  }
+
   return ret;
 }
 
@@ -2650,7 +2662,7 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
   gchar *bundle_ufrag = NULL;
   gchar *bundle_pwd = NULL;
   GList *seen_transceivers = NULL;
-  GstSDPMessage *last_answer = _get_latest_answer (webrtc);
+  GstSDPMessage *last_answer = _get_latest_self_generated_sdp (webrtc);
 
   if (!webrtc->pending_remote_description) {
     GST_ERROR_OBJECT (webrtc,
@@ -3033,6 +3045,18 @@ out:
   g_strfreev (bundled);
 
   g_list_free (seen_transceivers);
+
+  if (webrtc->priv->last_generated_offer)
+    gst_webrtc_session_description_free (webrtc->priv->last_generated_offer);
+  webrtc->priv->last_generated_offer = NULL;
+  if (webrtc->priv->last_generated_answer)
+    gst_webrtc_session_description_free (webrtc->priv->last_generated_answer);
+  {
+    GstSDPMessage *copy;
+    gst_sdp_message_copy (ret, &copy);
+    webrtc->priv->last_generated_answer =
+        gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_ANSWER, copy);
+  }
 
   return ret;
 }
@@ -5453,6 +5477,13 @@ gst_webrtc_bin_finalize (GObject * object)
   if (webrtc->pending_remote_description)
     gst_webrtc_session_description_free (webrtc->pending_remote_description);
   webrtc->pending_remote_description = NULL;
+
+  if (webrtc->priv->last_generated_answer)
+    gst_webrtc_session_description_free (webrtc->priv->last_generated_answer);
+  webrtc->priv->last_generated_answer = NULL;
+  if (webrtc->priv->last_generated_offer)
+    gst_webrtc_session_description_free (webrtc->priv->last_generated_offer);
+  webrtc->priv->last_generated_offer = NULL;
 
   if (webrtc->priv->stats)
     gst_structure_free (webrtc->priv->stats);

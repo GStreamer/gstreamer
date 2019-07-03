@@ -49,6 +49,7 @@ GstPadTemplate *        _find_pad_template          (GstElement * element,
 GstSDPMessage *         _get_latest_sdp             (GstWebRTCBin * webrtc);
 GstSDPMessage *         _get_latest_offer           (GstWebRTCBin * webrtc);
 GstSDPMessage *         _get_latest_answer          (GstWebRTCBin * webrtc);
+GstSDPMessage *         _get_latest_self_generated_sdp (GstWebRTCBin * webrtc);
 
 GstWebRTCICEStream *    _find_ice_stream_for_session            (GstWebRTCBin * webrtc,
                                                                  guint session_id);

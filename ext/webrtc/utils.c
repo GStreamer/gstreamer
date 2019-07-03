@@ -97,6 +97,17 @@ _get_latest_sdp (GstWebRTCBin * webrtc)
   return NULL;
 }
 
+GstSDPMessage *
+_get_latest_self_generated_sdp (GstWebRTCBin * webrtc)
+{
+  if (webrtc->priv->last_generated_answer)
+    return webrtc->priv->last_generated_answer->sdp;
+  if (webrtc->priv->last_generated_offer)
+    return webrtc->priv->last_generated_offer->sdp;
+
+  return NULL;
+}
+
 struct pad_block *
 _create_pad_block (GstElement * element, GstPad * pad, gulong block_id,
     gpointer user_data, GDestroyNotify notify)

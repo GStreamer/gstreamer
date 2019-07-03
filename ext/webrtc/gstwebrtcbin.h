@@ -133,6 +133,8 @@ struct _GstWebRTCBinPrivate
   guint media_counter;
   /* the number of times create_offer has been called for the version field */
   guint offer_count;
+  GstWebRTCSessionDescription *last_generated_offer;
+  GstWebRTCSessionDescription *last_generated_answer;
 
   GstStructure *stats;
 };
