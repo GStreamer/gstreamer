@@ -440,9 +440,6 @@ create_surfaces (GstGLWindowWaylandEGL * window_egl)
 
     window_egl->window.native =
         wl_egl_window_create (window_egl->window.surface, width, height);
-    if (window_egl->window.queue)
-      wl_proxy_set_queue ((struct wl_proxy *) window_egl->window.native,
-          window_egl->window.queue);
   }
 }
 
