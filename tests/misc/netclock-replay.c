@@ -48,24 +48,6 @@ static GOptionEntry entries[] = {
   {NULL,}
 };
 
-/* g_ascii_string_to_unsigned is available since 2.54. Get rid of this wrapper
- * when we bump the version in 1.18 */
-#if !GLIB_CHECK_VERSION(2,54,0)
-#define g_ascii_string_to_unsigned parse_ascii_string_to_unsigned
-static gboolean
-parse_ascii_string_to_unsigned (const gchar * str, guint base, guint64 min,
-    guint64 max, guint64 * out_num, GError ** error)
-{
-  gchar *endptr = NULL;
-  *out_num = g_ascii_strtoull (str, &endptr, base);
-  if (errno)
-    return FALSE;
-  if (endptr == str)
-    return FALSE;
-  return TRUE;
-}
-#endif
-
 static gboolean
 parse_time_values (const gchar * line, GstClockTime * local_1,
     GstClockTime * remote_1, GstClockTime * remote_2, GstClockTime * local_2)

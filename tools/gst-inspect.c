@@ -2104,15 +2104,11 @@ main (int argc, char *argv[])
 #elif defined(G_OS_WIN32)
   {
     /* g_log_writer_supports_color is available since 2.50.0 */
-#if GLIB_CHECK_VERSION(2,50,0)
     gint fd = _fileno (stdout);
     /* On Windows 10, g_log_writer_supports_color will also setup the console
      * so that it correctly interprets ANSI VT sequences if it's supported */
     if (!_isatty (fd) || !g_log_writer_supports_color (fd))
       colored_output = FALSE;
-#else
-    colored_output = FALSE;
-#endif
   }
 #endif
 
