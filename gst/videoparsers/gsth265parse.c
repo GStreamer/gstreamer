@@ -1767,8 +1767,7 @@ ensure_caps_profile (GstH265Parse * h265parse, GstCaps * caps, GstH265SPS * sps)
 static void
 gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 {
-  GstH265VPS *vps;
-  GstH265SPS *sps;
+  GstH265SPS *sps = NULL;
   GstCaps *sink_caps, *src_caps;
   gboolean modified = FALSE;
   GstBuffer *buf = NULL;
@@ -1795,8 +1794,6 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
 
   sps = h265parse->nalparser->last_sps;
   GST_DEBUG_OBJECT (h265parse, "sps: %p", sps);
-  vps = sps->vps;
-  GST_DEBUG_OBJECT (h265parse, "vps: %p", vps);
 
   /* only codec-data for nice-and-clean au aligned packetized hevc format */
   if ((h265parse->format == GST_H265_PARSE_FORMAT_HVC1
@@ -1826,6 +1823,9 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     gint crop_width, crop_height;
     const gchar *chroma_format = NULL;
     guint bit_depth_chroma;
+    GstH265VPS *vps = sps->vps;
+
+    GST_DEBUG_OBJECT (h265parse, "vps: %p", vps);
 
     if (sps->conformance_window_flag) {
       crop_width = sps->crop_rect_width;
