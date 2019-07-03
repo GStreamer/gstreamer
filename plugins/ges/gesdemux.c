@@ -210,6 +210,7 @@ ges_demux_create_timeline (GESDemux * self, gchar * uri, GError ** error)
   G_GNUC_UNUSED void *unused;
   TimelineConstructionData data = { 0, };
   GMainContext *ctx = g_main_context_new ();
+  GstQuery *query;
 
   g_main_context_push_thread_default (ctx);
   data.ml = g_main_loop_new (ctx, TRUE);
@@ -230,6 +231,26 @@ ges_demux_create_timeline (GESDemux * self, gchar * uri, GError ** error)
 
   g_main_loop_run (data.ml);
   g_main_loop_unref (data.ml);
+
+  query = gst_query_new_uri ();
+  if (gst_pad_peer_query (self->sinkpad, query)) {
+    gchar *upstream_uri = NULL;
+    GList *assets, *tmp;
+    gst_query_parse_uri (query, &upstream_uri);
+
+    assets = ges_project_list_assets (project, GES_TYPE_URI_CLIP);
+    for (tmp = assets; tmp; tmp = tmp->next) {
+      const gchar *id = ges_asset_get_id (tmp->data);
+
+      if (!g_strcmp0 (id, upstream_uri)) {
+        g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_DEMUX,
+            "Recursively loading uri: %s", upstream_uri);
+        break;
+      }
+    }
+
+    g_list_free_full (assets, g_object_unref);
+  }
 
 done:
   if (data.loaded_sigid)
