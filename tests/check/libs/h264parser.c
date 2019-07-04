@@ -229,6 +229,90 @@ GST_START_TEST (test_h264_parse_slice_5bytes)
 
 GST_END_TEST;
 
+static guint8 nalu_sps_with_vui[] = {
+  0x00, 0x00, 0x00, 0x01, 0x67, 0x64, 0x00, 0x28,
+  0xac, 0xd9, 0x40, 0x78, 0x04, 0x4f, 0xde, 0x03,
+  0xd2, 0x02, 0x02, 0x02, 0x80, 0x00, 0x01, 0xf4,
+  0x80, 0x00, 0x75, 0x30, 0x4f, 0x8b, 0x16, 0xcb
+};
+
+static guint8 nalu_sei_pic_timing[] = {
+  0x00, 0x00, 0x01, 0x06, 0x01, 0x02, 0x32, 0x80
+};
+
+static guint8 nalu_chained_sei[] = {
+  0x00, 0x00, 0x01, 0x06, 0x01, 0x02, 0x32, 0x80,
+  0x06, 0x01, 0xc4, 0x80
+};
+
+GST_START_TEST (test_h264_parse_invalid_sei)
+{
+  GstH264ParserResult res;
+  GstH264NalUnit nalu;
+  GstH264NalParser *const parser = gst_h264_nal_parser_new ();
+  const guint8 *buf = nalu_sps_with_vui;
+  GArray *seis = NULL;
+  GstH264SEIMessage *sei;
+
+  /* First try parsing the SEI, which will fail because there's no SPS yet */
+  res =
+      gst_h264_parser_identify_nalu (parser, nalu_sei_pic_timing, 0,
+      sizeof (nalu_sei_pic_timing), &nalu);
+  assert_equals_int (res, GST_H264_PARSER_NO_NAL_END);
+  assert_equals_int (nalu.type, GST_H264_NAL_SEI);
+
+  res = gst_h264_parser_parse_sei (parser, &nalu, &seis);
+  assert_equals_int (res, GST_H264_PARSER_BROKEN_LINK);
+  g_array_free (seis, TRUE);
+
+  /* Inject SPS */
+  res =
+      gst_h264_parser_identify_nalu (parser, buf, 0, sizeof (nalu_sps_with_vui),
+      &nalu);
+  assert_equals_int (res, GST_H264_PARSER_NO_NAL_END);
+  assert_equals_int (nalu.type, GST_H264_NAL_SPS);
+  assert_equals_int (nalu.size, 28);
+
+  res = gst_h264_parser_parse_nal (parser, &nalu);
+  assert_equals_int (res, GST_H264_PARSER_OK);
+
+  /* Parse the SEI again */
+  res =
+      gst_h264_parser_identify_nalu (parser, nalu_sei_pic_timing, 0,
+      sizeof (nalu_sei_pic_timing), &nalu);
+  assert_equals_int (res, GST_H264_PARSER_NO_NAL_END);
+  assert_equals_int (nalu.type, GST_H264_NAL_SEI);
+
+  res = gst_h264_parser_parse_sei (parser, &nalu, &seis);
+  assert_equals_int (res, GST_H264_PARSER_OK);
+  fail_if (seis == NULL);
+  assert_equals_int (seis->len, 1);
+  g_array_free (seis, TRUE);
+
+  /* Parse NALU with 2 chained SEI */
+  res =
+      gst_h264_parser_identify_nalu (parser, nalu_chained_sei, 0,
+      sizeof (nalu_chained_sei), &nalu);
+  assert_equals_int (res, GST_H264_PARSER_NO_NAL_END);
+  assert_equals_int (nalu.type, GST_H264_NAL_SEI);
+
+  res = gst_h264_parser_parse_sei (parser, &nalu, &seis);
+  assert_equals_int (res, GST_H264_PARSER_OK);
+  fail_if (seis == NULL);
+  assert_equals_int (seis->len, 2);
+  sei = &g_array_index (seis, GstH264SEIMessage, 0);
+  assert_equals_int (sei->payloadType, GST_H264_SEI_PIC_TIMING);
+
+  sei = &g_array_index (seis, GstH264SEIMessage, 1);
+  assert_equals_int (sei->payloadType, GST_H264_SEI_RECOVERY_POINT);
+
+  g_array_free (seis, TRUE);
+
+  gst_h264_nal_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h264parser_suite (void)
 {
@@ -240,6 +324,7 @@ h264parser_suite (void)
   tcase_add_test (tc_chain, test_h264_parse_slice_dpa);
   tcase_add_test (tc_chain, test_h264_parse_slice_eoseq_slice);
   tcase_add_test (tc_chain, test_h264_parse_slice_5bytes);
+  tcase_add_test (tc_chain, test_h264_parse_invalid_sei);
 
   return s;
 }
