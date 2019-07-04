@@ -1,5 +1,5 @@
-/* 
- * Copyright 2006 BBC and Fluendo S.A. 
+/*
+ * Copyright 2006 BBC and Fluendo S.A.
  *
  * This library is licensed under 4 different licenses and you
  * can choose to use it under the terms of any one of them. The
@@ -7,7 +7,7 @@
  * license.
  *
  * MPL:
- * 
+ *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -56,17 +56,17 @@
  * Unless otherwise indicated, Source Code is licensed under MIT license.
  * See further explanation attached in License Statement (distributed in the file
  * LICENSE).
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -349,7 +349,7 @@ tsmux_stream_consume (TsMuxStream * stream, guint len)
     g_slice_free (TsMuxStreamBuffer, stream->cur_buffer);
     stream->cur_buffer = NULL;
     /* FIXME: As a hack, for unbounded streams, start a new PES packet for each
-     * incoming packet we receive. This assumes that incoming data is 
+     * incoming packet we receive. This assumes that incoming data is
      * packetised sensibly - ie, every video frame */
     if (stream->cur_pes_payload_size == 0) {
       stream->state = TSMUX_STREAM_STATE_HEADER;
@@ -576,7 +576,7 @@ tsmux_stream_pes_header_length (TsMuxStream * stream)
   packet_len = 6;
 
   if (stream->pi.flags & TSMUX_PACKET_FLAG_PES_FULL_HEADER) {
-    /* For a PES 'full header' we have at least 3 more bytes, 
+    /* For a PES 'full header' we have at least 3 more bytes,
      * and then more based on flags */
     packet_len += 3;
     if (stream->pi.flags & TSMUX_PACKET_FLAG_PES_WRITE_PTS_DTS) {
@@ -585,7 +585,7 @@ tsmux_stream_pes_header_length (TsMuxStream * stream)
       packet_len += 5;
     }
     if (stream->pi.flags & TSMUX_PACKET_FLAG_PES_EXT_STREAMID) {
-      /* Need basic extension flags (1 byte), plus 2 more bytes for the 
+      /* Need basic extension flags (1 byte), plus 2 more bytes for the
        * length + extended stream id */
       packet_len += 3;
     }
@@ -677,7 +677,7 @@ tsmux_stream_write_pes_header (TsMuxStream * stream, guint8 * data)
       flags |= 0x01;            /* Enable PES_extension_flag */
     *data++ = flags;
 
-    /* Header length is the total pes length, 
+    /* Header length is the total pes length,
      * minus the 9 bytes of start codes, flags + hdr_len */
     g_return_if_fail (hdr_len >= 9);
     *data++ = (hdr_len - 9);

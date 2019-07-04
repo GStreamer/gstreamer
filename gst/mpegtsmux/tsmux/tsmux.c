@@ -1,5 +1,5 @@
-/* 
- * Copyright 2006 BBC and Fluendo S.A. 
+/*
+ * Copyright 2006 BBC and Fluendo S.A.
  *
  * This library is licensed under 4 different licenses and you
  * can choose to use it under the terms of any one of them. The
@@ -7,7 +7,7 @@
  * license.
  *
  * MPL:
- * 
+ *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -56,17 +56,17 @@
  * Unless otherwise indicated, Source Code is licensed under MIT license.
  * See further explanation attached in License Statement (distributed in the file
  * LICENSE).
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -90,8 +90,8 @@
 
 #define GST_CAT_DEFAULT gst_base_ts_mux_debug
 
-/* Maximum total data length for a PAT section is 1024 bytes, minus an 
- * 8 byte header, then the length of each program entry is 32 bits, 
+/* Maximum total data length for a PAT section is 1024 bytes, minus an
+ * 8 byte header, then the length of each program entry is 32 bits,
  * then finally a 32 bit CRC. Thus the maximum number of programs in this mux
  * is (1024 - 8 - 4) / 4 = 253 because it only supports single section PATs */
 #define TSMUX_MAX_PROGRAMS 253
@@ -101,7 +101,7 @@
 #define TSMUX_DEFAULT_NETWORK_ID 0x0001
 #define TSMUX_DEFAULT_TS_ID 0x0001
 
-/* HACK: We use a fixed buffering offset for the PCR at the moment - 
+/* HACK: We use a fixed buffering offset for the PCR at the moment -
  * this is the amount 'in advance' of the stream that the PCR sits.
  * 1/8 second atm */
 #define TSMUX_PCR_OFFSET (TSMUX_CLOCK_FREQ / 8)
@@ -738,7 +738,7 @@ tsmux_write_adaptation_field (guint8 * buf,
 
   g_assert (min_length <= TSMUX_PAYLOAD_LENGTH);
 
-  /* Write out all the fields from the packet info only if the 
+  /* Write out all the fields from the packet info only if the
    * user set the flag to request the adaptation field - if the flag
    * isn't set, we're just supposed to write stuffing bytes */
   if (pi->flags & TSMUX_PACKET_FLAG_ADAPTATION) {
@@ -837,7 +837,7 @@ tsmux_write_ts_header (TsMux * mux, guint8 * buf, TsMuxPacketInfo * pi,
   TS_DEBUG ("PID 0x%04x, counter = 0x%01x, %u bytes avail", pi->pid,
       mux->pid_packet_counts[pi->pid] & 0x0f, stream_avail);
 
-  /* 3 bits: 
+  /* 3 bits:
    *   transport_error_indicator
    *   payload_unit_start_indicator
    *   transport_priority: (00)
@@ -898,7 +898,7 @@ tsmux_write_ts_header (TsMux * mux, guint8 * buf, TsMuxPacketInfo * pi,
 
   adaptation_flag |= mux->pid_packet_counts[pi->pid] & 0x0f;
 
-  /* Write the byte of transport_scrambling_control, adaptation_field_control 
+  /* Write the byte of transport_scrambling_control, adaptation_field_control
    * + continuity counter out */
   buf[3] = adaptation_flag;
 

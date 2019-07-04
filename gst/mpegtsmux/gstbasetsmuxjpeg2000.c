@@ -1,5 +1,5 @@
 /* GStreamer JPEG 2000 Parser
- * 
+ *
  * Copyright (C) <2016> Milos Seleceni
  *  @author Milos Seleceni <milos.seleceni@comprimato.com>
  *

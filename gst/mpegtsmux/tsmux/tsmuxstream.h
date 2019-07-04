@@ -1,5 +1,5 @@
-/* 
- * Copyright 2006 BBC and Fluendo S.A. 
+/*
+ * Copyright 2006 BBC and Fluendo S.A.
  *
  * This library is licensed under 4 different licenses and you
  * can choose to use it under the terms of any one of them. The
@@ -7,7 +7,7 @@
  * license.
  *
  * MPL:
- * 
+ *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -56,17 +56,17 @@
  * Unless otherwise indicated, Source Code is licensed under MIT license.
  * See further explanation attached in License Statement (distributed in the file
  * LICENSE).
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
  * the Software without restriction, including without limitation the rights to
  * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
  * of the Software, and to permit persons to whom the Software is furnished to do
  * so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -242,7 +242,7 @@ void 		tsmux_stream_free 		(TsMuxStream *stream);
 
 guint16         tsmux_stream_get_pid            (TsMuxStream *stream);
 
-void 		tsmux_stream_set_buffer_release_func 	(TsMuxStream *stream, 
+void 		tsmux_stream_set_buffer_release_func 	(TsMuxStream *stream,
        							 TsMuxStreamBufferReleaseFunc func);
 
 void 		tsmux_stream_set_get_es_descriptors_func 	(TsMuxStream *stream,
@@ -251,7 +251,7 @@ void 		tsmux_stream_set_get_es_descriptors_func 	(TsMuxStream *stream,
 
 /* Add a new buffer to the pool of available bytes. If pts or dts are not -1, they
  * indicate the PTS or DTS of the first access unit within this packet */
-void 		tsmux_stream_add_data 		(TsMuxStream *stream, guint8 *data, guint len, 
+void 		tsmux_stream_add_data 		(TsMuxStream *stream, guint8 *data, guint len,
        						 void *user_data, gint64 pts, gint64 dts,
                                                  gboolean random_access);
 
