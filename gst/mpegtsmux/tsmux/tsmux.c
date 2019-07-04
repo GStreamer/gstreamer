@@ -660,6 +660,10 @@ tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr)
     return TRUE;
   }
 
+  if (mux->bitrate)
+    GST_BUFFER_PTS (buf) =
+        gst_util_uint64_scale (mux->n_bytes * 8, GST_SECOND, mux->bitrate);
+
   mux->n_bytes += gst_buffer_get_size (buf);
 
   return mux->write_func (buf, mux->write_func_data, pcr);

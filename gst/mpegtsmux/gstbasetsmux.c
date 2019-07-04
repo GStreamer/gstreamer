@@ -1017,7 +1017,8 @@ new_packet_cb (GstBuffer * buf, void *user_data, gint64 new_pcr)
 
   gst_buffer_map (buf, &map, GST_MAP_READWRITE);
 
-  GST_BUFFER_PTS (buf) = mux->last_ts;
+  if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf)))
+    GST_BUFFER_PTS (buf) = mux->last_ts;
 
   /* do common init (flags and streamheaders) */
   new_packet_common_init (mux, buf, map.data, map.size);
