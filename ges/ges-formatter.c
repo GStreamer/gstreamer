@@ -680,3 +680,56 @@ _find_formatter_asset_for_id (const gchar * id)
 
   return asset;
 }
+
+/**
+ * ges_find_formatter_for_uri:
+ *
+ * Get the best formatter for @uri. It tries to find a formatter
+ * compatible with @uri extension, if none is found, it returns the default
+ * formatter asset.
+ *
+ * Returns: (transfer none): The #GESAsset for the best formatter to save to @uri
+ *
+ * Since: 1.18
+ */
+GESAsset *
+ges_find_formatter_for_uri (const gchar * uri)
+{
+  GList *formatter_assets, *tmp;
+  GESAsset *asset = NULL;
+
+  gchar *extension = _get_extension (uri);
+  if (!extension)
+    return ges_formatter_get_default ();
+
+  formatter_assets = g_list_sort (ges_list_assets (GES_TYPE_FORMATTER),
+      (GCompareFunc) _sort_formatters);
+
+  for (tmp = formatter_assets; tmp; tmp = tmp->next) {
+    gint i;
+    gchar **valid_exts =
+        g_strsplit (ges_meta_container_get_string (GES_META_CONTAINER
+            (tmp->data),
+            GES_META_FORMATTER_EXTENSION), ",", -1);
+
+    for (i = 0; valid_exts[i]; i++) {
+      if (!g_strcmp0 (extension, valid_exts[i])) {
+        asset = GES_ASSET (tmp->data);
+        break;
+      }
+    }
+
+    g_strfreev (valid_exts);
+    if (asset)
+      break;
+  }
+  g_free (extension);
+  g_list_free (formatter_assets);
+
+  if (asset) {
+    GST_INFO_OBJECT (asset, "Using for URI %s", uri);
+    return asset;
+  }
+
+  return ges_formatter_get_default ();
+}

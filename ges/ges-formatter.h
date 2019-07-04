@@ -175,6 +175,9 @@ gboolean ges_formatter_save_to_uri      (GESFormatter * formatter,
 GES_API
 GESAsset *ges_formatter_get_default    (void);
 
+GES_API
+GESAsset *ges_find_formatter_for_uri   (const gchar *uri);
+
 G_END_DECLS
 
 #endif /* _GES_FORMATTER */

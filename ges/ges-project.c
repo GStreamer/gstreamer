@@ -1058,7 +1058,7 @@ ges_project_list_assets (GESProject * project, GType filter)
  * @uri: The uri where to save @project and @timeline
  * @formatter_asset: (allow-none): The formatter asset to use or %NULL. If %NULL,
  * will try to save in the same format as the one from which the timeline as been loaded
- * or default to the formatter with highest rank
+ * or default to the best formatter as defined in #ges_find_formatter_for_uri
  * @overwrite: %TRUE to overwrite file if it exists
  * @error: (out) (allow-none): An error to be set in case something wrong happens or %NULL
  *
@@ -1105,8 +1105,9 @@ ges_project_save (GESProject * project, GESTimeline * timeline,
     goto out;
   }
 
-  if (formatter_asset == NULL)
-    formatter_asset = gst_object_ref (ges_formatter_get_default ());
+  if (formatter_asset == NULL) {
+    formatter_asset = gst_object_ref (ges_find_formatter_for_uri (uri));
+  }
 
   formatter = GES_FORMATTER (ges_asset_extract (formatter_asset, error));
   if (formatter == NULL) {
