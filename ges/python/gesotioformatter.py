@@ -85,7 +85,7 @@ if otio is not None:
     GObject.type_register(GESOtioFormatter)
     known_extensions_mimetype_map = [
         ("otio", "xml", "fcpxml"),
-        ("application/otio", "application/xmeml", "application/fcpxml")
+        ("application/vnd.pixar.opentimelineio+json", "application/vnd.apple-xmeml+xml", "application/vnd.apple-fcp+xml")
     ]
 
     extensions = []

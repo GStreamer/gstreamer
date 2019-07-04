@@ -83,6 +83,7 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   uriasset_klass = g_type_class_ref (GES_TYPE_URI_CLIP_ASSET);
 
+  _init_formatter_assets ();
   if (!_ges_uri_asset_ensure_setup (uriasset_klass)) {
     GST_ERROR ("cannot setup uri asset");
     goto failed;
@@ -99,8 +100,6 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   }
   gst_object_unref (nlecomposition_factory);
 
-
-
   /* register clip classes with the system */
 
   g_type_class_ref (GES_TYPE_TEST_CLIP);
@@ -111,13 +110,6 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (GES_TYPE_OVERLAY_TEXT_CLIP);
 
   g_type_class_ref (GES_TYPE_GROUP);
-
-  /* register formatter types with the system */
-#ifndef DISABLE_XPTV
-  g_type_class_ref (GES_TYPE_PITIVI_FORMATTER);
-#endif
-  g_type_class_ref (GES_TYPE_COMMAND_LINE_FORMATTER);
-  g_type_class_ref (GES_TYPE_XML_FORMATTER);
 
   /* Register track elements */
   g_type_class_ref (GES_TYPE_EFFECT);
@@ -209,15 +201,6 @@ ges_deinit (void)
   g_type_class_unref (g_type_class_peek (GES_TYPE_OVERLAY_TEXT_CLIP));
 
   g_type_class_unref (g_type_class_peek (GES_TYPE_GROUP));
-
-  /* register formatter types with the system */
-#ifndef DISABLE_XPTV
-  g_type_class_unref (g_type_class_peek (GES_TYPE_PITIVI_FORMATTER));
-#endif
-
-  g_type_class_unref (g_type_class_peek (GES_TYPE_COMMAND_LINE_FORMATTER));
-  g_type_class_unref (g_type_class_peek (GES_TYPE_XML_FORMATTER));
-
   /* Register track elements */
   g_type_class_unref (g_type_class_peek (GES_TYPE_EFFECT));
 

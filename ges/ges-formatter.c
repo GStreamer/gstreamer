@@ -36,6 +36,10 @@
 #include "ges-formatter.h"
 #include "ges-internal.h"
 #include "ges.h"
+#ifndef DISABLE_XPTV
+#include "ges-pitivi-formatter.h"
+#endif
+
 #ifdef HAS_PYTHON
 #include <Python.h>
 #include "ges-resources.h"
@@ -44,6 +48,7 @@
 GST_DEBUG_CATEGORY_STATIC (ges_formatter_debug);
 #undef GST_CAT_DEFAULT
 #define GST_CAT_DEFAULT ges_formatter_debug
+static gboolean initialized = FALSE;
 
 /* TODO Add a GCancellable somewhere in the API */
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
@@ -477,9 +482,10 @@ ges_formatter_class_register_metas (GESFormatterClass * class,
   class->version = version;
   class->rank = rank;
 
-  if (ges_is_initialized () && g_type_class_peek (G_OBJECT_CLASS_TYPE (class)))
+  if (g_atomic_int_get (&initialized)
+      && g_type_class_peek (G_OBJECT_CLASS_TYPE (class)))
     gst_object_unref (ges_asset_request (G_OBJECT_CLASS_TYPE (class), NULL,
-            NULL));
+      NULL));
 }
 
 /* Main Formatter methods */
@@ -622,12 +628,34 @@ _init_formatter_assets (void)
     g_once_init_leave (&init_debug, TRUE);
   }
 
-  load_python_formatters ();
+  if (g_atomic_int_compare_and_exchange (&initialized, FALSE, TRUE)) {
+    /* register formatter types with the system */
+#ifndef DISABLE_XPTV
+    g_type_class_ref (GES_TYPE_PITIVI_FORMATTER);
+#endif
+    g_type_class_ref (GES_TYPE_COMMAND_LINE_FORMATTER);
+    g_type_class_ref (GES_TYPE_XML_FORMATTER);
 
+    load_python_formatters ();
 
-  formatters = g_type_children (GES_TYPE_FORMATTER, &n_formatters);
-  _list_formatters (formatters, n_formatters);
-  g_free (formatters);
+    formatters = g_type_children (GES_TYPE_FORMATTER, &n_formatters);
+    _list_formatters (formatters, n_formatters);
+    g_free (formatters);
+  }
+}
+
+void
+_deinit_formatter_assets (void)
+{
+  if (g_atomic_int_compare_and_exchange (&initialized, TRUE, FALSE)) {
+
+#ifndef DISABLE_XPTV
+    g_type_class_unref (g_type_class_peek (GES_TYPE_PITIVI_FORMATTER));
+#endif
+
+    g_type_class_unref (g_type_class_peek (GES_TYPE_COMMAND_LINE_FORMATTER));
+    g_type_class_unref (g_type_class_peek (GES_TYPE_XML_FORMATTER));
+  }
 }
 
 static gint

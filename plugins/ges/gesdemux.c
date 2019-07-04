@@ -47,11 +47,6 @@
 GST_DEBUG_CATEGORY_STATIC (gesdemux);
 #define GST_CAT_DEFAULT gesdemux
 
-static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/xges"));
-
 G_DECLARE_FINAL_TYPE (GESDemux, ges_demux, GES, Demux, GESBaseBin);
 
 struct _GESDemux
@@ -78,6 +73,92 @@ enum
 };
 
 static GParamSpec *properties[PROP_LAST];
+
+static GstCaps *
+ges_demux_get_sinkpad_caps ()
+{
+  GList *tmp, *formatters;
+  GstCaps *sinkpad_caps = gst_caps_new_empty ();
+
+  formatters = ges_list_assets (GES_TYPE_FORMATTER);
+  for (tmp = formatters; tmp; tmp = tmp->next) {
+    GstCaps *caps;
+    const gchar *mimetype =
+        ges_meta_container_get_string (GES_META_CONTAINER (tmp->data),
+        GES_META_FORMATTER_MIMETYPE);
+    if (!mimetype)
+      continue;
+
+    caps = gst_caps_from_string (mimetype);
+
+    if (!caps) {
+      GST_INFO_OBJECT (tmp->data,
+          "%s - could not create caps from mimetype: %s",
+          ges_meta_container_get_string (GES_META_CONTAINER (tmp->data),
+              GES_META_FORMATTER_NAME), mimetype);
+
+      continue;
+    }
+
+    gst_caps_append (sinkpad_caps, caps);
+  }
+  g_list_free (formatters);
+
+  return sinkpad_caps;
+}
+
+static gchar *
+ges_demux_get_extension (GstStructure * _struct)
+{
+  GList *tmp, *formatters;
+  gchar *ext = NULL;
+
+  formatters = ges_list_assets (GES_TYPE_FORMATTER);
+  for (tmp = formatters; tmp; tmp = tmp->next) {
+    gchar **extensions_a;
+    gint i, n_exts;
+    GstCaps *caps;
+    const gchar *mimetype =
+        ges_meta_container_get_string (GES_META_CONTAINER (tmp->data),
+        GES_META_FORMATTER_MIMETYPE);
+    const gchar *extensions =
+        ges_meta_container_get_string (GES_META_CONTAINER (tmp->data),
+        GES_META_FORMATTER_EXTENSION);
+    if (!mimetype)
+      continue;
+
+    if (!extensions)
+      continue;
+
+    caps = gst_caps_from_string (mimetype);
+    if (!caps) {
+      GST_INFO_OBJECT (tmp->data,
+          "%s - could not create caps from mimetype: %s",
+          ges_meta_container_get_string (GES_META_CONTAINER (tmp->data),
+              GES_META_FORMATTER_NAME), mimetype);
+
+      continue;
+    }
+
+    extensions_a = g_strsplit (extensions, ",", -1);
+    n_exts = g_strv_length (extensions_a);
+    for (i = 0; i < gst_caps_get_size (caps) && i < n_exts; i++) {
+      GstStructure *structure = gst_caps_get_structure (caps, i);
+
+      if (gst_structure_has_name (_struct, gst_structure_get_name (structure))) {
+        ext = g_strdup (extensions_a[i]);
+        g_strfreev (extensions_a);
+        gst_caps_unref (caps);
+        goto done;
+      }
+    }
+    g_strfreev (extensions_a);
+  }
+done:
+  g_list_free (formatters);
+
+  return ext;
+}
 
 static void
 ges_demux_get_property (GObject * object, guint property_id,
@@ -110,6 +191,7 @@ ges_demux_class_init (GESDemuxClass * self_class)
 {
   GObjectClass *gclass = G_OBJECT_CLASS (self_class);
   GstElementClass *gstelement_klass = GST_ELEMENT_CLASS (self_class);
+  GstCaps *sinkpad_caps = ges_demux_get_sinkpad_caps ();
 
   GST_DEBUG_CATEGORY_INIT (gesdemux, "gesdemux", 0, "ges demux element");
 
@@ -128,13 +210,16 @@ ges_demux_class_init (GESDemuxClass * self_class)
       GES_TYPE_TIMELINE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_override_property (gclass, PROP_TIMELINE, "timeline");
 
-  gst_element_class_add_pad_template (gstelement_klass,
-      gst_static_pad_template_get (&sink_template));
   gst_element_class_set_static_metadata (gstelement_klass,
       "GStreamer Editing Services based 'demuxer'",
       "Codec/Demux/Editing",
       "Demuxer for complex timeline file formats using GES.",
       "Thibault Saunier <tsaunier@igalia.com");
+
+  gst_element_class_add_pad_template (gstelement_klass,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          sinkpad_caps));
+  gst_caps_unref (sinkpad_caps);
 }
 
 typedef struct
@@ -455,10 +540,22 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       xges_buffer = gst_adapter_take_buffer (self->input_adapter, available);
       if (gst_buffer_map (xges_buffer, &map, GST_MAP_READ)) {
+        gint f;
         GError *err = NULL;
+        gchar *template = NULL;
         gchar *filename = NULL, *uri = NULL;
-        GError *error = NULL;
-        gint f = g_file_open_tmp (NULL, &filename, &err);
+        GstCaps *caps = gst_pad_get_current_caps (pad);
+        GstStructure *structure = gst_caps_get_structure (caps, 0);
+        gchar *ext = ges_demux_get_extension (structure);
+
+        gst_caps_unref (caps);
+        if (ext) {
+          template = g_strdup_printf ("XXXXXX.%s", ext);
+          g_free (ext);
+        }
+
+        f = g_file_open_tmp (template, &filename, &err);
+        g_free (template);
 
         if (err) {
           GST_ELEMENT_ERROR (self, RESOURCE, OPEN_WRITE,
@@ -480,8 +577,8 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         uri = gst_filename_to_uri (filename, NULL);
         GST_INFO_OBJECT (self, "Pre loading the timeline.");
 
-        ges_demux_create_timeline (self, uri, &error);
-        if (error)
+        ges_demux_create_timeline (self, uri, &err);
+        if (err)
           goto error;
 
       done:
@@ -493,9 +590,9 @@ ges_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       error:
         ret = FALSE;
         gst_element_post_message (GST_ELEMENT (self),
-            gst_message_new_error (parent, error,
+            gst_message_new_error (parent, err,
                 "Could not create timeline from description"));
-        g_clear_error (&error);
+        g_clear_error (&err);
 
         goto done;
       } else {
@@ -528,7 +625,10 @@ static void
 ges_demux_init (GESDemux * self)
 {
   ges_init ();
-  self->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
+
+  self->sinkpad =
+      gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
+          (self), "sink"), "sink");
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->input_adapter = gst_adapter_new ();

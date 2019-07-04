@@ -144,8 +144,6 @@ typedef struct
   GESAsset *asset;
 } GESAssetCacheEntry;
 
-/* Also protect all the entries in the cache */
-G_LOCK_DEFINE_STATIC (asset_cache_lock);
 /* We are mapping entries by types and ID, such as:
  *
  * {
@@ -169,8 +167,10 @@ G_LOCK_DEFINE_STATIC (asset_cache_lock);
  * different extractable types.
  **/
 static GHashTable *type_entries_table = NULL;
-#define LOCK_CACHE   (G_LOCK (asset_cache_lock))
-#define UNLOCK_CACHE (G_UNLOCK (asset_cache_lock))
+/* Protect all the entries in the cache */
+static GRecMutex asset_cache_lock;
+#define LOCK_CACHE   (g_rec_mutex_lock (&asset_cache_lock))
+#define UNLOCK_CACHE (g_rec_mutex_unlock (&asset_cache_lock))
 
 static gchar *
 _check_and_update_parameters (GType * extractable_type, const gchar * id,
@@ -470,12 +470,39 @@ _extractable_type_name (GType type)
   }
 }
 
+static void
+ges_asset_cache_init_unlocked (void)
+{
+  if (type_entries_table)
+    return;
+
+  type_entries_table = g_hash_table_new_full (g_str_hash, g_str_equal,
+      g_free, (GDestroyNotify) g_hash_table_unref);
+
+  _init_formatter_assets ();
+  _init_standard_transition_assets ();
+}
+
+
+/* WITH LOCK_CACHE */
+static GHashTable *
+_get_type_entries ()
+{
+  if (type_entries_table)
+    return type_entries_table;
+
+  ges_asset_cache_init_unlocked ();
+
+  return type_entries_table;
+}
+
+/* WITH LOCK_CACHE */
 static inline GESAssetCacheEntry *
 _lookup_entry (GType extractable_type, const gchar * id)
 {
   GHashTable *entries_table;
 
-  entries_table = g_hash_table_lookup (type_entries_table,
+  entries_table = g_hash_table_lookup (_get_type_entries (),
       _extractable_type_name (extractable_type));
   if (entries_table)
     return g_hash_table_lookup (entries_table, id);
@@ -608,13 +635,13 @@ ges_asset_cache_put (GESAsset * asset, GTask * task)
   if (!(entry = _lookup_entry (extractable_type, asset_id))) {
     GHashTable *entries_table;
 
-    entries_table = g_hash_table_lookup (type_entries_table,
+    entries_table = g_hash_table_lookup (_get_type_entries (),
         _extractable_type_name (extractable_type));
     if (entries_table == NULL) {
       entries_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
           _free_entries);
 
-      g_hash_table_insert (type_entries_table,
+      g_hash_table_insert (_get_type_entries (),
           g_strdup (_extractable_type_name (extractable_type)), entries_table);
     }
 
@@ -637,18 +664,20 @@ ges_asset_cache_put (GESAsset * asset, GTask * task)
 void
 ges_asset_cache_init (void)
 {
-  type_entries_table = g_hash_table_new_full (g_str_hash, g_str_equal,
-      g_free, (GDestroyNotify) g_hash_table_unref);
-
-  _init_formatter_assets ();
-  _init_standard_transition_assets ();
+  LOCK_CACHE;
+  ges_asset_cache_init_unlocked ();
+  UNLOCK_CACHE;
 }
 
 void
 ges_asset_cache_deinit (void)
 {
+  _deinit_formatter_assets ();
+
+  LOCK_CACHE;
   g_hash_table_destroy (type_entries_table);
   type_entries_table = NULL;
+  UNLOCK_CACHE;
 }
 
 gboolean
@@ -750,17 +779,21 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
     GHashTable *entries_table;
     GESAssetCacheEntry *entry;
 
-    entries_table = g_hash_table_lookup (type_entries_table,
+    LOCK_CACHE;
+    entries_table = g_hash_table_lookup (_get_type_entries (),
         _extractable_type_name (proxy->priv->extractable_type));
     entry = g_hash_table_find (entries_table, (GHRFunc) _lookup_proxied_asset,
         (gpointer) ges_asset_get_id (proxy));
 
     if (!entry) {
+      UNLOCK_CACHE;
       GST_DEBUG_OBJECT (asset, "Not proxying any asset %s", proxy->priv->id);
       return FALSE;
     }
 
     asset = entry->asset;
+    UNLOCK_CACHE;
+
     while (asset->priv->proxies)
       asset = asset->priv->proxies->data;
 
@@ -914,7 +947,7 @@ ges_asset_set_id (GESAsset * asset, const gchar * id)
   }
 
   LOCK_CACHE;
-  entries = g_hash_table_lookup (type_entries_table,
+  entries = g_hash_table_lookup (_get_type_entries (),
       _extractable_type_name (asset->priv->extractable_type));
 
   g_return_if_fail (g_hash_table_lookup_extended (entries, priv->id, &orig_id,
@@ -1369,7 +1402,7 @@ ges_list_assets (GType filter)
   g_return_val_if_fail (g_type_is_a (filter, GES_TYPE_EXTRACTABLE), NULL);
 
   LOCK_CACHE;
-  g_hash_table_iter_init (&types_iter, type_entries_table);
+  g_hash_table_iter_init (&types_iter, _get_type_entries ());
   while (g_hash_table_iter_next (&types_iter, &typename, &assets)) {
     if (g_type_is_a (filter, g_type_from_name ((gchar *) typename)) == FALSE)
       continue;
