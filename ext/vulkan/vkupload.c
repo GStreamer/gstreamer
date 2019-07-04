@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "vkupload.h"
-#include "vktrash.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_upload);
 #define GST_CAT_DEFAULT gst_debug_vulkan_upload
@@ -379,7 +378,7 @@ struct BufferToImageUpload
   gboolean pool_active;
 
   GstVulkanCommandPool *cmd_pool;
-  GList *trash_list;
+  GstVulkanTrashList *trash_list;
 };
 
 static gpointer
@@ -388,6 +387,7 @@ _buffer_to_image_new_impl (GstVulkanUpload * upload)
   struct BufferToImageUpload *raw = g_new0 (struct BufferToImageUpload, 1);
 
   raw->upload = upload;
+  raw->trash_list = gst_vulkan_trash_fence_list_new ();
 
   return raw;
 }
@@ -608,11 +608,11 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     if (gst_vulkan_error_to_g_error (err, &error, "vkQueueSubmit") < 0)
       goto error;
 
-    raw->trash_list = g_list_prepend (raw->trash_list,
+    gst_vulkan_trash_list_add (raw->trash_list,
         gst_vulkan_trash_new_free_command_buffer (fence, raw->cmd_pool, cmd));
   }
 
-  raw->trash_list = gst_vulkan_trash_list_gc (raw->trash_list);
+  gst_vulkan_trash_list_gc (raw->trash_list);
 
   ret = GST_FLOW_OK;
 
@@ -651,6 +651,7 @@ _buffer_to_image_free (gpointer impl)
   if (!gst_vulkan_trash_list_wait (raw->trash_list, -1))
     GST_WARNING_OBJECT (raw->upload,
         "Failed to wait for all fences to complete " "before shutting down");
+  gst_object_unref (raw->trash_list);
   raw->trash_list = NULL;
 
   g_free (impl);
@@ -687,7 +688,7 @@ struct RawToImageUpload
   gboolean in_pool_active;
 
   GstVulkanCommandPool *cmd_pool;
-  GList *trash_list;
+  GstVulkanTrashList *trash_list;
 };
 
 static gpointer
@@ -696,6 +697,7 @@ _raw_to_image_new_impl (GstVulkanUpload * upload)
   struct RawToImageUpload *raw = g_new0 (struct RawToImageUpload, 1);
 
   raw->upload = upload;
+  raw->trash_list = gst_vulkan_trash_fence_list_new ();
 
   return raw;
 }
@@ -982,11 +984,11 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     if (gst_vulkan_error_to_g_error (err, &error, "vkQueueSubmit") < 0)
       goto error;
 
-    raw->trash_list = g_list_prepend (raw->trash_list,
+    gst_vulkan_trash_list_add (raw->trash_list,
         gst_vulkan_trash_new_free_command_buffer (fence, raw->cmd_pool, cmd));
   }
 
-  raw->trash_list = gst_vulkan_trash_list_gc (raw->trash_list);
+  gst_vulkan_trash_list_gc (raw->trash_list);
 
   ret = GST_FLOW_OK;
 
@@ -1037,6 +1039,7 @@ _raw_to_image_free (gpointer impl)
   if (!gst_vulkan_trash_list_wait (raw->trash_list, -1))
     GST_WARNING_OBJECT (raw->upload,
         "Failed to wait for all fences to complete " "before shutting down");
+  gst_object_unref (raw->trash_list);
   raw->trash_list = NULL;
 
   g_free (impl);

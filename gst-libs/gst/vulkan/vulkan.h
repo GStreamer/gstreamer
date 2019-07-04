@@ -41,5 +41,6 @@
 #include <gst/vulkan/gstvkimagebufferpool.h>
 #include <gst/vulkan/gstvkutils.h>
 #include <gst/vulkan/gstvkcommandpool.h>
+#include <gst/vulkan/gstvktrash.h>
 
 #endif /* __GST_VULKAN_H__ */

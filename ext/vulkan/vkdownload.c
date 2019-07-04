@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "vkdownload.h"
-#include "vktrash.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_download);
 #define GST_CAT_DEFAULT gst_debug_vulkan_download
@@ -86,7 +85,7 @@ struct ImageToRawDownload
   gboolean pool_active;
 
   GstVulkanCommandPool *cmd_pool;
-  GList *trash_list;
+  GstVulkanTrashList *trash_list;
 };
 
 static gpointer
@@ -95,6 +94,7 @@ _image_to_raw_new_impl (GstVulkanDownload * download)
   struct ImageToRawDownload *raw = g_new0 (struct ImageToRawDownload, 1);
 
   raw->download = download;
+  raw->trash_list = gst_vulkan_trash_fence_list_new ();
 
   return raw;
 }
@@ -315,7 +315,7 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     if (gst_vulkan_error_to_g_error (err, &error, "vkQueueSubmit") < 0)
       goto error;
 
-    raw->trash_list = g_list_prepend (raw->trash_list,
+    gst_vulkan_trash_list_add (raw->trash_list,
         gst_vulkan_trash_new_free_command_buffer (fence, raw->cmd_pool, cmd));
   }
 
@@ -323,7 +323,7 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
    * Need to have the buffer gst_memory_map() wait for this fence before
    * allowing access */
   gst_vulkan_trash_list_wait (raw->trash_list, -1);
-  raw->trash_list = NULL;
+  gst_vulkan_trash_list_gc (raw->trash_list);
 
   ret = GST_FLOW_OK;
 
@@ -360,6 +360,9 @@ _image_to_raw_free (gpointer impl)
     gst_object_unref (raw->cmd_pool);
     raw->cmd_pool = NULL;
   }
+
+  gst_object_unref (raw->trash_list);
+  raw->trash_list = NULL;
 
   g_free (impl);
 }

@@ -17,6 +17,7 @@ vulkan_sources = [
   'gstvkinstance.c',
   'gstvkmemory.c',
   'gstvkqueue.c',
+  'gstvktrash.c',
   'gstvkutils.c',
   'gstvkwindow.c',
 ]
@@ -36,6 +37,7 @@ vulkan_headers = [
   'gstvkinstance.h',
   'gstvkmemory.h',
   'gstvkqueue.h',
+  'gstvktrash.h',
   'gstvkutils.h',
   'gstvkwindow.h',
   'vulkan-prelude.h',

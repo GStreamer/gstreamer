@@ -71,7 +71,7 @@ struct _GstVulkanFullScreenRender
   GstMemory            *vertices;
   GstMemory            *indices;
 
-  GList                *trash_list;
+  GstVulkanTrashList   *trash_list;
   GstVulkanFence       *last_fence;
 };
 

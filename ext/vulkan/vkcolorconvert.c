@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "vkcolorconvert.h"
-#include "vktrash.h"
 #include "vkshader.h"
 #include "shaders/identity.vert.h"
 #include "shaders/swizzle.frag.h"
@@ -1532,13 +1531,13 @@ gst_vulkan_color_convert_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
 
   if (render->last_fence) {
     if (conv->descriptor_pool)
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
               (render->last_fence), conv->descriptor_pool));
     conv->descriptor_set = NULL;
     conv->descriptor_pool = NULL;
     if (conv->uniform)
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
               (render->last_fence), (GstMiniObject *) conv->uniform));
     conv->uniform = NULL;
@@ -1579,18 +1578,18 @@ gst_vulkan_color_convert_stop (GstBaseTransform * bt)
   if (render->device) {
     if (render->last_fence) {
       if (conv->descriptor_pool)
-        render->trash_list = g_list_prepend (render->trash_list,
+        gst_vulkan_trash_list_add (render->trash_list,
             gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
                 (render->last_fence), conv->descriptor_pool));
       conv->descriptor_set = NULL;
       conv->descriptor_pool = NULL;
       if (conv->sampler)
-        render->trash_list = g_list_prepend (render->trash_list,
+        gst_vulkan_trash_list_add (render->trash_list,
             gst_vulkan_trash_new_free_sampler (gst_vulkan_fence_ref
                 (render->last_fence), conv->sampler));
       conv->sampler = NULL;
       if (conv->uniform)
-        render->trash_list = g_list_prepend (render->trash_list,
+        gst_vulkan_trash_list_add (render->trash_list,
             gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref
                 (render->last_fence), (GstMiniObject *) conv->uniform));
       conv->uniform = NULL;
@@ -1907,8 +1906,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
           out_img_mems[i]->barrier.image_layout, 1, &blit, VK_FILTER_LINEAR);
 
       /* XXX: try to reuse this image later */
-      render->trash_list =
-          g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_mini_object_unref (gst_vulkan_fence_ref (fence),
               (GstMiniObject *) render_img_mems[i]));
     }
@@ -1918,11 +1916,10 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   if (gst_vulkan_error_to_g_error (err, &error, "vkEndCommandBuffer") < 0)
     goto error;
 
-  render->trash_list =
-      g_list_prepend (render->trash_list,
+  gst_vulkan_trash_list_add (render->trash_list,
       gst_vulkan_trash_new_free_framebuffer (gst_vulkan_fence_ref (fence),
           framebuffer));
-  render->trash_list = g_list_prepend (render->trash_list,
+  gst_vulkan_trash_list_add (render->trash_list,
       gst_vulkan_trash_new_free_command_buffer (gst_vulkan_fence_ref (fence),
           conv->cmd_pool, cmd));
 

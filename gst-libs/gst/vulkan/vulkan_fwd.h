@@ -74,6 +74,11 @@ typedef struct _GstVulkanBarrierMemoryInfo GstVulkanBarrierMemoryInfo;
 typedef struct _GstVulkanBarrierBufferInfo GstVulkanBarrierBufferInfo;
 typedef struct _GstVulkanBarrierImageInfo GstVulkanBarrierImageInfo;
 
+typedef struct _GstVulkanTrashList GstVulkanTrashList;
+typedef struct _GstVulkanTrashListClass GstVulkanTrashListClass;
+
+typedef struct _GstVulkanTrash GstVulkanTrash;
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_FWD_H__ */

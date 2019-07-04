@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "vkimageidentity.h"
-#include "vktrash.h"
 #include "vkshader.h"
 
 GST_DEBUG_CATEGORY (gst_debug_vulkan_full_screen_render);
@@ -564,25 +563,25 @@ gst_vulkan_full_screen_render_set_caps (GstBaseTransform * bt,
 
   if (render->last_fence) {
     if (render->descriptor_set_layout) {
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_descriptor_set_layout (gst_vulkan_fence_ref
               (render->last_fence), render->descriptor_set_layout));
       render->descriptor_set_layout = NULL;
     }
     if (render->pipeline_layout) {
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_pipeline_layout (gst_vulkan_fence_ref
               (render->last_fence), render->pipeline_layout));
       render->pipeline_layout = NULL;
     }
     if (render->render_pass) {
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_render_pass (gst_vulkan_fence_ref
               (render->last_fence), render->render_pass));
       render->render_pass = NULL;
     }
     if (render->graphics_pipeline) {
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_pipeline (gst_vulkan_fence_ref
               (render->last_fence), render->graphics_pipeline));
       render->graphics_pipeline = NULL;
@@ -757,6 +756,8 @@ gst_vulkan_full_screen_render_start (GstBaseTransform * bt)
   if (!_create_vertex_buffers (render))
     return FALSE;
 
+  render->trash_list = gst_vulkan_trash_fence_list_new ();
+
   return TRUE;
 }
 
@@ -767,19 +768,19 @@ gst_vulkan_full_screen_render_stop (GstBaseTransform * bt)
 
   if (render->device) {
     if (render->last_fence) {
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_pipeline (gst_vulkan_fence_ref
               (render->last_fence), render->graphics_pipeline));
       render->graphics_pipeline = NULL;
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_pipeline_layout (gst_vulkan_fence_ref
               (render->last_fence), render->pipeline_layout));
       render->pipeline_layout = NULL;
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_render_pass (gst_vulkan_fence_ref
               (render->last_fence), render->render_pass));
       render->render_pass = NULL;
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_descriptor_set_layout (gst_vulkan_fence_ref
               (render->last_fence), render->descriptor_set_layout));
       render->descriptor_set_layout = NULL;
@@ -806,6 +807,7 @@ gst_vulkan_full_screen_render_stop (GstBaseTransform * bt)
     if (!gst_vulkan_trash_list_wait (render->trash_list, -1))
       GST_WARNING_OBJECT (render,
           "Failed to wait for all resources to be freed");
+    gst_object_unref (render->trash_list);
     render->trash_list = NULL;
 
     if (render->vertices)
@@ -914,7 +916,7 @@ gst_vulkan_full_screen_render_submit (GstVulkanFullScreenRender * render,
   if (gst_vulkan_error_to_g_error (err, &error, "vkQueueSubmit") < 0)
     goto error;
 
-  render->trash_list = gst_vulkan_trash_list_gc (render->trash_list);
+  gst_vulkan_trash_list_gc (render->trash_list);
 
   gst_vulkan_fence_unref (fence);
 

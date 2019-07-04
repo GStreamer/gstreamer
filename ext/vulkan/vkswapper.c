@@ -25,7 +25,6 @@
 #include <string.h>
 
 #include "vkswapper.h"
-#include "vktrash.h"
 
 #define GST_CAT_DEFAULT gst_vulkan_swapper_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
@@ -38,7 +37,7 @@ struct _GstVulkanSwapperPrivate
 {
   GMutex render_lock;
 
-  GList *trash_list;
+  GstVulkanTrashList *trash_list;
 
   /* source sizes accounting for all aspect ratios */
   guint dar_width;
@@ -435,6 +434,7 @@ gst_vulkan_swapper_finalize (GObject * object)
   if (!gst_vulkan_trash_list_wait (swapper->priv->trash_list, -1))
     GST_WARNING_OBJECT (swapper, "Failed to wait for all fences to complete "
         "before shutting down");
+  gst_object_unref (swapper->priv->trash_list);
   swapper->priv->trash_list = NULL;
 
   if (swapper->swap_chain_images) {
@@ -497,6 +497,8 @@ gst_vulkan_swapper_init (GstVulkanSwapper * swapper)
   swapper->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   swapper->par_n = DEFAULT_PIXEL_ASPECT_RATIO_N;
   swapper->par_d = DEFAULT_PIXEL_ASPECT_RATIO_D;
+
+  swapper->priv->trash_list = gst_vulkan_trash_fence_list_new ();
 }
 
 static void
@@ -1064,8 +1066,7 @@ _render_buffer_unlocked (GstVulkanSwapper * swapper,
   guint32 swap_idx;
   VkResult err, present_err = VK_SUCCESS;
 
-  swapper->priv->trash_list =
-      gst_vulkan_trash_list_gc (swapper->priv->trash_list);
+  gst_vulkan_trash_list_gc (swapper->priv->trash_list);
 
   if (!buffer) {
     g_set_error (error, GST_VULKAN_ERROR,
@@ -1147,10 +1148,10 @@ reacquire:
     if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0)
       goto error;
 
-    swapper->priv->trash_list = g_list_prepend (swapper->priv->trash_list,
+    gst_vulkan_trash_list_add (swapper->priv->trash_list,
         gst_vulkan_trash_new_free_command_buffer (gst_vulkan_fence_ref (fence),
             swapper->cmd_pool, cmd));
-    swapper->priv->trash_list = g_list_prepend (swapper->priv->trash_list,
+    gst_vulkan_trash_list_add (swapper->priv->trash_list,
         gst_vulkan_trash_new_free_semaphore (fence, acquire_semaphore));
 
     cmd = VK_NULL_HANDLE;
@@ -1204,7 +1205,7 @@ reacquire:
     if (gst_vulkan_error_to_g_error (err, error, "vkQueueSubmit") < 0)
       goto error;
 
-    swapper->priv->trash_list = g_list_prepend (swapper->priv->trash_list,
+    gst_vulkan_trash_list_add (swapper->priv->trash_list,
         gst_vulkan_trash_new_free_semaphore (fence, present_semaphore));
     fence = NULL;
   }

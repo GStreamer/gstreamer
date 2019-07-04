@@ -17,7 +17,6 @@ vulkan_sources = [
   'vksink.c',
   'vkshader.c',
   'vkswapper.c',
-  'vktrash.c',
   'vkupload.c',
 ]
 

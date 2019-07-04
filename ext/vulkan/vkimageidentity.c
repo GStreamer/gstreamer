@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "vkimageidentity.h"
-#include "vktrash.h"
 #include "vkshader.h"
 #include "shaders/identity.vert.h"
 #include "shaders/identity.frag.h"
@@ -355,7 +354,7 @@ gst_vulkan_image_identity_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
     return FALSE;
 
   if (render->last_fence) {
-    render->trash_list = g_list_prepend (render->trash_list,
+    gst_vulkan_trash_list_add (render->trash_list,
         gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
             (render->last_fence), vk_identity->descriptor_pool));
     vk_identity->descriptor_set = NULL;
@@ -438,12 +437,12 @@ gst_vulkan_image_identity_stop (GstBaseTransform * bt)
 
   if (render->device) {
     if (render->last_fence) {
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_descriptor_pool (gst_vulkan_fence_ref
               (render->last_fence), vk_identity->descriptor_pool));
       vk_identity->descriptor_set = NULL;
       vk_identity->descriptor_pool = NULL;
-      render->trash_list = g_list_prepend (render->trash_list,
+      gst_vulkan_trash_list_add (render->trash_list,
           gst_vulkan_trash_new_free_sampler (gst_vulkan_fence_ref
               (render->last_fence), vk_identity->sampler));
       vk_identity->sampler = NULL;
@@ -658,11 +657,10 @@ gst_vulkan_image_identity_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   if (gst_vulkan_error_to_g_error (err, &error, "vkEndCommandBuffer") < 0)
     goto error;
 
-  render->trash_list =
-      g_list_prepend (render->trash_list,
+  gst_vulkan_trash_list_add (render->trash_list,
       gst_vulkan_trash_new_free_framebuffer (gst_vulkan_fence_ref (fence),
           framebuffer));
-  render->trash_list = g_list_prepend (render->trash_list,
+  gst_vulkan_trash_list_add (render->trash_list,
       gst_vulkan_trash_new_free_command_buffer (gst_vulkan_fence_ref (fence),
           vk_identity->cmd_pool, cmd));
 
