@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _VK_SWAPPER_H_
-#define _VK_SWAPPER_H_
+#ifndef __GST_VULKAN_SWAPPER_H__
+#define __GST_VULKAN_SWAPPER_H__
 
 #include <gst/video/video.h>
 
@@ -33,6 +33,7 @@ G_BEGIN_DECLS
 #define GST_IS_VULKAN_SWAPPER(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_VULKAN_SWAPPER))
 #define GST_IS_VULKAN_SWAPPER_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_VULKAN_SWAPPER))
 #define GST_VULKAN_SWAPPER_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VULKAN_SWAPPER, GstVulkanSwapperClass))
+GST_VULKAN_API
 GType gst_vulkan_swapper_get_type       (void);
 
 #define GST_VULKAN_SWAPPER_VIDEO_FORMATS " { RGBA, BGRA, RGB, BGR } "
@@ -50,45 +51,6 @@ struct _GstVulkanSwapper
   GstVulkanQueue *queue;
   GstVulkanCommandPool *cmd_pool;
 
-  VkSurfaceKHR    surface;
-
-  VkSurfaceCapabilitiesKHR surf_props;
-  VkSurfaceFormatKHR *surf_formats;
-  guint32 n_surf_formats;
-  VkPresentModeKHR *surf_present_modes;
-  guint32 n_surf_present_modes;
-
-  VkSwapchainKHR swap_chain;
-  GstVulkanImageMemory **swap_chain_images;
-  guint32 n_swap_chain_images;
-
-  GstCaps *caps;
-  GstVideoInfo v_info;
-
-  PFN_vkGetPhysicalDeviceSurfaceSupportKHR GetPhysicalDeviceSurfaceSupportKHR;
-  PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR GetPhysicalDeviceSurfaceCapabilitiesKHR;
-  PFN_vkGetPhysicalDeviceSurfaceFormatsKHR GetPhysicalDeviceSurfaceFormatsKHR;
-  PFN_vkGetPhysicalDeviceSurfacePresentModesKHR GetPhysicalDeviceSurfacePresentModesKHR;
-  PFN_vkCreateSwapchainKHR CreateSwapchainKHR;
-  PFN_vkDestroySwapchainKHR DestroySwapchainKHR;
-  PFN_vkGetSwapchainImagesKHR GetSwapchainImagesKHR;
-  PFN_vkAcquireNextImageKHR AcquireNextImageKHR;
-  PFN_vkQueuePresentKHR QueuePresentKHR;
-
-  /* <private> */
-  /* runtime variables */
-  gint to_quit;
-  GstBuffer *current_buffer;
-
-  /* signal handlers */
-  gulong close_id;
-  gulong draw_id;
-
-  /* properties */
-  gboolean force_aspect_ratio;
-  gint par_n;
-  gint par_d;
-
   GstVulkanSwapperPrivate *priv;
 };
 
@@ -97,21 +59,26 @@ struct _GstVulkanSwapperClass
   GstObjectClass parent_class;
 };
 
+GST_VULKAN_API
 GstVulkanSwapper *  gst_vulkan_swapper_new                      (GstVulkanDevice * device,
                                                                  GstVulkanWindow * window);
 
+GST_VULKAN_API
 gboolean            gst_vulkan_swapper_choose_queue             (GstVulkanSwapper * swapper,
                                                                  GstVulkanQueue * available_queue,
                                                                  GError ** error);
+GST_VULKAN_API
 GstCaps *           gst_vulkan_swapper_get_supported_caps       (GstVulkanSwapper * swapper,
                                                                  GError ** error);
+GST_VULKAN_API
 gboolean            gst_vulkan_swapper_set_caps                 (GstVulkanSwapper * swapper,
                                                                  GstCaps * caps,
                                                                  GError ** error);
+GST_VULKAN_API
 gboolean            gst_vulkan_swapper_render_buffer            (GstVulkanSwapper * swapper,
                                                                  GstBuffer * buffer,
                                                                  GError ** error);
 
 G_END_DECLS
 
-#endif /* _VK_INSTANCE_H_ */
+#endif /* __GST_VULKAN_SWAPPER_H__ */

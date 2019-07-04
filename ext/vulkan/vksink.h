@@ -25,7 +25,6 @@
 #include <gst/video/gstvideosink.h>
 #include <gst/video/video.h>
 #include <gst/vulkan/vulkan.h>
-#include "vkswapper.h"
 
 G_BEGIN_DECLS
 

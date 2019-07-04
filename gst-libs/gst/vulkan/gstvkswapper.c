@@ -24,7 +24,7 @@
 
 #include <string.h>
 
-#include "vkswapper.h"
+#include "gstvkswapper.h"
 
 #define GST_CAT_DEFAULT gst_vulkan_swapper_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
@@ -35,6 +35,47 @@ GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 struct _GstVulkanSwapperPrivate
 {
+  VkSurfaceKHR surface;
+
+  VkSurfaceCapabilitiesKHR surf_props;
+  VkSurfaceFormatKHR *surf_formats;
+  guint32 n_surf_formats;
+  VkPresentModeKHR *surf_present_modes;
+  guint32 n_surf_present_modes;
+
+  VkSwapchainKHR swap_chain;
+  GstVulkanImageMemory **swap_chain_images;
+  guint32 n_swap_chain_images;
+
+  GstCaps *caps;
+  GstVideoInfo v_info;
+
+  PFN_vkGetPhysicalDeviceSurfaceSupportKHR GetPhysicalDeviceSurfaceSupportKHR;
+    PFN_vkGetPhysicalDeviceSurfaceCapabilitiesKHR
+      GetPhysicalDeviceSurfaceCapabilitiesKHR;
+  PFN_vkGetPhysicalDeviceSurfaceFormatsKHR GetPhysicalDeviceSurfaceFormatsKHR;
+    PFN_vkGetPhysicalDeviceSurfacePresentModesKHR
+      GetPhysicalDeviceSurfacePresentModesKHR;
+  PFN_vkCreateSwapchainKHR CreateSwapchainKHR;
+  PFN_vkDestroySwapchainKHR DestroySwapchainKHR;
+  PFN_vkGetSwapchainImagesKHR GetSwapchainImagesKHR;
+  PFN_vkAcquireNextImageKHR AcquireNextImageKHR;
+  PFN_vkQueuePresentKHR QueuePresentKHR;
+
+  /* <private> */
+  /* runtime variables */
+  gint to_quit;
+  GstBuffer *current_buffer;
+
+  /* signal handlers */
+  gulong close_id;
+  gulong draw_id;
+
+  /* properties */
+  gboolean force_aspect_ratio;
+  gint par_n;
+  gint par_d;
+
   GMutex render_lock;
 
   GstVulkanTrashList *trash_list;
@@ -76,8 +117,8 @@ _get_function_table (GstVulkanSwapper * swapper)
   }
 #define GET_PROC_ADDRESS_REQUIRED(obj, type, name) \
   G_STMT_START { \
-    obj->G_PASTE (, name) = G_PASTE(G_PASTE(gst_vulkan_, type), _get_proc_address) (type, "vk" G_STRINGIFY(name)); \
-    if (!obj->G_PASTE(, name)) { \
+    obj->priv->G_PASTE (, name) = G_PASTE(G_PASTE(gst_vulkan_, type), _get_proc_address) (type, "vk" G_STRINGIFY(name)); \
+    if (!obj->priv->G_PASTE(, name)) { \
       GST_ERROR_OBJECT (obj, "Failed to find required function vk" G_STRINGIFY(name)); \
       gst_object_unref (instance); \
       return FALSE; \
@@ -190,8 +231,8 @@ _add_vk_format_to_list (GValue * list, VkFormat format)
 static gboolean
 _vulkan_swapper_ensure_surface (GstVulkanSwapper * swapper, GError ** error)
 {
-  if (!swapper->surface) {
-    if (!(swapper->surface =
+  if (!swapper->priv->surface) {
+    if (!(swapper->priv->surface =
             gst_vulkan_window_get_surface (swapper->window, error))) {
       return FALSE;
     }
@@ -223,8 +264,8 @@ _choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
     VkBool32 physical_device_supported;
 
     err =
-        data->swapper->GetPhysicalDeviceSurfaceSupportKHR (gpu, queue->index,
-        data->swapper->surface, &physical_device_supported);
+        data->swapper->priv->GetPhysicalDeviceSurfaceSupportKHR (gpu,
+        queue->index, data->swapper->priv->surface, &physical_device_supported);
     if (gst_vulkan_error_to_g_error (err, &error,
             "GetPhysicalDeviceSurfaceSupport") < 0) {
       GST_DEBUG_OBJECT (data->swapper,
@@ -325,7 +366,7 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
   VkPhysicalDevice gpu;
   VkResult err;
 
-  if (swapper->surf_formats)
+  if (swapper->priv->surf_formats)
     return TRUE;
 
   gpu = gst_vulkan_device_get_physical_device (swapper->device);
@@ -338,39 +379,42 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
     return FALSE;
 
   err =
-      swapper->GetPhysicalDeviceSurfaceCapabilitiesKHR (gpu, swapper->surface,
-      &swapper->surf_props);
+      swapper->priv->GetPhysicalDeviceSurfaceCapabilitiesKHR (gpu,
+      swapper->priv->surface, &swapper->priv->surf_props);
   if (gst_vulkan_error_to_g_error (err, error,
           "GetPhysicalDeviceSurfaceCapabilitiesKHR") < 0)
     return FALSE;
 
   err =
-      swapper->GetPhysicalDeviceSurfaceFormatsKHR (gpu, swapper->surface,
-      &swapper->n_surf_formats, NULL);
+      swapper->priv->GetPhysicalDeviceSurfaceFormatsKHR (gpu,
+      swapper->priv->surface, &swapper->priv->n_surf_formats, NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "GetPhysicalDeviceSurfaceFormatsKHR") < 0)
     return FALSE;
 
-  swapper->surf_formats = g_new0 (VkSurfaceFormatKHR, swapper->n_surf_formats);
+  swapper->priv->surf_formats =
+      g_new0 (VkSurfaceFormatKHR, swapper->priv->n_surf_formats);
   err =
-      swapper->GetPhysicalDeviceSurfaceFormatsKHR (gpu, swapper->surface,
-      &swapper->n_surf_formats, swapper->surf_formats);
+      swapper->priv->GetPhysicalDeviceSurfaceFormatsKHR (gpu,
+      swapper->priv->surface, &swapper->priv->n_surf_formats,
+      swapper->priv->surf_formats);
   if (gst_vulkan_error_to_g_error (err, error,
           "GetPhysicalDeviceSurfaceFormatsKHR") < 0)
     return FALSE;
 
   err =
-      swapper->GetPhysicalDeviceSurfacePresentModesKHR (gpu, swapper->surface,
-      &swapper->n_surf_present_modes, NULL);
+      swapper->priv->GetPhysicalDeviceSurfacePresentModesKHR (gpu,
+      swapper->priv->surface, &swapper->priv->n_surf_present_modes, NULL);
   if (gst_vulkan_error_to_g_error (err, error,
           "GetPhysicalDeviceSurfacePresentModesKHR") < 0)
     return FALSE;
 
-  swapper->surf_present_modes =
-      g_new0 (VkPresentModeKHR, swapper->n_surf_present_modes);
+  swapper->priv->surf_present_modes =
+      g_new0 (VkPresentModeKHR, swapper->priv->n_surf_present_modes);
   err =
-      swapper->GetPhysicalDeviceSurfacePresentModesKHR (gpu, swapper->surface,
-      &swapper->n_surf_present_modes, swapper->surf_present_modes);
+      swapper->priv->GetPhysicalDeviceSurfacePresentModesKHR (gpu,
+      swapper->priv->surface, &swapper->priv->n_surf_present_modes,
+      swapper->priv->surf_present_modes);
   if (gst_vulkan_error_to_g_error (err, error,
           "GetPhysicalDeviceSurfacePresentModesKHR") < 0)
     return FALSE;
@@ -381,7 +425,7 @@ _vulkan_swapper_retrieve_surface_properties (GstVulkanSwapper * swapper,
 static gboolean
 _on_window_close (GstVulkanWindow * window, GstVulkanSwapper * swapper)
 {
-  g_atomic_int_set (&swapper->to_quit, 1);
+  g_atomic_int_set (&swapper->priv->to_quit, 1);
 
   return TRUE;
 }
@@ -394,11 +438,11 @@ gst_vulkan_swapper_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_FORCE_ASPECT_RATIO:
-      swapper->force_aspect_ratio = g_value_get_boolean (value);
+      swapper->priv->force_aspect_ratio = g_value_get_boolean (value);
       break;
     case PROP_PIXEL_ASPECT_RATIO:
-      swapper->par_n = gst_value_get_fraction_numerator (value);
-      swapper->par_d = gst_value_get_fraction_denominator (value);
+      swapper->priv->par_n = gst_value_get_fraction_numerator (value);
+      swapper->priv->par_d = gst_value_get_fraction_denominator (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -414,10 +458,11 @@ gst_vulkan_swapper_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_FORCE_ASPECT_RATIO:
-      g_value_set_boolean (value, swapper->force_aspect_ratio);
+      g_value_set_boolean (value, swapper->priv->force_aspect_ratio);
       break;
     case PROP_PIXEL_ASPECT_RATIO:
-      gst_value_set_fraction (value, swapper->par_n, swapper->par_d);
+      gst_value_set_fraction (value, swapper->priv->par_n,
+          swapper->priv->par_d);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -437,19 +482,30 @@ gst_vulkan_swapper_finalize (GObject * object)
   gst_object_unref (swapper->priv->trash_list);
   swapper->priv->trash_list = NULL;
 
-  if (swapper->swap_chain_images) {
-    for (i = 0; i < swapper->n_swap_chain_images; i++) {
-      gst_memory_unref ((GstMemory *) swapper->swap_chain_images[i]);
-      swapper->swap_chain_images[i] = NULL;
+  if (swapper->priv->swap_chain_images) {
+    for (i = 0; i < swapper->priv->n_swap_chain_images; i++) {
+      gst_memory_unref ((GstMemory *) swapper->priv->swap_chain_images[i]);
+      swapper->priv->swap_chain_images[i] = NULL;
     }
-    g_free (swapper->swap_chain_images);
+    g_free (swapper->priv->swap_chain_images);
   }
-  swapper->swap_chain_images = NULL;
+  swapper->priv->swap_chain_images = NULL;
 
-  if (swapper->swap_chain)
-    swapper->DestroySwapchainKHR (swapper->device->device, swapper->swap_chain,
-        NULL);
-  swapper->swap_chain = VK_NULL_HANDLE;
+  if (swapper->priv->swap_chain)
+    swapper->priv->DestroySwapchainKHR (swapper->device->device,
+        swapper->priv->swap_chain, NULL);
+  swapper->priv->swap_chain = VK_NULL_HANDLE;
+
+  g_free (swapper->priv->surf_present_modes);
+  swapper->priv->surf_present_modes = NULL;
+
+  g_free (swapper->priv->surf_formats);
+  swapper->priv->surf_formats = NULL;
+
+  gst_buffer_replace (&swapper->priv->current_buffer, NULL);
+  gst_caps_replace (&swapper->priv->caps, NULL);
+
+  g_mutex_clear (&swapper->priv->render_lock);
 
   if (swapper->cmd_pool)
     gst_object_unref (swapper->cmd_pool);
@@ -463,26 +519,15 @@ gst_vulkan_swapper_finalize (GObject * object)
     gst_object_unref (swapper->device);
   swapper->device = NULL;
 
-  g_signal_handler_disconnect (swapper->window, swapper->draw_id);
-  swapper->draw_id = 0;
+  g_signal_handler_disconnect (swapper->window, swapper->priv->draw_id);
+  swapper->priv->draw_id = 0;
 
-  g_signal_handler_disconnect (swapper->window, swapper->close_id);
-  swapper->close_id = 0;
+  g_signal_handler_disconnect (swapper->window, swapper->priv->close_id);
+  swapper->priv->close_id = 0;
 
   if (swapper->window)
     gst_object_unref (swapper->window);
   swapper->window = NULL;
-
-  g_free (swapper->surf_present_modes);
-  swapper->surf_present_modes = NULL;
-
-  g_free (swapper->surf_formats);
-  swapper->surf_formats = NULL;
-
-  gst_buffer_replace (&swapper->current_buffer, NULL);
-  gst_caps_replace (&swapper->caps, NULL);
-
-  g_mutex_clear (&swapper->priv->render_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -494,9 +539,9 @@ gst_vulkan_swapper_init (GstVulkanSwapper * swapper)
 
   g_mutex_init (&swapper->priv->render_lock);
 
-  swapper->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
-  swapper->par_n = DEFAULT_PIXEL_ASPECT_RATIO_N;
-  swapper->par_d = DEFAULT_PIXEL_ASPECT_RATIO_D;
+  swapper->priv->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
+  swapper->priv->par_n = DEFAULT_PIXEL_ASPECT_RATIO_N;
+  swapper->priv->par_d = DEFAULT_PIXEL_ASPECT_RATIO_D;
 
   swapper->priv->trash_list = gst_vulkan_trash_fence_list_new ();
 }
@@ -537,9 +582,9 @@ gst_vulkan_swapper_new (GstVulkanDevice * device, GstVulkanWindow * window)
     return NULL;
   }
 
-  swapper->close_id = g_signal_connect (swapper->window, "close",
+  swapper->priv->close_id = g_signal_connect (swapper->window, "close",
       (GCallback) _on_window_close, swapper);
-  swapper->draw_id = g_signal_connect (swapper->window, "draw",
+  swapper->priv->draw_id = g_signal_connect (swapper->window, "draw",
       (GCallback) _on_window_draw, swapper);
 
   return swapper;
@@ -568,12 +613,12 @@ gst_vulkan_swapper_get_supported_caps (GstVulkanSwapper * swapper,
 
     g_value_init (&list, GST_TYPE_LIST);
 
-    if (swapper->n_surf_formats
-        && swapper->surf_formats[0].format == VK_FORMAT_UNDEFINED) {
+    if (swapper->priv->n_surf_formats
+        && swapper->priv->surf_formats[0].format == VK_FORMAT_UNDEFINED) {
       _add_vk_format_to_list (&list, VK_FORMAT_B8G8R8A8_UNORM);
     } else {
-      for (i = 0; i < swapper->n_surf_formats; i++) {
-        _add_vk_format_to_list (&list, swapper->surf_formats[i].format);
+      for (i = 0; i < swapper->priv->n_surf_formats; i++) {
+        _add_vk_format_to_list (&list, swapper->priv->surf_formats[i].format);
       }
     }
 
@@ -617,21 +662,21 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
 
   gpu = gst_vulkan_device_get_physical_device (swapper->device);
   err =
-      swapper->GetPhysicalDeviceSurfaceCapabilitiesKHR (gpu,
-      swapper->surface, &swapper->surf_props);
+      swapper->priv->GetPhysicalDeviceSurfaceCapabilitiesKHR (gpu,
+      swapper->priv->surface, &swapper->priv->surf_props);
   if (gst_vulkan_error_to_g_error (err, error,
           "GetPhysicalDeviceSurfaceCapabilitiesKHR") < 0)
     return FALSE;
 
   /* width and height are either both -1, or both not -1. */
-  if (swapper->surf_props.currentExtent.width == -1) {
+  if (swapper->priv->surf_props.currentExtent.width == -1) {
     /* If the surface size is undefined, the size is set to
      * the size of the images requested. */
     swapchain_dims.width = 320;
     swapchain_dims.height = 240;
   } else {
     /* If the surface size is defined, the swap chain size must match */
-    swapchain_dims = swapper->surf_props.currentExtent;
+    swapchain_dims = swapper->priv->surf_props.currentExtent;
   }
 
   /* If mailbox mode is available, use it, as is the lowest-latency non-
@@ -639,13 +684,14 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
    * and is fastest (though it tears).  If not, fall back to FIFO which is
    * always available. */
   present_mode = VK_PRESENT_MODE_FIFO_KHR;
-  for (i = 0; i < swapper->n_surf_present_modes; i++) {
-    if (swapper->surf_present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
+  for (i = 0; i < swapper->priv->n_surf_present_modes; i++) {
+    if (swapper->priv->surf_present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
       present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
       break;
     }
     if ((present_mode != VK_PRESENT_MODE_MAILBOX_KHR) &&
-        (swapper->surf_present_modes[i] == VK_PRESENT_MODE_IMMEDIATE_KHR)) {
+        (swapper->priv->surf_present_modes[i] ==
+            VK_PRESENT_MODE_IMMEDIATE_KHR)) {
       present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
     }
   }
@@ -653,27 +699,27 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
   /* Determine the number of VkImage's to use in the swap chain (we desire to
    * own only 1 image at a time, besides the images being displayed and
    * queued for display): */
-  n_images_wanted = swapper->surf_props.minImageCount + 1;
-  if ((swapper->surf_props.maxImageCount > 0) &&
-      (n_images_wanted > swapper->surf_props.maxImageCount)) {
+  n_images_wanted = swapper->priv->surf_props.minImageCount + 1;
+  if ((swapper->priv->surf_props.maxImageCount > 0) &&
+      (n_images_wanted > swapper->priv->surf_props.maxImageCount)) {
     /* Application must settle for fewer images than desired: */
-    n_images_wanted = swapper->surf_props.maxImageCount;
+    n_images_wanted = swapper->priv->surf_props.maxImageCount;
   }
 
-  if (swapper->surf_props.
+  if (swapper->priv->surf_props.
       supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
     preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
   } else {
-    preTransform = swapper->surf_props.currentTransform;
+    preTransform = swapper->priv->surf_props.currentTransform;
   }
 
-  format = _vk_format_from_video_info (&swapper->v_info);
-  color_space = _vk_color_space_from_video_info (&swapper->v_info);
+  format = _vk_format_from_video_info (&swapper->priv->v_info);
+  color_space = _vk_color_space_from_video_info (&swapper->priv->v_info);
 
-  if ((swapper->surf_props.supportedCompositeAlpha &
+  if ((swapper->priv->surf_props.supportedCompositeAlpha &
           VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR) != 0) {
     alpha_flags = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-  } else if ((swapper->surf_props.supportedCompositeAlpha &
+  } else if ((swapper->priv->surf_props.supportedCompositeAlpha &
           VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR) != 0) {
     alpha_flags = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
   } else {
@@ -683,7 +729,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     return FALSE;
   }
 
-  if ((swapper->surf_props.supportedUsageFlags &
+  if ((swapper->priv->surf_props.supportedUsageFlags &
           VK_IMAGE_USAGE_TRANSFER_DST_BIT) != 0) {
     usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
   } else {
@@ -692,7 +738,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
         "Incorrect usage flags available for the swap images");
     return FALSE;
   }
-  if ((swapper->
+  if ((swapper->priv->
           surf_props.supportedUsageFlags & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT)
       != 0) {
     usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -707,13 +753,13 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     VkSwapchainCreateInfoKHR swap_chain_info = { 0, };
     VkSwapchainKHR old_swap_chain;
 
-    old_swap_chain = swapper->swap_chain;
+    old_swap_chain = swapper->priv->swap_chain;
 
     /* *INDENT-OFF* */
     swap_chain_info = (VkSwapchainCreateInfoKHR) {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .pNext = NULL,
-        .surface = swapper->surface,
+        .surface = swapper->priv->surface,
         .minImageCount = n_images_wanted,
         .imageFormat = format,
         .imageColorSpace = color_space,
@@ -732,45 +778,46 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
     /* *INDENT-ON* */
 
     err =
-        swapper->CreateSwapchainKHR (swapper->device->device, &swap_chain_info,
-        NULL, &swapper->swap_chain);
+        swapper->priv->CreateSwapchainKHR (swapper->device->device,
+        &swap_chain_info, NULL, &swapper->priv->swap_chain);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateSwapchainKHR") < 0)
       return FALSE;
 
     if (old_swap_chain != VK_NULL_HANDLE) {
-      swapper->DestroySwapchainKHR (swapper->device->device, old_swap_chain,
-          NULL);
+      swapper->priv->DestroySwapchainKHR (swapper->device->device,
+          old_swap_chain, NULL);
     }
   }
 
   err =
-      swapper->GetSwapchainImagesKHR (swapper->device->device,
-      swapper->swap_chain, &swapper->n_swap_chain_images, NULL);
+      swapper->priv->GetSwapchainImagesKHR (swapper->device->device,
+      swapper->priv->swap_chain, &swapper->priv->n_swap_chain_images, NULL);
   if (gst_vulkan_error_to_g_error (err, error, "vkGetSwapchainImagesKHR") < 0)
     return FALSE;
 
-  swap_chain_images = g_new0 (VkImage, swapper->n_swap_chain_images);
+  swap_chain_images = g_new0 (VkImage, swapper->priv->n_swap_chain_images);
   err =
-      swapper->GetSwapchainImagesKHR (swapper->device->device,
-      swapper->swap_chain, &swapper->n_swap_chain_images, swap_chain_images);
+      swapper->priv->GetSwapchainImagesKHR (swapper->device->device,
+      swapper->priv->swap_chain, &swapper->priv->n_swap_chain_images,
+      swap_chain_images);
   if (gst_vulkan_error_to_g_error (err, error, "vkGetSwapchainImagesKHR") < 0) {
     g_free (swap_chain_images);
     return FALSE;
   }
 
-  swapper->swap_chain_images =
-      g_new0 (GstVulkanImageMemory *, swapper->n_swap_chain_images);
-  for (i = 0; i < swapper->n_swap_chain_images; i++) {
-    swapper->swap_chain_images[i] = (GstVulkanImageMemory *)
+  swapper->priv->swap_chain_images =
+      g_new0 (GstVulkanImageMemory *, swapper->priv->n_swap_chain_images);
+  for (i = 0; i < swapper->priv->n_swap_chain_images; i++) {
+    swapper->priv->swap_chain_images[i] = (GstVulkanImageMemory *)
         gst_vulkan_image_memory_wrapped (swapper->device, swap_chain_images[i],
         format, swapchain_dims.width, swapchain_dims.height,
         VK_IMAGE_TILING_OPTIMAL, usage, NULL, NULL);
 
-    swapper->swap_chain_images[i]->barrier.parent.pipeline_stages =
+    swapper->priv->swap_chain_images[i]->barrier.parent.pipeline_stages =
         VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-    swapper->swap_chain_images[i]->barrier.parent.access_flags =
+    swapper->priv->swap_chain_images[i]->barrier.parent.access_flags =
         VK_ACCESS_MEMORY_READ_BIT;
-    swapper->swap_chain_images[i]->barrier.image_layout =
+    swapper->priv->swap_chain_images[i]->barrier.image_layout =
         VK_IMAGE_LAYOUT_UNDEFINED;
   }
 
@@ -789,15 +836,15 @@ _swapchain_resize (GstVulkanSwapper * swapper, GError ** error)
     }
   }
 
-  if (swapper->swap_chain_images) {
-    for (i = 0; i < swapper->n_swap_chain_images; i++) {
-      if (swapper->swap_chain_images[i])
-        gst_memory_unref ((GstMemory *) swapper->swap_chain_images[i]);
+  if (swapper->priv->swap_chain_images) {
+    for (i = 0; i < swapper->priv->n_swap_chain_images; i++) {
+      if (swapper->priv->swap_chain_images[i])
+        gst_memory_unref ((GstMemory *) swapper->priv->swap_chain_images[i]);
     }
-    g_free (swapper->swap_chain_images);
+    g_free (swapper->priv->swap_chain_images);
   }
 
-  return _allocate_swapchain (swapper, swapper->caps, error);
+  return _allocate_swapchain (swapper, swapper->priv->caps, error);
 }
 
 
@@ -821,9 +868,9 @@ configure_display_from_info (GstVulkanSwapper * swapper, GstVideoInfo * vinfo)
     par_n = 1;
 
   /* get display's PAR */
-  if (swapper->par_n != 0 && swapper->par_d != 0) {
-    display_par_n = swapper->par_n;
-    display_par_d = swapper->par_d;
+  if (swapper->priv->par_n != 0 && swapper->priv->par_d != 0) {
+    display_par_n = swapper->priv->par_n;
+    display_par_d = swapper->priv->par_d;
   } else {
     display_par_n = 1;
     display_par_d = 1;
@@ -867,19 +914,19 @@ gboolean
 gst_vulkan_swapper_set_caps (GstVulkanSwapper * swapper, GstCaps * caps,
     GError ** error)
 {
-  if (!gst_video_info_from_caps (&swapper->v_info, caps)) {
+  if (!gst_video_info_from_caps (&swapper->priv->v_info, caps)) {
     g_set_error (error, GST_VULKAN_ERROR,
         VK_ERROR_INITIALIZATION_FAILED, "Failed to get GstVideoInfo from caps");
     return FALSE;
   }
 
-  if (!configure_display_from_info (swapper, &swapper->v_info)) {
+  if (!configure_display_from_info (swapper, &swapper->priv->v_info)) {
     g_set_error (error, GST_VULKAN_ERROR,
         VK_ERROR_INITIALIZATION_FAILED, "Failed to configure display sizes");
     return FALSE;
   }
 
-  gst_caps_replace (&swapper->caps, caps);
+  gst_caps_replace (&swapper->priv->caps, caps);
 
   return _swapchain_resize (swapper, error);
 }
@@ -894,8 +941,8 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   GstVideoRectangle src, dst, rslt;
   VkResult err;
 
-  g_return_val_if_fail (swap_idx < swapper->n_swap_chain_images, FALSE);
-  swap_img = swapper->swap_chain_images[swap_idx];
+  g_return_val_if_fail (swap_idx < swapper->priv->n_swap_chain_images, FALSE);
+  swap_img = swapper->priv->swap_chain_images[swap_idx];
 
   if (!(cmd = gst_vulkan_command_pool_create (swapper->cmd_pool, error)))
     return FALSE;
@@ -949,7 +996,8 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   dst.w = gst_vulkan_image_memory_get_width (swap_img);
   dst.h = gst_vulkan_image_memory_get_height (swap_img);
 
-  gst_video_sink_center_rect (src, dst, &rslt, swapper->force_aspect_ratio);
+  gst_video_sink_center_rect (src, dst, &rslt,
+      swapper->priv->force_aspect_ratio);
 
   GST_TRACE_OBJECT (swapper, "rendering into result rectangle %ux%u+%u,%u "
       "src %ux%u dst %ux%u", rslt.w, rslt.h, rslt.x, rslt.y, src.w, src.h,
@@ -968,7 +1016,7 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
         },
         .srcOffsets = {
             {0, 0, 0},
-            {GST_VIDEO_INFO_WIDTH (&swapper->v_info), GST_VIDEO_INFO_HEIGHT (&swapper->v_info), 1},
+            {GST_VIDEO_INFO_WIDTH (&swapper->priv->v_info), GST_VIDEO_INFO_HEIGHT (&swapper->priv->v_info), 1},
         },
         .dstSubresource = {
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
@@ -1074,13 +1122,13 @@ _render_buffer_unlocked (GstVulkanSwapper * swapper,
     goto error;
   }
 
-  if (g_atomic_int_get (&swapper->to_quit)) {
+  if (g_atomic_int_get (&swapper->priv->to_quit)) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_SURFACE_LOST_KHR,
         "Output window was closed");
     goto error;
   }
 
-  gst_buffer_replace (&swapper->current_buffer, buffer);
+  gst_buffer_replace (&swapper->priv->current_buffer, buffer);
 
   /* *INDENT-OFF* */
   semaphore_info = (VkSemaphoreCreateInfo) {
@@ -1097,8 +1145,9 @@ reacquire:
     goto error;
 
   err =
-      swapper->AcquireNextImageKHR (swapper->device->device,
-      swapper->swap_chain, -1, acquire_semaphore, VK_NULL_HANDLE, &swap_idx);
+      swapper->priv->AcquireNextImageKHR (swapper->device->device,
+      swapper->priv->swap_chain, -1, acquire_semaphore, VK_NULL_HANDLE,
+      &swap_idx);
   /* TODO: Deal with the VK_SUBOPTIMAL_KHR and VK_ERROR_OUT_OF_DATE_KHR */
   if (err == VK_ERROR_OUT_OF_DATE_KHR) {
     GST_DEBUG_OBJECT (swapper, "out of date frame acquired");
@@ -1165,13 +1214,13 @@ reacquire:
       .waitSemaphoreCount = 1,
       .pWaitSemaphores = &present_semaphore,
       .swapchainCount = 1,
-      .pSwapchains = &swapper->swap_chain,
+      .pSwapchains = &swapper->priv->swap_chain,
       .pImageIndices = &swap_idx,
       .pResults = &present_err,
   };
   /* *INDENT-ON* */
 
-  err = swapper->QueuePresentKHR (swapper->queue->queue, &present);
+  err = swapper->priv->QueuePresentKHR (swapper->queue->queue, &present);
   if (gst_vulkan_error_to_g_error (err, error, "vkQueuePresentKHR") < 0)
     goto error;
 
@@ -1257,16 +1306,16 @@ _on_window_draw (GstVulkanWindow * window, GstVulkanSwapper * swapper)
   GError *error = NULL;
 
   RENDER_LOCK (swapper);
-  if (!swapper->current_buffer) {
+  if (!swapper->priv->current_buffer) {
     GST_DEBUG_OBJECT (swapper, "No buffer to render");
     RENDER_UNLOCK (swapper);
     return;
   }
 
   /* TODO: perform some rate limiting of the number of redraw events */
-  if (!_render_buffer_unlocked (swapper, swapper->current_buffer, &error))
+  if (!_render_buffer_unlocked (swapper, swapper->priv->current_buffer, &error))
     GST_ERROR_OBJECT (swapper, "Failed to redraw buffer %p %s",
-        swapper->current_buffer, error->message);
+        swapper->priv->current_buffer, error->message);
   g_clear_error (&error);
   RENDER_UNLOCK (swapper);
 }
