@@ -34,6 +34,7 @@
 #include "vkimageidentity.h"
 #include "vkcolorconvert.h"
 #include "vkdownload.h"
+#include "vkviewconvert.h"
 
 #define GST_CAT_DEFAULT gst_vulkan_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -65,6 +66,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "vulkanimageidentity",
           GST_RANK_NONE, GST_TYPE_VULKAN_IMAGE_IDENTITY)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "vulkanviewconvert",
+          GST_RANK_NONE, GST_TYPE_VULKAN_VIEW_CONVERT)) {
     return FALSE;
   }
 
