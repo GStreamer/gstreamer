@@ -1079,7 +1079,7 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream,
 {
   g_return_if_fail (stream->get_es_descrs != NULL);
 
-  return stream->get_es_descrs (stream, pmt_stream, stream->get_es_descrs_data);
+  stream->get_es_descrs (stream, pmt_stream, stream->get_es_descrs_data);
 }
 
 /**
