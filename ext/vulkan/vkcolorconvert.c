@@ -1628,8 +1628,8 @@ _create_framebuffer (GstVulkanColorConvert * conv, guint n_views,
       .renderPass = render->render_pass,
       .attachmentCount = n_views,
       .pAttachments = views,
-      .width = GST_VIDEO_INFO_WIDTH (&render->in_info),
-      .height = GST_VIDEO_INFO_HEIGHT (&render->in_info),
+      .width = GST_VIDEO_INFO_WIDTH (&render->out_info),
+      .height = GST_VIDEO_INFO_HEIGHT (&render->out_info),
       .layers = 1
   };
   /* *INDENT-ON* */
