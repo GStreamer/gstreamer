@@ -39,6 +39,12 @@
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
+enum
+{
+  PROP_0,
+  PROP_INSTANCE,
+};
+
 static void gst_vulkan_device_finalize (GObject * object);
 
 struct _GstVulkanDevicePrivate
@@ -75,15 +81,49 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanDevice, gst_vulkan_device, GST_TYPE_OBJECT,
 GstVulkanDevice *
 gst_vulkan_device_new (GstVulkanInstance * instance)
 {
-  GstVulkanDevice *device = g_object_new (GST_TYPE_VULKAN_DEVICE, NULL);
+  GstVulkanDevice *device;
 
+  g_return_val_if_fail (GST_IS_VULKAN_INSTANCE (instance), NULL);
+
+  device = g_object_new (GST_TYPE_VULKAN_DEVICE, "instance", instance, NULL);
   gst_object_ref_sink (device);
 
-  device->instance = gst_object_ref (instance);
   /* FIXME: select this externally */
   device->device_index = 0;
 
   return device;
+}
+
+static void
+gst_vulkan_device_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVulkanDevice *device = GST_VULKAN_DEVICE (object);
+
+  switch (prop_id) {
+    case PROP_INSTANCE:
+      device->instance = g_value_dup_object (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_vulkan_device_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVulkanDevice *device = GST_VULKAN_DEVICE (object);
+
+  switch (prop_id) {
+    case PROP_INSTANCE:
+      g_value_set_object (value, device->instance);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -97,7 +137,15 @@ gst_vulkan_device_class_init (GstVulkanDeviceClass * device_class)
 {
   GObjectClass *gobject_class = (GObjectClass *) device_class;
 
+  gobject_class->set_property = gst_vulkan_device_set_property;
+  gobject_class->get_property = gst_vulkan_device_get_property;
   gobject_class->finalize = gst_vulkan_device_finalize;
+
+  g_object_class_install_property (gobject_class, PROP_INSTANCE,
+      g_param_spec_object ("instance", "Instance",
+          "Associated Vulkan Instance",
+          GST_TYPE_VULKAN_INSTANCE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 }
 
 static void

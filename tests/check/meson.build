@@ -64,6 +64,7 @@ base_tests = [
   [['libs/vp8parser.c'], false, [gstcodecparsers_dep]],
   [['libs/vkmemory.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['elements/vkcolorconvert.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
+  [['libs/vkdevice.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
 ]
 
 # FIXME: unistd dependency, unstable or not tested yet on windows
