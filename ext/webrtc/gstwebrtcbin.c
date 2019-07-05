@@ -2935,6 +2935,15 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options)
         answer_dir = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
         answer_caps = gst_caps_ref (offer_caps);
       }
+
+      if (gst_caps_is_empty (answer_caps)) {
+        GST_WARNING_OBJECT (webrtc, "Could not create caps for media");
+        if (rtp_trans)
+          gst_object_unref (rtp_trans);
+        gst_caps_unref (answer_caps);
+        goto rejected;
+      }
+
       seen_transceivers = g_list_prepend (seen_transceivers, rtp_trans);
 
       if (!rtp_trans) {

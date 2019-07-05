@@ -188,6 +188,8 @@ _rtp_caps_from_media (const GstSDPMedia * media)
     GstCaps *caps;
 
     caps = gst_sdp_media_get_caps_from_media (media, pt);
+    if (!caps)
+      continue;
 
     /* gst_sdp_media_get_caps_from_media() produces caps with name
      * "application/x-unknown" which will fail intersection with
