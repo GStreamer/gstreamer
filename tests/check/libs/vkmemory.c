@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * Copyright (C) 2019 Jan Schmidt <matthew@centricular.com>
+ * Copyright (C) 2019 Matthew Waters <matthew@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
