@@ -470,22 +470,37 @@ ges_formatter_get_default (void)
   return ret;
 }
 
+/**
+ * ges_formatter_class_register_metas:
+ * @klass: The class to register metas on
+ * @name: The name of the formatter
+ * @description: The formatter description
+ * @extensions: A list of coma separated file extensions handled
+ * by the formatter. The order of the extensions should match the
+ * list of the structures inside @caps
+ * @caps: The caps the formatter handled, they should match what
+ * gstreamer typefind mechanism will report for the files the formatter
+ * handles.
+ * @version: The version of the formatter
+ * @rank: The rank of the formatter
+ */
 void
-ges_formatter_class_register_metas (GESFormatterClass * class,
+ges_formatter_class_register_metas (GESFormatterClass * klass,
     const gchar * name, const gchar * description, const gchar * extensions,
-    const gchar * mimetype, gdouble version, GstRank rank)
+    const gchar * caps, gdouble version, GstRank rank)
 {
-  class->name = g_strdup (name);
-  class->description = g_strdup (description);
-  class->extension = g_strdup (extensions);
-  class->mimetype = g_strdup (mimetype);
-  class->version = version;
-  class->rank = rank;
+  g_return_if_fail (klass->name);
+  klass->name = g_strdup (name);
+  klass->description = g_strdup (description);
+  klass->extension = g_strdup (extensions);
+  klass->mimetype = g_strdup (caps);
+  klass->version = version;
+  klass->rank = rank;
 
   if (g_atomic_int_get (&initialized)
-      && g_type_class_peek (G_OBJECT_CLASS_TYPE (class)))
-    gst_object_unref (ges_asset_request (G_OBJECT_CLASS_TYPE (class), NULL,
-      NULL));
+      && g_type_class_peek (G_OBJECT_CLASS_TYPE (klass)))
+    gst_object_unref (ges_asset_request (G_OBJECT_CLASS_TYPE (klass), NULL,
+            NULL));
 }
 
 /* Main Formatter methods */

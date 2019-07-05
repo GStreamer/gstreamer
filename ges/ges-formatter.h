@@ -150,7 +150,7 @@ void ges_formatter_class_register_metas (GESFormatterClass * klass,
                                          const gchar *name,
                                          const gchar *description,
                                          const gchar *extensions,
-                                         const gchar *mimetype,
+                                         const gchar *caps,
                                          gdouble version,
                                          GstRank rank);
 

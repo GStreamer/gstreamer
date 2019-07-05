@@ -2084,7 +2084,7 @@ ges_xml_formatter_class_init (GESXmlFormatterClass * self_class)
 
   ges_formatter_class_register_metas (GES_FORMATTER_CLASS (self_class),
       "ges", "GStreamer Editing Services project files",
-      "xges", "application/ges", VERSION, GST_RANK_PRIMARY);
+      "xges", "application/xges", VERSION, GST_RANK_PRIMARY);
 
   basexmlformatter_class->save = _save;
 }
