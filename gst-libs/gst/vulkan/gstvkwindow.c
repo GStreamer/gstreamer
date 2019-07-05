@@ -84,6 +84,12 @@ GstVulkanDummyWindow *gst_vulkan_dummy_window_new (void);
 
 enum
 {
+  PROP_0,
+  PROP_DISPLAY,
+};
+
+enum
+{
   SIGNAL_0,
   SIGNAL_CLOSE,
   SIGNAL_DRAW,
@@ -134,6 +140,38 @@ _init_debug (void)
 }
 
 static void
+gst_vulkan_window_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVulkanWindow *window = GST_VULKAN_WINDOW (object);
+
+  switch (prop_id) {
+    case PROP_DISPLAY:
+      window->display = g_value_dup_object (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_vulkan_window_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVulkanWindow *window = GST_VULKAN_WINDOW (object);
+
+  switch (prop_id) {
+    case PROP_DISPLAY:
+      g_value_set_object (value, window->display);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_vulkan_window_init (GstVulkanWindow * window)
 {
   window->priv = gst_vulkan_window_get_instance_private (window);
@@ -142,6 +180,8 @@ gst_vulkan_window_init (GstVulkanWindow * window)
 static void
 gst_vulkan_window_class_init (GstVulkanWindowClass * klass)
 {
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
   klass->open = GST_DEBUG_FUNCPTR (gst_vulkan_window_default_open);
   klass->close = GST_DEBUG_FUNCPTR (gst_vulkan_window_default_close);
 
@@ -153,7 +193,14 @@ gst_vulkan_window_class_init (GstVulkanWindowClass * klass)
       g_signal_new ("draw", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0,
       NULL, NULL, NULL, G_TYPE_NONE, 0);
 
-  G_OBJECT_CLASS (klass)->finalize = gst_vulkan_window_finalize;
+  gobject_class->set_property = gst_vulkan_window_set_property;
+  gobject_class->get_property = gst_vulkan_window_get_property;
+  gobject_class->finalize = gst_vulkan_window_finalize;
+
+  g_object_class_install_property (gobject_class, PROP_DISPLAY,
+      g_param_spec_object ("display", "Display",
+          "Associated Vulkan Display",
+          GST_TYPE_VULKAN_DISPLAY, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   _init_debug ();
 }
