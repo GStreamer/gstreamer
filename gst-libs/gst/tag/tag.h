@@ -61,12 +61,16 @@ G_BEGIN_DECLS
  * GST_TAG_MUSICBRAINZ_RELEASEGROUPID:
  *
  * MusicBrainz Release Group ID
+ *
+ * Since: 1.18
  */
 #define GST_TAG_MUSICBRAINZ_RELEASEGROUPID	"musicbrainz-releasegroupid"
 /**
  * GST_TAG_MUSICBRAINZ_RELEASETRACKID:
  *
  * MusicBrainz Release Track ID
+ *
+ * Since: 1.18
  */
 #define GST_TAG_MUSICBRAINZ_RELEASETRACKID	"musicbrainz-releasetrackid"
 /**
@@ -75,6 +79,29 @@ G_BEGIN_DECLS
  * MusicBrainz track TRM ID
  */
 #define GST_TAG_MUSICBRAINZ_TRMID	"musicbrainz-trmid"
+
+/**
+ * GST_TAG_ACOUSTID_ID:
+ *
+ * AcoustID Identifier
+ * 
+ * Since: 1.18
+ */
+#define GST_TAG_ACOUSTID_ID	"acoustid-id"
+
+/**
+ * GST_TAG_ACOUSTID_FINGERPRINT:
+ *
+ * AcoustID Fingerprint (Chromaprint)
+ *
+ * Since: 1.18
+ */
+/*
+ * FIXME 2.0: Using "chromaprint-fingerprint" for backwards compatibility with the
+ * old custom tag from the chromaprint plugin but should change this to
+ * "acoustid-fingerprint" in 2.0 for consistency.
+*/
+#define GST_TAG_ACOUSTID_FINGERPRINT	"chromaprint-fingerprint"
 
 /**
  * GST_TAG_CMML_STREAM:
@@ -443,12 +470,12 @@ GST_TAG_API
 const gchar *           gst_tag_to_vorbis_tag                   (const gchar *          gst_tag);
 
 GST_TAG_API
-void                    gst_vorbis_tag_add                      (GstTagList *           list,
-                                                                 const gchar *          tag,
+void                    gst_vorbis_tag_add                      (GstTagList *           list, 
+                                                                 const gchar *          tag, 
                                                                  const gchar *          value);
 
 GST_TAG_API
-GList *                 gst_tag_to_vorbis_comments              (const GstTagList *     list,
+GList *                 gst_tag_to_vorbis_comments              (const GstTagList *     list, 
                                                                  const gchar *          tag);
 
 /* functions to convert GstBuffers with vorbiscomment contents to GstTagLists and back */

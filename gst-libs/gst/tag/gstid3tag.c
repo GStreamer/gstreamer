@@ -161,6 +161,10 @@ static const GstTagEntryMatch user_tag_matches[] = {
   {GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "TXXX|MusicBrainz Album Artist Id"},
   {GST_TAG_MUSICBRAINZ_RELEASEGROUPID, "TXXX|MusicBrainz Release Group Id"},
   {GST_TAG_MUSICBRAINZ_TRMID, "TXXX|MusicBrainz TRM Id"},
+  /* acoustid identifiers according to the official musicbrainz mapping
+   * https://picard.musicbrainz.org/docs/mappings/ */
+  {GST_TAG_ACOUSTID_ID, "TXXX|Acoustid Id"},
+  {GST_TAG_ACOUSTID_FINGERPRINT, "TXXX|Acoustid Fingerprint"},
   /* according to: http://wiki.musicbrainz.org/MusicBrainzTag (yes, no space
    * before 'ID' and not 'Id' either this time, yay for consistency) */
   {GST_TAG_CDDA_MUSICBRAINZ_DISCID, "TXXX|MusicBrainz DiscID"},

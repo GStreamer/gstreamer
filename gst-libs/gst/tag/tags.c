@@ -90,6 +90,11 @@ gst_tag_register_tags_internal (gpointer unused)
       _("MusicBrainz release track ID"), NULL);
   gst_tag_register_static (GST_TAG_MUSICBRAINZ_TRMID, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("track TRM ID"), _("MusicBrainz TRM ID"), NULL);
+  gst_tag_register_static (GST_TAG_ACOUSTID_ID, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("AcoustID ID"), _("AcoustID ID"), NULL);
+  gst_tag_register_static (GST_TAG_ACOUSTID_FINGERPRINT,
+      GST_TAG_FLAG_META, G_TYPE_STRING, _("AcoustID fingerprint (chromaprint)"),
+      _("AcoustID fingerprint (chromaprint)"), NULL);
 
   /* CDDA tags */
   gst_tag_register_static (GST_TAG_CDDA_CDDB_DISCID, GST_TAG_FLAG_META,

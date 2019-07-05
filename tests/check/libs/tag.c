@@ -253,6 +253,8 @@ GST_START_TEST (test_vorbis_tags)
   gst_vorbis_tag_add (list, "CONTACT", "Coo");
   gst_vorbis_tag_add (list, "COMMENT", "Stroodle is good");
   gst_vorbis_tag_add (list, "COMMENT", "Peroxysulfid stroodles the brain");
+  gst_vorbis_tag_add (list, "ACOUSTID_ID", "5678913");
+  gst_vorbis_tag_add (list, "ACOUSTID_FINGERPRINT", "5678912");
 
   gst_vorbis_tag_add (list, "TRACKNUMBER", "5");
   gst_vorbis_tag_add (list, "TRACKTOTAL", "77");
@@ -275,6 +277,8 @@ GST_START_TEST (test_vorbis_tags)
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_CONTACT, "Coo");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_COMMENT,
       "Peroxysulfid stroodles the brain");
+  ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ACOUSTID_ID, "5678913");
+  ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ACOUSTID_FINGERPRINT, "5678912");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_COMMENT, "Stroodle is good");
   ASSERT_TAG_LIST_HAS_UINT (list, GST_TAG_TRACK_NUMBER, 5);
   ASSERT_TAG_LIST_HAS_UINT (list, GST_TAG_TRACK_COUNT, 77);
