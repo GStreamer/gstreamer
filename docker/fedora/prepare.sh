@@ -33,6 +33,7 @@ dnf install -y \
     gcc-c++ \
     gdb \
     git-lfs \
+    glslc \
     gtk3 \
     gtk3-devel \
     graphene \
