@@ -724,6 +724,8 @@ gst_srt_object_wait_connect (GstSRTObject * srtobject,
 
   local_address =
       gst_structure_get_string (srtobject->parameters, "localaddress");
+  if (local_address == NULL)
+    local_address = GST_SRT_DEFAULT_LOCALADDRESS;
 
   bind_addr = g_inet_socket_address_new_from_string (local_address, local_port);
   bind_sa_len = g_socket_address_get_native_size (bind_addr);
