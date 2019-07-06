@@ -31,3 +31,12 @@ if x11_dep.found()
     endif
   endif
 endif
+
+if host_system == 'windows'
+  executable('win32-videooverlay', 'win32-videooverlay.c',
+    c_args : gst_plugins_base_args,
+    include_directories : [configinc, libsinc],
+    dependencies : [gst_dep, video_dep],
+    install: false,
+  )
+endif
