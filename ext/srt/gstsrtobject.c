@@ -984,7 +984,7 @@ gst_srt_object_open_full (GstSRTObject * srtobject,
   addr_str = gst_uri_get_host (srtobject->uri);
 
   if (addr_str == NULL) {
-    addr_str = "0.0.0.0";
+    addr_str = GST_SRT_DEFAULT_LOCALADDRESS;
     GST_DEBUG_OBJECT (srtobject->element,
         "Given uri doesn't have hostname or address. Use any (%s) and"
         " setting listener mode", addr_str);
