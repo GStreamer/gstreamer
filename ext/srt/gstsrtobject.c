@@ -1000,7 +1000,7 @@ gst_srt_object_open_full (GstSRTObject * srtobject,
     goto out;
   }
 
-  /* FIXME: Unfortunately, SRT doesn't support IPv4 currently. */
+  /* FIXME: Unfortunately, SRT doesn't support IPv6 currently. */
   if (g_socket_address_get_family (socket_address) != G_SOCKET_FAMILY_IPV4) {
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
         "SRT supports IPv4 only");
