@@ -196,16 +196,6 @@ gst_tracing_register_hook (GstTracer * tracer, const gchar * detail,
   gst_tracing_register_hook_id (tracer, g_quark_try_string (detail), func);
 }
 
-#else /* !GST_DISABLE_GST_TRACER_HOOKS */
-
-void
-gst_tracing_register_hook (GstTracer * tracer, const gchar * detail,
-    GCallback func)
-{
-}
-
-#endif /* GST_DISABLE_GST_TRACER_HOOKS */
-
 /**
  * gst_tracing_get_active_tracers:
  *
@@ -243,3 +233,18 @@ gst_tracing_get_active_tracers (void)
 
   return tracers;
 }
+
+#else /* !GST_DISABLE_GST_TRACER_HOOKS */
+
+void
+gst_tracing_register_hook (GstTracer * tracer, const gchar * detail,
+    GCallback func)
+{
+}
+
+GList *
+gst_tracing_get_active_tracers (void)
+{
+  return NULL;
+}
+#endif /* GST_DISABLE_GST_TRACER_HOOKS */
