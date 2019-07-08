@@ -123,6 +123,10 @@ enum
   PROP_CONTRAST,
   PROP_SCALE_METHOD,
   PROP_VIDEO_DIRECTION,
+  PROP_CROP_LEFT,
+  PROP_CROP_RIGHT,
+  PROP_CROP_TOP,
+  PROP_CROP_BOTTOM,
   PROP_SKIN_TONE_ENHANCEMENT,
 };
 
@@ -619,6 +623,11 @@ update_filter (GstVaapiPostproc * postproc)
       postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION);
   }
 
+  if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_CROP)
+    if ((postproc->crop_left | postproc->crop_right | postproc->crop_top
+            | postproc->crop_bottom) == 0)
+      postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_CROP);
+
   if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_SKINTONE) {
     if (!gst_vaapi_filter_set_skintone (postproc->filter,
             postproc->skintone_enhance))
@@ -675,7 +684,8 @@ replace_to_dumb_buffer_if_required (GstVaapiPostproc * postproc,
 static gboolean
 use_vpp_crop (GstVaapiPostproc * postproc)
 {
-  return !postproc->forward_crop;
+  return !(postproc->forward_crop
+      && !(postproc->flags & GST_VAAPI_POSTPROC_FLAG_CROP));
 }
 
 static void
@@ -753,15 +763,20 @@ gst_vaapipostproc_process_vpp (GstBaseTransform * trans, GstBuffer * inbuf,
     goto error_invalid_buffer;
   inbuf_surface = gst_vaapi_video_meta_get_surface (inbuf_meta);
 
-  crop_meta = gst_buffer_get_video_crop_meta (inbuf);
-  if (crop_meta && use_vpp_crop (postproc)) {
-    GST_DEBUG_OBJECT (postproc, "cropping x=%d,y=%d,w=%d,h=%d",
-        crop_meta->x, crop_meta->y, crop_meta->width, crop_meta->height);
+  if (use_vpp_crop (postproc)) {
     crop_rect = &tmp_rect;
-    crop_rect->x = crop_meta->x;
-    crop_rect->y = crop_meta->y;
-    crop_rect->width = crop_meta->width;
-    crop_rect->height = crop_meta->height;
+    crop_rect->x = postproc->crop_left;
+    crop_rect->y = postproc->crop_top;
+    crop_rect->width = GST_VIDEO_INFO_WIDTH (&postproc->sinkpad_info)
+        - (postproc->crop_left + postproc->crop_right);
+    crop_rect->height = GST_VIDEO_INFO_HEIGHT (&postproc->sinkpad_info)
+        - (postproc->crop_top + postproc->crop_bottom);
+
+    crop_meta = gst_buffer_get_video_crop_meta (inbuf);
+    if (crop_meta) {
+      crop_rect->x += crop_meta->x;
+      crop_rect->y += crop_meta->y;
+    }
   }
 
   if (!crop_rect)
@@ -1730,8 +1745,13 @@ get_scale_factor (GstVaapiPostproc * const postproc, gdouble * w_factor,
       break;
   }
 
-  *w_factor = GST_VIDEO_INFO_WIDTH (&postproc->sinkpad_info) / wd;
-  *h_factor = GST_VIDEO_INFO_HEIGHT (&postproc->sinkpad_info) / hd;
+  *w_factor = GST_VIDEO_INFO_WIDTH (&postproc->sinkpad_info)
+      - (postproc->crop_left + postproc->crop_right);
+  *w_factor /= wd;
+
+  *h_factor = GST_VIDEO_INFO_HEIGHT (&postproc->sinkpad_info)
+      - (postproc->crop_top + postproc->crop_bottom);
+  *h_factor /= hd;
 }
 
 static gboolean
@@ -1754,6 +1774,7 @@ gst_vaapipostproc_src_event (GstBaseTransform * trans, GstEvent * event)
           gst_structure_get_double (structure, "pointer_y", &y)) {
         GST_DEBUG_OBJECT (postproc, "converting %fx%f", x, y);
 
+        /* video-direction compensation */
         switch (gst_vaapi_filter_get_video_direction (postproc->filter)) {
           case GST_VIDEO_ORIENTATION_90R:
             new_x = y;
@@ -1789,9 +1810,14 @@ gst_vaapipostproc_src_event (GstBaseTransform * trans, GstEvent * event)
             break;
         }
 
+        /* scale compensation */
         get_scale_factor (postproc, &w_factor, &h_factor);
         new_x *= w_factor;
         new_y *= h_factor;
+
+        /* crop compensation */
+        new_x += postproc->crop_left;
+        new_y += postproc->crop_top;
 
         GST_DEBUG_OBJECT (postproc, "to %fx%f", new_x, new_y);
         gst_structure_set (structure, "pointer_x", G_TYPE_DOUBLE, new_x,
@@ -1947,6 +1973,22 @@ gst_vaapipostproc_set_property (GObject * object,
       postproc->skintone_enhance = g_value_get_boolean (value);
       postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SKINTONE;
       break;
+    case PROP_CROP_LEFT:
+      postproc->crop_left = g_value_get_uint (value);
+      postproc->flags |= GST_VAAPI_POSTPROC_FLAG_CROP;
+      break;
+    case PROP_CROP_RIGHT:
+      postproc->crop_right = g_value_get_uint (value);
+      postproc->flags |= GST_VAAPI_POSTPROC_FLAG_CROP;
+      break;
+    case PROP_CROP_TOP:
+      postproc->crop_top = g_value_get_uint (value);
+      postproc->flags |= GST_VAAPI_POSTPROC_FLAG_CROP;
+      break;
+    case PROP_CROP_BOTTOM:
+      postproc->crop_bottom = g_value_get_uint (value);
+      postproc->flags |= GST_VAAPI_POSTPROC_FLAG_CROP;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2009,6 +2051,18 @@ gst_vaapipostproc_get_property (GObject * object,
       break;
     case PROP_SKIN_TONE_ENHANCEMENT:
       g_value_set_boolean (value, postproc->skintone_enhance);
+      break;
+    case PROP_CROP_LEFT:
+      g_value_set_uint (value, postproc->crop_left);
+      break;
+    case PROP_CROP_RIGHT:
+      g_value_set_uint (value, postproc->crop_right);
+      break;
+    case PROP_CROP_TOP:
+      g_value_set_uint (value, postproc->crop_top);
+      break;
+    case PROP_CROP_BOTTOM:
+      g_value_set_uint (value, postproc->crop_bottom);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2138,6 +2192,58 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
       g_param_spec_uint ("height",
           "Height",
           "Forced output height",
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiPostproc:crop-left:
+   *
+   * The number of pixels to crop at left.
+   */
+  g_object_class_install_property
+      (object_class,
+      PROP_CROP_LEFT,
+      g_param_spec_uint ("crop-left",
+          "Crop Left",
+          "Pixels to crop at left",
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiPostproc:crop-right:
+   *
+   * The number of pixels to crop at right.
+   */
+  g_object_class_install_property
+      (object_class,
+      PROP_CROP_RIGHT,
+      g_param_spec_uint ("crop-right",
+          "Crop Right",
+          "Pixels to crop at right",
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+  * GstVaapiPostproc:crop-top:
+  *
+  * The number of pixels to crop at top.
+  */
+  g_object_class_install_property
+      (object_class,
+      PROP_CROP_TOP,
+      g_param_spec_uint ("crop-top",
+          "Crop Top",
+          "Pixels to crop at top",
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiPostproc:crop-bottom:
+   *
+   * The number of pixels to crop at bottom.
+   */
+  g_object_class_install_property
+      (object_class,
+      PROP_CROP_BOTTOM,
+      g_param_spec_uint ("crop-bottom",
+          "Crop Bottom",
+          "Pixels to crop at bottom",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**

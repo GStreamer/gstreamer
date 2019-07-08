@@ -104,6 +104,7 @@ typedef enum
   GST_VAAPI_POSTPROC_FLAG_SCALE       = 1 << GST_VAAPI_FILTER_OP_SCALING,
   GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION =
       1 << GST_VAAPI_FILTER_OP_VIDEO_DIRECTION,
+  GST_VAAPI_POSTPROC_FLAG_CROP        = 1 << GST_VAAPI_FILTER_OP_CROP,
   GST_VAAPI_POSTPROC_FLAG_SKINTONE    = 1 << GST_VAAPI_FILTER_OP_SKINTONE,
 
   /* Additional custom flags */
@@ -167,6 +168,12 @@ struct _GstVaapiPostproc
 
   GstVideoOrientationMethod video_direction;
   GstVideoOrientationMethod tag_video_direction;
+
+  /* Cropping */
+  guint crop_left;
+  guint crop_right;
+  guint crop_top;
+  guint crop_bottom;
 
   /* Color balance filter values */
   gfloat hue;
