@@ -239,9 +239,6 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
     case PROP_LATENCY:
       gst_structure_set_value (srtobject->parameters, "latency", value);
       break;
-    case PROP_MSG_SIZE:
-      gst_structure_set_value (srtobject->parameters, "msg-size", value);
-      break;
     case PROP_LOCALADDRESS:
       gst_structure_set_value (srtobject->parameters, "localaddress", value);
       break;
@@ -316,15 +313,6 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
       if (!gst_structure_get_int (srtobject->parameters, "latency", &v)) {
         GST_WARNING_OBJECT (srtobject->element, "Failed to get 'latency'");
         v = GST_SRT_DEFAULT_LATENCY;
-      }
-      g_value_set_int (value, v);
-      break;
-    }
-    case PROP_MSG_SIZE:{
-      gint v;
-      if (!gst_structure_get_int (srtobject->parameters, "msg-size", &v)) {
-        GST_WARNING_OBJECT (srtobject->element, "Failed to get 'msg-size'");
-        v = GST_SRT_DEFAULT_MSG_SIZE;
       }
       g_value_set_int (value, v);
       break;
@@ -439,17 +427,6 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
       g_param_spec_int ("latency", "latency",
           "Minimum latency (milliseconds)", 0,
           G_MAXINT32, GST_SRT_DEFAULT_LATENCY,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * GstSRTSrc:msg-size:
-   * 
-   * The message size of buffer.
-   */
-  g_object_class_install_property (gobject_class, PROP_MSG_SIZE,
-      g_param_spec_int ("msg-size", "message size",
-          "Message size to use with SRT", 1,
-          G_MAXINT32, GST_SRT_DEFAULT_MSG_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -1118,7 +1095,6 @@ gst_srt_object_read (GstSRTObject * srtobject,
 {
   gssize len = 0;
   gint poll_timeout;
-  gint msg_size;
   GstSRTConnectionMode connection_mode = GST_SRT_CONNECTION_MODE_NONE;
   gint poll_id;
 
@@ -1145,10 +1121,6 @@ gst_srt_object_read (GstSRTObject * srtobject,
   if (!gst_structure_get_int (srtobject->parameters, "poll-timeout",
           &poll_timeout)) {
     poll_timeout = GST_SRT_DEFAULT_POLL_TIMEOUT;
-  }
-
-  if (!gst_structure_get_int (srtobject->parameters, "msg-size", &msg_size)) {
-    msg_size = GST_SRT_DEFAULT_MSG_SIZE;
   }
 
   while (!g_cancellable_is_cancelled (cancellable)) {
