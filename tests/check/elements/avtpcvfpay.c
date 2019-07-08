@@ -137,6 +137,38 @@ compare_h264_avtpdu (struct avtp_stream_pdu *pdu, GstBuffer * buffer)
   return result;
 }
 
+GST_START_TEST (test_payloader_zero_sized_nal)
+{
+  GstHarness *h;
+  GstBuffer *in;
+  GstMapInfo map;
+
+  /* Create the harness for the avtpcvfpay */
+  h = gst_harness_new_parse
+      ("avtpcvfpay streamid=0xAABBCCDDEEFF0001 mtt=1000000 tu=1000000 processing-deadline=0");
+  gst_harness_set_src_caps (h, generate_caps (4));
+
+  /* We have the buffer with the nal size (4 bytes) and the nal (4 bytes), but
+   * nal size will be zero */
+  in = gst_harness_create_buffer (h, 8);
+  GST_BUFFER_DTS (in) = 1000000;
+  GST_BUFFER_PTS (in) = 2000000;
+
+  gst_buffer_map (in, &map, GST_MAP_READWRITE);
+  map.data[0] = map.data[1] = map.data[2] = map.data[3] = 0;    /* Set NAL size to 0 */
+  map.data[4] = 1;              /* Some dummy vcl NAL type */
+  gst_buffer_unmap (in, &map);
+
+  gst_harness_push (h, in);
+
+  /* No buffer shuld come out */
+  fail_unless_equals_int (gst_harness_buffers_received (h), 0);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_payloader_no_codec_data)
 {
   GstHarness *h;
@@ -641,6 +673,7 @@ avtpcvfpay_suite (void)
   tcase_add_test (tc_chain, test_payloader_invalid_caps);
   tcase_add_test (tc_chain, test_payloader_properties);
   tcase_add_test (tc_chain, test_payloader_no_codec_data);
+  tcase_add_test (tc_chain, test_payloader_zero_sized_nal);
 
   return s;
 }

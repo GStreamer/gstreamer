@@ -249,6 +249,11 @@ gst_avtp_cvf_pay_extract_nals (GstAvtpCvfPay * avtpcvfpay,
       nal_len = (nal_len << 8) + data[i];
     }
 
+    if (nal_len == 0) {
+      GST_WARNING_OBJECT (avtpcvfpay, "Invalid NAL unit size: 0");
+      break;
+    }
+
     offset += avtpcvfpay->nal_length_size;
     data += avtpcvfpay->nal_length_size;
     size -= avtpcvfpay->nal_length_size;
