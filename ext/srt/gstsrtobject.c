@@ -1191,25 +1191,11 @@ gst_srt_object_read (GstSRTObject * srtobject,
         continue;
     }
 
-    while (len < size) {
-      gint recv;
-      gint rest = size - len;
 
-      /* Workaround for SRT being unhappy about buffers that
-       * are less than the chunk size */
-      if (rest < msg_size)
-        goto out;
-
-      recv = srt_recvmsg (rsock, (char *) (data + len), rest);
-
-      if (recv <= 0)
-        goto out;
-
-      len += recv;
-    }
+    len = srt_recvmsg (rsock, (char *) (data), size);
+    break;
   }
 
-out:
   return len;
 }
 
