@@ -62,24 +62,27 @@ def create_main_loop():
 
 def create_project(with_group=False, saved=False):
     """Creates a project with two clips in a group."""
-    project = GES.Project.new(None)
-    timeline = project.extract()
+    timeline = GES.Timeline.new_audio_video()
     layer = timeline.append_layer()
 
     if with_group:
         clip1 = GES.TitleClip()
         clip1.set_start(0)
-        clip1.set_duration(10)
+        clip1.set_duration(10*Gst.SECOND)
         layer.add_clip(clip1)
         clip2 = GES.TitleClip()
-        clip2.set_start(100)
-        clip2.set_duration(10)
+        clip2.set_start(100 * Gst.SECOND)
+        clip2.set_duration(10*Gst.SECOND)
         layer.add_clip(clip2)
         group = GES.Container.group([clip1, clip2])
 
     if saved:
-        uri = "file://%s" % tempfile.NamedTemporaryFile(suffix=".xges").name
-        project.save(timeline, uri, None, overwrite=True)
+        if isinstance(saved, str):
+            suffix = "-%s.xges" % saved
+        else:
+            suffix = ".xges"
+        uri = "file://%s" % tempfile.NamedTemporaryFile(suffix=suffix).name
+        timeline.get_asset().save(timeline, uri, None, overwrite=True)
 
     return timeline
 

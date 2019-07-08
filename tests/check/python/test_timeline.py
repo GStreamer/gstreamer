@@ -19,6 +19,7 @@
 
 from . import overrides_hack
 
+import tempfile  # noqa
 import gi
 
 gi.require_version("Gst", "1.0")
@@ -45,7 +46,6 @@ class TestTimeline(common.GESSimpleTimelineTest):
         project = GES.Project.new(uri=timeline.get_asset().props.uri)
 
         loaded_called = False
-
         def loaded(unused_project, unused_timeline):
             nonlocal loaded_called
             loaded_called = True
@@ -62,6 +62,77 @@ class TestTimeline(common.GESSimpleTimelineTest):
         mainloop.run()
         self.assertTrue(loaded_called)
         handle.assert_not_called()
+
+    def test_deeply_nested_serialization(self):
+        deep_timeline = common.create_project(with_group=True, saved="deep")
+        deep_project = deep_timeline.get_asset()
+
+        deep_asset = GES.UriClipAsset.request_sync(deep_project.props.id)
+
+        nested_timeline = common.create_project(with_group=False, saved=False)
+        nested_project = nested_timeline.get_asset()
+        nested_project.add_asset(deep_project)
+        nested_timeline.append_layer().add_asset(deep_asset, 0, 0, 5 * Gst.SECOND, GES.TrackType.UNKNOWN)
+
+        uri = "file://%s" % tempfile.NamedTemporaryFile(suffix="-nested.xges").name
+        nested_timeline.get_asset().save(nested_timeline, uri, None, overwrite=True)
+
+        asset = GES.UriClipAsset.request_sync(nested_project.props.id)
+        project = self.timeline.get_asset()
+        project.add_asset(nested_project)
+        refclip = self.layer.add_asset(asset, 0, 0, 5 * Gst.SECOND, GES.TrackType.VIDEO)
+
+        uri = "file://%s" % tempfile.NamedTemporaryFile(suffix=".xges").name
+        project.save(self.timeline, uri, None, overwrite=True)
+        self.assertEqual(len(project.list_assets(GES.Extractable)), 2)
+
+        mainloop = common.create_main_loop()
+        def loaded_cb(unused_project, unused_timeline):
+            mainloop.quit()
+        project.connect("loaded", loaded_cb)
+
+        # Extract again the timeline and compare with previous one.
+        timeline = project.extract()
+        mainloop.run()
+        layer, = timeline.get_layers()
+        clip, = layer.get_clips()
+        self.assertEqual(clip.props.uri, refclip.props.uri)
+        self.assertEqual(timeline.props.duration, self.timeline.props.duration)
+
+        self.assertEqual(timeline.get_asset(), project)
+        self.assertEqual(len(project.list_assets(GES.Extractable)), 2)
+
+    def test_nested_serialization(self):
+        nested_timeline = common.create_project(with_group=True, saved=True)
+        nested_project = nested_timeline.get_asset()
+        layer = nested_timeline.append_layer()
+
+        asset = GES.UriClipAsset.request_sync(nested_project.props.id)
+        refclip = self.layer.add_asset(asset, 0, 0, 110 * Gst.SECOND, GES.TrackType.UNKNOWN)
+        nested_project.save(nested_timeline, nested_project.props.id, None, True)
+
+        project = self.timeline.get_asset()
+        project.add_asset(nested_project)
+        uri = "file://%s" % tempfile.NamedTemporaryFile(suffix=".xges").name
+        self.assertEqual(len(project.list_assets(GES.Extractable)), 2)
+        project.save(self.timeline, uri, None, overwrite=True)
+        self.assertEqual(len(project.list_assets(GES.Extractable)), 2)
+
+        mainloop = common.create_main_loop()
+        def loaded(unused_project, unused_timeline):
+            mainloop.quit()
+        project.connect("loaded", loaded)
+
+        # Extract again the timeline and compare with previous one.
+        timeline = project.extract()
+        mainloop.run()
+        layer, = timeline.get_layers()
+        clip, = layer.get_clips()
+        self.assertEqual(clip.props.uri, refclip.props.uri)
+        self.assertEqual(timeline.props.duration, self.timeline.props.duration)
+
+        self.assertEqual(timeline.get_asset(), project)
+        self.assertEqual(len(project.list_assets(GES.Extractable)), 2)
 
     def test_timeline_duration(self):
         self.append_clip()

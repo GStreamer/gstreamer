@@ -30,6 +30,7 @@
 #include <locale.h>
 
 #include "ges.h"
+#include <glib/gstdio.h>
 #include "ges-internal.h"
 
 #define parent_class ges_xml_formatter_parent_class
@@ -41,6 +42,17 @@
 
 #define _GET_PRIV(o) (((GESXmlFormatter*)o)->priv)
 
+typedef struct
+{
+  const gchar *id;
+  gint start_line;
+  gint start_char;
+  gint fd;
+  gchar *filename;
+  GError *error;
+  GMainLoop *ml;
+} SubprojectData;
+
 struct _GESXmlFormatterPrivate
 {
   gboolean ges_opened;
@@ -49,14 +61,24 @@ struct _GESXmlFormatterPrivate
   GString *str;
 
   GHashTable *element_id;
+  GHashTable *subprojects_map;
+  SubprojectData *subproject;
+  gint subproject_depth;
 
   guint nbelements;
 
   guint min_version;
 };
 
+G_LOCK_DEFINE_STATIC (uri_subprojects_map_lock);
+/* { project_uri: { subproject_uri: new_suproject_uri}} */
+static GHashTable *uri_subprojects_map = NULL;
+
 G_DEFINE_TYPE_WITH_PRIVATE (GESXmlFormatter, ges_xml_formatter,
     GES_TYPE_BASE_XML_FORMATTER);
+
+static GString *_save_project (GESFormatter * formatter, GString * str,
+    GESProject * project, GESTimeline * timeline, GError ** error, guint depth);
 
 static inline void
 _parse_ges_element (GMarkupParseContext * context, const gchar * element_name,
@@ -71,7 +93,7 @@ _parse_ges_element (GMarkupParseContext * context, const gchar * element_name,
   if (g_strcmp0 (element_name, "ges")) {
     g_set_error (error, G_MARKUP_ERROR,
         G_MARKUP_ERROR_INVALID_CONTENT,
-        "element '%s', Missing <ges> element'", element_name);
+        "Found element '%s', Missing '<ges>' element'", element_name);
     return;
   }
 
@@ -301,6 +323,7 @@ _parse_asset (GMarkupParseContext * context, const gchar * element_name,
   GType extractable_type;
   const gchar *id, *extractable_type_name, *metadatas = NULL, *properties =
       NULL, *proxy_id = NULL;
+  GESXmlFormatterPrivate *priv = _GET_PRIV (self);
 
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error, G_MARKUP_COLLECT_STRING, "id", &id,
@@ -312,6 +335,39 @@ _parse_asset (GMarkupParseContext * context, const gchar * element_name,
     return;
 
   extractable_type = g_type_from_name (extractable_type_name);
+  if (extractable_type == GES_TYPE_TIMELINE) {
+    SubprojectData *subproj_data = g_malloc0 (sizeof (SubprojectData));
+    const gchar *nid;
+
+    priv->subproject = subproj_data;
+    G_LOCK (uri_subprojects_map_lock);
+    nid = g_hash_table_lookup (priv->subprojects_map, id);
+    G_UNLOCK (uri_subprojects_map_lock);
+
+    if (!nid) {
+      subproj_data->id = id;
+      subproj_data->fd =
+          g_file_open_tmp ("XXXXXX.xges", &subproj_data->filename, error);
+      if (subproj_data->fd == -1) {
+        GST_ERROR_OBJECT (self, "Could not create subproject file for %s", id);
+        return;
+      }
+      g_markup_parse_context_get_position (context, &subproj_data->start_line,
+          &subproj_data->start_char);
+      id = gst_uri_construct ("file", subproj_data->filename);
+      G_LOCK (uri_subprojects_map_lock);
+      g_hash_table_insert (priv->subprojects_map, g_strdup (subproj_data->id),
+          (gchar *) id);
+      G_UNLOCK (uri_subprojects_map_lock);
+      GST_INFO_OBJECT (self, "Serialized subproject %sis now at: %s",
+          subproj_data->id, id);
+    } else {
+      GST_DEBUG_OBJECT (self, "Subproject already exists: %s -> %s", id, nid);
+      id = nid;
+      subproj_data->start_line = -1;
+    }
+  }
+
   if (extractable_type == G_TYPE_NONE)
     g_set_error (error, G_MARKUP_ERROR,
         G_MARKUP_ERROR_INVALID_CONTENT,
@@ -326,6 +382,16 @@ _parse_asset (GMarkupParseContext * context, const gchar * element_name,
     GstStructure *props = NULL;
     if (properties)
       props = gst_structure_from_string (properties, NULL);
+
+    if (extractable_type == GES_TYPE_URI_CLIP) {
+      G_LOCK (uri_subprojects_map_lock);
+      if (g_hash_table_contains (priv->subprojects_map, id)) {
+        id = g_hash_table_lookup (priv->subprojects_map, id);
+
+        GST_DEBUG_OBJECT (self, "Using subproject %s", id);
+      }
+      G_UNLOCK (uri_subprojects_map_lock);
+    }
 
     ges_base_xml_formatter_add_asset (GES_BASE_XML_FORMATTER (self), id,
         extractable_type, props, metadatas, proxy_id, error);
@@ -474,6 +540,7 @@ _parse_clip (GMarkupParseContext * context,
   GstStructure *props = NULL, *children_props = NULL;
   GESTrackType track_types;
   GstClockTime start, inpoint = 0, duration, layer_prio;
+  GESXmlFormatterPrivate *priv = _GET_PRIV (self);
 
   const gchar *strid, *asset_id, *strstart, *strin, *strduration, *strrate,
       *strtrack_types, *strtype, *metadatas = NULL, *properties =
@@ -534,6 +601,12 @@ _parse_clip (GMarkupParseContext * context,
       goto wrong_children_properties;
   }
 
+  G_LOCK (uri_subprojects_map_lock);
+  if (g_hash_table_contains (priv->subprojects_map, asset_id)) {
+    asset_id = g_hash_table_lookup (priv->subprojects_map, asset_id);
+    GST_DEBUG_OBJECT (self, "Using subproject %s", asset_id);
+  }
+  G_UNLOCK (uri_subprojects_map_lock);
   ges_base_xml_formatter_add_clip (GES_BASE_XML_FORMATTER (self),
       strid, asset_id, type, start, inpoint, duration, layer_prio,
       track_types, props, children_props, metadatas, error);
@@ -776,13 +849,21 @@ _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
 {
   GESXmlFormatterPrivate *priv = _GET_PRIV (self);
 
-  if (!G_UNLIKELY (priv->ges_opened))
+  if (priv->subproject) {
+    if (g_strcmp0 (element_name, "ges") == 0) {
+      priv->subproject_depth += 1;
+    }
+    return;
+  }
+
+  if (!G_UNLIKELY (priv->ges_opened)) {
     _parse_ges_element (context, element_name, attribute_names,
         attribute_values, self, error);
-  else if (!G_UNLIKELY (priv->project_opened))
+  } else if (!G_UNLIKELY (priv->project_opened))
     _parse_project (context, element_name, attribute_names, attribute_values,
         self, error);
-  else if (g_strcmp0 (element_name, "encoding-profile") == 0)
+  else if (g_strcmp0 (element_name, "ges") == 0) {
+  } else if (g_strcmp0 (element_name, "encoding-profile") == 0)
     _parse_encoding_profile (context, element_name, attribute_names,
         attribute_values, self, error);
   else if (g_strcmp0 (element_name, "stream-profile") == 0)
@@ -822,19 +903,91 @@ _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
     GST_LOG_OBJECT (self, "Element %s not handled", element_name);
 }
 
+static gboolean
+_save_subproject_data (GESXmlFormatter * self, SubprojectData * subproj_data,
+    gint subproject_end_line, gint subproject_end_char, GError ** error)
+{
+  gsize size;
+  gint line = 1, i;
+  gboolean res = FALSE;
+  gsize start = 0, end = 0;
+  gchar *subproject_content = NULL;
+  gchar *xml = GES_BASE_XML_FORMATTER (self)->xmlcontent;
+
+  for (i = 0; xml[i] != '\0'; i++) {
+    if (!start && line == subproj_data->start_line) {
+      i += subproj_data->start_char - 1;
+      start = i;
+    }
+
+    if (line == subproject_end_line) {
+      end = i + subproject_end_char - 1;
+      break;
+    }
+
+    if (xml[i] == '\n')
+      line++;
+  }
+  g_assert (start && end);
+  size = (end - start);
+
+  subproject_content = g_malloc (sizeof (gchar) * size);
+  memcpy (subproject_content, &xml[start], end - start);
+  subproject_content[end - start] = '\0';
+  GST_INFO_OBJECT (self, "Saving subproject %s from %d:%d(%" G_GSIZE_FORMAT
+      ") to %d:%d(%" G_GSIZE_FORMAT ")",
+      subproj_data->id, subproj_data->start_line, subproj_data->start_char,
+      start, subproject_end_line, subproject_end_char, end);
+
+  res = g_file_set_contents (subproj_data->filename, subproject_content, -1,
+      error);
+  g_free (subproject_content);
+
+  return res;
+}
+
 static void
 _parse_element_end (GMarkupParseContext * context,
     const gchar * element_name, gpointer self, GError ** error)
 {
+  GESXmlFormatterPrivate *priv = _GET_PRIV (self);
+  SubprojectData *subproj_data = priv->subproject;
+
   /*GESXmlFormatterPrivate *priv = _GET_PRIV (self); */
-  if (g_strcmp0 (element_name, "ges") == 0 && GES_FORMATTER (self)->project) {
-    gchar *version = g_strdup_printf ("%d.%d",
-        API_VERSION, GES_XML_FORMATTER (self)->priv->min_version);
 
-    ges_meta_container_set_string (GES_META_CONTAINER (GES_FORMATTER
-            (self)->project), GES_META_FORMAT_VERSION, version);
+  if (!g_strcmp0 (element_name, "ges")) {
+    gint subproject_end_line, subproject_end_char;
 
-    g_free (version);
+    if (priv->subproject_depth)
+      priv->subproject_depth -= 1;
+
+    if (!subproj_data) {
+      if (GES_FORMATTER (self)->project) {
+        gchar *version = g_strdup_printf ("%d.%d",
+            API_VERSION, GES_XML_FORMATTER (self)->priv->min_version);
+
+        ges_meta_container_set_string (GES_META_CONTAINER (GES_FORMATTER
+                (self)->project), GES_META_FORMAT_VERSION, version);
+
+        g_free (version);
+        _GET_PRIV (self)->ges_opened = FALSE;
+      }
+    } else if (subproj_data->start_line != -1 && !priv->subproject_depth) {
+      g_markup_parse_context_get_position (context, &subproject_end_line,
+          &subproject_end_char);
+      _save_subproject_data (GES_XML_FORMATTER (self), subproj_data,
+          subproject_end_line, subproject_end_char, error);
+
+      subproj_data->filename = NULL;
+      g_close (subproj_data->fd, error);
+      subproj_data->id = NULL;
+      subproj_data->start_line = 0;
+      subproj_data->start_char = 0;
+    }
+
+    if (!priv->subproject_depth) {
+      g_clear_pointer (&priv->subproject, g_free);
+    }
   }
 }
 
@@ -853,9 +1006,24 @@ _error_parsing (GMarkupParseContext * context, GError * error,
 
 /* XML writting utils */
 static inline void
-append_escaped (GString * str, gchar * tmpstr)
+string_add_indents (GString * str, guint depth, gboolean prepend)
 {
-  g_string_append (str, tmpstr);
+  gint i;
+  for (i = 0; i < depth; i++)
+    prepend ? g_string_prepend (str, "  ") : g_string_append (str, "  ");
+}
+
+static inline void
+string_append_with_depth (GString * str, const gchar * string, guint depth)
+{
+  string_add_indents (str, depth, FALSE);
+  g_string_append (str, string);
+}
+
+static inline void
+append_escaped (GString * str, gchar * tmpstr, guint depth)
+{
+  string_append_with_depth (str, tmpstr, depth);
   g_free (tmpstr);
 }
 
@@ -954,30 +1122,168 @@ _serialize_properties (GObject * object, const gchar * fieldname, ...)
   return ret;
 }
 
-static inline void
-_save_assets (GESXmlFormatter * self, GString * str, GESProject * project)
+static void
+project_loaded_cb (GESProject * project, GESTimeline * timeline,
+    SubprojectData * data)
 {
-  char *properties, *metas;
+  g_main_loop_quit (data->ml);
+}
+
+static void
+error_loading_asset_cb (GESProject * project, GError * err,
+    const gchar * unused_id, GType extractable_type, SubprojectData * data)
+{
+  data->error = g_error_copy (err);
+  g_main_loop_quit (data->ml);
+}
+
+static gboolean
+_save_subproject (GESXmlFormatter * self, GString * str, GESProject * project,
+    GESAsset * subproject, GError ** error, guint depth)
+{
+  GString *substr;
+  GESTimeline *timeline;
+  gchar *properties, *metas;
+  GESXmlFormatterPrivate *priv = self->priv;
+  GMainContext *context = g_main_context_get_thread_default ();
+  const gchar *id = ges_asset_get_id (subproject);
+  SubprojectData data = { 0, };
+
+  if (!g_strcmp0 (ges_asset_get_id (GES_ASSET (project)), id)) {
+    g_set_error (error, G_MARKUP_ERROR,
+        G_MARKUP_ERROR_INVALID_CONTENT,
+        "Project %s trying to recurse into itself", id);
+    return FALSE;
+  }
+
+  G_LOCK (uri_subprojects_map_lock);
+  g_hash_table_insert (priv->subprojects_map, g_strdup (id), g_strdup (id));
+  G_UNLOCK (uri_subprojects_map_lock);
+  timeline = GES_TIMELINE (ges_asset_extract (subproject, error));
+  if (!timeline) {
+    return FALSE;
+  }
+
+  if (!context)
+    context = g_main_context_default ();
+
+  data.ml = g_main_loop_new (context, TRUE);
+  g_signal_connect (subproject, "loaded", (GCallback) project_loaded_cb, &data);
+  g_signal_connect (subproject, "error-loading-asset",
+      (GCallback) project_loaded_cb, &data);
+  g_main_loop_run (data.ml);
+
+  g_signal_handlers_disconnect_by_func (subproject, project_loaded_cb, &data);
+  g_signal_handlers_disconnect_by_func (subproject, error_loading_asset_cb,
+      &data);
+  if (data.error) {
+    g_propagate_error (error, data.error);
+    return FALSE;
+  }
+
+  subproject = ges_extractable_get_asset (GES_EXTRACTABLE (timeline));
+  substr = g_string_new (NULL);
+  properties = _serialize_properties (G_OBJECT (subproject), NULL);
+  metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (subproject));
+  append_escaped (str,
+      g_markup_printf_escaped
+      ("      <asset id='%s' extractable-type-name='%s' properties='%s' metadatas='%s'>\n",
+          ges_asset_get_id (subproject),
+          g_type_name (ges_asset_get_extractable_type (subproject)), properties,
+          metas), depth);
+
+  depth += 4;
+  GST_DEBUG_OBJECT (self, "Saving subproject %s (depth: %d)",
+      ges_asset_get_id (subproject), depth / 4);
+  if (!_save_project (GES_FORMATTER (self), substr, GES_PROJECT (subproject),
+          timeline, error, depth)) {
+    g_string_free (substr, TRUE);
+    g_object_unref (subproject);
+    goto err;
+  }
+  GST_DEBUG_OBJECT (self, "DONE Saving subproject %s",
+      ges_asset_get_id (subproject));
+  depth -= 4;
+
+  g_string_append (str, substr->str);
+  g_string_free (substr, TRUE);
+  string_append_with_depth (str, "      </asset>\n", depth);
+
+err:
+  g_object_unref (subproject);
+
+  return TRUE;
+}
+
+static gint
+sort_assets (GESAsset * a, GESAsset * b)
+{
+  if (GES_IS_PROJECT (a))
+    return -1;
+
+  if (GES_IS_PROJECT (b))
+    return 1;
+
+  return 0;
+}
+
+static inline gboolean
+_save_assets (GESXmlFormatter * self, GString * str, GESProject * project,
+    GError ** error, guint depth)
+{
+  gchar *properties, *metas;
   GESAsset *asset, *proxy;
   GList *assets, *tmp;
+  const gchar *id;
+  GESXmlFormatterPrivate *priv = self->priv;
 
   assets = ges_project_list_assets (project, GES_TYPE_EXTRACTABLE);
-  for (tmp = assets; tmp; tmp = tmp->next) {
+  for (tmp = g_list_sort (assets, (GCompareFunc) sort_assets); tmp;
+      tmp = tmp->next) {
     asset = GES_ASSET (tmp->data);
+    id = ges_asset_get_id (asset);
+
+    if (GES_IS_PROJECT (asset)) {
+      if (!_save_subproject (self, str, project, asset, error, depth))
+        return FALSE;
+
+      continue;
+    }
+
+    if (ges_asset_get_extractable_type (asset) == GES_TYPE_URI_CLIP) {
+      G_LOCK (uri_subprojects_map_lock);
+      if (g_hash_table_contains (priv->subprojects_map, id)) {
+        id = g_hash_table_lookup (priv->subprojects_map, id);
+
+        GST_DEBUG_OBJECT (self, "Using subproject %s", id);
+      }
+      G_UNLOCK (uri_subprojects_map_lock);
+    }
+
     properties = _serialize_properties (G_OBJECT (asset), NULL);
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (asset));
     append_escaped (str,
         g_markup_printf_escaped
         ("      <asset id='%s' extractable-type-name='%s' properties='%s' metadatas='%s' ",
-            ges_asset_get_id (asset),
-            g_type_name (ges_asset_get_extractable_type (asset)), properties,
-            metas));
+            id, g_type_name (ges_asset_get_extractable_type (asset)),
+            properties, metas), depth);
 
     /*TODO Save the whole list of proxies */
     proxy = ges_asset_get_proxy (asset);
     if (proxy) {
+      const gchar *proxy_id = ges_asset_get_id (proxy);
+
+      if (ges_asset_get_extractable_type (asset) == GES_TYPE_URI_CLIP) {
+        G_LOCK (uri_subprojects_map_lock);
+        if (g_hash_table_contains (priv->subprojects_map, proxy_id)) {
+          proxy_id = g_hash_table_lookup (priv->subprojects_map, proxy_id);
+
+          GST_DEBUG_OBJECT (self, "Using subproject %s", id);
+        }
+        G_UNLOCK (uri_subprojects_map_lock);
+      }
       append_escaped (str, g_markup_printf_escaped (" proxy-id='%s' ",
-              ges_asset_get_id (proxy)));
+              proxy_id), depth);
 
       if (!g_list_find (assets, proxy)) {
         assets = g_list_append (assets, gst_object_ref (proxy));
@@ -988,15 +1294,20 @@ _save_assets (GESXmlFormatter * self, GString * str, GESProject * project)
 
       self->priv->min_version = MAX (self->priv->min_version, 3);
     }
+
     g_string_append (str, "/>\n");
     g_free (properties);
     g_free (metas);
   }
+
   g_list_free_full (assets, gst_object_unref);
+
+  return TRUE;
 }
 
 static inline void
-_save_tracks (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
+_save_tracks (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
+    guint depth)
 {
   gchar *strtmp, *metas;
   GESTrack *track;
@@ -1014,7 +1325,7 @@ _save_tracks (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
     append_escaped (str,
         g_markup_printf_escaped
         ("      <track caps='%s' track-type='%i' track-id='%i' properties='%s' metadatas='%s'/>\n",
-            strtmp, track->type, nb_tracks++, properties, metas));
+            strtmp, track->type, nb_tracks++, properties, metas), depth);
     g_free (strtmp);
     g_free (metas);
     g_free (properties);
@@ -1023,7 +1334,8 @@ _save_tracks (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
 }
 
 static inline void
-_save_children_properties (GString * str, GESTimelineElement * element)
+_save_children_properties (GString * str, GESTimelineElement * element,
+    guint depth)
 {
   GstStructure *structure;
   GParamSpec **pspecs, *spec;
@@ -1055,14 +1367,15 @@ _save_children_properties (GString * str, GESTimelineElement * element)
 
   struct_str = gst_structure_to_string (structure);
   append_escaped (str,
-      g_markup_printf_escaped (" children-properties='%s'", struct_str));
+      g_markup_printf_escaped (" children-properties='%s'", struct_str), 0);
   gst_structure_free (structure);
   g_free (struct_str);
 }
 
 /* TODO : Use this function for every track element with controllable properties */
 static inline void
-_save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
+_save_keyframes (GString * str, GESTrackElement * trackelement, gint index,
+    guint depth)
 {
   GHashTable *bindings_hashtable;
   GHashTableIter iter;
@@ -1092,12 +1405,14 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
         append_escaped (str,
             g_markup_printf_escaped
             ("            <binding type='%s' source_type='interpolation' property='%s'",
-                absolute ? "direct-absolute" : "direct", (gchar *) key));
+                absolute ? "direct-absolute" : "direct", (gchar *) key), depth);
 
         g_object_get (source, "mode", &mode, NULL);
-        append_escaped (str, g_markup_printf_escaped (" mode='%d'", mode));
-        append_escaped (str, g_markup_printf_escaped (" track_id='%d'", index));
-        append_escaped (str, g_markup_printf_escaped (" values ='"));
+        append_escaped (str, g_markup_printf_escaped (" mode='%d'", mode),
+            depth);
+        append_escaped (str, g_markup_printf_escaped (" track_id='%d'", index),
+            depth);
+        append_escaped (str, g_markup_printf_escaped (" values ='"), depth);
         timed_values =
             gst_timed_value_control_source_get_all
             (GST_TIMED_VALUE_CONTROL_SOURCE (source));
@@ -1108,9 +1423,9 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
           value = (GstTimedValue *) tmp->data;
           append_escaped (str, g_markup_printf_escaped (" %" G_GUINT64_FORMAT
                   ":%s ", value->timestamp, g_ascii_dtostr (strbuf,
-                      G_ASCII_DTOSTR_BUF_SIZE, value->value)));
+                      G_ASCII_DTOSTR_BUF_SIZE, value->value)), depth);
         }
-        append_escaped (str, g_markup_printf_escaped ("'/>\n"));
+        append_escaped (str, g_markup_printf_escaped ("'/>\n"), depth);
       } else
         GST_DEBUG ("control source not in [interpolation]");
     } else
@@ -1120,7 +1435,7 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
 
 static inline void
 _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
-    GESTimeline * timeline)
+    GESTimeline * timeline, guint depth)
 {
   GESTrack *tck;
   GList *tmp, *tracks;
@@ -1163,21 +1478,23 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
           " type-name='%s' track-type='%i' track-id='%i' properties='%s' metadatas='%s'",
           extractable_id, clip_id,
           g_type_name (G_OBJECT_TYPE (trackelement)), tck->type, track_id,
-          properties, metas));
+          properties, metas), depth);
   g_free (extractable_id);
   g_free (properties);
   g_free (metas);
 
-  _save_children_properties (str, GES_TIMELINE_ELEMENT (trackelement));
-  append_escaped (str, g_markup_printf_escaped (">\n"));
+  _save_children_properties (str, GES_TIMELINE_ELEMENT (trackelement), depth);
+  append_escaped (str, g_markup_printf_escaped (">\n"), depth);
 
-  _save_keyframes (str, trackelement, -1);
+  _save_keyframes (str, trackelement, -1, depth);
 
-  append_escaped (str, g_markup_printf_escaped ("          </effect>\n"));
+  append_escaped (str, g_markup_printf_escaped ("          </effect>\n"),
+      depth);
 }
 
 static inline void
-_save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
+_save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
+    guint depth)
 {
   gchar *properties, *metas;
   GESLayer *layer;
@@ -1195,7 +1512,7 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
     append_escaped (str,
         g_markup_printf_escaped
         ("      <layer priority='%i' properties='%s' metadatas='%s'>\n",
-            priority, properties, metas));
+            priority, properties, metas), depth);
     g_free (properties);
     g_free (metas);
 
@@ -1221,6 +1538,14 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
           "supported-formats", "rate", "in-point", "start", "duration",
           "max-duration", "priority", "vtype", "uri", NULL);
       extractable_id = ges_extractable_get_id (GES_EXTRACTABLE (clip));
+      if (GES_IS_URI_CLIP (clip)) {
+        G_LOCK (uri_subprojects_map_lock);
+        if (g_hash_table_contains (priv->subprojects_map, extractable_id))
+          extractable_id =
+              g_strdup (g_hash_table_lookup (priv->subprojects_map,
+                  extractable_id));
+        G_UNLOCK (uri_subprojects_map_lock);
+      }
       metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (clip));
       append_escaped (str,
           g_markup_printf_escaped ("        <clip id='%i' asset-id='%s'"
@@ -1230,11 +1555,11 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
               priv->nbelements, extractable_id,
               g_type_name (G_OBJECT_TYPE (clip)), priority,
               ges_clip_get_supported_formats (clip), _START (clip),
-              _DURATION (clip), _INPOINT (clip), 0, properties, metas));
+              _DURATION (clip), _INPOINT (clip), 0, properties, metas), depth);
       g_free (metas);
 
       if (GES_IS_TRANSITION_CLIP (clip)) {
-        _save_children_properties (str, GES_TIMELINE_ELEMENT (clip));
+        _save_children_properties (str, GES_TIMELINE_ELEMENT (clip), depth);
         self->priv->min_version = MAX (self->priv->min_version, 4);
       }
       g_string_append (str, ">\n");
@@ -1252,7 +1577,7 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
       effects = ges_clip_get_top_effects (clip);
       for (tmpeffect = effects; tmpeffect; tmpeffect = tmpeffect->next) {
         _save_effect (str, priv->nbelements,
-            GES_TRACK_ELEMENT (tmpeffect->data), timeline);
+            GES_TRACK_ELEMENT (tmpeffect->data), timeline, depth);
       }
       g_list_free (effects);
       tracks = ges_timeline_get_tracks (timeline);
@@ -1275,27 +1600,29 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
             g_list_index (tracks,
             ges_track_element_get_track (tmptrackelement->data));
         append_escaped (str,
-            g_markup_printf_escaped ("          <source track-id='%i'", index));
-        _save_children_properties (str, tmptrackelement->data);
-        append_escaped (str, g_markup_printf_escaped (">\n"));
-        _save_keyframes (str, tmptrackelement->data, index);
-        append_escaped (str, g_markup_printf_escaped ("          </source>\n"));
+            g_markup_printf_escaped ("          <source track-id='%i'", index),
+            depth);
+        _save_children_properties (str, tmptrackelement->data, depth);
+        append_escaped (str, g_markup_printf_escaped (">\n"), depth);
+        _save_keyframes (str, tmptrackelement->data, index, depth);
+        append_escaped (str, g_markup_printf_escaped ("          </source>\n"),
+            depth);
       }
 
       g_list_free_full (tracks, gst_object_unref);
 
-      g_string_append (str, "        </clip>\n");
+      string_append_with_depth (str, "        </clip>\n", depth);
 
       priv->nbelements++;
     }
     g_list_free_full (clips, (GDestroyNotify) gst_object_unref);
-    g_string_append (str, "      </layer>\n");
+    string_append_with_depth (str, "      </layer>\n", depth);
   }
 }
 
 static void
 _save_group (GESXmlFormatter * self, GString * str, GList ** seen_groups,
-    GESGroup * group)
+    GESGroup * group, guint depth)
 {
   GList *tmp;
   gboolean serialize;
@@ -1319,7 +1646,7 @@ _save_group (GESXmlFormatter * self, GString * str, GList ** seen_groups,
   for (tmp = GES_CONTAINER_CHILDREN (group); tmp; tmp = tmp->next) {
     if (GES_IS_GROUP (tmp->data)) {
       _save_group (self, str, seen_groups,
-          GES_GROUP (GES_TIMELINE_ELEMENT (tmp->data)));
+          GES_GROUP (GES_TIMELINE_ELEMENT (tmp->data)), depth);
     }
   }
 
@@ -1328,6 +1655,7 @@ _save_group (GESXmlFormatter * self, GString * str, GList ** seen_groups,
   metadatas = ges_meta_container_metas_to_string (GES_META_CONTAINER (group));
   self->priv->min_version = MAX (self->priv->min_version, 5);
 
+  string_add_indents (str, depth, FALSE);
   g_string_append_printf (str,
       "        <group id='%d' properties='%s' metadatas='%s'>\n",
       self->priv->nbelements, properties, metadatas);
@@ -1341,28 +1669,31 @@ _save_group (GESXmlFormatter * self, GString * str, GList ** seen_groups,
     gint id = GPOINTER_TO_INT (g_hash_table_lookup (self->priv->element_id,
             tmp->data));
 
+    string_add_indents (str, depth, FALSE);
     g_string_append_printf (str, "          <child id='%d' name='%s'/>\n", id,
         GES_TIMELINE_ELEMENT_NAME (tmp->data));
   }
-  g_string_append (str, "        </group>\n");
+  string_append_with_depth (str, "        </group>\n", depth);
 }
 
 static void
-_save_groups (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
+_save_groups (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
+    guint depth)
 {
   GList *tmp;
   GList *seen_groups = NULL;
 
-  g_string_append (str, "      <groups>\n");
+  string_append_with_depth (str, "      <groups>\n", depth);
   for (tmp = ges_timeline_get_groups (timeline); tmp; tmp = tmp->next) {
-    _save_group (self, str, &seen_groups, tmp->data);
+    _save_group (self, str, &seen_groups, tmp->data, depth);
   }
   g_list_free (seen_groups);
-  g_string_append (str, "      </groups>\n");
+  string_append_with_depth (str, "      </groups>\n", depth);
 }
 
 static inline void
-_save_timeline (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
+_save_timeline (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
+    guint depth)
 {
   gchar *properties = NULL, *metas = NULL;
 
@@ -1374,13 +1705,14 @@ _save_timeline (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
   metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (timeline));
   append_escaped (str,
       g_markup_printf_escaped
-      ("    <timeline properties='%s' metadatas='%s'>\n", properties, metas));
+      ("    <timeline properties='%s' metadatas='%s'>\n", properties, metas),
+      depth);
 
-  _save_tracks (self, str, timeline);
-  _save_layers (self, str, timeline);
-  _save_groups (self, str, timeline);
+  _save_tracks (self, str, timeline, depth);
+  _save_layers (self, str, timeline, depth);
+  _save_groups (self, str, timeline, depth);
 
-  g_string_append (str, "    </timeline>\n");
+  string_append_with_depth (str, "    </timeline>\n", depth);
 
   g_free (properties);
   g_free (metas);
@@ -1388,7 +1720,8 @@ _save_timeline (GESXmlFormatter * self, GString * str, GESTimeline * timeline)
 
 static void
 _save_stream_profiles (GESXmlFormatter * self, GString * str,
-    GstEncodingProfile * sprof, const gchar * profilename, guint id)
+    GstEncodingProfile * sprof, const gchar * profilename, guint id,
+    guint depth)
 {
   gchar *tmpc;
   GstCaps *tmpcaps;
@@ -1399,10 +1732,10 @@ _save_stream_profiles (GESXmlFormatter * self, GString * str,
       ("        <stream-profile parent='%s' id='%d' type='%s' "
           "presence='%d' ", profilename, id,
           gst_encoding_profile_get_type_nick (sprof),
-          gst_encoding_profile_get_presence (sprof)));
+          gst_encoding_profile_get_presence (sprof)), depth);
 
   if (!gst_encoding_profile_is_enabled (sprof)) {
-    append_escaped (str, g_strdup ("enabled='0' "));
+    append_escaped (str, g_strdup ("enabled='0' "), depth);
 
     self->priv->min_version = MAX (self->priv->min_version, 2);
   }
@@ -1410,25 +1743,26 @@ _save_stream_profiles (GESXmlFormatter * self, GString * str,
   tmpcaps = gst_encoding_profile_get_format (sprof);
   if (tmpcaps) {
     tmpc = gst_caps_to_string (tmpcaps);
-    append_escaped (str, g_markup_printf_escaped ("format='%s' ", tmpc));
+    append_escaped (str, g_markup_printf_escaped ("format='%s' ", tmpc), depth);
     gst_caps_unref (tmpcaps);
     g_free (tmpc);
   }
 
   name = gst_encoding_profile_get_name (sprof);
   if (name)
-    append_escaped (str, g_markup_printf_escaped ("name='%s' ", name));
+    append_escaped (str, g_markup_printf_escaped ("name='%s' ", name), depth);
 
   description = gst_encoding_profile_get_description (sprof);
   if (description)
     append_escaped (str, g_markup_printf_escaped ("description='%s' ",
-            description));
+            description), depth);
 
   preset = gst_encoding_profile_get_preset (sprof);
   if (preset) {
     GstElement *encoder;
 
-    append_escaped (str, g_markup_printf_escaped ("preset='%s' ", preset));
+    append_escaped (str, g_markup_printf_escaped ("preset='%s' ", preset),
+        depth);
 
     encoder = get_element_for_encoding_profile (sprof,
         GST_ELEMENT_FACTORY_TYPE_ENCODER);
@@ -1438,7 +1772,8 @@ _save_stream_profiles (GESXmlFormatter * self, GString * str,
 
         gchar *settings = _serialize_properties (G_OBJECT (encoder), NULL);
         append_escaped (str,
-            g_markup_printf_escaped ("preset-properties='%s' ", settings));
+            g_markup_printf_escaped ("preset-properties='%s' ", settings),
+            depth);
         g_free (settings);
       }
       gst_object_unref (encoder);
@@ -1448,12 +1783,13 @@ _save_stream_profiles (GESXmlFormatter * self, GString * str,
   preset_name = gst_encoding_profile_get_preset_name (sprof);
   if (preset_name)
     append_escaped (str, g_markup_printf_escaped ("preset-name='%s' ",
-            preset_name));
+            preset_name), depth);
 
   tmpcaps = gst_encoding_profile_get_restriction (sprof);
   if (tmpcaps) {
     tmpc = gst_caps_to_string (tmpcaps);
-    append_escaped (str, g_markup_printf_escaped ("restriction='%s' ", tmpc));
+    append_escaped (str, g_markup_printf_escaped ("restriction='%s' ", tmpc),
+        depth);
     gst_caps_unref (tmpcaps);
     g_free (tmpc);
   }
@@ -1464,7 +1800,7 @@ _save_stream_profiles (GESXmlFormatter * self, GString * str,
     append_escaped (str,
         g_markup_printf_escaped ("pass='%d' variableframerate='%i' ",
             gst_encoding_video_profile_get_pass (vp),
-            gst_encoding_video_profile_get_variableframerate (vp)));
+            gst_encoding_video_profile_get_variableframerate (vp)), depth);
   }
 
   g_string_append (str, "/>\n");
@@ -1472,7 +1808,7 @@ _save_stream_profiles (GESXmlFormatter * self, GString * str,
 
 static inline void
 _save_encoding_profiles (GESXmlFormatter * self, GString * str,
-    GESProject * project)
+    GESProject * project, guint depth)
 {
   GstCaps *profformat;
   const gchar *profname, *profdesc, *profpreset, *proftype, *profpresetname;
@@ -1493,13 +1829,13 @@ _save_encoding_profiles (GESXmlFormatter * self, GString * str,
     append_escaped (str,
         g_markup_printf_escaped
         ("      <encoding-profile name='%s' description='%s' type='%s' ",
-            profname, profdesc, proftype));
+            profname, profdesc, proftype), depth);
 
     if (profpreset) {
       GstElement *element;
 
       append_escaped (str, g_markup_printf_escaped ("preset='%s' ",
-              profpreset));
+              profpreset), depth);
 
       if (GST_IS_ENCODING_CONTAINER_PROFILE (prof)) {
         element = get_element_for_encoding_profile (prof,
@@ -1514,7 +1850,8 @@ _save_encoding_profiles (GESXmlFormatter * self, GString * str,
             gst_preset_load_preset (GST_PRESET (element), profpreset)) {
           gchar *settings = _serialize_properties (G_OBJECT (element), NULL);
           append_escaped (str,
-              g_markup_printf_escaped ("preset-properties='%s' ", settings));
+              g_markup_printf_escaped ("preset-properties='%s' ", settings),
+              depth);
           g_free (settings);
         }
         gst_object_unref (element);
@@ -1524,12 +1861,13 @@ _save_encoding_profiles (GESXmlFormatter * self, GString * str,
 
     if (profpresetname)
       append_escaped (str, g_markup_printf_escaped ("preset-name='%s' ",
-              profpresetname));
+              profpresetname), depth);
 
     profformat = gst_encoding_profile_get_format (prof);
     if (profformat) {
       gchar *format = gst_caps_to_string (profformat);
-      append_escaped (str, g_markup_printf_escaped ("format='%s' ", format));
+      append_escaped (str, g_markup_printf_escaped ("format='%s' ", format),
+          depth);
       g_free (format);
       gst_caps_unref (profformat);
     }
@@ -1545,11 +1883,11 @@ _save_encoding_profiles (GESXmlFormatter * self, GString * str,
       for (tmp2 = gst_encoding_container_profile_get_profiles (container_prof);
           tmp2; tmp2 = tmp2->next, i++) {
         GstEncodingProfile *sprof = (GstEncodingProfile *) tmp2->data;
-        _save_stream_profiles (self, str, sprof, profname, i);
+        _save_stream_profiles (self, str, sprof, profname, i, depth);
       }
     }
     append_escaped (str,
-        g_markup_printf_escaped ("      </encoding-profile>\n"));
+        g_markup_printf_escaped ("      </encoding-profile>\n"), depth);
   }
   g_list_free (profiles);
 }
@@ -1559,41 +1897,51 @@ _save (GESFormatter * formatter, GESTimeline * timeline, GError ** error)
 {
   GString *str;
   GESProject *project;
-
-  gchar *projstr = NULL, *version;
-  gchar *properties = NULL, *metas = NULL;
-  GESXmlFormatter *self = GES_XML_FORMATTER (formatter);
-  GESXmlFormatterPrivate *priv;
-
-
-  priv = _GET_PRIV (formatter);
+  GESXmlFormatterPrivate *priv = _GET_PRIV (formatter);
 
   priv->min_version = 1;
   project = formatter->project;
   str = priv->str = g_string_new (NULL);
 
+  return _save_project (formatter, str, project, timeline, error, 0);
+}
+
+static GString *
+_save_project (GESFormatter * formatter, GString * str, GESProject * project,
+    GESTimeline * timeline, GError ** error, guint depth)
+{
+  gchar *projstr = NULL, *version;
+  gchar *properties = NULL, *metas = NULL;
+  GESXmlFormatter *self = GES_XML_FORMATTER (formatter);
+  GESXmlFormatterPrivate *priv = _GET_PRIV (formatter);
+
   properties = _serialize_properties (G_OBJECT (project), NULL);
   metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (project));
   append_escaped (str,
       g_markup_printf_escaped ("  <project properties='%s' metadatas='%s'>\n",
-          properties, metas));
+          properties, metas), depth);
   g_free (properties);
   g_free (metas);
 
-  g_string_append (str, "    <encoding-profiles>\n");
-  _save_encoding_profiles (GES_XML_FORMATTER (formatter), str, project);
-  g_string_append (str, "    </encoding-profiles>\n");
+  string_append_with_depth (str, "    <encoding-profiles>\n", depth);
+  _save_encoding_profiles (GES_XML_FORMATTER (formatter), str, project, depth);
+  string_append_with_depth (str, "    </encoding-profiles>\n", depth);
 
-  g_string_append (str, "    <ressources>\n");
-  _save_assets (self, str, project);
-  g_string_append (str, "    </ressources>\n");
+  string_append_with_depth (str, "    <ressources>\n", depth);
+  if (!_save_assets (self, str, project, error, depth)) {
+    g_string_free (str, TRUE);
+    return NULL;
+  }
+  string_append_with_depth (str, "    </ressources>\n", depth);
 
-  _save_timeline (self, str, timeline);
-  g_string_append (str, "</project>\n</ges>");
+  _save_timeline (self, str, timeline, depth);
+  string_append_with_depth (str, "  </project>\n", depth);
+  string_append_with_depth (str, "</ges>\n", depth);
 
   projstr = g_strdup_printf ("<ges version='%i.%i'>\n", API_VERSION,
       priv->min_version);
   g_string_prepend (str, projstr);
+  string_add_indents (str, depth, TRUE);
   g_free (projstr);
 
   ges_meta_container_set_int (GES_META_CONTAINER (project),
@@ -1610,6 +1958,66 @@ _save (GESFormatter * formatter, GESTimeline * timeline, GError ** error)
   priv->str = NULL;
 
   return str;
+}
+
+static void
+_setup_subprojects_map (GESXmlFormatterPrivate * priv, const gchar * uri)
+{
+  GHashTable *subprojects_map;
+
+  G_LOCK (uri_subprojects_map_lock);
+  if (!uri_subprojects_map)
+    uri_subprojects_map =
+        g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+        (GDestroyNotify) g_hash_table_unref);
+
+  subprojects_map = g_hash_table_lookup (uri_subprojects_map, uri);
+  if (!subprojects_map) {
+    subprojects_map =
+        g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+    g_hash_table_insert (uri_subprojects_map, g_strdup (uri), subprojects_map);
+  }
+  priv->subprojects_map = subprojects_map;
+  G_UNLOCK (uri_subprojects_map_lock);
+
+}
+
+void
+ges_xml_formatter_deinit (void)
+{
+  GST_DEBUG ("Deinit");
+  G_LOCK (uri_subprojects_map_lock);
+  if (uri_subprojects_map) {
+    g_hash_table_unref (uri_subprojects_map);
+    uri_subprojects_map = NULL;
+  }
+  G_UNLOCK (uri_subprojects_map_lock);
+}
+
+static gboolean
+_save_to_uri (GESFormatter * formatter, GESTimeline * timeline,
+    const gchar * uri, gboolean overwrite, GError ** error)
+{
+  _setup_subprojects_map (_GET_PRIV (formatter), uri);
+  return GES_FORMATTER_CLASS (parent_class)->save_to_uri (formatter, timeline,
+      uri, overwrite, error);
+}
+
+static gboolean
+_can_load_uri (GESFormatter * formatter, const gchar * uri, GError ** error)
+{
+  _setup_subprojects_map (_GET_PRIV (formatter), uri);
+  return GES_FORMATTER_CLASS (parent_class)->can_load_uri (formatter, uri,
+      error);
+}
+
+static gboolean
+_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
+    const gchar * uri, GError ** error)
+{
+  _setup_subprojects_map (_GET_PRIV (formatter), uri);
+  return GES_FORMATTER_CLASS (parent_class)->load_from_uri (formatter, timeline,
+      uri, error);
 }
 
 /***********************************************
@@ -1656,8 +2064,13 @@ ges_xml_formatter_class_init (GESXmlFormatterClass * self_class)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (self_class);
   GESBaseXmlFormatterClass *basexmlformatter_class;
+  GESFormatterClass *formatter_klass = GES_FORMATTER_CLASS (self_class);
 
   basexmlformatter_class = GES_BASE_XML_FORMATTER_CLASS (self_class);
+
+  formatter_klass->save_to_uri = _save_to_uri;
+  formatter_klass->can_load_uri = _can_load_uri;
+  formatter_klass->load_from_uri = _load_from_uri;
 
   object_class->get_property = _get_property;
   object_class->set_property = _set_property;

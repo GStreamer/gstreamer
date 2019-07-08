@@ -43,6 +43,24 @@
  * It lets you request new asset, and it informs you about new assets through
  * a set of signals. Also it handles problem such as missing files/missing
  * #GstElement and lets you try to recover from those.
+ *
+ * ## Subprojects
+ *
+ * In order to add a subproject, the only thing to do is to add the subproject
+ * with to the main project:
+ *
+ * ``` c
+ * ges_project_add_asset (project, GES_ASSET (subproject));
+ * ```
+ * then the subproject will be serialized in the project files. To use
+ * the subproject in a timeline, you should use a #GESUriClip with the
+ * same subproject URI.
+ *
+ * When loading a project with subproject, subprojects URIs will be temporary
+ * writable local files. If you want to edit the subproject timeline,
+ * you should retrieve the subproject from the parent project asset list and
+ * extract the timeline with ges_asset_extract() and save it at
+ * the same temporary location.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"

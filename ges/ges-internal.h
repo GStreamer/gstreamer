@@ -326,6 +326,12 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_binding (GESBaseXmlForma
                                                                   const gchar *track_id,
                                                                   GSList * timed_values);
 
+G_GNUC_INTERNAL void ges_base_xml_formatter_set_timeline_properties(GESBaseXmlFormatter * self,
+                                                                    GESTimeline *timeline,
+                                                                    const gchar *properties,
+                                                                    const gchar *metadatas);
+G_GNUC_INTERNAL void ges_xml_formatter_deinit                       (void);
+
 G_GNUC_INTERNAL gboolean set_property_foreach                   (GQuark field_id,
                                                                  const GValue * value,
                                                                  GObject * object);
@@ -345,11 +351,6 @@ G_GNUC_INTERNAL gint element_end_compare                  (GESTimelineElement * 
 G_GNUC_INTERNAL GstElementFactory *
 ges_get_compositor_factory                                (void);
 
-G_GNUC_INTERNAL void
-ges_base_xml_formatter_set_timeline_properties(GESBaseXmlFormatter * self,
-					       GESTimeline *timeline,
-					       const gchar *properties,
-					       const gchar *metadatas);
 
 /****************************************************
  *              GESContainer                        *

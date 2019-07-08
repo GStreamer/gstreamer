@@ -26,13 +26,6 @@
  * GES needs to be initialized after GStreamer itself. This section
  * contains the various functions to do so.
  */
-/* TODO
- * Add a deinit function
- *
- * Do not forget to
- *  + g_ptr_array_unref (new_paths);
- *  + g_hash_table_unref (tried_uris);
- */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -229,6 +222,7 @@ ges_deinit (void)
   g_type_class_unref (g_type_class_peek (GES_TYPE_EFFECT));
 
   ges_asset_cache_deinit ();
+  ges_xml_formatter_deinit ();
 
   initialized_thread = NULL;
   G_UNLOCK (init_lock);

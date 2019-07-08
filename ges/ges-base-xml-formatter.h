@@ -45,8 +45,9 @@ struct _GESBaseXmlFormatter
   /*< public > */
   /* <private> */
   GESBaseXmlFormatterPrivate *priv;
+  gchar *xmlcontent;
 
-  gpointer _ges_reserved[GES_PADDING];
+  gpointer _ges_reserved[GES_PADDING - 1];
 };
 
 /**

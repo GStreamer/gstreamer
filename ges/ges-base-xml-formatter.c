@@ -73,7 +73,6 @@ typedef enum
 struct _GESBaseXmlFormatterPrivate
 {
   GMarkupParseContext *parsecontext;
-  gchar *xmlcontent;
   gsize xmlsize;
   LoadingState state;
 
@@ -139,6 +138,12 @@ G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESBaseXmlFormatter,
 static gint
 compare_assets_for_loading (PendingAsset * a, PendingAsset * b)
 {
+  if (a->extractable_type == GES_TYPE_TIMELINE)
+    return -1;
+
+  if (b->extractable_type == GES_TYPE_TIMELINE)
+    return 1;
+
   if (a->proxy_id)
     return -1;
 
@@ -157,7 +162,7 @@ _parse (GESBaseXmlFormatter * self, GError ** error, LoadingState state)
       GES_BASE_XML_FORMATTER_GET_CLASS (self);
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
-  if (!priv->xmlcontent || g_strcmp0 (priv->xmlcontent, "") == 0) {
+  if (!self->xmlcontent || g_strcmp0 (self->xmlcontent, "") == 0) {
     err = g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Nothing contained in the project file.");
 
@@ -169,7 +174,7 @@ _parse (GESBaseXmlFormatter * self, GError ** error, LoadingState state)
 
   priv->state = state;
   GST_DEBUG_OBJECT (self, "Running %s pass", loading_state_name (state));
-  if (!g_markup_parse_context_parse (parsecontext, priv->xmlcontent,
+  if (!g_markup_parse_context_parse (parsecontext, self->xmlcontent,
           priv->xmlsize, &err))
     goto failed;
 
@@ -215,7 +220,8 @@ _load_and_parse (GESBaseXmlFormatter * self, const gchar * uri, GError ** error,
 
   GError *err = NULL;
 
-  GST_INFO_OBJECT (self, "loading xml from %s", uri);
+  GST_DEBUG_OBJECT (self, "loading xml from %s, %s", uri,
+      loading_state_name (state));
 
   file = g_file_new_for_uri (uri);
   /* TODO Handle GCancellable */
@@ -225,8 +231,8 @@ _load_and_parse (GESBaseXmlFormatter * self, const gchar * uri, GError ** error,
     goto failed;
   }
 
-  g_clear_pointer (&priv->xmlcontent, g_free);
-  if (!g_file_load_contents (file, NULL, &priv->xmlcontent, &priv->xmlsize,
+  g_clear_pointer (&self->xmlcontent, g_free);
+  if (!g_file_load_contents (file, NULL, &self->xmlcontent, &priv->xmlsize,
           NULL, &err))
     goto failed;
   g_object_unref (file);
@@ -374,11 +380,12 @@ _dispose (GObject * object)
 static void
 _finalize (GObject * object)
 {
+  GESBaseXmlFormatter *self = GES_BASE_XML_FORMATTER (object);
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (object);
 
   if (priv->parsecontext != NULL)
     g_markup_parse_context_free (priv->parsecontext);
-  g_free (priv->xmlcontent);
+  g_clear_pointer (&self->xmlcontent, g_free);
 
   g_list_free_full (priv->groups, (GDestroyNotify) _free_pending_group);
   priv->groups = NULL;
