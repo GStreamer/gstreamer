@@ -978,8 +978,6 @@ extract_vbi_line (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
 
   while (gst_video_vbi_parser_get_ancillary (self->vbiparser,
           &gstanc) == GST_VIDEO_VBI_PARSER_RESULT_OK) {
-    g_print ("found at line %d\n", field2_offset + line);
-    gst_util_dump_mem (vancdata, 16);
     switch (GST_VIDEO_ANCILLARY_DID16 (&gstanc)) {
       case GST_VIDEO_ANCILLARY_DID16_S334_EIA_708:
         if (*found_cc_out || !self->output_cc)
