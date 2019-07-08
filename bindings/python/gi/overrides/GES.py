@@ -86,6 +86,14 @@ class Container(GES.Container):
 Container = override(Container)
 __all__.append('Container')
 
+class Asset(GES.Asset):
+    def __repr__(self):
+        return "%s(%s)" % (super().__repr__(), self.props.id)
+
+
+Asset = override(Asset)
+__all__.append('Asset')
+
 try:
     from gi.repository import Gst
     Gst
