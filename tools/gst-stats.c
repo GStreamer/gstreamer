@@ -53,6 +53,8 @@ static gboolean have_element_reported_latency = FALSE;
 
 typedef struct
 {
+  /* display name of the element */
+  gchar *name;
   /* the number of latencies counted  */
   guint64 count;
   /* the total of all latencies */
@@ -61,6 +63,7 @@ typedef struct
   guint64 min;
   /* the max of all latencies */
   guint64 max;
+  GstClockTime first_latency_ts;
 } GstLatencyStats;
 
 typedef struct
@@ -121,11 +124,21 @@ typedef struct
 
 /* stats helper */
 
-static void
-latencies_foreach_print_stats (gchar * key, GstLatencyStats * ls, gpointer data)
+static gint
+sort_latency_stats_by_first_ts (gconstpointer a, gconstpointer b)
 {
+  const GstLatencyStats *ls1 = a, *ls2 = b;
+
+  return (GST_CLOCK_DIFF (ls2->first_latency_ts, ls1->first_latency_ts));
+}
+
+static void
+print_latency_stats (gpointer value, gpointer user_data)
+{
+  GstLatencyStats *ls = value;
+
   printf ("\t%s: mean=%" GST_TIME_FORMAT " min=%" GST_TIME_FORMAT " max=%"
-      GST_TIME_FORMAT "\n", key, GST_TIME_ARGS (ls->total / ls->count),
+      GST_TIME_FORMAT "\n", ls->name, GST_TIME_ARGS (ls->total / ls->count),
       GST_TIME_ARGS (ls->min), GST_TIME_ARGS (ls->max));
 }
 
@@ -140,6 +153,9 @@ reported_latencies_foreach_print_stats (GstReportedLatency * rl, gpointer data)
 static void
 free_latency_stats (gpointer data)
 {
+  GstLatencyStats *ls = data;
+
+  g_free (ls->name);
   g_slice_free (GstLatencyStats, data);
 }
 
@@ -475,17 +491,20 @@ do_proc_rusage_stats (GstStructure * s)
 }
 
 static void
-update_latency_table (GHashTable * table, const gchar * key, guint64 time)
+update_latency_table (GHashTable * table, const gchar * key, guint64 time,
+    GstClockTime ts)
 {
   /* Find the values in the hash table */
   GstLatencyStats *ls = g_hash_table_lookup (table, key);
   if (!ls) {
     /* Insert the new key if the value does not exist */
     ls = g_new0 (GstLatencyStats, 1);
+    ls->name = g_strdup (key);
     ls->count = 1;
     ls->total = time;
     ls->min = time;
     ls->max = time;
+    ls->first_latency_ts = ts;
     g_hash_table_insert (table, g_strdup (key), ls);
   } else {
     /* Otherwise update the existing value */
@@ -524,7 +543,7 @@ do_latency_stats (GstStructure * s)
       src, sink_element_id, sink_element, sink);
 
   /* Update the latency in the table */
-  update_latency_table (latencies, key, time);
+  update_latency_table (latencies, key, time, ts);
 
   /* Clean up */
   g_free (key);
@@ -553,7 +572,7 @@ do_element_latency_stats (GstStructure * s)
   key = g_strdup_printf ("%s.%s.%s", element_id, element, src);
 
   /* Update the latency in the table */
-  update_latency_table (element_latencies, key, time);
+  update_latency_table (element_latencies, key, time, ts);
 
   /* Clean up */
   g_free (key);
@@ -960,18 +979,28 @@ print_stats (void)
 
   /* latency stats */
   if (have_latency) {
+    GList *list = NULL;
+
     puts ("Latency Statistics:");
-    g_hash_table_foreach (latencies, (GHFunc) latencies_foreach_print_stats,
-        NULL);
+    list = g_hash_table_get_values (latencies);
+    /* Sort by first activity */
+    list = g_list_sort (list, sort_latency_stats_by_first_ts);
+    g_list_foreach (list, print_latency_stats, NULL);
     puts ("");
+    g_list_free (list);
   }
 
   /* element latency stats */
   if (have_element_latency) {
+    GList *list = NULL;
+
     puts ("Element Latency Statistics:");
-    g_hash_table_foreach (element_latencies,
-        (GHFunc) latencies_foreach_print_stats, NULL);
+    list = g_hash_table_get_values (element_latencies);
+    /* Sort by first activity */
+    list = g_list_sort (list, sort_latency_stats_by_first_ts);
+    g_list_foreach (list, print_latency_stats, NULL);
     puts ("");
+    g_list_free (list);
   }
 
   /* element reported latency stats */
