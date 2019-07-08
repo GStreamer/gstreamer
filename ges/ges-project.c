@@ -54,9 +54,6 @@
 static GPtrArray *new_paths = NULL;
 static GHashTable *tried_uris = NULL;
 
-/* TODO We should rely on both extractable_type and @id to identify
- * a Asset, not only @id
- */
 struct _GESProjectPrivate
 {
   GHashTable *assets;
@@ -95,6 +92,18 @@ G_DEFINE_TYPE_WITH_PRIVATE (GESProject, ges_project, GES_TYPE_ASSET);
 static guint _signals[LAST_SIGNAL] = { 0 };
 
 static guint nb_projects = 0;
+
+/* Find the type that implemented the GESExtractable interface */
+static inline const gchar *
+_extractable_type_name (GType type)
+{
+  while (1) {
+    if (g_type_is_a (g_type_parent (type), GES_TYPE_EXTRACTABLE))
+      type = g_type_parent (type);
+    else
+      return g_type_name (type);
+  }
+}
 
 enum
 {
@@ -582,17 +591,34 @@ ges_project_init (GESProject * project)
       g_free, NULL);
 }
 
+static gchar *
+ges_project_internal_extractable_type_id (GType extractable_type,
+    const gchar * id)
+{
+  return g_strdup_printf ("%s:%s", _extractable_type_name (extractable_type),
+      id);
+}
+
+static gchar *
+ges_project_internal_asset_id (GESAsset * asset)
+{
+  return
+      ges_project_internal_extractable_type_id (ges_asset_get_extractable_type
+      (asset), ges_asset_get_id (asset));
+}
+
 static void
 _send_error_loading_asset (GESProject * project, GESAsset * asset,
     GError * error)
 {
+  gchar *internal_id = ges_project_internal_asset_id (asset);
   const gchar *id = ges_asset_get_id (asset);
 
   GST_DEBUG_OBJECT (project, "Sending error loading asset for %s", id);
-  g_hash_table_remove (project->priv->loading_assets, id);
-  g_hash_table_add (project->priv->loaded_with_error, g_strdup (id));
-  g_signal_emit (project, _signals[ERROR_LOADING_ASSET], 0, error, id,
-      ges_asset_get_extractable_type (asset));
+  g_hash_table_remove (project->priv->loading_assets, internal_id);
+  g_hash_table_add (project->priv->loaded_with_error, internal_id);
+  g_signal_emit (project, _signals[ERROR_LOADING_ASSET], 0, error,
+      id, ges_asset_get_extractable_type (asset));
 }
 
 gchar *
@@ -601,6 +627,7 @@ ges_project_try_updating_id (GESProject * project, GESAsset * asset,
 {
   gchar *new_id = NULL;
   const gchar *id;
+  gchar *internal_id;
 
   g_return_val_if_fail (GES_IS_PROJECT (project), NULL);
   g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
@@ -632,7 +659,9 @@ ges_project_try_updating_id (GESProject * project, GESAsset * asset,
     GST_DEBUG_OBJECT (project, "No new id found for %s", id);
   }
 
-  g_hash_table_remove (project->priv->loading_assets, id);
+  internal_id = ges_project_internal_asset_id (asset);
+  g_hash_table_remove (project->priv->loading_assets, internal_id);
+  g_free (internal_id);
 
   if (new_id == NULL)
     _send_error_loading_asset (project, asset, error);
@@ -701,8 +730,8 @@ ges_project_add_loading_asset (GESProject * project, GType extractable_type,
   GESAsset *asset;
 
   if ((asset = ges_asset_cache_lookup (extractable_type, id))) {
-    if (g_hash_table_insert (project->priv->loading_assets, g_strdup (id),
-            gst_object_ref (asset)))
+    if (g_hash_table_insert (project->priv->loading_assets,
+            ges_project_internal_asset_id (asset), gst_object_ref (asset)))
       g_signal_emit (project, _signals[ASSET_LOADING_SIGNAL], 0, asset);
   }
 }
@@ -730,17 +759,23 @@ gboolean
 ges_project_create_asset (GESProject * project, const gchar * id,
     GType extractable_type)
 {
+  gchar *internal_id;
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
   g_return_val_if_fail (g_type_is_a (extractable_type, GES_TYPE_EXTRACTABLE),
       FALSE);
 
   if (id == NULL)
     id = g_type_name (extractable_type);
+  internal_id = ges_project_internal_extractable_type_id (extractable_type, id);
 
-  if (g_hash_table_lookup (project->priv->assets, id) ||
-      g_hash_table_lookup (project->priv->loading_assets, id) ||
-      g_hash_table_lookup (project->priv->loaded_with_error, id))
+  if (g_hash_table_lookup (project->priv->assets, internal_id) ||
+      g_hash_table_lookup (project->priv->loading_assets, internal_id) ||
+      g_hash_table_lookup (project->priv->loaded_with_error, internal_id)) {
+
+    g_free (internal_id);
     return FALSE;
+  }
+  g_free (internal_id);
 
   /* TODO Add a GCancellable somewhere in our API */
   ges_asset_request_async (extractable_type, id, NULL,
@@ -768,7 +803,7 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
     GType extractable_type, GError ** error)
 {
   GESAsset *asset;
-  gchar *possible_id = NULL;
+  gchar *possible_id = NULL, *internal_id;
   gboolean retry = TRUE;
 
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
@@ -778,11 +813,17 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
   if (id == NULL)
     id = g_type_name (extractable_type);
 
-  if ((asset = g_hash_table_lookup (project->priv->assets, id)))
+  internal_id = ges_project_internal_extractable_type_id (extractable_type, id);
+  if ((asset = g_hash_table_lookup (project->priv->assets, internal_id))) {
+    g_free (internal_id);
+
     return asset;
-  else if (g_hash_table_lookup (project->priv->loading_assets, id) ||
-      g_hash_table_lookup (project->priv->loaded_with_error, id))
+  } else if (g_hash_table_lookup (project->priv->loading_assets, internal_id) ||
+      g_hash_table_lookup (project->priv->loaded_with_error, internal_id)) {
+    g_free (internal_id);
+
     return NULL;
+  }
 
   /* TODO Add a GCancellable somewhere in our API */
   while (retry) {
@@ -795,10 +836,11 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
 
     if (asset) {
       retry = FALSE;
-
-      if ((!g_hash_table_lookup (project->priv->assets,
-                  ges_asset_get_id (asset))))
+      internal_id =
+          ges_project_internal_extractable_type_id (extractable_type, id);
+      if ((!g_hash_table_lookup (project->priv->assets, internal_id)))
         g_signal_emit (project, _signals[ASSET_LOADING_SIGNAL], 0, asset);
+      g_free (internal_id);
 
       if (possible_id) {
         g_free (possible_id);
@@ -848,15 +890,18 @@ ges_project_create_asset_sync (GESProject * project, const gchar * id,
 gboolean
 ges_project_add_asset (GESProject * project, GESAsset * asset)
 {
+  gchar *internal_id;
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
 
-  if (g_hash_table_lookup (project->priv->assets, ges_asset_get_id (asset)))
+  internal_id = ges_project_internal_asset_id (asset);
+  if (g_hash_table_lookup (project->priv->assets, internal_id)) {
+    g_free (internal_id);
     return TRUE;
+  }
 
-  g_hash_table_insert (project->priv->assets,
-      g_strdup (ges_asset_get_id (asset)), gst_object_ref (asset));
-
-  g_hash_table_remove (project->priv->loading_assets, ges_asset_get_id (asset));
+  g_hash_table_insert (project->priv->assets, internal_id,
+      gst_object_ref (asset));
+  g_hash_table_remove (project->priv->loading_assets, internal_id);
   GST_DEBUG_OBJECT (project, "Asset added: %s", ges_asset_get_id (asset));
   g_signal_emit (project, _signals[ASSET_ADDED_SIGNAL], 0, asset);
 
@@ -876,10 +921,13 @@ gboolean
 ges_project_remove_asset (GESProject * project, GESAsset * asset)
 {
   gboolean ret;
+  gchar *internal_id;
 
   g_return_val_if_fail (GES_IS_PROJECT (project), FALSE);
 
-  ret = g_hash_table_remove (project->priv->assets, ges_asset_get_id (asset));
+  internal_id = ges_project_internal_asset_id (asset);
+  ret = g_hash_table_remove (project->priv->assets, internal_id);
+  g_free (internal_id);
   g_signal_emit (project, _signals[ASSET_REMOVED_SIGNAL], 0, asset);
 
   return ret;
@@ -900,12 +948,15 @@ ges_project_get_asset (GESProject * project, const gchar * id,
     GType extractable_type)
 {
   GESAsset *asset;
+  gchar *internal_id;
 
   g_return_val_if_fail (GES_IS_PROJECT (project), NULL);
   g_return_val_if_fail (g_type_is_a (extractable_type, GES_TYPE_EXTRACTABLE),
       NULL);
 
-  asset = g_hash_table_lookup (project->priv->assets, id);
+  internal_id = ges_project_internal_extractable_type_id (extractable_type, id);
+  asset = g_hash_table_lookup (project->priv->assets, internal_id);
+  g_free (internal_id);
 
   if (asset)
     return gst_object_ref (asset);
