@@ -797,7 +797,7 @@ static GstCaps *gst_vulkan_color_convert_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstFlowReturn gst_vulkan_color_convert_transform (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static GstFlowReturn gst_vulkan_color_convert_set_caps (GstBaseTransform * bt,
+static gboolean gst_vulkan_color_convert_set_caps (GstBaseTransform * bt,
     GstCaps * in_caps, GstCaps * out_caps);
 
 static VkAttachmentReference

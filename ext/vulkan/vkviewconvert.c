@@ -526,7 +526,7 @@ static GstCaps *gst_vulkan_view_convert_fixate_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static GstFlowReturn gst_vulkan_view_convert_transform (GstBaseTransform * bt,
     GstBuffer * inbuf, GstBuffer * outbuf);
-static GstFlowReturn gst_vulkan_view_convert_set_caps (GstBaseTransform * bt,
+static gboolean gst_vulkan_view_convert_set_caps (GstBaseTransform * bt,
     GstCaps * in_caps, GstCaps * out_caps);
 
 static VkAttachmentReference
