@@ -1080,7 +1080,9 @@ collect_stats (const gchar * filename)
               } else {
                 GST_WARNING ("unknown log entry: '%s'", data);
               }
+              g_free (data);
             }
+            g_free (level);
           } else {
             if (*line) {
               GST_WARNING ("foreign log entry: %s:%d:'%s'", filename, lnr,
