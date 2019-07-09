@@ -166,6 +166,19 @@ ges_get_compositor_factory (void)
   return compositor_factory;
 }
 
+void
+ges_idle_add (GSourceFunc func, gpointer udata, GDestroyNotify notify)
+{
+  GMainContext *context = g_main_context_get_thread_default ();
+  GSource *source = g_idle_source_new ();
+  if (!context)
+    context = g_main_context_default ();
+
+  g_source_set_callback (source, func, udata, notify);
+  g_source_attach (source, context);
+
+}
+
 gboolean
 ges_nle_composition_add_object (GstElement * comp, GstElement * object)
 {

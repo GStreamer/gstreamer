@@ -224,7 +224,7 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
       data->project = gst_object_ref (project);
 
       /* Make sure the signal is emitted after the functions ends */
-      g_idle_add ((GSourceFunc) _emit_loaded_in_idle, data);
+      ges_idle_add ((GSourceFunc) _emit_loaded_in_idle, data, NULL);
       return TRUE;
     }
   }
