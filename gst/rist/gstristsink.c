@@ -54,7 +54,7 @@
  *
  * ## Exmaple launch line for bonding
  * |[
- * gst-launch-1.0 udpsrc ! tsparse set-timestamp=1 ! rtpmp2pay ! \
+ * gst-launch-1.0 udpsrc ! tsparse set-timestamps=1 ! rtpmp2tpay ! \
  *     ristsink bonding-addresses="10.0.0.1:5004,11.0.0.1:5006"
  * ]|
  */
