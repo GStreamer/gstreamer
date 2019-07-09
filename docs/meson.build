@@ -41,7 +41,7 @@ hotdoc = import('hotdoc')
 foreach extension: required_hotdoc_extensions
     if not hotdoc.has_extensions(extension)
         if get_option('doc').enabled()
-            error('Documentation enabled but gi-extension missing')
+            error('Documentation enabled but @0@ missing'.format(extension))
         endif
 
         message('@0@ extensions not found, not building documentation requiring it'.format(extension))
