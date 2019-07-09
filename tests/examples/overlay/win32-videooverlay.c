@@ -35,7 +35,7 @@ static HWND hwnd = NULL;
 
 #define DEFAULT_VIDEO_SINK "glimagesink"
 
-static LRESULT
+static LRESULT CALLBACK
 window_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message) {
@@ -139,7 +139,7 @@ main (gint argc, gchar ** argv)
   /* prepare window */
   wc.cbSize = sizeof (WNDCLASSEX);
   wc.style = CS_HREDRAW | CS_VREDRAW;
-  wc.lpfnWndProc = window_proc;
+  wc.lpfnWndProc = (WNDPROC) window_proc;
   wc.hInstance = hinstance;
   wc.hCursor = LoadCursor (NULL, IDC_ARROW);
   wc.lpszClassName = "GstWIN32VideoOverlay";
