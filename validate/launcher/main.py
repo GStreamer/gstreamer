@@ -582,7 +582,7 @@ def setup_launcher_from_args(args, main_options=None):
     if main_options:
         # Override output directories and logging properties of the sub launcher.
         for option in ["main_dir", "output_dir", "logsdir", "dest", "clone_dir",
-                       "redirect_logs", "verbose"]:
+                       "redirect_logs", "verbose", "timeout_factor"]:
             setattr(options, option, getattr(main_options, option))
     if not options.cleanup():
         return False, None, None
