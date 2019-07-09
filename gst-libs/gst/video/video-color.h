@@ -242,6 +242,28 @@ void         gst_video_color_range_offsets     (GstVideoColorRange range,
                                                 gint offset[GST_VIDEO_MAX_COMPONENTS],
                                                 gint scale[GST_VIDEO_MAX_COMPONENTS]);
 
+/* conversion between GStreamer color{matrix,transfer,primaries} enum and
+ * values defined by ISO/IEC 23001-8 and ITU-T H.273 specification.
+ * Also H264 and H265 specifications follow the color{matrix,trasfer,primaries}
+ * values */
+
+GST_VIDEO_API
+guint                     gst_video_color_matrix_to_iso      (GstVideoColorMatrix matrix);
+
+GST_VIDEO_API
+guint                     gst_video_color_transfer_to_iso    (GstVideoTransferFunction func);
+
+GST_VIDEO_API
+guint                     gst_video_color_primaries_to_iso   (GstVideoColorPrimaries primaries);
+
+GST_VIDEO_API
+GstVideoColorMatrix       gst_video_color_matrix_from_iso    (guint value);
+
+GST_VIDEO_API
+GstVideoTransferFunction  gst_video_color_transfer_from_iso  (guint value);
+
+GST_VIDEO_API
+GstVideoColorPrimaries    gst_video_color_primaries_from_iso (guint value);
 
 G_END_DECLS
 
