@@ -125,6 +125,26 @@ static const gchar caps_video_rtcp_fb_all_pt_102[] =
     "clock-rate=(int)90000, encoding-name=(string)H264, "
     "rtcp-fb-nack=(boolean)true, rtcp-fb-nack-pli=(boolean)true";
 
+static const gchar * sdp_extmap = "v=0\r\n"
+    "o=- 123456 2 IN IP4 127.0.0.1 \r\n"
+    "s=-\r\n"
+    "t=0 0\r\n"
+    "a=maxptime:60\r\n"
+    "a=sendrecv\r\n"
+    "m=video 1 UDP/TLS/RTP/SAVPF 100 101 102\r\n"
+    "c=IN IP4 1.1.1.1\r\n"
+    "a=rtpmap:100 VP8/90000\r\n"
+    "a=extmap:2 urn:ietf:params:rtp-hdrext:toffset\r\n"
+    "a=extmap:3/recvonly http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\n"
+    "a=extmap:4 urn:3gpp:video-orientation attributes\r\n";
+
+static const gchar caps_video_extmap_pt_100[] =
+    "application/x-unknown, media=(string)video, payload=(int)100, "
+    "clock-rate=(int)90000, encoding-name=(string)VP8, "
+    "extmap-2=urn:ietf:params:rtp-hdrext:toffset, "
+    "extmap-3=(string)<\"recvonly\",\"http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\",\"\">, "
+    "extmap-4=(string)<\"\",\"urn:3gpp:video-orientation\",\"attributes\">";
+
 /* *INDENT-ON* */
 
 GST_START_TEST (boxed)
@@ -536,6 +556,75 @@ GST_START_TEST (media_from_caps_rtcp_fb_pt_101)
 }
 
 GST_END_TEST
+GST_START_TEST (caps_from_media_extmap)
+{
+  GstSDPMessage *message;
+  glong length = -1;
+  const GstSDPMedia *media1;
+  GstCaps *caps1;
+  GstCaps *result1;
+
+  gst_sdp_message_new (&message);
+  gst_sdp_message_parse_buffer ((guint8 *) sdp_extmap, length, message);
+
+  media1 = gst_sdp_message_get_media (message, 0);
+  fail_unless (media1 != NULL);
+
+  caps1 = gst_sdp_media_get_caps_from_media (media1, 100);
+  gst_sdp_media_attributes_to_caps (media1, caps1);
+  result1 = gst_caps_from_string (caps_video_extmap_pt_100);
+  fail_unless (gst_caps_is_strictly_equal (caps1, result1));
+
+  gst_caps_unref (result1);
+  gst_caps_unref (caps1);
+
+  gst_sdp_message_free (message);
+}
+
+GST_END_TEST
+GST_START_TEST (media_from_caps_extmap_pt_100)
+{
+  GstSDPResult ret = GST_SDP_OK;
+  GstSDPMessage *message;
+  glong length = -1;
+  GstSDPMedia *media_caps;
+  const GstSDPMedia *media_sdp;
+  GstCaps *caps;
+  const gchar *attr_val_caps1, *attr_val_caps2, *attr_val_caps3;
+  const gchar *attr_val_sdp1, *attr_val_sdp2, *attr_val_sdp3;
+
+  caps = gst_caps_from_string (caps_video_extmap_pt_100);
+
+  gst_sdp_media_new (&media_caps);
+  fail_unless (media_caps != NULL);
+
+  ret = gst_sdp_media_set_media_from_caps (caps, media_caps);
+  fail_unless (ret == GST_SDP_OK);
+  gst_caps_unref (caps);
+
+  gst_sdp_message_new (&message);
+  gst_sdp_message_parse_buffer ((guint8 *) sdp_extmap, length, message);
+
+  media_sdp = gst_sdp_message_get_media (message, 0);
+  fail_unless (media_sdp != NULL);
+
+  attr_val_caps1 = gst_sdp_media_get_attribute_val_n (media_caps, "extmap", 0);
+  attr_val_caps2 = gst_sdp_media_get_attribute_val_n (media_caps, "extmap", 1);
+  attr_val_caps3 = gst_sdp_media_get_attribute_val_n (media_caps, "extmap", 2);
+
+  attr_val_sdp1 = gst_sdp_media_get_attribute_val_n (media_sdp, "extmap", 0);
+  attr_val_sdp2 = gst_sdp_media_get_attribute_val_n (media_sdp, "extmap", 1);
+  attr_val_sdp3 = gst_sdp_media_get_attribute_val_n (media_sdp, "extmap", 2);
+
+  fail_if (g_strcmp0 (attr_val_caps1, attr_val_sdp1) != 0);
+  fail_if (g_strcmp0 (attr_val_caps2, attr_val_sdp2) != 0);
+  fail_if (g_strcmp0 (attr_val_caps3, attr_val_sdp3) != 0);
+
+  gst_sdp_media_free (media_caps);
+  gst_sdp_message_free (message);
+}
+
+GST_END_TEST
 GST_START_TEST (caps_from_media_really_const)
 {
   GstSDPMessage *message;
@@ -588,8 +677,10 @@ sdp_suite (void)
   tcase_add_test (tc_chain, media_from_caps);
   tcase_add_test (tc_chain, caps_from_media_rtcp_fb);
   tcase_add_test (tc_chain, caps_from_media_rtcp_fb_all);
+  tcase_add_test (tc_chain, caps_from_media_extmap);
   tcase_add_test (tc_chain, media_from_caps_rtcp_fb_pt_100);
   tcase_add_test (tc_chain, media_from_caps_rtcp_fb_pt_101);
+  tcase_add_test (tc_chain, media_from_caps_extmap_pt_100);
 
   return s;
 }

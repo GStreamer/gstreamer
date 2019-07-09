@@ -3553,6 +3553,8 @@ gst_sdp_media_add_rtcp_fb_attributes_from_media (const GstSDPMedia * media,
  *
  * a=fmtp:(payload) (param)[=(value)];...
  *
+ * Note that the extmap attribute is set only by gst_sdp_media_attributes_to_caps().
+ *
  * Returns: a #GstCaps, or %NULL if an error happened
  *
  * Since: 1.8
@@ -3752,6 +3754,8 @@ no_rate:
  *
  * a=rtcp-fb:(payload) (param1) [param2]...
  *
+ * a=extmap:(id)[/direction] (extensionname) (extensionattributes)
+ *
  * Returns: a #GstSDPResult.
  *
  * Since: 1.8
@@ -3829,7 +3833,7 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
     }
   }
 
-  /* collect all other properties and add them to fmtp or attributes */
+  /* collect all other properties and add them to fmtp, extmap or attributes */
   fmtp = g_string_new ("");
   g_string_append_printf (fmtp, "%d ", caps_pt);
   first = TRUE;
@@ -3886,6 +3890,63 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
       /* attribute */
       if ((fval = gst_structure_get_string (s, fname)))
         gst_sdp_media_add_attribute (media, fname, fval);
+      continue;
+    }
+
+    /* extmap */
+    if (g_str_has_prefix (fname, "extmap-")) {
+      gchar *endptr;
+      guint id = strtoull (fname + 7, &endptr, 10);
+      const GValue *arr;
+
+      if (*endptr != '\0' || id == 0 || id == 15 || id > 9999)
+        continue;
+
+      if ((fval = gst_structure_get_string (s, fname))) {
+        gchar *extmap = g_strdup_printf ("%u %s", id, fval);
+        gst_sdp_media_add_attribute (media, "extmap", extmap);
+        g_free (extmap);
+      } else if ((arr = gst_structure_get_value (s, fname))
+          && G_VALUE_HOLDS (arr, GST_TYPE_ARRAY)
+          && gst_value_array_get_size (arr) == 3) {
+        const GValue *val;
+        const gchar *direction, *extensionname, *extensionattributes;
+
+        val = gst_value_array_get_value (arr, 0);
+        direction = g_value_get_string (val);
+
+        val = gst_value_array_get_value (arr, 1);
+        extensionname = g_value_get_string (val);
+
+        val = gst_value_array_get_value (arr, 2);
+        extensionattributes = g_value_get_string (val);
+
+        if (!extensionname || *extensionname == '\0')
+          continue;
+
+        if (direction && *direction != '\0' && extensionattributes
+            && *extensionattributes != '\0') {
+          gchar *extmap =
+              g_strdup_printf ("%u/%s %s %s", id, direction, extensionname,
+              extensionattributes);
+          gst_sdp_media_add_attribute (media, "extmap", extmap);
+          g_free (extmap);
+        } else if (direction && *direction != '\0') {
+          gchar *extmap =
+              g_strdup_printf ("%u/%s %s", id, direction, extensionname);
+          gst_sdp_media_add_attribute (media, "extmap", extmap);
+          g_free (extmap);
+        } else if (extensionattributes && *extensionattributes != '\0') {
+          gchar *extmap = g_strdup_printf ("%u %s %s", id, extensionname,
+              extensionattributes);
+          gst_sdp_media_add_attribute (media, "extmap", extmap);
+          g_free (extmap);
+        } else {
+          gchar *extmap = g_strdup_printf ("%u %s", id, extensionname);
+          gst_sdp_media_add_attribute (media, "extmap", extmap);
+          g_free (extmap);
+        }
+      }
       continue;
     }
 
@@ -4056,6 +4117,8 @@ sdp_add_attributes_to_caps (GArray * attributes, GstCaps * caps)
         continue;
       if (!strcmp (key, "key-mgmt"))
         continue;
+      if (!strcmp (key, "extmap"))
+        continue;
 
       /* string must be valid UTF8 */
       if (!g_utf8_validate (attr->value, -1, NULL))
@@ -4072,6 +4135,112 @@ sdp_add_attributes_to_caps (GArray * attributes, GstCaps * caps)
     }
   }
 
+  return GST_SDP_OK;
+}
+
+static GstSDPResult
+gst_sdp_media_add_extmap_attributes (GArray * attributes, GstCaps * caps)
+{
+  const gchar *extmap;
+  gchar *p, *tmp, *to_free;
+  guint id, i;
+  GstStructure *s;
+
+  g_return_val_if_fail (attributes != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), GST_SDP_EINVAL);
+
+  s = gst_caps_get_structure (caps, 0);
+
+  for (i = 0; i < attributes->len; i++) {
+    GstSDPAttribute *attr;
+    const gchar *direction, *extensionname, *extensionattributes;
+
+    attr = &g_array_index (attributes, GstSDPAttribute, i);
+    if (strcmp (attr->key, "extmap") != 0)
+      continue;
+
+    extmap = attr->value;
+
+    /* p is now of the format id[/direction] extensionname [extensionattributes] */
+    to_free = p = g_strdup (extmap);
+
+    id = strtoul (p, &tmp, 10);
+    if (id == 0 || id == 15 || id > 9999 || (*tmp != ' ' && *tmp != '/')) {
+      GST_ERROR ("Invalid extmap '%s'", to_free);
+      goto next;
+    } else if (*tmp == '/') {
+      p = tmp;
+      p++;
+
+      PARSE_STRING (p, " ", direction);
+
+      /* Invalid format */
+      if (direction == NULL || *direction == '\0') {
+        GST_ERROR ("Invalid extmap '%s'", to_free);
+        goto next;
+      }
+    } else {
+      /* At the space */
+      p = tmp;
+      direction = "";
+    }
+
+    SKIP_SPACES (p);
+
+    tmp = strstr (p, " ");
+    if (tmp == NULL) {
+      extensionname = p;
+      extensionattributes = "";
+    } else {
+      extensionname = p;
+      *tmp = '\0';
+      p = tmp + 1;
+      SKIP_SPACES (p);
+      extensionattributes = p;
+    }
+
+    if (extensionname == NULL || *extensionname == '\0') {
+      GST_ERROR ("Invalid extmap '%s'", to_free);
+      goto next;
+    }
+
+    if (*direction != '\0' || *extensionattributes != '\0') {
+      GValue arr = G_VALUE_INIT;
+      GValue val = G_VALUE_INIT;
+      gchar *key;
+
+      key = g_strdup_printf ("extmap-%u", id);
+
+      g_value_init (&arr, GST_TYPE_ARRAY);
+      g_value_init (&val, G_TYPE_STRING);
+
+      g_value_set_string (&val, direction);
+      gst_value_array_append_value (&arr, &val);
+
+      g_value_set_string (&val, extensionname);
+      gst_value_array_append_value (&arr, &val);
+
+      g_value_set_string (&val, extensionattributes);
+      gst_value_array_append_value (&arr, &val);
+
+      gst_structure_set_value (s, key, &arr);
+      g_value_unset (&val);
+      g_value_unset (&arr);
+      GST_DEBUG ("adding caps: %s=<%s,%s,%s>", key, direction, extensionname,
+          extensionattributes);
+      g_free (key);
+    } else {
+      gchar *key;
+
+      key = g_strdup_printf ("extmap-%u", id);
+      gst_structure_set (s, key, G_TYPE_STRING, extensionname, NULL);
+      GST_DEBUG ("adding caps: %s=%s", key, extensionname);
+      g_free (key);
+    }
+
+  next:
+    g_free (to_free);
+  }
   return GST_SDP_OK;
 }
 
@@ -4104,6 +4273,11 @@ gst_sdp_message_attributes_to_caps (const GstSDPMessage * msg, GstCaps * caps)
   }
 
   res = sdp_add_attributes_to_caps (msg->attributes, caps);
+
+  if (res == GST_SDP_OK) {
+    /* parse global extmap field */
+    res = gst_sdp_media_add_extmap_attributes (msg->attributes, caps);
+  }
 
 done:
   if (mikey)
@@ -4140,6 +4314,11 @@ gst_sdp_media_attributes_to_caps (const GstSDPMedia * media, GstCaps * caps)
   }
 
   res = sdp_add_attributes_to_caps (media->attributes, caps);
+
+  if (res == GST_SDP_OK) {
+    /* parse media extmap field */
+    res = gst_sdp_media_add_extmap_attributes (media->attributes, caps);
+  }
 
 done:
   if (mikey)
