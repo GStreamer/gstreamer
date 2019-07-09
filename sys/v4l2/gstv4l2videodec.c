@@ -1034,7 +1034,6 @@ gst_v4l2_video_dec_subclass_init (gpointer g_class, gpointer data)
 
   klass->default_device = cdata->device;
 
-  /* Note: gst_pad_template_new() take the floating ref from the caps */
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
           cdata->sink_caps));
