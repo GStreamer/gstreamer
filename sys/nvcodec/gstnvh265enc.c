@@ -34,43 +34,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_nv_h265_enc_debug);
 #define parent_class gst_nv_h265_enc_parent_class
 G_DEFINE_TYPE (GstNvH265Enc, gst_nv_h265_enc, GST_TYPE_NV_BASE_ENC);
 
-#if HAVE_NVCODEC_GST_GL
-#define GL_CAPS_STR \
-  ";" \
-  "video/x-raw(memory:GLMemory), " \
-  "format = (string) { NV12, Y444 }, " \
-  "width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ], " \
-  "framerate = (fraction) [0, MAX] "
-#else
-#define GL_CAPS_STR ""
-#endif
-
-/* *INDENT-OFF* */
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { NV12, I420 }, "       // TODO: YV12, Y444 support
-        "width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ], "
-        "framerate = (fraction) [0, MAX] "
-        GL_CAPS_STR
-    ));
-
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h265, "
-        "width = (int) [ 1, 4096 ], height = (int) [ 1, 4096 ], "
-        "framerate = (fraction) [0/1, MAX], "
-        "stream-format = (string) byte-stream, "
-        "alignment = (string) au, "
-        "profile = (string) { main }") // TODO: a couple of others
-    );
-/* *INDENT-ON* */
-
 static gboolean gst_nv_h265_enc_open (GstVideoEncoder * enc);
 static gboolean gst_nv_h265_enc_close (GstVideoEncoder * enc);
-static GstCaps *gst_nv_h265_enc_getcaps (GstVideoEncoder * enc,
-    GstCaps * filter);
 static gboolean gst_nv_h265_enc_set_src_caps (GstNvBaseEnc * nvenc,
     GstVideoCodecState * state);
 static gboolean gst_nv_h265_enc_set_encoder_config (GstNvBaseEnc * nvenc,
@@ -98,15 +63,10 @@ gst_nv_h265_enc_class_init (GstNvH265EncClass * klass)
   videoenc_class->open = GST_DEBUG_FUNCPTR (gst_nv_h265_enc_open);
   videoenc_class->close = GST_DEBUG_FUNCPTR (gst_nv_h265_enc_close);
 
-  videoenc_class->getcaps = GST_DEBUG_FUNCPTR (gst_nv_h265_enc_getcaps);
-
   nvenc_class->codec_id = NV_ENC_CODEC_HEVC_GUID;
   nvenc_class->set_encoder_config = gst_nv_h265_enc_set_encoder_config;
   nvenc_class->set_src_caps = gst_nv_h265_enc_set_src_caps;
   nvenc_class->set_pic_params = gst_nv_h265_enc_set_pic_params;
-
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
-  gst_element_class_add_static_pad_template (element_class, &src_factory);
 
   gst_element_class_set_static_metadata (element_class,
       "NVENC HEVC Video Encoder",
@@ -132,59 +92,10 @@ gst_nv_h265_enc_finalize (GObject * obj)
 }
 
 static gboolean
-_get_supported_profiles (GstNvH265Enc * nvenc)
-{
-  NVENCSTATUS nv_ret;
-  GUID profile_guids[64];
-  GValue list = G_VALUE_INIT;
-  GValue val = G_VALUE_INIT;
-  guint i, n, n_profiles;
-
-  if (nvenc->supported_profiles)
-    return TRUE;
-
-  nv_ret =
-      NvEncGetEncodeProfileGUIDCount (GST_NV_BASE_ENC (nvenc)->encoder,
-      NV_ENC_CODEC_HEVC_GUID, &n);
-  if (nv_ret != NV_ENC_SUCCESS)
-    return FALSE;
-
-  nv_ret =
-      NvEncGetEncodeProfileGUIDs (GST_NV_BASE_ENC (nvenc)->encoder,
-      NV_ENC_CODEC_HEVC_GUID, profile_guids, G_N_ELEMENTS (profile_guids), &n);
-  if (nv_ret != NV_ENC_SUCCESS)
-    return FALSE;
-
-  n_profiles = 0;
-  g_value_init (&list, GST_TYPE_LIST);
-  for (i = 0; i < n; i++) {
-    g_value_init (&val, G_TYPE_STRING);
-
-    if (gst_nvenc_cmp_guid (profile_guids[i], NV_ENC_HEVC_PROFILE_MAIN_GUID)) {
-      g_value_set_static_string (&val, "main");
-      gst_value_list_append_value (&list, &val);
-      n_profiles++;
-    }
-    /* TODO: map MAIN10, FREXT */
-
-    g_value_unset (&val);
-  }
-
-  if (n_profiles == 0)
-    return FALSE;
-
-  GST_OBJECT_LOCK (nvenc);
-  nvenc->supported_profiles = g_new0 (GValue, 1);
-  *nvenc->supported_profiles = list;
-  GST_OBJECT_UNLOCK (nvenc);
-
-  return TRUE;
-}
-
-static gboolean
 gst_nv_h265_enc_open (GstVideoEncoder * enc)
 {
   GstNvH265Enc *nvenc = GST_NV_H265_ENC (enc);
+  GstNvBaseEnc *base = GST_NV_BASE_ENC (enc);
 
   if (!GST_VIDEO_ENCODER_CLASS (gst_nv_h265_enc_parent_class)->open (enc))
     return FALSE;
@@ -194,8 +105,7 @@ gst_nv_h265_enc_open (GstVideoEncoder * enc)
     uint32_t i, num = 0;
     GUID guids[16];
 
-    NvEncGetEncodeGUIDs (GST_NV_BASE_ENC (nvenc)->encoder, guids,
-        G_N_ELEMENTS (guids), &num);
+    NvEncGetEncodeGUIDs (base->encoder, guids, G_N_ELEMENTS (guids), &num);
 
     for (i = 0; i < num; ++i) {
       if (gst_nvenc_cmp_guid (guids[i], NV_ENC_CODEC_HEVC_GUID))
@@ -209,7 +119,10 @@ gst_nv_h265_enc_open (GstVideoEncoder * enc)
   }
 
   /* query supported input formats */
-  if (!_get_supported_profiles (nvenc)) {
+  nvenc->supported_profiles =
+      gst_nv_enc_get_supported_codec_profiles (base->encoder,
+      NV_ENC_CODEC_HEVC_GUID);
+  if (!nvenc->supported_profiles) {
     GST_WARNING_OBJECT (nvenc, "No supported encoding profiles");
     gst_nv_h265_enc_close (enc);
     return FALSE;
@@ -231,42 +144,6 @@ gst_nv_h265_enc_close (GstVideoEncoder * enc)
   GST_OBJECT_UNLOCK (nvenc);
 
   return GST_VIDEO_ENCODER_CLASS (gst_nv_h265_enc_parent_class)->close (enc);
-}
-
-static GstCaps *
-gst_nv_h265_enc_getcaps (GstVideoEncoder * enc, GstCaps * filter)
-{
-  GstNvH265Enc *nvenc = GST_NV_H265_ENC (enc);
-  GstCaps *supported_incaps = NULL;
-  GstCaps *template_caps, *caps;
-  GValue *input_formats = GST_NV_BASE_ENC (enc)->input_formats;
-
-  GST_OBJECT_LOCK (nvenc);
-
-  if (input_formats != NULL) {
-    template_caps = gst_pad_get_pad_template_caps (enc->sinkpad);
-    supported_incaps = gst_caps_copy (template_caps);
-    gst_caps_set_value (supported_incaps, "format", input_formats);
-
-    GST_LOG_OBJECT (enc, "codec input caps %" GST_PTR_FORMAT, supported_incaps);
-    GST_LOG_OBJECT (enc, "   template caps %" GST_PTR_FORMAT, template_caps);
-    caps = gst_caps_intersect (template_caps, supported_incaps);
-    gst_caps_unref (template_caps);
-    gst_caps_unref (supported_incaps);
-    supported_incaps = caps;
-    GST_LOG_OBJECT (enc, "  supported caps %" GST_PTR_FORMAT, supported_incaps);
-  }
-
-  GST_OBJECT_UNLOCK (nvenc);
-
-  caps = gst_video_encoder_proxy_getcaps (enc, supported_incaps, filter);
-
-  if (supported_incaps)
-    gst_caps_unref (supported_incaps);
-
-  GST_DEBUG_OBJECT (nvenc, "  returning caps %" GST_PTR_FORMAT, caps);
-
-  return caps;
 }
 
 static gboolean
@@ -353,7 +230,8 @@ gst_nv_h265_enc_set_encoder_config (GstNvBaseEnc * nvenc,
   NV_ENC_CONFIG_HEVC *hevc_config = &config->encodeCodecConfig.hevcConfig;
   NV_ENC_CONFIG_HEVC_VUI_PARAMETERS *vui = &hevc_config->hevcVUIParameters;
 
-  template_caps = gst_static_pad_template_get_caps (&src_factory);
+  template_caps =
+      gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (h265enc));
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (h265enc));
 
   if (template_caps == allowed_caps) {
@@ -378,6 +256,10 @@ gst_nv_h265_enc_set_encoder_config (GstNvBaseEnc * nvenc,
     if (profile) {
       if (!strcmp (profile, "main")) {
         selected_profile = NV_ENC_HEVC_PROFILE_MAIN_GUID;
+      } else if (g_str_has_prefix (profile, "main-10")) {
+        selected_profile = NV_ENC_HEVC_PROFILE_MAIN10_GUID;
+      } else if (g_str_has_prefix (profile, "main-444")) {
+        selected_profile = NV_ENC_HEVC_PROFILE_FREXT_GUID;
       } else {
         g_assert_not_reached ();
       }
@@ -397,6 +279,20 @@ gst_nv_h265_enc_set_encoder_config (GstNvBaseEnc * nvenc,
   config->profileGUID = selected_profile;
   hevc_config->level = level_idc;
   hevc_config->idrPeriod = config->gopLength;
+
+  config->encodeCodecConfig.hevcConfig.chromaFormatIDC = 1;
+  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_Y444) {
+    GST_DEBUG_OBJECT (h265enc, "have Y444 input, setting config accordingly");
+    config->profileGUID = NV_ENC_HEVC_PROFILE_FREXT_GUID;
+    config->encodeCodecConfig.hevcConfig.chromaFormatIDC = 3;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  } else if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_P010_10LE) {
+#else
+  } else if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_P010_10BE) {
+#endif
+    config->profileGUID = NV_ENC_HEVC_PROFILE_MAIN10_GUID;
+    config->encodeCodecConfig.hevcConfig.pixelBitDepthMinus8 = 2;
+  }
 
   /* FIXME: make property */
   hevc_config->outputAUD = 1;

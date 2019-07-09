@@ -61,7 +61,6 @@ typedef struct {
   GstVideoEncoder video_encoder;
 
   /* properties */
-  guint           cuda_device_id;
   GstNvPreset     preset_enum;
   GUID            selected_preset;
   GstNvRCMode     rate_control_mode;
@@ -118,6 +117,7 @@ typedef struct {
   GstVideoEncoderClass video_encoder_class;
 
   GUID codec_id;
+  guint cuda_device_id;
 
   gboolean (*set_src_caps)       (GstNvBaseEnc * nvenc,
                                   GstVideoCodecState * state);
@@ -139,5 +139,14 @@ void gst_nv_base_enc_get_max_encode_size      (GstNvBaseEnc * nvenc,
 void gst_nv_base_enc_set_max_encode_size      (GstNvBaseEnc * nvenc,
                                                guint max_width,
                                                guint max_height);
+
+void gst_nv_base_enc_register                 (GstPlugin * plugin,
+                                               GType type,
+                                               const char * codec,
+                                               guint device_id,
+                                               guint rank,
+                                               GstCaps * sink_caps,
+                                               GstCaps * src_caps);
+
 
 #endif /* __GST_NV_BASE_ENC_H_INCLUDED__ */

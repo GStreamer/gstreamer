@@ -33,45 +33,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_nv_h264_enc_debug);
 #define parent_class gst_nv_h264_enc_parent_class
 G_DEFINE_TYPE (GstNvH264Enc, gst_nv_h264_enc, GST_TYPE_NV_BASE_ENC);
 
-#if HAVE_NVCODEC_GST_GL
-#define GL_CAPS_STR \
-  ";" \
-  "video/x-raw(memory:GLMemory), " \
-  "format = (string) { NV12, Y444 }, " \
-  "width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ], " \
-  "framerate = (fraction) [0, MAX]," \
-  "interlace-mode = { progressive, mixed, interleaved } "
-#else
-#define GL_CAPS_STR ""
-#endif
-
-/* *INDENT-OFF* */
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, " "format = (string) { NV12, I420, Y444 }, "
-        "width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ], "
-        "framerate = (fraction) [0, MAX],"
-        "interlace-mode = { progressive, mixed, interleaved } "
-        GL_CAPS_STR
-    ));
-
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, "
-        "width = (int) [ 1, 4096 ], height = (int) [ 1, 4096 ], "
-        "framerate = (fraction) [0/1, MAX], "
-        "stream-format = (string) byte-stream, " // TODO: avc support
-        "alignment = (string) au, "
-        "profile = (string) { high, main, baseline }") // TODO: a couple of others
-    );
-/* *INDENT-ON* */
-
 static gboolean gst_nv_h264_enc_open (GstVideoEncoder * enc);
 static gboolean gst_nv_h264_enc_close (GstVideoEncoder * enc);
-static GstCaps *gst_nv_h264_enc_getcaps (GstVideoEncoder * enc,
-    GstCaps * filter);
 static gboolean gst_nv_h264_enc_set_src_caps (GstNvBaseEnc * nvenc,
     GstVideoCodecState * state);
 static gboolean gst_nv_h264_enc_set_encoder_config (GstNvBaseEnc * nvenc,
@@ -99,22 +62,18 @@ gst_nv_h264_enc_class_init (GstNvH264EncClass * klass)
   videoenc_class->open = GST_DEBUG_FUNCPTR (gst_nv_h264_enc_open);
   videoenc_class->close = GST_DEBUG_FUNCPTR (gst_nv_h264_enc_close);
 
-  videoenc_class->getcaps = GST_DEBUG_FUNCPTR (gst_nv_h264_enc_getcaps);
-
   nvenc_class->codec_id = NV_ENC_CODEC_H264_GUID;
   nvenc_class->set_encoder_config = gst_nv_h264_enc_set_encoder_config;
   nvenc_class->set_src_caps = gst_nv_h264_enc_set_src_caps;
   nvenc_class->set_pic_params = gst_nv_h264_enc_set_pic_params;
 
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
-  gst_element_class_add_static_pad_template (element_class, &src_factory);
-
   gst_element_class_set_static_metadata (element_class,
       "NVENC H.264 Video Encoder",
       "Codec/Encoder/Video/Hardware",
       "Encode H.264 video streams using NVIDIA's hardware-accelerated NVENC encoder API",
-      "Tim-Philipp Müller <tim@centricular.com>\n"
-      "Matthew Waters <matthew@centricular.com>");
+      "Tim-Philipp Müller <tim@centricular.com>, "
+      "Matthew Waters <matthew@centricular.com>, "
+      "Seungha Yang <seungha.yang@navercorp.com>");
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_h264_enc_debug,
       "nvh264enc", 0, "Nvidia H.264 encoder");
@@ -132,70 +91,10 @@ gst_nv_h264_enc_finalize (GObject * obj)
 }
 
 static gboolean
-_get_supported_profiles (GstNvH264Enc * nvenc)
-{
-  NVENCSTATUS nv_ret;
-  GUID profile_guids[64];
-  GValue list = G_VALUE_INIT;
-  GValue val = G_VALUE_INIT;
-  guint i, n, n_profiles;
-
-  if (nvenc->supported_profiles)
-    return TRUE;
-
-  nv_ret =
-      NvEncGetEncodeProfileGUIDCount (GST_NV_BASE_ENC (nvenc)->encoder,
-      NV_ENC_CODEC_H264_GUID, &n);
-  if (nv_ret != NV_ENC_SUCCESS)
-    return FALSE;
-
-  nv_ret =
-      NvEncGetEncodeProfileGUIDs (GST_NV_BASE_ENC (nvenc)->encoder,
-      NV_ENC_CODEC_H264_GUID, profile_guids, G_N_ELEMENTS (profile_guids), &n);
-  if (nv_ret != NV_ENC_SUCCESS)
-    return FALSE;
-
-  n_profiles = 0;
-  g_value_init (&list, GST_TYPE_LIST);
-  for (i = 0; i < n; i++) {
-    g_value_init (&val, G_TYPE_STRING);
-
-    if (gst_nvenc_cmp_guid (profile_guids[i],
-            NV_ENC_H264_PROFILE_BASELINE_GUID)) {
-      g_value_set_static_string (&val, "baseline");
-      gst_value_list_append_value (&list, &val);
-      n_profiles++;
-    } else if (gst_nvenc_cmp_guid (profile_guids[i],
-            NV_ENC_H264_PROFILE_MAIN_GUID)) {
-      g_value_set_static_string (&val, "main");
-      gst_value_list_append_value (&list, &val);
-      n_profiles++;
-    } else if (gst_nvenc_cmp_guid (profile_guids[i],
-            NV_ENC_H264_PROFILE_HIGH_GUID)) {
-      g_value_set_static_string (&val, "high");
-      gst_value_list_append_value (&list, &val);
-      n_profiles++;
-    }
-    /* TODO: map HIGH_444, STEREO, CONSTRAINED_HIGH, SVC_TEMPORAL_SCALABILITY */
-
-    g_value_unset (&val);
-  }
-
-  if (n_profiles == 0)
-    return FALSE;
-
-  GST_OBJECT_LOCK (nvenc);
-  nvenc->supported_profiles = g_new0 (GValue, 1);
-  *nvenc->supported_profiles = list;
-  GST_OBJECT_UNLOCK (nvenc);
-
-  return TRUE;
-}
-
-static gboolean
 gst_nv_h264_enc_open (GstVideoEncoder * enc)
 {
   GstNvH264Enc *nvenc = GST_NV_H264_ENC (enc);
+  GstNvBaseEnc *base = GST_NV_BASE_ENC (enc);
 
   if (!GST_VIDEO_ENCODER_CLASS (gst_nv_h264_enc_parent_class)->open (enc))
     return FALSE;
@@ -205,8 +104,7 @@ gst_nv_h264_enc_open (GstVideoEncoder * enc)
     uint32_t i, num = 0;
     GUID guids[16];
 
-    NvEncGetEncodeGUIDs (GST_NV_BASE_ENC (nvenc)->encoder, guids,
-        G_N_ELEMENTS (guids), &num);
+    NvEncGetEncodeGUIDs (base->encoder, guids, G_N_ELEMENTS (guids), &num);
 
     for (i = 0; i < num; ++i) {
       if (gst_nvenc_cmp_guid (guids[i], NV_ENC_CODEC_H264_GUID))
@@ -220,7 +118,10 @@ gst_nv_h264_enc_open (GstVideoEncoder * enc)
   }
 
   /* query supported input formats */
-  if (!_get_supported_profiles (nvenc)) {
+  nvenc->supported_profiles =
+      gst_nv_enc_get_supported_codec_profiles (base->encoder,
+      NV_ENC_CODEC_H264_GUID);
+  if (!nvenc->supported_profiles) {
     GST_WARNING_OBJECT (nvenc, "No supported encoding profiles");
     gst_nv_h264_enc_close (enc);
     return FALSE;
@@ -242,82 +143,6 @@ gst_nv_h264_enc_close (GstVideoEncoder * enc)
   GST_OBJECT_UNLOCK (nvenc);
 
   return GST_VIDEO_ENCODER_CLASS (gst_nv_h264_enc_parent_class)->close (enc);
-}
-
-static GValue *
-_get_interlace_modes (GstNvH264Enc * nvenc)
-{
-  NV_ENC_CAPS_PARAM caps_param = { 0, };
-  GValue *list = g_new0 (GValue, 1);
-  GValue val = G_VALUE_INIT;
-
-  g_value_init (list, GST_TYPE_LIST);
-  g_value_init (&val, G_TYPE_STRING);
-
-  g_value_set_static_string (&val, "progressive");
-  gst_value_list_append_value (list, &val);
-
-  caps_param.version = NV_ENC_CAPS_PARAM_VER;
-  caps_param.capsToQuery = NV_ENC_CAPS_SUPPORT_FIELD_ENCODING;
-
-  if (NvEncGetEncodeCaps (GST_NV_BASE_ENC (nvenc)->encoder,
-          NV_ENC_CODEC_H264_GUID, &caps_param,
-          &nvenc->interlace_modes) != NV_ENC_SUCCESS)
-    nvenc->interlace_modes = 0;
-
-  if (nvenc->interlace_modes >= 1) {
-    g_value_set_static_string (&val, "interleaved");
-    gst_value_list_append_value (list, &val);
-    g_value_set_static_string (&val, "mixed");
-    gst_value_list_append_value (list, &val);
-    g_value_unset (&val);
-  }
-  /* TODO: figure out what nvenc frame based interlacing means in gst terms */
-
-  return list;
-}
-
-static GstCaps *
-gst_nv_h264_enc_getcaps (GstVideoEncoder * enc, GstCaps * filter)
-{
-  GstNvH264Enc *nvenc = GST_NV_H264_ENC (enc);
-  GstCaps *supported_incaps = NULL;
-  GstCaps *template_caps, *caps;
-  GValue *input_formats = GST_NV_BASE_ENC (enc)->input_formats;
-
-  GST_OBJECT_LOCK (nvenc);
-
-  if (input_formats != NULL) {
-    GValue *val;
-
-    template_caps = gst_pad_get_pad_template_caps (enc->sinkpad);
-    supported_incaps = gst_caps_copy (template_caps);
-    gst_caps_set_value (supported_incaps, "format", input_formats);
-
-    val = _get_interlace_modes (nvenc);
-    gst_caps_set_value (supported_incaps, "interlace-mode", val);
-    g_value_unset (val);
-    g_free (val);
-
-    GST_LOG_OBJECT (enc, "codec input caps %" GST_PTR_FORMAT, supported_incaps);
-    GST_LOG_OBJECT (enc, "   template caps %" GST_PTR_FORMAT, template_caps);
-    caps = gst_caps_intersect (template_caps, supported_incaps);
-    gst_caps_unref (template_caps);
-    gst_caps_unref (supported_incaps);
-    supported_incaps = caps;
-    GST_LOG_OBJECT (enc, "  supported caps %" GST_PTR_FORMAT, supported_incaps);
-  }
-
-  GST_OBJECT_UNLOCK (nvenc);
-
-  caps = gst_video_encoder_proxy_getcaps (enc, supported_incaps, filter);
-
-  if (supported_incaps)
-    gst_caps_unref (supported_incaps);
-
-  GST_DEBUG_OBJECT (nvenc, "  returning caps %" GST_PTR_FORMAT, caps);
-
-  return caps;
 }
 
 static gboolean
@@ -450,7 +275,8 @@ gst_nv_h264_enc_set_encoder_config (GstNvBaseEnc * nvenc,
   NV_ENC_CONFIG_H264 *h264_config = &config->encodeCodecConfig.h264Config;
   NV_ENC_CONFIG_H264_VUI_PARAMETERS *vui = &h264_config->h264VUIParameters;
 
-  template_caps = gst_static_pad_template_get_caps (&src_factory);
+  template_caps =
+      gst_pad_get_pad_template_caps (GST_VIDEO_ENCODER_SRC_PAD (h264enc));
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (h264enc));
 
   if (template_caps == allowed_caps) {

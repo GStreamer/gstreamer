@@ -242,8 +242,8 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
       g_param_spec_uint ("cuda-device-id",
           "Cuda Device ID",
-          "Set the GPU device to use for operations",
-          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Get the GPU device to use for operations",
+          0, G_MAXUINT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PRESET,
       g_param_spec_enum ("preset", "Encoding Preset",
           "Encoding Preset",
@@ -286,118 +286,13 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
 }
 
 static gboolean
-_get_supported_input_formats (GstNvBaseEnc * nvenc)
-{
-  GstNvBaseEncClass *nvenc_class = GST_NV_BASE_ENC_GET_CLASS (nvenc);
-  guint64 format_mask = 0;
-  uint32_t i, num = 0;
-  NV_ENC_BUFFER_FORMAT formats[64];
-  GValue val = G_VALUE_INIT;
-
-  if (nvenc->input_formats)
-    return TRUE;
-
-  NvEncGetInputFormats (nvenc->encoder, nvenc_class->codec_id, formats,
-      G_N_ELEMENTS (formats), &num);
-
-  for (i = 0; i < num; ++i) {
-    GST_INFO_OBJECT (nvenc, "input format: 0x%08x", formats[i]);
-    /* Apparently we can just ignore the tiled formats and can feed
-     * it the respective untiled planar format instead ?! */
-    switch (formats[i]) {
-      case NV_ENC_BUFFER_FORMAT_NV12_PL:
-#if defined (NV_ENC_BUFFER_FORMAT_NV12_TILED16x16)
-      case NV_ENC_BUFFER_FORMAT_NV12_TILED16x16:
-#endif
-#if defined (NV_ENC_BUFFER_FORMAT_NV12_TILED64x16)
-      case NV_ENC_BUFFER_FORMAT_NV12_TILED64x16:
-#endif
-        format_mask |= (1 << GST_VIDEO_FORMAT_NV12);
-        break;
-      case NV_ENC_BUFFER_FORMAT_YV12_PL:
-#if defined(NV_ENC_BUFFER_FORMAT_YV12_TILED16x16)
-      case NV_ENC_BUFFER_FORMAT_YV12_TILED16x16:
-#endif
-#if defined (NV_ENC_BUFFER_FORMAT_YV12_TILED64x16)
-      case NV_ENC_BUFFER_FORMAT_YV12_TILED64x16:
-#endif
-        format_mask |= (1 << GST_VIDEO_FORMAT_YV12);
-        break;
-      case NV_ENC_BUFFER_FORMAT_IYUV_PL:
-#if defined (NV_ENC_BUFFER_FORMAT_IYUV_TILED16x16)
-      case NV_ENC_BUFFER_FORMAT_IYUV_TILED16x16:
-#endif
-#if defined (NV_ENC_BUFFER_FORMAT_IYUV_TILED64x16)
-      case NV_ENC_BUFFER_FORMAT_IYUV_TILED64x16:
-#endif
-        format_mask |= (1 << GST_VIDEO_FORMAT_I420);
-        break;
-      case NV_ENC_BUFFER_FORMAT_YUV444_PL:
-#if defined (NV_ENC_BUFFER_FORMAT_YUV444_TILED16x16)
-      case NV_ENC_BUFFER_FORMAT_YUV444_TILED16x16:
-#endif
-#if defined (NV_ENC_BUFFER_FORMAT_YUV444_TILED64x16)
-      case NV_ENC_BUFFER_FORMAT_YUV444_TILED64x16:
-#endif
-      {
-        NV_ENC_CAPS_PARAM caps_param = { 0, };
-        int yuv444_supported = 0;
-
-        caps_param.version = NV_ENC_CAPS_PARAM_VER;
-        caps_param.capsToQuery = NV_ENC_CAPS_SUPPORT_YUV444_ENCODE;
-
-        if (NvEncGetEncodeCaps (nvenc->encoder, nvenc_class->codec_id,
-                &caps_param, &yuv444_supported) != NV_ENC_SUCCESS)
-          yuv444_supported = 0;
-
-        if (yuv444_supported)
-          format_mask |= (1 << GST_VIDEO_FORMAT_Y444);
-        break;
-      }
-      default:
-        GST_FIXME ("unmapped input format: 0x%08x", formats[i]);
-        break;
-    }
-  }
-
-  if (format_mask == 0)
-    return FALSE;
-
-  GST_OBJECT_LOCK (nvenc);
-  nvenc->input_formats = g_new0 (GValue, 1);
-
-  /* process a second time so we can add formats in the order we want */
-  g_value_init (nvenc->input_formats, GST_TYPE_LIST);
-  g_value_init (&val, G_TYPE_STRING);
-  if ((format_mask & (1 << GST_VIDEO_FORMAT_NV12))) {
-    g_value_set_static_string (&val, "NV12");
-    gst_value_list_append_value (nvenc->input_formats, &val);
-  }
-  if ((format_mask & (1 << GST_VIDEO_FORMAT_YV12))) {
-    g_value_set_static_string (&val, "YV12");
-    gst_value_list_append_value (nvenc->input_formats, &val);
-  }
-  if ((format_mask & (1 << GST_VIDEO_FORMAT_I420))) {
-    g_value_set_static_string (&val, "I420");
-    gst_value_list_append_value (nvenc->input_formats, &val);
-  }
-  if ((format_mask & (1 << GST_VIDEO_FORMAT_Y444))) {
-    g_value_set_static_string (&val, "Y444");
-    gst_value_list_append_value (nvenc->input_formats, &val);
-  }
-  g_value_unset (&val);
-
-  GST_OBJECT_UNLOCK (nvenc);
-
-  return TRUE;
-}
-
-static gboolean
 gst_nv_base_enc_open (GstVideoEncoder * enc)
 {
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
+  GstNvBaseEncClass *klass = GST_NV_BASE_ENC_GET_CLASS (enc);
+  GValue *formats = NULL;
 
-  nvenc->cuda_ctx = gst_nvenc_create_cuda_context (nvenc->cuda_device_id);
+  nvenc->cuda_ctx = gst_nvenc_create_cuda_context (klass->cuda_device_id);
   if (nvenc->cuda_ctx == NULL) {
     GST_ELEMENT_ERROR (enc, LIBRARY, INIT, (NULL),
         ("Failed to create CUDA context, perhaps CUDA is not supported."));
@@ -423,11 +318,14 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
   }
 
   /* query supported input formats */
-  if (!_get_supported_input_formats (nvenc)) {
+  if (!gst_nv_enc_get_supported_input_formats (nvenc->encoder, klass->codec_id,
+          &formats)) {
     GST_WARNING_OBJECT (nvenc, "No supported input formats");
     gst_nv_base_enc_close (enc);
     return FALSE;
   }
+
+  nvenc->input_formats = formats;
 
   return TRUE;
 }
@@ -542,42 +440,11 @@ gst_nv_base_enc_stop (GstVideoEncoder * enc)
   return TRUE;
 }
 
-static GValue *
-_get_interlace_modes (GstNvBaseEnc * nvenc)
-{
-  GstNvBaseEncClass *nvenc_class = GST_NV_BASE_ENC_GET_CLASS (nvenc);
-  NV_ENC_CAPS_PARAM caps_param = { 0, };
-  GValue *list = g_new0 (GValue, 1);
-  GValue val = G_VALUE_INIT;
-
-  g_value_init (list, GST_TYPE_LIST);
-  g_value_init (&val, G_TYPE_STRING);
-
-  g_value_set_static_string (&val, "progressive");
-  gst_value_list_append_value (list, &val);
-
-  caps_param.version = NV_ENC_CAPS_PARAM_VER;
-  caps_param.capsToQuery = NV_ENC_CAPS_SUPPORT_FIELD_ENCODING;
-
-  if (NvEncGetEncodeCaps (nvenc->encoder, nvenc_class->codec_id,
-          &caps_param, &nvenc->interlace_modes) != NV_ENC_SUCCESS)
-    nvenc->interlace_modes = 0;
-
-  if (nvenc->interlace_modes >= 1) {
-    g_value_set_static_string (&val, "interleaved");
-    gst_value_list_append_value (list, &val);
-    g_value_set_static_string (&val, "mixed");
-    gst_value_list_append_and_take_value (list, &val);
-  }
-  /* TODO: figure out what nvenc frame based interlacing means in gst terms */
-
-  return list;
-}
-
 static GstCaps *
 gst_nv_base_enc_getcaps (GstVideoEncoder * enc, GstCaps * filter)
 {
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
+  GstNvBaseEncClass *klass = GST_NV_BASE_ENC_GET_CLASS (enc);
   GstCaps *supported_incaps = NULL;
   GstCaps *template_caps, *caps;
 
@@ -590,7 +457,7 @@ gst_nv_base_enc_getcaps (GstVideoEncoder * enc, GstCaps * filter)
     supported_incaps = gst_caps_copy (template_caps);
     gst_caps_set_value (supported_incaps, "format", nvenc->input_formats);
 
-    val = _get_interlace_modes (nvenc);
+    val = gst_nv_enc_get_interlace_modes (nvenc->encoder, klass->codec_id);
     gst_caps_set_value (supported_incaps, "interlace-mode", val);
     g_value_unset (val);
     g_free (val);
@@ -1037,7 +904,8 @@ _get_plane_width (GstVideoInfo * info, guint plane)
     /* For now component width and plane width are the same and the
      * plane-component mapping matches
      */
-    return GST_VIDEO_INFO_COMP_WIDTH (info, plane);
+    return GST_VIDEO_INFO_COMP_WIDTH (info, plane)
+        * GST_VIDEO_INFO_COMP_PSTRIDE (info, plane);
   else                          /* RGB, GRAY */
     return GST_VIDEO_INFO_WIDTH (info);
 }
@@ -1319,7 +1187,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
         /* scratch buffer for non-contigious planer into a contigious buffer */
         cu_ret =
             CuMemAllocPitch ((CUdeviceptr *) & in_gl_resource->cuda_pointer,
-            &in_gl_resource->cuda_stride, input_width,
+            &in_gl_resource->cuda_stride, _get_plane_width (info, 0),
             _get_frame_data_height (info), 16);
         if (cu_ret != CUDA_SUCCESS) {
           const gchar *err;
@@ -1449,47 +1317,25 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   return TRUE;
 }
 
-static inline guint
-_plane_get_n_components (GstVideoInfo * info, guint plane)
+#if HAVE_NVCODEC_GST_GL
+static guint
+_get_cuda_device_stride (GstVideoInfo * info, guint plane, gsize cuda_stride)
 {
   switch (GST_VIDEO_INFO_FORMAT (info)) {
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_AYUV:
-      return 4;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-      return 3;
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-      return 2;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
-      return plane == 0 ? 1 : 2;
-    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P010_10BE:
     case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y41B:
+      return cuda_stride;
     case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-      return 1;
+      return plane == 0 ? cuda_stride : (GST_ROUND_UP_2 (cuda_stride) / 2);
     default:
       g_assert_not_reached ();
-      return 1;
+      return cuda_stride;
   }
 }
 
-#if HAVE_NVCODEC_GST_GL
 struct map_gl_input
 {
   GstNvBaseEnc *nvenc;
@@ -1509,7 +1355,6 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
   CuCtxPushCurrent (data->nvenc->cuda_ctx);
   data_pointer = data->in_gl_resource->cuda_pointer;
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (data->info); i++) {
-    guint plane_n_components;
     GstGLBuffer *gl_buf_obj;
     GstGLMemoryPBO *gl_mem;
     guint src_stride, dest_stride;
@@ -1519,7 +1364,6 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
         i);
     g_return_if_fail (gst_is_gl_memory_pbo ((GstMemory *) gl_mem));
     data->in_gl_resource->gl_mem[i] = GST_GL_MEMORY_CAST (gl_mem);
-    plane_n_components = _plane_get_n_components (data->info, i);
 
     gl_buf_obj = (GstGLBuffer *) gl_mem->pbo;
     g_return_if_fail (gl_buf_obj != NULL);
@@ -1559,7 +1403,9 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
     }
 
     src_stride = GST_VIDEO_INFO_PLANE_STRIDE (data->info, i);
-    dest_stride = data->in_gl_resource->cuda_stride;
+    dest_stride =
+        _get_cuda_device_stride (data->info, i,
+        data->in_gl_resource->cuda_stride);
 
     /* copy into scratch buffer */
     param.srcXInBytes = 0;
@@ -1573,7 +1419,7 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
     param.dstMemoryType = CU_MEMORYTYPE_DEVICE;
     param.dstDevice = (CUdeviceptr) data_pointer;
     param.dstPitch = dest_stride;
-    param.WidthInBytes = _get_plane_width (data->info, i) * plane_n_components;
+    param.WidthInBytes = _get_plane_width (data->info, i);
     param.Height = _get_plane_height (data->info, i);
 
     cuda_ret = CuMemcpy2D (&param);
@@ -1599,10 +1445,8 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
       g_assert_not_reached ();
     }
 
-    data_pointer =
-        data_pointer +
-        data->in_gl_resource->cuda_stride *
-        _get_plane_height (&data->nvenc->input_info, i);
+    data_pointer = data_pointer +
+        dest_stride * _get_plane_height (&data->nvenc->input_info, i);
   }
   CuCtxPopCurrent (NULL);
 }
@@ -1812,7 +1656,8 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
     }
     GST_LOG_OBJECT (nvenc, "Locked input buffer %p", in_buf);
 
-    width = GST_VIDEO_FRAME_WIDTH (&vframe);
+    width = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 0) *
+        GST_VIDEO_FRAME_COMP_PSTRIDE (&vframe, 0);
     height = GST_VIDEO_FRAME_HEIGHT (&vframe);
 
     /* copy Y plane */
@@ -1826,7 +1671,9 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
       src += src_stride;
     }
 
-    if (GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_NV12) {
+    if (GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_NV12 ||
+        GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_P010_10LE ||
+        GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_P010_10BE) {
       /* copy UV plane */
       src = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
       src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
@@ -2003,9 +1850,6 @@ gst_nv_base_enc_set_property (GObject * object, guint prop_id,
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (object);
 
   switch (prop_id) {
-    case PROP_DEVICE_ID:
-      nvenc->cuda_device_id = g_value_get_uint (value);
-      break;
     case PROP_PRESET:
       nvenc->preset_enum = g_value_get_enum (value);
       nvenc->selected_preset = _nv_preset_to_guid (nvenc->preset_enum);
@@ -2046,10 +1890,11 @@ gst_nv_base_enc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (object);
+  GstNvBaseEncClass *nvenc_class = GST_NV_BASE_ENC_GET_CLASS (object);
 
   switch (prop_id) {
     case PROP_DEVICE_ID:
-      g_value_set_uint (value, nvenc->cuda_device_id);
+      g_value_set_uint (value, nvenc_class->cuda_device_id);
       break;
     case PROP_PRESET:
       g_value_set_enum (value, nvenc->preset_enum);
@@ -2076,4 +1921,89 @@ gst_nv_base_enc_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+typedef struct
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+  guint cuda_device_id;
+  gboolean is_default;
+} GstNvEncClassData;
+
+static void
+gst_nv_base_enc_subclass_init (gpointer g_class, gpointer data)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstNvBaseEncClass *nvbaseenc_class = GST_NV_BASE_ENC_CLASS (g_class);
+  GstNvEncClassData *cdata = data;
+
+  if (!cdata->is_default) {
+    const gchar *long_name;
+    gchar *new_long_name;
+
+    long_name = gst_element_class_get_metadata (element_class,
+        GST_ELEMENT_METADATA_LONGNAME);
+
+    new_long_name = g_strdup_printf ("%s with devide-id %d", long_name,
+        cdata->cuda_device_id);
+
+    gst_element_class_add_metadata (element_class,
+        GST_ELEMENT_METADATA_LONGNAME, new_long_name);
+    g_free (new_long_name);
+  }
+
+
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          cdata->sink_caps));
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          cdata->src_caps));
+
+  nvbaseenc_class->cuda_device_id = cdata->cuda_device_id;
+
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
+  g_free (cdata);
+}
+
+void
+gst_nv_base_enc_register (GstPlugin * plugin, GType type, const char *codec,
+    guint device_id, guint rank, GstCaps * sink_caps, GstCaps * src_caps)
+{
+  GTypeQuery type_query;
+  GTypeInfo type_info = { 0, };
+  GType subtype;
+  gchar *type_name;
+  GstNvEncClassData *cdata;
+
+  cdata = g_new0 (GstNvEncClassData, 1);
+  cdata->sink_caps = gst_caps_ref (sink_caps);
+  cdata->src_caps = gst_caps_ref (src_caps);
+  cdata->cuda_device_id = device_id;
+  cdata->is_default = TRUE;
+
+  g_type_query (type, &type_query);
+  memset (&type_info, 0, sizeof (type_info));
+  type_info.class_size = type_query.class_size;
+  type_info.instance_size = type_query.instance_size;
+  type_info.class_init = gst_nv_base_enc_subclass_init;
+  type_info.class_data = cdata;
+
+  type_name = g_strdup_printf ("nv%senc", codec);
+
+  if (g_type_from_name (type_name) != 0) {
+    g_free (type_name);
+    type_name = g_strdup_printf ("nv%sdevice%denc", codec, device_id);
+    cdata->is_default = FALSE;
+  }
+
+  subtype = g_type_register_static (type, type_name, &type_info, 0);
+
+  /* make lower rank than default device */
+  if (!gst_element_register (plugin, type_name, rank - 1, subtype))
+    GST_WARNING ("Failed to register plugin '%s'", type_name);
+
+  g_free (type_name);
 }
