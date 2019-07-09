@@ -263,7 +263,8 @@ gst_rist_sink_add_bond (GstRistSink * sink)
 }
 
 static GstCaps *
-gst_rist_sink_request_pt_map (GstRistSrc * sink, GstElement * session, guint pt)
+gst_rist_sink_request_pt_map (GstRistSrc * sink, guint session_id, guint pt,
+    GstElement * rtpbin)
 {
   const GstRTPPayloadInfo *pt_info;
   GstCaps *ret;

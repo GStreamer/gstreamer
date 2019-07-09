@@ -219,7 +219,8 @@ gst_rist_src_pad_added (GstRistSrc * src, GstPad * new_pad, GstElement * rtpbin)
 }
 
 static GstCaps *
-gst_rist_src_request_pt_map (GstRistSrc * src, GstElement * session, guint pt)
+gst_rist_src_request_pt_map (GstRistSrc * src, guint session_id, guint pt,
+    GstElement * rtpbin)
 {
   const GstRTPPayloadInfo *pt_info;
   GstCaps *ret;
