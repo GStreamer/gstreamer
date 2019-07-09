@@ -689,23 +689,35 @@ _load_project (GstValidateScenario * scenario, GstValidateAction * action)
   }
 
   content = gst_structure_get_string (action->structure, "serialized-content");
+  if (content) {
 
-  g_file_set_contents (tmpfile, content, -1, &error);
-  if (error) {
-    GST_VALIDATE_REPORT (scenario,
-        g_quark_from_string ("scenario::execution-error"),
-        "Could not set XML content: %s", error->message);
+    g_file_set_contents (tmpfile, content, -1, &error);
+    if (error) {
+      GST_VALIDATE_REPORT (scenario,
+          g_quark_from_string ("scenario::execution-error"),
+          "Could not set XML content: %s", error->message);
 
-    goto fail;
-  }
+      goto fail;
+    }
 
-  uri = gst_filename_to_uri (tmpfile, &error);
-  if (error) {
-    GST_VALIDATE_REPORT (scenario,
-        g_quark_from_string ("scenario::execution-error"),
-        "Could not set filename to URI: %s", error->message);
+    uri = gst_filename_to_uri (tmpfile, &error);
+    if (error) {
+      GST_VALIDATE_REPORT (scenario,
+          g_quark_from_string ("scenario::execution-error"),
+          "Could not set filename to URI: %s", error->message);
 
-    goto fail;
+      goto fail;
+    }
+  } else {
+    uri = g_strdup (gst_structure_get_string (action->structure, "uri"));
+
+    if (!uri) {
+      GST_VALIDATE_REPORT (scenario,
+          g_quark_from_string ("scenario::execution-error"),
+          "None of 'uri' or 'content' passed as parametter"
+          " can't load any timeline!");
+      goto fail;
+    }
   }
 
   tmp_full = ges_timeline_get_layers (timeline);
@@ -742,9 +754,7 @@ done:
 
 fail:
 
-  /* We reported the issue ourself, so do not ask GstValidate
-   * to do that for us */
-  res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
 
   goto done;
 
@@ -1213,13 +1223,21 @@ ges_validate_register_action_types (void)
       (GstValidateActionParameter [])  {
         {
           .name = "serialized-content",
-          .description = "The full content of the XML describing project in XGES formet.",
-          .mandatory = TRUE,
+          .description = "The full content of the XML describing project in XGES format.",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "uri",
+          .description = "The uri of the project to load (used only if serialized-content is not provided)",
+          .mandatory = FALSE,
+          .types = "string",
           NULL
         },
         {NULL}
       },
-      "Loads a project either from its content passed in the serialized-content field.\n"
+      "Loads a project either from its content passed in the 'serialized-content' field or using the provided 'uri'.\n"
       "Note that it will completely clean the previous timeline",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
