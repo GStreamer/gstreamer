@@ -695,7 +695,7 @@ gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
             colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE2084;
             break;
           case 18:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+            colorimetry.transfer = GST_VIDEO_TRANSFER_ARIB_STD_B67;
             break;
           default:
             GST_FIXME_OBJECT (demux,
@@ -734,6 +734,18 @@ gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
             break;
           case 9:
             colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+            break;
+          case 10:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTEST428;
+            break;
+          case 11:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTERP431;
+            break;
+          case 12:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTEEG432;
+            break;
+          case 22:
+            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_EBU3213;
             break;
           default:
             GST_FIXME_OBJECT (demux, "Unsupported color primaries  %"
