@@ -462,6 +462,107 @@ gst_cc_combiner_update_src_caps (GstAggregator * agg,
   return res;
 }
 
+static gboolean
+gst_cc_combiner_src_query (GstAggregator * aggregator, GstQuery * query)
+{
+  GstPad *video_sinkpad =
+      gst_element_get_static_pad (GST_ELEMENT_CAST (aggregator), "sink");
+  gboolean ret;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    case GST_QUERY_DURATION:
+    case GST_QUERY_URI:
+    case GST_QUERY_CAPS:
+    case GST_QUERY_ALLOCATION:
+      ret = gst_pad_peer_query (video_sinkpad, query);
+      break;
+    case GST_QUERY_ACCEPT_CAPS:{
+      GstCaps *caps;
+      GstCaps *templ = gst_static_pad_template_get_caps (&srctemplate);
+
+      gst_query_parse_accept_caps (query, &caps);
+      gst_query_set_accept_caps_result (query, gst_caps_is_subset (caps,
+              templ));
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = GST_AGGREGATOR_CLASS (parent_class)->src_query (aggregator, query);
+      break;
+  }
+
+  gst_object_unref (video_sinkpad);
+
+  return ret;
+}
+
+static gboolean
+gst_cc_combiner_sink_query (GstAggregator * aggregator,
+    GstAggregatorPad * aggpad, GstQuery * query)
+{
+  GstPad *video_sinkpad =
+      gst_element_get_static_pad (GST_ELEMENT_CAST (aggregator), "sink");
+  GstPad *srcpad = GST_AGGREGATOR_SRC_PAD (aggregator);
+
+  gboolean ret;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    case GST_QUERY_DURATION:
+    case GST_QUERY_URI:
+    case GST_QUERY_ALLOCATION:
+      if (GST_PAD_CAST (aggpad) == video_sinkpad) {
+        ret = gst_pad_peer_query (srcpad, query);
+      } else {
+        ret =
+            GST_AGGREGATOR_CLASS (parent_class)->src_query (aggregator, query);
+      }
+      break;
+    case GST_QUERY_CAPS:
+      if (GST_PAD_CAST (aggpad) == video_sinkpad) {
+        ret = gst_pad_peer_query (srcpad, query);
+      } else {
+        GstCaps *filter;
+        GstCaps *templ = gst_static_pad_template_get_caps (&captiontemplate);
+
+        gst_query_parse_caps (query, &filter);
+
+        if (filter) {
+          GstCaps *caps =
+              gst_caps_intersect_full (filter, templ, GST_CAPS_INTERSECT_FIRST);
+          gst_query_set_caps_result (query, caps);
+          gst_caps_unref (caps);
+        } else {
+          gst_query_set_caps_result (query, templ);
+        }
+        gst_caps_unref (templ);
+        ret = TRUE;
+      }
+      break;
+    case GST_QUERY_ACCEPT_CAPS:
+      if (GST_PAD_CAST (aggpad) == video_sinkpad) {
+        ret = gst_pad_peer_query (srcpad, query);
+      } else {
+        GstCaps *caps;
+        GstCaps *templ = gst_static_pad_template_get_caps (&captiontemplate);
+
+        gst_query_parse_accept_caps (query, &caps);
+        gst_query_set_accept_caps_result (query, gst_caps_is_subset (caps,
+                templ));
+        ret = TRUE;
+      }
+      break;
+    default:
+      ret = GST_AGGREGATOR_CLASS (parent_class)->src_query (aggregator, query);
+      break;
+  }
+
+  gst_object_unref (video_sinkpad);
+
+  return ret;
+}
+
 static void
 gst_cc_combiner_class_init (GstCCCombinerClass * klass)
 {
@@ -495,6 +596,8 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
   aggregator_class->sink_event = gst_cc_combiner_sink_event;
   aggregator_class->update_src_caps = gst_cc_combiner_update_src_caps;
   aggregator_class->get_next_time = gst_aggregator_simple_get_next_time;
+  aggregator_class->src_query = gst_cc_combiner_src_query;
+  aggregator_class->sink_query = gst_cc_combiner_sink_query;
 
   GST_DEBUG_CATEGORY_INIT (gst_cc_combiner_debug, "cccombiner",
       0, "Closed Caption combiner");
