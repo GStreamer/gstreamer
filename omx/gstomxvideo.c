@@ -254,3 +254,96 @@ gst_omx_video_is_equal_framerate_q16 (OMX_U32 q16_a, OMX_U32 q16_b)
    * an unnecessary re-negotiation. */
   return fabs (((gdouble) q16_a) - ((gdouble) q16_b)) / (gdouble) q16_b < 0.01;
 }
+
+gboolean
+gst_omx_video_get_port_padding (GstOMXPort * port, GstVideoInfo * info_orig,
+    GstVideoAlignment * align)
+{
+  guint nstride;
+  guint nslice_height;
+  GstVideoInfo info;
+  gsize plane_size[GST_VIDEO_MAX_PLANES];
+
+  gst_video_alignment_reset (align);
+
+  /* Create a copy of @info_orig without any offset/stride as we need a
+   * 'standard' version to compute the paddings. */
+  gst_video_info_init (&info);
+  gst_video_info_set_interlaced_format (&info,
+      GST_VIDEO_INFO_FORMAT (info_orig),
+      GST_VIDEO_INFO_INTERLACE_MODE (info_orig),
+      GST_VIDEO_INFO_WIDTH (info_orig), GST_VIDEO_INFO_HEIGHT (info_orig));
+
+  /* Retrieve the plane sizes */
+  if (!gst_video_info_align_full (&info, align, plane_size)) {
+    GST_WARNING_OBJECT (port->comp->parent, "Failed to retrieve plane sizes");
+    return FALSE;
+  }
+
+  nstride = port->port_def.format.video.nStride;
+  nslice_height = port->port_def.format.video.nSliceHeight;
+
+  if (nstride > GST_VIDEO_INFO_PLANE_STRIDE (&info, 0)) {
+    align->padding_right = nstride - GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
+
+    if (GST_VIDEO_FORMAT_INFO_IS_COMPLEX (info.finfo)) {
+      /* Stride is in bytes while padding is in pixels so we need to do manual
+       * conversions for complex formats. */
+      switch (GST_VIDEO_INFO_FORMAT (&info)) {
+        case GST_VIDEO_FORMAT_NV12_10LE32:
+        case GST_VIDEO_FORMAT_NV16_10LE32:
+          /* Need ((width + 2) / 3) 32-bits words to store one row,
+           * see unpack_NV12_10LE32 in -base.
+           *
+           * So let's say:
+           * - W = the width, in pixels
+           * - S = the stride, in bytes
+           * - P = the padding, in bytes
+           * - Δ = the padding, in pixels
+           *
+           * we then have:
+           * S = ((W+2)/3) * 4
+           * S+P = ((W+2+Δ)/3) * 4
+           *
+           * By solving this system we get:
+           * Δ = (3/4) * P
+           */
+          align->padding_right *= 0.75;
+          break;
+        default:
+          GST_FIXME_OBJECT (port->comp->parent,
+              "Stride conversion is not supported for format %s",
+              GST_VIDEO_INFO_NAME (&info));
+          return FALSE;
+      }
+    }
+
+    GST_LOG_OBJECT (port->comp->parent,
+        "OMX stride (%d) is higher than standard (%d) for port %u; right padding: %d",
+        nstride, GST_VIDEO_INFO_PLANE_STRIDE (&info, 0), port->index,
+        align->padding_right);
+  }
+
+  if (nslice_height > GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size)) {
+    align->padding_bottom =
+        nslice_height - GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size);
+
+    if (GST_VIDEO_INFO_INTERLACE_MODE (&info) ==
+        GST_VIDEO_INTERLACE_MODE_ALTERNATE) {
+      /* GstVideoAlignment defines the alignment for the full frame while
+       * OMX gives us the slice height for a single field, so we have to
+       * double the vertical padding. */
+      GST_DEBUG_OBJECT (port->comp->parent,
+          "Double bottom padding because of alternate stream");
+      align->padding_bottom *= 2;
+    }
+
+    GST_LOG_OBJECT (port->comp->parent,
+        "OMX slice height (%d) is higher than standard (%" G_GSIZE_FORMAT
+        ") for port %u; vertical padding: %d", nslice_height,
+        GST_VIDEO_INFO_PLANE_HEIGHT (&info, 0, plane_size), port->index,
+        align->padding_bottom);
+  }
+
+  return TRUE;
+}

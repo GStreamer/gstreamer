@@ -63,6 +63,9 @@ OMX_U32 gst_omx_video_calculate_framerate_q16 (GstVideoInfo * info);
 
 gboolean gst_omx_video_is_equal_framerate_q16 (OMX_U32 q16_a, OMX_U32 q16_b);
 
+gboolean gst_omx_video_get_port_padding (GstOMXPort * port, GstVideoInfo * info_orig,
+    GstVideoAlignment * align);
+
 G_END_DECLS
 
 #endif /* __GST_OMX_VIDEO_H__ */
