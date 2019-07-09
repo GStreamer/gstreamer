@@ -209,18 +209,24 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
 
   g_signal_emit (project, _signals[LOADING_SIGNAL], 0, timeline);
   if (priv->uri == NULL) {
-    EmitLoadedInIdle *data = g_slice_new (EmitLoadedInIdle);
 
-    GST_LOG_OBJECT (project, "%s, Loading an empty timeline %s"
-        " as no URI set yet", GST_OBJECT_NAME (timeline),
-        ges_asset_get_id (GES_ASSET (project)));
+    if (gst_uri_is_valid (ges_asset_get_id (GES_ASSET (project)))) {
+      ges_project_set_uri (project, ges_asset_get_id (GES_ASSET (project)));
+      GST_INFO_OBJECT (project, "Using asset ID %s as URI.", priv->uri);
+    } else {
+      EmitLoadedInIdle *data = g_slice_new (EmitLoadedInIdle);
 
-    data->timeline = gst_object_ref (timeline);
-    data->project = gst_object_ref (project);
+      GST_INFO_OBJECT (project, "%s, Loading an empty timeline %s"
+          " as no URI set yet", GST_OBJECT_NAME (timeline),
+          ges_asset_get_id (GES_ASSET (project)));
 
-    /* Make sure the signal is emitted after the functions ends */
-    g_idle_add ((GSourceFunc) _emit_loaded_in_idle, data);
-    return TRUE;
+      data->timeline = gst_object_ref (timeline);
+      data->project = gst_object_ref (project);
+
+      /* Make sure the signal is emitted after the functions ends */
+      g_idle_add ((GSourceFunc) _emit_loaded_in_idle, data);
+      return TRUE;
+    }
   }
 
   if (priv->formatter_asset == NULL)
