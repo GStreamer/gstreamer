@@ -80,6 +80,14 @@ create_objects (GstVaapiTexture * texture, GLuint texture_id)
   EglContext *const ctx = texture_egl->egl_context;
   EglVTable *const vtable = egl_context_get_vtable (ctx, FALSE);
   GLint attribs[3] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE };
+  guint mem_types;
+
+  texture_egl->filter =
+      gst_vaapi_filter_new (GST_VAAPI_TEXTURE_DISPLAY (texture));
+  if (!texture_egl->filter)
+    goto error_create_filter;
+
+  mem_types = gst_vaapi_filter_get_memory_types (texture_egl->filter);
 
   texture_egl->egl_image =
       vtable->eglCreateImageKHR (ctx->display->base.handle.p,
@@ -91,14 +99,10 @@ create_objects (GstVaapiTexture * texture, GLuint texture_id)
   texture_egl->surface =
       gst_vaapi_surface_new_with_egl_image (GST_VAAPI_TEXTURE_DISPLAY (texture),
       texture_egl->egl_image, GST_VIDEO_FORMAT_RGBA, texture->width,
-      texture->height);
+      texture->height, mem_types);
   if (!texture_egl->surface)
     goto error_create_surface;
 
-  texture_egl->filter =
-      gst_vaapi_filter_new (GST_VAAPI_TEXTURE_DISPLAY (texture));
-  if (!texture_egl->filter)
-    goto error_create_filter;
   return TRUE;
 
   /* ERRORS */

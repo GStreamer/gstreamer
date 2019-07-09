@@ -130,6 +130,26 @@ EGL_PROTO_ARG(stride, EGLint *))
 EGL_PROTO_INVOKE(ExportDRMImageMESA, EGLImageKHR, (dpy, image, name, handle, stride))
 EGL_PROTO_END()
 
+EGL_PROTO_BEGIN(ExportDMABUFImageMESA, EGLBoolean, MESA_image_dma_buf_export)
+EGL_PROTO_ARG_LIST(
+EGL_PROTO_ARG(dpy, EGLDisplay),
+EGL_PROTO_ARG(image, EGLImageKHR),
+EGL_PROTO_ARG(fds, int *),
+EGL_PROTO_ARG(strides, EGLint *),
+EGL_PROTO_ARG(offsets, EGLint *))
+EGL_PROTO_INVOKE(ExportDMABUFImageMESA, EGLBoolean, (dpy, image, fds, strides, offsets))
+EGL_PROTO_END()
+
+EGL_PROTO_BEGIN(ExportDMABUFImageQueryMESA, EGLBoolean, MESA_image_dma_buf_export)
+EGL_PROTO_ARG_LIST(
+EGL_PROTO_ARG(dpy, EGLDisplay),
+EGL_PROTO_ARG(image, EGLImageKHR),
+EGL_PROTO_ARG(fourcc, int *),
+EGL_PROTO_ARG(num_planes, int *),
+EGL_PROTO_ARG(modifiers, EGLuint64KHR *))
+EGL_PROTO_INVOKE(ExportDMABUFImageQueryMESA, EGLBoolean, (dpy, image, fourcc, num_planes, modifiers))
+EGL_PROTO_END()
+
 EGL_DEFINE_EXTENSION(EXT_image_dma_buf_import)
 EGL_DEFINE_EXTENSION(KHR_create_context)
 EGL_DEFINE_EXTENSION(KHR_gl_texture_2D_image)
@@ -137,6 +157,7 @@ EGL_DEFINE_EXTENSION(KHR_image_base)
 EGL_DEFINE_EXTENSION(KHR_surfaceless_context)
 EGL_DEFINE_EXTENSION(MESA_configless_context)
 EGL_DEFINE_EXTENSION(MESA_drm_image)
+EGL_DEFINE_EXTENSION(MESA_image_dma_buf_export)
 
 GL_PROTO_BEGIN(GetError, GLenum, CORE_1_0)
 GL_PROTO_ARG_LIST()

@@ -36,7 +36,8 @@ gst_vaapi_surface_new_from_egl_image (GstVaapiDisplay * display,
 
 GstVaapiSurface *
 gst_vaapi_surface_new_with_egl_image (GstVaapiDisplay * display,
-    EGLImageKHR image, GstVideoFormat format, guint width, guint height);
+    EGLImageKHR image, GstVideoFormat format, guint width, guint height,
+    guint mem_types);
 
 G_END_DECLS
 

@@ -21,13 +21,23 @@
  */
 
 #include "sysdeps.h"
+
 #include "gstvaapisurface_egl.h"
-#include "gstvaapisurface_drm.h"
-#include "gstvaapisurface_priv.h"
-#include "gstvaapiimage_priv.h"
+
 #include "gstvaapibufferproxy_priv.h"
+#include "gstvaapicompat.h"
 #include "gstvaapidisplay_egl_priv.h"
 #include "gstvaapifilter.h"
+#include "gstvaapiimage_priv.h"
+#include "gstvaapisurface_drm.h"
+#include "gstvaapisurface_priv.h"
+
+#if USE_DRM
+#include <drm_fourcc.h>
+#else
+#define DRM_FORMAT_MOD_LINEAR 0ULL
+#define DRM_FORMAT_MOD_INVALID ((1ULL << 56) - 1)
+#endif
 
 typedef struct
 {
@@ -36,46 +46,102 @@ typedef struct
   GstVideoFormat format;
   guint width;
   guint height;
+  guint mem_types;
   GstVaapiSurface *surface;     /* result */
 } CreateSurfaceWithEGLImageArgs;
 
 static GstVaapiSurface *
 do_create_surface_with_egl_image_unlocked (GstVaapiDisplayEGL * display,
-    EGLImageKHR image, GstVideoFormat format, guint width, guint height)
+    EGLImageKHR image, GstVideoFormat format, guint width, guint height,
+    guint mem_types)
 {
   GstVaapiDisplay *const base_display = GST_VAAPI_DISPLAY_CAST (display);
   EglContext *const ctx = GST_VAAPI_DISPLAY_EGL_CONTEXT (display);
   EglVTable *vtable;
-  gsize size, offset[GST_VIDEO_MAX_PLANES];
-  gint name, stride[GST_VIDEO_MAX_PLANES];
 
   if (!ctx || !(vtable = egl_context_get_vtable (ctx, FALSE)))
     return NULL;
 
-  memset (offset, 0, sizeof (offset));
-  memset (stride, 0, sizeof (stride));
+  if ((mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM)
+      && vtable->has_EGL_MESA_drm_image) {
+    gsize size, offset[GST_VIDEO_MAX_PLANES] = { 0, };
+    gint name, stride[GST_VIDEO_MAX_PLANES] = { 0, };
 
-  if (!vtable->has_EGL_MESA_drm_image)
-    goto error_mission_extension;
+    /* EGL_MESA_drm_image extension */
+    if (!vtable->eglExportDRMImageMESA (ctx->display->base.handle.p, image,
+            &name, NULL, &stride[0]))
+      goto error_export_image_gem_buf;
 
-  /* EGL_MESA_drm_image extension */
-  if (!vtable->eglExportDRMImageMESA (ctx->display->base.handle.p, image,
-          &name, NULL, &stride[0]))
-    goto error_export_image_gem_buf;
+    size = height * stride[0];
+    /*
+     * XXX: The below surface creation may fail on Intel due to:
+     *   https://github.com/01org/intel-vaapi-driver/issues/222
+     * A permanent fix for that problem will be released in intel-vaapi-driver
+     * version 1.8.4 and later, and also in 1.8.3-1ubuntu1.
+     * However if you don't have that fix then a simple workaround is to
+     * uncomment this line of code:
+     *   size = GST_ROUND_UP_32 (height) * stride[0];
+     */
 
-  size = height * stride[0];
-  /*
-   * XXX: The below surface creation may fail on Intel due to:
-   *   https://github.com/01org/intel-vaapi-driver/issues/222
-   * A permanent fix for that problem will be released in intel-vaapi-driver
-   * version 1.8.4 and later, and also in 1.8.3-1ubuntu1.
-   * However if you don't have that fix then a simple workaround is to
-   * uncomment this line of code:
-   *   size = GST_ROUND_UP_32 (height) * stride[0];
-   */
+    return gst_vaapi_surface_new_with_gem_buf_handle (base_display, name, size,
+        format, width, height, offset, stride);
+  }
 
-  return gst_vaapi_surface_new_with_gem_buf_handle (base_display, name, size,
-      format, width, height, offset, stride);
+  if ((mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME)
+      && vtable->has_EGL_MESA_image_dma_buf_export) {
+    int fourcc, num_planes, fd;
+    EGLint offset = 0;
+    EGLint stride = 0;
+    EGLuint64KHR modifier;
+    GstVideoInfo vi;
+
+    if (!vtable->eglExportDMABUFImageQueryMESA (ctx->display->base.handle.p,
+            image, &fourcc, &num_planes, &modifier))
+      goto error_export_dma_buf_image_query;
+
+    /* Don't allow multi-plane dmabufs */
+    if (num_planes != 1)
+      goto error_bad_parameters;
+
+    /* FIXME: We don't support modifiers */
+    if (modifier != DRM_FORMAT_MOD_LINEAR && modifier != DRM_FORMAT_MOD_INVALID)
+      goto error_bad_parameters;
+
+    /* fix color format if needed */
+    if (fourcc == GST_MAKE_FOURCC ('A', 'B', '2', '4'))
+      format = gst_vaapi_video_format_from_va_fourcc (VA_FOURCC_RGBA);
+    else if (fourcc == GST_MAKE_FOURCC ('A', 'R', '2', '4'))
+      format = gst_vaapi_video_format_from_va_fourcc (VA_FOURCC_BGRA);
+
+    if (!vtable->eglExportDMABUFImageMESA (ctx->display->base.handle.p, image,
+            &fd, &stride, &offset))
+      goto error_export_dma_buf_image;
+
+    gst_video_info_set_format (&vi, format, width, height);
+    GST_VIDEO_INFO_PLANE_OFFSET (&vi, 0) = offset;
+    GST_VIDEO_INFO_PLANE_STRIDE (&vi, 0) = stride;
+
+    return gst_vaapi_surface_new_with_dma_buf_handle (base_display, fd, &vi);
+  }
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    GString *str = g_string_new (NULL);
+
+    if (mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_VA)
+      g_string_append (str, "VA ");
+    if (mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_V4L2)
+      g_string_append (str, "V4L2 ");
+    if (mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR)
+      g_string_append (str, "PTR ");
+    if (mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2)
+      g_string_append (str, "PRIME_2 ");
+
+    GST_ERROR ("missing EGL extensions for memory types: %s", str->str);
+    g_string_free (str, TRUE);
+  }
+#endif
+
+  return NULL;
 
   /* ERRORS */
 error_export_image_gem_buf:
@@ -83,10 +149,19 @@ error_export_image_gem_buf:
     GST_ERROR ("failed to export EGL image to GEM buffer");
     return NULL;
   }
-
-error_mission_extension:
+error_export_dma_buf_image_query:
   {
-    GST_ERROR ("missing EGL_MESA_drm_image extension");
+    GST_ERROR ("failed to query EGL image for dmabuf export");
+    return NULL;
+  }
+error_bad_parameters:
+  {
+    GST_ERROR ("multi-planed nor non-linear dmabufs are not supported");
+    return NULL;
+  }
+error_export_dma_buf_image:
+  {
+    GST_ERROR ("missing EGL_MESA_image_dma_buf_export extension");
     return NULL;
   }
 }
@@ -96,17 +171,17 @@ do_create_surface_with_egl_image (CreateSurfaceWithEGLImageArgs * args)
 {
   GST_VAAPI_DISPLAY_LOCK (args->display);
   args->surface = do_create_surface_with_egl_image_unlocked (args->display,
-      args->image, args->format, args->width, args->height);
+      args->image, args->format, args->width, args->height, args->mem_types);
   GST_VAAPI_DISPLAY_UNLOCK (args->display);
 }
 
 // Creates VA surface with EGLImage buffer as backing storage (internal)
 static inline GstVaapiSurface *
 create_surface_with_egl_image (GstVaapiDisplayEGL * display, EGLImageKHR image,
-    GstVideoFormat format, guint width, guint height)
+    GstVideoFormat format, guint width, guint height, guint mem_types)
 {
   CreateSurfaceWithEGLImageArgs args =
-      { display, image, format, width, height };
+      { display, image, format, width, height, mem_types };
 
   if (!egl_context_run (GST_VAAPI_DISPLAY_EGL_CONTEXT (display),
           (EglContextRunFunc) do_create_surface_with_egl_image, &args))
@@ -127,7 +202,7 @@ create_surface_from_egl_image (GstVaapiDisplayEGL * display,
   GstVaapiFilterStatus filter_status;
 
   img_surface = create_surface_with_egl_image (display, image, format,
-      width, height);
+      width, height, 0);
   if (!img_surface)
     return NULL;
 
@@ -240,6 +315,7 @@ error_invalid_display:
  * @format: the EGL @image format
  * @width: the EGL @image width in pixels
  * @height: the EGL @image height in pixels
+ * @mem_types: the supported memory types
  *
  * Creates a new #GstVaapiSurface bound to an external EGL image.
  *
@@ -252,7 +328,8 @@ error_invalid_display:
  */
 GstVaapiSurface *
 gst_vaapi_surface_new_with_egl_image (GstVaapiDisplay * base_display,
-    EGLImageKHR image, GstVideoFormat format, guint width, guint height)
+    EGLImageKHR image, GstVideoFormat format, guint width, guint height,
+    guint mem_types)
 {
   GstVaapiDisplayEGL *display;
 
@@ -264,7 +341,8 @@ gst_vaapi_surface_new_with_egl_image (GstVaapiDisplay * base_display,
   display = GST_VAAPI_DISPLAY_EGL (base_display);
   if (!display || !GST_VAAPI_IS_DISPLAY_EGL (display))
     goto error_invalid_display;
-  return create_surface_with_egl_image (display, image, format, width, height);
+  return create_surface_with_egl_image (display, image, format, width, height,
+      mem_types);
 
   /* ERRORS */
 error_invalid_display:
