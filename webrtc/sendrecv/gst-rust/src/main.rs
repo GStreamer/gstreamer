@@ -475,21 +475,6 @@ impl App {
                 .unwrap();
         }
 
-        let app_clone = self.downgrade();
-        self.0
-            .webrtcbin
-            .connect("on-new-transceiver", false, move |values| {
-                let _webrtc = values[0].get::<gst::Element>().unwrap();
-                let transceiver = values[1].get::<glib::Object>().unwrap();
-
-                let app = upgrade_weak!(app_clone, None);
-
-                transceiver.set_property("do-nack", &app.0.rtx).unwrap();
-
-                None
-            })
-            .unwrap();
-
         // Whenever there is a new ICE candidate, send it to the peer
         let app_clone = self.downgrade();
         self.0
@@ -522,6 +507,19 @@ impl App {
         // Create our audio/video sources we send to the peer
         self.add_video_source()?;
         self.add_audio_source()?;
+
+        // Enable RTX only for video, Chrome etc al fail SDP negotiation otherwise
+        if self.0.rtx {
+            let transceiver = self
+                .0
+                .webrtcbin
+                .emit("get-transceiver", &[&0i32])
+                .unwrap()
+                .unwrap()
+                .get::<glib::Object>()
+                .unwrap();
+            transceiver.set_property("do-nack", &true).unwrap();
+        }
 
         Ok(())
     }
