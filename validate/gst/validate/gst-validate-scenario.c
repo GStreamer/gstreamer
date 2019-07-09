@@ -2922,7 +2922,8 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   gst_validate_structure_resolve_variables (action->structure,
       scenario->priv->vars);
   for (i = 0; type->parameters[i].name; i++) {
-    if (g_str_has_suffix (type->parameters[i].types, "(GstClockTime)"))
+    if (type->parameters[i].types &&
+        g_str_has_suffix (type->parameters[i].types, "(GstClockTime)"))
       gst_validate_action_get_clocktime (scenario, action,
           type->parameters[i].name, &tmp);
   }
