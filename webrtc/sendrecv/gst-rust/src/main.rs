@@ -582,6 +582,10 @@ impl App {
         } else if type_ == "offer" {
             print!("Received offer:\n{}\n", sdp);
 
+            // FIXME: We need to do negotiation here based on what the peer offers us in the SDP
+            // and what we can produce. For example all RTCP or RTP header extensions we don't
+            // understand have to be removed, and similarly we have to negotiate the codecs.
+
             // Need to start the pipeline as a first step here
             self.setup_pipeline()?;
 
