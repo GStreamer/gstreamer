@@ -53,6 +53,10 @@ typedef struct _GstVideoCropMeta GstVideoCropMeta;
  *          valid, it is used by the default implementation of @map.
  * @map: map the memory of a plane
  * @unmap: unmap the memory of a plane
+ * @alignment: the paddings and alignment constraints of the video buffer.
+ * It is up to the caller of `gst_buffer_add_video_meta_full()` to set it
+ * using gst_video_meta_set_alignment(), if they did not it defaults
+ * to no padding and no alignment. Since: 1.18
  *
  * Extra buffer metadata describing image properties
  */
@@ -74,6 +78,8 @@ struct _GstVideoMeta {
   gboolean (*map)    (GstVideoMeta *meta, guint plane, GstMapInfo *info,
                       gpointer *data, gint * stride, GstMapFlags flags);
   gboolean (*unmap)  (GstVideoMeta *meta, guint plane, GstMapInfo *info);
+
+  GstVideoAlignment  alignment;
 };
 
 GST_VIDEO_API
@@ -104,6 +110,15 @@ gboolean       gst_video_meta_map        (GstVideoMeta *meta, guint plane, GstMa
 
 GST_VIDEO_API
 gboolean       gst_video_meta_unmap      (GstVideoMeta *meta, guint plane, GstMapInfo *info);
+
+GST_VIDEO_API
+gboolean       gst_video_meta_set_alignment (GstVideoMeta * meta, GstVideoAlignment alignment);
+
+GST_VIDEO_API
+gboolean       gst_video_meta_get_plane_size (GstVideoMeta * meta, gsize plane_size[GST_VIDEO_MAX_PLANES]);
+
+GST_VIDEO_API
+gboolean       gst_video_meta_get_plane_height (GstVideoMeta * meta, guint plane_height[GST_VIDEO_MAX_PLANES]);
 
 /**
  * GstVideoCropMeta:

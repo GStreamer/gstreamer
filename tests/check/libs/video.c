@@ -3626,6 +3626,127 @@ GST_START_TEST (test_video_info_align)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_meta_align)
+{
+  GstBuffer *buf;
+  GstVideoInfo info;
+  GstVideoMeta *meta;
+  gsize plane_size[GST_VIDEO_MAX_PLANES];
+  guint plane_height[GST_VIDEO_MAX_PLANES];
+  GstVideoAlignment alig;
+
+  buf = gst_buffer_new ();
+
+  /* NV12 no alignment */
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12, 1920, 1080);
+
+  meta = gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_INFO_FORMAT (&info), GST_VIDEO_INFO_WIDTH (&info),
+      GST_VIDEO_INFO_HEIGHT (&info), GST_VIDEO_INFO_N_PLANES (&info),
+      info.offset, info.stride);
+
+  g_assert_cmpuint (meta->alignment.padding_top, ==, 0);
+  g_assert_cmpuint (meta->alignment.padding_bottom, ==, 0);
+  g_assert_cmpuint (meta->alignment.padding_left, ==, 0);
+  g_assert_cmpuint (meta->alignment.padding_right, ==, 0);
+
+  g_assert (gst_video_meta_get_plane_size (meta, plane_size));
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 1080);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 1080 * 0.5);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert (gst_video_meta_get_plane_height (meta, plane_height));
+  g_assert_cmpuint (plane_height[0], ==, 1080);
+  g_assert_cmpuint (plane_height[1], ==, 540);
+  g_assert_cmpuint (plane_height[2], ==, 0);
+  g_assert_cmpuint (plane_height[3], ==, 0);
+
+  /* horizontal alignment */
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12, 1920, 1080);
+
+  gst_video_alignment_reset (&alig);
+  alig.padding_left = 2;
+  alig.padding_right = 6;
+
+  g_assert (gst_video_info_align (&info, &alig));
+
+  meta = gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_INFO_FORMAT (&info), GST_VIDEO_INFO_WIDTH (&info),
+      GST_VIDEO_INFO_HEIGHT (&info), GST_VIDEO_INFO_N_PLANES (&info),
+      info.offset, info.stride);
+  g_assert (gst_video_meta_set_alignment (meta, alig));
+
+  g_assert_cmpuint (meta->alignment.padding_top, ==, 0);
+  g_assert_cmpuint (meta->alignment.padding_bottom, ==, 0);
+  g_assert_cmpuint (meta->alignment.padding_left, ==, 2);
+  g_assert_cmpuint (meta->alignment.padding_right, ==, 6);
+
+  g_assert (gst_video_meta_get_plane_size (meta, plane_size));
+  g_assert_cmpuint (plane_size[0], ==, 1928 * 1080);
+  g_assert_cmpuint (plane_size[1], ==, 1928 * 1080 * 0.5);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert (gst_video_meta_get_plane_height (meta, plane_height));
+  g_assert_cmpuint (plane_height[0], ==, 1080);
+  g_assert_cmpuint (plane_height[1], ==, 540);
+  g_assert_cmpuint (plane_height[2], ==, 0);
+  g_assert_cmpuint (plane_height[3], ==, 0);
+
+  /* vertical alignment */
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12, 1920, 1080);
+
+  gst_video_alignment_reset (&alig);
+  alig.padding_top = 2;
+  alig.padding_bottom = 6;
+
+  g_assert (gst_video_info_align (&info, &alig));
+
+  meta = gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_INFO_FORMAT (&info), GST_VIDEO_INFO_WIDTH (&info),
+      GST_VIDEO_INFO_HEIGHT (&info), GST_VIDEO_INFO_N_PLANES (&info),
+      info.offset, info.stride);
+  g_assert (gst_video_meta_set_alignment (meta, alig));
+
+  g_assert_cmpuint (meta->alignment.padding_top, ==, 2);
+  g_assert_cmpuint (meta->alignment.padding_bottom, ==, 6);
+  g_assert_cmpuint (meta->alignment.padding_left, ==, 0);
+  g_assert_cmpuint (meta->alignment.padding_right, ==, 0);
+
+  g_assert (gst_video_meta_get_plane_size (meta, plane_size));
+  g_assert_cmpuint (plane_size[0], ==, 1920 * 1088);
+  g_assert_cmpuint (plane_size[1], ==, 1920 * 1088 * 0.5);
+  g_assert_cmpuint (plane_size[2], ==, 0);
+  g_assert_cmpuint (plane_size[3], ==, 0);
+
+  g_assert (gst_video_meta_get_plane_height (meta, plane_height));
+  g_assert_cmpuint (plane_height[0], ==, 1088);
+  g_assert_cmpuint (plane_height[1], ==, 544);
+  g_assert_cmpuint (plane_height[2], ==, 0);
+  g_assert_cmpuint (plane_height[3], ==, 0);
+
+  /* incompatible alignment */
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12, 1920, 1080);
+
+  gst_video_alignment_reset (&alig);
+  alig.padding_right = 2;
+
+  meta = gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_INFO_FORMAT (&info), GST_VIDEO_INFO_WIDTH (&info),
+      GST_VIDEO_INFO_HEIGHT (&info), GST_VIDEO_INFO_N_PLANES (&info),
+      info.offset, info.stride);
+  g_assert (!gst_video_meta_set_alignment (meta, alig));
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -3675,6 +3796,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_color_from_to_iso);
   tcase_add_test (tc_chain, test_video_format_info_plane_to_components);
   tcase_add_test (tc_chain, test_video_info_align);
+  tcase_add_test (tc_chain, test_video_meta_align);
 
   return s;
 }
