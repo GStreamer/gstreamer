@@ -150,7 +150,6 @@ _check_fields (GstStructure * structure, FieldsError fields_error,
 
     if (error)
       *error = g_error_new_literal (GES_ERROR, 0, msg->str);
-    GST_ERROR ("%s", msg->str);
 
     g_string_free (msg, TRUE);
 

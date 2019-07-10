@@ -62,6 +62,9 @@ struct _GESDemux
   GstPad *sinkpad;
 
   GstAdapter *input_adapter;
+
+  gchar *upstream_uri;
+  GStatBuf stats;
 };
 
 G_DEFINE_TYPE (GESDemux, ges_demux, ges_base_bin_get_type ());
@@ -166,8 +169,54 @@ error_loading_asset_cb (GESProject * project, GError * error, gchar * id,
 static gboolean
 ges_demux_src_probe (GstPad * pad, GstPadProbeInfo * info, GstElement * parent)
 {
-  GstEvent *event = info->data;
+  GESDemux *self = GES_DEMUX (parent);
+  GstEvent *event;
 
+  if (info->type & (GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM)) {
+    GstQuery *query = info->data;
+
+    if (GST_QUERY_TYPE (query) == GST_QUERY_CUSTOM) {
+      GstStructure *structure =
+          (GstStructure *) gst_query_get_structure (query);
+
+      if (gst_structure_has_name (structure,
+              "NleCompositionQueryNeedsTearDown")) {
+        GstQuery *uri_query = gst_query_new_uri ();
+
+        if (gst_pad_peer_query (self->sinkpad, uri_query)) {
+          gchar *upstream_uri = NULL;
+          GStatBuf stats;
+          gst_query_parse_uri (uri_query, &upstream_uri);
+
+          if (gst_uri_has_protocol (upstream_uri, "file")) {
+            gchar *location = gst_uri_get_location (upstream_uri);
+
+            g_stat (location, &stats);
+            g_free (location);
+            GST_OBJECT_LOCK (self);
+            if (g_strcmp0 (upstream_uri, self->upstream_uri)
+                || stats.st_mtime != self->stats.st_mtime
+                || stats.st_size != self->stats.st_size) {
+              GST_INFO_OBJECT (self,
+                  "Underlying file changed, asking for an update");
+              gst_structure_set (structure, "result", G_TYPE_BOOLEAN, TRUE,
+                  NULL);
+              g_free (self->upstream_uri);
+              self->upstream_uri = upstream_uri;
+              self->stats = stats;
+            } else {
+              g_free (upstream_uri);
+            }
+            GST_OBJECT_UNLOCK (self);
+          }
+        }
+        gst_query_unref (uri_query);
+      }
+    }
+
+    return GST_PAD_PROBE_OK;
+  }
+  event = info->data;
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_STREAM_START:
     {
@@ -198,7 +247,8 @@ static gboolean
 ges_demux_set_srcpad_probe (GstElement * element, GstPad * pad,
     gpointer user_data)
 {
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+  gst_pad_add_probe (pad,
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
       (GstPadProbeCallback) ges_demux_src_probe, element, NULL);
   return TRUE;
 }
@@ -234,21 +284,29 @@ ges_demux_create_timeline (GESDemux * self, gchar * uri, GError ** error)
 
   query = gst_query_new_uri ();
   if (gst_pad_peer_query (self->sinkpad, query)) {
-    gchar *upstream_uri = NULL;
     GList *assets, *tmp;
-    gst_query_parse_uri (query, &upstream_uri);
+
+    GST_OBJECT_LOCK (self);
+    g_free (self->upstream_uri);
+    gst_query_parse_uri (query, &self->upstream_uri);
+    if (gst_uri_has_protocol (self->upstream_uri, "file")) {
+      gchar *location = gst_uri_get_location (self->upstream_uri);
+
+      g_stat (location, &self->stats);
+      g_free (location);
+    }
 
     assets = ges_project_list_assets (project, GES_TYPE_URI_CLIP);
     for (tmp = assets; tmp; tmp = tmp->next) {
       const gchar *id = ges_asset_get_id (tmp->data);
 
-      if (!g_strcmp0 (id, upstream_uri)) {
+      if (!g_strcmp0 (id, self->upstream_uri)) {
         g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_DEMUX,
-            "Recursively loading uri: %s", upstream_uri);
+            "Recursively loading uri: %s", self->upstream_uri);
         break;
       }
     }
-
+    GST_OBJECT_UNLOCK (self);
     g_list_free_full (assets, g_object_unref);
   }
 

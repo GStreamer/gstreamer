@@ -3108,6 +3108,23 @@ _dump_stack (NleComposition * comp, GNode * stack)
 #endif
 }
 
+static gboolean
+nle_composition_query_needs_teardown (NleComposition * comp,
+    NleUpdateStackReason reason)
+{
+  gboolean res = FALSE;
+  GstStructure *structure =
+      gst_structure_new ("NleCompositionQueryNeedsTearDown", "reason",
+      G_TYPE_STRING, UPDATE_PIPELINE_REASONS[reason], NULL);
+  GstQuery *query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+
+  gst_pad_query (NLE_OBJECT_SRC (comp), query);
+  gst_structure_get_boolean (structure, "result", &res);
+
+  gst_query_unref (query);
+  return res;
+}
+
 /*
  * update_pipeline:
  * @comp: The #NleComposition
@@ -3129,7 +3146,7 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
   GstEvent *toplevel_seek;
 
   GNode *stack = NULL;
-  gboolean samestack = FALSE;
+  gboolean tear_down = FALSE;
   gboolean updatestoponly = FALSE;
   GstState state = GST_STATE (comp);
   NleCompositionPrivate *priv = comp->priv;
@@ -3167,7 +3184,8 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
 
   /* Get new stack and compare it to current one */
   stack = get_clean_toplevel_stack (comp, &currenttime, &new_start, &new_stop);
-  samestack = are_same_stacks (priv->current, stack);
+  tear_down = !are_same_stacks (priv->current, stack)
+      || nle_composition_query_needs_teardown (comp, update_reason);
 
   /* set new current_stack_start/stop (the current zone over which the new stack
    * is valid) */
@@ -3194,7 +3212,7 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
     stopchanged = priv->current_stack_stop != currenttime;
   }
 
-  if (samestack) {
+  if (!tear_down) {
     if (startchanged || stopchanged) {
       /* Update seek events need to be flushing if not in PLAYING,
        * else we will encounter deadlocks. */
@@ -3210,7 +3228,7 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
   _remove_update_actions (comp);
 
   /* If stacks are different, unlink/relink objects */
-  if (!samestack) {
+  if (tear_down) {
     _dump_stack (comp, stack);
     _deactivate_stack (comp, update_reason);
     _relink_new_stack (comp, stack, toplevel_seek);
@@ -3248,7 +3266,7 @@ update_pipeline (NleComposition * comp, GstClockTime currenttime, gint32 seqnum,
   }
 
   /* Activate stack */
-  if (!samestack)
+  if (tear_down)
     return _activate_new_stack (comp);
   else
     return _seek_current_stack (comp, toplevel_seek,
