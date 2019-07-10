@@ -3172,6 +3172,48 @@ GST_START_TEST (test_hdr)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_color_from_to_iso)
+{
+  gint i;
+
+#define ISO_IEC_UNSPECIFIED_COLOR_VALUE 2
+
+  for (i = 0; i <= GST_VIDEO_COLOR_MATRIX_BT2020; i++) {
+    guint matrix_val = gst_video_color_matrix_to_iso (i);
+    fail_unless_equals_int (gst_video_color_matrix_from_iso (matrix_val), i);
+  }
+
+  for (i = 0; i <= GST_VIDEO_TRANSFER_ARIB_STD_B67; i++) {
+    guint transfer_val = gst_video_color_transfer_to_iso (i);
+
+    /* don't know how to map below values to spec. */
+    if (i == GST_VIDEO_TRANSFER_GAMMA18 || i == GST_VIDEO_TRANSFER_GAMMA20
+        || i == GST_VIDEO_TRANSFER_ADOBERGB) {
+      fail_unless_equals_int (transfer_val, ISO_IEC_UNSPECIFIED_COLOR_VALUE);
+      continue;
+    }
+
+    fail_unless_equals_int (gst_video_color_transfer_from_iso (transfer_val),
+        i);
+  }
+
+  for (i = 0; i <= GST_VIDEO_COLOR_PRIMARIES_EBU3213; i++) {
+    guint primaries_val = gst_video_color_primaries_to_iso (i);
+
+    /* don't know how to map below value to spec. */
+    if (i == GST_VIDEO_COLOR_PRIMARIES_ADOBERGB) {
+      fail_unless_equals_int (primaries_val, ISO_IEC_UNSPECIFIED_COLOR_VALUE);
+      continue;
+    }
+
+    fail_unless_equals_int (gst_video_color_primaries_from_iso (primaries_val),
+        i);
+  }
+#undef ISO_IEC_UNSPECIFIED_COLOR_VALUE
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -3218,6 +3260,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_format_enum_stability);
   tcase_add_test (tc_chain, test_video_formats_pstrides);
   tcase_add_test (tc_chain, test_hdr);
+  tcase_add_test (tc_chain, test_video_color_from_to_iso);
 
   return s;
 }
