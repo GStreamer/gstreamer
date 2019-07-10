@@ -189,6 +189,8 @@ gst_h265_parse_reset_frame (GstH265Parse * h265parse)
   h265parse->idr_pos = -1;
   h265parse->sei_pos = -1;
   h265parse->keyframe = FALSE;
+  h265parse->predicted = FALSE;
+  h265parse->bidirectional = FALSE;
   h265parse->header = FALSE;
   h265parse->have_vps_in_frame = FALSE;
   h265parse->have_sps_in_frame = FALSE;
@@ -255,6 +257,7 @@ gst_h265_parse_reset (GstH265Parse * h265parse)
   gst_event_replace (&h265parse->force_key_unit_event, NULL);
 
   h265parse->discont = FALSE;
+  h265parse->discard_bidirectional = FALSE;
 
   gst_h265_parse_reset_stream_info (h265parse);
 }
@@ -593,11 +596,11 @@ gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
         minfo.Wx_n = sei.payload.mastering_display_colour_volume.white_point_x;
         minfo.Wy_n = sei.payload.mastering_display_colour_volume.white_point_y;
         minfo.max_luma_n =
-            sei.payload.
-            mastering_display_colour_volume.max_display_mastering_luminance;
+            sei.payload.mastering_display_colour_volume.
+            max_display_mastering_luminance;
         minfo.min_luma_n =
-            sei.payload.
-            mastering_display_colour_volume.min_display_mastering_luminance;
+            sei.payload.mastering_display_colour_volume.
+            min_display_mastering_luminance;
 
         minfo.Gx_d = minfo.Gy_d = minfo.Bx_d = minfo.By_d =
             minfo.Rx_d = minfo.Ry_d = minfo.Wx_d = minfo.Wy_d = chroma_den;
@@ -716,7 +719,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       }
 
       gst_h265_parser_store_nal (h265parse, vps.id, nal_type, nalu);
-      h265parse->header |= TRUE;
+      h265parse->header = TRUE;
       break;
     case GST_H265_NAL_SPS:
       /* reset state, everything else is obsolete */
@@ -732,7 +735,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
         if (pres != GST_H265_PARSER_OK) {
           GST_WARNING_OBJECT (h265parse, "failed to parse SPS:");
           h265parse->state |= GST_H265_PARSE_STATE_GOT_SPS;
-          h265parse->header |= TRUE;
+          h265parse->header = TRUE;
           return FALSE;
         }
         GST_WARNING_OBJECT (h265parse,
@@ -753,7 +756,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       }
 
       gst_h265_parser_store_nal (h265parse, sps.id, nal_type, nalu);
-      h265parse->header |= TRUE;
+      h265parse->header = TRUE;
       h265parse->state |= GST_H265_PARSE_STATE_GOT_SPS;
       break;
     case GST_H265_NAL_PPS:
@@ -789,7 +792,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       }
 
       gst_h265_parser_store_nal (h265parse, pps.id, nal_type, nalu);
-      h265parse->header |= TRUE;
+      h265parse->header = TRUE;
       h265parse->state |= GST_H265_PARSE_STATE_GOT_PPS;
       break;
     case GST_H265_NAL_PREFIX_SEI:
@@ -798,7 +801,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       if (!GST_H265_PARSE_STATE_VALID (h265parse, GST_H265_PARSE_STATE_GOT_SPS))
         return FALSE;
 
-      h265parse->header |= TRUE;
+      h265parse->header = TRUE;
 
       gst_h265_parse_process_sei (h265parse, nalu);
 
@@ -844,7 +847,11 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
 
       if (pres == GST_H265_PARSER_OK) {
         if (GST_H265_IS_I_SLICE (&slice))
-          h265parse->keyframe |= TRUE;
+          h265parse->keyframe = TRUE;
+        else if (GST_H265_IS_P_SLICE (&slice))
+          h265parse->predicted = TRUE;
+        else if (GST_H265_IS_B_SLICE (&slice))
+          h265parse->bidirectional = TRUE;
 
         h265parse->state |= GST_H265_PARSE_STATE_GOT_SLICE;
       }
@@ -2118,6 +2125,10 @@ gst_h265_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   else
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
+  if (h265parse->discard_bidirectional && h265parse->bidirectional)
+    goto discard;
+
+
   if (h265parse->header)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
   else
@@ -2139,7 +2150,15 @@ gst_h265_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_buffer_unref (buf);
   }
 
+done:
   return GST_FLOW_OK;
+
+discard:
+  GST_DEBUG_OBJECT (h265parse, "Discarding bidirectional frame");
+  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
+  gst_h265_parse_reset_frame (h265parse);
+  goto done;
+
 }
 
 /* sends a codec NAL downstream, decorating and transforming as needed.
@@ -2551,12 +2570,12 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           h265parse->parsed_fps_d,
           NULL,
           flags,
-          h265parse->time_code.hours_flag[i] ? h265parse->
-          time_code.hours_value[i] : 0,
-          h265parse->time_code.minutes_flag[i] ? h265parse->
-          time_code.minutes_value[i] : 0,
-          h265parse->time_code.seconds_flag[i] ? h265parse->
-          time_code.seconds_value[i] : 0, n_frames, field_count);
+          h265parse->time_code.hours_flag[i] ? h265parse->time_code.
+          hours_value[i] : 0,
+          h265parse->time_code.minutes_flag[i] ? h265parse->time_code.
+          minutes_value[i] : 0,
+          h265parse->time_code.seconds_flag[i] ? h265parse->time_code.
+          seconds_value[i] : 0, n_frames, field_count);
     }
   }
 
@@ -2846,7 +2865,16 @@ gst_h265_parse_event (GstBaseParse * parse, GstEvent * event)
       break;
     case GST_EVENT_SEGMENT:
     {
+      const GstSegment *segment = NULL;
+
+      gst_event_parse_segment (event, &segment);
+
       h265parse->last_report = GST_CLOCK_TIME_NONE;
+
+      if (segment->flags & GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED) {
+        GST_DEBUG_OBJECT (h265parse, "Will discard bidirectional frames");
+        h265parse->discard_bidirectional = TRUE;
+      }
 
       res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
       break;

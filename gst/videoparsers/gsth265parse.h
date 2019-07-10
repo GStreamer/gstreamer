@@ -102,6 +102,8 @@ struct _GstH265Parse
   gboolean update_caps;
   GstAdapter *frame_out;
   gboolean keyframe;
+  gboolean predicted;
+  gboolean bidirectional;
   gboolean header;
   /* AU state */
   gboolean picture_start;
@@ -119,6 +121,9 @@ struct _GstH265Parse
 
   GstVideoContentLightLevel content_light_level;
   guint content_light_level_state;
+
+  /* For forward predicted trickmode */
+  gboolean discard_bidirectional;
 };
 
 struct _GstH265ParseClass

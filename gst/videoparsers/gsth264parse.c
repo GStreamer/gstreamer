@@ -193,6 +193,8 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->idr_pos = -1;
   h264parse->sei_pos = -1;
   h264parse->keyframe = FALSE;
+  h264parse->predicted = FALSE;
+  h264parse->bidirectional = FALSE;
   h264parse->header = FALSE;
   h264parse->frame_start = FALSE;
   h264parse->aud_insert = TRUE;
@@ -260,6 +262,7 @@ gst_h264_parse_reset (GstH264Parse * h264parse)
   gst_event_replace (&h264parse->force_key_unit_event, NULL);
 
   h264parse->discont = FALSE;
+  h264parse->discard_bidirectional = FALSE;
 
   gst_h264_parse_reset_stream_info (h264parse);
 }
@@ -855,7 +858,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       if (pres != GST_H264_PARSER_OK) {
         GST_WARNING_OBJECT (h264parse, "failed to parse SPS:");
         h264parse->state |= GST_H264_PARSE_STATE_GOT_SPS;
-        h264parse->header |= TRUE;
+        h264parse->header = TRUE;
         return FALSE;
       }
 
@@ -875,7 +878,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       gst_h264_parser_store_nal (h264parse, sps.id, nal_type, nalu);
       gst_h264_sps_clear (&sps);
       h264parse->state |= GST_H264_PARSE_STATE_GOT_SPS;
-      h264parse->header |= TRUE;
+      h264parse->header = TRUE;
       break;
     case GST_H264_NAL_PPS:
       /* expected state: got-sps */
@@ -910,14 +913,14 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       gst_h264_parser_store_nal (h264parse, pps.id, nal_type, nalu);
       gst_h264_pps_clear (&pps);
       h264parse->state |= GST_H264_PARSE_STATE_GOT_PPS;
-      h264parse->header |= TRUE;
+      h264parse->header = TRUE;
       break;
     case GST_H264_NAL_SEI:
       /* expected state: got-sps */
       if (!GST_H264_PARSE_STATE_VALID (h264parse, GST_H264_PARSE_STATE_GOT_SPS))
         return FALSE;
 
-      h264parse->header |= TRUE;
+      h264parse->header = TRUE;
       gst_h264_parse_process_sei (h264parse, nalu);
       /* mark SEI pos */
       if (h264parse->sei_pos == -1) {
@@ -962,7 +965,12 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
             pres, slice.first_mb_in_slice, slice.type);
         if (pres == GST_H264_PARSER_OK) {
           if (GST_H264_IS_I_SLICE (&slice) || GST_H264_IS_SI_SLICE (&slice))
-            h264parse->keyframe |= TRUE;
+            h264parse->keyframe = TRUE;
+          else if (GST_H264_IS_P_SLICE (&slice)
+              || GST_H264_IS_SP_SLICE (&slice))
+            h264parse->predicted = TRUE;
+          else if (GST_H264_IS_B_SLICE (&slice))
+            h264parse->bidirectional = TRUE;
 
           h264parse->state |= GST_H264_PARSE_STATE_GOT_SLICE;
           h264parse->field_pic_flag = slice.field_pic_flag;
@@ -2335,6 +2343,9 @@ gst_h264_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   else
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
+  if (h264parse->discard_bidirectional && h264parse->bidirectional)
+    goto discard;
+
   if (h264parse->header)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_HEADER);
   else
@@ -2356,7 +2367,14 @@ gst_h264_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_buffer_unref (buf);
   }
 
+done:
   return GST_FLOW_OK;
+
+discard:
+  GST_DEBUG_OBJECT (h264parse, "Discarding bidirectional frame");
+  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
+  gst_h264_parse_reset_frame (h264parse);
+  goto done;
 }
 
 /* sends a codec NAL downstream, decorating and transforming as needed.
@@ -3155,6 +3173,12 @@ gst_h264_parse_event (GstBaseParse * parse, GstEvent * event)
           (segment->start != 0 || segment->rate != 1.0
               || segment->applied_rate != 1.0))
         h264parse->do_ts = FALSE;
+
+      if (segment->flags & GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED) {
+        GST_DEBUG_OBJECT (h264parse, "Will discard bidirectional frames");
+        h264parse->discard_bidirectional = TRUE;
+      }
+
 
       h264parse->last_report = GST_CLOCK_TIME_NONE;
 

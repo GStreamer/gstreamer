@@ -123,6 +123,8 @@ struct _GstH264Parse
   gboolean update_caps;
   GstAdapter *frame_out;
   gboolean keyframe;
+  gboolean predicted;
+  gboolean bidirectional;
   gboolean header;
   gboolean frame_start;
   /* AU state */
@@ -147,6 +149,9 @@ struct _GstH264Parse
   guint8 closedcaptions[96];
   guint closedcaptions_size;
   GstVideoCaptionType closedcaptions_type;
+
+  /* For forward predicted trickmode */
+  gboolean discard_bidirectional;
 };
 
 struct _GstH264ParseClass
