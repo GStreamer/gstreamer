@@ -340,7 +340,12 @@ _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
   clip_name = gst_structure_get_string (action->structure, "container-name");
 
   container = ges_timeline_get_element (timeline, clip_name);
-  g_return_val_if_fail (GES_IS_CONTAINER (container), FALSE);
+  if (!container) {
+    GST_VALIDATE_REPORT (scenario,
+        g_quark_from_string ("scenario::execution-error"),
+        "Could not find container %s", clip_name);
+    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+  }
 
   if (!gst_validate_action_get_clocktime (scenario, action,
           "position", &position)) {
