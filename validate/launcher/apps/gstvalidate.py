@@ -277,8 +277,11 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
 
             for scenario in scenarios_to_iterate:
                 if isinstance(scenario, str):
-                    scenario = self.test_manager.scenarios_manager.get_scenario(
+                    tmpscenario = self.test_manager.scenarios_manager.get_scenario(
                         scenario)
+                    if tmpscenario is None:
+                        raise RuntimeError("Could not find scenario file: %s" % scenario)
+                    scenario = tmpscenario
 
                 mediainfo = FakeMediaDescriptor(extra_data, pipeline)
                 if not mediainfo.is_compatible(scenario):
