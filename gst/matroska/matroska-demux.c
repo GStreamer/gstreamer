@@ -171,7 +171,7 @@ static GstCaps *gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext
     gchar ** codec_name, guint32 * riff_fourcc);
 static GstCaps *gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext
     * audiocontext, const gchar * codec_id, guint8 * data, guint size,
-    gchar ** codec_name, guint16 * riff_audio_fmt);
+    gchar ** codec_name, guint16 * riff_audio_fmt, GstClockTime * lead_in_ts);
 static GstCaps
     * gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
     subtitlecontext, const gchar * codec_id, gpointer data, guint size);
@@ -339,6 +339,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->segment_seqnum = 0;
   demux->requested_seek_time = GST_CLOCK_TIME_NONE;
   demux->seek_offset = -1;
+  demux->audio_lead_in_ts = 0;
   demux->building_index = FALSE;
   if (demux->seek_event) {
     gst_event_unref (demux->seek_event);
@@ -1512,12 +1513,18 @@ gst_matroska_demux_parse_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml,
     }
 
     case GST_MATROSKA_TRACK_TYPE_AUDIO:{
+      GstClockTime lead_in_ts = 0;
       GstMatroskaTrackAudioContext *audiocontext =
           (GstMatroskaTrackAudioContext *) context;
 
       caps = gst_matroska_demux_audio_caps (audiocontext,
           context->codec_id, context->codec_priv, context->codec_priv_size,
-          &codec, &riff_audio_fmt);
+          &codec, &riff_audio_fmt, &lead_in_ts);
+      if (lead_in_ts > demux->audio_lead_in_ts) {
+        demux->audio_lead_in_ts = lead_in_ts;
+        GST_DEBUG_OBJECT (demux, "Increased audio lead-in to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (lead_in_ts));
+      }
 
       if (codec) {
         gst_tag_list_add (context->tags, GST_TAG_MERGE_REPLACE,
@@ -2734,11 +2741,12 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   GstFormat format;
-  gboolean flush, keyunit, before, after, snap_next;
+  gboolean flush, keyunit, before, after, accurate, snap_next;
   gdouble rate;
   gint64 cur, stop;
   GstMatroskaTrackContext *track = NULL;
   GstSegment seeksegment = { 0, };
+  guint64 seekpos;
   gboolean update = TRUE;
   gboolean pad_locked = FALSE;
   guint32 seqnum;
@@ -2806,6 +2814,7 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   keyunit = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
   after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
   before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
+  accurate = ! !(flags & GST_SEEK_FLAG_ACCURATE);
 
   /* always do full update if flushing,
    * otherwise problems might arise downstream with missing keyframes etc */
@@ -2821,9 +2830,15 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     snap_dir = snap_next ? GST_SEARCH_MODE_AFTER : GST_SEARCH_MODE_BEFORE;
 
   GST_OBJECT_LOCK (demux);
+
+  seekpos = seeksegment.position;
+  if (accurate) {
+    seekpos -= MIN (seeksegment.position, demux->audio_lead_in_ts);
+  }
+
   track = gst_matroska_read_common_get_seek_track (&demux->common, track);
   if ((entry = gst_matroska_read_common_do_index_seek (&demux->common, track,
-              seeksegment.position, &demux->seek_index, &demux->seek_entry,
+              seekpos, &demux->seek_index, &demux->seek_entry,
               snap_dir)) == NULL) {
     /* pull mode without index can scan later on */
     if (demux->streaming) {
@@ -2890,7 +2905,7 @@ next:
       gst_event_set_seqnum (flush_event, seqnum);
       gst_pad_push_event (demux->common.sinkpad, flush_event);
     }
-    entry = gst_matroska_demux_search_pos (demux, seeksegment.position);
+    entry = gst_matroska_demux_search_pos (demux, seekpos);
     /* keep local copy */
     if (entry) {
       scan_entry = *entry;
@@ -6606,10 +6621,16 @@ round_up_pow2 (guint n)
 static GstCaps *
 gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     audiocontext, const gchar * codec_id, guint8 * data, guint size,
-    gchar ** codec_name, guint16 * riff_audio_fmt)
+    gchar ** codec_name, guint16 * riff_audio_fmt, GstClockTime * lead_in_ts)
 {
   GstMatroskaTrackContext *context = (GstMatroskaTrackContext *) audiocontext;
   GstCaps *caps = NULL;
+  guint lead_in = 0;
+  /* Max potential blocksize causing the longest possible lead_in_ts need, as
+   * we don't have the exact number parsed out here */
+  guint max_blocksize = 0;
+  /* Original samplerate before SBR multiplications, as parsers would use */
+  guint rate = audiocontext->samplerate;
 
   g_assert (audiocontext != NULL);
   g_assert (codec_name != NULL);
@@ -6640,6 +6661,8 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     else
       layer = 3;
 
+    lead_in = 30;               /* Could mp2 need as much too? */
+    max_blocksize = 1152;
     caps = gst_caps_new_simple ("audio/mpeg",
         "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, layer, NULL);
     *codec_name = g_strdup_printf ("MPEG-1 layer %d", layer);
@@ -6687,11 +6710,15 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     context->alignment = round_up_pow2 (context->alignment);
   } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AC3,
           strlen (GST_MATROSKA_CODEC_ID_AUDIO_AC3))) {
+    lead_in = 2;
+    max_blocksize = 1536;
     caps = gst_caps_new_simple ("audio/x-ac3",
         "framed", G_TYPE_BOOLEAN, TRUE, NULL);
     *codec_name = g_strdup ("AC-3 audio");
   } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_EAC3,
           strlen (GST_MATROSKA_CODEC_ID_AUDIO_EAC3))) {
+    lead_in = 2;
+    max_blocksize = 1536;
     caps = gst_caps_new_simple ("audio/x-eac3",
         "framed", G_TYPE_BOOLEAN, TRUE, NULL);
     *codec_name = g_strdup ("E-AC-3 audio");
@@ -6751,6 +6778,7 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
 
         samplerate =
             audiocontext->samplerate == 0 ? 48000 : audiocontext->samplerate;
+        rate = samplerate;
         channels = audiocontext->channels == 0 ? 2 : audiocontext->channels;
         if (channels == 1) {
           streams = 1;
@@ -6833,6 +6861,8 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
         /* assume SBR if samplerate <= 24kHz */
         if (obj_type == 5 || (freq_index >= 6 && freq_index != 15) ||
             (context->codec_priv_size == (5 + explicit_freq_bytes))) {
+          /* TODO: Commonly aacparse will reset the rate in caps to
+           * non-multiplied - which one is correct? */
           audiocontext->samplerate *= 2;
         }
       } else {
@@ -6890,6 +6920,8 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     }
 
     if (priv) {
+      lead_in = 2;
+      max_blocksize = 1024;
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, mpegversion,
           "framed", G_TYPE_BOOLEAN, TRUE,
@@ -6990,6 +7022,11 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     }
 
     caps = gst_caps_simplify (caps);
+  }
+
+  if (lead_in_ts && lead_in && max_blocksize && rate) {
+    *lead_in_ts =
+        gst_util_uint64_scale (GST_SECOND, max_blocksize * lead_in, rate);
   }
 
   return caps;
