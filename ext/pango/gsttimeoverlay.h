@@ -45,7 +45,7 @@ typedef enum {
   GST_TIME_OVERLAY_TIME_LINE_BUFFER_TIME,
   GST_TIME_OVERLAY_TIME_LINE_STREAM_TIME,
   GST_TIME_OVERLAY_TIME_LINE_RUNNING_TIME,
-  GST_TIME_OVERLAY_TIME_LINE_TIME_CODE
+  GST_TIME_OVERLAY_TIME_LINE_TIME_CODE,
 } GstTimeOverlayTimeLine;
 
 /**
@@ -58,6 +58,11 @@ struct _GstTimeOverlay {
 
   /*< private >*/
   GstTimeOverlayTimeLine time_line;
+
+  /* For datetime mode */
+  gboolean show_times_as_dates;
+  gchar *datetime_format;
+  GDateTime *datetime_epoch;
 };
 
 struct _GstTimeOverlayClass {

@@ -53,11 +53,16 @@
 #include "gsttimeoverlay.h"
 
 #define DEFAULT_TIME_LINE GST_TIME_OVERLAY_TIME_LINE_BUFFER_TIME
+#define DEFAULT_SHOW_TIMES_AS_DATES FALSE
+#define DEFAULT_DATETIME_FORMAT "%F %T" /* YYYY-MM-DD hh:mm:ss */
 
 enum
 {
   PROP_0,
-  PROP_TIME_LINE
+  PROP_TIME_LINE,
+  PROP_SHOW_TIMES_AS_DATES,
+  PROP_DATETIME_EPOCH,
+  PROP_DATETIME_FORMAT,
 };
 
 #define gst_time_overlay_parent_class parent_class
@@ -108,6 +113,7 @@ static gchar *
 gst_time_overlay_get_text (GstBaseTextOverlay * overlay,
     GstBuffer * video_frame)
 {
+  GstTimeOverlay *self = GST_TIME_OVERLAY (overlay);
   GstTimeOverlayTimeLine time_line;
   gchar *time_str, *txt, *ret;
 
@@ -150,8 +156,19 @@ gst_time_overlay_get_text (GstBaseTextOverlay * overlay,
         break;
     }
 
-    time_str = gst_time_overlay_render_time (GST_TIME_OVERLAY (overlay), ts);
+    if (self->show_times_as_dates) {
+      GDateTime *datetime;
+
+      datetime =
+          g_date_time_add_seconds (self->datetime_epoch,
+          (gdouble) GST_BUFFER_TIMESTAMP (video_frame) / GST_SECOND);
+      time_str = g_date_time_format (datetime, self->datetime_format);
+      g_date_time_unref (datetime);
+    } else {
+      time_str = gst_time_overlay_render_time (GST_TIME_OVERLAY (overlay), ts);
+    }
   }
+
   txt = g_strdup (overlay->default_text);
 
   if (txt != NULL && *txt != '\0') {
@@ -165,6 +182,15 @@ gst_time_overlay_get_text (GstBaseTextOverlay * overlay,
   g_free (time_str);
 
   return ret;
+}
+
+static void
+gst_time_overlay_finalize (GObject * gobject)
+{
+  GstTimeOverlay *self = GST_TIME_OVERLAY (gobject);
+
+  g_date_time_unref (self->datetime_epoch);
+  g_free (self->datetime_format);
 }
 
 static void
@@ -185,12 +211,30 @@ gst_time_overlay_class_init (GstTimeOverlayClass * klass)
 
   gsttextoverlay_class->get_text = gst_time_overlay_get_text;
 
+  gobject_class->finalize = gst_time_overlay_finalize;
   gobject_class->set_property = gst_time_overlay_set_property;
   gobject_class->get_property = gst_time_overlay_get_property;
 
   g_object_class_install_property (gobject_class, PROP_TIME_LINE,
       g_param_spec_enum ("time-mode", "Time Mode", "What time to show",
           GST_TYPE_TIME_OVERLAY_TIME_LINE, DEFAULT_TIME_LINE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DATETIME_EPOCH,
+      g_param_spec_boxed ("datetime-epoch", "Datetime Epoch",
+          "When showing times as dates, the initial date from which time "
+          "is counted, if not specified prime epoch is used (1900-01-01)",
+          G_TYPE_DATE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DATETIME_FORMAT,
+      g_param_spec_string ("datetime-format", "Datetime Format",
+          "When showing times as dates, the format to render date and time in",
+          DEFAULT_DATETIME_FORMAT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_SHOW_TIMES_AS_DATES,
+      g_param_spec_boolean ("show-times-as-dates", "Show times as dates",
+          "Whether to display times, counted from datetime-epoch, as dates",
+          DEFAULT_SHOW_TIMES_AS_DATES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -207,6 +251,9 @@ gst_time_overlay_init (GstTimeOverlay * overlay)
   textoverlay->halign = GST_BASE_TEXT_OVERLAY_HALIGN_LEFT;
 
   overlay->time_line = DEFAULT_TIME_LINE;
+  overlay->show_times_as_dates = DEFAULT_SHOW_TIMES_AS_DATES;
+  overlay->datetime_epoch = g_date_time_new_utc (1900, 1, 1, 0, 0, 0);
+  overlay->datetime_format = g_strdup (DEFAULT_DATETIME_FORMAT);
 
   context = textoverlay->pango_context;
 
@@ -234,6 +281,17 @@ gst_time_overlay_set_property (GObject * object, guint prop_id,
     case PROP_TIME_LINE:
       g_atomic_int_set (&overlay->time_line, g_value_get_enum (value));
       break;
+    case PROP_SHOW_TIMES_AS_DATES:
+      overlay->show_times_as_dates = g_value_get_boolean (value);
+      break;
+    case PROP_DATETIME_EPOCH:
+      g_date_time_unref (overlay->datetime_epoch);
+      overlay->datetime_epoch = (GDateTime *) g_value_dup_boxed (value);
+      break;
+    case PROP_DATETIME_FORMAT:
+      g_free (overlay->datetime_format);
+      overlay->datetime_format = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -249,6 +307,15 @@ gst_time_overlay_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_TIME_LINE:
       g_value_set_enum (value, g_atomic_int_get (&overlay->time_line));
+      break;
+    case PROP_SHOW_TIMES_AS_DATES:
+      g_value_set_boolean (value, overlay->show_times_as_dates);
+      break;
+    case PROP_DATETIME_EPOCH:
+      g_value_set_boxed (value, overlay->datetime_epoch);
+      break;
+    case PROP_DATETIME_FORMAT:
+      g_value_set_string (value, overlay->datetime_format);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
