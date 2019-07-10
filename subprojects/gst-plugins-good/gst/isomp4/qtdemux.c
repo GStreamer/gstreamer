@@ -8814,6 +8814,7 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
   }
 
   if (stream->pad) {
+    gboolean forward_collection = FALSE;
     GstCaps *prev_caps = NULL;
 
     GST_PAD_ELEMENT_PRIVATE (stream->pad) = stream;
@@ -8831,8 +8832,6 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       }
     }
 
-    GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT,
-        CUR_STREAM (stream)->caps);
     if (stream->new_stream) {
       GstEvent *event;
       GstStreamFlags stream_flags = GST_STREAM_FLAG_NONE;
@@ -8865,6 +8864,8 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       }
       gst_event_set_stream_flags (event, stream_flags);
       gst_pad_push_event (stream->pad, event);
+
+      forward_collection = TRUE;
     }
 
     prev_caps = gst_pad_get_current_caps (stream->pad);
@@ -8885,6 +8886,14 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
     if (prev_caps)
       gst_caps_unref (prev_caps);
     stream->new_caps = FALSE;
+
+    if (forward_collection) {
+      /* Forward upstream collection and selection if any */
+      GstEvent *upstream_event = gst_pad_get_sticky_event (qtdemux->sinkpad,
+          GST_EVENT_STREAM_COLLECTION, 0);
+      if (upstream_event)
+        gst_pad_push_event (stream->pad, upstream_event);
+    }
   }
   return TRUE;
 }
