@@ -56,6 +56,8 @@ _ges_get_asset_from_timeline                  (GESTimeline * timeline,
 G_GNUC_INTERNAL GESLayer *
 _ges_get_layer_by_priority                    (GESTimeline * timeline,
                                                gint priority);
+G_GNUC_INTERNAL gboolean
+_ges_save_timeline_if_needed (GESTimeline* timeline, GstStructure* structure, GError** error);
 
 G_END_DECLS
 

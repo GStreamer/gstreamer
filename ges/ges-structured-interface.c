@@ -160,6 +160,21 @@ _check_fields (GstStructure * structure, FieldsError fields_error,
   return TRUE;
 }
 
+gboolean
+_ges_save_timeline_if_needed (GESTimeline * timeline, GstStructure * structure,
+    GError ** error)
+{
+  gboolean res = TRUE;
+  const gchar *nested_timeline_id =
+      gst_structure_get_string (structure, "project-uri");
+
+  if (nested_timeline_id) {
+    res = ges_timeline_save_to_uri (timeline, nested_timeline_id, NULL, TRUE,
+        error);
+  }
+
+  return res;
+}
 
 gboolean
 _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
@@ -176,7 +191,7 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
   gboolean ret = FALSE;
 
   const gchar *valid_fields[] =
-      { "element-name", "property-name", "value", "timestamp",
+      { "element-name", "property-name", "value", "timestamp", "project-uri",
     NULL
   };
 
@@ -240,6 +255,7 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
           GST_TIME_ARGS (timestamp));
     }
   }
+  ret = _ges_save_timeline_if_needed (timeline, structure, error);
 
 done:
   if (source)
@@ -353,6 +369,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   const gchar *text;
   const gchar *pattern;
   const gchar *track_types_str;
+  const gchar *nested_timeline_id;
   gchar *asset_id = NULL;
   gchar *check_asset_id = NULL;
   const gchar *type_string;
@@ -365,7 +382,8 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
 
   const gchar *valid_fields[] =
       { "asset-id", "pattern", "name", "layer-priority", "layer", "type",
-    "start", "inpoint", "duration", "text", "track-types", NULL
+    "start", "inpoint", "duration", "text", "track-types", "project-uri",
+    NULL
   };
 
   FieldsError fields_error = { valid_fields, NULL };
@@ -386,6 +404,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   TRY_GET ("inpoint", GST_TYPE_CLOCK_TIME, &inpoint, 0);
   TRY_GET ("duration", GST_TYPE_CLOCK_TIME, &duration, GST_CLOCK_TIME_NONE);
   TRY_GET_STRING ("track-types", &track_types_str, NULL);
+  TRY_GET_STRING ("project-uri", &nested_timeline_id, NULL);
 
   if (track_types_str) {
     if (!get_flags_from_string (GES_TYPE_TRACK_TYPE, track_types_str,
@@ -483,6 +502,7 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   }
 
   gst_object_unref (layer);
+  res = _ges_save_timeline_if_needed (timeline, structure, error);
 
 beach:
   g_free (asset_id);
@@ -501,7 +521,7 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
 
   gboolean res = TRUE;
   const gchar *valid_fields[] = { "container-name", "asset-id",
-    "child-type", "child-name", NULL
+    "child-type", "child-name", "project-uri", NULL
   };
 
   FieldsError fields_error = { valid_fields, NULL };
@@ -568,6 +588,7 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
   } else {
     g_object_set_qdata (G_OBJECT (timeline), LAST_CHILD_QDATA, child);
   }
+  res = _ges_save_timeline_if_needed (timeline, structure, error);
 
 beach:
   return res;
@@ -581,7 +602,8 @@ _ges_set_child_property_from_struct (GESTimeline * timeline,
   GESTimelineElement *element;
   const gchar *property_name, *element_name;
 
-  const gchar *valid_fields[] = { "element-name", "property", "value", NULL };
+  const gchar *valid_fields[] =
+      { "element-name", "property", "value", "project-uri", NULL };
 
   FieldsError fields_error = { valid_fields, NULL };
 
@@ -644,8 +666,7 @@ _ges_set_child_property_from_struct (GESTimeline * timeline,
 
   ges_timeline_element_set_child_property (element, property_name,
       (GValue *) value);
-
-  return TRUE;
+  return _ges_save_timeline_if_needed (timeline, structure, error);
 }
 
 #undef GET_AND_CHECK

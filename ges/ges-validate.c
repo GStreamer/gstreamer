@@ -34,20 +34,97 @@
 #define MONITOR_ON_PIPELINE "validate-monitor"
 #define RUNNER_ON_PIPELINE "runner-monitor"
 
-#define DECLARE_AND_GET_TIMELINE_AND_PIPELINE(scenario, action) \
-  GESTimeline *timeline; \
-  GstElement * pipeline = gst_validate_scenario_get_pipeline (scenario); \
-  if (pipeline == NULL) { \
-    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,\
-            "Can't execute a '%s' action after the pipeline "\
-            "has been destroyed.", action->type);\
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;\
-  }\
-  g_object_get (pipeline, "timeline", &timeline, NULL);
+typedef struct
+{
+  GMainLoop *ml;
+  GError *error;
+} LoadTimelineData;
 
-#define DECLARE_AND_GET_TIMELINE(scenario, action) \
-  DECLARE_AND_GET_TIMELINE_AND_PIPELINE(scenario, action);\
-  gst_object_unref(pipeline);
+static void
+project_loaded_cb (GESProject * project, GESTimeline * timeline,
+    LoadTimelineData * data)
+{
+  g_main_loop_quit (data->ml);
+}
+
+static void
+error_loading_asset_cb (GESProject * project, GError * err,
+    const gchar * unused_id, GType extractable_type, LoadTimelineData * data)
+{
+  data->error = g_error_copy (err);
+  g_main_loop_quit (data->ml);
+}
+
+static GESTimeline *
+_ges_load_timeline (GstValidateScenario * scenario, const gchar * project_uri)
+{
+  GESProject *project = ges_project_new (project_uri);
+  GESTimeline *timeline;
+  LoadTimelineData data = { 0 };
+
+  data.ml = g_main_loop_new (NULL, TRUE);
+  timeline =
+      GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &data.error));
+  if (!timeline)
+    goto done;
+
+  g_signal_connect (project, "loaded", (GCallback) project_loaded_cb, &data);
+  g_signal_connect (project, "error-loading-asset",
+      (GCallback) error_loading_asset_cb, &data);
+  g_main_loop_run (data.ml);
+  g_signal_handlers_disconnect_by_func (project, project_loaded_cb, &data);
+  g_signal_handlers_disconnect_by_func (project, error_loading_asset_cb, &data);
+  GST_INFO_OBJECT (scenario, "Loaded timeline from %s", project_uri);
+
+done:
+  if (data.error) {
+    GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+        "Can not load timeline from: %s (%s)", project_uri,
+        data.error->message);
+    g_clear_error (&data.error);
+    gst_clear_object (&timeline);
+  }
+
+  g_main_loop_unref (data.ml);
+  gst_object_unref (project);
+  return timeline;
+}
+
+#define DECLARE_AND_GET_TIMELINE_AND_PIPELINE(scenario, action)                                   \
+    GESTimeline* timeline;                                                                        \
+    GstElement* pipeline = NULL;                                                                  \
+    const gchar* project_uri = gst_structure_get_string(action->structure, "project-uri"); \
+    if (!project_uri) {                                                                    \
+        pipeline = gst_validate_scenario_get_pipeline(scenario);                                  \
+        if (pipeline == NULL) {                                                                   \
+            GST_VALIDATE_REPORT(scenario, SCENARIO_ACTION_EXECUTION_ERROR,                        \
+                "Can't execute a '%s' action after the pipeline "                                 \
+                "has been destroyed.",                                                            \
+                action->type);                                                                    \
+            return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                                    \
+        }                                                                                         \
+        g_object_get(pipeline, "timeline", &timeline, NULL);                                      \
+    } else {                                                                                      \
+        timeline = _ges_load_timeline(scenario, project_uri);                              \
+        if (!timeline)                                                                            \
+            return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                                    \
+    }
+
+#define DECLARE_AND_GET_TIMELINE(scenario, action)         \
+  DECLARE_AND_GET_TIMELINE_AND_PIPELINE(scenario, action); \
+  if (pipeline)                                            \
+      gst_object_unref(pipeline);                          \
+
+#define SAVE_TIMELINE_IF_NEEDED(scenario, timeline, action)                                                  \
+    {                                                                                                        \
+        if (!_ges_save_timeline_if_needed(timeline, action->structure, NULL)) {                              \
+            GST_VALIDATE_REPORT(scenario,                                                                    \
+                g_quark_from_string("scenario::execution-error"),                                            \
+                "Could not save timeline to %s", gst_structure_get_string(action->structure, "project-id")); \
+            gst_object_unref(timeline);                                                                      \
+            return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;                                               \
+        }                                                                                                    \
+    }
 
 static gboolean
 _serialize_project (GstValidateScenario * scenario, GstValidateAction * action)
@@ -104,7 +181,7 @@ _remove_asset (GstValidateScenario * scenario, GstValidateAction * action)
   }
 
   res = ges_project_remove_asset (project, asset);
-
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 beach:
   g_object_unref (timeline);
   return res;
@@ -148,6 +225,7 @@ _add_asset (GstValidateScenario * scenario, GstValidateAction * action)
   }
 
   res = ges_project_add_asset (project, asset);
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 
 beach:
   g_object_unref (timeline);
@@ -176,6 +254,7 @@ _add_layer (GstValidateScenario * scenario, GstValidateAction * action)
       NULL);
 
 
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 beach:
   g_object_unref (timeline);
   return res;
@@ -206,6 +285,7 @@ _remove_layer (GstValidateScenario * scenario, GstValidateAction * action)
     GST_ERROR ("No layer with priority %d", priority);
   }
 
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 beach:
   g_object_unref (timeline);
   return res;
@@ -234,6 +314,7 @@ _remove_clip (GstValidateScenario * scenario, GstValidateAction * action)
     GST_ERROR ("No layer for clip %s", ges_timeline_element_get_name (clip));
   }
 
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
   g_object_unref (timeline);
   return res;
 }
@@ -294,6 +375,7 @@ _edit_container (GstValidateScenario * scenario, GstValidateAction * action)
   }
   gst_object_unref (container);
 
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 beach:
   g_object_unref (timeline);
   return res;
@@ -335,6 +417,7 @@ _commit (GstValidateScenario * scenario, GstValidateAction * action)
   }
   gst_object_unref (bus);
   gst_object_unref (timeline);
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 
   return GST_VALIDATE_EXECUTE_ACTION_ASYNC;
 }
@@ -399,6 +482,7 @@ _set_track_restriction_caps (GstValidateScenario * scenario,
     }
   }
   gst_caps_unref (caps);
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
   gst_object_unref (timeline);
 
   return res;
@@ -433,6 +517,7 @@ _set_asset_on_element (GstValidateScenario * scenario,
   }
 
   res = ges_extractable_set_asset (GES_EXTRACTABLE (element), asset);
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
 
 beach:
   gst_object_unref (timeline);
@@ -467,6 +552,7 @@ _container_remove_child (GstValidateScenario * scenario,
 
   res = ges_container_remove (container, child);
 
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
   gst_object_unref (timeline);
 
   return res;
@@ -496,6 +582,7 @@ _ungroup (GstValidateScenario * scenario, GstValidateAction * action)
 
   g_list_free (ges_container_ungroup (container, recursive));
 
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
   gst_object_unref (timeline);
 
   return res;
@@ -604,13 +691,14 @@ _set_control_source (GstValidateScenario * scenario, GstValidateAction * action)
   ret = ges_track_element_set_control_source (element,
       source, property_name, binding_type);
 
-
 done:
-  gst_object_unref (timeline);
   g_free (element_name);
   g_free (binding_type);
   g_free (source_type);
   g_free (interpolation_mode);
+
+  SAVE_TIMELINE_IF_NEEDED (scenario, timeline, action);
+  gst_object_unref (timeline);
 
   return ret;
 }
@@ -810,6 +898,12 @@ ges_validate_register_action_types (void)
           .types = "int",
           .def = "-1",
         },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
         {NULL}
        },
        "Allows to edit a container (like a GESClip), for more details, have a look at:\n"
@@ -831,6 +925,12 @@ ges_validate_register_action_types (void)
           .mandatory = TRUE,
           NULL
         },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
         {NULL}
       },
       "Allows to add an asset to the current project", GST_VALIDATE_ACTION_TYPE_NONE);
@@ -849,6 +949,12 @@ ges_validate_register_action_types (void)
           .mandatory = TRUE,
           NULL
         },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
         { NULL }
       },
       "Allows to remove an asset from the current project", GST_VALIDATE_ACTION_TYPE_NONE);
@@ -862,6 +968,12 @@ ges_validate_register_action_types (void)
                          " appended to the timeline",
           .mandatory = FALSE,
           NULL
+        },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
         },
         { NULL }
       },
@@ -881,6 +993,12 @@ ges_validate_register_action_types (void)
           .mandatory = FALSE,
           .types="boolean",
           .def = "False"
+        },
+        {
+          .name = "project-uri",
+          .description = "The nested timeline to add clip to",
+          .types = "string",
+          .mandatory = FALSE,
         },
         { NULL }
       },
@@ -930,6 +1048,12 @@ ges_validate_register_action_types (void)
           .types = "double or string",
           .mandatory = FALSE,
         },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
         {NULL}
       }, "Allows to add a clip to a given layer", GST_VALIDATE_ACTION_TYPE_NONE);
 
@@ -940,6 +1064,12 @@ ges_validate_register_action_types (void)
           .description = "The name of the clip to remove",
           .types = "string",
           .mandatory = TRUE,
+        },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
         },
         {NULL}
       }, "Allows to remove a clip from a given layer", GST_VALIDATE_ACTION_TYPE_NONE);
@@ -975,6 +1105,12 @@ ges_validate_register_action_types (void)
           .types = "gvalue",
           .mandatory = TRUE,
         },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
         {NULL}
       }, "Allows to change child property of an object", GST_VALIDATE_ACTION_TYPE_NONE);
 
@@ -991,6 +1127,12 @@ ges_validate_register_action_types (void)
           .description = "The position at which to split the clip",
           .types = "double or string",
           .mandatory = TRUE,
+        },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
         },
         {NULL}
       }, "Split a clip at a specified position.", GST_VALIDATE_ACTION_TYPE_NONE);
@@ -1009,6 +1151,12 @@ ges_validate_register_action_types (void)
           .types = "string",
           .mandatory = TRUE,
         },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
         {NULL}
       }, "Sets restriction caps on tracks of a specific type.", GST_VALIDATE_ACTION_TYPE_NONE);
 
@@ -1025,6 +1173,12 @@ ges_validate_register_action_types (void)
           .description = "The id of the asset from which to extract the clip",
           .types = "string",
           .mandatory = TRUE,
+        },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
         },
         {NULL}
       }, "Sets restriction caps on tracks of a specific type.", GST_VALIDATE_ACTION_TYPE_NONE);
@@ -1059,6 +1213,12 @@ ges_validate_register_action_types (void)
           .mandatory = FALSE,
           .def = "NULL"
         },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
         {NULL}
       }, "Add a child to @container-name. If asset-id and child-type are specified,"
        " the child will be created and added. Otherwize @child-name has to be specified"
@@ -1078,6 +1238,12 @@ ges_validate_register_action_types (void)
           .types = "string",
           .mandatory = TRUE,
         },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
         {NULL}
       }, "Remove a child from @container-name.", FALSE);
 
@@ -1093,6 +1259,12 @@ ges_validate_register_action_types (void)
           .name = "recursive",
           .description = "Wether to recurse ungrouping or not.",
           .types = "boolean",
+          .mandatory = FALSE,
+        },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
           .mandatory = FALSE,
         },
         {NULL}
@@ -1133,6 +1305,12 @@ ges_validate_register_action_types (void)
           .mandatory = FALSE,
           .def = "linear",
         },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
         {NULL}
       }, "Adds a GstControlSource on @element-name::@property-name"
          " allowing you to then add keyframes on that property.", GST_VALIDATE_ACTION_TYPE_NONE);
@@ -1162,6 +1340,12 @@ ges_validate_register_action_types (void)
           .description = "The value of the keyframe",
           .types = "float",
           .mandatory = TRUE,
+        },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
         },
         {NULL}
       }, "Remove a child from @container-name.", GST_VALIDATE_ACTION_TYPE_NONE);
@@ -1193,6 +1377,12 @@ ges_validate_register_action_types (void)
           .types = "string",
           .mandatory = FALSE,
         },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
+        },
         {NULL}
       }, "Remove a child from @container-name.", GST_VALIDATE_ACTION_TYPE_NONE);
 
@@ -1215,6 +1405,12 @@ ges_validate_register_action_types (void)
           .description = "The timestamp of the keyframe",
           .types = "string or float",
           .mandatory = TRUE,
+        },
+        {
+          .name = "project-uri",
+          .description = "The project URI with the serialized timeline to execute the action on",
+          .types = "string",
+          .mandatory = FALSE,
         },
         {NULL}
       }, "Remove a child from @container-name.", GST_VALIDATE_ACTION_TYPE_NONE);
