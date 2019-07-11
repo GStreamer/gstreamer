@@ -50,10 +50,18 @@ GType gst_rist_src_get_type (void);
 
 #define GST_TYPE_RIST_SINK          (gst_rist_sink_get_type())
 #define GST_RIST_SINK(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RIST_SINK,GstRistSink))
-typedef struct _GstRistSink GstRistSink; 
+typedef struct _GstRistSink GstRistSink;
 typedef struct {
   GstBinClass parent;
 } GstRistSinkClass;
 GType gst_rist_sink_get_type (void);
+
+#define GST_TYPE_RIST_RTP_EXT      (gst_rist_rtp_ext_get_type())
+#define GST_RIST_RTP_EXT(obj)      (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RIST_RTP_EXT,GstRistRtpExt))
+typedef struct _GstRistRtpExt GstRistRtpExt;
+typedef struct {
+  GstElementClass parent;
+} GstRistRtpExtClass;
+GType gst_rist_rtp_ext_get_type (void);
 
 #endif

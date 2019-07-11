@@ -43,6 +43,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "roundrobin", GST_RANK_NONE,
           GST_TYPE_ROUND_ROBIN))
     return FALSE;
+  if (!gst_element_register (plugin, "ristrtpext", GST_RANK_NONE,
+          GST_TYPE_RIST_RTP_EXT))
+    return FALSE;
 
   return TRUE;
 }
