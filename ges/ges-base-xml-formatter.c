@@ -1069,7 +1069,7 @@ ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
   GESTrackElement *element = NULL;
 
-  if (priv->state == STATE_LOADING_CLIPS) {
+  if (priv->state != STATE_LOADING_CLIPS) {
     GST_DEBUG_OBJECT (self, "Not loading source elements in %s state.",
         loading_state_name (priv->state));
     return;
