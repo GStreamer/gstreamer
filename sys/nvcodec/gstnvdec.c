@@ -207,40 +207,13 @@ static gboolean gst_nvdec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_nvdec_drain (GstVideoDecoder * decoder);
 static GstFlowReturn gst_nvdec_finish (GstVideoDecoder * decoder);
 
-static GstStaticPadTemplate gst_nvdec_sink_template =
-    GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
-    GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, stream-format=byte-stream, alignment=au; "
-        "video/x-h265, stream-format=byte-stream, alignment=au; "
-        "video/mpeg, mpegversion={ 1, 2, 4 }, systemstream=false; "
-        "image/jpeg; video/x-vp8; video/x-vp9")
-    );
-
-static GstStaticPadTemplate gst_nvdec_src_template =
-GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SRC_NAME,
-    GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "NV12") ", texture-target=2D")
-    );
-
-G_DEFINE_TYPE_WITH_CODE (GstNvDec, gst_nvdec, GST_TYPE_VIDEO_DECODER,
-    GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug_category, "nvdec", 0,
-        "Debug category for the nvdec element"));
+G_DEFINE_ABSTRACT_TYPE (GstNvDec, gst_nvdec, GST_TYPE_VIDEO_DECODER);
 
 static void
 gst_nvdec_class_init (GstNvDecClass * klass)
 {
   GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_nvdec_sink_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_nvdec_src_template);
-
-  gst_element_class_set_static_metadata (element_class, "NVDEC video decoder",
-      "Codec/Decoder/Video/Hardware", "NVDEC video decoder",
-      "Ericsson AB, http://www.ericsson.com");
 
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_nvdec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_nvdec_stop);
@@ -696,9 +669,7 @@ static gboolean
 gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   GstNvDec *nvdec = GST_NVDEC (decoder);
-  GstStructure *s;
-  const gchar *caps_name;
-  gint mpegversion = 0;
+  GstNvDecClass *klass = GST_NVDEC_GET_CLASS (decoder);
   CUVIDPARSERPARAMS parser_params = { 0, };
 
   GST_DEBUG_OBJECT (nvdec, "set format");
@@ -711,43 +682,7 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   if (!maybe_destroy_decoder_and_parser (nvdec))
     return FALSE;
 
-  s = gst_caps_get_structure (state->caps, 0);
-  caps_name = gst_structure_get_name (s);
-  GST_DEBUG_OBJECT (nvdec, "codec is %s", caps_name);
-
-  if (!g_strcmp0 (caps_name, "video/mpeg")) {
-    if (gst_structure_get_int (s, "mpegversion", &mpegversion)) {
-      switch (mpegversion) {
-        case 1:
-          parser_params.CodecType = cudaVideoCodec_MPEG1;
-          break;
-        case 2:
-          parser_params.CodecType = cudaVideoCodec_MPEG2;
-          break;
-        case 4:
-          parser_params.CodecType = cudaVideoCodec_MPEG4;
-          break;
-      }
-    }
-    if (!mpegversion) {
-      GST_ERROR_OBJECT (nvdec, "could not get MPEG version");
-      return FALSE;
-    }
-  } else if (!g_strcmp0 (caps_name, "video/x-h264")) {
-    parser_params.CodecType = cudaVideoCodec_H264;
-  } else if (!g_strcmp0 (caps_name, "image/jpeg")) {
-    parser_params.CodecType = cudaVideoCodec_JPEG;
-  } else if (!g_strcmp0 (caps_name, "video/x-h265")) {
-    parser_params.CodecType = cudaVideoCodec_HEVC;
-  } else if (!g_strcmp0 (caps_name, "video/x-vp8")) {
-    parser_params.CodecType = cudaVideoCodec_VP8;
-  } else if (!g_strcmp0 (caps_name, "video/x-vp9")) {
-    parser_params.CodecType = cudaVideoCodec_VP9;
-  } else {
-    GST_ERROR_OBJECT (nvdec, "failed to determine codec type");
-    return FALSE;
-  }
-
+  parser_params.CodecType = klass->codec_type;
   parser_params.ulMaxNumDecodeSurfaces = 20;
   parser_params.ulErrorThreshold = 100;
   parser_params.ulMaxDisplayDelay = 0;
@@ -1031,4 +966,323 @@ gst_nvdec_set_context (GstElement * element, GstContext * context)
       &nvdec->other_gl_context);
 
   GST_ELEMENT_CLASS (gst_nvdec_parent_class)->set_context (element, context);
+}
+
+typedef struct
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+  cudaVideoCodec codec_type;
+  gchar *codec;
+  guint cuda_device_id;
+  gboolean is_default;
+} GstNvDecClassData;
+
+static void
+gst_nvdec_subclass_init (gpointer g_class, gpointer data)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstNvDecClass *nvdec_class = GST_NVDEC_CLASS (g_class);
+  GstNvDecClassData *cdata = data;
+  gchar *long_name;
+
+  if (cdata->is_default) {
+    long_name = g_strdup_printf ("NVDEC %s Video Decoder", cdata->codec);
+  } else {
+    long_name = g_strdup_printf ("NVDEC %s Video Decoder with devide-id %d",
+        cdata->codec, cdata->cuda_device_id);
+  }
+
+  gst_element_class_set_metadata (element_class, long_name,
+      "Codec/Decoder/Video/Hardware", "NVDEC video decoder",
+      "Ericsson AB, http://www.ericsson.com, "
+      "Seungha Yang <seungha.yang@navercorp.com>");
+  g_free (long_name);
+
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          cdata->sink_caps));
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          cdata->src_caps));
+
+  nvdec_class->codec_type = cdata->codec_type;
+  nvdec_class->cuda_device_id = cdata->cuda_device_id;
+
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
+  g_free (cdata->codec);
+  g_free (cdata);
+}
+
+static void
+gst_nvdec_subclass_register (GstPlugin * plugin, GType type,
+    cudaVideoCodec codec_type, const gchar * codec, guint device_id, guint rank,
+    GstCaps * sink_caps, GstCaps * src_caps)
+{
+  GTypeQuery type_query;
+  GTypeInfo type_info = { 0, };
+  GType subtype;
+  gchar *type_name;
+  GstNvDecClassData *cdata;
+
+  cdata = g_new0 (GstNvDecClassData, 1);
+  cdata->sink_caps = gst_caps_ref (sink_caps);
+  cdata->src_caps = gst_caps_ref (src_caps);
+  cdata->codec_type = codec_type;
+  cdata->codec = g_strdup (codec);
+  cdata->cuda_device_id = device_id;
+  cdata->is_default = TRUE;
+
+  g_type_query (type, &type_query);
+  memset (&type_info, 0, sizeof (type_info));
+  type_info.class_size = type_query.class_size;
+  type_info.instance_size = type_query.instance_size;
+  type_info.class_init = gst_nvdec_subclass_init;
+  type_info.class_data = cdata;
+
+  type_name = g_strdup_printf ("nv%sdec", codec);
+
+  if (g_type_from_name (type_name) != 0) {
+    g_free (type_name);
+    type_name = g_strdup_printf ("nv%sdevice%ddec", codec, device_id);
+    cdata->is_default = FALSE;
+  }
+
+  subtype = g_type_register_static (type, type_name, &type_info, 0);
+
+  /* make lower rank than default device */
+  if (!gst_element_register (plugin, type_name, rank - 1, subtype))
+    GST_WARNING ("Failed to register plugin '%s'", type_name);
+
+  g_free (type_name);
+}
+
+typedef struct
+{
+  guint idx;
+  cudaVideoChromaFormat format;
+} GstNvdecChromaMap;
+
+static gboolean
+gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
+    const gchar * codec, const gchar * sink_caps_string, guint rank,
+    gint device_count)
+{
+  gint i;
+
+  for (i = 0; i < device_count; i++) {
+    CUdevice cuda_device;
+    CUcontext cuda_ctx;
+    CUresult cuda_ret;
+    gint max_width = 0, min_width = G_MAXINT;
+    gint max_height = 0, min_height = G_MAXINT;
+    GstCaps *sink_templ = NULL;
+    GstCaps *src_templ = NULL;
+    /* FIXME: support 10/12bits format */
+    guint bitdepth_minus8[1] = { 0 };
+    gint c_idx, b_idx;
+    guint num_support = 0;
+    cudaVideoChromaFormat chroma_list[] = {
+#if 0
+      /* FIXME: support monochrome */
+      cudaVideoChromaFormat_Monochrome,
+      /* FIXME: Can our OpenGL support NV16 and its 10/12bits variant?? */
+      cudaVideoChromaFormat_422,
+      cudaVideoChromaFormat_444,
+#endif
+      cudaVideoChromaFormat_420,
+    };
+    GValue format_list = G_VALUE_INIT;
+    GValue format = G_VALUE_INIT;
+
+    if (CuDeviceGet (&cuda_device, i) != CUDA_SUCCESS)
+      continue;
+
+    if (CuCtxCreate (&cuda_ctx, 0, cuda_device) != CUDA_SUCCESS)
+      continue;
+
+    g_value_init (&format_list, GST_TYPE_LIST);
+    g_value_init (&format, G_TYPE_STRING);
+
+    if (CuCtxPushCurrent (cuda_ctx) != CUDA_SUCCESS)
+      goto cuda_free;
+
+    for (c_idx = 0; c_idx < G_N_ELEMENTS (chroma_list); c_idx++) {
+      for (b_idx = 0; b_idx < G_N_ELEMENTS (bitdepth_minus8); b_idx++) {
+        CUVIDDECODECAPS decoder_caps = { 0, };
+
+        decoder_caps.eCodecType = codec_type;
+        decoder_caps.eChromaFormat = chroma_list[c_idx];
+        decoder_caps.nBitDepthMinus8 = bitdepth_minus8[b_idx];
+
+        cuda_ret = CuvidGetDecoderCaps (&decoder_caps);
+        if (cuda_ret != CUDA_SUCCESS) {
+          GST_INFO ("could not query %s decoder capability, ret %d",
+              codec, cuda_ret);
+          continue;
+        } else if (!decoder_caps.bIsSupported) {
+          GST_LOG ("%s bit-depth %d with chroma format %d is not supported",
+              codec, bitdepth_minus8[b_idx] + 8, c_idx);
+          continue;
+        }
+
+        if (min_width > decoder_caps.nMinWidth)
+          min_width = decoder_caps.nMinWidth;
+        if (min_height > decoder_caps.nMinHeight)
+          min_height = decoder_caps.nMinHeight;
+        if (max_width < decoder_caps.nMaxWidth)
+          max_width = decoder_caps.nMaxWidth;
+        if (max_height < decoder_caps.nMaxHeight)
+          max_height = decoder_caps.nMaxHeight;
+
+        GST_INFO ("%s bit-depth %d with chroma format %d [%d - %d] x [%d - %d]",
+            codec, bitdepth_minus8[b_idx] + 8, c_idx, min_width, max_width,
+            min_height, max_height);
+
+        switch (chroma_list[c_idx]) {
+          case cudaVideoChromaFormat_420:
+            g_value_set_string (&format, "NV12");
+            gst_value_list_append_value (&format_list, &format);
+            break;
+          default:
+            break;
+        }
+
+        num_support++;
+      }
+    }
+
+    if (num_support == 0) {
+      GST_INFO ("device can not support %s", codec);
+      goto cuda_free;
+    }
+
+    src_templ = gst_caps_new_simple ("video/x-raw",
+        "width", GST_TYPE_INT_RANGE, min_width, max_width,
+        "height", GST_TYPE_INT_RANGE, min_height, max_height,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+    gst_caps_set_value (src_templ, "format", &format_list);
+
+    /* OpenGL specific */
+    gst_caps_set_features_simple (src_templ,
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+    gst_caps_set_simple (src_templ,
+        "texture-target", G_TYPE_STRING, "2D", NULL);
+
+    sink_templ = gst_caps_from_string (sink_caps_string);
+    gst_caps_set_simple (sink_templ,
+        "width", GST_TYPE_INT_RANGE, min_width, max_width,
+        "height", GST_TYPE_INT_RANGE, min_height, max_height, NULL);
+
+    GST_DEBUG ("sink template caps %" GST_PTR_FORMAT, sink_templ);
+    GST_DEBUG ("src template caps %" GST_PTR_FORMAT, src_templ);
+
+    CuCtxPopCurrent (NULL);
+
+  cuda_free:
+    CuCtxDestroy (cuda_ctx);
+
+    g_value_unset (&format_list);
+    g_value_unset (&format);
+
+    if (sink_templ && src_templ) {
+      gst_nvdec_subclass_register (plugin, type, codec_type, codec, i, rank,
+          sink_templ, src_templ);
+    }
+
+    gst_clear_caps (&sink_templ);
+    gst_clear_caps (&src_templ);
+  }
+
+  return TRUE;
+}
+
+typedef struct
+{
+  cudaVideoCodec codec;
+  const gchar *codec_name;
+  const gchar *sink_caps_string;
+} GstNvCodecMap;
+
+const GstNvCodecMap codec_map[] = {
+  {cudaVideoCodec_MPEG1, "mpegvideo",
+      "video/mpeg, mpegversion = (int) 1, systemstream = (boolean) false"},
+  {cudaVideoCodec_MPEG2, "mpeg2video",
+      "video/mpeg, mpegversion = (int) 2, systemstream = (boolean) false"},
+  {cudaVideoCodec_MPEG4, "mpeg4video",
+      "video/mpeg, mpegversion = (int) 4, systemstream = (boolean) false"},
+#if 0
+  /* FIXME: need verification */
+  {cudaVideoCodec_VC1, "vc1"},
+#endif
+  {cudaVideoCodec_H264, "h264",
+      "video/x-h264, stream-format = (string) byte-stream"
+        ", alignment = (string) au"},
+  {cudaVideoCodec_JPEG, "jpeg", "image/jpeg"},
+#if 0
+  /* FIXME: need verification */
+  {cudaVideoCodec_H264_SVC, "h264svc"},
+  {cudaVideoCodec_H264_MVC, "h264mvc"},
+#endif
+  {cudaVideoCodec_HEVC, "h265",
+      "video/x-h265, stream-format = (string) byte-stream"
+        ", alignment = (string) au"},
+  {cudaVideoCodec_VP8, "vp8", "video/x-vp8"},
+  {cudaVideoCodec_VP9, "vp9", "video/x-vp9"}
+};
+
+gboolean
+gst_nvdec_plugin_init (GstPlugin * plugin)
+{
+  gint i;
+  CUresult cuda_ret;
+  gint dev_count = 0;
+  gboolean ret = TRUE;
+
+  GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug_category, "nvdec", 0,
+      "Debug category for the nvdec element");
+
+  if (!gst_cuvid_can_get_decoder_caps ()) {
+    GstCaps *src_templ;
+
+    GST_INFO ("Too old nvidia driver to query decoder capability");
+
+    src_templ =
+        gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "NV12")
+        ", texture-target=2D");
+
+    for (i = 0; i < G_N_ELEMENTS (codec_map); i++) {
+      GstCaps *sink_templ;
+
+      sink_templ = gst_caps_from_string (codec_map[i].sink_caps_string);
+
+      gst_nvdec_subclass_register (plugin, GST_TYPE_NVDEC, codec_map[i].codec,
+          codec_map[i].codec_name, 0, GST_RANK_PRIMARY, sink_templ, src_templ);
+    }
+
+    return TRUE;
+  }
+
+  cuda_ret = CuInit (0);
+  if (cuda_ret != CUDA_SUCCESS) {
+    GST_ERROR ("Failed to initialize CUDA API");
+    return TRUE;
+  }
+
+  cuda_ret = CuDeviceGetCount (&dev_count);
+  if (cuda_ret != CUDA_SUCCESS || dev_count == 0) {
+    GST_ERROR ("No CUDA devices detected");
+    return TRUE;
+  }
+
+  for (i = 0; i < G_N_ELEMENTS (codec_map); i++) {
+    ret &= gst_nvdec_register (plugin, GST_TYPE_NVDEC, codec_map[i].codec,
+        codec_map[i].codec_name, codec_map[i].sink_caps_string,
+        GST_RANK_PRIMARY, dev_count);
+  }
+
+  return ret;
 }

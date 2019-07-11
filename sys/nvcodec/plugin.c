@@ -46,8 +46,7 @@ plugin_init (GstPlugin * plugin)
 #if HAVE_NVCODEC_GST_GL
   /* FIXME: make nvdec usable without OpenGL dependency */
   if (gst_cuvid_load_library ()) {
-    ret &= gst_element_register (plugin, "nvdec", GST_RANK_PRIMARY,
-        GST_TYPE_NVDEC);
+    ret &= gst_nvdec_plugin_init (plugin);
   }
 #endif
 

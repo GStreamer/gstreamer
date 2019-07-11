@@ -30,10 +30,13 @@
 #define NVCUVID_LIBNAME "libnvcuvid.so.1"
 #endif
 
-#define LOAD_SYMBOL(name,func) G_STMT_START { \
+#define LOAD_SYMBOL(name,func,mandatory) G_STMT_START { \
   if (!g_module_symbol (module, G_STRINGIFY (name), (gpointer *) &vtable->func)) { \
-    GST_ERROR ("Failed to load '%s' from %s, %s", G_STRINGIFY (name), filename, g_module_error()); \
-    goto error; \
+    if (mandatory) { \
+      GST_ERROR ("Failed to load '%s' from %s, %s", G_STRINGIFY (name), filename, g_module_error()); \
+      goto error; \
+    } \
+    GST_WARNING ("Failed to load '%s' from %s, %s", G_STRINGIFY (name), filename, g_module_error()); \
   } \
 } G_STMT_END;
 
@@ -59,6 +62,7 @@ typedef struct _GstnvdecCuvidVTable
     CUresult (*CuvidMapVideoFrame) (CUvideodecoder hDecoder, int nPicIdx,
       guintptr * pDevPtr, unsigned int *pPitch, CUVIDPROCPARAMS * pVPP);
     CUresult (*CuvidUnmapVideoFrame) (CUvideodecoder hDecoder, guintptr DevPtr);
+    CUresult (*CuvidGetDecoderCaps) (CUVIDDECODECAPS * pdc);
 } GstnvdecCuvidVTable;
 
 static GstnvdecCuvidVTable gst_cuvid_vtable = { 0, };
@@ -81,18 +85,19 @@ gst_cuvid_load_library (void)
 
   vtable = &gst_cuvid_vtable;
 
-  LOAD_SYMBOL (cuvidCtxLockCreate, CuvidCtxLockCreate);
-  LOAD_SYMBOL (cuvidCtxLockDestroy, CuvidCtxLockDestroy);
-  LOAD_SYMBOL (cuvidCtxLock, CuvidCtxLock);
-  LOAD_SYMBOL (cuvidCtxUnlock, CuvidCtxUnlock);
-  LOAD_SYMBOL (cuvidCreateDecoder, CuvidCreateDecoder);
-  LOAD_SYMBOL (cuvidDestroyDecoder, CuvidDestroyDecoder);
-  LOAD_SYMBOL (cuvidDecodePicture, CuvidDecodePicture);
-  LOAD_SYMBOL (cuvidCreateVideoParser, CuvidCreateVideoParser);
-  LOAD_SYMBOL (cuvidParseVideoData, CuvidParseVideoData);
-  LOAD_SYMBOL (cuvidDestroyVideoParser, CuvidDestroyVideoParser);
-  LOAD_SYMBOL (cuvidMapVideoFrame, CuvidMapVideoFrame);
-  LOAD_SYMBOL (cuvidUnmapVideoFrame, CuvidUnmapVideoFrame);
+  LOAD_SYMBOL (cuvidCtxLockCreate, CuvidCtxLockCreate, TRUE);
+  LOAD_SYMBOL (cuvidCtxLockDestroy, CuvidCtxLockDestroy, TRUE);
+  LOAD_SYMBOL (cuvidCtxLock, CuvidCtxLock, TRUE);
+  LOAD_SYMBOL (cuvidCtxUnlock, CuvidCtxUnlock, TRUE);
+  LOAD_SYMBOL (cuvidCreateDecoder, CuvidCreateDecoder, TRUE);
+  LOAD_SYMBOL (cuvidDestroyDecoder, CuvidDestroyDecoder, TRUE);
+  LOAD_SYMBOL (cuvidDecodePicture, CuvidDecodePicture, TRUE);
+  LOAD_SYMBOL (cuvidCreateVideoParser, CuvidCreateVideoParser, TRUE);
+  LOAD_SYMBOL (cuvidParseVideoData, CuvidParseVideoData, TRUE);
+  LOAD_SYMBOL (cuvidDestroyVideoParser, CuvidDestroyVideoParser, TRUE);
+  LOAD_SYMBOL (cuvidMapVideoFrame, CuvidMapVideoFrame, TRUE);
+  LOAD_SYMBOL (cuvidUnmapVideoFrame, CuvidUnmapVideoFrame, TRUE);
+  LOAD_SYMBOL (cuvidGetDecoderCaps, CuvidGetDecoderCaps, FALSE);
 
   vtable->loaded = TRUE;
 
@@ -102,6 +107,12 @@ error:
   g_module_close (module);
 
   return FALSE;
+}
+
+gboolean
+gst_cuvid_can_get_decoder_caps (void)
+{
+  return ! !gst_cuvid_vtable.CuvidGetDecoderCaps;
 }
 
 CUresult
@@ -200,4 +211,12 @@ CuvidUnmapVideoFrame (CUvideodecoder hDecoder, guintptr DevPtr)
   g_assert (gst_cuvid_vtable.CuvidUnmapVideoFrame != NULL);
 
   return gst_cuvid_vtable.CuvidUnmapVideoFrame (hDecoder, DevPtr);
+}
+
+CUresult
+CuvidGetDecoderCaps (CUVIDDECODECAPS * pdc)
+{
+  g_assert (gst_cuvid_vtable.CuvidGetDecoderCaps != NULL);
+
+  return gst_cuvid_vtable.CuvidGetDecoderCaps (pdc);
 }

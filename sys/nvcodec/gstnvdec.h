@@ -57,6 +57,7 @@ GType gst_nvdec_cuda_context_get_type (void);
 #define GST_TYPE_NVDEC          (gst_nvdec_get_type())
 #define GST_NVDEC(obj)          (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_NVDEC, GstNvDec))
 #define GST_NVDEC_CLASS(klass)  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_NVDEC, GstNvDecClass))
+#define GST_NVDEC_GET_CLASS(obj)(G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_NVDEC,GstNvDecClass))
 #define GST_IS_NVDEC(obj)       (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_NVDEC))
 #define GST_IS_NVDEC_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_NVDEC))
 
@@ -96,9 +97,14 @@ struct _GstNvDec
 struct _GstNvDecClass
 {
   GstVideoDecoderClass parent_class;
+
+  cudaVideoCodec codec_type;
+  guint cuda_device_id;
 };
 
 GType gst_nvdec_get_type (void);
+
+gboolean gst_nvdec_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 

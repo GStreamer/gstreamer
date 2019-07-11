@@ -30,6 +30,9 @@ G_GNUC_INTERNAL
 gboolean gst_cuvid_load_library     (void);
 
 G_GNUC_INTERNAL
+gboolean gst_cuvid_can_get_decoder_caps (void);
+
+G_GNUC_INTERNAL
 CUresult CuvidCtxLockCreate         (CUvideoctxlock * pLock, CUcontext ctx);
 
 G_GNUC_INTERNAL
@@ -75,6 +78,8 @@ CUresult CuvidMapVideoFrame         (CUvideodecoder hDecoder,
 G_GNUC_INTERNAL
 CUresult CuvidUnmapVideoFrame       (CUvideodecoder hDecoder,
                                      guintptr DevPtr);
+G_GNUC_INTERNAL
+CUresult CuvidGetDecoderCaps        (CUVIDDECODECAPS * pdc);
 
 G_END_DECLS
 #endif /* __GST_CUVID_LOADER_H__ */
