@@ -299,7 +299,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
         ges_uri_clip_asset_get_duration (uri_clip_asset));
 
   ges_timeline_element_set_max_duration (GES_TIMELINE_ELEMENT (uriclip),
-      ges_uri_clip_asset_get_duration (uri_clip_asset));
+      ges_uri_clip_asset_get_max_duration (uri_clip_asset));
   ges_uri_clip_set_is_image (uriclip,
       ges_uri_clip_asset_is_image (uri_clip_asset));
 

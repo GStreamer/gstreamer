@@ -78,6 +78,8 @@ GstDiscovererInfo *ges_uri_clip_asset_get_info      (const GESUriClipAsset * sel
 GES_API
 GstClockTime ges_uri_clip_asset_get_duration        (GESUriClipAsset *self);
 GES_API
+GstClockTime ges_uri_clip_asset_get_max_duration    (GESUriClipAsset *self);
+GES_API
 gboolean ges_uri_clip_asset_is_image                (GESUriClipAsset *self);
 GES_API
 void ges_uri_clip_asset_new                         (const gchar *uri,

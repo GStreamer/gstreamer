@@ -113,6 +113,8 @@ ges_demux_class_init (GESDemuxClass * self_class)
 
   GST_DEBUG_CATEGORY_INIT (gesdemux, "gesdemux", 0, "ges demux element");
 
+  gst_tag_register ("is-ges-timeline", GST_TAG_FLAG_META, G_TYPE_BOOLEAN,
+      "is-ges-timeline", "The stream is a ges timeline.", NULL);
   gclass->get_property = ges_demux_get_property;
   gclass->set_property = ges_demux_set_property;
 
@@ -259,9 +261,14 @@ static gboolean
 ges_demux_set_srcpad_probe (GstElement * element, GstPad * pad,
     gpointer user_data)
 {
+  GstTagList *tlist = gst_tag_list_new ("is-ges-timeline", TRUE, NULL);
+
   gst_pad_add_probe (pad,
       GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
       (GstPadProbeCallback) ges_demux_src_probe, element, NULL);
+
+  gst_tag_list_set_scope (tlist, GST_TAG_SCOPE_GLOBAL);
+  gst_pad_push_event (pad, gst_event_new_tag (tlist));
   return TRUE;
 }
 

@@ -94,6 +94,7 @@ enum
 {
   PROP_0,
   PROP_DURATION,
+  PROP_IS_NESTED_TIMELINE,
   PROP_LAST
 };
 static GParamSpec *properties[PROP_LAST];
@@ -102,7 +103,9 @@ struct _GESUriClipAssetPrivate
 {
   GstDiscovererInfo *info;
   GstClockTime duration;
+  GstClockTime max_duration;
   gboolean is_image;
+  gboolean is_nested_timeline;
 
   GList *asset_trackfilesources;
 };
@@ -135,6 +138,9 @@ ges_uri_clip_asset_get_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_DURATION:
       g_value_set_uint64 (value, priv->duration);
+      break;
+    case PROP_IS_NESTED_TIMELINE:
+      g_value_set_boolean (value, priv->is_nested_timeline);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -272,6 +278,17 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
   g_object_class_install_property (object_class, PROP_DURATION,
       properties[PROP_DURATION]);
 
+  /**
+   * GESUriClipAsset:is-nested-timeline:
+   *
+   * The duration (in nanoseconds) of the media file
+   */
+  properties[PROP_IS_NESTED_TIMELINE] =
+      g_param_spec_boolean ("is-nested-timeline", "Is nested timeline",
+      "Whether this is a nested timeline", FALSE, G_PARAM_READABLE);
+  g_object_class_install_property (object_class, PROP_IS_NESTED_TIMELINE,
+      properties[PROP_IS_NESTED_TIMELINE]);
+
   _ges_uri_asset_ensure_setup (klass);
 }
 
@@ -283,7 +300,7 @@ ges_uri_clip_asset_init (GESUriClipAsset * self)
   priv = self->priv = ges_uri_clip_asset_get_instance_private (self);
 
   priv->info = NULL;
-  priv->duration = GST_CLOCK_TIME_NONE;
+  priv->max_duration = priv->duration = GST_CLOCK_TIME_NONE;
   priv->is_image = FALSE;
 }
 
@@ -329,6 +346,7 @@ ges_uri_clip_asset_set_info (GESUriClipAsset * self, GstDiscovererInfo * info)
 
   GESTrackType supportedformats = GES_TRACK_TYPE_UNKNOWN;
   GESUriClipAssetPrivate *priv = GES_URI_CLIP_ASSET (self)->priv;
+  const GstTagList *tlist = gst_discoverer_info_get_tags (info);
 
   /* Extract infos from the GstDiscovererInfo */
   stream_list = gst_discoverer_info_get_stream_list (info);
@@ -364,8 +382,16 @@ ges_uri_clip_asset_set_info (GESUriClipAsset * self, GstDiscovererInfo * info)
   if (stream_list)
     gst_discoverer_stream_info_list_free (stream_list);
 
-  if (priv->is_image == FALSE)
-    priv->duration = gst_discoverer_info_get_duration (info);
+  if (tlist)
+    gst_tag_list_get_boolean (tlist, "is-ges-timeline",
+        &priv->is_nested_timeline);
+
+  if (priv->is_image == FALSE) {
+    priv->max_duration = priv->duration =
+        gst_discoverer_info_get_duration (info);
+    if (priv->is_nested_timeline)
+      priv->max_duration = GST_CLOCK_TIME_NONE;
+  }
   /* else we keep #GST_CLOCK_TIME_NONE */
 
   priv->info = gst_object_ref (info);
@@ -498,6 +524,28 @@ ges_uri_clip_asset_get_duration (GESUriClipAsset * self)
   g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (self), GST_CLOCK_TIME_NONE);
 
   return self->priv->duration;
+}
+
+
+/**
+ * ges_uri_clip_asset_get_max_duration:
+ * @self: a #GESUriClipAsset
+ *
+ * Gets maximum duration of the file represented by @self,
+ * it is usually the same as GESUriClipAsset::duration,
+ * but in the case of nested timelines, for example, they
+ * are different as those can be extended 'infinitely'.
+ *
+ * Returns: The maximum duration of @self
+ *
+ * Since: 1.18
+ */
+GstClockTime
+ges_uri_clip_asset_get_max_duration (GESUriClipAsset * self)
+{
+  g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (self), GST_CLOCK_TIME_NONE);
+
+  return self->priv->max_duration;
 }
 
 /**
