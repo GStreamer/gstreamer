@@ -142,6 +142,7 @@ typedef struct
   GError *error;
   gulong loaded_sigid;
   gulong error_sigid;
+  gulong error_asset_sigid;
 } TimelineConstructionData;
 
 static void
@@ -156,12 +157,23 @@ project_loaded_cb (GESProject * project, GESTimeline * timeline,
 }
 
 static void
-error_loading_asset_cb (GESProject * project, GError * error, gchar * id,
-    GType extractable_type, TimelineConstructionData * data)
+error_loading_cb (GESProject * project, GESTimeline * timeline,
+    GError * error, TimelineConstructionData * data)
 {
   data->error = g_error_copy (error);
   g_signal_handler_disconnect (project, data->error_sigid);
   data->error_sigid = 0;
+
+  g_main_loop_quit (data->ml);
+}
+
+static void
+error_loading_asset_cb (GESProject * project, GError * error, gchar * id,
+    GType extractable_type, TimelineConstructionData * data)
+{
+  data->error = g_error_copy (error);
+  g_signal_handler_disconnect (project, data->error_asset_sigid);
+  data->error_asset_sigid = 0;
 
   g_main_loop_quit (data->ml);
 }
@@ -337,9 +349,12 @@ ges_demux_create_timeline (GESDemux * self, gchar * uri, GError ** error)
   data.loaded_sigid =
       g_signal_connect (project, "loaded", G_CALLBACK (project_loaded_cb),
       &data);
-  data.error_sigid =
+  data.error_asset_sigid =
       g_signal_connect_after (project, "error-loading-asset",
       G_CALLBACK (error_loading_asset_cb), &data);
+  data.error_sigid =
+      g_signal_connect_after (project, "error-loading",
+      G_CALLBACK (error_loading_cb), &data);
 
   unused = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &data.error));
   if (data.error) {
@@ -350,6 +365,9 @@ ges_demux_create_timeline (GESDemux * self, gchar * uri, GError ** error)
 
   g_main_loop_run (data.ml);
   g_main_loop_unref (data.ml);
+  if (data.error)
+    goto done;
+
   ges_demux_adapt_timeline_duration (self, data.timeline);
 
   query = gst_query_new_uri ();
@@ -387,13 +405,21 @@ done:
   if (data.error_sigid)
     g_signal_handler_disconnect (project, data.error_sigid);
 
+  if (data.error_asset_sigid)
+    g_signal_handler_disconnect (project, data.error_asset_sigid);
+
   g_clear_object (&project);
 
   GST_INFO_OBJECT (self, "Timeline properly loaded: %" GST_PTR_FORMAT,
       data.timeline);
-  ges_base_bin_set_timeline (GES_BASE_BIN (self), data.timeline);
-  gst_element_foreach_src_pad (GST_ELEMENT (self), ges_demux_set_srcpad_probe,
-      NULL);
+
+  if (!data.error) {
+    ges_base_bin_set_timeline (GES_BASE_BIN (self), data.timeline);
+    gst_element_foreach_src_pad (GST_ELEMENT (self), ges_demux_set_srcpad_probe,
+        NULL);
+  } else {
+    *error = data.error;
+  }
 
   g_main_context_pop_thread_default (ctx);
 

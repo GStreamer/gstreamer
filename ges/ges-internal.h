@@ -229,7 +229,8 @@ _find_formatter_asset_for_id                     (const gchar *id);
 /* FIXME This should probably become public, but we need to make sure it
  * is the right API before doing so */
 G_GNUC_INTERNAL  gboolean ges_project_set_loaded                  (GESProject * project,
-                                                                   GESFormatter *formatter);
+                                                                   GESFormatter *formatter,
+                                                                   GError *error);
 G_GNUC_INTERNAL  gchar * ges_project_try_updating_id              (GESProject *self,
                                                                    GESAsset *asset,
                                                                    GError *error);

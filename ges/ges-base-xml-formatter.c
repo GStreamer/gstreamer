@@ -88,6 +88,8 @@ struct _GESBaseXmlFormatterPrivate
   /* List of asset waited to be created */
   GList *pending_assets;
 
+  GError *asset_error;
+
   /* current track element */
   GESTrackElement *current_track_element;
 
@@ -273,6 +275,7 @@ _load_from_uri (GESFormatter * self, GESTimeline * timeline, const gchar * uri,
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
+  GST_INFO_OBJECT (self, "Loading %s in %" GST_PTR_FORMAT, uri, timeline);
   ges_timeline_set_auto_transition (timeline, FALSE);
 
   priv->parsecontext =
@@ -431,7 +434,7 @@ ges_base_xml_formatter_class_init (GESBaseXmlFormatterClass * self_class)
 
   self_class->save = NULL;
 
-  GST_DEBUG_CATEGORY_INIT (base_xml_formatter, "base-xml-formatter",
+  GST_DEBUG_CATEGORY_INIT (base_xml_formatter, "gesbasexmlformatter",
       GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "Base XML Formatter");
 }
 
@@ -490,8 +493,8 @@ static void
 _loading_done (GESFormatter * self)
 {
   GList *assets, *tmp;
+  GError *error = NULL;
   GESBaseXmlFormatterPrivate *priv = GES_BASE_XML_FORMATTER (self)->priv;
-
 
   if (priv->parsecontext)
     g_markup_parse_context_free (priv->parsecontext);
@@ -504,10 +507,16 @@ _loading_done (GESFormatter * self)
   }
   g_list_free_full (assets, g_object_unref);
 
-  if (priv->state == STATE_LOADING_ASSETS_AND_SYNC) {
+  if (priv->asset_error) {
+    error = priv->asset_error;
+    priv->asset_error = NULL;
+  } else if (priv->state == STATE_LOADING_ASSETS_AND_SYNC) {
+    GMarkupParseContext *context =
+        _parse (GES_BASE_XML_FORMATTER (self), &error, STATE_LOADING_CLIPS);
     GST_INFO_OBJECT (self, "Assets cached... now loading the timeline.");
-    g_markup_parse_context_free (_parse (GES_BASE_XML_FORMATTER (self), NULL,
-            STATE_LOADING_CLIPS));
+
+    if (context)
+      g_markup_parse_context_free (context);
     g_assert (priv->pending_assets == NULL);
   }
 
@@ -516,7 +525,8 @@ _loading_done (GESFormatter * self)
       priv->timeline_auto_transition);
 
   g_hash_table_foreach (priv->layers, (GHFunc) _set_auto_transition, NULL);
-  ges_project_set_loaded (self->project, self);
+  ges_project_set_loaded (self->project, self, error);
+  g_clear_error (&error);
 }
 
 static gboolean
@@ -565,14 +575,17 @@ _add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
     GESLayer * layer, GESAsset * asset, GstClockTime start,
     GstClockTime inpoint, GstClockTime duration,
     GESTrackType track_types, const gchar * metadatas,
-    GstStructure * properties, GstStructure * children_properties)
+    GstStructure * properties, GstStructure * children_properties,
+    GError ** error)
 {
   GESClip *clip = ges_layer_add_asset (layer,
       asset, start, inpoint, duration, track_types);
 
   if (clip == NULL) {
-    GST_WARNING_OBJECT (clip, "Could not add object from asset: %s",
-        ges_asset_get_id (asset));
+    g_set_error (error, GES_ERROR, GES_ERROR_FORMATTER_MALFORMED_INPUT_FILE,
+        "Could not add clip %s [ %" GST_TIME_FORMAT ", ( %" GST_TIME_FORMAT
+        ") - %" GST_TIME_FORMAT "]", id, GST_TIME_ARGS (start),
+        GST_TIME_ARGS (inpoint), GST_TIME_ARGS (duration));
 
     return NULL;
   }
@@ -667,6 +680,8 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
           error->message);
 
       _free_pending_asset (priv, passet);
+      if (!priv->asset_error)
+        priv->asset_error = g_error_copy (error);
       goto done;
     }
 
@@ -827,7 +842,7 @@ ges_base_xml_formatter_add_asset (GESBaseXmlFormatter * self,
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
 
   if (priv->state != STATE_LOADING_ASSETS_AND_SYNC) {
-    GST_INFO ("Not parsing assets in %s state",
+    GST_DEBUG_OBJECT (self, "Not parsing assets in %s state",
         loading_state_name (priv->state));
 
     return;
@@ -880,15 +895,14 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
   asset = ges_asset_request (type, asset_id, NULL);
   if (!asset) {
     g_set_error (error, GES_ERROR, GES_ERROR_FORMATTER_MALFORMED_INPUT_FILE,
-        "Clip references asset %s which was not present in the list of ressource"
-        " the file seems to be malformed.", asset_id);
-    GST_ERROR_OBJECT (self, "%s", (*error)->message);
+        "Clip references asset %s of type %s which was not present in the list of ressource,"
+        " the file seems to be malformed.", asset_id, g_type_name (type));
     return;
   }
 
   nclip = _add_object_to_layer (priv, id, entry->layer,
       asset, start, inpoint, duration, track_types, metadatas, properties,
-      children_properties);
+      children_properties, error);
 
   gst_object_unref (asset);
   if (!nclip)

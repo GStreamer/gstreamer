@@ -173,6 +173,16 @@ retry:
 }
 
 static void
+_project_loading_error_cb (GESProject * project, GESTimeline * timeline,
+    GError * error, GESLauncher * self)
+{
+  g_printerr ("Error loading timeline: '%s'\n", error->message);
+  self->priv->seenerrors = TRUE;
+
+  g_application_quit (G_APPLICATION (self));
+}
+
+static void
 _project_loaded_cb (GESProject * project, GESTimeline * timeline,
     GESLauncher * self)
 {
@@ -256,6 +266,8 @@ _create_timeline (GESLauncher * self, const gchar * serialized_timeline,
   g_signal_connect (project, "error-loading-asset",
       G_CALLBACK (_error_loading_asset_cb), self);
   g_signal_connect (project, "loaded", G_CALLBACK (_project_loaded_cb), self);
+  g_signal_connect (project, "error-loading",
+      G_CALLBACK (_project_loading_error_cb), self);
 
   self->priv->timeline =
       GES_TIMELINE (ges_asset_extract (GES_ASSET (project), &error));

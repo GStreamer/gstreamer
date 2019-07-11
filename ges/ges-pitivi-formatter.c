@@ -437,7 +437,7 @@ track_element_added_cb (GESClip * clip,
     priv->sources_to_load = g_list_remove (priv->sources_to_load, clip);
     if (!priv->sources_to_load && GES_FORMATTER (formatter)->project)
       ges_project_set_loaded (GES_FORMATTER (formatter)->project,
-          GES_FORMATTER (formatter));
+          GES_FORMATTER (formatter), NULL);
   }
 
   /* Disconnect the signal */
@@ -668,7 +668,7 @@ load_pitivi_file_from_uri (GESFormatter * self,
    */
   if (!g_hash_table_size (priv->clips_table) && GES_FORMATTER (self)->project) {
     ges_project_set_loaded (GES_FORMATTER (self)->project,
-        GES_FORMATTER (self));
+        GES_FORMATTER (self), NULL);
   } else {
     if (!make_clips (self)) {
       GST_ERROR ("Couldn't deserialise the project properly");

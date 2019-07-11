@@ -97,6 +97,7 @@ enum
 {
   LOADING_SIGNAL,
   LOADED_SIGNAL,
+  ERROR_LOADING,
   ERROR_LOADING_ASSET,
   ASSET_ADDED_SIGNAL,
   ASSET_REMOVED_SIGNAL,
@@ -591,6 +592,20 @@ ges_project_class_init (GESProjectClass * klass)
       NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 3, G_TYPE_ERROR, G_TYPE_STRING, G_TYPE_GTYPE);
 
+  /**
+   * GESProject::error-loading:
+   * @project: the #GESProject on which a problem happend when creted a #GESAsset
+   * @timeline: The timeline that failed loading
+   * @error: The #GError defining the error that occured
+   * 
+   * Since: 1.18
+   */
+  _signals[ERROR_LOADING] =
+      g_signal_new ("error-loading", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0,
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, GES_TYPE_TIMELINE,
+      G_TYPE_ERROR);
+
   object_class->dispose = _dispose;
   object_class->finalize = _finalize;
 
@@ -731,8 +746,15 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
  * Returns: %TRUE if the signale could be emitted %FALSE otherwize
  */
 gboolean
-ges_project_set_loaded (GESProject * project, GESFormatter * formatter)
+ges_project_set_loaded (GESProject * project, GESFormatter * formatter,
+    GError * error)
 {
+  if (error) {
+    GST_ERROR_OBJECT (project, "Emit project error-loading %s", error->message);
+    g_signal_emit (project, _signals[ERROR_LOADING], 0, formatter->timeline,
+        error);
+  }
+
   GST_INFO_OBJECT (project, "Emit project loaded");
   if (GST_STATE (formatter->timeline) < GST_STATE_PAUSED) {
     timeline_fill_gaps (formatter->timeline);
