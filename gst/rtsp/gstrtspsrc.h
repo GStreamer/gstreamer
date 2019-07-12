@@ -208,8 +208,10 @@ struct _GstRTSPSrc {
   gboolean         running;
   gboolean         need_range;
   gboolean         server_side_trickmode;
+  GstClockTime     trickmode_interval;
   gint             free_channel;
   gboolean         need_segment;
+  GstSegment       out_segment;
   GstClockTime     base_time;
 
   /* UDP mode loop */
@@ -273,6 +275,8 @@ struct _GstRTSPSrc {
   gboolean          max_ts_offset_is_set;
   gint              backchannel;
   GstClockTime      teardown_timeout;
+  gboolean          onvif_mode;
+  gboolean          onvif_rate_control;
 
   /* state */
   GstRTSPState       state;

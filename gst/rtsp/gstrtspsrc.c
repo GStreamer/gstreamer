@@ -280,6 +280,8 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_VERSION         GST_RTSP_VERSION_1_0
 #define DEFAULT_BACKCHANNEL  GST_RTSP_BACKCHANNEL_NONE
 #define DEFAULT_TEARDOWN_TIMEOUT  (100 * GST_MSECOND)
+#define DEFAULT_ONVIF_MODE FALSE
+#define DEFAULT_ONVIF_RATE_CONTROL TRUE
 
 enum
 {
@@ -325,6 +327,8 @@ enum
   PROP_DEFAULT_VERSION,
   PROP_BACKCHANNEL,
   PROP_TEARDOWN_TIMEOUT,
+  PROP_ONVIF_MODE,
+  PROP_ONVIF_RATE_CONTROL
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -937,6 +941,43 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtspSrc:onvif-mode
+   *
+   * Act as an ONVIF client. When set to %TRUE:
+   *
+   * - seeks will be interpreted as nanoseconds since prime epoch (1900-01-01)
+   *
+   * - #GstRtspSrc:onvif-rate-control can be used to request that the server sends
+   *   data as fast as it can
+   *
+   * - TCP is picked as the transport protocol
+   *
+   * - Trickmode flags in seek events are transformed into the appropriate ONVIF
+   *   request headers
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_ONVIF_MODE,
+      g_param_spec_boolean ("onvif-mode", "Onvif Mode",
+          "Act as an ONVIF client",
+          DEFAULT_ONVIF_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtspSrc:onvif-rate-control
+   *
+   * When in onvif-mode, whether to set Rate-Control to yes or no. When set
+   * to %FALSE, the server will deliver data as fast as the client can consume
+   * it.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_ONVIF_RATE_CONTROL,
+      g_param_spec_boolean ("onvif-rate-control", "Onvif Rate Control",
+          "When in onvif-mode, whether to set Rate-Control to yes or no",
+          DEFAULT_ONVIF_RATE_CONTROL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
    * @request: a #GstRTSPMessage
@@ -1336,6 +1377,8 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->default_version = DEFAULT_VERSION;
   src->version = GST_RTSP_VERSION_INVALID;
   src->teardown_timeout = DEFAULT_TEARDOWN_TIMEOUT;
+  src->onvif_mode = DEFAULT_ONVIF_MODE;
+  src->onvif_rate_control = DEFAULT_ONVIF_RATE_CONTROL;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1674,6 +1717,12 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_TEARDOWN_TIMEOUT:
       rtspsrc->teardown_timeout = g_value_get_uint64 (value);
       break;
+    case PROP_ONVIF_MODE:
+      rtspsrc->onvif_mode = g_value_get_boolean (value);
+      break;
+    case PROP_ONVIF_RATE_CONTROL:
+      rtspsrc->onvif_rate_control = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1837,6 +1886,12 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TEARDOWN_TIMEOUT:
       g_value_set_uint64 (value, rtspsrc->teardown_timeout);
+      break;
+    case PROP_ONVIF_MODE:
+      g_value_set_boolean (value, rtspsrc->onvif_mode);
+      break;
+    case PROP_ONVIF_RATE_CONTROL:
+      g_value_set_boolean (value, rtspsrc->onvif_rate_control);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2714,6 +2769,8 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   flush = flags & GST_SEEK_FLAG_FLUSH;
   server_side_trickmode = flags & GST_SEEK_FLAG_TRICKMODE;
 
+  gst_event_parse_seek_trickmode_interval (event, &src->trickmode_interval);
+
   /* now we need to make sure the streaming thread is stopped. We do this by
    * either sending a FLUSH_START event downstream which will cause the
    * streaming thread to stop with a WRONG_STATE.
@@ -2745,6 +2802,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   /* configure the seek parameters in the seeksegment. We will then have the
    * right values in the segment to perform the seek */
   GST_DEBUG_OBJECT (src, "configuring seek");
+  seeksegment.duration = GST_CLOCK_TIME_NONE;
   gst_segment_do_seek (&seeksegment, rate, format, flags,
       cur_type, cur, stop_type, stop, &update);
 
@@ -4737,8 +4795,8 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment,
 
   GST_DEBUG_OBJECT (src, "configuring stream caps");
 
-  start = segment->position;
-  stop = segment->duration;
+  start = segment->rate > 0.0 ? segment->start : segment->stop;
+  stop = segment->rate > 0.0 ? segment->stop : segment->start;
   play_speed = segment->rate;
   play_scale = segment->applied_rate;
 
@@ -4770,6 +4828,8 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment,
         gst_caps_set_simple (caps, "npt-stop", G_TYPE_UINT64, stop, NULL);
       gst_caps_set_simple (caps, "play-speed", G_TYPE_DOUBLE, play_speed, NULL);
       gst_caps_set_simple (caps, "play-scale", G_TYPE_DOUBLE, play_scale, NULL);
+      gst_caps_set_simple (caps, "onvif-mode", G_TYPE_BOOLEAN, src->onvif_mode,
+          NULL);
 
       item->caps = caps;
       GST_DEBUG_OBJECT (src, "stream %p, pt %d, caps %" GST_PTR_FORMAT, stream,
@@ -5358,10 +5418,15 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
   /* If needed send a new segment, don't forget we are live and buffer are
    * timestamped with running time */
   if (src->need_segment) {
-    GstSegment segment;
     src->need_segment = FALSE;
-    gst_segment_init (&segment, GST_FORMAT_TIME);
-    gst_rtspsrc_push_event (src, gst_event_new_segment (&segment));
+    if (src->onvif_mode) {
+      gst_rtspsrc_push_event (src, gst_event_new_segment (&src->out_segment));
+    } else {
+      GstSegment segment;
+
+      gst_segment_init (&segment, GST_FORMAT_TIME);
+      gst_rtspsrc_push_event (src, gst_event_new_segment (&segment));
+    }
   }
 
   if (stream->need_caps) {
@@ -7073,6 +7138,10 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
     protocols = src->cur_protocols;
   }
 
+  /* In ONVIF mode, we only want to try TCP transport */
+  if (src->onvif_mode && (protocols & GST_RTSP_LOWER_TRANS_TCP))
+    protocols = GST_RTSP_LOWER_TRANS_TCP;
+
   if (protocols == 0)
     goto no_protocols;
 
@@ -7429,8 +7498,9 @@ cleanup_error:
 
 static gboolean
 gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
-    GstSegment * segment)
+    GstSegment * segment, gboolean update_duration)
 {
+  GstClockTime begin_seconds, end_seconds;
   gint64 seconds;
   GstRTSPTimeRange *therange;
 
@@ -7447,6 +7517,8 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
     return FALSE;
   }
 
+  gst_rtsp_range_get_times (therange, &begin_seconds, &end_seconds);
+
   GST_DEBUG_OBJECT (src, "range: type %d, min %f - type %d,  max %f ",
       therange->min.type, therange->min.seconds, therange->max.type,
       therange->max.seconds);
@@ -7456,14 +7528,18 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
   else if (therange->min.type == GST_RTSP_TIME_END)
     seconds = 0;
   else
-    seconds = therange->min.seconds * GST_SECOND;
+    seconds = begin_seconds;
 
   GST_DEBUG_OBJECT (src, "range: min %" GST_TIME_FORMAT,
       GST_TIME_ARGS (seconds));
 
   /* we need to start playback without clipping from the position reported by
    * the server */
-  segment->start = seconds;
+  if (segment->rate > 0.0)
+    segment->start = seconds;
+  else
+    segment->stop = seconds;
+
   segment->position = seconds;
 
   if (therange->max.type == GST_RTSP_TIME_NOW)
@@ -7471,7 +7547,7 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
   else if (therange->max.type == GST_RTSP_TIME_END)
     seconds = -1;
   else
-    seconds = therange->max.seconds * GST_SECOND;
+    seconds = end_seconds;
 
   GST_DEBUG_OBJECT (src, "range: max %" GST_TIME_FORMAT,
       GST_TIME_ARGS (seconds));
@@ -7484,13 +7560,22 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
   }
 
   /* live (WMS) might send min == max, which is not worth recording */
-  if (segment->duration == -1 && seconds == segment->start)
+  if (segment->duration == -1 && seconds == begin_seconds)
     seconds = -1;
 
   /* don't change duration with unknown value, we might have a valid value
-   * there that we want to keep. */
-  if (seconds != -1)
+   * there that we want to keep. Also, the total duration of the stream
+   * can only be determined from the response to a DESCRIBE request, not
+   * from a PLAY request where we might have requested a custom range, so
+   * don't update duration in that case */
+  if (update_duration && seconds != -1) {
     segment->duration = seconds;
+  }
+
+  if (segment->rate > 0.0)
+    segment->stop = seconds;
+  else
+    segment->start = seconds;
 
   return TRUE;
 }
@@ -7592,7 +7677,7 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
         break;
 
       /* keep track of the range and configure it in the segment */
-      if (gst_rtspsrc_parse_range (src, range, &src->segment))
+      if (gst_rtspsrc_parse_range (src, range, &src->segment, TRUE))
         break;
     }
   }
@@ -7657,6 +7742,7 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
   /* reset our state */
   src->need_range = TRUE;
   src->server_side_trickmode = FALSE;
+  src->trickmode_interval = 0;
 
   src->state = GST_RTSP_STATE_READY;
 
@@ -8172,19 +8258,67 @@ gst_rtspsrc_get_float (const gchar * dstr)
 static gchar *
 gen_range_header (GstRTSPSrc * src, GstSegment * segment)
 {
-  gchar val_str[G_ASCII_DTOSTR_BUF_SIZE] = { 0, };
+  GstRTSPTimeRange range = { 0, };
+  gdouble begin_seconds, end_seconds;
 
-  if (src->range && src->range->min.type == GST_RTSP_TIME_NOW) {
-    g_strlcpy (val_str, "now", sizeof (val_str));
+  if (segment->rate > 0) {
+    begin_seconds = (gdouble) segment->start / GST_SECOND;
+    end_seconds = (gdouble) segment->stop / GST_SECOND;
   } else {
-    if (segment->position == 0) {
-      g_strlcpy (val_str, "0", sizeof (val_str));
-    } else {
-      g_ascii_dtostr (val_str, sizeof (val_str),
-          ((gdouble) segment->position) / GST_SECOND);
-    }
+    begin_seconds = (gdouble) segment->stop / GST_SECOND;
+    end_seconds = (gdouble) segment->start / GST_SECOND;
   }
-  return g_strdup_printf ("npt=%s-", val_str);
+
+  if (src->onvif_mode) {
+    GDateTime *prime_epoch, *datetime;
+
+    range.unit = GST_RTSP_RANGE_CLOCK;
+
+    prime_epoch = g_date_time_new_utc (1900, 1, 1, 0, 0, 0);
+
+    datetime = g_date_time_add_seconds (prime_epoch, begin_seconds);
+
+    range.min.type = GST_RTSP_TIME_UTC;
+    range.min2.year = g_date_time_get_year (datetime);
+    range.min2.month = g_date_time_get_month (datetime);
+    range.min2.day = g_date_time_get_day_of_month (datetime);
+    range.min.seconds =
+        g_date_time_get_seconds (datetime) +
+        g_date_time_get_minute (datetime) * 60 +
+        g_date_time_get_hour (datetime) * 60 * 60;
+
+    g_date_time_unref (datetime);
+
+    datetime = g_date_time_add_seconds (prime_epoch, end_seconds);
+
+    range.max.type = GST_RTSP_TIME_UTC;
+    range.max2.year = g_date_time_get_year (datetime);
+    range.max2.month = g_date_time_get_month (datetime);
+    range.max2.day = g_date_time_get_day_of_month (datetime);
+    range.max.seconds =
+        g_date_time_get_seconds (datetime) +
+        g_date_time_get_minute (datetime) * 60 +
+        g_date_time_get_hour (datetime) * 60 * 60;
+
+    g_date_time_unref (datetime);
+    g_date_time_unref (prime_epoch);
+  } else {
+    range.unit = GST_RTSP_RANGE_NPT;
+    range.min.type = GST_RTSP_TIME_SECONDS;
+    range.min.seconds = begin_seconds;
+    range.max.type = GST_RTSP_TIME_SECONDS;
+    range.max.seconds = end_seconds;
+  }
+
+  /* Don't set end bounds when not required to */
+  if (!GST_CLOCK_TIME_IS_VALID (segment->stop)) {
+    if (segment->rate > 0)
+      range.max.type = GST_RTSP_TIME_END;
+    else
+      range.min.type = GST_RTSP_TIME_END;
+  }
+
+  return gst_rtsp_range_to_string (&range);
 }
 
 static void
@@ -8328,6 +8462,26 @@ restart:
       }
     }
 
+    if (src->onvif_mode) {
+      if (segment->flags & GST_SEEK_FLAG_TRICKMODE_KEY_UNITS) {
+        gchar *hval;
+
+        if (src->trickmode_interval)
+          hval =
+              g_strdup_printf ("intra/%" G_GUINT64_FORMAT,
+              src->trickmode_interval / GST_MSECOND);
+        else
+          hval = g_strdup ("intra");
+
+        gst_rtsp_message_add_header (&request, GST_RTSP_HDR_FRAMES, hval);
+
+        g_free (hval);
+      } else if (segment->flags & GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED) {
+        gst_rtsp_message_add_header (&request, GST_RTSP_HDR_FRAMES,
+            "predicted");
+      }
+    }
+
     if (seek_style)
       gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SEEK_STYLE,
           seek_style);
@@ -8338,6 +8492,14 @@ restart:
         (control || stream->is_backchannel))
       gst_rtsp_message_add_header (&request, GST_RTSP_HDR_REQUIRE,
           BACKCHANNEL_ONVIF_HDR_REQUIRE_VAL);
+
+    if (src->onvif_mode) {
+      if (src->onvif_rate_control)
+        gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RATE_CONTROL,
+            "yes");
+      else
+        gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RATE_CONTROL, "no");
+    }
 
     if (async)
       GST_ELEMENT_PROGRESS (src, CONTINUE, "request", ("Sending PLAY request"));
@@ -8392,7 +8554,7 @@ restart:
      * Play Time) and should be put in the NEWSEGMENT position field. */
     if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RANGE, &hval,
             0) == GST_RTSP_OK)
-      gst_rtspsrc_parse_range (src, hval, segment);
+      gst_rtspsrc_parse_range (src, hval, segment, FALSE);
 
     /* assume 1.0 rate now, overwrite when the SCALE or SPEED headers are present. */
     segment->rate = 1.0;
@@ -8427,6 +8589,9 @@ restart:
     if (control)
       break;
   }
+
+  memcpy (&src->out_segment, segment, sizeof (GstSegment));
+
   /* configure the caps of the streams after we parsed all headers. Only reset
    * the manager object when we set a new Range header (we did a seek) */
   gst_rtspsrc_configure_caps (src, segment, src->need_range);
