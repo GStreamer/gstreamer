@@ -1202,9 +1202,23 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
           self->audio_running_time_to_end_at) == -1) {
     /* Audio ends after start, but before end: clip */
     GstSegment asegment2 = self->asegment;
+    guint64 start;
+    gint ssign;
 
-    gst_segment_set_running_time (&asegment2, GST_FORMAT_TIME,
-        self->audio_running_time_to_wait_for);
+    ssign = gst_segment_position_from_running_time_full (&asegment2,
+        GST_FORMAT_TIME, self->audio_running_time_to_wait_for, &start);
+    if (ssign > 0) {
+      asegment2.start = start;
+    } else {
+      /* Starting before the start of the audio segment?! */
+      /* This shouldn't happen: we already know that the current audio is
+       * inside the segment, and that the end is after the current audio
+       * position */
+      GST_ELEMENT_ERROR (self, CORE, FAILED,
+          ("Failed to clip audio: it should have started before the current segment"),
+          NULL);
+    }
+
     inbuf =
         gst_audio_buffer_clip (inbuf, &asegment2, self->ainfo.rate,
         self->ainfo.bpf);
