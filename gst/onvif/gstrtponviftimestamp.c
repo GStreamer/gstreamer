@@ -556,7 +556,7 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf)
     field |= (1 << 7);
   }
 
-  /* Set E if the next buffer has DISCONT */
+  /* Set E if this the last buffer of a contiguous section of recording */
   if (self->set_e_bit) {
     GST_DEBUG_OBJECT (self, "set E flag");
     field |= (1 << 6);
@@ -564,7 +564,7 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf)
   }
 
   /* Set D if the buffer has the DISCONT flag */
-  if (self->set_d_bit) {
+  if (self->set_d_bit || GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
     GST_DEBUG_OBJECT (self, "set D flag");
     field |= (1 << 5);
     self->set_d_bit = FALSE;
