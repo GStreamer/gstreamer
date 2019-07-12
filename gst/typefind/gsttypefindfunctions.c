@@ -697,6 +697,70 @@ xges_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/***application/vnd.apple-fcp+xml ****************************************************/
+
+static GstStaticCaps fcpxml_caps =
+GST_STATIC_CAPS ("application/vnd.apple-fcp+xml");
+
+#define FCPXML_CAPS gst_static_caps_get (&fcpxml_caps)
+
+static void
+fcpxml_type_find (GstTypeFind * tf, gpointer unused)
+{
+  if (xml_check_first_element (tf, "fcpxml", 3, FALSE)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, FCPXML_CAPS);
+  }
+}
+
+/*** application/vnd.apple-xmeml+xml ****************************************************/
+
+static GstStaticCaps xmeml_caps =
+GST_STATIC_CAPS ("application/vnd.apple-xmeml+xml");
+
+#define XMEML_CAPS gst_static_caps_get (&xmeml_caps)
+
+static void
+xmeml_type_find (GstTypeFind * tf, gpointer unused)
+{
+  if (xml_check_first_element (tf, "xmeml", 3, FALSE)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, XMEML_CAPS);
+  }
+}
+
+/*** application/otio ****************************************************/
+
+static GstStaticCaps otio_caps =
+GST_STATIC_CAPS ("application/vnd.pixar.opentimelineio+json");
+
+#define OTIO_CAPS gst_static_caps_get (&otio_caps)
+
+static void
+otio_type_find (GstTypeFind * tf, gpointer unused)
+{
+  const gchar *data, *tmp;
+
+  data = (const gchar *) gst_type_find_peek (tf, 0, 30);
+  if (!data)
+    return;
+
+  tmp = (const gchar *) memchr (data, '{', 30);
+  if (!tmp)
+    return;
+
+  data = (const gchar *) gst_type_find_peek (tf, tmp - data, 30);
+  if (!data)
+    return;
+
+  tmp = (const gchar *) memchr (data, '"', 30);
+  if (!tmp)
+    return;
+
+  data = (const gchar *) gst_type_find_peek (tf, tmp - data, 15);
+  if (memcmp (data, "\"OTIO_SCHEMA\":", 15)) {
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, OTIO_CAPS);
+  }
+}
+
 
 /*** application/sdp *********************************************************/
 
@@ -5943,6 +6007,12 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_SECONDARY, swf_type_find, "swf,swfl", SWF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/xges",
       GST_RANK_PRIMARY, xges_type_find, "xges", XGES_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/vnd.apple-xmeml+xml",
+      GST_RANK_SECONDARY, xmeml_type_find, "xmeml", XMEML_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/vnd.apple-fcp+xml",
+      GST_RANK_SECONDARY, fcpxml_type_find, "fcpxml", FCPXML_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/vnd.pixar.opentimelineio+json",
+      GST_RANK_SECONDARY, otio_type_find, "otio", OTIO_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/dash+xml",
       GST_RANK_PRIMARY, dash_mpd_type_find, "mpd,MPD", DASH_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/vnd.ms-sstr+xml",
