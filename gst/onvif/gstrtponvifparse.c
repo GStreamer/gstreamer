@@ -93,12 +93,14 @@ handle_buffer (GstRtpOnvifParse * self, GstBuffer * buf)
   guint16 bits;
   guint wordlen;
   guint8 flags;
+  guint64 timestamp_seconds;
+  guint64 timestamp_fraction;
+  guint64 timestamp_nseconds;
   /*
-     guint64 timestamp;
      guint8 cseq;
    */
 
-  if (!gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp)) {
+  if (!gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp)) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED,
         ("Failed to map RTP buffer"), (NULL));
     return FALSE;
@@ -112,7 +114,13 @@ handle_buffer (GstRtpOnvifParse * self, GstBuffer * buf)
   if (bits != EXTENSION_ID || wordlen != EXTENSION_SIZE)
     goto out;
 
-  /* timestamp = GST_READ_UINT64_BE (data);  TODO */
+  timestamp_seconds = GST_READ_UINT32_BE (data);
+  timestamp_fraction = GST_READ_UINT32_BE (data + 4);
+  timestamp_nseconds =
+      (timestamp_fraction * G_GINT64_CONSTANT (1000000000)) >> 32;
+  GST_BUFFER_PTS (buf) =
+      timestamp_seconds * GST_SECOND + timestamp_nseconds * GST_NSECOND;
+
   flags = GST_READ_UINT8 (data + 8);
   /* cseq = GST_READ_UINT8 (data + 9);  TODO */
 
