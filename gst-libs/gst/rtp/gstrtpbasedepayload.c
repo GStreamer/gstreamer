@@ -42,6 +42,7 @@ struct _GstRTPBaseDepayloadPrivate
   gdouble play_speed;
   gdouble play_scale;
   guint clock_base;
+  gboolean onvif_mode;
 
   gboolean discont;
   GstClockTime pts;
@@ -265,6 +266,7 @@ gst_rtp_base_depayload_init (GstRTPBaseDepayload * filter,
   priv->play_speed = 1.0;
   priv->play_scale = 1.0;
   priv->clock_base = -1;
+  priv->onvif_mode = FALSE;
   priv->dts = -1;
   priv->pts = -1;
   priv->duration = -1;
@@ -306,6 +308,16 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
   }
 
   caps_struct = gst_caps_get_structure (caps, 0);
+
+  value = gst_structure_get_value (caps_struct, "onvif-mode");
+  if (value && G_VALUE_HOLDS_BOOLEAN (value))
+    priv->onvif_mode = g_value_get_boolean (value);
+  else
+    priv->onvif_mode = FALSE;
+  GST_DEBUG_OBJECT (filter, "Onvif mode: %d", priv->onvif_mode);
+
+  if (priv->onvif_mode)
+    filter->need_newsegment = FALSE;
 
   /* get other values for newsegment */
   value = gst_structure_get_value (caps_struct, "npt-start");
@@ -622,7 +634,7 @@ gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
       gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
       GST_OBJECT_UNLOCK (filter);
 
-      filter->need_newsegment = TRUE;
+      filter->need_newsegment = !filter->priv->onvif_mode;
       filter->priv->next_seqnum = -1;
       gst_event_replace (&filter->priv->segment_event, NULL);
       break;
@@ -651,9 +663,12 @@ gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
       filter->segment = segment;
       GST_OBJECT_UNLOCK (filter);
 
-      /* don't pass the event downstream, we generate our own segment including
-       * the NTP time and other things we receive in caps */
-      forward = FALSE;
+      /* In ONVIF mode, upstream is expected to send us the correct segment */
+      if (!filter->priv->onvif_mode) {
+        /* don't pass the event downstream, we generate our own segment including
+         * the NTP time and other things we receive in caps */
+        forward = FALSE;
+      }
       break;
     }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
@@ -995,6 +1010,7 @@ gst_rtp_base_depayload_change_state (GstElement * element,
       priv->play_speed = 1.0;
       priv->play_scale = 1.0;
       priv->clock_base = -1;
+      priv->onvif_mode = FALSE;
       priv->next_seqnum = -1;
       priv->negotiated = FALSE;
       priv->discont = FALSE;
