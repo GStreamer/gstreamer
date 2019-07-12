@@ -131,7 +131,6 @@ gst_rist_rtp_ext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   if (drop_null) {
     guint8 *data = gst_rtp_buffer_get_payload (&rtp);
     guint plen = gst_rtp_buffer_get_payload_len (&rtp);
-    guint offset = 0;
     guint i;
 
     if (gst_rtp_buffer_get_padding (&rtp)) {
@@ -141,6 +140,7 @@ gst_rist_rtp_ext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     }
 
     for (i = 0; i < MIN (ts_packet_count, 7); i++) {
+      guint offset = (i - num_packets_deleted) * ts_packet_size;
       guint16 pid;
 
       /* Look for sync byte (0x47) at the start of TS packets */
@@ -173,8 +173,9 @@ gst_rist_rtp_ext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   bits = 0;
   bits |= drop_null << 15;      /* N */
-  bits |= self->seqnumext << 14;        /* E */
-  bits |= (ts_packet_count & 7) << 10;  /* Size */
+  bits |= self->add_seqnumext << 14;    /* E */
+  if (ts_packet_count <= 7)
+    bits |= (ts_packet_count & 7) << 10;        /* Size */
   bits |= (ts_packet_size == 204) << 7; /* T */
   bits |= (npd_bits & 0x7F);
 

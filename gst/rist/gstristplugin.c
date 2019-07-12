@@ -46,6 +46,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "ristrtpext", GST_RANK_NONE,
           GST_TYPE_RIST_RTP_EXT))
     return FALSE;
+  if (!gst_element_register (plugin, "ristrtpdeext", GST_RANK_NONE,
+          GST_TYPE_RIST_RTP_DEEXT))
+    return FALSE;
 
   return TRUE;
 }

@@ -5,7 +5,8 @@ rist_sources = [
   'gstristsrc.c',
   'gstristsink.c',
   'gstristplugin.c',
-  'gstristrtpext.c'
+  'gstristrtpext.c',
+  'gstristrtpdeext.c'
 ]
 
 gstrist = library('gstrist',

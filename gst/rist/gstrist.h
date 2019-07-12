@@ -64,4 +64,12 @@ typedef struct {
 } GstRistRtpExtClass;
 GType gst_rist_rtp_ext_get_type (void);
 
+#define GST_TYPE_RIST_RTP_DEEXT      (gst_rist_rtp_deext_get_type())
+#define GST_RIST_RTP_DEEXT(obj)      (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RIST_RTP_DEEXT,GstRistRtpDeext))
+typedef struct _GstRistRtpDeext GstRistRtpDeext;
+typedef struct {
+  GstElementClass parent;
+} GstRistRtpDeextClass;
+GType gst_rist_rtp_deext_get_type (void);
+
 #endif
