@@ -675,7 +675,7 @@ _parse_binding (GMarkupParseContext * context, const gchar * element_name,
     if (strlen (pair)) {
       GstTimedValue *value;
 
-      value = g_slice_new (GstTimedValue);
+      value = g_new0 (GstTimedValue, 1);
       value_pair = g_strsplit (pair, ":", 0);
       value->timestamp = g_ascii_strtoull (value_pair[0], NULL, 10);
       value->value = g_ascii_strtod (value_pair[1], NULL);
@@ -1425,6 +1425,7 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index,
                   ":%s ", value->timestamp, g_ascii_dtostr (strbuf,
                       G_ASCII_DTOSTR_BUF_SIZE, value->value)), depth);
         }
+        g_list_free (timed_values);
         append_escaped (str, g_markup_printf_escaped ("'/>\n"), depth);
       } else
         GST_DEBUG ("control source not in [interpolation]");

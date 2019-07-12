@@ -1048,6 +1048,7 @@ ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
   if (priv->state != STATE_LOADING_CLIPS) {
     GST_DEBUG_OBJECT (self, "Not loading control bindings in %s state.",
         loading_state_name (priv->state));
+    g_slist_free_full (timed_values, g_free);
     return;
   }
 
@@ -1072,6 +1073,7 @@ ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
 
     gst_timed_value_control_source_set_from_list (GST_TIMED_VALUE_CONTROL_SOURCE
         (source), timed_values);
+    g_slist_free_full (timed_values, g_free);
   } else
     GST_WARNING ("This interpolation type is not supported\n");
 }
