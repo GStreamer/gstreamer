@@ -534,11 +534,7 @@ gst_avwait_set_property (GObject * object, guint prop_id,
       g_mutex_lock (&self->mutex);
       self->target_running_time = g_value_get_uint64 (value);
       if (self->mode == MODE_RUNNING_TIME) {
-        self->running_time_to_wait_for = self->target_running_time;
-        if (self->recording) {
-          self->audio_running_time_to_wait_for = self->running_time_to_wait_for;
-        }
-        if (self->target_running_time < self->last_seen_video_running_time) {
+        if (self->target_running_time > self->last_seen_video_running_time) {
           self->dropping = TRUE;
         }
       }
@@ -549,10 +545,6 @@ gst_avwait_set_property (GObject * object, guint prop_id,
       g_mutex_lock (&self->mutex);
       self->end_running_time = g_value_get_uint64 (value);
       if (self->mode == MODE_RUNNING_TIME) {
-        self->running_time_to_end_at = self->end_running_time;
-        if (self->recording) {
-          self->audio_running_time_to_end_at = self->running_time_to_end_at;
-        }
         if (self->end_running_time >= self->last_seen_video_running_time) {
           self->dropping = TRUE;
         }
@@ -573,18 +565,14 @@ gst_avwait_set_property (GObject * object, guint prop_id,
                 gst_video_time_code_compare (self->last_seen_tc,
                     self->tc) < 0) {
               self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+              self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
               self->dropping = TRUE;
             }
             break;
           case MODE_RUNNING_TIME:
-            self->running_time_to_wait_for = self->target_running_time;
-            self->running_time_to_end_at = self->end_running_time;
-            if (self->recording) {
-              self->audio_running_time_to_wait_for =
-                  self->running_time_to_wait_for;
-              self->audio_running_time_to_end_at = self->running_time_to_end_at;
-            }
-            if (self->target_running_time < self->last_seen_video_running_time
+            self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+            self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
+            if (self->target_running_time > self->last_seen_video_running_time
                 || self->end_running_time >=
                 self->last_seen_video_running_time) {
               self->dropping = TRUE;
@@ -628,16 +616,14 @@ gst_avwait_vsink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_event_unref (event);
         return FALSE;
       }
-      if (self->mode != MODE_RUNNING_TIME) {
-        GST_DEBUG_OBJECT (self, "First time reset in video segment");
-        self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
-        self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
-        self->audio_running_time_to_wait_for = GST_CLOCK_TIME_NONE;
-        self->audio_running_time_to_end_at = GST_CLOCK_TIME_NONE;
-        if (!self->dropping) {
-          self->dropping = TRUE;
-          gst_avwait_send_element_message (self, TRUE, GST_CLOCK_TIME_NONE);
-        }
+      GST_DEBUG_OBJECT (self, "First time reset in video segment");
+      self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+      self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
+      self->audio_running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+      self->audio_running_time_to_end_at = GST_CLOCK_TIME_NONE;
+      if (!self->dropping) {
+        self->dropping = TRUE;
+        gst_avwait_send_element_message (self, TRUE, GST_CLOCK_TIME_NONE);
       }
       self->vsegment.position = GST_CLOCK_TIME_NONE;
       g_mutex_unlock (&self->mutex);
@@ -693,16 +679,14 @@ gst_avwait_vsink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       g_mutex_lock (&self->mutex);
       self->video_flush_flag = FALSE;
-      if (self->mode != MODE_RUNNING_TIME) {
-        GST_DEBUG_OBJECT (self, "First time reset in video flush");
-        self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
-        self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
-        self->audio_running_time_to_wait_for = GST_CLOCK_TIME_NONE;
-        self->audio_running_time_to_end_at = GST_CLOCK_TIME_NONE;
-        if (!self->dropping) {
-          self->dropping = TRUE;
-          gst_avwait_send_element_message (self, TRUE, GST_CLOCK_TIME_NONE);
-        }
+      GST_DEBUG_OBJECT (self, "First time reset in video flush");
+      self->running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+      self->running_time_to_end_at = GST_CLOCK_TIME_NONE;
+      self->audio_running_time_to_wait_for = GST_CLOCK_TIME_NONE;
+      self->audio_running_time_to_end_at = GST_CLOCK_TIME_NONE;
+      if (!self->dropping) {
+        self->dropping = TRUE;
+        gst_avwait_send_element_message (self, TRUE, GST_CLOCK_TIME_NONE);
       }
       gst_segment_init (&self->vsegment, GST_FORMAT_UNDEFINED);
       self->vsegment.position = GST_CLOCK_TIME_NONE;
@@ -887,9 +871,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
            * mid-flight) */
           emit_passthrough_signal = self->dropping;
           self->dropping = FALSE;
-          self->running_time_to_wait_for =
-              gst_segment_to_running_time (&self->vsegment, GST_FORMAT_TIME,
-              self->vsegment.position);
+          self->running_time_to_wait_for = running_time;
           if (self->recording) {
             self->audio_running_time_to_wait_for =
                 self->running_time_to_wait_for;
@@ -901,9 +883,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
             GST_INFO_OBJECT (self, "End timecode reached at %" GST_TIME_FORMAT,
                 GST_TIME_ARGS (self->vsegment.position));
             self->dropping = TRUE;
-            self->running_time_to_end_at =
-                gst_segment_to_running_time (&self->vsegment, GST_FORMAT_TIME,
-                self->vsegment.position);
+            self->running_time_to_end_at = running_time;
             if (self->recording) {
               self->audio_running_time_to_end_at = self->running_time_to_end_at;
               self->must_send_end_message |= END_MESSAGE_STREAM_ENDED;
@@ -922,45 +902,58 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       break;
     }
     case MODE_RUNNING_TIME:{
-      if (running_time < self->running_time_to_wait_for) {
+      gboolean emit_passthrough_signal = FALSE;
+
+      if (self->target_running_time != GST_CLOCK_TIME_NONE
+          && running_time < self->target_running_time) {
         GST_DEBUG_OBJECT (self,
             "Have %" GST_TIME_FORMAT ", waiting for %" GST_TIME_FORMAT,
             GST_TIME_ARGS (running_time),
-            GST_TIME_ARGS (self->running_time_to_wait_for));
+            GST_TIME_ARGS (self->target_running_time));
         gst_buffer_unref (inbuf);
         inbuf = NULL;
-      } else {
-        if (self->dropping) {
-          self->dropping = FALSE;
-          if (self->recording)
-            gst_avwait_send_element_message (self, FALSE, running_time);
+      } else if (self->running_time_to_wait_for == GST_CLOCK_TIME_NONE) {
+        /* Don't emit a signal if we weren't dropping (e.g. settings changed
+         * mid-flight) */
+        emit_passthrough_signal = self->dropping;
+        self->dropping = FALSE;
+        self->running_time_to_wait_for = running_time;
+        if (self->recording) {
+          self->audio_running_time_to_wait_for = running_time;
         }
+        if (self->recording)
+          gst_avwait_send_element_message (self, FALSE, running_time);
       }
 
-      if (GST_CLOCK_TIME_IS_VALID (self->running_time_to_end_at)
-          && running_time >= self->running_time_to_end_at) {
-        GST_INFO_OBJECT (self,
-            "End running time %" GST_TIME_FORMAT " reached at %"
-            GST_TIME_FORMAT, GST_TIME_ARGS (self->running_time_to_end_at),
-            GST_TIME_ARGS (self->vsegment.position));
-        self->dropping = TRUE;
-        if (self->recording) {
-          self->audio_running_time_to_end_at = self->running_time_to_end_at;
-          self->must_send_end_message |= END_MESSAGE_STREAM_ENDED;
+      if (GST_CLOCK_TIME_IS_VALID (self->end_running_time)
+          && running_time >= self->end_running_time) {
+        if (self->running_time_to_end_at == GST_CLOCK_TIME_NONE) {
+          GST_INFO_OBJECT (self,
+              "End running time %" GST_TIME_FORMAT " reached at %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (self->end_running_time),
+              GST_TIME_ARGS (self->vsegment.position));
+          self->dropping = TRUE;
+          self->running_time_to_end_at = running_time;
+          if (self->recording) {
+            self->audio_running_time_to_end_at = running_time;
+            self->must_send_end_message |= END_MESSAGE_STREAM_ENDED;
+          }
         }
 
         if (inbuf) {
           gst_buffer_unref (inbuf);
           inbuf = NULL;
         }
+      } else if (emit_passthrough_signal && self->recording) {
+        gst_avwait_send_element_message (self, FALSE,
+            self->running_time_to_wait_for);
       }
+
       break;
     }
     case MODE_VIDEO_FIRST:{
       if (self->running_time_to_wait_for == GST_CLOCK_TIME_NONE) {
-        self->running_time_to_wait_for =
-            gst_segment_to_running_time (&self->vsegment, GST_FORMAT_TIME,
-            self->vsegment.position);
+        self->running_time_to_wait_for = running_time;
         GST_DEBUG_OBJECT (self, "First video running time is %" GST_TIME_FORMAT,
             GST_TIME_ARGS (self->running_time_to_wait_for));
         if (self->recording) {
@@ -981,9 +974,13 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
     if (self->was_recording) {
       GST_INFO_OBJECT (self, "Recording stopped at %" GST_TIME_FORMAT,
           GST_TIME_ARGS (running_time));
+
       if (running_time > self->running_time_to_wait_for
-          && running_time <= self->running_time_to_end_at) {
+          && (running_time <= self->running_time_to_end_at
+              || self->running_time_to_end_at == GST_CLOCK_TIME_NONE)) {
         /* We just stopped recording: synchronise the audio */
+        if (self->running_time_to_end_at == GST_CLOCK_TIME_NONE)
+          self->running_time_to_end_at = running_time;
         self->audio_running_time_to_end_at = running_time;
         self->must_send_end_message |= END_MESSAGE_STREAM_ENDED;
       } else if (running_time < self->running_time_to_wait_for
@@ -991,6 +988,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
         self->audio_running_time_to_wait_for = GST_CLOCK_TIME_NONE;
       }
     }
+
     /* Recording is FALSE: we drop all buffers */
     if (inbuf) {
       gst_buffer_unref (inbuf);
@@ -1002,6 +1000,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
           "Recording started at %" GST_TIME_FORMAT " waiting for %"
           GST_TIME_FORMAT " inbuf %p", GST_TIME_ARGS (running_time),
           GST_TIME_ARGS (self->running_time_to_wait_for), inbuf);
+
       if (self->mode != MODE_VIDEO_FIRST ||
           self->first_audio_running_time <= running_time ||
           self->audio_eos_flag) {
@@ -1009,7 +1008,8 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
             self->running_time_to_end_at == GST_CLOCK_TIME_NONE) {
           /* We are before the end of the recording. Check if we just actually
            * started */
-          if (running_time > self->running_time_to_wait_for) {
+          if (self->running_time_to_wait_for != GST_CLOCK_TIME_NONE
+              && running_time > self->running_time_to_wait_for) {
             /* We just started recording: synchronise the audio */
             self->audio_running_time_to_wait_for = running_time;
             gst_avwait_send_element_message (self, FALSE, running_time);
