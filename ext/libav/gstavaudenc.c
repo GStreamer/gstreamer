@@ -176,6 +176,7 @@ gst_ffmpegaudenc_finalize (GObject * object)
   /* clean up remaining allocated data */
   av_frame_free (&ffmpegaudenc->frame);
   gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
+  gst_ffmpeg_avcodec_close (ffmpegaudenc->refcontext);
   av_free (ffmpegaudenc->context);
   av_free (ffmpegaudenc->refcontext);
 
