@@ -452,6 +452,9 @@ struct _QtDemuxStream
   gpointer protection_scheme_info;      /* specific to the protection scheme */
   GQueue protection_scheme_event_queue;
 
+  /* KEY_UNITS trickmode with an interval */
+  GstClockTime last_keyframe_dts;
+
   gint ref_count;               /* atomic */
 };
 
@@ -1608,6 +1611,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
     stream->offset_in_sample = 0;
     stream->segment_index = -1;
     stream->sent_eos = FALSE;
+    stream->last_keyframe_dts = GST_CLOCK_TIME_NONE;
 
     if (segment->flags & GST_SEEK_FLAG_FLUSH)
       gst_segment_init (&stream->segment, GST_FORMAT_TIME);
@@ -1784,6 +1788,9 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
             "let upstream handle seek for fragmented playback");
         goto upstream;
       }
+
+      gst_event_parse_seek_trickmode_interval (event,
+          &qtdemux->trickmode_interval);
 
       /* Build complete index for seeking;
        * if not a fragmented file at least */
@@ -2165,6 +2172,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
 
   if (hard) {
     qtdemux->segment_seqnum = GST_SEQNUM_INVALID;
+    qtdemux->trickmode_interval = 0;
     g_ptr_array_remove_range (qtdemux->active_streams,
         0, qtdemux->active_streams->len);
     g_ptr_array_remove_range (qtdemux->old_streams,
@@ -2204,6 +2212,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       stream->sent_eos = FALSE;
       stream->time_position = 0;
       stream->accumulated_base = 0;
+      stream->last_keyframe_dts = GST_CLOCK_TIME_NONE;
     }
   }
 }
@@ -6370,10 +6379,29 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   /* If we're doing a keyframe-only trickmode, only push keyframes on video streams */
   if (G_UNLIKELY (qtdemux->segment.
           flags & GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS)) {
-    if (stream->subtype == FOURCC_vide && !keyframe) {
-      GST_LOG_OBJECT (qtdemux, "Skipping non-keyframe on track-id %u",
-          stream->track_id);
-      goto next;
+    if (stream->subtype == FOURCC_vide) {
+      if (!keyframe) {
+        GST_LOG_OBJECT (qtdemux, "Skipping non-keyframe on track-id %u",
+            stream->track_id);
+        goto next;
+      } else if (qtdemux->trickmode_interval > 0) {
+        GstClockTimeDiff interval;
+
+        if (qtdemux->segment.rate > 0)
+          interval = stream->time_position - stream->last_keyframe_dts;
+        else
+          interval = stream->last_keyframe_dts - stream->time_position;
+
+        if (GST_CLOCK_TIME_IS_VALID (stream->last_keyframe_dts)
+            && interval < qtdemux->trickmode_interval) {
+          GST_LOG_OBJECT (qtdemux,
+              "Skipping keyframe within interval on track-id %u",
+              stream->track_id);
+          goto next;
+        } else {
+          stream->last_keyframe_dts = stream->time_position;
+        }
+      }
     }
   }
 

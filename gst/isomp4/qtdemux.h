@@ -118,6 +118,9 @@ struct _GstQTDemux {
   /* configured playback region */
   GstSegment segment;
 
+  /* State for key_units trickmode */
+  GstClockTime trickmode_interval;
+
   /* PUSH-BASED only: If the initial segment event, or a segment consequence of
    * a seek or incoming TIME segment from upstream needs to be pushed. This
    * variable is used instead of pushing the event directly because at that
