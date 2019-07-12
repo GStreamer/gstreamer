@@ -1042,9 +1042,13 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
   g_mutex_unlock (&self->mutex);
 
   if (inbuf) {
-    GST_DEBUG_OBJECT (self, "Pass video buffer ending at %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf) +
-            GST_BUFFER_DURATION (inbuf)));
+    GST_DEBUG_OBJECT (self,
+        "Pass video buffer %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (gst_segment_to_running_time (&self->vsegment,
+                GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (inbuf))),
+        GST_TIME_ARGS (gst_segment_to_running_time (&self->vsegment,
+                GST_FORMAT_TIME,
+                GST_BUFFER_TIMESTAMP (inbuf) + GST_BUFFER_DURATION (inbuf))));
     ret = gst_pad_push (self->vsrcpad, inbuf);
   }
 
@@ -1261,8 +1265,12 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
         GST_SECOND, self->ainfo.rate);
     GstClockTime new_running_time_at_end =
         gst_segment_to_running_time (&self->asegment, GST_FORMAT_TIME,
-        self->asegment.position + new_duration);
-    GST_DEBUG_OBJECT (self, "Pass audio buffer ending at %" GST_TIME_FORMAT,
+        GST_BUFFER_TIMESTAMP (inbuf) + new_duration);
+
+    GST_DEBUG_OBJECT (self,
+        "Pass audio buffer %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
+        GST_TIME_ARGS (gst_segment_to_running_time (&self->asegment,
+                GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (inbuf))),
         GST_TIME_ARGS (new_running_time_at_end));
     ret = gst_pad_push (self->asrcpad, inbuf);
   }
