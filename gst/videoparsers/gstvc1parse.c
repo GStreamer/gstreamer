@@ -891,8 +891,9 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, vc1parse->fps_n,
         vc1parse->fps_d, NULL);
 
-    vc1parse->frame_duration = gst_util_uint64_scale (GST_SECOND,
-        vc1parse->fps_d, vc1parse->fps_n);
+    if (vc1parse->fps_n > 0)
+      vc1parse->frame_duration = gst_util_uint64_scale (GST_SECOND,
+          vc1parse->fps_d, vc1parse->fps_n);
   }
 
   if (vc1parse->par_n != 0 && vc1parse->par_d != 0)
