@@ -1227,6 +1227,36 @@ sort_assets (GESAsset * a, GESAsset * b)
   return 0;
 }
 
+static void
+_serialize_streams (GESXmlFormatter * self, GString * str,
+    GESUriClipAsset * asset, GError ** error, guint depth)
+{
+  const GList *tmp, *streams = ges_uri_clip_asset_get_stream_assets (asset);
+
+  for (tmp = streams; tmp; tmp = tmp->next) {
+    gchar *properties, *metas, *capsstr;
+    const gchar *id = ges_asset_get_id (tmp->data);
+    GstDiscovererStreamInfo *sinfo =
+        ges_uri_source_asset_get_stream_info (tmp->data);
+    GstCaps *caps = gst_discoverer_stream_info_get_caps (sinfo);
+
+    properties = _serialize_properties (tmp->data, NULL);
+    metas = ges_meta_container_metas_to_string (tmp->data);
+    capsstr = gst_caps_to_string (caps);
+
+    append_escaped (str,
+        g_markup_printf_escaped
+        ("        <stream-info id='%s' extractable-type-name='%s' properties='%s' metadatas='%s' caps='%s'/>\n",
+            id, g_type_name (ges_asset_get_extractable_type (tmp->data)),
+            properties, metas, capsstr), depth);
+    g_free (metas);
+    g_free (properties);
+    g_free (capsstr);
+    gst_caps_unref (caps);
+  }
+
+}
+
 static inline gboolean
 _save_assets (GESXmlFormatter * self, GString * str, GESProject * project,
     GError ** error, guint depth)
@@ -1294,8 +1324,13 @@ _save_assets (GESXmlFormatter * self, GString * str, GESProject * project,
 
       self->priv->min_version = MAX (self->priv->min_version, 3);
     }
+    g_string_append (str, ">\n");
 
-    g_string_append (str, "/>\n");
+    if (GES_IS_URI_CLIP_ASSET (asset)) {
+      _serialize_streams (self, str, GES_URI_CLIP_ASSET (asset), error, depth);
+    }
+
+    string_append_with_depth (str, "      </asset>\n", depth);
     g_free (properties);
     g_free (metas);
   }
