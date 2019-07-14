@@ -860,7 +860,7 @@ gst_egl_image_from_dmabuf_direct (GstGLContext * context,
     return NULL;
 
   with_modifiers = gst_gl_context_check_feature (context,
-      "EGL_EXT_image_dma_buf_import_with_modifiers");
+      "EGL_EXT_image_dma_buf_import_modifiers");
 
   /* EGL DMABuf importation supports a maximum of 3 planes */
   if (G_UNLIKELY (n_planes > 3))
