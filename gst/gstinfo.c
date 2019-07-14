@@ -2097,6 +2097,35 @@ _priv_gst_debug_cleanup (void)
   }
 
   g_mutex_unlock (&__dbg_functions_mutex);
+
+  g_mutex_lock (&__cat_mutex);
+  while (__categories) {
+    GstDebugCategory *cat = __categories->data;
+    g_free ((gpointer) cat->name);
+    g_free ((gpointer) cat->description);
+    g_slice_free (GstDebugCategory, cat);
+    __categories = g_slist_delete_link (__categories, __categories);
+  }
+  g_mutex_unlock (&__cat_mutex);
+
+  g_mutex_lock (&__level_name_mutex);
+  while (__level_name) {
+    LevelNameEntry *level_name_entry = __level_name->data;
+    g_pattern_spec_free (level_name_entry->pat);
+    g_slice_free (LevelNameEntry, level_name_entry);
+    __level_name = g_slist_delete_link (__level_name, __level_name);
+  }
+  g_mutex_unlock (&__level_name_mutex);
+
+  g_mutex_lock (&__log_func_mutex);
+  while (__log_functions) {
+    LogFuncEntry *log_func_entry = __log_functions->data;
+    if (log_func_entry->notify)
+      log_func_entry->notify (log_func_entry->user_data);
+    g_slice_free (LogFuncEntry, log_func_entry);
+    __log_functions = g_slist_delete_link (__log_functions, __log_functions);
+  }
+  g_mutex_unlock (&__log_func_mutex);
 }
 
 static void
