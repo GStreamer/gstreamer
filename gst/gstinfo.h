@@ -446,8 +446,7 @@ void            gst_debug_set_threshold_from_string  (const gchar * list, gboole
 GST_API
 void            gst_debug_unset_threshold_for_name   (const gchar * name);
 
-
-GST_API
+GST_DEPRECATED
 void            gst_debug_category_free              (GstDebugCategory *	category);
 
 GST_API
@@ -1492,7 +1491,9 @@ GST_TRACE (const char *format, ...)
 
 #define GST_DEBUG_CATEGORY_INIT(var,name,color,desc)	G_STMT_START{ }G_STMT_END
 #define GST_DEBUG_CATEGORY_GET(var,name)		G_STMT_START{ }G_STMT_END
+#ifndef GST_DISABLE_DEPRECATED
 #define gst_debug_category_free(category)		G_STMT_START{ }G_STMT_END
+#endif
 #define gst_debug_category_set_threshold(category,level) G_STMT_START{ }G_STMT_END
 #define gst_debug_category_reset_threshold(category)	G_STMT_START{ }G_STMT_END
 #define gst_debug_category_get_threshold(category)	(GST_LEVEL_NONE)

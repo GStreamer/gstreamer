@@ -480,9 +480,6 @@ GST_START_TEST (info_post_gst_init_category_registration)
     fail_unless_equals_int (gst_debug_category_get_threshold (cats[0xb10]),
         GST_LEVEL_LOG);
   }
-
-  for (i = 0; i < G_N_ELEMENTS (cats); ++i)
-    gst_debug_category_free (cats[i]);
 }
 
 GST_END_TEST;

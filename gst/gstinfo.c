@@ -1742,27 +1742,20 @@ _gst_debug_category_new (const gchar * name, guint color,
   return cat;
 }
 
+#ifndef GST_REMOVE_DEPRECATED
 /**
  * gst_debug_category_free:
  * @category: #GstDebugCategory to free.
  *
  * Removes and frees the category and all associated resources.
+ *
+ * Deprecated: This function can easily cause memory corruption, don't use it.
  */
 void
 gst_debug_category_free (GstDebugCategory * category)
 {
-  if (category == NULL)
-    return;
-
-  /* remove from category list */
-  g_mutex_lock (&__cat_mutex);
-  __categories = g_slist_remove (__categories, category);
-  g_mutex_unlock (&__cat_mutex);
-
-  g_free ((gpointer) category->name);
-  g_free ((gpointer) category->description);
-  g_slice_free (GstDebugCategory, category);
 }
+#endif
 
 /**
  * gst_debug_category_set_threshold:
@@ -2304,10 +2297,12 @@ gst_debug_unset_threshold_for_name (const gchar * name)
 {
 }
 
+#ifndef GST_REMOVE_DEPRECATED
 void
 gst_debug_category_free (GstDebugCategory * category)
 {
 }
+#endif
 
 void
 gst_debug_category_set_threshold (GstDebugCategory * category,
