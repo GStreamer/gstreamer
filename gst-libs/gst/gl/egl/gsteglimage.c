@@ -1029,10 +1029,6 @@ gst_egl_image_export_dmabuf (GstEGLImage * image, int *fd, gint * stride,
   if (num_planes > 1)
     return FALSE;
 
-  GST_DEBUG_OBJECT (image->context, "Export DMABuf with fourcc %"
-      GST_FOURCC_FORMAT " and modififers %" G_GUINT64_FORMAT,
-      GST_FOURCC_ARGS (fourcc), modifier);
-
   /* FIXME We don't support modifiers */
   if (modifier != DRM_FORMAT_MOD_LINEAR)
     return FALSE;
@@ -1040,6 +1036,11 @@ gst_egl_image_export_dmabuf (GstEGLImage * image, int *fd, gint * stride,
   if (!gst_eglExportDMABUFImageMESA (egl_display, image->image, &egl_fd,
           &egl_stride, &egl_offset))
     return FALSE;
+
+  GST_DEBUG_OBJECT (image->context, "Export DMABuf with fourcc %"
+      GST_FOURCC_FORMAT ", modififers %" G_GUINT64_FORMAT
+      ", stride %i and offset %i", GST_FOURCC_ARGS (fourcc), modifier,
+      egl_stride, egl_offset);
 
   *fd = egl_fd;
   *stride = egl_stride;

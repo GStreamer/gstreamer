@@ -286,13 +286,14 @@ _create_cached_dmabuf_info (GstGLContext * context, gpointer data)
     if (gst_egl_image_export_dmabuf (image, &fd, &stride, &offset)) {
       GstGLDownloadElement *download = transfer->download;
       struct DmabufInfo *info;
-      gsize maxsize;
+      gsize size;
 
-      gst_memory_get_sizes (GST_MEMORY_CAST (transfer->glmem), NULL, &maxsize);
+      size =
+          gst_gl_memory_get_texture_height (transfer->glmem) * stride + offset;
 
       info = g_new0 (struct DmabufInfo, 1);
       info->dmabuf =
-          gst_dmabuf_allocator_alloc (download->dmabuf_allocator, fd, maxsize);
+          gst_dmabuf_allocator_alloc (download->dmabuf_allocator, fd, size);
       info->stride = stride;
       info->offset = offset;
 
