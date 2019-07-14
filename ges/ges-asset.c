@@ -769,7 +769,9 @@ ges_asset_set_proxy (GESAsset * asset, GESAsset * proxy)
 
     GST_INFO_OBJECT (asset, "%s Making sure the proxy chain is fully set.",
         ges_asset_get_id (entry->asset));
-    ges_asset_set_proxy (NULL, asset);
+    if (g_strcmp0 (asset->priv->proxied_asset_id, proxy->priv->id) ||
+        g_strcmp0 (asset->priv->id, proxy->priv->proxied_asset_id))
+      ges_asset_set_proxy (NULL, asset);
   }
 
   if (proxy->priv->proxy_target) {
