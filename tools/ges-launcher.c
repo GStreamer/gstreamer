@@ -103,7 +103,7 @@ _set_track_restriction_caps (GESTrack * track, const gchar * caps_str)
   caps = gst_caps_from_string (caps_str);
 
   if (!caps) {
-    g_printerr ("Could not create caps for %s from: %s",
+    g_error ("Could not create caps for %s from: %s",
         G_OBJECT_TYPE_NAME (track), caps_str);
 
     return FALSE;
@@ -113,6 +113,22 @@ _set_track_restriction_caps (GESTrack * track, const gchar * caps_str)
 
   gst_caps_unref (caps);
   return TRUE;
+}
+
+static void
+_set_restriction_caps (GESTimeline * timeline, ParsedOptions * opts)
+{
+  GList *tmp, *tracks = ges_timeline_get_tracks (timeline);
+
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    if (GES_TRACK (tmp->data)->type == GES_TRACK_TYPE_VIDEO)
+      _set_track_restriction_caps (tmp->data, opts->video_track_caps);
+    else if (GES_TRACK (tmp->data)->type == GES_TRACK_TYPE_AUDIO)
+      _set_track_restriction_caps (tmp->data, opts->audio_track_caps);
+  }
+
+  g_list_free_full (tracks, gst_object_unref);
+
 }
 
 static gboolean
@@ -167,6 +183,8 @@ retry:
       if (!(ges_timeline_add_track (timeline, tracka)))
         return FALSE;
     }
+  } else {
+    _set_restriction_caps (timeline, opts);
   }
 
   return TRUE;
