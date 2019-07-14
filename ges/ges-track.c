@@ -541,19 +541,28 @@ ges_track_constructed (GObject * object)
 {
   GESTrack *self = GES_TRACK (object);
   gchar *componame = NULL;
+  gchar *capsfiltername = NULL;
 
   if (self->type == GES_TRACK_TYPE_VIDEO) {
     componame =
         g_strdup_printf ("video_%s", GST_OBJECT_NAME (self->priv->composition));
+    capsfiltername =
+        g_strdup_printf ("video_restriction_%s",
+        GST_OBJECT_NAME (self->priv->capsfilter));
   } else if (self->type == GES_TRACK_TYPE_AUDIO) {
     componame =
         g_strdup_printf ("audio_%s", GST_OBJECT_NAME (self->priv->composition));
+    capsfiltername =
+        g_strdup_printf ("audio_restriction_%s",
+        GST_OBJECT_NAME (self->priv->capsfilter));
   }
 
   if (componame) {
     gst_object_set_name (GST_OBJECT (self->priv->composition), componame);
+    gst_object_set_name (GST_OBJECT (self->priv->capsfilter), capsfiltername);
 
     g_free (componame);
+    g_free (capsfiltername);
   }
 
   if (!gst_bin_add (GST_BIN (self), self->priv->composition))
