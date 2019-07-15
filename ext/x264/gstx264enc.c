@@ -1624,84 +1624,14 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   if (!encoder->insert_vui)
     goto skip_vui_parameters;
 
-  switch (info->colorimetry.primaries) {
-    case GST_VIDEO_COLOR_PRIMARIES_BT709:
-      encoder->x264param.vui.i_colorprim = 1;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_BT470M:
-      encoder->x264param.vui.i_colorprim = 4;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_BT470BG:
-      encoder->x264param.vui.i_colorprim = 5;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
-      encoder->x264param.vui.i_colorprim = 6;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
-      encoder->x264param.vui.i_colorprim = 7;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_FILM:
-      encoder->x264param.vui.i_colorprim = 8;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_BT2020:
-      encoder->x264param.vui.i_colorprim = 9;
-      break;
-    default:
-      encoder->x264param.vui.i_colorprim = 2;
-      break;
-  }
+  encoder->x264param.vui.i_colorprim =
+      gst_video_color_primaries_to_iso (info->colorimetry.primaries);
 
-  switch (info->colorimetry.transfer) {
-    case GST_VIDEO_TRANSFER_BT709:
-      encoder->x264param.vui.i_transfer = 1;
-      break;
-    case GST_VIDEO_TRANSFER_GAMMA22:
-      encoder->x264param.vui.i_transfer = 4;
-      break;
-    case GST_VIDEO_TRANSFER_GAMMA28:
-      encoder->x264param.vui.i_transfer = 5;
-      break;
-    case GST_VIDEO_TRANSFER_SMPTE240M:
-      encoder->x264param.vui.i_transfer = 7;
-      break;
-    case GST_VIDEO_TRANSFER_GAMMA10:
-      encoder->x264param.vui.i_transfer = 8;
-      break;
-    case GST_VIDEO_TRANSFER_LOG100:
-      encoder->x264param.vui.i_transfer = 9;
-      break;
-    case GST_VIDEO_TRANSFER_LOG316:
-      encoder->x264param.vui.i_transfer = 10;
-      break;
-    default:
-      encoder->x264param.vui.i_transfer = 2;
-      break;
+  encoder->x264param.vui.i_transfer =
+      gst_video_color_transfer_to_iso (info->colorimetry.transfer);
 
-  }
-
-  switch (info->colorimetry.matrix) {
-    case GST_VIDEO_COLOR_MATRIX_RGB:
-      encoder->x264param.vui.i_colmatrix = 0;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_FCC:
-      encoder->x264param.vui.i_colmatrix = 4;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT709:
-      encoder->x264param.vui.i_colmatrix = 1;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT601:
-      encoder->x264param.vui.i_colmatrix = 5;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
-      encoder->x264param.vui.i_colmatrix = 7;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT2020:
-      encoder->x264param.vui.i_colmatrix = 9;
-      break;
-    default:
-      encoder->x264param.vui.i_colmatrix = 2;
-      break;
-  }
+  encoder->x264param.vui.i_colmatrix =
+      gst_video_color_matrix_to_iso (info->colorimetry.matrix);
 
   if (info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255) {
     encoder->x264param.vui.b_fullrange = 1;
