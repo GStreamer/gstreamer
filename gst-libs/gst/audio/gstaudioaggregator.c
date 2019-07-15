@@ -612,7 +612,6 @@ gst_audio_aggregator_sink_getcaps (GstPad * pad, GstAggregator * agg,
   GstCaps *downstream_caps = gst_pad_get_allowed_caps (agg->srcpad);
   GstCaps *sink_caps;
   GstStructure *s, *s2;
-  gint downstream_rate;
 
   sink_template_caps = gst_caps_make_writable (sink_template_caps);
   s = gst_caps_get_structure (sink_template_caps, 0);
@@ -634,8 +633,8 @@ gst_audio_aggregator_sink_getcaps (GstPad * pad, GstAggregator * agg,
   else
     s2 = NULL;
 
-  if (s2 && gst_structure_get_int (s2, "rate", &downstream_rate)) {
-    gst_structure_fixate_field_nearest_int (s, "rate", downstream_rate);
+  if (s2 && gst_structure_has_field (s2, "rate")) {
+    gst_structure_set_value (s, "rate", gst_structure_get_value (s2, "rate"));
   } else if (first_configured_pad) {
     gst_structure_fixate_field_nearest_int (s, "rate",
         first_configured_pad->info.rate);
