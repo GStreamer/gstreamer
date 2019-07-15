@@ -7,11 +7,10 @@ git config --global user.email "gst-build@gstreamer.net"
 git config --global user.name "Gstbuild Runner"
 
 # Add rpm fusion repositories in order to access all of the gst plugins
-dnf install -y "http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-30.noarch.rpm" \
-  "http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-30.noarch.rpm"
+sudo dnf install -y \
+  "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
+  "https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
 
-rpm --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-nonfree-fedora-30"
-rpm --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-rpmfusion-free-fedora-30"
 dnf upgrade -y
 
 # Enable the cisco openh264 repo
