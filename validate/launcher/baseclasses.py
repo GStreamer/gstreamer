@@ -929,17 +929,19 @@ class GstValidateTest(Test):
 
         return value
 
-    def report_matches_expected_issues(self, report, expected_issues):
+    def report_matches_expected_issues(self, report, expected_issue):
         for key in ['bug', 'bugs', 'sometimes']:
-            if key in expected_issues:
-                del expected_issues[key]
+            if key in expected_issue:
+                del expected_issue[key]
         for key, value in list(report.items()):
-            if key in expected_issues:
-                if not re.findall(expected_issues[key], str(value)):
+            if key in expected_issue:
+                if not re.findall(expected_issue[key], str(value)):
                     return False
-                expected_issues.pop(key)
+                expected_issue.pop(key)
 
-        return not bool(expected_issues)
+        if "can-happen-several-times" in expected_issue:
+            expected_issue.pop("can-happen-several-times")
+        return not bool(expected_issue)
 
     def check_reported_issues(self, expected_issues):
         ret = []
