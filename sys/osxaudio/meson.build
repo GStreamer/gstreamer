@@ -27,7 +27,7 @@ if not have_osxaudio and osxaudio_option.enabled()
 endif
 
 if have_osxaudio
-  modules = ['CoreAudio', 'AudioToolBox']
+  modules = ['CoreAudio', 'AudioToolbox']
   if host_system == 'darwin'
     modules += ['AudioUnit', 'CoreServices']
   endif
