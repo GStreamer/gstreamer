@@ -685,6 +685,8 @@ handle_pending_frames (GstNvDec * nvdec)
         if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (decoder))
             || width != nvdec->width || height != nvdec->height
             || fps_n != nvdec->fps_n || fps_d != nvdec->fps_d) {
+          GstStructure *in_s = NULL;
+
           nvdec->width = width;
           nvdec->height = height;
           nvdec->fps_n = fps_n;
@@ -715,95 +717,41 @@ handle_pending_frames (GstNvDec * nvdec)
               format->video_signal_description.transfer_characteristics,
               format->video_signal_description.color_primaries);
 
-          switch (format->video_signal_description.color_primaries) {
-            case 1:
-              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
-              break;
-            case 4:
-              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470M;
-              break;
-            case 5:
-              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG;
-              break;
-            case 6:
-              vinfo->colorimetry.primaries =
-                  GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
-              break;
-            case 7:
-              vinfo->colorimetry.primaries =
-                  GST_VIDEO_COLOR_PRIMARIES_SMPTE240M;
-              break;
-            case 8:
-              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_FILM;
-              break;
-            case 9:
-              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
-              break;
-            default:
-              vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+          if (nvdec->input_state->caps)
+            in_s = gst_caps_get_structure (nvdec->input_state->caps, 0);
 
-          }
+          /* Set colorimetry when upstream did not provide it */
+          if (in_s && !gst_structure_has_field (in_s, "colorimetry")) {
+            GstVideoColorimetry colorimetry = { 0, };
 
-          if (format->video_signal_description.video_full_range_flag)
-            vinfo->colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
-          else
-            vinfo->colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+            if (format->video_signal_description.video_full_range_flag)
+              colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+            else
+              colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
 
-          switch (format->video_signal_description.transfer_characteristics) {
-            case 1:
-            case 6:
-            case 16:
-              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
-              break;
-            case 4:
-              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA22;
-              break;
-            case 5:
-              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA28;
-              break;
-            case 7:
-              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE240M;
-              break;
-            case 8:
-              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA10;
-              break;
-            case 9:
-              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_LOG100;
-              break;
-            case 10:
-              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_LOG316;
-              break;
-            case 15:
-              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
-              break;
-            default:
-              vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
-              break;
-          }
-          switch (format->video_signal_description.matrix_coefficients) {
-            case 0:
-              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
-              break;
-            case 1:
-              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
-              break;
-            case 4:
-              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_FCC;
-              break;
-            case 5:
-            case 6:
-              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
-              break;
-            case 7:
-              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_SMPTE240M;
-              break;
-            case 9:
-            case 10:
-              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
-              break;
-            default:
-              vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
-              break;
+            colorimetry.primaries =
+                gst_video_color_primaries_from_iso
+                (format->video_signal_description.color_primaries);
+
+            colorimetry.transfer =
+                gst_video_color_transfer_from_iso
+                (format->video_signal_description.transfer_characteristics);
+
+            colorimetry.matrix =
+                gst_video_color_matrix_from_iso
+                (format->video_signal_description.matrix_coefficients);
+
+            /* Use a colorimetry having at least one valid colorimetry entry,
+             * because we don't know whether the returned
+             * colorimetry (by nvdec) was actually parsed information or not.
+             * Otherwise let GstVideoInfo handle it with default colorimetry */
+            if (colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN ||
+                colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN ||
+                colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_UNKNOWN) {
+              GST_DEBUG_OBJECT (decoder,
+                  "Found valid colorimetry, update output colorimetry");
+              vinfo->colorimetry = colorimetry;
+            }
           }
 
           state->caps = gst_video_info_to_caps (&state->info);
