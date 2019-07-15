@@ -391,7 +391,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   self->video_format = GST_DECKLINK_VIDEO_FORMAT_AUTO;
   self->duplex_mode = bmdDuplexModeHalf;
   self->timecode_format = bmdTimecodeRP188Any;
-  self->no_signal = FALSE;
+  self->signal_state = SIGNAL_STATE_UNKNOWN;
   self->output_stream_time = DEFAULT_OUTPUT_STREAM_TIME;
   self->skip_first_time = DEFAULT_SKIP_FIRST_TIME;
   self->drop_no_signal_frames = DEFAULT_DROP_NO_SIGNAL_FRAMES;
@@ -530,7 +530,7 @@ gst_decklink_video_src_get_property (GObject * object, guint property_id,
       g_value_set_boolean (value, self->drop_no_signal_frames);
       break;
     case PROP_SIGNAL:
-      g_value_set_boolean (value, !self->no_signal);
+      g_value_set_boolean (value, self->signal_state == SIGNAL_STATE_AVAILABLE);
       break;
     case PROP_HW_SERIAL_NUMBER:
       if (self->input)
@@ -1224,10 +1224,10 @@ retry:
   // We will have no frame if frames without signal are dropped immediately
   // but we still have to signal that it's lost here.
   if (f.no_signal || !f.frame) {
-    if (!self->no_signal) {
-      self->no_signal = TRUE;
+    if (self->signal_state != SIGNAL_STATE_LOST) {
+      self->signal_state = SIGNAL_STATE_LOST;
       g_object_notify (G_OBJECT (self), "signal");
-      GST_ELEMENT_WARNING (GST_ELEMENT (self), RESOURCE, READ, ("No signal"),
+      GST_ELEMENT_WARNING (GST_ELEMENT (self), RESOURCE, READ, ("Signal lost"),
           ("No input source was detected - video frames invalid"));
     }
     // If we have no frame here, simply retry until we got one
@@ -1236,11 +1236,16 @@ retry:
       goto retry;
     }
   } else {
-    if (self->no_signal) {
-      self->no_signal = FALSE;
+    GstDecklinkSignalState previous_signal_state = self->signal_state;
+
+    if (previous_signal_state != SIGNAL_STATE_AVAILABLE) {
+      self->signal_state = SIGNAL_STATE_AVAILABLE;
       g_object_notify (G_OBJECT (self), "signal");
-      GST_ELEMENT_INFO (GST_ELEMENT (self), RESOURCE, READ, ("Signal found"),
-          ("Input source detected"));
+    }
+
+    if (previous_signal_state == SIGNAL_STATE_LOST) {
+      GST_ELEMENT_INFO (GST_ELEMENT (self), RESOURCE, READ,
+          ("Signal recovered"), ("Input source detected"));
     }
   }
 
@@ -1341,7 +1346,8 @@ retry:
 
   // If we have a format that supports VANC and we are asked to extract CC,
   // then do it here.
-  if ((self->output_cc || self->output_afd_bar) && !self->no_signal)
+  if ((self->output_cc || self->output_afd_bar)
+      && self->signal_state != SIGNAL_STATE_LOST)
     extract_vbi (self, buffer, vf, mode);
 
   if (f.no_signal)
@@ -1594,7 +1600,7 @@ gst_decklink_video_src_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      self->no_signal = FALSE;
+      self->signal_state = SIGNAL_STATE_UNKNOWN;
 
       gst_decklink_video_src_stop (self);
       break;

@@ -46,6 +46,12 @@ G_BEGIN_DECLS
 typedef struct _GstDecklinkVideoSrc GstDecklinkVideoSrc;
 typedef struct _GstDecklinkVideoSrcClass GstDecklinkVideoSrcClass;
 
+typedef enum {
+  SIGNAL_STATE_UNKNOWN,
+  SIGNAL_STATE_LOST,
+  SIGNAL_STATE_AVAILABLE,
+} GstDecklinkSignalState;
+
 struct _GstDecklinkVideoSrc
 {
   GstPushSrc parent;
@@ -74,7 +80,7 @@ struct _GstDecklinkVideoSrc
   GMutex lock;
   gboolean flushing;
   GstQueueArray *current_frames;
-  gboolean no_signal;
+  GstDecklinkSignalState signal_state;
 
   guint buffer_size;
 
