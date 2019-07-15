@@ -595,36 +595,7 @@ gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
         if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           goto beach;
 
-        switch (num) {
-          case 0:
-            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
-            break;
-          case 1:
-            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
-            break;
-          case 2:
-            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
-            break;
-          case 4:
-            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_FCC;
-            break;
-            /* FIXME: "5: BT470BG" is undefined in GstVideoColorMatrix
-             * but it's functionally same as "6: BT601" */
-          case 5:
-          case 6:
-            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
-            break;
-          case 7:
-            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_SMPTE240M;
-            break;
-          case 9:
-            colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
-            break;
-          default:
-            GST_FIXME_OBJECT (demux, "Unsupported color matrix coefficients  %"
-                G_GUINT64_FORMAT, num);
-            break;
-        }
+        colorimetry.matrix = gst_video_color_matrix_from_iso ((guint) num);
         break;
       }
 
@@ -654,55 +625,7 @@ gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
         if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           goto beach;
 
-        switch (num) {
-            /* FIXME: "6: BT601" and "14: BT2020_10" are undefined in
-             * GstVideoTransferFunction, but functionally same as "1: BT709" */
-          case 1:
-          case 6:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
-            break;
-          case 2:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
-            break;
-          case 4:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA22;
-            break;
-          case 5:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA28;
-            break;
-          case 7:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE240M;
-            break;
-          case 8:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA10;
-            break;
-          case 9:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_LOG100;
-            break;
-          case 10:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_LOG316;
-            break;
-          case 13:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_SRGB;
-            break;
-          case 14:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_10;
-            break;
-          case 15:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_BT2020_12;
-            break;
-          case 16:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_SMPTE2084;
-            break;
-          case 18:
-            colorimetry.transfer = GST_VIDEO_TRANSFER_ARIB_STD_B67;
-            break;
-          default:
-            GST_FIXME_OBJECT (demux,
-                "Unsupported color transfer characteristics  %"
-                G_GUINT64_FORMAT, num);
-            break;
-        }
+        colorimetry.transfer = gst_video_color_transfer_from_iso ((guint) num);
         break;
       }
 
@@ -710,48 +633,8 @@ gst_matroska_demux_parse_colour (GstMatroskaDemux * demux, GstEbmlRead * ebml,
         if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           goto beach;
 
-        switch (num) {
-          case 1:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
-            break;
-          case 2:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
-            break;
-          case 4:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470M;
-            break;
-          case 5:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT470BG;
-            break;
-          case 6:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
-            break;
-          case 7:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE240M;
-            break;
-          case 8:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_FILM;
-            break;
-          case 9:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
-            break;
-          case 10:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTEST428;
-            break;
-          case 11:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTERP431;
-            break;
-          case 12:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTEEG432;
-            break;
-          case 22:
-            colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_EBU3213;
-            break;
-          default:
-            GST_FIXME_OBJECT (demux, "Unsupported color primaries  %"
-                G_GUINT64_FORMAT, num);
-            break;
-        }
+        colorimetry.primaries =
+            gst_video_color_primaries_from_iso ((guint) num);
         break;
       }
 

@@ -2579,33 +2579,6 @@ gst_matroska_mux_write_colour (GstMatroskaMux * mux,
 
   master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_VIDEOCOLOUR);
 
-  switch (videocontext->colorimetry.matrix) {
-    case GST_VIDEO_COLOR_MATRIX_RGB:
-      matrix_id = 0;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT709:
-      matrix_id = 1;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_UNKNOWN:
-      matrix_id = 2;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_FCC:
-      matrix_id = 4;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT601:
-      matrix_id = 6;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
-      matrix_id = 7;
-      break;
-    case GST_VIDEO_COLOR_MATRIX_BT2020:
-      matrix_id = 9;
-      break;
-    default:
-      GST_FIXME_OBJECT (mux, "Unhandled color matrix %d", matrix_id);
-      break;
-  }
-
   switch (videocontext->colorimetry.range) {
     case GST_VIDEO_COLOR_RANGE_UNKNOWN:
       range_id = 0;
@@ -2617,100 +2590,11 @@ gst_matroska_mux_write_colour (GstMatroskaMux * mux,
       range_id = 2;
   }
 
-  switch (videocontext->colorimetry.transfer) {
-    case GST_VIDEO_TRANSFER_BT709:
-      transfer_id = 1;
-      break;
-      /* FIXME: can't tell what the code should be for these */
-    case GST_VIDEO_TRANSFER_GAMMA18:
-    case GST_VIDEO_TRANSFER_GAMMA20:
-    case GST_VIDEO_TRANSFER_ADOBERGB:
-    case GST_VIDEO_TRANSFER_UNKNOWN:
-      transfer_id = 2;
-      break;
-      /* Adobe RGB transfer is gamma 2.19921875 */
-    case GST_VIDEO_TRANSFER_GAMMA22:
-      transfer_id = 4;
-      break;
-    case GST_VIDEO_TRANSFER_GAMMA28:
-      transfer_id = 5;
-      break;
-    case GST_VIDEO_TRANSFER_SMPTE240M:
-      transfer_id = 7;
-      break;
-    case GST_VIDEO_TRANSFER_GAMMA10:
-      transfer_id = 8;
-      break;
-    case GST_VIDEO_TRANSFER_LOG100:
-      transfer_id = 9;
-      break;
-    case GST_VIDEO_TRANSFER_LOG316:
-      transfer_id = 10;
-      break;
-    case GST_VIDEO_TRANSFER_SRGB:
-      transfer_id = 13;
-      break;
-    case GST_VIDEO_TRANSFER_BT2020_10:
-      transfer_id = 14;
-      break;
-    case GST_VIDEO_TRANSFER_BT2020_12:
-      transfer_id = 15;
-      break;
-    case GST_VIDEO_TRANSFER_SMPTE2084:
-      transfer_id = 16;
-      break;
-    case GST_VIDEO_TRANSFER_ARIB_STD_B67:
-      transfer_id = 18;
-      break;
-    default:
-      GST_FIXME_OBJECT (mux,
-          "Unhandled transfer characteristic %d", transfer_id);
-      break;
-  }
-
-  switch (videocontext->colorimetry.primaries) {
-    case GST_VIDEO_COLOR_PRIMARIES_BT709:
-      primaries_id = 1;
-      break;
-      /* FIXME: can't tell what the code should be for this one */
-    case GST_VIDEO_COLOR_PRIMARIES_ADOBERGB:
-    case GST_VIDEO_COLOR_PRIMARIES_UNKNOWN:
-      primaries_id = 2;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_BT470M:
-      primaries_id = 4;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_BT470BG:
-      primaries_id = 5;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
-      primaries_id = 6;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
-      primaries_id = 7;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_FILM:
-      primaries_id = 8;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_BT2020:
-      primaries_id = 9;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_SMPTEST428:
-      primaries_id = 10;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_SMPTERP431:
-      primaries_id = 11;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_SMPTEEG432:
-      primaries_id = 12;
-      break;
-    case GST_VIDEO_COLOR_PRIMARIES_EBU3213:
-      primaries_id = 22;
-      break;
-    default:
-      GST_FIXME_OBJECT (mux, "Unhandled color primaries %d", primaries_id);
-      break;
-  }
+  matrix_id = gst_video_color_matrix_to_iso (videocontext->colorimetry.matrix);
+  transfer_id =
+      gst_video_color_transfer_to_iso (videocontext->colorimetry.transfer);
+  primaries_id =
+      gst_video_color_primaries_to_iso (videocontext->colorimetry.primaries);
 
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEORANGE, range_id);
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOMATRIXCOEFFICIENTS,
