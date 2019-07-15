@@ -184,6 +184,7 @@ _fixate_frame_size (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
       case GST_VIDEO_ORIENTATION_UL_LR:
       case GST_VIDEO_ORIENTATION_UR_LL:
         G_PRIMITIVE_SWAP (gint, from_w, from_h);
+        G_PRIMITIVE_SWAP (gint, from_par_n, from_par_d);
       default:
         break;
     }
