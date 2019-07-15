@@ -253,6 +253,9 @@ gboolean
 gst_vaapi_filter_set_video_direction (GstVaapiFilter * filter,
     GstVideoOrientationMethod method);
 
+GstVideoOrientationMethod
+gst_vaapi_filter_get_video_direction (GstVaapiFilter * filter);
+
 gboolean
 gst_vaapi_filter_set_skintone (GstVaapiFilter * filter,
     gboolean enhance);

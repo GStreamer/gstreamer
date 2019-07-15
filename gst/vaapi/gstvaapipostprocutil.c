@@ -23,6 +23,8 @@
  *  Boston, MA 02110-1301 USA
  */
 
+#include <gst/vaapi/gstvaapifilter.h>
+
 #include "gstvaapipostprocutil.h"
 #include "gstvaapipluginutil.h"
 
@@ -178,7 +180,7 @@ _fixate_frame_size (GstVaapiPostproc * postproc, GstVideoInfo * vinfo,
     from_h = GST_VIDEO_INFO_HEIGHT (vinfo);
 
     /* compensate for rotation if needed */
-    switch (postproc->video_direction) {
+    switch (gst_vaapi_filter_get_video_direction (postproc->filter)) {
       case GST_VIDEO_ORIENTATION_90R:
       case GST_VIDEO_ORIENTATION_90L:
       case GST_VIDEO_ORIENTATION_UL_LR:

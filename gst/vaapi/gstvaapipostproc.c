@@ -596,19 +596,22 @@ update_filter (GstVaapiPostproc * postproc)
   }
 
   if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION) {
-    if (!gst_vaapi_filter_set_video_direction (postproc->filter,
-            postproc->video_direction)) {
+    GstVideoOrientationMethod method = postproc->video_direction;
+    if (method == GST_VIDEO_ORIENTATION_AUTO)
+      method = postproc->tag_video_direction;
+
+    if (!gst_vaapi_filter_set_video_direction (postproc->filter, method)) {
       GST_ELEMENT_WARNING (postproc, LIBRARY, SETTINGS,
           ("Unsupported video direction '%s' by driver.",
               gst_vaapi_enum_type_get_nick
-              (GST_TYPE_VIDEO_ORIENTATION_METHOD, postproc->video_direction)),
+              (GST_TYPE_VIDEO_ORIENTATION_METHOD, method)),
           ("video direction transformation ignored"));
 
       /* Don't return FALSE because other filters might be set */
     }
 
     if (gst_vaapi_filter_get_video_direction_default (postproc->filter) ==
-        postproc->video_direction)
+        method)
       postproc->flags &= ~(GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION);
   }
 
@@ -1568,6 +1571,61 @@ gst_vaapipostproc_decide_allocation (GstBaseTransform * trans, GstQuery * query)
       query);
 }
 
+static gboolean
+gst_vaapipostproc_sink_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
+  GstTagList *taglist;
+  gchar *orientation;
+  gboolean ret;
+  gboolean do_reconf;
+
+  GST_DEBUG_OBJECT (postproc, "handling %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+      gst_event_parse_tag (event, &taglist);
+
+      if (gst_tag_list_get_string (taglist, "image-orientation", &orientation)) {
+        do_reconf = TRUE;
+        if (!g_strcmp0 ("rotate-0", orientation))
+          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_IDENTITY;
+        else if (!g_strcmp0 ("rotate-90", orientation))
+          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_90R;
+        else if (!g_strcmp0 ("rotate-180", orientation))
+          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_180;
+        else if (!g_strcmp0 ("rotate-270", orientation))
+          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_90L;
+        else if (!g_strcmp0 ("flip-rotate-0", orientation))
+          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_HORIZ;
+        else if (!g_strcmp0 ("flip-rotate-90", orientation))
+          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_UL_LR;
+        else if (!g_strcmp0 ("flip-rotate-180", orientation))
+          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_VERT;
+        else if (!g_strcmp0 ("flip-rotate-270", orientation))
+          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_UR_LL;
+        else
+          do_reconf = FALSE;
+
+        g_free (orientation);
+
+        if (do_reconf) {
+          postproc->flags |= GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION;
+          gst_base_transform_reconfigure_src (trans);
+        }
+      }
+      break;
+    default:
+      break;
+  }
+
+  ret =
+      GST_BASE_TRANSFORM_CLASS (gst_vaapipostproc_parent_class)->sink_event
+      (trans, event);
+
+  return ret;
+}
+
 static void
 gst_vaapipostproc_finalize (GObject * object)
 {
@@ -1749,6 +1807,7 @@ gst_vaapipostproc_class_init (GstVaapiPostprocClass * klass)
   trans_class->query = gst_vaapipostproc_query;
   trans_class->propose_allocation = gst_vaapipostproc_propose_allocation;
   trans_class->decide_allocation = gst_vaapipostproc_decide_allocation;
+  trans_class->sink_event = gst_vaapipostproc_sink_event;
 
   trans_class->prepare_output_buffer = gst_vaapipostproc_prepare_output_buffer;
 
@@ -2006,6 +2065,10 @@ gst_vaapipostproc_init (GstVaapiPostproc * postproc)
   postproc->field_duration = GST_CLOCK_TIME_NONE;
   postproc->keep_aspect = TRUE;
   postproc->get_va_surfaces = TRUE;
+
+  /* AUTO is not valid for tag_video_direction, this is just to
+   * ensure we setup the method as sink event tag */
+  postproc->tag_video_direction = GST_VIDEO_ORIENTATION_AUTO;
 
   filter_ops = gst_vaapi_filter_get_operations (NULL);
   if (filter_ops) {

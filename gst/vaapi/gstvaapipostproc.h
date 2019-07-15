@@ -166,6 +166,7 @@ struct _GstVaapiPostproc
   GstVaapiScaleMethod scale_method;
 
   GstVideoOrientationMethod video_direction;
+  GstVideoOrientationMethod tag_video_direction;
 
   /* Color balance filter values */
   gfloat hue;

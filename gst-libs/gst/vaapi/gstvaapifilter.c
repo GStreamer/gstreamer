@@ -2000,6 +2000,19 @@ gst_vaapi_filter_set_video_direction (GstVaapiFilter * filter,
   return TRUE;
 }
 
+/**
+ * gst_vaapi_filter_get_video_direction:
+ * @filter: a #GstVaapiFilter
+ *
+ * Return value: the currently applied video direction (see #GstVideoOrientationMethod)
+ */
+GstVideoOrientationMethod
+gst_vaapi_filter_get_video_direction (GstVaapiFilter * filter)
+{
+  g_return_val_if_fail (filter != NULL, GST_VIDEO_ORIENTATION_IDENTITY);
+  return filter->video_direction;
+}
+
 static inline gfloat
 op_get_float_default_value (GstVaapiFilter * filter,
     GstVaapiFilterOpData * op_data)
