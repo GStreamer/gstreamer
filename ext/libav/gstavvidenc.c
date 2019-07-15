@@ -221,6 +221,7 @@ gst_ffmpegvidenc_finalize (GObject * object)
   /* clean up remaining allocated data */
   av_frame_free (&ffmpegenc->picture);
   gst_ffmpeg_avcodec_close (ffmpegenc->context);
+  gst_ffmpeg_avcodec_close (ffmpegenc->refcontext);
   av_free (ffmpegenc->context);
   av_free (ffmpegenc->refcontext);
 
