@@ -1655,9 +1655,9 @@ main (int   argc,
     TestOutputStream () : OutputStream () { }
     void Write (uint8_t *a, unsigned int b) { }
     void NextSegment () { }
-    uint64_t SegmentSize () { }
+    uint64_t SegmentSize () { return 0; }
     void Close () { }
-    int Open () { }
+    int Open () { return 0; }
 };
   MultiplexJob *job = new MultiplexJob ();
   vector<IBitStream *> inputs;
