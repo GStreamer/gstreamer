@@ -1,5 +1,6 @@
 # name, condition when to skip the test and extra dependencies
 ugly_tests = [
+  [ 'elements/x264enc', not x264_dep.found(), [ x264_dep, gmodule_dep ] ],
   [ 'elements/xingmux' ],
   [ 'generic/states' ],
 ]
@@ -9,7 +10,6 @@ if host_machine.system() != 'windows'
   ugly_tests += [
     [ 'elements/amrnbenc', not amrnb_dep.found() ],
     [ 'elements/mpeg2dec', not mpeg2_dep.found() or not cdata.has('HAVE_UNISTD_H'), [ gstvideo_dep ] ],
-    [ 'elements/x264enc', not x264_dep.found() or not cdata.has('HAVE_UNISTD_H') ],
   ]
 endif
 
@@ -28,7 +28,8 @@ if gst_dep.type_name() == 'pkgconfig'
                  pbase.get_pkgconfig_variable('pluginsdir')]
 endif
 
-test_deps = [gst_dep, gstbase_dep, gstcheck_dep, gstaudio_dep, gstapp_dep, gstfft_dep]
+test_deps = [gst_dep, gstbase_dep, gstcheck_dep, gstaudio_dep, gstapp_dep,
+             gstfft_dep, gstvideo_dep, gstpbutils_dep]
 
 libm = cc.find_library('m', required : false)
 

@@ -20,8 +20,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <unistd.h>
-
 #include <gst/check/gstcheck.h>
 
 /* For ease of programming we use globals to keep refs for our floating
