@@ -2468,6 +2468,44 @@ gst_validate_pad_monitor_activatemode_func (GstPad * pad, GstObject * parent,
   return ret;
 }
 
+static GstFlowReturn
+gst_validate_pad_monitor_get_range_func (GstPad * pad, GstObject * parent,
+    guint64 offset, guint length, GstBuffer ** buffer)
+{
+  GstValidatePadMonitor *pad_monitor = _GET_PAD_MONITOR (pad);
+
+  if (pad_monitor->get_range_func) {
+    GstPad *peer = gst_pad_get_peer (pad);
+    GstTask *task = NULL;
+    GThread *thread = NULL;
+
+    if (peer) {
+      GST_OBJECT_LOCK (peer);
+      task = GST_PAD_TASK (peer);
+      if (task) {
+        GST_OBJECT_LOCK (task);
+        /* Only doing pointer comparison, no need to hold a ref */
+        thread = task->thread;
+        GST_OBJECT_UNLOCK (task);
+      }
+      GST_OBJECT_UNLOCK (peer);
+
+      if (thread && thread != g_thread_self ()) {
+        GST_VALIDATE_REPORT (pad_monitor, PULL_RANGE_FROM_WRONG_THREAD,
+            "Pulling from wrong thread, expected pad thread: %p, got %p",
+            task->thread, g_thread_self ());
+      }
+
+      gst_object_unref (peer);
+    }
+
+    return pad_monitor->get_range_func (pad, parent, offset, length, buffer);
+  }
+
+  return GST_FLOW_NOT_SUPPORTED;
+
+}
+
 /* The interval between two buffer frequency checks */
 #define BUF_FREQ_CHECK_INTERVAL (GST_SECOND)
 
@@ -2909,6 +2947,7 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
   pad_monitor->event_full_func = GST_PAD_EVENTFULLFUNC (pad);
   pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
   pad_monitor->activatemode_func = GST_PAD_ACTIVATEMODEFUNC (pad);
+  pad_monitor->get_range_func = GST_PAD_GETRANGEFUNC (pad);
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
 
     pad_monitor->chain_func = GST_PAD_CHAINFUNC (pad);
@@ -2935,6 +2974,11 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
   gst_pad_set_query_function (pad, gst_validate_pad_monitor_query_func);
   gst_pad_set_activatemode_function (pad,
       gst_validate_pad_monitor_activatemode_func);
+
+  if (GST_PAD_IS_SRC (pad)) {
+    gst_pad_set_getrange_function (pad,
+        gst_validate_pad_monitor_get_range_func);
+  }
 
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (monitor),
       g_strdup_printf ("%s:%s", GST_DEBUG_PAD_NAME (pad)));

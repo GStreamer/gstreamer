@@ -414,6 +414,10 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (CRITICAL, G_LOG_CRITICAL,
       "We got a g_log critical issue", NULL);
   REGISTER_VALIDATE_ISSUE (ISSUE, G_LOG_ISSUE, "We got a g_log issue", NULL);
+
+  REGISTER_VALIDATE_ISSUE (CRITICAL, PULL_RANGE_FROM_WRONG_THREAD,
+      "gst_pad_pull_range called from wrong thread",
+      _("gst_pad_pull_range has to be called from the sinkpad task thread."));
 }
 
 gboolean

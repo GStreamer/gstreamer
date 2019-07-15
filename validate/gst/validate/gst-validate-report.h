@@ -81,6 +81,8 @@ typedef enum {
 #define FLOW_ERROR_WITHOUT_ERROR_MESSAGE         _QUARK("buffer::flow-error-without-error-message")
 #define BUFFER_MISSING_DISCONT                   _QUARK("buffer::missing-discont")
 
+#define PULL_RANGE_FROM_WRONG_THREAD             _QUARK("threading::pull-range-from-wrong-thread")
+
 #define CAPS_IS_MISSING_FIELD                    _QUARK("caps::is-missing-field")
 #define CAPS_FIELD_HAS_BAD_TYPE                  _QUARK("caps::field-has-bad-type")
 #define CAPS_EXPECTED_FIELD_NOT_FOUND            _QUARK("caps::expected-field-not-found")
