@@ -894,7 +894,8 @@ test_seek (const gchar * range, const gchar * speed, const gchar * scale,
   gst_rtsp_message_unset (&request);
 
   g_mutex_lock (&check_mutex);
-  g_cond_wait (&check_cond, &check_mutex);
+  while (!terminal_frame || !received_rtcp)
+    g_cond_wait (&check_cond, &check_mutex);
   g_mutex_unlock (&check_mutex);
 
   send_teardown (client);
