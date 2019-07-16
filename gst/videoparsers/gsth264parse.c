@@ -1948,6 +1948,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
         h264parse->parsed_par_d = vui->par_d;
         GST_INFO_OBJECT (h264parse, "pixel aspect ratio has been changed %d/%d",
             h264parse->parsed_par_n, h264parse->parsed_par_d);
+        modified = TRUE;
       }
     }
 
