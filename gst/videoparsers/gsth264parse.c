@@ -214,6 +214,11 @@ gst_h264_parse_reset_stream_info (GstH264Parse * h264parse)
   h264parse->upstream_par_d = -1;
   h264parse->parsed_par_n = 0;
   h264parse->parsed_par_d = 0;
+  h264parse->parsed_colorimetry.range = GST_VIDEO_COLOR_RANGE_UNKNOWN;
+  h264parse->parsed_colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
+  h264parse->parsed_colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+  h264parse->parsed_colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+
   h264parse->have_pps = FALSE;
   h264parse->have_sps = FALSE;
 
@@ -1904,6 +1909,8 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     gint crop_width, crop_height;
     gint fps_num, fps_den;
     gint par_n, par_d;
+    GstH264VUIParams *vui = &sps->vui_parameters;
+    gchar *colorimetry = NULL;
 
     if (sps->frame_cropping_flag) {
       crop_width = sps->crop_rect_width;
@@ -1934,14 +1941,44 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       modified = TRUE;
     }
 
-    if (sps->vui_parameters.aspect_ratio_info_present_flag) {
-      if (G_UNLIKELY ((h264parse->parsed_par_n != sps->vui_parameters.par_n)
-              || (h264parse->parsed_par_d != sps->vui_parameters.par_d))) {
-        h264parse->parsed_par_n = sps->vui_parameters.par_n;
-        h264parse->parsed_par_d = sps->vui_parameters.par_d;
+    if (vui->aspect_ratio_info_present_flag) {
+      if (G_UNLIKELY ((h264parse->parsed_par_n != vui->par_n)
+              || (h264parse->parsed_par_d != vui->par_d))) {
+        h264parse->parsed_par_n = vui->par_n;
+        h264parse->parsed_par_d = vui->par_d;
         GST_INFO_OBJECT (h264parse, "pixel aspect ratio has been changed %d/%d",
             h264parse->parsed_par_n, h264parse->parsed_par_d);
       }
+    }
+
+    if (vui->video_signal_type_present_flag &&
+        vui->colour_description_present_flag) {
+      GstVideoColorimetry ci = { 0, };
+      gchar *old_colorimetry = NULL;
+
+      if (vui->video_full_range_flag)
+        ci.range = GST_VIDEO_COLOR_RANGE_0_255;
+      else
+        ci.range = GST_VIDEO_COLOR_RANGE_16_235;
+
+      ci.matrix = gst_video_color_matrix_from_iso (vui->matrix_coefficients);
+      ci.transfer =
+          gst_video_color_transfer_from_iso (vui->transfer_characteristics);
+      ci.primaries = gst_video_color_primaries_from_iso (vui->colour_primaries);
+
+      old_colorimetry =
+          gst_video_colorimetry_to_string (&h264parse->parsed_colorimetry);
+      colorimetry = gst_video_colorimetry_to_string (&ci);
+
+      if (colorimetry && g_strcmp0 (old_colorimetry, colorimetry)) {
+        GST_INFO_OBJECT (h264parse,
+            "colorimetry has been changed from %s to %s",
+            GST_STR_NULL (old_colorimetry), colorimetry);
+        h264parse->parsed_colorimetry = ci;
+        modified = TRUE;
+      }
+
+      g_free (old_colorimetry);
     }
 
     if (G_UNLIKELY (modified || h264parse->update_caps)) {
@@ -2060,7 +2097,14 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
             "chroma-format", G_TYPE_STRING, chroma_format,
             "bit-depth-luma", G_TYPE_UINT, sps->bit_depth_luma_minus8 + 8,
             "bit-depth-chroma", G_TYPE_UINT, bit_depth_chroma, NULL);
+
+      if (colorimetry && s && !gst_structure_has_field (s, "colorimetry")) {
+        gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, colorimetry,
+            NULL);
+      }
     }
+
+    g_free (colorimetry);
   }
 
   if (caps) {
