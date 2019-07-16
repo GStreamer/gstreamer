@@ -1262,12 +1262,16 @@ gst_video_aggregator_pad_sink_getcaps (GstPad * pad, GstVideoAggregator * vagg,
   n = gst_caps_get_size (srccaps);
   for (i = 0; i < n; i++) {
     s = gst_caps_get_structure (srccaps, i);
-    gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT,
+        1, NULL);
 
-    gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
-        "pixel-aspect-ratio", NULL);
+    if (GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD (pad)) {
+      gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+      gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
+          "pixel-aspect-ratio", NULL);
+    }
+
     if (has_interlace_mode)
       gst_structure_set (s, "interlace-mode", G_TYPE_STRING,
           gst_video_interlace_mode_to_string (interlace_mode), NULL);
@@ -2400,12 +2404,15 @@ gst_video_aggregator_pad_sink_acceptcaps (GstPad * pad,
   n = gst_caps_get_size (accepted_caps);
   for (i = 0; i < n; i++) {
     s = gst_caps_get_structure (accepted_caps, i);
-    gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+    gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT,
+        1, NULL);
 
-    gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
-        "pixel-aspect-ratio", NULL);
+    if (GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD (pad)) {
+      gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+      gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
+          "pixel-aspect-ratio", NULL);
+    }
   }
 
   modified_caps = gst_caps_intersect (accepted_caps, template_caps);
