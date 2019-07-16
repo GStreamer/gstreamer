@@ -611,7 +611,6 @@ gst_audio_aggregator_sink_getcaps (GstPad * pad, GstAggregator * agg,
   GstCaps *sink_template_caps = gst_pad_get_pad_template_caps (pad);
   GstCaps *downstream_caps = gst_pad_get_allowed_caps (agg->srcpad);
   GstCaps *sink_caps;
-  GstStructure *s, *s2;
 
   GST_INFO_OBJECT (pad, "Getting caps with filter %" GST_PTR_FORMAT, filter);
   GST_DEBUG_OBJECT (pad, "sink template caps : %" GST_PTR_FORMAT,
@@ -667,40 +666,65 @@ gst_audio_aggregator_sink_getcaps (GstPad * pad, GstAggregator * agg,
   }
 
   /* Else we have a GstAudioAggregatorConvertPad and convert between all
-   * formats except for the sample rate, which has to match */
-
-  sink_template_caps = gst_caps_make_writable (sink_template_caps);
-  s = gst_caps_get_structure (sink_template_caps, 0);
-
-  /* We will then use the rate in the first structure as the expected
-   * rate, we want to make sure only the compatible structures remain
-   * in downstream_caps
+   * formats except for the sample rate, which has to match.
    */
-  if (downstream_caps && filter) {
-    GstCaps *tmp = gst_caps_intersect_full (downstream_caps, filter,
+
+  /* If we have a first configured pad, we can only convert everything except
+   * for the sample rate, so modify our template caps to have exactly that
+   * sample rate in all structures */
+  if (first_configured_pad) {
+    GST_INFO_OBJECT (pad, "first configured pad has sample rate %d",
+        first_configured_pad->info.rate);
+    sink_template_caps = gst_caps_make_writable (sink_template_caps);
+    gst_caps_set_simple (sink_template_caps, "rate", G_TYPE_INT,
+        first_configured_pad->info.rate, NULL);
+    gst_object_unref (first_configured_pad);
+  }
+
+  /* Now if we have downstream caps, filter against the template caps from
+   * above, i.e. with potentially fixated sample rate field already. This
+   * filters out any structures with unsupported rates.
+   *
+   * Afterwards we create new caps that only take over the rate fields of the
+   * remaining downstream caps, and filter that against the plain template
+   * caps to get the resulting allowed caps with conversion for everything but
+   * the rate */
+  if (downstream_caps) {
+    GstCaps *tmp;
+    guint i, n;
+
+    tmp =
+        gst_caps_intersect_full (sink_template_caps, downstream_caps,
         GST_CAPS_INTERSECT_FIRST);
 
-    gst_caps_unref (downstream_caps);
-    downstream_caps = tmp;
+    n = gst_caps_get_size (tmp);
+    sink_caps = gst_caps_new_empty ();
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (tmp, i);
+      GstStructure *new_s =
+          gst_structure_new_empty (gst_structure_get_name (s));
+      gst_structure_set_value (new_s, "rate", gst_structure_get_value (s,
+              "rate"));
+      sink_caps = gst_caps_merge_structure (sink_caps, new_s);
+    }
+    gst_caps_unref (tmp);
+    tmp = sink_caps;
+
+    sink_caps =
+        gst_caps_intersect_full (sink_template_caps, tmp,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+  } else {
+    sink_caps = gst_caps_ref (sink_template_caps);
   }
 
-  if (downstream_caps && !gst_caps_is_empty (downstream_caps))
-    s2 = gst_caps_get_structure (downstream_caps, 0);
-  else
-    s2 = NULL;
-
-  if (s2 && gst_structure_has_field (s2, "rate")) {
-    gst_structure_set_value (s, "rate", gst_structure_get_value (s2, "rate"));
-  } else if (first_configured_pad) {
-    gst_structure_fixate_field_nearest_int (s, "rate",
-        first_configured_pad->info.rate);
+  /* And finally filter anything that remains against the filter caps */
+  if (filter) {
+    GstCaps *tmp =
+        gst_caps_intersect_full (filter, sink_caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (sink_caps);
+    sink_caps = tmp;
   }
-
-  if (first_configured_pad)
-    gst_object_unref (first_configured_pad);
-
-  sink_caps = filter ? gst_caps_intersect (sink_template_caps,
-      filter) : gst_caps_ref (sink_template_caps);
 
   GST_INFO_OBJECT (pad, "returned sink caps : %" GST_PTR_FORMAT, sink_caps);
 
