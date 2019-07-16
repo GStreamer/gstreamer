@@ -148,7 +148,8 @@ gst_video_colorimetry_from_string (GstVideoColorimetry * cinfo,
  *
  * Make a string representation of @cinfo.
  *
- * Returns: a string representation of @cinfo.
+ * Returns: (transfer full) (nullable): a string representation of @cinfo
+ * or %NULL if all the entries of @cinfo are unknown values.
  */
 gchar *
 gst_video_colorimetry_to_string (const GstVideoColorimetry * cinfo)
