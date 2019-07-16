@@ -6101,3 +6101,33 @@ gst_video_format_get_palette (GstVideoFormat format, gsize * size)
       return NULL;
   }
 }
+
+/**
+ * gst_video_format_info_component:
+ * @info: #GstVideoFormatInfo
+ * @plane: a plane number
+ * @components: (out): array used to store component numbers
+ *
+ * Fill @components with the number of all the components packed in plane @p
+ * for the format @info. A value of -1 in @components indicates that no more
+ * components are packed in the plane.
+ *
+ * Since: 1.18
+ */
+void
+gst_video_format_info_component (const GstVideoFormatInfo * info, guint plane,
+    gint components[GST_VIDEO_MAX_COMPONENTS])
+{
+  guint c, i = 0;
+
+  /* Reverse mapping of info->plane */
+  for (c = 0; c < GST_VIDEO_FORMAT_INFO_N_COMPONENTS (info); c++) {
+    if (GST_VIDEO_FORMAT_INFO_PLANE (info, c) == plane) {
+      components[i] = c;
+      i++;
+    }
+  }
+
+  for (c = i; c < GST_VIDEO_MAX_COMPONENTS; c++)
+    components[c] = -1;
+}

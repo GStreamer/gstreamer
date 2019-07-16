@@ -518,6 +518,9 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_TILE_WS(info) ((info)->tile_ws)
 #define GST_VIDEO_FORMAT_INFO_TILE_HS(info) ((info)->tile_hs)
 
+GST_VIDEO_API
+void gst_video_format_info_component                  (const GstVideoFormatInfo *info, guint plane, gint components[GST_VIDEO_MAX_COMPONENTS]);
+
 /* format properties */
 
 GST_VIDEO_API

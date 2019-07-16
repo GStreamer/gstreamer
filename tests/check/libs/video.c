@@ -3214,6 +3214,95 @@ GST_START_TEST (test_video_color_from_to_iso)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_format_info_plane_to_components)
+{
+  const GstVideoFormatInfo *info;
+  gint comps[GST_VIDEO_MAX_COMPONENTS];
+
+  /* RGB: 1 plane, 3 components */
+  info = gst_video_format_get_info (GST_VIDEO_FORMAT_RGB);
+
+  gst_video_format_info_component (info, 0, comps);
+  g_assert_cmpint (comps[0], ==, 0);
+  g_assert_cmpint (comps[1], ==, 1);
+  g_assert_cmpint (comps[2], ==, 2);
+  g_assert_cmpint (comps[3], ==, -1);
+
+  gst_video_format_info_component (info, 1, comps);
+  g_assert_cmpint (comps[0], ==, -1);
+  g_assert_cmpint (comps[1], ==, -1);
+  g_assert_cmpint (comps[2], ==, -1);
+  g_assert_cmpint (comps[3], ==, -1);
+
+  gst_video_format_info_component (info, 2, comps);
+  g_assert_cmpint (comps[0], ==, -1);
+  g_assert_cmpint (comps[1], ==, -1);
+  g_assert_cmpint (comps[2], ==, -1);
+  g_assert_cmpint (comps[3], ==, -1);
+
+  gst_video_format_info_component (info, 3, comps);
+  g_assert_cmpint (comps[0], ==, -1);
+  g_assert_cmpint (comps[1], ==, -1);
+  g_assert_cmpint (comps[2], ==, -1);
+  g_assert_cmpint (comps[3], ==, -1);
+
+  /* I420: 3 planes, 3 components */
+  info = gst_video_format_get_info (GST_VIDEO_FORMAT_I420);
+
+  gst_video_format_info_component (info, 0, comps);
+  g_assert_cmpint (comps[0], ==, 0);
+  g_assert_cmpint (comps[1], ==, -1);
+  g_assert_cmpint (comps[2], ==, -1);
+  g_assert_cmpint (comps[3], ==, -1);
+
+  gst_video_format_info_component (info, 1, comps);
+  g_assert_cmpint (comps[0], ==, 1);
+  g_assert_cmpint (comps[1], ==, -1);
+  g_assert_cmpint (comps[2], ==, -1);
+  g_assert_cmpint (comps[3], ==, -1);
+
+  gst_video_format_info_component (info, 2, comps);
+  g_assert_cmpint (comps[0], ==, 2);
+  g_assert_cmpint (comps[1], ==, -1);
+  g_assert_cmpint (comps[2], ==, -1);
+  g_assert_cmpint (comps[3], ==, -1);
+
+  gst_video_format_info_component (info, 3, comps);
+  g_assert_cmpint (comps[0], ==, -1);
+  g_assert_cmpint (comps[1], ==, -1);
+  g_assert_cmpint (comps[2], ==, -1);
+  g_assert_cmpint (comps[3], ==, -1);
+
+  /* NV12: 2 planes, 3 components */
+  info = gst_video_format_get_info (GST_VIDEO_FORMAT_NV12);
+
+  gst_video_format_info_component (info, 0, comps);
+  g_assert_cmpint (comps[0], ==, 0);
+  g_assert_cmpint (comps[1], ==, -1);
+  g_assert_cmpint (comps[2], ==, -1);
+  g_assert_cmpint (comps[3], ==, -1);
+
+  gst_video_format_info_component (info, 1, comps);
+  g_assert_cmpint (comps[0], ==, 1);
+  g_assert_cmpint (comps[1], ==, 2);
+  g_assert_cmpint (comps[2], ==, -1);
+  g_assert_cmpint (comps[3], ==, -1);
+
+  gst_video_format_info_component (info, 2, comps);
+  g_assert_cmpint (comps[0], ==, -1);
+  g_assert_cmpint (comps[1], ==, -1);
+  g_assert_cmpint (comps[2], ==, -1);
+  g_assert_cmpint (comps[3], ==, -1);
+
+  gst_video_format_info_component (info, 3, comps);
+  g_assert_cmpint (comps[0], ==, -1);
+  g_assert_cmpint (comps[1], ==, -1);
+  g_assert_cmpint (comps[2], ==, -1);
+  g_assert_cmpint (comps[3], ==, -1);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -3261,6 +3350,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_formats_pstrides);
   tcase_add_test (tc_chain, test_hdr);
   tcase_add_test (tc_chain, test_video_color_from_to_iso);
+  tcase_add_test (tc_chain, test_video_format_info_plane_to_components);
 
   return s;
 }
