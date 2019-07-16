@@ -41,7 +41,7 @@ typedef struct _GstWebRTCDataChannelClass GstWebRTCDataChannelClass;
 
 struct _GstWebRTCDataChannel
 {
-  GstObject                         parent;
+  GObject                         parent;
 
   GstWebRTCSCTPTransport           *sctp_transport;
   GstElement                       *appsrc;
@@ -63,13 +63,14 @@ struct _GstWebRTCDataChannel
   gboolean                          opened;
   gulong                            src_probe;
   GError                           *stored_error;
+  GMutex                            lock;
 
   gpointer                          _padding[GST_PADDING];
 };
 
 struct _GstWebRTCDataChannelClass
 {
-  GstObjectClass            parent_class;
+  GObjectClass            parent_class;
 
   gpointer                  _padding[GST_PADDING];
 };
