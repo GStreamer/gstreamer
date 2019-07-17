@@ -1205,3 +1205,27 @@ ges_track_set_create_element_for_gap_func (GESTrack * track,
 
   track->priv->create_element_for_gaps = func;
 }
+
+/**
+ * ges_track_get_restriction_caps:
+ * @track: a #GESTrack
+ *
+ * Returns: (transfer full): The currently set restriction caps
+ *
+ * Since: 1.18
+ */
+GstCaps *
+ges_track_get_restriction_caps (GESTrack * track)
+{
+  GESTrackPrivate *priv;
+
+  g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+  CHECK_THREAD (track);
+
+  priv = track->priv;
+
+  if (priv->restriction_caps)
+    return gst_caps_ref (priv->restriction_caps);
+
+  return NULL;
+}

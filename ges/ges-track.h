@@ -105,6 +105,8 @@ GES_API
 void               ges_track_set_restriction_caps            (GESTrack *track, const GstCaps *caps);
 GES_API
 void               ges_track_update_restriction_caps         (GESTrack *track, const GstCaps *caps);
+GES_API
+GstCaps *          ges_track_get_restriction_caps            (GESTrack * track);
 
 /* standard methods */
 GES_API
