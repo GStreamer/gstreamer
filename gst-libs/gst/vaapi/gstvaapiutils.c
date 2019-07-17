@@ -257,6 +257,11 @@ string_of_VAEntrypoint (VAEntrypoint entrypoint)
       MAP (IDCT);
       MAP (MoComp);
       MAP (Deblocking);
+      MAP (EncSlice);
+      MAP (EncPicture);
+      MAP (EncSliceLP);
+      MAP (VideoProc);
+      MAP (FEI);
 #undef MAP
     default:
       break;
