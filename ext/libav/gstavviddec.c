@@ -518,14 +518,6 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
    * supports it) */
   ffmpegdec->context->debug_mv = ffmpegdec->debug_mv;
 
-  if (ffmpegdec->max_threads == 0) {
-    if (!(oclass->in_plugin->capabilities & AV_CODEC_CAP_AUTO_THREADS))
-      ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
-    else
-      ffmpegdec->context->thread_count = 0;
-  } else
-    ffmpegdec->context->thread_count = ffmpegdec->max_threads;
-
   if (ffmpegdec->thread_type) {
     GST_DEBUG_OBJECT (ffmpegdec, "Use requested thread type 0x%x",
         ffmpegdec->thread_type);
@@ -549,6 +541,17 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
       ffmpegdec->context->thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
   }
 
+  if (ffmpegdec->max_threads == 0) {
+    /* When thread type is FF_THREAD_FRAME, extra latency is introduced equal
+     * to one frame per thread. We thus need to calculate the thread count ourselves */
+    if ((!(oclass->in_plugin->capabilities & AV_CODEC_CAP_AUTO_THREADS)) ||
+        (ffmpegdec->context->thread_type & FF_THREAD_FRAME))
+      ffmpegdec->context->thread_count = gst_ffmpeg_auto_max_threads ();
+    else
+      ffmpegdec->context->thread_count = 0;
+  } else
+    ffmpegdec->context->thread_count = ffmpegdec->max_threads;
+
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
    * during playback... */
@@ -564,6 +567,12 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     latency = gst_util_uint64_scale_ceil (
         (ffmpegdec->context->has_b_frames) * GST_SECOND, info->fps_d,
         info->fps_n);
+
+    if (ffmpegdec->context->thread_type & FF_THREAD_FRAME) {
+      latency +=
+          gst_util_uint64_scale_ceil (ffmpegdec->context->thread_count *
+          GST_SECOND, info->fps_d, info->fps_n);
+    }
   }
 
   ret = TRUE;
@@ -1431,6 +1440,11 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
     latency =
         gst_util_uint64_scale_ceil (ffmpegdec->context->has_b_frames *
         GST_SECOND, fps_d, fps_n);
+    if (ffmpegdec->context->thread_type & FF_THREAD_FRAME) {
+      latency +=
+          gst_util_uint64_scale_ceil (ffmpegdec->context->thread_count *
+          GST_SECOND, fps_d, fps_n);
+    }
     gst_video_decoder_set_latency (GST_VIDEO_DECODER (ffmpegdec), latency,
         latency);
   }
