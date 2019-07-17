@@ -1833,7 +1833,7 @@ do_test_scale_and_speed (const gchar * scale, const gchar * speed)
   gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT,
       "RTP/AVP;multicast");
   expected_transport = "RTP/AVP;multicast;destination=233.252.0.1;"
-      "ttl=1;port=5000-5001;mode=\"PLAY\"";
+      "ttl=1;port=.*;mode=\"PLAY\"";
   gst_rtsp_client_set_send_func (client, test_setup_response_200, NULL, NULL);
   fail_unless (gst_rtsp_client_handle_message (client,
           &request) == GST_RTSP_OK);
