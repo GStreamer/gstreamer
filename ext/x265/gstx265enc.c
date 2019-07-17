@@ -676,6 +676,23 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
     encoder->x265param.vui.sarHeight = info->par_d;
   }
 
+  encoder->x265param.vui.bEnableVideoSignalTypePresentFlag = 1;
+  /* Unspecified video format (5) */
+  encoder->x265param.vui.videoFormat = 5;
+  if (info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255) {
+    encoder->x265param.vui.bEnableVideoFullRangeFlag = 1;
+  } else {
+    encoder->x265param.vui.bEnableVideoFullRangeFlag = 0;
+  }
+
+  encoder->x265param.vui.bEnableColorDescriptionPresentFlag = 1;
+  encoder->x265param.vui.matrixCoeffs =
+      gst_video_color_matrix_to_iso (info->colorimetry.matrix);
+  encoder->x265param.vui.colorPrimaries =
+      gst_video_color_primaries_to_iso (info->colorimetry.primaries);
+  encoder->x265param.vui.transferCharacteristics =
+      gst_video_color_transfer_to_iso (info->colorimetry.transfer);
+
   if (encoder->qp != -1) {
     /* CQP */
     encoder->x265param.rc.qp = encoder->qp;
