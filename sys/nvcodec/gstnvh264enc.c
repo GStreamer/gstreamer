@@ -447,6 +447,8 @@ gst_nv_h264_enc_set_encoder_config (GstNvBaseEnc * nvenc,
   GUID selected_profile = NV_ENC_CODEC_PROFILE_AUTOSELECT_GUID;
   int level_idc = NV_ENC_LEVEL_AUTOSELECT;
   GstVideoInfo *info = &state->info;
+  NV_ENC_CONFIG_H264 *h264_config = &config->encodeCodecConfig.h264Config;
+  NV_ENC_CONFIG_H264_VUI_PARAMETERS *vui = &h264_config->h264VUIParameters;
 
   template_caps = gst_static_pad_template_get_caps (&src_factory);
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (h264enc));
@@ -499,18 +501,39 @@ gst_nv_h264_enc_set_encoder_config (GstNvBaseEnc * nvenc,
   /* override some defaults */
   GST_LOG_OBJECT (h264enc, "setting parameters");
   config->profileGUID = selected_profile;
-  config->encodeCodecConfig.h264Config.level = level_idc;
-  config->encodeCodecConfig.h264Config.chromaFormatIDC = 1;
+  h264_config->level = level_idc;
+  h264_config->chromaFormatIDC = 1;
   if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_Y444) {
     GST_DEBUG_OBJECT (h264enc, "have Y444 input, setting config accordingly");
     config->profileGUID = NV_ENC_H264_PROFILE_HIGH_444_GUID;
-    config->encodeCodecConfig.h264Config.chromaFormatIDC = 3;
+    h264_config->chromaFormatIDC = 3;
   }
 
-  config->encodeCodecConfig.h264Config.idrPeriod = config->gopLength;
+  h264_config->idrPeriod = config->gopLength;
 
   /* FIXME: make property */
-  config->encodeCodecConfig.h264Config.outputAUD = 1;
+  h264_config->outputAUD = 1;
+
+  vui->videoSignalTypePresentFlag = 1;
+  /* NOTE: vui::video_format represents the video format before
+   * being encoded such as PAL, NTSC, SECAM, and MAC. That's not much informal
+   * and can be inferred with resolution and framerate by any application.
+   */
+  /* Unspecified video format (5) */
+  vui->videoFormat = 5;
+
+  if (info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255) {
+    vui->videoFullRangeFlag = 1;
+  } else {
+    vui->videoFullRangeFlag = 0;
+  }
+
+  vui->colourDescriptionPresentFlag = 1;
+  vui->colourMatrix = gst_video_color_matrix_to_iso (info->colorimetry.matrix);
+  vui->colourPrimaries =
+      gst_video_color_primaries_to_iso (info->colorimetry.primaries);
+  vui->transferCharacteristics =
+      gst_video_color_transfer_to_iso (info->colorimetry.transfer);
 
   return TRUE;
 }

@@ -349,6 +349,9 @@ gst_nv_h265_enc_set_encoder_config (GstNvBaseEnc * nvenc,
   GstCaps *allowed_caps, *template_caps;
   GUID selected_profile = NV_ENC_CODEC_PROFILE_AUTOSELECT_GUID;
   int level_idc = NV_ENC_LEVEL_AUTOSELECT;
+  GstVideoInfo *info = &state->info;
+  NV_ENC_CONFIG_HEVC *hevc_config = &config->encodeCodecConfig.hevcConfig;
+  NV_ENC_CONFIG_HEVC_VUI_PARAMETERS *vui = &hevc_config->hevcVUIParameters;
 
   template_caps = gst_static_pad_template_get_caps (&src_factory);
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (h265enc));
@@ -392,11 +395,32 @@ gst_nv_h265_enc_set_encoder_config (GstNvBaseEnc * nvenc,
   /* override some defaults */
   GST_LOG_OBJECT (h265enc, "setting parameters");
   config->profileGUID = selected_profile;
-  config->encodeCodecConfig.hevcConfig.level = level_idc;
-  config->encodeCodecConfig.hevcConfig.idrPeriod = config->gopLength;
+  hevc_config->level = level_idc;
+  hevc_config->idrPeriod = config->gopLength;
 
   /* FIXME: make property */
-  config->encodeCodecConfig.hevcConfig.outputAUD = 1;
+  hevc_config->outputAUD = 1;
+
+  vui->videoSignalTypePresentFlag = 1;
+  /* NOTE: vui::video_format represents the video format before
+   * being encoded such as PAL, NTSC, SECAM, and MAC. That's not much informal
+   * and can be inferred with resolution and framerate by any application.
+   */
+  /* Unspecified video format (5) */
+  vui->videoFormat = 5;
+
+  if (info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255) {
+    vui->videoFullRangeFlag = 1;
+  } else {
+    vui->videoFullRangeFlag = 0;
+  }
+
+  vui->colourDescriptionPresentFlag = 1;
+  vui->colourMatrix = gst_video_color_matrix_to_iso (info->colorimetry.matrix);
+  vui->colourPrimaries =
+      gst_video_color_primaries_to_iso (info->colorimetry.primaries);
+  vui->transferCharacteristics =
+      gst_video_color_transfer_to_iso (info->colorimetry.transfer);
 
   return TRUE;
 }
