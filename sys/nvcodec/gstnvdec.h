@@ -64,6 +64,13 @@ GType gst_nvdec_cuda_context_get_type (void);
 typedef struct _GstNvDec GstNvDec;
 typedef struct _GstNvDecClass GstNvDecClass;
 
+typedef enum
+{
+  GST_NVDEC_STATE_INIT = 0,
+  GST_NVDEC_STATE_PARSE,
+  GST_NVDEC_STATE_DECODE,
+} GstNvDecState;
+
 struct _GstNvDec
 {
   GstVideoDecoder parent;
@@ -84,6 +91,7 @@ struct _GstNvDec
   GstVideoCodecState *input_state;
 
   GstFlowReturn last_ret;
+  GstNvDecState state;
 };
 
 struct _GstNvDecClass

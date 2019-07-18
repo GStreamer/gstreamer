@@ -445,17 +445,35 @@ parser_decode_callback (GstNvDec * nvdec, CUVIDPICPARAMS * params)
   }
 
   pending_frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (nvdec));
+
+  /* NOTE: this decode callback could be invoked multiple times for
+   * one cuvidParseVideoData() call. Most likely it can be related to "decode only"
+   * frame of VPX codec but no document available.
+   * In that case, the last decoded frame seems to be displayed */
+
   for (iter = pending_frames; iter; iter = g_list_next (iter)) {
     guint id;
     GstVideoCodecFrame *frame = (GstVideoCodecFrame *) iter->data;
+    gboolean set_data = FALSE;
 
     id = GPOINTER_TO_UINT (gst_video_codec_frame_get_user_data (frame));
-    if (!id) {
+    if (G_UNLIKELY (nvdec->state == GST_NVDEC_STATE_DECODE)) {
+      if (id) {
+        GST_LOG_OBJECT (nvdec, "reset the last user data");
+        set_data = TRUE;
+      }
+    } else if (!id) {
+      set_data = TRUE;
+    }
+
+    if (set_data) {
       gst_video_codec_frame_set_user_data (frame,
           GUINT_TO_POINTER (params->CurrPicIdx + 1), NULL);
       break;
     }
   }
+
+  nvdec->state = GST_NVDEC_STATE_DECODE;
 
   g_list_free_full (pending_frames,
       (GDestroyNotify) gst_video_codec_frame_unref);
@@ -586,6 +604,7 @@ gst_nvdec_start (GstVideoDecoder * decoder)
 {
   GstNvDec *nvdec = GST_NVDEC (decoder);
 
+  nvdec->state = GST_NVDEC_STATE_INIT;
   GST_DEBUG_OBJECT (nvdec, "creating CUDA context");
   nvdec->cuda_context = g_object_new (gst_nvdec_cuda_context_get_type (), NULL);
 
@@ -851,6 +870,8 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   if (GST_BUFFER_IS_DISCONT (frame->input_buffer))
     packet.flags |= CUVID_PKT_DISCONTINUITY;
 
+  nvdec->state = GST_NVDEC_STATE_PARSE;
+
   if (!cuda_OK (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
 
@@ -871,6 +892,8 @@ gst_nvdec_flush (GstVideoDecoder * decoder)
   packet.payload_size = 0;
   packet.payload = NULL;
   packet.flags = CUVID_PKT_ENDOFSTREAM;
+
+  nvdec->state = GST_NVDEC_STATE_PARSE;
 
   if (!cuda_OK (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
