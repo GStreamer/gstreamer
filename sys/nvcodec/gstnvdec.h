@@ -75,7 +75,6 @@ struct _GstNvDec
   GstNvDecCudaContext *cuda_context;
   CUvideoparser parser;
   CUvideodecoder decoder;
-  GAsyncQueue *decode_queue;
 
   guint width;
   guint height;
@@ -83,6 +82,8 @@ struct _GstNvDec
   guint fps_d;
   GstClockTime min_latency;
   GstVideoCodecState *input_state;
+
+  GstFlowReturn last_ret;
 };
 
 struct _GstNvDecClass

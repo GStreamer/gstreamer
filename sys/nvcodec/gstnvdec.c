@@ -31,21 +31,11 @@
 
 #include "gstnvdec.h"
 
-typedef enum
-{
-  GST_NVDEC_QUEUE_ITEM_TYPE_SEQUENCE,
-  GST_NVDEC_QUEUE_ITEM_TYPE_DECODE,
-  GST_NVDEC_QUEUE_ITEM_TYPE_DISPLAY
-} GstNvDecQueueItemType;
-
-typedef struct _GstNvDecQueueItem
-{
-  GstNvDecQueueItemType type;
-  gpointer data;
-} GstNvDecQueueItem;
-
 GST_DEBUG_CATEGORY_STATIC (gst_nvdec_debug_category);
 #define GST_CAT_DEFAULT gst_nvdec_debug_category
+
+static void
+copy_video_frame_to_gl_textures (GstGLContext * context, gpointer * args);
 
 static inline gboolean
 cuda_OK (CUresult result)
@@ -277,10 +267,8 @@ gst_nvdec_init (GstNvDec * nvdec)
 static gboolean
 parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
 {
-  GstNvDecQueueItem *item;
-  guint width, height;
+  guint width, height, fps_n, fps_d;
   CUVIDDECODECREATEINFO create_info = { 0, };
-  gboolean ret = TRUE;
 
   width = format->display_area.right - format->display_area.left;
   height = format->display_area.bottom - format->display_area.top;
@@ -289,14 +277,14 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
   if (!nvdec->decoder || (nvdec->width != width || nvdec->height != height)) {
     if (!cuda_OK (CuvidCtxLock (nvdec->cuda_context->lock, 0))) {
       GST_ERROR_OBJECT (nvdec, "failed to lock CUDA context");
-      return FALSE;
+      goto error;
     }
 
     if (nvdec->decoder) {
       GST_DEBUG_OBJECT (nvdec, "destroying decoder");
       if (!cuda_OK (CuvidDestroyDecoder (nvdec->decoder))) {
         GST_ERROR_OBJECT (nvdec, "failed to destroy decoder");
-        ret = FALSE;
+        goto error;
       } else
         nvdec->decoder = NULL;
     }
@@ -326,60 +314,269 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     if (nvdec->decoder
         || !cuda_OK (CuvidCreateDecoder (&nvdec->decoder, &create_info))) {
       GST_ERROR_OBJECT (nvdec, "failed to create decoder");
-      ret = FALSE;
+      goto error;
     }
 
     if (!cuda_OK (CuvidCtxUnlock (nvdec->cuda_context->lock, 0))) {
       GST_ERROR_OBJECT (nvdec, "failed to unlock CUDA context");
-      ret = FALSE;
+      goto error;
     }
   }
 
-  item = g_slice_new (GstNvDecQueueItem);
-  item->type = GST_NVDEC_QUEUE_ITEM_TYPE_SEQUENCE;
-  item->data = g_memdup (format, sizeof (CUVIDEOFORMAT));
-  g_async_queue_push (nvdec->decode_queue, item);
+  fps_n = format->frame_rate.numerator;
+  fps_d = MAX (1, format->frame_rate.denominator);
 
-  return ret;
+  if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (nvdec))
+      || width != nvdec->width || height != nvdec->height
+      || fps_n != nvdec->fps_n || fps_d != nvdec->fps_d) {
+    GstVideoCodecState *state;
+    GstVideoInfo *vinfo;
+    GstStructure *in_s = NULL;
+
+    nvdec->width = width;
+    nvdec->height = height;
+    nvdec->fps_n = fps_n;
+    nvdec->fps_d = fps_d;
+
+    state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (nvdec),
+        GST_VIDEO_FORMAT_NV12, nvdec->width, nvdec->height, nvdec->input_state);
+    vinfo = &state->info;
+    vinfo->fps_n = fps_n;
+    vinfo->fps_d = fps_d;
+    if (format->progressive_sequence) {
+      vinfo->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+
+      /* nvdec doesn't seem to deal with interlacing with hevc so rely
+       * on upstream's value */
+      if (format->codec == cudaVideoCodec_HEVC) {
+        vinfo->interlace_mode = nvdec->input_state->info.interlace_mode;
+      }
+    } else {
+      vinfo->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
+    }
+
+    GST_LOG_OBJECT (nvdec,
+        "Reading colorimetry information full-range %d matrix %d transfer %d primaries %d",
+        format->video_signal_description.video_full_range_flag,
+        format->video_signal_description.matrix_coefficients,
+        format->video_signal_description.transfer_characteristics,
+        format->video_signal_description.color_primaries);
+
+    if (nvdec->input_state->caps)
+      in_s = gst_caps_get_structure (nvdec->input_state->caps, 0);
+
+    /* Set colorimetry when upstream did not provide it */
+    if (in_s && !gst_structure_has_field (in_s, "colorimetry")) {
+      GstVideoColorimetry colorimetry = { 0, };
+
+      if (format->video_signal_description.video_full_range_flag)
+        colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+      else
+        colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+
+      colorimetry.primaries =
+          gst_video_color_primaries_from_iso
+          (format->video_signal_description.color_primaries);
+
+      colorimetry.transfer =
+          gst_video_color_transfer_from_iso
+          (format->video_signal_description.transfer_characteristics);
+
+      colorimetry.matrix =
+          gst_video_color_matrix_from_iso
+          (format->video_signal_description.matrix_coefficients);
+
+      /* Use a colorimetry having at least one valid colorimetry entry,
+       * because we don't know whether the returned
+       * colorimetry (by nvdec) was actually parsed information or not.
+       * Otherwise let GstVideoInfo handle it with default colorimetry */
+      if (colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN ||
+          colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN ||
+          colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_UNKNOWN) {
+        GST_DEBUG_OBJECT (nvdec,
+            "Found valid colorimetry, update output colorimetry");
+        vinfo->colorimetry = colorimetry;
+      }
+    }
+
+    state->caps = gst_video_info_to_caps (&state->info);
+
+    gst_caps_set_features (state->caps, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
+    gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING,
+        "2D", NULL);
+
+    gst_video_codec_state_unref (state);
+
+    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (nvdec))) {
+      GST_WARNING_OBJECT (nvdec, "failed to negotiate with downstream");
+      nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+
+error:
+  nvdec->last_ret = GST_FLOW_ERROR;
+  return FALSE;
 }
 
 static gboolean
 parser_decode_callback (GstNvDec * nvdec, CUVIDPICPARAMS * params)
 {
-  GstNvDecQueueItem *item;
+  GList *iter, *pending_frames;
 
   GST_LOG_OBJECT (nvdec, "picture index: %u", params->CurrPicIdx);
 
-  if (!cuda_OK (CuvidCtxLock (nvdec->cuda_context->lock, 0)))
-    GST_WARNING_OBJECT (nvdec, "failed to lock CUDA context");
+  if (!cuda_OK (CuvidCtxLock (nvdec->cuda_context->lock, 0))) {
+    GST_ERROR_OBJECT (nvdec, "failed to lock CUDA context");
+    goto error;
+  }
 
-  if (!cuda_OK (CuvidDecodePicture (nvdec->decoder, params)))
-    GST_WARNING_OBJECT (nvdec, "failed to decode picture");
+  if (!cuda_OK (CuvidDecodePicture (nvdec->decoder, params))) {
+    GST_ERROR_OBJECT (nvdec, "failed to decode picture");
+    goto error;
+  }
 
-  if (!cuda_OK (CuvidCtxUnlock (nvdec->cuda_context->lock, 0)))
-    GST_WARNING_OBJECT (nvdec, "failed to unlock CUDA context");
+  if (!cuda_OK (CuvidCtxUnlock (nvdec->cuda_context->lock, 0))) {
+    GST_ERROR_OBJECT (nvdec, "failed to unlock CUDA context");
+    goto error;
+  }
 
-  item = g_slice_new (GstNvDecQueueItem);
-  item->type = GST_NVDEC_QUEUE_ITEM_TYPE_DECODE;
-  item->data = g_memdup (params, sizeof (CUVIDPICPARAMS));
-  ((CUVIDPICPARAMS *) item->data)->pBitstreamData = NULL;
-  ((CUVIDPICPARAMS *) item->data)->pSliceDataOffsets = NULL;
-  g_async_queue_push (nvdec->decode_queue, item);
+  pending_frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (nvdec));
+  for (iter = pending_frames; iter; iter = g_list_next (iter)) {
+    guint id;
+    GstVideoCodecFrame *frame = (GstVideoCodecFrame *) iter->data;
+
+    id = GPOINTER_TO_UINT (gst_video_codec_frame_get_user_data (frame));
+    if (!id) {
+      gst_video_codec_frame_set_user_data (frame,
+          GUINT_TO_POINTER (params->CurrPicIdx + 1), NULL);
+      break;
+    }
+  }
+
+  g_list_free_full (pending_frames,
+      (GDestroyNotify) gst_video_codec_frame_unref);
 
   return TRUE;
+
+error:
+  nvdec->last_ret = GST_FLOW_ERROR;
+  return FALSE;
 }
 
 static gboolean
 parser_display_callback (GstNvDec * nvdec, CUVIDPARSERDISPINFO * dispinfo)
 {
-  GstNvDecQueueItem *item;
+  GList *iter, *pending_frames;
+  GstVideoCodecFrame *frame = NULL;
+  GstBuffer *output_buffer = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
+  guint num_resources, i;
+  CUgraphicsResource *resources;
+  gpointer args[4];
+  GstMemory *mem;
 
   GST_LOG_OBJECT (nvdec, "picture index: %u", dispinfo->picture_index);
 
-  item = g_slice_new (GstNvDecQueueItem);
-  item->type = GST_NVDEC_QUEUE_ITEM_TYPE_DISPLAY;
-  item->data = g_memdup (dispinfo, sizeof (CUVIDPARSERDISPINFO));
-  g_async_queue_push (nvdec->decode_queue, item);
+  pending_frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (nvdec));
+  for (iter = pending_frames; iter; iter = g_list_next (iter)) {
+    guint id;
+    GstVideoCodecFrame *tmp = (GstVideoCodecFrame *) iter->data;
+
+    id = GPOINTER_TO_UINT (gst_video_codec_frame_get_user_data (tmp));
+    if (id == dispinfo->picture_index + 1) {
+      frame = gst_video_codec_frame_ref (tmp);
+      break;
+    }
+  }
+  g_list_free_full (pending_frames,
+      (GDestroyNotify) gst_video_codec_frame_unref);
+
+  if (G_UNLIKELY (frame == NULL)) {
+    GST_WARNING_OBJECT (nvdec, "no frame for picture index %u",
+        dispinfo->picture_index);
+
+    output_buffer =
+        gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER (nvdec));
+
+    if (!output_buffer) {
+      GST_ERROR_OBJECT (nvdec, "Couldn't allocate output buffer");
+      nvdec->last_ret = GST_FLOW_ERROR;
+      return FALSE;
+    }
+
+    GST_BUFFER_PTS (output_buffer) = dispinfo->timestamp;
+    GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
+    /* assume buffer duration from framerate */
+    GST_BUFFER_DURATION (output_buffer) =
+        gst_util_uint64_scale (GST_SECOND, nvdec->fps_d, nvdec->fps_n);
+  } else {
+    ret = gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (nvdec),
+        frame);
+
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (nvdec, "failed to allocate output frame");
+      nvdec->last_ret = ret;
+      return FALSE;
+    }
+
+    output_buffer = frame->output_buffer;
+
+    if (dispinfo->timestamp != frame->pts) {
+      GST_INFO_OBJECT (nvdec,
+          "timestamp mismatch, diff: %" GST_STIME_FORMAT,
+          GST_STIME_ARGS (GST_CLOCK_DIFF (dispinfo->timestamp, frame->pts)));
+      frame->pts = dispinfo->timestamp;
+    }
+  }
+
+  num_resources = gst_buffer_n_memory (output_buffer);
+  resources = g_new (CUgraphicsResource, num_resources);
+
+  for (i = 0; i < num_resources; i++) {
+    mem = gst_buffer_get_memory (output_buffer, i);
+    resources[i] = ensure_cuda_graphics_resource (mem, nvdec->cuda_context);
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD);
+    gst_memory_unref (mem);
+  }
+
+  args[0] = nvdec;
+  args[1] = dispinfo;
+  args[2] = resources;
+  args[3] = GUINT_TO_POINTER (num_resources);
+  gst_gl_context_thread_add (nvdec->gl_context,
+      (GstGLContextThreadFunc) copy_video_frame_to_gl_textures, args);
+  g_free (resources);
+
+  if (!dispinfo->progressive_frame) {
+    GST_BUFFER_FLAG_SET (output_buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+
+    if (dispinfo->top_field_first) {
+      GST_BUFFER_FLAG_SET (output_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+    }
+
+    if (dispinfo->repeat_first_field == -1) {
+      GST_BUFFER_FLAG_SET (output_buffer, GST_VIDEO_BUFFER_FLAG_ONEFIELD);
+    } else {
+      GST_BUFFER_FLAG_SET (output_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
+    }
+  }
+
+  if (frame) {
+    ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (nvdec), frame);
+  } else {
+    ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (nvdec), output_buffer);
+  }
+
+  if (ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (nvdec, "failed to finish frame %s",
+        gst_flow_get_name (ret));
+    nvdec->last_ret = ret;
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -391,12 +588,13 @@ gst_nvdec_start (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (nvdec, "creating CUDA context");
   nvdec->cuda_context = g_object_new (gst_nvdec_cuda_context_get_type (), NULL);
-  nvdec->decode_queue = g_async_queue_new ();
 
   if (!nvdec->cuda_context->context || !nvdec->cuda_context->lock) {
     GST_ERROR_OBJECT (nvdec, "failed to create CUDA context or lock");
     return FALSE;
   }
+
+  nvdec->last_ret = GST_FLOW_OK;
 
   return TRUE;
 }
@@ -441,7 +639,6 @@ static gboolean
 gst_nvdec_stop (GstVideoDecoder * decoder)
 {
   GstNvDec *nvdec = GST_NVDEC (decoder);
-  GstNvDecQueueItem *item;
 
   GST_DEBUG_OBJECT (nvdec, "stop");
 
@@ -471,19 +668,6 @@ gst_nvdec_stop (GstVideoDecoder * decoder)
   if (nvdec->input_state) {
     gst_video_codec_state_unref (nvdec->input_state);
     nvdec->input_state = NULL;
-  }
-
-  if (nvdec->decode_queue) {
-    if (g_async_queue_length (nvdec->decode_queue) > 0) {
-      GST_INFO_OBJECT (nvdec, "decode queue not empty");
-
-      while ((item = g_async_queue_try_pop (nvdec->decode_queue))) {
-        g_free (item->data);
-        g_slice_free (GstNvDecQueueItem, item);
-      }
-    }
-    g_async_queue_unref (nvdec->decode_queue);
-    nvdec->decode_queue = NULL;
   }
 
   return TRUE;
@@ -635,260 +819,6 @@ unlock_cuda_context:
 }
 
 static GstFlowReturn
-handle_pending_frames (GstNvDec * nvdec)
-{
-  GstVideoDecoder *decoder = GST_VIDEO_DECODER (nvdec);
-  GList *pending_frames, *list, *tmp;
-  GstVideoCodecFrame *pending_frame;
-  guint frame_number;
-  GstClockTime latency = 0;
-  GstNvDecQueueItem *item;
-  CUVIDEOFORMAT *format;
-  GstVideoCodecState *state;
-  GstVideoInfo *vinfo;
-  guint width, height, fps_n, fps_d, i, num_resources;
-  CUVIDPICPARAMS *decode_params;
-  CUVIDPARSERDISPINFO *dispinfo;
-  CUgraphicsResource *resources;
-  gpointer args[4];
-  GstMemory *mem;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  /* find the oldest unused, unfinished frame */
-  pending_frames = list = gst_video_decoder_get_frames (decoder);
-  for (; pending_frames; pending_frames = pending_frames->next) {
-    pending_frame = pending_frames->data;
-    frame_number =
-        GPOINTER_TO_UINT (gst_video_codec_frame_get_user_data (pending_frame));
-    if (!frame_number)
-      break;
-    latency += pending_frame->duration;
-  }
-
-  while (ret == GST_FLOW_OK && pending_frames
-      && (item =
-          (GstNvDecQueueItem *) g_async_queue_try_pop (nvdec->decode_queue))) {
-    switch (item->type) {
-      case GST_NVDEC_QUEUE_ITEM_TYPE_SEQUENCE:
-        if (!nvdec->decoder) {
-          GST_ERROR_OBJECT (nvdec, "no decoder");
-          ret = GST_FLOW_ERROR;
-          break;
-        }
-
-        format = (CUVIDEOFORMAT *) item->data;
-        width = format->display_area.right - format->display_area.left;
-        height = format->display_area.bottom - format->display_area.top;
-        fps_n = format->frame_rate.numerator;
-        fps_d = MAX (1, format->frame_rate.denominator);
-
-        if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (decoder))
-            || width != nvdec->width || height != nvdec->height
-            || fps_n != nvdec->fps_n || fps_d != nvdec->fps_d) {
-          GstStructure *in_s = NULL;
-
-          nvdec->width = width;
-          nvdec->height = height;
-          nvdec->fps_n = fps_n;
-          nvdec->fps_d = fps_d;
-
-          state = gst_video_decoder_set_output_state (decoder,
-              GST_VIDEO_FORMAT_NV12, nvdec->width, nvdec->height,
-              nvdec->input_state);
-          vinfo = &state->info;
-          vinfo->fps_n = fps_n;
-          vinfo->fps_d = fps_d;
-          if (format->progressive_sequence) {
-            vinfo->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-
-            /* nvdec doesn't seem to deal with interlacing with hevc so rely
-             * on upstream's value */
-            if (format->codec == cudaVideoCodec_HEVC) {
-              vinfo->interlace_mode = nvdec->input_state->info.interlace_mode;
-            }
-          } else {
-            vinfo->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
-          }
-
-          GST_LOG_OBJECT (decoder,
-              "Reading colorimetry information full-range %d matrix %d transfer %d primaries %d",
-              format->video_signal_description.video_full_range_flag,
-              format->video_signal_description.matrix_coefficients,
-              format->video_signal_description.transfer_characteristics,
-              format->video_signal_description.color_primaries);
-
-          if (nvdec->input_state->caps)
-            in_s = gst_caps_get_structure (nvdec->input_state->caps, 0);
-
-          /* Set colorimetry when upstream did not provide it */
-          if (in_s && !gst_structure_has_field (in_s, "colorimetry")) {
-            GstVideoColorimetry colorimetry = { 0, };
-
-            if (format->video_signal_description.video_full_range_flag)
-              colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
-            else
-              colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
-
-            colorimetry.primaries =
-                gst_video_color_primaries_from_iso
-                (format->video_signal_description.color_primaries);
-
-            colorimetry.transfer =
-                gst_video_color_transfer_from_iso
-                (format->video_signal_description.transfer_characteristics);
-
-            colorimetry.matrix =
-                gst_video_color_matrix_from_iso
-                (format->video_signal_description.matrix_coefficients);
-
-            /* Use a colorimetry having at least one valid colorimetry entry,
-             * because we don't know whether the returned
-             * colorimetry (by nvdec) was actually parsed information or not.
-             * Otherwise let GstVideoInfo handle it with default colorimetry */
-            if (colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN ||
-                colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN ||
-                colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_UNKNOWN) {
-              GST_DEBUG_OBJECT (decoder,
-                  "Found valid colorimetry, update output colorimetry");
-              vinfo->colorimetry = colorimetry;
-            }
-          }
-
-          state->caps = gst_video_info_to_caps (&state->info);
-
-          gst_caps_set_features (state->caps, 0,
-              gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
-          gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING,
-              "2D", NULL);
-
-          gst_video_codec_state_unref (state);
-
-          if (!gst_video_decoder_negotiate (decoder)) {
-            GST_WARNING_OBJECT (nvdec, "failed to negotiate with downstream");
-            ret = GST_FLOW_NOT_NEGOTIATED;
-            break;
-          }
-        }
-
-        break;
-
-      case GST_NVDEC_QUEUE_ITEM_TYPE_DECODE:
-        decode_params = (CUVIDPICPARAMS *) item->data;
-        pending_frame = pending_frames->data;
-        frame_number = decode_params->CurrPicIdx + 1;
-        gst_video_codec_frame_set_user_data (pending_frame,
-            GUINT_TO_POINTER (frame_number), NULL);
-
-        if (decode_params->intra_pic_flag)
-          GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (pending_frame);
-
-        if (!GST_CLOCK_TIME_IS_VALID (pending_frame->duration)) {
-          pending_frame->duration =
-              nvdec->fps_n ? GST_SECOND * nvdec->fps_d / nvdec->fps_n : 0;
-        }
-        latency += pending_frame->duration;
-
-        pending_frames = pending_frames->next;
-
-        break;
-
-      case GST_NVDEC_QUEUE_ITEM_TYPE_DISPLAY:
-        dispinfo = (CUVIDPARSERDISPINFO *) item->data;
-        for (pending_frame = NULL, tmp = list; !pending_frame && tmp;
-            tmp = tmp->next) {
-          frame_number =
-              GPOINTER_TO_UINT (gst_video_codec_frame_get_user_data
-              (tmp->data));
-          if (frame_number == dispinfo->picture_index + 1)
-            pending_frame = tmp->data;
-        }
-        if (!pending_frame) {
-          GST_INFO_OBJECT (nvdec, "no frame with number %u",
-              dispinfo->picture_index + 1);
-          break;
-        }
-
-        if (dispinfo->timestamp != pending_frame->pts) {
-          GST_INFO_OBJECT (nvdec,
-              "timestamp mismatch, diff: %" GST_STIME_FORMAT,
-              GST_STIME_ARGS (GST_CLOCK_DIFF (dispinfo->timestamp,
-                      pending_frame->pts)));
-          pending_frame->pts = dispinfo->timestamp;
-        }
-
-        if (latency > nvdec->min_latency) {
-          nvdec->min_latency = latency;
-          gst_video_decoder_set_latency (decoder, nvdec->min_latency,
-              nvdec->min_latency);
-          GST_DEBUG_OBJECT (nvdec, "latency: %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (latency));
-        }
-        latency -= pending_frame->duration;
-
-        ret = gst_video_decoder_allocate_output_frame (decoder, pending_frame);
-        if (ret != GST_FLOW_OK) {
-          GST_WARNING_OBJECT (nvdec, "failed to allocate output frame");
-          break;
-        }
-
-        num_resources = gst_buffer_n_memory (pending_frame->output_buffer);
-        resources = g_new (CUgraphicsResource, num_resources);
-
-        for (i = 0; i < num_resources; i++) {
-          mem = gst_buffer_get_memory (pending_frame->output_buffer, i);
-          resources[i] =
-              ensure_cuda_graphics_resource (mem, nvdec->cuda_context);
-          GST_MINI_OBJECT_FLAG_SET (mem,
-              GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD);
-          gst_memory_unref (mem);
-        }
-
-        args[0] = nvdec;
-        args[1] = dispinfo;
-        args[2] = resources;
-        args[3] = GUINT_TO_POINTER (num_resources);
-        gst_gl_context_thread_add (nvdec->gl_context,
-            (GstGLContextThreadFunc) copy_video_frame_to_gl_textures, args);
-        g_free (resources);
-
-        if (!dispinfo->progressive_frame) {
-          GST_BUFFER_FLAG_SET (pending_frame->output_buffer,
-              GST_VIDEO_BUFFER_FLAG_INTERLACED);
-
-          if (dispinfo->top_field_first) {
-            GST_BUFFER_FLAG_SET (pending_frame->output_buffer,
-                GST_VIDEO_BUFFER_FLAG_TFF);
-          }
-          if (dispinfo->repeat_first_field == -1) {
-            GST_BUFFER_FLAG_SET (pending_frame->output_buffer,
-                GST_VIDEO_BUFFER_FLAG_ONEFIELD);
-          } else {
-            GST_BUFFER_FLAG_SET (pending_frame->output_buffer,
-                GST_VIDEO_BUFFER_FLAG_RFF);
-          }
-        }
-
-        list = g_list_remove (list, pending_frame);
-        ret = gst_video_decoder_finish_frame (decoder, pending_frame);
-        if (ret != GST_FLOW_OK)
-          GST_INFO_OBJECT (nvdec, "failed to finish frame");
-
-        break;
-
-      default:
-        g_assert_not_reached ();
-    }
-
-    g_free (item->data);
-    g_slice_free (GstNvDecQueueItem, item);
-  }
-
-  g_list_free_full (list, (GDestroyNotify) gst_video_codec_frame_unref);
-
-  return ret;
-}
-
-static GstFlowReturn
 gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 {
   GstNvDec *nvdec = GST_NVDEC (decoder);
@@ -897,6 +827,14 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   GST_LOG_OBJECT (nvdec, "handle frame");
 
+  if (nvdec->last_ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (nvdec,
+        "return last flow %s", gst_flow_get_name (nvdec->last_ret));
+    gst_video_codec_frame_unref (frame);
+    return nvdec->last_ret;
+  }
+
+  /* initialize with zero to keep track of frames */
   gst_video_codec_frame_set_user_data (frame, GUINT_TO_POINTER (0), NULL);
 
   if (!gst_buffer_map (frame->input_buffer, &map_info, GST_MAP_READ)) {
@@ -919,7 +857,7 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   gst_buffer_unmap (frame->input_buffer, &map_info);
   gst_video_codec_frame_unref (frame);
 
-  return handle_pending_frames (nvdec);
+  return nvdec->last_ret;
 }
 
 static gboolean
@@ -936,8 +874,6 @@ gst_nvdec_flush (GstVideoDecoder * decoder)
 
   if (!cuda_OK (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
-
-  handle_pending_frames (nvdec);
 
   return TRUE;
 }
@@ -957,7 +893,7 @@ gst_nvdec_drain (GstVideoDecoder * decoder)
   if (!cuda_OK (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
 
-  return handle_pending_frames (nvdec);
+  return nvdec->last_ret;
 }
 
 static GstFlowReturn
