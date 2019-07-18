@@ -150,6 +150,10 @@ gst_vaapi_rate_control_get_type (void)
         "Variable bitrate - Constrained", "vbr_constrained"},
     {GST_VAAPI_RATECONTROL_MB,
         "Macroblock based rate control", "mb"},
+    {GST_VAAPI_RATECONTROL_ICQ,
+        "Constant QP - Intelligent", "icq"},
+    {GST_VAAPI_RATECONTROL_QVBR,
+        "Variable bitrate - Quality defined", "qvbr"},
     {0, NULL, NULL},
   };
 

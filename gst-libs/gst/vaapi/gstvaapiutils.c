@@ -342,6 +342,14 @@ string_of_VARateControl (guint rate_control)
     case VA_RC_MB:
       return "MB";
 #endif
+#if VA_CHECK_VERSION(1,1,0)
+    case VA_RC_ICQ:
+      return "VA_RC_ICQ";
+#endif
+#if VA_CHECK_VERSION(1,3,0)
+    case VA_RC_QVBR:
+      return "VA_RC_QVBR";
+#endif
     default:
       break;
   }
@@ -711,6 +719,14 @@ from_GstVaapiRateControl (guint value)
     case GST_VAAPI_RATECONTROL_MB:
       return VA_RC_MB;
 #endif
+#if VA_CHECK_VERSION(1,1,0)
+    case GST_VAAPI_RATECONTROL_ICQ:
+      return VA_RC_ICQ;
+#endif
+#if VA_CHECK_VERSION(1,3,0)
+    case GST_VAAPI_RATECONTROL_QVBR:
+      return VA_RC_QVBR;
+#endif
   }
   GST_ERROR ("unsupported GstVaapiRateControl value %u", value);
   return VA_RC_NONE;
@@ -736,6 +752,15 @@ to_GstVaapiRateControl (guint value)
     case VA_RC_MB:
       return GST_VAAPI_RATECONTROL_MB;
 #endif
+#if VA_CHECK_VERSION(1,1,0)
+    case VA_RC_ICQ:
+      return GST_VAAPI_RATECONTROL_ICQ;
+#endif
+#if VA_CHECK_VERSION(1,3,0)
+    case VA_RC_QVBR:
+      return GST_VAAPI_RATECONTROL_QVBR;
+#endif
+
   }
   GST_ERROR ("unsupported VA-API Rate Control value %u", value);
   return GST_VAAPI_RATECONTROL_NONE;

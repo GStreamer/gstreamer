@@ -54,7 +54,9 @@
   (GST_VAAPI_RATECONTROL_MASK (CQP)  |                  \
    GST_VAAPI_RATECONTROL_MASK (CBR)  |                  \
    GST_VAAPI_RATECONTROL_MASK (VBR)  |                  \
-   GST_VAAPI_RATECONTROL_MASK (VBR_CONSTRAINED))
+   GST_VAAPI_RATECONTROL_MASK (VBR_CONSTRAINED)  |      \
+   GST_VAAPI_RATECONTROL_MASK (ICQ)  |                  \
+   GST_VAAPI_RATECONTROL_MASK (QVBR))
 
 /* Supported set of tuning options, within this implementation */
 #define SUPPORTED_TUNE_OPTIONS                          \
@@ -753,6 +755,7 @@ struct _GstVaapiEncoderH264
   guint32 num_bframes;
   guint32 mb_width;
   guint32 mb_height;
+  guint32 quality_factor;
   gboolean use_cabac;
   gboolean use_dct8x8;
   guint temporal_levels;        /* Number of temporal levels */
@@ -2514,6 +2517,14 @@ ensure_control_rate_params (GstVaapiEncoderH264 * encoder)
   if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP)
     return TRUE;
 
+#if VA_CHECK_VERSION(1,1,0)
+  if (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_ICQ) {
+    GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).ICQ_quality_factor =
+        encoder->quality_factor;
+    return TRUE;
+  }
+#endif
+
   /* RateControl params */
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).bits_per_second =
       encoder->bitrate_bits;
@@ -2528,6 +2539,11 @@ ensure_control_rate_params (GstVaapiEncoderH264 * encoder)
 #if VA_CHECK_VERSION(1,0,0)
   GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).rc_flags.bits.mb_rate_control =
       (guint) encoder->mbbrc;
+#endif
+
+#if VA_CHECK_VERSION(1,3,0)
+  GST_VAAPI_ENCODER_VA_RATE_CONTROL (encoder).quality_factor =
+      encoder->quality_factor;
 #endif
 
   /* HRD params */
@@ -2681,6 +2697,7 @@ ensure_bitrate (GstVaapiEncoderH264 * encoder)
     case GST_VAAPI_RATECONTROL_CBR:
     case GST_VAAPI_RATECONTROL_VBR:
     case GST_VAAPI_RATECONTROL_VBR_CONSTRAINED:
+    case GST_VAAPI_RATECONTROL_QVBR:
       if (!base_encoder->bitrate) {
         /* According to the literature and testing, CABAC entropy coding
            mode could provide for +10% to +18% improvement in general,
@@ -3552,6 +3569,9 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_PROP_MAX_QP:
       encoder->max_qp = g_value_get_uint (value);
       break;
+    case GST_VAAPI_ENCODER_H264_PROP_QUALITY_FACTOR:
+      encoder->quality_factor = g_value_get_uint (value);
+      break;
 
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
@@ -3837,6 +3857,19 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           "Tune Encode quality/performance by relaxing specification compliance restrictions",
           gst_vaapi_encoder_h264_compliance_mode_type (),
           GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_STRICT, G_PARAM_READWRITE));
+
+  /**
+   * GstVaapiEncoderH264:quality_factor:
+   *
+   * quality factor used under ICQ/QVBR bitrate control mode.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_QUALITY_FACTOR,
+      g_param_spec_uint ("quality-factor",
+          "Quality factor for ICQ/QVBR",
+          "quality factor for ICQ/QVBR bitrate control mode"
+          "(low value means higher-quality, higher value means lower-quality)",
+          1, 51, 26, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }
