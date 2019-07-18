@@ -76,6 +76,13 @@ static void gst_msdkenc_close_encoder (GstMsdkEnc * thiz);
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkenc_debug);
 #define GST_CAT_DEFAULT gst_msdkenc_debug
 
+#ifndef _WIN32
+#define DMABUF_CAPS_STR \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF, "{ NV12 }")
+#else
+#define DMABUF_CAPS_STR ""
+#endif
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -83,9 +90,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "format = (string) { NV12, I420, YV12, YUY2, UYVY, BGRA }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 16, MAX ], height = (int) [ 16, MAX ],"
-        "interlace-mode = (string) progressive" ";"
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
-            "{ NV12 }")));
+        "interlace-mode = (string) progressive" ";" DMABUF_CAPS_STR)
+    );
 
 #define PROP_HARDWARE_DEFAULT            TRUE
 #define PROP_ASYNC_DEPTH_DEFAULT         4
