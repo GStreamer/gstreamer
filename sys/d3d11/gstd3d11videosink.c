@@ -72,6 +72,8 @@ static gboolean gst_d3d11_video_sink_start (GstBaseSink * sink);
 static gboolean gst_d3d11_video_sink_stop (GstBaseSink * sink);
 static gboolean gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink,
     GstQuery * query);
+static gboolean gst_d3d11_video_sink_query (GstBaseSink * sink,
+    GstQuery * query);
 
 static GstFlowReturn
 gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf);
@@ -134,6 +136,7 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
   basesink_class->stop = GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_stop);
   basesink_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_propose_allocation);
+  basesink_class->query = GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_query);
 
   videosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_show_frame);
@@ -567,6 +570,25 @@ config_failed:
   }
 
   return TRUE;
+}
+
+static gboolean
+gst_d3d11_video_sink_query (GstBaseSink * sink, GstQuery * query)
+{
+  GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:
+      if (gst_d3d11_handle_context_query (GST_ELEMENT (self), query,
+              self->device)) {
+        return TRUE;
+      }
+      break;
+    default:
+      break;
+  }
+
+  return GST_BASE_SINK_CLASS (parent_class)->query (sink, query);
 }
 
 typedef struct
