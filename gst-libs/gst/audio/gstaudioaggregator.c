@@ -617,57 +617,70 @@ gst_audio_aggregator_sink_getcaps (GstPad * pad, GstAggregator * agg,
       sink_template_caps);
   GST_DEBUG_OBJECT (pad, "downstream caps %" GST_PTR_FORMAT, downstream_caps);
 
-  if (!GST_IS_AUDIO_AGGREGATOR_CONVERT_PAD (pad)) {
-    /* If we already have a configured pad, assume that we can only configure
-     * to the very same format filtered with the template caps and continue
-     * with the result of that as the template caps */
+  /* If we already have a configured pad, assume that we can only configure
+   * to the very same format filtered with the template caps and continue
+   * with the result of that as the template caps */
 
-    if (first_configured_pad) {
-      GstCaps *first_configured_caps =
-          gst_audio_info_to_caps (&first_configured_pad->info);
-      GstCaps *tmp;
+  if (first_configured_pad) {
+    GstCaps *first_configured_caps =
+        gst_audio_info_to_caps (&first_configured_pad->info);
+    GstCaps *tmp;
 
-      tmp =
-          gst_caps_intersect_full (sink_template_caps, first_configured_caps,
-          GST_CAPS_INTERSECT_FIRST);
-      gst_caps_unref (first_configured_caps);
-      gst_caps_unref (sink_template_caps);
-      sink_template_caps = tmp;
-
-      gst_object_unref (first_configured_pad);
-    }
-
-    /* If we have downstream caps, filter them against our template caps or
-     * the filtered first configured pad caps from above */
-    if (downstream_caps) {
-      sink_caps =
-          gst_caps_intersect_full (sink_template_caps, downstream_caps,
-          GST_CAPS_INTERSECT_FIRST);
-    } else {
-      sink_caps = gst_caps_ref (sink_template_caps);
-    }
-
-    if (filter) {
-      GstCaps *tmp = gst_caps_intersect_full (sink_caps, filter,
-          GST_CAPS_INTERSECT_FIRST);
-
-      gst_caps_unref (sink_caps);
-      sink_caps = tmp;
-    }
-
+    tmp =
+        gst_caps_intersect_full (sink_template_caps, first_configured_caps,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (first_configured_caps);
     gst_caps_unref (sink_template_caps);
+    sink_template_caps = tmp;
 
-    if (downstream_caps)
-      gst_caps_unref (downstream_caps);
-
-    GST_INFO_OBJECT (pad, "returned sink caps : %" GST_PTR_FORMAT, sink_caps);
-
-    return sink_caps;
+    gst_object_unref (first_configured_pad);
   }
 
-  /* Else we have a GstAudioAggregatorConvertPad and convert between all
-   * formats except for the sample rate, which has to match.
-   */
+  /* If we have downstream caps, filter them against our template caps or
+   * the filtered first configured pad caps from above */
+  if (downstream_caps) {
+    sink_caps =
+        gst_caps_intersect_full (sink_template_caps, downstream_caps,
+        GST_CAPS_INTERSECT_FIRST);
+  } else {
+    sink_caps = gst_caps_ref (sink_template_caps);
+  }
+
+  if (filter) {
+    GstCaps *tmp = gst_caps_intersect_full (sink_caps, filter,
+        GST_CAPS_INTERSECT_FIRST);
+
+    gst_caps_unref (sink_caps);
+    sink_caps = tmp;
+  }
+
+  gst_caps_unref (sink_template_caps);
+
+  if (downstream_caps)
+    gst_caps_unref (downstream_caps);
+
+  GST_INFO_OBJECT (pad, "returned sink caps : %" GST_PTR_FORMAT, sink_caps);
+
+  return sink_caps;
+}
+
+static GstCaps *
+gst_audio_aggregator_convert_sink_getcaps (GstPad * pad, GstAggregator * agg,
+    GstCaps * filter)
+{
+  GstAudioAggregatorPad *first_configured_pad =
+      gst_audio_aggregator_get_first_configured_pad (agg);
+  GstCaps *sink_template_caps = gst_pad_get_pad_template_caps (pad);
+  GstCaps *downstream_caps = gst_pad_get_allowed_caps (agg->srcpad);
+  GstCaps *sink_caps;
+
+  GST_INFO_OBJECT (pad, "Getting caps with filter %" GST_PTR_FORMAT, filter);
+  GST_DEBUG_OBJECT (pad, "sink template caps : %" GST_PTR_FORMAT,
+      sink_template_caps);
+  GST_DEBUG_OBJECT (pad, "downstream caps %" GST_PTR_FORMAT, downstream_caps);
+
+  /* We can convert between all formats except for the sample rate, which has
+   * to match.  */
 
   /* If we have a first configured pad, we can only convert everything except
    * for the sample rate, so modify our template caps to have exactly that
@@ -1127,7 +1140,14 @@ gst_audio_aggregator_sink_query (GstAggregator * agg, GstAggregatorPad * aggpad,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_audio_aggregator_sink_getcaps (GST_PAD (aggpad), agg, filter);
+      if (GST_IS_AUDIO_AGGREGATOR_CONVERT_PAD (aggpad)) {
+        caps =
+            gst_audio_aggregator_convert_sink_getcaps (GST_PAD (aggpad), agg,
+            filter);
+      } else {
+        caps =
+            gst_audio_aggregator_sink_getcaps (GST_PAD (aggpad), agg, filter);
+      }
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       res = TRUE;
