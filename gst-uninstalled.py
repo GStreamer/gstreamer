@@ -129,6 +129,8 @@ def get_subprocess_env(options, gst_version):
     if lib_path_envvar != 'PATH':
         prepend_env_var(env, lib_path_envvar, os.path.join(PREFIX_DIR, 'lib'),
                         options.sysroot)
+        prepend_env_var(env, lib_path_envvar, os.path.join(PREFIX_DIR, 'lib64'),
+                        options.sysroot)
     elif 'QMAKE' in os.environ:
         # There's no RPATH on Windows, so we need to set PATH for the qt5 DLLs
         prepend_env_var(env, 'PATH', os.path.dirname(os.environ['QMAKE']),
