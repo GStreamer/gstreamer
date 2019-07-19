@@ -663,6 +663,7 @@ test_play_twice_message_received (GstBus * bus, GstMessage * message,
             GST_CLOCK_TIME_NONE);
         ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
+        gst_event_set_seqnum (play_seek_event, gst_util_seqnum_next ());
         res = gst_element_send_event (GST_ELEMENT (bin),
             gst_event_ref (play_seek_event));
         fail_unless (res == TRUE, NULL);
@@ -740,6 +741,7 @@ GST_START_TEST (test_play_twice)
       GST_CLOCK_TIME_NONE);
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
+  gst_event_set_seqnum (play_seek_event, gst_util_seqnum_next ());
   res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
   fail_unless (res == TRUE, NULL);
 
@@ -829,6 +831,7 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
         GST_CLOCK_TIME_NONE);
     ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
+    gst_event_set_seqnum (play_seek_event, gst_util_seqnum_next ());
     res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
     fail_unless (res == TRUE, NULL);
 

@@ -389,6 +389,7 @@ test_play_twice_message_received (GstBus * bus, GstMessage * message,
         /* prepare playing again */
         set_state_and_wait (bin, GST_STATE_PAUSED);
 
+        gst_event_set_seqnum (play_seek_event, gst_util_seqnum_next ());
         res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
         fail_unless (res == TRUE, NULL);
 
@@ -443,6 +444,7 @@ GST_START_TEST (test_play_twice)
   /* prepare playing */
   set_state_and_wait (bin, GST_STATE_PAUSED);
 
+  gst_event_set_seqnum (play_seek_event, gst_util_seqnum_next ());
   res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
   fail_unless (res == TRUE, NULL);
 
@@ -505,6 +507,7 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
     /* prepare playing */
     set_state_and_wait (bin, GST_STATE_PAUSED);
 
+    gst_event_set_seqnum (play_seek_event, gst_util_seqnum_next ());
     res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
     fail_unless (res == TRUE, NULL);
 
@@ -659,6 +662,7 @@ GST_START_TEST (test_live_seeking)
     /* prepare playing */
     set_state_and_wait (bin, GST_STATE_PAUSED);
 
+    gst_event_set_seqnum (play_seek_event, gst_util_seqnum_next ());
     res = gst_element_send_event (bin, gst_event_ref (play_seek_event));
     fail_unless (res == TRUE, NULL);
 
