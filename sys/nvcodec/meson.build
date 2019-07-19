@@ -5,9 +5,6 @@ nvcodec_sources = [
   'gstnvh264enc.c',
   'gstnvh265enc.c',
   'gstcudaloader.c',
-]
-
-nvdec_sources = [
   'gstnvdec.c',
   'gstcuvidloader.c',
 ]
@@ -20,8 +17,6 @@ plugin_incdirs = [configinc, include_directories('./stub')]
 extra_c_args = []
 
 if gstgl_dep.found()
-  # FIXME: make nvdec usable without OpenGL dependency
-  nvcodec_sources += nvdec_sources
   extra_c_args += ['-DHAVE_NVCODEC_GST_GL=1']
 endif
 

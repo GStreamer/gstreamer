@@ -93,7 +93,13 @@ G_GNUC_INTERNAL
 CUresult CuMemcpy2D         (const CUDA_MEMCPY2D * pCopy);
 
 G_GNUC_INTERNAL
+CUresult CuMemcpy2DAsync    (const CUDA_MEMCPY2D *pCopy, CUstream hStream);
+
+G_GNUC_INTERNAL
 CUresult CuMemFree          (CUdeviceptr dptr);
+
+G_GNUC_INTERNAL
+CUresult CuStreamSynchronize (CUstream hStream);
 
 G_GNUC_INTERNAL
 CUresult CuDeviceGet        (CUdevice * device,

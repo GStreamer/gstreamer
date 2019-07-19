@@ -29,10 +29,7 @@
 #include "config.h"
 #endif
 
-#if HAVE_NVCODEC_GST_GL
 #include "gstnvdec.h"
-#endif
-
 #include "gstnvenc.h"
 
 static gboolean
@@ -41,12 +38,9 @@ plugin_init (GstPlugin * plugin)
   if (!gst_cuda_load_library ())
     return TRUE;
 
-#if HAVE_NVCODEC_GST_GL
-  /* FIXME: make nvdec usable without OpenGL dependency */
   if (gst_cuvid_load_library ()) {
     gst_nvdec_plugin_init (plugin);
   }
-#endif
 
   gst_nvenc_plugin_init (plugin);
 

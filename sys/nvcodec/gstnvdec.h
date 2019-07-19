@@ -28,8 +28,12 @@
 #ifndef __GST_NVDEC_H__
 #define __GST_NVDEC_H__
 
+#ifdef HAVE_NVCODEC_GST_GL
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
+#endif
+
+#include <gst/video/video.h>
 #include "gstcuvidloader.h"
 #include "gstcudaloader.h"
 
@@ -52,13 +56,22 @@ typedef enum
   GST_NVDEC_STATE_DECODE,
 } GstNvDecState;
 
+typedef enum
+{
+  GST_NVDEC_MEM_TYPE_SYSTEM = 0,
+  GST_NVDEC_MEM_TYPE_GL,
+  /* FIXME: add support CUDA, D3D11 memory */
+} GstNvDecMemType;
+
 struct _GstNvDec
 {
   GstVideoDecoder parent;
 
+#ifdef HAVE_NVCODEC_GST_GL
   GstGLDisplay *gl_display;
   GstGLContext *gl_context;
   GstGLContext *other_gl_context;
+#endif
 
   CUvideoparser parser;
   CUvideodecoder decoder;
@@ -75,6 +88,7 @@ struct _GstNvDec
 
   GstFlowReturn last_ret;
   GstNvDecState state;
+  GstNvDecMemType mem_type;
 };
 
 struct _GstNvDecClass

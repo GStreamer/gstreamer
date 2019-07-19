@@ -66,7 +66,9 @@ typedef struct _GstNvCodecCudaVTable
     CUresult (*CuMemAllocPitch) (CUdeviceptr * dptr, size_t * pPitch,
       size_t WidthInBytes, size_t Height, unsigned int ElementSizeBytes);
     CUresult (*CuMemcpy2D) (const CUDA_MEMCPY2D * pCopy);
+    CUresult (*CuMemcpy2DAsync) (const CUDA_MEMCPY2D * pCopy, CUstream hStream);
     CUresult (*CuMemFree) (CUdeviceptr dptr);
+    CUresult (*CuStreamSynchronize) (CUstream hStream);
 
     CUresult (*CuDeviceGet) (CUdevice * device, int ordinal);
     CUresult (*CuDeviceGetCount) (int *count);
@@ -120,7 +122,10 @@ gst_cuda_load_library (void)
   LOAD_SYMBOL (cuMemAlloc, CuMemAlloc);
   LOAD_SYMBOL (cuMemAllocPitch, CuMemAllocPitch);
   LOAD_SYMBOL (cuMemcpy2D, CuMemcpy2D);
+  LOAD_SYMBOL (cuMemcpy2DAsync, CuMemcpy2DAsync);
   LOAD_SYMBOL (cuMemFree, CuMemFree);
+
+  LOAD_SYMBOL (cuStreamSynchronize, CuStreamSynchronize);
 
   LOAD_SYMBOL (cuDeviceGet, CuDeviceGet);
   LOAD_SYMBOL (cuDeviceGetCount, CuDeviceGetCount);
@@ -270,11 +275,27 @@ CuMemcpy2D (const CUDA_MEMCPY2D * pCopy)
 }
 
 CUresult
+CuMemcpy2DAsync (const CUDA_MEMCPY2D * pCopy, CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuMemcpy2DAsync != NULL);
+
+  return gst_cuda_vtable.CuMemcpy2DAsync (pCopy, hStream);
+}
+
+CUresult
 CuMemFree (CUdeviceptr dptr)
 {
   g_assert (gst_cuda_vtable.CuMemFree != NULL);
 
   return gst_cuda_vtable.CuMemFree (dptr);
+}
+
+CUresult
+CuStreamSynchronize (CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuStreamSynchronize != NULL);
+
+  return gst_cuda_vtable.CuStreamSynchronize (hStream);
 }
 
 CUresult

@@ -6,13 +6,9 @@ libgstnvcodec_la_SOURCES = \
 	gstnvbaseenc.c \
 	gstnvh264enc.c \
 	gstnvh265enc.c \
-	gstcudaloader.c
-
-if USE_NVCODEC_GST_GL
-libgstnvcodec_la_SOURCES += \
+	gstcudaloader.c \
 	gstnvdec.c \
 	gstcuvidloader.c
-endif
 
 noinst_HEADERS = \
 	gstnvdec.h \
