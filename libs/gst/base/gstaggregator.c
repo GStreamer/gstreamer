@@ -2022,6 +2022,15 @@ gst_aggregator_do_seek (GstAggregator * self, GstEvent * event)
   flush = flags & GST_SEEK_FLAG_FLUSH;
 
   GST_OBJECT_LOCK (self);
+
+  if (gst_event_get_seqnum (event) == self->priv->next_seqnum) {
+    evdata.result = TRUE;
+    GST_DEBUG_OBJECT (self, "Dropping duplicated seek event with seqnum %d",
+        self->priv->next_seqnum);
+    GST_OBJECT_UNLOCK (self);
+    goto done;
+  }
+
   self->priv->next_seqnum = gst_event_get_seqnum (event);
 
   gst_segment_do_seek (&GST_AGGREGATOR_PAD (self->srcpad)->segment, rate, fmt,
@@ -2063,6 +2072,7 @@ gst_aggregator_do_seek (GstAggregator * self, GstEvent * event)
     }
   }
 
+done:
   GST_INFO_OBJECT (self, "seek done, result: %d", evdata.result);
 
   return evdata.result;
