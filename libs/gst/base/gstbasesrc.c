@@ -3403,7 +3403,7 @@ gst_base_src_negotiate_unlocked (GstBaseSrc * basesrc)
 
 /**
  * gst_base_src_negotiate:
- * @basesrc: base source instance
+ * @src: base source instance
  *
  * Negotiates src pad caps with downstream elements.
  * Unmarks GST_PAD_FLAG_NEED_RECONFIGURE in any case. But marks it again
