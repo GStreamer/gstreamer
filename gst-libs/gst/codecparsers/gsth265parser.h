@@ -136,6 +136,9 @@ typedef enum {
   GST_H265_PROFILE_SCALABLE_MONOCHROME_16,
   GST_H265_PROFILE_SCALABLE_MAIN_444,
   GST_H265_PROFILE_3D_MAIN,
+
+  /* end of the profiles */
+  GST_H265_PROFILE_MAX
 } GstH265Profile;
 
 /**

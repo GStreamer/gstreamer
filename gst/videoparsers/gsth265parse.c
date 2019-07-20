@@ -1664,59 +1664,221 @@ get_level_string (guint8 level_idc)
   }
 }
 
+static inline guint64
+profile_to_flag (GstH265Profile p)
+{
+  return (guint64) 1 << (guint64) p;
+}
+
 static GstCaps *
-get_compatible_profile_caps (GstH265SPS * sps)
+get_compatible_profile_caps (GstH265SPS * sps, GstH265Profile profile)
 {
   GstCaps *caps = NULL;
-  const gchar **profiles = NULL;
   gint i;
   GValue compat_profiles = G_VALUE_INIT;
+  guint64 profiles = 0;
+
   g_value_init (&compat_profiles, GST_TYPE_LIST);
 
-  switch (sps->profile_tier_level.profile_idc) {
-    case GST_H265_PROFILE_IDC_MAIN_10:
-      if (sps->profile_tier_level.profile_compatibility_flag[1]) {
-        if (sps->profile_tier_level.profile_compatibility_flag[3]) {
-          static const gchar *profile_array[] =
-              { "main", "main-still-picture", NULL };
-          profiles = profile_array;
-        } else {
-          static const gchar *profile_array[] = { "main", NULL };
-          profiles = profile_array;
-        }
-      }
-      break;
-    case GST_H265_PROFILE_IDC_MAIN:
-      if (sps->profile_tier_level.profile_compatibility_flag[3]) {
-        static const gchar *profile_array[] =
-            { "main-still-picture", "main-10", NULL
-        };
-        profiles = profile_array;
-      } else {
-        static const gchar *profile_array[] = { "main-10", NULL };
-        profiles = profile_array;
-      }
-      break;
-    case GST_H265_PROFILE_IDC_MAIN_STILL_PICTURE:
+  /* Relaxing profiles condition based on decoder capability specified by spec */
+  if (sps->profile_tier_level.profile_compatibility_flag[1])
+    profiles |= profile_to_flag (GST_H265_PROFILE_MAIN);
+
+  if (sps->profile_tier_level.profile_compatibility_flag[2])
+    profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_10);
+
+  if (sps->profile_tier_level.profile_compatibility_flag[3])
+    profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_STILL_PICTURE);
+
+  switch (profile) {
+    case GST_H265_PROFILE_MAIN_10:
     {
-      static const gchar *profile_array[] = { "main", "main-10", NULL
-      };
-      profiles = profile_array;
-    }
+      /* A.3.5 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_12);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_10);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_12);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_10);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_12);
+
+      /* A.3.7 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10);
+
+      /* H.11.1.1 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCALABLE_MAIN_10);
       break;
+    }
+    case GST_H265_PROFILE_MAIN:
+    {
+      /* A.3.3 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_10);
+
+      /* A.3.5 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_12);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_10);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_12);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_10);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_12);
+
+      /* A.3.7 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN);
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10);
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444);
+      profiles |=
+          profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14);
+
+      /* G.11.1.1 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_MULTIVIEW_MAIN);
+
+      /* H.11.1.1 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCALABLE_MAIN);
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCALABLE_MAIN_10);
+
+      /* I.11.1.1 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_3D_MAIN);
+      break;
+    }
+    case GST_H265_PROFILE_MAIN_STILL_PICTURE:
+    {
+      /* A.3.2, A.3.4 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_10);
+
+      /* A.3.5 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_12);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_10);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_12);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_10);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_12);
+
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_INTRA);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_10_INTRA);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_12_INTRA);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_10_INTRA);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_422_12_INTRA);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_INTRA);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_10_INTRA);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_12_INTRA);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_16_INTRA);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_STILL_PICTURE);
+      profiles |= profile_to_flag (GST_H265_PROFILE_MAIN_444_16_STILL_PICTURE);
+
+      /* A.3.7 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN);
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10);
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444);
+      profiles |=
+          profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14);
+      break;
+    }
+    case GST_H265_PROFILE_MONOCHROME:
+    {
+      /* A.3.7 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN);
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10);
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444);
+      profiles |=
+          profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14);
+      break;
+    }
+    case GST_H265_PROFILE_MAIN_444:
+    {
+      /* A.3.7 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444);
+      profiles |=
+          profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_444_10);
+      break;
+    }
+    case GST_H265_PROFILE_MAIN_444_10:
+    {
+      /* A.3.7 */
+      profiles |= profile_to_flag (GST_H265_PROFILE_SCREEN_EXTENDED_MAIN_10);
+      break;
+    }
+    case GST_H265_PROFILE_HIGH_THROUGHPUT_444:
+    {
+      /* A.3.7 */
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14);
+      break;
+    }
+    case GST_H265_PROFILE_HIGH_THROUGHPUT_444_10:
+    {
+      /* A.3.7 */
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10);
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14);
+      break;
+    }
+    case GST_H265_PROFILE_HIGH_THROUGHPUT_444_14:
+    {
+      /* A.3.7 */
+      profiles |=
+          profile_to_flag
+          (GST_H265_PROFILE_SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14);
+      break;
+    }
     default:
       break;
   }
 
   if (profiles) {
     GValue value = G_VALUE_INIT;
+    const gchar *profile_str;
     caps = gst_caps_new_empty_simple ("video/x-h265");
-    for (i = 0; profiles[i]; i++) {
-      g_value_init (&value, G_TYPE_STRING);
-      g_value_set_string (&value, profiles[i]);
-      gst_value_list_append_value (&compat_profiles, &value);
-      g_value_unset (&value);
+
+    for (i = GST_H265_PROFILE_MAIN; i < GST_H265_PROFILE_MAX; i++) {
+      if ((profiles & profile_to_flag (i)) == profile_to_flag (i)) {
+        profile_str = get_profile_string (i);
+
+        if (G_UNLIKELY (profile_str == NULL)) {
+          GST_FIXME ("Unhandled profile index %d", i);
+          continue;
+        }
+
+        g_value_init (&value, G_TYPE_STRING);
+        g_value_set_string (&value, profile_str);
+        gst_value_list_append_value (&compat_profiles, &value);
+        g_value_unset (&value);
+      }
     }
+
     gst_caps_set_value (caps, "profile", &compat_profiles);
     g_value_unset (&compat_profiles);
   }
@@ -1727,7 +1889,8 @@ get_compatible_profile_caps (GstH265SPS * sps)
 /* if downstream didn't support the exact profile indicated in sps header,
  * check for the compatible profiles also */
 static void
-ensure_caps_profile (GstH265Parse * h265parse, GstCaps * caps, GstH265SPS * sps)
+ensure_caps_profile (GstH265Parse * h265parse, GstCaps * caps, GstH265SPS * sps,
+    GstH265Profile profile)
 {
   GstCaps *peer_caps, *compat_caps;
 
@@ -1747,7 +1910,7 @@ ensure_caps_profile (GstH265Parse * h265parse, GstCaps * caps, GstH265SPS * sps)
   if (peer_caps && !gst_caps_can_intersect (caps, peer_caps)) {
     GstStructure *structure;
 
-    compat_caps = get_compatible_profile_caps (sps);
+    compat_caps = get_compatible_profile_caps (sps, profile);
     if (compat_caps != NULL) {
       GstCaps *res_caps = NULL;
 
@@ -2028,7 +2191,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
         gst_caps_set_simple (caps, "level", G_TYPE_STRING, level, NULL);
 
       /* relax the profile constraint to find a suitable decoder */
-      ensure_caps_profile (h265parse, caps, sps);
+      ensure_caps_profile (h265parse, caps, sps, p);
     }
 
     if (s
