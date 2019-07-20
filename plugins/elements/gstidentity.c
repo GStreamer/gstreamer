@@ -976,8 +976,12 @@ gst_identity_query (GstBaseTransform * base, GstPadDirection direction,
     GST_OBJECT_LOCK (identity);
     if (live)
       identity->upstream_latency = min;
-    else
+    else {
       identity->upstream_latency = 0;
+      /* if we interface a non-live source, then we know there is no
+       * limit in the maximum latency */
+      max = -1;
+    }
     GST_OBJECT_UNLOCK (identity);
 
     gst_query_set_latency (query, live || identity->sync, min, max);
