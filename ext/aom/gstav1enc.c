@@ -686,6 +686,8 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   av1enc->encoder_inited = TRUE;
 
   GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AOME_SET_CPUUSED, av1enc->cpu_used);
+  GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AV1E_SET_ROW_MT,
+      (av1enc->row_mt ? 1 : 0));
   g_mutex_unlock (&av1enc->encoder_lock);
 
   return TRUE;
