@@ -125,6 +125,7 @@ gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
       if (!gst_value_can_intersect (&default_value, value))
         encoding_name = "X-GST-OPUS-DRAFT-SPITTKA-00";
     }
+    gst_caps_unref (src_caps);
   }
 
   s = gst_caps_get_structure (caps, 0);
