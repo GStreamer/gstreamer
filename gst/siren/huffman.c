@@ -153,6 +153,10 @@ decode_envelope (int number_of_regions, float *decoder_standard_deviation,
 
     absolute_region_power_index[i] =
         absolute_region_power_index[i - 1] - index - 12;
+    if (absolute_region_power_index[i] < -24)
+      absolute_region_power_index[i] = -24;
+    else if (absolute_region_power_index[i] > 39)
+      absolute_region_power_index[i] = 39;
     decoder_standard_deviation[i] =
         standard_deviation[absolute_region_power_index[i] + 24];
   }
