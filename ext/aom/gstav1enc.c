@@ -142,7 +142,9 @@ enum
   PROP_OVERSHOOT_PCT,
   PROP_BUF_SZ,
   PROP_BUF_INITIAL_SZ,
-  PROP_BUF_OPTIMAL_SZ
+  PROP_BUF_OPTIMAL_SZ,
+  PROP_THREADS,
+  PROP_ROW_MT
 };
 
 /* From av1/av1_cx_iface.c */
@@ -169,6 +171,8 @@ enum
 #define DEFAULT_TIMEBASE_N                                      1
 #define DEFAULT_TIMEBASE_D                                     30
 #define DEFAULT_BIT_DEPTH                              AOM_BITS_8
+#define DEFAULT_THREADS                                         0
+#define DEFAULT_ROW_MT                                      FALSE
 
 static void gst_av1_enc_finalize (GObject * object);
 static void gst_av1_enc_set_property (GObject * object, guint prop_id,
@@ -362,6 +366,18 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
           "Decoder buffer optimal size, expressed in units of time (milliseconds)",
           0, G_MAXUINT, DEFAULT_BUF_OPTIMAL_SZ,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_THREADS,
+      g_param_spec_uint ("threads", "Max number of threads to use",
+          "Max number of threads to use encoding, set to 0 determine the "
+          "approximate number of threads that the system schedule",
+          0, G_MAXUINT, DEFAULT_THREADS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_ROW_MT,
+      g_param_spec_boolean ("row-mt", "Row based multi-threading",
+          "Enable row based multi-threading",
+          DEFAULT_ROW_MT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -382,6 +398,8 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
   av1enc->keyframe_dist = 30;
   av1enc->cpu_used = DEFAULT_CPU_USED;
   av1enc->format = AOM_IMG_FMT_I420;
+  av1enc->threads = DEFAULT_THREADS;
+  av1enc->row_mt = DEFAULT_ROW_MT;
 
   av1enc->aom_cfg.rc_dropframe_thresh = DEFAULT_DROP_FRAME;
   av1enc->aom_cfg.rc_resize_mode = DEFAULT_RESIZE_MODE;
@@ -637,6 +655,11 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   av1enc->aom_cfg.g_timebase.num = GST_VIDEO_INFO_FPS_D (info);
   av1enc->aom_cfg.g_timebase.den = GST_VIDEO_INFO_FPS_N (info);
   av1enc->aom_cfg.g_error_resilient = AOM_ERROR_RESILIENT_DEFAULT;
+
+  if (av1enc->threads == DEFAULT_THREADS)
+    av1enc->aom_cfg.g_threads = g_get_num_processors ();
+  else
+    av1enc->aom_cfg.g_threads = av1enc->threads;
   /* TODO: do more configuration including bit_depth config */
 
   av1enc->format =
@@ -657,6 +680,7 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   if (aom_codec_enc_init (&av1enc->encoder, av1enc_class->codec_algo,
           &av1enc->aom_cfg, 0)) {
     gst_av1_codec_error (&av1enc->encoder, "Failed to initialize encoder");
+    g_mutex_unlock (&av1enc->encoder_lock);
     return FALSE;
   }
   av1enc->encoder_inited = TRUE;
@@ -907,6 +931,15 @@ gst_av1_enc_set_property (GObject * object, guint prop_id,
       av1enc->aom_cfg.rc_buf_optimal_sz = g_value_get_uint (value);
       global = TRUE;
       break;
+    case PROP_THREADS:
+      av1enc->threads = g_value_get_uint (value);
+      global = TRUE;
+      break;
+    case PROP_ROW_MT:
+      av1enc->row_mt = g_value_get_boolean (value);
+      GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AV1E_SET_ROW_MT,
+          (av1enc->row_mt ? 1 : 0));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -987,6 +1020,12 @@ gst_av1_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_BUF_OPTIMAL_SZ:
       g_value_set_uint (value, av1enc->aom_cfg.rc_buf_optimal_sz);
+      break;
+    case PROP_THREADS:
+      g_value_set_uint (value, av1enc->threads);
+      break;
+    case PROP_ROW_MT:
+      g_value_set_boolean (value, av1enc->row_mt);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
