@@ -77,18 +77,6 @@ if not cuda_header_dep.found()
 endif
 
 if gstgl_dep.found()
-  if cuda_dep.found()
-    if cc.has_header('cudaGL.h', dependencies: cuda_dep)
-      use_nvcodec_gl = true
-    endif
-  else
-    if cc.has_header('cudaGL.h', args: '-I' + cuda_incdir)
-      use_nvcodec_gl = true
-    endif
-  endif
-endif
-
-if use_nvcodec_gl
   # FIXME: make nvdec usable without OpenGL dependency
   nvcodec_sources += nvdec_sources
   extra_c_args += ['-DHAVE_NVCODEC_GST_GL=1']

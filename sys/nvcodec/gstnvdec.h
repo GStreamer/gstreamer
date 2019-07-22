@@ -32,7 +32,6 @@
 #include <gst/gl/gstglfuncs.h>
 #include "gstcuvidloader.h"
 #include "gstcudaloader.h"
-#include <cudaGL.h>
 
 G_BEGIN_DECLS
 

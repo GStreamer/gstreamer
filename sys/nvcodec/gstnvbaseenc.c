@@ -31,13 +31,6 @@
 
 #if HAVE_NVCODEC_GST_GL
 #include <gst/gl/gl.h>
-/* missing headers in old cudaGL.h */
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
-#include <cudaGL.h>
 #endif
 
 /* TODO:
