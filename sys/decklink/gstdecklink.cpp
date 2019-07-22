@@ -887,6 +887,27 @@ public:
     m_input->input->EnableVideoInput (mode->GetDisplayMode (),
         pixelFormat, bmdVideoInputEnableFormatDetection);
     m_input->input->FlushStreams ();
+
+    /* Reset any timestamp observations we might've made */
+    if (m_input->videosrc) {
+      GstDecklinkVideoSrc *videosrc = GST_DECKLINK_VIDEO_SRC (m_input->videosrc);
+
+      g_mutex_lock (&videosrc->lock);
+      videosrc->window_fill = 0;
+      videosrc->window_filled = FALSE;
+      videosrc->window_skip = 1;
+      videosrc->window_skip_count = 0;
+      videosrc->current_time_mapping.xbase = 0;
+      videosrc->current_time_mapping.b = 0;
+      videosrc->current_time_mapping.num = 1;
+      videosrc->current_time_mapping.den = 1;
+      videosrc->next_time_mapping.xbase = 0;
+      videosrc->next_time_mapping.b = 0;
+      videosrc->next_time_mapping.num = 1;
+      videosrc->next_time_mapping.den = 1;
+      g_mutex_unlock (&videosrc->lock);
+    }
+
     m_input->input->StartStreams ();
     m_input->mode =
         gst_decklink_get_mode (gst_decklink_get_mode_enum_from_bmd
