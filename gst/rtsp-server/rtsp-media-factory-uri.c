@@ -465,7 +465,7 @@ pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
   GstCaps *caps;
   GstPad *sinkpad, *srcpad, *ghostpad;
   GstElement *convert;
-  gchar *padname;
+  gchar *padname, *payloader_name;
 
   GST_DEBUG ("added pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
@@ -521,7 +521,9 @@ pad_added_cb (GstElement * uribin, GstPad * pad, GstElement * element)
   GST_DEBUG ("found payloader factory %s",
       gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
 
-  payloader = gst_element_factory_create (factory, NULL);
+  payloader_name = g_strdup_printf ("pay_%s", padname);
+  payloader = gst_element_factory_create (factory, payloader_name);
+  g_free (payloader_name);
   if (payloader == NULL)
     goto no_payloader;
 

@@ -235,7 +235,7 @@ static gboolean default_handle_sdp (GstRTSPMedia * media, GstSDPMessage * sdp);
 
 static gboolean wait_preroll (GstRTSPMedia * media);
 
-static GstElement *find_payload_element (GstElement * payloader);
+static GstElement *find_payload_element (GstElement * payloader, GstPad * pad);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
@@ -2046,7 +2046,7 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       pad = gst_element_get_static_pad (elem, "src");
 
       /* find the real payload element in case elem is a GstBin */
-      pay = find_payload_element (elem);
+      pay = find_payload_element (elem, pad);
 
       /* create the stream */
       if (pay == NULL) {
@@ -2213,7 +2213,8 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   g_mutex_lock (&priv->lock);
   idx = priv->streams->len;
 
-  GST_DEBUG ("media %p: creating stream with index %d", media, idx);
+  GST_DEBUG ("media %p: creating stream with index %d and payloader %"
+      GST_PTR_FORMAT, media, idx, payloader);
 
   if (GST_PAD_IS_SRC (pad))
     name = g_strdup_printf ("src_%u", idx);
@@ -3148,27 +3149,57 @@ watch_destroyed (GstRTSPMedia * media)
   g_object_unref (media);
 }
 
+static gboolean
+is_payloader (GstElement * element)
+{
+  GstElementClass *eclass = GST_ELEMENT_GET_CLASS (element);
+  const gchar *klass;
+
+  klass = gst_element_class_get_metadata (eclass, GST_ELEMENT_METADATA_KLASS);
+  if (klass == NULL)
+    return FALSE;
+
+  if (strstr (klass, "Payloader") && strstr (klass, "RTP")) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static GstElement *
-find_payload_element (GstElement * payloader)
+find_payload_element (GstElement * payloader, GstPad * pad)
 {
   GstElement *pay = NULL;
 
   if (GST_IS_BIN (payloader)) {
     GstIterator *iter;
     GValue item = { 0 };
+    gchar *pad_name, *payloader_name;
+    GstElement *element;
+
+    if ((element = gst_bin_get_by_name (GST_BIN (payloader), "pay"))) {
+      if (is_payloader (element))
+        return element;
+      gst_object_unref (element);
+    }
+
+    pad_name = gst_object_get_name (GST_OBJECT (pad));
+    payloader_name = g_strdup_printf ("pay_%s", pad_name);
+    g_free (pad_name);
+    if ((element = gst_bin_get_by_name (GST_BIN (payloader), payloader_name))) {
+      g_free (payloader_name);
+      if (is_payloader (element))
+        return element;
+      gst_object_unref (element);
+    } else {
+      g_free (payloader_name);
+    }
 
     iter = gst_bin_iterate_recurse (GST_BIN (payloader));
     while (gst_iterator_next (iter, &item) == GST_ITERATOR_OK) {
-      GstElement *element = (GstElement *) g_value_get_object (&item);
-      GstElementClass *eclass = GST_ELEMENT_GET_CLASS (element);
-      const gchar *klass;
+      element = (GstElement *) g_value_get_object (&item);
 
-      klass =
-          gst_element_class_get_metadata (eclass, GST_ELEMENT_METADATA_KLASS);
-      if (klass == NULL)
-        continue;
-
-      if (strstr (klass, "Payloader") && strstr (klass, "RTP")) {
+      if (is_payloader (element)) {
         pay = gst_object_ref (element);
         g_value_unset (&item);
         break;
@@ -3192,7 +3223,7 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
   GstElement *pay;
 
   /* find the real payload element */
-  pay = find_payload_element (element);
+  pay = find_payload_element (element, pad);
   stream = gst_rtsp_media_create_stream (media, pay, pad);
   gst_object_unref (pay);
 
