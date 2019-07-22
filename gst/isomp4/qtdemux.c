@@ -1394,9 +1394,10 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
       if (next && kindex == -1)
         kindex = gst_qtdemux_find_keyframe (qtdemux, str, index, FALSE);
 
-      /* if the keyframe is at a different position, we need to update the
-       * requested seek time */
-      if (index != kindex) {
+      /* Update the requested time whenever a keyframe was found, to make it
+       * accurate and avoid having the first buffer fall outside of the segment
+       */
+      if (kindex != -1) {
         index = kindex;
 
         /* get timestamp of keyframe */
