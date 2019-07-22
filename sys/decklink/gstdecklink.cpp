@@ -1644,6 +1644,9 @@ gst_decklink_configure_duplex_mode (Device * device, BMDDuplexMode duplex_mode)
       return DUPLEX_MODE_SET_FAILURE;
     }
   }
+
+  g_assert_not_reached ();
+  return DUPLEX_MODE_SET_FAILURE;
 }
 
 DuplexModeSetOperationResult
