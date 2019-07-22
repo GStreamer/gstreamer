@@ -700,8 +700,14 @@ gst_download_buffer_wait_for_data (GstDownloadBuffer * dlbuf, guint64 offset,
     }
   }
 
-  if (dlbuf->write_pos != offset)
+  if (dlbuf->write_pos != offset) {
     perform_seek_to_offset (dlbuf, offset);
+
+    /* perform_seek_to_offset() releases the lock, so we may have been flushed
+     * during the call. */
+    if (dlbuf->srcresult == GST_FLOW_FLUSHING)
+      goto out_flushing;
+  }
 
   dlbuf->filling = TRUE;
   if (dlbuf->write_pos > dlbuf->read_pos)
