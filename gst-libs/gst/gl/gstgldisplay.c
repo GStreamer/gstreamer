@@ -365,7 +365,7 @@ gst_gl_display_default_get_handle (GstGLDisplay * display)
 
 /**
  * gst_gl_display_get_foreign_display:
- * @context: a #GstGLDisplay
+ * @display: a #GstGLDisplay
  *
  * Returns: whether the context belongs to a foreign display
  *
