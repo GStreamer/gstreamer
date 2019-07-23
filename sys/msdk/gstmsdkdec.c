@@ -1120,12 +1120,6 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   if (!pool)
     goto error_no_pool;
 
-  if (G_UNLIKELY (!IS_ALIGNED (GST_VIDEO_INFO_WIDTH (info), 16)
-          || !IS_ALIGNED (GST_VIDEO_INFO_HEIGHT (info), 32))) {
-    gst_msdk_set_video_alignment (info, &align);
-    gst_video_info_align (info, &align);
-  }
-
   caps = gst_video_info_to_caps (info);
 
   /* allocators should use the same width/height/stride/height_alignment of
