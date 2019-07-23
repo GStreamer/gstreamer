@@ -232,7 +232,7 @@ gst_avtp_cvf_pay_extract_nals (GstAvtpCvfPay * avtpcvfpay,
 
   res = gst_buffer_map (buffer, &map, GST_MAP_READ);
   if (!res) {
-    GST_ERROR_OBJECT (avtpcvfpay, "Could map buffer");
+    GST_ERROR_OBJECT (avtpcvfpay, "Could not map buffer");
     goto end;
   }
 
