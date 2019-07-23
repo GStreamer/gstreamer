@@ -314,12 +314,14 @@ _try_export_dmabuf (GstGLDownloadElement * download, GstBuffer * inbuf)
   GstCaps *src_caps;
   GstVideoInfo out_info;
   gsize total_offset;
+  GstVideoAlignment *alig = NULL;
 
   glmem = GST_GL_MEMORY_CAST (gst_buffer_peek_memory (inbuf, 0));
   if (glmem) {
     GstGLContext *context = GST_GL_BASE_MEMORY_CAST (glmem)->context;
     if (gst_gl_context_get_gl_platform (context) != GST_GL_PLATFORM_EGL)
       return NULL;
+    alig = &glmem->valign;
   }
 
   buffer = gst_buffer_new ();
@@ -361,9 +363,14 @@ _try_export_dmabuf (GstGLDownloadElement * download, GstBuffer * inbuf)
   gst_video_info_from_caps (&out_info, src_caps);
 
   if (download->add_videometa) {
-    gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+    GstVideoMeta *meta;
+
+    meta = gst_buffer_add_video_meta_full (buffer, GST_VIDEO_FRAME_FLAG_NONE,
         out_info.finfo->format, out_info.width, out_info.height,
         out_info.finfo->n_planes, offset, stride);
+
+    if (alig)
+      gst_video_meta_set_alignment (meta, *alig);
   } else {
     int i;
     gboolean match = TRUE;

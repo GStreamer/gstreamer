@@ -1943,6 +1943,7 @@ _gen_buffer (GstGLViewConvert * viewconvert, GstBuffer ** target)
   GstGLVideoAllocationParams *params;
   GstGLMemoryAllocator *mem_allocator;
   GstAllocator *allocator;
+  GstVideoMeta *meta;
 
   *target = gst_buffer_new ();
 
@@ -1962,12 +1963,15 @@ _gen_buffer (GstGLViewConvert * viewconvert, GstBuffer ** target)
   gst_gl_allocation_params_free ((GstGLAllocationParams *) params);
   gst_object_unref (allocator);
 
-  gst_buffer_add_video_meta_full (*target, 0,
+  meta = gst_buffer_add_video_meta_full (*target, 0,
       GST_VIDEO_INFO_FORMAT (&viewconvert->out_info),
       GST_VIDEO_INFO_WIDTH (&viewconvert->out_info),
       GST_VIDEO_INFO_HEIGHT (&viewconvert->out_info),
       GST_VIDEO_INFO_N_PLANES (&viewconvert->out_info),
       viewconvert->out_info.offset, viewconvert->out_info.stride);
+
+  if (params->valign)
+    gst_video_meta_set_alignment (meta, *params->valign);
 
   return TRUE;
 }

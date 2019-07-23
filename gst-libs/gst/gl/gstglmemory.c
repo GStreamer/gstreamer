@@ -1470,6 +1470,8 @@ gst_gl_memory_setup_buffer (GstGLMemoryAllocator * allocator,
       || n_mem * views == n_wrapped_pointers, FALSE);
 
   for (v = 0; v < views; v++) {
+    GstVideoMeta *meta;
+
     for (i = 0; i < n_mem; i++) {
       GstGLMemory *gl_mem;
 
@@ -1498,11 +1500,14 @@ gst_gl_memory_setup_buffer (GstGLMemoryAllocator * allocator,
       gst_buffer_append_memory (buffer, (GstMemory *) gl_mem);
     }
 
-    gst_buffer_add_video_meta_full (buffer, v,
+    meta = gst_buffer_add_video_meta_full (buffer, v,
         GST_VIDEO_INFO_FORMAT (params->v_info),
         GST_VIDEO_INFO_WIDTH (params->v_info),
         GST_VIDEO_INFO_HEIGHT (params->v_info), n_mem, params->v_info->offset,
         params->v_info->stride);
+
+    if (params->valign)
+      gst_video_meta_set_alignment (meta, *params->valign);
   }
 
   return TRUE;
