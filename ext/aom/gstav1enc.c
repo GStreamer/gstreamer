@@ -374,10 +374,12 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
           0, G_MAXUINT, DEFAULT_THREADS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+#ifdef AOM_CTRL_AV1E_SET_ROW_MT
   g_object_class_install_property (gobject_class, PROP_ROW_MT,
       g_param_spec_boolean ("row-mt", "Row based multi-threading",
           "Enable row based multi-threading",
           DEFAULT_ROW_MT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 }
 
 static void
@@ -686,8 +688,10 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   av1enc->encoder_inited = TRUE;
 
   GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AOME_SET_CPUUSED, av1enc->cpu_used);
+#ifdef AOM_CTRL_AV1E_SET_ROW_MT
   GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AV1E_SET_ROW_MT,
       (av1enc->row_mt ? 1 : 0));
+#endif
   g_mutex_unlock (&av1enc->encoder_lock);
 
   return TRUE;
@@ -937,11 +941,13 @@ gst_av1_enc_set_property (GObject * object, guint prop_id,
       av1enc->threads = g_value_get_uint (value);
       global = TRUE;
       break;
+#ifdef AOM_CTRL_AV1E_SET_ROW_MT
     case PROP_ROW_MT:
       av1enc->row_mt = g_value_get_boolean (value);
       GST_AV1_ENC_APPLY_CODEC_CONTROL (av1enc, AV1E_SET_ROW_MT,
           (av1enc->row_mt ? 1 : 0));
       break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1026,9 +1032,11 @@ gst_av1_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_THREADS:
       g_value_set_uint (value, av1enc->threads);
       break;
+#ifdef AOM_CTRL_AV1E_SET_ROW_MT
     case PROP_ROW_MT:
       g_value_set_boolean (value, av1enc->row_mt);
       break;
+#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
