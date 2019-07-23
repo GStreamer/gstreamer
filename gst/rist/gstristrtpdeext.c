@@ -69,6 +69,8 @@ struct _GstRistRtpDeext
 
   gboolean drop_null;
   gboolean seqnumext;
+
+  guint32 max_extseqnum;
 };
 
 G_DEFINE_TYPE_WITH_CODE (GstRistRtpDeext, gst_rist_rtp_deext, GST_TYPE_ELEMENT,
@@ -138,6 +140,24 @@ gst_rist_rtp_deext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GST_LOG_OBJECT (self, "Seqnum ext is %d\n", seqnumext_val);
   } else if (has_seqnum_ext && extlen == 0) {
     GST_WARNING_OBJECT (self, "Has seqnum flag, but extension is too short");
+    has_seqnum_ext = FALSE;
+    seqnumext_val = 0;
+  }
+
+  if (has_seqnum_ext) {
+    guint32 extseqnum = seqnumext_val << 16 | gst_rtp_buffer_get_seq (&rtp);
+
+    if (extseqnum < self->max_extseqnum &&
+        self->max_extseqnum - extseqnum > G_MAXINT16) {
+      gst_rtp_buffer_unmap (&rtp);
+      gst_buffer_unref (buffer);
+      GST_WARNING_OBJECT (self, "Buffer with extended seqnum %u is more than"
+          " G_MAXINT16 (%u) before the higher received seqnum %u, dropping to"
+          " avoid confusing downstream elements.",
+          extseqnum, G_MAXINT16, self->max_extseqnum);
+      return GST_FLOW_OK;
+    }
+    self->max_extseqnum = MAX (self->max_extseqnum, extseqnum);
   }
 
   if (!has_drop_null || num_packets_deleted == 0)
