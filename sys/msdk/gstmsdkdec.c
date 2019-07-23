@@ -308,8 +308,8 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
 
   klass->preinit_decoder (thiz);
 
-  /* Set framerate only if provided.
-   * If not, framerate will be assumed inside the driver.
+  /* Set frame rate only if provided.
+   * If not, frame rate will be assumed inside the driver.
    * Also we respect the upstream provided fps values */
   if (info->fps_n > 0 && info->fps_d > 0
       && info->fps_n != thiz->param.mfx.FrameInfo.FrameRateExtN
@@ -361,7 +361,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
     goto failed;
   }
 
-  /* account the downstream requirement */
+  /* account for downstream requirement */
   if (G_LIKELY (thiz->min_prealloc_buffers))
     request.NumFrameSuggested += thiz->min_prealloc_buffers;
   else
@@ -382,7 +382,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
     gst_msdk_frame_alloc (thiz->context, &request, &thiz->alloc_resp);
   }
 
-  /* update the prealloc_buffer count which will be used later
+  /* update the prealloc_buffer count, which will be used later
    * as GstBufferPool min_buffers */
   thiz->min_prealloc_buffers = request.NumFrameSuggested;
 
@@ -481,8 +481,8 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
   guint alloc_w, alloc_h;
   const gchar *format_str;
 
-  /* use display width and display height in output state which
-   * will be using for caps negotiation */
+  /* use display width and display height in output state, which
+   * will be used for caps negotiation */
   width =
       thiz->param.mfx.FrameInfo.CropW ? thiz->param.mfx.
       FrameInfo.CropW : GST_VIDEO_INFO_WIDTH (&thiz->input_state->info);
@@ -513,8 +513,8 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
       GST_ROUND_UP_32 (thiz->param.mfx.FrameInfo.Height ? thiz->param.mfx.
       FrameInfo.Height : height);
 
-  /* Ensure output_state->caps and info has same width and height
-   * Also mandate the 32 bit alignment */
+  /* Ensure output_state->caps and info have same width and height
+   * Also, mandate 32 bit alignment */
   vinfo = &output_state->info;
   gst_msdk_set_video_alignment (vinfo, alloc_w, alloc_h, &align);
   gst_video_info_align (vinfo, &align);
@@ -533,7 +533,7 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
         GST_ROUND_UP_32 (thiz->param.mfx.FrameInfo.Height ? thiz->param.mfx.
         FrameInfo.Height : GST_VIDEO_INFO_HEIGHT (&output_state->info));
 
-    /* set allocation width and height in allocation_caps
+    /* set allocation width and height in allocation_caps,
      * which may or may not be similar to the output_state caps */
     allocation_caps = gst_caps_copy (output_state->caps);
     format_str =
@@ -544,8 +544,8 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
         allocation_caps);
     gst_caps_replace (&thiz->allocation_caps, allocation_caps);
   } else {
-    /* We keep the allocation parameters as it is to avoid pool renegotiation.
-     * For codecs like VP9, dynamic resolution change doesn't requires allocation
+    /* We keep the allocation parameters as it is to avoid pool re-negotiation.
+     * For codecs like VP9, dynamic resolution change doesn't require allocation
      * reset if the new video frame resolution is lower than the
      * already configured one */
     allocation_caps = gst_caps_copy (thiz->allocation_caps);
@@ -772,15 +772,15 @@ release_msdk_surfaces (GstMsdkDec * thiz)
 }
 
 /* This will get invoked in the following situations:
- * 1: begining of the stream, which requires initialization (== complete reset)
+ * 1: beginning of the stream, which requires initialization (== complete reset)
  * 2: upstream notified a resolution change and set do_renego to TRUE.
- *    new resoulution may or may not requires full reset
- * 3: upstream failed to notify the resoulution change but
+ *    new resolution may or may not requires full reset
+ * 3: upstream failed to notify the resolution change but
  *    msdk detected the change (eg: vp9 stream in ivf elementary form
  *     with varying resolution frames).
  *
  * for any input configuration change, we deal with notification
- * from upstream and also use msdk apis to handle the parameter initialization
+ * from upstream and also use msdk APIs to handle the parameter initialization
  * efficiently
  */
 static gboolean
@@ -810,24 +810,24 @@ gst_msdkdec_negotiate (GstMsdkDec * thiz, gboolean hard_reset)
     }
 
     /* De-initialize the decoder if it is already active */
-    /* Not resetting the mfxVideoParam since it already
-     * possessing the required parameters for new session decode */
+    /* Do not reset the mfxVideoParam since it already
+     * has the required parameters for new session decode */
     gst_msdkdec_close_decoder (thiz, FALSE);
 
-    /* request for pool renegotiation by setting do_realloc */
+    /* request for pool re-negotiation by setting do_realloc */
     thiz->do_realloc = TRUE;
   }
 
-  /* At this point all pending frames(if there is any) are pushed downsteram
+  /* At this point all pending frames (if there are any) are pushed downstream
    * and we are ready to negotiate the output caps */
   if (!gst_msdkdec_set_src_caps (thiz, hard_reset))
     return FALSE;
 
   /* this will initiate the allocation query, we create the
-   * bufferpool in decide_allocation inorder to account
-   * the downstream min_buffer requirement
+   * bufferpool in decide_allocation in order to account
+   * for the downstream min_buffer requirement
    * Required initializations for MediaSDK operations
-   * will all be inited from decide_allocation after considering
+   * will all be initialized from decide_allocation after considering
    * some of the downstream requirements */
   if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (thiz)))
     goto error_negotiate;
@@ -842,7 +842,7 @@ error_drain:
   return FALSE;
 
 error_negotiate:
-  GST_ERROR_OBJECT (thiz, "Failed to renegotiation");
+  GST_ERROR_OBJECT (thiz, "Failed to re-negotiate");
   return FALSE;
 }
 
@@ -878,7 +878,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
    * the DecodeHeader() later on
    */
   if (!thiz->initialized || thiz->do_renego) {
-    /* Clear the internal adapter in renegotiation for non-packetized
+    /* Clear the internal adapter in re-negotiation for non-packetized
      * formats */
     if (!thiz->is_packetized)
       gst_adapter_clear (thiz->adapter);
@@ -905,7 +905,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   memset (&bitstream, 0, sizeof (bitstream));
 
   if (thiz->is_packetized) {
-    /* Packetized stream: We prefer to have a parser as connected upstream
+    /* Packetized stream: we prefer to have a parser as a connected upstream
      * element to the decoder */
     bitstream.Data = map_info.data;
     bitstream.DataLength = map_info.size;
@@ -928,12 +928,12 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   if (!thiz->initialized || thiz->do_renego) {
 
-    /* gstreamer caps will not bring all the necessary parameters
-     * required for optimal decode configuration. For eg: the required numbers
+    /* gstreamer caps will not provide all the necessary parameters
+     * required for optimal decode configuration. For example: the required number
      * of surfaces to be allocated can be calculated based on H264 SEI header
      * and this information can't be retrieved from the negotiated caps.
-     * So instead of introducing the codecparser dependency to parse the headers
-     * inside msdk plugin, we simply use the mfx apis to extract header information */
+     * So instead of introducing a codecparser dependency to parse the headers
+     * inside msdk plugin, we simply use the mfx APIs to extract header information */
     status = MFXVideoDECODE_DecodeHeader (session, &bitstream, &thiz->param);
     if (status == MFX_ERR_MORE_DATA) {
       flow = GST_FLOW_OK;
@@ -986,7 +986,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
         goto error;
       surface = get_surface (thiz, buffer);
       if (!surface) {
-        /* Can't get a surface for some reason, finish tasks to see if
+        /* Can't get a surface for some reason; finish tasks, then see if
            a surface becomes available. */
         for (i = 0; i < thiz->tasks->len - 1; i++) {
           thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
@@ -1010,14 +1010,14 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
         MFXVideoDECODE_DecodeFrameAsync (session, &bitstream, surface->surface,
         &task->surface, &task->sync_point);
 
-    /* media-sdk requires complete reset since the surface is inadaquate to
-     * do further decoding */
+    /* media-sdk requires complete reset since the surface is inadequate
+     * for further decoding */
     if (status == MFX_ERR_INCOMPATIBLE_VIDEO_PARAM &&
         retry_err_incompatible++ < 1) {
       /* MFX_ERR_INCOMPATIBLE_VIDEO_PARAM means the current mfx surface is not
-       * suitable for the current frame, call MFXVideoDECODE_DecodeHeader to get
-       * the current frame size then do memory re-allocation, otherwise
-       * MFXVideoDECODE_DecodeFrameAsync still will fail for next call */
+       * suitable for the current frame. Call MFXVideoDECODE_DecodeHeader to get
+       * the current frame size, then do memory re-allocation, otherwise
+       * MFXVideoDECODE_DecodeFrameAsync will still fail on next call */
       status = MFXVideoDECODE_DecodeHeader (session, &bitstream, &thiz->param);
       if (status == MFX_ERR_MORE_DATA) {
         flow = GST_FLOW_OK;
@@ -1028,7 +1028,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       if (!gst_msdkdec_negotiate (thiz, TRUE))
         goto error;
 
-      /* The current surface is freed when doing a hard reset, a new surface is
+      /* The current surface is freed when doing a hard reset; a new surface is
        * required for the new resolution */
       surface = NULL;
       continue;
@@ -1061,7 +1061,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       surface = NULL;
       continue;
     } else if (status == MFX_WRN_DEVICE_BUSY) {
-      /* If device is busy, wait 1ms and retry, as per MSDK's recomendation */
+      /* If device is busy, wait 1ms and retry, as per MSDK's recommendation */
       g_usleep (1000);
 
       if (task->surface &&
@@ -1070,8 +1070,8 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
         surface = NULL;
       }
 
-      /* If the current surface is still busy, we should do sync oepration
-       * then tries to decode again
+      /* If the current surface is still busy, we should do sync operation,
+       * then try to decode again
        */
       thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
     } else if (status < MFX_ERR_NONE) {
@@ -1083,7 +1083,7 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   }
 
   if (!thiz->is_packetized) {
-    /* flush out the data which is already consumed by msdk */
+    /* flush out the data which has already been consumed by msdk */
     gst_adapter_flush (thiz->adapter, bitstream.DataOffset);
     flow = GST_FLOW_OK;
   }
@@ -1132,7 +1132,7 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   caps = gst_video_info_to_caps (info);
 
   /* allocators should use the same width/height/stride/height_alignment of
-   * negotiated output caps which is what we configure in msdk_allocator */
+   * negotiated output caps, which is what we configure in msdk_allocator */
   if (thiz->use_dmabuf)
     allocator = gst_msdk_dmabuf_allocator_new (thiz->context, info, alloc_resp);
   else if (thiz->use_video_memory)
@@ -1200,14 +1200,14 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
           query))
     return FALSE;
 
-  /* Get the buffer pool config decided by the base class. The base
+  /* Get the buffer pool config decided on by the base class. The base
      class ensures that there will always be at least a 0th pool in
      the query. */
   gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
   pool_config = gst_buffer_pool_get_config (pool);
 
-  /* Get the caps of pool and increase the min and max buffers by async_depth,
-   * we will always have that number of decode operations in-flight */
+  /* Get the caps of pool and increase the min and max buffers by async_depth.
+   * We will always have that number of decode operations in-flight */
   gst_buffer_pool_config_get_params (pool_config, &pool_caps, &size,
       &min_buffers, &max_buffers);
   min_buffers += thiz->async_depth;
@@ -1226,16 +1226,16 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   }
 
   /* Initialize MSDK decoder before new bufferpool tries to alloc each buffer,
-   * which requires information of frame allocation.
+   * which requires information about frame allocation.
    * No effect if already initialized.
    */
   if (!gst_msdkdec_init_decoder (thiz))
     return FALSE;
 
-  /* get the updated min_buffers which account the msdk requirement too */
+  /* get the updated min_buffers, which account for the msdk requirement as well */
   min_buffers = thiz->min_prealloc_buffers;
 
-  /* Decoder always use its own pool. So we create a pool if msdk apis
+  /* Decoder always use its own pool. So we create a pool if msdk APIs
    * previously requested for allocation (do_realloc = TRUE) */
   if (thiz->do_realloc || !thiz->pool) {
     if (thiz->pool)
@@ -1254,7 +1254,7 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     GstAllocator *allocator;
 
     /* If downstream supports video meta and video alignment,
-     * we can replace our own msdk bufferpool and use it
+     * we can replace with our own msdk bufferpool and use it
      */
     /* Remove downstream's pool */
     gst_structure_free (pool_config);
@@ -1269,7 +1269,7 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
       gst_query_set_nth_allocation_param (query, 0, allocator, NULL);
     gst_structure_free (config);
   } else {
-    /* Unfortunately, dowstream doesn't have videometa or alignment support,
+    /* Unfortunately, downstream doesn't have videometa or alignment support,
      * we keep msdk pool as a side-pool that will be decoded into and
      * then copied from.
      */
@@ -1360,8 +1360,8 @@ gst_msdkdec_drain (GstVideoDecoder * decoder)
       /* If device is busy, wait 1ms and retry, as per MSDK's recomendation */
       g_usleep (1000);
 
-      /* If the current surface is still busy, we should do sync oepration
-       * then tries to decode again
+      /* If the current surface is still busy, we should do sync operation,
+       * then try to decode again
        */
       thiz->next_task = (thiz->next_task + 1) % thiz->tasks->len;
     } else if (status == MFX_ERR_MORE_DATA) {
