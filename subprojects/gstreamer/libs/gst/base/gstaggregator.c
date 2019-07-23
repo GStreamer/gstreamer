@@ -2108,7 +2108,6 @@ gst_aggregator_request_new_pad (GstElement * element,
   GstAggregator *self;
   GstAggregatorPad *agg_pad;
   GstAggregatorClass *klass = GST_AGGREGATOR_GET_CLASS (element);
-  GstAggregatorPrivate *priv = GST_AGGREGATOR (element)->priv;
 
   self = GST_AGGREGATOR (element);
 
@@ -2119,9 +2118,6 @@ gst_aggregator_request_new_pad (GstElement * element,
   }
 
   GST_DEBUG_OBJECT (element, "Adding pad %s", GST_PAD_NAME (agg_pad));
-
-  if (priv->running)
-    gst_pad_set_active (GST_PAD (agg_pad), TRUE);
 
   /* add the pad to the element */
   gst_element_add_pad (element, GST_PAD (agg_pad));

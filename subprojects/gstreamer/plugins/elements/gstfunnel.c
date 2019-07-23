@@ -238,8 +238,6 @@ gst_funnel_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_FLAG_PROXY_CAPS);
   GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_FLAG_PROXY_ALLOCATION);
 
-  gst_pad_set_active (sinkpad, TRUE);
-
   gst_element_add_pad (element, sinkpad);
 
   GST_DEBUG_OBJECT (element, "requested pad %s:%s",

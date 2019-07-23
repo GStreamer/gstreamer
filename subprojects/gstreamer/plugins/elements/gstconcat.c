@@ -311,8 +311,6 @@ gst_concat_request_new_pad (GstElement * element, GstPadTemplate * templ,
   GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_FLAG_PROXY_CAPS);
   GST_OBJECT_FLAG_SET (sinkpad, GST_PAD_FLAG_PROXY_ALLOCATION);
 
-  gst_pad_set_active (sinkpad, TRUE);
-
   g_mutex_lock (&self->lock);
   self->sinkpads = g_list_prepend (self->sinkpads, gst_object_ref (sinkpad));
   if (!self->current_sinkpad) {
