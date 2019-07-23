@@ -478,6 +478,7 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
   GstCaps *allocation_caps = NULL;
   GstVideoFormat format;
   guint width, height;
+  guint alloc_w, alloc_h;
   const gchar *format_str;
 
   /* use display width and display height in output state which
@@ -504,10 +505,18 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
   if (!output_state)
     return FALSE;
 
+  /* Find allocation width and height */
+  alloc_w =
+      GST_ROUND_UP_16 (thiz->param.mfx.FrameInfo.Width ? thiz->param.mfx.
+      FrameInfo.Width : width);
+  alloc_h =
+      GST_ROUND_UP_32 (thiz->param.mfx.FrameInfo.Height ? thiz->param.mfx.
+      FrameInfo.Height : height);
+
   /* Ensure output_state->caps and info has same width and height
    * Also mandate the 32 bit alignment */
   vinfo = &output_state->info;
-  gst_msdk_set_video_alignment (vinfo, &align);
+  gst_msdk_set_video_alignment (vinfo, alloc_w, alloc_h, &align);
   gst_video_info_align (vinfo, &align);
   output_state->caps = gst_video_info_to_caps (vinfo);
   if (srcpad_can_dmabuf (thiz))

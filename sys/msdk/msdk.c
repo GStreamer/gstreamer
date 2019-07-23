@@ -215,7 +215,7 @@ msdk_is_available (void)
 }
 
 void
-gst_msdk_set_video_alignment (GstVideoInfo * info,
+gst_msdk_set_video_alignment (GstVideoInfo * info, guint alloc_w, guint alloc_h,
     GstVideoAlignment * alignment)
 {
   guint i, width, height;
@@ -223,14 +223,21 @@ gst_msdk_set_video_alignment (GstVideoInfo * info,
   width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
 
+  g_assert (alloc_w == 0 || alloc_w >= width);
+  g_assert (alloc_h == 0 || alloc_h >= height);
+
+  if (alloc_w == 0)
+    alloc_w = width;
+
+  if (alloc_h == 0)
+    alloc_h = height;
+
   gst_video_alignment_reset (alignment);
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++)
     alignment->stride_align[i] = 15;    /* 16-byte alignment */
 
-  if (width & 15)
-    alignment->padding_right = GST_MSDK_ALIGNMENT_PADDING (width, 16);
-  if (height & 31)
-    alignment->padding_bottom = GST_MSDK_ALIGNMENT_PADDING (height, 32);
+  alignment->padding_right = GST_ROUND_UP_16 (alloc_w) - width;
+  alignment->padding_bottom = GST_ROUND_UP_32 (alloc_h) - height;
 }
 
 static const struct map *
@@ -267,8 +274,20 @@ gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
 {
   g_return_if_fail (info && mfx_info);
 
-  mfx_info->Width = GST_ROUND_UP_16 (GST_VIDEO_INFO_WIDTH (info));
-  mfx_info->Height = GST_ROUND_UP_32 (GST_VIDEO_INFO_HEIGHT (info));
+  /* Use the first component in info to calculate mfx width / height */
+  mfx_info->Width =
+      GST_ROUND_UP_16 (GST_VIDEO_INFO_COMP_STRIDE (info,
+          0) / GST_VIDEO_INFO_COMP_PSTRIDE (info, 0));
+
+  if (GST_VIDEO_INFO_N_PLANES (info) > 1)
+    mfx_info->Height =
+        GST_ROUND_UP_32 (GST_VIDEO_INFO_COMP_OFFSET (info,
+            1) / GST_VIDEO_INFO_COMP_STRIDE (info, 0));
+  else
+    mfx_info->Height =
+        GST_ROUND_UP_32 (GST_VIDEO_INFO_SIZE (info) /
+        GST_VIDEO_INFO_COMP_STRIDE (info, 0));
+
   mfx_info->CropW = GST_VIDEO_INFO_WIDTH (info);
   mfx_info->CropH = GST_VIDEO_INFO_HEIGHT (info);
   mfx_info->FrameRateExtN = GST_VIDEO_INFO_FPS_N (info);

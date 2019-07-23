@@ -936,7 +936,7 @@ gst_msdkenc_create_buffer_pool (GstMsdkEnc * thiz, GstCaps * caps,
     return NULL;
   }
 
-  gst_msdk_set_video_alignment (&info, &align);
+  gst_msdk_set_video_alignment (&info, 0, 0, &align);
   gst_video_info_align (&info, &align);
 
   if (thiz->use_dmabuf)

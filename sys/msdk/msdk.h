@@ -56,7 +56,7 @@ void msdk_frame_to_surface (GstVideoFrame * frame, mfxFrameSurface1 * surface);
 
 const gchar *msdk_status_to_string (mfxStatus status);
 
-void gst_msdk_set_video_alignment (GstVideoInfo * info,
+void gst_msdk_set_video_alignment (GstVideoInfo * info, guint alloc_w, guint alloc_h,
     GstVideoAlignment * alignment);
 
 /* Conversion from Gstreamer to libmfx */

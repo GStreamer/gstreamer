@@ -293,7 +293,7 @@ gst_msdkvpp_create_buffer_pool (GstMsdkVPP * thiz, GstPadDirection direction,
   if (!gst_video_info_from_caps (&info, caps))
     goto error_no_video_info;
 
-  gst_msdk_set_video_alignment (&info, &align);
+  gst_msdk_set_video_alignment (&info, 0, 0, &align);
   gst_video_info_align (&info, &align);
 
   if (use_dmabuf)

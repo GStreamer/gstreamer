@@ -135,7 +135,7 @@ gst_msdk_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
           GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT)) {
     GstVideoAlignment alignment;
 
-    gst_msdk_set_video_alignment (&video_info, &alignment);
+    gst_msdk_set_video_alignment (&video_info, 0, 0, &alignment);
     gst_video_info_align (&video_info, &alignment);
     gst_buffer_pool_config_set_video_alignment (config, &alignment);
   }
