@@ -1977,12 +1977,12 @@ gst_nv_base_enc_register (GstPlugin * plugin, GType type, const char *codec,
   GType subtype;
   gchar *type_name;
   GstNvEncClassData *cdata;
+  gboolean is_default = TRUE;
 
   cdata = g_new0 (GstNvEncClassData, 1);
   cdata->sink_caps = gst_caps_ref (sink_caps);
   cdata->src_caps = gst_caps_ref (src_caps);
   cdata->cuda_device_id = device_id;
-  cdata->is_default = TRUE;
 
   g_type_query (type, &type_query);
   memset (&type_info, 0, sizeof (type_info));
@@ -1996,13 +1996,17 @@ gst_nv_base_enc_register (GstPlugin * plugin, GType type, const char *codec,
   if (g_type_from_name (type_name) != 0) {
     g_free (type_name);
     type_name = g_strdup_printf ("nv%sdevice%denc", codec, device_id);
-    cdata->is_default = FALSE;
+    is_default = FALSE;
   }
 
+  cdata->is_default = is_default;
   subtype = g_type_register_static (type, type_name, &type_info, 0);
 
   /* make lower rank than default device */
-  if (!gst_element_register (plugin, type_name, rank - 1, subtype))
+  if (rank > 0 && !is_default)
+    rank--;
+
+  if (!gst_element_register (plugin, type_name, rank, subtype))
     GST_WARNING ("Failed to register plugin '%s'", type_name);
 
   g_free (type_name);
