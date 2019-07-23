@@ -756,6 +756,9 @@ otio_type_find (GstTypeFind * tf, gpointer unused)
     return;
 
   data = (const gchar *) gst_type_find_peek (tf, tmp - data, 15);
+  if (!data)
+    return;
+
   if (memcmp (data, "\"OTIO_SCHEMA\":", 15)) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, OTIO_CAPS);
   }
