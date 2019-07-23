@@ -218,6 +218,10 @@ static void gst_curl_http_src_request_remove (GstCurlHttpSrc * src);
 static void gst_curl_http_src_wait_until_removed (GstCurlHttpSrc * src);
 static char *gst_curl_http_src_strcasestr (const char *haystack,
     const char *needle);
+#ifndef GST_DISABLE_GST_DEBUG
+static int gst_curl_http_src_get_debug (CURL * handle, curl_infotype type,
+    char *data, size_t size, void *clientp);
+#endif
 
 static curl_version_info_data *gst_curl_http_src_curl_capabilities = NULL;
 static GstCurlHttpVersion pref_http_ver;
@@ -1078,6 +1082,19 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
     return NULL;
   }
   GST_INFO_OBJECT (s, "Creating a new handle for URI %s", s->uri);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (curl_easy_setopt (handle, CURLOPT_VERBOSE, 1) != CURLE_OK) {
+    GST_WARNING_OBJECT (s, "Failed to set verbose!");
+  }
+  if (curl_easy_setopt (handle, CURLOPT_DEBUGDATA, s) != CURLE_OK) {
+    GST_WARNING_OBJECT (s, "Failed to set debug user_data!");
+  }
+  if (curl_easy_setopt (handle, CURLOPT_DEBUGFUNCTION,
+          gst_curl_http_src_get_debug) != CURLE_OK) {
+    GST_WARNING_OBJECT (s, "Failed to set debug function!");
+  }
+#endif
 
   gst_curl_setopt_str (s, handle, CURLOPT_URL, s->uri);
   gst_curl_setopt_str (s, handle, CURLOPT_USERNAME, s->username);
@@ -1989,3 +2006,57 @@ gst_curl_http_src_wait_until_removed (GstCurlHttpSrc * src)
   }
   g_mutex_unlock (&src->buffer_mutex);
 }
+
+#ifndef GST_DISABLE_GST_DEBUG
+/*
+ * This callback receives debug information, as specified in the type argument.
+ * This function must return 0.
+ */
+static int
+gst_curl_http_src_get_debug (CURL * handle, curl_infotype type, char *data,
+    size_t size, void *clientp)
+{
+  GstCurlHttpSrc *src = (GstCurlHttpSrc *) clientp;
+  gchar *msg = NULL;
+
+  switch (type) {
+    case CURLINFO_TEXT:
+    case CURLINFO_HEADER_OUT:
+      msg = g_memdup (data, size);
+      if (size > 0) {
+        msg[size - 1] = '\0';
+        g_strchomp (msg);
+      }
+      break;
+    default:
+      break;
+  }
+
+  switch (type) {
+    case CURLINFO_TEXT:
+      GST_DEBUG_OBJECT (src, "%s", msg);
+      break;
+    case CURLINFO_HEADER_OUT:
+      GST_DEBUG_OBJECT (src, "outgoing header: %s", msg);
+      break;
+    case CURLINFO_DATA_IN:
+      GST_MEMDUMP_OBJECT (src, "incoming data", (guint8 *) data, size);
+      break;
+    case CURLINFO_DATA_OUT:
+      GST_MEMDUMP_OBJECT (src, "outgoing data", (guint8 *) data, size);
+      break;
+    case CURLINFO_SSL_DATA_IN:
+      GST_MEMDUMP_OBJECT (src, "incoming ssl data", (guint8 *) data, size);
+      break;
+    case CURLINFO_SSL_DATA_OUT:
+      GST_MEMDUMP_OBJECT (src, "outgoing ssl data", (guint8 *) data, size);
+      break;
+    default:
+      GST_DEBUG_OBJECT (src, "unknown debug info type %d", type);
+      GST_MEMDUMP_OBJECT (src, "unknown data", (guint8 *) data, size);
+      break;
+  }
+  g_free (msg);
+  return 0;
+}
+#endif
