@@ -1203,9 +1203,13 @@ const GstNvCodecMap codec_map[] = {
   /* FIXME: need verification */
   {cudaVideoCodec_VC1, "vc1"},
 #endif
+  /* NOTE: common supported h264 profiles for all GPU architecture
+   * 4:2:0, baseline, main, and high profiles
+   */
   {cudaVideoCodec_H264, "h264",
       "video/x-h264, stream-format = (string) byte-stream"
-        ", alignment = (string) au"},
+        ", alignment = (string) au"
+        ", profile = (string) { constrained-baseline, baseline, main, high }"},
   {cudaVideoCodec_JPEG, "jpeg", "image/jpeg"},
 #if 0
   /* FIXME: need verification */
@@ -1214,7 +1218,7 @@ const GstNvCodecMap codec_map[] = {
 #endif
   {cudaVideoCodec_HEVC, "h265",
       "video/x-h265, stream-format = (string) byte-stream"
-        ", alignment = (string) au"},
+        ", alignment = (string) au, profile = (string) { main }"},
   {cudaVideoCodec_VP8, "vp8", "video/x-vp8"},
   {cudaVideoCodec_VP9, "vp9", "video/x-vp9"}
 };
