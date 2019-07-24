@@ -71,6 +71,7 @@ struct _GstNvDec
   guint fps_d;
   GstClockTime min_latency;
   GstVideoCodecState *input_state;
+  GstVideoCodecState *output_state;
 
   GstFlowReturn last_ret;
   GstNvDecState state;

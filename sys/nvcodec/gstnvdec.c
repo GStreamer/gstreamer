@@ -195,6 +195,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
 {
   guint width, height, fps_n, fps_d;
   CUVIDDECODECREATEINFO create_info = { 0, };
+  GstVideoFormat out_format = GST_VIDEO_FORMAT_NV12;
 
   width = format->display_area.right - format->display_area.left;
   height = format->display_area.bottom - format->display_area.top;
@@ -227,6 +228,17 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     create_info.display_area.right = format->display_area.right;
     create_info.display_area.bottom = format->display_area.bottom;
     create_info.OutputFormat = cudaVideoSurfaceFormat_NV12;
+    create_info.bitDepthMinus8 = format->bit_depth_luma_minus8;
+    if (format->bit_depth_luma_minus8 > 0) {
+      GST_DEBUG_OBJECT (nvdec, "out format bitdepth : %d",
+          format->bit_depth_luma_minus8 + 8);
+      create_info.OutputFormat = cudaVideoSurfaceFormat_P016;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+      out_format = GST_VIDEO_FORMAT_P010_10LE;
+#else
+      out_format = GST_VIDEO_FORMAT_P010_10BE;
+#endif
+    }
     create_info.DeinterlaceMode = cudaVideoDeinterlaceMode_Weave;
     create_info.ulTargetWidth = width;
     create_info.ulTargetHeight = height;
@@ -265,7 +277,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     nvdec->fps_d = fps_d;
 
     state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (nvdec),
-        GST_VIDEO_FORMAT_NV12, nvdec->width, nvdec->height, nvdec->input_state);
+        out_format, nvdec->width, nvdec->height, nvdec->input_state);
     vinfo = &state->info;
     vinfo->fps_n = fps_n;
     vinfo->fps_d = fps_d;
@@ -332,7 +344,10 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING,
         "2D", NULL);
 
-    gst_video_codec_state_unref (state);
+    if (nvdec->output_state)
+      gst_video_codec_state_unref (nvdec->output_state);
+
+    nvdec->output_state = state;
 
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (nvdec))) {
       GST_WARNING_OBJECT (nvdec, "failed to negotiate with downstream");
@@ -634,6 +649,11 @@ gst_nvdec_stop (GstVideoDecoder * decoder)
     nvdec->input_state = NULL;
   }
 
+  if (nvdec->output_state) {
+    gst_video_codec_state_unref (nvdec->output_state);
+    nvdec->output_state = NULL;
+  }
+
   if (nvdec->ctx_lock) {
     CuvidCtxLockDestroy (nvdec->ctx_lock);
     nvdec->ctx_lock = NULL;
@@ -698,6 +718,7 @@ copy_video_frame_to_gl_textures (GstGLContext * context, gpointer * args)
   CUarray array;
   guint pitch, i;
   CUDA_MEMCPY2D mcpy2d = { 0, };
+  GstVideoInfo *info = &nvdec->output_state->info;
 
   GST_LOG_OBJECT (nvdec, "picture index: %u", dispinfo->picture_index);
 
@@ -724,8 +745,9 @@ copy_video_frame_to_gl_textures (GstGLContext * context, gpointer * args)
   mcpy2d.srcMemoryType = CU_MEMORYTYPE_DEVICE;
   mcpy2d.srcPitch = pitch;
   mcpy2d.dstMemoryType = CU_MEMORYTYPE_ARRAY;
-  mcpy2d.dstPitch = nvdec->width;
-  mcpy2d.WidthInBytes = nvdec->width;
+  mcpy2d.dstPitch = GST_VIDEO_INFO_WIDTH (info);
+  mcpy2d.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (info, 0)
+      * GST_VIDEO_INFO_COMP_PSTRIDE (info, 0);
 
   for (i = 0; i < num_resources; i++) {
     if (!cuda_OK (CuGraphicsSubResourceGetMappedArray (&array, resources[i], 0,
@@ -1044,6 +1066,56 @@ gst_nvdec_subclass_register (GstPlugin * plugin, GType type,
   g_free (type_name);
 }
 
+static gboolean
+gst_nvdec_get_supported_codec_profiles (GValue * profiles,
+    cudaVideoCodec codec_type, guint max_bitdepth_minus8)
+{
+  GValue val = G_VALUE_INIT;
+  gboolean ret = FALSE;
+
+  g_value_init (&val, G_TYPE_STRING);
+
+  switch (codec_type) {
+    case cudaVideoCodec_H264:
+      g_value_set_static_string (&val, "constrained-baseline");
+      gst_value_list_append_value (profiles, &val);
+
+      g_value_set_static_string (&val, "baseline");
+      gst_value_list_append_value (profiles, &val);
+
+      g_value_set_static_string (&val, "main");
+      gst_value_list_append_value (profiles, &val);
+
+      g_value_set_static_string (&val, "high");
+      gst_value_list_append_value (profiles, &val);
+
+      if (max_bitdepth_minus8 >= 2) {
+        g_value_set_static_string (&val, "high-10");
+        gst_value_list_append_value (profiles, &val);
+      }
+
+      ret = TRUE;
+      break;
+    case cudaVideoCodec_HEVC:
+      g_value_set_static_string (&val, "main");
+      gst_value_list_append_value (profiles, &val);
+
+      if (max_bitdepth_minus8 >= 2) {
+        g_value_set_static_string (&val, "main-10");
+        gst_value_list_append_value (profiles, &val);
+      }
+
+      ret = TRUE;
+      break;
+    default:
+      break;
+  }
+
+  g_value_unset (&val);
+
+  return ret;
+}
+
 typedef struct
 {
   guint idx;
@@ -1065,8 +1137,9 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
     gint max_height = 0, min_height = G_MAXINT;
     GstCaps *sink_templ = NULL;
     GstCaps *src_templ = NULL;
-    /* FIXME: support 10/12bits format */
-    guint bitdepth_minus8[1] = { 0 };
+    /* FIXME: support 12bits format */
+    guint bitdepth_minus8[2] = { 0, 2 };
+    guint max_bitdepth_minus8 = 0;
     gint c_idx, b_idx;
     guint num_support = 0;
     cudaVideoChromaFormat chroma_list[] = {
@@ -1081,6 +1154,7 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
     };
     GValue format_list = G_VALUE_INIT;
     GValue format = G_VALUE_INIT;
+    GValue profile_list = G_VALUE_INIT;
 
     if (CuDeviceGet (&cuda_device, i) != CUDA_SUCCESS)
       continue;
@@ -1090,6 +1164,7 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
 
     g_value_init (&format_list, GST_TYPE_LIST);
     g_value_init (&format, G_TYPE_STRING);
+    g_value_init (&profile_list, GST_TYPE_LIST);
 
     if (CuCtxPushCurrent (cuda_ctx) != CUDA_SUCCESS)
       goto cuda_free;
@@ -1122,20 +1197,32 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
         if (max_height < decoder_caps.nMaxHeight)
           max_height = decoder_caps.nMaxHeight;
 
+        max_bitdepth_minus8 = bitdepth_minus8[b_idx];
+
         GST_INFO ("%s bit-depth %d with chroma format %d [%d - %d] x [%d - %d]",
             codec, bitdepth_minus8[b_idx] + 8, c_idx, min_width, max_width,
             min_height, max_height);
 
         switch (chroma_list[c_idx]) {
           case cudaVideoChromaFormat_420:
-            g_value_set_string (&format, "NV12");
+            if (b_idx == 0) {
+              g_value_set_string (&format, "NV12");
+            } else if (b_idx == 1) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+              g_value_set_string (&format, "P010_10LE");
+#else
+              g_value_set_string (&format, "P010_10BE");
+#endif
+            } else {
+              /* unknown bit-depth */
+              break;
+            }
+            num_support++;
             gst_value_list_append_value (&format_list, &format);
             break;
           default:
             break;
         }
-
-        num_support++;
       }
     }
 
@@ -1162,6 +1249,11 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
         "width", GST_TYPE_INT_RANGE, min_width, max_width,
         "height", GST_TYPE_INT_RANGE, min_height, max_height, NULL);
 
+    if (gst_nvdec_get_supported_codec_profiles (&profile_list, codec_type,
+            max_bitdepth_minus8)) {
+      gst_caps_set_value (sink_templ, "profile", &profile_list);
+    }
+
     GST_DEBUG ("sink template caps %" GST_PTR_FORMAT, sink_templ);
     GST_DEBUG ("src template caps %" GST_PTR_FORMAT, src_templ);
 
@@ -1172,6 +1264,7 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
 
     g_value_unset (&format_list);
     g_value_unset (&format);
+    g_value_unset (&profile_list);
 
     if (sink_templ && src_templ) {
       gst_nvdec_subclass_register (plugin, type, codec_type, codec, i, rank,
