@@ -94,7 +94,7 @@ gst_cuda_load_library (void)
 
   module = g_module_open (filename, G_MODULE_BIND_LAZY);
   if (module == NULL) {
-    GST_ERROR ("Could not open library %s, %s", filename, g_module_error ());
+    GST_WARNING ("Could not open library %s, %s", filename, g_module_error ());
     return FALSE;
   }
 

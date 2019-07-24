@@ -356,7 +356,8 @@ load_nvenc_library (void)
 
   module = g_module_open (NVENC_LIBRARY_NAME, G_MODULE_BIND_LAZY);
   if (module == NULL) {
-    GST_ERROR ("%s", g_module_error ());
+    GST_WARNING ("Could not open library %s, %s",
+        NVENC_LIBRARY_NAME, g_module_error ());
     return FALSE;
   }
 
