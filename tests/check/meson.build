@@ -46,6 +46,7 @@ base_tests = [
   [['elements/svthevcenc.c'], not svthevcenc_dep.found(), [svthevcenc_dep]],
   [['elements/pcapparse.c'], false, [libparser_dep]],
   [['elements/pnm.c']],
+  [['elements/ristrtpext.c']],
   [['elements/rtponvifparse.c']],
   [['elements/rtponviftimestamp.c']],
   [['elements/rtpsrc.c']],
