@@ -95,8 +95,6 @@ gst_gl_upload_element_class_init (GstGLUploadElementClass * klass)
   bt_class->transform = gst_gl_upload_element_transform;
   bt_class->stop = gst_gl_upload_element_stop;
 
-  bt_class->passthrough_on_same_caps = TRUE;
-
   element_class->change_state = gst_gl_upload_element_change_state;
 
   gst_element_class_add_static_pad_template (element_class,
