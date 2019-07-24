@@ -49,6 +49,13 @@ else
 
   if mfx_root != ''
     mfx_libdir = [mfx_root + '/lib/lin_x64', mfx_root + '/lib/x64', mfx_root + '/lib64', mfx_root + '/lib']
+    if host_machine.system() == 'windows'
+      if host_machine.cpu_family() == 'x86'
+        mfx_libdir = [mfx_root + '/lib/win32']
+      else
+        mfx_libdir = [mfx_root + '/lib/x64']
+      endif
+    endif
     mfx_incdir = join_paths([mfx_root, 'include'])
     mfx_lib = cxx.find_library('mfx', dirs: mfx_libdir, required: msdk_option)
     mfx_inc = include_directories(mfx_incdir)
