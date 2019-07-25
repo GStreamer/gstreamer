@@ -1551,7 +1551,7 @@ relink_context (MqStreamCtx * ctx, GstSplitMuxSink * splitmux)
   templ = sinkpad->padtemplate;
   newpad =
       gst_element_request_pad (splitmux->muxer, templ,
-      GST_PAD_TEMPLATE_NAME_TEMPLATE (templ), NULL);
+      GST_PAD_NAME (sinkpad), NULL);
 
   GST_DEBUG_OBJECT (splitmux, "Relinking ctx %p to pad %" GST_PTR_FORMAT, ctx,
       newpad);
