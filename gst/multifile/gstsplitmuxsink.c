@@ -424,25 +424,27 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
    */
   signals[SIGNAL_SPLIT_NOW] =
       g_signal_new ("split-now", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSplitMuxSinkClass,
-          split_now), NULL, NULL, NULL, G_TYPE_NONE, 0);
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstSplitMuxSinkClass, split_now), NULL, NULL, NULL,
+      G_TYPE_NONE, 0);
 
   /**
    * GstSplitMuxSink::split-after:
    * @splitmux: the #GstSplitMuxSink
    *
    * When called by the user, this action signal splits the video file (and begins a new one) immediately.
-   * The current GOP will be output to the old file.
+   * Unlike the 'split-now' signal, with 'split-after', the current GOP will be output to the old file.
    *
    * Since: 1.16
    */
   signals[SIGNAL_SPLIT_AFTER] =
       g_signal_new ("split-after", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSplitMuxSinkClass,
-          split_after), NULL, NULL, NULL, G_TYPE_NONE, 0);
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstSplitMuxSinkClass, split_after), NULL, NULL, NULL,
+      G_TYPE_NONE, 0);
 
   /**
-   * GstSplitMuxSink::split-now:
+   * GstSplitMuxSink::split-at-running-time:
    * @splitmux: the #GstSplitMuxSink
    *
    * When called by the user, this action signal splits the video file (and
@@ -463,9 +465,9 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
    */
   signals[SIGNAL_SPLIT_AT_RUNNING_TIME] =
       g_signal_new ("split-at-running-time", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSplitMuxSinkClass,
-          split_at_running_time), NULL, NULL, NULL, G_TYPE_NONE, 1,
-      G_TYPE_UINT64);
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_STRUCT_OFFSET (GstSplitMuxSinkClass, split_at_running_time), NULL, NULL,
+      NULL, G_TYPE_NONE, 1, G_TYPE_UINT64);
 
   /**
    * GstSplitMuxSink::muxer-added:
