@@ -43,6 +43,8 @@ static gboolean gst_gtk_gl_sink_propose_allocation (GstBaseSink * bsink,
 static GstCaps *gst_gtk_gl_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
 
+static void gst_gtk_gl_sink_finalize (GObject * object);
+
 static GstStaticPadTemplate gst_gtk_gl_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -61,13 +63,17 @@ G_DEFINE_TYPE_WITH_CODE (GstGtkGLSink, gst_gtk_gl_sink,
 static void
 gst_gtk_gl_sink_class_init (GstGtkGLSinkClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
   GstGtkBaseSinkClass *gstgtkbasesink_class;
 
+  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
   gstgtkbasesink_class = (GstGtkBaseSinkClass *) klass;
+
+  gobject_class->finalize = gst_gtk_gl_sink_finalize;
 
   gstbasesink_class->query = gst_gtk_gl_sink_query;
   gstbasesink_class->propose_allocation = gst_gtk_gl_sink_propose_allocation;
@@ -138,6 +144,20 @@ _size_changed_cb (GtkWidget * widget, GdkRectangle * rectangle,
   }
 }
 
+static void
+destroy_cb (GtkWidget * widget, GstGtkGLSink * gtk_sink)
+{
+  if (gtk_sink->size_allocate_sig_handler) {
+    g_signal_handler_disconnect (widget, gtk_sink->size_allocate_sig_handler);
+    gtk_sink->size_allocate_sig_handler = 0;
+  }
+
+  if (gtk_sink->widget_destroy_sig_handler) {
+    g_signal_handler_disconnect (widget, gtk_sink->widget_destroy_sig_handler);
+    gtk_sink->widget_destroy_sig_handler = 0;
+  }
+}
+
 static gboolean
 gst_gtk_gl_sink_start (GstBaseSink * bsink)
 {
@@ -152,8 +172,14 @@ gst_gtk_gl_sink_start (GstBaseSink * bsink)
   gst_widget = GTK_GST_GL_WIDGET (base_sink->widget);
 
   /* Track the allocation size */
-  g_signal_connect (gst_widget, "size-allocate", G_CALLBACK (_size_changed_cb),
+  gtk_sink->size_allocate_sig_handler =
+      g_signal_connect (gst_widget, "size-allocate",
+      G_CALLBACK (_size_changed_cb), gtk_sink);
+
+  gtk_sink->widget_destroy_sig_handler =
+      g_signal_connect (gst_widget, "destroy", G_CALLBACK (destroy_cb),
       gtk_sink);
+
   _size_changed_cb (GTK_WIDGET (gst_widget), NULL, gtk_sink);
 
   if (!gtk_gst_gl_widget_init_winsys (gst_widget)) {
@@ -314,4 +340,25 @@ gst_gtk_gl_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   GST_DEBUG_OBJECT (bsink, "returning caps: %" GST_PTR_FORMAT, result);
 
   return result;
+}
+
+static void
+gst_gtk_gl_sink_finalize (GObject * object)
+{
+  GstGtkGLSink *gtk_sink = GST_GTK_GL_SINK (object);
+  GstGtkBaseSink *base_sink = GST_GTK_BASE_SINK (object);
+
+  if (gtk_sink->size_allocate_sig_handler) {
+    g_signal_handler_disconnect (base_sink->widget,
+        gtk_sink->size_allocate_sig_handler);
+    gtk_sink->size_allocate_sig_handler = 0;
+  }
+
+  if (gtk_sink->widget_destroy_sig_handler) {
+    g_signal_handler_disconnect (base_sink->widget,
+        gtk_sink->widget_destroy_sig_handler);
+    gtk_sink->widget_destroy_sig_handler = 0;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
