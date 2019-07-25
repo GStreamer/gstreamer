@@ -1250,6 +1250,7 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
   /* is it interlaced MJPEG? (we really don't want to scan the jpeg data
    * to see if there are two SOF markers in the packet to detect this) */
   if (gst_video_decoder_get_packetized (bdec) &&
+      dec->input_state &&
       dec->input_state->info.height > height &&
       dec->input_state->info.height <= (height * 2)
       && dec->input_state->info.width == width) {
@@ -1303,6 +1304,9 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
   /* decode second field if there is one */
   if (num_fields == 2) {
     GstVideoFormat field2_format;
+
+    /* Checked above before setting num_fields to 2 */
+    g_assert (dec->input_state != NULL);
 
     /* skip any chunk or padding bytes before the next SOI marker; both fields
      * are in one single buffer here, so direct access should be fine here */
