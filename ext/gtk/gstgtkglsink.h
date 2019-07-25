@@ -64,6 +64,9 @@ struct _GstGtkGLSink
   /* read/write with object lock */
   gint                  display_width;
   gint                  display_height;
+
+  gulong                size_allocate_sig_handler;
+  gulong                widget_destroy_sig_handler;
 };
 
 /**
