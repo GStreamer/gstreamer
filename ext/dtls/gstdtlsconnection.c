@@ -919,6 +919,8 @@ bio_method_write (BIO * bio, const char *data, int size)
     g_value_set_int (&values[2], size);
 
     g_closure_invoke (self->priv->send_closure, NULL, 3, values, NULL);
+
+    g_value_unset (&values[0]);
   }
 
   return size;
