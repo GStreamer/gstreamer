@@ -601,10 +601,10 @@ get_agent_by_pem (const gchar * pem)
     } else {
       GST_DEBUG_OBJECT (generated_cert_agent,
           "using agent with generated cert");
+      g_object_ref (generated_cert_agent);
     }
 
     agent = generated_cert_agent;
-    g_object_ref (agent);
   } else {
     G_LOCK (agent_table);
 
