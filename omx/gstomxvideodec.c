@@ -2062,6 +2062,9 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
 
   comp_supported_caps = gst_omx_video_get_caps_for_map (negotiation_map);
 
+  GST_DEBUG_OBJECT (self, "Decoder supported caps: %" GST_PTR_FORMAT,
+      comp_supported_caps);
+
   if (!gst_caps_is_empty (comp_supported_caps)) {
     GstCaps *tmp;
 
