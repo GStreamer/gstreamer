@@ -205,6 +205,8 @@ get_surface (GstMsdkDec * thiz, GstBuffer * buffer)
       goto failed_unref_buffer2;
   }
 
+  gst_msdk_update_mfx_frame_info_from_mfx_video_param (&i->surface->Info,
+      &thiz->param);
   thiz->decoded_msdk_surfaces = g_list_append (thiz->decoded_msdk_surfaces, i);
   return i;
 

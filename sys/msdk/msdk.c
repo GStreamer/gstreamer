@@ -377,3 +377,12 @@ gst_msdk_get_video_format_from_mfx_fourcc (mfxU32 fourcc)
 
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
+
+void
+gst_msdk_update_mfx_frame_info_from_mfx_video_param (mfxFrameInfo * mfx_info,
+    mfxVideoParam * param)
+{
+  mfx_info->BitDepthLuma = param->mfx.FrameInfo.BitDepthLuma;
+  mfx_info->BitDepthChroma = param->mfx.FrameInfo.BitDepthChroma;
+  mfx_info->Shift = param->mfx.FrameInfo.Shift;
+}

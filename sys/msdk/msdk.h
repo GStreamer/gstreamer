@@ -74,6 +74,10 @@ gst_msdk_get_surface_from_buffer (GstBuffer * buf);
 GstVideoFormat
 gst_msdk_get_video_format_from_mfx_fourcc (mfxU32 fourcc);
 
+void
+gst_msdk_update_mfx_frame_info_from_mfx_video_param (mfxFrameInfo * mfx_info,
+    mfxVideoParam * param);
+
 G_END_DECLS
 
 #endif /* __MSDK_H__ */
