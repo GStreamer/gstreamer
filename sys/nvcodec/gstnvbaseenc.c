@@ -22,6 +22,7 @@
 #endif
 
 #include "gstnvbaseenc.h"
+#include "gstcudautils.h"
 
 #include <gst/pbutils/codec-utils.h>
 
@@ -292,10 +293,9 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
   GstNvBaseEncClass *klass = GST_NV_BASE_ENC_GET_CLASS (enc);
   GValue *formats = NULL;
 
-  nvenc->cuda_ctx = gst_nvenc_create_cuda_context (klass->cuda_device_id);
-  if (nvenc->cuda_ctx == NULL) {
-    GST_ELEMENT_ERROR (enc, LIBRARY, INIT, (NULL),
-        ("Failed to create CUDA context, perhaps CUDA is not supported."));
+  if (!gst_cuda_ensure_element_context (GST_ELEMENT_CAST (enc),
+          klass->cuda_device_id, &nvenc->cuda_ctx)) {
+    GST_ERROR_OBJECT (nvenc, "failed to create CUDA context");
     return FALSE;
   }
 
@@ -305,13 +305,12 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
 
     params.version = NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER;
     params.apiVersion = NVENCAPI_VERSION;
-    params.device = nvenc->cuda_ctx;
+    params.device = gst_cuda_context_get_handle (nvenc->cuda_ctx);
     params.deviceType = NV_ENC_DEVICE_TYPE_CUDA;
     nv_ret = NvEncOpenEncodeSessionEx (&params, &nvenc->encoder);
     if (nv_ret != NV_ENC_SUCCESS) {
       GST_ERROR ("Failed to create NVENC encoder session, ret=%d", nv_ret);
-      if (gst_nvenc_destroy_cuda_context (nvenc->cuda_ctx))
-        nvenc->cuda_ctx = NULL;
+      gst_clear_object (&nvenc->cuda_ctx);
       return FALSE;
     }
     GST_INFO ("created NVENC encoder %p", nvenc->encoder);
@@ -333,9 +332,14 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
 static void
 gst_nv_base_enc_set_context (GstElement * element, GstContext * context)
 {
-#if HAVE_NVCODEC_GST_GL
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (element);
+  GstNvBaseEncClass *klass = GST_NV_BASE_ENC_GET_CLASS (nvenc);
 
+  if (gst_cuda_handle_set_context (element, context, klass->cuda_device_id,
+          &nvenc->cuda_ctx)) {
+    goto done;
+  }
+#if HAVE_NVCODEC_GST_GL
   gst_gl_handle_set_context (element, context,
       (GstGLDisplay **) & nvenc->display,
       (GstGLContext **) & nvenc->other_context);
@@ -344,32 +348,38 @@ gst_nv_base_enc_set_context (GstElement * element, GstContext * context)
         SUPPORTED_GL_APIS);
 #endif
 
+done:
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
 static gboolean
 gst_nv_base_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
 {
-#if HAVE_NVCODEC_GST_GL
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
-#endif
 
   switch (GST_QUERY_TYPE (query)) {
-#if HAVE_NVCODEC_GST_GL
     case GST_QUERY_CONTEXT:{
-      gboolean ret;
+      if (gst_cuda_handle_context_query (GST_ELEMENT (nvenc),
+              query, nvenc->cuda_ctx))
+        return TRUE;
 
-      ret = gst_gl_handle_context_query ((GstElement *) nvenc, query,
-          nvenc->display, NULL, nvenc->other_context);
-      if (nvenc->display)
-        gst_gl_display_filter_gl_api (GST_GL_DISPLAY (nvenc->display),
-            SUPPORTED_GL_APIS);
+#if HAVE_NVCODEC_GST_GL
+      {
+        gboolean ret;
 
-      if (ret)
-        return ret;
+        ret = gst_gl_handle_context_query ((GstElement *) nvenc, query,
+            nvenc->display, NULL, nvenc->other_context);
+        if (nvenc->display) {
+          gst_gl_display_filter_gl_api (GST_GL_DISPLAY (nvenc->display),
+              SUPPORTED_GL_APIS);
+        }
+
+        if (ret)
+          return ret;
+      }
+#endif
       break;
     }
-#endif
     default:
       break;
   }
@@ -629,11 +639,7 @@ gst_nv_base_enc_close (GstVideoEncoder * enc)
     nvenc->encoder = NULL;
   }
 
-  if (nvenc->cuda_ctx) {
-    if (!gst_nvenc_destroy_cuda_context (nvenc->cuda_ctx))
-      return FALSE;
-    nvenc->cuda_ctx = NULL;
-  }
+  gst_clear_object (&nvenc->cuda_ctx);
 
   GST_OBJECT_LOCK (nvenc);
   if (nvenc->input_formats)
@@ -977,7 +983,7 @@ gst_nv_base_enc_free_buffers (GstNvBaseEnc * nvenc)
     if (nvenc->gl_input) {
       struct gl_input_resource *in_gl_resource = nvenc->input_bufs[i];
 
-      CuCtxPushCurrent (nvenc->cuda_ctx);
+      gst_cuda_context_push (nvenc->cuda_ctx);
 
       if (in_gl_resource->mapped) {
         GST_LOG_OBJECT (nvenc, "Unmap resource %p", in_gl_resource);
@@ -1006,7 +1012,7 @@ gst_nv_base_enc_free_buffers (GstNvBaseEnc * nvenc)
       }
 
       g_free (in_gl_resource);
-      CuCtxPopCurrent (NULL);
+      gst_cuda_context_pop (NULL);
     } else
 #endif
     {
@@ -1306,7 +1312,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
         pixel_depth += GST_VIDEO_INFO_COMP_DEPTH (info, i);
       }
 
-      CuCtxPushCurrent (nvenc->cuda_ctx);
+      gst_cuda_context_push (nvenc->cuda_ctx);
       for (i = 0; i < nvenc->n_bufs; ++i) {
         struct gl_input_resource *in_gl_resource =
             g_new0 (struct gl_input_resource, 1);
@@ -1353,7 +1359,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
         g_async_queue_push (nvenc->in_bufs_pool, nvenc->input_bufs[i]);
       }
 
-      CuCtxPopCurrent (NULL);
+      gst_cuda_context_pop (NULL);
     } else
 #endif
     {
@@ -1489,7 +1495,7 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
   guint i;
   CUDA_MEMCPY2D param;
 
-  CuCtxPushCurrent (data->nvenc->cuda_ctx);
+  gst_cuda_context_push (data->nvenc->cuda_ctx);
   data_pointer = data->in_gl_resource->cuda_pointer;
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (data->info); i++) {
     GstGLBuffer *gl_buf_obj;
@@ -1585,7 +1591,7 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
     data_pointer = data_pointer +
         dest_stride * _get_plane_height (&data->nvenc->input_info, i);
   }
-  CuCtxPopCurrent (NULL);
+  gst_cuda_context_pop (NULL);
 }
 #endif
 

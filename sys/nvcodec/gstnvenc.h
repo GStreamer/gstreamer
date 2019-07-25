@@ -28,10 +28,6 @@
 
 GST_DEBUG_CATEGORY_EXTERN (gst_nvenc_debug);
 
-CUcontext               gst_nvenc_create_cuda_context (guint device_id);
-
-gboolean                gst_nvenc_destroy_cuda_context (CUcontext ctx);
-
 gboolean                gst_nvenc_cmp_guid (GUID g1, GUID g2);
 
 NV_ENC_BUFFER_FORMAT    gst_nvenc_get_nv_buffer_format (GstVideoFormat fmt);

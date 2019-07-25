@@ -23,6 +23,7 @@
 #include "gstnvenc.h"
 
 #include <gst/video/gstvideoencoder.h>
+#include "gstcudacontext.h"
 
 #define GST_TYPE_NV_BASE_ENC \
   (gst_nv_base_enc_get_type())
@@ -70,7 +71,7 @@ typedef struct {
   guint           bitrate;
   gint            gop_size;
 
-  CUcontext       cuda_ctx;
+  GstCudaContext * cuda_ctx;
   void          * encoder;
 
   /* the supported input formats */
