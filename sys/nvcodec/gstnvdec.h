@@ -87,7 +87,7 @@ struct _GstNvDecClass
 
 GType gst_nvdec_get_type (void);
 
-gboolean gst_nvdec_plugin_init (GstPlugin * plugin);
+void gst_nvdec_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 

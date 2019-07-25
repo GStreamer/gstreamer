@@ -48,7 +48,7 @@ GValue *                gst_nv_enc_get_supported_codec_profiles (gpointer enc,
                                                                  GUID codec_id);
 
 
-gboolean                gst_nvenc_plugin_init (GstPlugin * plugin);
+void                    gst_nvenc_plugin_init (GstPlugin * plugin);
 
 
 #endif /* __GST_NVENC_H_INCLUDED__ */

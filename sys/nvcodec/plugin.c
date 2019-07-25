@@ -38,19 +38,17 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret = TRUE;
-
   if (!gst_cuda_load_library ())
     return TRUE;
 
 #if HAVE_NVCODEC_GST_GL
   /* FIXME: make nvdec usable without OpenGL dependency */
   if (gst_cuvid_load_library ()) {
-    ret &= gst_nvdec_plugin_init (plugin);
+    gst_nvdec_plugin_init (plugin);
   }
 #endif
 
-  ret &= gst_nvenc_plugin_init (plugin);
+  gst_nvenc_plugin_init (plugin);
 
   return TRUE;
 }

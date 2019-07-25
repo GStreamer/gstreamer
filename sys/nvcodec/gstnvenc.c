@@ -635,7 +635,7 @@ gst_nv_enc_get_supported_codec_profiles (gpointer enc, GUID codec_id)
   return ret;
 }
 
-static gboolean
+static void
 gst_nv_enc_register (GstPlugin * plugin, GType type, GUID codec_id,
     const gchar * codec, guint rank, gint device_count)
 {
@@ -780,22 +780,18 @@ gst_nv_enc_register (GstPlugin * plugin, GType type, GUID codec_id,
     gst_clear_caps (&sink_templ);
     gst_clear_caps (&src_templ);
   }
-
-  return TRUE;
 }
 
 
-gboolean
+void
 gst_nvenc_plugin_init (GstPlugin * plugin)
 {
-  gboolean ret = TRUE;
-
   GST_DEBUG_CATEGORY_INIT (gst_nvenc_debug, "nvenc", 0, "Nvidia NVENC encoder");
 
   nvenc_api.version = NV_ENCODE_API_FUNCTION_LIST_VER;
   if (!load_nvenc_library ()) {
     GST_INFO ("Failed to load nvenc library");
-    return TRUE;
+    return;
   }
 
   if (nvEncodeAPICreateInstance (&nvenc_api) != NV_ENC_SUCCESS) {
@@ -809,23 +805,19 @@ gst_nvenc_plugin_init (GstPlugin * plugin)
     cuda_ret = CuInit (0);
     if (cuda_ret != CUDA_SUCCESS) {
       GST_ERROR ("Failed to initialize CUDA API");
-      return TRUE;
+      return;
     }
 
     cuda_ret = CuDeviceGetCount (&dev_count);
     if (cuda_ret != CUDA_SUCCESS || dev_count == 0) {
       GST_ERROR ("No CUDA devices detected");
-      return TRUE;
+      return;
     }
 
-    ret &=
-        gst_nv_enc_register (plugin, GST_TYPE_NV_H264_ENC,
+    gst_nv_enc_register (plugin, GST_TYPE_NV_H264_ENC,
         NV_ENC_CODEC_H264_GUID, "h264", GST_RANK_PRIMARY * 2, dev_count);
-    ret &=
-        gst_nv_enc_register (plugin, GST_TYPE_NV_H265_ENC,
+    gst_nv_enc_register (plugin, GST_TYPE_NV_H265_ENC,
         NV_ENC_CODEC_HEVC_GUID, "h265", GST_RANK_PRIMARY * 2, dev_count);
 
   }
-
-  return ret;
 }

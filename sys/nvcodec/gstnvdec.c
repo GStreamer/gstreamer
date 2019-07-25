@@ -1122,7 +1122,7 @@ typedef struct
   cudaVideoChromaFormat format;
 } GstNvdecChromaMap;
 
-static gboolean
+static void
 gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
     const gchar * codec, const gchar * sink_caps_string, guint rank,
     gint device_count)
@@ -1274,8 +1274,6 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
     gst_clear_caps (&sink_templ);
     gst_clear_caps (&src_templ);
   }
-
-  return TRUE;
 }
 
 typedef struct
@@ -1316,13 +1314,12 @@ const GstNvCodecMap codec_map[] = {
   {cudaVideoCodec_VP9, "vp9", "video/x-vp9"}
 };
 
-gboolean
+void
 gst_nvdec_plugin_init (GstPlugin * plugin)
 {
   gint i;
   CUresult cuda_ret;
   gint dev_count = 0;
-  gboolean ret = TRUE;
 
   GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug_category, "nvdec", 0,
       "Debug category for the nvdec element");
@@ -1346,26 +1343,24 @@ gst_nvdec_plugin_init (GstPlugin * plugin)
           codec_map[i].codec_name, 0, GST_RANK_PRIMARY, sink_templ, src_templ);
     }
 
-    return TRUE;
+    return;
   }
 
   cuda_ret = CuInit (0);
   if (cuda_ret != CUDA_SUCCESS) {
     GST_ERROR ("Failed to initialize CUDA API");
-    return TRUE;
+    return;
   }
 
   cuda_ret = CuDeviceGetCount (&dev_count);
   if (cuda_ret != CUDA_SUCCESS || dev_count == 0) {
     GST_ERROR ("No CUDA devices detected");
-    return TRUE;
+    return;
   }
 
   for (i = 0; i < G_N_ELEMENTS (codec_map); i++) {
-    ret &= gst_nvdec_register (plugin, GST_TYPE_NVDEC, codec_map[i].codec,
+    gst_nvdec_register (plugin, GST_TYPE_NVDEC, codec_map[i].codec,
         codec_map[i].codec_name, codec_map[i].sink_caps_string,
         GST_RANK_PRIMARY, dev_count);
   }
-
-  return ret;
 }
