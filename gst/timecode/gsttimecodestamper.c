@@ -1089,10 +1089,17 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
         if (timecodestamper->ltc_auto_resync) {
           if (timecodestamper->ltc_internal_tc)
             gst_video_time_code_free (timecodestamper->ltc_internal_tc);
-          timecodestamper->ltc_internal_tc =
-              gst_video_time_code_copy (ltc_read_tc_ptr);
-          updated_internal = TRUE;
-          GST_INFO_OBJECT (timecodestamper, "Resynced internal LTC counter");
+          if (gst_video_time_code_is_valid (ltc_read_tc_ptr)) {
+            timecodestamper->ltc_internal_tc =
+                gst_video_time_code_copy (ltc_read_tc_ptr);
+            updated_internal = TRUE;
+            GST_INFO_OBJECT (timecodestamper, "Resynced internal LTC counter");
+          } else {
+            tc_str = gst_video_time_code_to_string (ltc_read_tc_ptr);
+            GST_INFO_OBJECT (timecodestamper, "Invalid LTC timecode %s",
+                tc_str);
+            g_free (tc_str);
+          }
         }
 
         /* And store it for the next frame in case it has more or less the
