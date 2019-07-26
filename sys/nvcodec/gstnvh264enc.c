@@ -93,7 +93,6 @@ gst_nv_h264_enc_finalize (GObject * obj)
 static gboolean
 gst_nv_h264_enc_open (GstVideoEncoder * enc)
 {
-  GstNvH264Enc *nvenc = GST_NV_H264_ENC (enc);
   GstNvBaseEnc *base = GST_NV_BASE_ENC (enc);
 
   if (!GST_VIDEO_ENCODER_CLASS (gst_nv_h264_enc_parent_class)->open (enc))
@@ -117,31 +116,12 @@ gst_nv_h264_enc_open (GstVideoEncoder * enc)
     }
   }
 
-  /* query supported input formats */
-  nvenc->supported_profiles =
-      gst_nv_enc_get_supported_codec_profiles (base->encoder,
-      NV_ENC_CODEC_H264_GUID);
-  if (!nvenc->supported_profiles) {
-    GST_WARNING_OBJECT (nvenc, "No supported encoding profiles");
-    gst_nv_h264_enc_close (enc);
-    return FALSE;
-  }
-
   return TRUE;
 }
 
 static gboolean
 gst_nv_h264_enc_close (GstVideoEncoder * enc)
 {
-  GstNvH264Enc *nvenc = GST_NV_H264_ENC (enc);
-
-  GST_OBJECT_LOCK (nvenc);
-  if (nvenc->supported_profiles)
-    g_value_unset (nvenc->supported_profiles);
-  g_free (nvenc->supported_profiles);
-  nvenc->supported_profiles = NULL;
-  GST_OBJECT_UNLOCK (nvenc);
-
   return GST_VIDEO_ENCODER_CLASS (gst_nv_h264_enc_parent_class)->close (enc);
 }
 

@@ -38,16 +38,6 @@
 
 typedef struct {
   GstNvBaseEnc base_nvenc;
-
-  /* the supported input formats */
-  GValue        * supported_profiles;             /* OBJECT LOCK */
-
-  GstVideoCodecState *input_state;
-  gboolean            gl_input;
-
-  /* supported interlacing input modes.
-   * 0 = none, 1 = fields, 2 = interleaved */
-  gint            interlace_modes;
 } GstNvH265Enc;
 
 typedef struct {
