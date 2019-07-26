@@ -229,7 +229,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                         with open(scenario_file, 'w') as f:
                             f.write('\n'.join(action % extra_data for action in actions) + '\n')
                     scenarios.append(scenario_file)
-            tests_definition['extra_data'] = {'scenarios': scenarios, 'config_file': config_file}
+            tests_definition['extra_data'] = {'scenarios': scenarios, 'config_file': config_file, 'plays-reverse': True}
             tests_definition['pipeline_data'] = {"config_path": os.path.dirname(json_file)}
             tests_definition['pipeline_data'].update(extra_data)
             pipelines_descriptions.append(tests_definition)
