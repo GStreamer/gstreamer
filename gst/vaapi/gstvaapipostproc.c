@@ -1240,6 +1240,7 @@ gst_vaapipostproc_fixate_caps (GstBaseTransform * trans,
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
   GstCaps *outcaps = NULL;
+  gboolean same_caps, filter_updated = FALSE;
 
   GST_DEBUG_OBJECT (trans, "trying to fixate othercaps %" GST_PTR_FORMAT
       " based on caps %" GST_PTR_FORMAT " in direction %s", othercaps, caps,
@@ -1252,11 +1253,18 @@ gst_vaapipostproc_fixate_caps (GstBaseTransform * trans,
   }
 
   g_mutex_lock (&postproc->postproc_lock);
+  postproc->has_vpp = gst_vaapipostproc_ensure_filter_caps (postproc);
+  if (check_filter_update (postproc) && update_filter (postproc)) {
+    /* check again if changed value is default */
+    filter_updated = check_filter_update (postproc);
+  }
+
   outcaps = gst_vaapipostproc_fixate_srccaps (postproc, caps, othercaps);
   g_mutex_unlock (&postproc->postproc_lock);
 
   /* set passthrough according to caps changes or filter changes */
-  gst_vaapipostproc_set_passthrough (trans);
+  same_caps = gst_caps_is_equal (caps, outcaps);
+  gst_base_transform_set_passthrough (trans, same_caps && !filter_updated);
 
 done:
   GST_DEBUG_OBJECT (trans, "fixated othercaps to %" GST_PTR_FORMAT, outcaps);
