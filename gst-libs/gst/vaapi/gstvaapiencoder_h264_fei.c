@@ -3306,11 +3306,17 @@ gst_vaapi_encoder_h264_fei_reconfigure (GstVaapiEncoder * base_encoder)
   return status;
 }
 
-static gboolean
-gst_vaapi_encoder_h264_fei_init (GstVaapiEncoder * base_encoder)
+struct _GstVaapiEncoderH264FeiClass
 {
-  GstVaapiEncoderH264Fei *const encoder =
-      GST_VAAPI_ENCODER_H264_FEI_CAST (base_encoder);
+  GstVaapiEncoderClass parent_class;
+};
+
+G_DEFINE_TYPE (GstVaapiEncoderH264Fei, gst_vaapi_encoder_h264_fei,
+    GST_TYPE_VAAPI_ENCODER);
+
+static void
+gst_vaapi_encoder_h264_fei_init (GstVaapiEncoderH264Fei * encoder)
+{
   guint32 i;
 
   /* Default encoding entrypoint */
@@ -3351,16 +3357,14 @@ gst_vaapi_encoder_h264_fei_init (GstVaapiEncoder * base_encoder)
     ref_pool->max_reflist0_count = 1;
     ref_pool->max_reflist1_count = 1;
   }
-
-  return TRUE;
 }
 
 static void
-gst_vaapi_encoder_h264_fei_finalize (GstVaapiEncoder * base_encoder)
+gst_vaapi_encoder_h264_fei_finalize (GObject * gobject)
 {
   /*free private buffers */
-  GstVaapiEncoderH264Fei *const encoder =
-      GST_VAAPI_ENCODER_H264_FEI_CAST (base_encoder);
+  GstVaapiEncoderH264Fei *const encoder = GST_VAAPI_ENCODER_H264_FEI (gobject);
+  GstVaapiEncoder *base_encoder = GST_VAAPI_ENCODER (gobject);
   GstVaapiEncoder *enc_base_encoder = GST_VAAPI_ENCODER_CAST (encoder->feienc);
   GstVaapiMiniObject *object = GST_VAAPI_MINI_OBJECT (encoder->feipak);
   GstVaapiEncPicture *pic;
@@ -3425,6 +3429,8 @@ gst_vaapi_encoder_h264_fei_finalize (GstVaapiEncoder * base_encoder)
     encoder->ref_pool_ptr = NULL;
     encoder->feienc = NULL;
   }
+
+  G_OBJECT_CLASS (gst_vaapi_encoder_h264_fei_parent_class)->finalize (gobject);
 }
 
 static void
@@ -4001,29 +4007,24 @@ static const GstVaapiEncoderClassData fei_encoder_class_data = {
   .encoder_tune_mask = SUPPORTED_TUNE_OPTIONS,
 };
 
-static inline const GstVaapiEncoderClass *
-gst_vaapi_encoder_h264_fei_class (void)
+static void
+gst_vaapi_encoder_h264_fei_class_init (GstVaapiEncoderH264FeiClass * klass)
 {
-  static const GstVaapiEncoderClass GstVaapiEncoderH264FeiClass = {
-    .parent_class = {
-          .size = sizeof (GstVaapiEncoderH264Fei),
-          .finalize = (GDestroyNotify) gst_vaapi_encoder_finalize,
-        }
-    ,
-    .class_data = &fei_encoder_class_data,
-    .init = gst_vaapi_encoder_h264_fei_init,
-    .finalize = gst_vaapi_encoder_h264_fei_finalize,
-    .reconfigure = gst_vaapi_encoder_h264_fei_reconfigure,
-    .get_default_properties = gst_vaapi_encoder_h264_fei_get_default_properties,
-    .reordering = gst_vaapi_encoder_h264_fei_reordering,
-    .encode = gst_vaapi_encoder_h264_fei_encode,
-    .flush = gst_vaapi_encoder_h264_fei_flush,
-    .set_property = gst_vaapi_encoder_h264_fei_set_property,
-    .get_codec_data = gst_vaapi_encoder_h264_fei_get_codec_data,
-    .ensure_secondary_context =
-        gst_vaapi_encoder_h264_fei_ensure_secondary_context,
-  };
-  return &GstVaapiEncoderH264FeiClass;
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
+  GstVaapiEncoderClass *const encoder_class = GST_VAAPI_ENCODER_CLASS (klass);
+
+  encoder_class->class_data = &fei_encoder_class_data;
+  encoder_class->reconfigure = gst_vaapi_encoder_h264_fei_reconfigure;
+  encoder_class->get_default_properties =
+      gst_vaapi_encoder_h264_fei_get_default_properties;
+  encoder_class->reordering = gst_vaapi_encoder_h264_fei_reordering;
+  encoder_class->encode = gst_vaapi_encoder_h264_fei_encode;
+  encoder_class->flush = gst_vaapi_encoder_h264_fei_flush;
+  encoder_class->set_property = gst_vaapi_encoder_h264_fei_set_property;
+  encoder_class->get_codec_data = gst_vaapi_encoder_h264_fei_get_codec_data;
+  encoder_class->ensure_secondary_context =
+      gst_vaapi_encoder_h264_fei_ensure_secondary_context;
+  object_class->finalize = gst_vaapi_encoder_h264_fei_finalize;
 }
 
 /**
@@ -4040,10 +4041,10 @@ gst_vaapi_encoder_h264_fei_class (void)
 GPtrArray *
 gst_vaapi_encoder_h264_fei_get_default_properties (void)
 {
-  const GstVaapiEncoderClass *const klass = gst_vaapi_encoder_h264_fei_class ();
+  const GstVaapiEncoderClassData *class_data = &fei_encoder_class_data;
   GPtrArray *props;
 
-  props = gst_vaapi_encoder_properties_get_default (klass);
+  props = gst_vaapi_encoder_properties_get_default (class_data);
   if (!props)
     return NULL;
 
@@ -4336,31 +4337,41 @@ GstVaapiEncoder *
 gst_vaapi_encoder_h264_fei_new (GstVaapiDisplay * display)
 {
   GstVaapiEncoder *base_encoder;
-  GstVaapiEncoderH264Fei *feiencoder;
-  GstVaapiFeiEncH264 *feienc;
-  GstVaapiFEIPakH264 *feipak;
+  GstVaapiEncoderH264Fei *feiencoder = NULL;
+  GstVaapiFeiEncH264 *feienc = NULL;
+  GstVaapiFEIPakH264 *feipak = NULL;
 
   /* create FEIEncoderObject: Default mode of operation in ENC_PAK */
   base_encoder =
-      gst_vaapi_encoder_new (gst_vaapi_encoder_h264_fei_class (), display);
+      g_object_new (GST_TYPE_VAAPI_ENCODER_H264_FEI, "display", display, NULL);
   if (!base_encoder)
     return NULL;
   feiencoder = GST_VAAPI_ENCODER_H264_FEI_CAST (base_encoder);
 
   /* create an enc object */
-  feienc = GST_VAAPI_FEI_H264_ENC (gst_vaapi_feienc_h264_new (display));
+  feienc = GST_VAAPI_FEI_ENC_H264 (gst_vaapi_feienc_h264_new (display));
   if (!feienc)
-    return NULL;
+    goto error;
 
   /* create a pak object */
   feipak =
       gst_vaapi_feipak_h264_new (base_encoder, display,
       base_encoder->va_context);
   if (!feipak)
-    return NULL;
+    goto error;
 
   feiencoder->feienc = feienc;
   feiencoder->feipak = feipak;
 
   return base_encoder;
+
+error:
+  if (feienc)
+    g_object_unref (feienc);
+  if (feipak)
+    gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & feipak, NULL);
+  if (feiencoder)
+    g_object_unref (feiencoder);
+
+  return NULL;
 }

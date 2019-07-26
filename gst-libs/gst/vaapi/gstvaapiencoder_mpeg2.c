@@ -719,16 +719,19 @@ error:
   }
 }
 
-static gboolean
-gst_vaapi_encoder_mpeg2_init (GstVaapiEncoder * base_encoder)
+struct _GstVaapiEncoderMpeg2Class
 {
-  GstVaapiEncoderMpeg2 *const encoder =
-      GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
+  GstVaapiEncoderClass parent_class;
+};
 
+G_DEFINE_TYPE (GstVaapiEncoderMpeg2, gst_vaapi_encoder_mpeg2,
+    GST_TYPE_VAAPI_ENCODER);
+
+static void
+gst_vaapi_encoder_mpeg2_init (GstVaapiEncoderMpeg2 * encoder)
+{
   /* re-ordering */
   g_queue_init (&encoder->b_frames);
-
-  return TRUE;
 }
 
 static void
@@ -762,11 +765,10 @@ push_reference (GstVaapiEncoderMpeg2 * encoder, GstVaapiSurfaceProxy * ref)
 }
 
 static void
-gst_vaapi_encoder_mpeg2_finalize (GstVaapiEncoder * base_encoder)
+gst_vaapi_encoder_mpeg2_finalize (GObject * object)
 {
   /* free private buffers */
-  GstVaapiEncoderMpeg2 *const encoder =
-      GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
+  GstVaapiEncoderMpeg2 *const encoder = GST_VAAPI_ENCODER_MPEG2 (object);
   GstVaapiEncPicture *pic;
 
   clear_references (encoder);
@@ -776,6 +778,8 @@ gst_vaapi_encoder_mpeg2_finalize (GstVaapiEncoder * base_encoder)
     gst_vaapi_enc_picture_unref (pic);
   }
   g_queue_clear (&encoder->b_frames);
+
+  G_OBJECT_CLASS (gst_vaapi_encoder_mpeg2_parent_class)->finalize (object);
 }
 
 static GstVaapiEncoderStatus
@@ -800,14 +804,21 @@ gst_vaapi_encoder_mpeg2_set_property (GstVaapiEncoder * base_encoder,
 
 GST_VAAPI_ENCODER_DEFINE_CLASS_DATA (MPEG2);
 
-static inline const GstVaapiEncoderClass *
-gst_vaapi_encoder_mpeg2_class (void)
+static void
+gst_vaapi_encoder_mpeg2_class_init (GstVaapiEncoderMpeg2Class * klass)
 {
-  static const GstVaapiEncoderClass GstVaapiEncoderMpeg2Class = {
-    GST_VAAPI_ENCODER_CLASS_INIT (Mpeg2, mpeg2),
-    .set_property = gst_vaapi_encoder_mpeg2_set_property,
-  };
-  return &GstVaapiEncoderMpeg2Class;
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
+  GstVaapiEncoderClass *const encoder_class = GST_VAAPI_ENCODER_CLASS (klass);
+
+  encoder_class->class_data = &g_class_data;
+  encoder_class->reconfigure = gst_vaapi_encoder_mpeg2_reconfigure;
+  encoder_class->get_default_properties =
+      gst_vaapi_encoder_mpeg2_get_default_properties;
+  encoder_class->reordering = gst_vaapi_encoder_mpeg2_reordering;
+  encoder_class->encode = gst_vaapi_encoder_mpeg2_encode;
+  encoder_class->flush = gst_vaapi_encoder_mpeg2_flush;
+  encoder_class->set_property = gst_vaapi_encoder_mpeg2_set_property;
+  object_class->finalize = gst_vaapi_encoder_mpeg2_finalize;
 }
 
 /**
@@ -821,7 +832,7 @@ gst_vaapi_encoder_mpeg2_class (void)
 GstVaapiEncoder *
 gst_vaapi_encoder_mpeg2_new (GstVaapiDisplay * display)
 {
-  return gst_vaapi_encoder_new (gst_vaapi_encoder_mpeg2_class (), display);
+  return g_object_new (GST_TYPE_VAAPI_ENCODER_MPEG2, "display", display, NULL);
 }
 
 /**
@@ -838,10 +849,10 @@ gst_vaapi_encoder_mpeg2_new (GstVaapiDisplay * display)
 GPtrArray *
 gst_vaapi_encoder_mpeg2_get_default_properties (void)
 {
-  const GstVaapiEncoderClass *const klass = gst_vaapi_encoder_mpeg2_class ();
+  const GstVaapiEncoderClassData *class_data = &g_class_data;
   GPtrArray *props;
 
-  props = gst_vaapi_encoder_properties_get_default (klass);
+  props = gst_vaapi_encoder_properties_get_default (class_data);
   if (!props)
     return NULL;
 

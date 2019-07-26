@@ -510,24 +510,29 @@ error:
   }
 }
 
-static gboolean
-gst_vaapi_encoder_vp8_init (GstVaapiEncoder * base_encoder)
+struct _GstVaapiEncoderVP8Class
 {
-  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8 (base_encoder);
+  GstVaapiEncoderClass parent_class;
+};
 
+G_DEFINE_TYPE (GstVaapiEncoderVP8, gst_vaapi_encoder_vp8,
+    GST_TYPE_VAAPI_ENCODER);
+
+static void
+gst_vaapi_encoder_vp8_init (GstVaapiEncoderVP8 * encoder)
+{
   encoder->frame_num = 0;
   encoder->last_ref = NULL;
   encoder->golden_ref = NULL;
   encoder->alt_ref = NULL;
-
-  return TRUE;
 }
 
 static void
-gst_vaapi_encoder_vp8_finalize (GstVaapiEncoder * base_encoder)
+gst_vaapi_encoder_vp8_finalize (GObject * object)
 {
-  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8 (base_encoder);
+  GstVaapiEncoderVP8 *const encoder = GST_VAAPI_ENCODER_VP8 (object);
   clear_references (encoder);
+  G_OBJECT_CLASS (gst_vaapi_encoder_vp8_parent_class)->finalize (object);
 }
 
 static GstVaapiEncoderStatus
@@ -554,14 +559,21 @@ gst_vaapi_encoder_vp8_set_property (GstVaapiEncoder * base_encoder,
 
 GST_VAAPI_ENCODER_DEFINE_CLASS_DATA (VP8);
 
-static inline const GstVaapiEncoderClass *
-gst_vaapi_encoder_vp8_class (void)
+static void
+gst_vaapi_encoder_vp8_class_init (GstVaapiEncoderVP8Class * klass)
 {
-  static const GstVaapiEncoderClass GstVaapiEncoderVP8Class = {
-    GST_VAAPI_ENCODER_CLASS_INIT (VP8, vp8),
-    .set_property = gst_vaapi_encoder_vp8_set_property,
-  };
-  return &GstVaapiEncoderVP8Class;
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
+  GstVaapiEncoderClass *const encoder_class = GST_VAAPI_ENCODER_CLASS (klass);
+
+  encoder_class->class_data = &g_class_data;
+  encoder_class->reconfigure = gst_vaapi_encoder_vp8_reconfigure;
+  encoder_class->get_default_properties =
+      gst_vaapi_encoder_vp8_get_default_properties;
+  encoder_class->reordering = gst_vaapi_encoder_vp8_reordering;
+  encoder_class->encode = gst_vaapi_encoder_vp8_encode;
+  encoder_class->flush = gst_vaapi_encoder_vp8_flush;
+  encoder_class->set_property = gst_vaapi_encoder_vp8_set_property;
+  object_class->finalize = gst_vaapi_encoder_vp8_finalize;
 }
 
 /**
@@ -575,7 +587,7 @@ gst_vaapi_encoder_vp8_class (void)
 GstVaapiEncoder *
 gst_vaapi_encoder_vp8_new (GstVaapiDisplay * display)
 {
-  return gst_vaapi_encoder_new (gst_vaapi_encoder_vp8_class (), display);
+  return g_object_new (GST_TYPE_VAAPI_ENCODER_VP8, "display", display, NULL);
 }
 
 /**
@@ -592,10 +604,10 @@ gst_vaapi_encoder_vp8_new (GstVaapiDisplay * display)
 GPtrArray *
 gst_vaapi_encoder_vp8_get_default_properties (void)
 {
-  const GstVaapiEncoderClass *const klass = gst_vaapi_encoder_vp8_class ();
+  const GstVaapiEncoderClassData *class_data = &g_class_data;
   GPtrArray *props;
 
-  props = gst_vaapi_encoder_properties_get_default (klass);
+  props = gst_vaapi_encoder_properties_get_default (class_data);
   if (!props)
     return NULL;
 
@@ -619,7 +631,9 @@ gst_vaapi_encoder_vp8_get_default_properties (void)
       GST_VAAPI_ENCODER_VP8_PROP_YAC_Q_INDEX,
       g_param_spec_uint ("yac-qi",
           "Luma AC Quant Table index",
-          "Quantization Table index for Luma AC Coefficients, (in default case, yac_qi=4 for key frames and yac_qi=40 for P frames)",
+          "Quantization Table index for Luma AC Coefficients,"
+          " (in default case, yac_qi=4 for key frames and yac_qi=40"
+          " for P frames)",
           0, 127, DEFAULT_YAC_QI, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;

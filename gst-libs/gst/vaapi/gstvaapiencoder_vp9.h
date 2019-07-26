@@ -27,10 +27,15 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_ENCODER_VP9 \
+    (gst_vaapi_encoder_vp9_get_type ())
 #define GST_VAAPI_ENCODER_VP9(encoder) \
-  ((GstVaapiEncoderVP9 *) (encoder))
+    (G_TYPE_CHECK_INSTANCE_CAST ((encoder), GST_TYPE_VAAPI_ENCODER_VP9, GstVaapiEncoderVP9))
+#define GST_IS_VAAPI_ENCODER_VP9(encoder) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((encoder), GST_TYPE_VAAPI_ENCODER_VP9))
 
 typedef struct _GstVaapiEncoderVP9 GstVaapiEncoderVP9;
+typedef struct _GstVaapiEncoderVP9Class GstVaapiEncoderVP9Class;
 
 /**
  * GstVaapiEncoderVP9Prop:
@@ -49,6 +54,9 @@ typedef enum {
   GST_VAAPI_ENCODER_VP9_PROP_REF_PIC_MODE = -4,
   GST_VAAPI_ENCODER_VP9_PROP_CPB_LENGTH = -5
 } GstVaapiEncoderVP9Prop;
+
+GType
+gst_vaapi_encoder_vp9_get_type (void) G_GNUC_CONST;
 
 GstVaapiEncoder *
 gst_vaapi_encoder_vp9_new (GstVaapiDisplay * display);

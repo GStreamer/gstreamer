@@ -113,9 +113,9 @@ error_allocation_failed:
 
 /* Generate the common set of encoder properties */
 GPtrArray *
-gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
+gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClassData *
+    cdata)
 {
-  const GstVaapiEncoderClassData *const cdata = klass->class_data;
   GPtrArray *props = NULL;
 
   g_assert (cdata->rate_control_get_type != NULL);
@@ -462,7 +462,8 @@ void
 gst_vaapi_encoder_replace (GstVaapiEncoder ** old_encoder_ptr,
     GstVaapiEncoder * new_encoder)
 {
-  gst_vaapi_object_replace (old_encoder_ptr, new_encoder);
+  gst_object_replace ((GstObject **) old_encoder_ptr,
+      (GstObject *) new_encoder);
 }
 
 /* Notifies gst_vaapi_encoder_create_coded_buffer() that a new buffer is free */
@@ -1546,16 +1547,17 @@ error_operation_failed:
 }
 
 /* Initialize default values for configurable properties */
-static gboolean
-gst_vaapi_encoder_init_properties (GstVaapiEncoder * encoder)
+static void
+gst_vaapi_encoder_constructed (GObject * object)
 {
+  GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
   GPtrArray *props;
   guint i;
 
   props = klass->get_default_properties ();
   if (!props)
-    return FALSE;
+    return;
 
   encoder->properties = props;
   for (i = 0; i < props->len; i++) {
@@ -1563,37 +1565,23 @@ gst_vaapi_encoder_init_properties (GstVaapiEncoder * encoder)
 
     if (gst_vaapi_encoder_set_property (encoder, prop->prop,
             NULL) != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-      return FALSE;
+      return;
   }
 
-  return TRUE;
+  return;
 }
 
-/* Base encoder initialization (internal) */
-static gboolean
-gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
+G_DEFINE_ABSTRACT_TYPE (GstVaapiEncoder, gst_vaapi_encoder, GST_TYPE_OBJECT);
+
+enum
 {
-  GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
+  ENCODER_PROP_DISPLAY = 1,
+  ENCODER_N_PROPERTIES
+};
 
-  g_return_val_if_fail (display != NULL, FALSE);
-
-#define CHECK_VTABLE_HOOK(FUNC) do {            \
-    if (!klass->FUNC)                           \
-      goto error_invalid_vtable;                \
-  } while (0)
-
-  CHECK_VTABLE_HOOK (init);
-  CHECK_VTABLE_HOOK (finalize);
-  CHECK_VTABLE_HOOK (get_default_properties);
-  CHECK_VTABLE_HOOK (reconfigure);
-  CHECK_VTABLE_HOOK (encode);
-  CHECK_VTABLE_HOOK (reordering);
-  CHECK_VTABLE_HOOK (flush);
-
-#undef CHECK_VTABLE_HOOK
-
-  encoder->display = gst_object_ref (display);
-  encoder->va_display = gst_vaapi_display_get_display (display);
+static void
+gst_vaapi_encoder_init (GstVaapiEncoder * encoder)
+{
   encoder->va_context = VA_INVALID_ID;
 
   gst_video_info_init (&encoder->video_info);
@@ -1604,30 +1592,13 @@ gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
 
   encoder->codedbuf_queue = g_async_queue_new_full ((GDestroyNotify)
       gst_vaapi_coded_buffer_proxy_unref);
-  if (!encoder->codedbuf_queue)
-    return FALSE;
-
-  if (!klass->init (encoder))
-    return FALSE;
-  if (!gst_vaapi_encoder_init_properties (encoder))
-    return FALSE;
-  return TRUE;
-
-  /* ERRORS */
-error_invalid_vtable:
-  {
-    GST_ERROR ("invalid subclass hook (internal error)");
-    return FALSE;
-  }
 }
 
 /* Base encoder cleanup (internal) */
-void
-gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder)
+static void
+gst_vaapi_encoder_finalize (GObject * object)
 {
-  GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
-
-  klass->finalize (encoder);
+  GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
 
   gst_vaapi_object_replace (&encoder->context, NULL);
   gst_vaapi_display_replace (&encoder->display, NULL);
@@ -1646,6 +1617,8 @@ gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder)
   g_cond_clear (&encoder->surface_free);
   g_cond_clear (&encoder->codedbuf_free);
   g_mutex_clear (&encoder->mutex);
+
+  G_OBJECT_CLASS (gst_vaapi_encoder_parent_class)->finalize (object);
 }
 
 /* Helper function to create new GstVaapiEncoder instances (internal) */
@@ -1653,23 +1626,63 @@ GstVaapiEncoder *
 gst_vaapi_encoder_new (const GstVaapiEncoderClass * klass,
     GstVaapiDisplay * display)
 {
-  GstVaapiEncoder *encoder;
+  return NULL;
+}
 
-  encoder = (GstVaapiEncoder *)
-      gst_vaapi_mini_object_new0 (GST_VAAPI_MINI_OBJECT_CLASS (klass));
-  if (!encoder)
-    return NULL;
+static void
+encoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
 
-  if (!gst_vaapi_encoder_init (encoder, display))
-    goto error;
-  return encoder;
-
-  /* ERRORS */
-error:
-  {
-    gst_vaapi_encoder_unref (encoder);
-    return NULL;
+  switch (prop_id) {
+    case ENCODER_PROP_DISPLAY:
+      g_assert (encoder->display == NULL);
+      encoder->display = g_value_dup_object (value);
+      g_assert (encoder->display != NULL);
+      encoder->va_display = GST_VAAPI_DISPLAY_VADISPLAY (encoder->display);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
+}
+
+static void
+encoder_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
+
+  switch (prop_id) {
+    case ENCODER_PROP_DISPLAY:
+      g_value_set_object (value, encoder->display);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
+{
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
+
+  object_class->set_property = encoder_set_property;
+  object_class->get_property = encoder_get_property;
+  object_class->finalize = gst_vaapi_encoder_finalize;
+  object_class->constructed = gst_vaapi_encoder_constructed;
+
+  /**
+   * GstVaapiDecoder:display:
+   *
+   * #GstVaapiDisplay to be used.
+   */
+  g_object_class_install_property (object_class, ENCODER_PROP_DISPLAY,
+      g_param_spec_object ("display", "Gst VA-API Display",
+          "The VA-API display object to use", GST_TYPE_VAAPI_DISPLAY,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME));
 }
 
 static GstVaapiContext *

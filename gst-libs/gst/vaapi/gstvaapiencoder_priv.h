@@ -37,10 +37,10 @@ G_BEGIN_DECLS
     ((GstVaapiEncoder *)(encoder))
 
 #define GST_VAAPI_ENCODER_CLASS(klass) \
-    ((GstVaapiEncoderClass *)(klass))
+    (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VAAPI_ENCODER, GstVaapiEncoderClass))
 
 #define GST_VAAPI_ENCODER_GET_CLASS(obj) \
-    GST_VAAPI_ENCODER_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPI_ENCODER, GstVaapiEncoderClass))
 
 /**
  * GST_VAAPI_ENCODER_PACKED_HEADERS:
@@ -240,12 +240,12 @@ gst_vaapi_encoder_properties_append (GPtrArray * props, gint prop_id,
 
 G_GNUC_INTERNAL
 GPtrArray *
-gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass);
+gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClassData *cdata);
 
 struct _GstVaapiEncoder
 {
   /*< private >*/
-  GstVaapiMiniObject parent_instance;
+  GstObject parent_instance;
 
   GPtrArray *properties;
   GstVaapiDisplay *display;
@@ -337,12 +337,9 @@ struct _GstVaapiEncoderClassData
 struct _GstVaapiEncoderClass
 {
   /*< private >*/
-  GstVaapiMiniObjectClass parent_class;
+  GstObjectClass parent_class;
 
   const GstVaapiEncoderClassData *class_data;
-
-  gboolean              (*init)         (GstVaapiEncoder * encoder);
-  void                  (*finalize)     (GstVaapiEncoder * encoder);
 
   GstVaapiEncoderStatus (*reconfigure)  (GstVaapiEncoder * encoder);
 
@@ -398,10 +395,6 @@ G_GNUC_INTERNAL
 GstVaapiEncoder *
 gst_vaapi_encoder_new (const GstVaapiEncoderClass * klass,
     GstVaapiDisplay * display);
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder);
 
 G_GNUC_INTERNAL
 GstVaapiSurfaceProxy *

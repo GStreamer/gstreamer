@@ -28,10 +28,15 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_ENCODER_H265 \
+    (gst_vaapi_encoder_h265_get_type ())
 #define GST_VAAPI_ENCODER_H265(encoder) \
-  ((GstVaapiEncoderH265 *) (encoder))
+    (G_TYPE_CHECK_INSTANCE_CAST ((encoder), GST_TYPE_VAAPI_ENCODER_H265, GstVaapiEncoderH265))
+#define GST_IS_VAAPI_ENCODER_H265(encoder) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((encoder), GST_TYPE_VAAPI_ENCODER_H265))
 
 typedef struct _GstVaapiEncoderH265 GstVaapiEncoderH265;
+typedef struct _GstVaapiEncoderH265Class GstVaapiEncoderH265Class;
 
 /**
  * GstVaapiEncoderH265Prop:
@@ -64,6 +69,9 @@ typedef enum {
   GST_VAAPI_ENCODER_H265_PROP_LOW_DELAY_B = -11,
   GST_VAAPI_ENCODER_H265_PROP_MAX_QP = -12,
 } GstVaapiEncoderH265Prop;
+
+GType
+gst_vaapi_encoder_h265_get_type (void) G_GNUC_CONST;
 
 GstVaapiEncoder *
 gst_vaapi_encoder_h265_new (GstVaapiDisplay * display);

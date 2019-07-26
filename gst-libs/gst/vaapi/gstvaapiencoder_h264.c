@@ -3388,10 +3388,17 @@ gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
   return set_context_info (base_encoder);
 }
 
-static gboolean
-gst_vaapi_encoder_h264_init (GstVaapiEncoder * base_encoder)
+struct _GstVaapiEncoderH264Class
 {
-  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
+  GstVaapiEncoderClass parent_class;
+};
+
+G_DEFINE_TYPE (GstVaapiEncoderH264, gst_vaapi_encoder_h264,
+    GST_TYPE_VAAPI_ENCODER);
+
+static void
+gst_vaapi_encoder_h264_init (GstVaapiEncoderH264 * encoder)
+{
   guint32 i;
 
   /* Default encoding entrypoint */
@@ -3428,15 +3435,13 @@ gst_vaapi_encoder_h264_init (GstVaapiEncoder * base_encoder)
 
   encoder->compliance_mode = GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_STRICT;
   encoder->min_cr = 1;
-
-  return TRUE;
 }
 
 static void
-gst_vaapi_encoder_h264_finalize (GstVaapiEncoder * base_encoder)
+gst_vaapi_encoder_h264_finalize (GObject * object)
 {
   /*free private buffers */
-  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (object);
   GstVaapiEncPicture *pic;
   GstVaapiEncoderH264Ref *ref;
   guint32 i;
@@ -3466,6 +3471,8 @@ gst_vaapi_encoder_h264_finalize (GstVaapiEncoder * base_encoder)
     }
     g_queue_clear (&reorder_pool->reorder_frame_list);
   }
+
+  G_OBJECT_CLASS (gst_vaapi_encoder_h264_parent_class)->finalize (object);
 }
 
 static void
@@ -3581,16 +3588,24 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
 
 GST_VAAPI_ENCODER_DEFINE_CLASS_DATA (H264);
 
-static inline const GstVaapiEncoderClass *
-gst_vaapi_encoder_h264_class (void)
+static void
+gst_vaapi_encoder_h264_class_init (GstVaapiEncoderH264Class * klass)
 {
-  static const GstVaapiEncoderClass GstVaapiEncoderH264Class = {
-    GST_VAAPI_ENCODER_CLASS_INIT (H264, h264),
-    .set_property = gst_vaapi_encoder_h264_set_property,
-    .get_codec_data = gst_vaapi_encoder_h264_get_codec_data,
-    .get_pending_reordered = gst_vaapi_encoder_h264_get_pending_reordered,
-  };
-  return &GstVaapiEncoderH264Class;
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
+  GstVaapiEncoderClass *const encoder_class = GST_VAAPI_ENCODER_CLASS (klass);
+
+  encoder_class->class_data = &g_class_data;
+  encoder_class->reconfigure = gst_vaapi_encoder_h264_reconfigure;
+  encoder_class->get_default_properties =
+      gst_vaapi_encoder_h264_get_default_properties;
+  encoder_class->reordering = gst_vaapi_encoder_h264_reordering;
+  encoder_class->encode = gst_vaapi_encoder_h264_encode;
+  encoder_class->flush = gst_vaapi_encoder_h264_flush;
+  encoder_class->set_property = gst_vaapi_encoder_h264_set_property;
+  encoder_class->get_codec_data = gst_vaapi_encoder_h264_get_codec_data;
+  encoder_class->get_pending_reordered =
+      gst_vaapi_encoder_h264_get_pending_reordered;
+  object_class->finalize = gst_vaapi_encoder_h264_finalize;
 }
 
 /**
@@ -3605,7 +3620,7 @@ gst_vaapi_encoder_h264_class (void)
 GstVaapiEncoder *
 gst_vaapi_encoder_h264_new (GstVaapiDisplay * display)
 {
-  return gst_vaapi_encoder_new (gst_vaapi_encoder_h264_class (), display);
+  return g_object_new (GST_TYPE_VAAPI_ENCODER_H264, "display", display, NULL);
 }
 
 /**
@@ -3622,10 +3637,10 @@ gst_vaapi_encoder_h264_new (GstVaapiDisplay * display)
 GPtrArray *
 gst_vaapi_encoder_h264_get_default_properties (void)
 {
-  const GstVaapiEncoderClass *const klass = gst_vaapi_encoder_h264_class ();
+  const GstVaapiEncoderClassData *class_data = &g_class_data;
   GPtrArray *props;
 
-  props = gst_vaapi_encoder_properties_get_default (klass);
+  props = gst_vaapi_encoder_properties_get_default (class_data);
   if (!props)
     return NULL;
 

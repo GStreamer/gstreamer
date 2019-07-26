@@ -29,10 +29,17 @@
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_ENCODER(encoder) \
-    ((GstVaapiEncoder *) (encoder))
+#define GST_TYPE_VAAPI_ENCODER \
+    (gst_vaapi_encoder_get_type ())
+#define GST_VAAPI_ENCODER(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPI_ENCODER, GstVaapiEncoder))
+#define GST_VAAPI_IS_ENCODER(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPI_ENCODER))
 
 typedef struct _GstVaapiEncoder GstVaapiEncoder;
+
+GType
+gst_vaapi_encoder_get_type (void) G_GNUC_CONST;
 
 /**
  * GstVaapiEncoderStatus:

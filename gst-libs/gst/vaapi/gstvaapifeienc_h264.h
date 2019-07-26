@@ -29,9 +29,16 @@
 #include <gst/vaapi/gstvaapifeiutils_h264.h>
 #include <gst/vaapi/gstvaapifei_objects_priv.h>
 G_BEGIN_DECLS
-#define GST_VAAPI_FEI_H264_ENC(feienc) \
-  ((GstVaapiFeiEncH264 *) (feienc))
+
+#define GST_TYPE_VAAPI_FEI_ENC_H264 \
+    (gst_vaapi_feienc_h264_get_type ())
+#define GST_VAAPI_FEI_ENC_H264(encoder) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((encoder), GST_TYPE_VAAPI_FEI_ENC_H264, GstVaapiFeiEncH264))
+#define GST_IS_VAAPI_FEI_ENC_H264(encoder) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((encoder), GST_TYPE_VAAPI_FEI_ENC_H264))
+
 typedef struct _GstVaapiFeiEncH264 GstVaapiFeiEncH264;
+typedef struct _GstVaapiFeiEncH264Class GstVaapiFeiEncH264Class;
 
 /**
  * GstVaapiFeiEncH264Prop:
@@ -80,6 +87,9 @@ typedef enum
   GST_VAAPI_FEI_H264_ENC_PROP_MULTI_PRED_L1 = -26,
   GST_VAAPI_FEI_H264_ENC_PROP_ENABLE_STATS_OUT = -27,
 } GstVaapiFeiEncH264Prop;
+
+GType
+gst_vaapi_feienc_h264_get_type (void) G_GNUC_CONST;
 
 GstVaapiEncoder *
 gst_vaapi_feienc_h264_new (GstVaapiDisplay * display);

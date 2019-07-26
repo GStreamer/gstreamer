@@ -28,10 +28,15 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_ENCODER_MPEG2 \
+    (gst_vaapi_encoder_mpeg2_get_type ())
 #define GST_VAAPI_ENCODER_MPEG2(encoder) \
-  ((GstVaapiEncoderMpeg2 *) (encoder))
+    (G_TYPE_CHECK_INSTANCE_CAST ((encoder), GST_TYPE_VAAPI_ENCODER_MPEG2, GstVaapiEncoderMpeg2))
+#define GST_IS_VAAPI_ENCODER_MPEG2(encoder) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((encoder), GST_TYPE_VAAPI_ENCODER_MPEG2))
 
 typedef struct _GstVaapiEncoderMpeg2 GstVaapiEncoderMpeg2;
+typedef struct _GstVaapiEncoderMpeg2Class GstVaapiEncoderMpeg2Class;
 
 /**
  * GstVaapiEncoderMpeg2Prop:
@@ -45,6 +50,9 @@ typedef enum {
   GST_VAAPI_ENCODER_MPEG2_PROP_QUANTIZER = -1,
   GST_VAAPI_ENCODER_MPEG2_PROP_MAX_BFRAMES = -2,
 } GstVaapiEncoderMpeg2Prop;
+
+GType
+gst_vaapi_encoder_mpeg2_get_type (void) G_GNUC_CONST;
 
 GstVaapiEncoder *
 gst_vaapi_encoder_mpeg2_new (GstVaapiDisplay * display);

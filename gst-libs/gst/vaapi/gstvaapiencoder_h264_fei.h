@@ -30,10 +30,15 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_ENCODER_H264_FEI \
+    (gst_vaapi_encoder_h264_fei_get_type ())
 #define GST_VAAPI_ENCODER_H264_FEI(encoder) \
-  ((GstVaapiEncoderH264Fei *) (encoder))
+    (G_TYPE_CHECK_INSTANCE_CAST ((encoder), GST_TYPE_VAAPI_ENCODER_H264_FEI, GstVaapiEncoderH264Fei))
+#define GST_IS_VAAPI_ENCODER_H264_FEI(encoder) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((encoder), GST_TYPE_VAAPI_ENCODER_H264_FEI))
 
 typedef struct _GstVaapiEncoderH264Fei GstVaapiEncoderH264Fei;
+typedef struct _GstVaapiEncoderH264FeiClass GstVaapiEncoderH264FeiClass;
 
 /**
  * GstVaapiEncoderH264FeiProp:
@@ -84,6 +89,9 @@ typedef enum {
   GST_VAAPI_ENCODER_H264_FEI_PROP_MAX_QP = -29,
 
 } GstVaapiEncoderH264FeiProp;
+
+GType
+gst_vaapi_encoder_h264_fei_get_type (void) G_GNUC_CONST;
 
 GstVaapiEncoder *
 gst_vaapi_encoder_h264_fei_new (GstVaapiDisplay * display);

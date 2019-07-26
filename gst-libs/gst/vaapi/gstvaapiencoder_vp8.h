@@ -27,10 +27,15 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VAAPI_ENCODER_VP8 \
+    (gst_vaapi_encoder_vp8_get_type ())
 #define GST_VAAPI_ENCODER_VP8(encoder) \
-  ((GstVaapiEncoderVP8 *) (encoder))
+    (G_TYPE_CHECK_INSTANCE_CAST ((encoder), GST_TYPE_VAAPI_ENCODER_VP8, GstVaapiEncoderVP8))
+#define GST_IS_VAAPI_ENCODER_VP8(encoder) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((encoder), GST_TYPE_VAAPI_ENCODER_VP8))
 
 typedef struct _GstVaapiEncoderVP8 GstVaapiEncoderVP8;
+typedef struct _GstVaapiEncoderVP8Class GstVaapiEncoderVP8Class;
 
 /**
  * GstVaapiEncoderVP8Prop:
@@ -45,6 +50,9 @@ typedef enum {
   GST_VAAPI_ENCODER_VP8_PROP_SHARPNESS_LEVEL = -2,
   GST_VAAPI_ENCODER_VP8_PROP_YAC_Q_INDEX = -3
 } GstVaapiEncoderVP8Prop;
+
+GType
+gst_vaapi_encoder_vp8_get_type (void) G_GNUC_CONST;
 
 GstVaapiEncoder *
 gst_vaapi_encoder_vp8_new (GstVaapiDisplay * display);

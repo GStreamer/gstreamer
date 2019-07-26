@@ -743,24 +743,23 @@ gst_vaapi_encoder_jpeg_reconfigure (GstVaapiEncoder * base_encoder)
   return set_context_info (base_encoder);
 }
 
-static gboolean
-gst_vaapi_encoder_jpeg_init (GstVaapiEncoder * base_encoder)
+struct _GstVaapiEncoderJpegClass
 {
-  GstVaapiEncoderJpeg *const encoder = GST_VAAPI_ENCODER_JPEG (base_encoder);
+  GstVaapiEncoderClass parent_class;
+};
 
+G_DEFINE_TYPE (GstVaapiEncoderJpeg, gst_vaapi_encoder_jpeg,
+    GST_TYPE_VAAPI_ENCODER);
+
+static void
+gst_vaapi_encoder_jpeg_init (GstVaapiEncoderJpeg * encoder)
+{
   encoder->has_quant_tables = FALSE;
   memset (&encoder->quant_tables, 0, sizeof (encoder->quant_tables));
   memset (&encoder->scaled_quant_tables, 0,
       sizeof (encoder->scaled_quant_tables));
   encoder->has_huff_tables = FALSE;
   memset (&encoder->huff_tables, 0, sizeof (encoder->huff_tables));
-
-  return TRUE;
-}
-
-static void
-gst_vaapi_encoder_jpeg_finalize (GstVaapiEncoder * base_encoder)
-{
 }
 
 static GstVaapiEncoderStatus
@@ -781,14 +780,19 @@ gst_vaapi_encoder_jpeg_set_property (GstVaapiEncoder * base_encoder,
 
 GST_VAAPI_ENCODER_DEFINE_CLASS_DATA (JPEG);
 
-static inline const GstVaapiEncoderClass *
-gst_vaapi_encoder_jpeg_class (void)
+static void
+gst_vaapi_encoder_jpeg_class_init (GstVaapiEncoderJpegClass * klass)
 {
-  static const GstVaapiEncoderClass GstVaapiEncoderJpegClass = {
-    GST_VAAPI_ENCODER_CLASS_INIT (Jpeg, jpeg),
-    .set_property = gst_vaapi_encoder_jpeg_set_property,
-  };
-  return &GstVaapiEncoderJpegClass;
+  GstVaapiEncoderClass *const encoder_class = GST_VAAPI_ENCODER_CLASS (klass);
+
+  encoder_class->class_data = &g_class_data;
+  encoder_class->reconfigure = gst_vaapi_encoder_jpeg_reconfigure;
+  encoder_class->get_default_properties =
+      gst_vaapi_encoder_jpeg_get_default_properties;
+  encoder_class->reordering = gst_vaapi_encoder_jpeg_reordering;
+  encoder_class->encode = gst_vaapi_encoder_jpeg_encode;
+  encoder_class->flush = gst_vaapi_encoder_jpeg_flush;
+  encoder_class->set_property = gst_vaapi_encoder_jpeg_set_property;
 }
 
 /**
@@ -802,7 +806,7 @@ gst_vaapi_encoder_jpeg_class (void)
 GstVaapiEncoder *
 gst_vaapi_encoder_jpeg_new (GstVaapiDisplay * display)
 {
-  return gst_vaapi_encoder_new (gst_vaapi_encoder_jpeg_class (), display);
+  return g_object_new (GST_TYPE_VAAPI_ENCODER_JPEG, "display", display, NULL);
 }
 
 /**
@@ -819,10 +823,10 @@ gst_vaapi_encoder_jpeg_new (GstVaapiDisplay * display)
 GPtrArray *
 gst_vaapi_encoder_jpeg_get_default_properties (void)
 {
-  const GstVaapiEncoderClass *const klass = gst_vaapi_encoder_jpeg_class ();
+  const GstVaapiEncoderClassData *class_data = &g_class_data;
   GPtrArray *props;
 
-  props = gst_vaapi_encoder_properties_get_default (klass);
+  props = gst_vaapi_encoder_properties_get_default (class_data);
   if (!props)
     return NULL;
 
