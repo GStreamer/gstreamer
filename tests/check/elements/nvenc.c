@@ -216,6 +216,62 @@ GST_START_TEST (test_reuse)
 
 GST_END_TEST;
 
+GST_START_TEST (test_caps_interlace_mode)
+{
+  GstElement *nvenc;
+  GstBuffer *buffer;
+  GstCaps *caps, *srccaps;
+  GstSegment seg;
+
+  nvenc =
+      setup_nvenc
+      ("video/x-raw,format=(string)NV12,width=(int)320,height=(int)240,"
+      "framerate=(fraction)25/1", &srccaps);
+
+  ASSERT_SET_STATE (nvenc, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+
+  gst_check_setup_events (srcpad, nvenc, srccaps, GST_FORMAT_TIME);
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&seg)));
+
+  buffer = gst_buffer_new_allocate (NULL, 320 * 240 + 2 * 160 * 120, NULL);
+  gst_buffer_memset (buffer, 0, 0, -1);
+
+  /* empty interlace-mode */
+  GST_BUFFER_TIMESTAMP (buffer) = 0;
+  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (1, GST_SECOND, 25);
+  fail_unless (gst_pad_push (srcpad, gst_buffer_ref (buffer)) == GST_FLOW_OK);
+
+  /* always valid interlace mode */
+  caps =
+      gst_caps_from_string
+      ("video/x-raw,format=(string)NV12,width=(int)320,height=(int)240,"
+      "framerate=(fraction)25/1,interlace-mode=(string)progressive");
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+
+  GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (1, GST_SECOND, 25);
+  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (1, GST_SECOND, 25);
+  fail_unless (gst_pad_push (srcpad, gst_buffer_ref (buffer)) == GST_FLOW_OK);
+
+  /* not-supported interlace mode */
+  caps =
+      gst_caps_from_string
+      ("video/x-raw,format=(string)NV12,width=(int)320,height=(int)240,"
+      "framerate=(fraction)25/1,interlace-mode=(string)alternate");
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_caps (caps)));
+  gst_caps_unref (caps);
+
+  GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (2, GST_SECOND, 25);
+  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (1, GST_SECOND, 25);
+  fail_if (gst_pad_push (srcpad, gst_buffer_ref (buffer)) == GST_FLOW_OK);
+  gst_buffer_unref (buffer);
+  gst_caps_unref (srccaps);
+
+  cleanup_nvenc (nvenc);
+}
+
+GST_END_TEST;
 
 static gboolean
 check_nvenc_available (void)
@@ -263,6 +319,7 @@ nvenc_suite (void)
 
   tcase_add_test (tc_chain, test_encode_simple);
   tcase_add_test (tc_chain, test_reuse);
+  tcase_add_test (tc_chain, test_caps_interlace_mode);
 
 end:
   return s;
