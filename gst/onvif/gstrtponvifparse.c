@@ -86,7 +86,7 @@ gst_rtp_onvif_parse_init (GstRtpOnvifParse * self)
 #define EXTENSION_SIZE 3
 
 static gboolean
-handle_buffer (GstRtpOnvifParse * self, GstBuffer * buf)
+handle_buffer (GstRtpOnvifParse * self, GstBuffer * buf, gboolean * send_eos)
 {
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   guint8 *data;
@@ -139,6 +139,10 @@ handle_buffer (GstRtpOnvifParse * self, GstBuffer * buf)
   else
     GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
 
+  /* T */
+  if (flags & (1 << 4))
+    *send_eos = TRUE;
+
 out:
   gst_rtp_buffer_unmap (&rtp);
   return TRUE;
@@ -148,11 +152,23 @@ static GstFlowReturn
 gst_rtp_onvif_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstRtpOnvifParse *self = GST_RTP_ONVIF_PARSE (parent);
+  GstFlowReturn ret;
+  gboolean send_eos = FALSE;
 
-  if (!handle_buffer (self, buf)) {
+  if (!handle_buffer (self, buf, &send_eos)) {
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 
-  return gst_pad_push (self->srcpad, buf);
+  ret = gst_pad_push (self->srcpad, buf);
+
+  if (ret == GST_FLOW_OK && send_eos) {
+    GstEvent *event;
+
+    event = gst_event_new_eos ();
+    gst_pad_push_event (self->srcpad, event);
+    ret = GST_FLOW_EOS;
+  }
+
+  return ret;
 }
