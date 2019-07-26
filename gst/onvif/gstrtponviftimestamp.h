@@ -52,6 +52,7 @@ struct _GstRtpOnvifTimestamp {
   guint prop_cseq;
   gboolean prop_set_e_bit;
   gboolean prop_set_t_bit;
+  gboolean prop_drop_out_of_segment;
 
   /* currently used ntp-offset
    *(can be changed runtime with a GstNtpOffset event)

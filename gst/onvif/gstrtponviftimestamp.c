@@ -36,6 +36,7 @@
 #define DEFAULT_CSEQ 0
 #define DEFAULT_SET_E_BIT FALSE
 #define DEFAULT_SET_T_BIT FALSE
+#define DEFAULT_DROP_OUT_OF_SEGMENT TRUE
 
 GST_DEBUG_CATEGORY_STATIC (rtponviftimestamp_debug);
 #define GST_CAT_DEFAULT (rtponviftimestamp_debug)
@@ -71,6 +72,7 @@ enum
   PROP_CSEQ,
   PROP_SET_E_BIT,
   PROP_SET_T_BIT,
+  PROP_DROP_OUT_OF_SEGMENT
 };
 
 /*static guint gst_rtp_onvif_timestamp_signals[LAST_SIGNAL] = { 0 }; */
@@ -96,6 +98,8 @@ gst_rtp_onvif_timestamp_get_property (GObject * object,
     case PROP_SET_T_BIT:
       g_value_set_boolean (value, self->prop_set_t_bit);
       break;
+    case PROP_DROP_OUT_OF_SEGMENT:
+      g_value_set_boolean (value, self->prop_drop_out_of_segment);
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -120,6 +124,9 @@ gst_rtp_onvif_timestamp_set_property (GObject * object,
       break;
     case PROP_SET_T_BIT:
       self->prop_set_t_bit = g_value_get_boolean (value);
+      break;
+    case PROP_DROP_OUT_OF_SEGMENT:
+      self->prop_drop_out_of_segment = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -270,6 +277,13 @@ gst_rtp_onvif_timestamp_class_init (GstRtpOnvifTimestampClass * klass)
           "If the element should set the 'T' bit as defined in the ONVIF RTP "
           "extension. This increases latency by one packet",
           DEFAULT_SET_T_BIT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DROP_OUT_OF_SEGMENT,
+      g_param_spec_boolean ("drop-out-of-segment", "Drop out of segment",
+          "Whether the element should drop buffers that fall outside the segment, "
+          "not part of the specification but allows full reverse playback.",
+          DEFAULT_DROP_OUT_OF_SEGMENT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* register pads */
   gst_element_class_add_static_pad_template (gstelement_class,
@@ -438,6 +452,7 @@ gst_rtp_onvif_timestamp_init (GstRtpOnvifTimestamp * self)
   self->prop_ntp_offset = DEFAULT_NTP_OFFSET;
   self->prop_set_e_bit = DEFAULT_SET_E_BIT;
   self->prop_set_t_bit = DEFAULT_SET_T_BIT;
+  self->prop_drop_out_of_segment = DEFAULT_DROP_OUT_OF_SEGMENT;
 
   gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
 
@@ -530,18 +545,20 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf)
     goto done;
   }
 
-  if (time == GST_CLOCK_TIME_NONE) {
+  if (self->prop_drop_out_of_segment && time == GST_CLOCK_TIME_NONE) {
     GST_ERROR_OBJECT (self, "Failed to get stream time");
-    goto done;
+    gst_rtp_buffer_unmap (&rtp);
+    return FALSE;
   }
 
   /* add the offset (in seconds) */
-  time += self->ntp_offset;
-
-  /* convert to NTP time. upper 32 bits should contain the seconds
-   * and the lower 32 bits, the fractions of a second. */
-  time = gst_util_uint64_scale (time, (G_GINT64_CONSTANT (1) << 32),
-      GST_SECOND);
+  if (time != GST_CLOCK_TIME_NONE) {
+    time += self->ntp_offset;
+    /* convert to NTP time. upper 32 bits should contain the seconds
+     * and the lower 32 bits, the fractions of a second. */
+    time = gst_util_uint64_scale (time, (G_GINT64_CONSTANT (1) << 32),
+        GST_SECOND);
+  }
 
   GST_DEBUG_OBJECT (self, "timestamp: %" G_GUINT64_FORMAT, time);
 

@@ -118,8 +118,13 @@ handle_buffer (GstRtpOnvifParse * self, GstBuffer * buf, gboolean * send_eos)
   timestamp_fraction = GST_READ_UINT32_BE (data + 4);
   timestamp_nseconds =
       (timestamp_fraction * G_GINT64_CONSTANT (1000000000)) >> 32;
-  GST_BUFFER_PTS (buf) =
-      timestamp_seconds * GST_SECOND + timestamp_nseconds * GST_NSECOND;
+
+  if (timestamp_seconds == G_MAXUINT32 && timestamp_fraction == G_MAXUINT32) {
+    GST_BUFFER_PTS (buf) = GST_CLOCK_TIME_NONE;
+  } else {
+    GST_BUFFER_PTS (buf) =
+        timestamp_seconds * GST_SECOND + timestamp_nseconds * GST_NSECOND;
+  }
 
   flags = GST_READ_UINT8 (data + 8);
   /* cseq = GST_READ_UINT8 (data + 9);  TODO */
