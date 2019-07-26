@@ -2157,7 +2157,7 @@ gst_nv_base_enc_flush (GstVideoEncoder * enc)
 }
 #endif
 
-static void
+void
 gst_nv_base_enc_schedule_reconfig (GstNvBaseEnc * nvenc)
 {
   g_atomic_int_set (&nvenc->reconfig, TRUE);

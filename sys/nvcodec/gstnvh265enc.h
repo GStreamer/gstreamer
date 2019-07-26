@@ -28,6 +28,9 @@ typedef struct {
 
   NV_ENC_SEI_PAYLOAD *sei_payload;
   guint num_sei_payload;
+
+  /* properties */
+  gboolean aud;
 } GstNvH265Enc;
 
 typedef struct {

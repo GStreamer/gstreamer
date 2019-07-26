@@ -131,5 +131,7 @@ GType gst_nv_base_enc_get_type (void);
 GType gst_nv_base_enc_register                (const char * codec,
                                                guint device_id);
 
+void gst_nv_base_enc_schedule_reconfig        (GstNvBaseEnc * nvenc);
+
 
 #endif /* __GST_NV_BASE_ENC_H_INCLUDED__ */

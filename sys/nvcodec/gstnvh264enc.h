@@ -24,6 +24,8 @@
 
 typedef struct {
   GstNvBaseEnc base_nvenc;
+  /* properties */
+  gboolean aud;
 } GstNvH264Enc;
 
 typedef struct {

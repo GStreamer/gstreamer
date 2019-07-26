@@ -41,6 +41,14 @@ GST_DEBUG_CATEGORY_STATIC (gst_nv_h265_enc_debug);
 
 static GstElementClass *parent_class = NULL;
 
+enum
+{
+  PROP_0,
+  PROP_AUD,
+};
+
+#define DEFAULT_AUD TRUE
+
 static gboolean gst_nv_h265_enc_open (GstVideoEncoder * enc);
 static gboolean gst_nv_h265_enc_close (GstVideoEncoder * enc);
 static gboolean gst_nv_h265_enc_stop (GstVideoEncoder * enc);
@@ -81,6 +89,12 @@ gst_nv_h265_enc_class_init (GstNvH265EncClass * klass, gpointer data)
   nvenc_class->set_src_caps = gst_nv_h265_enc_set_src_caps;
   nvenc_class->set_pic_params = gst_nv_h265_enc_set_pic_params;
 
+  g_object_class_install_property (gobject_class, PROP_AUD,
+      g_param_spec_boolean ("aud", "AUD",
+          "Use AU (Access Unit) delimiter", DEFAULT_AUD,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+
   if (cdata->is_default)
     long_name = g_strdup ("NVENC HEVC Video Encoder");
   else
@@ -113,6 +127,7 @@ gst_nv_h265_enc_class_init (GstNvH265EncClass * klass, gpointer data)
 static void
 gst_nv_h265_enc_init (GstNvH265Enc * nvenc)
 {
+  nvenc->aud = DEFAULT_AUD;
 }
 
 static void
@@ -449,8 +464,7 @@ gst_nv_h265_enc_set_encoder_config (GstNvBaseEnc * nvenc,
     config->encodeCodecConfig.hevcConfig.pixelBitDepthMinus8 = 2;
   }
 
-  /* FIXME: make property */
-  hevc_config->outputAUD = 1;
+  hevc_config->outputAUD = h265enc->aud;
 
   vui->videoSignalTypePresentFlag = 1;
   /* NOTE: vui::video_format represents the video format before
@@ -540,18 +554,40 @@ static void
 gst_nv_h265_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstNvH265Enc *self = (GstNvH265Enc *) object;
+  gboolean reconfig = FALSE;
+
   switch (prop_id) {
+    case PROP_AUD:
+    {
+      gboolean aud;
+
+      aud = g_value_get_boolean (value);
+      if (aud != self->aud) {
+        self->aud = aud;
+        reconfig = TRUE;
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  if (reconfig)
+    gst_nv_base_enc_schedule_reconfig (GST_NV_BASE_ENC (self));
 }
 
 static void
 gst_nv_h265_enc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
+  GstNvH265Enc *self = (GstNvH265Enc *) object;
+
   switch (prop_id) {
+    case PROP_AUD:
+      g_value_set_boolean (value, self->aud);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
