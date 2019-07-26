@@ -1546,8 +1546,11 @@ gst_vaapipostproc_propose_allocation (GstBaseTransform * trans,
     goto bail;
 
   if (allocation_width != negotiated_width
-      || allocation_height != negotiated_height)
+      || allocation_height != negotiated_height) {
+    g_mutex_lock (&postproc->postproc_lock);
     postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SIZE;
+    g_mutex_unlock (&postproc->postproc_lock);
+  }
 
 bail:
   /* Let vaapidecode allocate the video buffers */
@@ -2120,7 +2123,9 @@ gst_vaapipostproc_colorbalance_set_value (GstColorBalance * balance,
   var = cb_get_value_ptr (postproc, channel, &flags);
   if (var) {
     *var = new_val;
+    g_mutex_lock (&postproc->postproc_lock);
     postproc->flags |= flags;
+    g_mutex_unlock (&postproc->postproc_lock);
     gst_color_balance_value_changed (balance, channel, value);
     if (check_filter_update (postproc))
       gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (postproc));
