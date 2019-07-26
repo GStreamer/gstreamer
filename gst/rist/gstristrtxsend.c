@@ -146,6 +146,10 @@ typedef struct
   /* history of rtp packets */
   GSequence *queue;
   guint32 max_extseqnum;
+
+  /* current rtcp app seqnum extension */
+  gboolean has_seqnum_ext;
+  guint16 seqnum_ext;
 } SSRCRtxData;
 
 static SSRCRtxData *
@@ -407,7 +411,6 @@ gst_rist_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           GSequenceIter *iter;
           BufferQueueItem search_item;
           guint32 extseqnum;
-          guint32 max_extseqnum;
 
           /* update statistics */
           ++rtx->num_rtx_requests;
@@ -415,8 +418,12 @@ gst_rist_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           data = gst_rist_rtx_send_get_ssrc_data (rtx, ssrc);
 
 
-          max_extseqnum = data->max_extseqnum;
-          extseqnum = gst_rist_rtp_ext_seq (&max_extseqnum, seqnum);
+          if (data->has_seqnum_ext) {
+            extseqnum = data->seqnum_ext << 16 | seqnum;
+          } else {
+            guint32 max_extseqnum = data->max_extseqnum;
+            extseqnum = gst_rist_rtp_ext_seq (&max_extseqnum, seqnum);
+          }
 
           search_item.extseqnum = extseqnum;
           iter = g_sequence_lookup (data->queue, &search_item,
@@ -796,4 +803,33 @@ gst_rist_rtx_send_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+}
+
+void
+gst_rist_rtx_send_set_extseqnum (GstRistRtxSend * rtx, guint32 ssrc,
+    guint16 seqnum_ext)
+{
+  SSRCRtxData *data;
+
+  GST_OBJECT_LOCK (rtx);
+  data = g_hash_table_lookup (rtx->ssrc_data, GUINT_TO_POINTER (ssrc));
+
+  if (data) {
+    data->has_seqnum_ext = TRUE;
+    data->seqnum_ext = seqnum_ext;
+  }
+  GST_OBJECT_UNLOCK (rtx);
+}
+
+void
+gst_rist_rtx_send_clear_extseqnum (GstRistRtxSend * rtx, guint32 ssrc)
+{
+  SSRCRtxData *data;
+
+  GST_OBJECT_LOCK (rtx);
+  data = g_hash_table_lookup (rtx->ssrc_data, GUINT_TO_POINTER (ssrc));
+
+  if (data)
+    data->has_seqnum_ext = FALSE;
+  GST_OBJECT_UNLOCK (rtx);
 }

@@ -74,4 +74,8 @@ GType gst_rist_rtp_deext_get_type (void);
 
 guint32 gst_rist_rtp_ext_seq (guint32 * extseqnum, guint16 seqnum);
 
+void gst_rist_rtx_send_set_extseqnum (GstRistRtxSend *self, guint32 ssrc,
+    guint16 seqnum_ext);
+void gst_rist_rtx_send_clear_extseqnum (GstRistRtxSend *self, guint32 ssrc);
+
 #endif
