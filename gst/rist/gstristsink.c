@@ -296,6 +296,64 @@ gst_rist_sink_request_aux_sender (GstRistSink * sink, guint session_id,
 }
 
 static void
+on_receiving_rtcp (GObject * session, GstBuffer * buffer, GstRistSink * sink)
+{
+  RistSenderBond *bond = NULL;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+
+  if (gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp)) {
+    GstRTCPPacket packet;
+
+    if (gst_rtcp_buffer_get_first_packet (&rtcp, &packet)) {
+      /* Always skip the first one as it's never a FB or APP packet */
+
+      while (gst_rtcp_packet_move_to_next (&packet)) {
+        guint32 ssrc;
+
+        switch (gst_rtcp_packet_get_type (&packet)) {
+          case GST_RTCP_TYPE_APP:
+            if (memcmp (gst_rtcp_packet_app_get_name (&packet), "RIST", 4) == 0)
+              ssrc = gst_rtcp_packet_app_get_ssrc (&packet);
+            else
+              continue;
+            break;
+          case GST_RTCP_TYPE_RTPFB:
+            if (gst_rtcp_packet_fb_get_type (&packet) ==
+                GST_RTCP_RTPFB_TYPE_NACK)
+              ssrc = gst_rtcp_packet_fb_get_media_ssrc (&packet);
+            else
+              continue;
+            break;
+          default:
+            continue;
+        }
+
+        /* The SSRC could be that of the original data or the
+         * retransmission. So for the last bit to 0.
+         */
+        ssrc &= 0xFFFFFFFE;
+
+        if (bond == NULL) {
+          guint session_id =
+              GPOINTER_TO_UINT (g_object_get_qdata (session, session_id_quark));
+
+          bond = g_ptr_array_index (sink->bonds, session_id);
+          if (bond == NULL) {
+            g_critical ("Can't find session id %u", session_id);
+            goto done;
+          }
+        }
+
+        gst_rist_rtx_send_clear_extseqnum (GST_RIST_RTX_SEND (bond->rtx_send),
+            ssrc);
+      }
+    }
+  done:
+    gst_rtcp_buffer_unmap (&rtcp);
+  }
+}
+
+static void
 on_app_rtcp (GObject * session, guint32 subtype, guint32 ssrc,
     const gchar * name, GstBuffer * data, GstRistSink * sink)
 {
@@ -338,6 +396,31 @@ on_app_rtcp (GObject * session, guint32 subtype, guint32 ssrc,
         gst_buffer_unmap (data, &map);
         gst_object_unref (send_rtp_sink);
       }
+    } else if (subtype == 1) {
+      GstMapInfo map;
+      RistSenderBond *bond;
+      guint16 seqnum_ext;
+
+      bond = g_ptr_array_index (sink->bonds, session_id);
+
+      if (gst_buffer_get_size (data) < 4) {
+        if (bond)
+          gst_rist_rtx_send_clear_extseqnum (GST_RIST_RTX_SEND (bond->rtx_send),
+              ssrc);
+
+        GST_WARNING_OBJECT (sink, "RIST APP RTCP packet is too small,"
+            " it's %zu bytes, less than the expected 4 bytes",
+            gst_buffer_get_size (data));
+        return;
+      }
+
+      gst_buffer_map (data, &map, GST_MAP_READ);
+      seqnum_ext = GST_READ_UINT16_BE (map.data);
+      gst_buffer_unmap (data, &map);
+
+      if (bond)
+        gst_rist_rtx_send_set_extseqnum (GST_RIST_RTX_SEND (bond->rtx_send),
+            ssrc, seqnum_ext);
     }
   }
 }
@@ -358,10 +441,13 @@ gst_rist_sink_on_new_sender_ssrc (GstRistSink * sink, guint session_id,
   g_signal_emit_by_name (session, "get-source-by-ssrc", ssrc, &source);
   g_object_set_qdata (session, session_id_quark, GUINT_TO_POINTER (session_id));
 
-  if (ssrc & 1)
+  if (ssrc & 1) {
     g_object_set (source, "disable-rtcp", TRUE, NULL);
-  else
+  } else {
     g_signal_connect (session, "on-app-rtcp", (GCallback) on_app_rtcp, sink);
+    g_signal_connect (session, "on-receiving-rtcp",
+        (GCallback) on_receiving_rtcp, sink);
+  }
 
   g_object_unref (source);
   g_object_unref (session);
