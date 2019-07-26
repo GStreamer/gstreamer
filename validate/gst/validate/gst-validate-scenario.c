@@ -1639,14 +1639,9 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
 
   if (priv->seeked_in_pause && priv->seek_flags & GST_SEEK_FLAG_ACCURATE &&
       priv->seek_format == GST_FORMAT_TIME) {
-    if ((*rate > 0 && (*position >= priv->segment_start + priv->seek_pos_tol ||
-                *position < ((priv->segment_start <
-                        priv->seek_pos_tol) ? 0 : priv->segment_start -
-                    priv->seek_pos_tol)))
-        || (*rate < 0 && (*position > priv->segment_start + priv->seek_pos_tol
-                || *position < ((priv->segment_start <
-                        priv->seek_pos_tol) ? 0 : priv->segment_start -
-                    priv->seek_pos_tol)))) {
+    if (*rate > 0
+        && (GstClockTime) ABS (GST_CLOCK_DIFF (*position,
+                priv->segment_start)) > priv->seek_pos_tol) {
       priv->seeked_in_pause = FALSE;
       GST_VALIDATE_REPORT (scenario, EVENT_SEEK_RESULT_POSITION_WRONG,
           "Reported position after accurate seek in PAUSED state should be exactly"
