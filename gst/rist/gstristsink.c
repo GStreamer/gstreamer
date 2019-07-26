@@ -181,6 +181,8 @@ gst_rist_bonding_method_get_type (void)
 G_DEFINE_TYPE_WITH_CODE (GstRistSink, gst_rist_sink, GST_TYPE_BIN,
     GST_DEBUG_CATEGORY_INIT (gst_rist_sink_debug, "ristsink", 0, "RIST Sink"));
 
+GQuark session_id_quark = 0;
+
 static RistSenderBond *
 gst_rist_sink_add_bond (GstRistSink * sink)
 {
@@ -295,16 +297,23 @@ gst_rist_sink_request_aux_sender (GstRistSink * sink, guint session_id,
 
 static void
 on_app_rtcp (GObject * session, guint32 subtype, guint32 ssrc,
-    const gchar * name, GstBuffer * data, GstElement * rtpsession)
+    const gchar * name, GstBuffer * data, GstRistSink * sink)
 {
   if (g_str_equal (name, "RIST")) {
+    guint session_id =
+        GPOINTER_TO_UINT (g_object_get_qdata (session, session_id_quark));
+
     if (subtype == 0) {
       GstEvent *event;
       GstPad *send_rtp_sink;
       GstMapInfo map;
       gint i;
+      GstElement *gstsession;
 
-      send_rtp_sink = gst_element_get_static_pad (rtpsession, "send_rtp_sink");
+      g_signal_emit_by_name (sink->rtpbin, "get-session", session_id,
+          &gstsession);
+
+      send_rtp_sink = gst_element_get_static_pad (gstsession, "send_rtp_sink");
       if (send_rtp_sink) {
         gst_buffer_map (data, &map, GST_MAP_READ);
 
@@ -347,12 +356,12 @@ gst_rist_sink_on_new_sender_ssrc (GstRistSink * sink, guint session_id,
   g_signal_emit_by_name (rtpbin, "get-session", session_id, &gstsession);
   g_signal_emit_by_name (rtpbin, "get-internal-session", session_id, &session);
   g_signal_emit_by_name (session, "get-source-by-ssrc", ssrc, &source);
+  g_object_set_qdata (session, session_id_quark, GUINT_TO_POINTER (session_id));
 
   if (ssrc & 1)
     g_object_set (source, "disable-rtcp", TRUE, NULL);
   else
-    g_signal_connect (session, "on-app-rtcp", (GCallback) on_app_rtcp,
-        gstsession);
+    g_signal_connect (session, "on-app-rtcp", (GCallback) on_app_rtcp, sink);
 
   g_object_unref (source);
   g_object_unref (session);
@@ -1190,6 +1199,9 @@ gst_rist_sink_class_init (GstRistSinkClass * klass)
 {
   GstElementClass *element_class = (GstElementClass *) klass;
   GObjectClass *object_class = (GObjectClass *) klass;
+
+
+  session_id_quark = g_quark_from_static_string ("gst-rist-sink-session-id");
 
   gst_element_class_set_metadata (element_class,
       "RIST Sink", "Source/Network",
