@@ -6337,10 +6337,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
   /* check for segment end */
   if (G_UNLIKELY (qtdemux->segment.stop != -1
-          && ((qtdemux->segment.rate >= 0 && qtdemux->segment.stop <= min_time)
-              || (qtdemux->segment.rate < 0
-                  && qtdemux->segment.start > min_time))
-          && target_stream->on_keyframe)) {
+          && qtdemux->segment.rate >= 0
+          && qtdemux->segment.stop <= min_time && target_stream->on_keyframe)) {
     GST_DEBUG_OBJECT (qtdemux, "we reached the end of our segment.");
     target_stream->time_position = GST_CLOCK_TIME_NONE;
     goto eos_stream;
