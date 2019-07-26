@@ -72,4 +72,6 @@ typedef struct {
 } GstRistRtpDeextClass;
 GType gst_rist_rtp_deext_get_type (void);
 
+guint32 gst_rist_rtp_ext_seq (guint32 * extseqnum, guint16 seqnum);
+
 #endif

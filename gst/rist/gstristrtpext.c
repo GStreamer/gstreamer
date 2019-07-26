@@ -87,74 +87,6 @@ G_DEFINE_TYPE_WITH_CODE (GstRistRtpExt, gst_rist_rtp_ext, GST_TYPE_ELEMENT,
         "RIST RTP Extension"));
 
 
-/*
- * rtp_ext_seq:
- * @extseq: (inout): a previous extended seqs
- * @seq: a new seq
- *
- * Update the @extseq field with the extended seq of @seq
- * For the first call of the method, @extseq should point to a location
- * with a value of -1.
- *
- * This function is able to handle both forward and backward seqs taking
- * into account:
- *   - seq wraparound making sure that the returned value is properly increased.
- *   - seq unwraparound making sure that the returned value is properly decreased.
- *
- * Returns: The extended seq of @seq or 0 if the result can't go anywhere backwards.
- *
- * NOTE: This is a calque of gst_rtp_buffer_ext_timestamp() but with
- * s/32/16/ and s/64/32/ and s/0xffffffff/0xffff/ and s/timestamp/seqnum/.
- */
-static guint32
-rtp_ext_seq (guint32 * extseqnum, guint16 seqnum)
-{
-  guint32 result, ext;
-
-  g_return_val_if_fail (extseqnum != NULL, -1);
-
-  ext = *extseqnum;
-
-  if (ext == -1) {
-    result = seqnum;
-  } else {
-    /* pick wraparound counter from previous seqnum and add to new seqnum */
-    result = seqnum + (ext & ~(0xffff));
-
-    /* check for seqnum wraparound */
-    if (result < ext) {
-      guint32 diff = ext - result;
-
-      if (diff > G_MAXINT16) {
-        /* seqnum went backwards more than allowed, we wrap around and get
-         * updated extended seqnum. */
-        result += (1 << 16);
-      }
-    } else {
-      guint32 diff = result - ext;
-
-      if (diff > G_MAXINT16) {
-        if (result < (1 << 16)) {
-          GST_WARNING
-              ("Cannot unwrap, any wrapping took place yet. Returning 0 without updating extended seqnum.");
-          return 0;
-        } else {
-          /* seqnum went forwards more than allowed, we unwrap around and get
-           * updated extended seqnum. */
-          result -= (1 << 16);
-          /* We don't want the extended seqnum storage to go back, ever */
-          return result;
-        }
-      }
-    }
-  }
-
-  *extseqnum = result;
-
-  return result;
-}
-
-
 static GstFlowReturn
 gst_rist_rtp_ext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
@@ -261,7 +193,7 @@ gst_rist_rtp_ext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     if (GST_BUFFER_IS_DISCONT (buffer))
       self->extseqnum = -1;
 
-    extseqnum = rtp_ext_seq (&self->extseqnum, seqnum);
+    extseqnum = gst_rist_rtp_ext_seq (&self->extseqnum, seqnum);
 
     gst_rtp_buffer_get_extension_data (&rtp, &bits, (void **) &data, &wordlen);
     GST_WRITE_UINT16_BE (data, (extseqnum >> 16));
