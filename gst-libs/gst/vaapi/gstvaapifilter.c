@@ -69,6 +69,8 @@ struct _GstVaapiFilter
   GstVaapiRectangle target_rect;
   guint use_crop_rect:1;
   guint use_target_rect:1;
+  guint32 mirror_flags;
+  guint32 rotation_flags;
 };
 
 typedef struct _GstVaapiFilterClass GstVaapiFilterClass;
@@ -281,6 +283,34 @@ vpp_get_filter_caps (GstVaapiFilter * filter, VAProcFilterType type,
   caps = vpp_get_filter_caps_unlocked (filter, type, cap_size, num_caps_ptr);
   GST_VAAPI_DISPLAY_UNLOCK (filter->display);
   return caps;
+}
+
+static void
+vpp_get_pipeline_caps_unlocked (GstVaapiFilter * filter)
+{
+#if VA_CHECK_VERSION(1,1,0)
+  VAProcPipelineCaps pipeline_caps = { 0, };
+
+  VAStatus va_status = vaQueryVideoProcPipelineCaps (filter->va_display,
+      filter->va_context, NULL, 0, &pipeline_caps);
+
+  if (vaapi_check_status (va_status, "vaQueryVideoProcPipelineCaps()")) {
+    filter->mirror_flags = pipeline_caps.mirror_flags;
+    filter->rotation_flags = pipeline_caps.rotation_flags;
+    return;
+  }
+#endif
+
+  filter->mirror_flags = 0;
+  filter->rotation_flags = 0;
+}
+
+static void
+vpp_get_pipeline_caps (GstVaapiFilter * filter)
+{
+  GST_VAAPI_DISPLAY_LOCK (filter->display);
+  vpp_get_pipeline_caps_unlocked (filter);
+  GST_VAAPI_DISPLAY_UNLOCK (filter->display);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -715,6 +745,8 @@ get_operations_ordered (GstVaapiFilter * filter, GPtrArray * default_ops)
     filter_caps = NULL;
   }
 
+  vpp_get_pipeline_caps (filter);
+
   if (filter->operations)
     g_ptr_array_unref (filter->operations);
   filter->operations = g_ptr_array_ref (ops);
@@ -1036,7 +1068,6 @@ op_set_skintone (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
   GST_VAAPI_DISPLAY_UNLOCK (filter->display);
   return success;
 }
-
 
 static gboolean
 deint_refs_set (GArray * refs, GstVaapiSurface ** surfaces, guint num_surfaces)
@@ -1958,56 +1989,31 @@ gst_vaapi_filter_set_video_direction (GstVaapiFilter * filter,
 {
   g_return_val_if_fail (filter != NULL, FALSE);
 
-  switch (method) {
-    case GST_VIDEO_ORIENTATION_IDENTITY:
-      break;
-    case GST_VIDEO_ORIENTATION_HORIZ:
-    case GST_VIDEO_ORIENTATION_VERT:
-    case GST_VIDEO_ORIENTATION_90R:
-    case GST_VIDEO_ORIENTATION_180:
-    case GST_VIDEO_ORIENTATION_90L:
-    case GST_VIDEO_ORIENTATION_UL_LR:
-    case GST_VIDEO_ORIENTATION_UR_LL:
-    {
 #if VA_CHECK_VERSION(1,1,0)
-      VAProcPipelineCaps pipeline_caps;
-      guint va_mirror = VA_MIRROR_NONE;
-      guint va_rotation = VA_ROTATION_NONE;
+  {
+    guint32 va_mirror = VA_MIRROR_NONE;
+    guint32 va_rotation = VA_ROTATION_NONE;
 
-      VAStatus va_status = vaQueryVideoProcPipelineCaps (filter->va_display,
-          filter->va_context, NULL, 0, &pipeline_caps);
-      if (!vaapi_check_status (va_status, "vaQueryVideoProcPipelineCaps()"))
-        return FALSE;
+    from_GstVideoOrientationMethod (method, &va_mirror, &va_rotation);
 
-      from_GstVideoOrientationMethod (method, &va_mirror, &va_rotation);
-
-      if (va_mirror != VA_MIRROR_NONE) {
-        if (!(pipeline_caps.mirror_flags & va_mirror)) {
-          GST_WARNING ("%s video-direction unsupported",
-              gst_vaapi_get_video_direction_nick (method));
-          return TRUE;
-        }
-      }
-
-      if (va_rotation != VA_ROTATION_NONE) {
-        if (!(pipeline_caps.rotation_flags & (1 << va_rotation))) {
-          GST_WARNING ("%s video-direction unsupported",
-              gst_vaapi_get_video_direction_nick (method));
-          return TRUE;
-        }
-      }
-#else
+    if (va_mirror != VA_MIRROR_NONE && !(filter->mirror_flags & va_mirror)) {
       GST_WARNING ("%s video-direction unsupported",
           gst_vaapi_get_video_direction_nick (method));
       return TRUE;
-#endif
-      break;
     }
-    default:
-      GST_WARNING ("%s video-direction unsupported or unimplemented",
+
+    if (va_rotation != VA_ROTATION_NONE
+        && !(filter->rotation_flags & (1 << va_rotation))) {
+      GST_WARNING ("%s video-direction unsupported",
           gst_vaapi_get_video_direction_nick (method));
       return TRUE;
+    }
   }
+#else
+  GST_WARNING ("%s video-direction unsupported",
+      gst_vaapi_get_video_direction_nick (method));
+  return TRUE;
+#endif
 
   filter->video_direction = method;
   return TRUE;
