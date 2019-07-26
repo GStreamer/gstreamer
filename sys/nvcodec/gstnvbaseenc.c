@@ -537,6 +537,8 @@ gst_nv_base_enc_init (GstNvBaseEnc * nvenc)
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+
+  GST_PAD_SET_ACCEPT_INTERSECT (GST_VIDEO_ENCODER_SINK_PAD (encoder));
 }
 
 static void
