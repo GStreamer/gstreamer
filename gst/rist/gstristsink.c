@@ -296,35 +296,37 @@ on_app_rtcp (GObject * session, guint32 subtype, guint32 ssrc,
     const gchar * name, GstBuffer * data, GstElement * rtpsession)
 {
   if (g_str_equal (name, "RIST")) {
-    GstEvent *event;
-    GstPad *send_rtp_sink;
-    GstMapInfo map;
-    gint i;
+    if (subtype == 0) {
+      GstEvent *event;
+      GstPad *send_rtp_sink;
+      GstMapInfo map;
+      gint i;
 
-    send_rtp_sink = gst_element_get_static_pad (rtpsession, "send_rtp_sink");
-    if (send_rtp_sink) {
-      gst_buffer_map (data, &map, GST_MAP_READ);
+      send_rtp_sink = gst_element_get_static_pad (rtpsession, "send_rtp_sink");
+      if (send_rtp_sink) {
+        gst_buffer_map (data, &map, GST_MAP_READ);
 
-      for (i = 0; i < map.size; i += sizeof (guint32)) {
-        guint32 dword = GST_READ_UINT32_BE (map.data + i);
-        guint16 seqnum = dword >> 16;
-        guint16 num = dword & 0x0000FFFF;
-        guint16 j;
+        for (i = 0; i < map.size; i += sizeof (guint32)) {
+          guint32 dword = GST_READ_UINT32_BE (map.data + i);
+          guint16 seqnum = dword >> 16;
+          guint16 num = dword & 0x0000FFFF;
+          guint16 j;
 
-        GST_DEBUG ("got RIST nack packet, #%u %u", seqnum, num);
+          GST_DEBUG ("got RIST nack packet, #%u %u", seqnum, num);
 
-        /* num is inclusive, i.e. it can be 0, which means exactly 1 seqnum */
-        for (j = 0; j <= num; j++) {
-          event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
-              gst_structure_new ("GstRTPRetransmissionRequest",
-                  "seqnum", G_TYPE_UINT, (guint) seqnum + j,
-                  "ssrc", G_TYPE_UINT, (guint) ssrc, NULL));
-          gst_pad_push_event (send_rtp_sink, event);
+          /* num is inclusive, i.e. it can be 0, which means exactly 1 seqnum */
+          for (j = 0; j <= num; j++) {
+            event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+                gst_structure_new ("GstRTPRetransmissionRequest",
+                    "seqnum", G_TYPE_UINT, (guint) seqnum + j,
+                    "ssrc", G_TYPE_UINT, (guint) ssrc, NULL));
+            gst_pad_push_event (send_rtp_sink, event);
+          }
         }
-      }
 
-      gst_buffer_unmap (data, &map);
-      gst_object_unref (send_rtp_sink);
+        gst_buffer_unmap (data, &map);
+        gst_object_unref (send_rtp_sink);
+      }
     }
   }
 }
