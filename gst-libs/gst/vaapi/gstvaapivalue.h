@@ -157,6 +157,10 @@ G_PASTE(name,_get_type)(void)                                           \
     return gst_vaapi_type_define_enum_subset_from_mask(&subset, MASK);  \
 }
 
+G_GNUC_INTERNAL
+const gchar *
+gst_vaapi_enum_type_get_nick (GType type, gint value);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_VALUE_H */

@@ -37,6 +37,8 @@
 #include "gstcompat.h"
 #include <gst/video/video.h>
 
+#include <gst/vaapi/gstvaapivalue.h>
+
 #include "gstvaapipostproc.h"
 #include "gstvaapipostprocutil.h"
 #include "gstvaapipluginutil.h"
@@ -595,8 +597,15 @@ update_filter (GstVaapiPostproc * postproc)
 
   if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION) {
     if (!gst_vaapi_filter_set_video_direction (postproc->filter,
-            postproc->video_direction))
-      return FALSE;
+            postproc->video_direction)) {
+      GST_ELEMENT_WARNING (postproc, LIBRARY, SETTINGS,
+          ("Unsupported video direction '%s' by driver.",
+              gst_vaapi_enum_type_get_nick
+              (GST_TYPE_VIDEO_ORIENTATION_METHOD, postproc->video_direction)),
+          ("video direction transformation ignored"));
+
+      /* Don't return FALSE because other filters might be set */
+    }
 
     if (gst_vaapi_filter_get_video_direction_default (postproc->filter) ==
         postproc->video_direction)

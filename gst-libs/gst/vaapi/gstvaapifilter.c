@@ -118,17 +118,6 @@ gst_vaapi_scale_method_get_type (void)
   return g_type;
 }
 
-static const gchar *
-gst_vaapi_get_video_direction_nick (GstVideoOrientationMethod method)
-{
-  gpointer const klass = g_type_class_peek (GST_TYPE_VIDEO_ORIENTATION_METHOD);
-  GEnumValue *const e = g_enum_get_value (klass, method);
-
-  if (e)
-    return e->value_nick;
-  return "<unknown>";
-}
-
 GType
 gst_vaapi_deinterlace_method_get_type (void)
 {
@@ -1996,23 +1985,15 @@ gst_vaapi_filter_set_video_direction (GstVaapiFilter * filter,
 
     from_GstVideoOrientationMethod (method, &va_mirror, &va_rotation);
 
-    if (va_mirror != VA_MIRROR_NONE && !(filter->mirror_flags & va_mirror)) {
-      GST_WARNING ("%s video-direction unsupported",
-          gst_vaapi_get_video_direction_nick (method));
-      return TRUE;
-    }
+    if (va_mirror != VA_MIRROR_NONE && !(filter->mirror_flags & va_mirror))
+      return FALSE;
 
     if (va_rotation != VA_ROTATION_NONE
-        && !(filter->rotation_flags & (1 << va_rotation))) {
-      GST_WARNING ("%s video-direction unsupported",
-          gst_vaapi_get_video_direction_nick (method));
-      return TRUE;
-    }
+        && !(filter->rotation_flags & (1 << va_rotation)))
+      return FALSE;
   }
 #else
-  GST_WARNING ("%s video-direction unsupported",
-      gst_vaapi_get_video_direction_nick (method));
-  return TRUE;
+  return FALSE;
 #endif
 
   filter->video_direction = method;
