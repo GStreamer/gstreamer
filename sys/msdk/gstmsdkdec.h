@@ -67,7 +67,6 @@ struct _GstMsdkDec
   /* aligned msdk pool info */
   GstVideoInfo output_info;
   GstBufferPool *pool;
-  GstCaps *allocation_caps;
   /* downstream pool info based on allocation query */
   GstVideoInfo non_msdk_pool_info;
   mfxFrameAllocResponse alloc_resp;

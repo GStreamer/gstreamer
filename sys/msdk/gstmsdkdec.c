@@ -542,20 +542,16 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
         G_TYPE_INT, height, "format", G_TYPE_STRING, format_str, NULL);
     GST_INFO_OBJECT (thiz, "new alloc caps = %" GST_PTR_FORMAT,
         allocation_caps);
-    gst_caps_replace (&thiz->allocation_caps, allocation_caps);
+    gst_caps_replace (&output_state->allocation_caps, allocation_caps);
+    gst_caps_unref (allocation_caps);
   } else {
     /* We keep the allocation parameters as it is to avoid pool re-negotiation.
      * For codecs like VP9, dynamic resolution change doesn't require allocation
      * reset if the new video frame resolution is lower than the
      * already configured one */
-    allocation_caps = gst_caps_copy (thiz->allocation_caps);
   }
-
-  gst_caps_replace (&output_state->allocation_caps, allocation_caps);
-  if (allocation_caps)
-    gst_caps_unref (allocation_caps);
-
   gst_video_codec_state_unref (output_state);
+
   return TRUE;
 }
 
@@ -947,14 +943,23 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
     if (!thiz->initialized)
       hard_reset = TRUE;
-    else if (thiz->allocation_caps) {
-      gst_video_info_from_caps (&alloc_info, thiz->allocation_caps);
+    else {
+      GstVideoCodecState *output_state =
+          gst_video_decoder_get_output_state (GST_VIDEO_DECODER (thiz));
 
-      /* Check whether we need complete reset for dynamic resolution change */
-      if (thiz->param.mfx.FrameInfo.Width > GST_VIDEO_INFO_WIDTH (&alloc_info)
-          || thiz->param.mfx.FrameInfo.Height >
-          GST_VIDEO_INFO_HEIGHT (&alloc_info))
-        hard_reset = TRUE;
+      if (output_state) {
+        if (output_state->allocation_caps) {
+          gst_video_info_from_caps (&alloc_info, output_state->allocation_caps);
+
+          /* Check whether we need complete reset for dynamic resolution change */
+          if (thiz->param.mfx.FrameInfo.Width >
+              GST_VIDEO_INFO_WIDTH (&alloc_info)
+              || thiz->param.mfx.FrameInfo.Height >
+              GST_VIDEO_INFO_HEIGHT (&alloc_info))
+            hard_reset = TRUE;
+        }
+        gst_video_codec_state_unref (output_state);
+      }
     }
 
     /* if subclass requested for the force reset */
