@@ -2651,7 +2651,7 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing,
     cmd = CMD_WAIT;
     state = GST_STATE_PAUSED;
   } else {
-    event = gst_event_new_flush_stop (FALSE);
+    event = gst_event_new_flush_stop (TRUE);
     gst_event_set_seqnum (event, seqnum);
     GST_DEBUG_OBJECT (src, "stop flush; playing %d", playing);
     cmd = CMD_LOOP;
