@@ -2337,6 +2337,7 @@ gst_matroska_demux_peek_cluster_info (GstMatroskaDemux * demux,
         cluster->time = demux->cluster_time * demux->common.time_scale;
         break;
       case GST_MATROSKA_ID_SILENTTRACKS:
+      case GST_EBML_ID_CRC32:
         /* ignore and continue */
         break;
       default:
