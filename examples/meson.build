@@ -10,6 +10,8 @@ examples = [
   'test-netclock',
   'test-netclock-client',
   'test-ogg',
+  'test-onvif-client',
+  'test-onvif-server',
   'test-readme',
   'test-record-auth',
   'test-record',
