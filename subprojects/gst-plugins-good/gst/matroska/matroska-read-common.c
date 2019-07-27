@@ -1639,6 +1639,7 @@ gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
   idx.track = 0;
   idx.time = GST_CLOCK_TIME_NONE;
   idx.block = 1;
+  idx.relative = FALSE;
 
   DEBUG_ELEMENT_START (common, ebml, "CueTrackPositions");
 
@@ -1702,6 +1703,9 @@ gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
           break;
         }
 
+        if (idx.relative)
+          break;
+
         GST_DEBUG_OBJECT (common->sinkpad, "CueBlockNumber: %" G_GUINT64_FORMAT,
             num);
         idx.block = num;
@@ -1710,6 +1714,27 @@ gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
         if (idx.block > G_MAXUINT16) {
           GST_DEBUG_OBJECT (common->sinkpad, "... looks suspicious, ignoring");
           idx.block = 1;
+        }
+        break;
+      }
+
+        /* byte offset from start of cluster */
+      case GST_MATROSKA_ID_CUERELATIVEPOSITION:
+      {
+        guint64 num;
+
+        if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+          break;
+
+        GST_DEBUG_OBJECT (common->sinkpad,
+            "CueRelativePosition: %" G_GUINT64_FORMAT, num);
+
+        /* mild sanity check, disregard strange cases ... */
+        if (num > G_MAXUINT32) {
+          GST_DEBUG_OBJECT (common->sinkpad, "... looks suspicious, ignoring");
+        } else {
+          idx.offset = num;
+          idx.relative = TRUE;
         }
         break;
       }
@@ -1730,7 +1755,7 @@ gst_matroska_read_common_parse_index_cuetrack (GstMatroskaReadCommon * common,
 
   /* (e.g.) lavf typically creates entries without a block number,
    * which is bogus and leads to contradictory information */
-  if (common->index->len) {
+  if (common->index->len && !idx.relative) {
     GstMatroskaIndex *last_idx;
 
     last_idx = &g_array_index (common->index, GstMatroskaIndex,
@@ -1818,8 +1843,10 @@ gst_matroska_read_common_parse_index_pointentry (GstMatroskaReadCommon *
 
         idx->time = time;
         GST_DEBUG_OBJECT (common->sinkpad, "Index entry: pos=%" G_GUINT64_FORMAT
-            ", time=%" GST_TIME_FORMAT ", track=%u, block=%u", idx->pos,
-            GST_TIME_ARGS (idx->time), (guint) idx->track, (guint) idx->block);
+            ", time=%" GST_TIME_FORMAT ", track=%u, %s=%u", idx->pos,
+            GST_TIME_ARGS (idx->time), (guint) idx->track,
+            idx->relative ? "offset" : "block",
+            (guint) (idx->relative ? idx->offset : idx->block));
       }
     }
   } else {
