@@ -282,6 +282,7 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_TEARDOWN_TIMEOUT  (100 * GST_MSECOND)
 #define DEFAULT_ONVIF_MODE FALSE
 #define DEFAULT_ONVIF_RATE_CONTROL TRUE
+#define DEFAULT_IS_LIVE TRUE
 
 enum
 {
@@ -328,7 +329,8 @@ enum
   PROP_BACKCHANNEL,
   PROP_TEARDOWN_TIMEOUT,
   PROP_ONVIF_MODE,
-  PROP_ONVIF_RATE_CONTROL
+  PROP_ONVIF_RATE_CONTROL,
+  PROP_IS_LIVE
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -978,6 +980,22 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtspSrc:is-live
+   *
+   * Whether to act as a live source. This is useful in combination with
+   * #GstRtspSrc:onvif-rate-control set to %FALSE and usage of the TCP
+   * protocol. In that situation, data delivery rate can be entirely
+   * controlled from the client side, enabling features such as frame
+   * stepping and instantaneous rate changes.
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (gobject_class, PROP_IS_LIVE,
+      g_param_spec_boolean ("is-live", "Is live",
+          "Whether to act as a live source",
+          DEFAULT_IS_LIVE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
    * @request: a #GstRTSPMessage
@@ -1379,6 +1397,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->teardown_timeout = DEFAULT_TEARDOWN_TIMEOUT;
   src->onvif_mode = DEFAULT_ONVIF_MODE;
   src->onvif_rate_control = DEFAULT_ONVIF_RATE_CONTROL;
+  src->is_live = DEFAULT_IS_LIVE;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1723,6 +1742,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_ONVIF_RATE_CONTROL:
       rtspsrc->onvif_rate_control = g_value_get_boolean (value);
       break;
+    case PROP_IS_LIVE:
+      rtspsrc->is_live = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1892,6 +1914,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_ONVIF_RATE_CONTROL:
       g_value_set_boolean (value, rtspsrc->onvif_rate_control);
+      break;
+    case PROP_IS_LIVE:
+      g_value_set_boolean (value, rtspsrc->is_live);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2853,11 +2878,14 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     stream->discont = TRUE;
   }
 
-  /* and continue playing if needed */
+  /* and continue playing if needed. If we are not acting as a live source,
+   * then only the RTSP PLAYING state, set earlier, matters. */
   GST_OBJECT_LOCK (src);
-  playing = (GST_STATE_PENDING (src) == GST_STATE_VOID_PENDING
-      && GST_STATE (src) == GST_STATE_PLAYING)
-      || (GST_STATE_PENDING (src) == GST_STATE_PLAYING);
+  if (src->is_live) {
+    playing = (GST_STATE_PENDING (src) == GST_STATE_VOID_PENDING
+        && GST_STATE (src) == GST_STATE_PLAYING)
+        || (GST_STATE_PENDING (src) == GST_STATE_PLAYING);
+  }
   GST_OBJECT_UNLOCK (src);
 
   if (src->version >= GST_RTSP_VERSION_2_0) {
@@ -3029,7 +3057,7 @@ gst_rtspsrc_handle_internal_src_query (GstPad * pad, GstObject * parent,
     {
       /* we are live with a min latency of 0 and unlimited max latency, this
        * result will be updated by the session manager if there is any. */
-      gst_query_set_latency (query, TRUE, 0, -1);
+      gst_query_set_latency (query, src->is_live, 0, -1);
       break;
     }
     default:
@@ -3502,7 +3530,10 @@ on_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
               "stream-number", G_TYPE_INT, stream->id, "ssrc", G_TYPE_UINT,
               stream->ssrc, NULL)));
 
-  on_timeout_common (session, source, stream);
+  /* In non-live mode, timeouts can occur if we are PAUSED, this doesn't mean
+   * the stream is EOS, it may simply be blocked */
+  if (src->is_live || !src->interleaved)
+    on_timeout_common (session, source, stream);
 }
 
 static void
@@ -3829,6 +3860,9 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
   const gchar *manager;
   gchar *name;
   GstStateChangeReturn ret;
+
+  if (!src->is_live)
+    goto use_no_manager;
 
   /* find a manager */
   if (gst_rtsp_transport_get_manager (transport->trans, &manager, 0) < 0)
@@ -5337,6 +5371,11 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
     for (streams = src->streams; streams; streams = g_list_next (streams)) {
       GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
       GstCaps *caps;
+
+      /* Activate in advance so that the stream-start event is registered */
+      if (stream->srcpad) {
+        gst_pad_set_active (stream->srcpad, TRUE);
+      }
 
       stream_id =
           g_strdup_printf ("%s/%d", g_checksum_get_string (cs), ostream->id);
@@ -7986,6 +8025,12 @@ gst_rtspsrc_open (GstRTSPSrc * src, gboolean async)
   if ((ret = gst_rtspsrc_open_from_sdp (src, src->sdp, async)) < 0)
     goto open_failed;
 
+  if (src->initial_seek) {
+    if (!gst_rtspsrc_perform_seek (src, src->initial_seek))
+      goto initial_seek_failed;
+    gst_event_replace (&src->initial_seek, NULL);
+  }
+
 done:
   if (async)
     gst_rtspsrc_loop_end_cmd (src, CMD_OPEN, ret);
@@ -8002,6 +8047,13 @@ no_sdp:
 open_failed:
   {
     GST_WARNING_OBJECT (src, "can't setup streaming from sdp");
+    src->open_error = TRUE;
+    goto done;
+  }
+initial_seek_failed:
+  {
+    GST_WARNING_OBJECT (src, "Failed to perform initial seek");
+    ret = GST_RTSP_ERROR;
     src->open_error = TRUE;
     goto done;
   }
@@ -9028,17 +9080,22 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       /* first attempt, don't ignore timeouts */
       rtspsrc->ignore_timeout = FALSE;
       rtspsrc->open_error = FALSE;
-      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_OPEN, 0);
+      if (rtspsrc->is_live)
+        gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_OPEN, 0);
+      else
+        gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PLAY, 0);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       set_manager_buffer_mode (rtspsrc);
       /* fall-through */
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      /* unblock the tcp tasks and make the loop waiting */
-      if (gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_WAIT, CMD_LOOP)) {
-        /* make sure it is waiting before we send PAUSE or PLAY below */
-        GST_RTSP_STREAM_LOCK (rtspsrc);
-        GST_RTSP_STREAM_UNLOCK (rtspsrc);
+      if (rtspsrc->is_live) {
+        /* unblock the tcp tasks and make the loop waiting */
+        if (gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_WAIT, CMD_LOOP)) {
+          /* make sure it is waiting before we send PAUSE or PLAY below */
+          GST_RTSP_STREAM_LOCK (rtspsrc);
+          GST_RTSP_STREAM_UNLOCK (rtspsrc);
+        }
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -9056,16 +9113,22 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      ret = GST_STATE_CHANGE_NO_PREROLL;
+      if (rtspsrc->is_live)
+        ret = GST_STATE_CHANGE_NO_PREROLL;
+      else
+        ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PLAY, 0);
+      if (rtspsrc->is_live)
+        gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PLAY, 0);
       ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      /* send pause request and keep the idle task around */
-      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PAUSE, CMD_LOOP);
-      ret = GST_STATE_CHANGE_NO_PREROLL;
+      if (rtspsrc->is_live) {
+        /* send pause request and keep the idle task around */
+        gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PAUSE, CMD_LOOP);
+      }
+      ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_rtspsrc_loop_send_cmd_and_wait (rtspsrc, CMD_CLOSE, CMD_ALL,
@@ -9109,8 +9172,14 @@ gst_rtspsrc_send_event (GstElement * element, GstEvent * event)
   rtspsrc = GST_RTSPSRC (element);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
-    res = gst_rtspsrc_perform_seek (rtspsrc, event);
-    gst_event_unref (event);
+    if (rtspsrc->state >= GST_RTSP_STATE_READY) {
+      res = gst_rtspsrc_perform_seek (rtspsrc, event);
+      gst_event_unref (event);
+    } else {
+      /* Store for later use */
+      res = TRUE;
+      rtspsrc->initial_seek = event;
+    }
   } else if (GST_EVENT_IS_DOWNSTREAM (event)) {
     res = gst_rtspsrc_push_event (rtspsrc, event);
   } else {

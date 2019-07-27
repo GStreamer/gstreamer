@@ -277,6 +277,7 @@ struct _GstRTSPSrc {
   GstClockTime      teardown_timeout;
   gboolean          onvif_mode;
   gboolean          onvif_rate_control;
+  gboolean          is_live;
 
   /* state */
   GstRTSPState       state;
@@ -320,6 +321,8 @@ struct _GstRTSPSrc {
 
   GstRTSPVersion default_version;
   GstRTSPVersion version;
+
+  GstEvent *initial_seek;
 };
 
 struct _GstRTSPSrcClass {
