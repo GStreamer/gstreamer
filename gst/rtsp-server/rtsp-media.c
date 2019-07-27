@@ -243,6 +243,8 @@ static gboolean check_complete (GstRTSPMedia * media);
 
 #define C_ENUM(v) ((gint) v)
 
+#define TRICKMODE_FLAGS (GST_SEEK_FLAG_TRICKMODE | GST_SEEK_FLAG_TRICKMODE_KEY_UNITS | GST_SEEK_FLAG_TRICKMODE_FORWARD_PREDICTED)
+
 GType
 gst_rtsp_suspend_mode_get_type (void)
 {
@@ -2757,13 +2759,11 @@ gst_rtsp_media_seek_trickmode (GstRTSPMedia * media,
   if (stop != GST_CLOCK_TIME_NONE)
     stop_type = GST_SEEK_TYPE_SET;
 
-  /* we force a seek if any seek flag is set, or if the the rate
+  /* we force a seek if any trickmode flag is set, or if the rate
    * is non-standard, i.e. not 1.0 */
-  force_seek = flags != GST_SEEK_FLAG_NONE || rate != 1.0;
+  force_seek = (flags & TRICKMODE_FLAGS) || rate != 1.0;
 
   if (start != GST_CLOCK_TIME_NONE || stop != GST_CLOCK_TIME_NONE || force_seek) {
-    gboolean had_flags = flags != GST_SEEK_FLAG_NONE;
-
     GST_INFO ("seeking to %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
@@ -2782,14 +2782,7 @@ gst_rtsp_media_seek_trickmode (GstRTSPMedia * media,
             GST_TIME_ARGS (current_position));
         start = current_position;
         start_type = GST_SEEK_TYPE_SET;
-        if (!had_flags)
-          flags |= GST_SEEK_FLAG_ACCURATE;
       }
-    } else {
-      /* only set keyframe flag when modifying start */
-      if (start_type != GST_SEEK_TYPE_NONE)
-        if (!had_flags)
-          flags |= GST_SEEK_FLAG_KEY_UNIT;
     }
 
     if (start == current_position && stop_type == GST_SEEK_TYPE_NONE &&

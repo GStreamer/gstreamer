@@ -1862,7 +1862,13 @@ setup_play_mode (GstRTSPClient * client, GstRTSPContext * ctx,
         flags = GST_SEEK_FLAG_KEY_UNIT & GST_SEEK_FLAG_SNAP_AFTER;
       else
         GST_FIXME_OBJECT (client, "Add support for seek style %s", seek_style);
+    } else if (range->min.type == GST_RTSP_TIME_END) {
+      flags = GST_SEEK_FLAG_ACCURATE;
+    } else {
+      flags = GST_SEEK_FLAG_KEY_UNIT;
     }
+  } else {
+    flags = GST_SEEK_FLAG_ACCURATE;
   }
 
   /* check for scale and/or speed headers
