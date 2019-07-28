@@ -32,6 +32,15 @@
 GST_DEBUG_CATEGORY_STATIC (gst_openjpeg_dec_debug);
 #define GST_CAT_DEFAULT gst_openjpeg_dec_debug
 
+enum
+{
+  PROP_0,
+  PROP_MAX_THREADS,
+  PROP_LAST
+};
+
+#define GST_OPENJPEG_DEC_DEFAULT_MAX_THREADS		0
+
 static gboolean gst_openjpeg_dec_start (GstVideoDecoder * decoder);
 static gboolean gst_openjpeg_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
@@ -40,6 +49,11 @@ static GstFlowReturn gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_openjpeg_dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query);
+static void gst_openjpeg_dec_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_openjpeg_dec_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
+
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define GRAY16 "GRAY16_LE"
@@ -75,6 +89,7 @@ gst_openjpeg_dec_class_init (GstOpenJPEGDecClass * klass)
 {
   GstElementClass *element_class;
   GstVideoDecoderClass *video_decoder_class;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   element_class = (GstElementClass *) klass;
   video_decoder_class = (GstVideoDecoderClass *) klass;
@@ -97,6 +112,21 @@ gst_openjpeg_dec_class_init (GstOpenJPEGDecClass * klass)
   video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_openjpeg_dec_handle_frame);
   video_decoder_class->decide_allocation = gst_openjpeg_dec_decide_allocation;
+  gobject_class->set_property = gst_openjpeg_dec_set_property;
+  gobject_class->get_property = gst_openjpeg_dec_get_property;
+
+  /**
+   * GstOpenJPEGDec:max-threads:
+   *
+   * Maximum number of worker threads to spawn. (0 = auto)
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_THREADS,
+      g_param_spec_int ("max-threads", "Maximum decode threads",
+          "Maximum number of worker threads to spawn. (0 = auto)",
+          0, G_MAXINT, GST_OPENJPEG_DEC_DEFAULT_MAX_THREADS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_openjpeg_dec_debug, "openjpegdec", 0,
       "OpenJPEG Decoder");
@@ -114,6 +144,8 @@ gst_openjpeg_dec_init (GstOpenJPEGDec * self)
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (self));
   opj_set_default_decoder_parameters (&self->params);
   self->sampling = GST_JPEG2000_SAMPLING_NONE;
+  self->max_threads = GST_OPENJPEG_DEC_DEFAULT_MAX_THREADS;
+  self->num_procs = g_get_num_processors ();
 }
 
 static gboolean
@@ -146,6 +178,39 @@ gst_openjpeg_dec_stop (GstVideoDecoder * video_decoder)
   GST_DEBUG_OBJECT (self, "Stopped");
 
   return TRUE;
+}
+
+
+static void
+gst_openjpeg_dec_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstOpenJPEGDec *dec = (GstOpenJPEGDec *) object;
+
+  switch (prop_id) {
+    case PROP_MAX_THREADS:
+      g_atomic_int_set (&dec->max_threads, g_value_get_int (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_openjpeg_dec_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstOpenJPEGDec *dec = (GstOpenJPEGDec *) object;
+
+  switch (prop_id) {
+    case PROP_MAX_THREADS:
+      g_value_set_int (value, g_atomic_int_get (&dec->max_threads));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static gboolean
@@ -1055,6 +1120,7 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
   opj_image_t *image;
   GstVideoFrame vframe;
   opj_dparameters_t params;
+  gint max_threads;
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
@@ -1086,6 +1152,13 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
     params.jpwl_exp_comps = self->ncomps;
   if (!opj_setup_decoder (dec, &params))
     goto open_error;
+
+  max_threads = g_atomic_int_get (&self->max_threads);
+  if (max_threads == 0)
+    max_threads = self->num_procs;
+  if (!opj_codec_set_threads (dec, max_threads))
+    GST_WARNING_OBJECT (self, "Failed to set %d number of threads",
+        max_threads);
 
   if (!gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ))
     goto map_read_error;

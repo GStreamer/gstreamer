@@ -57,6 +57,8 @@ struct _GstOpenJPEGDec
   OPJ_COLOR_SPACE color_space;
   GstJPEG2000Sampling sampling;
   gint ncomps;
+  gint max_threads;  /* atomic */
+  gint num_procs;
 
   void (*fill_frame) (GstVideoFrame *frame, opj_image_t * image);
 
