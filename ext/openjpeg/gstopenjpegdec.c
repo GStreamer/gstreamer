@@ -1084,7 +1084,8 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
   params = self->params;
   if (self->ncomps)
     params.jpwl_exp_comps = self->ncomps;
-  opj_setup_decoder (dec, &params);
+  if (!opj_setup_decoder (dec, &params))
+    goto open_error;
 
   if (!gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ))
     goto map_read_error;
