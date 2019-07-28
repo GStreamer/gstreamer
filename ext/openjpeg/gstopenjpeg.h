@@ -23,20 +23,4 @@
 
 #include <openjpeg.h>
 
-#ifdef HAVE_OPENJPEG_1
-#define OPJ_CLRSPC_UNKNOWN CLRSPC_UNKNOWN
-#define OPJ_CLRSPC_SRGB CLRSPC_SRGB
-#define OPJ_CLRSPC_GRAY CLRSPC_GRAY
-#define OPJ_CLRSPC_SYCC CLRSPC_SYCC
-
-#define OPJ_CODEC_J2K CODEC_J2K
-#define OPJ_CODEC_JP2 CODEC_JP2
-
-#define OPJ_LRCP LRCP
-#define OPJ_RLCP RLCP
-#define OPJ_RPCL RPCL
-#define OPJ_PCRL PCRL
-#define OPJ_CPRL CPRL
-#endif
-
 #endif /* __GST_OPENJPEG_H__ */

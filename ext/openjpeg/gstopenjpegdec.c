@@ -113,9 +113,6 @@ gst_openjpeg_dec_init (GstOpenJPEGDec * self)
       (self), TRUE);
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (self));
   opj_set_default_decoder_parameters (&self->params);
-#ifdef HAVE_OPENJPEG_1
-  self->params.cp_limit_decoding = NO_LIMITATION;
-#endif
   self->sampling = GST_JPEG2000_SAMPLING_NONE;
 }
 
@@ -983,7 +980,6 @@ gst_openjpeg_dec_opj_info (const char *msg, void *userdata)
   g_free (trimmed);
 }
 
-#ifndef HAVE_OPENJPEG_1
 typedef struct
 {
   guint8 *data;
@@ -1044,7 +1040,6 @@ seek_fn (OPJ_OFF_T p_nb_bytes, void *p_user_data)
 
   return OPJ_TRUE;
 }
-#endif
 
 static GstFlowReturn
 gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
@@ -1054,14 +1049,9 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
   GstFlowReturn ret = GST_FLOW_OK;
   gint64 deadline;
   GstMapInfo map;
-#ifdef HAVE_OPENJPEG_1
-  opj_dinfo_t *dec;
-  opj_cio_t *io;
-#else
   opj_codec_t *dec;
   opj_stream_t *stream;
   MemStream mstream;
-#endif
   opj_image_t *image;
   GstVideoFrame vframe;
   opj_dparameters_t params;
@@ -1080,19 +1070,6 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
   if (!dec)
     goto initialization_error;
 
-#ifdef HAVE_OPENJPEG_1
-  if (G_UNLIKELY (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >=
-          GST_LEVEL_TRACE)) {
-    opj_event_mgr_t callbacks;
-
-    callbacks.error_handler = gst_openjpeg_dec_opj_error;
-    callbacks.warning_handler = gst_openjpeg_dec_opj_warning;
-    callbacks.info_handler = gst_openjpeg_dec_opj_info;
-    opj_set_event_mgr ((opj_common_ptr) dec, &callbacks, self);
-  } else {
-    opj_set_event_mgr ((opj_common_ptr) dec, NULL, NULL);
-  }
-#else
   if (G_UNLIKELY (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >=
           GST_LEVEL_TRACE)) {
     opj_set_info_handler (dec, gst_openjpeg_dec_opj_info, self);
@@ -1103,7 +1080,6 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
     opj_set_warning_handler (dec, NULL, NULL);
     opj_set_error_handler (dec, NULL, NULL);
   }
-#endif
 
   params = self->params;
   if (self->ncomps)
@@ -1116,16 +1092,6 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
   if (self->is_jp2c && map.size < 8)
     goto open_error;
 
-#ifdef HAVE_OPENJPEG_1
-  io = opj_cio_open ((opj_common_ptr) dec, map.data + (self->is_jp2c ? 8 : 0),
-      map.size - (self->is_jp2c ? 8 : 0));
-  if (!io)
-    goto open_error;
-
-  image = opj_decode (dec, io);
-  if (!image)
-    goto decode_error;
-#else
   stream = opj_stream_create (4096, OPJ_TRUE);
   if (!stream)
     goto open_error;
@@ -1147,7 +1113,6 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
 
   if (!opj_decode (dec, stream, image))
     goto decode_error;
-#endif
 
   {
     gint i;
@@ -1176,16 +1141,10 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
 
   gst_video_frame_unmap (&vframe);
 
-#ifdef HAVE_OPENJPEG_1
-  opj_cio_close (io);
-  opj_image_destroy (image);
-  opj_destroy_decompress (dec);
-#else
   opj_end_decompress (dec, stream);
   opj_stream_destroy (stream);
   opj_image_destroy (image);
   opj_destroy_codec (dec);
-#endif
 
   ret = gst_video_decoder_finish_frame (decoder, frame);
 
@@ -1200,11 +1159,7 @@ initialization_error:
   }
 map_read_error:
   {
-#ifdef HAVE_OPENJPEG_1
-    opj_destroy_decompress (dec);
-#else
     opj_destroy_codec (dec);
-#endif
     gst_video_codec_frame_unref (frame);
 
     GST_ELEMENT_ERROR (self, CORE, FAILED,
@@ -1213,11 +1168,7 @@ map_read_error:
   }
 open_error:
   {
-#ifdef HAVE_OPENJPEG_1
-    opj_destroy_decompress (dec);
-#else
     opj_destroy_codec (dec);
-#endif
     gst_buffer_unmap (frame->input_buffer, &map);
     gst_video_codec_frame_unref (frame);
 
@@ -1229,13 +1180,8 @@ decode_error:
   {
     if (image)
       opj_image_destroy (image);
-#ifdef HAVE_OPENJPEG_1
-    opj_cio_close (io);
-    opj_destroy_decompress (dec);
-#else
     opj_stream_destroy (stream);
     opj_destroy_codec (dec);
-#endif
     gst_buffer_unmap (frame->input_buffer, &map);
     gst_video_codec_frame_unref (frame);
 
@@ -1246,13 +1192,8 @@ decode_error:
 negotiate_error:
   {
     opj_image_destroy (image);
-#ifdef HAVE_OPENJPEG_1
-    opj_cio_close (io);
-    opj_destroy_decompress (dec);
-#else
     opj_stream_destroy (stream);
     opj_destroy_codec (dec);
-#endif
     gst_video_codec_frame_unref (frame);
 
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
@@ -1262,13 +1203,8 @@ negotiate_error:
 allocate_error:
   {
     opj_image_destroy (image);
-#ifdef HAVE_OPENJPEG_1
-    opj_cio_close (io);
-    opj_destroy_decompress (dec);
-#else
     opj_stream_destroy (stream);
     opj_destroy_codec (dec);
-#endif
     gst_video_codec_frame_unref (frame);
 
     GST_ELEMENT_ERROR (self, CORE, FAILED,
@@ -1278,13 +1214,8 @@ allocate_error:
 map_write_error:
   {
     opj_image_destroy (image);
-#ifdef HAVE_OPENJPEG_1
-    opj_cio_close (io);
-    opj_destroy_decompress (dec);
-#else
     opj_stream_destroy (stream);
     opj_destroy_codec (dec);
-#endif
     gst_video_codec_frame_unref (frame);
 
     GST_ELEMENT_ERROR (self, CORE, FAILED,
