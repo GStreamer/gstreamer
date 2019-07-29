@@ -1502,6 +1502,9 @@ exif_reader_read_rational_tag (GstExifReader * exif_reader,
     }
   }
 
+  if (frac_d == 0)
+    return FALSE;               /* Ignore invalid fractions */
+
   if (_frac_n)
     *_frac_n = frac_n;
   if (_frac_d)
