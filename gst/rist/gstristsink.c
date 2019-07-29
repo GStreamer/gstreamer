@@ -94,7 +94,9 @@ enum
   PROP_MULTICAST_TTL,
   PROP_BONDING_ADDRESSES,
   PROP_BONDING_METHOD,
-  PROP_DISPATCHER
+  PROP_DISPATCHER,
+  PROP_DROP_NULL_TS_PACKETS,
+  PROP_SEQUENCE_NUMBER_EXTENSION
 };
 
 typedef enum
@@ -132,6 +134,7 @@ struct _GstRistSink
   GstPad *sinkpad;
   GstElement *rtxbin;
   GstElement *dispatcher;
+  GstElement *rtpext;
 
   /* Common properties, protected by bonds_lock */
   gint multicast_ttl;
@@ -548,6 +551,8 @@ gst_rist_sink_init (GstRistSink * sink)
   GstStructure *sdes = NULL;
   RistSenderBond *bond;
 
+  sink->rtpext = gst_element_factory_make ("ristrtpext", "ristrtpext");
+
   g_mutex_init (&sink->bonds_lock);
   sink->bonds = g_ptr_array_new ();
 
@@ -700,7 +705,7 @@ dns_resolve_failed:
 static GstStateChangeReturn
 gst_rist_sink_start (GstRistSink * sink)
 {
-  GstPad *dispatcher_sinkpad, *rtxbin_gpad;
+  GstPad *rtxbin_gpad, *rtpext_sinkpad;
   gint i;
 
   /* Unless a custom dispatcher was provided, use the specified bonding method
@@ -729,12 +734,14 @@ gst_rist_sink_start (GstRistSink * sink)
     return GST_STATE_CHANGE_FAILURE;
   }
 
-  gst_bin_add (GST_BIN (sink->rtxbin), sink->dispatcher);
-  dispatcher_sinkpad = gst_element_get_static_pad (sink->dispatcher, "sink");
+  gst_bin_add (GST_BIN (sink), sink->rtpext);
   rtxbin_gpad = gst_element_get_static_pad (sink->rtxbin, "sink_0");
-  gst_ghost_pad_set_target (GST_GHOST_PAD (rtxbin_gpad), dispatcher_sinkpad);
-  gst_object_unref (dispatcher_sinkpad);
-  gst_object_unref (rtxbin_gpad);
+  rtpext_sinkpad = gst_element_get_static_pad (sink->rtpext, "sink");
+  gst_ghost_pad_set_target (GST_GHOST_PAD (rtxbin_gpad), rtpext_sinkpad);
+  gst_object_unref (rtpext_sinkpad);
+
+  gst_bin_add (GST_BIN (sink->rtxbin), sink->dispatcher);
+  gst_element_link (sink->rtpext, sink->dispatcher);
 
   for (i = 0; i < sink->bonds->len; i++) {
     RistSenderBond *bond = g_ptr_array_index (sink->bonds, i);
@@ -1145,6 +1152,16 @@ gst_rist_sink_get_property (GObject * object, guint prop_id,
       g_value_set_object (value, sink->dispatcher);
       break;
 
+    case PROP_DROP_NULL_TS_PACKETS:
+      g_object_get_property (G_OBJECT (sink->rtpext), "drop-null-ts-packets",
+          value);
+      break;
+
+    case PROP_SEQUENCE_NUMBER_EXTENSION:
+      g_object_get_property (G_OBJECT (sink->rtpext),
+          "sequence-number-extension", value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1246,6 +1263,16 @@ gst_rist_sink_set_property (GObject * object, guint prop_id,
       if (sink->dispatcher)
         g_object_unref (sink->dispatcher);
       sink->dispatcher = g_object_ref_sink (g_value_get_object (value));
+      break;
+
+    case PROP_DROP_NULL_TS_PACKETS:
+      g_object_set_property (G_OBJECT (sink->rtpext), "drop-null-ts-packets",
+          value);
+      break;
+
+    case PROP_SEQUENCE_NUMBER_EXTENSION:
+      g_object_set_property (G_OBJECT (sink->rtpext),
+          "sequence-number-extension", value);
       break;
 
     default:
@@ -1380,4 +1407,14 @@ gst_rist_sink_class_init (GstRistSinkClass * klass)
           GST_TYPE_ELEMENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
+  g_object_class_install_property (object_class, PROP_DROP_NULL_TS_PACKETS,
+      g_param_spec_boolean ("drop-null-ts-packets", "Drop null TS packets",
+          "Drop null MPEG-TS packet and replace them with a custom header"
+          " extension.", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (object_class, PROP_SEQUENCE_NUMBER_EXTENSION,
+      g_param_spec_boolean ("sequence-number-extension",
+          "Sequence Number Extension",
+          "Add sequence number extension to packets.", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 }
