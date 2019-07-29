@@ -302,6 +302,7 @@ _resolve_host (GstWebRTCICE * ice, const gchar * host)
   GError *error = NULL;
   GInetAddress *addr;
   GList *addresses;
+  gchar *address;
 
   GST_DEBUG_OBJECT (ice, "Resolving host %s", host);
 
@@ -316,8 +317,10 @@ _resolve_host (GstWebRTCICE * ice, const gchar * host)
 
   /* XXX: only the first address is used */
   addr = addresses->data;
+  address = g_inet_address_to_string (addr);
+  g_resolver_free_addresses (addresses);
 
-  return g_inet_address_to_string (addr);
+  return address;
 }
 
 static void
