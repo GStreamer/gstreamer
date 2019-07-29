@@ -123,6 +123,7 @@ struct _GstRistSrc
   GstPad *srcpad;
   GstElement *rtxbin;
   GstElement *rtx_funnel;
+  GstElement *rtpdeext;
 
   /* Common properties, protected by bonds_lock */
   guint reorder_section;
@@ -438,7 +439,11 @@ gst_rist_src_init (GstRistSrc * src)
   src->rtx_funnel = gst_element_factory_make ("funnel", "rist_rtx_funnel");
   gst_bin_add (GST_BIN (src->rtxbin), src->rtx_funnel);
 
-  pad = gst_element_get_static_pad (src->rtx_funnel, "src");
+  src->rtpdeext = gst_element_factory_make ("ristrtpdeext", "rist_rtp_de_ext");
+  gst_bin_add (GST_BIN (src->rtxbin), src->rtpdeext);
+  gst_element_link (src->rtx_funnel, src->rtpdeext);
+
+  pad = gst_element_get_static_pad (src->rtpdeext, "src");
   gpad = gst_ghost_pad_new ("src_0", pad);
   gst_object_unref (pad);
   gst_element_add_pad (src->rtxbin, gpad);
