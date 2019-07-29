@@ -440,22 +440,155 @@ gst_nv_base_enc_stop (GstVideoEncoder * enc)
   return TRUE;
 }
 
+static void
+check_formats (const gchar * str, guint * max_chroma, guint * max_bit_minus8)
+{
+  if (!str)
+    return;
+
+  if (g_strrstr (str, "-444") || g_strrstr (str, "-4:4:4"))
+    *max_chroma = 2;
+  else if ((g_strrstr (str, "-4:2:2") || g_strrstr (str, "-422"))
+      && *max_chroma < 1)
+    *max_chroma = 1;
+
+  if (g_strrstr (str, "-12"))
+    *max_bit_minus8 = 4;
+  else if (g_strrstr (str, "-10") && *max_bit_minus8 < 2)
+    *max_bit_minus8 = 2;
+}
+
+static gboolean
+gst_nv_base_enc_set_filtered_input_formats (GstNvBaseEnc * nvenc,
+    GstCaps * caps, const GValue * input_formats, guint max_chroma,
+    guint max_bit_minus8)
+{
+  gint i;
+  GValue supported_format = G_VALUE_INIT;
+  gint num_format = 0;
+  const GValue *last_format = NULL;
+
+  g_value_init (&supported_format, GST_TYPE_LIST);
+
+  for (i = 0; i < gst_value_list_get_size (input_formats); i++) {
+    const GValue *val;
+    GstVideoFormat format;
+
+    val = gst_value_list_get_value (input_formats, i);
+    format = gst_video_format_from_string (g_value_get_string (val));
+
+    switch (format) {
+      case GST_VIDEO_FORMAT_NV12:
+      case GST_VIDEO_FORMAT_YV12:
+      case GST_VIDEO_FORMAT_I420:
+        /* 8bits 4:2:0 formats are always supported */
+        gst_value_list_append_value (&supported_format, val);
+        last_format = val;
+        num_format++;
+        break;
+      case GST_VIDEO_FORMAT_Y444:
+        if (max_chroma >= 2) {
+          gst_value_list_append_value (&supported_format, val);
+          last_format = val;
+          num_format++;
+        }
+        break;
+      case GST_VIDEO_FORMAT_P010_10LE:
+      case GST_VIDEO_FORMAT_P010_10BE:
+        if (max_bit_minus8 >= 2) {
+          gst_value_list_append_value (&supported_format, val);
+          last_format = val;
+          num_format++;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (num_format == 0) {
+    g_value_unset (&supported_format);
+    GST_WARNING_OBJECT (nvenc, "Cannot find matching input format");
+    return FALSE;
+  }
+
+  if (num_format > 1)
+    gst_caps_set_value (caps, "format", &supported_format);
+  else
+    gst_caps_set_value (caps, "format", last_format);
+
+  g_value_unset (&supported_format);
+
+  return TRUE;
+}
+
 static GstCaps *
 gst_nv_base_enc_getcaps (GstVideoEncoder * enc, GstCaps * filter)
 {
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
   GstNvBaseEncClass *klass = GST_NV_BASE_ENC_GET_CLASS (enc);
   GstCaps *supported_incaps = NULL;
-  GstCaps *template_caps, *caps;
+  GstCaps *template_caps, *caps, *allowed;
+
+  template_caps = gst_pad_get_pad_template_caps (enc->sinkpad);
+  allowed = gst_pad_get_allowed_caps (enc->srcpad);
+
+  GST_LOG_OBJECT (enc, "template caps %" GST_PTR_FORMAT, template_caps);
+  GST_LOG_OBJECT (enc, "allowed caps %" GST_PTR_FORMAT, allowed);
+
+  if (!allowed) {
+    /* no peer */
+    supported_incaps = template_caps;
+    template_caps = NULL;
+    goto done;
+  } else if (gst_caps_is_empty (allowed)) {
+    /* couldn't be negotiated, just return empty caps */
+    gst_caps_unref (template_caps);
+    return allowed;
+  }
 
   GST_OBJECT_LOCK (nvenc);
 
   if (nvenc->input_formats != NULL) {
     GValue *val;
+    gboolean has_profile = FALSE;
+    guint max_chroma_index = 0;
+    guint max_bit_minus8 = 0;
+    gint i, j;
 
-    template_caps = gst_pad_get_pad_template_caps (enc->sinkpad);
+    for (i = 0; i < gst_caps_get_size (allowed); i++) {
+      const GstStructure *allowed_s = gst_caps_get_structure (allowed, i);
+      const GValue *val;
+
+      if ((val = gst_structure_get_value (allowed_s, "profile"))) {
+        if (G_VALUE_HOLDS_STRING (val)) {
+          check_formats (g_value_get_string (val), &max_chroma_index,
+              &max_bit_minus8);
+          has_profile = TRUE;
+        } else if (GST_VALUE_HOLDS_LIST (val)) {
+          for (j = 0; j < gst_value_list_get_size (val); j++) {
+            const GValue *vlist = gst_value_list_get_value (val, j);
+
+            if (G_VALUE_HOLDS_STRING (vlist)) {
+              check_formats (g_value_get_string (vlist), &max_chroma_index,
+                  &max_bit_minus8);
+              has_profile = TRUE;
+            }
+          }
+        }
+      }
+    }
+
+    GST_LOG_OBJECT (enc,
+        "downstream requested profile %d, max bitdepth %d, max chroma %d",
+        has_profile, max_bit_minus8 + 8, max_chroma_index);
+
     supported_incaps = gst_caps_copy (template_caps);
-    gst_caps_set_value (supported_incaps, "format", nvenc->input_formats);
+    if (!has_profile ||
+        !gst_nv_base_enc_set_filtered_input_formats (nvenc, supported_incaps,
+            nvenc->input_formats, max_chroma_index, max_bit_minus8)) {
+      gst_caps_set_value (supported_incaps, "format", nvenc->input_formats);
+    }
 
     val = gst_nv_enc_get_interlace_modes (nvenc->encoder, klass->codec_id);
     gst_caps_set_value (supported_incaps, "interlace-mode", val);
@@ -465,7 +598,6 @@ gst_nv_base_enc_getcaps (GstVideoEncoder * enc, GstCaps * filter)
     GST_LOG_OBJECT (enc, "codec input caps %" GST_PTR_FORMAT, supported_incaps);
     GST_LOG_OBJECT (enc, "   template caps %" GST_PTR_FORMAT, template_caps);
     caps = gst_caps_intersect (template_caps, supported_incaps);
-    gst_caps_unref (template_caps);
     gst_caps_unref (supported_incaps);
     supported_incaps = caps;
     GST_LOG_OBJECT (enc, "  supported caps %" GST_PTR_FORMAT, supported_incaps);
@@ -473,10 +605,13 @@ gst_nv_base_enc_getcaps (GstVideoEncoder * enc, GstCaps * filter)
 
   GST_OBJECT_UNLOCK (nvenc);
 
+done:
   caps = gst_video_encoder_proxy_getcaps (enc, supported_incaps, filter);
 
   if (supported_incaps)
     gst_caps_unref (supported_incaps);
+  gst_clear_caps (&allowed);
+  gst_clear_caps (&template_caps);
 
   GST_DEBUG_OBJECT (nvenc, "  returning caps %" GST_PTR_FORMAT, caps);
 
