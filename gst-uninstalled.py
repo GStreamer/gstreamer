@@ -305,16 +305,16 @@ if __name__ == "__main__":
         else:
             args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
         if "bash" in args[0] and not strtobool(os.environ.get("GST_BUILD_DISABLE_PS1_OVERRIDE", r"FALSE")):
+            tmprc = tempfile.NamedTemporaryFile(mode='w')
             bashrc = os.path.expanduser('~/.bashrc')
             if os.path.exists(bashrc):
-                tmprc = tempfile.NamedTemporaryFile(mode='w')
                 with open(bashrc, 'r') as src:
                     shutil.copyfileobj(src, tmprc)
-                tmprc.write('\nexport PS1="[gst-%s] $PS1"' % gst_version)
-                tmprc.flush()
-                # Let the GC remove the tmp file
-                args.append("--rcfile")
-                args.append(tmprc.name)
+            tmprc.write('\nexport PS1="[gst-%s] $PS1"' % gst_version)
+            tmprc.flush()
+            # Let the GC remove the tmp file
+            args.append("--rcfile")
+            args.append(tmprc.name)
     try:
         exit(subprocess.call(args, close_fds=False,
                              env=get_subprocess_env(options, gst_version)))
