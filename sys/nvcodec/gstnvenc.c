@@ -49,7 +49,7 @@ GST_DEBUG_CATEGORY (gst_nvenc_debug);
 
 static NV_ENCODE_API_FUNCTION_LIST nvenc_api;
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncOpenEncodeSessionEx (NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS * params,
     void **encoder)
 {
@@ -57,14 +57,14 @@ NvEncOpenEncodeSessionEx (NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS * params,
   return nvenc_api.nvEncOpenEncodeSessionEx (params, encoder);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncDestroyEncoder (void *encoder)
 {
   g_assert (nvenc_api.nvEncDestroyEncoder != NULL);
   return nvenc_api.nvEncDestroyEncoder (encoder);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncGetEncodeGUIDs (void *encoder, GUID * array, uint32_t array_size,
     uint32_t * count)
 {
@@ -72,7 +72,7 @@ NvEncGetEncodeGUIDs (void *encoder, GUID * array, uint32_t array_size,
   return nvenc_api.nvEncGetEncodeGUIDs (encoder, array, array_size, count);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncGetEncodeProfileGUIDCount (void *encoder, GUID encodeGUID,
     uint32_t * encodeProfileGUIDCount)
 {
@@ -81,7 +81,7 @@ NvEncGetEncodeProfileGUIDCount (void *encoder, GUID encodeGUID,
       encodeProfileGUIDCount);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncGetEncodeProfileGUIDs (void *encoder, GUID encodeGUID,
     GUID * profileGUIDs, uint32_t guidArraySize, uint32_t * GUIDCount)
 {
@@ -90,7 +90,7 @@ NvEncGetEncodeProfileGUIDs (void *encoder, GUID encodeGUID,
       profileGUIDs, guidArraySize, GUIDCount);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncGetInputFormats (void *encoder, GUID enc_guid,
     NV_ENC_BUFFER_FORMAT * array, uint32_t size, uint32_t * num)
 {
@@ -98,7 +98,7 @@ NvEncGetInputFormats (void *encoder, GUID enc_guid,
   return nvenc_api.nvEncGetInputFormats (encoder, enc_guid, array, size, num);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncGetEncodePresetCount (void *encoder, GUID encodeGUID,
     uint32_t * encodePresetGUIDCount)
 {
@@ -107,7 +107,7 @@ NvEncGetEncodePresetCount (void *encoder, GUID encodeGUID,
       encodePresetGUIDCount);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncGetEncodePresetGUIDs (void *encoder, GUID encodeGUID,
     GUID * presetGUIDs, uint32_t guidArraySize, uint32_t * GUIDCount)
 {
@@ -116,7 +116,7 @@ NvEncGetEncodePresetGUIDs (void *encoder, GUID encodeGUID,
       presetGUIDs, guidArraySize, GUIDCount);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncGetEncodePresetConfig (void *encoder, GUID encodeGUID,
     GUID presetGUID, NV_ENC_PRESET_CONFIG * presetConfig)
 {
@@ -125,7 +125,7 @@ NvEncGetEncodePresetConfig (void *encoder, GUID encodeGUID,
       presetConfig);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncGetEncodeCaps (void *encoder, GUID encodeGUID,
     NV_ENC_CAPS_PARAM * capsParam, int *capsVal)
 {
@@ -133,7 +133,7 @@ NvEncGetEncodeCaps (void *encoder, GUID encodeGUID,
   return nvenc_api.nvEncGetEncodeCaps (encoder, encodeGUID, capsParam, capsVal);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncGetSequenceParams (void *encoder,
     NV_ENC_SEQUENCE_PARAM_PAYLOAD * sequenceParamPayload)
 {
@@ -141,105 +141,105 @@ NvEncGetSequenceParams (void *encoder,
   return nvenc_api.nvEncGetSequenceParams (encoder, sequenceParamPayload);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncInitializeEncoder (void *encoder, NV_ENC_INITIALIZE_PARAMS * params)
 {
   g_assert (nvenc_api.nvEncInitializeEncoder != NULL);
   return nvenc_api.nvEncInitializeEncoder (encoder, params);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncReconfigureEncoder (void *encoder, NV_ENC_RECONFIGURE_PARAMS * params)
 {
   g_assert (nvenc_api.nvEncReconfigureEncoder != NULL);
   return nvenc_api.nvEncReconfigureEncoder (encoder, params);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncRegisterResource (void *encoder, NV_ENC_REGISTER_RESOURCE * params)
 {
   g_assert (nvenc_api.nvEncRegisterResource != NULL);
   return nvenc_api.nvEncRegisterResource (encoder, params);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncUnregisterResource (void *encoder, NV_ENC_REGISTERED_PTR resource)
 {
   g_assert (nvenc_api.nvEncUnregisterResource != NULL);
   return nvenc_api.nvEncUnregisterResource (encoder, resource);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncMapInputResource (void *encoder, NV_ENC_MAP_INPUT_RESOURCE * params)
 {
   g_assert (nvenc_api.nvEncMapInputResource != NULL);
   return nvenc_api.nvEncMapInputResource (encoder, params);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncUnmapInputResource (void *encoder, NV_ENC_INPUT_PTR input_buffer)
 {
   g_assert (nvenc_api.nvEncUnmapInputResource != NULL);
   return nvenc_api.nvEncUnmapInputResource (encoder, input_buffer);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncCreateInputBuffer (void *encoder, NV_ENC_CREATE_INPUT_BUFFER * input_buf)
 {
   g_assert (nvenc_api.nvEncCreateInputBuffer != NULL);
   return nvenc_api.nvEncCreateInputBuffer (encoder, input_buf);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncLockInputBuffer (void *encoder, NV_ENC_LOCK_INPUT_BUFFER * input_buf)
 {
   g_assert (nvenc_api.nvEncLockInputBuffer != NULL);
   return nvenc_api.nvEncLockInputBuffer (encoder, input_buf);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncUnlockInputBuffer (void *encoder, NV_ENC_INPUT_PTR input_buf)
 {
   g_assert (nvenc_api.nvEncUnlockInputBuffer != NULL);
   return nvenc_api.nvEncUnlockInputBuffer (encoder, input_buf);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncDestroyInputBuffer (void *encoder, NV_ENC_INPUT_PTR input_buf)
 {
   g_assert (nvenc_api.nvEncDestroyInputBuffer != NULL);
   return nvenc_api.nvEncDestroyInputBuffer (encoder, input_buf);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncCreateBitstreamBuffer (void *encoder, NV_ENC_CREATE_BITSTREAM_BUFFER * bb)
 {
   g_assert (nvenc_api.nvEncCreateBitstreamBuffer != NULL);
   return nvenc_api.nvEncCreateBitstreamBuffer (encoder, bb);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncLockBitstream (void *encoder, NV_ENC_LOCK_BITSTREAM * lock_bs)
 {
   g_assert (nvenc_api.nvEncLockBitstream != NULL);
   return nvenc_api.nvEncLockBitstream (encoder, lock_bs);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncUnlockBitstream (void *encoder, NV_ENC_OUTPUT_PTR bb)
 {
   g_assert (nvenc_api.nvEncUnlockBitstream != NULL);
   return nvenc_api.nvEncUnlockBitstream (encoder, bb);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncDestroyBitstreamBuffer (void *encoder, NV_ENC_OUTPUT_PTR bit_buf)
 {
   g_assert (nvenc_api.nvEncDestroyBitstreamBuffer != NULL);
   return nvenc_api.nvEncDestroyBitstreamBuffer (encoder, bit_buf);
 }
 
-NVENCSTATUS
+NVENCSTATUS NVENCAPI
 NvEncEncodePicture (void *encoder, NV_ENC_PIC_PARAMS * pic_params)
 {
   g_assert (nvenc_api.nvEncEncodePicture != NULL);
