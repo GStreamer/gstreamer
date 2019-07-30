@@ -1069,7 +1069,8 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     params->frameRateNum = info->fps_n;
     params->frameRateDen = info->fps_d;
   } else {
-    GST_FIXME_OBJECT (nvenc, "variable framerate");
+    params->frameRateNum = 0;
+    params->frameRateDen = 1;
   }
 
   if (gst_util_fraction_multiply (GST_VIDEO_INFO_WIDTH (info),
