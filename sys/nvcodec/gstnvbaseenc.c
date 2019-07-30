@@ -726,6 +726,7 @@ gst_nv_base_enc_bitstream_thread (gpointer user_data)
     if (flow != GST_FLOW_OK) {
       GST_INFO_OBJECT (enc, "got flow %s", gst_flow_get_name (flow));
       g_atomic_int_set (&nvenc->last_flow, flow);
+      g_async_queue_push (nvenc->in_bufs_pool, SHUTDOWN_COOKIE);
       break;
     }
   }
@@ -1462,6 +1463,9 @@ _acquire_input_buffer (GstNvBaseEnc * nvenc, gpointer * input)
   *input = g_async_queue_pop (nvenc->in_bufs_pool);
   GST_VIDEO_ENCODER_STREAM_LOCK (nvenc);
 
+  if (*input == SHUTDOWN_COOKIE)
+    return g_atomic_int_get (&nvenc->last_flow);
+
   return GST_FLOW_OK;
 }
 
@@ -1568,6 +1572,8 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
 
   flow = _acquire_input_buffer (nvenc, &input_buffer);
   if (flow != GST_FLOW_OK)
+    goto out;
+  else if (input_buffer == SHUTDOWN_COOKIE)
     goto out;
   if (input_buffer == NULL)
     goto error;
