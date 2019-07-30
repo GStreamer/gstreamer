@@ -208,6 +208,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
   guint width, height, fps_n, fps_d;
   CUVIDDECODECREATEINFO create_info = { 0, };
   GstVideoFormat out_format = GST_VIDEO_FORMAT_NV12;
+  GstVideoInfo *info = &nvdec->input_state->info;
 
   width = format->display_area.right - format->display_area.left;
   height = format->display_area.bottom - format->display_area.top;
@@ -273,8 +274,13 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     }
   }
 
-  fps_n = format->frame_rate.numerator;
-  fps_d = MAX (1, format->frame_rate.denominator);
+  fps_n = GST_VIDEO_INFO_FPS_N (info);
+  fps_d = GST_VIDEO_INFO_FPS_D (info);
+
+  if (fps_n < 1 || fps_d < 1) {
+    fps_n = format->frame_rate.numerator;
+    fps_d = MAX (1, format->frame_rate.denominator);
+  }
 
   if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (nvdec))
       || width != nvdec->width || height != nvdec->height
