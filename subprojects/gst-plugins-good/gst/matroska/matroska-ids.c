@@ -70,6 +70,7 @@ gst_matroska_track_init_video_context (GstMatroskaTrackContext ** p_context)
   video_context->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
   video_context->colorimetry.transfer = GST_VIDEO_TRANSFER_UNKNOWN;
   video_context->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_UNKNOWN;
+  video_context->chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
   gst_video_mastering_display_info_init
       (&video_context->mastering_display_info);
   video_context->mastering_display_info_present = FALSE;
