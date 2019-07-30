@@ -536,7 +536,6 @@ parser_display_callback (GstNvDec * nvdec, CUVIDPARSERDISPINFO * dispinfo)
       GST_INFO_OBJECT (nvdec,
           "timestamp mismatch, diff: %" GST_STIME_FORMAT,
           GST_STIME_ARGS (GST_CLOCK_DIFF (dispinfo->timestamp, frame->pts)));
-      frame->pts = dispinfo->timestamp;
     }
   }
 
