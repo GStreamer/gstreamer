@@ -106,9 +106,6 @@
  * 1/8 second atm */
 #define TSMUX_PCR_OFFSET (TSMUX_CLOCK_FREQ / 8)
 
-/* Times per second to write PCR */
-#define TSMUX_DEFAULT_PCR_FREQ (50)
-
 /* Base for all written PCR and DTS/PTS,
  * so we have some slack to go backwards */
 #define CLOCK_BASE (TSMUX_CLOCK_FREQ * 10 * 360)
@@ -148,6 +145,8 @@ tsmux_new (void)
 
   mux->si_changed = TRUE;
   mux->si_interval = TSMUX_DEFAULT_SI_INTERVAL;
+
+  mux->pcr_interval = TSMUX_DEFAULT_PCR_INTERVAL;
 
   mux->next_si_pcr = -1;
 
@@ -234,6 +233,21 @@ tsmux_set_pat_interval (TsMux * mux, guint freq)
   g_return_if_fail (mux != NULL);
 
   mux->pat_interval = freq;
+}
+
+/**
+ * tsmux_set_pcr_interval:
+ * @mux: a #TsMux
+ * @freq: a new PCR interval
+ *
+ * Set the interval (in cycles of the 90kHz clock) for writing the PCR.
+ */
+void
+tsmux_set_pcr_interval (TsMux * mux, guint freq)
+{
+  g_return_if_fail (mux != NULL);
+
+  mux->pcr_interval = freq;
 }
 
 /**
@@ -1086,10 +1100,9 @@ write_new_pcr (TsMux * mux, TsMuxStream * stream, gint64 cur_pcr)
     stream->pi.pcr = cur_pcr;
 
     if (stream->next_pcr == -1)
-      stream->next_pcr =
-          cur_pcr + TSMUX_SYS_CLOCK_FREQ / TSMUX_DEFAULT_PCR_FREQ;
+      stream->next_pcr = cur_pcr + mux->pcr_interval * 300;
     else
-      stream->next_pcr += TSMUX_SYS_CLOCK_FREQ / TSMUX_DEFAULT_PCR_FREQ;
+      stream->next_pcr += mux->pcr_interval * 300;
   } else {
     cur_pcr = -1;
   }

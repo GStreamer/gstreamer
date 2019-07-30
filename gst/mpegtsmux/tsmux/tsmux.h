@@ -164,6 +164,9 @@ struct TsMux {
   /* Next PAT position, 27 MHz */
   gint64   next_pat_pcr;
 
+  /* interval between PCR in MPEG PTS clock time */
+  guint    pcr_interval;
+
   /* trigger writing Service Information Tables */
   gboolean si_changed;
   /* interval between SIT in MPEG PTS clock time */
@@ -224,6 +227,7 @@ TsMuxStream *	tsmux_find_stream 		(TsMux *mux, guint16 pid);
 
 void 		tsmux_program_add_stream 	(TsMuxProgram *program, TsMuxStream *stream);
 void 		tsmux_program_set_pcr_stream 	(TsMuxProgram *program, TsMuxStream *stream);
+void    tsmux_set_pcr_interval (TsMux * mux, guint freq);
 
 /* writing stuff */
 gboolean 	tsmux_write_stream_packet 	(TsMux *mux, TsMuxStream *stream);

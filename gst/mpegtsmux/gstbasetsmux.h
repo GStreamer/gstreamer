@@ -173,6 +173,7 @@ struct GstBaseTsMux {
   gint alignment;
   guint si_interval;
   guint64 bitrate;
+  guint pcr_interval;
 
   /* state */
   gboolean first;

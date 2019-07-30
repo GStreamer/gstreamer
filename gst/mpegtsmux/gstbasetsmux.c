@@ -194,6 +194,7 @@ enum
   PROP_ALIGNMENT,
   PROP_SI_INTERVAL,
   PROP_BITRATE,
+  PROP_PCR_INTERVAL,
 };
 
 #define BASETSMUX_DEFAULT_ALIGNMENT    -1
@@ -1704,6 +1705,11 @@ gst_base_ts_mux_set_property (GObject * object, guint prop_id,
       if (mux->tsmux)
         tsmux_set_bitrate (mux->tsmux, mux->bitrate);
       break;
+    case PROP_PCR_INTERVAL:
+      mux->pcr_interval = g_value_get_uint (value);
+      if (mux->tsmux)
+        tsmux_set_pcr_interval (mux->tsmux, mux->pcr_interval);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1734,6 +1740,9 @@ gst_base_ts_mux_get_property (GObject * object, guint prop_id,
       break;
     case PROP_BITRATE:
       g_value_set_uint64 (value, mux->bitrate);
+      break;
+    case PROP_PCR_INTERVAL:
+      g_value_set_uint (value, mux->pcr_interval);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1863,6 +1872,12 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
           0, G_MAXUINT64, TSMUX_DEFAULT_BITRATE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PCR_INTERVAL,
+      g_param_spec_uint ("pcr-interval", "PCR interval",
+          "Set the interval (in ticks of the 90kHz clock) for writing PCR",
+          1, G_MAXUINT, TSMUX_DEFAULT_PCR_INTERVAL,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &gst_base_ts_mux_src_factory, GST_TYPE_AGGREGATOR_PAD);
 }
@@ -1876,6 +1891,7 @@ gst_base_ts_mux_init (GstBaseTsMux * mux)
   mux->pat_interval = TSMUX_DEFAULT_PAT_INTERVAL;
   mux->pmt_interval = TSMUX_DEFAULT_PMT_INTERVAL;
   mux->si_interval = TSMUX_DEFAULT_SI_INTERVAL;
+  mux->pcr_interval = TSMUX_DEFAULT_PCR_INTERVAL;
   mux->prog_map = NULL;
   mux->alignment = BASETSMUX_DEFAULT_ALIGNMENT;
   mux->bitrate = TSMUX_DEFAULT_BITRATE;
