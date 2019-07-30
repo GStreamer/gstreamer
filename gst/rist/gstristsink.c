@@ -1229,7 +1229,7 @@ gst_rist_sink_class_init (GstRistSinkClass * klass)
 
   g_object_class_install_property (object_class, PROP_STATS_UPDATE_INTERVAL,
       g_param_spec_uint ("stats-update-interval", "Statistics Update Interval",
-          "The interval between 'stats' update notification (0 disabled)",
+          "The interval between 'stats' update notification (in ms) (0 disabled)",
           0, G_MAXUINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
