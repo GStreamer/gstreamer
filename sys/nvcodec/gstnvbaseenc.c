@@ -901,14 +901,8 @@ gst_nv_base_enc_free_buffers (GstNvBaseEnc * nvenc)
 static inline guint
 _get_plane_width (GstVideoInfo * info, guint plane)
 {
-  if (GST_VIDEO_INFO_IS_YUV (info))
-    /* For now component width and plane width are the same and the
-     * plane-component mapping matches
-     */
-    return GST_VIDEO_INFO_COMP_WIDTH (info, plane)
-        * GST_VIDEO_INFO_COMP_PSTRIDE (info, plane);
-  else                          /* RGB, GRAY */
-    return GST_VIDEO_INFO_WIDTH (info);
+  return GST_VIDEO_INFO_COMP_WIDTH (info, plane)
+      * GST_VIDEO_INFO_COMP_PSTRIDE (info, plane);
 }
 
 static inline guint
@@ -1329,6 +1323,10 @@ _get_cuda_device_stride (GstVideoInfo * info, guint plane, gsize cuda_stride)
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P010_10BE:
     case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+    case GST_VIDEO_FORMAT_RGB10A2_LE:
       return cuda_stride;
     case GST_VIDEO_FORMAT_I420:
       return plane == 0 ? cuda_stride : (GST_ROUND_UP_2 (cuda_stride) / 2);
@@ -1744,6 +1742,8 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
         dest += dest_stride;
         src += src_stride;
       }
+    } else if (GST_VIDEO_INFO_IS_RGB (info)) {
+      /* nothing to do */
     } else {
       // FIXME: this only works for NV12 and I420
       g_assert_not_reached ();

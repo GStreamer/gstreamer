@@ -271,6 +271,14 @@ gst_nvenc_get_nv_buffer_format (GstVideoFormat fmt)
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P010_10BE:
       return NV_ENC_BUFFER_FORMAT_YUV420_10BIT;
+    case GST_VIDEO_FORMAT_BGRA:
+      return NV_ENC_BUFFER_FORMAT_ARGB;
+    case GST_VIDEO_FORMAT_RGBA:
+      return NV_ENC_BUFFER_FORMAT_ABGR;
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+      return NV_ENC_BUFFER_FORMAT_ARGB10;
+    case GST_VIDEO_FORMAT_RGB10A2_LE:
+      return NV_ENC_BUFFER_FORMAT_ABGR10;
     default:
       break;
   }
@@ -395,13 +403,20 @@ gst_nv_enc_get_supported_input_formats (gpointer encoder, GUID codec_id,
     {GST_VIDEO_FORMAT_NV12, NV_ENC_BUFFER_FORMAT_NV12, FALSE, FALSE},
     {GST_VIDEO_FORMAT_YV12, NV_ENC_BUFFER_FORMAT_YV12, FALSE, FALSE},
     {GST_VIDEO_FORMAT_I420, NV_ENC_BUFFER_FORMAT_IYUV, FALSE, FALSE},
+    {GST_VIDEO_FORMAT_BGRA, NV_ENC_BUFFER_FORMAT_ARGB, FALSE, FALSE},
+    {GST_VIDEO_FORMAT_RGBA, NV_ENC_BUFFER_FORMAT_ABGR, FALSE, FALSE},
     {GST_VIDEO_FORMAT_Y444, NV_ENC_BUFFER_FORMAT_YUV444, FALSE, FALSE},
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
     {GST_VIDEO_FORMAT_P010_10LE, NV_ENC_BUFFER_FORMAT_YUV420_10BIT, TRUE,
         FALSE},
+    {GST_VIDEO_FORMAT_BGR10A2_LE, NV_ENC_BUFFER_FORMAT_ARGB10, TRUE,
+        FALSE},
+    {GST_VIDEO_FORMAT_RGB10A2_LE, NV_ENC_BUFFER_FORMAT_ABGR10, TRUE,
+        FALSE},
 #else
     {GST_VIDEO_FORMAT_P010_10BE, NV_ENC_BUFFER_FORMAT_YUV420_10BIT, TRUE,
         FALSE},
+    /* FIXME: No 10bits big-endian ARGB10 format is defined */
 #endif
   };
 
@@ -428,35 +443,36 @@ gst_nv_enc_get_supported_input_formats (gpointer encoder, GUID codec_id,
     GST_INFO ("input format: 0x%08x", format_list[i]);
     switch (format_list[i]) {
       case NV_ENC_BUFFER_FORMAT_NV12:
-        if (!format_map[0].supported) {
-          format_map[0].supported = TRUE;
-          num_format++;
-        }
-        break;
       case NV_ENC_BUFFER_FORMAT_YV12:
-        if (!format_map[1].supported) {
-          format_map[0].supported = TRUE;
-          num_format++;
-        }
-        break;
       case NV_ENC_BUFFER_FORMAT_IYUV:
-        if (!format_map[2].supported) {
-          format_map[2].supported = TRUE;
+      case NV_ENC_BUFFER_FORMAT_ARGB:
+      case NV_ENC_BUFFER_FORMAT_ABGR:
+        if (!format_map[i].supported) {
+          format_map[i].supported = TRUE;
           num_format++;
         }
         break;
       case NV_ENC_BUFFER_FORMAT_YUV444:
-        if (support_yuv444 && !format_map[3].supported) {
-          format_map[3].supported = TRUE;
+        if (support_yuv444 && !format_map[i].supported) {
+          format_map[i].supported = TRUE;
           num_format++;
         }
         break;
       case NV_ENC_BUFFER_FORMAT_YUV420_10BIT:
-        if (support_yuv444 && support_10bit && !format_map[4].supported) {
-          format_map[4].supported = TRUE;
+        if (support_yuv444 && support_10bit && !format_map[i].supported) {
+          format_map[i].supported = TRUE;
           num_format++;
         }
         break;
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+      case NV_ENC_BUFFER_FORMAT_ARGB10:
+      case NV_ENC_BUFFER_FORMAT_ABGR10:
+        if (support_10bit && !format_map[i].supported) {
+          format_map[i].supported = TRUE;
+          num_format++;
+        }
+        break;
+#endif
       default:
         GST_FIXME ("unmapped input format: 0x%08x", format_list[i]);
         break;
