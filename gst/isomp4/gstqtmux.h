@@ -159,6 +159,7 @@ struct _GstQTPad
   GstAdapter *raw_audio_adapter;
   guint64 raw_audio_adapter_offset;
   GstClockTime raw_audio_adapter_pts;
+  GstFlowReturn flow_status;
 };
 
 typedef enum _GstQTMuxState

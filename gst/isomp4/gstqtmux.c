@@ -683,6 +683,7 @@ gst_qt_mux_pad_reset (GstQTPad * qtpad)
   qtpad->total_bytes = 0;
   qtpad->sparse = FALSE;
   qtpad->first_cc_sample_size = 0;
+  qtpad->flow_status = GST_FLOW_OK;
 
   gst_buffer_replace (&qtpad->last_buf, NULL);
 
@@ -1882,6 +1883,10 @@ gst_qt_mux_send_buffer (GstQTMux * qtmux, GstBuffer * buf, guint64 * offset,
     GST_LOG_OBJECT (qtmux, "downstream");
     res = gst_pad_push (qtmux->srcpad, buf);
   }
+
+  if (res != GST_FLOW_OK)
+    GST_WARNING_OBJECT (qtmux,
+        "Failed to send buffer (%p) size %" G_GSIZE_FORMAT, buf, size);
 
   if (G_LIKELY (offset))
     *offset += size;
@@ -3985,6 +3990,7 @@ gst_qt_mux_pad_fragment_add_buffer (GstQTMux * qtmux, GstQTPad * pad,
     guint32 delta, guint32 size, gboolean sync, gint64 pts_offset)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  guint index = 0;
 
   /* setup if needed */
   if (G_UNLIKELY (!pad->traf || force))
@@ -4015,6 +4021,11 @@ flush:
         gst_buffer_get_size (buffer));
     ret = gst_qt_mux_send_buffer (qtmux, buffer, &qtmux->header_size, FALSE);
 
+    atom_moof_free (moof);
+
+    if (ret != GST_FLOW_OK)
+      goto moof_send_error;
+
     /* and actual data */
     total_size = 0;
     for (i = 0; i < atom_array_get_len (&pad->fragment_buffers); i++) {
@@ -4024,20 +4035,24 @@ flush:
 
     GST_LOG_OBJECT (qtmux, "writing %d buffers, total_size %d",
         atom_array_get_len (&pad->fragment_buffers), total_size);
-    if (ret == GST_FLOW_OK)
-      ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, total_size,
-          FALSE, FALSE);
-    for (i = 0; i < atom_array_get_len (&pad->fragment_buffers); i++) {
-      if (G_LIKELY (ret == GST_FLOW_OK))
-        ret = gst_qt_mux_send_buffer (qtmux,
-            atom_array_index (&pad->fragment_buffers, i), &qtmux->header_size,
-            FALSE);
-      else
-        gst_buffer_unref (atom_array_index (&pad->fragment_buffers, i));
+    ret = gst_qt_mux_send_mdat_header (qtmux, &qtmux->header_size, total_size,
+        FALSE, FALSE);
+    if (ret != GST_FLOW_OK)
+      goto mdat_header_send_error;
+
+    for (index = 0; index < atom_array_get_len (&pad->fragment_buffers);
+        index++) {
+      GST_DEBUG_OBJECT (qtmux, "sending fragment %p",
+          atom_array_index (&pad->fragment_buffers, index));
+      ret =
+          gst_qt_mux_send_buffer (qtmux,
+          atom_array_index (&pad->fragment_buffers, index), &qtmux->header_size,
+          FALSE);
+      if (ret != GST_FLOW_OK)
+        goto fragment_buf_send_error;
     }
 
     atom_array_clear (&pad->fragment_buffers);
-    atom_moof_free (moof);
     qtmux->fragment_sequence++;
     force = FALSE;
   }
@@ -4060,7 +4075,8 @@ init:
   /* add buffer and metadata */
   atom_traf_add_samples (pad->traf, delta, size, sync, pts_offset,
       pad->sync && sync);
-  atom_array_append (&pad->fragment_buffers, buf, 256);
+  GST_LOG_OBJECT (qtmux, "adding buffer %p to fragments", buf);
+  atom_array_append (&pad->fragment_buffers, g_steal_pointer (&buf), 256);
   pad->fragment_duration -= delta;
 
   if (pad->tfra) {
@@ -4074,6 +4090,46 @@ init:
     goto flush;
 
   return ret;
+
+moof_send_error:
+  {
+    guint i;
+
+    GST_ERROR_OBJECT (qtmux, "Failed to send moof buffer");
+    for (i = 0; i < atom_array_get_len (&pad->fragment_buffers); i++)
+      gst_buffer_unref (atom_array_index (&pad->fragment_buffers, i));
+    atom_array_clear (&pad->fragment_buffers);
+    gst_clear_buffer (&buf);
+
+    return ret;
+  }
+
+mdat_header_send_error:
+  {
+    guint i;
+
+    GST_ERROR_OBJECT (qtmux, "Failed to send mdat header");
+    for (i = 0; i < atom_array_get_len (&pad->fragment_buffers); i++)
+      gst_buffer_unref (atom_array_index (&pad->fragment_buffers, i));
+    atom_array_clear (&pad->fragment_buffers);
+    gst_clear_buffer (&buf);
+
+    return ret;
+  }
+
+fragment_buf_send_error:
+  {
+    guint i;
+
+    GST_ERROR_OBJECT (qtmux, "Failed to send fragment");
+    for (i = index + 1; i < atom_array_get_len (&pad->fragment_buffers); i++) {
+      gst_buffer_unref (atom_array_index (&pad->fragment_buffers, i));
+    }
+    atom_array_clear (&pad->fragment_buffers);
+    gst_clear_buffer (&buf);
+
+    return ret;
+  }
 }
 
 /* Here's the clever bit of robust recording: Updating the moov
@@ -4782,9 +4838,12 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
   }
 
   /* now we go and register this buffer/sample all over */
-  ret = gst_qt_mux_register_and_push_sample (qtmux, pad, last_buf,
+  pad->flow_status = gst_qt_mux_register_and_push_sample (qtmux, pad, last_buf,
       buf == NULL, nsamples, last_dts, scaled_duration, sample_size,
       chunk_offset, sync, TRUE, pts_offset);
+  if (pad->flow_status != GST_FLOW_OK)
+    goto sample_error;
+
   pad->sample_offset += nsamples;
 
   /* if this is sparse and we have a next buffer, check if there is any gap
@@ -4864,6 +4923,11 @@ not_negotiated:
     if (buf)
       gst_buffer_unref (buf);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+sample_error:
+  {
+    GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL), ("Failed to push sample."));
+    return pad->flow_status;
   }
 }
 
@@ -5075,6 +5139,12 @@ gst_qt_mux_collected (GstCollectPads * pads, gpointer user_data)
   /* clipping already converted to running time */
   if (best_pad != NULL) {
     GstBuffer *buf = NULL;
+
+    /* FIXME: the function should always return flow_status information, that
+     * is supposed to be stored each time buffers (collected from the pads)
+     * are pushed. */
+    if (best_pad->flow_status != GST_FLOW_OK)
+      return best_pad->flow_status;
 
     if (qtmux->mux_mode != GST_QT_MUX_MODE_ROBUST_RECORDING_PREFILL ||
         best_pad->raw_audio_adapter == NULL ||
