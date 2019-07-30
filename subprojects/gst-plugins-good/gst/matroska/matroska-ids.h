@@ -144,6 +144,8 @@
 #define GST_MATROSKA_ID_VIDEOCOLOUR                0x55B0
 /* IDs in the Colour master*/
 #define GST_MATROSKA_ID_VIDEOMATRIXCOEFFICIENTS    0x55B1
+#define GST_MATROSKA_ID_VIDEOCHROMASITINGHORZ      0x55B7
+#define GST_MATROSKA_ID_VIDEOCHROMASITINGVERT      0x55B8
 #define GST_MATROSKA_ID_VIDEORANGE                 0x55B9
 #define GST_MATROSKA_ID_VIDEOTRANSFERCHARACTERISTICS  0x55BA
 #define GST_MATROSKA_ID_VIDEOPRIMARIES             0x55BB
@@ -656,6 +658,7 @@ typedef struct _GstMatroskaTrackVideoContext {
 
   GstBuffer     *dirac_unit;
   GstVideoColorimetry colorimetry;
+  GstVideoChromaSite chroma_site;
 
   GstVideoMasteringDisplayInfo mastering_display_info;
   gboolean mastering_display_info_present;
