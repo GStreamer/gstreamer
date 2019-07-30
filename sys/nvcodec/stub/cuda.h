@@ -64,7 +64,7 @@ typedef struct
   gconstpointer srcHost;
   CUdeviceptr srcDevice;
   CUarray srcArray;
-  guint srcPitch;
+  gsize srcPitch;
 
   gsize dstXInBytes;
   gsize dstY;
