@@ -131,9 +131,9 @@ validate_ext (GstRTPBuffer * rtp, gboolean wanted_has_drop_null,
 
   data = extdata;
 
-  has_drop_null = (data[0] >> 7) & 1;     /* N */
-  has_seqnum_ext = (data[0] >> 6) & 1;    /* E */
-  orig_ts_packet_count = (data[0] >> 3) & 7;      /* Size */
+  has_drop_null = (data[0] >> 7) & 1;   /* N */
+  has_seqnum_ext = (data[0] >> 6) & 1;  /* E */
+  orig_ts_packet_count = (data[0] >> 3) & 7;    /* Size */
   ts_packet_size = ((data[1] >> 7) & 1) ? 204 : 188;
   npd_bits = data[1] & 0x7F;
 
@@ -983,6 +983,7 @@ GST_START_TEST (test_deext_seq_base)
   GstHarness *h = gst_harness_new ("ristrtpdeext");
   GstBuffer *ibuf, *obuf;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint max_seqnum;
 
   gst_harness_set_src_caps_str (h, "application/x-rtp, payload=33,"
       "clock-rate=90000, encoding-name=MP2T");
@@ -994,12 +995,18 @@ GST_START_TEST (test_deext_seq_base)
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (obuf);
 
+  g_object_get (h->element, "max-ext-seqnum", &max_seqnum, NULL);
+  fail_unless_equals_int (max_seqnum, 44);
+
   ibuf = alloc_ts_buffer_with_ext (7, FALSE, TRUE, 7, 188, 0, 1);
   obuf = gst_harness_push_and_pull (h, ibuf);
   gst_rtp_buffer_map (obuf, GST_MAP_READ, &rtp);
   validate_ts_buffer_noext (&rtp, 7);
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (obuf);
+
+  g_object_get (h->element, "max-ext-seqnum", &max_seqnum, NULL);
+  fail_unless_equals_int (max_seqnum, 65536 + 44);
 
   gst_harness_teardown (h);
 }
@@ -1011,6 +1018,7 @@ GST_START_TEST (test_deext_seq_drop)
   GstHarness *h = gst_harness_new ("ristrtpdeext");
   GstBuffer *ibuf, *obuf;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint max_seqnum;
 
   gst_harness_set_src_caps_str (h, "application/x-rtp, payload=33,"
       "clock-rate=90000, encoding-name=MP2T");
@@ -1022,6 +1030,10 @@ GST_START_TEST (test_deext_seq_drop)
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (obuf);
 
+  g_object_get (h->element, "max-ext-seqnum", &max_seqnum, NULL);
+  fail_unless_equals_int (max_seqnum, 44);
+
+
   ibuf = alloc_ts_buffer_with_ext (7, FALSE, TRUE, 7, 188, 0, 2);
   obuf = gst_harness_push_and_pull (h, ibuf);
   gst_rtp_buffer_map (obuf, GST_MAP_READ, &rtp);
@@ -1029,9 +1041,15 @@ GST_START_TEST (test_deext_seq_drop)
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (obuf);
 
+  g_object_get (h->element, "max-ext-seqnum", &max_seqnum, NULL);
+  fail_unless_equals_int (max_seqnum, 65536 + 65536 + 44);
+
   ibuf = alloc_ts_buffer_with_ext (7, FALSE, TRUE, 7, 188, 0, 0);
   fail_unless_equals_int (gst_harness_push (h, ibuf), GST_FLOW_OK);
   fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
+
+  g_object_get (h->element, "max-ext-seqnum", &max_seqnum, NULL);
+  fail_unless_equals_int (max_seqnum, 65536 + 65536 + 44);
 
   gst_harness_teardown (h);
 }

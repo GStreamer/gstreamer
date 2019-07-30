@@ -47,6 +47,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_rist_rtp_deext_debug);
 enum
 {
   PROP_0 = 0,
+  PROP_MAX_EXT_SEQNUM,
+  PROP_HAVE_EXT_SEQNUM
 };
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
@@ -67,9 +69,7 @@ struct _GstRistRtpDeext
 
   GstPad *srcpad, *sinkpad;
 
-  gboolean drop_null;
-  gboolean seqnumext;
-
+  gboolean have_extseqnum;
   guint32 max_extseqnum;
 };
 
@@ -150,6 +150,8 @@ gst_rist_rtp_deext_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   npd_bits = data[1] & 0x7F;
 
   num_packets_deleted = bit_count (npd_bits);
+
+  self->have_extseqnum = has_seqnum_ext;
 
   if (has_seqnum_ext) {
     guint16 seqnumext_val = GST_READ_UINT16_BE (data + 2);
@@ -293,15 +295,20 @@ static void
 gst_rist_rtp_deext_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  /* GstRistRtpDeext *self = GST_RIST_RTP_DEEXT (object); */
+  GstRistRtpDeext *self = GST_RIST_RTP_DEEXT (object);
 
   switch (prop_id) {
+    case PROP_MAX_EXT_SEQNUM:
+      g_value_set_uint (value, self->max_extseqnum);
+      break;
+    case PROP_HAVE_EXT_SEQNUM:
+      g_value_set_boolean (value, self->have_extseqnum);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
-
 
 static void
 gst_rist_rtp_deext_class_init (GstRistRtpDeextClass * klass)
@@ -310,11 +317,23 @@ gst_rist_rtp_deext_class_init (GstRistRtpDeextClass * klass)
   GObjectClass *object_class = (GObjectClass *) klass;
 
   gst_element_class_set_metadata (element_class,
-      "RIST RTP Eextension remover", "Filter/Network",
+      "RIST RTP Extension remover", "Filter/Network",
       "Removes RIST TR-06-2 RTP Header extension",
       "Olivier Crete <olivier.crete@collabora.com");
   gst_element_class_add_static_pad_template (element_class, &src_templ);
   gst_element_class_add_static_pad_template (element_class, &sink_templ);
 
   object_class->get_property = gst_rist_rtp_deext_get_property;
+
+  g_object_class_install_property (object_class, PROP_MAX_EXT_SEQNUM,
+      g_param_spec_uint ("max-ext-seqnum",
+          "Maximum Extended Sequence Number",
+          "Largest extended sequence number received", 0, G_MAXUINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class, PROP_HAVE_EXT_SEQNUM,
+      g_param_spec_boolean ("have-ext-seqnum",
+          "Have extended seqnum",
+          "Has an extended sequence number extension been seen", FALSE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
