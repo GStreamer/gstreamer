@@ -3000,9 +3000,44 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
   gint64 now = g_get_monotonic_time ();
   const gchar *message_str = gst_debug_message_get (message);
 
+  /* __FILE__ might be a file name or an absolute path or a
+   * relative path, irrespective of the exact compiler used,
+   * in which case we want to shorten it to the filename for
+   * readability. */
+  c = file[0];
+  if (c == '.' || c == '/' || c == '\\' || (c != '\0' && file[1] == ':')) {
+    file = gst_path_basename (file);
+  }
+
+  if (object) {
+    obj = gst_debug_print_object (object);
+  } else {
+    obj = (gchar *) "";
+  }
+
+  elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
+  pid = getpid ();
+  thread = g_thread_self ();
+
+  /* no color, all platforms */
+#define PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
+  output =
+      g_strdup_printf ("%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
+      pid, thread, gst_debug_level_get_name (level),
+      gst_debug_category_get_name (category), file, line, function, obj,
+      message_str);
+#undef PRINT_FMT
+
+  output_len = strlen (output);
+
+  if (object != NULL)
+    g_free (obj);
+
   G_LOCK (ring_buffer_logger);
 
   if (logger->thread_timeout > 0) {
+    gchar *buf;
+
     /* Remove all threads that saw no output since thread_timeout seconds.
      * By construction these are all at the tail of the queue, and the queue
      * is ordered by last use, so we just need to look at the tail.
@@ -3013,8 +3048,8 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
         break;
 
       g_hash_table_remove (logger->thread_index, log->thread);
-      while ((output = g_queue_pop_head (&log->log)))
-        g_free (output);
+      while ((buf = g_queue_pop_head (&log->log)))
+        g_free (buf);
       g_free (log);
       g_queue_pop_tail (&logger->threads);
     }
@@ -3022,7 +3057,6 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
 
   /* Get logger for this thread, and put it back at the
    * head of the threads queue */
-  thread = g_thread_self ();
   log = g_hash_table_lookup (logger->thread_index, thread);
   if (!log) {
     log = g_new0 (GstRingBufferLog, 1);
@@ -3037,36 +3071,6 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
     g_queue_push_head_link (&logger->threads, log->link);
   }
   log->last_use = now;
-
-  /* __FILE__ might be a file name or an absolute path or a
-   * relative path, irrespective of the exact compiler used,
-   * in which case we want to shorten it to the filename for
-   * readability. */
-  c = file[0];
-  if (c == '.' || c == '/' || c == '\\' || (c != '\0' && file[1] == ':')) {
-    file = gst_path_basename (file);
-  }
-
-  pid = getpid ();
-
-  if (object) {
-    obj = gst_debug_print_object (object);
-  } else {
-    obj = (gchar *) "";
-  }
-
-  elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
-
-  /* no color, all platforms */
-#define PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
-  output =
-      g_strdup_printf ("%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
-      pid, thread, gst_debug_level_get_name (level),
-      gst_debug_category_get_name (category), file, line, function, obj,
-      message_str);
-#undef PRINT_FMT
-
-  output_len = strlen (output);
 
   if (output_len < logger->max_size_per_thread) {
     gchar *buf;
@@ -3097,9 +3101,6 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
     g_free (output);
     log->log_size = 0;
   }
-
-  if (object != NULL)
-    g_free (obj);
 
   G_UNLOCK (ring_buffer_logger);
 }
