@@ -103,7 +103,7 @@ gst_mpeg4vparse_set_property (GObject * object, guint property_id,
       parse->drop = g_value_get_boolean (value);
       break;
     case PROP_CONFIG_INTERVAL:
-      parse->interval = g_value_get_uint (value);
+      parse->interval = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -121,7 +121,7 @@ gst_mpeg4vparse_get_property (GObject * object, guint property_id,
       g_value_set_boolean (value, parse->drop);
       break;
     case PROP_CONFIG_INTERVAL:
-      g_value_set_uint (value, parse->interval);
+      g_value_set_int (value, parse->interval);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -142,16 +142,17 @@ gst_mpeg4vparse_class_init (GstMpeg4VParseClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DROP,
       g_param_spec_boolean ("drop", "drop",
-          "Drop data untill valid configuration data is received either "
+          "Drop data until valid configuration data is received either "
           "in the stream or through caps", DEFAULT_PROP_DROP,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_CONFIG_INTERVAL,
-      g_param_spec_uint ("config-interval",
+      g_param_spec_int ("config-interval",
           "Configuration Send Interval",
           "Send Configuration Insertion Interval in seconds (configuration headers "
-          "will be multiplexed in the data stream when detected.) (0 = disabled)",
-          0, 3600, DEFAULT_CONFIG_INTERVAL,
+          "will be multiplexed in the data stream when detected.) "
+          "(0 = disabled, -1 = send with every IDR frame)",
+          -1, 3600, DEFAULT_CONFIG_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_static_pad_template (element_class, &src_template);
@@ -754,6 +755,10 @@ gst_mpeg4vparse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
               &parse->segment, GST_BUFFER_TIMESTAMP (buffer),
               GST_BUFFER_FLAGS (buffer), mp4vparse->pending_key_unit_ts))) {
     gst_mpeg4vparse_prepare_key_unit (mp4vparse, event);
+    push_codec = TRUE;
+  }
+
+  if (mp4vparse->interval == -1) {
     push_codec = TRUE;
   }
 
