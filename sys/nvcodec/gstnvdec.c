@@ -30,6 +30,7 @@
 #endif
 
 #include "gstnvdec.h"
+#include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_nvdec_debug_category);
 #define GST_CAT_DEFAULT gst_nvdec_debug_category
