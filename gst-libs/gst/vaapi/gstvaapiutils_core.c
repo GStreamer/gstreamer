@@ -77,6 +77,50 @@ gst_vaapi_get_config_attribute (GstVaapiDisplay * display, VAProfile profile,
   return TRUE;
 }
 
+static VASurfaceAttrib *
+get_surface_attributes (GstVaapiDisplay * display, VAConfigID config,
+    guint * num_attribs)
+{
+  VASurfaceAttrib *surface_attribs = NULL;
+  guint num_surface_attribs = 0;
+  VAStatus va_status;
+
+  if (config == VA_INVALID_ID)
+    goto error;
+
+  GST_VAAPI_DISPLAY_LOCK (display);
+  va_status = vaQuerySurfaceAttributes (GST_VAAPI_DISPLAY_VADISPLAY (display),
+      config, NULL, &num_surface_attribs);
+  GST_VAAPI_DISPLAY_UNLOCK (display);
+  if (!vaapi_check_status (va_status, "vaQuerySurfaceAttributes()"))
+    goto error;
+
+  surface_attribs = g_malloc (num_surface_attribs * sizeof (*surface_attribs));
+  if (!surface_attribs)
+    goto error;
+
+  GST_VAAPI_DISPLAY_LOCK (display);
+  va_status = vaQuerySurfaceAttributes (GST_VAAPI_DISPLAY_VADISPLAY (display),
+      config, surface_attribs, &num_surface_attribs);
+  GST_VAAPI_DISPLAY_UNLOCK (display);
+  if (!vaapi_check_status (va_status, "vaQuerySurfaceAttributes()"))
+    goto error;
+
+  if (num_attribs)
+    *num_attribs = num_surface_attribs;
+  return surface_attribs;
+
+  /* ERRORS */
+error:
+  {
+    if (num_attribs)
+      *num_attribs = -1;
+    if (surface_attribs)
+      g_free (surface_attribs);
+    return NULL;
+  }
+}
+
 /**
  * gst_vaapi_get_surface_formats:
  * @display: a #GstVaapiDisplay
@@ -92,30 +136,13 @@ gst_vaapi_get_config_attribute (GstVaapiDisplay * display, VAProfile profile,
 GArray *
 gst_vaapi_get_surface_formats (GstVaapiDisplay * display, VAConfigID config)
 {
-  VASurfaceAttrib *surface_attribs = NULL;
+  VASurfaceAttrib *surface_attribs;
   guint i, num_surface_attribs = 0;
-  VAStatus va_status;
   GArray *formats;
 
-  if (config == VA_INVALID_ID)
-    return NULL;
-
-  GST_VAAPI_DISPLAY_LOCK (display);
-  va_status = vaQuerySurfaceAttributes (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      config, NULL, &num_surface_attribs);
-  GST_VAAPI_DISPLAY_UNLOCK (display);
-  if (!vaapi_check_status (va_status, "vaQuerySurfaceAttributes()"))
-    return NULL;
-
-  surface_attribs = g_malloc (num_surface_attribs * sizeof (*surface_attribs));
+  surface_attribs =
+      get_surface_attributes (display, config, &num_surface_attribs);
   if (!surface_attribs)
-    return NULL;
-
-  GST_VAAPI_DISPLAY_LOCK (display);
-  va_status = vaQuerySurfaceAttributes (GST_VAAPI_DISPLAY_VADISPLAY (display),
-      config, surface_attribs, &num_surface_attribs);
-  GST_VAAPI_DISPLAY_UNLOCK (display);
-  if (!vaapi_check_status (va_status, "vaQuerySurfaceAttributes()"))
     return NULL;
 
   formats = g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat),
@@ -150,6 +177,6 @@ gst_vaapi_get_surface_formats (GstVaapiDisplay * display, VAConfigID config)
 error:
   {
     g_free (surface_attribs);
+    return NULL;
   }
-  return NULL;
 }
