@@ -75,6 +75,8 @@ struct _GstRtpFunnel
   GstCaps *srccaps;
   gboolean send_sticky_events;
   GHashTable *ssrc_to_pad;
+  /* The last pad data was chained on */
+  GstPad *current_pad;
 
   /* properties */
   gint common_ts_offset;
@@ -96,12 +98,11 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 G_DEFINE_TYPE (GstRtpFunnel, gst_rtp_funnel, GST_TYPE_ELEMENT);
 
 
-static gboolean
+static void
 gst_rtp_funnel_send_sticky (GstRtpFunnel * funnel, GstPad * pad)
 {
   GstEvent *stream_start;
   GstEvent *caps;
-  GstEvent *segment;
 
   if (!funnel->send_sticky_events)
     goto done;
@@ -118,16 +119,31 @@ gst_rtp_funnel_send_sticky (GstRtpFunnel * funnel, GstPad * pad)
     goto done;
   }
 
+  funnel->send_sticky_events = FALSE;
+
+done:
+  return;
+}
+
+static void
+gst_rtp_funnel_forward_segment (GstRtpFunnel * funnel, GstPad * pad)
+{
+  GstEvent *segment;
+
+  if (pad == funnel->current_pad) {
+    goto done;
+  }
+
   segment = gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
   if (segment && !gst_pad_push_event (funnel->srcpad, segment)) {
     GST_ERROR_OBJECT (funnel, "Could not push segment");
     goto done;
   }
 
-  funnel->send_sticky_events = FALSE;
+  funnel->current_pad = pad;
 
 done:
-  return !funnel->send_sticky_events;
+  return;
 }
 
 static GstFlowReturn
@@ -140,11 +156,8 @@ gst_rtp_funnel_sink_chain_object (GstPad * pad, GstRtpFunnel * funnel,
 
   GST_PAD_STREAM_LOCK (funnel->srcpad);
 
-  if (!gst_rtp_funnel_send_sticky (funnel, pad)) {
-    GST_PAD_STREAM_UNLOCK (funnel->srcpad);
-    gst_mini_object_unref (obj);
-    return GST_FLOW_OK;
-  }
+  gst_rtp_funnel_send_sticky (funnel, pad);
+  gst_rtp_funnel_forward_segment (funnel, pad);
 
   if (is_list)
     res = gst_pad_push_list (funnel->srcpad, GST_BUFFER_LIST_CAST (obj));
@@ -474,4 +487,5 @@ gst_rtp_funnel_init (GstRtpFunnel * funnel)
   funnel->send_sticky_events = TRUE;
   funnel->srccaps = gst_caps_new_empty_simple (RTP_CAPS);
   funnel->ssrc_to_pad = g_hash_table_new (NULL, NULL);
+  funnel->current_pad = NULL;
 }
