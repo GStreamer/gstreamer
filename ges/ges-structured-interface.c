@@ -467,6 +467,15 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
   if (clip) {
     res = TRUE;
 
+    if (GES_TIMELINE_ELEMENT_DURATION (clip) == 0) {
+      *error = g_error_new (GES_ERROR, 0,
+          "Clip %s has 0 as duration, please provide a proper duration",
+          asset_id);
+      res = FALSE;
+      goto beach;
+    }
+
+
     if (GES_IS_TEST_CLIP (clip)) {
       if (pattern) {
         GEnumClass *enum_class =
