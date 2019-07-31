@@ -407,6 +407,11 @@ _ges_add_clip_from_struct (GESTimeline * timeline, GstStructure * structure,
     goto beach;
   }
 
+  if (GES_IS_URI_CLIP_ASSET (asset) && !GST_CLOCK_TIME_IS_VALID (duration)) {
+    duration = GST_CLOCK_DIFF (inpoint,
+        ges_uri_clip_asset_get_duration (GES_URI_CLIP_ASSET (asset)));
+  }
+
   clip = ges_layer_add_asset (layer, asset, start, inpoint, duration,
       GES_TRACK_TYPE_UNKNOWN);
 
