@@ -32,6 +32,11 @@
  * will occur when transmitting and receiving over multicast on the
  * same host, and will be properly ignored.
  *
+ * It also implements part of the RIST TR-06-2 Main Profile transmitter. The
+ * tunneling, multiplexing and encryption parts of the specification are not
+ * included. This element will include the RIST header extension if either of
+ * the "sequence-number-extension" or "drop-null-ts-packets" properties are set.
+ *
  * ## Example gst-launch line
  * |[
  * gst-launch-1.0 udpsrc ! tsparse set-timestamps=1 smoothing-latency=40000 ! \

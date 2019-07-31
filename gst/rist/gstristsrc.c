@@ -29,6 +29,12 @@
  * media players. The RIST URI handler also allows setting properties through
  * the URI query.
  *
+ * It also implements part of the RIST TR-06-2 Main Profile receiver. The
+ * tunneling, multiplexing and encryption parts of the specification are not
+ * included. This element will accept the RIST RTP header extension and restore
+ * the null MPEG-TS packets if the extension is included. It will not currently
+ * use the sequence number extension when sending RTCP NACK requests.
+ *
  * ## Example gst-launch line
  * |[
  * gst-launch-1.0 ristsrc address=0.0.0.0 port=5004 ! rtpmp2tdepay ! udpsink
