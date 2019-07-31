@@ -14,6 +14,7 @@ import logging
 import asyncio
 import websockets
 import argparse
+import http
 
 from concurrent.futures._base import TimeoutError
 
@@ -45,6 +46,10 @@ sessions = dict()
 rooms = dict()
 
 ############### Helper functions ###############
+
+async def health_check(path, request_headers):
+    if path == "/health/":
+        return http.HTTPStatus.OK, [], b"OK\n"
 
 async def recv_msg_ping(ws, raddr):
     '''
@@ -265,7 +270,7 @@ if not options.disable_ssl:
 
 print("Listening on https://{}:{}".format(*ADDR_PORT))
 # Websocket server
-wsd = websockets.serve(handler, *ADDR_PORT, ssl=sslctx,
+wsd = websockets.serve(handler, *ADDR_PORT, ssl=sslctx, process_request=health_check,
                        # Maximum number of messages that websockets will pop
                        # off the asyncio and OS buffers per connection. See:
                        # https://websockets.readthedocs.io/en/stable/api.html#websockets.protocol.WebSocketCommonProtocol
