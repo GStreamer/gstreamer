@@ -182,6 +182,8 @@ struct _GstSplitMuxSink
   GstStructure *muxer_properties;
   gchar *sink_factory;
   GstStructure *sink_properties;
+
+  GstStructure *muxerpad_map;
 };
 
 struct _GstSplitMuxSinkClass

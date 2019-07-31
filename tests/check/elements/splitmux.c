@@ -850,6 +850,54 @@ GST_START_TEST (test_splitmuxsink_reuse_simple)
 
 GST_END_TEST;
 
+GST_START_TEST (test_splitmuxsink_muxer_pad_map)
+{
+  GstElement *sink, *muxer;
+  GstPad *muxpad;
+  GstPad *pad1 = NULL, *pad2 = NULL;
+  GstStructure *pad_map;
+
+  pad_map = gst_structure_new ("x-pad-map",
+      "video", G_TYPE_STRING, "video_100",
+      "audio_0", G_TYPE_STRING, "audio_101", NULL);
+
+  muxer = gst_element_factory_make ("qtmux", NULL);
+  fail_if (muxer == NULL);
+  sink = gst_element_factory_make ("splitmuxsink", NULL);
+  fail_if (sink == NULL);
+
+  g_object_set (sink, "muxer", muxer, "muxer-pad-map", pad_map, NULL);
+  gst_structure_free (pad_map);
+
+  pad1 = gst_element_get_request_pad (sink, "video");
+  fail_unless (g_str_equal ("video", GST_PAD_NAME (pad1)));
+  muxpad = gst_element_get_static_pad (muxer, "video_100");
+  fail_unless (muxpad != NULL);
+  gst_object_unref (muxpad);
+
+  pad2 = gst_element_get_request_pad (sink, "audio_0");
+  fail_unless (g_str_equal ("audio_0", GST_PAD_NAME (pad2)));
+  muxpad = gst_element_get_static_pad (muxer, "audio_101");
+  fail_unless (muxpad != NULL);
+  gst_object_unref (muxpad);
+
+  g_object_set (sink, "location", "/dev/null", NULL);
+
+  fail_unless (gst_element_set_state (sink,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_ASYNC);
+  fail_unless (gst_element_set_state (sink,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+
+  gst_element_release_request_pad (sink, pad1);
+  gst_object_unref (pad1);
+  gst_element_release_request_pad (sink, pad2);
+  gst_object_unref (pad2);
+  gst_object_unref (sink);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 splitmux_suite (void)
 {
@@ -910,6 +958,7 @@ splitmux_suite (void)
         tempdir_cleanup);
     tcase_add_test (tc_chain_mp4_jpeg, test_splitmuxsrc_caps_change);
     tcase_add_test (tc_chain_mp4_jpeg, test_splitmuxsrc_robust_mux);
+    tcase_add_test (tc_chain_mp4_jpeg, test_splitmuxsink_muxer_pad_map);
   } else {
     GST_INFO ("Skipping tests, missing plugins: jpegenc or mp4mux");
   }

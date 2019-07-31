@@ -60,6 +60,12 @@
  * Records a video stream captured from a v4l2 device and muxer it into
  * streamable Matroska files, splitting as needed to limit size/duration to 10
  * seconds. Each file will finalize asynchronously.
+ *
+ * |[
+ * gst-launch-1.0 videotestsrc num-buffers=10 ! jpegenc ! .video splitmuxsink muxer=qtmux muxer-pad-map=x-pad-map,video=video_1 location=test%05d.mp4 -v
+ * ]|
+ * Records 10 frames to an mp4 file, using a muxer-pad-map to make explicit mappings between the splitmuxsink sink pad and the corresponding muxer pad
+ * it will deliver to.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -106,7 +112,8 @@ enum
   PROP_MUXER_FACTORY,
   PROP_MUXER_PROPERTIES,
   PROP_SINK_FACTORY,
-  PROP_SINK_PROPERTIES
+  PROP_SINK_PROPERTIES,
+  PROP_MUXERPAD_MAP
 };
 
 #define DEFAULT_MAX_SIZE_TIME       0
@@ -389,6 +396,26 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstSplitMuxSink::muxer-pad-map
+   *
+   * An optional GstStructure that provides a map from splitmuxsink sinkpad
+   * names to muxer pad names they should feed. Splitmuxsink has some default
+   * mapping behaviour to link video to video pads and audio to audio pads
+   * that usually works fine. This property is useful if you need to ensure
+   * a particular mapping to muxed streams.
+   *
+   * The GstStructure contains string fields like so:
+   *   splitmuxsink muxer-pad-map=x-pad-map,video=video_1
+   *
+   * Since: 1.18
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MUXERPAD_MAP,
+      g_param_spec_boxed ("muxer-pad-map", "Muxer pad map",
+          "A GstStructure specifies the mapping from splitmuxsink sink pads to muxer pads",
+          GST_TYPE_STRUCTURE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
    * GstSplitMuxSink::format-location:
    * @splitmux: the #GstSplitMuxSink
    * @fragment_id: the sequence number of the file to be created
@@ -565,6 +592,9 @@ gst_splitmux_sink_finalize (GObject * object)
   g_mutex_clear (&splitmux->lock);
   g_queue_foreach (&splitmux->out_cmd_q, (GFunc) out_cmd_buf_free, NULL);
   g_queue_clear (&splitmux->out_cmd_q);
+
+  if (splitmux->muxerpad_map)
+    gst_structure_free (splitmux->muxerpad_map);
 
   if (splitmux->provided_sink)
     gst_object_unref (splitmux->provided_sink);
@@ -749,6 +779,20 @@ gst_splitmux_sink_set_property (GObject * object, guint prop_id,
         splitmux->sink_properties = NULL;
       GST_OBJECT_UNLOCK (splitmux);
       break;
+    case PROP_MUXERPAD_MAP:
+    {
+      const GstStructure *s = gst_value_get_structure (value);
+      GST_SPLITMUX_LOCK (splitmux);
+      if (splitmux->muxerpad_map) {
+        gst_structure_free (splitmux->muxerpad_map);
+      }
+      if (s)
+        splitmux->muxerpad_map = gst_structure_copy (s);
+      else
+        splitmux->muxerpad_map = NULL;
+      GST_SPLITMUX_UNLOCK (splitmux);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -846,6 +890,11 @@ gst_splitmux_sink_get_property (GObject * object, guint prop_id,
       GST_OBJECT_LOCK (splitmux);
       gst_value_set_structure (value, splitmux->sink_properties);
       GST_OBJECT_UNLOCK (splitmux);
+      break;
+    case PROP_MUXERPAD_MAP:
+      GST_SPLITMUX_LOCK (splitmux);
+      gst_value_set_structure (value, splitmux->muxerpad_map);
+      GST_SPLITMUX_UNLOCK (splitmux);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2579,33 +2628,66 @@ handle_q_overrun (GstElement * q, gpointer user_data)
   }
 }
 
+/* Called with SPLITMUX lock held */
+static const gchar *
+lookup_muxer_pad (GstSplitMuxSink * splitmux, const gchar * sinkpad_name)
+{
+  const gchar *ret = NULL;
+
+  if (splitmux->muxerpad_map == NULL)
+    return NULL;
+
+  if (sinkpad_name == NULL) {
+    GST_WARNING_OBJECT (splitmux,
+        "Can't look up request pad in pad map without providing a pad name");
+    return NULL;
+  }
+
+  ret = gst_structure_get_string (splitmux->muxerpad_map, sinkpad_name);
+  if (ret) {
+    GST_INFO_OBJECT (splitmux, "Sink pad %s maps to muxer pad %s", sinkpad_name,
+        ret);
+    return g_strdup (ret);
+  }
+
+  return NULL;
+}
+
 static GstPad *
 gst_splitmux_sink_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
   GstSplitMuxSink *splitmux = (GstSplitMuxSink *) element;
   GstPadTemplate *mux_template = NULL;
-  GstPad *res = NULL;
+  GstPad *ret = NULL, *muxpad = NULL;
   GstElement *q;
   GstPad *q_sink = NULL, *q_src = NULL;
   gchar *gname, *qname;
-  gboolean is_primary_video = FALSE;
+  gboolean is_primary_video = FALSE, is_video = FALSE,
+      muxer_is_requestpad = FALSE;
   MqStreamCtx *ctx;
+  const gchar *muxer_padname = NULL;
 
-  GST_DEBUG_OBJECT (element, "templ:%s, name:%s", templ->name_template, name);
+  GST_DEBUG_OBJECT (splitmux, "templ:%s, name:%s", templ->name_template, name);
 
   GST_SPLITMUX_LOCK (splitmux);
   if (!create_muxer (splitmux))
     goto fail;
   g_signal_emit (splitmux, signals[SIGNAL_MUXER_ADDED], 0, splitmux->muxer);
 
-  if (templ->name_template) {
-    if (g_str_equal (templ->name_template, "video") ||
-        g_str_has_prefix (templ->name_template, "video_aux_")) {
-      is_primary_video = g_str_equal (templ->name_template, "video");
-      if (is_primary_video && splitmux->have_video)
-        goto already_have_video;
+  if (g_str_equal (templ->name_template, "video") ||
+      g_str_has_prefix (templ->name_template, "video_aux_")) {
+    is_primary_video = g_str_equal (templ->name_template, "video");
+    if (is_primary_video && splitmux->have_video)
+      goto already_have_video;
+    is_video = TRUE;
+  }
 
+  /* See if there's a pad map and it lists this pad */
+  muxer_padname = lookup_muxer_pad (splitmux, name);
+
+  if (muxer_padname == NULL) {
+    if (is_video) {
       /* FIXME: Look for a pad template with matching caps, rather than by name */
       GST_DEBUG_OBJECT (element,
           "searching for pad-template with name 'video_%%u'");
@@ -2655,42 +2737,51 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
           (splitmux->muxer), "sink");
       name = NULL;
     }
-  }
 
-  if (mux_template == NULL) {
-    GST_ERROR_OBJECT (element,
-        "unable to find a suitable sink pad-template on the muxer");
-
-    goto fail;
-  }
-  GST_DEBUG_OBJECT (element, "found sink pad-template '%s' on the muxer",
-      mux_template->name_template);
-
-  if (mux_template->presence == GST_PAD_REQUEST) {
-    GST_DEBUG_OBJECT (element, "requesting pad from pad-template");
-
-    res = gst_element_request_pad (splitmux->muxer, mux_template, name, caps);
-    if (res == NULL)
+    if (mux_template == NULL) {
+      GST_ERROR_OBJECT (element,
+          "unable to find a suitable sink pad-template on the muxer");
       goto fail;
-  } else if (mux_template->presence == GST_PAD_ALWAYS) {
-    GST_DEBUG_OBJECT (element, "accessing always pad from pad-template");
-
-    res =
-        gst_element_get_static_pad (splitmux->muxer,
+    }
+    GST_DEBUG_OBJECT (element, "found sink pad-template '%s' on the muxer",
         mux_template->name_template);
-    if (res == NULL)
-      goto fail;
-  } else {
-    GST_ERROR_OBJECT (element,
-        "unexpected pad presence %d", mux_template->presence);
 
-    goto fail;
+    if (mux_template->presence == GST_PAD_REQUEST) {
+      GST_DEBUG_OBJECT (element, "requesting pad from pad-template");
+
+      muxpad =
+          gst_element_request_pad (splitmux->muxer, mux_template, name, caps);
+      muxer_is_requestpad = TRUE;
+    } else if (mux_template->presence == GST_PAD_ALWAYS) {
+      GST_DEBUG_OBJECT (element, "accessing always pad from pad-template");
+
+      muxpad =
+          gst_element_get_static_pad (splitmux->muxer,
+          mux_template->name_template);
+    } else {
+      GST_ERROR_OBJECT (element,
+          "unexpected pad presence %d", mux_template->presence);
+      goto fail;
+    }
+  } else {
+    /* Have a muxer pad name */
+    if (!(muxpad = gst_element_get_static_pad (splitmux->muxer, muxer_padname))) {
+      if ((muxpad =
+              gst_element_get_request_pad (splitmux->muxer, muxer_padname)))
+        muxer_is_requestpad = TRUE;
+    }
+    g_free ((gchar *) muxer_padname);
+    muxer_padname = NULL;
   }
+
+  /* One way or another, we must have a muxer pad by now */
+  if (muxpad == NULL)
+    goto fail;
 
   if (is_primary_video)
     gname = g_strdup ("video");
   else if (name == NULL)
-    gname = gst_pad_get_name (res);
+    gname = gst_pad_get_name (muxpad);
   else
     gname = g_strdup (name);
 
@@ -2709,13 +2800,14 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
   q_sink = gst_element_get_static_pad (q, "sink");
   q_src = gst_element_get_static_pad (q, "src");
 
-  if (gst_pad_link (q_src, res) != GST_PAD_LINK_OK) {
-    gst_element_release_request_pad (splitmux->muxer, res);
-    gst_object_unref (GST_OBJECT (res));
+  if (gst_pad_link (q_src, muxpad) != GST_PAD_LINK_OK) {
+    if (muxer_is_requestpad)
+      gst_element_release_request_pad (splitmux->muxer, muxpad);
+    gst_object_unref (GST_OBJECT (muxpad));
     goto fail;
   }
 
-  gst_object_unref (GST_OBJECT (res));
+  gst_object_unref (GST_OBJECT (muxpad));
 
   ctx = mq_stream_ctx_new (splitmux);
   /* Context holds a ref: */
@@ -2739,8 +2831,8 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
     ctx->is_reference = TRUE;
   }
 
-  res = gst_ghost_pad_new_from_template (gname, q_sink, templ);
-  g_object_set_qdata ((GObject *) (res), PAD_CONTEXT, ctx);
+  ret = gst_ghost_pad_new_from_template (gname, q_sink, templ);
+  g_object_set_qdata ((GObject *) (ret), PAD_CONTEXT, ctx);
 
   ctx->sink_pad_block_id =
       gst_pad_add_probe (q_sink,
@@ -2748,8 +2840,8 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
       GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM,
       (GstPadProbeCallback) handle_mq_input, ctx, NULL);
 
-  GST_DEBUG_OBJECT (splitmux, "Request pad %" GST_PTR_FORMAT
-      " feeds queue pad %" GST_PTR_FORMAT, res, q_sink);
+  GST_DEBUG_OBJECT (splitmux, "splitmuxsink pad %" GST_PTR_FORMAT
+      " feeds queue pad %" GST_PTR_FORMAT, ret, q_sink);
 
   splitmux->contexts = g_list_append (splitmux->contexts, ctx);
 
@@ -2758,12 +2850,12 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
   if (is_primary_video)
     splitmux->have_video = TRUE;
 
-  gst_pad_set_active (res, TRUE);
-  gst_element_add_pad (element, res);
+  gst_pad_set_active (ret, TRUE);
+  gst_element_add_pad (GST_ELEMENT (splitmux), ret);
 
   GST_SPLITMUX_UNLOCK (splitmux);
 
-  return res;
+  return ret;
 fail:
   GST_SPLITMUX_UNLOCK (splitmux);
 
