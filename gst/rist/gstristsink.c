@@ -24,38 +24,40 @@
  * @see_also: ristsrc
  *
  * This element implements RIST TR-06-1 Simple Profile transmitter. It
- * currently supports any registered RTP payload types such as MPEG TS. The
- * stream passed to this element must be RTP payloaded already. Even though
- * RTP SSRC collision is rare in unidirectional streaming, this element expect
- * the upstream elements to obey to collision events and change the SSRC in
- * use. Collision will occur when transmitting and receiving over multicast on
- * the same host.
+ * currently supports any registered RTP static payload types such as
+ * MPEG TS. The stream passed to this element must be already RTP
+ * payloaded.  Even though RTP SSRC collision are rare in
+ * unidirectional streaming, this element expects the upstream elements
+ * to obey to collision events and change the SSRC in use. Collisions
+ * will occur when transmitting and receiving over multicast on the
+ * same host, and will be properly ignored.
  *
- * ## Example launch line
+ * ## Example gst-launch line
  * |[
- * gst-launch-1.0 udpsrc ! tsparse set-timestamp=1 ! rtpmp2pay ! \
- *     ristsink address=10.0.0.1 port=5004
+ * gst-launch-1.0 udpsrc ! tsparse set-timestamps=1 smoothing-latency=40000 ! \
+ * rtpmp2tpay ! ristsink address=10.0.0.1 port=5004
  * ]|
  *
- * Additionally, this element supports bonding, which consist of using multiple
- * links in order to transmit the streams. The address of each link is
- * configured through the "bonding-addresses" property. When set, this will replace
- * the value that might have been set on "address" and "port". Each bonds will be
- * mapped to its down RTP session. RTX request are only replied on the link
- * the NACK was received from.
+ * Additionally, this element supports bonding, which consist of using
+ * multiple links in order to transmit the streams. The address of
+ * each link is configured through the "bonding-addresses"
+ * property. When set, this will replace the value that might have
+ * been set on the "address" and "port" properties. Each link will be
+ * mapped to its own RTP session. RTX request are only replied to on the
+ * link the NACK was received from.
  *
- * There is currently two bonding methods in place: "broadcast" and "round-robin".
+ * There are currently two bonding methods in place: "broadcast" and "round-robin".
  * In "broadcast" mode, all the packets are duplicated over all sessions.
  * While in "round-robin" mode, packets are evenly distributed over the links. One
- * can also implement its down dispatcher element and configure it using the
+ * can also implement its own dispatcher element and configure it using the
  * "dispatcher" property. As a reference, "broadcast" mode is implemented with
  * the "tee" element, while "round-robin" mode is implemented with the
  * "round-robin" element.
  *
- * ## Exmaple launch line for bonding
+ * ## Example gst-launch line for bonding
  * |[
- * gst-launch-1.0 udpsrc ! tsparse set-timestamps=1 ! rtpmp2tpay ! \
- *     ristsink bonding-addresses="10.0.0.1:5004,11.0.0.1:5006"
+ * gst-launch-1.0 udpsrc ! tsparse set-timestamps=1 smoothing-latency=40000 ! \
+ *  rtpmp2tpay ! ristsink bonding-addresses="10.0.0.1:5004,11.0.0.1:5006"
  * ]|
  */
 
@@ -1206,24 +1208,24 @@ gst_rist_sink_class_init (GstRistSinkClass * klass)
 
   g_object_class_install_property (object_class, PROP_PORT,
       g_param_spec_uint ("port", "Port", "The port RTP packets will be sent, "
-          "RTCP port is derived from it, this port must be an even number.",
+          "the RTCP port is this value + 1. This port must be an even number.",
           2, 65534, 5004,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (object_class, PROP_SENDER_BUFFER,
       g_param_spec_uint ("sender-buffer", "Sender Buffer",
-          "Size of the retransmission queue in ms", 0, G_MAXUINT, 1200,
+          "Size of the retransmission queue (in ms)", 0, G_MAXUINT, 1200,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (object_class, PROP_MIN_RTCP_INTERVAL,
       g_param_spec_uint ("min-rtcp-interval", "Minimum RTCP Intercal",
-          "The minimum interval in ms between two regular successive RTCP "
+          "The minimum interval (in ms) between two regular successive RTCP "
           "packets.", 0, 100, 100,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (object_class, PROP_MAX_RTCP_BANDWIDTH,
       g_param_spec_double ("max-rtcp-bandwidth", "Maximum RTCP Bandwidth",
-          "The maximum bandwidth used for RTCP in fraction of RTP bandwdith",
+          "The maximum bandwidth used for RTCP as a fraction of RTP bandwdith",
           0.0, 0.05, 0.05,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
@@ -1273,7 +1275,7 @@ gst_rist_sink_class_init (GstRistSinkClass * klass)
 
   g_object_class_install_property (object_class, PROP_DISPATCHER,
       g_param_spec_object ("dispatcher", "Bonding Dispatcher",
-          "An element that takes care of multi-plexing bounds. When set "
+          "An element that takes care of multi-plexing bonded links. When set "
           "\"bonding-method\" is ignored.",
           GST_TYPE_ELEMENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |

@@ -26,21 +26,22 @@
  * This element implements RIST TR-06-1 Simple Profile receiver. The stream
  * produced by this element will be RTP payloaded. This element also implements
  * the URI scheme `rist://` allowing to render RIST streams in GStreamer based
- * media players. The RIST URI handler also allows setting propertied through
+ * media players. The RIST URI handler also allows setting properties through
  * the URI query.
  *
- * ## Example launch line
+ * ## Example gst-launch line
  * |[
- * gst-launch-1.0 ristsrc address=0.0.0.0 port=5004 ! rtpmp2depay ! udpsink
+ * gst-launch-1.0 ristsrc address=0.0.0.0 port=5004 ! rtpmp2tdepay ! udpsink
  * gst-play-1.0 "rist://0.0.0.0:5004?receiver-buffer=700"
  * ]|
  *
- * Additionally, this element supports bonding, which means it can receive the
- * same stream from multiple addresses. Each address will be mapped to it's
- * own RTP session. In order to enable bonding support, one need to configure
- * the list of addresses through "bonding-addresses" properties.
+ * Additionally, this element supports link bonding, which means it
+ * can receive the same stream from multiple addresses. Each address
+ * will be mapped to its own RTP session. In order to enable bonding
+ * support, one need to configure the list of addresses through
+ * "bonding-addresses" properties.
  *
- * ## Example launch line for bonding
+ * ## Example gst-launch line for bonding
  * |[
  * gst-launch-1.0 ristsrc bonding-addresses="10.0.0.1:5004,11.0.0.1:5006" ! rtpmp2tdepay ! udpsink
  * gst-play-1.0 "rist://0.0.0.0:5004?bonding-addresses=10.0.0.1:5004,11.0.0.1:5006"
@@ -1202,18 +1203,18 @@ gst_rist_src_class_init (GstRistSrcClass * klass)
 
   g_object_class_install_property (object_class, PROP_PORT,
       g_param_spec_uint ("port", "Port", "The port to listen for RTP packets, "
-          "RTCP port is derived from it, this port must be an even number.",
+          "the RTCP port is this value + 1. This port must be an even number.",
           2, 65534, 5004,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (object_class, PROP_RECEIVER_BUFFER,
       g_param_spec_uint ("receiver-buffer", "Receiver Buffer",
-          "Buffering duration in ms", 0, G_MAXUINT, 1000,
+          "Buffering duration (in ms)", 0, G_MAXUINT, 1000,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (object_class, PROP_REORDER_SECTION,
       g_param_spec_uint ("reorder-section", "Recorder Section",
-          "Time to wait before sending retransmission request in ms.",
+          "Time to wait before sending retransmission request (in ms)",
           0, G_MAXUINT, 70,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
@@ -1225,13 +1226,13 @@ gst_rist_src_class_init (GstRistSrcClass * klass)
 
   g_object_class_install_property (object_class, PROP_MIN_RTCP_INTERVAL,
       g_param_spec_uint ("min-rtcp-interval", "Minimum RTCP Intercal",
-          "The minimum interval in ms between two successive RTCP packets",
+          "The minimum interval (in ms) between two successive RTCP packets",
           0, 100, 100,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (object_class, PROP_MAX_RTCP_BANDWIDTH,
       g_param_spec_double ("max-rtcp-bandwidth", "Maximum RTCP Bandwidth",
-          "The maximum bandwidth used for RTCP in fraction of RTP bandwdith",
+          "The maximum bandwidth used for RTCP as a fraction of RTP bandwdith",
           0.0, 0.05, 0.05,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
@@ -1254,7 +1255,7 @@ gst_rist_src_class_init (GstRistSrcClass * klass)
 
   g_object_class_install_property (object_class, PROP_MULTICAST_LOOPBACK,
       g_param_spec_boolean ("multicast-loopback", "Multicast Loopback",
-          "When enabled, the packet will be received locally.", FALSE,
+          "When enabled, the packets will be received locally.", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (object_class, PROP_MULTICAST_IFACE,
@@ -1269,8 +1270,8 @@ gst_rist_src_class_init (GstRistSrcClass * klass)
 
   g_object_class_install_property (object_class, PROP_BONDING_ADDRESSES,
       g_param_spec_string ("bonding-addresses", "Bonding Addresses",
-          "Comma (,) seperated list of <address>:<port> to receive from. "
-          "Only used if 'enale-bonding' is set.", NULL,
+          "Comma (,) separated list of <address>:<port> to receive from. "
+          "Only used if 'enable-bonding' is set.", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
