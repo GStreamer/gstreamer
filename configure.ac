@@ -868,70 +868,15 @@ AC_SUBST(LIBUDEV_LIBS)
 AC_SUBST(LIBUSB_CFLAGS)
 AC_SUBST(LIBUSB_LIBS)
 
-dnl *** CUDA ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_CUDA, true)
-AG_GST_CHECK_FEATURE(CUDA, [NVIDIA CUDA API],, [
-  AC_ARG_WITH([cuda-prefix],
-          AS_HELP_STRING([--with-cuda-prefix],
-          [Use the provided prefix for detecting the cuda installation]),
-          [AS_IF([test "x$with_cuda_prefix" != "x"],
-                 [CUDA_PREFIX="$with_cuda_prefix"])],
-          [CUDA_PREFIX=""])
-
-  HAVE_CUDA="yes"
-  if test "x$CUDA_PREFIX" != "x"; then
-    dnl only override if not already set
-    if test "x$CUDA_CFLAGS" = "x"; then
-      dnl this is an educated guess, user can always override these
-      CUDA_CFLAGS="-I$CUDA_PREFIX/include"
-    fi
-  else
-    PKG_CHECK_MODULES([CUDA], [cuda-10.1],, [
-      PKG_CHECK_MODULES([CUDA], [cuda-10.0],, [
-        PKG_CHECK_MODULES([CUDA], [cuda-9.2],, [
-          PKG_CHECK_MODULES([CUDA], [cuda-9.1],, [
-            PKG_CHECK_MODULES([CUDA], [cuda-9.0],, [
-              PKG_CHECK_MODULES([CUDA], [cuda-8.0],, [
-                PKG_CHECK_MODULES([CUDA], [cuda-7.5],, [
-                  PKG_CHECK_MODULES([CUDA], [cuda-7.0],, [
-                    PKG_CHECK_MODULES([CUDA], [cuda-6.5],, [
-                      AC_MSG_WARN([Could not find cuda headers/libraries])])])])])])])])])])
-  fi
-
-  HAVE_CUDA_H=no
-  save_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$CUDA_CFLAGS $save_CPPFLAGS "
-  AC_CHECK_HEADER([cuda.h], [HAVE_CUDA_H=yes],
-      AC_MSG_WARN([Could not find cuda.h]))
-  CPPFLAGS=$save_CPPFLAGS
-])
-
 dnl *** USE_NVCODEC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NVCODEC, true)
 AG_GST_CHECK_FEATURE(NVCODEC, [NVIDIA Codec plugin], nvcodec, [
-  USE_NVENC_GST_GL=no
-  if test "x$HAVE_CUDA_H" = "xyes"; then
-    HAVE_NVCODEC="yes"
-    if test "x$GST_GL_HAVE_API_GL" = "x1"; then
-      dnl cudaGL header
-      save_CPPFLAGS="$CPPFLAGS"
-      CPPFLAGS="$save_CPPFLAGS $CUDA_CFLAGS"
-      AC_CHECK_HEADER([cudaGL.h], [
-        USE_NVCODEC_GST_GL="yes"
-        AC_DEFINE(HAVE_NVCODEC_GST_GL, [1] , [NVCODEC GStreamer OpenGL support available])
-        ], [], [
-          /* missing headers in old cudaGL.h */
-          #ifdef __APPLE__
-          #include <OpenGL/gl.h>
-          #else
-          #include <GL/gl.h>
-          #endif
-          #include <cuda.h>
-        ])
-      CPPFLAGS="$save_CPPFLAGS"
-    fi
-  else
-    HAVE_NVCODEC="no"
+  HAVE_NVCODEC="yes"
+  USE_NVCODEC_GST_GL="no"
+
+  if test "x$GST_GL_HAVE_API_GL" = "x1"; then
+    USE_NVCODEC_GST_GL="yes"
+    AC_DEFINE(HAVE_NVCODEC_GST_GL, [1], [NVCODEC GStreamer OpenGL support available])
   fi
 ])
 AM_CONDITIONAL(USE_NVCODEC_GST_GL, test "x$USE_NVCODEC_GST_GL" = "xyes")

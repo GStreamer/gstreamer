@@ -20,14 +20,15 @@ noinst_HEADERS = \
 	nvEncodeAPI.h \
 	cuviddec.h \
 	nvcuvid.h \
-	gstcuvidloader.h
+	gstcuvidloader.h \
+	stub/cuda.h
 
 libgstnvcodec_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PBUTILS_CFLAGS) \
 	$(GST_VIDEO_CFLAGS) \
 	$(GST_CFLAGS) \
-	$(CUDA_CFLAGS)
+	-I$(srcdir)/stub
 
 libgstnvcodec_la_LIBADD = \
 	$(GST_PBUTILS_LIBS) \
