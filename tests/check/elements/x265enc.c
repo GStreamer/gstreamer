@@ -149,6 +149,62 @@ GST_START_TEST (test_encode_simple)
 
 GST_END_TEST;
 
+GST_START_TEST (test_tiny_picture)
+{
+  GstElement *x265enc;
+  GstBuffer *buffer;
+  gint i;
+  GList *l;
+  GstCaps *outcaps, *sinkcaps;
+  GstSegment seg;
+
+  x265enc =
+      setup_x265enc
+      ("video/x-raw,format=(string)I420,width=(int)16,height=(int)16,framerate=(fraction)25/1");
+
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  seg.stop = gst_util_uint64_scale (10, GST_SECOND, 25);
+
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_segment (&seg)));
+
+  buffer = gst_buffer_new_allocate (NULL, 16 * 16 + 2 * 8 * 8, NULL);
+  gst_buffer_memset (buffer, 0, 0, -1);
+
+  for (i = 0; i < 10; i++) {
+    GST_BUFFER_TIMESTAMP (buffer) = gst_util_uint64_scale (i, GST_SECOND, 25);
+    GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (1, GST_SECOND, 25);
+    fail_unless (gst_pad_push (srcpad, gst_buffer_ref (buffer)) == GST_FLOW_OK);
+  }
+
+  gst_buffer_unref (buffer);
+
+  fail_unless (gst_pad_push_event (srcpad, gst_event_new_eos ()));
+
+  /* All buffers must be there now */
+  fail_unless_equals_int (g_list_length (buffers), 10);
+
+  outcaps =
+      gst_caps_from_string
+      ("video/x-h265,width=(int)16,height=(int)16,framerate=(fraction)25/1");
+
+  for (l = buffers, i = 0; l; l = l->next, i++) {
+    buffer = l->data;
+
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buffer),
+        gst_util_uint64_scale (1, GST_SECOND, 25));
+
+    sinkcaps = gst_pad_get_current_caps (sinkpad);
+    fail_unless (gst_caps_can_intersect (sinkcaps, outcaps));
+    gst_caps_unref (sinkcaps);
+  }
+
+  gst_caps_unref (outcaps);
+
+  cleanup_x265enc (x265enc);
+}
+
+GST_END_TEST;
+
 static Suite *
 x265enc_suite (void)
 {
@@ -158,6 +214,7 @@ x265enc_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_encode_simple);
+  tcase_add_test (tc_chain, test_tiny_picture);
 
   return s;
 }
