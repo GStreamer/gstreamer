@@ -62,7 +62,7 @@ struct _GstVaapiFilter
   GstVideoFormat format;
   GstVaapiScaleMethod scale_method;
   GstVideoOrientationMethod video_direction;
-  GArray *formats;
+  GstVaapiConfigSurfaceAttributes *attribs;
   GArray *forward_references;
   GArray *backward_references;
   GstVaapiRectangle crop_rect;
@@ -1086,18 +1086,18 @@ deint_refs_clear_all (GstVaapiFilter * filter)
 }
 
 /* ------------------------------------------------------------------------- */
-/* --- Surface Formats                                                   --- */
+/* --- Surface Attribs                                                   --- */
 /* ------------------------------------------------------------------------- */
 
 static gboolean
-ensure_formats (GstVaapiFilter * filter)
+ensure_attributes (GstVaapiFilter * filter)
 {
-  if (G_LIKELY (filter->formats))
+  if (G_LIKELY (filter->attribs))
     return TRUE;
 
-  filter->formats = gst_vaapi_get_surface_formats (filter->display,
+  filter->attribs = gst_vaapi_config_surface_attributes_get (filter->display,
       filter->va_config);
-  return (filter->formats != NULL);
+  return (filter->attribs != NULL);
 }
 
 static inline gboolean
@@ -1111,12 +1111,14 @@ static gboolean
 find_format (GstVaapiFilter * filter, GstVideoFormat format)
 {
   guint i;
+  GArray *formats;
 
-  if (is_special_format (format) || !filter->formats)
+  formats = filter->attribs->formats;
+  if (is_special_format (format) || !formats)
     return FALSE;
 
-  for (i = 0; i < filter->formats->len; i++) {
-    if (g_array_index (filter->formats, GstVideoFormat, i) == format)
+  for (i = 0; i < formats->len; i++) {
+    if (g_array_index (formats, GstVideoFormat, i) == format)
       return TRUE;
   }
   return FALSE;
@@ -1199,9 +1201,9 @@ gst_vaapi_filter_finalize (GObject * object)
     filter->backward_references = NULL;
   }
 
-  if (filter->formats) {
-    g_array_unref (filter->formats);
-    filter->formats = NULL;
+  if (filter->attribs) {
+    gst_vaapi_config_surface_attributes_free (filter->attribs);
+    filter->attribs = NULL;
   }
 
   G_OBJECT_CLASS (gst_vaapi_filter_parent_class)->finalize (object);
@@ -1657,9 +1659,11 @@ gst_vaapi_filter_get_formats (GstVaapiFilter * filter)
 {
   g_return_val_if_fail (filter != NULL, NULL);
 
-  if (!ensure_formats (filter))
+  if (!ensure_attributes (filter))
     return NULL;
-  return g_array_ref (filter->formats);
+  if (filter->attribs->formats)
+    return g_array_ref (filter->attribs->formats);
+  return NULL;
 }
 
 /**
@@ -1685,7 +1689,7 @@ gst_vaapi_filter_set_format (GstVaapiFilter * filter, GstVideoFormat format)
 {
   g_return_val_if_fail (filter != NULL, FALSE);
 
-  if (!ensure_formats (filter))
+  if (!ensure_attributes (filter))
     return FALSE;
 
   if (!is_special_format (format) && !find_format (filter, format))

@@ -39,7 +39,6 @@
 #include "gstvaapisurfaceproxy.h"
 #include "gstvaapivideopool_priv.h"
 #include "gstvaapiutils.h"
-#include "gstvaapiutils_core.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -51,15 +50,15 @@
 #define SCRATCH_SURFACES_COUNT (4)
 
 static gboolean
-ensure_formats (GstVaapiContext * context)
+ensure_attributes (GstVaapiContext * context)
 {
-  if (G_LIKELY (context->formats))
+  if (G_LIKELY (context->attribs))
     return TRUE;
 
-  context->formats =
-      gst_vaapi_get_surface_formats (GST_VAAPI_OBJECT_DISPLAY (context),
-      context->va_config);
-  return (context->formats != NULL);
+  context->attribs =
+      gst_vaapi_config_surface_attributes_get (GST_VAAPI_OBJECT_DISPLAY
+      (context), context->va_config);
+  return (context->attribs != NULL);
 }
 
 static void
@@ -119,9 +118,9 @@ context_destroy (GstVaapiContext * context)
     context->va_config = VA_INVALID_ID;
   }
 
-  if (context->formats) {
-    g_array_unref (context->formats);
-    context->formats = NULL;
+  if (context->attribs) {
+    gst_vaapi_config_surface_attributes_free (context->attribs);
+    context->attribs = NULL;
   }
 }
 
@@ -133,13 +132,13 @@ context_ensure_surfaces (GstVaapiContext * context)
   GstVaapiSurface *surface;
   guint i;
 
-  if (!ensure_formats (context))
+  if (!ensure_attributes (context))
     return FALSE;
 
   for (i = context->surfaces->len; i < num_surfaces; i++) {
     surface =
         gst_vaapi_surface_new_from_formats (GST_VAAPI_OBJECT_DISPLAY (context),
-        cip->chroma_type, cip->width, cip->height, context->formats);
+        cip->chroma_type, cip->width, cip->height, context->attribs->formats);
     if (!surface)
       return FALSE;
     gst_vaapi_surface_set_parent_context (surface, context);
@@ -407,7 +406,7 @@ gst_vaapi_context_init (GstVaapiContext * context,
   context->reset_on_resize = TRUE;
   gst_vaapi_context_overlay_init (context);
 
-  context->formats = NULL;
+  context->attribs = NULL;
 }
 
 static void
@@ -633,7 +632,10 @@ gst_vaapi_context_get_surface_formats (GstVaapiContext * context)
 {
   g_return_val_if_fail (context, NULL);
 
-  if (!ensure_formats (context))
+  if (!ensure_attributes (context))
     return NULL;
-  return g_array_ref (context->formats);
+
+  if (context->attribs->formats)
+    return g_array_ref (context->attribs->formats);
+  return NULL;
 }

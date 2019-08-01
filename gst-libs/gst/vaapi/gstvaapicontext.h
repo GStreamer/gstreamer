@@ -30,6 +30,7 @@
 #include "gstvaapiprofile.h"
 #include "gstvaapidisplay.h"
 #include "gstvaapisurface.h"
+#include "gstvaapiutils_core.h"
 #include "gstvaapivideopool.h"
 
 G_BEGIN_DECLS
@@ -115,7 +116,7 @@ struct _GstVaapiContext
   GPtrArray *overlays[2];
   guint overlay_id;
   gboolean reset_on_resize;
-  GArray *formats;
+  GstVaapiConfigSurfaceAttributes *attribs;
 };
 
 /**
