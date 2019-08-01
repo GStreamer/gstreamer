@@ -615,6 +615,8 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
   if (got_any_frames)
     gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), NULL, 1);
 
+  return;
+
 send_packet_failed:
   GST_WARNING_OBJECT (ffmpegdec, "send packet failed, could not drain decoder");
 }
