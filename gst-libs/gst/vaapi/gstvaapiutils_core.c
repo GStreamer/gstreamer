@@ -122,66 +122,6 @@ error:
 }
 
 /**
- * gst_vaapi_get_surface_formats:
- * @display: a #GstVaapiDisplay
- * @config: a #VAConfigID
- *
- * Gets surface formats for the supplied config.
- *
- * This function will query for all the supported formats for the
- * supplied VA @config.
- *
- * Return value: (transfer full): a #GArray of #GstVideoFormats or %NULL
- */
-GArray *
-gst_vaapi_get_surface_formats (GstVaapiDisplay * display, VAConfigID config)
-{
-  VASurfaceAttrib *surface_attribs;
-  guint i, num_surface_attribs = 0;
-  GArray *formats;
-
-  surface_attribs =
-      get_surface_attributes (display, config, &num_surface_attribs);
-  if (!surface_attribs)
-    return NULL;
-
-  formats = g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat),
-      num_surface_attribs);
-  if (!formats)
-    goto error;
-
-  for (i = 0; i < num_surface_attribs; i++) {
-    const VASurfaceAttrib *const attrib = &surface_attribs[i];
-    GstVideoFormat fmt;
-
-    if (attrib->type != VASurfaceAttribPixelFormat)
-      continue;
-    if (!(attrib->flags & VA_SURFACE_ATTRIB_SETTABLE))
-      continue;
-
-    fmt = gst_vaapi_video_format_from_va_fourcc (attrib->value.value.i);
-    if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
-      continue;
-    g_array_append_val (formats, fmt);
-  }
-
-  if (formats->len == 0) {
-    g_array_unref (formats);
-    formats = NULL;
-  }
-
-  g_free (surface_attribs);
-  return formats;
-
-  /* ERRORS */
-error:
-  {
-    g_free (surface_attribs);
-    return NULL;
-  }
-}
-
-/**
  * gst_vaapi_config_surface_attribures_get:
  * @display: a #GstVaapiDisplay
  * @config: a #VAConfigID

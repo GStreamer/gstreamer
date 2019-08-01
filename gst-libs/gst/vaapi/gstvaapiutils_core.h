@@ -59,11 +59,6 @@ gboolean
 gst_vaapi_get_config_attribute (GstVaapiDisplay * display, VAProfile profile,
     VAEntrypoint entrypoint, VAConfigAttribType type, guint * out_value_ptr);
 
-/* Gets the available GstVideoFormats of a surface in a VAConfig */
-G_GNUC_INTERNAL
-GArray *
-gst_vaapi_get_surface_formats (GstVaapiDisplay * display, VAConfigID config);
-
 G_GNUC_INTERNAL
 GstVaapiConfigSurfaceAttributes *
 gst_vaapi_config_surface_attributes_get (GstVaapiDisplay * display, VAConfigID config);
