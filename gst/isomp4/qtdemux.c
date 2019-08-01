@@ -2174,10 +2174,8 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
 
   if (hard) {
     qtdemux->segment_seqnum = GST_SEQNUM_INVALID;
-    g_ptr_array_remove_range (qtdemux->active_streams,
-        0, qtdemux->active_streams->len);
-    g_ptr_array_remove_range (qtdemux->old_streams,
-        0, qtdemux->old_streams->len);
+    g_ptr_array_set_size (qtdemux->active_streams, 0);
+    g_ptr_array_set_size (qtdemux->old_streams, 0);
     qtdemux->n_video_streams = 0;
     qtdemux->n_audio_streams = 0;
     qtdemux->n_sub_streams = 0;
@@ -2283,7 +2281,7 @@ gst_qtdemux_stream_concat (GstQTDemux * qtdemux, GPtrArray * dest,
     g_ptr_array_add (dest, gst_qtdemux_stream_ref (stream));
   }
 
-  g_ptr_array_remove_range (src, 0, len);
+  g_ptr_array_set_size (src, 0);
 }
 
 static gboolean
@@ -12857,9 +12855,7 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
         return GST_FLOW_ERROR;
     }
 
-    g_ptr_array_remove_range (qtdemux->old_streams,
-        0, qtdemux->old_streams->len);
-
+    g_ptr_array_set_size (qtdemux->old_streams, 0);
     qtdemux->need_segment = TRUE;
 
     return GST_FLOW_OK;
@@ -12901,7 +12897,7 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
     }
   }
 
-  g_ptr_array_remove_range (qtdemux->old_streams, 0, qtdemux->old_streams->len);
+  g_ptr_array_set_size (qtdemux->old_streams, 0);
 
   /* check if we should post a redirect in case there is a single trak
    * and it is a redirecting trak */
