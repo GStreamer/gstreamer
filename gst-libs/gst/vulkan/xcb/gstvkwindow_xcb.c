@@ -185,9 +185,9 @@ gst_vulkan_window_xcb_create_window (GstVulkanWindowXCB * window_xcb)
       root_window, x, y, width, height, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT,
       screen->root_visual, value_mask, value_list);
 
-  GST_LOG_OBJECT (window_xcb, "gl window id: %p",
+  GST_LOG_OBJECT (window_xcb, "vulkan window id: %p",
       (gpointer) (guintptr) window_xcb->win_id);
-  GST_LOG_OBJECT (window_xcb, "gl window props: x:%d y:%d", x, y);
+  GST_LOG_OBJECT (window_xcb, "vulkan window props: x:%d y:%d", x, y);
 
   /* Magic code that will send notification when window is destroyed */
   cookie = xcb_intern_atom (connection, 1, 12, "WM_PROTOCOLS");

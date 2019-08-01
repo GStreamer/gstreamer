@@ -96,7 +96,7 @@ gst_vulkan_display_xcb_new (const gchar * name)
   GstVulkanDisplayXCB *ret;
   int screen_no = 0;
 
-  GST_DEBUG_CATEGORY_GET (gst_vulkan_display_debug, "gldisplay");
+  GST_DEBUG_CATEGORY_GET (gst_vulkan_display_debug, "vulkandisplay");
 
   connection = xcb_connect (NULL, &screen_no);
   if (connection == NULL || xcb_connection_has_error (connection)) {
@@ -129,7 +129,7 @@ gst_vulkan_display_xcb_new_with_connection (xcb_connection_t * connection,
 
   g_return_val_if_fail (connection != NULL, NULL);
 
-  GST_DEBUG_CATEGORY_GET (gst_vulkan_display_debug, "gldisplay");
+  GST_DEBUG_CATEGORY_GET (gst_vulkan_display_debug, "vulkandisplay");
 
   ret = g_object_new (GST_TYPE_VULKAN_DISPLAY_XCB, NULL);
   gst_object_ref_sink (ret);
