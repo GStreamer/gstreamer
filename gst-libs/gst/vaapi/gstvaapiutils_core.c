@@ -180,3 +180,107 @@ error:
     return NULL;
   }
 }
+
+/**
+ * gst_vaapi_config_surface_attribures_get:
+ * @display: a #GstVaapiDisplay
+ * @config: a #VAConfigID
+ *
+ * Retrieves the possible surface attributes for the supplied config.
+ *
+ * Returns: (transfer full): returns a #GstVaapiConfigSurfaceAttributes
+ **/
+GstVaapiConfigSurfaceAttributes *
+gst_vaapi_config_surface_attributes_get (GstVaapiDisplay * display,
+    VAConfigID config)
+{
+  VASurfaceAttrib *surface_attribs;
+  guint i, num_pixel_formats = 0, num_surface_attribs = 0;
+  GstVaapiConfigSurfaceAttributes *attribs = NULL;
+
+  surface_attribs =
+      get_surface_attributes (display, config, &num_surface_attribs);
+  if (!surface_attribs)
+    return NULL;
+
+  attribs = g_slice_new0 (GstVaapiConfigSurfaceAttributes);
+  if (!attribs)
+    goto error;
+
+  for (i = 0; i < num_surface_attribs; i++) {
+    const VASurfaceAttrib *const attrib = &surface_attribs[i];
+
+    switch (attrib->type) {
+      case VASurfaceAttribPixelFormat:
+        if ((attrib->flags & VA_SURFACE_ATTRIB_SETTABLE)) {
+          GstVideoFormat fmt;
+
+          fmt = gst_vaapi_video_format_from_va_fourcc (attrib->value.value.i);
+          if (fmt != GST_VIDEO_FORMAT_UNKNOWN)
+            num_pixel_formats++;
+        }
+        break;
+      case VASurfaceAttribMinWidth:
+        attribs->min_width = attrib->value.value.i;
+        break;
+      case VASurfaceAttribMinHeight:
+        attribs->min_height = attrib->value.value.i;
+        break;
+      case VASurfaceAttribMaxWidth:
+        attribs->max_width = attrib->value.value.i;
+        break;
+      case VASurfaceAttribMaxHeight:
+        attribs->max_height = attrib->value.value.i;
+        break;
+      case VASurfaceAttribMemoryType:
+        attribs->mem_types = attrib->value.value.i;
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (num_pixel_formats == 0) {
+    attribs->formats = NULL;
+  } else {
+    attribs->formats = g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat),
+        num_pixel_formats);
+
+    for (i = 0; i < num_surface_attribs; i++) {
+      const VASurfaceAttrib *const attrib = &surface_attribs[i];
+      GstVideoFormat fmt;
+
+      if (attrib->type != VASurfaceAttribPixelFormat)
+        continue;
+      if (!(attrib->flags & VA_SURFACE_ATTRIB_SETTABLE))
+        continue;
+
+      fmt = gst_vaapi_video_format_from_va_fourcc (attrib->value.value.i);
+      if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+        continue;
+      g_array_append_val (attribs->formats, fmt);
+    }
+  }
+
+  return attribs;
+
+  /* ERRORS */
+error:
+  {
+    g_free (surface_attribs);
+    gst_vaapi_config_surface_attributes_free (attribs);
+    return NULL;
+  }
+}
+
+void
+gst_vaapi_config_surface_attributes_free (GstVaapiConfigSurfaceAttributes *
+    attribs)
+{
+  if (!attribs)
+    return;
+
+  if (attribs->formats)
+    g_array_unref (attribs->formats);
+  g_slice_free (GstVaapiConfigSurfaceAttributes, attribs);
+}
