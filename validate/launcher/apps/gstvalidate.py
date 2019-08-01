@@ -1133,7 +1133,7 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             ('rtsp.*playback.seek_with_stop.*',
              'https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/issues/386'),
             ('rtsp.*playback.fast_*',
-             'https://gitlab.freedesktop.org/gstreamer/gst-rtsp-server/issues/14'),
+             'rtpbasedepayload does not handle rate != 1.0 correctly'),
         ])
 
     def register_default_test_generators(self):
