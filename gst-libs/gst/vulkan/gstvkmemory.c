@@ -247,6 +247,8 @@ _vk_mem_free (GstAllocator * allocator, GstMemory * memory)
     vkFreeMemory (mem->device->device, mem->mem_ptr, NULL);
 
   gst_object_unref (mem->device);
+
+  g_free (mem);
 }
 
 /**
