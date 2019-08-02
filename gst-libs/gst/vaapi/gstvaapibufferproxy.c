@@ -30,44 +30,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-guint
-from_GstVaapiBufferMemoryType (guint type)
-{
-  guint va_type;
-
-  switch (type) {
-    case GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF:
-      va_type = VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME;
-      break;
-    case GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF:
-      va_type = VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM;
-      break;
-    default:
-      va_type = 0;
-      break;
-  }
-  return va_type;
-}
-
-guint
-to_GstVaapiBufferMemoryType (guint va_type)
-{
-  guint type;
-
-  switch (va_type) {
-    case VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME:
-      type = GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF;
-      break;
-    case VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM:
-      type = GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF;
-      break;
-    default:
-      type = 0;
-      break;
-  }
-  return type;
-}
-
 static gboolean
 gst_vaapi_buffer_proxy_acquire_handle (GstVaapiBufferProxy * proxy)
 {

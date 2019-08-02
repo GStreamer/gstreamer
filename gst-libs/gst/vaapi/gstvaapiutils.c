@@ -25,9 +25,10 @@
 #include "sysdeps.h"
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
-#include "gstvaapisurface.h"
-#include "gstvaapisubpicture.h"
+#include "gstvaapibufferproxy.h"
 #include "gstvaapifilter.h"
+#include "gstvaapisubpicture.h"
+#include "gstvaapisurface.h"
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -906,4 +907,66 @@ from_GstVideoOrientationMethod (guint value, guint * va_mirror,
     default:
       break;
   }
+}
+
+/**
+ * from_GstVaapiBufferMemoryType:
+ * @type: a #GstVaapiBufferMemoryType
+ *
+ * Returns: the VA's memory type symbol
+ **/
+guint
+from_GstVaapiBufferMemoryType (guint type)
+{
+  guint va_type;
+
+  switch (type) {
+#if VA_CHECK_VERSION(1,1,0)
+    case GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF2:
+      va_type = VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2;
+      break;
+#endif
+    case GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF:
+      va_type = VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME;
+      break;
+    case GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF:
+      va_type = VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM;
+      break;
+    case GST_VAAPI_BUFFER_MEMORY_TYPE_V4L2:
+      va_type = VA_SURFACE_ATTRIB_MEM_TYPE_V4L2;
+      break;
+    case GST_VAAPI_BUFFER_MEMORY_TYPE_USER_PTR:
+      va_type = VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR;
+    default:
+      va_type = 0;
+      break;
+  }
+  return va_type;
+}
+
+/**
+ * to_GstVaapiBufferMemoryType:
+ * @va_type: a VA's memory type symbol
+ *
+ * It will return the first "supported" memory type from @va_type bit
+ * flag.
+ *
+ * Returns: a #GstVaapiBufferMemoryType or 0 if unknown.
+ **/
+guint
+to_GstVaapiBufferMemoryType (guint va_type)
+{
+#if VA_CHECK_VERSION(1,1,0)
+  if ((va_type & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2))
+    return GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF2;
+#endif
+  if ((va_type & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME))
+    return GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF;
+  if ((va_type & VA_SURFACE_ATTRIB_MEM_TYPE_KERNEL_DRM))
+    return GST_VAAPI_BUFFER_MEMORY_TYPE_GEM_BUF;
+  if ((va_type & VA_SURFACE_ATTRIB_MEM_TYPE_V4L2))
+    return GST_VAAPI_BUFFER_MEMORY_TYPE_V4L2;
+  if ((va_type & VA_SURFACE_ATTRIB_MEM_TYPE_USER_PTR))
+    return GST_VAAPI_BUFFER_MEMORY_TYPE_USER_PTR;
+  return 0;
 }

@@ -158,4 +158,12 @@ void
 from_GstVideoOrientationMethod (guint value, guint * va_mirror,
     guint * va_rotation);
 
+G_GNUC_INTERNAL
+guint
+from_GstVaapiBufferMemoryType (guint type);
+
+G_GNUC_INTERNAL
+guint
+to_GstVaapiBufferMemoryType (guint va_type);
+
 #endif /* GST_VAAPI_UTILS_H */
