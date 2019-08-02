@@ -639,3 +639,36 @@ gst_vaapi_context_get_surface_formats (GstVaapiContext * context)
     return g_array_ref (context->attribs->formats);
   return NULL;
 }
+
+/**
+ * gst_vaapi_context_get_surface_attributes:
+ * @context: a #GstVaapiContext
+ * @out_attribs: an allocated #GstVaapiConfigSurfaceAttributes
+ *
+ * Copy context's surface restrictions to @out_attribs, EXCEPT the
+ * color formats. Use gst_vaapi_context_get_surface_formats() to get
+ * them.
+ *
+ * Returns: %TRUE if the attributes were extracted and copied; %FALSE,
+ * otherwise
+ **/
+gboolean
+gst_vaapi_context_get_surface_attributes (GstVaapiContext * context,
+    GstVaapiConfigSurfaceAttributes * out_attribs)
+{
+  g_return_val_if_fail (context, FALSE);
+
+  if (!ensure_attributes (context))
+    return FALSE;
+
+  if (out_attribs) {
+    out_attribs->min_width = context->attribs->min_width;
+    out_attribs->min_height = context->attribs->min_height;
+    out_attribs->max_width = context->attribs->max_width;
+    out_attribs->max_height = context->attribs->max_height;
+    out_attribs->mem_types = context->attribs->mem_types;
+    out_attribs->formats = NULL;
+  }
+
+  return TRUE;
+}

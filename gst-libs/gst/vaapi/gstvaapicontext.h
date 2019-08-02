@@ -161,6 +161,11 @@ G_GNUC_INTERNAL
 GArray *
 gst_vaapi_context_get_surface_formats (GstVaapiContext * context);
 
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_context_get_surface_attributes (GstVaapiContext * context,
+    GstVaapiConfigSurfaceAttributes * out_attribs);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_CONTEXT_H */
