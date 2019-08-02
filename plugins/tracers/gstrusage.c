@@ -346,6 +346,9 @@ gst_rusage_tracer_class_init (GstRUsageTracerClass * klass)
           NULL),
       NULL);
   /* *INDENT-ON* */
+
+  GST_OBJECT_FLAG_SET (tr_thread, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (tr_proc, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 }
 
 static void

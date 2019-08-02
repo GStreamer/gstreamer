@@ -668,6 +668,11 @@ gst_latency_tracer_class_init (GstLatencyTracerClass * klass)
           NULL),
       NULL);
   /* *INDENT-ON* */
+
+  GST_OBJECT_FLAG_SET (tr_latency, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (tr_element_latency, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (tr_element_reported_latency,
+      GST_OBJECT_FLAG_MAY_BE_LEAKED);
 }
 
 static void

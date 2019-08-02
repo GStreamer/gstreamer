@@ -744,6 +744,14 @@ gst_stats_tracer_class_init (GstStatsTracerClass * klass)
           NULL),
       NULL);
   /* *INDENT-ON* */
+
+  GST_OBJECT_FLAG_SET (tr_buffer, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (tr_event, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (tr_message, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (tr_element_query, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (tr_query, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (tr_new_element, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (tr_new_pad, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 }
 
 static void
