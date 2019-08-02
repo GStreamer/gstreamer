@@ -3415,14 +3415,19 @@ set_defaults (PlaybackApp * app)
 static void
 reset_app (PlaybackApp * app)
 {
-  g_list_free (app->formats);
+  GstBus *bus = gst_pipeline_get_bus (GST_PIPELINE (app->pipeline));
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
 
+  g_list_free (app->formats);
   g_mutex_clear (&app->state_mutex);
 
   if (app->overlay_element)
     gst_object_unref (app->overlay_element);
   if (app->navigation_element)
     gst_object_unref (app->navigation_element);
+  if (app->colorbalance_element)
+    gst_object_unref (app->colorbalance_element);
 
   g_list_foreach (app->paths, (GFunc) g_free, NULL);
   g_list_free (app->paths);
@@ -3562,6 +3567,7 @@ main (int argc, char **argv)
   gst_element_set_state (app.pipeline, GST_STATE_NULL);
 
   reset_app (&app);
+  gst_deinit ();
 
   return 0;
 }
