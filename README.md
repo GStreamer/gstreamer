@@ -5,7 +5,7 @@ GStreamer [meson](http://mesonbuild.com/) based repositories aggregrator.
 Check out this module and run meson on it, and it will git clone the other
 GStreamer modules as [meson subprojects](http://mesonbuild.com/Subprojects.html)
 and build everything in one go. Once that is done you can switch into an
-uninstalled environment which allows you to easily develop and test the latest
+development environment which allows you to easily develop and test the latest
 version of GStreamer without the need to install anything or touch an existing
 GStreamer system installation.
 
@@ -63,14 +63,14 @@ it is built by passing `-Dgst-plugins-good:qt5=enabled` to `meson`. This will
 cause Meson to error out if the plugin could not be enabled. This also works
 for all plugins in all GStreamer repositories.
 
-## Uninstalled environment
+## Development environment target
 
-gst-build also contains a special `uninstalled` target that lets you enter an
-uninstalled development environment where you will be able to work on GStreamer
+gst-build also contains a special `devenv` target that lets you enter an
+development environment where you will be able to work on GStreamer
 easily. You can get into that environment running:
 
 ```
-ninja -C build/ uninstalled
+ninja -C build/ devenv
 ```
 
 If your operating system handles symlinks, built modules source code will be
@@ -78,7 +78,7 @@ available at the root of `gst-build/` for example GStreamer core will be in
 `gstreamer/`. Otherwise they will be present in `subprojects/`. You can simply
 hack in there and to rebuild you just need to rerun `ninja -C build/`.
 
-NOTE: In the uninstalled environment, a fully usable prefix is also configured
+NOTE: In the development environment, a fully usable prefix is also configured
 in `gst-build/prefix` where you can install any extra dependency/project.
 
 ## Update git subprojects
@@ -151,7 +151,7 @@ GST_CHECKS=test_subbuffer meson test -C build/ --suite gstreamer gst_gstbuffer
 
 ## Optional Installation
 
-`gst-build` has been created primarily for [uninstalled usage](#uninstalled-environment),
+`gst-build` has been created primarily for [development usage](#development-environment-target),
 but you can also install everything that is built into a predetermined prefix like so:
 
 ```

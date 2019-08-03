@@ -273,11 +273,6 @@ def get_windows_shell():
     result = subprocess.check_output(command)
     return result.decode().strip()
 
-# https://stackoverflow.com/questions/1871549/determine-if-python-is-running-inside-virtualenv
-def in_venv():
-    return (hasattr(sys, 'real_prefix') or
-            (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="gstreamer-uninstalled")
 

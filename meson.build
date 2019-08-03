@@ -167,9 +167,13 @@ cmdres = run_command(python3, find_program('scripts/generate_plugins_path.py'), 
 assert(cmdres.returncode() == 0, 'Could not create plugins path: @0@'.format(cmdres.stderr()))
 
 message('Building subprojects: ' + ', '.join(subprojects_names))
-setenv = find_program('gst-uninstalled.py')
-run_target('uninstalled', command : [setenv, '--builddir=@0@'.format(meson.build_root()),
-	   '--srcdir=@0@'.format(meson.source_root())])
+setenv = find_program('gst-env.py')
+
+devenv_cmd = [setenv, '--builddir=@0@'.format(meson.build_root()),
+              '--srcdir=@0@'.format(meson.source_root())]
+
+run_target('uninstalled', command : devenv_cmd)
+run_target('devenv', command : devenv_cmd)
 
 update = find_program('git-update')
 run_target('git-update', command : [update])
