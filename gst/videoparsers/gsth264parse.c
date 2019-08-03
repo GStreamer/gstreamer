@@ -2074,12 +2074,17 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
         }
 
       }
-      if (sps->frame_mbs_only_flag == 0)
+
+      /* upstream overrides or uses sps info */
+      if (s && gst_structure_has_field (s, "interlace-mode"))
+        imode =
+            gst_video_interlace_mode_from_string (gst_structure_get_string (s,
+                "interlace-mode"));
+      else if (sps->frame_mbs_only_flag == 0)
         imode = GST_VIDEO_INTERLACE_MODE_MIXED;
 
-      if (s && !gst_structure_has_field (s, "interlace-mode"))
-        gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
-            gst_video_interlace_mode_to_string (imode), NULL);
+      gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
+          gst_video_interlace_mode_to_string (imode), NULL);
 
       bit_depth_chroma = sps->bit_depth_chroma_minus8 + 8;
 
