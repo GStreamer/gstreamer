@@ -348,7 +348,8 @@ gst_ps_demux_reset (GstPsDemux * demux)
 }
 
 static GstPsStream *
-gst_ps_demux_create_stream (GstPsDemux * demux, gint id, gint stream_type)
+gst_ps_demux_create_stream (GstPsDemux * demux, gint id, gint stream_type,
+    gint layer)
 {
   GstPsStream *stream;
   GstPadTemplate *template;
@@ -394,8 +395,13 @@ gst_ps_demux_create_stream (GstPsDemux * demux, gint id, gint stream_type)
     case ST_AUDIO_MPEG2:
       template = klass->audio_template;
       name = g_strdup_printf ("audio_%02x", id);
-      caps = gst_caps_new_simple ("audio/mpeg",
-          "mpegversion", G_TYPE_INT, 1, NULL);
+      if (layer) {
+        caps = gst_caps_new_simple ("audio/mpeg",
+            "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, layer, NULL);
+      } else {
+        caps = gst_caps_new_simple ("audio/mpeg",
+            "mpegversion", G_TYPE_INT, 1, NULL);
+      }
       break;
     case ST_PRIVATE_SECTIONS:
     case ST_PRIVATE_DATA:
@@ -525,12 +531,12 @@ gst_ps_demux_create_stream (GstPsDemux * demux, gint id, gint stream_type)
 }
 
 static GstPsStream *
-gst_ps_demux_get_stream (GstPsDemux * demux, gint id, gint type)
+gst_ps_demux_get_stream (GstPsDemux * demux, gint id, gint type, gint layer)
 {
   GstPsStream *stream = demux->streams[id];
 
   if (stream == NULL) {
-    if (!(stream = gst_ps_demux_create_stream (demux, id, type)))
+    if (!(stream = gst_ps_demux_create_stream (demux, id, type, layer)))
       goto unknown_stream;
 
     GST_DEBUG_OBJECT (demux, "adding pad for stream id 0x%02x type 0x%02x", id,
@@ -771,7 +777,7 @@ gst_ps_demux_handle_dvd_event (GstPsDemux * demux, GstEvent * event)
     GST_DEBUG_OBJECT (demux, "Handling language codes event");
 
     /* Create a video pad to ensure have it before emit no more pads */
-    (void) gst_ps_demux_get_stream (demux, 0xe0, ST_VIDEO_MPEG2);
+    (void) gst_ps_demux_get_stream (demux, 0xe0, ST_VIDEO_MPEG2, 0);
 
     /* Read out the languages for audio streams and request each one that 
      * is present */
@@ -796,7 +802,7 @@ gst_ps_demux_handle_dvd_event (GstPsDemux * demux, GstEvent * event)
           GST_DEBUG_OBJECT (demux,
               "Audio stream %d format %d ID 0x%02x - AC3", i,
               stream_format, stream_id);
-          temp = gst_ps_demux_get_stream (demux, stream_id, ST_PS_AUDIO_AC3);
+          temp = gst_ps_demux_get_stream (demux, stream_id, ST_PS_AUDIO_AC3, 0);
           break;
         case 0x2:
         case 0x3:
@@ -806,7 +812,7 @@ gst_ps_demux_handle_dvd_event (GstPsDemux * demux, GstEvent * event)
           GST_DEBUG_OBJECT (demux,
               "Audio stream %d format %d ID 0x%02x - MPEG audio", i,
               stream_format, stream_id);
-          temp = gst_ps_demux_get_stream (demux, stream_id, ST_AUDIO_MPEG1);
+          temp = gst_ps_demux_get_stream (demux, stream_id, ST_AUDIO_MPEG1, 0);
           break;
         case 0x4:
           /* LPCM */
@@ -814,7 +820,8 @@ gst_ps_demux_handle_dvd_event (GstPsDemux * demux, GstEvent * event)
           GST_DEBUG_OBJECT (demux,
               "Audio stream %d format %d ID 0x%02x - DVD LPCM", i,
               stream_format, stream_id);
-          temp = gst_ps_demux_get_stream (demux, stream_id, ST_PS_AUDIO_LPCM);
+          temp =
+              gst_ps_demux_get_stream (demux, stream_id, ST_PS_AUDIO_LPCM, 0);
           break;
         case 0x6:
           /* DTS */
@@ -822,7 +829,7 @@ gst_ps_demux_handle_dvd_event (GstPsDemux * demux, GstEvent * event)
           GST_DEBUG_OBJECT (demux,
               "Audio stream %d format %d ID 0x%02x - DTS", i,
               stream_format, stream_id);
-          temp = gst_ps_demux_get_stream (demux, stream_id, ST_PS_AUDIO_DTS);
+          temp = gst_ps_demux_get_stream (demux, stream_id, ST_PS_AUDIO_DTS, 0);
           break;
         case 0x7:
           /* FIXME: What range is SDDS? */
@@ -869,7 +876,7 @@ gst_ps_demux_handle_dvd_event (GstPsDemux * demux, GstEvent * event)
 
       /* Retrieve the subpicture stream to force pad creation */
       temp = gst_ps_demux_get_stream (demux, 0x20 + stream_id,
-          ST_PS_DVD_SUBPICTURE);
+          ST_PS_DVD_SUBPICTURE, 0);
       if (temp == NULL)
         continue;
 
@@ -2222,6 +2229,7 @@ gst_ps_demux_data_cb (GstPESFilter * filter, gboolean first,
   start_code = filter->start_code;
   id = filter->id;
   if (first) {
+    gint layer = 0;
     /* find the stream type */
     stream_type = demux->psm[id];
     if (stream_type == -1) {
@@ -2265,7 +2273,27 @@ gst_ps_demux_data_cb (GstPESFilter * filter, gboolean first,
       }
       if (stream_type == -1)
         goto unknown_stream_type;
+    } else if (stream_type == ST_AUDIO_MPEG1 || stream_type == ST_AUDIO_MPEG2) {
+      if (datalen >= 2) {
+        guint hdr = GST_READ_UINT16_BE (map.data);
+        if ((hdr & 0xfff0) == 0xfff0) {
+          switch (hdr & 0x06) {
+            case 0x6:
+              layer = 1;
+              break;
+            case 0x4:
+              layer = 2;
+              break;
+            case 0x2:
+              layer = 3;
+              break;
+            default:
+              GST_WARNING_OBJECT (demux, "unknown mpeg audio layer");
+          }
+        }
+      }
     }
+
     if (filter->pts != -1) {
       demux->next_pts = filter->pts + demux->scr_adjust;
       GST_LOG_OBJECT (demux, "stream 0x%02x PTS = orig %" G_GUINT64_FORMAT
@@ -2280,7 +2308,8 @@ gst_ps_demux_data_cb (GstPESFilter * filter, gboolean first,
       demux->next_dts = demux->next_pts;
     }
 
-    demux->current_stream = gst_ps_demux_get_stream (demux, id, stream_type);
+    demux->current_stream =
+        gst_ps_demux_get_stream (demux, id, stream_type, layer);
   }
 
   if (G_UNLIKELY (demux->current_stream == NULL)) {
