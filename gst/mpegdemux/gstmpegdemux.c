@@ -536,6 +536,9 @@ gst_ps_demux_get_stream (GstPsDemux * demux, gint id, gint type)
     GST_DEBUG_OBJECT (demux, "adding pad for stream id 0x%02x type 0x%02x", id,
         type);
 
+    demux->streams[id] = stream;
+    demux->streams_found[demux->found_count++] = stream;
+
     if (demux->need_no_more_pads) {
       gst_element_add_pad (GST_ELEMENT (demux), stream->pad);
       gst_flow_combiner_add_pad (demux->flowcombiner, stream->pad);
@@ -547,9 +550,6 @@ gst_ps_demux_get_stream (GstPsDemux * demux, gint id, gint type)
           "but already signalled no-more-pads; not adding");
       gst_object_ref_sink (stream->pad);
     }
-
-    demux->streams[id] = stream;
-    demux->streams_found[demux->found_count++] = stream;
   }
   return stream;
 
