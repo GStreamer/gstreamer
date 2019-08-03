@@ -414,7 +414,15 @@ gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
 #if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_DMABUF
   else if (dl->dmabuf_allocator) {
     GstBuffer *buffer = _try_export_dmabuf (dl, inbuf);
+
     if (buffer) {
+      GstGLContext *context = GST_GL_BASE_FILTER (bt)->context;
+      GstGLSyncMeta *in_sync_meta;
+
+      in_sync_meta = gst_buffer_get_gl_sync_meta (inbuf);
+      if (in_sync_meta)
+        gst_gl_sync_meta_wait (in_sync_meta, context);
+
       if (GST_BASE_TRANSFORM_GET_CLASS (bt)->copy_metadata)
         if (!GST_BASE_TRANSFORM_GET_CLASS (bt)->copy_metadata (bt, inbuf,
                 buffer)) {
