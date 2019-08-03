@@ -5,6 +5,7 @@ import shutil
 import argparse
 import platform
 import subprocess
+import uuid
 
 
 ROOTDIR = os.path.abspath(os.path.dirname(__file__))
@@ -30,6 +31,33 @@ def win32_get_short_path_name(long_name):
             return output_buf.value
         else:
             output_buf_size = needed
+
+
+def get_wine_shortpath(winecmd, wine_paths):
+    seen = set()
+    wine_paths += [p for p in wine_paths if not (p in seen or seen.add(p))]
+
+    getShortPathScript = '%s.bat' % str(uuid.uuid4()).lower()[:5]
+    with open(getShortPathScript, mode='w') as f:
+        f.write("@ECHO OFF\nfor %%x in (%*) do (\n echo|set /p=;%~sx\n)\n")
+        f.flush()
+    try:
+        with open(os.devnull, 'w') as stderr:
+            wine_path = subprocess.check_output(
+                winecmd +
+                ['cmd', '/C', getShortPathScript] + wine_paths,
+                stderr=stderr).decode('utf-8')
+    except subprocess.CalledProcessError as e:
+        print("Could not get short paths: %s" % e)
+        wine_path = ';'.join(wine_paths)
+    finally:
+        os.remove(getShortPathScript)
+    if len(wine_path) > 2048:
+        raise AssertionError('WINEPATH size {} > 2048'
+                                ' this will cause random failure.'.format(
+                                    len(wine_path)))
+    return wine_path
+
 
 class Colors:
     HEADER = '\033[95m'

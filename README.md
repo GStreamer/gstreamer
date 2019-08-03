@@ -279,3 +279,55 @@ pip3 install meson
 Note that Meson is written entirely in Python, so you can also run it as-is
 from the [git repository](https://github.com/mesonbuild/meson/) if you want to
 use the latest master branch for some reason.
+
+
+### Setup a mingw/wine based development environment on linux
+
+#### Install wine and mingw
+
+##### On fedora x64
+
+``` sh
+sudo dnf install mingw64-gcc mingw64-gcc-c++ mingw64-pkg-config mingw64-winpthreads wine
+```
+
+FIXME: Figure out what needs to be installed on other distros
+
+#### Get meson from git
+
+This simplifies the process and allows us to use the cross files
+defined in meson itself.
+
+``` sh
+git clone https://github.com/mesonbuild/meson.git
+```
+
+#### Build and install
+
+```
+BUILDDIR=$PWD/winebuild/
+export WINEPREFIX=$BUILDDIR/wine-prefix/ && mkdir -p $WINEPREFIX
+# Setting the prefix is mandatory as it is used to setup symlinks during uninstalled development
+meson/meson.py $BUILDDIR --cross-file meson/cross/linux-mingw-w64-64bit.txt -Dgst-plugins-bad:vulkan=disabled -Dorc:gtk_doc=disabled --prefix=$BUILDDIR/wininstall/ -Djson-glib:gtk_doc=disabled
+meson/meson.py install -C $BUILDDIR/
+```
+
+> __NOTE__: You should use `meson install -C $BUILDDIR`  each time you make a change
+> instead of the usual `ninja -C build` as the environment is not uninstalled.
+
+#### The development environment
+
+You can get into the development environment the usual way:
+
+```
+ninja -C $BUILDDIR/ devenv
+```
+
+After setting up [binfmt] to use wine for windows binaries,
+you can run GStreamer tools under wine by running:
+
+```
+gst-launch-1.0.exe videotestsrc ! glimagesink
+```
+
+[binfmt]: http://man7.org/linux/man-pages/man5/binfmt.d.5.html

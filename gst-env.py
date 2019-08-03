@@ -19,6 +19,7 @@ from distutils.util import strtobool
 from scripts.common import get_meson
 from scripts.common import git
 from scripts.common import win32_get_short_path_name
+from scripts.common import get_wine_shortpath
 
 SCRIPTDIR = os.path.dirname(os.path.realpath(__file__))
 PREFIX_DIR = os.path.join(SCRIPTDIR, 'prefix')
@@ -88,29 +89,53 @@ def is_library_target_and_not_plugin(target, filename):
     return True
 
 
+def get_wine_subprocess_env(options, env):
+    with open(os.path.join(options.builddir, 'meson-info', 'intro-buildoptions.json')) as f:
+        buildoptions = json.load(f)
+
+    prefix, = [o for o in buildoptions if o['name'] == 'prefix']
+    path = os.path.normpath(os.path.join(prefix['value'], 'bin'))
+    prepend_env_var(env, "PATH", path, options.sysroot)
+    wine_path = get_wine_shortpath(
+        options.wine.split(' '),
+        [path] + env.get('WINEPATH', '').split(';')
+    )
+    if options.winepath:
+        wine_path += ';' + options.winepath
+    env['WINEPATH'] = wine_path
+    env['WINEDEBUG'] = 'fixme-all'
+
+    return env
+
+
 def get_subprocess_env(options, gst_version):
     env = os.environ.copy()
 
     env["CURRENT_GST"] = os.path.normpath(SCRIPTDIR)
+    env["GST_VERSION"] = gst_version
     env["GST_VALIDATE_SCENARIOS_PATH"] = os.path.normpath(
         "%s/subprojects/gst-devtools/validate/data/scenarios" % SCRIPTDIR)
     env["GST_VALIDATE_PLUGIN_PATH"] = os.path.normpath(
         "%s/subprojects/gst-devtools/validate/plugins" % options.builddir)
     env["GST_VALIDATE_APPS_DIR"] = os.path.normpath(
         "%s/subprojects/gst-editing-services/tests/validate" % SCRIPTDIR)
+    env["GST_ENV"] = 'gst-' + gst_version
+    env["GST_REGISTRY"] = os.path.normpath(options.builddir + "/registry.dat")
     prepend_env_var(env, "PATH", os.path.normpath(
         "%s/subprojects/gst-devtools/validate/tools" % options.builddir),
         options.sysroot)
+
+    if options.wine:
+        return get_wine_subprocess_env(options, env)
+
     prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'meson'),
         options.sysroot)
-    env["GST_VERSION"] = gst_version
-    env["GST_ENV"] = 'gst-' + gst_version
+
     env["GST_PLUGIN_SYSTEM_PATH"] = ""
     env["GST_PLUGIN_SCANNER"] = os.path.normpath(
         "%s/subprojects/gstreamer/libs/gst/helpers/gst-plugin-scanner" % options.builddir)
     env["GST_PTP_HELPER"] = os.path.normpath(
         "%s/subprojects/gstreamer/libs/gst/helpers/gst-ptp-helper" % options.builddir)
-    env["GST_REGISTRY"] = os.path.normpath(options.builddir + "/registry.dat")
 
     if os.name is 'nt':
         lib_path_envvar = 'PATH'
@@ -285,6 +310,12 @@ if __name__ == "__main__":
     parser.add_argument("--sysroot",
                         default='',
                         help="The sysroot path used during cross-compilation")
+    parser.add_argument("--wine",
+                        default='',
+                        help="Build a wine env based on specified wine command")
+    parser.add_argument("--winepath",
+                        default='',
+                        help="Exra path to set to WINEPATH.")
     options, args = parser.parse_known_args()
 
     if not os.path.exists(options.builddir):
@@ -301,6 +332,9 @@ if __name__ == "__main__":
     # The following incantation will retrieve the current branch name.
     gst_version = git("rev-parse", "--symbolic-full-name", "--abbrev-ref", "HEAD",
                       repository_path=options.srcdir).strip('\n')
+
+    if options.wine:
+        gst_version += '-' + os.path.basename(options.wine)
 
     if not args:
         if os.name is 'nt':
