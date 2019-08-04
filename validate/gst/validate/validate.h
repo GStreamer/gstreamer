@@ -18,6 +18,8 @@
 #include <gst/validate/gst-validate-reporter.h>
 #include <gst/validate/gst-validate-media-info.h>
 
+G_BEGIN_DECLS
+
 GST_VALIDATE_API
 void gst_validate_init (void);
 GST_VALIDATE_API
@@ -26,5 +28,7 @@ GST_VALIDATE_API
 GList * gst_validate_plugin_get_config (GstPlugin * plugin);
 GST_VALIDATE_API
 gboolean gst_validate_is_initialized (void);
+
+G_END_DECLS
 
 #endif /* _GST_VALIDATE_H */
