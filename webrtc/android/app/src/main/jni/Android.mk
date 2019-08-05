@@ -3,7 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := gstwebrtc
-LOCAL_SRC_FILES := webrtc.c
+LOCAL_SRC_FILES := webrtc.c dummy.cpp
 
 LOCAL_SHARED_LIBRARIES := gstreamer_android
 LOCAL_LDLIBS := -llog -landroid
@@ -44,7 +44,7 @@ GSTREAMER_PLUGINS         := $(GSTREAMER_PLUGINS_CORE)      \
                              nice androidmedia
 
 #                             $(GSTREAMER_PLUGINS_CODECS)
-GSTREAMER_EXTRA_DEPS      := gstreamer-webrtc-1.0 gstreamer-video-1.0 libsoup-2.4 json-glib-1.0 glib-2.0
+GSTREAMER_EXTRA_DEPS      := gstreamer-webrtc-1.0 gstreamer-sdp-1.0 gstreamer-video-1.0 libsoup-2.4 json-glib-1.0 glib-2.0
 
 G_IO_MODULES = gnutls
 
