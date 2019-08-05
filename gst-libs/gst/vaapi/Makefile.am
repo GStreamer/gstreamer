@@ -63,6 +63,7 @@ libgstvaapi_source_c =				\
 	gstvaapiparser_frame.c			\
 	gstvaapipixmap.c			\
 	gstvaapiprofile.c			\
+	gstvaapiprofilecaps.c			\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
 	gstvaapisurface_drm.c			\
@@ -97,6 +98,7 @@ libgstvaapi_source_h =				\
 	gstvaapiobject.h			\
 	gstvaapipixmap.h			\
 	gstvaapiprofile.h			\
+	gstvaapiprofilecaps.h			\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
 	gstvaapisurface_drm.h			\

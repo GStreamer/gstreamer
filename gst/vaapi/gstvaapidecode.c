@@ -24,6 +24,7 @@
 
 #include "gstcompat.h"
 #include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapiprofilecaps.h>
 
 #include "gstvaapidecode.h"
 #include "gstvaapidecode_props.h"
@@ -1214,15 +1215,14 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
 {
   GstCaps *caps, *allowed_sinkpad_caps;
   GArray *profiles;
+  GstVaapiDisplay *const display = GST_VAAPI_PLUGIN_BASE_DISPLAY (decode);
   guint i;
   gboolean base_only = FALSE;
   gboolean have_high = FALSE;
   gboolean have_mvc = FALSE;
   gboolean have_svc = FALSE;
 
-  profiles =
-      gst_vaapi_display_get_decode_profiles (GST_VAAPI_PLUGIN_BASE_DISPLAY
-      (decode));
+  profiles = gst_vaapi_display_get_decode_profiles (display);
   if (!profiles)
     goto error_no_profiles;
 
@@ -1254,6 +1254,8 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
     if (profile_name)
       gst_structure_set (structure, "profile", G_TYPE_STRING,
           profile_name, NULL);
+
+    gst_vaapi_profile_caps_append_decoder (display, profile, structure);
 
     allowed_sinkpad_caps = gst_caps_merge (allowed_sinkpad_caps, caps);
     have_mvc |= is_mvc_profile (profile);
@@ -1297,6 +1299,8 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
     }
   }
   decode->allowed_sinkpad_caps = gst_caps_simplify (allowed_sinkpad_caps);
+  GST_DEBUG_OBJECT (decode, "allowed sink caps %" GST_PTR_FORMAT,
+      decode->allowed_sinkpad_caps);
 
   g_array_unref (profiles);
   return TRUE;
