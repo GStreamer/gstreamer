@@ -220,7 +220,7 @@ format_from_media_type (const GstStructure * structure)
     return GST_JPEG2000_PARSE_J2C;
   if (!strcmp (media_type, "image/x-jpc"))
     return GST_JPEG2000_PARSE_JPC;
-  if (!strcmp (media_type, "image/x-jp2"))
+  if (!strcmp (media_type, "image/jp2"))
     return GST_JPEG2000_PARSE_JP2;
   return GST_JPEG2000_PARSE_NO_CODEC;
 }
@@ -275,7 +275,7 @@ media_type_from_codec_format (GstJPEG2000ParseFormats f)
     case GST_JPEG2000_PARSE_J2C:
       return "image/x-j2c";
     case GST_JPEG2000_PARSE_JP2:
-      return "image/x-jp2";
+      return "image/jp2";
     case GST_JPEG2000_PARSE_JPC:
       return "image/x-jpc";
     default:
