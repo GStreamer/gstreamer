@@ -24,6 +24,7 @@ vulkan_sources = [
 ]
 
 vulkan_headers = [
+  'gstvkapi.h',
   'gstvkbarrier.h',
   'gstvkbuffermemory.h',
   'gstvkbufferpool.h',
@@ -43,6 +44,7 @@ vulkan_headers = [
   'gstvkutils.h',
   'gstvkwindow.h',
   'vulkan-prelude.h',
+  'vulkan_fwd.h',
   'vulkan.h',
 ]
 
