@@ -529,7 +529,7 @@ gst_vaapi_decoder_get_property (GObject * object, guint property_id,
       g_value_set_object (value, decoder->display);
       break;
     case PROP_CAPS:
-      g_value_set_boxed (value, get_caps (decoder));
+      g_value_set_boxed (value, gst_caps_ref (get_caps (decoder)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -694,7 +694,7 @@ gst_vaapi_decoder_set_codec_state_changed_func (GstVaapiDecoder * decoder,
  * Retrieves the @decoder caps. The decoder owns the returned caps, so
  * use gst_caps_ref() whenever necessary.
  *
- * Return value: the @decoder caps
+ * Returns: (transfer none): the @decoder caps
  */
 GstCaps *
 gst_vaapi_decoder_get_caps (GstVaapiDecoder * decoder)
