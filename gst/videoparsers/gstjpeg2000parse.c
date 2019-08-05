@@ -116,10 +116,14 @@ G_DEFINE_TYPE (GstJPEG2000Parse, gst_jpeg2000_parse, GST_TYPE_BASE_PARSE);
 static gboolean gst_jpeg2000_parse_start (GstBaseParse * parse);
 static gboolean gst_jpeg2000_parse_event (GstBaseParse * parse,
     GstEvent * event);
+static void gst_jpeg2000_parse_reset (GstBaseParse * parse,
+    gboolean hard_reset);
 static GstFlowReturn gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
 static gboolean gst_jpeg2000_parse_set_sink_caps (GstBaseParse * parse,
     GstCaps * caps);
+static GstJPEG2000ParseFormats
+format_from_media_type (const GstStructure * structure);
 
 static void
 gst_jpeg2000_parse_class_init (GstJPEG2000ParseClass * klass)
@@ -145,19 +149,31 @@ gst_jpeg2000_parse_class_init (GstJPEG2000ParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_jpeg2000_parse_handle_frame);
 }
 
+static void
+gst_jpeg2000_parse_reset (GstBaseParse * parse, gboolean hard_reset)
+{
+  GstJPEG2000Parse *jpeg2000parse = GST_JPEG2000_PARSE (parse);
+
+  jpeg2000parse->parsed_j2c_box = FALSE;
+  jpeg2000parse->frame_size = 0;
+  if (hard_reset) {
+    jpeg2000parse->width = 0;
+    jpeg2000parse->height = 0;
+    jpeg2000parse->sampling = GST_JPEG2000_SAMPLING_NONE;
+    jpeg2000parse->colorspace = GST_JPEG2000_COLORSPACE_NONE;
+    jpeg2000parse->codec_format = GST_JPEG2000_PARSE_NO_CODEC;
+    jpeg2000parse->sink_codec_format = GST_JPEG2000_PARSE_NO_CODEC;
+  }
+}
+
 static gboolean
 gst_jpeg2000_parse_start (GstBaseParse * parse)
 {
   GstJPEG2000Parse *jpeg2000parse = GST_JPEG2000_PARSE (parse);
   GST_DEBUG_OBJECT (jpeg2000parse, "start");
   gst_base_parse_set_min_frame_size (parse, GST_JPEG2000_PARSE_MIN_FRAME_SIZE);
+  gst_jpeg2000_parse_reset (parse, TRUE);
 
-  jpeg2000parse->width = 0;
-  jpeg2000parse->height = 0;
-
-  jpeg2000parse->sampling = GST_JPEG2000_SAMPLING_NONE;
-  jpeg2000parse->colorspace = GST_JPEG2000_COLORSPACE_NONE;
-  jpeg2000parse->codec_format = GST_JPEG2000_PARSE_NO_CODEC;
   return TRUE;
 }
 
@@ -175,13 +191,8 @@ gst_jpeg2000_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
   GstJPEG2000Parse *jpeg2000parse = GST_JPEG2000_PARSE (parse);
   GstStructure *caps_struct = gst_caps_get_structure (caps, 0);
 
-  if (gst_structure_has_name (caps_struct, "image/jp2")) {
-    jpeg2000parse->codec_format = GST_JPEG2000_PARSE_JP2;
-  } else if (gst_structure_has_name (caps_struct, "image/x-j2c")) {
-    jpeg2000parse->codec_format = GST_JPEG2000_PARSE_J2C;
-  } else if (gst_structure_has_name (caps_struct, "image/x-jpc")) {
-    jpeg2000parse->codec_format = GST_JPEG2000_PARSE_JPC;
-  }
+  gst_jpeg2000_parse_reset (parse, TRUE);
+  jpeg2000parse->sink_codec_format = format_from_media_type (caps_struct);
 
   return TRUE;
 }
