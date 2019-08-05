@@ -85,6 +85,7 @@ gst_jpeg2000_parse_get_subsampling (GstJPEG2000Sampling sampling, guint8 * dx,
 #define GST_JPEG2000_PARSE_MIN_FRAME_SIZE (GST_JPEG2000_MARKER_SIZE + GST_JPEG2000_PARSE_SIZE_OF_J2C_PREFIX_BYTES + 36)
 
 #define GST_JPEG2000_PARSE_J2K_MAGIC 0xFF4FFF51
+#define GST_JPEG2000_PARSE_J2C_BOX_ID 0x6a703263        /* "jp2c" */
 
 GST_DEBUG_CATEGORY (jpeg2000_parse_debug);
 #define GST_CAT_DEFAULT jpeg2000_parse_debug
@@ -226,13 +227,14 @@ format_from_media_type (const GstStructure * structure)
 }
 
 /* check downstream caps to configure media type */
-static void
+static gboolean
 gst_jpeg2000_parse_negotiate (GstJPEG2000Parse * parse, GstCaps * in_caps)
 {
   GstCaps *caps;
   guint codec_format = GST_JPEG2000_PARSE_NO_CODEC;
 
-  g_return_if_fail ((in_caps == NULL) || gst_caps_is_fixed (in_caps));
+  if (in_caps != NULL && gst_caps_is_fixed (in_caps))
+    return FALSE;
 
   caps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
   GST_DEBUG_OBJECT (parse, "allowed caps: %" GST_PTR_FORMAT, caps);
@@ -259,13 +261,13 @@ gst_jpeg2000_parse_negotiate (GstJPEG2000Parse * parse, GstCaps * in_caps)
     caps = gst_caps_fixate (caps);
     codec_format = format_from_media_type (gst_caps_get_structure (caps, 0));
   }
-
-  GST_DEBUG_OBJECT (parse, "selected codec format %d", codec_format);
-
-  parse->codec_format = codec_format;
-
   if (caps)
     gst_caps_unref (caps);
+
+  GST_DEBUG_OBJECT (parse, "selected codec format %d", codec_format);
+  parse->codec_format = codec_format;
+
+  return codec_format != GST_JPEG2000_PARSE_NO_CODEC;
 }
 
 static const char *
@@ -311,113 +313,114 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   const gchar *sink_sampling_string = NULL;
   GstJPEG2000Sampling sink_sampling = GST_JPEG2000_SAMPLING_NONE;
   GstJPEG2000Sampling source_sampling = GST_JPEG2000_SAMPLING_NONE;
-  guint magic_offset = 0;
-  guint j2c_box_id_offset = 0;
   guint num_prefix_bytes = 0;   /* number of bytes to skip before actual code stream */
   GstCaps *src_caps = NULL;
-  guint frame_size = 0;
-  gboolean is_j2c;
-  gboolean parsed_j2c_4cc = FALSE;
+  guint eoc_frame_size = 0;
 
   if (!gst_buffer_map (frame->buffer, &map, GST_MAP_READ)) {
     GST_ERROR_OBJECT (jpeg2000parse, "Unable to map buffer");
     return GST_FLOW_ERROR;
   }
   gst_byte_reader_init (&reader, map.data, map.size);
+  current_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (parse));
 
-  /* try to get from caps */
-  if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_NO_CODEC)
-    gst_jpeg2000_parse_negotiate (jpeg2000parse, NULL);
+  /* Parse J2C box */
+  if (!jpeg2000parse->parsed_j2c_box) {
+    gboolean has_j2c_box = FALSE;
+    gboolean is_j2c_src;
+    guint j2c_box_id_offset = -1;
+    guint magic_offset = -1;
 
-  /* if we can't get from caps, then try to parse */
-  if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_NO_CODEC) {
-    /* check for "jp2c" box */
-    /* both jp2 and j2c will be found with this scan, and both will be treated as j2c format */
-    j2c_box_id_offset = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
-        GST_MAKE_FOURCC ('j', 'p', '2', 'c'), 0,
-        gst_byte_reader_get_remaining (&reader));
-    parsed_j2c_4cc = TRUE;
-    is_j2c = j2c_box_id_offset != -1;
-    jpeg2000parse->codec_format =
-        is_j2c ? GST_JPEG2000_PARSE_J2C : GST_JPEG2000_PARSE_JPC;
+    /* Look for magic. If not found, get more data */
+    magic_offset = gst_byte_reader_masked_scan_uint32_peek (&reader, 0xffffffff,
+        GST_JPEG2000_PARSE_J2K_MAGIC, 0,
+        gst_byte_reader_get_remaining (&reader), NULL);
+    if (magic_offset == -1)
+      goto beach;
+    GST_DEBUG_OBJECT (jpeg2000parse, "Found magic at offset = %d",
+        magic_offset);
 
-  } else {
-    /* for now, just treat JP2 as J2C */
-    if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_JP2) {
-      jpeg2000parse->codec_format = GST_JPEG2000_PARSE_J2C;
-    }
-    is_j2c = jpeg2000parse->codec_format == GST_JPEG2000_PARSE_J2C;
-  }
-
-  num_prefix_bytes = GST_JPEG2000_MARKER_SIZE;
-  if (is_j2c) {
-    num_prefix_bytes +=
-        GST_JPEG2000_JP2_SIZE_OF_BOX_LEN + GST_JPEG2000_JP2_SIZE_OF_BOX_ID;
-    /* check for "jp2c" (may have already parsed j2c_box_id_offset if caps are empty) */
-    if (!parsed_j2c_4cc) {
+    if (magic_offset > 0) {
       j2c_box_id_offset =
-          gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
-          GST_MAKE_FOURCC ('j', 'p', '2', 'c'), 0,
-          gst_byte_reader_get_remaining (&reader));
+          gst_byte_reader_masked_scan_uint32_peek (&reader, 0xffffffff,
+          GST_JPEG2000_PARSE_J2C_BOX_ID, 0, magic_offset, NULL);
+      has_j2c_box = j2c_box_id_offset != -1;
+      /* sanity check on box id offset */
+      if (has_j2c_box) {
+        if (j2c_box_id_offset + GST_JPEG2000_JP2_SIZE_OF_BOX_ID != magic_offset
+            || j2c_box_id_offset < GST_JPEG2000_JP2_SIZE_OF_BOX_LEN) {
+          GST_ELEMENT_ERROR (jpeg2000parse, STREAM, DECODE, NULL,
+              ("Corrupt contiguous code stream box for j2c stream"));
+          ret = GST_FLOW_ERROR;
+          goto beach;
+        }
+        /* read the box length */
+        if (!gst_byte_reader_skip (&reader,
+                j2c_box_id_offset - GST_JPEG2000_JP2_SIZE_OF_BOX_LEN))
+          goto beach;
+        if (!gst_byte_reader_get_uint32_be (&reader,
+                &jpeg2000parse->frame_size))
+          goto beach;
+      }
+    }
+    jpeg2000parse->parsed_j2c_box = TRUE;
+
+    /* determine downstream j2k format */
+    if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_NO_CODEC) {
+      if (!gst_jpeg2000_parse_negotiate (jpeg2000parse, current_caps)) {
+        ret = GST_FLOW_NOT_NEGOTIATED;
+        goto beach;
+      }
     }
 
-    if (j2c_box_id_offset == -1) {
+    /* treat JP2 as J2C */
+    if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_JP2)
+      jpeg2000parse->codec_format = GST_JPEG2000_PARSE_J2C;
+    is_j2c_src = jpeg2000parse->codec_format == GST_JPEG2000_PARSE_J2C;
+    /* we can't convert JPC to any other format */
+    if (!has_j2c_box && is_j2c_src) {
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto beach;
+    }
+    /* sanity check on sink caps */
+    if (jpeg2000parse->sink_codec_format > GST_JPEG2000_PARSE_J2C
+        && !has_j2c_box) {
       GST_ELEMENT_ERROR (jpeg2000parse, STREAM, DECODE, NULL,
-          ("Missing contiguous code stream box for j2c stream"));
+          ("Expected J2C box but found none."));
       ret = GST_FLOW_ERROR;
       goto beach;
     }
-  }
-
-  /* Look for magic. If found, skip to beginning of frame */
-  magic_offset = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
-      GST_JPEG2000_PARSE_J2K_MAGIC, 0, gst_byte_reader_get_remaining (&reader));
-  if (magic_offset == -1) {
-    *skipsize = gst_byte_reader_get_size (&reader) - num_prefix_bytes;
-    goto beach;
-  }
-
-  /* see if we need to skip any bytes at beginning of frame */
-  GST_DEBUG_OBJECT (jpeg2000parse, "Found magic at offset = %d", magic_offset);
-  if (magic_offset > 0) {
+    /* adjust frame size for JPC src caps */
+    if (jpeg2000parse->frame_size &&
+        jpeg2000parse->codec_format == GST_JPEG2000_PARSE_JPC) {
+      jpeg2000parse->frame_size -=
+          GST_JPEG2000_JP2_SIZE_OF_BOX_LEN + GST_JPEG2000_JP2_SIZE_OF_BOX_ID;
+    }
+    /* see if we need to skip any bytes at beginning of frame */
     *skipsize = magic_offset;
-    /* J2C has 8 bytes preceding J2K magic */
-    if (is_j2c)
+    if (is_j2c_src)
       *skipsize -= GST_JPEG2000_PARSE_SIZE_OF_J2C_PREFIX_BYTES;
     if (*skipsize > 0)
       goto beach;
+    /* reset reader to beginning of buffer */
+    gst_byte_reader_set_pos (&reader, 0);
   }
 
-  if (is_j2c) {
-    /* sanity check on box id offset */
-    if (j2c_box_id_offset + GST_JPEG2000_JP2_SIZE_OF_BOX_ID != magic_offset) {
-      GST_ELEMENT_ERROR (jpeg2000parse, STREAM, DECODE, NULL,
-          ("Corrupt contiguous code stream box for j2c stream"));
-      ret = GST_FLOW_ERROR;
-      goto beach;
-    }
-
-    /* check that we have enough bytes for the J2C box length */
-    if (j2c_box_id_offset < GST_JPEG2000_JP2_SIZE_OF_BOX_LEN) {
-      *skipsize = gst_byte_reader_get_size (&reader) - num_prefix_bytes;
-      goto beach;
-    }
-
-    if (!gst_byte_reader_skip (&reader,
-            j2c_box_id_offset - GST_JPEG2000_JP2_SIZE_OF_BOX_LEN))
-      goto beach;
-
-    /* read the box length, and adjust num_prefix_bytes accordingly  */
-    if (!gst_byte_reader_get_uint32_be (&reader, &frame_size))
-      goto beach;
-    num_prefix_bytes -= GST_JPEG2000_JP2_SIZE_OF_BOX_LEN;
-
-    /* bail out if not enough data for frame */
-    if ((gst_byte_reader_get_size (&reader) < frame_size))
-      goto beach;
+  /* we keep prefix bytes but skip them in order
+   * to process the rest of the frame */
+  /* magic prefix */
+  num_prefix_bytes = GST_JPEG2000_MARKER_SIZE;
+  /* J2C box prefix */
+  if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_J2C) {
+    num_prefix_bytes +=
+        GST_JPEG2000_JP2_SIZE_OF_BOX_LEN + GST_JPEG2000_JP2_SIZE_OF_BOX_ID;
   }
+  /* bail out if not enough data for code stream */
+  if (jpeg2000parse->frame_size &&
+      (gst_byte_reader_get_size (&reader) < jpeg2000parse->frame_size))
+    goto beach;
 
-  /* 2 to skip marker size */
+  /* skip prefix and 2 bytes for marker size */
   if (!gst_byte_reader_skip (&reader, num_prefix_bytes + 2))
     goto beach;
 
@@ -498,8 +501,6 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
   }
-
-  current_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (parse));
   if (current_caps) {
     const gchar *colorspace_string = NULL;
     current_caps_struct = gst_caps_get_structure (current_caps, 0);
@@ -652,9 +653,6 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
       colorspace = GST_JPEG2000_COLORSPACE_YUV;
     }
   }
-
-  gst_jpeg2000_parse_negotiate (jpeg2000parse, current_caps);
-
   /* now we can set the source caps, if something has changed */
   source_sampling =
       sink_sampling !=
@@ -742,37 +740,39 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   /* look for EOC end of codestream marker  */
   eoc_offset = gst_byte_reader_masked_scan_uint32 (&reader, 0x0000ffff,
       0xFFD9, 0, gst_byte_reader_get_remaining (&reader));
-
-  if (eoc_offset != -1) {
-    /* add 4 for eoc marker and eoc marker size */
-    guint eoc_frame_size = gst_byte_reader_get_pos (&reader) + eoc_offset + 4;
-    GST_DEBUG_OBJECT (jpeg2000parse,
-        "Found EOC at offset = %d, frame size = %d", eoc_offset,
-        eoc_frame_size);
-
-    /* bail out if not enough data for frame */
-    if (gst_byte_reader_get_size (&reader) < eoc_frame_size)
-      goto beach;
-
-    if (frame_size && frame_size != eoc_frame_size) {
-      GST_WARNING_OBJECT (jpeg2000parse,
-          "Frame size %d from contiguous code size does not equal frame size %d signalled by eoc",
-          frame_size, eoc_frame_size);
-    }
-    frame_size = eoc_frame_size;
-  } else {
+  if (eoc_offset == -1)
     goto beach;
+
+  /* add 4 for eoc marker and eoc marker size */
+  eoc_frame_size = gst_byte_reader_get_pos (&reader) + eoc_offset + 4;
+  GST_DEBUG_OBJECT (jpeg2000parse,
+      "Found EOC at offset = %d, frame size = %d", eoc_offset, eoc_frame_size);
+
+  /* bail out if not enough data for frame */
+  if (gst_byte_reader_get_size (&reader) < eoc_frame_size)
+    goto beach;
+
+  if (jpeg2000parse->frame_size && jpeg2000parse->frame_size != eoc_frame_size) {
+    GST_WARNING_OBJECT (jpeg2000parse,
+        "Frame size %d from contiguous code size does not equal frame size %d signaled by eoc",
+        jpeg2000parse->frame_size, eoc_frame_size);
   }
+  jpeg2000parse->frame_size = eoc_frame_size;
+
 
   /* clean up and finish frame */
   if (current_caps)
     gst_caps_unref (current_caps);
   gst_buffer_unmap (frame->buffer, &map);
-  return gst_base_parse_finish_frame (parse, frame, frame_size);
+  ret = gst_base_parse_finish_frame (parse, frame, jpeg2000parse->frame_size);
+  gst_jpeg2000_parse_reset (parse, FALSE);
+  return ret;
 
 beach:
   if (current_caps)
     gst_caps_unref (current_caps);
   gst_buffer_unmap (frame->buffer, &map);
+  if (ret != GST_FLOW_OK)
+    gst_jpeg2000_parse_reset (parse, TRUE);
   return ret;
 }
