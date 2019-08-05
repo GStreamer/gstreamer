@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "26.0.2"
 
     defaultConfig {
         applicationId "org.freedesktop.gstreamer.webrtc"
@@ -45,6 +44,10 @@ android {
         ndkBuild {
             path 'src/main/jni/Android.mk'
         }
+    }
+
+    lintOptions {
+        abortOnError false
     }
 }
 
