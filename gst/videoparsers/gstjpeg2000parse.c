@@ -664,11 +664,6 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
       || jpeg2000parse->colorspace != colorspace) {
     gint fr_num = 0, fr_denom = 0;
 
-    jpeg2000parse->width = width;
-    jpeg2000parse->height = height;
-    jpeg2000parse->sampling = source_sampling;
-    jpeg2000parse->colorspace = colorspace;
-
     src_caps =
         gst_caps_new_simple (media_type_from_codec_format
         (jpeg2000parse->codec_format),
@@ -736,6 +731,10 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
       goto beach;
     }
     gst_caps_unref (src_caps);
+    jpeg2000parse->width = width;
+    jpeg2000parse->height = height;
+    jpeg2000parse->sampling = source_sampling;
+    jpeg2000parse->colorspace = colorspace;
   }
   /*************************************************/
 
