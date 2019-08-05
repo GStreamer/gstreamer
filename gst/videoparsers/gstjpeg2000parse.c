@@ -162,7 +162,7 @@ gst_jpeg2000_parse_reset (GstBaseParse * parse, gboolean hard_reset)
     jpeg2000parse->height = 0;
     jpeg2000parse->sampling = GST_JPEG2000_SAMPLING_NONE;
     jpeg2000parse->colorspace = GST_JPEG2000_COLORSPACE_NONE;
-    jpeg2000parse->codec_format = GST_JPEG2000_PARSE_NO_CODEC;
+    jpeg2000parse->src_codec_format = GST_JPEG2000_PARSE_NO_CODEC;
     jpeg2000parse->sink_codec_format = GST_JPEG2000_PARSE_NO_CODEC;
   }
 }
@@ -265,7 +265,7 @@ gst_jpeg2000_parse_negotiate (GstJPEG2000Parse * parse, GstCaps * in_caps)
     gst_caps_unref (caps);
 
   GST_DEBUG_OBJECT (parse, "selected codec format %d", codec_format);
-  parse->codec_format = codec_format;
+  parse->src_codec_format = codec_format;
 
   return codec_format != GST_JPEG2000_PARSE_NO_CODEC;
 }
@@ -366,7 +366,7 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     jpeg2000parse->parsed_j2c_box = TRUE;
 
     /* determine downstream j2k format */
-    if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_NO_CODEC) {
+    if (jpeg2000parse->src_codec_format == GST_JPEG2000_PARSE_NO_CODEC) {
       if (!gst_jpeg2000_parse_negotiate (jpeg2000parse, current_caps)) {
         ret = GST_FLOW_NOT_NEGOTIATED;
         goto beach;
@@ -374,9 +374,9 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     }
 
     /* treat JP2 as J2C */
-    if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_JP2)
-      jpeg2000parse->codec_format = GST_JPEG2000_PARSE_J2C;
-    is_j2c_src = jpeg2000parse->codec_format == GST_JPEG2000_PARSE_J2C;
+    if (jpeg2000parse->src_codec_format == GST_JPEG2000_PARSE_JP2)
+      jpeg2000parse->src_codec_format = GST_JPEG2000_PARSE_J2C;
+    is_j2c_src = jpeg2000parse->src_codec_format == GST_JPEG2000_PARSE_J2C;
     /* we can't convert JPC to any other format */
     if (!has_j2c_box && is_j2c_src) {
       ret = GST_FLOW_NOT_NEGOTIATED;
@@ -392,7 +392,7 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     }
     /* adjust frame size for JPC src caps */
     if (jpeg2000parse->frame_size &&
-        jpeg2000parse->codec_format == GST_JPEG2000_PARSE_JPC) {
+        jpeg2000parse->src_codec_format == GST_JPEG2000_PARSE_JPC) {
       jpeg2000parse->frame_size -=
           GST_JPEG2000_JP2_SIZE_OF_BOX_LEN + GST_JPEG2000_JP2_SIZE_OF_BOX_ID;
     }
@@ -411,7 +411,7 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   /* magic prefix */
   num_prefix_bytes = GST_JPEG2000_MARKER_SIZE;
   /* J2C box prefix */
-  if (jpeg2000parse->codec_format == GST_JPEG2000_PARSE_J2C) {
+  if (jpeg2000parse->src_codec_format == GST_JPEG2000_PARSE_J2C) {
     num_prefix_bytes +=
         GST_JPEG2000_JP2_SIZE_OF_BOX_LEN + GST_JPEG2000_JP2_SIZE_OF_BOX_ID;
   }
@@ -664,7 +664,7 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
 
     src_caps =
         gst_caps_new_simple (media_type_from_codec_format
-        (jpeg2000parse->codec_format),
+        (jpeg2000parse->src_codec_format),
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
         "colorspace", G_TYPE_STRING,
