@@ -298,17 +298,18 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   GstCaps *current_caps = NULL;
   GstStructure *current_caps_struct = NULL;
   GstJPEG2000Colorspace colorspace = GST_JPEG2000_COLORSPACE_NONE;
-  guint x0, y0, x1, y1;
+  guint x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   guint width = 0, height = 0;
+  guint i;
   guint8 dx[GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS];
   guint8 dy[GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS];
-  guint16 numcomps;
+  guint16 numcomps = 0;
   guint16 capabilities = 0;
   guint16 profile = 0;
   gboolean validate_main_level = FALSE;
   guint8 main_level = 0;
   guint8 sub_level = 0;
-  guint16 compno;
+  guint16 compno = 0;
   GstJPEG2000Sampling parsed_sampling = GST_JPEG2000_SAMPLING_NONE;
   const gchar *sink_sampling_string = NULL;
   GstJPEG2000Sampling sink_sampling = GST_JPEG2000_SAMPLING_NONE;
@@ -316,6 +317,11 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
   guint num_prefix_bytes = 0;   /* number of bytes to skip before actual code stream */
   GstCaps *src_caps = NULL;
   guint eoc_frame_size = 0;
+
+  for (i = 0; i < GST_JPEG2000_PARSE_MAX_SUPPORTED_COMPONENTS; ++i) {
+    dx[i] = 1;
+    dy[i] = 1;
+  }
 
   if (!gst_buffer_map (frame->buffer, &map, GST_MAP_READ)) {
     GST_ERROR_OBJECT (jpeg2000parse, "Unable to map buffer");
