@@ -3088,9 +3088,6 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstRTSPSrc *src;
   GstRTSPStream *stream;
   GstFlowReturn res = GST_FLOW_OK;
-  GstMapInfo map;
-  guint8 *data;
-  guint size;
   GstRTSPResult ret;
   GstRTSPMessage message = { 0 };
   GstRTSPConnInfo *conninfo;
@@ -3098,30 +3095,23 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   stream = (GstRTSPStream *) gst_pad_get_element_private (pad);
   src = stream->parent;
 
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
-  size = map.size;
-  data = map.data;
-
   gst_rtsp_message_init_data (&message, stream->channel[1]);
 
   /* lend the body data to the message */
-  gst_rtsp_message_take_body (&message, data, size);
+  gst_rtsp_message_set_body_buffer (&message, buffer);
 
   if (stream->conninfo.connection)
     conninfo = &stream->conninfo;
   else
     conninfo = &src->conninfo;
 
-  GST_DEBUG_OBJECT (src, "sending %u bytes RTCP", size);
+  GST_DEBUG_OBJECT (src, "sending %u bytes RTCP",
+      (guint) gst_buffer_get_size (buffer));
   ret = gst_rtspsrc_connection_send (src, conninfo, &message, NULL);
   GST_DEBUG_OBJECT (src, "sent RTCP, %d", ret);
 
-  /* and steal it away again because we will free it when unreffing the
-   * buffer */
-  gst_rtsp_message_steal_body (&message, &data, &size);
   gst_rtsp_message_unset (&message);
 
-  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   return res;
@@ -3145,39 +3135,28 @@ gst_rtspsrc_push_backchannel_buffer (GstRTSPSrc * src, guint id,
 
   if (src->interleaved) {
     GstBuffer *buffer;
-    GstMapInfo map;
-    guint8 *data;
-    guint size;
     GstRTSPResult ret;
     GstRTSPMessage message = { 0 };
     GstRTSPConnInfo *conninfo;
 
     buffer = gst_sample_get_buffer (sample);
 
-    gst_buffer_map (buffer, &map, GST_MAP_READ);
-    size = map.size;
-    data = map.data;
-
     gst_rtsp_message_init_data (&message, stream->channel[0]);
 
     /* lend the body data to the message */
-    gst_rtsp_message_take_body (&message, data, size);
+    gst_rtsp_message_set_body_buffer (&message, buffer);
 
     if (stream->conninfo.connection)
       conninfo = &stream->conninfo;
     else
       conninfo = &src->conninfo;
 
-    GST_DEBUG_OBJECT (src, "sending %u bytes backchannel RTP", size);
+    GST_DEBUG_OBJECT (src, "sending %u bytes backchannel RTP",
+        (guint) gst_buffer_get_size (buffer));
     ret = gst_rtspsrc_connection_send (src, conninfo, &message, NULL);
     GST_DEBUG_OBJECT (src, "sent backchannel RTP, %d", ret);
 
-    /* and steal it away again because we will free it when unreffing the
-     * buffer */
-    gst_rtsp_message_steal_body (&message, &data, &size);
     gst_rtsp_message_unset (&message);
-
-    gst_buffer_unmap (buffer, &map);
 
     res = GST_FLOW_OK;
   } else {
