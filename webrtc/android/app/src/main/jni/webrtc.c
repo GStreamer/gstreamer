@@ -339,7 +339,7 @@ start_pipeline (WebRTC * webrtc)
 
   pad = gst_element_get_static_pad (webrtc->webrtcbin, "sink_0");
   gst_util_set_object_arg (G_OBJECT (pad), "fec-type", "ulp-red");
-  g_object_set (pad, "do-nack", FALSE);
+  g_object_set (pad, "do-nack", FALSE, NULL);
   gst_object_unref (pad);
 
   /* This is the gstwebrtc entry point where we create the offer and so on. It
@@ -727,6 +727,8 @@ _call_thread (WebRTC * webrtc)
   g_main_context_pop_thread_default (context);
 
   detach_current_thread (env);
+
+  return NULL;
 }
 
 static void
