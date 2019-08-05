@@ -2716,8 +2716,8 @@ GST_START_TEST (test_renego_transceiver_set_direction)
   pad = gst_element_get_static_pad (t->webrtc1, "sink_0");
   g_object_get (pad, "transceiver", &transceiver, NULL);
   fail_unless (transceiver != NULL);
-  gst_webrtc_rtp_transceiver_set_direction (transceiver,
-      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE);
+  g_object_set (transceiver, "direction",
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE, NULL);
   expected_offer[0] = "inactive";
   expected_answer[0] = "inactive";
 

@@ -54,28 +54,12 @@ enum
   PROP_MID,
   PROP_SENDER,
   PROP_RECEIVER,
-  PROP_STOPPED,                 // FIXME
-  PROP_DIRECTION,               // FIXME
+  PROP_DIRECTION,
   PROP_MLINE,
+  PROP_STOPPED,                 // FIXME
 };
 
 //static guint gst_webrtc_rtp_transceiver_signals[LAST_SIGNAL] = { 0 };
-
-void
-gst_webrtc_rtp_transceiver_set_direction (GstWebRTCRTPTransceiver * trans,
-    GstWebRTCRTPTransceiverDirection direction)
-{
-  GstWebRTCRTPTransceiverClass *trans_class;
-
-  GST_OBJECT_LOCK (trans);
-  trans->direction = direction;
-
-  trans_class = GST_WEBRTC_RTP_TRANSCEIVER_GET_CLASS (trans);
-
-  g_assert (trans_class->set_direction);
-  trans_class->set_direction (trans, direction);
-  GST_OBJECT_UNLOCK (trans);
-}
 
 static void
 gst_webrtc_rtp_transceiver_set_property (GObject * object, guint prop_id,
@@ -92,6 +76,9 @@ gst_webrtc_rtp_transceiver_set_property (GObject * object, guint prop_id,
       break;
     case PROP_MLINE:
       webrtc->mline = g_value_get_uint (value);
+      break;
+    case PROP_DIRECTION:
+      webrtc->direction = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -114,6 +101,9 @@ gst_webrtc_rtp_transceiver_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MLINE:
       g_value_set_uint (value, webrtc->mline);
+      break;
+    case PROP_DIRECTION:
+      g_value_set_enum (value, webrtc->direction);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -194,9 +184,25 @@ gst_webrtc_rtp_transceiver_class_init (GstWebRTCRTPTransceiverClass * klass)
           "Index in the SDP of the Media",
           0, G_MAXUINT, 0,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebRTCRTPTransceiver:direction:
+   *
+   * Direction of the transceiver.
+   *
+   * Since: 1.18
+   **/
+  g_object_class_install_property (gobject_class,
+      PROP_DIRECTION,
+      g_param_spec_enum ("direction", "Direction",
+          "Transceiver direction",
+          GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
+          GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_webrtc_rtp_transceiver_init (GstWebRTCRTPTransceiver * webrtc)
 {
+  webrtc->direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE;
 }

@@ -221,8 +221,8 @@ stream_change (gpointer data)
     gst_element_send_event (extra_src, gst_event_new_eos ());
 
     g_object_get (peer, "transceiver", &transceiver, NULL);
-    gst_webrtc_rtp_transceiver_set_direction (transceiver,
-        GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE);
+    g_object_set (transceiver, "direction",
+        GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE, NULL);
 
     gst_element_set_locked_state (extra_src, TRUE);
     gst_element_set_state (extra_src, GST_STATE_NULL);
