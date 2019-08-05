@@ -63,6 +63,30 @@ GST_VALIDATE_CAPS_TO_PROTOCOL = [("application/x-hls", Protocols.HLS),
                                  ("application/dash+xml", Protocols.DASH)]
 
 
+def expand_vars_in_list_recurse(l, data):
+    for i, v in enumerate(l):
+        if isinstance(v, dict):
+            l[i] = expand_vars_in_dict_recurse(v, data)
+        elif isinstance(v, str):
+            l[i] = v % data
+        elif isinstance(v, list):
+            l[i] = expand_vars_in_list_recurse(v, data)
+
+    return l
+
+
+def expand_vars_in_dict_recurse(dico, data):
+    for key, value in dico.items():
+        if isinstance(value, dict):
+            dico[key] = expand_vars_in_dict_recurse(value, data)
+        elif isinstance(value, str):
+            dico[key] = value % data
+        elif isinstance(value, list):
+            dico[key] = expand_vars_in_list_recurse(value, data)
+
+    return dico
+
+
 class GstValidateMediaCheckTestsGenerator(GstValidateTestsGenerator):
 
     def __init__(self, test_manager):
@@ -200,7 +224,7 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
         name = os.path.basename(json_file).replace('.json', '')
         pipelines_descriptions = []
         for test_name, defs in descriptions.items():
-            tests_definition = {'name': test_name, 'pipeline': defs['pipeline']}
+            tests_definition = {'name': test_name, 'pipeline': defs.pop('pipeline')}
             test_private_dir = os.path.join(test_manager.options.privatedir,
                                             name, test_name)
 
@@ -211,10 +235,10 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                                            test_name + '.config')
                 with open(config_file, 'w') as f:
                     f.write(format_config_template(extra_data,
-                            '\n'.join(defs['config']) + '\n', test_name))
+                            '\n'.join(defs.pop('config')) + '\n', test_name))
 
             scenarios = []
-            for scenario in defs.get('scenarios', []):
+            for scenario in defs.pop('scenarios', []):
                 if isinstance(scenario, str):
                     # Path to a scenario file
                     scenarios.append(scenario)
@@ -229,9 +253,21 @@ class GstValidatePipelineTestsGenerator(GstValidateTestsGenerator):
                         with open(scenario_file, 'w') as f:
                             f.write('\n'.join(action % extra_data for action in actions) + '\n')
                     scenarios.append(scenario_file)
-            tests_definition['extra_data'] = {'scenarios': scenarios, 'config_file': config_file, 'plays-reverse': True}
+
+            local_extra_data = extra_data.copy()
+            local_extra_data.update(defs)
+            envvars = defs.pop('extra_env_vars', {})
+            local_extra_data.update({
+                'scenarios': scenarios,
+                'config_file': config_file,
+                'plays-reverse': True,
+                'extra_env_vars': envvars,
+            })
+
+            expand_vars_in_dict_recurse(local_extra_data, extra_data)
+            tests_definition['extra_data'] = local_extra_data
             tests_definition['pipeline_data'] = {"config_path": os.path.dirname(json_file)}
-            tests_definition['pipeline_data'].update(extra_data)
+            tests_definition['pipeline_data'].update(local_extra_data)
             pipelines_descriptions.append(tests_definition)
 
         return GstValidatePipelineTestsGenerator(name, test_manager, pipelines_descriptions=pipelines_descriptions)
