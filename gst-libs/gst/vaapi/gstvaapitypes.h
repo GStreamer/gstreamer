@@ -165,7 +165,7 @@ typedef enum {
 
 /* Define a mask for GstVaapiRateControl */
 #define GST_VAAPI_RATECONTROL_MASK(RC) \
-    (1 << G_PASTE(GST_VAAPI_RATECONTROL_,RC))
+    (1U << G_PASTE(GST_VAAPI_RATECONTROL_,RC))
 
 G_END_DECLS
 
