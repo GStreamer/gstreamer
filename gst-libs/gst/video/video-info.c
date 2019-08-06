@@ -1006,6 +1006,8 @@ fill_planes (GstVideoInfo * info)
     case GST_VIDEO_FORMAT_GBR_10BE:
     case GST_VIDEO_FORMAT_GBR_12LE:
     case GST_VIDEO_FORMAT_GBR_12BE:
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_Y444_16BE:
       info->stride[0] = GST_ROUND_UP_4 (width * 2);
       info->stride[1] = info->stride[0];
       info->stride[2] = info->stride[0];
