@@ -28,13 +28,9 @@
  *
  * Takes packets from various input sinks into one output source.
  *
- * funnel always outputs a single, open ended segment from
- * 0 with in %GST_FORMAT_TIME and outputs the buffers of the
- * different sinkpads with timestamps that are set to the
- * running time for that stream. funnel does not synchronize
- * the different input streams but simply forwards all buffers
- * immediately when they arrive.
- *
+ * #GstFunnel will forward sticky events from its first active sink pad
+ * and, if #GstFunnel:forward-sticky-events is set to true, it will
+ * forward sticky events each time a pad becomes active.
  */
 
 #ifdef HAVE_CONFIG_H
