@@ -165,11 +165,20 @@ gboolean
 vaapi_create_buffer (VADisplay dpy, VAContextID ctx, int type, guint size,
     gconstpointer buf, VABufferID * buf_id_ptr, gpointer * mapped_data)
 {
+  return vaapi_create_n_elements_buffer (dpy, ctx, type, size, buf, buf_id_ptr,
+      mapped_data, 1);
+}
+
+gboolean
+vaapi_create_n_elements_buffer (VADisplay dpy, VAContextID ctx, int type,
+    guint size, gconstpointer buf, VABufferID * buf_id_ptr,
+    gpointer * mapped_data, int num_elements)
+{
   VABufferID buf_id;
   VAStatus status;
   gpointer data = (gpointer) buf;
 
-  status = vaCreateBuffer (dpy, ctx, type, size, 1, data, &buf_id);
+  status = vaCreateBuffer (dpy, ctx, type, size, num_elements, data, &buf_id);
   if (!vaapi_check_status (status, "vaCreateBuffer()"))
     return FALSE;
 

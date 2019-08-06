@@ -791,13 +791,20 @@ find_operation (GstVaapiFilter * filter, GstVaapiFilterOp op)
 
 /* Ensure the operation's VA buffer is allocated */
 static inline gboolean
-op_ensure_buffer (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data)
+op_ensure_n_elements_buffer (GstVaapiFilter * filter,
+    GstVaapiFilterOpData * op_data, gint op_num)
 {
   if (G_LIKELY (op_data->va_buffer != VA_INVALID_ID))
     return TRUE;
-  return vaapi_create_buffer (filter->va_display, filter->va_context,
+  return vaapi_create_n_elements_buffer (filter->va_display, filter->va_context,
       VAProcFilterParameterBufferType, op_data->va_buffer_size, NULL,
-      &op_data->va_buffer, NULL);
+      &op_data->va_buffer, NULL, op_num);
+}
+
+static inline gboolean
+op_ensure_buffer (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data)
+{
+  return op_ensure_n_elements_buffer (filter, op_data, 1);
 }
 
 /* Update a generic filter (float value) */
@@ -844,6 +851,9 @@ op_set_generic (GstVaapiFilter * filter, GstVaapiFilterOpData * op_data,
 }
 
 /* Update the color balance filter */
+#define COLOR_BALANCE_NUM \
+    GST_VAAPI_FILTER_OP_CONTRAST - GST_VAAPI_FILTER_OP_HUE + 1
+
 static gboolean
 op_set_color_balance_unlocked (GstVaapiFilter * filter,
     GstVaapiFilterOpData * op_data, gfloat value)
@@ -851,27 +861,81 @@ op_set_color_balance_unlocked (GstVaapiFilter * filter,
   VAProcFilterParameterBufferColorBalance *buf;
   VAProcFilterCapColorBalance *filter_cap;
   gfloat va_value;
+  gint i;
+  GstVaapiFilterOpData *color_data[COLOR_BALANCE_NUM];
+  GstVaapiFilterOpData *enabled_data = NULL;
 
-  if (!op_data || !op_ensure_buffer (filter, op_data))
+  if (!op_data)
     return FALSE;
 
-  op_data->is_enabled =
-      (value != G_PARAM_SPEC_FLOAT (op_data->pspec)->default_value);
-  if (!op_data->is_enabled)
-    return TRUE;
+  /* collect all the Color Balance operators and find the first
+   * enabled one */
+  for (i = 0; i < COLOR_BALANCE_NUM; i++) {
+    color_data[i] = find_operation (filter, GST_VAAPI_FILTER_OP_HUE + i);
+    if (!color_data[i])
+      return FALSE;
 
-  filter_cap = op_data->va_caps;
-  if (!op_data_get_value_float (op_data, &filter_cap->range, value, &va_value))
-    return FALSE;
+    if (!enabled_data && color_data[i]->is_enabled)
+      enabled_data = color_data[i];
+  }
 
-  buf = vaapi_map_buffer (filter->va_display, op_data->va_buffer);
-  if (!buf)
-    return FALSE;
+  /* If there's no enabled operators let's enable this one.
+   *
+   * HACK: This operator will be the only one with an allocated buffer
+   * which will store all the color balance operators.
+   */
+  if (!enabled_data) {
+    if (value == G_PARAM_SPEC_FLOAT (op_data->pspec)->default_value)
+      return TRUE;
 
-  buf->type = op_data->va_type;
-  buf->attrib = op_data->va_subtype;
-  buf->value = va_value;
-  vaapi_unmap_buffer (filter->va_display, op_data->va_buffer, NULL);
+    if (!op_ensure_n_elements_buffer (filter, op_data, COLOR_BALANCE_NUM))
+      return FALSE;
+
+    enabled_data = op_data;
+
+    buf = vaapi_map_buffer (filter->va_display, enabled_data->va_buffer);
+    if (!buf)
+      return FALSE;
+
+    /* Write all the color balance operator values in the buffer. --
+     * Use the default value for all the operators except the set
+     * one. */
+    for (i = 0; i < COLOR_BALANCE_NUM; i++) {
+      buf[i].type = color_data[i]->va_type;
+      buf[i].attrib = color_data[i]->va_subtype;
+
+      va_value = G_PARAM_SPEC_FLOAT (color_data[i]->pspec)->default_value;
+      if (color_data[i]->op == op_data->op) {
+        filter_cap = color_data[i]->va_caps;
+        /* don't fail, just ignore current value and set default one */
+        op_data_get_value_float (color_data[i], &filter_cap->range, value,
+            &va_value);
+      }
+
+      buf[i].value = va_value;
+    }
+
+    enabled_data->is_enabled = 1;
+  } else {
+    /* There's already one operator enabled, *in theory* with a
+     * buffer associated. */
+    if (G_UNLIKELY (enabled_data->va_buffer == VA_INVALID_ID))
+      return FALSE;
+
+    filter_cap = op_data->va_caps;
+    if (!op_data_get_value_float (op_data, &filter_cap->range, value,
+            &va_value))
+      return FALSE;
+
+    buf = vaapi_map_buffer (filter->va_display, enabled_data->va_buffer);
+    if (!buf)
+      return FALSE;
+
+    buf[op_data->op - GST_VAAPI_FILTER_OP_HUE].value = va_value;
+  }
+
+  vaapi_unmap_buffer (filter->va_display, enabled_data->va_buffer, NULL);
+
   return TRUE;
 }
 

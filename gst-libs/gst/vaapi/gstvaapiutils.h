@@ -54,6 +54,12 @@ gboolean
 vaapi_create_buffer (VADisplay dpy, VAContextID ctx, int type, guint size,
     gconstpointer data, VABufferID * buf_id, gpointer * mapped_data);
 
+G_GNUC_INTERNAL
+gboolean
+vaapi_create_n_elements_buffer (VADisplay dpy, VAContextID ctx, int type,
+    guint size, gconstpointer data, VABufferID * buf_id, gpointer * mapped_data,
+    int num_elements);
+
 /** Destroy VA buffer */
 G_GNUC_INTERNAL
 void
