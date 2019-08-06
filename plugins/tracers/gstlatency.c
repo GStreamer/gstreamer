@@ -297,10 +297,9 @@ calculate_latency (GstElement * parent, GstPad * pad, guint64 ts)
       GST_DEBUG ("%s_%s: Should log full lantency now (event %p)",
           GST_DEBUG_PAD_NAME (pad), ev);
       if (ev) {
-        g_object_set_qdata ((GObject *) pad, latency_probe_id, NULL);
         log_latency (gst_event_get_structure (ev), peer_parent,
             GST_PAD_PEER (pad), ts);
-        gst_event_unref (ev);
+        g_object_set_qdata ((GObject *) pad, latency_probe_id, NULL);
       }
     }
 
@@ -308,9 +307,8 @@ calculate_latency (GstElement * parent, GstPad * pad, guint64 ts)
     GST_DEBUG ("%s_%s: Should log sub lantency now (event %p)",
         GST_DEBUG_PAD_NAME (pad), ev);
     if (ev) {
-      g_object_set_qdata ((GObject *) pad, sub_latency_probe_id, NULL);
       log_element_latency (gst_event_get_structure (ev), parent, pad, ts);
-      gst_event_unref (ev);
+      g_object_set_qdata ((GObject *) pad, sub_latency_probe_id, NULL);
     }
   }
 }
@@ -412,8 +410,8 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
       if (GST_OBJECT_FLAG_IS_SET (peer_parent, GST_ELEMENT_FLAG_SINK)) {
         /* store event so that we can calculate latency when the buffer that
          * follows has been processed */
-        g_object_set_qdata ((GObject *) pad, latency_probe_id,
-            gst_event_ref (ev));
+        g_object_set_qdata_full ((GObject *) pad, latency_probe_id,
+            gst_event_ref (ev), (GDestroyNotify) gst_event_unref);
       }
     }
 
@@ -433,8 +431,8 @@ do_push_event_pre (GstTracer * self, guint64 ts, GstPad * pad, GstEvent * ev)
           !g_str_equal (value_pad_name, pad_name)) {
         GST_DEBUG ("%s_%s: Storing sub-latency event",
             GST_DEBUG_PAD_NAME (pad));
-        g_object_set_qdata ((GObject *) pad, sub_latency_probe_id,
-            gst_event_ref (ev));
+        g_object_set_qdata_full ((GObject *) pad, sub_latency_probe_id,
+            gst_event_ref (ev), (GDestroyNotify) gst_event_unref);
       }
 
       g_free (pad_name);
