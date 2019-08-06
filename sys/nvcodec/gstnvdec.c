@@ -47,21 +47,6 @@ static gboolean
 gst_nvdec_copy_device_to_system (GstNvDec * nvdec,
     CUVIDPARSERDISPINFO * dispinfo, GstBuffer * output_buffer);
 
-static inline gboolean
-cuda_OK (CUresult result)
-{
-  const gchar *error_name, *error_text;
-
-  if (result != CUDA_SUCCESS) {
-    CuGetErrorName (result, &error_name);
-    CuGetErrorString (result, &error_text);
-    GST_WARNING ("CUDA call failed: %s, %s", error_name, error_text);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
 #ifdef HAVE_NVCODEC_GST_GL
 typedef struct _GstNvDecCudaGraphicsResourceInfo
 {
@@ -86,8 +71,9 @@ register_cuda_resource (GstGLContext * context, gpointer * args)
   if (gst_memory_map (mem, &map_info, GST_MAP_READ | GST_MAP_GL)) {
     texture_id = *(guint *) map_info.data;
 
-    if (!cuda_OK (CuGraphicsGLRegisterImage (&cgr_info->resource, texture_id,
-                GL_TEXTURE_2D, CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD)))
+    if (!gst_cuda_result (CuGraphicsGLRegisterImage (&cgr_info->resource,
+                texture_id, GL_TEXTURE_2D,
+                CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD)))
       GST_WARNING_OBJECT (nvdec, "failed to register texture with CUDA");
 
     gst_memory_unmap (mem, &map_info);
@@ -107,7 +93,7 @@ unregister_cuda_resource (GstGLContext * context,
   if (!gst_cuda_context_push (nvdec->cuda_ctx))
     GST_WARNING_OBJECT (nvdec, "failed to lock CUDA context");
 
-  if (!cuda_OK (CuGraphicsUnregisterResource ((const CUgraphicsResource)
+  if (!gst_cuda_result (CuGraphicsUnregisterResource ((const CUgraphicsResource)
               cgr_info->resource)))
     GST_WARNING_OBJECT (nvdec, "failed to unregister resource");
 
@@ -227,7 +213,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
 
     if (nvdec->decoder) {
       GST_DEBUG_OBJECT (nvdec, "destroying decoder");
-      if (!cuda_OK (CuvidDestroyDecoder (nvdec->decoder))) {
+      if (!gst_cuda_result (CuvidDestroyDecoder (nvdec->decoder))) {
         GST_ERROR_OBJECT (nvdec, "failed to destroy decoder");
         goto error;
       } else
@@ -267,7 +253,8 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     create_info.target_rect.bottom = height;
 
     if (nvdec->decoder
-        || !cuda_OK (CuvidCreateDecoder (&nvdec->decoder, &create_info))) {
+        || !gst_cuda_result (CuvidCreateDecoder (&nvdec->decoder,
+                &create_info))) {
       GST_ERROR_OBJECT (nvdec, "failed to create decoder");
       goto error;
     }
@@ -431,7 +418,7 @@ parser_decode_callback (GstNvDec * nvdec, CUVIDPICPARAMS * params)
     goto error;
   }
 
-  if (!cuda_OK (CuvidDecodePicture (nvdec->decoder, params))) {
+  if (!gst_cuda_result (CuvidDecodePicture (nvdec->decoder, params))) {
     GST_ERROR_OBJECT (nvdec, "failed to decode picture");
     goto error;
   }
@@ -639,7 +626,7 @@ maybe_destroy_decoder_and_parser (GstNvDec * nvdec)
 
   if (nvdec->decoder) {
     GST_DEBUG_OBJECT (nvdec, "destroying decoder");
-    ret = cuda_OK (CuvidDestroyDecoder (nvdec->decoder));
+    ret = gst_cuda_result (CuvidDestroyDecoder (nvdec->decoder));
     if (ret)
       nvdec->decoder = NULL;
     else
@@ -653,7 +640,7 @@ maybe_destroy_decoder_and_parser (GstNvDec * nvdec)
 
   if (nvdec->parser) {
     GST_DEBUG_OBJECT (nvdec, "destroying parser");
-    if (!cuda_OK (CuvidDestroyVideoParser (nvdec->parser))) {
+    if (!gst_cuda_result (CuvidDestroyVideoParser (nvdec->parser))) {
       GST_ERROR_OBJECT (nvdec, "failed to destroy parser");
       return FALSE;
     }
@@ -744,7 +731,8 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
       (PFNVIDDISPLAYCALLBACK) parser_display_callback;
 
   GST_DEBUG_OBJECT (nvdec, "creating parser");
-  if (!cuda_OK (CuvidCreateVideoParser (&nvdec->parser, &parser_params))) {
+  if (!gst_cuda_result (CuvidCreateVideoParser (&nvdec->parser,
+              &parser_params))) {
     GST_ERROR_OBJECT (nvdec, "failed to create parser");
     return FALSE;
   }
@@ -791,14 +779,15 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
     return;
   }
 
-  if (!cuda_OK (CuvidMapVideoFrame (nvdec->decoder, dispinfo->picture_index,
-              &dptr, &pitch, &proc_params))) {
+  if (!gst_cuda_result (CuvidMapVideoFrame (nvdec->decoder,
+              dispinfo->picture_index, &dptr, &pitch, &proc_params))) {
     GST_WARNING_OBJECT (nvdec, "failed to map CUDA video frame");
     data->ret = FALSE;
     goto unlock_cuda_context;
   }
 
-  if (!cuda_OK (CuGraphicsMapResources (num_resources, resources, NULL))) {
+  if (!gst_cuda_result (CuGraphicsMapResources (num_resources, resources,
+              NULL))) {
     GST_WARNING_OBJECT (nvdec, "failed to map CUDA resources");
     data->ret = FALSE;
     goto unmap_video_frame;
@@ -812,8 +801,8 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
       * GST_VIDEO_INFO_COMP_PSTRIDE (info, 0);
 
   for (i = 0; i < num_resources; i++) {
-    if (!cuda_OK (CuGraphicsSubResourceGetMappedArray (&array, resources[i], 0,
-                0))) {
+    if (!gst_cuda_result (CuGraphicsSubResourceGetMappedArray (&array,
+                resources[i], 0, 0))) {
       GST_WARNING_OBJECT (nvdec, "failed to map CUDA array");
       data->ret = FALSE;
       break;
@@ -823,19 +812,20 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
     mcpy2d.dstArray = array;
     mcpy2d.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
-    if (!cuda_OK (CuMemcpy2DAsync (&mcpy2d, 0))) {
+    if (!gst_cuda_result (CuMemcpy2DAsync (&mcpy2d, 0))) {
       GST_WARNING_OBJECT (nvdec, "memcpy to mapped array failed");
       data->ret = FALSE;
     }
   }
 
-  CuStreamSynchronize (0);
+  gst_cuda_result (CuStreamSynchronize (0));
 
-  if (!cuda_OK (CuGraphicsUnmapResources (num_resources, resources, NULL)))
+  if (!gst_cuda_result (CuGraphicsUnmapResources (num_resources, resources,
+              NULL)))
     GST_WARNING_OBJECT (nvdec, "failed to unmap CUDA resources");
 
 unmap_video_frame:
-  if (!cuda_OK (CuvidUnmapVideoFrame (nvdec->decoder, dptr)))
+  if (!gst_cuda_result (CuvidUnmapVideoFrame (nvdec->decoder, dptr)))
     GST_WARNING_OBJECT (nvdec, "failed to unmap CUDA video frame");
 
 unlock_cuda_context:
@@ -898,7 +888,7 @@ gst_nvdec_copy_device_to_system (GstNvDec * nvdec,
   params.top_field_first = dispinfo->top_field_first;
   params.unpaired_field = dispinfo->repeat_first_field < 0;
 
-  if (!cuda_OK (CuvidMapVideoFrame (nvdec->decoder,
+  if (!gst_cuda_result (CuvidMapVideoFrame (nvdec->decoder,
               dispinfo->picture_index, &dptr, &pitch, &params))) {
     GST_ERROR_OBJECT (nvdec, "failed to map video frame");
     gst_cuda_context_pop (NULL);
@@ -917,7 +907,7 @@ gst_nvdec_copy_device_to_system (GstNvDec * nvdec,
     copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
     copy_params.Height = GST_VIDEO_FRAME_COMP_HEIGHT (&video_frame, i);
 
-    if (!cuda_OK (CuMemcpy2DAsync (&copy_params, 0))) {
+    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, 0))) {
       GST_ERROR_OBJECT (nvdec, "failed to copy %dth plane", i);
       CuvidUnmapVideoFrame (nvdec->decoder, dptr);
       gst_video_frame_unmap (&video_frame);
@@ -926,11 +916,11 @@ gst_nvdec_copy_device_to_system (GstNvDec * nvdec,
     }
   }
 
-  CuStreamSynchronize (0);
+  gst_cuda_result (CuStreamSynchronize (0));
 
   gst_video_frame_unmap (&video_frame);
 
-  if (!cuda_OK (CuvidUnmapVideoFrame (nvdec->decoder, dptr)))
+  if (!gst_cuda_result (CuvidUnmapVideoFrame (nvdec->decoder, dptr)))
     GST_WARNING_OBJECT (nvdec, "failed to unmap video frame");
 
   if (!gst_cuda_context_pop (NULL))
@@ -974,7 +964,7 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   nvdec->state = GST_NVDEC_STATE_PARSE;
 
-  if (!cuda_OK (CuvidParseVideoData (nvdec->parser, &packet)))
+  if (!gst_cuda_result (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
 
   gst_buffer_unmap (frame->input_buffer, &map_info);
@@ -997,7 +987,8 @@ gst_nvdec_flush (GstVideoDecoder * decoder)
 
   nvdec->state = GST_NVDEC_STATE_PARSE;
 
-  if (nvdec->parser && !cuda_OK (CuvidParseVideoData (nvdec->parser, &packet)))
+  if (nvdec->parser
+      && !gst_cuda_result (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
 
   return TRUE;
@@ -1015,7 +1006,8 @@ gst_nvdec_drain (GstVideoDecoder * decoder)
   packet.payload = NULL;
   packet.flags = CUVID_PKT_ENDOFSTREAM;
 
-  if (nvdec->parser && !cuda_OK (CuvidParseVideoData (nvdec->parser, &packet)))
+  if (nvdec->parser
+      && !gst_cuda_result (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
 
   return nvdec->last_ret;
