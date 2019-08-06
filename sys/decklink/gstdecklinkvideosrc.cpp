@@ -220,10 +220,6 @@ static GstStateChangeReturn
 gst_decklink_video_src_change_state (GstElement * element,
     GstStateChange transition);
 
-static gboolean gst_decklink_video_src_set_caps (GstBaseSrc * bsrc,
-    GstCaps * caps);
-static GstCaps *gst_decklink_video_src_get_caps (GstBaseSrc * bsrc,
-    GstCaps * filter);
 static gboolean gst_decklink_video_src_query (GstBaseSrc * bsrc,
     GstQuery * query);
 static gboolean gst_decklink_video_src_unlock (GstBaseSrc * bsrc);
@@ -258,9 +254,8 @@ gst_decklink_video_src_class_init (GstDecklinkVideoSrcClass * klass)
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_decklink_video_src_change_state);
 
-  basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_decklink_video_src_get_caps);
-  basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_decklink_video_src_set_caps);
   basesrc_class->query = GST_DEBUG_FUNCPTR (gst_decklink_video_src_query);
+  basesrc_class->negotiate = NULL;
   basesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_decklink_video_src_unlock);
   basesrc_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_decklink_video_src_unlock_stop);
@@ -396,6 +391,8 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
 
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
+
+  gst_pad_use_fixed_caps (GST_BASE_SRC_PAD (self));
 
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
@@ -557,36 +554,19 @@ gst_decklink_video_src_finalize (GObject * object)
 }
 
 static gboolean
-gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
+gst_decklink_video_src_start (GstDecklinkVideoSrc * self)
 {
-  GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (bsrc);
-  GstCaps *current_caps;
   const GstDecklinkMode *mode;
   BMDVideoInputFlags flags;
   HRESULT ret;
   BMDPixelFormat format;
 
-  GST_DEBUG_OBJECT (self, "Setting caps %" GST_PTR_FORMAT, caps);
-
-  if ((current_caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (bsrc)))) {
-    GST_DEBUG_OBJECT (self, "Pad already has caps %" GST_PTR_FORMAT, caps);
-
-    if (!gst_caps_is_equal (caps, current_caps)) {
-      GST_DEBUG_OBJECT (self, "New caps, reconfiguring");
-      gst_caps_unref (current_caps);
-      if (self->mode == GST_DECKLINK_MODE_AUTO) {
-        return TRUE;
-      } else {
-        return FALSE;
-      }
-    } else {
-      gst_caps_unref (current_caps);
-      return TRUE;
-    }
+  g_mutex_lock (&self->input->lock);
+  if (self->input->video_enabled) {
+    g_mutex_unlock (&self->input->lock);
+    return TRUE;
   }
-
-  if (!gst_video_info_from_caps (&self->info, caps))
-    return FALSE;
+  g_mutex_unlock (&self->input->lock);
 
   if (self->input->config && self->connection != GST_DECKLINK_CONNECTION_AUTO) {
     ret = self->input->config->SetInt (bmdDeckLinkConfigVideoInputConnection,
@@ -653,32 +633,6 @@ gst_decklink_video_src_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
   g_mutex_unlock (&self->input->lock);
 
   return TRUE;
-}
-
-static GstCaps *
-gst_decklink_video_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
-{
-  GstDecklinkVideoSrc *self = GST_DECKLINK_VIDEO_SRC_CAST (bsrc);
-  GstCaps *mode_caps, *caps;
-  BMDPixelFormat format;
-  GstDecklinkModeEnum mode;
-
-  g_mutex_lock (&self->lock);
-  mode = self->caps_mode;
-  format = self->caps_format;
-  g_mutex_unlock (&self->lock);
-
-  mode_caps = gst_decklink_mode_get_caps (mode, format, TRUE);
-
-  if (filter) {
-    caps =
-        gst_caps_intersect_full (filter, mode_caps, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (mode_caps);
-  } else {
-    caps = mode_caps;
-  }
-
-  return caps;
 }
 
 static void
@@ -1036,6 +990,10 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   static GstStaticCaps hardware_reference =
       GST_STATIC_CAPS ("timestamp/x-decklink-hardware");
 
+  if (!gst_decklink_video_src_start (self)) {
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+
   g_mutex_lock (&self->lock);
   while (gst_queue_array_is_empty (self->current_frames) && !self->flushing) {
     g_cond_wait (&self->cond, &self->lock);
@@ -1053,8 +1011,14 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
   g_assert (f.frame != NULL);
 
   g_mutex_lock (&self->lock);
+
+  if (!gst_pad_has_current_caps (GST_BASE_SRC_PAD (self))) {
+    caps_changed = TRUE;
+  }
+
   if (self->caps_mode != f.mode) {
-    if (self->mode == GST_DECKLINK_MODE_AUTO) {
+    if (self->mode == GST_DECKLINK_MODE_AUTO
+        || !gst_pad_has_current_caps (GST_BASE_SRC_PAD (self))) {
       GST_DEBUG_OBJECT (self, "Mode changed from %d to %d", self->caps_mode,
           f.mode);
       caps_changed = TRUE;
@@ -1069,7 +1033,8 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
     }
   }
   if (self->caps_format != f.format) {
-    if (self->video_format == GST_DECKLINK_VIDEO_FORMAT_AUTO) {
+    if (self->video_format == GST_DECKLINK_VIDEO_FORMAT_AUTO
+        || !gst_pad_has_current_caps (GST_BASE_SRC_PAD (self))) {
       GST_DEBUG_OBJECT (self, "Format changed from %d to %d", self->caps_format,
           f.format);
       caps_changed = TRUE;
