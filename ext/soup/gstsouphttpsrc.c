@@ -1536,6 +1536,9 @@ gst_soup_http_src_send_message (GstSoupHTTPSrc * src)
   src->input_stream =
       soup_session_send (src->session, src->msg, src->cancellable, &error);
 
+  if (error)
+    GST_DEBUG_OBJECT (src, "Sending message failed: %s", error->message);
+
   if (g_cancellable_is_cancelled (src->cancellable)) {
     ret = GST_FLOW_FLUSHING;
     goto done;
