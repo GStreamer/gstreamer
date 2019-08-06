@@ -36,6 +36,7 @@
 #include <gst/video/video.h>
 #include "gstcuvidloader.h"
 #include "gstcudaloader.h"
+#include "gstcudacontext.h"
 
 G_BEGIN_DECLS
 
@@ -75,8 +76,7 @@ struct _GstNvDec
 
   CUvideoparser parser;
   CUvideodecoder decoder;
-  CUcontext context;
-  CUvideoctxlock ctx_lock;
+  GstCudaContext *cuda_ctx;
 
   guint width;
   guint height;
