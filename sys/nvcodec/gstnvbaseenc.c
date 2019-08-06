@@ -511,6 +511,8 @@ gst_nv_base_enc_set_filtered_input_formats (GstNvBaseEnc * nvenc,
       case GST_VIDEO_FORMAT_P010_10BE:
       case GST_VIDEO_FORMAT_BGR10A2_LE:
       case GST_VIDEO_FORMAT_RGB10A2_LE:
+      case GST_VIDEO_FORMAT_Y444_16LE:
+      case GST_VIDEO_FORMAT_Y444_16BE:
         if (max_bit_minus8 >= 2) {
           gst_value_list_append_value (&supported_format, val);
           last_format = val;
@@ -1474,6 +1476,8 @@ _get_cuda_device_stride (GstVideoInfo * info, guint plane, gsize cuda_stride)
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_RGB10A2_LE:
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_Y444_16BE:
       return cuda_stride;
     case GST_VIDEO_FORMAT_I420:
       return plane == 0 ? cuda_stride : (GST_ROUND_UP_2 (cuda_stride) / 2);
@@ -1866,7 +1870,9 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
         dest += dest_stride;
         src += src_stride;
       }
-    } else if (GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_Y444) {
+    } else if (GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_Y444 ||
+        GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_Y444_16LE ||
+        GST_VIDEO_FRAME_FORMAT (&vframe) == GST_VIDEO_FORMAT_Y444_16BE) {
       src = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
       src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 1);
       dest = (guint8 *) in_buf_lock.bufferDataPtr +

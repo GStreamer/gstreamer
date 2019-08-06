@@ -279,6 +279,9 @@ gst_nvenc_get_nv_buffer_format (GstVideoFormat fmt)
       return NV_ENC_BUFFER_FORMAT_ARGB10;
     case GST_VIDEO_FORMAT_RGB10A2_LE:
       return NV_ENC_BUFFER_FORMAT_ABGR10;
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_Y444_16BE:
+      return NV_ENC_BUFFER_FORMAT_YUV444_10BIT;
     default:
       break;
   }
@@ -341,8 +344,12 @@ gst_nv_enc_get_supported_input_formats (gpointer encoder, GUID codec_id,
         FALSE},
     {GST_VIDEO_FORMAT_RGB10A2_LE, NV_ENC_BUFFER_FORMAT_ABGR10, TRUE,
         FALSE},
+    {GST_VIDEO_FORMAT_Y444_16LE, NV_ENC_BUFFER_FORMAT_YUV444_10BIT, TRUE,
+        FALSE},
 #else
     {GST_VIDEO_FORMAT_P010_10BE, NV_ENC_BUFFER_FORMAT_YUV420_10BIT, TRUE,
+        FALSE},
+    {GST_VIDEO_FORMAT_Y444_16BE, NV_ENC_BUFFER_FORMAT_YUV444_10BIT, TRUE,
         FALSE},
     /* FIXME: No 10bits big-endian ARGB10 format is defined */
 #endif
@@ -388,6 +395,12 @@ gst_nv_enc_get_supported_input_formats (gpointer encoder, GUID codec_id,
         break;
       case NV_ENC_BUFFER_FORMAT_YUV420_10BIT:
         if (support_10bit && !format_map[i].supported) {
+          format_map[i].supported = TRUE;
+          num_format++;
+        }
+        break;
+      case NV_ENC_BUFFER_FORMAT_YUV444_10BIT:
+        if (support_yuv444 && support_10bit && !format_map[i].supported) {
           format_map[i].supported = TRUE;
           num_format++;
         }
