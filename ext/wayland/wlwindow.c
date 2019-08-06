@@ -504,11 +504,7 @@ gst_wl_window_update_borders (GstWlWindow * window)
   }
 
   /* we want WL_SHM_FORMAT_XRGB8888 */
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-  format = GST_VIDEO_FORMAT_xRGB;
-#else
   format = GST_VIDEO_FORMAT_BGRx;
-#endif
 
   /* draw the area_subsurface */
   gst_video_info_set_format (&info, format, width, height);
