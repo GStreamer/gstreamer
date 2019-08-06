@@ -137,8 +137,8 @@ static void
 _create_window (GstVulkanWindowIos * window_ios)
 {
   GstVulkanWindowIosPrivate *priv = window_ios->priv;
-  CGRect rect = CGRectMake (0, 0, priv->preferred_width, priv->preferred_height);
   UIView *external_view = (__bridge UIView *) priv->external_view;
+  CGRect rect = CGRectMake (0, 0, external_view.frame.size.width, external_view.frame.size.height);
   GstVulkanUIView *view;
 
   view = [[GstVulkanUIView alloc] initWithFrame:rect];
