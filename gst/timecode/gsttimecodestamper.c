@@ -87,14 +87,14 @@ static GstStaticPadTemplate gst_timecodestamper_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw")
+    GST_STATIC_CAPS ("video/x-raw, framerate=[1/2147483647, 2147483647/1]")
     );
 
 static GstStaticPadTemplate gst_timecodestamper_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw")
+    GST_STATIC_CAPS ("video/x-raw, framerate=[1/2147483647, 2147483647/1]")
     );
 
 static GstStaticPadTemplate gst_timecodestamper_ltc_template =
