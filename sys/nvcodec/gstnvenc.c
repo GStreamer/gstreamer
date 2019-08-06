@@ -387,7 +387,7 @@ gst_nv_enc_get_supported_input_formats (gpointer encoder, GUID codec_id,
         }
         break;
       case NV_ENC_BUFFER_FORMAT_YUV420_10BIT:
-        if (support_yuv444 && support_10bit && !format_map[i].supported) {
+        if (support_10bit && !format_map[i].supported) {
           format_map[i].supported = TRUE;
           num_format++;
         }
