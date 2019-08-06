@@ -771,7 +771,7 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     gst_caps_unref (current_caps);
   gst_buffer_unmap (frame->buffer, &map);
   ret = gst_base_parse_finish_frame (parse, frame, jpeg2000parse->frame_size);
-  gst_jpeg2000_parse_reset (parse, FALSE);
+  gst_jpeg2000_parse_reset (parse, (ret != GST_FLOW_OK));
   return ret;
 
 beach:
