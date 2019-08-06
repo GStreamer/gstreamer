@@ -828,6 +828,7 @@ gst_avwait_vsink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       && self->first_audio_running_time == GST_CLOCK_TIME_NONE
       && !self->audio_eos_flag
       && !self->shutdown_flag && !self->video_flush_flag) {
+    GST_DEBUG_OBJECT (self, "Waiting for first audio buffer");
     g_cond_wait (&self->audio_cond, &self->mutex);
   }
 
@@ -1163,6 +1164,11 @@ gst_avwait_asink_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
           /* Wait if audio is after the video: dunno what to do */
           || gst_avwait_compare_guint64_with_signs (asign,
               running_time_at_end, vsign, video_running_time) == 1)) {
+    GST_DEBUG_OBJECT (self,
+        "Waiting for video: audio at %s%" GST_TIME_FORMAT ", video at %s%"
+        GST_TIME_FORMAT, asign < 0 ? "-" : "+",
+        GST_TIME_ARGS (running_time_at_end), vsign < 0 ? "-" : "+",
+        GST_TIME_ARGS (video_running_time));
     g_cond_wait (&self->cond, &self->mutex);
     vsign =
         gst_segment_to_running_time_full (&self->vsegment, GST_FORMAT_TIME,
