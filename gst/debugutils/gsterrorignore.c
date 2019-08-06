@@ -212,6 +212,7 @@ gst_error_ignore_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GST_LOG_OBJECT (pad, "Got %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
     case GST_EVENT_FLUSH_STOP:
       self->keep_pushing = TRUE;
       /* fall through */
