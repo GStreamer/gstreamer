@@ -22,6 +22,14 @@
 #  include <config.h>
 #endif
 
+/* Note: initguid.h can not be included in gstwasapiutil.h, otherwise a
+ * symbol redefinition error will be raised.
+ * initguid.h must be included in the C file before mmdeviceapi.h
+ * which is included in gstwasapiutil.h.
+ */
+#ifdef _MSC_VER
+#include <initguid.h>
+#endif
 #include "gstwasapiutil.h"
 #include "gstwasapidevice.h"
 
