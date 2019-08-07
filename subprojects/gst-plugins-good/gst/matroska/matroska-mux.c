@@ -1107,8 +1107,12 @@ gst_matroska_mux_video_pad_setcaps (GstMatroskaMux * mux,
   if (interlace_mode != NULL) {
     if (strcmp (interlace_mode, "progressive") == 0)
       videocontext->interlace_mode = GST_MATROSKA_INTERLACE_MODE_PROGRESSIVE;
-    else
+    else {
       videocontext->interlace_mode = GST_MATROSKA_INTERLACE_MODE_INTERLACED;
+      if ((s = gst_structure_get_string (structure, "field-order"))) {
+        videocontext->field_order = gst_video_field_order_from_string (s);
+      }
+    }
   } else {
     videocontext->interlace_mode = GST_MATROSKA_INTERLACE_MODE_UNKNOWN;
   }
@@ -2844,6 +2848,18 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux, GstMatroskaMuxPad * pad)
       switch (videocontext->interlace_mode) {
         case GST_MATROSKA_INTERLACE_MODE_INTERLACED:
           gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFLAGINTERLACED, 1);
+          if (videocontext->field_order != GST_VIDEO_FIELD_ORDER_UNKNOWN) {
+            if (videocontext->field_order ==
+                GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST) {
+              gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFIELDORDER, 9);
+            } else if (videocontext->field_order ==
+                GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST) {
+              gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFIELDORDER, 14);
+            } else {
+              GST_FIXME_OBJECT (mux, "unhandled video field order %d",
+                  videocontext->field_order);
+            }
+          }
           break;
         case GST_MATROSKA_INTERLACE_MODE_PROGRESSIVE:
           gst_ebml_write_uint (ebml, GST_MATROSKA_ID_VIDEOFLAGINTERLACED, 2);
