@@ -97,7 +97,7 @@ GST_START_TEST (test_ebml_header_v1)
     0x6d, 0x61, 0x74, 0x72, 0x6f, 0x73, 0x6b, 0x61, 0x00,       /* "matroska" */
     0x42, 0x87,                 /* doctypeversion */
     0x81,                       /* 1 byte */
-    0x01,                       /* 1 */
+    0x04,                       /* 4 */
     0x42, 0x85,                 /* doctypereadversion */
     0x81,                       /* 1 byte */
     0x01,                       /* 1 */
@@ -118,7 +118,7 @@ GST_START_TEST (test_ebml_header_v2)
     0x6d, 0x61, 0x74, 0x72, 0x6f, 0x73, 0x6b, 0x61, 0x00,       /* "matroska" */
     0x42, 0x87,                 /* doctypeversion */
     0x81,                       /* 1 byte */
-    0x02,                       /* 2 */
+    0x04,                       /* 4 */
     0x42, 0x85,                 /* doctypereadversion */
     0x81,                       /* 1 byte */
     0x02,                       /* 2 */

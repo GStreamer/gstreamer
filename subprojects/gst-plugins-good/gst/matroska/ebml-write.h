@@ -130,7 +130,8 @@ void    gst_ebml_write_binary        (GstEbmlWrite *ebml,
                                       guint64       length);
 void    gst_ebml_write_header        (GstEbmlWrite *ebml,
                                       const gchar  *doctype,
-                                      guint         version);
+                                      guint         version,
+                                      guint         readversion);
 
 /*
  * Note: this is supposed to be used only for media data.
