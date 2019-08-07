@@ -1330,6 +1330,8 @@ retry:
   if (mode->interlaced && mode->tff)
     GST_BUFFER_FLAG_SET (*buffer,
         GST_VIDEO_BUFFER_FLAG_TFF | GST_VIDEO_BUFFER_FLAG_INTERLACED);
+  else if (mode->interlaced)
+    GST_BUFFER_FLAG_SET (*buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
 
   GST_DEBUG_OBJECT (self,
       "Outputting buffer %p with timestamp %" GST_TIME_FORMAT " and duration %"
