@@ -90,6 +90,10 @@ typedef struct _GstGLBaseFilter GstGLBaseFilter;
 typedef struct _GstGLBaseFilterClass GstGLBaseFilterClass;
 typedef struct _GstGLBaseFilterPrivate GstGLBaseFilterPrivate;
 
+typedef struct _GstGLBaseSrc GstGLBaseSrc;
+typedef struct _GstGLBaseSrcClass GstGLBaseSrcClass;
+typedef struct _GstGLBaseSrcPrivate GstGLBaseSrcPrivate;
+
 typedef struct _GstGLFilter GstGLFilter;
 typedef struct _GstGLFilterClass GstGLFilterClass;
 
@@ -111,6 +115,8 @@ typedef struct _GstGLAsyncDebug GstGLAsyncDebug;
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLBaseFilter, gst_object_unref)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLBaseMemoryAllocator, gst_object_unref)
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLBaseSrc, gst_object_unref)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLBufferAllocator, gst_object_unref)
 

@@ -18,6 +18,7 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstglfilter.c \
 	gstglformat.c \
 	gstglbasefilter.c \
+	gstglbasesrc.c \
 	gstglshader.c \
 	gstglshaderstrings.c \
 	gstglsl.c \
@@ -50,6 +51,7 @@ gstgl_headers = \
 	gstglfilter.h \
 	gstglformat.h \
 	gstglbasefilter.h \
+	gstglbasesrc.h \
 	gstglshader.h \
 	gstglshaderstrings.h \
 	gstglsl.h \
