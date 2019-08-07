@@ -214,3 +214,20 @@
   ...
   fun:sethostent
 }
+# Some gnutls conditional failure, taken from
+# https://salsa.debian.org/debian/flatpak/commit/fb4a8dda211c4bc036781f2b0d706266e95ce068
+{
+   gnutls_import_fail
+   Memcheck:Cond
+   ...
+   fun:gnutls_x509_ext_import_subject_alt_names
+   fun:gnutls_x509_crt_import
+}
+{
+   gnutls_x509_trust_list_add_cas cond failure
+   Memcheck:Cond
+   ...
+   fun:gnutls_x509_trust_list_add_cas
+   fun:gnutls_x509_trust_list_add_trust_mem
+   fun:gnutls_x509_trust_list_add_trust_file
+}
