@@ -24,6 +24,11 @@
 #ifndef __TYPES_COMPAT_H__
 #define __TYPES_COMPAT_H__
 
+#ifdef   __linux__
+#include <linux/types.h>
+#include <asm/ioctl.h>
+
+#else /* One of the BSDs */
 /* From linux/types.h */
 #ifndef __bitwise__
 #  ifdef __CHECKER__
@@ -41,12 +46,14 @@
 #  endif
 #endif
 
-#define __u64 guint64
-#define __u32 guint32
-#define __u16 guint16
-#define __u8 guint8
-#define __s64 gint64
-#define __s32 gint32
-#define __le32 guint32 __bitwise
+typedef guint8  __u8;
+typedef guint16 __u16;
+typedef gint32  __s32;
+typedef guint32 __u32;
+typedef gint64  __s64;
+typedef guint64 __u64;
+typedef guint32 __bitwise __le32;
+
+#endif
 
 #endif /* __TYPES_COMPAT_H__ */
