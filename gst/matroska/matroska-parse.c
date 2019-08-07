@@ -557,6 +557,44 @@ gst_matroska_parse_add_stream (GstMatroskaParse * parse, GstEbmlRead * ebml)
               break;
             }
 
+              /* interlaced field order */
+            case GST_MATROSKA_ID_VIDEOFIELDORDER:{
+              guint64 num;
+
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+                break;
+
+              if (videocontext->interlace_mode !=
+                  GST_MATROSKA_INTERLACE_MODE_INTERLACED) {
+                GST_WARNING_OBJECT (parse,
+                    "FieldOrder element when not interlaced - ignoring");
+                break;
+              }
+
+              if (num == 0)
+                /* turns out we're actually progressive */
+                videocontext->interlace_mode =
+                    GST_MATROSKA_INTERLACE_MODE_PROGRESSIVE;
+              else if (num == 2)
+                videocontext->field_order = GST_VIDEO_FIELD_ORDER_UNKNOWN;
+              else if (num == 9)
+                videocontext->field_order =
+                    GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+              else if (num == 14)
+                videocontext->field_order =
+                    GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST;
+              else {
+                GST_FIXME_OBJECT (parse,
+                    "Unknown or unsupported FieldOrder %" G_GUINT64_FORMAT,
+                    num);
+                videocontext->field_order = GST_VIDEO_FIELD_ORDER_UNKNOWN;
+              }
+
+              GST_DEBUG_OBJECT (parse, "video track field order: %d",
+                  videocontext->field_order);
+              break;
+            }
+
               /* aspect ratio behaviour */
             case GST_MATROSKA_ID_VIDEOASPECTRATIOTYPE:{
               guint64 num;

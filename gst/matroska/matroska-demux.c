@@ -974,6 +974,44 @@ gst_matroska_demux_parse_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml,
               break;
             }
 
+              /* interlaced field order */
+            case GST_MATROSKA_ID_VIDEOFIELDORDER:{
+              guint64 num;
+
+              if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
+                break;
+
+              if (videocontext->interlace_mode !=
+                  GST_MATROSKA_INTERLACE_MODE_INTERLACED) {
+                GST_WARNING_OBJECT (demux,
+                    "FieldOrder element when not interlaced - ignoring");
+                break;
+              }
+
+              if (num == 0)
+                /* turns out we're actually progressive */
+                videocontext->interlace_mode =
+                    GST_MATROSKA_INTERLACE_MODE_PROGRESSIVE;
+              else if (num == 2)
+                videocontext->field_order = GST_VIDEO_FIELD_ORDER_UNKNOWN;
+              else if (num == 9)
+                videocontext->field_order =
+                    GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+              else if (num == 14)
+                videocontext->field_order =
+                    GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST;
+              else {
+                GST_FIXME_OBJECT (demux,
+                    "Unknown or unsupported FieldOrder %" G_GUINT64_FORMAT,
+                    num);
+                videocontext->field_order = GST_VIDEO_FIELD_ORDER_UNKNOWN;
+              }
+
+              GST_DEBUG_OBJECT (demux, "video track field order: %d",
+                  videocontext->field_order);
+              break;
+            }
+
               /* aspect ratio behaviour */
             case GST_MATROSKA_ID_VIDEOASPECTRATIOTYPE:{
               guint64 num;
@@ -6437,7 +6475,12 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
           break;
         case GST_MATROSKA_INTERLACE_MODE_INTERLACED:
           gst_structure_set (structure,
-              "interlace-mode", G_TYPE_STRING, "mixed", NULL);
+              "interlace-mode", G_TYPE_STRING, "interleaved", NULL);
+
+          if (videocontext->field_order != GST_VIDEO_FIELD_ORDER_UNKNOWN)
+            gst_structure_set (structure, "field-order", G_TYPE_STRING,
+                gst_video_field_order_to_string (videocontext->field_order),
+                NULL);
           break;
         default:
           break;

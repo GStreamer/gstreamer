@@ -132,6 +132,7 @@
 #define GST_MATROSKA_ID_VIDEOPIXELCROPLEFT         0x54CC
 #define GST_MATROSKA_ID_VIDEOPIXELCROPRIGHT        0x54DD
 #define GST_MATROSKA_ID_VIDEOFLAGINTERLACED        0x9A
+#define GST_MATROSKA_ID_VIDEOFIELDORDER            0x9D
 /* semi-draft */
 #define GST_MATROSKA_ID_VIDEOSTEREOMODE            0x53B8
 #define GST_MATROSKA_ID_VIDEOASPECTRATIOTYPE       0x54B3
@@ -632,6 +633,7 @@ typedef struct _GstMatroskaTrackVideoContext {
   guint32       fourcc;
 
   GstMatroskaInterlaceMode interlace_mode;
+  GstVideoFieldOrder field_order;
 
   GstVideoMultiviewMode multiview_mode;
   GstVideoMultiviewFlags multiview_flags;
