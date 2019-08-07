@@ -126,7 +126,7 @@ get_ancillary_16 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
       composite = TRUE;
     } else if (data[parser->offset] == 0x000 &&
         data[parser->offset + 1] == 0x3ff &&
-        data[parser->offset + 1] == 0x3ff) {
+        data[parser->offset + 2] == 0x3ff) {
       /* component */
       i += 3;
       composite = FALSE;
@@ -234,7 +234,7 @@ get_ancillary_8 (GstVideoVBIParser * parser, GstVideoAncillary * anc)
       composite = TRUE;
       i += 1;
     } else if (data[parser->offset] == 0x00 &&
-        data[parser->offset + 1] == 0xff && data[parser->offset + 1] == 0xff) {
+        data[parser->offset + 1] == 0xff && data[parser->offset + 2] == 0xff) {
       /* component */
       composite = FALSE;
       i += 3;
