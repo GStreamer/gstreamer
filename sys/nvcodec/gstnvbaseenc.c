@@ -492,6 +492,10 @@ gst_nv_base_enc_set_filtered_input_formats (GstNvBaseEnc * nvenc,
       case GST_VIDEO_FORMAT_YV12:
       case GST_VIDEO_FORMAT_I420:
         /* 8bits 4:2:0 formats are always supported */
+      case GST_VIDEO_FORMAT_BGRA:
+      case GST_VIDEO_FORMAT_RGBA:
+        /* NOTE: RGB formats seems to also supported format, which are
+         * encoded to 4:2:0 formats */
         gst_value_list_append_value (&supported_format, val);
         last_format = val;
         num_format++;
@@ -505,6 +509,8 @@ gst_nv_base_enc_set_filtered_input_formats (GstNvBaseEnc * nvenc,
         break;
       case GST_VIDEO_FORMAT_P010_10LE:
       case GST_VIDEO_FORMAT_P010_10BE:
+      case GST_VIDEO_FORMAT_BGR10A2_LE:
+      case GST_VIDEO_FORMAT_RGB10A2_LE:
         if (max_bit_minus8 >= 2) {
           gst_value_list_append_value (&supported_format, val);
           last_format = val;
