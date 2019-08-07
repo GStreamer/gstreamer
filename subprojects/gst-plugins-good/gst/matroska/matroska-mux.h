@@ -97,7 +97,7 @@ struct _GstMatroskaMux {
   /* EBML DocType. */
   const gchar    *doctype;
 
-  /* DocType version. */
+  /* DocType read version. Minimal version of specification required to read file */
   guint          doctype_version;
 
   /* state */
