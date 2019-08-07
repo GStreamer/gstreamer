@@ -1972,7 +1972,7 @@ gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
 }
 
 static GstFlowReturn
-gst_wavparse_stream_data (GstWavParse * wav)
+gst_wavparse_stream_data (GstWavParse * wav, gboolean flushing)
 {
   GstBuffer *buf = NULL;
   GstFlowReturn res = GST_FLOW_OK;
@@ -2054,10 +2054,21 @@ iterate_adapter:
 
     if (avail < desired) {
       GST_LOG_OBJECT (wav, "Got only %u bytes of data from the sinkpad", avail);
-      return GST_FLOW_OK;
-    }
 
-    buf = gst_adapter_take_buffer (wav->adapter, desired);
+      /* If we are at the end of the stream, we need to flush whatever we have left */
+      if (avail > 0 && flushing) {
+        if (avail >= wav->blockalign && wav->blockalign > 0) {
+          avail -= (avail % wav->blockalign);
+          buf = gst_adapter_take_buffer (wav->adapter, avail);
+        } else {
+          return GST_FLOW_OK;
+        }
+      } else {
+        return GST_FLOW_OK;
+      }
+    } else {
+      buf = gst_adapter_take_buffer (wav->adapter, desired);
+    }
   } else {
     if ((res = gst_pad_pull_range (wav->sinkpad, wav->offset,
                 desired, &buf)) != GST_FLOW_OK)
@@ -2237,7 +2248,7 @@ gst_wavparse_loop (GstPad * pad)
       /* fall-through */
 
     case GST_WAVPARSE_DATA:
-      if ((ret = gst_wavparse_stream_data (wav)) != GST_FLOW_OK)
+      if ((ret = gst_wavparse_stream_data (wav, FALSE)) != GST_FLOW_OK)
         goto pause;
       break;
     default:
@@ -2337,7 +2348,7 @@ gst_wavparse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     case GST_WAVPARSE_DATA:
       if (buf && GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))
         wav->discont = TRUE;
-      if ((ret = gst_wavparse_stream_data (wav)) != GST_FLOW_OK)
+      if ((ret = gst_wavparse_stream_data (wav, FALSE)) != GST_FLOW_OK)
         goto done;
       break;
     default:
@@ -2361,7 +2372,7 @@ gst_wavparse_flush_data (GstWavParse * wav)
   guint av;
 
   if ((av = gst_adapter_available (wav->adapter)) > 0) {
-    ret = gst_wavparse_stream_data (wav);
+    ret = gst_wavparse_stream_data (wav, TRUE);
   }
 
   return ret;
