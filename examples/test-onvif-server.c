@@ -171,8 +171,6 @@ translate_seek (ReplayBin * self, GstPad * pad, GstEvent * ievent)
     /* First up to where we should seek the file */
     ostop = istop % (ustop + INTERVAL);
 
-    GST_ERROR ("Ostop is %" GST_TIME_FORMAT, GST_TIME_ARGS (ostop));
-
     /* This may end up in our empty interval */
     if (ostop > ustop) {
       istop -= ostop - ustop;
@@ -225,7 +223,7 @@ translate_seek (ReplayBin * self, GstPad * pad, GstEvent * ievent)
   gst_event_set_seek_trickmode_interval (oevent, self->trickmode_interval);
   gst_event_set_seqnum (oevent, seqnum);
 
-  GST_ERROR ("Translated event to %" GST_PTR_FORMAT " (remainder: %ld)", oevent,
+  GST_DEBUG ("Translated event to %" GST_PTR_FORMAT " (remainder: %ld)", oevent,
       self->remainder);
 
 done:
@@ -242,7 +240,7 @@ replay_bin_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      GST_ERROR ("Processing seek event %" GST_PTR_FORMAT, event);
+      GST_DEBUG ("Processing seek event %" GST_PTR_FORMAT, event);
 
       self->incoming_seek = event;
 
@@ -357,7 +355,7 @@ translate_segment (GstPad * pad, GstEvent * ievent)
 
     gst_event_unref (ievent);
 
-    GST_ERROR ("Translated segment: %" GST_PTR_FORMAT ", ts_offset: %lu", ret,
+    GST_DEBUG ("Translated segment: %" GST_PTR_FORMAT ", ts_offset: %lu", ret,
         self->ts_offset);
   } else {
     ret = NULL;
@@ -476,14 +474,6 @@ replay_bin_buffer_probe (GstPad * pad, GstPadProbeInfo * info, gpointer unused)
     GST_BUFFER_PTS (info->data) += self->ts_offset;
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (info->data)))
     GST_BUFFER_DTS (info->data) += self->ts_offset;
-
-  /*
-     if (GST_BUFFER_PTS (info->data) < self->min_pts) {
-     GST_ERROR ("Retimestamping for the greater good");
-     GST_BUFFER_PTS (info->data) = self->min_pts;
-     self->min_pts += 1;
-     }
-   */
 
   GST_LOG ("Pushing buffer %" GST_PTR_FORMAT, info->data);
 
