@@ -3192,9 +3192,9 @@ gst_matroska_mux_start_file (GstMatroskaMux * mux)
 
   /* we start with a EBML header */
   doctype = mux->doctype;
-  GST_INFO_OBJECT (ebml, "DocType: %s, Version: %d",
-      doctype, mux->doctype_version);
-  gst_ebml_write_header (ebml, doctype, mux->doctype_version);
+  GST_INFO_OBJECT (ebml, "DocType: %s, Version: 4/%d", doctype,
+      mux->doctype_version);
+  gst_ebml_write_header (ebml, doctype, 4, mux->doctype_version);
 
   /* the rest of the header is cached */
   gst_ebml_write_set_cache (ebml, 0x1000);

@@ -911,7 +911,7 @@ gst_ebml_replace_uint (GstEbmlWrite * ebml, guint64 pos, guint64 num)
  */
 void
 gst_ebml_write_header (GstEbmlWrite * ebml, const gchar * doctype,
-    guint version)
+    guint version, guint readversion)
 {
   guint64 pos;
 
@@ -929,7 +929,7 @@ gst_ebml_write_header (GstEbmlWrite * ebml, const gchar * doctype,
 #endif
   gst_ebml_write_ascii (ebml, GST_EBML_ID_DOCTYPE, doctype);
   gst_ebml_write_uint (ebml, GST_EBML_ID_DOCTYPEVERSION, version);
-  gst_ebml_write_uint (ebml, GST_EBML_ID_DOCTYPEREADVERSION, version);
+  gst_ebml_write_uint (ebml, GST_EBML_ID_DOCTYPEREADVERSION, readversion);
   gst_ebml_write_master_finish (ebml, pos);
   gst_ebml_write_flush_cache (ebml, FALSE, 0);
 }
