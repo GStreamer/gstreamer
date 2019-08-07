@@ -121,6 +121,8 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_RGB10A2_LE: packed 4:4:4 RGB with alpha channel(R-G-B-A), 10 bits for R/G/B channel and MSB 2 bits for alpha channel (Since: 1.18)
  * @GST_VIDEO_FORMAT_Y444_16BE: planar 4:4:4 YUV, 16 bits per channel (Since: 1.18)
  * @GST_VIDEO_FORMAT_Y444_16LE: planar 4:4:4 YUV, 16 bits per channel (Since: 1.18)
+ * @GST_VIDEO_FORMAT_P016_BE: planar 4:2:0 YUV with interleaved UV plane, 16 bits per channel (Since: 1.18)
+ * @GST_VIDEO_FORMAT_P016_LE: planar 4:2:0 YUV with interleaved UV plane, 16 bits per channel (Since: 1.18)
  *
  * Enum value describing the most common video formats.
  *
@@ -217,6 +219,8 @@ typedef enum {
   GST_VIDEO_FORMAT_RGB10A2_LE,
   GST_VIDEO_FORMAT_Y444_16BE,
   GST_VIDEO_FORMAT_Y444_16LE,
+  GST_VIDEO_FORMAT_P016_BE,
+  GST_VIDEO_FORMAT_P016_LE,
 } GstVideoFormat;
 
 #define GST_VIDEO_MAX_PLANES 4
@@ -572,7 +576,7 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
   "P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, " \
   "GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, " \
   "Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, " \
-  "Y444_16BE, Y444_16LE }"
+  "Y444_16BE, Y444_16LE, P016_BE, P016_LE }"
 
 /**
  * GST_VIDEO_CAPS_MAKE:
