@@ -104,6 +104,7 @@ struct _GstDecklinkVideoSrc
 
   GstVideoVBIParser *vbiparser;
   GstVideoFormat anc_vformat;
+  gint anc_width;
   gboolean output_cc;
   gint last_cc_vbi_line;
   gint last_cc_vbi_line_field2;

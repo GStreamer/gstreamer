@@ -1014,12 +1014,13 @@ extract_vbi_line (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
 }
 
 static void
-extract_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
-    VideoFrame * vf, const GstDecklinkMode * mode)
+extract_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer, VideoFrame * vf)
 {
   IDeckLinkVideoFrameAncillary *vanc_frame = NULL;
   gint line;
   GstVideoFormat videoformat;
+  GstDecklinkModeEnum mode_enum;
+  const GstDecklinkMode *mode;
   gboolean found_cc = FALSE, found_afd_bar = FALSE;
 
   if (vf->frame->GetAncillaryData (&vanc_frame) != S_OK)
@@ -1027,6 +1028,9 @@ extract_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
 
   videoformat =
       gst_decklink_video_format_from_type (vanc_frame->GetPixelFormat ());
+  mode_enum =
+      gst_decklink_get_mode_enum_from_bmd (vanc_frame->GetDisplayMode ());
+  mode = gst_decklink_get_mode (mode_enum);
 
   if (videoformat == GST_VIDEO_FORMAT_UNKNOWN) {
     GST_DEBUG_OBJECT (self, "Unknown video format for Ancillary data");
@@ -1034,7 +1038,8 @@ extract_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
     return;
   }
 
-  if (videoformat != self->anc_vformat && self->vbiparser) {
+  if ((videoformat != self->anc_vformat || mode->width != self->anc_width)
+      && self->vbiparser) {
     gst_video_vbi_parser_free (self->vbiparser);
     self->vbiparser = NULL;
   }
@@ -1042,6 +1047,7 @@ extract_vbi (GstDecklinkVideoSrc * self, GstBuffer ** buffer,
   if (self->vbiparser == NULL) {
     self->vbiparser = gst_video_vbi_parser_new (videoformat, mode->width);
     self->anc_vformat = videoformat;
+    self->anc_width = mode->width;
   }
 
   GST_DEBUG_OBJECT (self, "Checking for ancillary data in VBI");
@@ -1288,6 +1294,7 @@ retry:
       gst_video_vbi_parser_free (self->vbiparser);
       self->vbiparser = NULL;
       self->anc_vformat = GST_VIDEO_FORMAT_UNKNOWN;
+      self->anc_width = 0;
     }
   }
 
@@ -1306,13 +1313,11 @@ retry:
   vf->input = self->input->input;
   vf->input->AddRef ();
 
-  mode = gst_decklink_get_mode (self->mode);
-
   // If we have a format that supports VANC and we are asked to extract CC,
   // then do it here.
   if ((self->output_cc || self->output_afd_bar)
       && self->signal_state != SIGNAL_STATE_LOST)
-    extract_vbi (self, buffer, vf, mode);
+    extract_vbi (self, buffer, vf);
 
   if (f.no_signal)
     GST_BUFFER_FLAG_SET (*buffer, GST_BUFFER_FLAG_GAP);
@@ -1327,6 +1332,7 @@ retry:
       gst_static_caps_get (&hardware_reference), f.hardware_timestamp,
       f.hardware_duration);
 
+  mode = gst_decklink_get_mode (self->caps_mode);
   if (mode->interlaced && mode->tff)
     GST_BUFFER_FLAG_SET (*buffer,
         GST_VIDEO_BUFFER_FLAG_TFF | GST_VIDEO_BUFFER_FLAG_INTERLACED);
@@ -1483,6 +1489,7 @@ gst_decklink_video_src_stop (GstDecklinkVideoSrc * self)
     gst_video_vbi_parser_free (self->vbiparser);
     self->vbiparser = NULL;
     self->anc_vformat = GST_VIDEO_FORMAT_UNKNOWN;
+    self->anc_width = 0;
   }
 
   return TRUE;
@@ -1550,6 +1557,7 @@ gst_decklink_video_src_change_state (GstElement * element,
       }
       self->vbiparser = NULL;
       self->anc_vformat = GST_VIDEO_FORMAT_UNKNOWN;
+      self->anc_width = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       self->flushing = FALSE;
