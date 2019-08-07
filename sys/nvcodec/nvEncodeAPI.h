@@ -1,7 +1,7 @@
 /*
  * This copyright notice applies to this header file only:
  *
- * Copyright (c) 2010-2018 NVIDIA Corporation
+ * Copyright (c) 2010-2019 NVIDIA Corporation
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -109,8 +109,8 @@ typedef void* NV_ENC_INPUT_PTR;             /**< NVENCODE API input buffer      
 typedef void* NV_ENC_OUTPUT_PTR;            /**< NVENCODE API output buffer*/
 typedef void* NV_ENC_REGISTERED_PTR;        /**< A Resource that has been registered with NVENCODE API*/
 
-#define NVENCAPI_MAJOR_VERSION 8
-#define NVENCAPI_MINOR_VERSION 1
+#define NVENCAPI_MAJOR_VERSION 9
+#define NVENCAPI_MINOR_VERSION 0
 
 #define NVENCAPI_VERSION (NVENCAPI_MAJOR_VERSION | (NVENCAPI_MINOR_VERSION << 24))
 
@@ -310,6 +310,7 @@ typedef enum _NV_ENC_PIC_TYPE
     NV_ENC_PIC_TYPE_BI              = 0x04,    /**< Bi-directionally predicted with only Intra MBs */
     NV_ENC_PIC_TYPE_SKIPPED         = 0x05,    /**< Picture is skipped */
     NV_ENC_PIC_TYPE_INTRA_REFRESH   = 0x06,    /**< First picture in intra refresh cycle */
+    NV_ENC_PIC_TYPE_NONREF_P        = 0x07,    /**< Non reference P picture */            
     NV_ENC_PIC_TYPE_UNKNOWN         = 0xFF     /**< Picture type unknown */
 } NV_ENC_PIC_TYPE;
 
@@ -358,6 +359,10 @@ typedef enum _NV_ENC_BUFFER_FORMAT
                                                                              where a pixel is represented by a 32-bit word with R
                                                                              in the lowest 10 bits, G in the next 10 bits, B in the
                                                                              10 bits after that and A in the highest 2 bits. */
+    NV_ENC_BUFFER_FORMAT_U8                              = 0x40000000,  /**< Buffer format representing one-dimensional buffer. 
+                                                                             This format should be used only when registering the 
+                                                                             resource as output buffer, which will be used to write
+                                                                             the encoded bit stream or H.264 ME only mode output. */
 } NV_ENC_BUFFER_FORMAT;
 
 #define NV_ENC_BUFFER_FORMAT_NV12_PL NV_ENC_BUFFER_FORMAT_NV12
@@ -611,7 +616,7 @@ typedef enum _NV_ENC_MEMORY_HEAP
 typedef enum _NV_ENC_BFRAME_REF_MODE
 {
     NV_ENC_BFRAME_REF_MODE_DISABLED = 0x0,          /**< B frame is not used for reference */
-    NV_ENC_BFRAME_REF_MODE_EACH     = 0x1,          /**< Each B-frame will be used for reference. currently not supported */
+    NV_ENC_BFRAME_REF_MODE_EACH     = 0x1,          /**< Each B-frame will be used for reference. currently not supported for H.264 */
     NV_ENC_BFRAME_REF_MODE_MIDDLE   = 0x2,          /**< Only(Number of B-frame)/2 th B-frame will be used for reference */
 } NV_ENC_BFRAME_REF_MODE;
 
@@ -677,9 +682,22 @@ typedef enum _NV_ENC_INPUT_RESOURCE_TYPE
 {
     NV_ENC_INPUT_RESOURCE_TYPE_DIRECTX          = 0x0,   /**< input resource type is a directx9 surface*/
     NV_ENC_INPUT_RESOURCE_TYPE_CUDADEVICEPTR    = 0x1,   /**< input resource type is a cuda device pointer surface*/
-    NV_ENC_INPUT_RESOURCE_TYPE_CUDAARRAY        = 0x2,   /**< input resource type is a cuda array surface */
+    NV_ENC_INPUT_RESOURCE_TYPE_CUDAARRAY        = 0x2,   /**< input resource type is a cuda array surface.
+                                                              This array must be a 2D array and the CUDA_ARRAY3D_SURFACE_LDST
+                                                              flag must have been specified when creating it. */
     NV_ENC_INPUT_RESOURCE_TYPE_OPENGL_TEX       = 0x3    /**< input resource type is an OpenGL texture */
 } NV_ENC_INPUT_RESOURCE_TYPE;
+
+/**
+ *  Buffer usage
+ */
+typedef enum _NV_ENC_BUFFER_USAGE
+{
+    NV_ENC_INPUT_IMAGE              = 0x0,          /**< Registered surface will be used for input image */
+    NV_ENC_OUTPUT_MOTION_VECTOR     = 0x1,          /**< Registered surface will be used for output of H.264 ME only mode. 
+                                                         This buffer usage type is not supported for HEVC ME only mode. */
+    NV_ENC_OUTPUT_BITSTREAM         = 0x2           /**< Registered surface will be used for output bitstream in encoding */
+} NV_ENC_BUFFER_USAGE;
 
 /**
  *  Encoder Device type
@@ -1044,6 +1062,19 @@ typedef struct _NV_ENC_CAPS_PARAM
 
 
 /**
+ * Encoder Output parameters
+ */
+typedef struct _NV_ENC_ENCODE_OUT_PARAMS
+{
+    uint32_t                  version;                 /**< [out]: Struct version. */
+    uint32_t                  bitstreamSizeInBytes;    /**< [out]: Encoded bitstream size in bytes */
+    uint32_t                  reserved[62];            /**< [out]: Reserved and must be set to 0 */
+} NV_ENC_ENCODE_OUT_PARAMS;
+
+/** NV_ENC_ENCODE_OUT_PARAMS struct version. */
+#define NV_ENC_ENCODE_OUT_PARAMS_VER NVENCAPI_STRUCT_VERSION(1) 
+
+/**
  * Creation parameters for input buffer.
  */
 typedef struct _NV_ENC_CREATE_INPUT_BUFFER
@@ -1108,7 +1139,7 @@ typedef struct _NV_ENC_H264_MV_DATA
 typedef struct _NV_ENC_HEVC_MV_DATA
 {
     NV_ENC_MVECTOR    mv[4];               /**< up to 4 vectors within a CU */
-    uint8_t           cuType;              /**< 0 (I), 1(P), 2 (Skip) */
+    uint8_t           cuType;              /**< 0 (I), 1(P) */
     uint8_t           cuSize;              /**< 0: 8x8, 1: 16x16, 2: 32x32, 3: 64x64 */
     uint8_t           partitionMode;       /**< The CU partition mode
                                                 0 (2Nx2N), 1 (2NxN), 2(Nx2N), 3 (NxN),
@@ -1386,7 +1417,8 @@ typedef struct _NV_ENC_CONFIG_HEVC
                                                                                Set to 1 to use "LTR Trust" mode of LTR operation. Clients are discouraged to use "LTR Trust" mode as this mode may 
                                                                                be deprecated in future releases.
                                                                                Set to 0 when using "LTR Per Picture" mode of LTR operation. */
-    uint32_t                            reserved1[217];             /**< [in]: Reserved and must be set to 0.*/
+    NV_ENC_BFRAME_REF_MODE              useBFramesAsRef;            /**< [in]: Specifies the B-Frame as reference mode. Check support for useBFramesAsRef mode using  ::NV_ENC_CAPS_SUPPORT_BFRAME_REF_MODE caps.*/
+    uint32_t                            reserved1[216];             /**< [in]: Reserved and must be set to 0.*/
     void*    reserved2[64];                                         /**< [in]: Reserved and must be set to NULL */
 } NV_ENC_CONFIG_HEVC;
 
@@ -1482,7 +1514,8 @@ typedef struct _NV_ENC_INITIALIZE_PARAMS
                                                                                            NV_ENC_PIC_PARAMS::meHintRefPicDist should preferably be set with enablePTD=1. */
     uint32_t                                   enableMEOnlyMode          :1;    /**< [in]: Set to 1 to enable ME Only Mode .*/
     uint32_t                                   enableWeightedPrediction  :1;    /**< [in]: Set this to 1 to enable weighted prediction. Not supported if encode session is configured for B-Frames( 'frameIntervalP' in NV_ENC_CONFIG is greater than 1).*/
-    uint32_t                                   reservedBitFields         :27;   /**< [in]: Reserved bitfields and must be set to 0 */
+    uint32_t                                   enableOutputInVidmem      :1;    /**< [in]: Set this to 1 to enable output of NVENC in video memory buffer created by application. This feature is not supported for HEVC ME only mode. */
+    uint32_t                                   reservedBitFields         :26;   /**< [in]: Reserved bitfields and must be set to 0 */
     uint32_t                                   privDataSize;                    /**< [in]: Reserved private data buffer size and must be set to 0 */
     void*                                      privData;                        /**< [in]: Reserved private data buffer and must be set to NULL */
     NV_ENC_CONFIG*                             encodeConfig;                    /**< [in]: Specifies the advanced codec specific structure. If client has sent a valid codec config structure, it will override parameters set by the NV_ENC_INITIALIZE_PARAMS::presetGUID parameter. If set to NULL the NvEncodeAPI interface will use the NV_ENC_INITIALIZE_PARAMS::presetGUID to set the codec specific parameters.
@@ -1601,8 +1634,12 @@ typedef struct _NV_ENC_PIC_PARAMS_H264
     uint32_t ltrMarkFrameIdx;                            /**< [in]: Specifies the long term referenceframe index to use for marking this frame as LTR.*/
     uint32_t ltrUseFrameBitmap;                          /**< [in]: Specifies the the associated bitmap of LTR frame indices to use when encoding this frame. */
     uint32_t ltrUsageMode;                               /**< [in]: Not supported. Reserved for future use and must be set to 0. */
-    uint32_t reserved [243];                             /**< [in]: Reserved and must be set to 0. */
-    void*    reserved2[62];                              /**< [in]: Reserved and must be set to NULL. */
+    uint32_t forceIntraSliceCount;                       /**< [in]: Specfies the number of slices to be forced to Intra in the current picture.
+                                                                    This option along with forceIntraSliceIdx[] array needs to be used with sliceMode = 3 only */
+    uint32_t *forceIntraSliceIdx;                        /**< [in]: Slice indices to be forced to intra in the current picture. Each slice index should be <= num_slices_in_picture -1. Index starts from 0 for first slice.
+                                                                    The number of entries in this array should be equal to forceIntraSliceCount */
+    uint32_t reserved [242];                             /**< [in]: Reserved and must be set to 0. */
+    void*    reserved2[61];                              /**< [in]: Reserved and must be set to NULL. */
 } NV_ENC_PIC_PARAMS_H264;
 
 /**
@@ -1673,7 +1710,14 @@ typedef struct _NV_ENC_PIC_PARAMS
     uint64_t                                    inputTimeStamp;                 /**< [in]: Specifies presentation timestamp associated with the input picture. */
     uint64_t                                    inputDuration;                  /**< [in]: Specifies duration of the input picture */
     NV_ENC_INPUT_PTR                            inputBuffer;                    /**< [in]: Specifies the input buffer pointer. Client must use a pointer obtained from ::NvEncCreateInputBuffer() or ::NvEncMapInputResource() APIs.*/
-    NV_ENC_OUTPUT_PTR                           outputBitstream;                /**< [in]: Specifies the pointer to output buffer. Client should use a pointer obtained from ::NvEncCreateBitstreamBuffer() API. */
+    NV_ENC_OUTPUT_PTR                           outputBitstream;                /**< [in]: Specifies the output buffer pointer. 
+                                                                                           If NV_ENC_INITIALIZE_PARAMS::enableOutputInVidmem is set to 0, specifies the pointer to output buffer. Client should use a pointer obtained from ::NvEncCreateBitstreamBuffer() API. 
+                                                                                           If NV_ENC_INITIALIZE_PARAMS::enableOutputInVidmem is set to 1, client should allocate buffer in video memory for NV_ENC_ENCODE_OUT_PARAMS struct and encoded bitstream data. Client 
+                                                                                           should use a pointer obtained from ::NvEncMapInputResource() API, when mapping this output buffer and assign it to NV_ENC_PIC_PARAMS::outputBitstream. 
+                                                                                           First 256 bytes of this buffer should be interpreted as NV_ENC_ENCODE_OUT_PARAMS struct followed by encoded bitstream data. Recommended size for output buffer is sum of size of 
+                                                                                           NV_ENC_ENCODE_OUT_PARAMS struct and twice the input frame size for lower resolution eg. CIF and 1.5 times the input frame size for higher resolutions. If encoded bitstream size is 
+                                                                                           greater than the allocated buffer size for encoded bitstream, then the output buffer will have encoded bitstream data equal to buffer size. All CUDA operations on this buffer must use 
+                                                                                           the default stream. */
     void*                                       completionEvent;                /**< [in]: Specifies an event to be signalled on completion of encoding of this Frame [only if operating in Asynchronous mode]. Each output buffer should be associated with a distinct event pointer. */
     NV_ENC_BUFFER_FORMAT                        bufferFmt;                      /**< [in]: Specifies the input buffer format. */
     NV_ENC_PIC_STRUCT                           pictureStruct;                  /**< [in]: Specifies structure of the input picture. */
@@ -1715,7 +1759,12 @@ typedef struct _NV_ENC_MEONLY_PARAMS
     uint32_t                inputHeight;                        /**< [in]: Specifies the input buffer height */
     NV_ENC_INPUT_PTR        inputBuffer;                        /**< [in]: Specifies the input buffer pointer. Client must use a pointer obtained from NvEncCreateInputBuffer() or NvEncMapInputResource() APIs. */
     NV_ENC_INPUT_PTR        referenceFrame;                     /**< [in]: Specifies the reference frame pointer */
-    NV_ENC_OUTPUT_PTR       mvBuffer;                           /**< [in]: Specifies the pointer to motion vector data buffer allocated by NvEncCreateMVBuffer. Client must lock mvBuffer using ::NvEncLockBitstream() API to get the motion vector data. */
+    NV_ENC_OUTPUT_PTR       mvBuffer;                           /**< [in]: Specifies the output buffer pointer.
+                                                                           If NV_ENC_INITIALIZE_PARAMS::enableOutputInVidmem is set to 0, specifies the pointer to motion vector data buffer allocated by NvEncCreateMVBuffer. 
+                                                                           Client must lock mvBuffer using ::NvEncLockBitstream() API to get the motion vector data. 
+                                                                           If NV_ENC_INITIALIZE_PARAMS::enableOutputInVidmem is set to 1, client should allocate buffer in video memory for storing the motion vector data. The size of this buffer must 
+                                                                           be equal to total number of macroblocks multiplied by size of NV_ENC_H264_MV_DATA struct. Client should use a pointer obtained from ::NvEncMapInputResource() API, when mapping this 
+                                                                           output buffer and assign it to NV_ENC_MEONLY_PARAMS::mvBuffer. All CUDA operations on this buffer must use the default stream. */
     NV_ENC_BUFFER_FORMAT    bufferFmt;                          /**< [in]: Specifies the input buffer format. */
     void*                   completionEvent;                    /**< [in]: Specifies an event to be signalled on completion of motion estimation 
                                                                            of this Frame [only if operating in Asynchronous mode]. 
@@ -1745,7 +1794,8 @@ typedef struct _NV_ENC_LOCK_BITSTREAM
     uint32_t                version;                     /**< [in]: Struct version. Must be set to ::NV_ENC_LOCK_BITSTREAM_VER. */
     uint32_t                doNotWait         :1;        /**< [in]: If this flag is set, the NvEncodeAPI interface will return buffer pointer even if operation is not completed. If not set, the call will block until operation completes. */
     uint32_t                ltrFrame          :1;        /**< [out]: Flag indicating this frame is marked as LTR frame */
-    uint32_t                reservedBitFields :30;       /**< [in]: Reserved bit fields and must be set to 0 */
+    uint32_t                getRCStats        :1;        /**< [in]: If this flag is set then lockBitstream call will add additional intra-inter MB count and average MVX, MVY */
+    uint32_t                reservedBitFields :29;       /**< [in]: Reserved bit fields and must be set to 0 */
     void*                   outputBitstream;             /**< [in]: Pointer to the bitstream buffer being locked. */
     uint32_t*               sliceOffsets;                /**< [in,out]: Array which receives the slice offsets. This is not supported if NV_ENC_CONFIG_H264::sliceMode is 1 on Kepler GPUs. Array size must be equal to size of frame in MBs. */
     uint32_t                frameIdx;                    /**< [out]: Frame no. for which the bitstream is being retrieved. */ 
@@ -1763,7 +1813,12 @@ typedef struct _NV_ENC_LOCK_BITSTREAM
     uint32_t                frameSatd;                   /**< [out]: Total SATD cost for whole frame. */
     uint32_t                ltrFrameIdx;                 /**< [out]: Frame index associated with this LTR frame. */
     uint32_t                ltrFrameBitmap;              /**< [out]: Bitmap of LTR frames indices which were used for encoding this frame. Value of 0 if no LTR frames were used. */
-    uint32_t                reserved [236];              /**< [in]: Reserved and must be set to 0 */
+    uint32_t                reserved[13];                /**< [in]: Reserved and must be set to 0 */
+    uint32_t                intraMBCount;                /**< [out]: For H264, Number of Intra MBs in the encoded frame. For HEVC, Number of Intra CTBs in the encoded frame. Supported only if _NV_ENC_LOCK_BITSTREAM::getRCStats set to 1. */
+    uint32_t                interMBCount;                /**< [out]: For H264, Number of Inter MBs in the encoded frame, includes skip MBs. For HEVC, Number of Inter CTBs in the encoded frame. Supported only if _NV_ENC_LOCK_BITSTREAM::getRCStats set to 1. */
+    int32_t                 averageMVX;                  /**< [out]: Average Motion Vector in X direction for the encoded frame. Supported only if _NV_ENC_LOCK_BITSTREAM::getRCStats set to 1. */
+    int32_t                 averageMVY;                  /**< [out]: Average Motion Vector in y direction for the encoded frame. Supported only if _NV_ENC_LOCK_BITSTREAM::getRCStats set to 1. */
+    uint32_t                reserved1[219];              /**< [in]: Reserved and must be set to 0 */
     void*                   reserved2[64];               /**< [in]: Reserved and must be set to NULL */
 } NV_ENC_LOCK_BITSTREAM;
 
@@ -1835,12 +1890,24 @@ typedef struct _NV_ENC_REGISTER_RESOURCE
                                                                            ::NV_ENC_INPUT_RESOURCE_TYPE_OPENGL_TEX */
     uint32_t                    width;                          /**< [in]: Input buffer Width. */
     uint32_t                    height;                         /**< [in]: Input buffer Height. */
-    uint32_t                    pitch;                          /**< [in]: Input buffer Pitch.  */
+    uint32_t                    pitch;                          /**< [in]: Input buffer Pitch.
+                                                                           For ::NV_ENC_INPUT_RESOURCE_TYPE_DIRECTX resources, set this to 0.
+                                                                           For ::NV_ENC_INPUT_RESOURCE_TYPE_CUDADEVICEPTR resources, set this to
+                                                                             the pitch as obtained from cuMemAllocPitch(), or to the width in
+                                                                             bytes (if this resource was created by using cuMemAlloc()). This
+                                                                             value must be a multiple of 4.
+                                                                           For ::NV_ENC_INPUT_RESOURCE_TYPE_CUDAARRAY resources, set this to the
+                                                                             width of the allocation in bytes (i.e.
+                                                                             CUDA_ARRAY3D_DESCRIPTOR::Width * CUDA_ARRAY3D_DESCRIPTOR::NumChannels).
+                                                                           For ::NV_ENC_INPUT_RESOURCE_TYPE_OPENGL_TEX resources, set this to the
+                                                                             texture width multiplied by the number of components in the texture
+                                                                             format. */
     uint32_t                    subResourceIndex;               /**< [in]: Subresource Index of the DirectX resource to be registered. Should be set to 0 for other interfaces. */
     void*                       resourceToRegister;             /**< [in]: Handle to the resource that is being registered. */
     NV_ENC_REGISTERED_PTR       registeredResource;             /**< [out]: Registered resource handle. This should be used in future interactions with the Nvidia Video Encoder Interface. */
     NV_ENC_BUFFER_FORMAT        bufferFormat;                   /**< [in]: Buffer format of resource to be registered. */
-    uint32_t                    reserved1[248];                 /**< [in]: Reserved and must be set to 0. */
+    NV_ENC_BUFFER_USAGE         bufferUsage;                    /**< [in]: Usage of resource to be registered. */
+    uint32_t                    reserved1[247];                 /**< [in]: Reserved and must be set to 0. */
     void*                       reserved2[62];                  /**< [in]: Reserved and must be set to NULL. */
 } NV_ENC_REGISTER_RESOURCE;
 
@@ -2932,8 +2999,10 @@ NVENCSTATUS NVENCAPI NvEncUnregisterAsyncEvent                  (void* encoder, 
  * mapped resource is returned in the field NV_ENC_MAP_INPUT_RESOURCE::outputResourcePtr.
  * The NvEncodeAPI interface also returns the buffer format of the mapped resource
  * in the field NV_ENC_MAP_INPUT_RESOURCE::outbufferFmt.
- * This function provides synchronization guarantee that any graphics or compute
- * work submitted on the input buffer is completed before the buffer is used for encoding.
+ * This function provides synchronization guarantee that any graphics work submitted
+ * on the input buffer is completed before the buffer is used for encoding. This is
+ * also true for compute (i.e. CUDA) work, provided that the previous workload using
+ * the input resource was submitted to the default stream.
  * The client should not access any input buffer while they are mapped by the encoder.
  *
  * \param [in] encoder
