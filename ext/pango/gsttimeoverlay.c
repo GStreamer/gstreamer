@@ -191,6 +191,7 @@ gst_time_overlay_finalize (GObject * gobject)
 
   g_date_time_unref (self->datetime_epoch);
   g_free (self->datetime_format);
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
 static void
