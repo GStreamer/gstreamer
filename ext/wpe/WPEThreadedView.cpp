@@ -174,7 +174,7 @@ void WPEThreadedView::s_loadEvent(WebKitWebView*, WebKitLoadEvent event, gpointe
     }
 }
 
-void WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
+bool WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
 {
     GST_DEBUG("context %p display %p, size (%d,%d)", context, display, width, height);
 
@@ -186,14 +186,20 @@ void WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
 #endif
         });
 
+    EGLDisplay eglDisplay = gst_gl_display_egl_get_from_native(GST_GL_DISPLAY_TYPE_WAYLAND,
+        gst_gl_display_get_handle(display));
+    GST_DEBUG("eglDisplay %p", eglDisplay);
+
     struct InitializeContext {
         GstWpeSrc* src;
         WPEThreadedView& view;
         GstGLContext* context;
         GstGLDisplay* display;
+        EGLDisplay eglDisplay;
         int width;
         int height;
-    } initializeContext{ src, *this, context, display, width, height };
+      bool result;
+    } initializeContext { src, *this, context, display, eglDisplay, width, height, FALSE };
 
     GSource* source = g_idle_source_new();
     g_source_set_callback(source,
@@ -210,11 +216,12 @@ void WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
             view.wpe.width = initializeContext.width;
             view.wpe.height = initializeContext.height;
 
-            EGLDisplay eglDisplay = gst_gl_display_egl_get_from_native(
-                GST_GL_DISPLAY_TYPE_WAYLAND,
-                gst_gl_display_get_handle(initializeContext.display));
-            GST_DEBUG("eglDisplay %p", eglDisplay);
-            wpe_fdo_initialize_for_egl_display(eglDisplay);
+            initializeContext.result = wpe_fdo_initialize_for_egl_display(initializeContext.eglDisplay);
+            GST_DEBUG("FDO EGL display initialisation result: %d", initializeContext.result);
+            if (!initializeContext.result) {
+              g_cond_signal(&view.threading.cond);
+              return G_SOURCE_REMOVE;
+            }
 
             view.wpe.exportable = wpe_view_backend_exportable_fdo_egl_create(&s_exportableClient,
                 &view, view.wpe.width, view.wpe.height);
@@ -254,12 +261,13 @@ void WPEThreadedView::initialize(GstWpeSrc* src, GstGLContext* context, GstGLDis
 
     g_source_unref(source);
 
-    {
+    if (initializeContext.result) {
         GST_DEBUG("waiting load to finish");
         GMutexHolder lock(threading.ready_mutex);
         g_cond_wait(&threading.ready_cond, &threading.ready_mutex);
         GST_DEBUG("done");
     }
+    return initializeContext.result;
 }
 
 GstEGLImage* WPEThreadedView::image()
@@ -267,28 +275,33 @@ GstEGLImage* WPEThreadedView::image()
     GstEGLImage* ret = nullptr;
     GMutexHolder lock(images.mutex);
 
-    GST_TRACE("pending %" GST_PTR_FORMAT " committed %" GST_PTR_FORMAT, images.pending, images.committed);
+    GST_TRACE("pending %" GST_PTR_FORMAT " (%d) committed %" GST_PTR_FORMAT " (%d)", images.pending,
+        GST_IS_EGL_IMAGE(images.pending) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(images.pending)) : 0,
+        images.committed,
+        GST_IS_EGL_IMAGE(images.committed) ? GST_MINI_OBJECT_REFCOUNT_VALUE(GST_MINI_OBJECT_CAST(images.committed)) : 0);
 
     if (images.pending) {
         auto* previousImage = images.committed;
         images.committed = images.pending;
         images.pending = nullptr;
 
-        frameComplete();
-
         if (previousImage)
             gst_egl_image_unref(previousImage);
     }
 
-    if (images.committed)
+    if (images.committed) {
         ret = images.committed;
+        frameComplete();
+    }
 
     return ret;
 }
 
 void WPEThreadedView::resize(int width, int height)
 {
-    GST_DEBUG("resize");
+    GST_DEBUG("resize to %dx%d", width, height);
+    wpe.width = width;
+    wpe.height = height;
 
     GSource* source = g_idle_source_new();
     g_source_set_callback(source,
@@ -317,7 +330,7 @@ void WPEThreadedView::resize(int width, int height)
 
 void WPEThreadedView::frameComplete()
 {
-    GST_DEBUG("frame complete");
+    GST_TRACE("frame complete");
 
     GSource* source = g_idle_source_new();
     g_source_set_callback(source,
@@ -325,7 +338,7 @@ void WPEThreadedView::frameComplete()
             auto& view = *static_cast<WPEThreadedView*>(data);
             GMutexHolder lock(view.threading.mutex);
 
-            GST_DEBUG("dispatching");
+            GST_TRACE("dispatching");
             wpe_view_backend_exportable_fdo_dispatch_frame_complete(view.wpe.exportable);
 
             g_cond_signal(&view.threading.cond);
@@ -358,7 +371,7 @@ void WPEThreadedView::loadUri(const gchar* uri)
     struct UriContext {
         WPEThreadedView& view;
         const gchar* uri;
-    } uriContext{ *this, uri };
+    } uriContext { *this, uri };
 
     GSource* source = g_idle_source_new();
     g_source_set_callback(source,
@@ -412,7 +425,7 @@ void WPEThreadedView::releaseImage(gpointer imagePointer)
             auto& view = releaseImageContext.view;
             GMutexHolder lock(view.threading.mutex);
 
-            GST_DEBUG("Dispatch release exported image");
+            GST_TRACE("Dispatch release exported image %p", releaseImageContext.imagePointer);
 #if USE_DEPRECATED_FDO_EGL_IMAGE
             wpe_view_backend_exportable_fdo_egl_dispatch_release_image(releaseImageContext.view.wpe.exportable,
                 static_cast<EGLImageKHR>(releaseImageContext.imagePointer));
@@ -453,8 +466,12 @@ void WPEThreadedView::handleExportedImage(gpointer image)
 #endif
 
     auto* gstImage = gst_egl_image_new_wrapped(gst.context, eglImage, GST_GL_RGBA, imageContext, s_releaseImage);
-    GMutexHolder lock(images.mutex);
-    images.pending = gstImage;
+    {
+      GMutexHolder lock(images.mutex);
+
+      GST_TRACE("EGLImage %p wrapped in GstEGLImage %" GST_PTR_FORMAT, eglImage, gstImage);
+      images.pending = gstImage;
+    }
 }
 
 struct wpe_view_backend_exportable_fdo_egl_client WPEThreadedView::s_exportableClient = {

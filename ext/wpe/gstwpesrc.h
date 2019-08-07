@@ -20,7 +20,7 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/base/gstpushsrc.h>
+#include <gst/gl/gl.h>
 #include <wpe/webkit.h>
 
 G_BEGIN_DECLS
@@ -36,7 +36,7 @@ typedef struct _GstWpeSrcClass GstWpeSrcClass;
 
 struct _GstWpeSrcClass
 {
-  GstPushSrcClass parent_class;
+  GstGLBaseSrcClass parent_class;
 };
 
 GType gst_wpe_src_get_type (void);

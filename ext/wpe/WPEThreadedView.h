@@ -36,7 +36,7 @@ public:
     WPEThreadedView();
     ~WPEThreadedView();
 
-    void initialize(GstWpeSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
+    bool initialize(GstWpeSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
 
     void resize(int width, int height);
     void loadUri(const gchar*);
