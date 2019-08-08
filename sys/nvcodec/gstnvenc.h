@@ -32,16 +32,16 @@ gboolean                gst_nvenc_cmp_guid (GUID g1, GUID g2);
 
 NV_ENC_BUFFER_FORMAT    gst_nvenc_get_nv_buffer_format (GstVideoFormat fmt);
 
-gboolean                gst_nv_enc_get_supported_input_formats (gpointer encoder,
-                                                                GUID codec_id,
-                                                                GValue ** formats);
+gboolean                gst_nvenc_get_supported_input_formats (gpointer encoder,
+                                                               GUID codec_id,
+                                                               GValue ** formats);
 
 
-GValue *                gst_nv_enc_get_interlace_modes (gpointer enc,
-                                                        GUID codec_id);
+GValue *                gst_nvenc_get_interlace_modes (gpointer enc,
+                                                       GUID codec_id);
 
-GValue *                gst_nv_enc_get_supported_codec_profiles (gpointer enc,
-                                                                 GUID codec_id);
+GValue *                gst_nvenc_get_supported_codec_profiles (gpointer enc,
+                                                                GUID codec_id);
 
 
 void                    gst_nvenc_plugin_init (GstPlugin * plugin);

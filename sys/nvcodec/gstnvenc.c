@@ -319,7 +319,7 @@ typedef struct
 } GstNvEncFormat;
 
 gboolean
-gst_nv_enc_get_supported_input_formats (gpointer encoder, GUID codec_id,
+gst_nvenc_get_supported_input_formats (gpointer encoder, GUID codec_id,
     GValue ** formats)
 {
   guint32 i, count = 0;
@@ -446,7 +446,7 @@ gst_nv_enc_get_supported_input_formats (gpointer encoder, GUID codec_id,
 }
 
 GValue *
-gst_nv_enc_get_interlace_modes (gpointer enc, GUID codec_id)
+gst_nvenc_get_interlace_modes (gpointer enc, GUID codec_id)
 {
   NV_ENC_CAPS_PARAM caps_param = { 0, };
   GValue *list;
@@ -495,7 +495,7 @@ typedef struct
 } GstNvEncCodecProfile;
 
 GValue *
-gst_nv_enc_get_supported_codec_profiles (gpointer enc, GUID codec_id)
+gst_nvenc_get_supported_codec_profiles (gpointer enc, GUID codec_id)
 {
   NVENCSTATUS nv_ret;
   GUID profile_guids[64];
@@ -648,10 +648,10 @@ gst_nv_enc_register (GstPlugin * plugin, GType type, GUID codec_id,
     if (j == count)
       goto enc_free;
 
-    if (!gst_nv_enc_get_supported_input_formats (enc, codec_id, &formats))
+    if (!gst_nvenc_get_supported_input_formats (enc, codec_id, &formats))
       goto enc_free;
 
-    profiles = gst_nv_enc_get_supported_codec_profiles (enc, codec_id);
+    profiles = gst_nvenc_get_supported_codec_profiles (enc, codec_id);
     if (!profiles)
       goto free_format;
 
@@ -676,7 +676,7 @@ gst_nv_enc_register (GstPlugin * plugin, GType type, GUID codec_id,
       max_height = 4096;
     }
 
-    interlace_modes = gst_nv_enc_get_interlace_modes (enc, codec_id);
+    interlace_modes = gst_nvenc_get_interlace_modes (enc, codec_id);
 
     sink_templ = gst_caps_new_empty_simple ("video/x-raw");
     gst_caps_set_value (sink_templ, "format", formats);

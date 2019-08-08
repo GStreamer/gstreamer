@@ -328,7 +328,7 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
   }
 
   /* query supported input formats */
-  if (!gst_nv_enc_get_supported_input_formats (nvenc->encoder, klass->codec_id,
+  if (!gst_nvenc_get_supported_input_formats (nvenc->encoder, klass->codec_id,
           &formats)) {
     GST_WARNING_OBJECT (nvenc, "No supported input formats");
     gst_nv_base_enc_close (enc);
@@ -619,7 +619,7 @@ gst_nv_base_enc_getcaps (GstVideoEncoder * enc, GstCaps * filter)
       gst_caps_set_value (supported_incaps, "format", nvenc->input_formats);
     }
 
-    val = gst_nv_enc_get_interlace_modes (nvenc->encoder, klass->codec_id);
+    val = gst_nvenc_get_interlace_modes (nvenc->encoder, klass->codec_id);
     gst_caps_set_value (supported_incaps, "interlace-mode", val);
     g_value_unset (val);
     g_free (val);
