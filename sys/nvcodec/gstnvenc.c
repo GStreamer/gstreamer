@@ -355,7 +355,7 @@ gst_nvenc_get_supported_input_formats (gpointer encoder, GUID codec_id,
 #endif
   };
 
-  param.version = NV_ENC_CAPS_PARAM_VER;
+  param.version = gst_nvenc_get_caps_param_version ();
   param.capsToQuery = NV_ENC_CAPS_SUPPORT_YUV444_ENCODE;
   if (NvEncGetEncodeCaps (encoder,
           codec_id, &param, &support_yuv444) != NV_ENC_SUCCESS) {
@@ -453,7 +453,7 @@ gst_nvenc_get_interlace_modes (gpointer enc, GUID codec_id)
   GValue val = G_VALUE_INIT;
   gint interlace_modes = 0;
 
-  caps_param.version = NV_ENC_CAPS_PARAM_VER;
+  caps_param.version = gst_nvenc_get_caps_param_version ();
   caps_param.capsToQuery = NV_ENC_CAPS_SUPPORT_FIELD_ENCODING;
 
   if (NvEncGetEncodeCaps (enc, codec_id, &caps_param,
@@ -528,7 +528,7 @@ gst_nvenc_get_supported_codec_profiles (gpointer enc, GUID codec_id)
 #endif
   };
 
-  param.version = NV_ENC_CAPS_PARAM_VER;
+  param.version = gst_nvenc_get_caps_param_version ();
   param.capsToQuery = NV_ENC_CAPS_SUPPORT_YUV444_ENCODE;
   if (NvEncGetEncodeCaps (enc,
           codec_id, &param, &support_yuv444) != NV_ENC_SUCCESS) {
@@ -626,8 +626,8 @@ gst_nv_enc_register (GstPlugin * plugin, GType type, GUID codec_id,
       goto cuda_free;
     }
 
-    params.version = NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER;
-    params.apiVersion = NVENCAPI_VERSION;
+    params.version = gst_nvenc_get_open_encode_session_ex_params_version ();
+    params.apiVersion = gst_nvenc_get_api_version ();
     params.device = cuda_ctx;
     params.deviceType = NV_ENC_DEVICE_TYPE_CUDA;
 
@@ -655,7 +655,7 @@ gst_nv_enc_register (GstPlugin * plugin, GType type, GUID codec_id,
     if (!profiles)
       goto free_format;
 
-    caps_param.version = NV_ENC_CAPS_PARAM_VER;
+    caps_param.version = gst_nvenc_get_caps_param_version ();
     caps_param.capsToQuery = NV_ENC_CAPS_WIDTH_MAX;
     if (NvEncGetEncodeCaps (enc,
             codec_id, &caps_param, &max_width) != NV_ENC_SUCCESS) {
@@ -739,10 +739,20 @@ gst_nv_enc_register (GstPlugin * plugin, GType type, GUID codec_id,
   }
 }
 
+/* For backward compatibility */
+#define GST_NVENC_API_MAJOR_VERSION 8
+#define GST_NVENC_API_MINOR_VERSION 1
+
+#define GST_NVENCAPI_VERSION (GST_NVENC_API_MAJOR_VERSION | (GST_NVENC_API_MINOR_VERSION << 24))
+#define GST_NVENCAPI_STRUCT_VERSION(ver,api_ver) ((uint32_t)(api_ver) | ((ver)<<16) | (0x7 << 28))
+
+static guint32 gst_nvenc_api_version = NVENCAPI_VERSION;
 
 void
 gst_nvenc_plugin_init (GstPlugin * plugin)
 {
+  NVENCSTATUS ret = NV_ENC_SUCCESS;
+
   GST_DEBUG_CATEGORY_INIT (gst_nvenc_debug, "nvenc", 0, "Nvidia NVENC encoder");
 
   nvenc_api.version = NV_ENCODE_API_FUNCTION_LIST_VER;
@@ -751,9 +761,49 @@ gst_nvenc_plugin_init (GstPlugin * plugin)
     return;
   }
 
-  if (nvEncodeAPICreateInstance (&nvenc_api) != NV_ENC_SUCCESS) {
-    GST_ERROR ("Failed to get NVEncodeAPI function table!");
-  } else {
+  ret = nvEncodeAPICreateInstance (&nvenc_api);
+
+  /* WARNING: Any developers who want to bump SDK version must ensure that
+   * following macro values were not changed and also need to check ABI compatibility.
+   * Otherwise, gst_nvenc_get_ helpers also should be updated.
+   * Currently SDK 8.1 and 9.0 compatible
+   *
+   * NVENCAPI_VERSION (NVENCAPI_MAJOR_VERSION | (NVENCAPI_MINOR_VERSION << 24))
+   *
+   * NVENCAPI_STRUCT_VERSION(ver) ((uint32_t)NVENCAPI_VERSION | ((ver)<<16) | (0x7 << 28))
+   *
+   * NV_ENC_CAPS_PARAM_VER                NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENC_ENCODE_OUT_PARAMS_VER         NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENC_CREATE_INPUT_BUFFER_VER       NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENC_CREATE_BITSTREAM_BUFFER_VER   NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENC_CREATE_MV_BUFFER_VER          NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENC_RC_PARAMS_VER                 NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENC_CONFIG_VER                   (NVENCAPI_STRUCT_VERSION(7) | ( 1<<31 ))
+   * NV_ENC_INITIALIZE_PARAMS_VER        (NVENCAPI_STRUCT_VERSION(5) | ( 1<<31 ))
+   * NV_ENC_RECONFIGURE_PARAMS_VER       (NVENCAPI_STRUCT_VERSION(1) | ( 1<<31 ))
+   * NV_ENC_PRESET_CONFIG_VER            (NVENCAPI_STRUCT_VERSION(4) | ( 1<<31 ))
+   * NV_ENC_PIC_PARAMS_VER               (NVENCAPI_STRUCT_VERSION(4) | ( 1<<31 ))
+   * NV_ENC_MEONLY_PARAMS_VER             NVENCAPI_STRUCT_VERSION(3)
+   * NV_ENC_LOCK_BITSTREAM_VER            NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENC_LOCK_INPUT_BUFFER_VER         NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENC_MAP_INPUT_RESOURCE_VER        NVENCAPI_STRUCT_VERSION(4)
+   * NV_ENC_REGISTER_RESOURCE_VER         NVENCAPI_STRUCT_VERSION(3)
+   * NV_ENC_STAT_VER                      NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENC_SEQUENCE_PARAM_PAYLOAD_VER    NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENC_EVENT_PARAMS_VER              NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER NVENCAPI_STRUCT_VERSION(1)
+   * NV_ENCODE_API_FUNCTION_LIST_VER      NVENCAPI_STRUCT_VERSION(2)
+   */
+  if (ret != NV_ENC_SUCCESS) {
+    GST_WARNING ("Failed to get the latest NVEncodeAPI function table!");
+    gst_nvenc_api_version = GST_NVENCAPI_VERSION;
+    /* NV_ENCODE_API_FUNCTION_LIST_VER == NVENCAPI_STRUCT_VERSION(2) */
+    nvenc_api.version = GST_NVENCAPI_STRUCT_VERSION (2, gst_nvenc_api_version);
+
+    ret = nvEncodeAPICreateInstance (&nvenc_api);
+  }
+
+  if (ret == NV_ENC_SUCCESS) {
     CUresult cuda_ret;
     gint dev_count = 0;
 
@@ -775,6 +825,159 @@ gst_nvenc_plugin_init (GstPlugin * plugin)
         NV_ENC_CODEC_H264_GUID, "h264", GST_RANK_PRIMARY * 2, dev_count);
     gst_nv_enc_register (plugin, GST_TYPE_NV_H265_ENC,
         NV_ENC_CODEC_HEVC_GUID, "h265", GST_RANK_PRIMARY * 2, dev_count);
-
+  } else {
+    GST_ERROR ("too old driver, could not load api vtable");
   }
+}
+
+guint32
+gst_nvenc_get_api_version (void)
+{
+  /* NVENCAPI_VERSION == (NVENCAPI_MAJOR_VERSION | (NVENCAPI_MINOR_VERSION << 24)) */
+  return gst_nvenc_api_version;
+}
+
+guint32
+gst_nvenc_get_caps_param_version (void)
+{
+  /* NV_ENC_CAPS_PARAM_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_encode_out_params_version (void)
+{
+  /* NV_ENC_ENCODE_OUT_PARAMS_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_create_input_buffer_version (void)
+{
+  /* NV_ENC_CREATE_INPUT_BUFFER_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_create_bitstream_buffer_version (void)
+{
+  /* NV_ENC_CREATE_BITSTREAM_BUFFER_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_create_mv_buffer_version (void)
+{
+  /* NV_ENC_CREATE_MV_BUFFER_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_rc_params_version (void)
+{
+  /* NV_ENC_RC_PARAMS_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_config_version (void)
+{
+  /* NV_ENC_CONFIG_VER ==
+   *   (NVENCAPI_STRUCT_VERSION(7) | ( 1<<31 )) */
+  return GST_NVENCAPI_STRUCT_VERSION (7, gst_nvenc_api_version) | (1 << 31);
+}
+
+guint32
+gst_nvenc_get_initialize_params_version (void)
+{
+  /* NV_ENC_INITIALIZE_PARAMS_VER ==
+   *   (NVENCAPI_STRUCT_VERSION(5) | ( 1<<31 )) */
+  return GST_NVENCAPI_STRUCT_VERSION (5, gst_nvenc_api_version) | (1 << 31);
+}
+
+guint32
+gst_nvenc_get_reconfigure_params_version (void)
+{
+  /* NV_ENC_RECONFIGURE_PARAMS_VER ==
+   *   (NVENCAPI_STRUCT_VERSION(1) | ( 1<<31 )) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version) | (1 << 31);
+}
+
+guint32
+gst_nvenc_get_preset_config_version (void)
+{
+  /* NV_ENC_PRESET_CONFIG_VER ==
+   *   (NVENCAPI_STRUCT_VERSION(4) | ( 1<<31 )) */
+  return GST_NVENCAPI_STRUCT_VERSION (4, gst_nvenc_api_version) | (1 << 31);
+}
+
+guint32
+gst_nvenc_get_pic_params_version (void)
+{
+  /* NV_ENC_PIC_PARAMS_VER ==
+   *  (NVENCAPI_STRUCT_VERSION(4) | ( 1<<31 )) */
+  return GST_NVENCAPI_STRUCT_VERSION (4, gst_nvenc_api_version) | (1 << 31);
+}
+
+guint32
+gst_nvenc_get_meonly_params_version (void)
+{
+  /* NV_ENC_MEONLY_PARAMS_VER == NVENCAPI_STRUCT_VERSION(3) */
+  return GST_NVENCAPI_STRUCT_VERSION (3, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_lock_bitstream_version (void)
+{
+  /* NV_ENC_LOCK_BITSTREAM_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_lock_input_buffer_version (void)
+{
+  /* NV_ENC_LOCK_INPUT_BUFFER_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_map_input_resource_version (void)
+{
+  /* NV_ENC_MAP_INPUT_RESOURCE_VER == NVENCAPI_STRUCT_VERSION(4) */
+  return GST_NVENCAPI_STRUCT_VERSION (4, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_registure_resource_version (void)
+{
+  /* NV_ENC_REGISTER_RESOURCE_VER == NVENCAPI_STRUCT_VERSION(3) */
+  return GST_NVENCAPI_STRUCT_VERSION (3, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_stat_version (void)
+{
+  /* NV_ENC_STAT_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_sequence_param_payload_version (void)
+{
+  /* NV_ENC_SEQUENCE_PARAM_PAYLOAD_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_event_params_version (void)
+{
+  /* NV_ENC_EVENT_PARAMS_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+}
+
+guint32
+gst_nvenc_get_open_encode_session_ex_params_version (void)
+{
+  /* NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER == NVENCAPI_STRUCT_VERSION(1) */
+  return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
 }

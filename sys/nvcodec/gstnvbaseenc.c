@@ -314,8 +314,8 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
     NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS params = { 0, };
     NVENCSTATUS nv_ret;
 
-    params.version = NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER;
-    params.apiVersion = NVENCAPI_VERSION;
+    params.version = gst_nvenc_get_open_encode_session_ex_params_version ();
+    params.apiVersion = gst_nvenc_get_api_version ();
     params.device = gst_cuda_context_get_handle (nvenc->cuda_ctx);
     params.deviceType = NV_ENC_DEVICE_TYPE_CUDA;
     nv_ret = NvEncOpenEncodeSessionEx (&params, &nvenc->encoder);
@@ -795,7 +795,7 @@ gst_nv_base_enc_bitstream_thread (gpointer user_data)
         GST_LOG_OBJECT (nvenc, "waiting for output buffer %p to be ready",
             out_buf);
 
-        lock_bs.version = NV_ENC_LOCK_BITSTREAM_VER;
+        lock_bs.version = gst_nvenc_get_lock_bitstream_version ();
         lock_bs.outputBitstream = out_buf;
         lock_bs.doNotWait = 0;
 
@@ -1136,13 +1136,13 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   g_atomic_int_set (&nvenc->reconfig, FALSE);
 
   if (old_state) {
-    reconfigure_params.version = NV_ENC_RECONFIGURE_PARAMS_VER;
+    reconfigure_params.version = gst_nvenc_get_reconfigure_params_version ();
     params = &reconfigure_params.reInitEncodeParams;
   } else {
     params = &init_params;
   }
 
-  params->version = NV_ENC_INITIALIZE_PARAMS_VER;
+  params->version = gst_nvenc_get_initialize_params_version ();
   params->encodeGUID = nvenc_class->codec_id;
   params->encodeWidth = GST_VIDEO_INFO_WIDTH (info);
   params->encodeHeight = GST_VIDEO_INFO_HEIGHT (info);
@@ -1208,8 +1208,8 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     }
   }
 
-  preset_config.version = NV_ENC_PRESET_CONFIG_VER;
-  preset_config.presetCfg.version = NV_ENC_CONFIG_VER;
+  preset_config.version = gst_nvenc_get_preset_config_version ();
+  preset_config.presetCfg.version = gst_nvenc_get_config_version ();
 
   nv_ret =
       NvEncGetEncodePresetConfig (nvenc->encoder,
@@ -1364,7 +1364,8 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
           g_assert_not_reached ();
         }
 
-        in_gl_resource->nv_resource.version = NV_ENC_REGISTER_RESOURCE_VER;
+        in_gl_resource->nv_resource.version =
+            gst_nvenc_get_registure_resource_version ();
         in_gl_resource->nv_resource.resourceType =
             NV_ENC_INPUT_RESOURCE_TYPE_CUDADEVICEPTR;
         in_gl_resource->nv_resource.width = input_width;
@@ -1393,7 +1394,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
       for (i = 0; i < nvenc->n_bufs; ++i) {
         NV_ENC_CREATE_INPUT_BUFFER cin_buf = { 0, };
 
-        cin_buf.version = NV_ENC_CREATE_INPUT_BUFFER_VER;
+        cin_buf.version = gst_nvenc_get_create_input_buffer_version ();
 
         cin_buf.width = GST_ROUND_UP_32 (input_width);
         cin_buf.height = GST_ROUND_UP_32 (input_height);
@@ -1425,7 +1426,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     for (i = 0; i < nvenc->n_bufs; ++i) {
       NV_ENC_CREATE_BITSTREAM_BUFFER cout_buf = { 0, };
 
-      cout_buf.version = NV_ENC_CREATE_BITSTREAM_BUFFER_VER;
+      cout_buf.version = gst_nvenc_get_create_bitstream_buffer_version ();
 
       /* 1 MB should be large enough to hold most output frames.
        * NVENC will automatically increase this if it's not enough. */
@@ -1456,7 +1457,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
       NV_ENC_SEQUENCE_PARAM_PAYLOAD seq_param = { 0 };
       uint32_t seq_size = 0;
 
-      seq_param.version = NV_ENC_SEQUENCE_PARAM_PAYLOAD_VER;
+      seq_param.version = gst_nvenc_get_sequence_param_payload_version ();
       seq_param.spsppsBuffer = g_alloca (1024);
       seq_param.inBufferSize = 1024;
       seq_param.outSPSPPSPayloadSize = &seq_size;
@@ -1742,7 +1743,7 @@ _submit_input_buffer (GstNvBaseEnc * nvenc, GstVideoCodecFrame * frame,
       "pts %" GST_TIME_FORMAT, frame->system_frame_number, inputBuffer,
       outputBufferPtr, GST_TIME_ARGS (frame->pts));
 
-  pic_params.version = NV_ENC_PIC_PARAMS_VER;
+  pic_params.version = gst_nvenc_get_pic_params_version ();
   pic_params.inputBuffer = inputBufferPtr;
   pic_params.bufferFmt = bufferFormat;
 
@@ -1867,7 +1868,8 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
       goto error;
     }
 
-    in_gl_resource->nv_mapped_resource.version = NV_ENC_MAP_INPUT_RESOURCE_VER;
+    in_gl_resource->nv_mapped_resource.version =
+        gst_nvenc_get_map_input_resource_version ();
     in_gl_resource->nv_mapped_resource.registeredResource =
         in_gl_resource->nv_resource.registeredResource;
 
@@ -1916,7 +1918,7 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
 
     GST_LOG_OBJECT (enc, "got input buffer %p", in_buf);
 
-    in_buf_lock.version = NV_ENC_LOCK_INPUT_BUFFER_VER;
+    in_buf_lock.version = gst_nvenc_get_lock_input_buffer_version ();
     in_buf_lock.inputBuffer = in_buf;
 
     nv_ret = NvEncLockInputBuffer (nvenc->encoder, &in_buf_lock);
@@ -2078,7 +2080,7 @@ gst_nv_base_enc_drain_encoder (GstNvBaseEnc * nvenc)
     return TRUE;
   }
 
-  pic_params.version = NV_ENC_PIC_PARAMS_VER;
+  pic_params.version = gst_nvenc_get_pic_params_version ();
   pic_params.encodePicFlags = NV_ENC_PIC_FLAG_EOS;
 
   nv_ret = NvEncEncodePicture (nvenc->encoder, &pic_params);

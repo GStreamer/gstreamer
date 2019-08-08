@@ -139,7 +139,7 @@ gst_nv_h264_enc_set_profile_and_level (GstNvH264Enc * nvenc, GstCaps * caps)
   NVENCSTATUS nv_ret;
   guint32 seq_size;
 
-  spp.version = NV_ENC_SEQUENCE_PARAM_PAYLOAD_VER;
+  spp.version = gst_nvenc_get_sequence_param_payload_version ();
   spp.inBufferSize = N_BYTES_SPS;
   spp.spsId = 0;
   spp.ppsId = 0;

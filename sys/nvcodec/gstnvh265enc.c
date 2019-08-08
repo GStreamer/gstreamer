@@ -165,7 +165,7 @@ gst_nv_h265_enc_set_level_tier_and_profile (GstNvH265Enc * nvenc,
   NVENCSTATUS nv_ret;
   guint32 seq_size;
 
-  spp.version = NV_ENC_SEQUENCE_PARAM_PAYLOAD_VER;
+  spp.version = gst_nvenc_get_sequence_param_payload_version ();
   spp.inBufferSize = N_BYTES_VPS;
   spp.spsId = 0;
   spp.ppsId = 0;
