@@ -27,6 +27,7 @@
 import sys
 import inspect
 import itertools
+import weakref
 from ..overrides import override
 from ..module import get_introspection_module
 
@@ -153,7 +154,6 @@ class Pad(Gst.Pad):
         return self._real_event_func(pad, event)
 
     def _query_override(self, pad, parent, query):
-        query.mini_object.refcount -= 1
         try:
             res = self._real_query_func(pad, query)
         except TypeError:
@@ -162,25 +162,20 @@ class Pad(Gst.Pad):
             except TypeError:
                 raise TypeError("Invalid query method %s, 2 or 3 arguments required"
                                 % self._real_query_func)
-        query.mini_object.refcount += 1
 
         return res
 
     def set_chain_function(self, func):
         self._real_chain_func = func
-        self.set_chain_function_full(self._chain_override, None)
+        self.set_chain_function_full(weakref.WeakMethod(self._chain_override), None)
 
     def set_event_function(self, func):
         self._real_event_func = func
-        self.set_event_function_full(self._event_override, None)
+        self.set_event_function_full(weakref.WeakMethod(func), None)
 
     def set_query_function(self, func):
         self._real_query_func = func
-        self.set_query_function_full(self._query_override, None)
-
-    def set_query_function_full(self, func, udata):
-        self._real_query_func = func
-        self._real_set_query_function_full(self._query_override, None)
+        self.set_query_function_full(weakref.WeakMethod(self._query_override), None)
 
     def query_caps(self, filter=None):
         return Gst.Pad.query_caps(self, filter)
@@ -207,7 +202,6 @@ class Pad(Gst.Pad):
             raise LinkError(ret)
         return ret
 
-Pad._real_set_query_function_full = Gst.Pad.set_query_function_full
 Pad = override(Pad)
 __all__.append('Pad')
 
