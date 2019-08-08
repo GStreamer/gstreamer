@@ -121,6 +121,8 @@ static void gst_jpeg2000_parse_reset (GstBaseParse * parse,
     gboolean hard_reset);
 static GstFlowReturn gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
+static GstFlowReturn gst_jpeg2000_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 static gboolean gst_jpeg2000_parse_set_sink_caps (GstBaseParse * parse,
     GstCaps * caps);
 static GstJPEG2000ParseFormats
@@ -148,6 +150,8 @@ gst_jpeg2000_parse_class_init (GstJPEG2000ParseClass * klass)
   parse_class->sink_event = GST_DEBUG_FUNCPTR (gst_jpeg2000_parse_event);
   parse_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_jpeg2000_parse_handle_frame);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_jpeg2000_parse_pre_push_frame);
 }
 
 static void
@@ -773,7 +777,8 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
     gst_caps_unref (current_caps);
   gst_buffer_unmap (frame->buffer, &map);
   ret = gst_base_parse_finish_frame (parse, frame, jpeg2000parse->frame_size);
-  gst_jpeg2000_parse_reset (parse, (ret != GST_FLOW_OK));
+  if (ret != GST_FLOW_OK)
+    gst_jpeg2000_parse_reset (parse, TRUE);
   return ret;
 
 beach:
@@ -783,4 +788,13 @@ beach:
   if (ret != GST_FLOW_OK)
     gst_jpeg2000_parse_reset (parse, TRUE);
   return ret;
+}
+
+static GstFlowReturn
+gst_jpeg2000_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame)
+{
+  gst_jpeg2000_parse_reset (parse, FALSE);
+  return GST_FLOW_OK;
+
 }
