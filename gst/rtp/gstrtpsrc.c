@@ -123,9 +123,14 @@ gst_rtp_src_rtpbin_request_pt_map_cb (GstElement * rtpbin, guint session_id,
 
   }
 
-  /* Static payload types, this is a simple lookup */
-  if (!GST_RTP_PAYLOAD_IS_DYNAMIC (pt)) {
-    p = gst_rtp_payload_info_for_pt (pt);
+  /* If info has been found before based on the encoding-name, go with
+   * it. If not, try to look it up on with a static one. Needs to be guarded
+   * because some encoders do not use dynamic values for H.264 */
+  if (p == NULL) {
+    /* Static payload types, this is a simple lookup */
+    if (!GST_RTP_PAYLOAD_IS_DYNAMIC (pt)) {
+      p = gst_rtp_payload_info_for_pt (pt);
+    }
   }
 
   if (p != NULL) {
