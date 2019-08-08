@@ -2848,9 +2848,22 @@ parse_jp2k_access_unit (TSDemuxStream * stream)
 
   /* Check if we have enough data to create a valid buffer */
   if ((stream->current_size - data_location) < (AUF[0] + AUF[1])) {
-    GST_ERROR ("Required size (%d) greater than remaining size in buffer (%d)",
+    GST_ERROR_OBJECT
+        (stream->pad,
+        "Required size (%d) greater than remaining size in buffer (%d)",
         AUF[0] + AUF[1], (stream->current_size - data_location));
-    goto error;
+    if (stream->expected_size && stream->current_size != stream->expected_size) {
+      /* warn if buffer is truncated due to draining */
+      GST_WARNING_OBJECT
+          (stream->pad,
+          "Truncated buffer: current size (%d) doesn't match expected size (%d)",
+          stream->current_size, stream->expected_size);
+    } else {
+      /* kill pipeline if either we don't know what expected size is, or
+       * we know the expected size, and thus are sure that the buffer is not
+       *  truncated due to draining */
+      goto error;
+    }
   }
 
   retbuf = gst_buffer_new_wrapped_full (0, stream->data, stream->current_size,
