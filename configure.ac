@@ -1069,6 +1069,23 @@ esac
 AC_DEFINE_UNQUOTED(GST_PLUGIN_SCANNER_SUBDIR,
     "$GST_PLUGIN_SCANNER_SUBDIR", [libexecdir path component, used to find plugin-scanner on relocatable builds on windows])
 
+case "${libdir}" in
+  *lib64)
+    GST_PLUGIN_SUBDIR="lib64";;
+  *lib32)
+    GST_PLUGIN_SUBDIR="lib32";;
+  *lib)
+    GST_PLUGIN_SUBDIR="lib";;
+  *)
+    GST_PLUGIN_SUBDIR=`basename ${libdir}`;
+    if test -z "$GST_PLUGIN_SUBDIR"; then
+      AC_MSG_WARN([Couldn't determined libdir suffix, using "lib"])
+      GST_PLUGIN_SUBDIR="lib";
+    fi
+    ;;
+esac
+AC_DEFINE_UNQUOTED(GST_PLUGIN_SUBDIR,
+    "$GST_PLUGIN_SUBDIR", [plugin directory path component, used to find plugins on relocatable builds on windows])
 
 dnl completion helper locations
 AS_AC_EXPAND(GST_COMPLETION_HELPER_INSTALLED,${libexecdir}/gstreamer-$GST_API_VERSION/gst-completion-helper)
