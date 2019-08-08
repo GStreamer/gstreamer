@@ -229,18 +229,66 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     create_info.display_area.top = format->display_area.top;
     create_info.display_area.right = format->display_area.right;
     create_info.display_area.bottom = format->display_area.bottom;
-    create_info.OutputFormat = cudaVideoSurfaceFormat_NV12;
     create_info.bitDepthMinus8 = format->bit_depth_luma_minus8;
-    if (format->bit_depth_luma_minus8 > 0) {
-      GST_DEBUG_OBJECT (nvdec, "out format bitdepth : %d",
-          format->bit_depth_luma_minus8 + 8);
-      create_info.OutputFormat = cudaVideoSurfaceFormat_P016;
+    create_info.OutputFormat = cudaVideoSurfaceFormat_NV12;
+    switch (format->chroma_format) {
+      case cudaVideoChromaFormat_444:
+        if (format->bit_depth_luma_minus8 == 0) {
+          out_format = GST_VIDEO_FORMAT_Y444;
+          create_info.OutputFormat = cudaVideoSurfaceFormat_YUV444;
+        } else if (format->bit_depth_luma_minus8 == 2 ||
+            format->bit_depth_luma_minus8 == 4) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      out_format = GST_VIDEO_FORMAT_P010_10LE;
+          out_format = GST_VIDEO_FORMAT_Y444_16LE;
 #else
-      out_format = GST_VIDEO_FORMAT_P010_10BE;
+          out_format = GST_VIDEO_FORMAT_Y444_16BE;
 #endif
+          create_info.OutputFormat = cudaVideoSurfaceFormat_YUV444_16Bit;
+        } else {
+          GST_ERROR_OBJECT (nvdec, "Unknown 4:4:4 format bitdepth %d",
+              format->bit_depth_luma_minus8 + 8);
+
+          nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
+          return FALSE;
+        }
+        break;
+      case cudaVideoChromaFormat_420:
+        if (format->bit_depth_luma_minus8 == 0) {
+          out_format = GST_VIDEO_FORMAT_NV12;
+          create_info.OutputFormat = cudaVideoSurfaceFormat_NV12;
+        } else if (format->bit_depth_luma_minus8 == 2) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+          out_format = GST_VIDEO_FORMAT_P010_10LE;
+#else
+          out_format = GST_VIDEO_FORMAT_P010_10BE;
+#endif
+          create_info.OutputFormat = cudaVideoSurfaceFormat_P016;
+        } else if (format->bit_depth_luma_minus8 == 4) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+          out_format = GST_VIDEO_FORMAT_P016_LE;
+#else
+          out_format = GST_VIDEO_FORMAT_P016_BE;
+#endif
+          create_info.OutputFormat = cudaVideoSurfaceFormat_P016;
+        } else {
+          GST_ERROR_OBJECT (nvdec, "Unknown 4:2:0 format bitdepth %d",
+              format->bit_depth_luma_minus8 + 8);
+
+          nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
+          return FALSE;
+        }
+        break;
+      default:
+        GST_ERROR_OBJECT (nvdec, "unhandled chroma format %d, bitdepth %d",
+            format->chroma_format, format->bit_depth_luma_minus8 + 8);
+
+        nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
+        return FALSE;
     }
+
+    GST_DEBUG_OBJECT (nvdec,
+        "out format: %s", gst_video_format_to_string (out_format));
+
     create_info.DeinterlaceMode = cudaVideoDeinterlaceMode_Weave;
     create_info.ulTargetWidth = width;
     create_info.ulTargetHeight = height;
@@ -1285,9 +1333,20 @@ gst_nvdec_subclass_register (GstPlugin * plugin, GType type,
   g_free (type_name);
 }
 
+typedef enum
+{
+  GST_NVDEC_FORMAT_FLAG_NONE = (1 << 0),
+  GST_NVDEC_FORMAT_FLAG_420_8BITS = (1 << 1),
+  GST_NVDEC_FORMAT_FLAG_420_10BITS = (1 << 2),
+  GST_NVDEC_FORMAT_FLAG_420_12BITS = (1 << 3),
+  GST_NVDEC_FORMAT_FLAG_444_8BITS = (1 << 4),
+  GST_NVDEC_FORMAT_FLAG_444_10BITS = (1 << 5),
+  GST_NVDEC_FORMAT_FLAG_444_12BITS = (1 << 6),
+} GstNvDecFormatFlags;
+
 static gboolean
 gst_nvdec_get_supported_codec_profiles (GValue * profiles,
-    cudaVideoCodec codec_type, guint max_bitdepth_minus8)
+    cudaVideoCodec codec_type, GstNvDecFormatFlags flags)
 {
   GValue val = G_VALUE_INIT;
   gboolean ret = FALSE;
@@ -1296,31 +1355,77 @@ gst_nvdec_get_supported_codec_profiles (GValue * profiles,
 
   switch (codec_type) {
     case cudaVideoCodec_H264:
-      g_value_set_static_string (&val, "constrained-baseline");
-      gst_value_list_append_value (profiles, &val);
+      if ((flags & GST_NVDEC_FORMAT_FLAG_420_8BITS) ==
+          GST_NVDEC_FORMAT_FLAG_420_8BITS) {
+        g_value_set_static_string (&val, "constrained-baseline");
+        gst_value_list_append_value (profiles, &val);
 
-      g_value_set_static_string (&val, "baseline");
-      gst_value_list_append_value (profiles, &val);
+        g_value_set_static_string (&val, "baseline");
+        gst_value_list_append_value (profiles, &val);
 
-      g_value_set_static_string (&val, "main");
-      gst_value_list_append_value (profiles, &val);
+        g_value_set_static_string (&val, "main");
+        gst_value_list_append_value (profiles, &val);
 
-      g_value_set_static_string (&val, "high");
-      gst_value_list_append_value (profiles, &val);
+        g_value_set_static_string (&val, "high");
+        gst_value_list_append_value (profiles, &val);
+      }
 
-      if (max_bitdepth_minus8 >= 2) {
+      /* NVDEC supports only 4:2:0 8bits h264 decoding.
+       * following conditions are for the future enhancement */
+      if ((flags & GST_NVDEC_FORMAT_FLAG_420_10BITS) ==
+          GST_NVDEC_FORMAT_FLAG_420_10BITS) {
         g_value_set_static_string (&val, "high-10");
+        gst_value_list_append_value (profiles, &val);
+      }
+
+      if ((flags & GST_NVDEC_FORMAT_FLAG_420_12BITS) ==
+          GST_NVDEC_FORMAT_FLAG_420_12BITS ||
+          (flags & GST_NVDEC_FORMAT_FLAG_444_8BITS) ==
+          GST_NVDEC_FORMAT_FLAG_444_8BITS ||
+          (flags & GST_NVDEC_FORMAT_FLAG_444_10BITS) ==
+          GST_NVDEC_FORMAT_FLAG_444_10BITS ||
+          (flags & GST_NVDEC_FORMAT_FLAG_444_12BITS) ==
+          GST_NVDEC_FORMAT_FLAG_444_12BITS) {
+        g_value_set_static_string (&val, "high-4:4:4");
         gst_value_list_append_value (profiles, &val);
       }
 
       ret = TRUE;
       break;
     case cudaVideoCodec_HEVC:
-      g_value_set_static_string (&val, "main");
-      gst_value_list_append_value (profiles, &val);
+      if ((flags & GST_NVDEC_FORMAT_FLAG_420_8BITS) ==
+          GST_NVDEC_FORMAT_FLAG_420_8BITS) {
+        g_value_set_static_string (&val, "main");
+        gst_value_list_append_value (profiles, &val);
+      }
 
-      if (max_bitdepth_minus8 >= 2) {
+      if ((flags & GST_NVDEC_FORMAT_FLAG_420_10BITS) ==
+          GST_NVDEC_FORMAT_FLAG_420_10BITS) {
         g_value_set_static_string (&val, "main-10");
+        gst_value_list_append_value (profiles, &val);
+      }
+
+      if ((flags & GST_NVDEC_FORMAT_FLAG_420_12BITS) ==
+          GST_NVDEC_FORMAT_FLAG_420_12BITS) {
+        g_value_set_static_string (&val, "main-12");
+        gst_value_list_append_value (profiles, &val);
+      }
+
+      if ((flags & GST_NVDEC_FORMAT_FLAG_444_8BITS) ==
+          GST_NVDEC_FORMAT_FLAG_444_8BITS) {
+        g_value_set_static_string (&val, "main-444");
+        gst_value_list_append_value (profiles, &val);
+      }
+
+      if ((flags & GST_NVDEC_FORMAT_FLAG_444_10BITS) ==
+          GST_NVDEC_FORMAT_FLAG_444_10BITS) {
+        g_value_set_static_string (&val, "main-444-10");
+        gst_value_list_append_value (profiles, &val);
+      }
+
+      if ((flags & GST_NVDEC_FORMAT_FLAG_444_12BITS) ==
+          GST_NVDEC_FORMAT_FLAG_444_12BITS) {
+        g_value_set_static_string (&val, "main-444-12");
         gst_value_list_append_value (profiles, &val);
       }
 
@@ -1357,8 +1462,8 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
     GstCaps *sink_templ = NULL;
     GstCaps *src_templ = NULL;
     /* FIXME: support 12bits format */
-    guint bitdepth_minus8[2] = { 0, 2 };
-    guint max_bitdepth_minus8 = 0;
+    guint bitdepth_minus8[3] = { 0, 2, 4 };
+    GstNvDecFormatFlags format_flags = 0;
     gint c_idx, b_idx;
     guint num_support = 0;
     cudaVideoChromaFormat chroma_list[] = {
@@ -1367,9 +1472,9 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
       cudaVideoChromaFormat_Monochrome,
       /* FIXME: Can our OpenGL support NV16 and its 10/12bits variant?? */
       cudaVideoChromaFormat_422,
-      cudaVideoChromaFormat_444,
 #endif
       cudaVideoChromaFormat_420,
+      cudaVideoChromaFormat_444,
     };
     GValue format_list = G_VALUE_INIT;
     GValue format = G_VALUE_INIT;
@@ -1391,6 +1496,7 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
     for (c_idx = 0; c_idx < G_N_ELEMENTS (chroma_list); c_idx++) {
       for (b_idx = 0; b_idx < G_N_ELEMENTS (bitdepth_minus8); b_idx++) {
         CUVIDDECODECAPS decoder_caps = { 0, };
+        GstNvDecFormatFlags cur_flag = 0;
 
         decoder_caps.eCodecType = codec_type;
         decoder_caps.eChromaFormat = chroma_list[c_idx];
@@ -1416,7 +1522,12 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
         if (max_height < decoder_caps.nMaxHeight)
           max_height = decoder_caps.nMaxHeight;
 
-        max_bitdepth_minus8 = bitdepth_minus8[b_idx];
+        if (chroma_list[c_idx] == cudaVideoChromaFormat_420)
+          cur_flag = GST_NVDEC_FORMAT_FLAG_420_8BITS;
+        else
+          cur_flag = GST_NVDEC_FORMAT_FLAG_444_8BITS;
+
+        format_flags |= (cur_flag << (bitdepth_minus8[b_idx] / 2));
 
         GST_INFO ("%s bit-depth %d with chroma format %d [%d - %d] x [%d - %d]",
             codec, bitdepth_minus8[b_idx] + 8, c_idx, min_width, max_width,
@@ -1424,16 +1535,45 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
 
         switch (chroma_list[c_idx]) {
           case cudaVideoChromaFormat_420:
-            if (b_idx == 0) {
+            if (bitdepth_minus8[b_idx] == 0) {
               g_value_set_string (&format, "NV12");
-            } else if (b_idx == 1) {
+            } else if (bitdepth_minus8[b_idx] == 2) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
               g_value_set_string (&format, "P010_10LE");
 #else
               g_value_set_string (&format, "P010_10BE");
 #endif
+            } else if (bitdepth_minus8[b_idx] == 4) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+              g_value_set_string (&format, "P016_LE");
+#else
+              g_value_set_string (&format, "P016_BE");
+#endif
             } else {
-              /* unknown bit-depth */
+              GST_WARNING ("unhandled bitdepth %d", bitdepth_minus8[b_idx] + 8);
+              break;
+            }
+            num_support++;
+            gst_value_list_append_value (&format_list, &format);
+            break;
+          case cudaVideoChromaFormat_444:
+            if (cudaVideoCodec_JPEG == codec_type) {
+              /* NVDEC jpeg decoder can decode 4:4:4 format
+               * but it produces 4:2:0 frame */
+              break;
+            }
+
+            if (bitdepth_minus8[b_idx] == 0) {
+              g_value_set_string (&format, "Y444");
+            } else if (bitdepth_minus8[b_idx] == 2 ||
+                bitdepth_minus8[b_idx] == 4) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+              g_value_set_string (&format, "Y444_16LE");
+#else
+              g_value_set_string (&format, "Y444_16BE");
+#endif
+            } else {
+              GST_WARNING ("unhandled bitdepth %d", bitdepth_minus8[b_idx] + 8);
               break;
             }
             num_support++;
@@ -1473,7 +1613,7 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
         "height", GST_TYPE_INT_RANGE, min_height, max_height, NULL);
 
     if (gst_nvdec_get_supported_codec_profiles (&profile_list, codec_type,
-            max_bitdepth_minus8)) {
+            format_flags)) {
       gst_caps_set_value (sink_templ, "profile", &profile_list);
     }
 
