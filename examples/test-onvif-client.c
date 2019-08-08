@@ -539,6 +539,14 @@ io_callback (GIOChannel * io, GIOCondition condition, Context * ctx)
   return ret;
 }
 
+#ifndef STDIN_FILENO
+#ifdef G_OS_WIN32
+#define STDIN_FILENO _fileno(stdin)
+#else /* !G_OS_WIN32 */
+#define STDIN_FILENO 0
+#endif /* G_OS_WIN32 */
+#endif /* STDIN_FILENO */
+
 static void
 prompt_on (Context * ctx)
 {
