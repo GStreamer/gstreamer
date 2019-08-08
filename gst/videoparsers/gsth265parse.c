@@ -592,7 +592,7 @@ gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
         minfo.Rx_n =
             sei.payload.mastering_display_colour_volume.display_primaries_x[2];
         minfo.Ry_n =
-            sei.payload.mastering_display_colour_volume.display_primaries_x[2];
+            sei.payload.mastering_display_colour_volume.display_primaries_y[2];
         minfo.Wx_n = sei.payload.mastering_display_colour_volume.white_point_x;
         minfo.Wy_n = sei.payload.mastering_display_colour_volume.white_point_y;
         minfo.max_luma_n =
