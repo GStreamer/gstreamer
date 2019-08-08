@@ -201,13 +201,15 @@ gst_jpeg2000_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
 static gboolean
 gst_jpeg2000_parse_event (GstBaseParse * parse, GstEvent * event)
 {
-  gboolean res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
+  gboolean res;
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       gst_base_parse_set_min_frame_size (parse,
           GST_JPEG2000_PARSE_MIN_FRAME_SIZE);
+      res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
       break;
     default:
+      res = GST_BASE_PARSE_CLASS (parent_class)->sink_event (parse, event);
       break;
   }
   return res;
