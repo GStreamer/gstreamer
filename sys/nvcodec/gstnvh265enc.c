@@ -25,6 +25,7 @@
 #include "gstnvh265enc.h"
 
 #include <gst/pbutils/codec-utils.h>
+#include <gst/base/gstbytewriter.h>
 
 #include <string.h>
 
@@ -36,6 +37,7 @@ G_DEFINE_TYPE (GstNvH265Enc, gst_nv_h265_enc, GST_TYPE_NV_BASE_ENC);
 
 static gboolean gst_nv_h265_enc_open (GstVideoEncoder * enc);
 static gboolean gst_nv_h265_enc_close (GstVideoEncoder * enc);
+static gboolean gst_nv_h265_enc_stop (GstVideoEncoder * enc);
 static gboolean gst_nv_h265_enc_set_src_caps (GstNvBaseEnc * nvenc,
     GstVideoCodecState * state);
 static gboolean gst_nv_h265_enc_set_encoder_config (GstNvBaseEnc * nvenc,
@@ -62,6 +64,7 @@ gst_nv_h265_enc_class_init (GstNvH265EncClass * klass)
 
   videoenc_class->open = GST_DEBUG_FUNCPTR (gst_nv_h265_enc_open);
   videoenc_class->close = GST_DEBUG_FUNCPTR (gst_nv_h265_enc_close);
+  videoenc_class->stop = GST_DEBUG_FUNCPTR (gst_nv_h265_enc_stop);
 
   nvenc_class->codec_id = NV_ENC_CODEC_HEVC_GUID;
   nvenc_class->set_encoder_config = gst_nv_h265_enc_set_encoder_config;
@@ -124,6 +127,32 @@ static gboolean
 gst_nv_h265_enc_close (GstVideoEncoder * enc)
 {
   return GST_VIDEO_ENCODER_CLASS (gst_nv_h265_enc_parent_class)->close (enc);
+}
+
+static void
+gst_nv_h265_enc_clear_stream_data (GstNvH265Enc * h265enc)
+{
+  gint i;
+
+  if (!h265enc->sei_payload)
+    return;
+
+  for (i = 0; i < h265enc->num_sei_payload; i++)
+    g_free (h265enc->sei_payload[i].payload);
+
+  g_free (h265enc->sei_payload);
+  h265enc->sei_payload = NULL;
+  h265enc->num_sei_payload = 0;
+}
+
+static gboolean
+gst_nv_h265_enc_stop (GstVideoEncoder * enc)
+{
+  GstNvH265Enc *h265enc = GST_NV_H265_ENC (enc);
+
+  gst_nv_h265_enc_clear_stream_data (h265enc);
+
+  return GST_VIDEO_ENCODER_CLASS (gst_nv_h265_enc_parent_class)->stop (enc);
 }
 
 static gboolean
@@ -196,6 +225,120 @@ gst_nv_h265_enc_set_src_caps (GstNvBaseEnc * nvenc, GstVideoCodecState * state)
 
   /* TODO: would be nice to also send some tags with the codec name */
   return TRUE;
+}
+
+static guint8 *
+gst_nv_h265_enc_create_mastering_display_sei_nal (GstNvH265Enc * h265enc,
+    GstVideoMasteringDisplayInfo * minfo, guint * size)
+{
+  guint sei_size;
+  guint16 primary_x[3];
+  guint16 primary_y[3];
+  guint16 white_x, white_y;
+  guint32 max_luma;
+  guint32 min_luma;
+  const guint chroma_scale = 50000;
+  const guint luma_scale = 10000;
+  gint i;
+  GstByteWriter br;
+
+  GST_DEBUG_OBJECT (h265enc, "Apply mastering display info");
+  GST_LOG_OBJECT (h265enc, "\tRed  (%u/%u, %u/%u)", minfo->Rx_n,
+      minfo->Rx_d, minfo->Ry_n, minfo->Ry_d);
+  GST_LOG_OBJECT (h265enc, "\tGreen(%u/%u, %u/%u)", minfo->Gx_n,
+      minfo->Gx_d, minfo->Gy_n, minfo->Gy_d);
+  GST_LOG_OBJECT (h265enc, "\tBlue (%u/%u, %u/%u)", minfo->Bx_n,
+      minfo->Bx_d, minfo->By_n, minfo->By_d);
+  GST_LOG_OBJECT (h265enc, "\tWhite(%u/%u, %u/%u)", minfo->Wx_n,
+      minfo->Wx_d, minfo->Wy_n, minfo->Wy_d);
+  GST_LOG_OBJECT (h265enc,
+      "\tmax_luminance:(%u/%u), min_luminance:(%u/%u)",
+      minfo->max_luma_n, minfo->max_luma_d, minfo->min_luma_n,
+      minfo->min_luma_d);
+
+  primary_x[0] =
+      (guint16) gst_util_uint64_scale_round (minfo->Gx_n, chroma_scale,
+      minfo->Gx_d);
+  primary_x[1] =
+      (guint16) gst_util_uint64_scale_round (minfo->Bx_n, chroma_scale,
+      minfo->Bx_d);
+  primary_x[2] =
+      (guint16) gst_util_uint64_scale_round (minfo->Rx_n, chroma_scale,
+      minfo->Rx_d);
+
+  primary_y[0] =
+      (guint16) gst_util_uint64_scale_round (minfo->Gy_n, chroma_scale,
+      minfo->Gy_d);
+  primary_y[1] =
+      (guint16) gst_util_uint64_scale_round (minfo->By_n, chroma_scale,
+      minfo->By_d);
+  primary_y[2] =
+      (guint16) gst_util_uint64_scale_round (minfo->Ry_n, chroma_scale,
+      minfo->Ry_d);
+
+  white_x =
+      (guint16) gst_util_uint64_scale_round (minfo->Wx_n, chroma_scale,
+      minfo->Wx_d);
+  white_y =
+      (guint16) gst_util_uint64_scale_round (minfo->Wy_n, chroma_scale,
+      minfo->Wy_d);
+  max_luma =
+      (guint32) gst_util_uint64_scale_round (minfo->max_luma_n, luma_scale,
+      minfo->max_luma_d);
+  min_luma =
+      (guint32) gst_util_uint64_scale_round (minfo->min_luma_n, luma_scale,
+      minfo->min_luma_d);
+
+  /* x, y 16bits per RGB channel
+   * x, y 16bits white point
+   * max, min luminance 32bits
+   */
+  sei_size = (2 * 2 * 3) + (2 * 2) + (4 * 2);
+  gst_byte_writer_init_with_size (&br, sei_size, TRUE);
+
+  for (i = 0; i < 3; i++) {
+    gst_byte_writer_put_uint16_be (&br, primary_x[i]);
+    gst_byte_writer_put_uint16_be (&br, primary_y[i]);
+  }
+
+  gst_byte_writer_put_uint16_be (&br, white_x);
+  gst_byte_writer_put_uint16_be (&br, white_y);
+
+  gst_byte_writer_put_uint32_be (&br, max_luma);
+  gst_byte_writer_put_uint32_be (&br, min_luma);
+
+  *size = sei_size;
+
+  return gst_byte_writer_reset_and_get_data (&br);
+}
+
+static guint8 *
+gst_nv_h265_enc_create_content_light_level_sei_nal (GstNvH265Enc * h265enc,
+    GstVideoContentLightLevel * linfo, guint * size)
+{
+  gdouble val;
+  guint sei_size;
+  GstByteWriter br;
+
+  GST_DEBUG_OBJECT (h265enc, "Apply content light level");
+  GST_LOG_OBJECT (h265enc, "content light level found");
+  GST_LOG_OBJECT (h265enc,
+      "\tmaxCLL:(%u/%u), maxFALL:(%u/%u)", linfo->maxCLL_n, linfo->maxCLL_d,
+      linfo->maxFALL_n, linfo->maxFALL_d);
+
+  /* maxCLL and maxFALL per 16bits */
+  sei_size = 2 * 2;
+  gst_byte_writer_init_with_size (&br, sei_size, TRUE);
+
+  gst_util_fraction_to_double (linfo->maxCLL_n, linfo->maxCLL_d, &val);
+  gst_byte_writer_put_uint16_be (&br, (guint16) val);
+
+  gst_util_fraction_to_double (linfo->maxFALL_n, linfo->maxFALL_d, &val);
+  gst_byte_writer_put_uint16_be (&br, (guint16) val);
+
+  *size = sei_size;
+
+  return gst_byte_writer_reset_and_get_data (&br);
 }
 
 static gboolean
@@ -303,6 +446,46 @@ gst_nv_h265_enc_set_encoder_config (GstNvBaseEnc * nvenc,
   vui->transferCharacteristics =
       gst_video_color_transfer_to_iso (info->colorimetry.transfer);
 
+  gst_nv_h265_enc_clear_stream_data (h265enc);
+
+  {
+    GstVideoMasteringDisplayInfo minfo;
+    GstVideoContentLightLevel linfo;
+    gboolean have_mastering;
+    gboolean have_cll;
+    guint size;
+    gint i = 0;
+
+    have_mastering =
+        gst_video_mastering_display_info_from_caps (&minfo, state->caps);
+    have_cll = gst_video_content_light_level_from_caps (&linfo, state->caps);
+
+    if (have_mastering)
+      h265enc->num_sei_payload++;
+    if (have_cll)
+      h265enc->num_sei_payload++;
+
+    h265enc->sei_payload =
+        g_new0 (NV_ENC_SEI_PAYLOAD, h265enc->num_sei_payload);
+
+    if (have_mastering) {
+      h265enc->sei_payload[i].payload =
+          gst_nv_h265_enc_create_mastering_display_sei_nal (h265enc,
+          &minfo, &size);
+      h265enc->sei_payload[i].payloadSize = size;
+      h265enc->sei_payload[i].payloadType = 137;
+      i++;
+    }
+
+    if (have_cll) {
+      h265enc->sei_payload[i].payload =
+          gst_nv_h265_enc_create_content_light_level_sei_nal (h265enc,
+          &linfo, &size);
+      h265enc->sei_payload[i].payloadSize = size;
+      h265enc->sei_payload[i].payloadType = 144;
+    }
+  }
+
   return TRUE;
 }
 
@@ -310,9 +493,18 @@ static gboolean
 gst_nv_h265_enc_set_pic_params (GstNvBaseEnc * enc, GstVideoCodecFrame * frame,
     NV_ENC_PIC_PARAMS * pic_params)
 {
+  GstNvH265Enc *h265enc = GST_NV_H265_ENC (enc);
+
   /* encode whole picture in one single slice */
   pic_params->codecPicParams.hevcPicParams.sliceMode = 0;
   pic_params->codecPicParams.hevcPicParams.sliceModeData = 0;
+
+  if (h265enc->sei_payload) {
+    pic_params->codecPicParams.hevcPicParams.seiPayloadArray =
+        h265enc->sei_payload;
+    pic_params->codecPicParams.hevcPicParams.seiPayloadArrayCnt =
+        h265enc->num_sei_payload;
+  }
 
   return TRUE;
 }

@@ -38,6 +38,9 @@
 
 typedef struct {
   GstNvBaseEnc base_nvenc;
+
+  NV_ENC_SEI_PAYLOAD *sei_payload;
+  guint num_sei_payload;
 } GstNvH265Enc;
 
 typedef struct {
