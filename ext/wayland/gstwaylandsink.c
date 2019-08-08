@@ -98,7 +98,7 @@ static GstCaps *gst_wayland_sink_get_caps (GstBaseSink * bsink,
 static gboolean gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static gboolean
 gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query);
-static gboolean gst_wayland_sink_show_frame (GstVideoSink * bsink,
+static GstFlowReturn gst_wayland_sink_show_frame (GstVideoSink * bsink,
     GstBuffer * buffer);
 
 /* VideoOverlay interface */
