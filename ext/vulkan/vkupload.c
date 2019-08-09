@@ -1348,7 +1348,8 @@ gst_vulkan_upload_change_state (GstElement * element, GstStateChange transition)
                 gst_vulkan_instance_create_device (vk_upload->instance,
                     &error))) {
           GST_ELEMENT_ERROR (vk_upload, RESOURCE, NOT_FOUND,
-              ("Failed to create vulkan device"), ("%s", error->message));
+              ("Failed to create vulkan device"), ("%s",
+                  error ? error->message : ""));
           g_clear_error (&error);
           return GST_STATE_CHANGE_FAILURE;
         }

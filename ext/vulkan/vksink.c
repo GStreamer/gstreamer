@@ -270,7 +270,8 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
       if (!(vk_sink->device =
               gst_vulkan_instance_create_device (vk_sink->instance, &error))) {
         GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
-            ("Failed to create vulkan device"), ("%s", error->message));
+            ("Failed to create vulkan device"), ("%s",
+                error ? error->message : ""));
         g_clear_error (&error);
         return GST_STATE_CHANGE_FAILURE;
       }
@@ -293,7 +294,7 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
 
       if (!gst_vulkan_window_open (vk_sink->window, &error)) {
         GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
-            ("Failed to open window"), ("%s", error->message));
+            ("Failed to open window"), ("%s", error ? error->message : ""));
         g_clear_error (&error);
         return GST_STATE_CHANGE_FAILURE;
       }
@@ -316,8 +317,8 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
         gst_vulkan_queue_run_context_query (GST_ELEMENT (vk_sink), &queue);
         if (!gst_vulkan_swapper_choose_queue (vk_sink->swapper, queue, &error)) {
           GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
-              ("Swapper failed to choose a compatible Vulkan Queue"), ("%s",
-                  error->message));
+              ("Swapper failed to choose a compatible Vulkan Queue"),
+              ("%s", error ? error->message : ""));
           return GST_STATE_CHANGE_FAILURE;
         }
       }
@@ -395,8 +396,8 @@ gst_vulkan_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   if (vk_sink->swapper) {
     if (!(result =
             gst_vulkan_swapper_get_supported_caps (vk_sink->swapper, &error))) {
-      GST_ELEMENT_ERROR (bsink, RESOURCE, NOT_FOUND, ("%s", error->message),
-          (NULL));
+      GST_ELEMENT_ERROR (bsink, RESOURCE, NOT_FOUND, ("%s",
+              error ? error->message : ""), (NULL));
       g_clear_error (&error);
       return NULL;
     }
@@ -498,7 +499,7 @@ gst_vulkan_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   if (!gst_vulkan_swapper_set_caps (vk_sink->swapper, caps, &error)) {
     GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
-        ("Failed to configure caps"), ("%s", error->message));
+        ("Failed to configure caps"), ("%s", error ? error->message : ""));
     g_clear_error (&error);
     return FALSE;
   }
@@ -532,7 +533,7 @@ gst_vulkan_sink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   if (!gst_vulkan_swapper_render_buffer (vk_sink->swapper, buf, &error)) {
     GST_ELEMENT_ERROR (vk_sink, RESOURCE, NOT_FOUND,
-        ("Failed to render buffer"), ("%s", error->message));
+        ("Failed to render buffer"), ("%s", error ? error->message : ""));
     g_clear_error (&error);
     return GST_FLOW_ERROR;
   }
