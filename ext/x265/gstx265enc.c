@@ -564,6 +564,8 @@ gst_x265_enc_init (GstX265Enc * encoder)
   encoder->api = &default_vtable;
 
   encoder->api->param_default (&encoder->x265param);
+
+  encoder->peer_profiles = g_ptr_array_new ();
 }
 
 typedef struct
@@ -630,6 +632,10 @@ gst_x265_enc_dequeue_all_frames (GstX265Enc * enc)
 static gboolean
 gst_x265_enc_start (GstVideoEncoder * encoder)
 {
+  GstX265Enc *x265enc = GST_X265_ENC (encoder);
+
+  g_ptr_array_set_size (x265enc->peer_profiles, 0);
+
   return TRUE;
 }
 
@@ -647,6 +653,8 @@ gst_x265_enc_stop (GstVideoEncoder * encoder)
   if (x265enc->input_state)
     gst_video_codec_state_unref (x265enc->input_state);
   x265enc->input_state = NULL;
+
+  g_ptr_array_set_size (x265enc->peer_profiles, 0);
 
   return TRUE;
 }
@@ -680,6 +688,9 @@ gst_x265_enc_finalize (GObject * object)
   gst_x265_enc_close_encoder (encoder);
 
   g_string_free (encoder->option_string_prop, TRUE);
+
+  if (encoder->peer_profiles)
+    g_ptr_array_free (encoder->peer_profiles, FALSE);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -781,6 +792,7 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
 {
   GstVideoInfo *info;
   guint bitdepth;
+  gboolean peer_intra = FALSE;
 
   if (!encoder->input_state) {
     GST_DEBUG_OBJECT (encoder, "Have no input state yet");
@@ -888,25 +900,37 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
     encoder->x265param.rc.rateControlMode = X265_RC_ABR;
   }
 
-  if (encoder->peer_profile) {
-    GST_DEBUG_OBJECT (encoder, "Apply peer profile %s", encoder->peer_profile);
-    if (encoder->api->param_apply_profile (&encoder->x265param,
-            encoder->peer_profile) < 0) {
-      GST_ERROR_OBJECT (encoder, "Failed to apply profile %s",
-          encoder->peer_profile);
+  if (encoder->peer_profiles->len > 0) {
+    gint i;
+
+    for (i = 0; i < encoder->peer_profiles->len; i++) {
+      const gchar *profile = g_ptr_array_index (encoder->peer_profiles, i);
+
+      GST_DEBUG_OBJECT (encoder, "Apply peer profile %s", profile);
+      if (encoder->api->param_apply_profile (&encoder->x265param, profile) < 0) {
+        GST_WARNING_OBJECT (encoder, "Failed to apply profile %s", profile);
+      } else {
+        /* libx265 chooses still-picture profile only if x265_param::totalFrames
+         * equals to one (otherwise, -intra profile will be chosen) */
+        if (g_strrstr (profile, "stillpicture"))
+          encoder->x265param.totalFrames = 1;
+
+        if (g_str_has_suffix (profile, "-intra"))
+          peer_intra = TRUE;
+
+        break;
+      }
+    }
+
+    if (i == encoder->peer_profiles->len) {
+      GST_ERROR_OBJECT (encoder, "Could't apply peer profile");
       GST_OBJECT_UNLOCK (encoder);
 
       return FALSE;
     }
-
-    /* libx265 chooses still-picture profile only if x265_param::totalFrames
-     * equals to one (otherwise, -intra profile will be chosen) */
-    if (g_strrstr (encoder->peer_profile, "stillpicture")) {
-      encoder->x265param.totalFrames = 1;
-    }
   }
 
-  if (encoder->peer_intra_profile) {
+  if (peer_intra) {
     encoder->x265param.keyframeMax = 1;
   } else if (encoder->keyintmax > 0) {
     encoder->x265param.keyframeMax = encoder->keyintmax;
@@ -1287,6 +1311,45 @@ typedef struct
   const gchar *x265_profile;
 } GstX265EncProfileTable;
 
+static const gchar *
+gst_x265_enc_profile_from_gst (const gchar * profile)
+{
+  gint i;
+  static const GstX265EncProfileTable profile_table[] = {
+    /* 8 bits */
+    {"main", "main"},
+    {"main-still-picture", "mainstillpicture"},
+    {"main-intra", "main-intra"},
+    {"main-444", "main444-8"},
+    {"main-444-intra", "main444-intra"},
+    {"main-444-still-picture", "main444-stillpicture"},
+    /* 10 bits */
+    {"main-10", "main10"},
+    {"main-10-intra", "main10-intra"},
+    {"main-422-10", "main422-10"},
+    {"main-422-10-intra", "main422-10-intra"},
+    {"main-444-10", "main444-10"},
+    {"main-444-10-intra", "main444-10-intra"},
+    /* 12 bits */
+    {"main-12", "main12"},
+    {"main-12-intra", "main12-intra"},
+    {"main-422-12", "main422-12"},
+    {"main-422-12-intra", "main422-12-intra"},
+    {"main-444-12", "main444-12"},
+    {"main-444-12-intra", "main444-12-intra"},
+  };
+
+  if (!profile)
+    return NULL;
+
+  for (i = 0; i < G_N_ELEMENTS (profile_table); i++) {
+    if (!strcmp (profile, profile_table[i].gst_profile))
+      return profile_table[i].x265_profile;
+  }
+
+  return NULL;
+}
+
 static gboolean
 gst_x265_enc_set_format (GstVideoEncoder * video_enc,
     GstVideoCodecState * state)
@@ -1318,41 +1381,17 @@ gst_x265_enc_set_format (GstVideoEncoder * video_enc,
     gst_video_codec_state_unref (encoder->input_state);
   encoder->input_state = gst_video_codec_state_ref (state);
 
-  encoder->peer_profile = NULL;
-  encoder->peer_intra_profile = FALSE;
+  g_ptr_array_set_size (encoder->peer_profiles, 0);
 
   template_caps = gst_static_pad_template_get_caps (&src_factory);
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
 
+  GST_DEBUG_OBJECT (encoder, "allowed caps %" GST_PTR_FORMAT, allowed_caps);
+
   /* allowed != template is meaning that downstream has some restriction
    * so we need check whether there is requested profile or not */
   if (allowed_caps && !gst_caps_is_equal (allowed_caps, template_caps)) {
-    GstStructure *s;
-    const gchar *profile;
-    gint i;
-    static const GstX265EncProfileTable profile_table[] = {
-      /* 8 bits */
-      {"main", "main"},
-      {"main-still-picture", "mainstillpicture"},
-      {"main-intra", "main-intra"},
-      {"main-444", "main444-8"},
-      {"main-444-intra", "main444-intra"},
-      {"main-444-still-picture", "main444-stillpicture"},
-      /* 10 bits */
-      {"main-10", "main10"},
-      {"main-10-intra", "main10-intra"},
-      {"main-422-10", "main422-10"},
-      {"main-422-10-intra", "main422-10-intra"},
-      {"main-444-10", "main444-10"},
-      {"main-444-10-intra", "main444-10-intra"},
-      /* 12 bits */
-      {"main-12", "main12"},
-      {"main-12-intra", "main12-intra"},
-      {"main-422-12", "main422-12"},
-      {"main-422-12-intra", "main422-12-intra"},
-      {"main-444-12", "main444-12"},
-      {"main-444-12-intra", "main444-12-intra"},
-    };
+    gint i, j;
 
     if (gst_caps_is_empty (allowed_caps)) {
       gst_caps_unref (allowed_caps);
@@ -1360,25 +1399,40 @@ gst_x265_enc_set_format (GstVideoEncoder * video_enc,
       return FALSE;
     }
 
-    allowed_caps = gst_caps_make_writable (allowed_caps);
-    allowed_caps = gst_caps_fixate (allowed_caps);
-    s = gst_caps_get_structure (allowed_caps, 0);
+    for (i = 0; i < gst_caps_get_size (allowed_caps); i++) {
+      GstStructure *s;
+      const GValue *val;
+      const gchar *profile;
+      const gchar *x265_profile;
 
-    profile = gst_structure_get_string (s, "profile");
-    if (profile) {
-      if (g_str_has_suffix (profile, "-intra")) {
-        encoder->peer_intra_profile = TRUE;
-      }
+      s = gst_caps_get_structure (allowed_caps, i);
 
-      for (i = 0; G_N_ELEMENTS (profile_table); i++) {
-        if (!strcmp (profile, profile_table[i].gst_profile)) {
-          encoder->peer_profile = profile_table[i].x265_profile;
-          break;
+      if ((val = gst_structure_get_value (s, "profile"))) {
+        if (G_VALUE_HOLDS_STRING (val)) {
+          profile = g_value_get_string (val);
+          x265_profile = gst_x265_enc_profile_from_gst (profile);
+
+          if (x265_profile) {
+            GST_DEBUG_OBJECT (encoder,
+                "Add profile %s to peer profile list", x265_profile);
+
+            g_ptr_array_add (encoder->peer_profiles, (gpointer) x265_profile);
+          }
+        } else if (GST_VALUE_HOLDS_LIST (val)) {
+          for (j = 0; j < gst_value_list_get_size (val); j++) {
+            const GValue *vlist = gst_value_list_get_value (val, j);
+            profile = g_value_get_string (vlist);
+            x265_profile = gst_x265_enc_profile_from_gst (profile);
+
+            if (x265_profile) {
+              GST_DEBUG_OBJECT (encoder,
+                  "Add profile %s to peer profile list", x265_profile);
+
+              g_ptr_array_add (encoder->peer_profiles, (gpointer) x265_profile);
+            }
+          }
         }
       }
-
-      if (!encoder->peer_profile)
-        GST_WARNING_OBJECT (encoder, "Unknown peer profile %s", profile);
     }
   }
 

@@ -73,8 +73,7 @@ struct _GstX265Enc
   gboolean reconfig;
 
   /* from the downstream caps */
-  const gchar *peer_profile;
-  gboolean peer_intra_profile;
+  GPtrArray *peer_profiles;
   /*const x265_level_t *peer_level; */
 };
 
