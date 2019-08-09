@@ -670,14 +670,14 @@ gst_jpeg2000_parse_handle_frame (GstBaseParse * parse,
         "colorspace", G_TYPE_STRING,
         gst_jpeg2000_colorspace_to_string (colorspace), "sampling",
         G_TYPE_STRING, gst_jpeg2000_sampling_to_string (source_sampling),
-        "profile", G_TYPE_UINT, profile, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+        "profile", G_TYPE_INT, profile, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
     if (gst_jpeg2000_parse_is_broadcast (capabilities)
         || gst_jpeg2000_parse_is_imf (capabilities)) {
-      gst_caps_set_simple (src_caps, "main-level", G_TYPE_UINT, main_level,
+      gst_caps_set_simple (src_caps, "main-level", G_TYPE_INT, main_level,
           NULL);
       if (gst_jpeg2000_parse_is_imf (capabilities)) {
-        gst_caps_set_simple (src_caps, "sub-level", G_TYPE_UINT, sub_level,
+        gst_caps_set_simple (src_caps, "sub-level", G_TYPE_INT, sub_level,
             NULL);
       }
     }
