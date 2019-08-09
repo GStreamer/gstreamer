@@ -271,9 +271,17 @@ static gboolean
 gst_vulkan_window_xcb_open (GstVulkanWindow * window, GError ** error)
 {
   GstVulkanWindowXCB *window_xcb = GST_VULKAN_WINDOW_XCB (window);
-  GstVulkanDisplayXCB *display_xcb = (GstVulkanDisplayXCB *) window->display;
+  GstVulkanDisplayXCB *display_xcb;
   xcb_connection_t *connection;
 
+  if (!GST_IS_VULKAN_DISPLAY_XCB (window->display)) {
+    g_set_error (error, GST_VULKAN_WINDOW_ERROR,
+        GST_VULKAN_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+        "Cannot create an XCB window from a non-XCB display");
+    goto failure;
+  }
+
+  display_xcb = GST_VULKAN_DISPLAY_XCB (window->display);
   connection = GST_VULKAN_DISPLAY_XCB_CONNECTION (display_xcb);
   if (connection == NULL) {
     g_set_error (error, GST_VULKAN_WINDOW_ERROR,
