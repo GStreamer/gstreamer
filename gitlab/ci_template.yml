@@ -109,12 +109,6 @@ gst indent:
     key: "${CI_JOB_NAME}"
     paths:
       - "${CCACHE_DIR}"
-  artifacts:
-    expire_in: '5 days'
-    when: always
-    paths:
-      - "manifest.xml"
-      - "gst-build/"
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
@@ -125,6 +119,12 @@ build fedora x86_64:
   image: $FEDORA_IMAGE
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled ${MESON_BUILDTYPE_ARGS} --werror"
+  artifacts:
+    expire_in: '5 days'
+    when: always
+    paths:
+      - "manifest.xml"
+      - "gst-build/"
   except:
     variables:
       - $CI_PROJECT_NAME == "cerbero"
