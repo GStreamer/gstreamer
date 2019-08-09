@@ -66,10 +66,12 @@ struct _GstVulkanSwapperPrivate
   /* runtime variables */
   gint to_quit;
   GstBuffer *current_buffer;
+  gboolean any_current_extent;
 
   /* signal handlers */
   gulong close_id;
   gulong draw_id;
+  gulong resize_id;
 
   /* properties */
   gboolean force_aspect_ratio;
@@ -104,6 +106,8 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanSwapper, gst_vulkan_swapper,
 
 static void _on_window_draw (GstVulkanWindow * window,
     GstVulkanSwapper * swapper);
+static void _on_window_resize (GstVulkanWindow * window,
+    guint width, guint height, GstVulkanSwapper * swapper);
 
 static gboolean
 _get_function_table (GstVulkanSwapper * swapper)
@@ -525,6 +529,9 @@ gst_vulkan_swapper_finalize (GObject * object)
   g_signal_handler_disconnect (swapper->window, swapper->priv->close_id);
   swapper->priv->close_id = 0;
 
+  g_signal_handler_disconnect (swapper->window, swapper->priv->resize_id);
+  swapper->priv->resize_id = 0;
+
   if (swapper->window)
     gst_object_unref (swapper->window);
   swapper->window = NULL;
@@ -586,6 +593,8 @@ gst_vulkan_swapper_new (GstVulkanDevice * device, GstVulkanWindow * window)
       (GCallback) _on_window_close, swapper);
   swapper->priv->draw_id = g_signal_connect (swapper->window, "draw",
       (GCallback) _on_window_draw, swapper);
+  swapper->priv->resize_id = g_signal_connect (swapper->window, "resize",
+      (GCallback) _on_window_resize, swapper);
 
   return swapper;
 }
@@ -672,11 +681,15 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
   if (swapper->priv->surf_props.currentExtent.width == -1) {
     /* If the surface size is undefined, the size is set to
      * the size of the images requested. */
-    swapchain_dims.width = 320;
-    swapchain_dims.height = 240;
+    guint width, height;
+    gst_vulkan_window_get_surface_dimensions (swapper->window, &width, &height);
+    swapchain_dims.width = width;
+    swapchain_dims.height = height;
+    swapper->priv->any_current_extent = TRUE;
   } else {
     /* If the surface size is defined, the swap chain size must match */
     swapchain_dims = swapper->priv->surf_props.currentExtent;
+    swapper->priv->any_current_extent = FALSE;
   }
 
   /* If mailbox mode is available, use it, as is the lowest-latency non-
@@ -1317,5 +1330,20 @@ _on_window_draw (GstVulkanWindow * window, GstVulkanSwapper * swapper)
     GST_ERROR_OBJECT (swapper, "Failed to redraw buffer %p %s",
         swapper->priv->current_buffer, error->message);
   g_clear_error (&error);
+  RENDER_UNLOCK (swapper);
+}
+
+static void
+_on_window_resize (GstVulkanWindow * window, guint width, guint height,
+    GstVulkanSwapper * swapper)
+{
+  GError *error = NULL;
+
+  RENDER_LOCK (swapper);
+  if (swapper->priv->any_current_extent) {
+    if (!_swapchain_resize (swapper, &error))
+      GST_ERROR_OBJECT (swapper, "Failed to resize swapchain: %s",
+          error->message);
+  }
   RENDER_UNLOCK (swapper);
 }

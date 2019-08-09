@@ -142,7 +142,9 @@ _create_window (GstVulkanWindowIos * window_ios)
   GstVulkanUIView *view;
 
   view = [[GstVulkanUIView alloc] initWithFrame:rect];
+  [view setGstWindow:window_ios];
   view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  view.contentMode = UIViewContentModeRedraw;
 
   priv->internal_view = (__bridge_retained gpointer)view;
   [external_view addSubview:view];
@@ -216,7 +218,9 @@ static void
 gst_vulkan_window_ios_close (GstVulkanWindow * window)
 {
   GstVulkanWindowIos *window_ios = GST_VULKAN_WINDOW_IOS (window);
+  GstVulkanUIView *view = (__bridge GstVulkanUIView *) window_ios->priv->internal_view;
 
+  [view setGstWindow:NULL];
   CFBridgingRelease (window_ios->priv->internal_view);
   window_ios->priv->internal_view = NULL;
 
@@ -240,11 +244,34 @@ gst_vulkan_window_ios_set_window_handle (GstVulkanWindow * window,
   window_ios->priv->external_view = view;
 }
 
-@implementation GstVulkanUIView
+@implementation GstVulkanUIView {
+    GstVulkanWindowIos * window_ios;
+
+    guint width;
+    guint height;
+};
 
 +(Class) layerClass
 {
   return [CAMetalLayer class];
+}
+
+-(void) setGstWindow:(GstVulkanWindowIos *) window
+{
+  window_ios = window;
+}
+
+-(void) layoutSubViews
+{
+  [super layoutSubviews];
+  CGSize rect = self.bounds.size;
+  GST_ERROR ("%ix%i", (int) rect.width, (int) rect.height);
+  gboolean resize = self->width != rect.width || self->height != rect.height;
+  self->width = rect.width;
+  self->height = rect.height;
+  if (resize && self->window_ios) {
+    gst_vulkan_window_resize (GST_VULKAN_WINDOW (self->window_ios), rect.width, rect.height);
+  }
 }
 
 @end

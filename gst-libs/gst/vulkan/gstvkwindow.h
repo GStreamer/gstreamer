@@ -90,6 +90,9 @@ struct _GstVulkanWindowClass {
                                                  guint32 queue_family_idx);
   void          (*set_window_handle)            (GstVulkanWindow *window,
                                                  guintptr handle);
+  void          (*get_surface_dimensions)       (GstVulkanWindow *window,
+                                                 guint * width,
+                                                 guint * height);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
@@ -107,6 +110,10 @@ GST_VULKAN_API
 gboolean           gst_vulkan_window_get_presentation_support       (GstVulkanWindow *window,
                                                                      GstVulkanDevice *device,
                                                                      guint32 queue_family_idx);
+GST_VULKAN_API
+void               gst_vulkan_window_get_surface_dimensions         (GstVulkanWindow *window,
+                                                                     guint *width,
+                                                                     guint *height);
 GST_VULKAN_API
 void               gst_vulkan_window_set_window_handle              (GstVulkanWindow *window,
                                                                      guintptr handle);

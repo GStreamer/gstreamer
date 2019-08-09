@@ -93,6 +93,7 @@ enum
   SIGNAL_0,
   SIGNAL_CLOSE,
   SIGNAL_DRAW,
+  SIGNAL_RESIZE,
   LAST_SIGNAL
 };
 
@@ -192,6 +193,10 @@ gst_vulkan_window_class_init (GstVulkanWindowClass * klass)
   gst_vulkan_window_signals[SIGNAL_DRAW] =
       g_signal_new ("draw", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0,
       NULL, NULL, NULL, G_TYPE_NONE, 0);
+
+  gst_vulkan_window_signals[SIGNAL_RESIZE] =
+      g_signal_new ("resize", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0,
+      NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_UINT);
 
   gobject_class->set_property = gst_vulkan_window_set_property;
   gobject_class->get_property = gst_vulkan_window_get_property;
@@ -394,7 +399,8 @@ gst_vulkan_window_resize (GstVulkanWindow * window, gint width, gint height)
   window->priv->surface_width = width;
   window->priv->surface_height = height;
 
-  /* XXX: possibly queue a resize/redraw */
+  g_signal_emit (window, gst_vulkan_window_signals[SIGNAL_RESIZE], 0, width,
+      height);
 }
 
 /**
@@ -428,6 +434,25 @@ gst_vulkan_window_set_window_handle (GstVulkanWindow * window, guintptr handle)
           GST_OBJECT_NAME (window));
   } else {
     klass->set_window_handle (window, handle);
+  }
+}
+
+void
+gst_vulkan_window_get_surface_dimensions (GstVulkanWindow * window,
+    guint * width, guint * height)
+{
+  GstVulkanWindowClass *klass;
+
+  g_return_if_fail (GST_IS_VULKAN_WINDOW (window));
+  klass = GST_VULKAN_WINDOW_GET_CLASS (window);
+
+  if (klass->get_surface_dimensions) {
+    klass->get_surface_dimensions (window, width, height);
+  } else {
+    GST_DEBUG_OBJECT (window, "Returning size %ix%i",
+        window->priv->surface_width, window->priv->surface_height);
+    *width = window->priv->surface_width;
+    *height = window->priv->surface_height;
   }
 }
 

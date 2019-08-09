@@ -29,6 +29,7 @@
 G_BEGIN_DECLS
 
 @interface GstVulkanUIView : UIView
+- (void) setGstWindow:(GstVulkanWindowIos *)window_ios;
 @end
 
 typedef void (*GstVulkanWindowFunc) (gpointer data);
