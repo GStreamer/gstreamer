@@ -35,6 +35,7 @@ base_tests = [
   [['elements/mxfdemux.c']],
   [['elements/mxfmux.c']],
   [['elements/nvenc.c'], false, [gmodule_dep, gstgl_dep]],
+  [['elements/nvdec.c'], not gstgl_dep.found(), [gmodule_dep, gstgl_dep]],
   [['elements/pcapparse.c'], false, [libparser_dep]],
   [['elements/pnm.c']],
   [['elements/rtponvifparse.c']],
