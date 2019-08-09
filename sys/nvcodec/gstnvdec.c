@@ -157,7 +157,9 @@ static gboolean gst_nvdec_src_query (GstVideoDecoder * decoder,
 static gboolean gst_nvdec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_nvdec_drain (GstVideoDecoder * decoder);
 static GstFlowReturn gst_nvdec_finish (GstVideoDecoder * decoder);
+static gboolean gst_nvdec_negotiate (GstVideoDecoder * decoder);
 
+#define gst_nvdec_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstNvDec, gst_nvdec, GST_TYPE_VIDEO_DECODER);
 
 static void
@@ -179,6 +181,7 @@ gst_nvdec_class_init (GstNvDecClass * klass)
   video_decoder_class->drain = GST_DEBUG_FUNCPTR (gst_nvdec_drain);
   video_decoder_class->flush = GST_DEBUG_FUNCPTR (gst_nvdec_flush);
   video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_nvdec_finish);
+  video_decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_nvdec_negotiate);
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nvdec_set_context);
 }
@@ -406,66 +409,7 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
   }
 
   if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (nvdec)) || updata) {
-    GstVideoCodecState *state;
-    GstVideoInfo *vinfo;
-
-    state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (nvdec),
-        GST_VIDEO_INFO_FORMAT (out_info), GST_VIDEO_INFO_WIDTH (out_info),
-        GST_VIDEO_INFO_HEIGHT (out_info), nvdec->input_state);
-    vinfo = &state->info;
-
-    /* update output info with CUvidparser provided one */
-    vinfo->interlace_mode = out_info->interlace_mode;
-    vinfo->fps_n = out_info->fps_n;
-    vinfo->fps_d = out_info->fps_d;
-
-    state->caps = gst_video_info_to_caps (&state->info);
-    nvdec->mem_type = GST_NVDEC_MEM_TYPE_SYSTEM;
-
-#ifdef HAVE_NVCODEC_GST_GL
-    {
-      GstCaps *caps;
-      caps = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (nvdec));
-      GST_DEBUG_OBJECT (nvdec, "Allowed caps %" GST_PTR_FORMAT, caps);
-
-      if (!caps || gst_caps_is_any (caps)) {
-        GST_DEBUG_OBJECT (nvdec,
-            "cannot determine output format, use system memory");
-      } else if (nvdec->gl_display) {
-        GstCapsFeatures *features;
-        guint size = gst_caps_get_size (caps);
-        guint i;
-
-        for (i = 0; i < size; i++) {
-          features = gst_caps_get_features (caps, i);
-          if (features && gst_caps_features_contains (features,
-                  GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
-            GST_DEBUG_OBJECT (nvdec, "found GL memory feature, use gl");
-            nvdec->mem_type = GST_NVDEC_MEM_TYPE_GL;
-            break;
-          }
-        }
-      }
-      gst_clear_caps (&caps);
-    }
-
-    if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_GL) {
-      gst_caps_set_features (state->caps, 0,
-          gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
-      gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING,
-          "2D", NULL);
-    } else {
-      GST_DEBUG_OBJECT (nvdec, "use system memory");
-    }
-#endif
-
-    if (nvdec->output_state)
-      gst_video_codec_state_unref (nvdec->output_state);
-
-    nvdec->output_state = state;
-
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (nvdec))) {
-      GST_WARNING_OBJECT (nvdec, "failed to negotiate with downstream");
       nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
       return FALSE;
     }
@@ -476,6 +420,82 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
 error:
   nvdec->last_ret = GST_FLOW_ERROR;
   return FALSE;
+}
+
+static gboolean
+gst_nvdec_negotiate (GstVideoDecoder * decoder)
+{
+  GstNvDec *nvdec = GST_NVDEC (decoder);
+  GstVideoCodecState *state;
+  GstVideoInfo *vinfo;
+  GstVideoInfo *out_info = &nvdec->out_info;
+  gboolean ret;
+
+  GST_DEBUG_OBJECT (nvdec, "negotiate");
+
+  state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (nvdec),
+      GST_VIDEO_INFO_FORMAT (out_info), GST_VIDEO_INFO_WIDTH (out_info),
+      GST_VIDEO_INFO_HEIGHT (out_info), nvdec->input_state);
+  vinfo = &state->info;
+
+  /* update output info with CUvidparser provided one */
+  vinfo->interlace_mode = out_info->interlace_mode;
+  vinfo->fps_n = out_info->fps_n;
+  vinfo->fps_d = out_info->fps_d;
+
+  state->caps = gst_video_info_to_caps (&state->info);
+  nvdec->mem_type = GST_NVDEC_MEM_TYPE_SYSTEM;
+
+#ifdef HAVE_NVCODEC_GST_GL
+  {
+    GstCaps *caps;
+    caps = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (nvdec));
+    GST_DEBUG_OBJECT (nvdec, "Allowed caps %" GST_PTR_FORMAT, caps);
+
+    if (!caps || gst_caps_is_any (caps)) {
+      GST_DEBUG_OBJECT (nvdec,
+          "cannot determine output format, use system memory");
+    } else if (nvdec->gl_display) {
+      GstCapsFeatures *features;
+      guint size = gst_caps_get_size (caps);
+      guint i;
+
+      for (i = 0; i < size; i++) {
+        features = gst_caps_get_features (caps, i);
+        if (features && gst_caps_features_contains (features,
+                GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+          GST_DEBUG_OBJECT (nvdec, "found GL memory feature, use gl");
+          nvdec->mem_type = GST_NVDEC_MEM_TYPE_GL;
+          break;
+        }
+      }
+    }
+    gst_clear_caps (&caps);
+  }
+
+  if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_GL) {
+    gst_caps_set_features (state->caps, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL));
+    gst_caps_set_simple (state->caps, "texture-target", G_TYPE_STRING,
+        "2D", NULL);
+  } else {
+    GST_DEBUG_OBJECT (nvdec, "use system memory");
+  }
+#endif
+
+  if (nvdec->output_state)
+    gst_video_codec_state_unref (nvdec->output_state);
+
+  nvdec->output_state = state;
+
+  ret = GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
+
+  if (!ret) {
+    GST_ERROR_OBJECT (nvdec, "failed to negotiate with downstream");
+    nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
+  }
+
+  return ret;
 }
 
 static gboolean
