@@ -894,6 +894,7 @@ gst_x265_enc_init_encoder (GstX265Enc * encoder)
             encoder->peer_profile) < 0) {
       GST_ERROR_OBJECT (encoder, "Failed to apply profile %s",
           encoder->peer_profile);
+      GST_OBJECT_UNLOCK (encoder);
 
       return FALSE;
     }
