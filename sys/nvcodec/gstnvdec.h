@@ -79,10 +79,7 @@ struct _GstNvDec
   GstCudaContext *cuda_ctx;
   CUstream cuda_stream;
 
-  guint width;
-  guint height;
-  guint fps_n;
-  guint fps_d;
+  GstVideoInfo out_info;
   GstClockTime min_latency;
   GstVideoCodecState *input_state;
   GstVideoCodecState *output_state;

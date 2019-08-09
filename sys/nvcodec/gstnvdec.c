@@ -190,20 +190,172 @@ gst_nvdec_init (GstNvDec * nvdec)
   gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (nvdec), TRUE);
 }
 
+static cudaVideoSurfaceFormat
+get_cuda_surface_format_from_gst (GstVideoFormat format)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_NV12:
+      return cudaVideoSurfaceFormat_NV12;
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P010_10BE:
+    case GST_VIDEO_FORMAT_P016_LE:
+    case GST_VIDEO_FORMAT_P016_BE:
+      return cudaVideoSurfaceFormat_P016;
+    case GST_VIDEO_FORMAT_Y444:
+      return cudaVideoSurfaceFormat_YUV444;
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_Y444_16BE:
+      return cudaVideoSurfaceFormat_YUV444_16Bit;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  return cudaVideoSurfaceFormat_NV12;
+}
+
 static gboolean
 parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
 {
-  guint width, height, fps_n, fps_d;
+  guint width, height;
   CUVIDDECODECREATEINFO create_info = { 0, };
-  GstVideoFormat out_format = GST_VIDEO_FORMAT_NV12;
-  GstVideoInfo *info = &nvdec->input_state->info;
+  GstVideoFormat out_format;
+  GstVideoInfo *in_info = &nvdec->input_state->info;
+  GstVideoInfo *out_info = &nvdec->out_info;
+  GstVideoInfo prev_out_info = *out_info;
   GstCudaContext *ctx = nvdec->cuda_ctx;
+  GstStructure *in_s = NULL;
+  gboolean updata = FALSE;
 
   width = format->display_area.right - format->display_area.left;
   height = format->display_area.bottom - format->display_area.top;
+
+  switch (format->chroma_format) {
+    case cudaVideoChromaFormat_444:
+      if (format->bit_depth_luma_minus8 == 0) {
+        out_format = GST_VIDEO_FORMAT_Y444;
+      } else if (format->bit_depth_luma_minus8 == 2 ||
+          format->bit_depth_luma_minus8 == 4) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+        out_format = GST_VIDEO_FORMAT_Y444_16LE;
+#else
+        out_format = GST_VIDEO_FORMAT_Y444_16BE;
+#endif
+      } else {
+        GST_ERROR_OBJECT (nvdec, "Unknown 4:4:4 format bitdepth %d",
+            format->bit_depth_luma_minus8 + 8);
+
+        nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
+        return FALSE;
+      }
+      break;
+    case cudaVideoChromaFormat_420:
+      if (format->bit_depth_luma_minus8 == 0) {
+        out_format = GST_VIDEO_FORMAT_NV12;
+      } else if (format->bit_depth_luma_minus8 == 2) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+        out_format = GST_VIDEO_FORMAT_P010_10LE;
+#else
+        out_format = GST_VIDEO_FORMAT_P010_10BE;
+#endif
+      } else if (format->bit_depth_luma_minus8 == 4) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+        out_format = GST_VIDEO_FORMAT_P016_LE;
+#else
+        out_format = GST_VIDEO_FORMAT_P016_BE;
+#endif
+      } else {
+        GST_ERROR_OBJECT (nvdec, "Unknown 4:2:0 format bitdepth %d",
+            format->bit_depth_luma_minus8 + 8);
+
+        nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
+        return FALSE;
+      }
+      break;
+    default:
+      GST_ERROR_OBJECT (nvdec, "unhandled chroma format %d, bitdepth %d",
+          format->chroma_format, format->bit_depth_luma_minus8 + 8);
+
+      nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
+      return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (nvdec,
+      "out format: %s", gst_video_format_to_string (out_format));
+
   GST_DEBUG_OBJECT (nvdec, "width: %u, height: %u", width, height);
 
-  if (!nvdec->decoder || (nvdec->width != width || nvdec->height != height)) {
+  gst_video_info_set_format (out_info, out_format, width, height);
+  GST_VIDEO_INFO_FPS_N (out_info) = GST_VIDEO_INFO_FPS_N (in_info);
+  GST_VIDEO_INFO_FPS_D (out_info) = GST_VIDEO_INFO_FPS_D (in_info);
+
+  if (GST_VIDEO_INFO_FPS_N (out_info) < 1 ||
+      GST_VIDEO_INFO_FPS_D (out_info) < 1) {
+    GST_VIDEO_INFO_FPS_N (out_info) = format->frame_rate.numerator;
+    GST_VIDEO_INFO_FPS_D (out_info) = MAX (1, format->frame_rate.denominator);
+  }
+
+  GST_LOG_OBJECT (nvdec,
+      "Reading colorimetry information full-range %d matrix %d transfer %d primaries %d",
+      format->video_signal_description.video_full_range_flag,
+      format->video_signal_description.matrix_coefficients,
+      format->video_signal_description.transfer_characteristics,
+      format->video_signal_description.color_primaries);
+
+  if (nvdec->input_state->caps)
+    in_s = gst_caps_get_structure (nvdec->input_state->caps, 0);
+
+  /* Set colorimetry when upstream did not provide it */
+  if (in_s && !gst_structure_has_field (in_s, "colorimetry")) {
+    GstVideoColorimetry colorimetry = { 0, };
+
+    if (format->video_signal_description.video_full_range_flag)
+      colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+    else
+      colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+
+    colorimetry.primaries =
+        gst_video_color_primaries_from_iso
+        (format->video_signal_description.color_primaries);
+
+    colorimetry.transfer =
+        gst_video_color_transfer_from_iso
+        (format->video_signal_description.transfer_characteristics);
+
+    colorimetry.matrix =
+        gst_video_color_matrix_from_iso
+        (format->video_signal_description.matrix_coefficients);
+
+    /* Use a colorimetry having at least one valid colorimetry entry,
+     * because we don't know whether the returned
+     * colorimetry (by nvdec) was actually parsed information or not.
+     * Otherwise let GstVideoInfo handle it with default colorimetry */
+    if (colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN ||
+        colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN ||
+        colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_UNKNOWN) {
+      GST_DEBUG_OBJECT (nvdec,
+          "Found valid colorimetry, update output colorimetry");
+      out_info->colorimetry = colorimetry;
+    }
+  } else {
+    out_info->colorimetry = in_info->colorimetry;
+  }
+
+  if (format->progressive_sequence) {
+    out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+
+    /* nvdec doesn't seem to deal with interlacing with hevc so rely
+     * on upstream's value */
+    if (format->codec == cudaVideoCodec_HEVC) {
+      out_info->interlace_mode = in_info->interlace_mode;
+    }
+  } else {
+    out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
+  }
+
+  if (!nvdec->decoder || !gst_video_info_is_equal (out_info, &prev_out_info)) {
+    updata = TRUE;
+
     if (!gst_cuda_context_push (ctx)) {
       GST_ERROR_OBJECT (nvdec, "failed to lock CUDA context");
       goto error;
@@ -229,66 +381,8 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     create_info.display_area.top = format->display_area.top;
     create_info.display_area.right = format->display_area.right;
     create_info.display_area.bottom = format->display_area.bottom;
+    create_info.OutputFormat = get_cuda_surface_format_from_gst (out_format);
     create_info.bitDepthMinus8 = format->bit_depth_luma_minus8;
-    create_info.OutputFormat = cudaVideoSurfaceFormat_NV12;
-    switch (format->chroma_format) {
-      case cudaVideoChromaFormat_444:
-        if (format->bit_depth_luma_minus8 == 0) {
-          out_format = GST_VIDEO_FORMAT_Y444;
-          create_info.OutputFormat = cudaVideoSurfaceFormat_YUV444;
-        } else if (format->bit_depth_luma_minus8 == 2 ||
-            format->bit_depth_luma_minus8 == 4) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-          out_format = GST_VIDEO_FORMAT_Y444_16LE;
-#else
-          out_format = GST_VIDEO_FORMAT_Y444_16BE;
-#endif
-          create_info.OutputFormat = cudaVideoSurfaceFormat_YUV444_16Bit;
-        } else {
-          GST_ERROR_OBJECT (nvdec, "Unknown 4:4:4 format bitdepth %d",
-              format->bit_depth_luma_minus8 + 8);
-
-          nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
-          return FALSE;
-        }
-        break;
-      case cudaVideoChromaFormat_420:
-        if (format->bit_depth_luma_minus8 == 0) {
-          out_format = GST_VIDEO_FORMAT_NV12;
-          create_info.OutputFormat = cudaVideoSurfaceFormat_NV12;
-        } else if (format->bit_depth_luma_minus8 == 2) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-          out_format = GST_VIDEO_FORMAT_P010_10LE;
-#else
-          out_format = GST_VIDEO_FORMAT_P010_10BE;
-#endif
-          create_info.OutputFormat = cudaVideoSurfaceFormat_P016;
-        } else if (format->bit_depth_luma_minus8 == 4) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-          out_format = GST_VIDEO_FORMAT_P016_LE;
-#else
-          out_format = GST_VIDEO_FORMAT_P016_BE;
-#endif
-          create_info.OutputFormat = cudaVideoSurfaceFormat_P016;
-        } else {
-          GST_ERROR_OBJECT (nvdec, "Unknown 4:2:0 format bitdepth %d",
-              format->bit_depth_luma_minus8 + 8);
-
-          nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
-          return FALSE;
-        }
-        break;
-      default:
-        GST_ERROR_OBJECT (nvdec, "unhandled chroma format %d, bitdepth %d",
-            format->chroma_format, format->bit_depth_luma_minus8 + 8);
-
-        nvdec->last_ret = GST_FLOW_NOT_NEGOTIATED;
-        return FALSE;
-    }
-
-    GST_DEBUG_OBJECT (nvdec,
-        "out format: %s", gst_video_format_to_string (out_format));
-
     create_info.DeinterlaceMode = cudaVideoDeinterlaceMode_Weave;
     create_info.ulTargetWidth = width;
     create_info.ulTargetHeight = height;
@@ -311,86 +405,19 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     }
   }
 
-  fps_n = GST_VIDEO_INFO_FPS_N (info);
-  fps_d = GST_VIDEO_INFO_FPS_D (info);
-
-  if (fps_n < 1 || fps_d < 1) {
-    fps_n = format->frame_rate.numerator;
-    fps_d = MAX (1, format->frame_rate.denominator);
-  }
-
-  if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (nvdec))
-      || width != nvdec->width || height != nvdec->height
-      || fps_n != nvdec->fps_n || fps_d != nvdec->fps_d) {
+  if (!gst_pad_has_current_caps (GST_VIDEO_DECODER_SRC_PAD (nvdec)) || updata) {
     GstVideoCodecState *state;
     GstVideoInfo *vinfo;
-    GstStructure *in_s = NULL;
-
-    nvdec->width = width;
-    nvdec->height = height;
-    nvdec->fps_n = fps_n;
-    nvdec->fps_d = fps_d;
 
     state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (nvdec),
-        out_format, nvdec->width, nvdec->height, nvdec->input_state);
+        GST_VIDEO_INFO_FORMAT (out_info), GST_VIDEO_INFO_WIDTH (out_info),
+        GST_VIDEO_INFO_HEIGHT (out_info), nvdec->input_state);
     vinfo = &state->info;
-    vinfo->fps_n = fps_n;
-    vinfo->fps_d = fps_d;
-    if (format->progressive_sequence) {
-      vinfo->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
-      /* nvdec doesn't seem to deal with interlacing with hevc so rely
-       * on upstream's value */
-      if (format->codec == cudaVideoCodec_HEVC) {
-        vinfo->interlace_mode = nvdec->input_state->info.interlace_mode;
-      }
-    } else {
-      vinfo->interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
-    }
-
-    GST_LOG_OBJECT (nvdec,
-        "Reading colorimetry information full-range %d matrix %d transfer %d primaries %d",
-        format->video_signal_description.video_full_range_flag,
-        format->video_signal_description.matrix_coefficients,
-        format->video_signal_description.transfer_characteristics,
-        format->video_signal_description.color_primaries);
-
-    if (nvdec->input_state->caps)
-      in_s = gst_caps_get_structure (nvdec->input_state->caps, 0);
-
-    /* Set colorimetry when upstream did not provide it */
-    if (in_s && !gst_structure_has_field (in_s, "colorimetry")) {
-      GstVideoColorimetry colorimetry = { 0, };
-
-      if (format->video_signal_description.video_full_range_flag)
-        colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
-      else
-        colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
-
-      colorimetry.primaries =
-          gst_video_color_primaries_from_iso
-          (format->video_signal_description.color_primaries);
-
-      colorimetry.transfer =
-          gst_video_color_transfer_from_iso
-          (format->video_signal_description.transfer_characteristics);
-
-      colorimetry.matrix =
-          gst_video_color_matrix_from_iso
-          (format->video_signal_description.matrix_coefficients);
-
-      /* Use a colorimetry having at least one valid colorimetry entry,
-       * because we don't know whether the returned
-       * colorimetry (by nvdec) was actually parsed information or not.
-       * Otherwise let GstVideoInfo handle it with default colorimetry */
-      if (colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN ||
-          colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN ||
-          colorimetry.matrix != GST_VIDEO_COLOR_MATRIX_UNKNOWN) {
-        GST_DEBUG_OBJECT (nvdec,
-            "Found valid colorimetry, update output colorimetry");
-        vinfo->colorimetry = colorimetry;
-      }
-    }
+    /* update output info with CUvidparser provided one */
+    vinfo->interlace_mode = out_info->interlace_mode;
+    vinfo->fps_n = out_info->fps_n;
+    vinfo->fps_d = out_info->fps_d;
 
     state->caps = gst_video_info_to_caps (&state->info);
     nvdec->mem_type = GST_NVDEC_MEM_TYPE_SYSTEM;
@@ -557,7 +584,9 @@ parser_display_callback (GstNvDec * nvdec, CUVIDPARSERDISPINFO * dispinfo)
     GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
     /* assume buffer duration from framerate */
     GST_BUFFER_DURATION (output_buffer) =
-        gst_util_uint64_scale (GST_SECOND, nvdec->fps_d, nvdec->fps_n);
+        gst_util_uint64_scale (GST_SECOND,
+        GST_VIDEO_INFO_FPS_D (&nvdec->out_info),
+        GST_VIDEO_INFO_FPS_N (&nvdec->out_info));
   } else {
     ret = gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (nvdec),
         frame);
@@ -670,6 +699,7 @@ gst_nvdec_start (GstVideoDecoder * decoder)
 
   nvdec->state = GST_NVDEC_STATE_INIT;
   nvdec->last_ret = GST_FLOW_OK;
+  gst_video_info_init (&nvdec->out_info);
 
   return TRUE;
 }
@@ -902,7 +932,7 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
     mcpy2d.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (info, i)
         * GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
 
-    mcpy2d.srcDevice = dptr + (i * pitch * nvdec->height);
+    mcpy2d.srcDevice = dptr + (i * pitch * GST_VIDEO_INFO_HEIGHT (info));
     mcpy2d.dstDevice = cuda_ptr;
     mcpy2d.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
@@ -986,7 +1016,7 @@ gst_nvdec_copy_device_to_system (GstNvDec * nvdec,
       * GST_VIDEO_INFO_COMP_PSTRIDE (info, 0);
 
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&video_frame); i++) {
-    copy_params.srcDevice = dptr + (i * pitch * nvdec->height);
+    copy_params.srcDevice = dptr + (i * pitch * GST_VIDEO_INFO_HEIGHT (info));
     copy_params.dstHost = GST_VIDEO_FRAME_PLANE_DATA (&video_frame, i);
     copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
     copy_params.Height = GST_VIDEO_FRAME_COMP_HEIGHT (&video_frame, i);
