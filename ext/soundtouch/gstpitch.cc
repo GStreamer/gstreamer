@@ -876,7 +876,9 @@ gst_pitch_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   gst_buffer_map (buffer, &info, GST_MAP_READ);
+  GST_OBJECT_LOCK (pitch);
   priv->st->putSamples ((soundtouch::SAMPLETYPE *) info.data, info.size / pitch->info.bpf);
+  GST_OBJECT_UNLOCK (pitch);
   gst_buffer_unmap (buffer, &info);
   gst_buffer_unref (buffer);
 
