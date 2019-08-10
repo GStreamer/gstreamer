@@ -26,10 +26,11 @@
  * @see_also: #GstRgLimiter, #GstRgAnalysis
  *
  * This element applies volume changes to streams as lined out in the proposed
- * <ulink url="http://replaygain.org">ReplayGain standard</ulink>.  It
- * interprets the ReplayGain meta data tags and carries out the adjustment (by
- * using a volume element internally).  The relevant tags are:
+ * [ReplayGain standard](https://wiki.hydrogenaud.io/index.php?title=ReplayGain).
+ * It interprets the ReplayGain meta data tags and carries out the adjustment
+ * (by using a volume element internally).
  *
+ * The relevant tags are:
  * * #GST_TAG_TRACK_GAIN
  * * #GST_TAG_TRACK_PEAK
  * * #GST_TAG_ALBUM_GAIN
@@ -197,9 +198,7 @@ gst_rg_volume_class_init (GstRgVolumeClass * klass)
    * range.
    *
    * Note that the default value is 0 dB because the ReplayGain reference value
-   * was adjusted by +6 dB (from 83 to 89 dB).  At the time of this writing, the
-   * <ulink url="http://replaygain.org">webpage</ulink> is still outdated and
-   * does not reflect this change however.  Where the original proposal states
+   * was adjusted by +6 dB (from 83 to 89 dB). The original proposal stated
    * that a proper default pre-amp value is +6 dB, this translates to the used 0
    * dB.
    */

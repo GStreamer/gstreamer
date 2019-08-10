@@ -27,8 +27,8 @@
  *
  * This element applies signal compression/limiting to raw audio data.  It
  * performs strict hard limiting with soft-knee characteristics, using a
- * threshold of -6 dB.  This type of filter is mentioned in the proposed <ulink
- * url="http://replaygain.org">ReplayGain standard</ulink>.
+ * threshold of -6 dB.  This type of filter is mentioned in the proposed
+ * [ReplayGain standard](https://wiki.hydrogenaud.io/index.php?title=ReplayGain).
  *
  * ## Example launch line
  * |[

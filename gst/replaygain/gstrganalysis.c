@@ -26,7 +26,7 @@
  * @see_also: #GstRgVolume
  *
  * This element analyzes raw audio sample data in accordance with the proposed
- * <ulink url="http://replaygain.org">ReplayGain standard</ulink> for
+ * [ReplayGain standard](https://wiki.hydrogenaud.io/index.php?title=ReplayGain) for
  * calculating the ideal replay gain for music tracks and albums.  The element
  * is designed as a pass-through filter that never modifies any data.  As it
  * receives an EOS event, it finalizes the ongoing analysis and generates a tag
@@ -63,9 +63,8 @@
  *
  * ## Acknowledgements
  *
- * This element is based on code used in the <ulink
- * url="http://sjeng.org/vorbisgain.html">vorbisgain</ulink> program and many
- * others.  The relevant parts are copyrighted by David Robinson, Glen Sawyer
+ * This element is based on code used in the [vorbisgain](https://sjeng.org/vorbisgain.html)
+ * program and many others.  The relevant parts are copyrighted by David Robinson, Glen Sawyer
  * and Frank Klemm.
  *
  */
@@ -230,10 +229,8 @@ gst_rg_analysis_class_init (GstRgAnalysisClass * klass)
    * ReplayGain, set this property to 83.
    *
    * Almost all software uses 89 dB as a reference however, and this value has
-   * become the new official value.  That is to say, while the change has been
-   * acclaimed by the author of the ReplayGain proposal, the <ulink
-   * url="http://replaygain.org">webpage</ulink> is still outdated at the time
-   * of this writing.
+   * become the new official value, and that change has been acclaimed by the
+   * original author of the ReplayGain proposal.
    *
    * The value was changed because the original proposal recommends a default
    * pre-amp value of +6 dB for playback.  This seemed a bit odd, as it means
