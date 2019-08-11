@@ -3691,6 +3691,13 @@ activate_sink_bus_handler (GstBus * bus, GstMessage * msg,
       gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
     else
       gst_message_unref (msg);
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_HAVE_CONTEXT) {
+    GstContext *context;
+
+    gst_message_parse_have_context (msg, &context);
+    gst_element_set_context (GST_ELEMENT_CAST (playbin), context);
+    gst_context_unref (context);
+    gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
   } else {
     gst_element_post_message (GST_ELEMENT_CAST (playbin), msg);
   }
