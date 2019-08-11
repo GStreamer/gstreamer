@@ -63,10 +63,6 @@ typedef struct
 
 #define GST_VIDEO_COLORIMETRY_NONAME  NULL
 
-#define DEFAULT_UNKNOWN 9
-
-/* NOTE: If you add an entry below, don't forget to update DEFAULT_UNKNOWN
- * above */
 static const ColorimetryInfo colorimetry[] = {
   MAKE_COLORIMETRY (BT601, _16_235, BT601, BT709, SMPTE170M),
   MAKE_COLORIMETRY (BT709, _16_235, BT709, BT709, BT709),
@@ -74,12 +70,10 @@ static const ColorimetryInfo colorimetry[] = {
   MAKE_COLORIMETRY (SRGB, _0_255, RGB, SRGB, BT709),
   MAKE_COLORIMETRY (BT2020, _16_235, BT2020, BT2020_12, BT2020),
   MAKE_COLORIMETRY (NONAME, _0_255, BT601, UNKNOWN, UNKNOWN),
-  MAKE_COLORIMETRY (NONAME, _UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN),
+  MAKE_COLORIMETRY (NONAME, _UNKNOWN, UNKNOWN, UNKNOWN, UNKNOWN),       /* Keep last! */
 };
 
-/* Ensure that DEFAULT_UNKNOWN is indeed updated */
-G_STATIC_ASSERT (sizeof (colorimetry) ==
-    (sizeof (gchar *) + sizeof (GstVideoColorimetry)) * (DEFAULT_UNKNOWN + 1));
+#define DEFAULT_UNKNOWN (G_N_ELEMENTS(colorimetry)-1)
 
 static const ColorimetryInfo *
 gst_video_get_colorimetry (const gchar * s)
