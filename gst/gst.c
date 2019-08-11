@@ -131,6 +131,7 @@
 
 static gboolean gst_initialized = FALSE;
 static gboolean gst_deinitialized = FALSE;
+static GMutex init_lock;
 
 GstClockTime _priv_gst_start_time;
 
@@ -410,7 +411,6 @@ gst_get_main_executable_path (void)
 gboolean
 gst_init_check (int *argc, char **argv[], GError ** error)
 {
-  static GMutex init_lock;
 #ifndef GST_DISABLE_OPTION_PARSING
   GOptionGroup *group;
   GOptionContext *ctx;
@@ -1109,15 +1109,18 @@ gst_deinit (void)
   GstBinClass *bin_class;
   GstClock *clock;
 
-  if (!gst_initialized)
-    return;
+  g_mutex_lock (&init_lock);
 
-  GST_INFO ("deinitializing GStreamer");
-
-  if (gst_deinitialized) {
-    GST_DEBUG ("already deinitialized");
+  if (!gst_initialized) {
+    g_mutex_unlock (&init_lock);
     return;
   }
+  if (gst_deinitialized) {
+    /* tell the user how naughty they've been */
+    g_error ("GStreamer should not be deinitialized a second time.");
+  }
+
+  GST_INFO ("deinitializing GStreamer");
   g_thread_pool_set_max_unused_threads (0);
   bin_class = (GstBinClass *) g_type_class_peek (gst_bin_get_type ());
   if (bin_class && bin_class->pool != NULL) {
@@ -1262,6 +1265,7 @@ gst_deinit (void)
 
   gst_deinitialized = TRUE;
   GST_INFO ("deinitialized GStreamer");
+  g_mutex_unlock (&init_lock);
 
   /* Doing this as the very last step to allow the above GST_INFO() to work
    * correctly. It's of course making the above statement a lie: for a short

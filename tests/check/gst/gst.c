@@ -39,7 +39,7 @@ GST_START_TEST (test_deinit)
 {
   gst_init (NULL, NULL);
 
-  gst_deinit ();
+  /* gst_deinit will be called by test exit handler */
 }
 
 GST_END_TEST;
@@ -53,7 +53,7 @@ GST_START_TEST (test_deinit_sysclock)
   clock = gst_system_clock_obtain ();
   gst_object_unref (clock);
 
-  gst_deinit ();
+  /* gst_deinit will be called by test exit handler */
 }
 
 GST_END_TEST;
@@ -100,15 +100,19 @@ gst_suite (void)
 {
   Suite *s = suite_create ("Gst");
   TCase *tc_chain = tcase_create ("gst tests");
+  const char *ck_fork = g_getenv ("CK_FORK");
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_init);
   tcase_add_test (tc_chain, test_new_pipeline);
   tcase_add_test (tc_chain, test_new_fakesrc);
   tcase_add_test (tc_chain, test_version);
-  /* run these last so the others don't fail if CK_FORK=no is being used */
+  /* run these last so the others don't fail if CK_FORK=no is being used.
+   * only run single test for deinitialization if CK_FORK=no, so system exit
+   * will make the single deinit call */
   tcase_add_test (tc_chain, test_deinit_sysclock);
-  tcase_add_test (tc_chain, test_deinit);
+  if (!ck_fork || (strcmp (ck_fork, "no") != 0))
+    tcase_add_test (tc_chain, test_deinit);
 
   return s;
 }
