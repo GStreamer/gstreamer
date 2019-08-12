@@ -334,6 +334,8 @@ static void gst_uri_decode_bin3_set_property (GObject * object, guint prop_id,
 static void gst_uri_decode_bin3_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_uri_decode_bin3_finalize (GObject * obj);
+static GstSourceHandler *new_source_handler (GstURIDecodeBin3 * uridecodebin,
+    gboolean is_main);
 
 static GstStateChangeReturn gst_uri_decode_bin3_change_state (GstElement *
     element, GstStateChange transition);
@@ -709,8 +711,11 @@ src_pad_added_cb (GstElement * element, GstPad * pad,
   GstURIDecodeBin3 *uridecodebin;
   GstPad *sinkpad = NULL;
   GstPadLinkReturn res;
+  GstPlayItem *current_play_item;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   uridecodebin = handler->uridecodebin;
+  current_play_item = uridecodebin->current;
 
   GST_DEBUG_OBJECT (uridecodebin,
       "New pad %" GST_PTR_FORMAT " from source %" GST_PTR_FORMAT, pad, element);
@@ -737,6 +742,17 @@ src_pad_added_cb (GstElement * element, GstPad * pad,
     if (GST_PAD_LINK_FAILED (res))
       goto link_failed;
   }
+
+  /* Activate sub_item after the main source activation was finished */
+  if (handler->is_main_source && current_play_item->sub_item
+      && !current_play_item->sub_item->handler) {
+    current_play_item->sub_item->handler =
+        new_source_handler (uridecodebin, FALSE);
+    ret = activate_source_item (current_play_item->sub_item);
+    if (ret == GST_STATE_CHANGE_FAILURE)
+      goto sub_item_activation_failed;
+  }
+
   return;
 
 link_failed:
@@ -744,6 +760,12 @@ link_failed:
     GST_ERROR_OBJECT (uridecodebin,
         "failed to link pad %s:%s to decodebin, reason %s (%d)",
         GST_DEBUG_PAD_NAME (pad), gst_pad_link_get_name (res), res);
+    return;
+  }
+sub_item_activation_failed:
+  {
+    GST_ERROR_OBJECT (uridecodebin,
+        "failed to activate subtitle playback item");
     return;
   }
 }
@@ -882,19 +904,25 @@ gst_uri_decode_bin3_get_property (GObject * object, guint prop_id,
     }
     case PROP_CURRENT_URI:
     {
-      g_value_set_string (value, dec->suburi);
+      if (dec->current && dec->current->main_item) {
+        g_value_set_string (value, dec->current->main_item->uri);
+      } else {
+        g_value_set_string (value, NULL);
+      }
       break;
     }
     case PROP_SUBURI:
     {
-      /* FIXME : Return current uri */
-      g_value_set_string (value, dec->uri);
+      g_value_set_string (value, dec->suburi);
       break;
     }
     case PROP_CURRENT_SUBURI:
     {
-      /* FIXME : Return current suburi */
-      g_value_set_string (value, dec->suburi);
+      if (dec->current && dec->current->sub_item) {
+        g_value_set_string (value, dec->current->sub_item->uri);
+      } else {
+        g_value_set_string (value, NULL);
+      }
       break;
     }
     case PROP_SOURCE:
@@ -1024,11 +1052,6 @@ assign_handlers_to_item (GstURIDecodeBin3 * dec, GstPlayItem * item)
       return ret;
   }
 
-  if (item->sub_item && item->sub_item->handler) {
-    item->sub_item->handler = new_source_handler (dec, FALSE);
-    ret = activate_source_item (item->sub_item);
-  }
-
   return ret;
 }
 
@@ -1050,6 +1073,7 @@ activate_next_play_item (GstURIDecodeBin3 * dec)
   }
 
   dec->play_items = g_list_append (dec->play_items, item);
+  dec->current = dec->play_items->data;
 
   return ret;
 }
