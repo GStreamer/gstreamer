@@ -33,6 +33,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp8_depay_debug);
 #define GST_CAT_DEFAULT gst_rtp_vp8_depay_debug
 
 static void gst_rtp_vp8_depay_dispose (GObject * object);
+static void gst_rtp_vp8_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_rtp_vp8_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 static GstBuffer *gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depayload,
     GstRTPBuffer * rtp);
 static GstStateChangeReturn gst_rtp_vp8_depay_change_state (GstElement *
@@ -57,11 +61,20 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "media = (string) \"video\","
         "encoding-name = (string) { \"VP8\", \"VP8-DRAFT-IETF-01\" }"));
 
+#define DEFAULT_WAIT_FOR_KEYFRAME FALSE
+
+enum
+{
+  PROP_0,
+  PROP_WAIT_FOR_KEYFRAME
+};
+
 static void
 gst_rtp_vp8_depay_init (GstRtpVP8Depay * self)
 {
   self->adapter = gst_adapter_new ();
   self->started = FALSE;
+  self->wait_for_keyframe = DEFAULT_WAIT_FOR_KEYFRAME;
 }
 
 static void
@@ -71,7 +84,6 @@ gst_rtp_vp8_depay_class_init (GstRtpVP8DepayClass * gst_rtp_vp8_depay_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (gst_rtp_vp8_depay_class);
   GstRTPBaseDepayloadClass *depay_class =
       (GstRTPBaseDepayloadClass *) (gst_rtp_vp8_depay_class);
-
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_rtp_vp8_depay_sink_template);
@@ -84,6 +96,14 @@ gst_rtp_vp8_depay_class_init (GstRtpVP8DepayClass * gst_rtp_vp8_depay_class)
       "Sjoerd Simons <sjoerd@luon.net>");
 
   object_class->dispose = gst_rtp_vp8_depay_dispose;
+  object_class->set_property = gst_rtp_vp8_depay_set_property;
+  object_class->get_property = gst_rtp_vp8_depay_get_property;
+
+  g_object_class_install_property (object_class, PROP_WAIT_FOR_KEYFRAME,
+      g_param_spec_boolean ("wait-for-keyframe", "Wait for Keyframe",
+          "Wait for the next keyframe after packet loss",
+          DEFAULT_WAIT_FOR_KEYFRAME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   element_class->change_state = gst_rtp_vp8_depay_change_state;
 
@@ -109,6 +129,38 @@ gst_rtp_vp8_depay_dispose (GObject * object)
     G_OBJECT_CLASS (gst_rtp_vp8_depay_parent_class)->dispose (object);
 }
 
+static void
+gst_rtp_vp8_depay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpVP8Depay *self = GST_RTP_VP8_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_WAIT_FOR_KEYFRAME:
+      self->wait_for_keyframe = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_vp8_depay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpVP8Depay *self = GST_RTP_VP8_DEPAY (object);
+
+  switch (prop_id) {
+    case PROP_WAIT_FOR_KEYFRAME:
+      g_value_set_boolean (value, self->wait_for_keyframe);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static GstBuffer *
 gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
 {
@@ -122,6 +174,9 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
     GST_LOG_OBJECT (self, "Discontinuity, flushing adapter");
     gst_adapter_clear (self->adapter);
     self->started = FALSE;
+
+    if (self->wait_for_keyframe)
+      self->waiting_for_keyframe = TRUE;
   }
 
   size = gst_rtp_buffer_get_payload_len (rtp);
@@ -190,7 +245,7 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
     if ((header[0] & 0x01)) {
       GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
 
-      if (!self->caps_sent) {
+      if (self->waiting_for_keyframe) {
         gst_buffer_unref (out);
         out = NULL;
         GST_INFO_OBJECT (self, "Dropping inter-frame before intra-frame");
@@ -222,11 +277,11 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
         gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depay), srccaps);
         gst_caps_unref (srccaps);
 
-        self->caps_sent = TRUE;
         self->last_width = width;
         self->last_height = height;
         self->last_profile = profile;
       }
+      self->waiting_for_keyframe = FALSE;
     }
 
     return out;
@@ -253,7 +308,7 @@ gst_rtp_vp8_depay_change_state (GstElement * element, GstStateChange transition)
       self->last_profile = -1;
       self->last_height = -1;
       self->last_width = -1;
-      self->caps_sent = FALSE;
+      self->waiting_for_keyframe = TRUE;
       break;
     default:
       break;

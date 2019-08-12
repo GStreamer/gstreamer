@@ -54,10 +54,12 @@ struct _GstRtpVP8Depay
   GstAdapter *adapter;
   gboolean started;
 
-  gboolean caps_sent;
+  gboolean waiting_for_keyframe;
   gint last_profile;
   gint last_width;
   gint last_height;
+
+  gboolean wait_for_keyframe;
 };
 
 GType gst_rtp_vp8_depay_get_type (void);
