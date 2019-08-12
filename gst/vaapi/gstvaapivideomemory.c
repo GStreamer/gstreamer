@@ -709,7 +709,7 @@ bail:
   /* ERRORS */
 error_no_derive_image:
   {
-    GST_ERROR ("Cannot create a VA derived image from surface %p", surface);
+    GST_INFO ("Cannot create a VA derived image from surface %p", surface);
     return FALSE;
   }
 error_cannot_map:
