@@ -860,6 +860,12 @@ void                    gst_element_set_start_time      (GstElement *element, Gs
 GST_API
 GstClockTime            gst_element_get_start_time      (GstElement *element);
 
+GST_API
+GstClockTime            gst_element_get_current_running_time (GstElement *element);
+
+GST_API
+GstClockTime            gst_element_get_current_clock_time (GstElement *element);
+
 /* bus */
 
 GST_API
