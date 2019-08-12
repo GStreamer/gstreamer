@@ -554,9 +554,9 @@ GST_START_TEST (test_seek_on_nested)
   GST_DEBUG ("Resetted pipeline to NULL");
 
   ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "main pipeline", 1, 2);
-  gst_check_objects_destroyed_on_unref (pipeline, comp, nested_source, NULL);
   ASSERT_OBJECT_REFCOUNT_BETWEEN (bus, "main bus", 1, 2);
   gst_object_unref (bus);
+  gst_check_objects_destroyed_on_unref (pipeline, comp, nested_source, NULL);
 
   ges_deinit ();
 }
