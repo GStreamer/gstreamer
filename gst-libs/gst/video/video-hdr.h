@@ -100,7 +100,7 @@ gboolean  gst_video_mastering_display_info_add_to_caps  (const GstVideoMastering
                                                          GstCaps * caps);
 
 /**
- * GstVideoContentLightMeta:
+ * GstVideoContentLightLevel:
  * @maxCLL_n: the numerator of Maximum Content Light Level (cd/m^2 and nit)
  * @maxCLL_d: the denominator of Maximum Content Light Level (cd/m^2 and nit)
  * @maxFALL_n: the numerator Maximum Frame-Average Light Level (cd/m^2 and nit)
