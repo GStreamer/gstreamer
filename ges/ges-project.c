@@ -219,8 +219,9 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
 
   g_signal_emit (project, _signals[LOADING_SIGNAL], 0, timeline);
   if (priv->uri == NULL) {
+    const gchar *id = ges_asset_get_id (GES_ASSET (project));
 
-    if (gst_uri_is_valid (ges_asset_get_id (GES_ASSET (project)))) {
+    if (id && gst_uri_is_valid (id)) {
       ges_project_set_uri (project, ges_asset_get_id (GES_ASSET (project)));
       GST_INFO_OBJECT (project, "Using asset ID %s as URI.", priv->uri);
     } else {
