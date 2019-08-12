@@ -25,6 +25,7 @@ parser.add_argument('--port', default=8443, type=int, help='Port to listen on')
 parser.add_argument('--keepalive-timeout', dest='keepalive_timeout', default=30, type=int, help='Timeout for keepalive (in seconds)')
 parser.add_argument('--cert-path', default=os.path.dirname(__file__))
 parser.add_argument('--disable-ssl', default=False, help='Disable ssl', action='store_true')
+parser.add_argument('--health', default='/health', help='Health check route')
 
 options = parser.parse_args(sys.argv[1:])
 
@@ -48,7 +49,7 @@ rooms = dict()
 ############### Helper functions ###############
 
 async def health_check(path, request_headers):
-    if path == "/health/":
+    if path == options.health:
         return http.HTTPStatus.OK, [], b"OK\n"
 
 async def recv_msg_ping(ws, raddr):
