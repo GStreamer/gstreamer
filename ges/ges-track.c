@@ -694,6 +694,13 @@ ges_track_class_init (GESTrackClass * klass)
   g_object_class_install_property (object_class, ARG_MIXING,
       properties[ARG_MIXING]);
 
+  /**
+   * GESTrack::id:
+   *
+   * The stream-id of the underlying composition
+   *
+   * Since: 1.18
+   */
   properties[ARG_ID] =
       g_param_spec_string ("id", "Id", "The stream-id of the composition",
       NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);

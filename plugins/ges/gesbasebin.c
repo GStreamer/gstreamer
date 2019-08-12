@@ -122,6 +122,8 @@ ges_base_bin_class_init (GESBaseBinClass * self_class)
    * GESBaseBin:timeline:
    *
    * Timeline to use in this bin.
+   *
+   * Since: 1.16
    */
   properties[PROP_TIMELINE] = g_param_spec_object ("timeline", "Timeline",
       "Timeline to use in this src.",

@@ -282,6 +282,8 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
    * GESUriClipAsset:is-nested-timeline:
    *
    * The duration (in nanoseconds) of the media file
+   *
+   * Since: 1.18
    */
   properties[PROP_IS_NESTED_TIMELINE] =
       g_param_spec_boolean ("is-nested-timeline", "Is nested timeline",
