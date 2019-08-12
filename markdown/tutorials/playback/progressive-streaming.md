@@ -360,9 +360,9 @@ range) depends on what we requested in the
 values are used to generate the graph.
 
 ``` c
-if (gst_element_query_position (data->pipeline, &format, &position) &&
+if (gst_element_query_position (data->pipeline, GST_FORMAT_TIME, &position) &&
     GST_CLOCK_TIME_IS_VALID (position) &&
-    gst_element_query_duration (data->pipeline, &format, &duration) &&
+    gst_element_query_duration (data->pipeline, GST_FORMAT_TIME, &duration) &&
     GST_CLOCK_TIME_IS_VALID (duration)) {
   i = (gint)(GRAPH_LENGTH * (double)position / (double)(duration + 1));
   graph [i] = data->buffering_level < 100 ? 'X' : '>';

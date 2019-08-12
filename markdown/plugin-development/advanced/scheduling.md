@@ -221,10 +221,9 @@ far.
     {
       GstFlowReturn ret;
       guint64 len;
-      GstFormat fmt = GST_FORMAT_BYTES;
       GstBuffer *buf = NULL;
 
-      if (!gst_pad_query_duration (filter->sinkpad, fmt, &len)) {
+      if (!gst_pad_query_duration (filter->sinkpad, GST_FORMAT_BYTES, &len)) {
         GST_DEBUG_OBJECT (filter, "failed to query duration, pausing");
         goto stop;
       }

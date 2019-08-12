@@ -610,7 +610,6 @@ static void set_current_ui_position (gint position, gint duration, CustomData *d
 /* If we have pipeline and it is running, query the current position and clip duration and inform
  * the application */
 static gboolean refresh_ui (CustomData *data) {
-  GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
   gint64 position;
 
@@ -620,12 +619,12 @@ static gboolean refresh_ui (CustomData *data) {
 
   /* If we didn't know it yet, query the stream duration */
   if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
-    if (!gst_element_query_duration (data->pipeline, &fmt, &data->duration)) {
+    if (!gst_element_query_duration (data->pipeline, GST_FORMAT_TIME, data->duration)) {
       GST_WARNING ("Could not query current duration");
     }
   }
 
-  if (gst_element_query_position (data->pipeline, &fmt, &position)) {
+  if (gst_element_query_position (data->pipeline, GST_FORMAT_TIME, &position)) {
     /* Java expects these values in milliseconds, and GStreamer provides nanoseconds */
     set_current_ui_position (position / GST_MSECOND, data->duration / GST_MSECOND, data);
   }
@@ -1169,7 +1168,6 @@ Then, in the refresh\_ui method:
 
 ``` c
 static gboolean refresh_ui (CustomData *data) {
-  GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
   gint64 position;
 
@@ -1179,12 +1177,12 @@ static gboolean refresh_ui (CustomData *data) {
 
   /* If we didn't know it yet, query the stream duration */
   if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
-    if (!gst_element_query_duration (data->pipeline, &fmt, &data->duration)) {
+    if (!gst_element_query_duration (data->pipeline, GST_FORMAT_TIME, &data->duration)) {
       GST_WARNING ("Could not query current duration");
     }
   }
 
-  if (gst_element_query_position (data->pipeline, &fmt, &position)) {
+  if (gst_element_query_position (data->pipeline, GST_FORMAT_TIME, &position)) {
     /* Java expects these values in milliseconds, and GStreamer provides nanoseconds */
     set_current_ui_position (position / GST_MSECOND, data->duration / GST_MSECOND, data);
   }

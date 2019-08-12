@@ -79,11 +79,10 @@ typedef struct _CustomData {
 /* Send seek event to change rate */
 static void send_seek_event (CustomData *data) {
   gint64 position;
-  GstFormat format = GST_FORMAT_TIME;
   GstEvent *seek_event;
 
   /* Obtain the current position, needed for the seek event */
-  if (!gst_element_query_position (data->pipeline, &format, &position)) {
+  if (!gst_element_query_position (data->pipeline, GST_FORMAT_TIME, &position)) {
     g_printerr ("Unable to retrieve current position.\n");
     return;
   }
