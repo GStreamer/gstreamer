@@ -354,7 +354,7 @@ _parse_asset (GMarkupParseContext * context, const gchar * element_name,
       }
       g_markup_parse_context_get_position (context, &subproj_data->start_line,
           &subproj_data->start_char);
-      id = gst_uri_construct ("file", subproj_data->filename);
+      id = g_filename_to_uri (subproj_data->filename, NULL, NULL);
       G_LOCK (uri_subprojects_map_lock);
       g_hash_table_insert (priv->subprojects_map, g_strdup (subproj_data->id),
           (gchar *) id);
