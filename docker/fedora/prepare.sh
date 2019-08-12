@@ -17,6 +17,7 @@ dnf upgrade -y
 dnf install -y \
     aom \
     aom-extra-tools \
+    bat \
     libaom \
     libaom-devel \
     ccache \
@@ -162,7 +163,7 @@ dnf debuginfo-install -y gtk3 \
     zip \
     zlib
 
-pip3 install meson==0.50.1 git+https://github.com/axiros/terminal_markdown_viewer hotdoc
+pip3 install meson==0.50.1 hotdoc
 
 # Install the dependencies of gstreamer
 dnf builddep -y gstreamer1 \
