@@ -572,6 +572,13 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
           G_MAXUINT64, DEFAULT_OUTPUT_BUFFER_DURATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstAudioAggregator:output-buffer-duration-fraction:
+   *
+   * Output block size in nanoseconds, expressed as a fraction.
+   *
+   * Since: 1.18
+   */
   g_object_class_install_property (gobject_class,
       PROP_OUTPUT_BUFFER_DURATION_FRACTION,
       gst_param_spec_fraction ("output-buffer-duration-fraction",
