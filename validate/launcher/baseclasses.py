@@ -52,10 +52,6 @@ try:
 except ImportError:
     import xml.etree.cElementTree as ET
 
-try:
-    import mdv
-except ImportError:
-    mdv = None
 
 from .vfb_server import get_virual_frame_buffer_server
 from .httpserver import HTTPServer
@@ -638,13 +634,16 @@ class Test(Loggable):
         self.start_ts = time.time()
 
     def _dump_log_file(self, logfile):
+        if which('bat'):
+            try:
+                subprocess.check_call(['bat', '-H', '1', '--paging=never', logfile])
+                return
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                pass
+
         with open(logfile, 'r') as fin:
-            printc(self.get_logfile_repr())
-            if mdv and utils.supports_ansi_colors():
-                printc(mdv.main(fin.read()))
-            else:
-                for line in fin.readlines():
-                    print('> ' + line, end='')
+            for line in fin.readlines():
+                print('> ' + line, end='')
 
     def _dump_log_files(self):
         self._dump_log_file(self.logfile)

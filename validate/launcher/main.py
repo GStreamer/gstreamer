@@ -463,7 +463,8 @@ class LauncherConfig(Loggable):
         parser.add_argument("--dump-on-failure", dest="dump_on_failure",
                             action="store_true", default=False,
                             help="Dump logs to stdout when a test fails."
-                            " Note that mdv is used to enhance output if avalaible, install with `pip install mdv`.")
+                            " Note that bat is used to enhance output if available"
+                            " (See https://github.com/sharkdp/bat)")
         parser.add_argument("--max-dump-size", dest="max_dump_size", type=float,
                             default=0.5, help="Maximum size of logs to dump on stdout in MB.")
         parser.add_argument("-c", "--config", dest="config",
