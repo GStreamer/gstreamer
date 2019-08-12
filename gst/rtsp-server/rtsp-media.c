@@ -2896,6 +2896,7 @@ preroll_failed:
  * @media must be prepared with gst_rtsp_media_prepare().
  *
  * Returns: %TRUE on success.
+ * Since: 1.18
  */
 gboolean
 gst_rtsp_media_seek_full (GstRTSPMedia * media, GstRTSPTimeRange * range,
