@@ -190,8 +190,6 @@ build clang fedora x86_64:
     GST_DEBUG_NO_COLOR: "true"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/validate-logs/"
     GST_VALIDATE_LAUNCHER_FORCE_COLORS: "true"
-    width: 100
-    COLUMNS: 100
   script:
     - cd gst-build/
     - echo "-> Running ${TEST_SUITE}"
