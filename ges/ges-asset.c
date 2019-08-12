@@ -486,7 +486,7 @@ ges_asset_cache_init_unlocked (void)
 
 /* WITH LOCK_CACHE */
 static GHashTable *
-_get_type_entries ()
+_get_type_entries (void)
 {
   if (type_entries_table)
     return type_entries_table;

@@ -50,7 +50,7 @@ static void discoverer_discovered_cb (GstDiscoverer * discoverer,
 
 /* WITH discoverers_lock */
 static GstDiscoverer *
-create_discoverer ()
+create_discoverer (void)
 {
   GstDiscoverer *disco = gst_discoverer_new (discovering_timeout, NULL);
 
@@ -64,7 +64,7 @@ create_discoverer ()
 }
 
 static GstDiscoverer *
-get_discoverer ()
+get_discoverer (void)
 {
   GstDiscoverer *disco;
 
