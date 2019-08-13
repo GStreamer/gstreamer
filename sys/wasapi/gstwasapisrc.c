@@ -191,7 +191,7 @@ gst_wasapi_src_init (GstWasapiSrc * self)
   self->event_handle = CreateEvent (NULL, FALSE, FALSE, NULL);
   self->client_needs_restart = FALSE;
 
-  CoInitialize (NULL);
+  CoInitializeEx (NULL, COINIT_MULTITHREADED);
 }
 
 static void
@@ -444,7 +444,7 @@ gst_wasapi_src_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   guint bpf, rate, devicep_frames, buffer_frames;
   HRESULT hr;
 
-  CoInitialize (NULL);
+  CoInitializeEx (NULL, COINIT_MULTITHREADED);
 
   if (gst_wasapi_src_can_audioclient3 (self)) {
     if (!gst_wasapi_util_initialize_audioclient3 (GST_ELEMENT (self), spec,
