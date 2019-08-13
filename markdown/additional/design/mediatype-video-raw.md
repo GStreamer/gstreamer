@@ -634,6 +634,7 @@
           default size: size (component0) +
                         size (component1) +
                         size (component2)
+```
 
 - **"v210"** packed 4:2:2 10-bit YUV, complex format
 
