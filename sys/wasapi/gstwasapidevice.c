@@ -48,7 +48,7 @@ gst_wasapi_device_provider_class_init (GstWasapiDeviceProviderClass * klass)
 static void
 gst_wasapi_device_provider_init (GstWasapiDeviceProvider * provider)
 {
-  CoInitialize (NULL);
+  CoInitializeEx (NULL, COINIT_MULTITHREADED);
 }
 
 static void
