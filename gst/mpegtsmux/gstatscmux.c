@@ -131,6 +131,9 @@ gst_atsc_mux_create_new_stream (guint16 new_pid,
     ret->id = 0xBD;
     ret->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
     ret->is_audio = TRUE;
+  } else if (stream_type == TSMUX_ST_PS_AUDIO_AC3) {
+    ret->id = 0xBD;
+    ret->id_extended = 0;
   }
 
   tsmux_stream_set_get_es_descriptors_func (ret,
