@@ -682,6 +682,15 @@ gst_ffmpegvidenc_receive_packet (GstFFMpegVidEnc * ffmpegenc,
       GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
   }
 
+  frame->dts =
+      gst_ffmpeg_time_ff_to_gst (pkt->dts, ffmpegenc->context->time_base);
+  /* This will lose some precision compared to setting the PTS from the input
+   * buffer directly, but that way we're sure PTS and DTS are consistent, in
+   * particular DTS should always be <= PTS
+   */
+  frame->pts =
+      gst_ffmpeg_time_ff_to_gst (pkt->pts, ffmpegenc->context->time_base);
+
   ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
 
 done:
@@ -835,6 +844,8 @@ gst_ffmpegvidenc_start (GstVideoEncoder * encoder)
     GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
     return FALSE;
   }
+
+  gst_video_encoder_set_min_pts (encoder, GST_SECOND * 60 * 60 * 1000);
 
   return TRUE;
 }
