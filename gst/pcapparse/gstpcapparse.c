@@ -325,6 +325,7 @@ gst_pcap_parse_reset (GstPcapParse * self)
   self->cur_ts = GST_CLOCK_TIME_NONE;
   self->base_ts = GST_CLOCK_TIME_NONE;
   self->newsegment_sent = FALSE;
+  self->first_packet = TRUE;
 
   gst_adapter_clear (self->adapter);
 }
@@ -537,6 +538,15 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
             } else {
               out_buf = gst_buffer_new ();
             }
+
+            /* only first packet should have DISCONT flag */
+            if (G_LIKELY (!self->first_packet)) {
+              GST_BUFFER_FLAG_UNSET (out_buf, GST_BUFFER_FLAG_DISCONT);
+            } else {
+              GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DISCONT);
+              self->first_packet = FALSE;
+            }
+
             gst_adapter_flush (self->adapter,
                 self->cur_packet_size - offset - payload_size);
 

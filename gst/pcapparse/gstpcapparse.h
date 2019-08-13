@@ -85,6 +85,7 @@ struct _GstPcapParse
   GstPcapParseLinktype linktype;
 
   gboolean newsegment_sent;
+  gboolean first_packet;
 };
 
 struct _GstPcapParseClass
