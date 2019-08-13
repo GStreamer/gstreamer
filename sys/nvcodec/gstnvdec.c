@@ -1121,12 +1121,12 @@ gst_nvdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 
   gst_query_parse_allocation (query, &outcaps, NULL);
   n = gst_query_get_n_allocation_pools (query);
-  if (n > 0) {
+  if (n > 0)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-    if (!GST_IS_GL_BUFFER_POOL (pool)) {
-      gst_object_unref (pool);
-      pool = NULL;
-    }
+
+  if (pool && !GST_IS_GL_BUFFER_POOL (pool)) {
+    gst_object_unref (pool);
+    pool = NULL;
   }
 
   if (!pool) {
