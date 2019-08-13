@@ -4553,7 +4553,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
           &max_packet_lifetime))
     max_packet_lifetime = -1;
   if (!init_params
-      || !gst_structure_get_boolean (init_params, "max-retransmits",
+      || !gst_structure_get_int (init_params, "max-retransmits",
           &max_retransmits))
     max_retransmits = -1;
   /* both retransmits and lifetime cannot be set */
