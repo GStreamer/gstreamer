@@ -1688,6 +1688,7 @@ gst_aggregator_default_create_new_pad (GstAggregator * self,
   }
 
   name = g_strdup_printf ("sink_%u", serial);
+  g_assert (g_type_is_a (pad_type, GST_TYPE_AGGREGATOR_PAD));
   agg_pad = g_object_new (pad_type,
       "name", name, "direction", GST_PAD_SINK, "template", templ, NULL);
   g_free (name);
@@ -2454,6 +2455,7 @@ gst_aggregator_init (GstAggregator * self, GstAggregatorClass * klass)
       GST_PAD_TEMPLATE_GTYPE (pad_template) ==
       G_TYPE_NONE ? GST_TYPE_AGGREGATOR_PAD :
       GST_PAD_TEMPLATE_GTYPE (pad_template);
+  g_assert (g_type_is_a (pad_type, GST_TYPE_AGGREGATOR_PAD));
   self->srcpad =
       g_object_new (pad_type, "name", "src", "direction", GST_PAD_SRC,
       "template", pad_template, NULL);
