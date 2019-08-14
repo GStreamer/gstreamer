@@ -2286,14 +2286,14 @@ gst_h264_parse_get_timestamp (GstH264Parse * h264parse,
       /* If upstream timestamp is valid, we respect it and adjust current
        * reference point */
       h264parse->ts_trn_nb = upstream -
-          (GstClockTime) gst_util_uint64_scale_int
+          (GstClockTime) gst_util_uint64_scale
           (h264parse->sei_cpb_removal_delay * GST_SECOND,
           sps->vui_parameters.num_units_in_tick,
           sps->vui_parameters.time_scale);
     } else {
       /* If no upstream timestamp is given, we write in new timestamp */
       upstream = h264parse->dts = h264parse->ts_trn_nb +
-          (GstClockTime) gst_util_uint64_scale_int
+          (GstClockTime) gst_util_uint64_scale
           (h264parse->sei_cpb_removal_delay * GST_SECOND,
           sps->vui_parameters.num_units_in_tick,
           sps->vui_parameters.time_scale);
@@ -2304,7 +2304,7 @@ gst_h264_parse_get_timestamp (GstH264Parse * h264parse,
     GST_LOG_OBJECT (h264parse, "duration based ts");
     /* naive method: no removal delay specified
      * track upstream timestamp and provide best guess frame duration */
-    dur = gst_util_uint64_scale_int (duration * GST_SECOND,
+    dur = gst_util_uint64_scale (duration * GST_SECOND,
         sps->vui_parameters.num_units_in_tick, sps->vui_parameters.time_scale);
     /* sanity check */
     if (dur < GST_MSECOND) {
