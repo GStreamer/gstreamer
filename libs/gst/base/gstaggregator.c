@@ -1032,6 +1032,9 @@ gst_aggregator_update_src_caps (GstAggregator * self)
   if (ret < GST_FLOW_OK) {
     GST_WARNING_OBJECT (self, "Subclass failed to update provided caps");
     goto done;
+  } else if (ret == GST_AGGREGATOR_FLOW_NEED_DATA) {
+    GST_DEBUG_OBJECT (self, "Subclass needs more data to decide on caps");
+    goto done;
   }
   if ((caps == NULL || gst_caps_is_empty (caps)) && ret >= GST_FLOW_OK) {
     ret = GST_FLOW_NOT_NEGOTIATED;
@@ -1145,6 +1148,8 @@ gst_aggregator_aggregate_func (GstAggregator * self)
       flow_return = gst_aggregator_update_src_caps (self);
       if (flow_return != GST_FLOW_OK)
         gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (self));
+      if (flow_return == GST_AGGREGATOR_FLOW_NEED_DATA)
+        flow_return = GST_FLOW_OK;
     }
 
     if (timeout || flow_return >= GST_FLOW_OK) {
