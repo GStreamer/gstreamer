@@ -235,6 +235,8 @@ struct _GstAggregator
  *                     downstream allocation query.
  * @propose_allocation: Optional.
  *                     Allows the subclass to handle the allocation query from upstream.
+ * @negotiate: Optional.
+ *             Negotiate the caps with the peer (Since: 1.18).
  *
  * The aggregator base class will handle in a thread-safe way all manners of
  * concurrent flushes, seeks, pad additions and removals, leaving to the
@@ -311,8 +313,11 @@ struct _GstAggregatorClass {
                                            GstAggregatorPad * pad,
                                            GstQuery * decide_query,
                                            GstQuery * query);
+
+  gboolean          (*negotiate) (GstAggregator * self);
+
   /*< private >*/
-  gpointer          _gst_reserved[GST_PADDING_LARGE];
+  gpointer          _gst_reserved[GST_PADDING_LARGE-1];
 };
 
 /************************************
@@ -340,6 +345,9 @@ GstFlowReturn  gst_aggregator_finish_buffer         (GstAggregator              
 GST_BASE_API
 void           gst_aggregator_set_src_caps          (GstAggregator                *  self,
                                                      GstCaps                      *  caps);
+
+GST_BASE_API
+gboolean        gst_aggregator_negotiate            (GstAggregator                * self);
 
 GST_BASE_API
 void           gst_aggregator_set_latency           (GstAggregator                *  self,

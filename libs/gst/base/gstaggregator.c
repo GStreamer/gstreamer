@@ -1008,9 +1008,8 @@ no_decide_allocation:
 
 }
 
-/* WITH SRC_LOCK held */
-static GstFlowReturn
-gst_aggregator_update_src_caps (GstAggregator * self)
+static gboolean
+gst_aggregator_default_negotiate (GstAggregator * self)
 {
   GstAggregatorClass *agg_klass = GST_AGGREGATOR_GET_CLASS (self);
   GstCaps *downstream_caps, *template_caps, *caps = NULL;
@@ -1100,6 +1099,47 @@ done:
   if (caps)
     gst_caps_unref (caps);
 
+  return ret >= GST_FLOW_OK || ret == GST_AGGREGATOR_FLOW_NEED_DATA;
+}
+
+/* WITH SRC_LOCK held */
+static gboolean
+gst_aggregator_negotiate_unlocked (GstAggregator * self)
+{
+  GstAggregatorClass *agg_klass = GST_AGGREGATOR_GET_CLASS (self);
+
+  if (agg_klass->negotiate)
+    return agg_klass->negotiate (self);
+
+  return TRUE;
+}
+
+/**
+ * gst_aggregator_negotiate:
+ * @self: a #GstAggregator
+ *
+ * Negotiates src pad caps with downstream elements.
+ * Unmarks GST_PAD_FLAG_NEED_RECONFIGURE in any case. But marks it again
+ * if #GstAggregatorClass.negotiate() fails.
+ *
+ * Returns: %TRUE if the negotiation succeeded, else %FALSE.
+ *
+ * Since: 1.18
+ */
+gboolean
+gst_aggregator_negotiate (GstAggregator * self)
+{
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (GST_IS_AGGREGATOR (self), FALSE);
+
+  GST_PAD_STREAM_LOCK (GST_AGGREGATOR_SRC_PAD (self));
+  gst_pad_check_reconfigure (GST_AGGREGATOR_SRC_PAD (self));
+  ret = gst_aggregator_negotiate_unlocked (self);
+  if (!ret)
+    gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (self));
+  GST_PAD_STREAM_UNLOCK (GST_AGGREGATOR_SRC_PAD (self));
+
   return ret;
 }
 
@@ -1147,11 +1187,14 @@ gst_aggregator_aggregate_func (GstAggregator * self)
       continue;
 
     if (gst_pad_check_reconfigure (GST_AGGREGATOR_SRC_PAD (self))) {
-      flow_return = gst_aggregator_update_src_caps (self);
-      if (flow_return != GST_FLOW_OK)
+      if (!gst_aggregator_negotiate_unlocked (self)) {
         gst_pad_mark_reconfigure (GST_AGGREGATOR_SRC_PAD (self));
-      if (flow_return == GST_AGGREGATOR_FLOW_NEED_DATA)
-        flow_return = GST_FLOW_OK;
+        if (GST_PAD_IS_FLUSHING (GST_AGGREGATOR_SRC_PAD (self))) {
+          flow_return = GST_FLOW_FLUSHING;
+        } else {
+          flow_return = GST_FLOW_NOT_NEGOTIATED;
+        }
+      }
     }
 
     if (timeout || flow_return >= GST_FLOW_OK) {
@@ -2381,6 +2424,8 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
   klass->update_src_caps = gst_aggregator_default_update_src_caps;
   klass->fixate_src_caps = gst_aggregator_default_fixate_src_caps;
   klass->negotiated_src_caps = gst_aggregator_default_negotiated_src_caps;
+
+  klass->negotiate = gst_aggregator_default_negotiate;
 
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_aggregator_request_new_pad);
