@@ -674,11 +674,29 @@ _ges_set_child_property_from_struct (GESTimeline * timeline,
 
   value = gst_structure_get_value (structure, "value");
 
-  GST_DEBUG ("%s Setting %s property to %p",
-      element->name, property_name, value);
+  g_print ("%s Setting %s property to %s\n", element->name, property_name,
+      gst_value_serialize (value));
 
-  ges_timeline_element_set_child_property (element, property_name,
-      (GValue *) value);
+  if (!ges_timeline_element_set_child_property (element, property_name,
+          (GValue *) value)) {
+    guint n_specs, i;
+    GParamSpec **specs =
+        ges_timeline_element_list_children_properties (element, &n_specs);
+    GString *errstr = g_string_new (NULL);
+
+    g_string_append_printf (errstr,
+        "\n  Could not set property `%s` on `%s`, valid properties:\n",
+        property_name, GES_TIMELINE_ELEMENT_NAME (element));
+
+    for (i = 0; i < n_specs; i++)
+      g_string_append_printf (errstr, "    - %s\n", specs[i]->name);
+    g_free (specs);
+
+    *error = g_error_new_literal (GES_ERROR, 0, errstr->str);
+    g_string_free (errstr, TRUE);
+
+    return FALSE;
+  }
   return _ges_save_timeline_if_needed (timeline, structure, error);
 }
 

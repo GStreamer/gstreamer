@@ -47,7 +47,7 @@
  * ## Subprojects
  *
  * In order to add a subproject, the only thing to do is to add the subproject
- * with to the main project:
+ * to the main project:
  *
  * ``` c
  * ges_project_add_asset (project, GES_ASSET (subproject));
