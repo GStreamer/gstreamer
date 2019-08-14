@@ -96,7 +96,7 @@ operation will eventually block when the ringbuffer is filled.
 When no samples arrive in time, the ringbuffer will play silence. Each
 buffer that arrives will be placed into the ringbuffer at the correct
 times. This means that dropping samples or inserting silence is done
-automatically and very accurate and independend of the play pointer.
+automatically and very accurate and independent of the play pointer.
 
 In this mode, the ringbuffer is usually kept as full as possible. When
 using a small buffer (small segsize and segtotal), the latency for audio

@@ -43,7 +43,7 @@ mode). `activate_mode(PULL)` is then responsible for starting the task
 that pulls from fakesrc:src. Clearly, fakesrc needs to be notified that
 fakesrc is about to pull on its src pad, even though the pipeline has
 not yet changed fakesrc’s state. For this reason, GStreamer will first
-call call `activate_mode(PULL)` on fakesink:sink’s peer before calling
+call `activate_mode(PULL)` on fakesink:sink’s peer before calling
 `activate_mode(PULL)` on fakesink:sinks.
 
 In short, upstream elements operating in PULL mode must be ready to

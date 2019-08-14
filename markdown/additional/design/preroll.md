@@ -24,16 +24,16 @@ When going to `PAUSED` and `PLAYING` a buffer should be queued in the pad.
 We also make this a requirement for going to `PLAYING` since a flush event
 in the `PAUSED` state could unqueue the buffer again.
 
-The state is commited in the following conditions:
+The state is committed in the following conditions:
 
 - a buffer is received on a sinkpad;
-- an GAP event is received on a sinkpad;
+- a GAP event is received on a sinkpad;
 - an EOS event is received on a sinkpad.
 
-We require the state change to be commited in EOS as well, since an EOS
+We require the state change to be committed in EOS as well, since an EOS
 , by definition, means no buffer is going to arrive anymore.
 
-After the state is commited, a blocking wait should be performed for the
+After the state is committed, a blocking wait should be performed for the
 next event. Some sinks might render the preroll buffer before starting
 this blocking wait.
 

@@ -63,7 +63,7 @@ This policy allows for parents to iterate their children and setting
 properties on them.
 
 Whenever a nested lock needs to be taken on objects not involved in a
-parent-child relation (eg. pads), an explictic locking order has to be
+parent-child relation (eg. pads), an explicit locking order has to be
 defined.
 
 ## Path Generation
