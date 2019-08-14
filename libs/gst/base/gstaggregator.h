@@ -237,6 +237,12 @@ struct _GstAggregator
  *                     Allows the subclass to handle the allocation query from upstream.
  * @negotiate: Optional.
  *             Negotiate the caps with the peer (Since: 1.18).
+ * @sink_event_pre_queue: Optional.
+ *                        Called when an event is received on a sink pad before queueing up
+ *                        serialized events. The subclass should always chain up (Since: 1.18).
+ * @sink_query_pre_queue: Optional.
+ *                        Called when a query is received on a sink pad before queueing up
+ *                        serialized queries. The subclass should always chain up (Since: 1.18).
  *
  * The aggregator base class will handle in a thread-safe way all manners of
  * concurrent flushes, seeks, pad additions and removals, leaving to the
@@ -316,8 +322,16 @@ struct _GstAggregatorClass {
 
   gboolean          (*negotiate) (GstAggregator * self);
 
+  gboolean          (*sink_event_pre_queue)     (GstAggregator    *  aggregator,
+                                                 GstAggregatorPad *  aggregator_pad,
+                                                 GstEvent         *  event);
+
+  gboolean          (*sink_query_pre_queue)     (GstAggregator    *  aggregator,
+                                                 GstAggregatorPad *  aggregator_pad,
+                                                 GstQuery         *  query);
+
   /*< private >*/
-  gpointer          _gst_reserved[GST_PADDING_LARGE-1];
+  gpointer          _gst_reserved[GST_PADDING_LARGE-3];
 };
 
 /************************************
