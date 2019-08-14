@@ -153,6 +153,7 @@ _gl_sync_unref (struct gl_sync *sync)
 
     _gl_sync_result_unref (sync->result);
 
+    g_object_unref (sync->sink);
     g_object_unref (sync->surface);
     gst_memory_unref ((GstMemory *) sync->oes_mem);
 
@@ -1464,7 +1465,7 @@ retry:
 
     sync = g_new0 (struct gl_sync, 1);
     sync->refcount = 1;
-    sync->sink = self;
+    sync->sink = g_object_ref (self);
     sync->buffer = outbuf;
     sync->surface = g_object_ref (self->surface);
     sync->oes_mem =
