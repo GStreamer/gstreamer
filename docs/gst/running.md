@@ -312,3 +312,20 @@ Common values are 'egl', 'glx', 'wgl' or 'cgl'.
 
 Influences the OpenGL API requested by the OpenGL platform. Common
 values are 'opengl' or 'gles2'.
+
+**`GST_PLUGIN_FEATURE_RANK`. (Since: 1.18)**
+
+This environment variable can be used to adjust rank of each plugin feature.
+
+The variable takes a comma-separated list of `plugin_feature:rank`
+pairs to set specific ranks for the individual plugin features.
+The rank can be an arbitrary numerical value or one of pre-defined rank values
+from `NONE`(0) to `PRIMARY`(256) in case-insensitive manner.
+In addition to the pre-defined rank values, `MAX` is an acceptable value to set
+higher rank than the rank of other existing plugin features.
+
+Example: `GST_PLUGIN_FEATURE_RANK=foo:PRIMARY,bar:primary,foobar:128`
+
+As a result of the above example,
+the `foo` and` bar` plugin feature rank values are `PRIMARY`(256)
+and `SECONDARY`(128) rank value will be assigned to `foobar`.

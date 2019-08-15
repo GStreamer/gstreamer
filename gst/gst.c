@@ -809,6 +809,10 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
       GLIB_MINOR_VERSION, GLIB_MICRO_VERSION);
   GST_INFO ("initialized GStreamer successfully");
 
+  /* Adjust initial plugin rank based on the GST_PLUGIN_FEATURE_RANK
+   * environment variable */
+  _priv_gst_plugin_feature_rank_initialize ();
+
 #ifndef GST_DISABLE_GST_DEBUG
   _priv_gst_tracing_init ();
 #endif
