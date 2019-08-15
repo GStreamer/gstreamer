@@ -692,7 +692,6 @@ test_webrtc_wait_for_answer_error_eos (struct test_webrtc *t)
   test_webrtc_wait_for_state_mask (t, states);
 }
 
-#if 0
 static void
 test_webrtc_wait_for_ice_gathering_complete (struct test_webrtc *t)
 {
@@ -709,6 +708,7 @@ test_webrtc_wait_for_ice_gathering_complete (struct test_webrtc *t)
   g_mutex_unlock (&t->lock);
 }
 
+#if 0
 static void
 test_webrtc_wait_for_ice_connection (struct test_webrtc *t,
     GstWebRTCICEConnectionState states)
@@ -899,6 +899,78 @@ GST_START_TEST (test_audio)
    * of media sections */
 
   test_validate_sdp (t, &offer, &answer);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+static void
+_check_ice_port_restriction (struct test_webrtc *t, GstElement * element,
+    guint mlineindex, gchar * candidate, GstElement * other, gpointer user_data)
+{
+  GRegex *regex;
+  GMatchInfo *match_info;
+
+  gchar *candidate_port;
+  gchar *candidate_protocol;
+  gchar *candidate_typ;
+  guint port_as_int;
+  guint peer_number;
+
+  regex =
+      g_regex_new ("candidate:(\\d+) (1) (UDP|TCP) (\\d+) ([0-9.]+|[0-9a-f:]+)"
+      " (\\d+) typ ([a-z]+)", 0, 0, NULL);
+
+  g_regex_match (regex, candidate, 0, &match_info);
+  fail_unless (g_match_info_get_match_count (match_info) == 8, candidate);
+
+  candidate_protocol = g_match_info_fetch (match_info, 2);
+  candidate_port = g_match_info_fetch (match_info, 6);
+  candidate_typ = g_match_info_fetch (match_info, 7);
+
+  peer_number = t->webrtc1 == element ? 1 : 2;
+
+  port_as_int = atoi (candidate_port);
+
+  if (!g_strcmp0 (candidate_typ, "host") && port_as_int != 9) {
+    guint expected_min = peer_number * 10000 + 1000;
+    guint expected_max = expected_min + 999;
+
+    fail_unless (port_as_int >= expected_min);
+    fail_unless (port_as_int <= expected_max);
+  }
+
+  g_free (candidate_port);
+  g_free (candidate_protocol);
+  g_free (candidate_typ);
+  g_match_info_free (match_info);
+  g_regex_unref (regex);
+}
+
+GST_START_TEST (test_ice_port_restriction)
+{
+  struct test_webrtc *t = create_audio_test ();
+  GObject *webrtcice;
+
+  VAL_SDP_INIT (offer, _count_num_sdp_media, GUINT_TO_POINTER (1), NULL);
+  VAL_SDP_INIT (answer, _count_num_sdp_media, GUINT_TO_POINTER (1), NULL);
+
+  /*
+   *  Ports are defined as follows "{peer}{protocol}000"
+   *  - peer number: "1" for t->webrtc1, "2" for t->webrtc2
+   */
+  g_object_get (t->webrtc1, "ice-agent", &webrtcice, NULL);
+  g_object_set (webrtcice, "min-rtp-port", 11000, "max-rtp-port", 11999, NULL);
+  g_object_unref (webrtcice);
+
+  g_object_get (t->webrtc2, "ice-agent", &webrtcice, NULL);
+  g_object_set (webrtcice, "min-rtp-port", 21000, "max-rtp-port", 21999, NULL);
+  g_object_unref (webrtcice);
+
+  t->on_ice_candidate = _check_ice_port_restriction;
+  test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_wait_for_ice_gathering_complete (t);
   test_webrtc_free (t);
 }
 
@@ -2896,6 +2968,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_sdp_no_media);
     tcase_add_test (tc, test_session_stats);
     tcase_add_test (tc, test_audio);
+    tcase_add_test (tc, test_ice_port_restriction);
     tcase_add_test (tc, test_audio_video);
     tcase_add_test (tc, test_media_direction);
     tcase_add_test (tc, test_media_setup);

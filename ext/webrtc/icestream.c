@@ -46,6 +46,7 @@ struct _GstWebRTCICEStreamPrivate
 {
   gboolean gathered;
   GList *transports;
+  gboolean gathering_started;
 };
 
 #define gst_webrtc_ice_stream_parent_class parent_class
@@ -187,6 +188,24 @@ gst_webrtc_ice_stream_gather_candidates (GstWebRTCICEStream * stream)
   }
 
   g_object_get (stream->ice, "agent", &agent, NULL);
+
+  if (!stream->priv->gathering_started) {
+    if (stream->ice->min_rtp_port != 0 || stream->ice->max_rtp_port != 65535) {
+      if (stream->ice->min_rtp_port > stream->ice->max_rtp_port) {
+        GST_ERROR_OBJECT (stream->ice,
+            "invalid port range: min-rtp-port %d must be <= max-rtp-port %d",
+            stream->ice->min_rtp_port, stream->ice->max_rtp_port);
+        return FALSE;
+      }
+
+      nice_agent_set_port_range (agent, stream->stream_id,
+          NICE_COMPONENT_TYPE_RTP, stream->ice->min_rtp_port,
+          stream->ice->max_rtp_port);
+    }
+    /* mark as gathering started to prevent changing ports again */
+    stream->priv->gathering_started = TRUE;
+  }
+
   if (!nice_agent_gather_candidates (agent, stream->stream_id)) {
     g_object_unref (agent);
     return FALSE;
