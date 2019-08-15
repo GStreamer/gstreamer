@@ -46,6 +46,8 @@ struct _GstD3D11VideoSink
   GstVideoSink sink;
   GstD3D11Device *device;
   GstD3D11Window *window;
+  gint video_width;
+  gint video_height;
 
   GstVideoInfo info;
   DXGI_FORMAT dxgi_format;

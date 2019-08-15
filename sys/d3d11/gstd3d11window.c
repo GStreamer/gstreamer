@@ -137,6 +137,9 @@ gst_d3d11_window_init (GstD3D11Window * self)
   self->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   self->enable_navigation_events = DEFAULT_ENABLE_NAVIGATION_EVENTS;
 
+  self->aspect_ratio_n = 1;
+  self->aspect_ratio_d = 1;
+
   GST_TRACE_OBJECT (self, "Initialized");
 }
 
@@ -500,9 +503,12 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
   if (width != window->surface_width || height != window->surface_height) {
     GstVideoRectangle src_rect, dst_rect;
     gdouble src_ratio, dst_ratio;
+    gdouble aspect_ratio =
+        (gdouble) window->aspect_ratio_n / (gdouble) window->aspect_ratio_d;
 
     src_ratio = (gdouble) width / height;
-    dst_ratio = (gdouble) window->surface_width / window->surface_height;
+    dst_ratio =
+        (gdouble) window->surface_width / window->surface_height * aspect_ratio;
 
     src_rect.x = 0;
     src_rect.y = 0;
@@ -778,7 +784,8 @@ mastering_display_gst_to_dxgi (GstVideoMasteringDisplayInfo * m,
 
 gboolean
 gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
-    DXGI_FORMAT format, GstCaps * caps)
+    guint aspect_ratio_n, guint aspect_ratio_d, DXGI_FORMAT format,
+    GstCaps * caps)
 {
   DXGI_SWAP_CHAIN_DESC desc = { 0, };
   gboolean have_cll = FALSE;
@@ -786,6 +793,8 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   gboolean hdr_api_available = FALSE;
 
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
+  g_return_val_if_fail (aspect_ratio_n > 0, FALSE);
+  g_return_val_if_fail (aspect_ratio_d > 0, FALSE);
 
   GST_DEBUG_OBJECT (window, "Prepare window with %dx%d format %d",
       width, height, format);
@@ -822,6 +831,9 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
   }
 #endif
 
+  window->aspect_ratio_n = aspect_ratio_n;
+  window->aspect_ratio_d = aspect_ratio_d;
+
   window->render_rect.x = 0;
   window->render_rect.y = 0;
   window->render_rect.w = width;
@@ -847,8 +859,8 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint width, guint height,
     desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 #endif
   desc.OutputWindow =
-      window->external_win_id ? window->
-      external_win_id : window->internal_win_id;
+      window->external_win_id ? window->external_win_id : window->
+      internal_win_id;
   desc.Windowed = TRUE;
   desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 

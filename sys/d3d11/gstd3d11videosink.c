@@ -309,6 +309,8 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 
   GST_DEBUG_OBJECT (self, "scaling to %dx%d",
       GST_VIDEO_SINK_WIDTH (self), GST_VIDEO_SINK_HEIGHT (self));
+  self->video_width = video_width;
+  self->video_height = video_height;
 
   if (GST_VIDEO_SINK_WIDTH (self) <= 0 || GST_VIDEO_SINK_HEIGHT (self) <= 0)
     goto no_display_size;
@@ -346,7 +348,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   GST_OBJECT_UNLOCK (self);
 
   if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
-          GST_VIDEO_SINK_HEIGHT (self), self->dxgi_format, caps)) {
+          GST_VIDEO_SINK_HEIGHT (self), num, den, self->dxgi_format, caps)) {
     GST_ERROR_OBJECT (self, "cannot create swapchain");
     return FALSE;
   }
@@ -670,8 +672,8 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
     rect.w = crop->width;
     rect.h = crop->height;
   } else {
-    rect.w = GST_VIDEO_SINK_WIDTH (self);
-    rect.h = GST_VIDEO_SINK_HEIGHT (self);
+    rect.w = self->video_width;
+    rect.h = self->video_height;
   }
 
   ret = gst_d3d11_window_render (self->window, texture, &rect);

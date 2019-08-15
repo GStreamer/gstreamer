@@ -62,6 +62,9 @@ struct _GstD3D11Window
   guint surface_width;
   guint surface_height;
 
+  guint aspect_ratio_n;
+  guint aspect_ratio_d;
+
   gboolean visible;
 
   GSource *msg_source;
@@ -113,6 +116,8 @@ void gst_d3d11_window_get_surface_dimensions (GstD3D11Window * window,
 gboolean gst_d3d11_window_prepare (GstD3D11Window * window,
                                    guint width,
                                    guint height,
+                                   guint aspect_ratio_n,
+                                   guint aspect_ratio_d,
                                    DXGI_FORMAT format,
                                    GstCaps * caps);
 
