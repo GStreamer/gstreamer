@@ -1013,18 +1013,22 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
   ges_timeline_add_track (GES_FORMATTER (self)->timeline, track);
 
   if (properties) {
-    gchar *restriction;
+    gchar *restriction = NULL;
     GstCaps *restriction_caps;
 
-    gst_structure_get (properties, "restriction-caps", G_TYPE_STRING,
-        &restriction, NULL);
+    if (gst_structure_get (properties, "restriction-caps", G_TYPE_STRING,
+            &restriction, NULL) && g_strcmp0 (restriction, "NULL")) {
+      restriction_caps = gst_caps_from_string (restriction);
+      if (restriction_caps) {
+        ges_track_set_restriction_caps (track, restriction_caps);
+        gst_caps_unref (restriction_caps);
+      } else {
+        GST_ERROR_OBJECT (self, "No caps read from the given track property: "
+            "restriction-caps=\"%s\"", restriction);
+      }
+    }
     gst_structure_remove_fields (properties, "restriction-caps", "caps",
         "message-forward", NULL);
-    if (g_strcmp0 (restriction, "NULL")) {
-      restriction_caps = gst_caps_from_string (restriction);
-      ges_track_set_restriction_caps (track, restriction_caps);
-      gst_caps_unref (restriction_caps);
-    }
     gst_structure_foreach (properties,
         (GstStructureForeachFunc) set_property_foreach, track);
     g_free (restriction);
