@@ -50,6 +50,7 @@ typedef struct
   guint byte;                   /* Byte position */
   guint bits_in_cache;          /* bitpos in the cache of next bit */
   guint8 first_byte;
+  guint32 epb_cache;            /* cache 3 bytes to check emulation prevention bytes */
   guint64 cache;                /* cached bytes */
 } NalReader;
 

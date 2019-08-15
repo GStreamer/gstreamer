@@ -74,6 +74,7 @@ nal_reader_init (NalReader * nr, const guint8 * data, guint size)
   nr->bits_in_cache = 0;
   /* fill with something other than 0 to detect emulation prevention bytes */
   nr->first_byte = 0xff;
+  nr->epb_cache = 0xff;
   nr->cache = 0xff;
 }
 
@@ -88,20 +89,16 @@ nal_reader_read (NalReader * nr, guint nbits)
 
   while (nr->bits_in_cache < nbits) {
     guint8 byte;
-    gboolean check_three_byte;
 
-    check_three_byte = TRUE;
   next_byte:
     if (G_UNLIKELY (nr->byte >= nr->size))
       return FALSE;
 
     byte = nr->data[nr->byte++];
+    nr->epb_cache = (nr->epb_cache << 8) | byte;
 
     /* check if the byte is a emulation_prevention_three_byte */
-    if (check_three_byte && byte == 0x03 && nr->first_byte == 0x00 &&
-        ((nr->cache & 0xff) == 0)) {
-      /* next byte goes unconditionally to the cache, even if it's 0x03 */
-      check_three_byte = FALSE;
+    if ((nr->epb_cache & 0xffffff) == 0x3) {
       nr->n_epb++;
       goto next_byte;
     }
