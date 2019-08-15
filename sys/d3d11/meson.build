@@ -43,7 +43,7 @@ gstd3d11 = library('gstd3d11',
   d3d11_sources,
   c_args : gst_plugins_bad_args + extra_c_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gstallocators_dep, d3d11_lib, dxgi_lib] + extra_dep,
+  dependencies : [gstbase_dep, gstvideo_dep, d3d11_lib, dxgi_lib] + extra_dep,
   install : true,
   install_dir : plugins_install_dir,
 )
