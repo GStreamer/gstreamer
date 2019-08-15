@@ -2046,6 +2046,11 @@ d3d_wnd_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   WNDPROC proc;
   LRESULT ret = 0;
 
+  /* d3dvideosink object might not available yet.
+   * The thread for message queue starts earlier than SetProp... */
+  if (!sink)
+    return DefWindowProc (hWnd, message, wParam, lParam);
+
   LOCK_SINK (sink);
   proc = sink->d3d.orig_wnd_proc;
   UNLOCK_SINK (sink);
