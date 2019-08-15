@@ -33,7 +33,6 @@ subdir('libcheck')
 
 configure_file(input : 'libcheck/check.h.in',
   output : 'internal-check.h',
-  install : true,
   install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/check'),
   configuration : check_cdata)
 
