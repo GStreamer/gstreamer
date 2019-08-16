@@ -90,8 +90,8 @@ gst_amc_surface_class_init (GstAmcSurfaceClass * klass)
   gobject_class->dispose = gst_amc_surface_dispose;
 
   if (!_cache_java_class (klass, &err)) {
-    g_log (G_LOG_DOMAIN, G_LOG_LEVEL_CRITICAL,
-        "Could not cache java class android/view/Surface: %s", err->message);
+    GST_ERROR ("Could not cache java class android/view/Surface: %s",
+        err->message);
     g_clear_error (&err);
   }
 }
