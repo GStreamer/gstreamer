@@ -268,7 +268,8 @@ create_listener (GstAmcSurfaceTextureJNI * self, JNIEnv * env, GError ** err)
 
   (*env)->RegisterNatives (env, listener_cls, &amcOnFrameAvailableListener, 1);
   if ((*env)->ExceptionCheck (env)) {
-    (*env)->ExceptionClear (env);
+    gst_amc_jni_set_error (env, err, GST_LIBRARY_ERROR,
+        GST_LIBRARY_ERROR_FAILED, "Failed to register native methods");
     goto done;
   }
 
@@ -325,6 +326,7 @@ static gboolean
 {
   GstAmcSurfaceTextureJNI *self = GST_AMC_SURFACE_TEXTURE_JNI (base);
   JNIEnv *env;
+  GError *local_error = NULL;
 
   env = gst_amc_jni_get_env ();
 
@@ -336,8 +338,11 @@ static gboolean
   if (callback == NULL)
     return TRUE;
 
-  if (!create_listener (self, env, err))
+  if (!create_listener (self, env, &local_error)) {
+    GST_ERROR ("Could not create listener: %s", local_error->message);
+    g_propagate_error (err, local_error);
     return FALSE;
+  }
 
   if (!gst_amc_jni_call_void_method (env, err, self->jobject,
           surface_texture.set_on_frame_available_listener, self->listener)) {
