@@ -218,6 +218,7 @@ do_dssim (GstIqa * self, GstVideoFrame * ref, GstVideoFrame * cmp,
       dssim_structure, NULL);
   gst_structure_free (dssim_structure);
 
+  free (map_meta.data);
   g_free (ptrs);
   g_free (ptrs2);
   gst_buffer_unmap (ref->buffer, &ref_info);
