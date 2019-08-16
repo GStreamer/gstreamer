@@ -1354,7 +1354,7 @@ _save_tracks (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
   tracks = ges_timeline_get_tracks (timeline);
   for (tmp = tracks; tmp; tmp = tmp->next) {
     track = GES_TRACK (tmp->data);
-    properties = _serialize_properties (G_OBJECT (track), NULL);
+    properties = _serialize_properties (G_OBJECT (track), "caps", NULL);
     strtmp = gst_caps_to_string (ges_track_get_caps (track));
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (track));
     append_escaped (str,
