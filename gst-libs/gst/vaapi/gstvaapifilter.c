@@ -864,6 +864,7 @@ op_set_color_balance_unlocked (GstVaapiFilter * filter,
   gint i;
   GstVaapiFilterOpData *color_data[COLOR_BALANCE_NUM];
   GstVaapiFilterOpData *enabled_data = NULL;
+  gboolean ret = TRUE;
 
   if (!op_data)
     return FALSE;
@@ -907,9 +908,10 @@ op_set_color_balance_unlocked (GstVaapiFilter * filter,
       va_value = G_PARAM_SPEC_FLOAT (color_data[i]->pspec)->default_value;
       if (color_data[i]->op == op_data->op) {
         filter_cap = color_data[i]->va_caps;
-        /* don't fail, just ignore current value and set default one */
-        op_data_get_value_float (color_data[i], &filter_cap->range, value,
-            &va_value);
+        /* fail but ignore current value and set default one */
+        if (!op_data_get_value_float (color_data[i], &filter_cap->range, value,
+                &va_value))
+          ret = FALSE;
       }
 
       buf[i].value = va_value;
@@ -936,7 +938,7 @@ op_set_color_balance_unlocked (GstVaapiFilter * filter,
 
   vaapi_unmap_buffer (filter->va_display, enabled_data->va_buffer, NULL);
 
-  return TRUE;
+  return ret;
 }
 
 static inline gboolean
