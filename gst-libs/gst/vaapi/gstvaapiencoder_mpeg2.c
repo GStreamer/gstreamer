@@ -101,7 +101,7 @@ ensure_hw_profile (GstVaapiEncoderMpeg2 * encoder)
 error_unsupported_profile:
   {
     GST_ERROR ("unsupported HW profile %s",
-        gst_vaapi_profile_get_name (encoder->profile));
+        gst_vaapi_profile_get_va_name (encoder->profile));
     return FALSE;
   }
 }

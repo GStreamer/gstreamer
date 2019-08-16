@@ -31,6 +31,7 @@
 #include <gst/gstbuffer.h>
 #include "gstvaapicompat.h"
 #include "gstvaapiprofile.h"
+#include "gstvaapiutils.h"
 #include "gstvaapiworkarounds.h"
 
 typedef struct _GstVaapiCodecMap GstVaapiCodecMap;
@@ -242,8 +243,25 @@ gst_vaapi_profile_get_name (GstVaapiProfile profile)
 }
 
 /**
- * gst_vaapi_profile_get_media_type_name:
+ * gst_vaapi_profile_get_va_name:
  * @profile: a #GstVaapiProfile
+ *
+ * Returns a string representation for the supplied @profile as VAProfile.
+ *
+ * Return value: the statically allocated string representation of
+ * @profile as VAProfile
+ */
+const gchar *
+gst_vaapi_profile_get_va_name (GstVaapiProfile profile)
+{
+  const GstVaapiProfileMap *const m = get_profiles_map (profile);
+
+  return m ? string_of_VAProfile (m->va_profile) : NULL;
+}
+
+/**
+ * gst_vaapi_profile_get_media_type_name:
+ * @profile: a #GstVaapiProfileo
  *
  * Returns a string representation for the media type of the supplied
  * @profile.

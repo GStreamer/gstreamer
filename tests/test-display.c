@@ -84,7 +84,7 @@ print_profiles (GArray * profiles, const gchar * name)
     if (!codec_name)
       continue;
 
-    profile_name = gst_vaapi_profile_get_name (profile);
+    profile_name = gst_vaapi_profile_get_va_name (profile);
     if (!profile_name)
       continue;
 

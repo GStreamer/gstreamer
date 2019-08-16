@@ -222,6 +222,9 @@ const gchar *
 gst_vaapi_profile_get_name(GstVaapiProfile profile);
 
 const gchar *
+gst_vaapi_profile_get_va_name(GstVaapiProfile profile);
+
+const gchar *
 gst_vaapi_profile_get_media_type_name(GstVaapiProfile profile);
 
 VAProfile
