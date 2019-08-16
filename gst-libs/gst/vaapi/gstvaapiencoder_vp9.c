@@ -159,10 +159,8 @@ ensure_profile (GstVaapiEncoderVP9 * encoder)
       GST_VIDEO_INFO_FORMAT (GST_VAAPI_ENCODER_VIDEO_INFO (encoder));
   if (format == GST_VIDEO_FORMAT_P010_10LE)
     encoder->profile = GST_VAAPI_PROFILE_VP9_2;
-  else if (format == GST_VIDEO_FORMAT_NV12)
-    encoder->profile = GST_VAAPI_PROFILE_VP9_0;
   else
-    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+    encoder->profile = GST_VAAPI_PROFILE_VP9_0;
 
   /* Ensure bitrate if not set already */
   ensure_bitrate (encoder);
