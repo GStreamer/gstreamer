@@ -24,6 +24,7 @@
 #include "gstcompat.h"
 #include <gst/vaapi/gstvaapivalue.h>
 #include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapiprofilecaps.h>
 #include "gstvaapiencode.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideometa.h"
@@ -391,6 +392,19 @@ get_profile (GstVaapiEncode * encode)
   return GST_VAAPI_PROFILE_UNKNOWN;
 }
 
+static GstVaapiEntrypoint
+get_entrypoint (GstVaapiEncode * encode, GstVaapiProfile profile)
+{
+  GstVaapiEncoderTune tune = GST_VAAPI_ENCODER_TUNE_NONE;
+
+  g_object_get (encode, "tune", &tune, NULL);
+  if (tune == GST_VAAPI_ENCODER_TUNE_LOW_POWER)
+    return GST_VAAPI_ENTRYPOINT_SLICE_ENCODE_LP;
+  if (profile == GST_VAAPI_PROFILE_JPEG_BASELINE)
+    return GST_VAAPI_ENTRYPOINT_PICTURE_ENCODE;
+  return GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+}
+
 static gboolean
 ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
 {
@@ -398,6 +412,8 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
   GArray *formats = NULL;
   gboolean ret = FALSE;
   GstVaapiProfile profile;
+  guint i, size;
+  GstStructure *structure;
 
   if (encode->allowed_sinkpad_caps)
     return TRUE;
@@ -423,6 +439,16 @@ ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
 
   out_caps = gst_caps_make_writable (out_caps);
   gst_caps_append (out_caps, gst_caps_copy (raw_caps));
+
+  size = gst_caps_get_size (out_caps);
+  for (i = 0; i < size; i++) {
+    structure = gst_caps_get_structure (out_caps, i);
+    if (!structure)
+      continue;
+    gst_vaapi_profile_caps_append_encoder (GST_VAAPI_PLUGIN_BASE_DISPLAY
+        (encode), profile, get_entrypoint (encode, profile), structure);
+  }
+
   gst_caps_replace (&encode->allowed_sinkpad_caps, out_caps);
   GST_INFO_OBJECT (encode, "Allowed sink caps %" GST_PTR_FORMAT,
       encode->allowed_sinkpad_caps);
