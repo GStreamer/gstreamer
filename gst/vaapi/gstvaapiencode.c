@@ -365,34 +365,53 @@ gst_vaapiencode_buffer_loop (GstVaapiEncode * encode)
   gst_pad_pause_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
 }
 
+static GstVaapiProfile
+get_profile (GstVaapiEncode * encode)
+{
+  GstVaapiEncodeClass *klass = GST_VAAPIENCODE_GET_CLASS (encode);
+
+  if (klass->get_profile) {
+    GstVaapiProfile profile = GST_VAAPI_PROFILE_UNKNOWN;
+    GstCaps *allowed =
+        gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
+
+    if (allowed) {
+      if (!gst_caps_is_empty (allowed) && !gst_caps_is_any (allowed))
+        profile = klass->get_profile (allowed);
+      gst_caps_unref (allowed);
+    }
+
+    if (profile != GST_VAAPI_PROFILE_UNKNOWN)
+      return profile;
+  }
+
+  if (encode->encoder)
+    return gst_vaapi_encoder_get_profile (encode->encoder);
+
+  return GST_VAAPI_PROFILE_UNKNOWN;
+}
+
 static gboolean
 ensure_allowed_sinkpad_caps (GstVaapiEncode * encode)
 {
-  GstVaapiEncodeClass *klass = GST_VAAPIENCODE_GET_CLASS (encode);
   GstCaps *out_caps, *raw_caps = NULL;
   GArray *formats = NULL;
   gboolean ret = FALSE;
-  GstVaapiProfile profile = GST_VAAPI_PROFILE_UNKNOWN;
+  GstVaapiProfile profile;
 
   if (encode->allowed_sinkpad_caps)
     return TRUE;
   if (!encode->encoder)
     return TRUE;
 
+  profile = get_profile (encode);
+  if (profile == GST_VAAPI_PROFILE_UNKNOWN)
+    return TRUE;
+
   out_caps = gst_caps_from_string (GST_VAAPI_MAKE_SURFACE_CAPS ";"
       GST_VAAPI_MAKE_DMABUF_CAPS);
   if (!out_caps)
     goto failed_create_va_caps;
-
-  if (klass->get_profile) {
-    GstCaps *allowed =
-        gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
-    if (allowed) {
-      if (!gst_caps_is_empty (allowed) && !gst_caps_is_any (allowed))
-        profile = klass->get_profile (allowed);
-      gst_caps_unref (allowed);
-    }
-  }
 
   formats = gst_vaapi_encoder_get_surface_formats (encode->encoder, profile);
   if (!formats)

@@ -1869,6 +1869,14 @@ gst_vaapi_encoder_ensure_max_num_ref_frames (GstVaapiEncoder * encoder,
   return TRUE;
 }
 
+GstVaapiProfile
+gst_vaapi_encoder_get_profile (GstVaapiEncoder * encoder)
+{
+  g_return_val_if_fail (encoder, GST_VAAPI_PROFILE_UNKNOWN);
+
+  return encoder->profile;
+}
+
 /** Returns a GType for the #GstVaapiEncoderTune set */
 GType
 gst_vaapi_encoder_tune_get_type (void)
