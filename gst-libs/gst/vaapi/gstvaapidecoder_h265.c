@@ -1282,10 +1282,6 @@ ensure_quant_matrix (GstVaapiDecoderH265 * decoder,
   }
   iq_matrix = base_picture->iq_matrix->param;
 
-  /* Only supporting 4:2:0 */
-  if (sps->chroma_format_idc != 1)
-    return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
-
   fill_iq_matrix_4x4 (iq_matrix, scaling_list);
   fill_iq_matrix_8x8 (iq_matrix, scaling_list);
   fill_iq_matrix_16x16 (iq_matrix, scaling_list);
