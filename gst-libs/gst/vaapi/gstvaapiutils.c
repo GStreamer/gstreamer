@@ -383,61 +383,39 @@ string_of_VARateControl (guint rate_control)
 guint
 to_GstVaapiChromaType (guint va_rt_format)
 {
-  guint chroma_type;
-
-  switch (va_rt_format) {
-    case VA_RT_FORMAT_YUV420:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
-      break;
-    case VA_RT_FORMAT_YUV422:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422;
-      break;
-    case VA_RT_FORMAT_YUV444:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444;
-      break;
-    case VA_RT_FORMAT_YUV411:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV411;
-      break;
-    case VA_RT_FORMAT_YUV400:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV400;
-      break;
-    case VA_RT_FORMAT_RGB32:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_RGB32;
-      break;
-    case VA_RT_FORMAT_RGB16:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_RGB16;
-      break;
-    case VA_RT_FORMAT_RGBP:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_RGBP;
-      break;
-    case VA_RT_FORMAT_YUV420_10BPP:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
-      break;
+  if (va_rt_format & VA_RT_FORMAT_YUV420)
+    return GST_VAAPI_CHROMA_TYPE_YUV420;
+  if (va_rt_format & VA_RT_FORMAT_YUV422)
+    return GST_VAAPI_CHROMA_TYPE_YUV422;
+  if (va_rt_format & VA_RT_FORMAT_YUV444)
+    return GST_VAAPI_CHROMA_TYPE_YUV444;
+  if (va_rt_format & VA_RT_FORMAT_YUV411)
+    return GST_VAAPI_CHROMA_TYPE_YUV411;
+  if (va_rt_format & VA_RT_FORMAT_YUV400)
+    return GST_VAAPI_CHROMA_TYPE_YUV400;
+  if (va_rt_format & VA_RT_FORMAT_RGB32)
+    return GST_VAAPI_CHROMA_TYPE_RGB32;
+  if (va_rt_format & VA_RT_FORMAT_RGB16)
+    return GST_VAAPI_CHROMA_TYPE_RGB16;
+  if (va_rt_format & VA_RT_FORMAT_RGBP)
+    return GST_VAAPI_CHROMA_TYPE_RGBP;
+  if (va_rt_format & VA_RT_FORMAT_YUV420_10BPP)
+    return GST_VAAPI_CHROMA_TYPE_YUV420_10BPP;
 #if VA_CHECK_VERSION(1,2,0)
-    case VA_RT_FORMAT_YUV422_10:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_10BPP;
-      break;
-    case VA_RT_FORMAT_YUV444_10:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444_10BPP;
-      break;
-    case VA_RT_FORMAT_YUV420_12:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420_12BPP;
-      break;
-    case VA_RT_FORMAT_YUV422_12:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422_12BPP;
-      break;
-    case VA_RT_FORMAT_YUV444_12:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444_12BPP;
-      break;
-    case VA_RT_FORMAT_RGB32_10:
-      chroma_type = GST_VAAPI_CHROMA_TYPE_RGB32_10BPP;
-      break;
+  if (va_rt_format & VA_RT_FORMAT_YUV422_10)
+    return GST_VAAPI_CHROMA_TYPE_YUV422_10BPP;
+  if (va_rt_format & VA_RT_FORMAT_YUV444_10)
+    return GST_VAAPI_CHROMA_TYPE_YUV444_10BPP;
+  if (va_rt_format & VA_RT_FORMAT_YUV420_12)
+    return GST_VAAPI_CHROMA_TYPE_YUV420_12BPP;
+  if (va_rt_format & VA_RT_FORMAT_YUV422_12)
+    return GST_VAAPI_CHROMA_TYPE_YUV422_12BPP;
+  if (va_rt_format & VA_RT_FORMAT_YUV444_12)
+    return GST_VAAPI_CHROMA_TYPE_YUV444_12BPP;
+  if (va_rt_format & VA_RT_FORMAT_RGB32_10)
+    return GST_VAAPI_CHROMA_TYPE_RGB32_10BPP;
 #endif
-    default:
-      chroma_type = 0;
-      break;
-  }
-  return chroma_type;
+  return 0;
 }
 
 /**
