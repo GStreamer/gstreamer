@@ -81,7 +81,7 @@ append_caps (GstVaapiContext * context, GstStructure * structure)
  * @profile: a #GstVaapiProfile
  * @structure: a #GstStructure
  *
- * Extracts the config's surface attributes, from @profile, in an
+ * Extracts the config's surface attributes, from @profile, in a
  * decoder context, and transforms it into a caps formats and appended
  * into @structure.
  *
@@ -110,9 +110,39 @@ gst_vaapi_profile_caps_append_decoder (GstVaapiDisplay * display,
   return ret;
 }
 
+/**
+ * gst_vaapi_profile_caps_append_encoder:
+ * @display: a #GstVaapiDisplay
+ * @profile: a #GstVaapiProfile
+ * @entrypoint: a #GstVaapiEntryPoint
+ * @structure: a #GstStructure
+ *
+ * Extracts the config's surface attributes, from @profile and
+ * @entrypoint, in an encoder context, and transforms it into a caps
+ * formats and appended into @structure.
+ *
+ * Returns: %TRUE if the capabilities could be extracted and appended
+ * into @structure; otherwise %FALSE
+ **/
 gboolean
 gst_vaapi_profile_caps_append_encoder (GstVaapiDisplay * display,
-    GstVaapiProfile profile, GstStructure * structure)
+    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint,
+    GstStructure * structure)
 {
-  return TRUE;
+  GstVaapiContext *context;
+  GstVaapiContextInfo cip = {
+    GST_VAAPI_CONTEXT_USAGE_ENCODE, profile, entrypoint, 0,
+  };
+  gboolean ret;
+
+  g_return_val_if_fail (display != NULL, FALSE);
+  g_return_val_if_fail (structure != NULL, FALSE);
+
+  context = create_context (display, &cip);
+  if (!context)
+    return FALSE;
+
+  ret = append_caps (context, structure);
+  gst_vaapi_object_unref (context);
+  return ret;
 }
