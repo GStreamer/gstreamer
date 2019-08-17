@@ -1156,7 +1156,6 @@ gst_nvdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 static gboolean
 gst_nvdec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 {
-#ifdef HAVE_NVCODEC_GST_GL
   GstNvDec *nvdec = GST_NVDEC (decoder);
 
   switch (GST_QUERY_TYPE (query)) {
@@ -1165,14 +1164,15 @@ gst_nvdec_src_query (GstVideoDecoder * decoder, GstQuery * query)
               query, nvdec->cuda_ctx)) {
         return TRUE;
       }
+#ifdef HAVE_NVCODEC_GST_GL
       if (gst_gl_handle_context_query (GST_ELEMENT (decoder), query,
               nvdec->gl_display, nvdec->gl_context, nvdec->other_gl_context))
         return TRUE;
+#endif
       break;
     default:
       break;
   }
-#endif
 
   return GST_VIDEO_DECODER_CLASS (gst_nvdec_parent_class)->src_query (decoder,
       query);
