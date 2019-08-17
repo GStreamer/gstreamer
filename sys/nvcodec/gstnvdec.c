@@ -38,6 +38,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_nvdec_debug_category);
 #define GST_CAT_DEFAULT gst_nvdec_debug_category
 
 #ifdef HAVE_NVCODEC_GST_GL
+#define SUPPORTED_GL_APIS (GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2)
+
 static gboolean
 gst_nvdec_copy_device_to_gl (GstNvDec * nvdec,
     CUVIDPARSERDISPINFO * dispinfo, GstBuffer * output_buffer);
@@ -638,6 +640,9 @@ gst_nvdec_open (GstVideoDecoder * decoder)
 #if HAVE_NVCODEC_GST_GL
   gst_gl_ensure_element_data (GST_ELEMENT (nvdec),
       &nvdec->gl_display, &nvdec->other_gl_context);
+  if (nvdec->gl_display)
+    gst_gl_display_filter_gl_api (GST_GL_DISPLAY (nvdec->gl_display),
+        SUPPORTED_GL_APIS);
 #endif
 
   return TRUE;
@@ -1119,6 +1124,12 @@ gst_nvdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     }
   }
 
+  if (!gst_gl_context_check_gl_version (nvdec->gl_context,
+          SUPPORTED_GL_APIS, 3, 0)) {
+    GST_ERROR_OBJECT (nvdec, "OpenGL context could not support PBO download");
+    return FALSE;
+  }
+
   gst_query_parse_allocation (query, &outcaps, NULL);
   n = gst_query_get_n_allocation_pools (query);
   if (n > 0)
@@ -1166,8 +1177,12 @@ gst_nvdec_src_query (GstVideoDecoder * decoder, GstQuery * query)
       }
 #ifdef HAVE_NVCODEC_GST_GL
       if (gst_gl_handle_context_query (GST_ELEMENT (decoder), query,
-              nvdec->gl_display, nvdec->gl_context, nvdec->other_gl_context))
+              nvdec->gl_display, nvdec->gl_context, nvdec->other_gl_context)) {
+        if (nvdec->gl_display)
+          gst_gl_display_filter_gl_api (GST_GL_DISPLAY (nvdec->gl_display),
+              SUPPORTED_GL_APIS);
         return TRUE;
+      }
 #endif
       break;
     default:
