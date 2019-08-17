@@ -73,7 +73,8 @@ register_cuda_resource (GstGLContext * context,
   GstNvDecCudaGraphicsResourceInfo *cgr_info = data->info;
   GstNvDec *nvdec = data->nvdec;
   GstMapInfo map_info = GST_MAP_INFO_INIT;
-  guint texture_id;
+  CUresult cuda_ret;
+  GstGLBuffer *gl_buf_obj;
 
   data->ret = FALSE;
 
@@ -83,14 +84,18 @@ register_cuda_resource (GstGLContext * context,
   }
 
   if (gst_memory_map (mem, &map_info, GST_MAP_READ | GST_MAP_GL)) {
-    texture_id = *(guint *) map_info.data;
+    GstGLMemoryPBO *gl_mem = (GstGLMemoryPBO *) data->mem;
+    gl_buf_obj = gl_mem->pbo;
 
-    if (!gst_cuda_result (CuGraphicsGLRegisterImage (&cgr_info->resource,
-                texture_id, GL_TEXTURE_2D,
-                CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD))) {
-      GST_WARNING_OBJECT (nvdec, "failed to register texture with CUDA");
-    } else {
+    GST_LOG_OBJECT (nvdec,
+        "registure glbuffer %d to CUDA resource", gl_buf_obj->id);
+
+    cuda_ret = CuGraphicsGLRegisterBuffer (&cgr_info->resource, gl_buf_obj->id,
+        CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD);
+    if (gst_cuda_result (cuda_ret)) {
       data->ret = TRUE;
+    } else {
+      GST_WARNING_OBJECT (nvdec, "failed to register memory");
     }
 
     gst_memory_unmap (mem, &map_info);
@@ -138,8 +143,9 @@ ensure_cuda_graphics_resource (GstMemory * mem, GstNvDec * nvdec)
   GstNvDecCudaGraphicsResourceInfo *cgr_info;
   GstNvDecRegisterResourceData data;
 
-  if (!gst_is_gl_base_memory (mem)) {
-    GST_WARNING_OBJECT (nvdec, "memory is not GL base memory");
+  if (!gst_is_gl_memory_pbo (mem)) {
+    GST_WARNING_OBJECT (nvdec, "memory is not GL PBO memory, %s",
+        mem->allocator->mem_type);
     return NULL;
   }
 
@@ -816,7 +822,6 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
   guint num_resources = data->num_resources;
   CUVIDPROCPARAMS proc_params = { 0, };
   guintptr dptr;
-  CUarray array;
   guint pitch, i;
   CUDA_MEMCPY2D mcpy2d = { 0, };
   GstVideoInfo *info = &nvdec->output_state->info;
@@ -851,21 +856,25 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
 
   mcpy2d.srcMemoryType = CU_MEMORYTYPE_DEVICE;
   mcpy2d.srcPitch = pitch;
-  mcpy2d.dstMemoryType = CU_MEMORYTYPE_ARRAY;
-  mcpy2d.dstPitch = GST_VIDEO_INFO_WIDTH (info);
-  mcpy2d.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (info, 0)
-      * GST_VIDEO_INFO_COMP_PSTRIDE (info, 0);
+  mcpy2d.dstMemoryType = CU_MEMORYTYPE_DEVICE;
 
   for (i = 0; i < num_resources; i++) {
-    if (!gst_cuda_result (CuGraphicsSubResourceGetMappedArray (&array,
-                resources[i], 0, 0))) {
-      GST_WARNING_OBJECT (nvdec, "failed to map CUDA array");
+    CUdeviceptr cuda_ptr;
+    gsize size;
+
+    if (!gst_cuda_result (CuGraphicsResourceGetMappedPointer (&cuda_ptr, &size,
+                resources[i]))) {
+      GST_WARNING_OBJECT (nvdec, "failed to map CUDA resource");
       data->ret = FALSE;
       break;
     }
 
+    mcpy2d.dstPitch = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
+    mcpy2d.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (info, i)
+        * GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
+
     mcpy2d.srcDevice = dptr + (i * pitch * nvdec->height);
-    mcpy2d.dstArray = array;
+    mcpy2d.dstDevice = cuda_ptr;
     mcpy2d.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
     if (!gst_cuda_result (CuMemcpy2DAsync (&mcpy2d, nvdec->cuda_stream))) {
@@ -910,7 +919,8 @@ gst_nvdec_copy_device_to_gl (GstNvDec * nvdec,
       return FALSE;
     }
 
-    GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_DOWNLOAD);
+    /* Need PBO -> texture */
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);
   }
 
   gst_gl_context_thread_add (nvdec->gl_context,
@@ -1487,8 +1497,6 @@ gst_nvdec_register (GstPlugin * plugin, GType type, cudaVideoCodec codec_type,
       GstCaps *gl_caps = gst_caps_copy (src_templ);
       gst_caps_set_features_simple (gl_caps,
           gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
-      gst_caps_set_simple (gl_caps,
-          "texture-target", G_TYPE_STRING, "2D", NULL);
       gst_caps_append (src_templ, gl_caps);
     }
 #endif
@@ -1585,8 +1593,6 @@ gst_nvdec_plugin_init (GstPlugin * plugin)
       GstCaps *gl_caps = gst_caps_copy (src_templ);
       gst_caps_set_features_simple (gl_caps,
           gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
-      gst_caps_set_simple (gl_caps,
-          "texture-target", G_TYPE_STRING, "2D", NULL);
       gst_caps_append (src_templ, gl_caps);
     }
 #endif
