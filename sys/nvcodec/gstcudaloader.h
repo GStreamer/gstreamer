@@ -137,5 +137,9 @@ CUresult CuGraphicsGLRegisterBuffer (CUgraphicsResource * pCudaResource,
                                      unsigned int buffer,
                                      unsigned int Flags);
 
+G_GNUC_INTERNAL
+CUresult CuGraphicsResourceSetMapFlags (CUgraphicsResource resource,
+                                        unsigned int flags);
+
 G_END_DECLS
 #endif /* __GST_CUDA_LOADER_H__ */

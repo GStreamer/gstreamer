@@ -82,6 +82,8 @@ typedef struct _GstNvCodecCudaVTable
       unsigned int image, unsigned int target, unsigned int Flags);
     CUresult (*CuGraphicsGLRegisterBuffer) (CUgraphicsResource * pCudaResource,
       unsigned int buffer, unsigned int Flags);
+    CUresult (*CuGraphicsResourceSetMapFlags) (CUgraphicsResource resource,
+      unsigned int flags);
 } GstNvCodecCudaVTable;
 
 static GstNvCodecCudaVTable gst_cuda_vtable = { 0, };
@@ -139,6 +141,7 @@ gst_cuda_load_library (void)
   /* cudaGL.h */
   LOAD_SYMBOL (cuGraphicsGLRegisterImage, CuGraphicsGLRegisterImage);
   LOAD_SYMBOL (cuGraphicsGLRegisterBuffer, CuGraphicsGLRegisterBuffer);
+  LOAD_SYMBOL (cuGraphicsResourceSetMapFlags, CuGraphicsResourceSetMapFlags);
 
   vtable->loaded = TRUE;
 
@@ -369,4 +372,12 @@ CuGraphicsGLRegisterBuffer (CUgraphicsResource * pCudaResource,
 
   return gst_cuda_vtable.CuGraphicsGLRegisterBuffer (pCudaResource, buffer,
       Flags);
+}
+
+CUresult
+CuGraphicsResourceSetMapFlags (CUgraphicsResource resource, unsigned int flags)
+{
+  g_assert (gst_cuda_vtable.CuGraphicsResourceSetMapFlags != NULL);
+
+  return gst_cuda_vtable.CuGraphicsResourceSetMapFlags (resource, flags);
 }

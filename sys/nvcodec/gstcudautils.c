@@ -24,6 +24,11 @@
 #include "gstcudautils.h"
 #include "gstcudacontext.h"
 
+#ifdef HAVE_NVCODEC_GST_GL
+#include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_utils_debug);
 #define GST_CAT_DEFAULT gst_cuda_utils_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
@@ -339,4 +344,242 @@ gst_context_new_cuda_context (GstCudaContext * cuda_ctx)
   context_set_cuda_context (context, cuda_ctx);
 
   return context;
+}
+
+static const gchar *gst_cuda_quark_strings[] =
+    { "GstCudaQuarkGraphicsResource" };
+
+static GQuark gst_cuda_quark_table[GST_CUDA_QUARK_MAX];
+
+static void
+init_cuda_quark_once (void)
+{
+  static volatile gsize once_init = 0;
+
+  if (g_once_init_enter (&once_init)) {
+    gint i;
+
+    for (i = 0; i < GST_CUDA_QUARK_MAX; i++) {
+      gst_cuda_quark_table[i] =
+          g_quark_from_static_string (gst_cuda_quark_strings[i]);
+
+      g_once_init_leave (&once_init, 1);
+    }
+  }
+}
+
+/**
+ * gst_cuda_quark_from_id: (skip)
+ * @id: a #GstCudaQuarkId
+ *
+ * Returns: the GQuark for given @id or 0 if @id is unknown value
+ */
+GQuark
+gst_cuda_quark_from_id (GstCudaQuarkId id)
+{
+  g_return_val_if_fail (id < GST_CUDA_QUARK_MAX, 0);
+
+  init_cuda_quark_once ();
+  _init_debug ();
+
+  return gst_cuda_quark_table[id];
+}
+
+/**
+ * gst_cuda_graphics_resource_new: (skip)
+ * @context: (transfer none): a #GstCudaContext
+ * @graphics_context: (transfer none) (nullable): a grapics API specific context object
+ * @type: a #GstCudaGraphicsResourceType of resource registration
+ *
+ * Create new #GstCudaGraphicsResource with given @context and @type
+ *
+ * Returns: a new #GstCudaGraphicsResource.
+ * Free with gst_cuda_graphics_resource_free
+ */
+GstCudaGraphicsResource *
+gst_cuda_graphics_resource_new (GstCudaContext *
+    context, GstObject * graphics_context, GstCudaGraphicsResourceType type)
+{
+  GstCudaGraphicsResource *resource;
+
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), NULL);
+
+  _init_debug ();
+
+  resource = g_new0 (GstCudaGraphicsResource, 1);
+  resource->cuda_context = gst_object_ref (context);
+  if (graphics_context)
+    resource->graphics_context = gst_object_ref (graphics_context);
+
+  return resource;
+}
+
+/**
+ * gst_cuda_graphics_resource_register_gl_buffer: (skip)
+ * @resource a #GstCudaGraphicsResource
+ * @buffer: a GL buffer object
+ * @flags: a #CUgraphicsRegisterFlags
+ *
+ * Register the @buffer for access by CUDA.
+ * Must be called from the gl context thread with current cuda context was
+ * pushed on the current thread
+ *
+ * Returns: whether @buffer was registered or not
+ */
+gboolean
+gst_cuda_graphics_resource_register_gl_buffer (GstCudaGraphicsResource *
+    resource, guint buffer, CUgraphicsRegisterFlags flags)
+{
+  CUresult cuda_ret;
+
+  g_return_val_if_fail (resource != NULL, FALSE);
+  g_return_val_if_fail (resource->registered == FALSE, FALSE);
+
+  _init_debug ();
+
+  cuda_ret = CuGraphicsGLRegisterBuffer (&resource->resource, buffer, flags);
+
+  if (!gst_cuda_result (cuda_ret))
+    return FALSE;
+
+  resource->registered = TRUE;
+  resource->type = GST_CUDA_GRAPHICS_RESOURCE_GL_BUFFER;
+  resource->flags = flags;
+
+  return TRUE;
+}
+
+/**
+ * gst_cuda_graphics_resource_unregister: (skip)
+ * @resource: a #GstCudaGraphicsResource
+ *
+ * Unregister previously registered resource.
+ * For GL resource, this method must be called from gl context thread.
+ * Also, current cuda context should be pushed on the current thread
+ * before calling this method.
+ */
+void
+gst_cuda_graphics_resource_unregister (GstCudaGraphicsResource * resource)
+{
+  g_return_if_fail (resource != NULL);
+
+  _init_debug ();
+
+  if (!resource->registered)
+    return;
+
+  gst_cuda_result (CuGraphicsUnregisterResource (resource->resource));
+  resource->resource = NULL;
+  resource->registered = FALSE;
+
+  return;
+}
+
+/**
+ * gst_cuda_graphics_resource_map: (skip)
+ * @resource: a #GstCudaGraphicsResource
+ * @stream: a #CUstream
+ * @flags: a #CUgraphicsMapResourceFlags
+ *
+ * Map previously registered resource with map flags
+ *
+ * Returns: the #CUgraphicsResource if successful or %NULL when failed
+ */
+CUgraphicsResource
+gst_cuda_graphics_resource_map (GstCudaGraphicsResource * resource,
+    CUstream stream, CUgraphicsMapResourceFlags flags)
+{
+  CUresult cuda_ret;
+
+  g_return_val_if_fail (resource != NULL, NULL);
+  g_return_val_if_fail (resource->registered != FALSE, NULL);
+
+  _init_debug ();
+
+  cuda_ret = CuGraphicsResourceSetMapFlags (resource->resource, flags);
+  if (!gst_cuda_result (cuda_ret))
+    return NULL;
+
+  cuda_ret = CuGraphicsMapResources (1, &resource->resource, stream);
+  if (!gst_cuda_result (cuda_ret))
+    return NULL;
+
+  resource->mapped = TRUE;
+
+  return resource->resource;
+}
+
+/**
+ * gst_cuda_graphics_resource_unmap: (skip)
+ * @resource: a #GstCudaGraphicsResource
+ * @stream: a #CUstream
+ *
+ * Unmap previously mapped resource
+ */
+void
+gst_cuda_graphics_resource_unmap (GstCudaGraphicsResource * resource,
+    CUstream stream)
+{
+  g_return_if_fail (resource != NULL);
+  g_return_if_fail (resource->registered != FALSE);
+
+  _init_debug ();
+
+  if (!resource->mapped)
+    return;
+
+  gst_cuda_result (CuGraphicsUnmapResources (1, &resource->resource, stream));
+
+  resource->mapped = FALSE;
+}
+
+#ifdef HAVE_NVCODEC_GST_GL
+static void
+unregister_resource_from_gl_thread (GstGLContext * gl_context,
+    GstCudaGraphicsResource * resource)
+{
+  GstCudaContext *cuda_context = resource->cuda_context;
+
+  if (!gst_cuda_context_push (cuda_context)) {
+    GST_WARNING_OBJECT (cuda_context, "failed to push CUDA context");
+    return;
+  }
+
+  gst_cuda_graphics_resource_unregister (resource);
+
+  if (!gst_cuda_context_pop (NULL)) {
+    GST_WARNING_OBJECT (cuda_context, "failed to pop CUDA context");
+  }
+}
+#endif
+
+/**
+ * gst_cuda_graphics_resource_free: (skip)
+ * @resource: a #GstCudaGraphicsResource
+ *
+ * Free @resource
+ */
+void
+gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource)
+{
+  g_return_if_fail (resource != NULL);
+
+  if (resource->registered) {
+#ifdef HAVE_NVCODEC_GST_GL
+    if (resource->type == GST_CUDA_GRAPHICS_RESOURCE_GL_BUFFER) {
+      gst_gl_context_thread_add ((GstGLContext *) resource->graphics_context,
+          (GstGLContextThreadFunc) unregister_resource_from_gl_thread,
+          resource);
+    } else
+#endif
+    {
+      /* FIXME: currently opengl only */
+      g_assert_not_reached ();
+    }
+  }
+
+  gst_object_unref (resource->cuda_context);
+  if (resource->graphics_context)
+    gst_object_unref (resource->graphics_context);
+  g_free (resource);
 }

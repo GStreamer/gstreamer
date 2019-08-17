@@ -71,6 +71,34 @@ _gst_cuda_debug(CUresult result, GstDebugCategory * category,
   _gst_cuda_debug(result, NULL, __FILE__, GST_FUNCTION, __LINE__)
 #endif
 
+typedef enum
+{
+  GST_CUDA_QUARK_GRAPHICS_RESOURCE = 0,
+
+  /* end of quark list */
+  GST_CUDA_QUARK_MAX = 1
+} GstCudaQuarkId;
+
+typedef enum
+{
+  GST_CUDA_GRAPHICS_RESOURCE_NONE = 0,
+  GST_CUDA_GRAPHICS_RESOURCE_GL_BUFFER = 1,
+} GstCudaGraphicsResourceType;
+
+typedef struct _GstCudaGraphicsResource
+{
+  GstCudaContext *cuda_context;
+  /* GL context (or d3d11 context in the future) */
+  GstObject *graphics_context;
+
+  GstCudaGraphicsResourceType type;
+  CUgraphicsResource resource;
+  CUgraphicsRegisterFlags flags;
+
+  gboolean registered;
+  gboolean mapped;
+} GstCudaGraphicsResource;
+
 G_GNUC_INTERNAL
 gboolean        gst_cuda_ensure_element_context (GstElement * element,
                                                  gint device_id,
@@ -90,6 +118,33 @@ gboolean        gst_cuda_handle_context_query   (GstElement * element,
 G_GNUC_INTERNAL
 GstContext *    gst_context_new_cuda_context    (GstCudaContext * context);
 
+G_GNUC_INTERNAL
+GQuark          gst_cuda_quark_from_id          (GstCudaQuarkId id);
+
+G_GNUC_INTERNAL
+GstCudaGraphicsResource * gst_cuda_graphics_resource_new  (GstCudaContext * context,
+                                                           GstObject * graphics_context,
+                                                           GstCudaGraphicsResourceType type);
+
+G_GNUC_INTERNAL
+gboolean        gst_cuda_graphics_resource_register_gl_buffer (GstCudaGraphicsResource * resource,
+                                                               guint buffer,
+                                                               CUgraphicsRegisterFlags flags);
+
+G_GNUC_INTERNAL
+void            gst_cuda_graphics_resource_unregister (GstCudaGraphicsResource * resource);
+
+G_GNUC_INTERNAL
+CUgraphicsResource gst_cuda_graphics_resource_map (GstCudaGraphicsResource * resource,
+                                                   CUstream stream,
+                                                   CUgraphicsMapResourceFlags flags);
+
+G_GNUC_INTERNAL
+void            gst_cuda_graphics_resource_unmap (GstCudaGraphicsResource * resource,
+                                                  CUstream stream);
+
+G_GNUC_INTERNAL
+void            gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource);
 
 G_END_DECLS
 

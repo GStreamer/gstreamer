@@ -52,9 +52,17 @@ typedef enum
 
 typedef enum
 {
-  CU_GRAPHICS_REGISTER_FLAGS_READ_ONLY = 1,
-  CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD = 2
+  CU_GRAPHICS_REGISTER_FLAGS_NONE = 0x00,
+  CU_GRAPHICS_REGISTER_FLAGS_READ_ONLY = 0x01,
+  CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD = 0x02,
 } CUgraphicsRegisterFlags;
+
+typedef enum
+{
+  CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE = 0x00,
+  CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY = 0x01,
+  CU_GRAPHICS_MAP_RESOURCE_FLAGS_WRITE_DISCARD = 0x02,
+} CUgraphicsMapResourceFlags;
 
 typedef enum
 {
@@ -92,6 +100,7 @@ typedef struct
 #define cuCtxPopCurrent cuCtxPopCurrent_v2
 #define cuCtxPushCurrent cuCtxPushCurrent_v2
 #define cuGraphicsResourceGetMappedPointer cuGraphicsResourceGetMappedPointer_v2
+#define cuGraphicsResourceSetMapFlags cuGraphicsResourceSetMapFlags_v2
 
 #define cuMemAlloc cuMemAlloc_v2
 #define cuMemAllocPitch cuMemAllocPitch_v2
