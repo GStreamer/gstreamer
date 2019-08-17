@@ -25,6 +25,12 @@
  *
  * The effect will be applied on the sources that have lower priorities
  * (higher number) between the inpoint and the end of it.
+ *
+ * The asset ID of an effect clip is in the form:
+ *
+ * ```
+ *   "audio ! bin ! description || video ! bin ! description"
+ * ```
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -40,8 +46,11 @@ struct _GESEffectClipPrivate
   gchar *audio_bin_description;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GESEffectClip, ges_effect_clip,
-    GES_TYPE_BASE_EFFECT_CLIP);
+static void ges_extractable_interface_init (GESExtractableInterface * iface);
+G_DEFINE_TYPE_WITH_CODE (GESEffectClip, ges_effect_clip,
+    GES_TYPE_BASE_EFFECT_CLIP, G_ADD_PRIVATE (GESEffectClip)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 enum
 {
@@ -53,6 +62,76 @@ enum
 static void ges_effect_clip_finalize (GObject * object);
 static GESTrackElement *_create_track_element (GESClip * self,
     GESTrackType type);
+
+static GParameter *
+extractable_get_parameters_from_id (const gchar * id, guint * n_params)
+{
+  gchar *bin_desc;
+  GESTrackType ttype;
+  GParameter *params = g_new0 (GParameter, 2);
+  gchar **effects_desc = g_strsplit (id, "||", -1);
+  gint i;
+
+  *n_params = 0;
+
+  if (g_strv_length (effects_desc) > 2)
+    GST_ERROR ("EffectClip id %s contains too many effect descriptions", id);
+
+  for (i = 0; effects_desc[i] && i < 2; i++) {
+    bin_desc =
+        ges_effect_assect_id_get_type_and_bindesc (effects_desc[i], &ttype,
+        NULL);
+
+    if (ttype == GES_TRACK_TYPE_AUDIO) {
+      *n_params = *n_params + 1;
+      params[*n_params - 1].name = "audio-bin-description";
+    } else if (ttype == GES_TRACK_TYPE_VIDEO) {
+      *n_params = *n_params + 1;
+      params[i].name = "video-bin-description";
+    } else {
+      g_free (bin_desc);
+      GST_ERROR ("Could not find effect type for %s", effects_desc[i]);
+      continue;
+    }
+
+    g_value_init (&params[*n_params - 1].value, G_TYPE_STRING);
+    g_value_set_string (&params[*n_params - 1].value, bin_desc);
+    g_free (bin_desc);
+  }
+
+  g_strfreev (effects_desc);
+  return params;
+}
+
+static gchar *
+extractable_check_id (GType type, const gchar * id, GError ** error)
+{
+  return g_strdup (id);
+}
+
+static gchar *
+extractable_get_id (GESExtractable * self)
+{
+  GString *id = g_string_new (NULL);
+  GESEffectClipPrivate *priv = GES_EFFECT_CLIP (self)->priv;
+
+  if (priv->audio_bin_description)
+    g_string_append_printf (id, "audio %s ||", priv->audio_bin_description);
+  if (priv->video_bin_description)
+    g_string_append_printf (id, "video %s", priv->video_bin_description);
+
+  return g_string_free (id, FALSE);
+}
+
+static void
+ges_extractable_interface_init (GESExtractableInterface * iface)
+{
+  iface->asset_type = GES_TYPE_ASSET;
+  iface->check_id = extractable_check_id;
+  iface->get_parameters_from_id = extractable_get_parameters_from_id;
+  iface->get_id = extractable_get_id;
+}
+
 
 static void
 ges_effect_clip_finalize (GObject * object)
@@ -184,8 +263,19 @@ GESEffectClip *
 ges_effect_clip_new (const gchar * video_bin_description,
     const gchar * audio_bin_description)
 {
-  /*  FIXME Handle GESAsset! */
-  return g_object_new (GES_TYPE_EFFECT_CLIP,
-      "video-bin-description", video_bin_description,
-      "audio-bin-description", audio_bin_description, NULL);
+  GESAsset *asset;
+  GESEffectClip *res;
+  GString *id = g_string_new (NULL);
+
+  if (audio_bin_description)
+    g_string_append_printf (id, "audio %s ||", audio_bin_description);
+  if (video_bin_description)
+    g_string_append_printf (id, "video %s", video_bin_description);
+
+  asset = ges_asset_request (GES_TYPE_EFFECT_CLIP, id->str, NULL);
+  res = GES_EFFECT_CLIP (ges_asset_extract (asset, NULL));
+  g_string_free (id, TRUE);
+  gst_object_unref (asset);
+
+  return res;
 }
