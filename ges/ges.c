@@ -34,6 +34,8 @@
 #include <stdlib.h>
 #include <ges/ges.h>
 #include "ges/gstframepositioner.h"
+#include "ges/ges-smart-adder.h"
+#include "ges/ges-smart-video-mixer.h"
 #include "ges-internal.h"
 
 #ifndef DISABLE_XPTV
@@ -115,6 +117,7 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (GES_TYPE_TRANSITION_CLIP);
   g_type_class_ref (GES_TYPE_OVERLAY_CLIP);
   g_type_class_ref (GES_TYPE_OVERLAY_TEXT_CLIP);
+  g_type_class_ref (GES_TYPE_EFFECT_CLIP);
 
   g_type_class_ref (GES_TYPE_GROUP);
 
@@ -123,6 +126,8 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   ges_asset_cache_init ();
 
+  gst_element_register (NULL, "gesaudiomixer", 0, GES_TYPE_SMART_ADDER);
+  gst_element_register (NULL, "gescompositor", 0, GES_TYPE_SMART_MIXER);
   gst_element_register (NULL, "framepositioner", 0, GST_TYPE_FRAME_POSITIONNER);
   gst_element_register (NULL, "gespipeline", 0, GES_TYPE_PIPELINE);
 
@@ -212,6 +217,7 @@ ges_deinit (void)
   g_type_class_unref (g_type_class_peek (GES_TYPE_TRANSITION_CLIP));
   g_type_class_unref (g_type_class_peek (GES_TYPE_OVERLAY_CLIP));
   g_type_class_unref (g_type_class_peek (GES_TYPE_OVERLAY_TEXT_CLIP));
+  g_type_class_unref (g_type_class_peek (GES_TYPE_EFFECT_CLIP));
 
   g_type_class_unref (g_type_class_peek (GES_TYPE_GROUP));
   /* Register track elements */

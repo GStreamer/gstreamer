@@ -22,6 +22,10 @@
  * @title: GESEffect
  * @short_description: adds an effect build from a parse-launch style
  * bin description to a stream in a GESSourceClip or a GESLayer
+ *
+ * Currently we only support effects with 1 sinkpad and 1 sourcepad
+ * with the exception of `gesaudiomixer` and `gescompositor` which
+ * can be used as effects.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -290,6 +294,10 @@ ges_effect_create_element (GESTrackElement * object)
       { "audioconvert", "audioresample", "videoconvert", NULL };
 
   GESTrackType type = ges_track_element_get_track_type (object);
+
+  if (!g_strcmp0 (self->priv->bin_description, "gesaudiomixer") ||
+      !g_strcmp0 (self->priv->bin_description, "gescompositor"))
+    return gst_element_factory_make (self->priv->bin_description, NULL);
 
   if (type == GES_TRACK_TYPE_VIDEO) {
     bin_desc = g_strconcat ("videoconvert name=pre_video_convert ! ",
