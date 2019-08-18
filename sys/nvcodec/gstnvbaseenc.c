@@ -292,11 +292,22 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
   GstNvBaseEncClass *klass = GST_NV_BASE_ENC_GET_CLASS (enc);
   GValue *formats = NULL;
+  CUresult cuda_ret;
 
   if (!gst_cuda_ensure_element_context (GST_ELEMENT_CAST (enc),
           klass->cuda_device_id, &nvenc->cuda_ctx)) {
     GST_ERROR_OBJECT (nvenc, "failed to create CUDA context");
     return FALSE;
+  }
+
+  if (gst_cuda_context_push (nvenc->cuda_ctx)) {
+    cuda_ret = CuStreamCreate (&nvenc->cuda_stream, CU_STREAM_NON_BLOCKING);
+    if (!gst_cuda_result (cuda_ret)) {
+      GST_WARNING_OBJECT (nvenc,
+          "Could not create cuda stream, will use default stream");
+      nvenc->cuda_stream = NULL;
+    }
+    gst_cuda_context_pop (NULL);
   }
 
   {
@@ -640,14 +651,24 @@ static gboolean
 gst_nv_base_enc_close (GstVideoEncoder * enc)
 {
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
+  gboolean ret = TRUE;
 
   if (nvenc->encoder) {
     if (NvEncDestroyEncoder (nvenc->encoder) != NV_ENC_SUCCESS)
-      return FALSE;
+      ret = FALSE;
+
     nvenc->encoder = NULL;
   }
 
+  if (nvenc->cuda_ctx && nvenc->cuda_stream) {
+    if (gst_cuda_context_push (nvenc->cuda_ctx)) {
+      gst_cuda_result (CuStreamDestroy (nvenc->cuda_stream));
+      gst_cuda_context_pop (NULL);
+    }
+  }
+
   gst_clear_object (&nvenc->cuda_ctx);
+  nvenc->cuda_stream = NULL;
 
   GST_OBJECT_LOCK (nvenc);
   if (nvenc->input_formats)
@@ -667,7 +688,7 @@ gst_nv_base_enc_close (GstVideoEncoder * enc)
     nvenc->bitstream_pool = NULL;
   }
 
-  return TRUE;
+  return ret;
 }
 
 static void
@@ -1537,7 +1558,8 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
     }
 
     cuda_ret =
-        CuGraphicsMapResources (1, &data->in_gl_resource->cuda_texture, 0);
+        CuGraphicsMapResources (1, &data->in_gl_resource->cuda_texture,
+        data->nvenc->cuda_stream);
     if (!gst_cuda_result (cuda_ret)) {
       GST_ERROR_OBJECT (data->nvenc, "failed to map GL texture %u into cuda "
           "ret :%d", gl_mem->mem.tex_id, cuda_ret);
@@ -1574,7 +1596,7 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
     param.WidthInBytes = _get_plane_width (data->info, i);
     param.Height = _get_plane_height (data->info, i);
 
-    cuda_ret = CuMemcpy2D (&param);
+    cuda_ret = CuMemcpy2DAsync (&param, data->nvenc->cuda_stream);
     if (!gst_cuda_result (cuda_ret)) {
       GST_ERROR_OBJECT (data->nvenc, "failed to copy GL texture %u into cuda "
           "ret :%d", gl_mem->mem.tex_id, cuda_ret);
@@ -1582,7 +1604,8 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
     }
 
     cuda_ret =
-        CuGraphicsUnmapResources (1, &data->in_gl_resource->cuda_texture, 0);
+        CuGraphicsUnmapResources (1, &data->in_gl_resource->cuda_texture,
+        data->nvenc->cuda_stream);
     if (!gst_cuda_result (cuda_ret)) {
       GST_ERROR_OBJECT (data->nvenc, "failed to unmap GL texture %u from cuda "
           "ret :%d", gl_mem->mem.tex_id, cuda_ret);
@@ -1600,6 +1623,7 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
     data_pointer = data_pointer +
         dest_stride * _get_plane_height (&data->nvenc->input_info, i);
   }
+  gst_cuda_result (CuStreamSynchronize (data->nvenc->cuda_stream));
   gst_cuda_context_pop (NULL);
 }
 #endif

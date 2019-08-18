@@ -72,6 +72,7 @@ typedef struct {
   gint            gop_size;
 
   GstCudaContext * cuda_ctx;
+  CUstream         cuda_stream;
   void          * encoder;
 
   /* the supported input formats */
