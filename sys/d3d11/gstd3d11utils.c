@@ -108,7 +108,7 @@ gst_d3d11_device_get_supported_caps_internal (GstD3D11Device * device,
   GValue v_list = G_VALUE_INIT;
   GstCaps *supported_caps;
 
-  d3d11_device = gst_d3d11_device_get_device (device);
+  d3d11_device = gst_d3d11_device_get_device_handle (device);
   g_value_init (&v_list, GST_TYPE_LIST);
 
   for (i = 0; i < G_N_ELEMENTS (gst_dxgi_format_map); i++) {

@@ -592,7 +592,7 @@ gst_d3d11_device_new (gint adapter)
 }
 
 /**
- * gst_d3d11_device_get_device:
+ * gst_d3d11_device_get_device_handle:
  * @device: a #GstD3D11Device
  *
  * Used for various D3D11 APIs directly.
@@ -601,7 +601,7 @@ gst_d3d11_device_new (gint adapter)
  * Returns: (transfer none): the ID3D11Device
  */
 ID3D11Device *
-gst_d3d11_device_get_device (GstD3D11Device * device)
+gst_d3d11_device_get_device_handle (GstD3D11Device * device)
 {
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
@@ -609,7 +609,7 @@ gst_d3d11_device_get_device (GstD3D11Device * device)
 }
 
 /**
- * gst_d3d11_device_get_device_context:
+ * gst_d3d11_device_get_device_context_handle:
  * @device: a #GstD3D11Device
  *
  * Used for various D3D11 APIs directly.
@@ -618,7 +618,7 @@ gst_d3d11_device_get_device (GstD3D11Device * device)
  * Returns: (transfer none): the ID3D11DeviceContext
  */
 ID3D11DeviceContext *
-gst_d3d11_device_get_device_context (GstD3D11Device * device)
+gst_d3d11_device_get_device_context_handle (GstD3D11Device * device)
 {
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 

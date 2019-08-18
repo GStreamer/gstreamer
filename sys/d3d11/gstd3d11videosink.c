@@ -587,7 +587,7 @@ _upload_frame (GstD3D11Device * device, gpointer data)
 
   self = upload_data->sink;
 
-  device_context = gst_d3d11_device_get_device_context (device);
+  device_context = gst_d3d11_device_get_device_context_handle (device);
 
   hr = ID3D11DeviceContext_Map (device_context,
       upload_data->resource, 0, D3D11_MAP_WRITE, 0, &d3d11_map);

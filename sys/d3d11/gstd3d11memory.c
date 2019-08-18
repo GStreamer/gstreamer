@@ -137,7 +137,7 @@ _map_cpu_access_data (GstD3D11Device * device, gpointer data)
   ID3D11Resource *texture = (ID3D11Resource *) dmem->texture;
   ID3D11Resource *staging = (ID3D11Resource *) dmem->staging;
   ID3D11DeviceContext *device_context =
-      gst_d3d11_device_get_device_context (device);
+      gst_d3d11_device_get_device_context_handle (device);
 
   ID3D11DeviceContext_CopySubresourceRegion (device_context,
       staging, 0, 0, 0, 0, texture, 0, NULL);
@@ -190,7 +190,7 @@ _unmap_cpu_access_data (GstD3D11Device * device, gpointer data)
   ID3D11Resource *texture = (ID3D11Resource *) dmem->texture;
   ID3D11Resource *staging = (ID3D11Resource *) dmem->staging;
   ID3D11DeviceContext *device_context =
-      gst_d3d11_device_get_device_context (device);
+      gst_d3d11_device_get_device_context_handle (device);
 
   ID3D11DeviceContext_Unmap (device_context, staging, 0);
 
@@ -315,7 +315,7 @@ _calculate_buffer_size (GstD3D11Device * device, CalculateSizeData * data)
   HRESULT hr;
   D3D11_MAPPED_SUBRESOURCE map;
   ID3D11DeviceContext *device_context =
-      gst_d3d11_device_get_device_context (device);
+      gst_d3d11_device_get_device_context_handle (device);
 
   hr = ID3D11DeviceContext_Map (device_context,
       (ID3D11Resource *) data->staging, 0, GST_MAP_READWRITE, 0, &map);

@@ -495,8 +495,8 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
   if (!window->swap_chain)
     return;
 
-  d3d11_dev = gst_d3d11_device_get_device (device);
-  d3d11_context = gst_d3d11_device_get_device_context (device);
+  d3d11_dev = gst_d3d11_device_get_device_handle (device);
+  d3d11_context = gst_d3d11_device_get_device_context_handle (device);
 
   if (window->backbuffer) {
     ID3D11Texture2D_Release (window->backbuffer);
@@ -1057,7 +1057,7 @@ _present_on_device_thread (GstD3D11Device * device, FramePresentData * data)
   src_box.front = 0;
   src_box.back = 1;
 
-  device_context = gst_d3d11_device_get_device_context (device);
+  device_context = gst_d3d11_device_get_device_context_handle (device);
 
   if (data->resource) {
     ID3D11DeviceContext_ClearRenderTargetView (device_context, self->rtv,
