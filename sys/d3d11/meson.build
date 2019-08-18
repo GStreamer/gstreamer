@@ -10,6 +10,7 @@ d3d11_sources = [
   'gstd3d11basefilter.c',
   'gstd3d11upload.c',
   'gstd3d11download.c',
+  'gstd3d11colorconvert.c',
 ]
 
 have_d3d11 = false
@@ -23,8 +24,9 @@ endif
 
 d3d11_lib = cc.find_library('d3d11', required : d3d11_option)
 dxgi_lib = cc.find_library('dxgi', required : d3d11_option)
+d3dcompiler_lib = cc.find_library('d3dcompiler', required: d3d11_option)
 
-have_d3d11 = d3d11_lib.found() and dxgi_lib.found() and cc.has_header('d3d11.h') and cc.has_header('dxgi.h')
+have_d3d11 = d3d11_lib.found() and dxgi_lib.found() and cc.has_header('d3d11.h') and cc.has_header('dxgi.h') and cc.has_header('d3dcompiler.h')
 if not have_d3d11
   if d3d11_option.enabled()
     error('The d3d11 plugin was enabled explicitly, but required dependencies were not found.')
@@ -47,7 +49,7 @@ gstd3d11 = library('gstd3d11',
   d3d11_sources,
   c_args : gst_plugins_bad_args + extra_c_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, d3d11_lib, dxgi_lib] + extra_dep,
+  dependencies : [gstbase_dep, gstvideo_dep, d3d11_lib, dxgi_lib, d3dcompiler_lib] + extra_dep,
   install : true,
   install_dir : plugins_install_dir,
 )

@@ -25,6 +25,7 @@
 #include "gstd3d11videosink.h"
 #include "gstd3d11upload.h"
 #include "gstd3d11download.h"
+#include "gstd3d11colorconvert.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -36,6 +37,8 @@ plugin_init (GstPlugin * plugin)
       "d3d11upload", GST_RANK_NONE, GST_TYPE_D3D11_UPLOAD);
   gst_element_register (plugin,
       "d3d11download", GST_RANK_NONE, GST_TYPE_D3D11_DOWNLOAD);
+  gst_element_register (plugin,
+      "d3d11colorconvert", GST_RANK_NONE, GST_TYPE_D3D11_COLOR_CONVERT);
 
   return TRUE;
 }
