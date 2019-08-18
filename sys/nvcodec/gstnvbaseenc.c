@@ -1509,21 +1509,128 @@ _get_cuda_device_stride (GstVideoInfo * info, guint plane, gsize cuda_stride)
   }
 }
 
-struct map_gl_input
+typedef struct _GstNvEncRegisterResourceData
 {
+  GstMemory *mem;
+  GstCudaGraphicsResource *resource;
   GstNvBaseEnc *nvenc;
-  GstVideoCodecFrame *frame;
-  GstVideoInfo *info;
-  struct gl_input_resource *in_gl_resource;
-};
+  gboolean ret;
+} GstNvEncRegisterResourceData;
 
 static void
-_map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
+register_cuda_resource (GstGLContext * context,
+    GstNvEncRegisterResourceData * data)
+{
+  GstMemory *mem = data->mem;
+  GstCudaGraphicsResource *resource = data->resource;
+  GstNvBaseEnc *nvenc = data->nvenc;
+  GstMapInfo map_info = GST_MAP_INFO_INIT;
+  GstGLBuffer *gl_buf_obj;
+
+  data->ret = FALSE;
+
+  if (!gst_cuda_context_push (nvenc->cuda_ctx)) {
+    GST_WARNING_OBJECT (nvenc, "failed to push CUDA context");
+    return;
+  }
+
+  if (gst_memory_map (mem, &map_info, GST_MAP_READ | GST_MAP_GL)) {
+    GstGLMemoryPBO *gl_mem = (GstGLMemoryPBO *) data->mem;
+    gl_buf_obj = gl_mem->pbo;
+
+    GST_LOG_OBJECT (nvenc,
+        "registure glbuffer %d to CUDA resource", gl_buf_obj->id);
+
+    if (gst_cuda_graphics_resource_register_gl_buffer (resource,
+            gl_buf_obj->id, CU_GRAPHICS_REGISTER_FLAGS_NONE)) {
+      data->ret = TRUE;
+    } else {
+      GST_WARNING_OBJECT (nvenc, "failed to register memory");
+    }
+
+    gst_memory_unmap (mem, &map_info);
+  } else {
+    GST_WARNING_OBJECT (nvenc, "failed to map memory");
+  }
+
+  if (!gst_cuda_context_pop (NULL))
+    GST_WARNING_OBJECT (nvenc, "failed to unlock CUDA context");
+}
+
+static GstCudaGraphicsResource *
+ensure_cuda_graphics_resource (GstMemory * mem, GstNvBaseEnc * nvenc)
+{
+  GQuark quark;
+  GstCudaGraphicsResource *cgr_info;
+  GstNvEncRegisterResourceData data;
+
+  if (!gst_is_gl_memory_pbo (mem)) {
+    GST_WARNING_OBJECT (nvenc, "memory is not GL PBO memory, %s",
+        mem->allocator->mem_type);
+    return NULL;
+  }
+
+  quark = gst_cuda_quark_from_id (GST_CUDA_QUARK_GRAPHICS_RESOURCE);
+
+  cgr_info = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem), quark);
+  if (!cgr_info) {
+    cgr_info = gst_cuda_graphics_resource_new (nvenc->cuda_ctx,
+        GST_OBJECT (GST_GL_BASE_MEMORY_CAST (mem)->context),
+        GST_CUDA_GRAPHICS_RESOURCE_GL_BUFFER);
+    data.mem = mem;
+    data.resource = cgr_info;
+    data.nvenc = nvenc;
+    gst_gl_context_thread_add ((GstGLContext *) cgr_info->graphics_context,
+        (GstGLContextThreadFunc) register_cuda_resource, &data);
+    if (!data.ret) {
+      GST_WARNING_OBJECT (nvenc, "could not register resource");
+      gst_cuda_graphics_resource_free (cgr_info);
+
+      return NULL;
+    }
+
+    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem), quark, cgr_info,
+        (GDestroyNotify) gst_cuda_graphics_resource_free);
+  }
+
+  return cgr_info;
+}
+
+typedef struct _GstNvEncGLMapData
+{
+  GstNvBaseEnc *nvenc;
+  GstBuffer *buffer;
+  GstVideoInfo *info;
+  struct gl_input_resource *in_gl_resource;
+
+  gboolean ret;
+} GstNvEncGLMapData;
+
+static void
+_map_gl_input_buffer (GstGLContext * context, GstNvEncGLMapData * data)
 {
   CUresult cuda_ret;
   guint8 *data_pointer;
   guint i;
   CUDA_MEMCPY2D param;
+  GstCudaGraphicsResource **resources;
+  guint num_resources;
+
+  data->ret = FALSE;
+
+  num_resources = gst_buffer_n_memory (data->buffer);
+  resources = g_newa (GstCudaGraphicsResource *, num_resources);
+
+  for (i = 0; i < num_resources; i++) {
+    GstMemory *mem;
+
+    mem = gst_buffer_peek_memory (data->buffer, i);
+    resources[i] = ensure_cuda_graphics_resource (mem, data->nvenc);
+    if (!resources[i]) {
+      GST_ERROR_OBJECT (data->nvenc, "could not register %dth memory", i);
+      return;
+    }
+  }
 
   gst_cuda_context_push (data->nvenc->cuda_ctx);
   data_pointer = data->in_gl_resource->cuda_pointer;
@@ -1531,10 +1638,9 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
     GstGLBuffer *gl_buf_obj;
     GstGLMemoryPBO *gl_mem;
     guint src_stride, dest_stride;
+    CUgraphicsResource cuda_resource;
 
-    gl_mem =
-        (GstGLMemoryPBO *) gst_buffer_peek_memory (data->frame->input_buffer,
-        i);
+    gl_mem = (GstGLMemoryPBO *) gst_buffer_peek_memory (data->buffer, i);
     g_return_if_fail (gst_is_gl_memory_pbo ((GstMemory *) gl_mem));
     data->in_gl_resource->gl_mem[i] = GST_GL_MEMORY_CAST (gl_mem);
 
@@ -1548,28 +1654,20 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
     GST_LOG_OBJECT (data->nvenc, "attempting to copy texture %u into cuda",
         gl_mem->mem.tex_id);
 
-    cuda_ret =
-        CuGraphicsGLRegisterBuffer (&data->in_gl_resource->cuda_texture,
-        gl_buf_obj->id, CU_GRAPHICS_REGISTER_FLAGS_READ_ONLY);
-    if (!gst_cuda_result (cuda_ret)) {
-      GST_ERROR_OBJECT (data->nvenc, "failed to register GL texture %u to cuda "
-          "ret :%d", gl_mem->mem.tex_id, cuda_ret);
-      g_assert_not_reached ();
-    }
+    cuda_resource =
+        gst_cuda_graphics_resource_map (resources[i], data->nvenc->cuda_stream,
+        CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY);
 
-    cuda_ret =
-        CuGraphicsMapResources (1, &data->in_gl_resource->cuda_texture,
-        data->nvenc->cuda_stream);
-    if (!gst_cuda_result (cuda_ret)) {
-      GST_ERROR_OBJECT (data->nvenc, "failed to map GL texture %u into cuda "
-          "ret :%d", gl_mem->mem.tex_id, cuda_ret);
+    if (!cuda_resource) {
+      GST_ERROR_OBJECT (data->nvenc, "failed to map GL texture %u into cuda",
+          gl_mem->mem.tex_id);
       g_assert_not_reached ();
     }
 
     cuda_ret =
         CuGraphicsResourceGetMappedPointer (&data->in_gl_resource->
         cuda_plane_pointers[i], &data->in_gl_resource->cuda_num_bytes,
-        data->in_gl_resource->cuda_texture);
+        cuda_resource);
     if (!gst_cuda_result (cuda_ret)) {
       GST_ERROR_OBJECT (data->nvenc, "failed to get mapped pointer of map GL "
           "texture %u in cuda ret :%d", gl_mem->mem.tex_id, cuda_ret);
@@ -1603,28 +1701,15 @@ _map_gl_input_buffer (GstGLContext * context, struct map_gl_input *data)
       g_assert_not_reached ();
     }
 
-    cuda_ret =
-        CuGraphicsUnmapResources (1, &data->in_gl_resource->cuda_texture,
-        data->nvenc->cuda_stream);
-    if (!gst_cuda_result (cuda_ret)) {
-      GST_ERROR_OBJECT (data->nvenc, "failed to unmap GL texture %u from cuda "
-          "ret :%d", gl_mem->mem.tex_id, cuda_ret);
-      g_assert_not_reached ();
-    }
-
-    cuda_ret =
-        CuGraphicsUnregisterResource (data->in_gl_resource->cuda_texture);
-    if (!gst_cuda_result (cuda_ret)) {
-      GST_ERROR_OBJECT (data->nvenc, "failed to unregister GL texture %u from "
-          "cuda ret :%d", gl_mem->mem.tex_id, cuda_ret);
-      g_assert_not_reached ();
-    }
+    gst_cuda_graphics_resource_unmap (resources[i], data->nvenc->cuda_stream);
 
     data_pointer = data_pointer +
         dest_stride * _get_plane_height (&data->nvenc->input_info, i);
   }
   gst_cuda_result (CuStreamSynchronize (data->nvenc->cuda_stream));
   gst_cuda_context_pop (NULL);
+
+  data->ret = TRUE;
 }
 #endif
 
@@ -1761,7 +1846,7 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
 #if HAVE_NVCODEC_GST_GL
   if (nvenc->gl_input) {
     struct gl_input_resource *in_gl_resource = input_buffer;
-    struct map_gl_input data;
+    GstNvEncGLMapData data;
 
     GST_LOG_OBJECT (enc, "got input buffer %p", in_gl_resource);
 
@@ -1770,12 +1855,17 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
     g_assert (gst_is_gl_memory ((GstMemory *) in_gl_resource->gl_mem[0]));
 
     data.nvenc = nvenc;
-    data.frame = frame;
+    data.buffer = frame->input_buffer;
     data.info = &vframe.info;
     data.in_gl_resource = in_gl_resource;
 
     gst_gl_context_thread_add (in_gl_resource->gl_mem[0]->mem.context,
         (GstGLContextThreadFunc) _map_gl_input_buffer, &data);
+
+    if (!data.ret) {
+      GST_ERROR_OBJECT (nvenc, "Could not map input buffer");
+      goto error;
+    }
 
     in_gl_resource->nv_mapped_resource.version = NV_ENC_MAP_INPUT_RESOURCE_VER;
     in_gl_resource->nv_mapped_resource.registeredResource =
