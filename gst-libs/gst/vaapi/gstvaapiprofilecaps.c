@@ -75,6 +75,22 @@ append_caps (GstVaapiContext * context, GstStructure * structure)
   return TRUE;
 }
 
+static gboolean
+append_caps_with_context_info (GstVaapiDisplay * display,
+    GstVaapiContextInfo * cip, GstStructure * structure)
+{
+  GstVaapiContext *context;
+  gboolean ret;
+
+  context = create_context (display, cip);
+  if (!context)
+    return FALSE;
+
+  ret = append_caps (context, structure);
+  gst_vaapi_object_unref (context);
+  return ret;
+}
+
 /**
  * gst_vaapi_decoder_add_profile_caps:
  * @display: a #GstVaapiDisplay
@@ -92,22 +108,14 @@ gboolean
 gst_vaapi_profile_caps_append_decoder (GstVaapiDisplay * display,
     GstVaapiProfile profile, GstStructure * structure)
 {
-  GstVaapiContext *context;
   GstVaapiContextInfo cip = {
     GST_VAAPI_CONTEXT_USAGE_DECODE, profile, GST_VAAPI_ENTRYPOINT_VLD, 0,
   };
-  gboolean ret;
 
   g_return_val_if_fail (display != NULL, FALSE);
   g_return_val_if_fail (structure != NULL, FALSE);
 
-  context = create_context (display, &cip);
-  if (!context)
-    return FALSE;
-
-  ret = append_caps (context, structure);
-  gst_vaapi_object_unref (context);
-  return ret;
+  return append_caps_with_context_info (display, &cip, structure);
 }
 
 /**
@@ -129,20 +137,12 @@ gst_vaapi_profile_caps_append_encoder (GstVaapiDisplay * display,
     GstVaapiProfile profile, GstVaapiEntrypoint entrypoint,
     GstStructure * structure)
 {
-  GstVaapiContext *context;
   GstVaapiContextInfo cip = {
     GST_VAAPI_CONTEXT_USAGE_ENCODE, profile, entrypoint, 0,
   };
-  gboolean ret;
 
   g_return_val_if_fail (display != NULL, FALSE);
   g_return_val_if_fail (structure != NULL, FALSE);
 
-  context = create_context (display, &cip);
-  if (!context)
-    return FALSE;
-
-  ret = append_caps (context, structure);
-  gst_vaapi_object_unref (context);
-  return ret;
+  return append_caps_with_context_info (display, &cip, structure);
 }
