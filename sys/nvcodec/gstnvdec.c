@@ -656,24 +656,23 @@ maybe_destroy_decoder_and_parser (GstNvDec * nvdec)
   if (nvdec->decoder) {
     GST_DEBUG_OBJECT (nvdec, "destroying decoder");
     ret = gst_cuda_result (CuvidDestroyDecoder (nvdec->decoder));
-    if (ret)
-      nvdec->decoder = NULL;
-    else
-      GST_ERROR_OBJECT (nvdec, "failed to destroy decoder");
-  }
+    nvdec->decoder = NULL;
 
-  if (!gst_cuda_context_pop (NULL)) {
-    GST_ERROR_OBJECT (nvdec, "failed to unlock CUDA context");
-    return FALSE;
+    if (!ret)
+      GST_ERROR_OBJECT (nvdec, "failed to destroy decoder");
   }
 
   if (nvdec->parser) {
     GST_DEBUG_OBJECT (nvdec, "destroying parser");
     if (!gst_cuda_result (CuvidDestroyVideoParser (nvdec->parser))) {
       GST_ERROR_OBJECT (nvdec, "failed to destroy parser");
-      return FALSE;
+      ret = FALSE;
     }
     nvdec->parser = NULL;
+  }
+
+  if (!gst_cuda_context_pop (NULL)) {
+    GST_WARNING_OBJECT (nvdec, "failed to pop CUDA context");
   }
 
   return ret;
@@ -735,6 +734,7 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   GstNvDec *nvdec = GST_NVDEC (decoder);
   GstNvDecClass *klass = GST_NVDEC_GET_CLASS (decoder);
   CUVIDPARSERPARAMS parser_params = { 0, };
+  gboolean ret = TRUE;
 
   GST_DEBUG_OBJECT (nvdec, "set format");
 
@@ -759,14 +759,17 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   parser_params.pfnDisplayPicture =
       (PFNVIDDISPLAYCALLBACK) parser_display_callback;
 
+  gst_cuda_context_push (nvdec->cuda_ctx);
   GST_DEBUG_OBJECT (nvdec, "creating parser");
   if (!gst_cuda_result (CuvidCreateVideoParser (&nvdec->parser,
               &parser_params))) {
     GST_ERROR_OBJECT (nvdec, "failed to create parser");
-    return FALSE;
+    ret = FALSE;
   }
 
-  return TRUE;
+  gst_cuda_context_pop (NULL);
+
+  return ret;
 }
 
 #ifdef HAVE_NVCODEC_GST_GL
