@@ -211,6 +211,9 @@ gboolean
 gst_vaapi_filter_set_format (GstVaapiFilter * filter, GstVideoFormat format);
 
 gboolean
+gst_vaapi_filter_append_caps (GstVaapiFilter * filter, GstStructure * structure);
+
+gboolean
 gst_vaapi_filter_set_cropping_rectangle (GstVaapiFilter * filter,
     const GstVaapiRectangle * rect);
 

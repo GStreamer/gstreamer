@@ -1700,6 +1700,43 @@ gst_vaapi_filter_set_format (GstVaapiFilter * filter, GstVideoFormat format)
 }
 
 /**
+ * gst_vaapi_filter_append_caps:
+ * @filter: a #GstVaapiFilter
+ * @structure: a #GstStructure from #GstCaps
+ *
+ * Extracts the config's surface attributes, from @filter's context,
+ * and transforms it into a caps formats and appended them into
+ * @structure.
+ *
+ * Returns: %TRUE if the capabilities could be extracted and appended
+ * into @structure; otherwise %FALSE
+ **/
+gboolean
+gst_vaapi_filter_append_caps (GstVaapiFilter * filter, GstStructure * structure)
+{
+  GstVaapiConfigSurfaceAttributes *attribs;
+
+  g_return_val_if_fail (filter != NULL, FALSE);
+  g_return_val_if_fail (structure != NULL, FALSE);
+
+  if (!ensure_attributes (filter))
+    return FALSE;
+
+  attribs = filter->attribs;
+
+  if (attribs->min_width >= attribs->max_width ||
+      attribs->min_height >= attribs->max_height)
+    return FALSE;
+
+  gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, attribs->min_width,
+      attribs->max_width, "height", GST_TYPE_INT_RANGE, attribs->min_height,
+      attribs->max_height, NULL);
+
+  return TRUE;
+
+}
+
+/**
  * gst_vaapi_filter_set_cropping_rectangle:
  * @filter: a #GstVaapiFilter
  * @rect: the cropping region

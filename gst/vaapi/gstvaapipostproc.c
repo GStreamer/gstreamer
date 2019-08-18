@@ -1103,6 +1103,7 @@ static gboolean
 ensure_allowed_sinkpad_caps (GstVaapiPostproc * postproc)
 {
   GstCaps *out_caps, *raw_caps;
+  guint i, num_structures;
 
   if (postproc->allowed_sinkpad_caps)
     return TRUE;
@@ -1128,6 +1129,18 @@ ensure_allowed_sinkpad_caps (GstVaapiPostproc * postproc)
 
   out_caps = gst_caps_make_writable (out_caps);
   gst_caps_append (out_caps, gst_caps_copy (raw_caps));
+
+  num_structures = gst_caps_get_size (out_caps);
+  for (i = 0; i < num_structures; i++) {
+    GstStructure *structure;
+
+    structure = gst_caps_get_structure (out_caps, i);
+    if (!structure)
+      continue;
+
+    gst_vaapi_filter_append_caps (postproc->filter, structure);
+  }
+
   postproc->allowed_sinkpad_caps = out_caps;
 
   /* XXX: append VA/VPP filters */
@@ -1160,15 +1173,18 @@ expand_allowed_srcpad_caps (GstVaapiPostproc * postproc, GstCaps * caps)
     GstCapsFeatures *const features = gst_caps_get_features (caps, i);
     GstStructure *structure;
 
+    structure = gst_caps_get_structure (caps, i);
+    if (!structure)
+      continue;
+
+    gst_vaapi_filter_append_caps (postproc->filter, structure);
+
     if (gst_caps_features_contains (features,
             GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META)) {
       gl_upload_meta_idx = i;
       continue;
     }
 
-    structure = gst_caps_get_structure (caps, i);
-    if (!structure)
-      continue;
     gst_structure_set_value (structure, "format", &value);
   }
   g_value_unset (&value);
