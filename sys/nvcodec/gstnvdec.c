@@ -1039,6 +1039,8 @@ gst_nvdec_drain (GstVideoDecoder * decoder)
   packet.payload = NULL;
   packet.flags = CUVID_PKT_ENDOFSTREAM;
 
+  nvdec->state = GST_NVDEC_STATE_PARSE;
+
   if (nvdec->parser
       && !gst_cuda_result (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
