@@ -143,6 +143,10 @@ typedef struct {
 
   GstFlowReturn   last_flow;          /* ATOMIC */
 
+  /* the first frame when bframe was enabled */
+  GstVideoCodecFrame *first_frame;
+  GstClockTime dts_offset;
+
   /*< protected >*/
   /* device capability dependent properties, set by subclass */
   gboolean        weighted_pred;

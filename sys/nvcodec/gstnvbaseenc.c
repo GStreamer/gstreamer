@@ -585,6 +585,9 @@ gst_nv_base_enc_start (GstVideoEncoder * enc)
   }
 #endif
 
+  /* DTS can be negative if bframe was enabled */
+  gst_video_encoder_set_min_pts (enc, GST_SECOND * 60 * 60 * 1000);
+
   return TRUE;
 }
 
@@ -1066,6 +1069,57 @@ gst_nv_base_enc_bitstream_thread (gpointer user_data)
 
     g_async_queue_push (nvenc->available_queue, state_in_queue);
 
+    /* Ugly but no other way to get DTS offset since nvenc dose not adjust
+     * dts/pts even if bframe was enabled. So the output PTS can be smaller
+     * than DTS. The maximum difference between DTS and PTS can be calculated
+     * using the PTS difference between the first frame and the second frame.
+     */
+    if (nvenc->bframes > 0) {
+      if (nvenc->dts_offset == 0) {
+        if (!nvenc->first_frame) {
+          /* store the first frame to get dts offset */
+          nvenc->first_frame = frame;
+          continue;
+        } else {
+          if (nvenc->first_frame->pts >= frame->pts) {
+            GstClockTime duration = 0;
+
+            GST_WARNING_OBJECT (enc, "Could not calculate DTS offset");
+
+            if (nvenc->input_info.fps_n > 0 && nvenc->input_info.fps_d > 0) {
+              duration =
+                  gst_util_uint64_scale (GST_SECOND, nvenc->input_info.fps_d,
+                  nvenc->input_info.fps_n);
+            } else if (nvenc->first_frame->duration > 0 &&
+                GST_CLOCK_TIME_IS_VALID (nvenc->first_frame->duration)) {
+              duration = nvenc->first_frame->duration;
+            } else {
+              GST_WARNING_OBJECT (enc,
+                  "No way to get frame duration, assuming 30fps");
+              duration = gst_util_uint64_scale (GST_SECOND, 1, 30);
+            }
+
+            nvenc->dts_offset = duration * nvenc->bframes;
+          } else {
+            nvenc->dts_offset = frame->pts - nvenc->first_frame->pts;
+          }
+
+          /* + 1 to dts_offset to adjust fraction */
+          nvenc->dts_offset++;
+
+          GST_DEBUG_OBJECT (enc,
+              "Calculated DTS offset %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (nvenc->dts_offset));
+        }
+
+        nvenc->first_frame->dts -= nvenc->dts_offset;
+        gst_video_encoder_finish_frame (enc, nvenc->first_frame);
+        nvenc->first_frame = NULL;
+      }
+
+      frame->dts -= nvenc->dts_offset;
+    }
+
     flow = gst_video_encoder_finish_frame (enc, frame);
 
     if (flow != GST_FLOW_OK) {
@@ -1079,6 +1133,11 @@ gst_nv_base_enc_bitstream_thread (gpointer user_data)
 
 error_shutdown:
   {
+    if (nvenc->first_frame) {
+      gst_clear_buffer (&nvenc->first_frame->output_buffer);
+      gst_video_encoder_finish_frame (enc, nvenc->first_frame);
+      nvenc->first_frame = NULL;
+    }
     g_atomic_int_set (&nvenc->last_flow, GST_FLOW_ERROR);
     g_async_queue_push (nvenc->available_queue, SHUTDOWN_COOKIE);
 
@@ -1087,6 +1146,11 @@ error_shutdown:
 
 exit_thread:
   {
+    if (nvenc->first_frame) {
+      gst_video_encoder_finish_frame (enc, nvenc->first_frame);
+      nvenc->first_frame = NULL;
+    }
+
     GST_INFO_OBJECT (nvenc, "exiting thread");
 
     return NULL;
