@@ -99,6 +99,13 @@ G_GNUC_INTERNAL
 CUresult CuMemFree          (CUdeviceptr dptr);
 
 G_GNUC_INTERNAL
+CUresult CuStreamCreate     (CUstream *phStream,
+                             unsigned int Flags);
+
+G_GNUC_INTERNAL
+CUresult CuStreamDestroy    (CUstream hStream);
+
+G_GNUC_INTERNAL
 CUresult CuStreamSynchronize (CUstream hStream);
 
 G_GNUC_INTERNAL

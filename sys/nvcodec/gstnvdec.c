@@ -616,6 +616,7 @@ gst_nvdec_open (GstVideoDecoder * decoder)
 {
   GstNvDec *nvdec = GST_NVDEC (decoder);
   GstNvDecClass *klass = GST_NVDEC_GET_CLASS (nvdec);
+  CUresult cuda_ret;
 
   GST_DEBUG_OBJECT (nvdec, "creating CUDA context");
 
@@ -623,6 +624,16 @@ gst_nvdec_open (GstVideoDecoder * decoder)
           klass->cuda_device_id, &nvdec->cuda_ctx)) {
     GST_ERROR_OBJECT (nvdec, "failed to create CUDA context");
     return FALSE;
+  }
+
+  if (gst_cuda_context_push (nvdec->cuda_ctx)) {
+    cuda_ret = CuStreamCreate (&nvdec->cuda_stream, CU_STREAM_NON_BLOCKING);
+    if (!gst_cuda_result (cuda_ret)) {
+      GST_WARNING_OBJECT (nvdec,
+          "Could not create cuda stream, will use default stream");
+      nvdec->cuda_stream = NULL;
+    }
+    gst_cuda_context_pop (NULL);
   }
 #if HAVE_NVCODEC_GST_GL
   gst_gl_ensure_element_data (GST_ELEMENT (nvdec),
@@ -723,7 +734,15 @@ gst_nvdec_close (GstVideoDecoder * decoder)
 {
   GstNvDec *nvdec = GST_NVDEC (decoder);
 
+  if (nvdec->cuda_ctx && nvdec->cuda_stream) {
+    if (gst_cuda_context_push (nvdec->cuda_ctx)) {
+      gst_cuda_result (CuStreamDestroy (nvdec->cuda_stream));
+      gst_cuda_context_pop (NULL);
+    }
+  }
+
   gst_clear_object (&nvdec->cuda_ctx);
+  nvdec->cuda_stream = NULL;
 
   return TRUE;
 }
@@ -819,7 +838,7 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
   }
 
   if (!gst_cuda_result (CuGraphicsMapResources (num_resources, resources,
-              NULL))) {
+              nvdec->cuda_stream))) {
     GST_WARNING_OBJECT (nvdec, "failed to map CUDA resources");
     data->ret = FALSE;
     goto unmap_video_frame;
@@ -844,17 +863,17 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
     mcpy2d.dstArray = array;
     mcpy2d.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
-    if (!gst_cuda_result (CuMemcpy2DAsync (&mcpy2d, 0))) {
+    if (!gst_cuda_result (CuMemcpy2DAsync (&mcpy2d, nvdec->cuda_stream))) {
       GST_WARNING_OBJECT (nvdec, "memcpy to mapped array failed");
       data->ret = FALSE;
     }
   }
 
-  gst_cuda_result (CuStreamSynchronize (0));
-
   if (!gst_cuda_result (CuGraphicsUnmapResources (num_resources, resources,
-              NULL)))
+              nvdec->cuda_stream)))
     GST_WARNING_OBJECT (nvdec, "failed to unmap CUDA resources");
+
+  gst_cuda_result (CuStreamSynchronize (nvdec->cuda_stream));
 
 unmap_video_frame:
   if (!gst_cuda_result (CuvidUnmapVideoFrame (nvdec->decoder, dptr)))
@@ -943,7 +962,7 @@ gst_nvdec_copy_device_to_system (GstNvDec * nvdec,
     copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
     copy_params.Height = GST_VIDEO_FRAME_COMP_HEIGHT (&video_frame, i);
 
-    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, 0))) {
+    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, nvdec->cuda_stream))) {
       GST_ERROR_OBJECT (nvdec, "failed to copy %dth plane", i);
       CuvidUnmapVideoFrame (nvdec->decoder, dptr);
       gst_video_frame_unmap (&video_frame);
@@ -952,7 +971,7 @@ gst_nvdec_copy_device_to_system (GstNvDec * nvdec,
     }
   }
 
-  gst_cuda_result (CuStreamSynchronize (0));
+  gst_cuda_result (CuStreamSynchronize (nvdec->cuda_stream));
 
   gst_video_frame_unmap (&video_frame);
 

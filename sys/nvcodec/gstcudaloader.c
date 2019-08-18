@@ -68,6 +68,8 @@ typedef struct _GstNvCodecCudaVTable
     CUresult (*CuMemcpy2D) (const CUDA_MEMCPY2D * pCopy);
     CUresult (*CuMemcpy2DAsync) (const CUDA_MEMCPY2D * pCopy, CUstream hStream);
     CUresult (*CuMemFree) (CUdeviceptr dptr);
+    CUresult (*CuStreamCreate) (CUstream * phStream, unsigned int Flags);
+    CUresult (*CuStreamDestroy) (CUstream hStream);
     CUresult (*CuStreamSynchronize) (CUstream hStream);
 
     CUresult (*CuDeviceGet) (CUdevice * device, int ordinal);
@@ -125,6 +127,8 @@ gst_cuda_load_library (void)
   LOAD_SYMBOL (cuMemcpy2DAsync, CuMemcpy2DAsync);
   LOAD_SYMBOL (cuMemFree, CuMemFree);
 
+  LOAD_SYMBOL (cuStreamCreate, CuStreamCreate);
+  LOAD_SYMBOL (cuStreamDestroy, CuStreamDestroy);
   LOAD_SYMBOL (cuStreamSynchronize, CuStreamSynchronize);
 
   LOAD_SYMBOL (cuDeviceGet, CuDeviceGet);
@@ -288,6 +292,22 @@ CuMemFree (CUdeviceptr dptr)
   g_assert (gst_cuda_vtable.CuMemFree != NULL);
 
   return gst_cuda_vtable.CuMemFree (dptr);
+}
+
+CUresult
+CuStreamCreate (CUstream * phStream, unsigned int Flags)
+{
+  g_assert (gst_cuda_vtable.CuStreamCreate != NULL);
+
+  return gst_cuda_vtable.CuStreamCreate (phStream, Flags);
+}
+
+CUresult
+CuStreamDestroy (CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuStreamDestroy != NULL);
+
+  return gst_cuda_vtable.CuStreamDestroy (hStream);
 }
 
 CUresult

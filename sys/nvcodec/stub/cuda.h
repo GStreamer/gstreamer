@@ -56,6 +56,12 @@ typedef enum
   CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD = 2
 } CUgraphicsRegisterFlags;
 
+typedef enum
+{
+  CU_STREAM_DEFAULT = 0x0,
+  CU_STREAM_NON_BLOCKING = 0x1
+} CUstream_flags;
+
 typedef struct
 {
   gsize srcXInBytes;

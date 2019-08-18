@@ -77,6 +77,7 @@ struct _GstNvDec
   CUvideoparser parser;
   CUvideodecoder decoder;
   GstCudaContext *cuda_ctx;
+  CUstream cuda_stream;
 
   guint width;
   guint height;
