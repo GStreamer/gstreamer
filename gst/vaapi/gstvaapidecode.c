@@ -325,6 +325,8 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
     case GST_VAAPI_CAPS_FEATURE_DMABUF:
     case GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE:{
       GstStructure *structure = gst_caps_get_structure (state->caps, 0);
+      if (!structure)
+        break;
 
       /* Remove chroma-site and colorimetry from src caps,
        * which is unnecessary on downstream if using VASurface
@@ -886,6 +888,9 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
         GstStructure *const structure = gst_caps_get_structure (caps, 0);
         const gchar *str = NULL;
 
+        if (!structure)
+          break;
+
         if ((str = gst_structure_get_string (structure, "alignment"))) {
           GstVaapiStreamAlignH264 alignment;
           if (g_strcmp0 (str, "au") == 0)
@@ -913,6 +918,9 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
       if (decode->decoder && caps) {
         GstStructure *const structure = gst_caps_get_structure (caps, 0);
         const gchar *str = NULL;
+
+        if (!structure)
+          break;
 
         if ((str = gst_structure_get_string (structure, "alignment"))) {
           GstVaapiStreamAlignH265 alignment;
@@ -1249,6 +1257,8 @@ gst_vaapidecode_ensure_allowed_sinkpad_caps (GstVaapiDecode * decode)
     if (!caps)
       continue;
     structure = gst_caps_get_structure (caps, 0);
+    if (!structure)
+      continue;
 
     profile_name = gst_vaapi_profile_get_name (profile);
     if (profile_name)
