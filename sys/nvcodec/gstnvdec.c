@@ -627,7 +627,7 @@ gst_nvdec_open (GstVideoDecoder * decoder)
   }
 
   if (gst_cuda_context_push (nvdec->cuda_ctx)) {
-    cuda_ret = CuStreamCreate (&nvdec->cuda_stream, CU_STREAM_NON_BLOCKING);
+    cuda_ret = CuStreamCreate (&nvdec->cuda_stream, CU_STREAM_DEFAULT);
     if (!gst_cuda_result (cuda_ret)) {
       GST_WARNING_OBJECT (nvdec,
           "Could not create cuda stream, will use default stream");

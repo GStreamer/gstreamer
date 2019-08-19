@@ -301,7 +301,7 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
   }
 
   if (gst_cuda_context_push (nvenc->cuda_ctx)) {
-    cuda_ret = CuStreamCreate (&nvenc->cuda_stream, CU_STREAM_NON_BLOCKING);
+    cuda_ret = CuStreamCreate (&nvenc->cuda_stream, CU_STREAM_DEFAULT);
     if (!gst_cuda_result (cuda_ret)) {
       GST_WARNING_OBJECT (nvenc,
           "Could not create cuda stream, will use default stream");
