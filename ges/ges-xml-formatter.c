@@ -35,7 +35,7 @@
 
 #define parent_class ges_xml_formatter_parent_class
 #define API_VERSION 0
-#define MINOR_VERSION 5
+#define MINOR_VERSION 6
 #define VERSION 0.5
 
 #define COLLECT_STR_OPT (G_MARKUP_COLLECT_STRING | G_MARKUP_COLLECT_OPTIONAL)
@@ -1191,6 +1191,7 @@ _save_subproject (GESXmlFormatter * self, GString * str, GESProject * project,
           ges_asset_get_id (subproject),
           g_type_name (ges_asset_get_extractable_type (subproject)), properties,
           metas), depth);
+  self->priv->min_version = MAX (self->priv->min_version, 6);
 
   depth += 4;
   GST_DEBUG_OBJECT (self, "Saving subproject %s (depth: %d)",
@@ -1249,6 +1250,7 @@ _serialize_streams (GESXmlFormatter * self, GString * str,
         ("        <stream-info id='%s' extractable-type-name='%s' properties='%s' metadatas='%s' caps='%s'/>\n",
             id, g_type_name (ges_asset_get_extractable_type (tmp->data)),
             properties, metas, capsstr), depth);
+    self->priv->min_version = MAX (self->priv->min_version, 6);
     g_free (metas);
     g_free (properties);
     g_free (capsstr);
