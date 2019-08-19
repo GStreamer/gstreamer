@@ -352,12 +352,34 @@ static void
 _finalize (GObject * object)
 {
   ValidateSsimOverridePrivate *priv = VALIDATE_SSIM_OVERRIDE (object)->priv;
+  GDir *outdir_handle = NULL;
+  const gchar *filename = NULL;
+  GError *error = NULL;
 
   if (priv->converter)
     gst_video_converter_free (priv->converter);
 
   if (priv->last_caps)
     gst_caps_unref (priv->last_caps);
+
+  if (priv->config && !gst_structure_has_field (priv->config, "output-dir")) {
+    /* Remove temporary directory contents (expected to be files, no sub-directories). */
+    outdir_handle = g_dir_open (priv->outdir, 0, &error);
+    if (outdir_handle != NULL) {
+      while ((filename = g_dir_read_name (outdir_handle))) {
+        gchar *path =
+            g_build_path (G_DIR_SEPARATOR_S, priv->outdir, filename, NULL);
+        g_remove (path);
+        g_free (path);
+      }
+      g_dir_close (outdir_handle);
+    } else {
+      GST_ERROR ("Unable to cleanup temporary directory %s: %s", priv->outdir,
+          error->message);
+      g_error_free (error);
+    }
+    g_rmdir (priv->outdir);
+  }
 
   g_free (priv->outdir);
   g_free (priv->result_outdir);
