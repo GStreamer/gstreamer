@@ -1573,11 +1573,120 @@ gst_vaapi_encoder_constructed (GObject * object)
 
 G_DEFINE_ABSTRACT_TYPE (GstVaapiEncoder, gst_vaapi_encoder, GST_TYPE_OBJECT);
 
+/**
+ * GstVaapiEncoderProp:
+ * @ENCODER_PROP_DISPLAY: The display.
+ * @ENCODER_PROP_BITRATE: Bitrate expressed in kbps (uint).
+ * @ENCODER_PROP_TARGET_PERCENTAGE: Desired target percentage of
+ *  bitrate for variable rate controls.
+ * @ENCODER_PROP_KEYFRAME_PERIOD: The maximal distance
+ *   between two keyframes (uint).
+ * @ENCODER_PROP_DEFAULT_ROI_VALUE: The default delta qp to apply
+ *   to each region of interest.
+ * @ENCODER_PROP_TRELLIS: Use trellis quantization method (gboolean).
+ *
+ * The set of configurable properties for the encoder.
+ */
 enum
 {
   ENCODER_PROP_DISPLAY = 1,
+  ENCODER_PROP_BITRATE,
+  ENCODER_PROP_TARGET_PERCENTAGE,
+  ENCODER_PROP_KEYFRAME_PERIOD,
+  ENCODER_PROP_QUALITY_LEVEL,
+  ENCODER_PROP_DEFAULT_ROI_VALUE,
+  ENCODER_PROP_TRELLIS,
   ENCODER_N_PROPERTIES
 };
+
+static GParamSpec *properties[ENCODER_N_PROPERTIES];
+
+__attribute__ ((unused))
+     static void
+         _gst_vaapi_encoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
+  GstVaapiEncoderStatus status = GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  switch (prop_id) {
+    case ENCODER_PROP_DISPLAY:
+      g_assert (encoder->display == NULL);
+      encoder->display = g_value_dup_object (value);
+      g_assert (encoder->display != NULL);
+      encoder->va_display = GST_VAAPI_DISPLAY_VADISPLAY (encoder->display);
+      break;
+    case ENCODER_PROP_BITRATE:
+      status = gst_vaapi_encoder_set_bitrate (encoder,
+          g_value_get_uint (value));
+      break;
+    case ENCODER_PROP_TARGET_PERCENTAGE:
+      status =
+          gst_vaapi_encoder_set_target_percentage (encoder,
+          g_value_get_uint (value));
+      break;
+    case ENCODER_PROP_KEYFRAME_PERIOD:
+      status =
+          gst_vaapi_encoder_set_keyframe_period (encoder,
+          g_value_get_uint (value));
+      break;
+    case ENCODER_PROP_QUALITY_LEVEL:
+      status =
+          gst_vaapi_encoder_set_quality_level (encoder,
+          g_value_get_uint (value));
+      break;
+    case ENCODER_PROP_DEFAULT_ROI_VALUE:
+      encoder->default_roi_value = g_value_get_int (value);
+      status = GST_VAAPI_ENCODER_STATUS_SUCCESS;
+      break;
+    case ENCODER_PROP_TRELLIS:
+      status =
+          gst_vaapi_encoder_set_trellis (encoder, g_value_get_boolean (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  if (status)
+    GST_WARNING_OBJECT (encoder, "Failed to set the property:%s, error is %d",
+        g_param_spec_get_name (pspec), status);
+}
+
+__attribute__ ((unused))
+     static void
+         _gst_vaapi_encoder_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
+
+  switch (prop_id) {
+    case ENCODER_PROP_DISPLAY:
+      g_value_set_object (value, encoder->display);
+      break;
+    case ENCODER_PROP_BITRATE:
+      g_value_set_uint (value, encoder->bitrate);
+      break;
+    case ENCODER_PROP_TARGET_PERCENTAGE:
+      g_value_set_uint (value, encoder->target_percentage);
+      break;
+    case ENCODER_PROP_KEYFRAME_PERIOD:
+      g_value_set_uint (value, encoder->keyframe_period);
+      break;
+    case ENCODER_PROP_QUALITY_LEVEL:
+      g_value_set_uint (value, GST_VAAPI_ENCODER_QUALITY_LEVEL (encoder));
+      break;
+    case ENCODER_PROP_DEFAULT_ROI_VALUE:
+      g_value_set_int (value, encoder->default_roi_value);
+      break;
+    case ENCODER_PROP_TRELLIS:
+      g_value_set_boolean (value, encoder->trellis);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_vaapi_encoder_init (GstVaapiEncoder * encoder)
@@ -1671,10 +1780,92 @@ gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
    *
    * #GstVaapiDisplay to be used.
    */
-  g_object_class_install_property (object_class, ENCODER_PROP_DISPLAY,
+  properties[ENCODER_PROP_DISPLAY] =
       g_param_spec_object ("display", "Gst VA-API Display",
-          "The VA-API display object to use", GST_TYPE_VAAPI_DISPLAY,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME));
+      "The VA-API display object to use", GST_TYPE_VAAPI_DISPLAY,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_NAME);
+
+  /**
+   * GstVaapiEncoder:bitrate:
+   *
+   * The desired bitrate, expressed in kbps.
+   * This is available when rate-control is CBR or VBR.
+   *
+   * CBR: This applies equally to minimum, maximum and target bitrate in the driver.
+   * VBR: This applies to maximum bitrate in the driver.
+   *      Minimum bitrate will be calculated like the following in the driver.
+   *      if (target percentage < 50) minimum bitrate = 0
+   *      else minimum bitrate = maximum bitrate * (2 * target percentage -100) / 100
+   *      Target bitrate will be calculated like the following in the driver.
+   *      target bitrate = maximum bitrate * target percentage / 100
+   */
+  properties[ENCODER_PROP_BITRATE] =
+      g_param_spec_uint ("bitrate",
+      "Bitrate (kbps)",
+      "The desired bitrate expressed in kbps (0: auto-calculate)",
+      0, 2000 * 1024, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoder:target-percentage:
+   *
+   * The desired target percentage of bitrate for variable rate controls.
+   */
+  properties[ENCODER_PROP_TARGET_PERCENTAGE] =
+      g_param_spec_uint ("target-percentage",
+      "Target Percentage",
+      "The desired target percentage of bitrate for variable rate "
+      "controls.", 1, 100, 70, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoder:keyframe-period:
+   *
+   * The maximal distance between two keyframes.
+   */
+  properties[ENCODER_PROP_KEYFRAME_PERIOD] =
+      g_param_spec_uint ("keyframe-period",
+      "Keyframe Period",
+      "Maximal distance between two keyframes (0: auto-calculate)", 0,
+      G_MAXUINT32, 30, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoder:quality-level:
+   *
+   * The Encoding quality level.
+   */
+  properties[ENCODER_PROP_QUALITY_LEVEL] =
+      g_param_spec_uint ("quality-level",
+      "Quality Level", "Encoding Quality Level "
+      "(lower value means higher-quality/slow-encode, "
+      " higher value means lower-quality/fast-encode)",
+      1, 7, 4, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVapiEncoder:roi-default-delta-qp
+   *
+   * Default delta-qp to apply to each Region of Interest
+   */
+  properties[ENCODER_PROP_DEFAULT_ROI_VALUE] =
+      g_param_spec_int ("default-roi-delta-qp", "Default ROI delta QP",
+      "The default delta-qp to apply to each Region of Interest"
+      "(lower value means higher-quality, "
+      "higher value means lower-quality)",
+      -10, 10, -10, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoder: trellis:
+   *
+   * The trellis quantization method the encoder can use.
+   * Trellis is an improved quantization algorithm.
+   *
+   */
+  properties[ENCODER_PROP_TRELLIS] =
+      g_param_spec_boolean ("trellis",
+      "Trellis Quantization",
+      "The Trellis Quantization Method of Encoder",
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, ENCODER_N_PROPERTIES,
+      properties);
 }
 
 static GstVaapiContext *
