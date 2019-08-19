@@ -375,7 +375,6 @@ gst_vpx_dec_default_send_tags (GstVPXDec * dec)
       gst_event_new_tag (list));
 }
 
-#ifdef HAVE_VPX_1_4
 struct Frame
 {
   GstMapInfo info;
@@ -509,7 +508,6 @@ gst_vpx_dec_release_buffer_cb (gpointer priv, vpx_codec_frame_buffer_t * fb)
 
   return 0;
 }
-#endif
 
 static void
 gst_vpx_dec_image_to_buffer (GstVPXDec * dec, const vpx_image_t * img,
@@ -633,10 +631,8 @@ gst_vpx_dec_open_codec (GstVPXDec * dec, GstVideoCodecFrame * frame)
           gst_vpx_error_name (status));
     }
   }
-#ifdef HAVE_VPX_1_4
   vpx_codec_set_frame_buffer_functions (&dec->decoder,
       gst_vpx_dec_get_buffer_cb, gst_vpx_dec_release_buffer_cb, dec);
-#endif
 
   dec->decoder_inited = TRUE;
 
@@ -717,13 +713,10 @@ gst_vpx_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       gst_video_decoder_drop_frame (decoder, frame);
     } else {
       gst_vpx_dec_handle_resolution_change (dec, img, fmt);
-#ifdef HAVE_VPX_1_4
       if (img->fb_priv && dec->have_video_meta) {
         frame->output_buffer = gst_vpx_dec_prepare_image (dec, img);
         ret = gst_video_decoder_finish_frame (decoder, frame);
-      } else
-#endif
-      {
+      } else {
         ret = gst_video_decoder_allocate_output_frame (decoder, frame);
 
         if (ret == GST_FLOW_OK) {

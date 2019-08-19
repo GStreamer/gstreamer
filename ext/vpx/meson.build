@@ -16,7 +16,7 @@ vpx_features = [
   [ 'vpx/vp8dx.h', 'vpx_codec_vp9_dx_algo', '-DHAVE_VP9_DECODER', 'VP9 decoder' ],
 ]
 
-vpx_dep = dependency('vpx', version : '>=1.3.0', required : get_option('vpx'))
+vpx_dep = dependency('vpx', version : '>=1.5.0', required : get_option('vpx'))
 
 if vpx_dep.found()
   vpx_args = []
@@ -42,11 +42,6 @@ if vpx_dep.found()
 
   if vpx_args.length() == 0
     message('WARNING: libvpx was built without any encoder or decoder features!')
-  endif
-
-  if vpx_dep.version().version_compare('>= 1.4.0')
-    message('Found vpx >= 1.4.0')
-    vpx_args += '-DHAVE_VPX_1_4'
   endif
 
   if vpx_dep.version().version_compare('>= 1.8.0')
