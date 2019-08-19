@@ -1029,10 +1029,13 @@ not been tested and explicitely activated if you set use --wanted-tests ALL""")
             if self._is_test_wanted(test) and test.media_descriptor is not None:
                 protocol = test.media_descriptor.get_protocol()
                 uri = test.media_descriptor.get_uri()
-
-                if protocol in [Protocols.HTTP, Protocols.HLS, Protocols.DASH] and \
-                        ("127.0.0.1:%s" % (
-                            self.options.http_server_port) in uri or "127.0.0.1:8079" in uri):
+                uri_requires_http_server = False
+                if uri:
+                    expanded_uri = uri % {
+                        'http-server-port': self.options.http_server_port}
+                    uri_requires_http_server = expanded_uri.find(
+                        "127.0.0.1:%s" % self.options.http_server_port) != -1
+                if protocol in [Protocols.HTTP, Protocols.HLS, Protocols.DASH] or uri_requires_http_server:
                     return True
         return False
 
