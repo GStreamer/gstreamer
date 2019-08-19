@@ -1170,7 +1170,7 @@ _save_subproject (GESXmlFormatter * self, GString * str, GESProject * project,
   data.ml = g_main_loop_new (context, TRUE);
   g_signal_connect (subproject, "loaded", (GCallback) project_loaded_cb, &data);
   g_signal_connect (subproject, "error-loading-asset",
-      (GCallback) project_loaded_cb, &data);
+      (GCallback) error_loading_asset_cb, &data);
   g_main_loop_run (data.ml);
 
   g_signal_handlers_disconnect_by_func (subproject, project_loaded_cb, &data);
