@@ -161,6 +161,17 @@ static char *gst_info_printf_pointer_extension_func (const char *format,
 #include <tlhelp32.h>
 #endif /* HAVE_DBGHELP */
 
+#ifdef G_OS_WIN32
+/* We take a lock in order to
+ * 1) keep colors and content together for a single line
+ * 2) serialise gst_print*() and gst_printerr*() with each other and the debug
+ *    log to keep the debug log colouring from interfering with those and
+ *    to prevent broken output on the windows terminal.
+ * Maybe there is a better way but for now this will do the right
+ * thing. */
+G_LOCK_DEFINE_STATIC (win_print_mutex);
+#endif
+
 extern gboolean gst_is_initialized (void);
 
 /* we want these symbols exported even if debug is disabled, to maintain
@@ -1178,11 +1189,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 
   if (color_mode != GST_DEBUG_COLOR_MODE_OFF) {
 #ifdef G_OS_WIN32
-    /* We take a lock to keep colors and content together.
-     * Maybe there is a better way but for now this will do the right
-     * thing. */
-    static GMutex win_print_mutex;
-    g_mutex_lock (&win_print_mutex);
+    G_LOCK (win_print_mutex);
     if (color_mode == GST_DEBUG_COLOR_MODE_UNIX) {
 #endif
       /* colors, non-windows */
@@ -1240,7 +1247,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
       fprintf (log_file, " %s\n", message_str);
       fflush (log_file);
     }
-    g_mutex_unlock (&win_print_mutex);
+    G_UNLOCK (win_print_mutex);
 #endif
   } else {
     /* no color, all platforms */
@@ -2539,7 +2546,15 @@ gst_print (const gchar * format, ...)
   str = gst_info_strdup_vprintf (format, args);
   va_end (args);
 
+#ifdef G_OS_WIN32
+  G_LOCK (win_print_mutex);
+#endif
+
   g_print ("%s", str);
+
+#ifdef G_OS_WIN32
+  G_UNLOCK (win_print_mutex);
+#endif
   g_free (str);
 }
 
@@ -2574,7 +2589,15 @@ gst_println (const gchar * format, ...)
   str = gst_info_strdup_vprintf (format, args);
   va_end (args);
 
+#ifdef G_OS_WIN32
+  G_LOCK (win_print_mutex);
+#endif
+
   g_print ("%s\n", str);
+
+#ifdef G_OS_WIN32
+  G_UNLOCK (win_print_mutex);
+#endif
   g_free (str);
 }
 
@@ -2609,7 +2632,15 @@ gst_printerr (const gchar * format, ...)
   str = gst_info_strdup_vprintf (format, args);
   va_end (args);
 
+#ifdef G_OS_WIN32
+  G_LOCK (win_print_mutex);
+#endif
+
   g_printerr ("%s", str);
+
+#ifdef G_OS_WIN32
+  G_UNLOCK (win_print_mutex);
+#endif
   g_free (str);
 }
 
@@ -2644,7 +2675,15 @@ gst_printerrln (const gchar * format, ...)
   str = gst_info_strdup_vprintf (format, args);
   va_end (args);
 
+#ifdef G_OS_WIN32
+  G_LOCK (win_print_mutex);
+#endif
+
   g_printerr ("%s\n", str);
+
+#ifdef G_OS_WIN32
+  G_UNLOCK (win_print_mutex);
+#endif
   g_free (str);
 }
 
@@ -2931,8 +2970,17 @@ gst_debug_print_stack_trace (void)
 {
   gchar *trace = gst_debug_get_stack_trace (GST_STACK_TRACE_SHOW_FULL);
 
-  if (trace)
+  if (trace) {
+#ifdef G_OS_WIN32
+    G_LOCK (win_print_mutex);
+#endif
+
     g_print ("%s\n", trace);
+
+#ifdef G_OS_WIN32
+    G_UNLOCK (win_print_mutex);
+#endif
+  }
 
   g_free (trace);
 }
