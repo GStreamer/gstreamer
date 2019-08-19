@@ -68,7 +68,7 @@ static gboolean waiting_eos = FALSE;
 static gchar **exclude_args = NULL;
 
 /* convenience macro so we don't have to litter the code with if(!quiet) */
-#define PRINT if(!quiet)g_print
+#define PRINT if(!quiet)gst_print
 
 #ifdef G_OS_UNIX
 static void
@@ -322,9 +322,9 @@ print_error_message (GstMessage * msg)
   name = gst_object_get_path_string (msg->src);
   gst_message_parse_error (msg, &err, &debug);
 
-  g_printerr (_("ERROR: from element %s: %s\n"), name, err->message);
+  gst_printerr (_("ERROR: from element %s: %s\n"), name, err->message);
   if (debug != NULL)
-    g_printerr (_("Additional debug info:\n%s\n"), debug);
+    gst_printerr (_("Additional debug info:\n%s\n"), debug);
 
   g_clear_error (&err);
   g_free (debug);
@@ -1044,9 +1044,9 @@ main (int argc, char *argv[])
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     if (err)
-      g_printerr ("Error initializing: %s\n", GST_STR_NULL (err->message));
+      gst_printerr ("Error initializing: %s\n", GST_STR_NULL (err->message));
     else
-      g_printerr ("Error initializing: Unknown error!\n");
+      gst_printerr ("Error initializing: Unknown error!\n");
     g_clear_error (&err);
     g_option_context_free (ctx);
     exit (1);
@@ -1074,15 +1074,15 @@ main (int argc, char *argv[])
 
   if (!pipeline) {
     if (error) {
-      g_printerr (_("ERROR: pipeline could not be constructed: %s.\n"),
+      gst_printerr (_("ERROR: pipeline could not be constructed: %s.\n"),
           GST_STR_NULL (error->message));
       g_clear_error (&error);
     } else {
-      g_printerr (_("ERROR: pipeline could not be constructed.\n"));
+      gst_printerr (_("ERROR: pipeline could not be constructed.\n"));
     }
     return 1;
   } else if (error) {
-    g_printerr (_("WARNING: erroneous pipeline: %s\n"),
+    gst_printerr (_("WARNING: erroneous pipeline: %s\n"),
         GST_STR_NULL (error->message));
     g_clear_error (&error);
     return 1;
@@ -1098,7 +1098,7 @@ main (int argc, char *argv[])
       GstElement *real_pipeline = gst_element_factory_make ("pipeline", NULL);
 
       if (real_pipeline == NULL) {
-        g_printerr (_("ERROR: the 'pipeline' element wasn't found.\n"));
+        gst_printerr (_("ERROR: the 'pipeline' element wasn't found.\n"));
         return 1;
       }
       gst_bin_add (GST_BIN (real_pipeline), pipeline);
@@ -1134,7 +1134,7 @@ main (int argc, char *argv[])
 
     switch (ret) {
       case GST_STATE_CHANGE_FAILURE:
-        g_printerr (_("ERROR: Pipeline doesn't want to pause.\n"));
+        gst_printerr (_("ERROR: Pipeline doesn't want to pause.\n"));
         res = -1;
         event_loop (pipeline, FALSE, FALSE, GST_STATE_VOID_PENDING);
         goto end;
@@ -1146,7 +1146,7 @@ main (int argc, char *argv[])
         PRINT (_("Pipeline is PREROLLING ...\n"));
         caught_error = event_loop (pipeline, TRUE, TRUE, GST_STATE_PAUSED);
         if (caught_error) {
-          g_printerr (_("ERROR: pipeline doesn't want to preroll.\n"));
+          gst_printerr (_("ERROR: pipeline doesn't want to preroll.\n"));
           res = caught_error;
           goto end;
         }
@@ -1160,7 +1160,7 @@ main (int argc, char *argv[])
     caught_error = event_loop (pipeline, FALSE, TRUE, GST_STATE_PLAYING);
 
     if (caught_error) {
-      g_printerr (_("ERROR: pipeline doesn't want to preroll.\n"));
+      gst_printerr (_("ERROR: pipeline doesn't want to preroll.\n"));
       res = caught_error;
     } else {
       GstClockTime tfthen, tfnow;
@@ -1173,7 +1173,7 @@ main (int argc, char *argv[])
         GstMessage *err_msg;
         GstBus *bus;
 
-        g_printerr (_("ERROR: pipeline doesn't want to play.\n"));
+        gst_printerr (_("ERROR: pipeline doesn't want to play.\n"));
         bus = gst_element_get_bus (pipeline);
         if ((err_msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, 0))) {
           print_error_message (err_msg);
