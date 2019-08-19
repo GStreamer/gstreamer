@@ -91,6 +91,10 @@ CUresult CUDAAPI CuMemAllocPitch    (CUdeviceptr * dptr,
                                      unsigned int ElementSizeBytes);
 
 G_GNUC_INTERNAL
+CUresult CUDAAPI CuMemAllocHost     (void **pp,
+                                     unsigned int bytesize);
+
+G_GNUC_INTERNAL
 CUresult CUDAAPI CuMemcpy2D         (const CUDA_MEMCPY2D * pCopy);
 
 G_GNUC_INTERNAL
@@ -98,6 +102,9 @@ CUresult CUDAAPI CuMemcpy2DAsync    (const CUDA_MEMCPY2D *pCopy, CUstream hStrea
 
 G_GNUC_INTERNAL
 CUresult CUDAAPI CuMemFree          (CUdeviceptr dptr);
+
+G_GNUC_INTERNAL
+CUresult CUDAAPI CuMemFreeHost      (void *p);
 
 G_GNUC_INTERNAL
 CUresult CUDAAPI CuStreamCreate     (CUstream *phStream,

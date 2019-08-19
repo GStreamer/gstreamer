@@ -69,10 +69,14 @@ typedef struct _GstNvCodecCudaVTable
     CUresult (CUDAAPI * CuMemAlloc) (CUdeviceptr * dptr, unsigned int bytesize);
     CUresult (CUDAAPI * CuMemAllocPitch) (CUdeviceptr * dptr, size_t * pPitch,
       size_t WidthInBytes, size_t Height, unsigned int ElementSizeBytes);
+    CUresult (CUDAAPI * CuMemAllocHost) (void **pp, unsigned int bytesize);
     CUresult (CUDAAPI * CuMemcpy2D) (const CUDA_MEMCPY2D * pCopy);
     CUresult (CUDAAPI * CuMemcpy2DAsync) (const CUDA_MEMCPY2D * pCopy,
       CUstream hStream);
+
     CUresult (CUDAAPI * CuMemFree) (CUdeviceptr dptr);
+    CUresult (CUDAAPI * CuMemFreeHost) (void *p);
+
     CUresult (CUDAAPI * CuStreamCreate) (CUstream * phStream,
       unsigned int Flags);
     CUresult (CUDAAPI * CuStreamDestroy) (CUstream hStream);
@@ -136,9 +140,12 @@ gst_cuda_load_library (void)
 
   LOAD_SYMBOL (cuMemAlloc, CuMemAlloc);
   LOAD_SYMBOL (cuMemAllocPitch, CuMemAllocPitch);
+  LOAD_SYMBOL (cuMemAllocHost, CuMemAllocHost);
   LOAD_SYMBOL (cuMemcpy2D, CuMemcpy2D);
   LOAD_SYMBOL (cuMemcpy2DAsync, CuMemcpy2DAsync);
+
   LOAD_SYMBOL (cuMemFree, CuMemFree);
+  LOAD_SYMBOL (cuMemFreeHost, CuMemFreeHost);
 
   LOAD_SYMBOL (cuStreamCreate, CuStreamCreate);
   LOAD_SYMBOL (cuStreamDestroy, CuStreamDestroy);
@@ -286,6 +293,14 @@ CuMemAllocPitch (CUdeviceptr * dptr, size_t * pPitch, size_t WidthInBytes,
 }
 
 CUresult CUDAAPI
+CuMemAllocHost (void **pp, unsigned int bytesize)
+{
+  g_assert (gst_cuda_vtable.CuMemAllocHost != NULL);
+
+  return gst_cuda_vtable.CuMemAllocHost (pp, bytesize);
+}
+
+CUresult CUDAAPI
 CuMemcpy2D (const CUDA_MEMCPY2D * pCopy)
 {
   g_assert (gst_cuda_vtable.CuMemcpy2D != NULL);
@@ -307,6 +322,14 @@ CuMemFree (CUdeviceptr dptr)
   g_assert (gst_cuda_vtable.CuMemFree != NULL);
 
   return gst_cuda_vtable.CuMemFree (dptr);
+}
+
+CUresult CUDAAPI
+CuMemFreeHost (void *p)
+{
+  g_assert (gst_cuda_vtable.CuMemFreeHost != NULL);
+
+  return gst_cuda_vtable.CuMemFreeHost (p);
 }
 
 CUresult CUDAAPI

@@ -114,6 +114,7 @@ typedef enum
 
 #define cuMemAlloc cuMemAlloc_v2
 #define cuMemAllocPitch cuMemAllocPitch_v2
+#define cuMemAllocHost  cuMemAllocHost_v2
 #define cuMemcpy2D cuMemcpy2D_v2
 #define cuMemcpy2DAsync cuMemcpy2DAsync_v2
 #define cuMemFree cuMemFree_v2
