@@ -735,7 +735,10 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       g_usleep (1000);
     };
 
-    if (status != MFX_ERR_NONE && status != MFX_ERR_MORE_DATA
+    if (status == MFX_WRN_INCOMPATIBLE_VIDEO_PARAM)
+      GST_WARNING_OBJECT (thiz, "VPP returned: %s",
+          msdk_status_to_string (status));
+    else if (status != MFX_ERR_NONE && status != MFX_ERR_MORE_DATA
         && status != MFX_ERR_MORE_SURFACE)
       goto vpp_error;
 
