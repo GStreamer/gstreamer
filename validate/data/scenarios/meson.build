@@ -21,6 +21,7 @@ _scenarios = ['simple_seeks.scenario',
               'switch_subtitle_track_while_paused.scenario',
               'disable_subtitle_track_while_paused.scenario',
               'play_15s.scenario',
+              'play_5s.scenario',
               'change_state_intensive.scenario',
               'switch_audio_track.scenario',
               'force_rtsp2.scenario',]
