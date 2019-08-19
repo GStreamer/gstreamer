@@ -44,11 +44,13 @@ if vpx_dep.found()
     message('WARNING: libvpx was built without any encoder or decoder features!')
   endif
 
-  if dependency('vpx', version : '>=1.4.0', required : false).found()
+  if vpx_dep.version().version_compare('>= 1.4.0')
+    message('Found vpx >= 1.4.0')
     vpx_args += '-DHAVE_VPX_1_4'
   endif
 
-  if dependency('vpx', version : '>=1.8.0', required : false).found()
+  if vpx_dep.version().version_compare('>= 1.8.0')
+    message('Found vpx >= 1.8.0')
     vpx_args += '-DHAVE_VPX_1_8'
   endif
 
