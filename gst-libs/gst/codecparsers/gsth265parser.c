@@ -2106,8 +2106,9 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
   }
 
   if (pps->pps_range_extension_flag) {
-    READ_UE (&nr,
-        pps->pps_extension_params.log2_max_transform_skip_block_size_minus2);
+    if (pps->transform_skip_enabled_flag)
+      READ_UE (&nr,
+          pps->pps_extension_params.log2_max_transform_skip_block_size_minus2);
     READ_UINT8 (&nr,
         pps->pps_extension_params.cross_component_prediction_enabled_flag, 1);
     READ_UINT8 (&nr,
