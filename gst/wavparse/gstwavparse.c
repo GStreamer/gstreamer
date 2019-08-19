@@ -2494,10 +2494,10 @@ gst_wavparse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         if (G_UNLIKELY (wav->first)) {
           wav->first = FALSE;
           gst_wavparse_add_src_pad (wav, NULL);
-        } else {
-          /* stream leftover data in current segment */
-          gst_wavparse_flush_data (wav);
         }
+
+        /* stream leftover data in current segment */
+        gst_wavparse_flush_data (wav);
       }
 
       /* fall-through */
