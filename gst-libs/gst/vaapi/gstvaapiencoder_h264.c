@@ -3515,8 +3515,64 @@ set_default_ids:
   }
 }
 
+/**
+ * @ENCODER_H264_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
+ * @ENCODER_H264_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
+ * @ENCODER_H264_PROP_MAX_BFRAMES: Number of B-frames between I
+ *   and P (uint).
+ * @ENCODER_H264_PROP_INIT_QP: Initial quantizer value (uint).
+ * @ENCODER_H264_PROP_MIN_QP: Minimal quantizer value (uint).
+ * @ENCODER_H264_PROP_NUM_SLICES: Number of slices per frame (uint).
+ * @ENCODER_H264_PROP_CABAC: Enable CABAC entropy coding mode (bool).
+ * @ENCODER_H264_PROP_DCT8X8: Enable adaptive use of 8x8
+ *   transforms in I-frames (bool).
+ * @ENCODER_H264_PROP_CPB_LENGTH: Length of the CPB buffer
+ *   in milliseconds (uint).
+ * @ENCODER_H264_PROP_NUM_VIEWS: Number of views per frame.
+ * @ENCODER_H264_PROP_VIEW_IDS: View IDs
+ * @ENCODER_H264_PROP_AUD: Insert AUD as first NAL per frame.
+ * @ENCODER_H264_PROP_COMPLIANCE_MODE: Relax Compliance restrictions
+ * @ENCODER_H264_PROP_NUM_REF_FRAMES: Maximum number of reference frames.
+ * @ENCODER_H264_PROP_MBBRC: Macroblock level Bitrate Control.
+ * @ENCODER_H264_PROP_QP_IP: Difference of QP between I and P frame.
+ * @ENCODER_H264_PROP_QP_IB: Difference of QP between I and B frame.
+ * @ENCODER_H264_PROP_TEMPORAL_LEVELS: Number of temporal levels
+ * @ENCODER_H264_PROP_PREDICTION_TYPE: Reference picture selection modes
+ * @ENCODER_H264_PROP_MAX_QP: Maximal quantizer value (uint).
+ * @ENCODER_H264_PROP_QUALITY_FACTOR: Factor for ICQ/QVBR bitrate control mode.
+ *
+ * The set of H.264 encoder specific configurable properties.
+ */
+enum
+{
+  ENCODER_H264_PROP_RATECONTROL = 1,
+  ENCODER_H264_PROP_TUNE,
+  ENCODER_H264_PROP_MAX_BFRAMES,
+  ENCODER_H264_PROP_INIT_QP,
+  ENCODER_H264_PROP_MIN_QP,
+  ENCODER_H264_PROP_NUM_SLICES,
+  ENCODER_H264_PROP_CABAC,
+  ENCODER_H264_PROP_DCT8X8,
+  ENCODER_H264_PROP_CPB_LENGTH,
+  ENCODER_H264_PROP_NUM_VIEWS,
+  ENCODER_H264_PROP_VIEW_IDS,
+  ENCODER_H264_PROP_AUD,
+  ENCODER_H264_PROP_COMPLIANCE_MODE,
+  ENCODER_H264_PROP_NUM_REF_FRAMES,
+  ENCODER_H264_PROP_MBBRC,
+  ENCODER_H264_PROP_QP_IP,
+  ENCODER_H264_PROP_QP_IB,
+  ENCODER_H264_PROP_TEMPORAL_LEVELS,
+  ENCODER_H264_PROP_PREDICTION_TYPE,
+  ENCODER_H264_PROP_MAX_QP,
+  ENCODER_H264_PROP_QUALITY_FACTOR,
+  ENCODER_H264_N_PROPERTIES
+};
+
+static GParamSpec *properties[ENCODER_H264_N_PROPERTIES];
+
 static GstVaapiEncoderStatus
-gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
+_gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
 {
   GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
@@ -3586,6 +3642,166 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
+static void
+gst_vaapi_encoder_h264_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (object);
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER (object);
+
+  if (base_encoder->num_codedbuf_queued > 0) {
+    GST_ERROR_OBJECT (object,
+        "failed to set any property after encoding started");
+    return;
+  }
+
+  switch (prop_id) {
+    case ENCODER_H264_PROP_RATECONTROL:
+      gst_vaapi_encoder_set_rate_control (base_encoder,
+          g_value_get_enum (value));
+      break;
+    case ENCODER_H264_PROP_TUNE:
+      gst_vaapi_encoder_set_tuning (base_encoder, g_value_get_enum (value));
+      break;
+    case ENCODER_H264_PROP_MAX_BFRAMES:
+      encoder->num_bframes = g_value_get_uint (value);
+      break;
+    case ENCODER_H264_PROP_INIT_QP:
+      encoder->init_qp = g_value_get_uint (value);
+      break;
+    case ENCODER_H264_PROP_MIN_QP:
+      encoder->min_qp = g_value_get_uint (value);
+      break;
+    case ENCODER_H264_PROP_QP_IP:
+      encoder->qp_ip = g_value_get_int (value);
+      break;
+    case ENCODER_H264_PROP_QP_IB:
+      encoder->qp_ib = g_value_get_int (value);
+      break;
+    case ENCODER_H264_PROP_NUM_SLICES:
+      encoder->num_slices = g_value_get_uint (value);
+      break;
+    case ENCODER_H264_PROP_CABAC:
+      encoder->use_cabac = g_value_get_boolean (value);
+      break;
+    case ENCODER_H264_PROP_DCT8X8:
+      encoder->use_dct8x8 = g_value_get_boolean (value);
+      break;
+    case ENCODER_H264_PROP_CPB_LENGTH:
+      encoder->cpb_length = g_value_get_uint (value);
+      break;
+    case ENCODER_H264_PROP_NUM_VIEWS:
+      encoder->num_views = g_value_get_uint (value);
+      break;
+    case ENCODER_H264_PROP_VIEW_IDS:
+      set_view_ids (encoder, value);
+      break;
+    case ENCODER_H264_PROP_AUD:
+      encoder->use_aud = g_value_get_boolean (value);
+      break;
+    case ENCODER_H264_PROP_COMPLIANCE_MODE:
+      encoder->compliance_mode = g_value_get_enum (value);
+      break;
+    case ENCODER_H264_PROP_NUM_REF_FRAMES:
+      encoder->num_ref_frames = g_value_get_uint (value);
+      break;
+    case ENCODER_H264_PROP_MBBRC:
+      encoder->mbbrc = g_value_get_enum (value);
+      break;
+    case ENCODER_H264_PROP_TEMPORAL_LEVELS:
+      encoder->temporal_levels = g_value_get_uint (value);
+      break;
+    case ENCODER_H264_PROP_PREDICTION_TYPE:
+      encoder->prediction_type = g_value_get_enum (value);
+      break;
+    case ENCODER_H264_PROP_MAX_QP:
+      encoder->max_qp = g_value_get_uint (value);
+      break;
+    case ENCODER_H264_PROP_QUALITY_FACTOR:
+      encoder->quality_factor = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static void
+gst_vaapi_encoder_h264_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (object);
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER (object);
+
+  switch (prop_id) {
+    case ENCODER_H264_PROP_RATECONTROL:
+      g_value_set_enum (value, base_encoder->rate_control);
+      break;
+    case ENCODER_H264_PROP_TUNE:
+      g_value_set_enum (value, base_encoder->tune);
+      break;
+    case ENCODER_H264_PROP_MAX_BFRAMES:
+      g_value_set_uint (value, encoder->num_bframes);
+      break;
+    case ENCODER_H264_PROP_INIT_QP:
+      g_value_set_uint (value, encoder->init_qp);
+      break;
+    case ENCODER_H264_PROP_MIN_QP:
+      g_value_set_uint (value, encoder->min_qp);
+      break;
+    case ENCODER_H264_PROP_QP_IP:
+      g_value_set_int (value, encoder->qp_ip);
+      break;
+    case ENCODER_H264_PROP_QP_IB:
+      g_value_set_int (value, encoder->qp_ib);
+      break;
+    case ENCODER_H264_PROP_NUM_SLICES:
+      g_value_set_uint (value, encoder->num_slices);
+      break;
+    case ENCODER_H264_PROP_CABAC:
+      g_value_set_boolean (value, encoder->use_cabac);
+      break;
+    case ENCODER_H264_PROP_DCT8X8:
+      g_value_set_boolean (value, encoder->use_dct8x8);
+      break;
+    case ENCODER_H264_PROP_CPB_LENGTH:
+      g_value_set_uint (value, encoder->cpb_length);
+      break;
+    case ENCODER_H264_PROP_NUM_VIEWS:
+      g_value_set_uint (value, encoder->num_views);
+      break;
+    case ENCODER_H264_PROP_VIEW_IDS:
+      // TODO:
+      //get_view_ids (encoder, value);
+      break;
+    case ENCODER_H264_PROP_AUD:
+      g_value_set_boolean (value, encoder->use_aud);
+      break;
+    case ENCODER_H264_PROP_COMPLIANCE_MODE:
+      g_value_set_enum (value, encoder->compliance_mode);
+      break;
+    case ENCODER_H264_PROP_NUM_REF_FRAMES:
+      g_value_set_uint (value, encoder->num_ref_frames);
+      break;
+    case ENCODER_H264_PROP_MBBRC:
+      g_value_set_enum (value, encoder->mbbrc);
+      break;
+    case ENCODER_H264_PROP_TEMPORAL_LEVELS:
+      g_value_set_uint (value, encoder->temporal_levels);
+      break;
+    case ENCODER_H264_PROP_PREDICTION_TYPE:
+      g_value_set_enum (value, encoder->prediction_type);
+      break;
+    case ENCODER_H264_PROP_MAX_QP:
+      g_value_set_uint (value, encoder->max_qp);
+      break;
+    case ENCODER_H264_PROP_QUALITY_FACTOR:
+      g_value_set_uint (value, encoder->quality_factor);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
 GST_VAAPI_ENCODER_DEFINE_CLASS_DATA (H264);
 
 static void
@@ -3601,11 +3817,264 @@ gst_vaapi_encoder_h264_class_init (GstVaapiEncoderH264Class * klass)
   encoder_class->reordering = gst_vaapi_encoder_h264_reordering;
   encoder_class->encode = gst_vaapi_encoder_h264_encode;
   encoder_class->flush = gst_vaapi_encoder_h264_flush;
-  encoder_class->set_property = gst_vaapi_encoder_h264_set_property;
+  encoder_class->set_property = _gst_vaapi_encoder_h264_set_property;
   encoder_class->get_codec_data = gst_vaapi_encoder_h264_get_codec_data;
   encoder_class->get_pending_reordered =
       gst_vaapi_encoder_h264_get_pending_reordered;
+
+  object_class->set_property = gst_vaapi_encoder_h264_set_property;
+  object_class->get_property = gst_vaapi_encoder_h264_get_property;
   object_class->finalize = gst_vaapi_encoder_h264_finalize;
+
+  /**
+   * GstVaapiEncoderH264:rate-control:
+   *
+   * The desired rate control mode, expressed as a #GstVaapiRateControl.
+   */
+  properties[ENCODER_H264_PROP_RATECONTROL] =
+      g_param_spec_enum ("rate-control",
+      "Rate Control", "Rate control mode",
+      g_class_data.rate_control_get_type (),
+      g_class_data.default_rate_control,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:tune:
+   *
+   * The desired encoder tuning option.
+   */
+  properties[ENCODER_H264_PROP_TUNE] =
+      g_param_spec_enum ("tune",
+      "Encoder Tuning",
+      "Encoder tuning option",
+      g_class_data.encoder_tune_get_type (),
+      g_class_data.default_encoder_tune,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:max-bframes:
+   *
+   * The number of B-frames between I and P.
+   */
+  properties[ENCODER_H264_PROP_MAX_BFRAMES] =
+      g_param_spec_uint ("max-bframes",
+      "Max B-Frames", "Number of B-frames between I and P", 0, 10, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:refs:
+   *
+   * The number of reference frames.
+   * If B frame is encoded, it will add 1 reference frame more.
+   */
+  properties[ENCODER_H264_PROP_NUM_REF_FRAMES] =
+      g_param_spec_uint ("refs", "Number of Reference Frames",
+      "Number of reference frames", 1, 8, 1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:init-qp:
+   *
+   * The initial quantizer value.
+   */
+  properties[ENCODER_H264_PROP_INIT_QP] =
+      g_param_spec_uint ("init-qp",
+      "Initial QP", "Initial quantizer value", 0, 51, 26,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:min-qp:
+   *
+   * The minimum quantizer value.
+   */
+  properties[ENCODER_H264_PROP_MIN_QP] =
+      g_param_spec_uint ("min-qp",
+      "Minimum QP", "Minimum quantizer value", 0, 51, 1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:max-qp:
+   *
+   * The maximum quantizer value.
+   *
+   * Since: 1.18
+   */
+  properties[ENCODER_H264_PROP_MAX_QP] =
+      g_param_spec_uint ("max-qp",
+      "Maximum QP", "Maximum quantizer value", 0, 51, 51,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:qp-ip:
+   *
+   * The difference of QP between I and P Frame.
+   * This is available only on CQP mode.
+   */
+  properties[ENCODER_H264_PROP_QP_IP] =
+      g_param_spec_int ("qp-ip",
+      "Difference of QP between I and P frame",
+      "Difference of QP between I and P frame (available only on CQP)",
+      -51, 51, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:qp-ib:
+   *
+   * The difference of QP between I and B Frame.
+   * This is available only on CQP mode.
+   */
+  properties[ENCODER_H264_PROP_QP_IB] =
+      g_param_spec_int ("qp-ib",
+      "Difference of QP between I and B frame",
+      "Difference of QP between I and B frame (available only on CQP)",
+      -51, 51, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:num-slices:
+   *
+   * The number of slices per frame.
+   */
+  properties[ENCODER_H264_PROP_NUM_SLICES] =
+      g_param_spec_uint ("num-slices",
+      "Number of Slices",
+      "Number of slices per frame",
+      1, 200, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:cabac:
+   *
+   * Enable CABAC entropy coding mode for improved compression ratio,
+   * at the expense that the minimum target profile is Main. Default
+   * is CAVLC entropy coding mode.
+   */
+  properties[ENCODER_H264_PROP_CABAC] =
+      g_param_spec_boolean ("cabac",
+      "Enable CABAC",
+      "Enable CABAC entropy coding mode",
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:dct8x8:
+   *
+   * Enable adaptive use of 8x8 transforms in I-frames. This improves
+   * the compression ratio by the minimum target profile is High.
+   * Default is to use 4x4 DCT only.
+   */
+  properties[ENCODER_H264_PROP_DCT8X8] =
+      g_param_spec_boolean ("dct8x8",
+      "Enable 8x8 DCT",
+      "Enable adaptive use of 8x8 transforms in I-frames",
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:mbbrc:
+   *
+   * Macroblock level bitrate control.
+   * This is not compatible with Constant QP rate control.
+   */
+  properties[ENCODER_H264_PROP_MBBRC] =
+      g_param_spec_enum ("mbbrc",
+      "Macroblock level Bitrate Control",
+      "Macroblock level Bitrate Control",
+      GST_VAAPI_TYPE_ENCODER_MBBRC, GST_VAAPI_ENCODER_MBBRC_AUTO,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:temporal-levels:
+   *
+   * Number of temporal levels in the encoded stream.
+   */
+  properties[ENCODER_H264_PROP_TEMPORAL_LEVELS] =
+      g_param_spec_uint ("temporal-levels",
+      "temporal levels",
+      "Number of temporal levels in the encoded stream ",
+      MIN_TEMPORAL_LEVELS, MAX_TEMPORAL_LEVELS, MIN_TEMPORAL_LEVELS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:prediction-type:
+   *
+   * Select the referece picture selection modes
+   */
+  properties[ENCODER_H264_PROP_PREDICTION_TYPE] =
+      g_param_spec_enum ("prediction-type",
+      "RefPic Selection",
+      "Reference Picture Selection Modes",
+      gst_vaapi_encoder_h264_prediction_type (),
+      GST_VAAPI_ENCODER_H264_PREDICTION_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:cpb-length:
+   *
+   * The size of the CPB buffer in milliseconds.
+   */
+  properties[ENCODER_H264_PROP_CPB_LENGTH] =
+      g_param_spec_uint ("cpb-length",
+      "CPB Length", "Length of the CPB buffer in milliseconds",
+      1, 10000, DEFAULT_CPB_LENGTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:num-views:
+   *
+   * The number of views for MVC encoding .
+   */
+  properties[ENCODER_H264_PROP_NUM_VIEWS] =
+      g_param_spec_uint ("num-views",
+      "Number of Views",
+      "Number of Views for MVC encoding",
+      1, MAX_NUM_VIEWS, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:view-ids:
+   *
+   * The view ids for MVC encoding .
+   */
+  properties[ENCODER_H264_PROP_VIEW_IDS] =
+      gst_param_spec_array ("view-ids",
+      "View IDs", "Set of View Ids used for MVC encoding",
+      g_param_spec_uint ("view-id-value", "View id value",
+          "view id values used for mvc encoding", 0, MAX_VIEW_ID, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:aud:
+   *
+   * Use AU (Access Unit) delimeter.
+   */
+  properties[ENCODER_H264_PROP_AUD] =
+      g_param_spec_boolean ("aud", "AU delimiter",
+      "Use AU (Access Unit) delimeter", FALSE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH264:Compliance Mode:
+   *
+   * Encode Tuning(Tweaking) with different compliance modes .
+   *
+   *
+   */
+  properties[ENCODER_H264_PROP_COMPLIANCE_MODE] =
+      g_param_spec_enum ("compliance-mode",
+      "Spec Compliance Mode",
+      "Tune Encode quality/performance by relaxing specification compliance restrictions",
+      gst_vaapi_encoder_h264_compliance_mode_type (),
+      GST_VAAPI_ENCODER_H264_COMPLIANCE_MODE_STRICT, G_PARAM_READWRITE);
+
+  /**
+   * GstVaapiEncoderH264:quality_factor:
+   *
+   * quality factor used under ICQ/QVBR bitrate control mode.
+   */
+  properties[ENCODER_H264_PROP_QUALITY_FACTOR] =
+      g_param_spec_uint ("quality-factor",
+      "Quality factor for ICQ/QVBR",
+      "quality factor for ICQ/QVBR bitrate control mode"
+      "(low value means higher-quality, higher value means lower-quality)",
+      1, 51, 26, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, ENCODER_H264_N_PROPERTIES,
+      properties);
 }
 
 /**
