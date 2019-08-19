@@ -243,11 +243,15 @@ gst_rtmp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
       GST_ERROR_OBJECT (src, "Failed to parse URI %s", uri);
       g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
           "Could not parse RTMP URI");
+#ifndef _MSC_VER
       /* FIXME: we should not be freeing RTMP internals to avoid leaking */
       free (playpath.av_val);
+#endif
       return FALSE;
     }
+#ifndef _MSC_VER
     free (playpath.av_val);
+#endif
     src->uri = g_strdup (uri);
   }
 
