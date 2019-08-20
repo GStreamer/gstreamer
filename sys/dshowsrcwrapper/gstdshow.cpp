@@ -443,10 +443,10 @@ gst_dshow_select_device (const GUID * device_category,
     if (device && g_strcmp0 (device, entry->device) == 0) {
       selected = entry;
       break;
-    } else if (device_name && g_strcmp0 (device_name, entry->device_name) == 0) {
+    } else if (!device && device_name && g_strcmp0 (device_name, entry->device_name) == 0) {
       selected = entry;
       break;
-    } else if (device_index == entry->device_index) {
+    } else if (!device && !deviceName && device_index == entry->device_index) {
       selected = entry;
       break;
     }
