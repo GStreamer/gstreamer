@@ -377,6 +377,7 @@ gst_video_content_light_level_from_string (GstVideoContentLightLevel *
 /**
  * gst_video_content_light_level_to_string:
  * @linfo: a #GstVideoContentLightLevel
+ *
  * Convert @linfo to its string representation.
  *
  * Returns: (transfer full): a string representation of @linfo.

@@ -30,7 +30,7 @@ typedef struct _GstVideoContentLightLevel GstVideoContentLightLevel;
 
 /**
  * GstVideoMasteringDisplayInfo:
- * @Rx_n: the numerator of nunormalized red x coordinate as defined CIE 1931
+ * @Rx_n: the numerator of normalized red x coordinate as defined CIE 1931
  * @Rx_d: the denominator of normalized red x coordinate as defined CIE 1931
  * @Ry_n: the numerator of normalized red y coordinate as defined CIE 1931
  * @Ry_d: the denominator of normalized red y coordinate as defined CIE 1931
@@ -53,8 +53,8 @@ typedef struct _GstVideoContentLightLevel GstVideoContentLightLevel;
  *
  * Mastering display color volume information defined by SMPTE ST 2086
  * (a.k.a static HDR metadata).
- * Each array represent fraction value of red, green, blue, white
- * and min/max luma (the first element of an array is numerator).
+ * Each pair of *_d and *_n represents fraction value of red, green, blue, white
+ * and min/max luma.
  *
  * The decimal representation of each red, green, blue and white value should
  * be in the range of [0, 1].
