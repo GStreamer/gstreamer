@@ -35,7 +35,6 @@
 #include "gstvaapicontext.h"
 #include "gstvaapiimage.h"
 #include "gstvaapiimage_priv.h"
-#include "gstvaapicontext_overlay.h"
 #include "gstvaapibufferproxy_priv.h"
 
 #define DEBUG 1
@@ -78,7 +77,6 @@ gst_vaapi_surface_destroy (GstVaapiSurface * surface)
   GST_DEBUG ("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS (surface_id));
 
   gst_vaapi_surface_destroy_subpictures (surface);
-  gst_vaapi_surface_set_parent_context (surface, NULL);
 
   if (surface_id != VA_INVALID_SURFACE) {
     GST_VAAPI_DISPLAY_LOCK (display);
@@ -620,42 +618,6 @@ gst_vaapi_surface_get_size (GstVaapiSurface * surface,
 }
 
 /**
- * gst_vaapi_surface_set_parent_context:
- * @surface: a #GstVaapiSurface
- * @context: a #GstVaapiContext
- *
- * Sets new parent context, or clears any parent context if @context
- * is %NULL. This function owns an extra reference to the context,
- * which will be released when the surface is destroyed.
- */
-void
-gst_vaapi_surface_set_parent_context (GstVaapiSurface * surface,
-    GstVaapiContext * context)
-{
-  g_return_if_fail (surface != NULL);
-
-  surface->parent_context = NULL;
-}
-
-/**
- * gst_vaapi_surface_get_parent_context:
- * @surface: a #GstVaapiSurface
- *
- * Retrieves the parent #GstVaapiContext, or %NULL if there is
- * none. The surface shall still own a reference to the context.
- * i.e. the caller shall not unreference the returned context object.
- *
- * Return value: the parent context, if any.
- */
-GstVaapiContext *
-gst_vaapi_surface_get_parent_context (GstVaapiSurface * surface)
-{
-  g_return_val_if_fail (surface != NULL, NULL);
-
-  return surface->parent_context;
-}
-
-/**
  * gst_vaapi_surface_derive_image:
  * @surface: a #GstVaapiSurface
  *
@@ -1026,8 +988,6 @@ gst_vaapi_surface_query_status (GstVaapiSurface * surface,
  * gst_vaapi_surface_set_subpictures_from_composition:
  * @surface: a #GstVaapiSurface
  * @compostion: a #GstVideoOverlayCompositon
- * @propagate_context: a flag specifying whether to apply composition
- *     to the parent context, if any
  *
  * Helper to update the subpictures from #GstVideoOverlayCompositon. Sending
  * a NULL composition will clear all the current subpictures. Note that this
@@ -1037,16 +997,12 @@ gst_vaapi_surface_query_status (GstVaapiSurface * surface,
  */
 gboolean
 gst_vaapi_surface_set_subpictures_from_composition (GstVaapiSurface * surface,
-    GstVideoOverlayComposition * composition, gboolean propagate_context)
+    GstVideoOverlayComposition * composition)
 {
   GstVaapiDisplay *display;
   guint n, nb_rectangles;
 
   g_return_val_if_fail (surface != NULL, FALSE);
-
-  if (propagate_context && surface->parent_context)
-    return gst_vaapi_context_apply_composition (surface->parent_context,
-        composition);
 
   display = GST_VAAPI_OBJECT_DISPLAY (surface);
   if (!display)

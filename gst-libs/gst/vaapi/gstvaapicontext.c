@@ -34,7 +34,6 @@
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
 #include "gstvaapisurface.h"
-#include "gstvaapisurface_priv.h"
 #include "gstvaapisurfacepool.h"
 #include "gstvaapisurfaceproxy.h"
 #include "gstvaapivideopool_priv.h"
@@ -59,13 +58,6 @@ ensure_attributes (GstVaapiContext * context)
       gst_vaapi_config_surface_attributes_get (GST_VAAPI_OBJECT_DISPLAY
       (context), context->va_config);
   return (context->attribs != NULL);
-}
-
-static void
-unref_surface_cb (GstVaapiSurface * surface)
-{
-  gst_vaapi_surface_set_parent_context (surface, NULL);
-  gst_vaapi_object_unref (surface);
 }
 
 static inline gboolean
@@ -141,7 +133,6 @@ context_ensure_surfaces (GstVaapiContext * context)
         cip->chroma_type, cip->width, cip->height, context->attribs->formats);
     if (!surface)
       return FALSE;
-    gst_vaapi_surface_set_parent_context (surface, context);
     g_ptr_array_add (context->surfaces, surface);
     if (!gst_vaapi_video_pool_add_object (context->surfaces_pool, surface))
       return FALSE;
@@ -163,7 +154,7 @@ context_create_surfaces (GstVaapiContext * context)
   num_surfaces = cip->ref_frames + SCRATCH_SURFACES_COUNT;
   if (!context->surfaces) {
     context->surfaces = g_ptr_array_new_full (num_surfaces,
-        (GDestroyNotify) unref_surface_cb);
+        (GDestroyNotify) gst_vaapi_object_unref);
     if (!context->surfaces)
       return FALSE;
   }

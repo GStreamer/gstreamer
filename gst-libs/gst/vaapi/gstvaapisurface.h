@@ -247,7 +247,7 @@ gst_vaapi_surface_query_status (GstVaapiSurface * surface,
 
 gboolean
 gst_vaapi_surface_set_subpictures_from_composition (GstVaapiSurface * surface,
-    GstVideoOverlayComposition * composition, gboolean propagate_context);
+    GstVideoOverlayComposition * composition);
 
 void
 gst_vaapi_surface_set_buffer_proxy (GstVaapiSurface * surface,

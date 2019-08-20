@@ -47,7 +47,6 @@ struct _GstVaapiSurface
   guint height;
   GstVaapiChromaType chroma_type;
   GPtrArray *subpictures;
-  GstVaapiContext *parent_context;
 };
 
 /**
@@ -108,15 +107,6 @@ struct _GstVaapiSurfaceClass
 #undef  GST_VAAPI_SURFACE_HEIGHT
 #define GST_VAAPI_SURFACE_HEIGHT(surface) \
   (GST_VAAPI_SURFACE (surface)->height)
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_surface_set_parent_context (GstVaapiSurface * surface,
-    GstVaapiContext * context);
-
-G_GNUC_INTERNAL
-GstVaapiContext *
-gst_vaapi_surface_get_parent_context (GstVaapiSurface * surface);
 
 G_END_DECLS
 

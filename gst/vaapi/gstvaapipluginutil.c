@@ -482,7 +482,7 @@ gst_vaapi_apply_composition (GstVaapiSurface * surface, GstBuffer * buffer)
   if (cmeta)
     composition = cmeta->overlay;
   return gst_vaapi_surface_set_subpictures_from_composition (surface,
-      composition, TRUE);
+      composition);
 }
 
 gboolean
