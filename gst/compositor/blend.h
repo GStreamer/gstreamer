@@ -46,12 +46,14 @@ typedef void (*FillColorFunction) (GstVideoFrame * frame, gint c1, gint c2, gint
 extern BlendFunction gst_compositor_blend_argb;
 extern BlendFunction gst_compositor_blend_bgra;
 #define gst_compositor_blend_ayuv gst_compositor_blend_argb
+#define gst_compositor_blend_vuya gst_compositor_blend_bgra
 #define gst_compositor_blend_abgr gst_compositor_blend_argb
 #define gst_compositor_blend_rgba gst_compositor_blend_bgra
 
 extern BlendFunction gst_compositor_overlay_argb;
 extern BlendFunction gst_compositor_overlay_bgra;
 #define gst_compositor_overlay_ayuv gst_compositor_overlay_argb
+#define gst_compositor_overlay_vuya gst_compositor_overlay_bgra
 #define gst_compositor_overlay_abgr gst_compositor_overlay_argb
 #define gst_compositor_overlay_rgba gst_compositor_overlay_bgra
 extern BlendFunction gst_compositor_blend_i420;
@@ -76,6 +78,7 @@ extern FillCheckerFunction gst_compositor_fill_checker_argb;
 extern FillCheckerFunction gst_compositor_fill_checker_bgra;
 #define gst_compositor_fill_checker_rgba gst_compositor_fill_checker_bgra
 extern FillCheckerFunction gst_compositor_fill_checker_ayuv;
+extern FillCheckerFunction gst_compositor_fill_checker_vuya;
 extern FillCheckerFunction gst_compositor_fill_checker_i420;
 #define gst_compositor_fill_checker_yv12 gst_compositor_fill_checker_i420
 extern FillCheckerFunction gst_compositor_fill_checker_nv12;
@@ -98,6 +101,7 @@ extern FillColorFunction gst_compositor_fill_color_abgr;
 extern FillColorFunction gst_compositor_fill_color_bgra;
 extern FillColorFunction gst_compositor_fill_color_rgba;
 extern FillColorFunction gst_compositor_fill_color_ayuv;
+extern FillColorFunction gst_compositor_fill_color_vuya;
 extern FillColorFunction gst_compositor_fill_color_i420;
 extern FillColorFunction gst_compositor_fill_color_yv12;
 extern FillColorFunction gst_compositor_fill_color_nv12;

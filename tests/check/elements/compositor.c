@@ -47,7 +47,7 @@ static GstCaps *
 _compositor_get_all_supported_caps (void)
 {
   return gst_caps_from_string (GST_VIDEO_CAPS_MAKE
-      (" { AYUV, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, "
+      (" { AYUV, VUYA, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, "
           "   YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "
           "   RGBx, BGRx } "));
 }

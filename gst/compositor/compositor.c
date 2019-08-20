@@ -24,7 +24,7 @@
  * SECTION:element-compositor
  * @title: compositor
  *
- * Compositor can accept AYUV, ARGB and BGRA video streams. For each of the requested
+ * Compositor can accept AYUV, VUYA, ARGB and BGRA video streams. For each of the requested
  * sink pads it will compare the incoming geometry and framerate to define the
  * output parameters. Indeed output video frames will have the geometry of the
  * biggest incoming video stream and the framerate of the fastest incoming one.
@@ -103,7 +103,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_compositor_debug);
 #define GST_CAT_DEFAULT gst_compositor_debug
 
-#define FORMATS " { AYUV, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, "\
+#define FORMATS " { AYUV, VUYA, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, "\
                 "   YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "\
                 "   RGBx, BGRx } "
 
@@ -597,6 +597,13 @@ set_functions (GstCompositor * self, GstVideoInfo * info)
       self->overlay = gst_compositor_overlay_ayuv;
       self->fill_checker = gst_compositor_fill_checker_ayuv;
       self->fill_color = gst_compositor_fill_color_ayuv;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_VUYA:
+      self->blend = gst_compositor_blend_vuya;
+      self->overlay = gst_compositor_overlay_vuya;
+      self->fill_checker = gst_compositor_fill_checker_vuya;
+      self->fill_color = gst_compositor_fill_color_vuya;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_ARGB:
