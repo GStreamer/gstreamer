@@ -282,6 +282,8 @@ gst_nvenc_get_nv_buffer_format (GstVideoFormat fmt)
     case GST_VIDEO_FORMAT_Y444_16LE:
     case GST_VIDEO_FORMAT_Y444_16BE:
       return NV_ENC_BUFFER_FORMAT_YUV444_10BIT;
+    case GST_VIDEO_FORMAT_VUYA:
+      return NV_ENC_BUFFER_FORMAT_AYUV;
     default:
       break;
   }
@@ -337,6 +339,7 @@ gst_nvenc_get_supported_input_formats (gpointer encoder, GUID codec_id,
     {GST_VIDEO_FORMAT_BGRA, NV_ENC_BUFFER_FORMAT_ARGB, FALSE, FALSE},
     {GST_VIDEO_FORMAT_RGBA, NV_ENC_BUFFER_FORMAT_ABGR, FALSE, FALSE},
     {GST_VIDEO_FORMAT_Y444, NV_ENC_BUFFER_FORMAT_YUV444, FALSE, FALSE},
+    {GST_VIDEO_FORMAT_VUYA, NV_ENC_BUFFER_FORMAT_AYUV, FALSE, FALSE},
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
     {GST_VIDEO_FORMAT_P010_10LE, NV_ENC_BUFFER_FORMAT_YUV420_10BIT, TRUE,
         FALSE},
@@ -388,6 +391,7 @@ gst_nvenc_get_supported_input_formats (gpointer encoder, GUID codec_id,
         }
         break;
       case NV_ENC_BUFFER_FORMAT_YUV444:
+      case NV_ENC_BUFFER_FORMAT_AYUV:
         if (support_yuv444 && !format_map[i].supported) {
           format_map[i].supported = TRUE;
           num_format++;

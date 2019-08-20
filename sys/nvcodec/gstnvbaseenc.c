@@ -685,6 +685,7 @@ gst_nv_base_enc_set_filtered_input_formats (GstNvBaseEnc * nvenc,
         num_format++;
         break;
       case GST_VIDEO_FORMAT_Y444:
+      case GST_VIDEO_FORMAT_VUYA:
         if (max_chroma >= 2) {
           gst_value_list_append_value (&supported_format, val);
           last_format = val;
@@ -1840,6 +1841,7 @@ _get_cuda_device_stride (GstVideoInfo * info, guint plane, gsize cuda_stride)
     case GST_VIDEO_FORMAT_RGB10A2_LE:
     case GST_VIDEO_FORMAT_Y444_16LE:
     case GST_VIDEO_FORMAT_Y444_16BE:
+    case GST_VIDEO_FORMAT_VUYA:
       return cuda_stride;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:

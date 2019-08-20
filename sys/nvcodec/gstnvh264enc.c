@@ -431,7 +431,8 @@ gst_nv_h264_enc_set_encoder_config (GstNvBaseEnc * nvenc,
   config->profileGUID = selected_profile;
   h264_config->level = level_idc;
   h264_config->chromaFormatIDC = 1;
-  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_Y444) {
+  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_Y444 ||
+      GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_VUYA) {
     GST_DEBUG_OBJECT (h264enc, "have Y444 input, setting config accordingly");
     config->profileGUID = NV_ENC_H264_PROFILE_HIGH_444_GUID;
     h264_config->chromaFormatIDC = 3;
