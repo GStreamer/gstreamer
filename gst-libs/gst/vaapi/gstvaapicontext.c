@@ -30,7 +30,6 @@
 #include "sysdeps.h"
 #include "gstvaapicompat.h"
 #include "gstvaapicontext.h"
-#include "gstvaapicontext_overlay.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
 #include "gstvaapisurface.h"
@@ -71,8 +70,6 @@ context_get_attribute (GstVaapiContext * context, VAConfigAttribType type,
 static void
 context_destroy_surfaces (GstVaapiContext * context)
 {
-  gst_vaapi_context_overlay_reset (context);
-
   if (context->surfaces) {
     g_ptr_array_unref (context->surfaces);
     context->surfaces = NULL;
@@ -147,9 +144,6 @@ context_create_surfaces (GstVaapiContext * context)
   const GstVaapiContextInfo *const cip = &context->info;
   GstVaapiDisplay *const display = GST_VAAPI_OBJECT_DISPLAY (context);
   guint num_surfaces;
-
-  if (!gst_vaapi_context_overlay_reset (context))
-    return FALSE;
 
   num_surfaces = cip->ref_frames + SCRATCH_SURFACES_COUNT;
   if (!context->surfaces) {
@@ -395,7 +389,6 @@ gst_vaapi_context_init (GstVaapiContext * context,
 
   context->va_config = VA_INVALID_ID;
   context->reset_on_resize = TRUE;
-  gst_vaapi_context_overlay_init (context);
 
   context->attribs = NULL;
 }
@@ -405,7 +398,6 @@ gst_vaapi_context_finalize (GstVaapiContext * context)
 {
   context_destroy (context);
   context_destroy_surfaces (context);
-  gst_vaapi_context_overlay_finalize (context);
 }
 
 GST_VAAPI_OBJECT_DEFINE_CLASS (GstVaapiContext, gst_vaapi_context);

@@ -2,7 +2,6 @@ gstlibvaapi_sources = [
   'gstvaapibufferproxy.c',
   'gstvaapicodec_objects.c',
   'gstvaapicontext.c',
-  'gstvaapicontext_overlay.c',
   'gstvaapidecoder.c',
   'gstvaapidecoder_dpb.c',
   'gstvaapidecoder_h264.c',
