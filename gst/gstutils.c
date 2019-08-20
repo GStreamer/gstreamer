@@ -48,15 +48,9 @@
 #include "glib-compat-private.h"
 #include <math.h>
 
-/**
- * gst_util_dump_mem:
- * @mem: (array length=size): a pointer to the memory to dump
- * @size: the size of the memory block to dump
- *
- * Dumps the memory block into a hex representation. Useful for debugging.
- */
-void
-gst_util_dump_mem (const guchar * mem, guint size)
+
+static void
+gst_util_dump_mem_offset (const guchar * mem, guint size, guint offset)
 {
   guint i, j;
   GString *string = g_string_sized_new (50);
@@ -75,7 +69,7 @@ gst_util_dump_mem (const guchar * mem, guint size)
     i++;
 
     if (j == 16 || i == size) {
-      g_print ("%08x (%p): %-48.48s %-16.16s\n", i - j, mem + i - j,
+      g_print ("%08x (%p): %-48.48s %-16.16s\n", i - j + offset, mem + i - j,
           string->str, chars->str);
       g_string_set_size (string, 0);
       g_string_set_size (chars, 0);
@@ -84,6 +78,19 @@ gst_util_dump_mem (const guchar * mem, guint size)
   }
   g_string_free (string, TRUE);
   g_string_free (chars, TRUE);
+}
+
+/**
+ * gst_util_dump_mem:
+ * @mem: (array length=size): a pointer to the memory to dump
+ * @size: the size of the memory block to dump
+ *
+ * Dumps the memory block into a hex representation. Useful for debugging.
+ */
+void
+gst_util_dump_mem (const guchar * mem, guint size)
+{
+  gst_util_dump_mem_offset (mem, size, 0);
 }
 
 /**
@@ -98,10 +105,35 @@ void
 gst_util_dump_buffer (GstBuffer * buf)
 {
   GstMapInfo map;
+  GstMemory *mem;
+  guint n_memory;
+  guint i;
+  guint offset;
 
-  if (gst_buffer_map (buf, &map, GST_MAP_READ)) {
-    gst_util_dump_mem (map.data, map.size);
-    gst_buffer_unmap (buf, &map);
+  n_memory = gst_buffer_n_memory (buf);
+
+  if (n_memory == 1) {
+    if (gst_buffer_map (buf, &map, GST_MAP_READ)) {
+      gst_util_dump_mem (map.data, map.size);
+      gst_buffer_unmap (buf, &map);
+    }
+  } else if (n_memory > 1) {
+    /* gst_buffer_map() will merge multiple memory segments into one contiguous
+     * area so we need to use gst_memory_map() in order not to affect the
+     * contents of buf */
+    offset = 0;
+    for (i = 0; i < n_memory; ++i) {
+      g_print ("[Memory #%u]\n", i);
+      mem = gst_buffer_get_memory (buf, i);
+      if (gst_memory_map (mem, &map, GST_MAP_READ)) {
+        gst_util_dump_mem_offset (map.data, map.size, offset);
+        offset += map.size;
+        gst_memory_unmap (mem, &map);
+      }
+      gst_memory_unref (mem);
+    }
+  } else {
+    g_print ("[Empty]\n");
   }
 }
 
