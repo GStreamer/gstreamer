@@ -175,6 +175,7 @@ struct _GstVaapiPostproc
   gfloat contrast;
 
   gboolean skintone_enhance;
+  gboolean forward_crop;
 
   guint get_va_surfaces:1;
   guint has_vpp:1;
