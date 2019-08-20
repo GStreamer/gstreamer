@@ -783,7 +783,7 @@ gst_vaapi_encoder_mpeg2_finalize (GObject * object)
 }
 
 static GstVaapiEncoderStatus
-gst_vaapi_encoder_mpeg2_set_property (GstVaapiEncoder * base_encoder,
+_gst_vaapi_encoder_mpeg2_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
 {
   GstVaapiEncoderMpeg2 *const encoder =
@@ -802,6 +802,83 @@ gst_vaapi_encoder_mpeg2_set_property (GstVaapiEncoder * base_encoder,
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
+/**
+ * @ENCODER_MPEG2_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
+ * @ENCODER_MPEG2_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
+ * @ENCODER_MPEG2_PROP_QUANTIZER: Constant quantizer value (uint).
+ * @ENCODER_MPEG2_PROP_MAX_BFRAMES: Number of B-frames between I
+ *   and P (uint).
+ *
+ * The set of MPEG-2 encoder specific configurable properties.
+ */
+enum
+{
+  ENCODER_MPEG2_PROP_RATECONTROL = 1,
+  ENCODER_MPEG2_PROP_TUNE,
+  ENCODER_MPEG2_PROP_QUANTIZER,
+  ENCODER_MPEG2_PROP_MAX_BFRAMES,
+  ENCODER_MPEG2_N_PROPERTIES
+};
+
+static GParamSpec *properties[ENCODER_MPEG2_N_PROPERTIES];
+
+static void
+gst_vaapi_encoder_mpeg2_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER (object);
+  GstVaapiEncoderMpeg2 *const encoder = GST_VAAPI_ENCODER_MPEG2 (object);
+
+  if (base_encoder->num_codedbuf_queued > 0) {
+    GST_ERROR_OBJECT (object,
+        "failed to set any property after encoding started");
+    return;
+  }
+
+  switch (prop_id) {
+    case ENCODER_MPEG2_PROP_RATECONTROL:
+      gst_vaapi_encoder_set_rate_control (base_encoder,
+          g_value_get_enum (value));
+      break;
+    case ENCODER_MPEG2_PROP_TUNE:
+      gst_vaapi_encoder_set_tuning (base_encoder, g_value_get_enum (value));
+      break;
+    case ENCODER_MPEG2_PROP_QUANTIZER:
+      encoder->cqp = g_value_get_uint (value);
+      break;
+    case ENCODER_MPEG2_PROP_MAX_BFRAMES:
+      encoder->ip_period = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static void
+gst_vaapi_encoder_mpeg2_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncoderMpeg2 *const encoder = GST_VAAPI_ENCODER_MPEG2 (object);
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER (object);
+
+  switch (prop_id) {
+    case ENCODER_MPEG2_PROP_RATECONTROL:
+      g_value_set_enum (value, base_encoder->rate_control);
+      break;
+    case ENCODER_MPEG2_PROP_TUNE:
+      g_value_set_enum (value, base_encoder->tune);
+      break;
+    case ENCODER_MPEG2_PROP_QUANTIZER:
+      g_value_set_uint (value, encoder->cqp);
+      break;
+    case ENCODER_MPEG2_PROP_MAX_BFRAMES:
+      g_value_set_uint (value, encoder->ip_period);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
 GST_VAAPI_ENCODER_DEFINE_CLASS_DATA (MPEG2);
 
 static void
@@ -817,8 +894,50 @@ gst_vaapi_encoder_mpeg2_class_init (GstVaapiEncoderMpeg2Class * klass)
   encoder_class->reordering = gst_vaapi_encoder_mpeg2_reordering;
   encoder_class->encode = gst_vaapi_encoder_mpeg2_encode;
   encoder_class->flush = gst_vaapi_encoder_mpeg2_flush;
-  encoder_class->set_property = gst_vaapi_encoder_mpeg2_set_property;
+  encoder_class->set_property = _gst_vaapi_encoder_mpeg2_set_property;
+
+  object_class->set_property = gst_vaapi_encoder_mpeg2_set_property;
+  object_class->get_property = gst_vaapi_encoder_mpeg2_get_property;
   object_class->finalize = gst_vaapi_encoder_mpeg2_finalize;
+
+  /**
+   * GstVaapiEncoderMpeg2:rate-control:
+   *
+   * The desired rate control mode, expressed as a #GstVaapiRateControl.
+   */
+  properties[ENCODER_MPEG2_PROP_RATECONTROL] =
+      g_param_spec_enum ("rate-control",
+      "Rate Control", "Rate control mode",
+      g_class_data.rate_control_get_type (),
+      g_class_data.default_rate_control,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderMpeg2:tune:
+   *
+   * The desired encoder tuning option.
+   */
+  properties[ENCODER_MPEG2_PROP_TUNE] =
+      g_param_spec_enum ("tune",
+      "Encoder Tuning",
+      "Encoder tuning option",
+      g_class_data.encoder_tune_get_type (),
+      g_class_data.default_encoder_tune,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  properties[ENCODER_MPEG2_PROP_QUANTIZER] =
+      g_param_spec_uint ("quantizer",
+      "Constant Quantizer",
+      "Constant quantizer (if rate-control mode is CQP)",
+      2, 62, 8, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  properties[ENCODER_MPEG2_PROP_MAX_BFRAMES] =
+      g_param_spec_uint ("max-bframes", "Max B-Frames",
+      "Number of B-frames between I and P", 0, 16, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, ENCODER_MPEG2_N_PROPERTIES,
+      properties);
 }
 
 /**
