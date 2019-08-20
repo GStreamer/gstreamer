@@ -686,7 +686,11 @@ receive_cb (struct socket *sock, union sctp_sockstore addr, void *data,
     if (flags & MSG_NOTIFICATION) {
       handle_notification (self, (const union sctp_notification *) data,
           datalen);
-      free (data);
+      /* We use this instead of a bare `free()` so that we use the `free` from
+       * the C runtime that usrsctp was built with. This makes a difference on
+       * Windows where libusrstcp and GStreamer can be linked to two different
+       * CRTs. */
+      usrsctp_freedumpbuffer (data);
     } else {
       handle_message (self, data, datalen, rcv_info.rcv_sid,
           ntohl (rcv_info.rcv_ppid));
