@@ -1556,13 +1556,14 @@ gst_harness_set_forwarding (GstHarness * h, gboolean forwarding)
     gst_harness_set_forwarding (h->sink_harness, forwarding);
 }
 
+/*
+* Call with HARNESS_LOCK
+*/
 static void
 gst_harness_set_forward_pad (GstHarness * h, GstPad * fwdpad)
 {
-  HARNESS_LOCK (h);
   gst_object_replace ((GstObject **) & h->priv->sink_forward_pad,
       (GstObject *) fwdpad);
-  HARNESS_UNLOCK (h);
 }
 
 /**
@@ -2308,7 +2309,11 @@ gst_harness_add_src_harness (GstHarness * h,
   if (h->src_harness)
     gst_harness_teardown (h->src_harness);
   h->src_harness = src_harness;
+
+  HARNESS_LOCK (h->src_harness);
   gst_harness_set_forward_pad (h->src_harness, h->srcpad);
+  HARNESS_UNLOCK (h->src_harness);
+
   h->src_harness->priv->has_clock_wait = has_clock_wait;
   gst_harness_set_forwarding (h->src_harness, h->priv->forwarding);
 }
@@ -2494,24 +2499,35 @@ forward_sticky_events (GstPad * pad, GstEvent ** ev, gpointer user_data)
 void
 gst_harness_add_sink_harness (GstHarness * h, GstHarness * sink_harness)
 {
-  GstHarnessPrivate *priv = h->priv;
+  GstHarnessPrivate *priv;
+  GstPad *fwdpad;
+
+  HARNESS_LOCK (h);
+  priv = h->priv;
 
   if (h->sink_harness) {
     gst_harness_set_forward_pad (h, NULL);
     gst_harness_teardown (h->sink_harness);
   }
   h->sink_harness = sink_harness;
-  gst_harness_set_forward_pad (h, h->sink_harness->srcpad);
-  HARNESS_LOCK (h);
-  if (priv->forwarding && h->sinkpad && h->priv->sink_forward_pad) {
-    GstPad *fwdpad = gst_object_ref (h->priv->sink_forward_pad);
+
+  fwdpad = h->sink_harness->srcpad;
+  if (fwdpad)
+    gst_object_ref (fwdpad);
+
+  if (priv->forwarding && h->sinkpad && fwdpad) {
     HARNESS_UNLOCK (h);
     gst_pad_sticky_events_foreach (h->sinkpad, forward_sticky_events, fwdpad);
-    gst_object_unref (fwdpad);
-  } else {
-    HARNESS_UNLOCK (h);
+    HARNESS_LOCK (h);
   }
+
+  gst_harness_set_forward_pad (h, fwdpad);
+  if (fwdpad)
+    gst_object_unref (fwdpad);
+
   gst_harness_set_forwarding (h->sink_harness, priv->forwarding);
+
+  HARNESS_UNLOCK (h);
 }
 
 /**
