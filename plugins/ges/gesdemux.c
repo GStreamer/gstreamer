@@ -271,7 +271,7 @@ ges_demux_src_probe (GstPad * pad, GstPadProbeInfo * info, GstElement * parent)
   GESDemux *self = GES_DEMUX (parent);
   GstEvent *event;
 
-  if (info->type & (GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM)) {
+  if (info->type & (GST_PAD_PROBE_TYPE_QUERY_UPSTREAM)) {
     GstQuery *query = info->data;
 
     if (GST_QUERY_TYPE (query) == GST_QUERY_CUSTOM) {
