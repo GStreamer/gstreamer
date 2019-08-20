@@ -578,8 +578,6 @@ static gboolean
 ensure_encoder (GstVaapiEncode * encode)
 {
   GstVaapiEncodeClass *klass = GST_VAAPIENCODE_GET_CLASS (encode);
-  GstVaapiEncoderStatus status;
-  GPtrArray *const prop_values = encode->prop_values;
   guint i;
 
   g_return_val_if_fail (klass->alloc_encoder, FALSE);
@@ -592,15 +590,17 @@ ensure_encoder (GstVaapiEncode * encode)
   if (!encode->encoder)
     return FALSE;
 
-  if (prop_values) {
-    for (i = 0; i < prop_values->len; i++) {
-      PropValue *const prop_value = g_ptr_array_index (prop_values, i);
-      status = gst_vaapi_encoder_set_property (encode->encoder, prop_value->id,
-          &prop_value->value);
-      if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-        return FALSE;
+  if (encode->prop_values && encode->prop_values->len) {
+    for (i = 0; i < encode->prop_values->len; i++) {
+      PropValue *const prop_value = g_ptr_array_index (encode->prop_values, i);
+      g_object_set_property ((GObject *) encode->encoder,
+          g_param_spec_get_name (prop_value->pspec), &prop_value->value);
     }
+    /* clear alll the cache */
+    g_ptr_array_unref (encode->prop_values);
+    encode->prop_values = NULL;
   }
+
   return TRUE;
 }
 

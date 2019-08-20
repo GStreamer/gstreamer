@@ -1547,8 +1547,8 @@ error_operation_failed:
 }
 
 /* Initialize default values for configurable properties */
-static void
-gst_vaapi_encoder_constructed (GObject * object)
+__attribute__ ((unused))
+     static void gst_vaapi_encoder_constructed (GObject * object)
 {
   GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
@@ -1601,9 +1601,8 @@ enum
 
 static GParamSpec *properties[ENCODER_N_PROPERTIES];
 
-__attribute__ ((unused))
-     static void
-         _gst_vaapi_encoder_set_property (GObject * object, guint prop_id,
+static void
+_gst_vaapi_encoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
@@ -1653,9 +1652,8 @@ __attribute__ ((unused))
         g_param_spec_get_name (pspec), status);
 }
 
-__attribute__ ((unused))
-     static void
-         _gst_vaapi_encoder_get_property (GObject * object, guint prop_id,
+static void
+_gst_vaapi_encoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
@@ -1730,8 +1728,9 @@ gst_vaapi_encoder_finalize (GObject * object)
   G_OBJECT_CLASS (gst_vaapi_encoder_parent_class)->finalize (object);
 }
 
-static void
-encoder_set_property (GObject * object, guint prop_id,
+__attribute__ ((unused))
+     static void
+         encoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
@@ -1749,8 +1748,9 @@ encoder_set_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-encoder_get_property (GObject * object, guint prop_id,
+__attribute__ ((unused))
+     static void
+         encoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
@@ -1770,10 +1770,9 @@ gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
 {
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
 
-  object_class->set_property = encoder_set_property;
-  object_class->get_property = encoder_get_property;
+  object_class->set_property = _gst_vaapi_encoder_set_property;
+  object_class->get_property = _gst_vaapi_encoder_get_property;
   object_class->finalize = gst_vaapi_encoder_finalize;
-  object_class->constructed = gst_vaapi_encoder_constructed;
 
   /**
    * GstVaapiDecoder:display:

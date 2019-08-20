@@ -90,43 +90,13 @@ G_DEFINE_TYPE (GstVaapiEncodeH265, gst_vaapiencode_h265, GST_TYPE_VAAPIENCODE);
 static void
 gst_vaapiencode_h265_init (GstVaapiEncodeH265 * encode)
 {
-  gst_vaapiencode_init_properties (GST_VAAPIENCODE_CAST (encode));
+  /* nothing to do here */
 }
 
 static void
 gst_vaapiencode_h265_finalize (GObject * object)
 {
   G_OBJECT_CLASS (gst_vaapiencode_h265_parent_class)->finalize (object);
-}
-
-static void
-gst_vaapiencode_h265_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec)
-{
-  GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_GET_CLASS (object);
-  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (object);
-
-  switch (prop_id) {
-    default:
-      if (!encode_class->set_property (base_encode, prop_id, value))
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_vaapiencode_h265_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec)
-{
-  GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_GET_CLASS (object);
-  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (object);
-
-  switch (prop_id) {
-    default:
-      if (!encode_class->get_property (base_encode, prop_id, value))
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static GstVaapiProfile
@@ -407,15 +377,15 @@ gst_vaapiencode_h265_class_init (GstVaapiEncodeH265Class * klass)
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_CLASS (klass);
+  gpointer encoder_class;
 
   GST_DEBUG_CATEGORY_INIT (gst_vaapi_h265_encode_debug,
       GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
 
   object_class->finalize = gst_vaapiencode_h265_finalize;
-  object_class->set_property = gst_vaapiencode_h265_set_property;
-  object_class->get_property = gst_vaapiencode_h265_get_property;
+  object_class->set_property = gst_vaapiencode_set_property_subclass;
+  object_class->get_property = gst_vaapiencode_get_property_subclass;
 
-  encode_class->get_properties = gst_vaapi_encoder_h265_get_default_properties;
   encode_class->get_profile = gst_vaapiencode_h265_get_profile;
   encode_class->set_config = gst_vaapiencode_h265_set_config;
   encode_class->get_caps = gst_vaapiencode_h265_get_caps;
@@ -436,5 +406,8 @@ gst_vaapiencode_h265_class_init (GstVaapiEncodeH265Class * klass)
   gst_element_class_add_static_pad_template (element_class,
       &gst_vaapiencode_h265_src_factory);
 
-  gst_vaapiencode_class_init_properties (encode_class);
+  encoder_class = g_type_class_ref (GST_TYPE_VAAPI_ENCODER_H265);
+  g_assert (encoder_class);
+  gst_vaapiencode_class_install_properties (encode_class, encoder_class);
+  g_type_class_unref (encoder_class);
 }
