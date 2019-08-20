@@ -2664,7 +2664,7 @@ gst_vaapi_encoder_h265_finalize (GObject * object)
 }
 
 static GstVaapiEncoderStatus
-gst_vaapi_encoder_h265_set_property (GstVaapiEncoder * base_encoder,
+_gst_vaapi_encoder_h265_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
 {
   GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
@@ -2710,6 +2710,156 @@ gst_vaapi_encoder_h265_set_property (GstVaapiEncoder * base_encoder,
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
+/**
+ * @ENCODER_H265_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
+ * @ENCODER_H265_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
+ * @ENCODER_H265_PROP_MAX_BFRAMES: Number of B-frames between I
+ *   and P (uint).
+ * @ENCODER_H265_PROP_INIT_QP: Initial quantizer value (uint).
+ * @ENCODER_H265_PROP_MIN_QP: Minimal quantizer value (uint).
+ * @ENCODER_H265_PROP_NUM_SLICES: Number of slices per frame (uint).
+ * @ENCODER_H265_PROP_NUM_REF_FRAMES: Maximum number of reference frames.
+ * @ENCODER_H265_PROP_CPB_LENGTH: Length of the CPB buffer
+ *   in milliseconds (uint).
+ * @ENCODER_H265_PROP_MBBRC: Macroblock level Bitrate Control.
+ * @ENCODER_H265_PROP_QP_IP: Difference of QP between I and P frame.
+ * @ENCODER_H265_PROP_QP_IB: Difference of QP between I and B frame.
+ * @ENCODER_H265_PROP_LOW_DELAY_B: use low delay b feature.
+ * @ENCODER_H265_PROP_MAX_QP: Maximal quantizer value (uint).
+ *
+ * The set of H.265 encoder specific configurable properties.
+ */
+enum
+{
+  ENCODER_H265_PROP_RATECONTROL = 1,
+  ENCODER_H265_PROP_TUNE,
+  ENCODER_H265_PROP_MAX_BFRAMES,
+  ENCODER_H265_PROP_INIT_QP,
+  ENCODER_H265_PROP_MIN_QP,
+  ENCODER_H265_PROP_NUM_SLICES,
+  ENCODER_H265_PROP_NUM_REF_FRAMES,
+  ENCODER_H265_PROP_CPB_LENGTH,
+  ENCODER_H265_PROP_MBBRC,
+  ENCODER_H265_PROP_QP_IP,
+  ENCODER_H265_PROP_QP_IB,
+  ENCODER_H265_PROP_LOW_DELAY_B,
+  ENCODER_H265_PROP_MAX_QP,
+  ENCODER_H265_N_PROPERTIES
+};
+
+static GParamSpec *properties[ENCODER_H265_N_PROPERTIES];
+
+static void
+gst_vaapi_encoder_h265_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER (object);
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (object);
+
+  if (base_encoder->num_codedbuf_queued > 0) {
+    GST_ERROR_OBJECT (object,
+        "failed to set any property after encoding started");
+    return;
+  }
+
+  switch (prop_id) {
+    case ENCODER_H265_PROP_RATECONTROL:
+      gst_vaapi_encoder_set_rate_control (base_encoder,
+          g_value_get_enum (value));
+      break;
+    case ENCODER_H265_PROP_TUNE:
+      gst_vaapi_encoder_set_tuning (base_encoder, g_value_get_enum (value));
+      break;
+    case ENCODER_H265_PROP_MAX_BFRAMES:
+      encoder->num_bframes = g_value_get_uint (value);
+      break;
+    case ENCODER_H265_PROP_INIT_QP:
+      encoder->init_qp = g_value_get_uint (value);
+      break;
+    case ENCODER_H265_PROP_MIN_QP:
+      encoder->min_qp = g_value_get_uint (value);
+      break;
+    case ENCODER_H265_PROP_QP_IP:
+      encoder->qp_ip = g_value_get_int (value);
+      break;
+    case ENCODER_H265_PROP_QP_IB:
+      encoder->qp_ib = g_value_get_int (value);
+      break;
+    case ENCODER_H265_PROP_NUM_SLICES:
+      encoder->num_slices = g_value_get_uint (value);
+      break;
+    case ENCODER_H265_PROP_CPB_LENGTH:
+      encoder->cpb_length = g_value_get_uint (value);
+      break;
+    case ENCODER_H265_PROP_NUM_REF_FRAMES:
+      encoder->num_ref_frames = g_value_get_uint (value);
+      break;
+    case ENCODER_H265_PROP_MBBRC:
+      encoder->mbbrc = g_value_get_enum (value);
+      break;
+    case ENCODER_H265_PROP_LOW_DELAY_B:
+      encoder->low_delay_b = g_value_get_boolean (value);
+      break;
+    case ENCODER_H265_PROP_MAX_QP:
+      encoder->max_qp = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static void
+gst_vaapi_encoder_h265_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (object);
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER (object);
+
+  switch (prop_id) {
+    case ENCODER_H265_PROP_RATECONTROL:
+      g_value_set_enum (value, base_encoder->rate_control);
+      break;
+    case ENCODER_H265_PROP_TUNE:
+      g_value_set_enum (value, base_encoder->tune);
+      break;
+    case ENCODER_H265_PROP_MAX_BFRAMES:
+      g_value_set_uint (value, encoder->num_bframes);
+      break;
+    case ENCODER_H265_PROP_INIT_QP:
+      g_value_set_uint (value, encoder->init_qp);
+      break;
+    case ENCODER_H265_PROP_MIN_QP:
+      g_value_set_uint (value, encoder->min_qp);
+      break;
+    case ENCODER_H265_PROP_QP_IP:
+      g_value_set_int (value, encoder->qp_ip);
+      break;
+    case ENCODER_H265_PROP_QP_IB:
+      g_value_set_int (value, encoder->qp_ib);
+      break;
+    case ENCODER_H265_PROP_NUM_SLICES:
+      g_value_set_uint (value, encoder->num_slices);
+      break;
+    case ENCODER_H265_PROP_CPB_LENGTH:
+      g_value_set_uint (value, encoder->cpb_length);
+      break;
+    case ENCODER_H265_PROP_NUM_REF_FRAMES:
+      g_value_set_uint (value, encoder->num_ref_frames);
+      break;
+    case ENCODER_H265_PROP_MBBRC:
+      g_value_set_enum (value, encoder->mbbrc);
+      break;
+    case ENCODER_H265_PROP_LOW_DELAY_B:
+      g_value_set_boolean (value, encoder->low_delay_b);
+      break;
+    case ENCODER_H265_PROP_MAX_QP:
+      g_value_set_uint (value, encoder->max_qp);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
 GST_VAAPI_ENCODER_DEFINE_CLASS_DATA (H265);
 
 static void
@@ -2725,11 +2875,166 @@ gst_vaapi_encoder_h265_class_init (GstVaapiEncoderH265Class * klass)
   encoder_class->reordering = gst_vaapi_encoder_h265_reordering;
   encoder_class->encode = gst_vaapi_encoder_h265_encode;
   encoder_class->flush = gst_vaapi_encoder_h265_flush;
-  encoder_class->set_property = gst_vaapi_encoder_h265_set_property;
+  encoder_class->set_property = _gst_vaapi_encoder_h265_set_property;
   encoder_class->get_codec_data = gst_vaapi_encoder_h265_get_codec_data;
   encoder_class->get_pending_reordered =
       gst_vaapi_encoder_h265_get_pending_reordered;
+
+  object_class->set_property = gst_vaapi_encoder_h265_set_property;
+  object_class->get_property = gst_vaapi_encoder_h265_get_property;
   object_class->finalize = gst_vaapi_encoder_h265_finalize;
+
+  /**
+   * GstVaapiEncoderH265:rate-control:
+   *
+   * The desired rate control mode, expressed as a #GstVaapiRateControl.
+   */
+  properties[ENCODER_H265_PROP_RATECONTROL] =
+      g_param_spec_enum ("rate-control",
+      "Rate Control", "Rate control mode",
+      g_class_data.rate_control_get_type (),
+      g_class_data.default_rate_control,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH265:tune:
+   *
+   * The desired encoder tuning option.
+   */
+  properties[ENCODER_H265_PROP_TUNE] =
+      g_param_spec_enum ("tune",
+      "Encoder Tuning",
+      "Encoder tuning option",
+      g_class_data.encoder_tune_get_type (),
+      g_class_data.default_encoder_tune,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH265:max-bframes:
+   *
+   * The number of B-frames between I and P.
+   */
+  properties[ENCODER_H265_PROP_MAX_BFRAMES] =
+      g_param_spec_uint ("max-bframes",
+      "Max B-Frames", "Number of B-frames between I and P", 0, 10, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH265:refs:
+   *
+   * The number of reference frames.
+   * If B frame is encoded, it will add 1 reference frame more.
+   */
+  properties[ENCODER_H265_PROP_NUM_REF_FRAMES] =
+      g_param_spec_uint ("refs",
+      "Number of Reference Frames", "Number of reference frames", 1, 3, 1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH265:init-qp:
+   *
+   * The initial quantizer value.
+   */
+  properties[ENCODER_H265_PROP_INIT_QP] =
+      g_param_spec_uint ("init-qp",
+      "Initial QP", "Initial quantizer value", 0, 51, 26,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH265:min-qp:
+   *
+   * The minimum quantizer value.
+   */
+  properties[ENCODER_H265_PROP_MIN_QP] =
+      g_param_spec_uint ("min-qp",
+      "Minimum QP", "Minimum quantizer value", 0, 51, 1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH265:max-qp:
+   *
+   * The maximum quantizer value.
+   *
+   * Since: 1.18
+   */
+  properties[ENCODER_H265_PROP_MAX_QP] =
+      g_param_spec_uint ("max-qp",
+      "Maximum QP", "Maximum quantizer value", 0, 51, 51,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH265:qp-ip:
+   *
+   * The difference of QP between I and P Frame.
+   * This is available only on CQP mode.
+   */
+  properties[ENCODER_H265_PROP_QP_IP] =
+      g_param_spec_int ("qp-ip",
+      "Difference of QP between I and P frame",
+      "Difference of QP between I and P frame (available only on CQP)",
+      -51, 51, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH265:qp-ib:
+   *
+   * The difference of QP between I and B Frame.
+   * This is available only on CQP mode.
+   */
+  properties[ENCODER_H265_PROP_QP_IB] =
+      g_param_spec_int ("qp-ib",
+      "Difference of QP between I and B frame",
+      "Difference of QP between I and B frame (available only on CQP)",
+      -51, 51, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /* FIXME: there seems to be issues with multi-slice encoding */
+  /**
+   * GstVaapiEncoderH265:num-slices:
+   *
+   * The number of slices per frame.
+   */
+  properties[ENCODER_H265_PROP_NUM_SLICES] =
+      g_param_spec_uint ("num-slices",
+      "Number of Slices",
+      "Number of slices per frame",
+      1, 200, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH265:cpb-length:
+   *
+   * The size of the CPB buffer in milliseconds.
+   */
+  properties[ENCODER_H265_PROP_CPB_LENGTH] =
+      g_param_spec_uint ("cpb-length",
+      "CPB Length", "Length of the CPB buffer in milliseconds",
+      1, 10000, DEFAULT_CPB_LENGTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH265:mbbrc:
+   *
+   * Macroblock level bitrate control.
+   * This is not compatible with Constant QP rate control.
+   */
+  properties[ENCODER_H265_PROP_MBBRC] =
+      g_param_spec_enum ("mbbrc",
+      "Macroblock level Bitrate Control",
+      "Macroblock level Bitrate Control",
+      GST_VAAPI_TYPE_ENCODER_MBBRC, GST_VAAPI_ENCODER_MBBRC_AUTO,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstVaapiEncoderH265:low_delay_b:
+   *
+   * Enable low delay b frame, which will change P frame with B frame.
+   */
+  properties[ENCODER_H265_PROP_LOW_DELAY_B] =
+      g_param_spec_boolean ("low-delay-b",
+      "Enable low delay b",
+      "Transforms P frames into predictive B frames."
+      " Enable it when P frames are not supported.",
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (object_class, ENCODER_H265_N_PROPERTIES,
+      properties);
 }
 
 /**
