@@ -315,7 +315,7 @@ ges_formatter_can_save_uri (const gchar * uri, GError ** error)
 
   if (!(gst_uri_has_protocol (uri, "file"))) {
     gchar *proto = gst_uri_get_protocol (uri);
-    GST_ERROR ("Unspported protocol '%s'", proto);
+    GST_ERROR ("Unsupported protocol '%s'", proto);
     g_free (proto);
     return FALSE;
   }
@@ -379,6 +379,8 @@ error:
  *
  * Returns: TRUE if the timeline data was successfully loaded from the URI,
  * else FALSE.
+ *
+ * Deprecated: 1.18: Use @ges_timeline_load_from_uri
  */
 
 gboolean
@@ -411,6 +413,8 @@ ges_formatter_load_from_uri (GESFormatter * formatter,
  *
  * Returns: TRUE if the timeline data was successfully saved to the URI
  * else FALSE.
+ *
+ * Deprecated: 1.18: Use @ges_timeline_save_to_uri
  */
 
 gboolean

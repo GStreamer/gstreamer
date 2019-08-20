@@ -139,8 +139,6 @@ void ges_track_element_set_track_type          (GESTrackElement * object,
 
 GES_API
 GstElement * ges_track_element_get_nleobject   (GESTrackElement * object);
-GES_API
-GstElement * ges_track_element_get_gnlobject   (GESTrackElement * object);
 
 GES_API
 GstElement * ges_track_element_get_element     (GESTrackElement * object);
@@ -152,60 +150,10 @@ gboolean ges_track_element_set_active          (GESTrackElement * object,
 GES_API
 gboolean ges_track_element_is_active           (GESTrackElement * object);
 
-GES_API GParamSpec **
-ges_track_element_list_children_properties     (GESTrackElement *object,
-                                               guint *n_properties);
-
-GES_API
-gboolean ges_track_element_lookup_child        (GESTrackElement *object,
-                                               const gchar *prop_name,
-                                               GstElement **element,
-                                               GParamSpec **pspec);
-
 GES_API void
 ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
                                               GParamSpec * pspec,
                                               GValue * value);
-
-GES_API void
-ges_track_element_get_child_property_valist   (GESTrackElement * object,
-                                              const gchar * first_property_name,
-                                              va_list var_args);
-
-GES_API
-void ges_track_element_get_child_properties   (GESTrackElement *object,
-                                              const gchar * first_property_name,
-                                              ...) G_GNUC_NULL_TERMINATED;
-
-GES_API void
-ges_track_element_set_child_property_valist   (GESTrackElement * object,
-                                              const gchar * first_property_name,
-                                              va_list var_args);
-
-GES_API void
-ges_track_element_set_child_property_by_pspec (GESTrackElement * object,
-                                              GParamSpec * pspec,
-                                              GValue * value);
-
-GES_API
-void ges_track_element_set_child_properties   (GESTrackElement * object,
-                                              const gchar * first_property_name,
-                                              ...) G_GNUC_NULL_TERMINATED;
-
-GES_API
-gboolean ges_track_element_set_child_property (GESTrackElement *object,
-                                              const gchar *property_name,
-                                              GValue * value);
-
-GES_API
-gboolean ges_track_element_get_child_property (GESTrackElement *object,
-                                              const gchar *property_name,
-                                              GValue * value);
-
-GES_API gboolean
-ges_track_element_edit                        (GESTrackElement * object,
-                                              GList *layers, GESEditMode mode,
-                                              GESEdge edge, guint64 position);
 
 GES_API gboolean
 ges_track_element_set_control_source          (GESTrackElement *object,
@@ -227,5 +175,8 @@ ges_track_element_get_all_control_bindings    (GESTrackElement * trackelement);
 GES_API gboolean
 ges_track_element_remove_control_binding      (GESTrackElement * object,
                                                const gchar * property_name);
+
+#include "ges-track-element-deprecated.h"
+
 G_END_DECLS
 #endif /* _GES_TRACK_ELEMENT */

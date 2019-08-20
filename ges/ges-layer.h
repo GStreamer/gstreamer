@@ -117,7 +117,7 @@ GES_API
 gboolean ges_layer_remove_clip (GESLayer * layer,
 					   GESClip * clip);
 
-GES_API
+GES_DEPRECATED_FOR(ges_timeline_move_layer)
 void     ges_layer_set_priority  (GESLayer * layer,
 					   guint priority);
 

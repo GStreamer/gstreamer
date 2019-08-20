@@ -151,7 +151,7 @@ GList * ges_container_ungroup     (GESContainer * container, gboolean recursive)
 GES_API
 GESContainer *ges_container_group (GList *containers);
 
-GES_API
+GES_DEPRECATED_FOR(ges_timeline_element_edit)
 gboolean ges_container_edit       (GESContainer * container,
                                    GList * layers, gint new_layer_priority,
                                    GESEditMode mode,

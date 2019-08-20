@@ -251,7 +251,7 @@ gboolean             ges_timeline_element_set_duration                (GESTimeli
 GES_API
 gboolean             ges_timeline_element_set_max_duration            (GESTimelineElement *self,
                                                                        GstClockTime maxduration);
-GES_API
+GES_DEPRECATED
 gboolean             ges_timeline_element_set_priority                (GESTimelineElement *self,
                                                                        guint32 priority);
 GES_API

@@ -1005,7 +1005,7 @@ ges_timeline_element_get_priority (GESTimelineElement * self)
  *
  * Sets the priority of the object within the containing layer
  *
- * Deprecated: All priority management is done by GES itself now.
+ * Deprecated:1.10: All priority management is done by GES itself now.
  * To set #GESEffect priorities #ges_clip_set_top_effect_index should
  * be used.
  *

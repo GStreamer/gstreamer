@@ -93,6 +93,7 @@ ges_headers = files([
     'ges-audio-track.h',
     'ges-video-track.h',
     'ges-track-element.h',
+    'ges-track-element-deprecated.h',
     'ges-source.h',
     'ges-operation.h',
     'ges-video-source.h',

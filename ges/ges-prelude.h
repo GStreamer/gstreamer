@@ -32,4 +32,12 @@
 # endif
 #endif
 
+#ifndef GST_DISABLE_DEPRECATED
+#define GES_DEPRECATED GES_API
+#define GES_DEPRECATED_FOR(f) GES_API
+#else
+#define GES_DEPRECATED G_DEPRECATED GES_API
+#define GES_DEPRECATED_FOR(f) G_DEPRECATED_FOR(f) GES_API
+#endif
+
 #endif /* __GST_GES_PRELUDE_H__ */

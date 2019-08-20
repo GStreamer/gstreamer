@@ -106,32 +106,17 @@ static void
 ges_title_clip_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESTitleClip *uriclip = GES_TITLE_CLIP (object);
-
   switch (property_id) {
     case PROP_TEXT:
-      ges_title_clip_set_text (uriclip, g_value_get_string (value));
-      break;
     case PROP_FONT_DESC:
-      ges_title_clip_set_font_desc (uriclip, g_value_get_string (value));
-      break;
     case PROP_HALIGNMENT:
-      ges_title_clip_set_halignment (uriclip, g_value_get_enum (value));
-      break;
     case PROP_VALIGNMENT:
-      ges_title_clip_set_valignment (uriclip, g_value_get_enum (value));
-      break;
     case PROP_COLOR:
-      ges_title_clip_set_color (uriclip, g_value_get_uint (value));
-      break;
     case PROP_BACKGROUND:
-      ges_title_clip_set_background (uriclip, g_value_get_uint (value));
-      break;
     case PROP_XPOS:
-      ges_title_clip_set_xpos (uriclip, g_value_get_double (value));
-      break;
     case PROP_YPOS:
-      ges_title_clip_set_ypos (uriclip, g_value_get_double (value));
+      ges_timeline_element_set_child_property (GES_TIMELINE_ELEMENT (object),
+          pspec->name, value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -314,7 +299,7 @@ ges_title_clip_set_text (GESTitleClip * self, const gchar * text)
   GST_DEBUG_OBJECT (self, "text:%s", text);
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_element_set_child_properties (tmp->data, "text", text, NULL);
+    ges_timeline_element_set_child_properties (tmp->data, "text", text, NULL);
   }
 }
 
@@ -336,7 +321,7 @@ ges_title_clip_set_font_desc (GESTitleClip * self, const gchar * font_desc)
   GST_DEBUG_OBJECT (self, "font_desc:%s", font_desc);
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_element_set_child_properties (tmp->data,
+    ges_timeline_element_set_child_properties (tmp->data,
         "font-desc", font_desc, NULL);
   }
 }
@@ -359,7 +344,7 @@ ges_title_clip_set_halignment (GESTitleClip * self, GESTextHAlign halign)
   GST_DEBUG_OBJECT (self, "halign:%d", halign);
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_element_set_child_properties (tmp->data,
+    ges_timeline_element_set_child_properties (tmp->data,
         "halignment", halign, NULL);
   }
 }
@@ -382,7 +367,7 @@ ges_title_clip_set_valignment (GESTitleClip * self, GESTextVAlign valign)
   GST_DEBUG_OBJECT (self, "valign:%d", valign);
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_element_set_child_properties (tmp->data,
+    ges_timeline_element_set_child_properties (tmp->data,
         "valignment", valign, NULL);
   }
 }
@@ -405,7 +390,7 @@ ges_title_clip_set_color (GESTitleClip * self, guint32 color)
   GST_DEBUG_OBJECT (self, "color:%d", color);
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_element_set_child_properties (tmp->data, "color", color, NULL);
+    ges_timeline_element_set_child_properties (tmp->data, "color", color, NULL);
   }
 }
 
@@ -427,11 +412,10 @@ ges_title_clip_set_background (GESTitleClip * self, guint32 background)
   GST_DEBUG_OBJECT (self, "background:%d", background);
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_element_set_child_properties (tmp->data,
+    ges_timeline_element_set_child_properties (tmp->data,
         "foreground-color", background, NULL);
   }
 }
-
 
 /**
  * ges_title_clip_set_xpos:
@@ -451,7 +435,8 @@ ges_title_clip_set_xpos (GESTitleClip * self, gdouble position)
   GST_DEBUG_OBJECT (self, "xpos:%f", position);
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_element_set_child_properties (tmp->data, "xpos", position, NULL);
+    ges_timeline_element_set_child_properties (tmp->data, "xpos", position,
+        NULL);
   }
 }
 
@@ -473,7 +458,8 @@ ges_title_clip_set_ypos (GESTitleClip * self, gdouble position)
   GST_DEBUG_OBJECT (self, "ypos:%f", position);
 
   for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
-    ges_track_element_set_child_properties (tmp->data, "ypos", position, NULL);
+    ges_timeline_element_set_child_properties (tmp->data, "ypos", position,
+        NULL);
   }
 }
 
@@ -493,7 +479,7 @@ ges_title_clip_get_text (GESTitleClip * self)
 {
   gchar *text;
 
-  ges_track_element_get_child_properties (self->priv->track_titles->data,
+  ges_timeline_element_get_child_properties (self->priv->track_titles->data,
       "text", &text, NULL);
 
   return text;
@@ -515,7 +501,7 @@ ges_title_clip_get_font_desc (GESTitleClip * self)
 {
   gchar *font_desc;
 
-  ges_track_element_get_child_properties (self->priv->track_titles->data,
+  ges_timeline_element_get_child_properties (self->priv->track_titles->data,
       "font-desc", &font_desc, NULL);
 
   return font_desc;
@@ -537,7 +523,7 @@ ges_title_clip_get_halignment (GESTitleClip * self)
 {
   GESTextHAlign halign;
 
-  ges_track_element_get_child_properties (self->priv->track_titles->data,
+  ges_timeline_element_get_child_properties (self->priv->track_titles->data,
       "halignment", &halign, NULL);
 
   return halign;
@@ -559,7 +545,7 @@ ges_title_clip_get_valignment (GESTitleClip * self)
 {
   GESTextVAlign valign;
 
-  ges_track_element_get_child_properties (self->priv->track_titles->data,
+  ges_timeline_element_get_child_properties (self->priv->track_titles->data,
       "valignment", &valign, NULL);
 
   return valign;
@@ -581,7 +567,7 @@ ges_title_clip_get_text_color (GESTitleClip * self)
 {
   guint32 color;
 
-  ges_track_element_get_child_properties (self->priv->track_titles->data,
+  ges_timeline_element_get_child_properties (self->priv->track_titles->data,
       "color", &color, NULL);
 
   return color;
@@ -603,7 +589,7 @@ ges_title_clip_get_background_color (GESTitleClip * self)
 {
   guint32 color;
 
-  ges_track_element_get_child_properties (self->priv->track_titles->data,
+  ges_timeline_element_get_child_properties (self->priv->track_titles->data,
       "foreground-color", &color, NULL);
 
   return color;
@@ -625,7 +611,7 @@ ges_title_clip_get_xpos (GESTitleClip * self)
 {
   gdouble xpos;
 
-  ges_track_element_get_child_properties (self->priv->track_titles->data,
+  ges_timeline_element_get_child_properties (self->priv->track_titles->data,
       "xpos", &xpos, NULL);
 
   return xpos;
@@ -646,7 +632,7 @@ ges_title_clip_get_ypos (GESTitleClip * self)
 {
   gdouble ypos;
 
-  ges_track_element_get_child_properties (self->priv->track_titles->data,
+  ges_timeline_element_get_child_properties (self->priv->track_titles->data,
       "ypos", &ypos, NULL);
 
   return ypos;
