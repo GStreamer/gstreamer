@@ -359,7 +359,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
     if (status < MFX_ERR_NONE) {
       GST_ERROR_OBJECT (thiz, "Init failed (%s)",
           msdk_status_to_string (status));
-      goto no_vpp;
+      goto no_vpp_free_resource;
     } else if (status > MFX_ERR_NONE) {
       GST_WARNING_OBJECT (thiz, "Init returned: %s",
           msdk_status_to_string (status));
@@ -375,7 +375,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
         GST_WARNING_OBJECT (thiz, "VPP close failed (%s)",
             msdk_status_to_string (status1));
 
-      goto no_vpp;
+      goto no_vpp_free_resource;
     } else if (status > MFX_ERR_NONE) {
       GST_WARNING_OBJECT (thiz, "Get VPP Parameters returned: %s",
           msdk_status_to_string (status));
@@ -529,6 +529,9 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 
   return TRUE;
 
+no_vpp_free_resource:
+  if (thiz->use_video_memory)
+    gst_msdk_frame_free (thiz->context, &thiz->vpp_alloc_resp);
 no_vpp:
 failed:
   GST_OBJECT_UNLOCK (thiz);

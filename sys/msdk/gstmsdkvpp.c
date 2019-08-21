@@ -804,6 +804,11 @@ gst_msdkvpp_close (GstMsdkVPP * thiz)
   if (!thiz->context)
     return;
 
+  if (thiz->use_video_memory) {
+    gst_msdk_frame_free (thiz->context, &thiz->in_alloc_resp);
+    gst_msdk_frame_free (thiz->context, &thiz->out_alloc_resp);
+  }
+
   GST_DEBUG_OBJECT (thiz, "Closing VPP 0x%p", thiz->context);
   status = MFXVideoVPP_Close (gst_msdk_context_get_session (thiz->context));
   if (status != MFX_ERR_NONE && status != MFX_ERR_NOT_INITIALIZED) {
@@ -956,8 +961,14 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
    * otherwise the subsequent function call of MFXVideoVPP_Init() will
    * fail
    */
-  if (thiz->initialized)
+  if (thiz->initialized) {
+    if (thiz->use_video_memory) {
+      gst_msdk_frame_free (thiz->context, &thiz->in_alloc_resp);
+      gst_msdk_frame_free (thiz->context, &thiz->out_alloc_resp);
+    }
+
     MFXVideoVPP_Close (session);
+  }
 
   if (thiz->use_video_memory) {
     gst_msdk_set_frame_allocator (thiz->context);
