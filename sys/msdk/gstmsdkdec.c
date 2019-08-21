@@ -137,7 +137,7 @@ allocate_output_buffer (GstMsdkDec * thiz, GstBuffer ** buffer)
     if (GST_PAD_IS_FLUSHING (decoder->srcpad))
       return GST_FLOW_FLUSHING;
     else
-      return GST_FLOW_ERROR;
+      return GST_FLOW_CUSTOM_SUCCESS;
   }
 
   if (!frame->output_buffer) {
@@ -994,7 +994,10 @@ gst_msdkdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       goto error;
     if (!surface) {
       flow = allocate_output_buffer (thiz, &buffer);
-      if (flow != GST_FLOW_OK)
+      if (flow == GST_FLOW_CUSTOM_SUCCESS) {
+        flow = GST_FLOW_OK;
+        break;
+      } else if (flow != GST_FLOW_OK)
         goto error;
       surface = get_surface (thiz, buffer);
       if (!surface) {
