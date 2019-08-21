@@ -609,7 +609,7 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     GstClockTime buffered_time;
     guint32 written = 0;
     GstClock *clock;
-    GstClockTime clock_ahead;
+    GstClockTimeDiff clock_ahead;
 
     if (GST_BASE_SINK_CAST (self)->flushing) {
       flow_ret = GST_FLOW_FLUSHING;
@@ -664,14 +664,13 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
         else
           clock_now = 0;
 
-        if (clock_now < running_time)
-          clock_ahead = running_time - clock_now;
+        clock_ahead = running_time - clock_now;
       }
     }
 
     GST_DEBUG_OBJECT (self,
-        "Ahead %" GST_TIME_FORMAT " of the clock running time",
-        GST_TIME_ARGS (clock_ahead));
+        "Ahead %" GST_STIME_FORMAT " of the clock running time",
+        GST_STIME_ARGS (clock_ahead));
 
     if (self->output->
         output->GetBufferedAudioSampleFrameCount (&buffered_samples) != S_OK)
@@ -683,13 +682,35 @@ gst_decklink_audio_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     GST_DEBUG_OBJECT (self,
         "Buffered %" GST_TIME_FORMAT " in the driver (%u samples)",
         GST_TIME_ARGS (buffered_time), buffered_samples);
+
+    {
+      GstClockTimeDiff buffered_ahead_of_clock_ahead = GST_CLOCK_DIFF (clock_ahead, buffered_time);
+
+      GST_DEBUG_OBJECT (self, "driver is %" GST_STIME_FORMAT " ahead of the "
+          "expected clock", GST_STIME_ARGS (buffered_ahead_of_clock_ahead));
+      /* we don't want to store too much data in the driver as decklink
+       * doesn't seem to actually use our provided timestamps to perform its
+       * own synchronisation. It seems to count samples instead. */
+      /* FIXME: do we need to split buffers? */
+      if (buffered_ahead_of_clock_ahead > 0 &&
+            buffered_ahead_of_clock_ahead > gst_base_sink_get_max_lateness (bsink)) {
+        GST_DEBUG_OBJECT (self, "Dropping buffer that is %" GST_STIME_FORMAT
+            " too late", GST_STIME_ARGS (buffered_ahead_of_clock_ahead));
+        if (self->resampler)
+          gst_audio_resampler_reset (self->resampler);
+        flow_ret = GST_FLOW_OK;
+        break;
+      }
+    }
+
     // We start waiting once we have more than buffer-time buffered
-    if (buffered_time > self->buffer_time || clock_ahead > self->buffer_time) {
+    if (((GstClockTime) clock_ahead) > self->buffer_time) {
       GstClockReturn clock_ret;
       GstClockTime wait_time = running_time;
 
       GST_DEBUG_OBJECT (self,
-          "Buffered enough, wait for preroll or the clock or flushing");
+          "Buffered enough, wait for preroll or the clock or flushing. "
+          "Configured buffer time: %" GST_TIME_FORMAT, GST_TIME_ARGS (self->buffer_time));
 
       if (wait_time < self->buffer_time)
         wait_time = 0;
