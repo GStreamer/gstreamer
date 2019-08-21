@@ -458,16 +458,14 @@ ges_asset_init (GESAsset * self)
 
 /* Internal methods */
 
-/* Find the type that implemented the GESExtractable interface */
 static inline const gchar *
 _extractable_type_name (GType type)
 {
-  while (1) {
-    if (g_type_is_a (g_type_parent (type), GES_TYPE_EXTRACTABLE))
-      type = g_type_parent (type);
-    else
-      return g_type_name (type);
-  }
+  /* We can use `ges_asset_request (GES_TYPE_FORMATTER);` */
+  if (g_type_is_a (type, GES_TYPE_FORMATTER))
+    return g_type_name (GES_TYPE_FORMATTER);
+
+  return g_type_name (type);
 }
 
 static void
