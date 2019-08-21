@@ -2026,7 +2026,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (str)
     gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RANGE, str);
 
-  if (!gst_rtsp_media_is_receive_only (media)) {
+  if (gst_rtsp_media_has_completed_sender (media)) {
     /* the scale and speed headers must always be added if they were present in
      * the request. however, even if they were not, we still add them if
      * applied_rate or rate deviate from the "normal", i.e. 1.0 */

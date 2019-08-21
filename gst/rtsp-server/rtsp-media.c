@@ -2562,7 +2562,10 @@ gst_rtsp_media_get_rates (GstRTSPMedia * media, gdouble * rate,
 {
   GstRTSPMediaPrivate *priv;
   GstRTSPStream *stream;
+  gdouble save_rate, save_applied_rate;
   gboolean result = TRUE;
+  gboolean first_stream = TRUE;
+  gint i;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
@@ -2576,11 +2579,34 @@ gst_rtsp_media_get_rates (GstRTSPMedia * media, gdouble * rate,
   g_mutex_lock (&priv->lock);
 
   g_assert (priv->streams->len > 0);
-  stream = g_ptr_array_index (priv->streams, 0);
-  if (!gst_rtsp_stream_get_rates (stream, rate, applied_rate)) {
+  for (i = 0; i < priv->streams->len; i++) {
+    stream = g_ptr_array_index (priv->streams, i);
+    if (gst_rtsp_stream_is_complete (stream)) {
+      if (gst_rtsp_stream_get_rates (stream, rate, applied_rate)) {
+        if (first_stream) {
+          save_rate = *rate;
+          save_applied_rate = *applied_rate;
+          first_stream = FALSE;
+        } else {
+          if (save_rate != *rate || save_applied_rate != *applied_rate) {
+            /* diffrent rate or applied_rate, weird */
+            g_assert (FALSE);
+            result = FALSE;
+            break;
+          }
+        }
+      } else {
+        /* complete stream withot rate and applied_rate, weird */
+        g_assert (FALSE);
+        result = FALSE;
+        break;
+      }
+    }
+  }
+
+  if (!result) {
     GST_WARNING_OBJECT (media,
-        "failed to obtain rate and applied_rate from first stream");
-    result = FALSE;
+        "failed to obtain consistent rate and applied_rate");
   }
 
   g_mutex_unlock (&priv->lock);
@@ -4779,6 +4805,36 @@ gst_rtsp_media_is_receive_only (GstRTSPMedia * media)
   }
 
   return receive_only;
+}
+
+/**
+ * gst_rtsp_media_has_completed_sender:
+ *
+ * See gst_rtsp_stream_is_complete(), gst_rtsp_stream_is_sender().
+ *    
+ * Returns: whether @media has at least one complete sender stream.
+ * Since: 1.18
+ */
+gboolean
+gst_rtsp_media_has_completed_sender (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  gboolean sender = FALSE;
+  guint i;
+
+  g_mutex_lock (&priv->lock);
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStream *stream = g_ptr_array_index (priv->streams, i);
+    if (gst_rtsp_stream_is_complete (stream))
+      if (gst_rtsp_stream_is_sender (stream) ||
+          !gst_rtsp_stream_is_receiver (stream)) {
+        sender = TRUE;
+        break;
+      }
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return sender;
 }
 
 /**

@@ -2401,6 +2401,78 @@ GST_START_TEST (test_multiple_transports)
 
 GST_END_TEST;
 
+GST_START_TEST (test_suspend_mode_reset_only_audio)
+{
+  GstRTSPMountPoints *mounts;
+  gchar *service;
+  GstRTSPMediaFactory *factory;
+  GstRTSPConnection *conn;
+  GstSDPMessage *sdp_message = NULL;
+  const GstSDPMedia *sdp_media;
+  const gchar *audio_control;
+  GstRTSPRange client_port;
+  gchar *session = NULL;
+  GstRTSPTransport *audio_transport = NULL;
+  GSocket *rtp_socket, *rtcp_socket;
+
+  mounts = gst_rtsp_server_get_mount_points (server);
+
+  factory = gst_rtsp_media_factory_new ();
+  gst_rtsp_media_factory_set_suspend_mode (factory,
+      GST_RTSP_SUSPEND_MODE_RESET);
+  gst_rtsp_media_factory_set_launch (factory,
+      "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
+  gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
+  g_object_unref (mounts);
+
+  /* set port to any */
+  gst_rtsp_server_set_service (server, "0");
+
+  /* attach to default main context */
+  source_id = gst_rtsp_server_attach (server, NULL);
+  fail_if (source_id == 0);
+
+  /* get port */
+  service = gst_rtsp_server_get_service (server);
+  test_port = atoi (service);
+  fail_unless (test_port != 0);
+  g_free (service);
+
+  conn = connect_to_server (test_port, TEST_MOUNT_POINT);
+
+  sdp_message = do_describe (conn, TEST_MOUNT_POINT);
+
+  /* get control strings from DESCRIBE response */
+  fail_unless (gst_sdp_message_medias_len (sdp_message) == 2);
+  sdp_media = gst_sdp_message_get_media (sdp_message, 1);
+  audio_control = gst_sdp_media_get_attribute_val (sdp_media, "control");
+
+  get_client_ports_full (&client_port, &rtp_socket, &rtcp_socket);
+
+  /* do SETUP for audio */
+  fail_unless (do_setup (conn, audio_control, &client_port, &session,
+          &audio_transport) == GST_RTSP_STS_OK);
+
+  /* send PLAY request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_PLAY,
+          session) == GST_RTSP_STS_OK);
+
+  /* send TEARDOWN request and check that we get 200 OK */
+  fail_unless (do_simple_request (conn, GST_RTSP_TEARDOWN,
+          session) == GST_RTSP_STS_OK);
+
+  /* clean up and iterate so the clean-up can finish */
+  g_free (session);
+  gst_rtsp_transport_free (audio_transport);
+  gst_sdp_message_free (sdp_message);
+  gst_rtsp_connection_free (conn);
+
+  stop_server ();
+  iterate ();
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspserver_suite (void)
 {
@@ -2439,6 +2511,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_announce_without_sdp);
   tcase_add_test (tc, test_record_tcp);
   tcase_add_test (tc, test_multiple_transports);
+  tcase_add_test (tc, test_suspend_mode_reset_only_audio);
 
   return s;
 }
