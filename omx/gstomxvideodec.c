@@ -1051,10 +1051,20 @@ gst_omx_video_dec_allocate_output_buffers (GstOMXVideoDec * self)
         } else {
           /* if downstream pool is 1 n_mem then always try to use buffers
            * and retry without using them if it fails */
+          GstMemory *mem;
+
           buffers = g_list_append (buffers, buffer);
           frames = g_list_append (frames, frame);
-          images =
-              g_list_append (images, GST_VIDEO_FRAME_PLANE_DATA (frame, 0));
+
+          mem = gst_buffer_peek_memory (buffer, 0);
+          if (self->dmabuf && gst_is_dmabuf_memory (mem))
+            /* Use the imported fd rather than mapped address in dmabuf mode */
+            images =
+                g_list_append (images,
+                GUINT_TO_POINTER (gst_dmabuf_memory_get_fd (mem)));
+          else
+            images =
+                g_list_append (images, GST_VIDEO_FRAME_PLANE_DATA (frame, 0));
         }
       }
 
