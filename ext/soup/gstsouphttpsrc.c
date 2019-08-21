@@ -2151,7 +2151,7 @@ gst_soup_http_src_set_proxy (GstSoupHTTPSrc * src, const gchar * uri)
   return (src->proxy != NULL);
 }
 
-static guint
+static GstURIType
 gst_soup_http_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
