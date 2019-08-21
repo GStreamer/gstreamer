@@ -157,11 +157,14 @@ gst_omx_buffer_pool_start (GstBufferPool * bpool)
 
   g_assert (pool->port->buffers);
 
-  if (pool->output_mode == GST_OMX_BUFFER_MODE_DMABUF)
-    mode = GST_OMX_ALLOCATOR_FOREIGN_MEM_DMABUF;
-  else if (pool->other_pool)
+  if (pool->other_pool)
+    /* Importing buffers from downstream, either normal or dmabuf ones */
     mode = GST_OMX_ALLOCATOR_FOREIGN_MEM_OTHER_POOL;
+  else if (pool->output_mode == GST_OMX_BUFFER_MODE_DMABUF)
+    /* Exporting dmabuf */
+    mode = GST_OMX_ALLOCATOR_FOREIGN_MEM_DMABUF;
   else
+    /* Exporting normal buffers */
     mode = GST_OMX_ALLOCATOR_FOREIGN_MEM_NONE;
 
   if (!gst_omx_allocator_configure (pool->allocator, min, mode))
