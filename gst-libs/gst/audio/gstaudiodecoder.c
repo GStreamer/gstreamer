@@ -2195,11 +2195,11 @@ gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
 
   GST_OBJECT_LOCK (dec);
   dec->priv->ctx.info = info;
+  dec->priv->ctx.caps = caps;
   GST_OBJECT_UNLOCK (dec);
 
   GST_INFO_OBJECT (dec,
       "Chose default caps %" GST_PTR_FORMAT " for initial gap", caps);
-  gst_caps_unref (caps);
 
   return TRUE;
 
