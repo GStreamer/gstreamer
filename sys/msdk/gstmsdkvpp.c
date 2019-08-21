@@ -1113,6 +1113,9 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
   gst_msdkvpp_set_passthrough (thiz);
 
   /* Ensure sinkpad buffer pool */
+  if (thiz->sinkpad_buffer_pool)
+    gst_object_unref (thiz->sinkpad_buffer_pool);
+
   thiz->sinkpad_buffer_pool =
       gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SINK, caps,
       thiz->in_num_surfaces);
@@ -1121,6 +1124,9 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
     return FALSE;
   }
   /* Ensure a srcpad buffer pool */
+  if (thiz->srcpad_buffer_pool)
+    gst_object_unref (thiz->srcpad_buffer_pool);
+
   thiz->srcpad_buffer_pool =
       gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SRC, out_caps,
       thiz->out_num_surfaces);
