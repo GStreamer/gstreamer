@@ -770,16 +770,23 @@ gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
   if (key == NULL)
     goto key_failed;
 
-  gst_hls_demux_stream_decrypt_start (hls_stream, key->data,
-      hls_stream->current_iv);
+  if (!gst_hls_demux_stream_decrypt_start (hls_stream, key->data,
+          hls_stream->current_iv))
+    goto decrypt_start_failed;
 
   return TRUE;
 
 key_failed:
   {
-    GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
+    GST_ELEMENT_ERROR (demux, STREAM, DECRYPT_NOKEY,
         ("Couldn't retrieve key for decryption"), (NULL));
     GST_WARNING_OBJECT (demux, "Failed to decrypt data");
+    return FALSE;
+  }
+decrypt_start_failed:
+  {
+    GST_ELEMENT_ERROR (demux, STREAM, DECRYPT, ("Failed to start decrypt"),
+        ("Couldn't set key and IV or plugin was built without crypto library"));
     return FALSE;
   }
 }
