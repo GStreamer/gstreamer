@@ -28,6 +28,10 @@
 #include "gstmsdkvpputil.h"
 #include "msdk-enums.h"
 
+#define SWAP_GINT(a, b) do {      \
+        const gint t = a; a = b; b = t; \
+    } while (0)
+
 gboolean
 gst_msdkvpp_is_deinterlace_enabled (GstMsdkVPP * msdkvpp, GstVideoInfo * vip)
 {
@@ -74,6 +78,12 @@ fixate_output_frame_size (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
     from_par_d = GST_VIDEO_INFO_PAR_D (vinfo);
     from_w = GST_VIDEO_INFO_WIDTH (vinfo);
     from_h = GST_VIDEO_INFO_HEIGHT (vinfo);
+
+    /* compensate for rotation if needed */
+    if (thiz->rotation == 90 || thiz->rotation == 270) {
+      SWAP_GINT (from_w, from_h);
+      SWAP_GINT (from_par_n, from_par_d);
+    }
 
     gst_structure_get_int (outs, "width", &w);
     gst_structure_get_int (outs, "height", &h);
