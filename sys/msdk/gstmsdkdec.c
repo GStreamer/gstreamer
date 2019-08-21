@@ -769,8 +769,9 @@ release_msdk_surfaces (GstMsdkDec * thiz)
   GList *l;
   MsdkSurface *surface;
 
-  for (l = thiz->decoded_msdk_surfaces; l; l = l->next) {
+  for (l = thiz->decoded_msdk_surfaces; l;) {
     surface = l->data;
+    l = l->next;
     free_surface (thiz, surface);
   }
 }

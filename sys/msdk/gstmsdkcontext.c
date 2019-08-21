@@ -468,8 +468,9 @@ check_surfaces_available (GstMsdkContext * context, GstMsdkAllocResponse * resp)
   gboolean ret = FALSE;
 
   g_mutex_lock (&priv->mutex);
-  for (l = resp->surfaces_locked; l; l = l->next) {
+  for (l = resp->surfaces_locked; l;) {
     surface = l->data;
+    l = l->next;
     if (!surface->Data.Locked) {
       resp->surfaces_locked = g_list_remove (resp->surfaces_locked, surface);
       resp->surfaces_avail = g_list_prepend (resp->surfaces_avail, surface);
@@ -503,9 +504,9 @@ gst_msdk_context_get_surface_available (GstMsdkContext * context,
 
 retry:
   g_mutex_lock (&priv->mutex);
-  for (l = msdk_resp->surfaces_avail; l; l = l->next) {
+  for (l = msdk_resp->surfaces_avail; l;) {
     surface = l->data;
-
+    l = l->next;
     if (!surface->Data.Locked) {
       msdk_resp->surfaces_avail =
           g_list_remove (msdk_resp->surfaces_avail, surface);

@@ -647,15 +647,18 @@ gst_msdkenc_dequeue_frame (GstMsdkEnc * thiz, GstVideoCodecFrame * frame)
 {
   GList *l;
 
-  for (l = thiz->pending_frames; l; l = l->next) {
+  for (l = thiz->pending_frames; l;) {
     FrameData *fdata = l->data;
+    GList *l1 = l;
+
+    l = l->next;
 
     if (fdata->frame != frame)
       continue;
 
     gst_msdkenc_free_frame_data (thiz, fdata);
 
-    thiz->pending_frames = g_list_delete_link (thiz->pending_frames, l);
+    thiz->pending_frames = g_list_delete_link (thiz->pending_frames, l1);
     return;
   }
 }
