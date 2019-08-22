@@ -171,7 +171,7 @@ gst_vulkan_display_finalize (GObject * object)
   display->priv->event_thread = NULL;
   g_mutex_unlock (&display->priv->thread_lock);
 
-  if (display->main_context && display->event_source) {
+  if (display->event_source) {
     g_source_destroy (display->event_source);
     g_source_unref (display->event_source);
   }
