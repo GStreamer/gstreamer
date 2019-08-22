@@ -177,6 +177,11 @@ ges_meta_container_set_meta            (GESMetaContainer * container,
                                         const GValue *value);
 
 GES_API gboolean
+ges_meta_container_set_marker_list     (GESMetaContainer * container,
+                                        const gchar * meta_item,
+                                        const GESMarkerList *list);
+
+GES_API gboolean
 ges_meta_container_register_meta_boolean (GESMetaContainer *container,
                                           GESMetaFlag flags,
                                           const gchar* meta_item,
@@ -296,6 +301,10 @@ ges_meta_container_get_date_time   (GESMetaContainer *container,
 GES_API const gchar *
 ges_meta_container_get_string      (GESMetaContainer * container,
                                         const gchar * meta_item);
+
+GES_API GESMarkerList *
+ges_meta_container_get_marker_list (GESMetaContainer * container,
+                                    const gchar * key);
 
 GES_API const GValue *
 ges_meta_container_get_meta            (GESMetaContainer * container,

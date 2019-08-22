@@ -450,6 +450,14 @@ G_GNUC_INTERNAL GESMultiFileURI * ges_multi_file_uri_new (const gchar * uri);
  ************************/
 #define GES_PARAM_NO_SERIALIZATION (1 << (G_PARAM_USER_SHIFT + 1))
 
+/*******************************
+ * GESMarkerList serialization *
+ *******************************/
+
+
+G_GNUC_INTERNAL gchar * ges_marker_list_serialize (const GValue * v);
+G_GNUC_INTERNAL gboolean ges_marker_list_deserialize (GValue *dest, const gchar *s);
+
 /********************
  *  Gnonlin helpers *
  ********************/

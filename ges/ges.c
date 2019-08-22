@@ -75,6 +75,13 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 {
   GESUriClipAssetClass *uriasset_klass = NULL;
   GstElementFactory *nlecomposition_factory = NULL;
+  static GstValueTable gstvtable = {
+    G_TYPE_NONE,
+    (GstValueCompareFunc) NULL,
+    (GstValueSerializeFunc) ges_marker_list_serialize,
+    (GstValueDeserializeFunc) ges_marker_list_deserialize
+  };
+  static gboolean marker_list_registered = FALSE;
 
   if (initialized_thread) {
     GST_DEBUG ("already initialized ges");
@@ -122,6 +129,12 @@ ges_init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   /* TODO: user-defined types? */
   initialized_thread = g_thread_self ();
   g_type_class_unref (uriasset_klass);
+
+  if (!marker_list_registered) {
+    gstvtable.type = GES_TYPE_MARKER_LIST;
+    gst_value_register (&gstvtable);
+    marker_list_registered = TRUE;
+  }
 
   GST_DEBUG ("GStreamer Editing Services initialized");
 

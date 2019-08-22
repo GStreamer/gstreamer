@@ -188,6 +188,10 @@ typedef struct _GESVideoTrack GESVideoTrack;
 typedef struct _GESAudioTrackClass GESAudioTrackClass;
 typedef struct _GESAudioTrack GESAudioTrack;
 
+typedef struct _GESMarkerList GESMarkerList;
+
+typedef struct _GESMarker GESMarker;
+
 G_END_DECLS
 
 #endif /* __GES_TYPES_H__ */

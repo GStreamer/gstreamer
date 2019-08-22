@@ -1462,6 +1462,70 @@ GST_START_TEST (test_layer_meta_value)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_layer_meta_marker_list)
+{
+  GESTimeline *timeline;
+  GESLayer *layer, *layer2;
+  GESMarkerList *mlist, *mlist2;
+  GESMarker *marker;
+  gchar *metas1, *metas2;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+  layer2 = ges_layer_new ();
+  ges_timeline_add_layer (timeline, layer2);
+
+  mlist = ges_marker_list_new ();
+  marker = ges_marker_list_add (mlist, 42);
+  ges_meta_container_set_string (GES_META_CONTAINER (marker), "bar", "baz");
+  marker = ges_marker_list_add (mlist, 84);
+  ges_meta_container_set_string (GES_META_CONTAINER (marker), "lorem",
+      "ip\tsu\"m;");
+
+  ASSERT_OBJECT_REFCOUNT (mlist, "local ref", 1);
+
+  fail_unless (ges_meta_container_set_marker_list (GES_META_CONTAINER (layer),
+          "foo", mlist));
+
+  ASSERT_OBJECT_REFCOUNT (mlist, "GstStructure + local ref", 2);
+
+  mlist2 =
+      ges_meta_container_get_marker_list (GES_META_CONTAINER (layer), "foo");
+
+  fail_unless (mlist == mlist2);
+
+  ASSERT_OBJECT_REFCOUNT (mlist, "GstStructure + getter + local ref", 3);
+
+  g_object_unref (mlist2);
+
+  ASSERT_OBJECT_REFCOUNT (mlist, "GstStructure + local ref", 2);
+
+  metas1 = ges_meta_container_metas_to_string (GES_META_CONTAINER (layer));
+  ges_meta_container_add_metas_from_string (GES_META_CONTAINER (layer2),
+      metas1);
+  metas2 = ges_meta_container_metas_to_string (GES_META_CONTAINER (layer2));
+
+  fail_unless_equals_string (metas1, metas2);
+  g_free (metas1);
+  g_free (metas2);
+
+  fail_unless (ges_meta_container_set_marker_list (GES_META_CONTAINER (layer),
+          "foo", NULL));
+
+  ASSERT_OBJECT_REFCOUNT (mlist, "local ref", 1);
+
+  g_object_unref (mlist);
+  g_object_unref (timeline);
+
+  ges_deinit ();
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_layer_meta_register)
 {
   GESTimeline *timeline;
@@ -1667,6 +1731,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_layer_meta_date);
   tcase_add_test (tc_chain, test_layer_meta_date_time);
   tcase_add_test (tc_chain, test_layer_meta_value);
+  tcase_add_test (tc_chain, test_layer_meta_marker_list);
   tcase_add_test (tc_chain, test_layer_meta_register);
   tcase_add_test (tc_chain, test_layer_meta_foreach);
   tcase_add_test (tc_chain, test_layer_get_clips_in_interval);

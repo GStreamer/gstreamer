@@ -61,6 +61,7 @@ ges_sources = files([
     'ges-validate.c',
     'ges-structured-interface.c',
     'ges-structure-parser.c',
+    'ges-marker-list.c',
     'gstframepositioner.c'
 ])
 
@@ -122,7 +123,8 @@ ges_headers = files([
     'ges-container.h',
     'ges-effect-asset.h',
     'ges-utils.h',
-    'ges-group.h'
+    'ges-group.h',
+    'ges-marker-list.h'
 ])
 
 if libxml_dep.found()

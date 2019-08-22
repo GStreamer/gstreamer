@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 
 #include "ges-meta-container.h"
+#include "ges-marker-list.h"
 
 /**
 * SECTION: gesmetacontainer
@@ -37,8 +38,7 @@ static GQuark ges_meta_key;
 
 G_DEFINE_INTERFACE_WITH_CODE (GESMetaContainer, ges_meta_container,
     G_TYPE_OBJECT, ges_meta_key =
-    g_quark_from_static_string ("ges-meta-container-data");
-    );
+    g_quark_from_static_string ("ges-meta-container-data"););
 
 enum
 {
@@ -432,6 +432,49 @@ ges_meta_container_set_meta (GESMetaContainer * container,
     return FALSE;
 
   return _set_value (container, meta_item, value);
+}
+
+/**
+ * ges_meta_container_set_marker_list:
+ * @container: Target container
+ * @meta_item: Name of the meta item to set
+ * @list: (allow-none) (transfer none): List to set
+ *
+ * Associates a marker list with the given meta item
+ *
+ * Return: %TRUE if the meta could be added, %FALSE otherwise
+ * Since: 1.18
+ */
+gboolean
+ges_meta_container_set_marker_list (GESMetaContainer * container,
+    const gchar * meta_item, const GESMarkerList * list)
+{
+  gboolean ret;
+  GValue v = G_VALUE_INIT;
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
+  g_return_val_if_fail (meta_item != NULL, FALSE);
+
+  if (list == NULL) {
+    GstStructure *structure = _meta_container_get_structure (container);
+    gst_structure_remove_field (structure, meta_item);
+
+    g_signal_emit (container, _signals[NOTIFY_SIGNAL], 0, meta_item, list);
+
+    return TRUE;
+  }
+
+  g_return_val_if_fail (GES_IS_MARKER_LIST ((gpointer) list), FALSE);
+
+  if (_can_write_value (container, meta_item, GES_TYPE_MARKER_LIST) == FALSE)
+    return FALSE;
+
+  g_value_init_from_instance (&v, (gpointer) list);
+
+  ret = _set_value (container, meta_item, &v);
+
+  g_value_unset (&v);
+
+  return ret;
 }
 
 /**
@@ -912,6 +955,38 @@ ges_meta_container_get_meta (GESMetaContainer * container, const gchar * key)
   structure = _meta_container_get_structure (container);
 
   return gst_structure_get_value (structure, key);
+}
+
+/**
+ * ges_meta_container_get_marker_list:
+ * @container: Target container
+ * @key: The key name of the list to retrieve
+ *
+ * Gets the value of a given meta item, returns NULL if @key
+ * can not be found.
+ *
+ * Returns: (transfer full): the #GESMarkerList corresponding to the meta with the given @key.
+ * Since: 1.18
+ */
+GESMarkerList *
+ges_meta_container_get_marker_list (GESMetaContainer * container,
+    const gchar * key)
+{
+  GstStructure *structure;
+  const GValue *v;
+
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
+  g_return_val_if_fail (key != NULL, FALSE);
+
+  structure = _meta_container_get_structure (container);
+
+  v = gst_structure_get_value (structure, key);
+
+  if (v == NULL) {
+    return NULL;
+  }
+
+  return GES_MARKER_LIST (g_value_dup_object (v));
 }
 
 /**

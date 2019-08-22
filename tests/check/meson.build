@@ -17,6 +17,7 @@ ges_tests = [
     ['ges/track'],
     ['ges/tempochange'],
     ['ges/negative'],
+    ['ges/markerlist'],
     ['nle/simple'],
     ['nle/complex'],
     ['nle/nleoperation'],
