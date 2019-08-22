@@ -2465,7 +2465,6 @@ gst_omx_video_enc_semi_planar_manual_copy (GstOMXVideoEnc * self,
 
     if (dest + dest_stride * height >
         outbuf->omx_buf->pBuffer + outbuf->omx_buf->nAllocLen) {
-      gst_video_frame_unmap (&frame);
       GST_ERROR_OBJECT (self, "Invalid output buffer size");
       gst_video_frame_unmap (&frame);
       return FALSE;
