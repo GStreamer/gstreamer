@@ -363,9 +363,10 @@ gst_vulkan_display_remove_window (GstVulkanDisplay * display,
   GST_OBJECT_LOCK (display);
   l = _find_window_list_item (display, window);
   if (l) {
+    GWeakRef *ref = l->data;
     display->windows = g_list_delete_link (display->windows, l);
-    g_weak_ref_clear (l->data);
-    g_free (l->data);
+    g_weak_ref_clear (ref);
+    g_free (ref);
     ret = TRUE;
   }
   GST_OBJECT_UNLOCK (display);
