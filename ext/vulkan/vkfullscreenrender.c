@@ -503,6 +503,7 @@ _create_render_pass (GstVulkanFullScreenRender * render)
       vkCreateRenderPass (render->device->device, &render_pass_info, NULL,
       &render_pass);
   g_free (color_attachment_refs);
+  g_free (descriptions);
   if (gst_vulkan_error_to_g_error (err, &error, "vkCreateRenderPass") < 0) {
     GST_ERROR_OBJECT (render, "Failed to create renderpass: %s",
         error->message);
