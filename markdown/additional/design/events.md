@@ -14,7 +14,7 @@ Different types of events exist to implement various functionalities.
 * `GST_EVENT_CAPS`: Format information about the following buffers
 * `GST_EVENT_SEGMENT`: Timing information for the following buffers
 * `GST_EVENT_TAG`: Stream metadata.
-* `GST_EVENT_BUFFERSIZE`: Buffer size requirements
+* `GST_EVENT_BUFFERSIZE`: Buffer size requirements. Currently not used yet.
 * `GST_EVENT_SINK_MESSAGE`: An event turned into a message by sinks
 * `GST_EVENT_EOS`: no more data is to be expected on a pad.
 * `GST_EVENT_QOS`: A notification of the quality of service of the stream
@@ -23,10 +23,6 @@ Different types of events exist to implement various functionalities.
 * `GST_EVENT_LATENCY`: Configure the latency in a pipeline
 * `GST_EVENT_STEP`: Stepping event
 * `GST_EVENT_RECONFIGURE`: stream reconfigure event
-
-- `GST_EVENT_DRAIN`: Play all data downstream before returning.
-  > not yet implemented, under investigation, might be needed to do
-    still frames in DVD.
 
 ## src pads
 
@@ -44,7 +40,7 @@ A `gst_pad_send_event()` on a sinkpad will call the event function on
 the pad. If the event function returns success, the sticky event is
 stored in the sticky event array and the event is marked for update.
 
-When the pad is flushing, the `_send_event()` function returns FALSE
+When the pad is flushing, the `gst_pad_send_event()` function returns FALSE
 immediately.
 
 When the next data item is pushed, the pending events are pushed first.
@@ -178,7 +174,6 @@ tagging system. A tag is serialized with buffers.
 ## BUFFERSIZE
 
 > **Note**
->
 > This event is not yet implemented.
 
 An element can suggest a buffersize for downstream elements. This is
@@ -263,20 +258,3 @@ value is calculated by the pipeline and distributed to all sink elements
 before they are set to PLAYING. The sinks will add the configured
 latency value to the timestamps of the buffer in order to delay their
 presentation. (See also [latency](additional/design/latency.md)).
-
-## DRAIN
-
-> **Note**
->
-> This event is not yet implemented.
-
-Drain event indicates that upstream is about to perform a real-time
-event, such as pausing to present an interactive menu or such, and needs
-to wait for all data it has sent to be played-out in the sink.
-
-Drain should only be used by live elements, as it may otherwise occur
-during prerolling.
-
-Usually after draining the pipeline, an element either needs to modify
-timestamps, or FLUSH to prevent subsequent data being discarded at the
-sinks for arriving late (only applies during playback scenarios).

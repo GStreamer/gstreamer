@@ -21,7 +21,7 @@ for this is that this way we can detect when the first buffer or event
 arrives in the sink when the state change completes.
 
 A sink should block on the first `EOS` event or buffer received in the
-`READY→PAUSED` state before commiting the state to `PAUSED`.
+`READY→PAUSED` state before committing the state to `PAUSED`.
 
 `FLUSHING` events have to be handled out of sync with the buffer flow and
 take no part in the preroll procedure.
@@ -42,9 +42,9 @@ Events other than `EOS` do not complete the preroll stage.
     switch (pending)
       case PLAYING:
         need_preroll = FALSE
-	break
+        break
       case PAUSED:
-	break
+        break
       case READY:
       case NULL:
         return FALSE
@@ -178,7 +178,7 @@ Events other than `EOS` do not complete the preroll stage.
       break
     SEGMENT:
       # the segment must be used to clip incoming
-      # buffers. Then then go into the queue as non-prerollable
+      # buffers. Then go into the queue as non-prerollable
       # items used for syncing the buffers
       STREAM_LOCK
       PREROLL_LOCK
@@ -234,50 +234,50 @@ Events other than `EOS` do not complete the preroll stage.
       READY_PAUSED:
         # no datapassing is going on so we always return ASYNC
         ret = ASYNC
-	need_commit = TRUE
+        need_commit = TRUE
         eos = FALSE
         flushing = FALSE
-	need_preroll = TRUE
-	prerolled = FALSE
+        need_preroll = TRUE
+        prerolled = FALSE
         break
       PAUSED_PLAYING:
         # we grab the preroll lock. This we can only do if the
-	# chain function is either doing some clock sync, we are
-	# waiting for preroll or the chain function is not being called.
+        # chain function is either doing some clock sync, we are
+        # waiting for preroll or the chain function is not being called.
         PREROLL_LOCK
-	if (prerolled || eos)
+        if (prerolled || eos)
           ret = OK
-	  need_commit = FALSE
-	  need_preroll = FALSE
-	  if (eos)
-	    post_eos
-	  else
+          need_commit = FALSE
+          need_preroll = FALSE
+          if (eos)
+            post_eos
+          else
             PREROLL_SIGNAL
-	else
-	  need_preroll = TRUE
-	  need_commit = TRUE
+        else
+          need_preroll = TRUE
+          need_commit = TRUE
           ret = ASYNC
         PREROLL_UNLOCK
         break
       PLAYING_PAUSED:
                            ---> subclass can interrupt render
         # we grab the preroll lock. This we can only do if the
-	# chain function is either doing some clock sync
-	# or the chain function is not being called.
+        # chain function is either doing some clock sync
+        # or the chain function is not being called.
         PREROLL_LOCK
-	need_preroll = TRUE
+        need_preroll = TRUE
         unlock_clock
-	if (prerolled || eos)
+        if (prerolled || eos)
           ret = OK
-	else
+        else
           ret = ASYNC
         PREROLL_UNLOCK
         break
       PAUSED_READY:
                            ---> subclass can interrupt render
         # we grab the preroll lock. Set to flushing and unlock
-	# everything. This should exit the chain functions and stop
-	# streaming.
+        # everything. This should exit the chain functions and stop
+        # streaming.
         PREROLL_LOCK
         flushing = TRUE
         unlock_clock
