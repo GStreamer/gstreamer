@@ -144,6 +144,16 @@ gst_vulkan_display_init (GstVulkanDisplay * display)
 }
 
 static void
+free_window_weak_ref (GWeakRef * ref)
+{
+  if (!ref)
+    return;
+
+  g_weak_ref_clear (ref);
+  g_free (ref);
+}
+
+static void
 gst_vulkan_display_finalize (GObject * object)
 {
   GstVulkanDisplay *display = GST_VULKAN_DISPLAY (object);
@@ -166,6 +176,11 @@ gst_vulkan_display_finalize (GObject * object)
     g_source_unref (display->event_source);
   }
   display->event_source = NULL;
+
+  GST_OBJECT_LOCK (display);
+  g_list_free_full (display->windows, (GDestroyNotify) free_window_weak_ref);
+  display->windows = NULL;
+  GST_OBJECT_UNLOCK (display);
 
   if (display->instance) {
     gst_object_unref (display->instance);
@@ -325,7 +340,8 @@ _compare_vulkan_window (GWeakRef * ref, GstVulkanWindow * window)
   GstVulkanWindow *other = g_weak_ref_get (ref);
   gboolean equal = window == other;
 
-  gst_object_unref (other);
+  if (other)
+    gst_object_unref (other);
 
   return !equal;
 }
@@ -365,8 +381,7 @@ gst_vulkan_display_remove_window (GstVulkanDisplay * display,
   if (l) {
     GWeakRef *ref = l->data;
     display->windows = g_list_delete_link (display->windows, l);
-    g_weak_ref_clear (ref);
-    g_free (ref);
+    free_window_weak_ref (ref);
     ret = TRUE;
   }
   GST_OBJECT_UNLOCK (display);
