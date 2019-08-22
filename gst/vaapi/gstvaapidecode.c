@@ -1434,6 +1434,22 @@ gst_vaapidecode_sink_event (GstVideoDecoder * vdec, GstEvent * event)
   return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (vdec, event);
 }
 
+static gboolean
+gst_vaapidecode_transform_meta (GstVideoDecoder *
+    vdec, GstVideoCodecFrame * frame, GstMeta * meta)
+{
+  const GstMetaInfo *info = meta->info;
+
+  if (GST_VIDEO_DECODER_CLASS (parent_class)->transform_meta (vdec, frame,
+          meta))
+    return TRUE;
+
+  if (!g_strcmp0 (g_type_name (info->type), "GstVideoRegionOfInterestMeta"))
+    return TRUE;
+
+  return FALSE;
+}
+
 static void
 gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
 {
@@ -1470,6 +1486,8 @@ gst_vaapidecode_class_init (GstVaapiDecodeClass * klass)
   vdec_class->sink_query = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_query);
   vdec_class->getcaps = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_getcaps);
   vdec_class->sink_event = GST_DEBUG_FUNCPTR (gst_vaapidecode_sink_event);
+  vdec_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_vaapidecode_transform_meta);
 
   map = (GstVaapiDecoderMap *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
       GST_VAAPI_DECODE_PARAMS_QDATA);
