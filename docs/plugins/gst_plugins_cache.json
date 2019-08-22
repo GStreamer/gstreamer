@@ -79,6 +79,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "adpcmdec": {
@@ -164,6 +165,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "adpcmenc": {
@@ -281,6 +283,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "aiff": {
@@ -383,6 +386,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "aom": {
@@ -638,6 +642,14 @@
                         ],
                         "writable": true
                     },
+                    "row-mt": {
+                        "blurb": "Enable row based multi-threading",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "superres-denominator": {
                         "blurb": "Frame super-resolution denominator, used only by SUPERRES_FIXED mode",
                         "construct": false,
@@ -719,6 +731,16 @@
                         "type-name": "guint",
                         "writable": true
                     },
+                    "threads": {
+                        "blurb": "Max number of threads to use encoding, set to 0 determine the approximate number of threads that the system schedule",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
                     "undershoot-pct": {
                         "blurb": "Rate control adaptation undershoot control",
                         "construct": false,
@@ -737,6 +759,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "asfmux": {
@@ -1079,6 +1102,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "assrender": {
@@ -1099,7 +1123,7 @@
                 "name": "assrender",
                 "pad-templates": {
                     "src": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always",
                         "typename": "GstPad"
@@ -1111,7 +1135,7 @@
                         "typename": "GstPad"
                     },
                     "video_sink": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always",
                         "typename": "GstPad"
@@ -1165,6 +1189,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "audiobuffersplit": {
@@ -1277,6 +1302,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "audiofxbad": {
@@ -1383,6 +1409,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "audiolatency": {
@@ -1466,6 +1493,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "audiomixmatrix": {
@@ -1589,6 +1617,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "audiovisualizers": {
@@ -2133,6 +2162,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "autoconvert": {
@@ -2276,6 +2306,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "avtp": {
@@ -2967,6 +2998,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "bluez": {
@@ -3335,6 +3367,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "bs2b": {
@@ -3403,6 +3436,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "bz2": {
@@ -3545,6 +3579,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "camerabin": {
@@ -4129,6 +4164,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "chromaprint": {
@@ -4213,6 +4249,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "closedcaption": {
@@ -4237,12 +4274,12 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     },
                     "video_sink": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -4646,6 +4683,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "coloreffects": {
@@ -4849,6 +4887,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "colormanagement": {
@@ -4986,6 +5025,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "curl": {
@@ -6700,6 +6740,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "d3d": {
@@ -7099,6 +7140,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "dc1394": {
@@ -7982,7 +8024,7 @@
                 "name": "fakevideosink",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -8572,6 +8614,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "decklink": {
@@ -9963,7 +10006,7 @@
                         "blurb": "True if there is a valid input signal available",
                         "construct": false,
                         "construct-only": false,
-                        "default": "true",
+                        "default": "false",
                         "type-name": "gboolean",
                         "writable": false
                     },
@@ -10075,6 +10118,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "directfb": {
@@ -11077,6 +11121,7 @@
         "license": "BSD",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "dtsdec": {
@@ -14152,6 +14197,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "dvbsuboverlay": {
@@ -14172,7 +14218,7 @@
                 "name": "dvbsuboverlay",
                 "pad-templates": {
                     "src": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always",
                         "typename": "GstPad"
@@ -14184,7 +14230,7 @@
                         "typename": "GstPad"
                     },
                     "video_sink": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always",
                         "typename": "GstPad"
@@ -14240,6 +14286,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "dvdspu": {
@@ -14302,6 +14349,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "faac": {
@@ -14682,6 +14730,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "fbdevsink": {
@@ -14867,6 +14916,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "fdkaac": {
@@ -15043,6 +15093,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "festival": {
@@ -15099,6 +15150,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "fieldanalysis": {
@@ -15308,6 +15360,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "flite": {
@@ -15504,6 +15557,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "freeverb": {
@@ -15609,6 +15663,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "frei0r": {
@@ -27397,6 +27452,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "gaudieffects": {
@@ -27887,6 +27943,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "gdp": {
@@ -28015,6 +28072,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "geometrictransform": {
@@ -29900,6 +29958,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "gme": {
@@ -29936,6 +29995,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "gsm": {
@@ -30098,6 +30158,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "hls": {
@@ -30446,6 +30507,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "id3tag": {
@@ -30529,6 +30591,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "inter": {
@@ -31083,7 +31146,7 @@
                 "name": "intervideosink",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always",
                         "typename": "GstPad"
@@ -31257,7 +31320,7 @@
                 "name": "intervideosrc",
                 "pad-templates": {
                     "src": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always",
                         "typename": "GstPad"
@@ -31341,6 +31404,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "interlace": {
@@ -31489,6 +31553,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "ipcpipeline": {
@@ -31755,6 +31820,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "iqa": {
@@ -31966,6 +32032,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "ivfparse": {
@@ -32031,6 +32098,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "ivtc": {
@@ -32152,6 +32220,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "jp2kdecimator": {
@@ -32228,6 +32297,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "jpegformat": {
@@ -32339,6 +32409,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "kate": {
@@ -32700,6 +32771,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "kms": {
@@ -32978,6 +33050,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "ladspa": {
@@ -33620,6 +33693,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "legacyrawparse": {
@@ -34477,6 +34551,26 @@
                                 "desc": "GST_VIDEO_FORMAT_RGB10A2_LE",
                                 "name": "rgb10a2-le",
                                 "value": "86"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_Y444_16BE",
+                                "name": "y444-16be",
+                                "value": "87"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_Y444_16LE",
+                                "name": "y444-16le",
+                                "value": "88"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_P016_BE",
+                                "name": "p016-be",
+                                "value": "89"
+                            },
+                            {
+                                "desc": "GST_VIDEO_FORMAT_P016_LE",
+                                "name": "p016-le",
+                                "value": "90"
                             }
                         ],
                         "writable": true
@@ -34594,6 +34688,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "midi": {
@@ -34650,6 +34745,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "mms": {
@@ -34902,6 +34998,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "mpeg2enc": {
@@ -35592,6 +35689,7 @@
         "license": "unknown",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "mpegpsmux": {
@@ -35656,6 +35754,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "mpegtsdemux": {
@@ -35864,6 +35963,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "mpegtsmux": {
@@ -36011,6 +36111,16 @@
                         "construct": false,
                         "construct-only": false,
                         "default": "9000",
+                        "max": "-1",
+                        "min": "1",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "pcr-interval": {
+                        "blurb": "Set the interval (in ticks of the 90kHz clock) for writing PCR",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "3600",
                         "max": "-1",
                         "min": "1",
                         "type-name": "guint",
@@ -36240,6 +36350,16 @@
                         "type-name": "guint",
                         "writable": true
                     },
+                    "pcr-interval": {
+                        "blurb": "Set the interval (in ticks of the 90kHz clock) for writing PCR",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "3600",
+                        "max": "-1",
+                        "min": "1",
+                        "type-name": "guint",
+                        "writable": true
+                    },
                     "pmt-interval": {
                         "blurb": "Set the interval (in ticks of the 90kHz clock) for writing out the PMT table",
                         "construct": false,
@@ -36311,6 +36431,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "mplex": {
@@ -36818,6 +36939,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "neonhttpsrc": {
@@ -37142,6 +37264,17 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
+    "nvcodec": {
+        "description": "GStreamer NVCODEC plugin",
+        "elements": {},
+        "filename": "gstnvcodec",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "nvdec": {
@@ -37662,6 +37795,7 @@
         "license": "GPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "openal": {
@@ -38110,6 +38244,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "opencv": {
@@ -39347,7 +39482,7 @@
                         "blurb": "Location of Haar cascade file to use for face blurion",
                         "construct": false,
                         "construct-only": false,
-                        "default": "/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml",
+                        "default": "/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -39413,7 +39548,7 @@
                         "blurb": "Location of Haar cascade file to use for eye-pair detection",
                         "construct": false,
                         "construct-only": false,
-                        "default": "/usr/share/opencv/haarcascades/haarcascade_mcs_eyepair_small.xml",
+                        "default": "/usr/share/OpenCV/haarcascades/haarcascade_mcs_eyepair_small.xml",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -39476,7 +39611,7 @@
                         "blurb": "Location of Haar cascade file to use for mouth detection",
                         "construct": false,
                         "construct-only": false,
-                        "default": "/usr/share/opencv/haarcascades/haarcascade_mcs_mouth.xml",
+                        "default": "/usr/share/OpenCV/haarcascades/haarcascade_mcs_mouth.xml",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -39492,7 +39627,7 @@
                         "blurb": "Location of Haar cascade file to use for nose detection",
                         "construct": false,
                         "construct-only": false,
-                        "default": "/usr/share/opencv/haarcascades/haarcascade_mcs_nose.xml",
+                        "default": "/usr/share/OpenCV/haarcascades/haarcascade_mcs_nose.xml",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -39507,7 +39642,7 @@
                         "blurb": "Location of Haar cascade file to use for face detection",
                         "construct": false,
                         "construct-only": false,
-                        "default": "/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml",
+                        "default": "/usr/share/OpenCV/haarcascades/haarcascade_frontalface_default.xml",
                         "type-name": "gchararray",
                         "writable": true
                     },
@@ -40468,6 +40603,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "openexr": {
@@ -40505,6 +40641,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "openh264": {
@@ -40862,6 +40999,7 @@
         "license": "BSD",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "openjpeg": {
@@ -40896,6 +41034,16 @@
                     }
                 },
                 "properties": {
+                    "max-threads": {
+                        "blurb": "Maximum number of worker threads to spawn. (0 = auto)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -41070,6 +41218,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "openmpt": {
@@ -41396,6 +41545,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "pcapparse": {
@@ -41570,6 +41720,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "pnm": {
@@ -41690,6 +41841,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "proxy": {
@@ -41800,6 +41952,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "removesilence": {
@@ -41929,6 +42082,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "resindvd": {
@@ -41962,7 +42116,7 @@
                         "typename": "GstPad"
                     },
                     "video": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "sometimes",
                         "typename": "GstPad"
@@ -42034,6 +42188,7 @@
         "license": "GPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "rfbsrc": {
@@ -42228,6 +42383,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "rist": {
@@ -42497,14 +42653,14 @@
                         "writable": true
                     },
                     "dispatcher": {
-                        "blurb": "An element that takes care of multi-plexing bounds. When set \"bonding-method\" is ignored.",
+                        "blurb": "An element that takes care of multi-plexing bonded links. When set \"bonding-method\" is ignored.",
                         "construct": false,
                         "construct-only": false,
                         "type-name": "GstElement",
                         "writable": true
                     },
                     "max-rtcp-bandwidth": {
-                        "blurb": "The maximum bandwidth used for RTCP in fraction of RTP bandwdith",
+                        "blurb": "The maximum bandwidth used for RTCP as a fraction of RTP bandwdith",
                         "construct": true,
                         "construct-only": false,
                         "default": "0.05",
@@ -42522,7 +42678,7 @@
                         "writable": true
                     },
                     "min-rtcp-interval": {
-                        "blurb": "The minimum interval in ms between two regular successive RTCP packets.",
+                        "blurb": "The minimum interval (in ms) between two regular successive RTCP packets.",
                         "construct": true,
                         "construct-only": false,
                         "default": "100",
@@ -42573,7 +42729,7 @@
                         "writable": true
                     },
                     "port": {
-                        "blurb": "The port RTP packets will be sent, RTCP port is derived from it, this port must be an even number.",
+                        "blurb": "The port RTP packets will be sent, the RTCP port is this value + 1. This port must be an even number.",
                         "construct": true,
                         "construct-only": false,
                         "default": "5004",
@@ -42583,7 +42739,7 @@
                         "writable": true
                     },
                     "sender-buffer": {
-                        "blurb": "Size of the retransmission queue in ms",
+                        "blurb": "Size of the retransmission queue (in ms)",
                         "construct": true,
                         "construct-only": false,
                         "default": "1200",
@@ -42601,7 +42757,7 @@
                         "writable": false
                     },
                     "stats-update-interval": {
-                        "blurb": "The interval between 'stats' update notification (0 disabled)",
+                        "blurb": "The interval between 'stats' update notification (in ms) (0 disabled)",
                         "construct": true,
                         "construct-only": false,
                         "default": "0",
@@ -42651,7 +42807,7 @@
                         "writable": true
                     },
                     "bonding-addresses": {
-                        "blurb": "Comma (,) seperated list of <address>:<port> to receive from. Only used if 'enale-bonding' is set.",
+                        "blurb": "Comma (,) separated list of <address>:<port> to receive from. Only used if 'enable-bonding' is set.",
                         "construct": false,
                         "construct-only": false,
                         "default": "0.0.0.0:5004",
@@ -42667,7 +42823,7 @@
                         "writable": true
                     },
                     "max-rtcp-bandwidth": {
-                        "blurb": "The maximum bandwidth used for RTCP in fraction of RTP bandwdith",
+                        "blurb": "The maximum bandwidth used for RTCP as a fraction of RTP bandwdith",
                         "construct": true,
                         "construct-only": false,
                         "default": "0.05",
@@ -42695,7 +42851,7 @@
                         "writable": true
                     },
                     "min-rtcp-interval": {
-                        "blurb": "The minimum interval in ms between two successive RTCP packets",
+                        "blurb": "The minimum interval (in ms) between two successive RTCP packets",
                         "construct": true,
                         "construct-only": false,
                         "default": "100",
@@ -42713,7 +42869,7 @@
                         "writable": true
                     },
                     "multicast-loopback": {
-                        "blurb": "When enabled, the packet will be received locally.",
+                        "blurb": "When enabled, the packets will be received locally.",
                         "construct": true,
                         "construct-only": false,
                         "default": "false",
@@ -42746,7 +42902,7 @@
                         "writable": true
                     },
                     "port": {
-                        "blurb": "The port to listen for RTP packets, RTCP port is derived from it, this port must be an even number.",
+                        "blurb": "The port to listen for RTP packets, the RTCP port is this value + 1. This port must be an even number.",
                         "construct": true,
                         "construct-only": false,
                         "default": "5004",
@@ -42756,7 +42912,7 @@
                         "writable": true
                     },
                     "receiver-buffer": {
-                        "blurb": "Buffering duration in ms",
+                        "blurb": "Buffering duration (in ms)",
                         "construct": true,
                         "construct-only": false,
                         "default": "1000",
@@ -42766,7 +42922,7 @@
                         "writable": true
                     },
                     "reorder-section": {
-                        "blurb": "Time to wait before sending retransmission request in ms.",
+                        "blurb": "Time to wait before sending retransmission request (in ms)",
                         "construct": true,
                         "construct-only": false,
                         "default": "70",
@@ -42784,7 +42940,7 @@
                         "writable": false
                     },
                     "stats-update-interval": {
-                        "blurb": "The interval between 'stats' update notification (0 disabled)",
+                        "blurb": "The interval between 'stats' update notification (in ms) (0 disabled)",
                         "construct": true,
                         "construct-only": false,
                         "default": "0",
@@ -42844,6 +43000,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "rsvg": {
@@ -43067,6 +43224,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "rtmp": {
@@ -43341,6 +43499,189 @@
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
+    "rtpmanagerbad": {
+        "description": "GStreamer RTP Plugins",
+        "elements": {
+            "rtpsink": {
+                "author": "Marc Leeman <marc.leeman@gmail.com>",
+                "description": "Simple RTP sink",
+                "hierarchy": [
+                    "GstRtpSink",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Generic/Bin/Sink",
+                "long-name": "RTP Sink element",
+                "pad-templates": {
+                    "sink_%%u": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    }
+                },
+                "properties": {
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "ttl": {
+                        "blurb": "Used for setting the unicast TTL parameter",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "64",
+                        "max": "255",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "ttl-mc": {
+                        "blurb": "Used for setting the multicast TTL parameter",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "255",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "uri": {
+                        "blurb": "URI in the form of rtp://host:port?query",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "rtp://0.0.0.0:5004",
+                        "type-name": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "primary + 1"
+            },
+            "rtpsrc": {
+                "author": "Marc Leeman <marc.leeman@gmail.com>",
+                "description": "Simple RTP src",
+                "hierarchy": [
+                    "GstRtpSrc",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Generic/Bin/Src",
+                "long-name": "RTP Source element",
+                "pad-templates": {
+                    "src_%%u": {
+                        "caps": "application/x-rtp:\n",
+                        "direction": "src",
+                        "presence": "sometimes"
+                    }
+                },
+                "properties": {
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "encoding-name": {
+                        "blurb": "Encoding name use to determine caps parameters",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "latency": {
+                        "blurb": "Default amount of ms to buffer in the jitterbuffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "200",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "ttl": {
+                        "blurb": "Used for setting the unicast TTL parameter",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "64",
+                        "max": "255",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "ttl-mc": {
+                        "blurb": "Used for setting the multicast TTL parameter",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "1",
+                        "max": "255",
+                        "min": "0",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "uri": {
+                        "blurb": "URI in the form of rtp://host:port?query",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "rtp://0.0.0.0:5004",
+                        "type-name": "gchararray",
+                        "writable": true
+                    }
+                },
+                "rank": "primary + 1",
+                "signals": {
+                    "no-more-pads": {
+                        "args": [],
+                        "retval": "void"
+                    },
+                    "pad-added": {
+                        "args": [
+                            "GstPad"
+                        ],
+                        "retval": "void"
+                    },
+                    "pad-removed": {
+                        "args": [
+                            "GstPad"
+                        ],
+                        "retval": "void"
+                    }
+                }
+            }
+        },
+        "filename": "gstrtpmanagerbad",
+        "license": "LGPL",
+        "package": "GStreamer Bad Plug-ins git",
+        "source": "gst-plugins-bad",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
     "rtponvif": {
         "description": "ONVIF Streaming features",
         "elements": {
@@ -43428,6 +43769,14 @@
                         "type-name": "guint",
                         "writable": true
                     },
+                    "drop-out-of-segment": {
+                        "blurb": "Whether the element should drop buffers that fall outside the segment, not part of the specification but allows full reverse playback.",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
                     "name": {
                         "blurb": "The name of the object",
                         "construct": true,
@@ -43477,6 +43826,7 @@
         "license": "unknown",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "sbc": {
@@ -44013,6 +44363,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "segmentclip": {
@@ -44117,6 +44468,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "shm": {
@@ -44447,6 +44799,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "siren": {
@@ -44613,6 +44966,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "smooth": {
@@ -44715,6 +45069,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "smoothstreaming": {
@@ -44843,6 +45198,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "sndfile": {
@@ -44879,6 +45235,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "soundtouch": {
@@ -45031,6 +45388,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "spandsp": {
@@ -45384,6 +45742,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "srt": {
@@ -46266,6 +46625,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "subenc": {
@@ -46408,6 +46768,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "teletext": {
@@ -46490,6 +46851,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "timecode": {
@@ -46535,6 +46897,16 @@
                     }
                 },
                 "properties": {
+                    "end-running-time": {
+                        "blurb": "Running time to end at in running-time mode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
                     "end-timecode": {
                         "blurb": "Timecode to end at in timecode mode (object)",
                         "construct": false,
@@ -46620,7 +46992,7 @@
                 "rank": "none"
             },
             "timecodestamper": {
-                "author": "Vivia Nikolaidou <vivia@toolsonair.com",
+                "author": "Vivia Nikolaidou <vivia@toolsonair.com>",
                 "description": "Attaches a timecode meta into each video frame",
                 "hierarchy": [
                     "GstTimeCodeStamper",
@@ -46634,14 +47006,19 @@
                 "long-name": "Timecode stamper",
                 "name": "timecodestamper",
                 "pad-templates": {
+                    "ltc_sink": {
+                        "caps": "audio/x-raw:\n         format: U8\n           rate: [ 1, 2147483647 ]\n       channels: 1\n",
+                        "direction": "sink",
+                        "presence": "request"
+                    },
                     "sink": {
-                        "caps": "video/x-raw:\n",
+                        "caps": "video/x-raw:\n      framerate: [ 1/2147483647, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always",
                         "typename": "GstPad"
                     },
                     "src": {
-                        "caps": "video/x-raw:\n",
+                        "caps": "video/x-raw:\n      framerate: [ 1/2147483647, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always",
                         "typename": "GstPad"
@@ -46676,6 +47053,21 @@
                         "construct-only": false,
                         "default": "false",
                         "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "ltc-auto-resync": {
+                        "blurb": "If true and LTC timecode is used, it will be automatically resynced if it drifts, otherwise it will only be initialised once",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "ltc-daily-jam": {
+                        "blurb": "The daily jam of the LTC timecode",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GDateTime",
                         "writable": true
                     },
                     "name": {
@@ -46716,6 +47108,103 @@
                         "default": "false",
                         "type-name": "gboolean",
                         "writable": true
+                    },
+                    "rtc-auto-resync": {
+                        "blurb": "If true and RTC timecode is used, it will be automatically resynced if it drifts, otherwise it will only be initialised once",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "rtc-max-drift": {
+                        "blurb": "Maximum number of nanoseconds the RTC clock is allowed to drift from the video before it is resynced",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "250000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "set": {
+                        "blurb": "Choose whether timecodes should be overridden or not",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "keep (1)",
+                        "enum": true,
+                        "type-name": "GstTimeCodeStamperSet",
+                        "values": [
+                            {
+                                "desc": "Never set timecodes",
+                                "name": "never",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Keep upstream timecodes and only set if no upstream timecode",
+                                "name": "keep",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Always set timecode and remove upstream timecode",
+                                "name": "always",
+                                "value": "2"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "set-internal-timecode": {
+                        "blurb": "If set, take this timecode as the internal timecode for the first frame and increment from it. Only the values itself and daily jam are taken, flags and frame rate are always determined by timecodestamper itself. If unset (and to-now is also not set), the internal timecode will start at 0 with the daily jam being the current real-time clock time",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstVideoTimeCode",
+                        "writable": true
+                    },
+                    "source": {
+                        "blurb": "Choose from what source the timecode should be taken",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "internal (0)",
+                        "enum": true,
+                        "type-name": "GstTimeCodeStamperSource",
+                        "values": [
+                            {
+                                "desc": "Use internal timecode counter, starting at zero or value set by property",
+                                "name": "internal",
+                                "value": "0"
+                            },
+                            {
+                                "desc": "Always use zero",
+                                "name": "zero",
+                                "value": "1"
+                            },
+                            {
+                                "desc": "Count up from the last known upstream timecode or internal if unknown",
+                                "name": "last-known",
+                                "value": "2"
+                            },
+                            {
+                                "desc": "Linear timecode from an audio device",
+                                "name": "ltc",
+                                "value": "3"
+                            },
+                            {
+                                "desc": "Timecode from real time clock",
+                                "name": "rtc",
+                                "value": "4"
+                            }
+                        ],
+                        "writable": true
+                    },
+                    "timecode-offset": {
+                        "blurb": "Add this offset in frames to internal, LTC or RTC timecode, useful if there is an offset between the timecode source and video",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "2147483647",
+                        "min": "-2147483648",
+                        "type-name": "gint",
+                        "writable": true
                     }
                 },
                 "rank": "none"
@@ -46725,6 +47214,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "tinyalsa": {
@@ -46997,6 +47487,222 @@
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
+    "transcode": {
+        "description": "A plugin containing elements for transcoding",
+        "elements": {
+            "transcodebin": {
+                "author": "Thibault Saunier <tsaunier@igalia.com>",
+                "description": "Autoplug and transcoder a stream",
+                "hierarchy": [
+                    "GstTranscodeBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Generic/Bin/Encoding",
+                "long-name": "Transcode Bin",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "ANY",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "ANY",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "audio-filter": {
+                        "blurb": "the audio filter(s) to apply, if possible",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstElement",
+                        "writable": true
+                    },
+                    "avoid-reencoding": {
+                        "blurb": "Whether to re-encode portions of compatible video streams that lay on segment boundaries",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "profile": {
+                        "blurb": "The GstEncodingProfile to use",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstEncodingProfile",
+                        "writable": true
+                    },
+                    "video-filter": {
+                        "blurb": "the video filter(s) to apply, if possible",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstElement",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "uritranscodebin": {
+                "author": "Thibault Saunier <tsaunier@igalia.com>",
+                "description": "Autoplug and transcoder media from uris",
+                "hierarchy": [
+                    "GstUriTranscodeBin",
+                    "GstPipeline",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Generic/Bin/Encoding",
+                "long-name": "URITranscode Bin",
+                "properties": {
+                    "async-handling": {
+                        "blurb": "The bin will handle Asynchronous state changes",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "audio-filter": {
+                        "blurb": "the audio filter(s) to apply, if possible",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstElement",
+                        "writable": true
+                    },
+                    "auto-flush-bus": {
+                        "blurb": "Whether to automatically flush the pipeline's bus when going from READY into NULL state",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "avoid-reencoding": {
+                        "blurb": "Whether to re-encode portions of compatible video streams that lay on segment boundaries",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "cpu-usage": {
+                        "blurb": "The percentage of CPU to try to use with the processus running the pipeline driven by the clock",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "100",
+                        "max": "100",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "delay": {
+                        "blurb": "Expected delay needed for elements to spin up to PLAYING in nanoseconds",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "dest-uri": {
+                        "blurb": "URI to put output stream",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "latency": {
+                        "blurb": "Latency to configure on the pipeline",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "18446744073709551615",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "type-name": "guint64",
+                        "writable": true
+                    },
+                    "message-forward": {
+                        "blurb": "Forwards all children messages",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "profile": {
+                        "blurb": "The GstEncodingProfile to use",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstEncodingProfile",
+                        "writable": true
+                    },
+                    "sink": {
+                        "blurb": "the output element to use",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstElement",
+                        "writable": true
+                    },
+                    "source": {
+                        "blurb": "the input element to use",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstElement",
+                        "writable": true
+                    },
+                    "source-uri": {
+                        "blurb": "URI to decode",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "video-filter": {
+                        "blurb": "the video filter(s) to apply, if possible",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstElement",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gsttranscode",
+        "license": "LGPL",
+        "package": "GStreamer git",
+        "source": "gstreamer",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
     "ttmlsubs": {
         "description": "TTML subtitle handling",
         "elements": {
@@ -47061,7 +47767,7 @@
                 "name": "ttmlrender",
                 "pad-templates": {
                     "src": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always",
                         "typename": "GstPad"
@@ -47073,7 +47779,7 @@
                         "typename": "GstPad"
                     },
                     "video_sink": {
-                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, NV12, NV21, A420, YUV9, YVU9, IYU1, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(ANY):\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always",
                         "typename": "GstPad"
@@ -47103,6 +47809,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "uvch264": {
@@ -47215,13 +47922,13 @@
                         "typename": "GstPad"
                     },
                     "vfsrc": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nimage/jpeg:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nimage/jpeg:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always",
                         "typename": "GstPad"
                     },
                     "vidsrc": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nimage/jpeg:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-h264:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n  stream-format: { (string)byte-stream, (string)avc }\n      alignment: au\n        profile: { (string)high, (string)main, (string)baseline, (string)constrained-baseline }\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, YUY2, UYVY, AYUV, VUYA, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, Y210, Y410, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10BE, I420_10LE, I422_10BE, I422_10LE, Y444_10BE, Y444_10LE, GBR, GBR_10BE, GBR_10LE, NV16, NV24, NV12_64Z32, A420_10BE, A420_10LE, A422_10BE, A422_10LE, A444_10BE, A444_10LE, NV61, P010_10BE, P010_10LE, IYU2, VYUY, GBRA, GBRA_10BE, GBRA_10LE, BGR10A2_LE, RGB10A2_LE, GBR_12BE, GBR_12LE, GBRA_12BE, GBRA_12LE, I420_12BE, I420_12LE, I422_12BE, I422_12LE, Y444_12BE, Y444_12LE, GRAY10_LE32, NV12_10LE32, NV16_10LE32, NV12_10LE40, Y444_16BE, Y444_16LE, P016_BE, P016_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nimage/jpeg:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-h264:\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n  stream-format: { (string)byte-stream, (string)avc }\n      alignment: au\n        profile: { (string)high, (string)main, (string)baseline, (string)constrained-baseline }\n",
                         "direction": "src",
                         "presence": "always",
                         "typename": "GstPad"
@@ -47757,6 +48464,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "videofiltersbad": {
@@ -47945,6 +48653,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "videoframe_audiolevel": {
@@ -48013,6 +48722,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "videoparsersbad": {
@@ -48343,13 +49053,13 @@
                 },
                 "properties": {
                     "config-interval": {
-                        "blurb": "Send Configuration Insertion Interval in seconds (configuration headers will be multiplexed in the data stream when detected.) (0 = disabled)",
+                        "blurb": "Send Configuration Insertion Interval in seconds (configuration headers will be multiplexed in the data stream when detected.) (0 = disabled, -1 = send with every IDR frame)",
                         "construct": false,
                         "construct-only": false,
                         "default": "0",
                         "max": "3600",
-                        "min": "0",
-                        "type-name": "guint",
+                        "min": "-1",
+                        "type-name": "gint",
                         "writable": true
                     },
                     "disable-passthrough": {
@@ -48361,7 +49071,7 @@
                         "writable": true
                     },
                     "drop": {
-                        "blurb": "Drop data untill valid configuration data is received either in the stream or through caps",
+                        "blurb": "Drop data until valid configuration data is received either in the stream or through caps",
                         "construct": true,
                         "construct-only": false,
                         "default": "true",
@@ -48572,6 +49282,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "videosignal": {
@@ -48924,6 +49635,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "vmnc": {
@@ -48981,6 +49693,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "voaacenc": {
@@ -50213,6 +50926,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "webp": {
@@ -50418,6 +51132,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "webrtc": {
@@ -50450,7 +51165,16 @@
                                 "GstObject",
                                 "GInitiallyUnowned",
                                 "GObject"
-                            ]
+                            ],
+                            "properties": {
+                                "transceiver": {
+                                    "blurb": "Transceiver associated with this pad",
+                                    "construct": false,
+                                    "construct-only": false,
+                                    "type-name": "GstWebRTCRTPTransceiver",
+                                    "writable": false
+                                }
+                            }
                         },
                         "presence": "request"
                     },
@@ -50539,6 +51263,20 @@
                                 "value": "5"
                             }
                         ],
+                        "writable": false
+                    },
+                    "current-local-description": {
+                        "blurb": "The local description that was successfully negotiated the last time the connection transitioned into the stable state",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstWebRTCSessionDescription",
+                        "writable": false
+                    },
+                    "current-remote-description": {
+                        "blurb": "The last remote description that was successfully negotiated the last time the connection transitioned into the stable state plus any remote candidates that have been supplied via addIceCandidate() since the offer or answer was created",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstWebRTCSessionDescription",
                         "writable": false
                     },
                     "ice-connection-state": {
@@ -50635,11 +51373,11 @@
                         "writable": true
                     },
                     "local-description": {
-                        "blurb": "The local SDP description to use for this connection",
+                        "blurb": "The local SDP description in use for this connection. Favours a pending description over the current description",
                         "construct": false,
                         "construct-only": false,
                         "type-name": "GstWebRTCSessionDescription",
-                        "writable": true
+                        "writable": false
                     },
                     "message-forward": {
                         "blurb": "Forwards all children messages",
@@ -50664,12 +51402,26 @@
                         "type-name": "GstObject",
                         "writable": true
                     },
-                    "remote-description": {
-                        "blurb": "The remote SDP description to use for this connection",
+                    "pending-local-description": {
+                        "blurb": "The local description that is in the process of being negotiated plus any local candidates that have been generated by the ICE Agent since the offer or answer was created",
                         "construct": false,
                         "construct-only": false,
                         "type-name": "GstWebRTCSessionDescription",
-                        "writable": true
+                        "writable": false
+                    },
+                    "pending-remote-description": {
+                        "blurb": "The remote description that is in the process of being negotiated, complete with any remote candidates that have been supplied via addIceCandidate() since the offer or answer was created",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstWebRTCSessionDescription",
+                        "writable": false
+                    },
+                    "remote-description": {
+                        "blurb": "The remote SDP description to use for this connection. Favours a pending description over the current description",
+                        "construct": false,
+                        "construct-only": false,
+                        "type-name": "GstWebRTCSessionDescription",
+                        "writable": false
                     },
                     "signaling-state": {
                         "blurb": "The signaling state of this element",
@@ -50849,6 +51601,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "webrtcdsp": {
@@ -51200,6 +51953,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "wildmidi": {
@@ -51340,6 +52094,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "winks": {
@@ -51758,6 +52513,102 @@
         "source": "gst-plugins-bad",
         "url": "Unknown package origin"
     },
+    "wpe": {
+        "description": "WPE src plugin",
+        "elements": {
+            "wpesrc": {
+                "author": "Philippe Normand <philn@igalia.com>, \u017dan Dober\u0161ek <zdobersek@igalia.com>",
+                "description": "Creates a video stream from a WPE browser",
+                "hierarchy": [
+                    "GstWpeSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Video",
+                "long-name": "WPE source",
+                "pad-templates": {
+                    "src": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\npixel-aspect-ratio: 1/1\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "blocksize": {
+                        "blurb": "Size in bytes to read per buffer (-1 = default)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "type-name": "guint",
+                        "writable": true
+                    },
+                    "do-timestamp": {
+                        "blurb": "Apply current stream time to buffers",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "draw-background": {
+                        "blurb": "Whether to draw the WebView background",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "true",
+                        "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "location": {
+                        "blurb": "The URL to display",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "NULL",
+                        "type-name": "gchararray",
+                        "writable": true
+                    },
+                    "num-buffers": {
+                        "blurb": "Number of buffers to output before sending EOS (-1 = unlimited)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "-1",
+                        "max": "2147483647",
+                        "min": "-1",
+                        "type-name": "gint",
+                        "writable": true
+                    },
+                    "typefind": {
+                        "blurb": "Run typefind before negotiating (deprecated, non-functional)",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "false",
+                        "type-name": "gboolean",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "configure-web-view": {
+                        "args": [
+                            "GObject"
+                        ],
+                        "retval": "void"
+                    }
+                }
+            }
+        },
+        "filename": "gstwpe",
+        "license": "LGPL",
+        "package": "gst-plugins-bad",
+        "source": "gst-plugins-bad",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
     "x265": {
         "description": "x265-based H265 plugins",
         "elements": {
@@ -52063,6 +52914,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "yadif": {
@@ -52154,6 +53006,7 @@
         "license": "GPL",
         "package": "GStreamer Bad Plug-ins",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     },
     "zbar": {
@@ -52244,6 +53097,7 @@
         "license": "LGPL",
         "package": "GStreamer Bad Plug-ins git",
         "source": "gst-plugins-bad",
+        "tracers": {},
         "url": "Unknown package origin"
     }
 }
