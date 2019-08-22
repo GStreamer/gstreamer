@@ -33,9 +33,22 @@
 #include "xcb_event_source.h"
 
 static gint
-_compare_xcb_window (GstVulkanWindowXCB * window_xcb, xcb_window_t * window_id)
+_compare_xcb_window (GWeakRef * ref, xcb_window_t * window_id)
 {
-  return window_xcb->win_id - *window_id;
+  GstVulkanWindowXCB *window_xcb;
+  gint ret;
+
+  window_xcb = g_weak_ref_get (ref);
+  if (!window_xcb)
+    return -1;
+
+  g_return_val_if_fail (GST_IS_VULKAN_WINDOW_XCB (window_xcb), -1);
+  g_return_val_if_fail (window_id != 0, -1);
+
+  ret = window_xcb->win_id - *window_id;
+  gst_object_unref (window_xcb);
+
+  return ret;
 }
 
 static GstVulkanWindowXCB *
@@ -52,8 +65,9 @@ _find_window_from_xcb_window (GstVulkanDisplayXCB * display_xcb,
   GST_OBJECT_LOCK (display);
   l = g_list_find_custom (display->windows, &window_id,
       (GCompareFunc) _compare_xcb_window);
-  if (l)
-    ret = gst_object_ref (l->data);
+  if (l) {
+    ret = g_weak_ref_get (l->data);
+  }
   GST_OBJECT_UNLOCK (display);
 
   return ret;
