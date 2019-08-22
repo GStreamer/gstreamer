@@ -38,10 +38,8 @@ void main()
     }
   } else if (output_type == VIEW_MONO_LEFT) {
     outColor0 = swizzle(l, out_reorder_idx);
-    outColor0 = vec4(1.0, 0.0, 1.0, 1.0);
   } else if (output_type == VIEW_MONO_RIGHT) {
     outColor0 = swizzle(r, out_reorder_idx);
-    outColor0 = vec4(0.0, 0.0, 1.0, 1.0);
   } else if (output_type == VIEW_SIDE_BY_SIDE) {
     if (inTexCoord.x < 0.5) {
       outColor0 = swizzle(l, out_reorder_idx);
