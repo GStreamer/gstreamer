@@ -676,15 +676,19 @@ gst_vulkan_view_convert_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_INPUT_LAYOUT:
       conv->input_mode_override = g_value_get_enum (value);
+      gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (conv));
       break;
     case PROP_INPUT_FLAGS:
       conv->input_flags_override = g_value_get_flags (value);
+      gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (conv));
       break;
     case PROP_OUTPUT_LAYOUT:
       conv->output_mode_override = g_value_get_enum (value);
+      gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (conv));
       break;
     case PROP_OUTPUT_FLAGS:
       conv->output_flags_override = g_value_get_flags (value);
+      gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (conv));
       break;
     case PROP_OUTPUT_DOWNMIX_MODE:
       conv->downmix_mode = g_value_get_enum (value);
