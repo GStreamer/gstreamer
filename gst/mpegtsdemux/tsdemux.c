@@ -72,8 +72,8 @@
 
 #define GST_FLOW_REWINDING GST_FLOW_CUSTOM_ERROR
 
-/* latency in nsecs */
-#define TS_LATENCY (700 * GST_MSECOND)
+/* latency in msecs */
+#define DEFAULT_LATENCY (700)
 
 /* Limit PES packet collection to a maximum of 32MB
  * which is more than large enough to support an H264 frame at
@@ -289,6 +289,7 @@ enum
   PROP_0,
   PROP_PROGRAM_NUMBER,
   PROP_EMIT_STATS,
+  PROP_LATENCY,
   /* FILL ME */
 };
 
@@ -381,6 +382,12 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
           "Emit messages for every pcr/opcr/pts/dts", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_LATENCY,
+      g_param_spec_int ("latency", "Latency",
+          "Latency to add for smooth demuxing (in ms)", -1,
+          G_MAXINT, DEFAULT_LATENCY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   element_class = GST_ELEMENT_CLASS (klass);
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&video_template));
@@ -455,6 +462,7 @@ gst_ts_demux_init (GstTSDemux * demux)
   demux->flowcombiner = gst_flow_combiner_new ();
   demux->requested_program_number = -1;
   demux->program_number = -1;
+  demux->latency = DEFAULT_LATENCY;
   gst_ts_demux_reset (base);
 }
 
@@ -474,6 +482,9 @@ gst_ts_demux_set_property (GObject * object, guint prop_id,
     case PROP_EMIT_STATS:
       demux->emit_statistics = g_value_get_boolean (value);
       break;
+    case PROP_LATENCY:
+      demux->latency = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -491,6 +502,9 @@ gst_ts_demux_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EMIT_STATS:
       g_value_set_boolean (value, demux->emit_statistics);
+      break;
+    case PROP_LATENCY:
+      g_value_set_int (value, demux->latency);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -558,6 +572,7 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       if (res) {
         GstClockTime min_lat, max_lat;
         gboolean live;
+        gint latency;
 
         /* According to H.222.0
            Annex D.0.3 (System Time Clock recovery in the decoder)
@@ -566,10 +581,13 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
            We can end up with an interval of up to 700ms between valid
            PTS/DTS. We therefore allow a latency of 700ms for that.
          */
+        latency = demux->latency;
+        if (latency < 0)
+          latency = 700;
         gst_query_parse_latency (query, &live, &min_lat, &max_lat);
-        min_lat += TS_LATENCY;
+        min_lat += latency * GST_MSECOND;
         if (GST_CLOCK_TIME_IS_VALID (max_lat))
-          max_lat += TS_LATENCY;
+          max_lat += latency * GST_MSECOND;
         gst_query_set_latency (query, live, min_lat, max_lat);
       }
       break;
