@@ -61,9 +61,6 @@ struct _GstSRTObject
   SRTSOCKET                     listener_sock;
   gint                          listener_poll_id;
 
-  GMainLoop                    *loop;
-  GMainContext                 *context;
-  GSource                      *listener_source;
   GThread                      *thread;
 
   GList                        *callers;
