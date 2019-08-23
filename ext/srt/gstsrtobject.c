@@ -162,6 +162,18 @@ gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
     }
   }
 
+  {
+    int latency;
+
+    if (!gst_structure_get_int (srtobject->parameters, "latency", &latency))
+      latency = GST_SRT_DEFAULT_LATENCY;
+    if (srt_setsockopt (sock, 0, SRTO_LATENCY, &latency, sizeof (int))) {
+      g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS,
+          "failed to set latency (reason: %s)", srt_getlasterror_str ());
+      return FALSE;
+    }
+  }
+
   return TRUE;
 }
 
