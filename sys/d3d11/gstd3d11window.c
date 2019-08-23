@@ -508,7 +508,7 @@ gst_d3d11_window_on_resize (GstD3D11Device * device, GstD3D11Window * window)
 
     src_ratio = (gdouble) width / height;
     dst_ratio =
-        (gdouble) window->surface_width / window->surface_height * aspect_ratio;
+        (gdouble) window->surface_width / window->surface_height / aspect_ratio;
 
     src_rect.x = 0;
     src_rect.y = 0;
