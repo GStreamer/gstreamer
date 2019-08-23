@@ -503,6 +503,10 @@ gst_vulkan_display_choose_type (GstVulkanInstance * instance)
     first_supported = GST_VULKAN_DISPLAY_TYPE_WIN32;
 #endif
 
+  /* if there are no winsys enabled at build time, we get a 'unused but set'
+   * warning.  Remove that. */
+  (void) window_str;
+
   if (type)
     return type;
 
