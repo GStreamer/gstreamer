@@ -27,7 +27,8 @@
  * @see_also: #GstAudioConvert #GstAudioResample, #GstAudioTestSrc, #GstAutoAudioSink
  *
  * The LADSPA (Linux Audio Developer's Simple Plugin API) element is a bridge
- * for plugins using the <ulink url="http://www.ladspa.org/">LADSPA</ulink> API.
+ * for plugins using the [LADSPA](http://www.ladspa.org/) API.
+ *
  * It scans all installed LADSPA plugins and registers them as gstreamer
  * elements. If available it can also parse LRDF files and use the metadata for
  * element classification. The functionality you get depends on the LADSPA plugins

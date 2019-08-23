@@ -49,10 +49,11 @@
  * @title: kateenc
  * @see_also: oggmux
  *
- * This element encodes Kate streams
- * <ulink url="http://libkate.googlecode.com/">Kate</ulink> is a free codec
- * for text based data, such as subtitles. Any number of kate streams can be
- * embedded in an Ogg stream.
+ * This element encodes Kate streams.
+ *
+ * [Kate](http://libkate.googlecode.com/) is a free codec for text based data,
+ * such as subtitles. Any number of kate streams can be embedded in an Ogg
+ * stream.
  *
  * libkate (see above url) is needed to build this plugin.
  *

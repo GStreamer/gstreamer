@@ -23,7 +23,7 @@
  * @title: GstWebRTCDataChannel
  * @see_also: #GstWebRTCRTPTransceiver
  *
- * <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcsctptransport">http://w3c.github.io/webrtc-pc/#dom-rtcsctptransport</ulink>
+ * <http://w3c.github.io/webrtc-pc/#dom-rtcsctptransport>
  */
 
 #ifdef HAVE_CONFIG_H

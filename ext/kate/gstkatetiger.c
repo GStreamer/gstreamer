@@ -48,12 +48,12 @@
  * @title: tiger
  * @see_also: katedec
  *
- * This element decodes and renders Kate streams
- * <ulink url="http://libkate.googlecode.com/">Kate</ulink> is a free codec
- * for text based data, such as subtitles. Any number of kate streams can be
- * embedded in an Ogg stream.
+ * This element decodes and renders Kate streams.
+ * [Kate](http://libkate.googlecode.com/) is a free codec for text based data,
+ * such as subtitles. Any number of kate streams can be embedded in an Ogg
+ * stream.
  *
- * libkate (see above url) and <ulink url="http://libtiger.googlecode.com/">libtiger</ulink>
+ * libkate (see above url) and [libtiger](http://libtiger.googlecode.com/)
  * are needed to build this element.
  *
  * ## Example pipeline

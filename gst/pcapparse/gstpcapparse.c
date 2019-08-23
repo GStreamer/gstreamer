@@ -26,9 +26,8 @@
  * #GstPcapParse:src-port and #GstPcapParse:dst-port to restrict which packets
  * should be included.
  *
- * The supported data format is the classical <ulink
- * url="https://wiki.wireshark.org/Development/LibpcapFileFormat">libpcap file
- * format</ulink>.
+ * The supported data format is the classical
+ * [libpcap file format](https://wiki.wireshark.org/Development/LibpcapFileFormat)
  *
  * ## Example pipelines
  * |[

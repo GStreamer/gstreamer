@@ -23,19 +23,21 @@
  * @title: dfbvideosink
  *
  * DfbVideoSink renders video frames using the
- * <ulink url="http://www.directfb.org/">DirectFB</ulink> library.
+ * [DirectFB](http://www.directfb.org/) library.
  * Rendering can happen in two different modes :
  *
  * * Standalone: this mode will take complete control of the monitor forcing
- *   <ulink url="http://www.directfb.org/">DirectFB</ulink> to fullscreen layout.
+ *   DirectFB to fullscreen layout.
+ *
  *   This is convenient to test using the  gst-launch-1.0 command line tool or
  *   other simple applications. It is possible to interrupt playback while
  *   being in this mode by pressing the Escape key.
  *   This mode handles navigation events for every input device supported by
- *   the <ulink url="http://www.directfb.org/">DirectFB</ulink> library, it will
- *   look for available video modes in the fb.modes file and try to switch
- *   the framebuffer video mode to the most suitable one. Depending on
- *   hardware acceleration capabilities the element will handle scaling or not.
+ *   the DirectFB library, it will look for available video modes in the fb.modes
+ *   file and try to switch the framebuffer video mode to the most suitable one.
+ *   Depending on hardware acceleration capabilities the element will handle
+ *   scaling or not.
+ *
  *   If no acceleration is available it will do clipping or centering of the
  *   video frames respecting the original aspect ratio.
  *
@@ -43,7 +45,8 @@
  *   #GstDfbVideoSink:surface provided by the
  *   application developer. This is a more advanced usage of the element and
  *   it is required to integrate video playback in existing
- *   <ulink url="http://www.directfb.org/">DirectFB</ulink> applications.
+ *   DirectFB applications.
+ *
  *   When using this mode the element just renders to the
  *   #GstDfbVideoSink:surface provided by the
  *   application, that means it won't handle navigation events and won't resize

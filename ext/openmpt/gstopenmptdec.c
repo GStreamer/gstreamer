@@ -23,8 +23,8 @@
  * @see_also: #GstOpenMptDec
  *
  * openmpdec decodes module music formats, such as S3M, MOD, XM, IT.
- * It uses the <ulink url="https://lib.openmpt.org">OpenMPT library</ulink>
- * for this purpose. It can be autoplugged and therefore works with decodebin.
+ * It uses the [OpenMPT library](https://lib.openmpt.org) for this purpose.
+ * It can be autoplugged and therefore works with decodebin.
  *
  * ## Example launch line
  *

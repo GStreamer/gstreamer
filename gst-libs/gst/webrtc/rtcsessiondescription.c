@@ -22,7 +22,7 @@
  * @short_description: RTCSessionDescription object
  * @title: GstWebRTCSessionDescription
  *
- * <ulink url="https://www.w3.org/TR/webrtc/#rtcsessiondescription-class">https://www.w3.org/TR/webrtc/#rtcsessiondescription-class</ulink>
+ * <https://www.w3.org/TR/webrtc/#rtcsessiondescription-class>
  */
 
 #ifdef HAVE_CONFIG_H

@@ -23,7 +23,7 @@
  * @see_also: #GstAmrWbDec, #GstAmrWbParse
  *
  * AMR wideband encoder based on the
- * <ulink url="http://www.penguin.cz/~utx/amr">reference codec implementation</ulink>.
+ * [reference codec implementation](http://www.penguin.cz/~utx/amr).
  *
  * ## Example launch line
  * |[

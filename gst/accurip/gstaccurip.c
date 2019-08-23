@@ -38,8 +38,8 @@
  *
  * The accurip element calculates a CRC for an audio stream which can be used
  * to match the audio stream to a database hosted on
- * <ulink url="http://accuraterip.com/">AccurateRip</ulink>. This database
- * is used to check for a CD rip accuracy.
+ * [AccurateRip](http://accuraterip.com/). This database is used to check for a
+ * CD rip accuracy.
  *
  * ## Example launch line
  * |[

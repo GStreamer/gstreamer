@@ -38,7 +38,7 @@ GType gst_webrtc_session_description_get_type (void);
  * @type: the #GstWebRTCSDPType of the description
  * @sdp: the #GstSDPMessage of the description
  *
- * See <ulink url="https://www.w3.org/TR/webrtc/#rtcsessiondescription-class">https://www.w3.org/TR/webrtc/#rtcsessiondescription-class</ulink>
+ * See <https://www.w3.org/TR/webrtc/#rtcsessiondescription-class>
  */
 struct _GstWebRTCSessionDescription
 {

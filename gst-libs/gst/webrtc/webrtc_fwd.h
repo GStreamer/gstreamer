@@ -82,7 +82,7 @@ typedef enum /*< underscore_name=gst_webrtc_dtls_transport_state >*/
  * @GST_WEBRTC_ICE_GATHERING_STATE_GATHERING: gathering
  * @GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE: complete
  *
- * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcicegatheringstate">http://w3c.github.io/webrtc-pc/#dom-rtcicegatheringstate</ulink>
+ * See <http://w3c.github.io/webrtc-pc/#dom-rtcicegatheringstate>
  */
 typedef enum /*< underscore_name=gst_webrtc_ice_gathering_state >*/
 {
@@ -101,7 +101,7 @@ typedef enum /*< underscore_name=gst_webrtc_ice_gathering_state >*/
  * @GST_WEBRTC_ICE_CONNECTION_STATE_DISCONNECTED: disconnected
  * @GST_WEBRTC_ICE_CONNECTION_STATE_CLOSED: closed
  *
- * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtciceconnectionstate">http://w3c.github.io/webrtc-pc/#dom-rtciceconnectionstate</ulink>
+ * See <http://w3c.github.io/webrtc-pc/#dom-rtciceconnectionstate>
  */
 typedef enum /*< underscore_name=gst_webrtc_ice_connection_state >*/
 {
@@ -123,7 +123,7 @@ typedef enum /*< underscore_name=gst_webrtc_ice_connection_state >*/
  * @GST_WEBRTC_SIGNALING_STATE_HAVE_LOCAL_PRANSWER: have-local-pranswer
  * @GST_WEBRTC_SIGNALING_STATE_HAVE_REMOTE_PRANSWER: have-remote-pranswer
  *
- * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcsignalingstate">http://w3c.github.io/webrtc-pc/#dom-rtcsignalingstate</ulink>
+ * See <http://w3c.github.io/webrtc-pc/#dom-rtcsignalingstate>
  */
 typedef enum /*< underscore_name=gst_webrtc_signaling_state >*/
 {
@@ -144,7 +144,7 @@ typedef enum /*< underscore_name=gst_webrtc_signaling_state >*/
  * @GST_WEBRTC_PEER_CONNECTION_STATE_FAILED: failed
  * @GST_WEBRTC_PEER_CONNECTION_STATE_CLOSED: closed
  *
- * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectionstate">http://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectionstate</ulink>
+ * See <http://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectionstate>
  */
 typedef enum /*< underscore_name=gst_webrtc_peer_connection_state >*/
 {
@@ -185,7 +185,7 @@ typedef enum /*< underscore_name=gst_webrtc_ice_component >*/
  * @GST_WEBRTC_SDP_TYPE_ANSWER: answer
  * @GST_WEBRTC_SDP_TYPE_ROLLBACK: rollback
  *
- * See <ulink url="http://w3c.github.io/webrtc-pc/#rtcsdptype">http://w3c.github.io/webrtc-pc/#rtcsdptype</ulink>
+ * See <http://w3c.github.io/webrtc-pc/#rtcsdptype>
  */
 typedef enum /*< underscore_name=gst_webrtc_sdp_type >*/
 {
@@ -282,7 +282,7 @@ typedef enum /*< underscore_name=gst_webrtc_fec_type >*/
  * GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED: connected
  * GST_WEBRTC_SCTP_TRANSPORT_STATE_CLOSED: closed
  *
- * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate">http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate</ulink>
+ * See <http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate>
  *
  * Since: 1.16
  */
@@ -301,7 +301,7 @@ typedef enum /*< underscore_name=gst_webrtc_sctp_transport_state >*/
  * GST_WEBRTC_PRIORITY_TYPE_MEDIUM: medium
  * GST_WEBRTC_PRIORITY_TYPE_HIGH: high
  *
- * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype">http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype</ulink>
+ * See <http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype>
  *
  * Since: 1.16
  */
@@ -321,7 +321,7 @@ typedef enum /*< underscore_name=gst_webrtc_priority_type >*/
  * GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING: closing
  * GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED: closed
  *
- * See <ulink url="http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate">http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate</ulink>
+ * See <http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate>
  *
  * Since: 1.16
  */

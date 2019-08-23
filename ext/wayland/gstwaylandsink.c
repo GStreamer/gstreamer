@@ -27,8 +27,9 @@
  *
  *  The waylandsink is creating its own window and render the decoded video frames to that.
  *  Setup the Wayland environment as described in
- *  <ulink url="http://wayland.freedesktop.org/building.html">Wayland</ulink> home page.
- *  The current implementaion is based on weston compositor.
+ *  [Wayland](http://wayland.freedesktop.org/building.html) home page.
+ *
+ *  The current implementation is based on weston compositor.
  *
  * ## Example pipelines
  * |[

@@ -23,7 +23,7 @@
  * SECTION:element-srtsink
  * @title: srtsink
  *
- * srtsink is a network sink that sends <ulink url="http://www.srtalliance.org/">SRT</ulink>
+ * srtsink is a network sink that sends [SRT](http://www.srtalliance.org/)
  * packets to the network.
  *
  * ## Examples</title>

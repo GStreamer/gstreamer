@@ -23,8 +23,9 @@
  * @see_also: #GstWildmidiDec
  *
  * wildmididec decodes MIDI files.
- * It uses <ulink url="https://www.mindwerks.net/projects/wildmidi/">WildMidi</ulink>
- * for this purpose. It can be autoplugged and therefore works with decodebin.
+ *
+ * It uses [WildMidi](https://www.mindwerks.net/projects/wildmidi/) for this
+ * purpose. It can be autoplugged and therefore works with decodebin.
  *
  * ## Example launch line
  *

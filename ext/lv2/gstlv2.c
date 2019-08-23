@@ -30,8 +30,8 @@
  * a successor to LADSPA (Linux Audio Developer's Simple Plugin API).
  *
  * The LV2 element is a bridge for plugins using the
- * <ulink url="http://www.lv2plug.in/">LV2</ulink> API.  It scans all
- * installed LV2 plugins and registers them as gstreamer elements.
+ * [LV2](http://www.lv2plug.in/) API.  It scans all installed LV2 plugins and
+ * registers them as gstreamer elements.
  */
 
 #ifdef HAVE_CONFIG_H

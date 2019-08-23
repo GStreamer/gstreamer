@@ -27,8 +27,8 @@
  *
  * The chromaprint element calculates an acoustic fingerprint for an
  * audio stream which can be used to identify a song and look up
- * further metadata from the <ulink url="http://acoustid.org/">Acoustid</ulink>
- * and Musicbrainz databases.
+ * further metadata from the [Acoustid](http://acoustid.org/) and Musicbrainz
+ * databases.
  *
  * ## Example launch line
  * |[

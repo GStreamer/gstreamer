@@ -25,7 +25,7 @@
  * @see_also: timidity, wildmidi
  *
  * This element renders midi-events as audio streams using
- * <ulink url="http://fluidsynth.sourceforge.net//">Fluidsynth</ulink>.
+ * [Fluidsynth](http://fluidsynth.sourceforge.net/).
  * It offers better sound quality compared to the timidity or wildmidi element.
  *
  * ## Example pipeline

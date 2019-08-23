@@ -23,7 +23,7 @@
  * @title: GstWebRTCDTLSTransport
  * @see_also: #GstWebRTCRTPSender, #GstWebRTCRTPReceiver, #GstWebRTCICETransport
  *
- * <ulink url="https://www.w3.org/TR/webrtc/#rtcdtlstransport">https://www.w3.org/TR/webrtc/#rtcdtlstransport</ulink>
+ * <https://www.w3.org/TR/webrtc/#rtcdtlstransport>
  */
 
 #ifdef HAVE_CONFIG_H

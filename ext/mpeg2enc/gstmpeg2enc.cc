@@ -25,9 +25,10 @@
  * @see_also: mpeg2dec
  *
  * This element encodes raw video into an MPEG-1/2 elementary stream using the
- * <ulink url="http://mjpeg.sourceforge.net/">mjpegtools</ulink> library.
+ * [mjpegtools](http://mjpeg.sourceforge.net/) library.
+ *
  * Documentation on MPEG encoding in general can be found in the 
- * <ulink url="https://sourceforge.net/docman/display_doc.php?docid=3456&group_id=5776">MJPEG Howto</ulink>
+ * [MJPEG Howto](https://sourceforge.net/docman/display_doc.php?docid=3456&group_id=5776)
  * and on the various available parameters in the documentation
  * of the mpeg2enc tool in particular, which shares options with this element.
  *

@@ -28,8 +28,8 @@
 /**
  * SECTION:element-modplug
  * 
- * Modplug uses the <ulink url="http://modplug-xmms.sourceforge.net/">modplug</ulink>
- * library to decode tracked music in the MOD/S3M/XM/IT and related formats.
+ * Modplug uses the [modplug](http://modplug-xmms.sourceforge.net/) library to
+ * decode tracked music in the MOD/S3M/XM/IT and related formats.
  * 
  * ## Example pipeline
  *

@@ -26,9 +26,9 @@
  *
  * This element is an audio/video multiplexer for MPEG-1/2 video streams
  * and (un)compressed audio streams such as AC3, MPEG layer I/II/III.
- * It is based on the <ulink url="http://mjpeg.sourceforge.net/">mjpegtools</ulink> library.
+ * It is based on the [mjpegtools](http://mjpeg.sourceforge.net/) library.
  * Documentation on creating MPEG videos in general can be found in the
- * <ulink url="https://sourceforge.net/docman/display_doc.php?docid=3456&group_id=5776">MJPEG Howto</ulink>
+ * [MJPEG Howto](https://sourceforge.net/docman/display_doc.php?docid=3456&group_id=5776)
  * and the man-page of the mplex tool documents the properties of this element,
  * which are shared with the mplex tool.
  *

@@ -21,8 +21,9 @@
  * SECTION:element-voaacenc
  * @title: voaacenc
  *
- * AAC audio encoder based on vo-aacenc library
- * <ulink url="http://sourceforge.net/projects/opencore-amr/files/vo-aacenc/">vo-aacenc library source file</ulink>.
+ * AAC audio encoder based on vo-aacenc library.
+ *
+ * [vo-aacenc library source file](http://sourceforge.net/projects/opencore-amr/files/vo-aacenc/)
  *
  * ## Example launch line
  * |[

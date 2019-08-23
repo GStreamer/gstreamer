@@ -23,7 +23,7 @@
  * SECTION:element-srtsrc
  * @title: srtsrc
  *
- * srtsrc is a network source that reads <ulink url="http://www.srtalliance.org/">SRT</ulink>
+ * srtsrc is a network source that reads [SRT](http://www.srtalliance.org/)
  * packets from the network.
  *
  * ## Examples

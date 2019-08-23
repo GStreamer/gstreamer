@@ -23,7 +23,7 @@
  * @title: GstWebRTCRTPSender
  * @see_also: #GstWebRTCRTPReceiver, #GstWebRTCRTPTransceiver
  *
- * <ulink url="https://www.w3.org/TR/webrtc/#rtcrtpsender-interface">https://www.w3.org/TR/webrtc/#rtcrtpsender-interface</ulink>
+ * <https://www.w3.org/TR/webrtc/#rtcrtpsender-interface>
  */
 
 #ifdef HAVE_CONFIG_H
