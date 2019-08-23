@@ -21,7 +21,9 @@ endif
 
 plugins_cache = join_paths(meson.current_source_dir(), 'plugins', 'gst_plugins_cache.json')
 
-if plugins_cache_generator.found()
+if plugins.length() == 0
+    message('All bad plugins have been disabled')
+elif plugins_cache_generator.found()
     plugins_doc_dep = custom_target('bad-plugins-doc-cache',
         command: [plugins_cache_generator, plugins_cache, '@OUTPUT@', '@INPUT@'],
         input: plugins,
