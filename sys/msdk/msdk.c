@@ -386,3 +386,48 @@ gst_msdk_update_mfx_frame_info_from_mfx_video_param (mfxFrameInfo * mfx_info,
   mfx_info->BitDepthChroma = param->mfx.FrameInfo.BitDepthChroma;
   mfx_info->Shift = param->mfx.FrameInfo.Shift;
 }
+
+void
+gst_msdk_get_mfx_video_orientation_from_video_direction (guint value,
+    guint * mfx_mirror, guint * mfx_rotation)
+{
+  *mfx_mirror = MFX_MIRRORING_DISABLED;
+  *mfx_rotation = MFX_ANGLE_0;
+
+  switch (value) {
+    case GST_VIDEO_ORIENTATION_IDENTITY:
+      *mfx_mirror = MFX_MIRRORING_DISABLED;
+      *mfx_rotation = MFX_ANGLE_0;
+      break;
+    case GST_VIDEO_ORIENTATION_HORIZ:
+      *mfx_mirror = MFX_MIRRORING_HORIZONTAL;
+      *mfx_rotation = MFX_ANGLE_0;
+      break;
+    case GST_VIDEO_ORIENTATION_VERT:
+      *mfx_mirror = MFX_MIRRORING_VERTICAL;
+      *mfx_rotation = MFX_ANGLE_0;
+      break;
+    case GST_VIDEO_ORIENTATION_90R:
+      *mfx_mirror = MFX_MIRRORING_DISABLED;
+      *mfx_rotation = MFX_ANGLE_90;
+      break;
+    case GST_VIDEO_ORIENTATION_180:
+      *mfx_mirror = MFX_MIRRORING_DISABLED;
+      *mfx_rotation = MFX_ANGLE_180;
+      break;
+    case GST_VIDEO_ORIENTATION_90L:
+      *mfx_mirror = MFX_MIRRORING_DISABLED;
+      *mfx_rotation = MFX_ANGLE_270;
+      break;
+    case GST_VIDEO_ORIENTATION_UL_LR:
+      *mfx_mirror = MFX_MIRRORING_HORIZONTAL;
+      *mfx_rotation = MFX_ANGLE_90;
+      break;
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      *mfx_mirror = MFX_MIRRORING_VERTICAL;
+      *mfx_rotation = MFX_ANGLE_90;
+      break;
+    default:
+      break;
+  }
+}

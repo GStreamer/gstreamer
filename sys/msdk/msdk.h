@@ -78,6 +78,10 @@ void
 gst_msdk_update_mfx_frame_info_from_mfx_video_param (mfxFrameInfo * mfx_info,
     mfxVideoParam * param);
 
+void
+gst_msdk_get_mfx_video_orientation_from_video_direction (guint value,
+    guint * mfx_mirror, guint * mfx_rotation);
+
 G_END_DECLS
 
 #endif /* __MSDK_H__ */

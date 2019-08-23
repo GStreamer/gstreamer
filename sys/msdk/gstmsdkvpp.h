@@ -68,6 +68,7 @@ typedef enum {
   GST_MSDK_FLAG_MIRRORING    = 1 << 8,
   GST_MSDK_FLAG_SCALING_MODE = 1 << 9,
   GST_MSDK_FLAG_FRC          = 1 << 10,
+  GST_MSDK_FLAG_VIDEO_DIRECTION = 1 << 11,
 } GstMsdkVppFlags;
 
 struct _GstMsdkVPP
@@ -119,6 +120,7 @@ struct _GstMsdkVPP
   guint scaling_mode;
   gboolean keep_aspect;
   guint frc_algm;
+  guint video_direction;
 
   GstClockTime buffer_duration;
 

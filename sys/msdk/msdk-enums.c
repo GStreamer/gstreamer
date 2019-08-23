@@ -178,6 +178,7 @@ gst_msdkenc_adaptive_b_get_type (void)
 
 /*========= MSDK VPP Enums =========================*/
 
+#ifndef GST_REMOVE_DEPRECATED
 GType
 gst_msdkvpp_rotation_get_type (void)
 {
@@ -196,6 +197,7 @@ gst_msdkvpp_rotation_get_type (void)
   }
   return type;
 }
+#endif
 
 GType
 gst_msdkvpp_deinterlace_mode_get_type (void)
@@ -263,6 +265,7 @@ gst_msdkvpp_deinterlace_method_get_type (void)
   return type;
 }
 
+#ifndef GST_REMOVE_DEPRECATED
 GType
 gst_msdkvpp_mirroring_get_type (void)
 {
@@ -280,6 +283,7 @@ gst_msdkvpp_mirroring_get_type (void)
   }
   return type;
 }
+#endif
 
 GType
 gst_msdkvpp_scaling_mode_get_type (void)

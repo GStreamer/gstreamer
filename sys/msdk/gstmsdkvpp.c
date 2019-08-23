@@ -109,7 +109,9 @@ enum
   PROP_HARDWARE,
   PROP_ASYNC_DEPTH,
   PROP_DENOISE,
+#ifndef GST_REMOVE_DEPRECATED
   PROP_ROTATION,
+#endif
   PROP_DEINTERLACE_MODE,
   PROP_DEINTERLACE_METHOD,
   PROP_HUE,
@@ -117,17 +119,23 @@ enum
   PROP_BRIGHTNESS,
   PROP_CONTRAST,
   PROP_DETAIL,
+#ifndef GST_REMOVE_DEPRECATED
   PROP_MIRRORING,
+#endif
   PROP_SCALING_MODE,
   PROP_FORCE_ASPECT_RATIO,
   PROP_FRC_ALGORITHM,
+  PROP_VIDEO_DIRECTION,
   PROP_N,
 };
 
 #define PROP_HARDWARE_DEFAULT            TRUE
 #define PROP_ASYNC_DEPTH_DEFAULT         1
 #define PROP_DENOISE_DEFAULT             0
+#ifndef GST_REMOVE_DEPRECATED
 #define PROP_ROTATION_DEFAULT            MFX_ANGLE_0
+#define PROP_MIRRORING_DEFAULT           MFX_MIRRORING_DISABLED
+#endif
 #define PROP_DEINTERLACE_MODE_DEFAULT    GST_MSDKVPP_DEINTERLACE_MODE_AUTO
 #define PROP_DEINTERLACE_METHOD_DEFAULT  MFX_DEINTERLACING_BOB
 #define PROP_HUE_DEFAULT                 0
@@ -135,10 +143,10 @@ enum
 #define PROP_BRIGHTNESS_DEFAULT          0
 #define PROP_CONTRAST_DEFAULT            1
 #define PROP_DETAIL_DEFAULT              0
-#define PROP_MIRRORING_DEFAULT           MFX_MIRRORING_DISABLED
 #define PROP_SCALING_MODE_DEFAULT        MFX_SCALING_MODE_DEFAULT
 #define PROP_FORCE_ASPECT_RATIO_DEFAULT  TRUE
 #define PROP_FRC_ALGORITHM_DEFAULT       _MFX_FRC_ALGORITHM_NONE
+#define PROP_VIDEO_DIRECTION_DEFAULT     GST_VIDEO_ORIENTATION_IDENTITY
 
 #define gst_msdkvpp_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
@@ -820,7 +828,6 @@ gst_msdkvpp_close (GstMsdkVPP * thiz)
 static void
 ensure_filters (GstMsdkVPP * thiz)
 {
-
   /* Denoise */
   if (thiz->flags & GST_MSDK_FLAG_DENOISE) {
     mfxExtVPPDenoise *mfx_denoise = &thiz->mfx_denoise;
@@ -831,7 +838,7 @@ ensure_filters (GstMsdkVPP * thiz)
   }
 
   /* Rotation */
-  if (thiz->flags & GST_MSDK_FLAG_ROTATION) {
+  if (thiz->rotation != MFX_ANGLE_0) {
     mfxExtVPPRotation *mfx_rotation = &thiz->mfx_rotation;
     mfx_rotation->Header.BufferId = MFX_EXTBUFF_VPP_ROTATION;
     mfx_rotation->Header.BufferSz = sizeof (mfxExtVPPRotation);
@@ -871,7 +878,7 @@ ensure_filters (GstMsdkVPP * thiz)
   }
 
   /* Mirroring */
-  if (thiz->flags & GST_MSDK_FLAG_MIRRORING) {
+  if (thiz->mirroring != MFX_MIRRORING_DISABLED) {
     mfxExtVPPMirroring *mfx_mirroring = &thiz->mfx_mirroring;
     mfx_mirroring->Header.BufferId = MFX_EXTBUFF_VPP_MIRRORING;
     mfx_mirroring->Header.BufferSz = sizeof (mfxExtVPPMirroring);
@@ -1171,6 +1178,14 @@ gst_msdkvpp_fixate_caps (GstBaseTransform * trans,
     result = gst_caps_fixate (result);
     use_dmabuf = &thiz->use_sinkpad_dmabuf;
   } else {
+    /*
+     * Override mirroring & rotation properties once video-direction
+     * is set explicitly
+     */
+    if (thiz->flags & GST_MSDK_FLAG_VIDEO_DIRECTION)
+      gst_msdk_get_mfx_video_orientation_from_video_direction
+          (thiz->video_direction, &thiz->mirroring, &thiz->rotation);
+
     result = gst_msdkvpp_fixate_srccaps (thiz, caps, othercaps);
     use_dmabuf = &thiz->use_srcpad_dmabuf;
   }
@@ -1250,10 +1265,16 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
       thiz->denoise_factor = g_value_get_uint (value);
       thiz->flags |= GST_MSDK_FLAG_DENOISE;
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_ROTATION:
       thiz->rotation = g_value_get_enum (value);
       thiz->flags |= GST_MSDK_FLAG_ROTATION;
       break;
+    case PROP_MIRRORING:
+      thiz->mirroring = g_value_get_enum (value);
+      thiz->flags |= GST_MSDK_FLAG_MIRRORING;
+      break;
+#endif
     case PROP_DEINTERLACE_MODE:
       thiz->deinterlace_mode = g_value_get_enum (value);
       break;
@@ -1280,10 +1301,6 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
       thiz->detail = g_value_get_uint (value);
       thiz->flags |= GST_MSDK_FLAG_DETAIL;
       break;
-    case PROP_MIRRORING:
-      thiz->mirroring = g_value_get_enum (value);
-      thiz->flags |= GST_MSDK_FLAG_MIRRORING;
-      break;
     case PROP_SCALING_MODE:
       thiz->scaling_mode = g_value_get_enum (value);
       thiz->flags |= GST_MSDK_FLAG_SCALING_MODE;
@@ -1293,6 +1310,10 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
       break;
     case PROP_FRC_ALGORITHM:
       thiz->frc_algm = g_value_get_enum (value);
+      break;
+    case PROP_VIDEO_DIRECTION:
+      thiz->video_direction = g_value_get_enum (value);
+      thiz->flags |= GST_MSDK_FLAG_VIDEO_DIRECTION;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1316,9 +1337,14 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
     case PROP_DENOISE:
       g_value_set_uint (value, thiz->denoise_factor);
       break;
+#ifndef GST_REMOVE_DEPRECATED
     case PROP_ROTATION:
       g_value_set_enum (value, thiz->rotation);
       break;
+    case PROP_MIRRORING:
+      g_value_set_enum (value, thiz->mirroring);
+      break;
+#endif
     case PROP_DEINTERLACE_MODE:
       g_value_set_enum (value, thiz->deinterlace_mode);
       break;
@@ -1340,9 +1366,6 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
     case PROP_DETAIL:
       g_value_set_uint (value, thiz->detail);
       break;
-    case PROP_MIRRORING:
-      g_value_set_enum (value, thiz->mirroring);
-      break;
     case PROP_SCALING_MODE:
       g_value_set_enum (value, thiz->scaling_mode);
       break;
@@ -1351,6 +1374,9 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
       break;
     case PROP_FRC_ALGORITHM:
       g_value_set_enum (value, thiz->frc_algm);
+      break;
+    case PROP_VIDEO_DIRECTION:
+      g_value_set_enum (value, thiz->video_direction);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1437,10 +1463,20 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       "Denoising Factor",
       0, 100, PROP_DENOISE_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+#ifndef GST_REMOVE_DEPRECATED
   obj_properties[PROP_ROTATION] =
       g_param_spec_enum ("rotation", "Rotation",
-      "Rotation Angle", gst_msdkvpp_rotation_get_type (),
-      PROP_ROTATION_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      "Rotation Angle (DEPRECATED, use video-direction instead)",
+      gst_msdkvpp_rotation_get_type (), PROP_ROTATION_DEFAULT,
+      G_PARAM_DEPRECATED | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[PROP_MIRRORING] =
+      g_param_spec_enum ("mirroring", "Mirroring",
+      "The Mirroring type (DEPRECATED, use video-direction instead)",
+      gst_msdkvpp_mirroring_get_type (), PROP_MIRRORING_DEFAULT,
+      G_PARAM_DEPRECATED | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+#endif
 
   obj_properties[PROP_DEINTERLACE_MODE] =
       g_param_spec_enum ("deinterlace-mode", "Deinterlace Mode",
@@ -1481,11 +1517,6 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       "The factor of detail/edge enhancement filter algorithm",
       0, 100, PROP_DETAIL_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  obj_properties[PROP_MIRRORING] =
-      g_param_spec_enum ("mirroring", "Mirroring",
-      "The Mirroring type", gst_msdkvpp_mirroring_get_type (),
-      PROP_MIRRORING_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-
   obj_properties[PROP_SCALING_MODE] =
       g_param_spec_enum ("scaling-mode", "Scaling Mode",
       "The Scaling mode to use", gst_msdkvpp_scaling_mode_get_type (),
@@ -1503,6 +1534,19 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
       gst_msdkvpp_frc_algorithm_get_type (), PROP_FRC_ALGORITHM_DEFAULT,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  /*
+   * The video-direction to use, expressed as an enum value. See
+   * #GstVideoOrientationMethod.
+   */
+  obj_properties[PROP_VIDEO_DIRECTION] = g_param_spec_enum ("video-direction",
+      "Video Direction", "Video direction: rotation and flipping"
+#ifndef GST_REMOVE_DEPRECATED
+      ", it will override both mirroring & rotation properties if set explicitly"
+#endif
+      ,
+      GST_TYPE_VIDEO_ORIENTATION_METHOD,
+      PROP_VIDEO_DIRECTION_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_N, obj_properties);
 }
 
@@ -1513,7 +1557,13 @@ gst_msdkvpp_init (GstMsdkVPP * thiz)
   thiz->hardware = PROP_HARDWARE_DEFAULT;
   thiz->async_depth = PROP_ASYNC_DEPTH_DEFAULT;
   thiz->denoise_factor = PROP_DENOISE_DEFAULT;
+#ifndef GST_REMOVE_DEPRECATED
   thiz->rotation = PROP_ROTATION_DEFAULT;
+  thiz->mirroring = PROP_MIRRORING_DEFAULT;
+#else
+  thiz->rotation = MFX_ANGLE_0;
+  thiz->mirroring = MFX_MIRRORING_DISABLED;
+#endif
   thiz->deinterlace_mode = PROP_DEINTERLACE_MODE_DEFAULT;
   thiz->deinterlace_method = PROP_DEINTERLACE_METHOD_DEFAULT;
   thiz->buffer_duration = GST_CLOCK_TIME_NONE;
@@ -1522,10 +1572,10 @@ gst_msdkvpp_init (GstMsdkVPP * thiz)
   thiz->brightness = PROP_BRIGHTNESS_DEFAULT;
   thiz->contrast = PROP_CONTRAST_DEFAULT;
   thiz->detail = PROP_DETAIL_DEFAULT;
-  thiz->mirroring = PROP_MIRRORING_DEFAULT;
   thiz->scaling_mode = PROP_SCALING_MODE_DEFAULT;
   thiz->keep_aspect = PROP_FORCE_ASPECT_RATIO_DEFAULT;
   thiz->frc_algm = PROP_FRC_ALGORITHM_DEFAULT;
+  thiz->video_direction = PROP_VIDEO_DIRECTION_DEFAULT;
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
 }
