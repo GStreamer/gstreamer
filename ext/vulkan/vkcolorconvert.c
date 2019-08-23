@@ -657,11 +657,11 @@ calculate_reorder_indexes (GstVideoFormat in_format,
   const GstVideoFormatInfo *in_finfo, *out_finfo;
   VkFormat in_vk_formats[GST_VIDEO_MAX_COMPONENTS];
   VkFormat out_vk_formats[GST_VIDEO_MAX_COMPONENTS];
-  int in_vk_order[GST_VIDEO_MAX_COMPONENTS],
-      in_reorder[GST_VIDEO_MAX_COMPONENTS];
-  int out_vk_order[GST_VIDEO_MAX_COMPONENTS],
-      out_reorder[GST_VIDEO_MAX_COMPONENTS];
-  int tmp[GST_VIDEO_MAX_PLANES];
+  int in_vk_order[GST_VIDEO_MAX_COMPONENTS] = { 0, };
+  int in_reorder[GST_VIDEO_MAX_COMPONENTS] = { 0, };
+  int out_vk_order[GST_VIDEO_MAX_COMPONENTS] = { 0, };
+  int out_reorder[GST_VIDEO_MAX_COMPONENTS] = { 0, };
+  int tmp[GST_VIDEO_MAX_PLANES] = { 0, };
   int i;
 
   in_finfo = gst_video_format_get_info (in_format);
