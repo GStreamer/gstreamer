@@ -113,7 +113,8 @@ gst_vulkan_error_to_g_error (VkResult result, GError ** error,
   g_vasprintf (&string, format, args);
   va_end (args);
 
-  g_set_error (error, GST_VULKAN_ERROR, result, "%s: %s", result_str, string);
+  g_set_error (error, GST_VULKAN_ERROR, result, "%s (0x%x, %i): %s", result_str,
+      result, result, string);
 
   return result;
 }
