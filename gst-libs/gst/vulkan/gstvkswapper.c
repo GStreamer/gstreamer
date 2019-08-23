@@ -61,6 +61,7 @@ struct _GstVulkanSwapperPrivate
   PFN_vkGetSwapchainImagesKHR GetSwapchainImagesKHR;
   PFN_vkAcquireNextImageKHR AcquireNextImageKHR;
   PFN_vkQueuePresentKHR QueuePresentKHR;
+  PFN_vkDestroySurfaceKHR DestroySurfaceKHR;
 
   /* <private> */
   /* runtime variables */
@@ -137,6 +138,7 @@ _get_function_table (GstVulkanSwapper * swapper)
       GetPhysicalDeviceSurfaceFormatsKHR);
   GET_PROC_ADDRESS_REQUIRED (swapper, instance,
       GetPhysicalDeviceSurfacePresentModesKHR);
+  GET_PROC_ADDRESS_REQUIRED (swapper, instance, DestroySurfaceKHR);
   GET_PROC_ADDRESS_REQUIRED (swapper, device, CreateSwapchainKHR);
   GET_PROC_ADDRESS_REQUIRED (swapper, device, DestroySwapchainKHR);
   GET_PROC_ADDRESS_REQUIRED (swapper, device, GetSwapchainImagesKHR);
@@ -478,6 +480,8 @@ static void
 gst_vulkan_swapper_finalize (GObject * object)
 {
   GstVulkanSwapper *swapper = GST_VULKAN_SWAPPER (object);
+  GstVulkanInstance *instance =
+      gst_vulkan_device_get_instance (swapper->device);
   int i;
 
   g_signal_handler_disconnect (swapper->window, swapper->priv->draw_id);
@@ -509,6 +513,12 @@ gst_vulkan_swapper_finalize (GObject * object)
         swapper->priv->swap_chain, NULL);
   swapper->priv->swap_chain = VK_NULL_HANDLE;
 
+  if (swapper->priv->surface) {
+    swapper->priv->DestroySurfaceKHR (instance->instance,
+        swapper->priv->surface, NULL);
+  }
+  swapper->priv->surface = VK_NULL_HANDLE;
+
   g_free (swapper->priv->surf_present_modes);
   swapper->priv->surf_present_modes = NULL;
 
@@ -535,6 +545,8 @@ gst_vulkan_swapper_finalize (GObject * object)
   if (swapper->window)
     gst_object_unref (swapper->window);
   swapper->window = NULL;
+
+  gst_object_unref (instance);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

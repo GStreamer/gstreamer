@@ -294,7 +294,8 @@ gst_vulkan_window_get_display (GstVulkanWindow * window)
  * @window: a #GstVulkanWindow
  * @error: a #GError
  *
- * Returns: the VkSurface for displaying into
+ * Returns: the VkSurface for displaying into.  The caller is responsible for
+ *     calling `VkDestroySurface` on the returned surface.
  *
  * Since: 1.18
  */
