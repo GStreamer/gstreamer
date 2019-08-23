@@ -480,6 +480,15 @@ gst_vulkan_swapper_finalize (GObject * object)
   GstVulkanSwapper *swapper = GST_VULKAN_SWAPPER (object);
   int i;
 
+  g_signal_handler_disconnect (swapper->window, swapper->priv->draw_id);
+  swapper->priv->draw_id = 0;
+
+  g_signal_handler_disconnect (swapper->window, swapper->priv->close_id);
+  swapper->priv->close_id = 0;
+
+  g_signal_handler_disconnect (swapper->window, swapper->priv->resize_id);
+  swapper->priv->resize_id = 0;
+
   if (!gst_vulkan_trash_list_wait (swapper->priv->trash_list, -1))
     GST_WARNING_OBJECT (swapper, "Failed to wait for all fences to complete "
         "before shutting down");
@@ -522,15 +531,6 @@ gst_vulkan_swapper_finalize (GObject * object)
   if (swapper->device)
     gst_object_unref (swapper->device);
   swapper->device = NULL;
-
-  g_signal_handler_disconnect (swapper->window, swapper->priv->draw_id);
-  swapper->priv->draw_id = 0;
-
-  g_signal_handler_disconnect (swapper->window, swapper->priv->close_id);
-  swapper->priv->close_id = 0;
-
-  g_signal_handler_disconnect (swapper->window, swapper->priv->resize_id);
-  swapper->priv->resize_id = 0;
 
   if (swapper->window)
     gst_object_unref (swapper->window);
