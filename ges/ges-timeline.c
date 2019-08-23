@@ -1443,7 +1443,8 @@ layer_object_removed_cb (GESLayer * layer, GESClip * clip,
     return;
   }
 
-  GST_DEBUG ("Clip %p removed from layer %p", clip, layer);
+  GST_DEBUG_OBJECT (timeline, "Clip %" GES_FORMAT " removed from layer %p",
+      GES_ARGS (clip), layer);
 
   /* Go over the clip's track element and figure out which one belongs to
    * the list of tracks we control */

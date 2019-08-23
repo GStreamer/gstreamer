@@ -1001,11 +1001,6 @@ class TestTransitions(common.GESSimpleTimelineTest):
         <clip id='1' asset-id='bar-wipe-lr' type-name='GESTransitionClip' layer-priority='0' track-types='4' start='3225722559' duration='1333196743' inpoint='0' rate='0' properties='properties, name=(string)transitionclip84;'  children-properties='properties, GESVideoTransition::border=(uint)0, GESVideoTransition::invert=(boolean)false;'/>
         <clip id='2' asset-id='%(uri)s' type-name='GESUriClip' layer-priority='0' track-types='6' start='3225722559' duration='3479110239' inpoint='4558919302' rate='0' properties='properties, name=(string)uriclip25265, mute=(boolean)false, is-image=(boolean)false;' />
       </layer>
-      <layer priority='1' properties='properties, auto-transition=(boolean)true;' metadatas='metadatas, volume=(float)1;'>
-        <clip id='3' asset-id='%(uri)s' type-name='GESUriClip' layer-priority='1' track-types='4' start='8566459322' duration='1684610449' inpoint='0' rate='0' properties='properties, name=(string)uriclip25266, mute=(boolean)false, is-image=(boolean)true;' />
-        <clip id='4' asset-id='GESTitleClip' type-name='GESTitleClip' layer-priority='1' track-types='6' start='8566459322' duration='4500940746' inpoint='0' rate='0' properties='properties, name=(string)titleclip69;' />
-        <clip id='5' asset-id='%(uri)s' type-name='GESUriClip' layer-priority='1' track-types='4' start='9566459322' duration='4363207710' inpoint='0' rate='0' properties='properties, name=(string)uriclip25275, mute=(boolean)false, is-image=(boolean)true;' />
-      </layer>
       <groups>
       </groups>
     </timeline>
@@ -1019,13 +1014,16 @@ class TestTransitions(common.GESSimpleTimelineTest):
             timeline = project.extract()
 
             mainloop = common.create_main_loop()
-            mainloop.run(until_empty=True)
+            def loaded_cb(unused_project, unused_timeline):
+                mainloop.quit()
+            project.connect("loaded", loaded_cb)
+
+            mainloop.run()
 
             layers = timeline.get_layers()
             self.assertEqual(len(layers), 2)
 
             self.assertTrue(layers[0].props.auto_transition)
-            self.assertTrue(layers[1].props.auto_transition)
 
     def test_transition_type(self):
         xges = self.create_xges()
@@ -1034,10 +1032,13 @@ class TestTransitions(common.GESSimpleTimelineTest):
             timeline = project.extract()
 
             mainloop = common.create_main_loop()
-            mainloop.run(until_empty=True)
+            def loaded_cb(unused_project, unused_timeline):
+                mainloop.quit()
+            project.connect("loaded", loaded_cb)
+            mainloop.run()
 
             layers = timeline.get_layers()
-            self.assertEqual(len(layers), 2)
+            self.assertEqual(len(layers), 1)
 
             clips = layers[0].get_clips()
             clip1 = clips[0]
@@ -1046,10 +1047,6 @@ class TestTransitions(common.GESSimpleTimelineTest):
             self.assertLess(clip1.props.start, clip2.props.start)
             self.assertLess(clip2.props.start, clip1.props.start + clip1.props.duration)
             self.assertLess(clip1.props.start + clip1.props.duration, clip2.props.start + clip2.props.duration)
-            self.assertEqual(len(clips), 3)
-
-            # 3 clips would be overlapping, 1 of them wasn't added!
-            clips = layers[1].get_clips()
             self.assertEqual(len(clips), 3)
 
 
