@@ -23,7 +23,7 @@
  * @see_also: #GstAmrwbEnc
  *
  * AMR wideband decoder based on the
- * <ulink url="http://sourceforge.net/projects/opencore-amr">opencore codec implementation</ulink>.
+ * [opencore codec implementation](http://sourceforge.net/projects/opencore-amr).
  *
  * ## Example launch line
  * |[
