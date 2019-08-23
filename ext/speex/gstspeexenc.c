@@ -23,9 +23,8 @@
  * @see_also: speexdec, oggmux
  *
  * This element encodes audio as a Speex stream.
- * <ulink url="http://www.speex.org/">Speex</ulink> is a royalty-free
- * audio codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
- * Foundation</ulink>.
+ * [Speex](http://www.speex.org/) is a royalty-free
+ * audio codec maintained by the [Xiph.org Foundation](http://www.xiph.org/).
  *
  * ## Example pipelines
  * |[

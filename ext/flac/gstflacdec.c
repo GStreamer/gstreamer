@@ -25,8 +25,7 @@
  * @see_also: #GstFlacEnc
  *
  * flacdec decodes FLAC streams.
- * <ulink url="http://flac.sourceforge.net/">FLAC</ulink>
- * is a Free Lossless Audio Codec.
+ * [FLAC](http://flac.sourceforge.net/) is a Free Lossless Audio Codec.
  *
  * ## Example launch line
  * |[

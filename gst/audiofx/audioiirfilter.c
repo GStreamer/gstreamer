@@ -23,9 +23,10 @@
  * SECTION:element-audioiirfilter
  * @title: audioiirfilter
  *
- * audioiirfilter implements a generic audio <ulink url="http://en.wikipedia.org/wiki/Infinite_impulse_response">IIR filter</ulink>. Before usage the
- * "a" and "b" properties have to be set to the filter coefficients that
- * should be used.
+ * audioiirfilter implements a generic audio
+ * [IIR filter](http://en.wikipedia.org/wiki/Infinite_impulse_response).
+ * Before usage the "a" and "b" properties have to be set to the filter
+ * coefficients that should be used.
  *
  * The filter coefficients describe the numerator and denominator of the
  * transfer function.

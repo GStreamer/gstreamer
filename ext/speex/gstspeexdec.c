@@ -24,9 +24,8 @@
  * @see_also: speexenc, oggdemux
  *
  * This element decodes a Speex stream to raw integer audio.
- * <ulink url="http://www.speex.org/">Speex</ulink> is a royalty-free
- * audio codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
- * Foundation</ulink>.
+ * [Speex](http://www.speex.org/) is a royalty-free
+ * audio codec maintained by the [Xiph.org Foundation](http://www.xiph.org/).
  *
  * ## Example pipelines
  * |[

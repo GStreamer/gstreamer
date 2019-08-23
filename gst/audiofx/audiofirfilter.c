@@ -23,8 +23,9 @@
  * SECTION:element-audiofirfilter
  * @title: audiofirfilter
  *
- * audiofirfilter implements a generic audio <ulink url="http://en.wikipedia.org/wiki/Finite_impulse_response">FIR filter</ulink>. Before usage the
- * "kernel" property has to be set to the filter kernel that should be
+ * audiofirfilter implements a generic audio
+ * [FIR filter](http://en.wikipedia.org/wiki/Finite_impulse_response). Before
+ * usage the "kernel" property has to be set to the filter kernel that should be
  * used and the "latency" property has to be set to the latency (in samples)
  * that is introduced by the filter kernel. Setting a latency of n samples
  * will lead to the first n samples being dropped from the output and

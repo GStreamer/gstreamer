@@ -27,7 +27,7 @@
  * @see_also: pulsesrc
  *
  * This element outputs audio to a
- * <ulink href="http://www.pulseaudio.org">PulseAudio sound server</ulink>.
+ * [PulseAudio sound server](http://www.pulseaudio.org).
  *
  * ## Example pipelines
  * |[
@@ -1959,7 +1959,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
    * GstPulseSink:stream-properties:
    *
    * List of pulseaudio stream properties. A list of defined properties can be
-   * found in the <ulink url="http://0pointer.de/lennart/projects/pulseaudio/doxygen/proplist_8h.html">pulseaudio api docs</ulink>.
+   * found in the [pulseaudio api docs](http://0pointer.de/lennart/projects/pulseaudio/doxygen/proplist_8h.html).
    *
    * Below is an example for registering as a music application to pulseaudio.
    * |[

@@ -55,11 +55,12 @@
  * The following background intends to explain why various similar muxers
  * are present in this plugin.
  *
- * The <ulink url="http://www.apple.com/quicktime/resources/qtfileformat.pdf">
- * QuickTime file format specification</ulink> served as basis for the MP4 file
- * format specification (mp4mux), and as such the QuickTime file structure is
- * nearly identical to the so-called ISO Base Media file format defined in
- * ISO 14496-12 (except for some media specific parts).
+ * The [QuickTime file format specification](http://www.apple.com/quicktime/resources/qtfileformat.pdf)
+ * served as basis for the MP4 file format specification (mp4mux), and as such
+ * the QuickTime file structure is nearly identical to the so-called ISO Base
+ * Media file format defined in ISO 14496-12 (except for some media specific
+ * parts).
+ *
  * In turn, the latter ISO Base Media format was further specialized as a
  * Motion JPEG-2000 file format in ISO 15444-3 (mj2mux)
  * and in various 3GPP(2) specs (gppmux).

@@ -25,16 +25,15 @@
  * @see_also: vp9dec, webmmux, oggmux
  *
  * This element encodes raw video into a VP9 stream.
- * <ulink url="http://www.webmproject.org">VP9</ulink> is a royalty-free
- * video codec maintained by <ulink url="http://www.google.com/">Google
- * </ulink>. It's the successor of On2 VP3, which was the base of the
- * Theora video codec.
+ * [VP9](http://www.webmproject.org) is a royalty-free video codec maintained by
+ * [Google](http://www.google.com/). It's the successor of On2 VP3, which was
+ * the base of the Theora video codec.
  *
  * To control the quality of the encoding, the #GstVP9Enc:target-bitrate,
  * #GstVP9Enc:min-quantizer, #GstVP9Enc:max-quantizer or #GstVP9Enc:cq-level
  * properties can be used. Which one is used depends on the mode selected by
  * the #GstVP9Enc:end-usage property.
- * See <ulink url="http://www.webmproject.org/docs/encoder-parameters/">Encoder Parameters</ulink>
+ * See [Encoder Parameters](http://www.webmproject.org/docs/encoder-parameters/)
  * for explanation, examples for useful encoding parameters and more details
  * on the encoding parameters.
  *

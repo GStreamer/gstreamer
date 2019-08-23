@@ -25,10 +25,10 @@
  * @see_also: lame, mad, vorbisenc
  *
  * This element encodes raw integer audio into an MPEG-1 layer 3 (MP3) stream.
- * Note that <ulink url="http://en.wikipedia.org/wiki/MP3">MP3</ulink> is not
+ * Note that [MP3](http://en.wikipedia.org/wiki/MP3) is not
  * a free format, there are licensing and patent issues to take into
- * consideration. See <ulink url="http://www.vorbis.com/">Ogg/Vorbis</ulink>
- * for a royalty free (and often higher quality) alternative.
+ * consideration. See [Ogg/Vorbis](http://www.vorbis.com/) for a royalty free
+ * (and often higher quality) alternative.
  *
  * ## Output sample rate
  *

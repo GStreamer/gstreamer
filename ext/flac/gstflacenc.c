@@ -22,9 +22,9 @@
  * @see_also: #GstFlacDec
  *
  * flacenc encodes FLAC streams.
- * <ulink url="http://flac.sourceforge.net/">FLAC</ulink>
- * is a Free Lossless Audio Codec. FLAC audio can directly be written into
- * a file, or embedded into containers such as oggmux or matroskamux.
+ * [FLAC](http://flac.sourceforge.net/) is a Free Lossless Audio Codec.
+ * FLAC audio can directly be written into a file, or embedded into containers
+ * such as oggmux or matroskamux.
  *
  * ## Example launch line
  * |[

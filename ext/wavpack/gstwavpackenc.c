@@ -24,8 +24,8 @@
  * @title: wavpackenc
  *
  * WavpackEnc encodes raw audio into a framed Wavpack stream.
- * <ulink url="http://www.wavpack.com/">Wavpack</ulink> is an open-source
- * audio codec that features both lossless and lossy encoding.
+ * [Wavpack](http://www.wavpack.com/) is an open-source audio codec that
+ * features both lossless and lossy encoding.
  *
  * ## Example launch line
  * |[

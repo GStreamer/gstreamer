@@ -25,10 +25,9 @@
  * @see_also: vp8enc, matroskademux
  *
  * This element decodes VP8 streams into raw video.
- * <ulink url="http://www.webmproject.org">VP8</ulink> is a royalty-free
- * video codec maintained by <ulink url="http://www.google.com/">Google
- * </ulink>. It's the successor of On2 VP3, which was the base of the
- * Theora video codec.
+ * [VP8](http://www.webmproject.org) is a royalty-free video codec maintained by
+ * [Google](http://www.google.com/). It's the successor of On2 VP3, which was
+ * the base of the Theora video codec.
  *
  * ## Example pipeline
  * |[

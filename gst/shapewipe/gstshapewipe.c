@@ -27,8 +27,7 @@
  * can be added by the border property.
  *
  * Transition bitmaps can be downloaded from the
- * <ulink url="http://cinelerra.org/transitions.php">Cinelerra transition</ulink>
- * page.
+ * [Cinelerra transition](http://cinelerra.org/transitions.php) page.
  *
  * ## Example launch line
  * |[

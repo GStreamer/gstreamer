@@ -25,16 +25,15 @@
  * @see_also: vp8dec, webmmux, oggmux
  *
  * This element encodes raw video into a VP8 stream.
- * <ulink url="http://www.webmproject.org">VP8</ulink> is a royalty-free
- * video codec maintained by <ulink url="http://www.google.com/">Google
- * </ulink>. It's the successor of On2 VP3, which was the base of the
- * Theora video codec.
+ * [VP8](http://www.webmproject.org) is a royalty-free video codec maintained by
+ * [Google](http://www.google.com/). It's the successor of On2 VP3, which was
+ * the base of the Theora video codec.
  *
  * To control the quality of the encoding, the #GstVP8Enc:target-bitrate,
  * #GstVP8Enc:min-quantizer, #GstVP8Enc:max-quantizer or #GstVP8Enc:cq-level
  * properties can be used. Which one is used depends on the mode selected by
  * the #GstVP8Enc:end-usage property.
- * See <ulink url="http://www.webmproject.org/docs/encoder-parameters/">Encoder Parameters</ulink>
+ * See [Encoder Parameters](http://www.webmproject.org/docs/encoder-parameters/)
  * for explanation, examples for useful encoding parameters and more details
  * on the encoding parameters.
  *

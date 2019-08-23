@@ -27,8 +27,8 @@
  *
  * WavpackDec decodes framed (for example by the WavpackParse element)
  * Wavpack streams and decodes them to raw audio.
- * <ulink url="http://www.wavpack.com/">Wavpack</ulink> is an open-source
- * audio codec that features both lossless and lossy encoding.
+ * [Wavpack](http://www.wavpack.com/) is an open-source audio codec that
+ * features both lossless and lossy encoding.
  *
  * ## Example launch line
  * |[
