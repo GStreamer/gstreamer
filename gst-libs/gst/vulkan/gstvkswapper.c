@@ -855,6 +855,7 @@ _swapchain_resize (GstVulkanSwapper * swapper, GError ** error)
         gst_memory_unref ((GstMemory *) swapper->priv->swap_chain_images[i]);
     }
     g_free (swapper->priv->swap_chain_images);
+    swapper->priv->swap_chain_images = NULL;
   }
 
   return _allocate_swapchain (swapper, swapper->priv->caps, error);
@@ -1166,6 +1167,7 @@ reacquire:
     GST_DEBUG_OBJECT (swapper, "out of date frame acquired");
 
     vkDestroySemaphore (swapper->device->device, acquire_semaphore, NULL);
+    acquire_semaphore = NULL;
     if (!_swapchain_resize (swapper, error))
       goto error;
     goto reacquire;
@@ -1215,6 +1217,7 @@ reacquire:
             swapper->cmd_pool, cmd));
     gst_vulkan_trash_list_add (swapper->priv->trash_list,
         gst_vulkan_trash_new_free_semaphore (fence, acquire_semaphore));
+    acquire_semaphore = NULL;
 
     cmd = VK_NULL_HANDLE;
     fence = NULL;
