@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
  *
  * The #GstPromise object implements the container for values that may
  * be available later. i.e. a Future or a Promise in
- * <ulink url="https://en.wikipedia.org/wiki/Futures_and_promises">https://en.wikipedia.org/wiki/Futures_and_promises</ulink>
+ * <https://en.wikipedia.org/wiki/Futures_and_promises>.
  * As with all Future/Promise-like functionality, there is the concept of the
  * producer of the value and the consumer of the value.
  *

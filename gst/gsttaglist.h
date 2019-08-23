@@ -1156,7 +1156,7 @@ gst_tag_list_take (GstTagList **old_taglist, GstTagList *new_taglist)
 /**
  * GST_TAG_MIDI_BASE_NOTE:
  *
- * <ulink url="http://en.wikipedia.org/wiki/Note#Note_designation_in_accordance_with_octave_name">Midi note number</ulink>
+ * [Midi note number](http://en.wikipedia.org/wiki/Note#Note_designation_in_accordance_with_octave_name)
  * of the audio track. This is useful for sample instruments and in particular
  * for multi-samples.
  *
