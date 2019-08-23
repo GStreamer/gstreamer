@@ -276,6 +276,7 @@ _choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
             "GetPhysicalDeviceSurfaceSupport") < 0) {
       GST_DEBUG_OBJECT (data->swapper,
           "surface not supported by the physical device: %s", error->message);
+      g_clear_error (&error);
       return TRUE;
     }
   }
@@ -1357,6 +1358,7 @@ _on_window_resize (GstVulkanWindow * window, guint width, guint height,
     if (!_swapchain_resize (swapper, &error))
       GST_ERROR_OBJECT (swapper, "Failed to resize swapchain: %s",
           error->message);
+    g_clear_error (&error);
   }
   RENDER_UNLOCK (swapper);
 }
