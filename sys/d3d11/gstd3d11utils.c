@@ -156,6 +156,9 @@ gst_d3d11_device_get_supported_caps (GstD3D11Device * device,
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
+  _init_d3d11_utils_debug ();
+  _init_context_debug ();
+
   data.caps = NULL;
   data.flags = flags;
 
@@ -171,6 +174,9 @@ gst_d3d11_calculate_buffer_size (GstVideoInfo * info, guint pitch,
     gsize * size)
 {
   g_return_val_if_fail (info != NULL, FALSE);
+
+  _init_d3d11_utils_debug ();
+  _init_context_debug ();
 
   switch (GST_VIDEO_INFO_FORMAT (info)) {
     case GST_VIDEO_FORMAT_BGRA:
@@ -214,24 +220,66 @@ gst_d3d11_calculate_buffer_size (GstVideoInfo * info, guint pitch,
  */
 gboolean
 gst_d3d11_handle_set_context (GstElement * element, GstContext * context,
-    GstD3D11Device ** device)
+    gint adapter, GstD3D11Device ** device)
 {
-  GstD3D11Device *device_replacement = NULL;
+  const gchar *context_type;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (device != NULL, FALSE);
 
+  _init_d3d11_utils_debug ();
+  _init_context_debug ();
+
   if (!context)
     return FALSE;
 
-  if (!gst_context_get_d3d11_device (context, &device_replacement))
-    return FALSE;
+  context_type = gst_context_get_context_type (context);
+  if (g_strcmp0 (context_type, GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE) == 0) {
+    const GstStructure *str;
+    GstD3D11Device *other_device = NULL;
+    gint other_adapter = 0;
 
-  if (*device)
-    gst_object_unref (*device);
-  *device = device_replacement;
+    /* If we had device already, will not replace it */
+    if (*device)
+      return TRUE;
 
-  return TRUE;
+    str = gst_context_get_structure (context);
+
+    if (gst_structure_get (str, "device", GST_TYPE_D3D11_DEVICE,
+            &other_device, "adapter", G_TYPE_INT, &other_adapter, NULL)) {
+      if (adapter == -1 || adapter == other_adapter) {
+        GST_CAT_DEBUG_OBJECT (GST_CAT_CONTEXT,
+            element, "Found D3D11 device context");
+        *device = other_device;
+
+        return TRUE;
+      }
+
+      gst_object_unref (other_device);
+    }
+  }
+
+  return FALSE;
+}
+
+static void
+context_set_d3d11_device (GstContext * context, GstD3D11Device * device)
+{
+  GstStructure *s;
+  gint adapter;
+
+  g_return_if_fail (context != NULL);
+
+  g_object_get (G_OBJECT (device), "adapter", &adapter, NULL);
+
+  GST_CAT_LOG (GST_CAT_CONTEXT,
+      "setting GstD3D11Device(%" GST_PTR_FORMAT
+      ") with adapter %d on context(%" GST_PTR_FORMAT ")",
+      device, adapter, context);
+
+  s = gst_context_writable_structure (context);
+  gst_structure_set (s, "device", GST_TYPE_D3D11_DEVICE,
+      device, "adapter", G_TYPE_INT, adapter, NULL);
 }
 
 /**
@@ -253,6 +301,9 @@ gst_d3d11_handle_context_query (GstElement * element, GstQuery * query,
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
+  _init_d3d11_utils_debug ();
+  _init_context_debug ();
+
   GST_LOG_OBJECT (element, "handle context query %" GST_PTR_FORMAT, query);
 
   if (!device)
@@ -268,7 +319,7 @@ gst_d3d11_handle_context_query (GstElement * element, GstQuery * query,
   else
     context = gst_context_new (GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE, TRUE);
 
-  gst_context_set_d3d11_device (context, device);
+  context_set_d3d11_device (context, device);
   gst_query_set_context (query, context);
   gst_context_unref (context);
 
@@ -321,14 +372,13 @@ run_query (GstElement * element, GstQuery * query, GstPadDirection direction)
 }
 
 static void
-run_d3d11_context_query (GstElement * element)
+run_d3d11_context_query (GstElement * element, GstD3D11Device ** device)
 {
   GstQuery *query;
   GstContext *ctxt;
 
-  /*  2a) Query downstream with GST_QUERY_CONTEXT for the context and
-   *      check if downstream already has a context of the specific type
-   *  2b) Query upstream as above.
+  /* 1) Query downstream with GST_QUERY_CONTEXT for the context and
+   *    check if downstream already has a context of the specific type
    */
   query = gst_query_new_context (GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE);
   if (run_query (element, query, GST_PAD_SRC)) {
@@ -336,12 +386,18 @@ run_d3d11_context_query (GstElement * element)
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "found context (%" GST_PTR_FORMAT ") in downstream query", ctxt);
     gst_element_set_context (element, ctxt);
-  } else if (run_query (element, query, GST_PAD_SINK)) {
+  }
+
+  /* 2) although we found d3d11 device context above, the element does not want
+   *    to use the context. Then try to find from the other direction */
+  if (*device == NULL && run_query (element, query, GST_PAD_SINK)) {
     gst_query_parse_context (query, &ctxt);
     GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
         "found context (%" GST_PTR_FORMAT ") in upstream query", ctxt);
     gst_element_set_context (element, ctxt);
-  } else {
+  }
+
+  if (*device == NULL) {
     /* 3) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with
      *    the required context type and afterwards check if a
      *    usable context was set now as in 1). The message could
@@ -369,8 +425,9 @@ run_d3d11_context_query (GstElement * element)
 /**
  * gst_d3d11_ensure_element_data:
  * @element: the #GstElement running the query
+ * @adapter: prefered adapter index, pass adapter >=0 when
+ *           the adapter explicitly required. Otherwise, set -1.
  * @device: (inout): the resulting #GstD3D11Device
- * @preferred_adapter: the index of preferred adapter
  *
  * Perform the steps necessary for retrieving a #GstD3D11Device
  * from the surrounding elements or from the application using the #GstContext mechanism.
@@ -381,14 +438,15 @@ run_d3d11_context_query (GstElement * element)
  * Returns: whether a #GstD3D11Device exists in @device
  */
 gboolean
-gst_d3d11_ensure_element_data (GstElement * element, GstD3D11Device ** device,
-    gint preferred_adapter)
+gst_d3d11_ensure_element_data (GstElement * element, gint adapter,
+    GstD3D11Device ** device)
 {
-  GstD3D11Device *new_device;
-  GstContext *context;
+  guint target_adapter = 0;
 
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (device != NULL, FALSE);
+
+  _init_d3d11_utils_debug ();
   _init_context_debug ();
 
   if (*device) {
@@ -396,34 +454,36 @@ gst_d3d11_ensure_element_data (GstElement * element, GstD3D11Device ** device,
     return TRUE;
   }
 
-  run_d3d11_context_query (element);
-
-  /* Neighbour found and it updated the devicey */
-  if (*device) {
+  run_d3d11_context_query (element, device);
+  if (*device)
     return TRUE;
-  }
 
-  new_device = gst_d3d11_device_new (preferred_adapter);
+  if (adapter > 0)
+    target_adapter = adapter;
 
-  if (!new_device) {
+  *device = gst_d3d11_device_new (target_adapter);
+
+  if (*device == NULL) {
     GST_ERROR_OBJECT (element,
-        "Couldn't create new device with adapter index %d", preferred_adapter);
+        "Couldn't create new device with adapter index %d", target_adapter);
     return FALSE;
+  } else {
+    GstContext *context;
+    GstMessage *msg;
+
+    /* Propagate new D3D11 device context */
+
+    context = gst_context_new (GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE, TRUE);
+    context_set_d3d11_device (context, *device);
+
+    gst_element_set_context (element, context);
+
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+        "posting have context (%p) message with D3D11 device context (%p)",
+        context, *device);
+    msg = gst_message_new_have_context (GST_OBJECT_CAST (element), context);
+    gst_element_post_message (GST_ELEMENT_CAST (element), msg);
   }
-
-  *device = new_device;
-
-  context = gst_context_new (GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE, TRUE);
-  gst_context_set_d3d11_device (context, new_device);
-
-  gst_element_set_context (element, context);
-
-  GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
-      "posting have context (%" GST_PTR_FORMAT
-      ") message with device (%" GST_PTR_FORMAT ")", context, device);
-
-  gst_element_post_message (GST_ELEMENT_CAST (element),
-      gst_message_new_have_context (GST_OBJECT_CAST (element), context));
 
   return TRUE;
 }

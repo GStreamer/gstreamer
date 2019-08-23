@@ -205,7 +205,7 @@ gst_d3d11_video_sink_set_context (GstElement * element, GstContext * context)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (element);
 
-  gst_d3d11_handle_set_context (element, context, &self->device);
+  gst_d3d11_handle_set_context (element, context, self->adapter, &self->device);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -452,8 +452,8 @@ gst_d3d11_video_sink_start (GstBaseSink * sink)
 
   GST_DEBUG_OBJECT (self, "Start");
 
-  if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), &self->device,
-          self->adapter) || !self->device) {
+  if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), self->adapter,
+          &self->device)) {
     GST_ERROR_OBJECT (sink, "Cannot create d3d11device");
     return FALSE;
   }

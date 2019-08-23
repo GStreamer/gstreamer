@@ -42,6 +42,7 @@ gboolean        gst_d3d11_calculate_buffer_size     (GstVideoInfo * info,
 
 gboolean        gst_d3d11_handle_set_context        (GstElement * element,
                                                      GstContext * context,
+                                                     gint adapter,
                                                      GstD3D11Device ** device);
 
 gboolean        gst_d3d11_handle_context_query      (GstElement * element,
@@ -49,8 +50,8 @@ gboolean        gst_d3d11_handle_context_query      (GstElement * element,
                                                      GstD3D11Device * device);
 
 gboolean        gst_d3d11_ensure_element_data       (GstElement * element,
-                                                     GstD3D11Device ** device,
-                                                     gint preferred_adapter);
+                                                     gint adapter,
+                                                     GstD3D11Device ** device);
 
 G_END_DECLS
 

@@ -102,12 +102,6 @@ ID3D11Texture2D *     gst_d3d11_device_create_texture     (GstD3D11Device * devi
 void                  gst_d3d11_device_release_texture    (GstD3D11Device * device,
                                                            ID3D11Texture2D * texture);
 
-void                  gst_context_set_d3d11_device        (GstContext * context,
-                                                           GstD3D11Device * device);
-
-gboolean              gst_context_get_d3d11_device        (GstContext * context,
-                                                           GstD3D11Device ** device);
-
 G_END_DECLS
 
 #endif /* __GST_D3D11_DEVICE_H__ */
