@@ -24,7 +24,7 @@
                         "presence": "sometimes"
                     },
                     "sink": {
-                        "caps": "application/xges:\n",
+                        "caps": "text/x-xptv:\napplication/xges:\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -224,6 +224,14 @@
                         "construct-only": false,
                         "default": "false",
                         "type-name": "gboolean",
+                        "writable": true
+                    },
+                    "id": {
+                        "blurb": "The stream-id of the composition",
+                        "construct": false,
+                        "construct-only": false,
+                        "default": "08b803d370ed02669347d0152504d701",
+                        "type-name": "gchararray",
                         "writable": true
                     },
                     "inpoint": {
@@ -823,6 +831,7 @@
         "license": "LGPL",
         "package": "GStreamer Editing Services",
         "source": "gst-editing-services",
+        "tracers": {},
         "url": "Unknown package origin"
     }
 }

@@ -381,8 +381,8 @@ GType ges_pipeline_flags_get_type (void);
  *  (not implemented yet)
  *
  * You can also find more explanation about the behaviour of those modes at:
- * <ulink url="http://pitivi.org/manual/trimming.html"> trim, ripple and roll</ulink>
- * and <ulink url="http://pitivi.org/manual/usingclips.html">clip management</ulink>.
+ * [trim, ripple and roll](http://pitivi.org/manual/trimming.html)
+ * and [clip management](http://pitivi.org/manual/usingclips.html).
  */
 typedef enum {
     GES_EDIT_MODE_NORMAL,
