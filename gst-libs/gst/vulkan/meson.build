@@ -233,6 +233,13 @@ if vulkan_dep.found() and has_vulkan_header
     dependencies : [gstbase_dep, gstvideo_dep, vulkan_dep] + optional_deps)
 
   if build_gir
+    extra_gir_includes = []
+    gobject_introspection_dep = dependency('gobject-introspection-1.0')
+    if gobject_introspection_dep.version().version_compare('>=1.61.1')
+      # This is the first version that contains Vulkan-1.0.gir
+      extra_gir_includes += ['Vulkan-1.0']
+    endif
+
     vulkan_gir = gnome.generate_gir(gstvulkan,
       sources : vulkan_sources + vulkan_headers + [vulkan_enumtypes_h, vulkan_enumtypes_c],
       namespace : 'GstVulkan',
@@ -240,7 +247,7 @@ if vulkan_dep.found() and has_vulkan_header
       identifier_prefix : 'Gst',
       symbol_prefix : 'gst',
       export_packages : 'gstreamer-vulkan-1.0',
-      includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'],
+      includes : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'] + extra_gir_includes,
       install : true,
       extra_args : gir_init_section + ['--c-include=gst/vulkan/vulkan.h'],
       dependencies : [gstvideo_dep, gst_dep, gstbase_dep] + optional_deps
