@@ -23,8 +23,12 @@
 #include "config.h"
 #endif
 
+/* Needed for GValueArray */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include "gstsrtobject.h"
 
+#include <gst/base/gstbasesink.h>
 #include <gio/gnetworking.h>
 #include <stdlib.h>
 
@@ -1399,50 +1403,103 @@ gst_srt_object_write (GstSRTObject * srtobject,
   return len;
 }
 
+static GstStructure *
+get_stats_for_srtsock (SRTSOCKET srtsock, gboolean is_sender)
+{
+  GstStructure *s = gst_structure_new_empty ("application/x-srt-statistics");
+  int ret;
+  SRT_TRACEBSTATS stats;
+
+  ret = srt_bstats (srtsock, &stats, 0);
+
+  if (ret >= 0) {
+    if (is_sender)
+      gst_structure_set (s,
+          /* number of sent data packets, including retransmissions */
+          "packets-sent", G_TYPE_INT64, stats.pktSent,
+          /* number of lost packets (sender side) */
+          "packets-sent-lost", G_TYPE_INT, stats.pktSndLoss,
+          /* number of retransmitted packets */
+          "packets-retransmitted", G_TYPE_INT, stats.pktRetrans,
+          /* number of received ACK packets */
+          "packet-ack-received", G_TYPE_INT, stats.pktRecvACK,
+          /* number of received NAK packets */
+          "packet-nack-received", G_TYPE_INT, stats.pktRecvNAK,
+          /* time duration when UDT is sending data (idle time exclusive) */
+          "send-duration-us", G_TYPE_INT64, stats.usSndDuration,
+          /* number of sent data bytes, including retransmissions */
+          "bytes-sent", G_TYPE_UINT64, stats.byteSent,
+          /* number of retransmitted bytes */
+          "bytes-retransmitted", G_TYPE_UINT64, stats.byteRetrans,
+          /* number of too-late-to-send dropped bytes */
+          "bytes-sent-dropped", G_TYPE_UINT64, stats.byteSndDrop,
+          /* number of too-late-to-send dropped packets */
+          "packets-sent-dropped", G_TYPE_INT, stats.pktSndDrop,
+          /* sending rate in Mb/s */
+          "send-rate-mbps", G_TYPE_DOUBLE, stats.mbpsSendRate,
+          /* busy sending time (i.e., idle time exclusive) */
+          "send-duration-us", G_TYPE_UINT64, stats.usSndDuration,
+          "negotiated-latency-ms", G_TYPE_INT, stats.msSndTsbPdDelay, NULL);
+    else
+      gst_structure_set (s,
+          "packets-received", G_TYPE_INT64, stats.pktRecvTotal,
+          "packets-received-lost", G_TYPE_INT, stats.pktRcvLossTotal,
+          /* number of sent ACK packets */
+          "packet-ack-sent", G_TYPE_INT, stats.pktSentACK,
+          /* number of sent NAK packets */
+          "packet-nack-sent", G_TYPE_INT, stats.pktSentNAK,
+          "bytes-received", G_TYPE_UINT64, stats.byteRecvTotal,
+          "bytes-received-lost", G_TYPE_INT, stats.byteRcvLossTotal,
+          "receive-rate-mbps", G_TYPE_DOUBLE, stats.mbpsRecvRate,
+          "negotiated-latency-ms", G_TYPE_INT, stats.msRcvTsbPdDelay, NULL);
+
+    gst_structure_set (s,
+        /* estimated bandwidth, in Mb/s */
+        "bandwidth-mbps", G_TYPE_DOUBLE, stats.mbpsBandwidth,
+        "rtt-ms", G_TYPE_DOUBLE, stats.msRTT, NULL);
+
+  }
+
+  return s;
+}
+
 GstStructure *
 gst_srt_object_get_stats (GstSRTObject * srtobject)
 {
-  SRT_TRACEBSTATS stats;
-  int ret;
-  GstStructure *s = gst_structure_new_empty ("application/x-srt-statistics");
+  GstStructure *s = NULL;
+  gboolean is_sender = GST_IS_BASE_SINK (srtobject->element);
 
-  /* FIXME: what if ruinning on listener mode */
-  if (srtobject->sock == SRT_INVALID_SOCK)
-    return s;
-
-  ret = srt_bstats (srtobject->sock, &stats, 0);
-
-  if (ret >= 0) {
-    gst_structure_set (s,
-        /* number of sent data packets, including retransmissions */
-        "packets-sent", G_TYPE_INT64, stats.pktSent,
-        /* number of lost packets (sender side) */
-        "packets-sent-lost", G_TYPE_INT, stats.pktSndLoss,
-        /* number of retransmitted packets */
-        "packets-retransmitted", G_TYPE_INT, stats.pktRetrans,
-        /* number of received ACK packets */
-        "packet-ack-received", G_TYPE_INT, stats.pktRecvACK,
-        /* number of received NAK packets */
-        "packet-nack-received", G_TYPE_INT, stats.pktRecvNAK,
-        /* time duration when UDT is sending data (idle time exclusive) */
-        "send-duration-us", G_TYPE_INT64, stats.usSndDuration,
-        /* number of sent data bytes, including retransmissions */
-        "bytes-sent", G_TYPE_UINT64, stats.byteSent,
-        /* number of retransmitted bytes */
-        "bytes-retransmitted", G_TYPE_UINT64, stats.byteRetrans,
-        /* number of too-late-to-send dropped bytes */
-        "bytes-sent-dropped", G_TYPE_UINT64, stats.byteSndDrop,
-        /* number of too-late-to-send dropped packets */
-        "packets-sent-dropped", G_TYPE_INT, stats.pktSndDrop,
-        /* sending rate in Mb/s */
-        "send-rate-mbps", G_TYPE_DOUBLE, stats.msRTT,
-        /* estimated bandwidth, in Mb/s */
-        "bandwidth-mbps", G_TYPE_DOUBLE, stats.mbpsBandwidth,
-        /* busy sending time (i.e., idle time exclusive) */
-        "send-duration-us", G_TYPE_UINT64, stats.usSndDuration,
-        "rtt-ms", G_TYPE_DOUBLE, stats.msRTT,
-        "negotiated-latency-ms", G_TYPE_INT, stats.msSndTsbPdDelay, NULL);
+  GST_OBJECT_LOCK (srtobject->element);
+  if (srtobject->sock != SRT_INVALID_SOCK) {
+    s = get_stats_for_srtsock (srtobject->sock, is_sender);
+    goto done;
   }
+
+  s = gst_structure_new_empty ("application/x-srt-statistics");
+
+  if (srtobject->callers) {
+    GValueArray *callers_stats = g_value_array_new (1);
+    GValue callers_stats_v = G_VALUE_INIT;
+    GList *item;
+
+    for (item = srtobject->callers; item; item = item->next) {
+      SRTCaller *caller = item->data;
+      GstStructure *tmp = get_stats_for_srtsock (caller->sock, is_sender);
+      GValue *v;
+
+      g_value_array_append (callers_stats, NULL);
+      v = g_value_array_get_nth (callers_stats, callers_stats->n_values - 1);
+      g_value_init (v, GST_TYPE_STRUCTURE);
+      g_value_take_boxed (v, tmp);
+    }
+
+    g_value_init (&callers_stats_v, G_TYPE_VALUE_ARRAY);
+    g_value_take_boxed (&callers_stats_v, callers_stats);
+    gst_structure_take_value (s, "callers", &callers_stats_v);
+  }
+
+done:
+  GST_OBJECT_UNLOCK (srtobject->element);
 
   return s;
 }
