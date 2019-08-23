@@ -23,9 +23,8 @@
  * @see_also: vorbisdec, oggmux
  *
  * This element encodes raw float audio into a Vorbis stream.
- * <ulink url="http://www.vorbis.com/">Vorbis</ulink> is a royalty-free
- * audio codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
- * Foundation</ulink>.
+ * [Vorbis](http://www.vorbis.com/) is a royalty-free audio codec maintained by
+ * the [Xiph.org Foundation](http://www.xiph.org/).
  *
  * ## Example pipelines
  * |[

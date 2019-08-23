@@ -26,9 +26,9 @@
  * @see_also: theoraenc, oggdemux
  *
  * This element decodes theora streams into raw video
- * <ulink url="http://www.theora.org/">Theora</ulink> is a royalty-free
- * video codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
- * Foundation</ulink>, based on the VP3 codec.
+ * [Theora](http://www.theora.org/) is a royalty-free
+ * video codec maintained by the [Xiph.org Foundation](http://www.xiph.org/),
+ * based on the VP3 codec.
  *
  * ## Example pipeline
  * |[

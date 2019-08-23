@@ -26,9 +26,9 @@
  * @see_also: theoradec, oggmux
  *
  * This element encodes raw video into a Theora stream.
- * <ulink url="http://www.theora.org/">Theora</ulink> is a royalty-free
- * video codec maintained by the <ulink url="http://www.xiph.org/">Xiph.org
- * Foundation</ulink>, based on the VP3 codec.
+ * [Theora](http://www.theora.org/) is a royalty-free
+ * video codec maintained by the [Xiph.org Foundation](http://www.xiph.org/),
+ * based on the VP3 codec.
  *
  * The theora codec internally only supports encoding of images that are a
  * multiple of 16 pixels in both X and Y direction. It is however perfectly
