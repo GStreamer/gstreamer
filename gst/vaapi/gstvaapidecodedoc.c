@@ -25,9 +25,8 @@
  * @short_description: A VA-API based JPEG image decoder
  *
  * vaapijpegdec decodes a JPEG image to surfaces suitable for the
- * vaapisink or vaapipostproc elements using the installed <ulink
- * url="https://wiki.freedesktop.org/www/Software/vaapi/">VA-API</ulink>
- * back-end.
+ * vaapisink or vaapipostproc elements using the installed
+ * [VA-API](https://wiki.freedesktop.org/www/Software/vaapi/) back-end.
  *
  * In the case of OpenGL based elements, the buffers have the
  * #GstVideoGLTextureUploadMeta meta, which efficiently copies the
@@ -50,9 +49,7 @@
  *
  * vaapimpeg2dec decodes from MPEG2 bitstreams to surfaces suitable
  * for the vaapisink or vaapipostproc elements using the installed
- * <ulink
- * url="https://wiki.freedesktop.org/www/Software/vaapi/">VA-API</ulink>
- * back-end.
+ * [VA-API](https://wiki.freedesktop.org/www/Software/vaapi/) back-end.
  *
  * In the case of OpenGL based elements, the buffers have the
  * #GstVideoGLTextureUploadMeta meta, which efficiently copies the
@@ -75,9 +72,7 @@
  *
  * vaapimpeg4dec decodes from MPEG4 bitstreams to surfaces suitable
  * for the vaapisink or vaapipostproc elements using the installed
- * <ulink
- * url="https://wiki.freedesktop.org/www/Software/vaapi/">VA-API</ulink>
- * back-end.
+ * [VA-API](https://wiki.freedesktop.org/www/Software/vaapi/) back-end.
  *
  * In the case of OpenGL based elements, the buffers have the
  * #GstVideoGLTextureUploadMeta meta, which efficiently copies the
@@ -100,9 +95,7 @@
  *
  * vaapih263dec decodes from H263 bitstreams to surfaces suitable
  * for the vaapisink or vaapipostproc elements using the installed
- * <ulink
- * url="https://wiki.freedesktop.org/www/Software/vaapi/">VA-API</ulink>
- * back-end.
+ * [VA-API](https://wiki.freedesktop.org/www/Software/vaapi/) back-end.
  *
  * In the case of OpenGL based elements, the buffers have the
  * #GstVideoGLTextureUploadMeta meta, which efficiently copies the
@@ -125,9 +118,7 @@
  *
  * vaapih264dec decodes from H264 bitstreams to surfaces suitable
  * for the vaapisink or vaapipostproc elements using the installed
- * <ulink
- * url="https://wiki.freedesktop.org/www/Software/vaapi/">VA-API</ulink>
- * back-end.
+ * [VA-API](https://wiki.freedesktop.org/www/Software/vaapi/) back-end.
  *
  * In the case of OpenGL based elements, the buffers have the
  * #GstVideoGLTextureUploadMeta meta, which efficiently copies the
@@ -150,9 +141,7 @@
  *
  * vaapih265dec decodes from H265 bitstreams to surfaces suitable
  * for the vaapisink or vaapipostproc elements using the installed
- * <ulink
- * url="https://wiki.freedesktop.org/www/Software/vaapi/">VA-API</ulink>
- * back-end.
+ * [VA-API](https://wiki.freedesktop.org/www/Software/vaapi/) back-end.
  *
  * In the case of OpenGL based elements, the buffers have the
  * #GstVideoGLTextureUploadMeta meta, which efficiently copies the
@@ -175,9 +164,7 @@
  *
  * vaapivc1dec decodes from VC1 bitstreams to surfaces suitable
  * for the vaapisink or vaapipostproc elements using the installed
- * <ulink
- * url="https://wiki.freedesktop.org/www/Software/vaapi/">VA-API</ulink>
- * back-end.
+ * [VA-API](https://wiki.freedesktop.org/www/Software/vaapi/) back-end.
  *
  * In the case of OpenGL based elements, the buffers have the
  * #GstVideoGLTextureUploadMeta meta, which efficiently copies the
@@ -200,9 +187,7 @@
  *
  * vaapivp8dec decodes from VP8 bitstreams to surfaces suitable
  * for the vaapisink or vaapipostproc elements using the installed
- * <ulink
- * url="https://wiki.freedesktop.org/www/Software/vaapi/">VA-API</ulink>
- * back-end.
+ * [VA-API](https://wiki.freedesktop.org/www/Software/vaapi/) back-end.
  *
  * In the case of OpenGL based elements, the buffers have the
  * #GstVideoGLTextureUploadMeta meta, which efficiently copies the
@@ -225,9 +210,7 @@
  *
  * vaapivp9dec decodes from VP9 bitstreams to surfaces suitable
  * for the vaapisink or vaapipostproc elements using the installed
- * <ulink
- * url="https://wiki.freedesktop.org/www/Software/vaapi/">VA-API</ulink>
- * back-end.
+ * [VA-API](https://wiki.freedesktop.org/www/Software/vaapi/) back-end.
  *
  * In the case of OpenGL based elements, the buffers have the
  * #GstVideoGLTextureUploadMeta meta, which efficiently copies the
