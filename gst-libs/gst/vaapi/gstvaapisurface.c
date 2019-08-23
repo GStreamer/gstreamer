@@ -327,10 +327,12 @@ gst_vaapi_surface_new_from_formats (GstVaapiDisplay * display,
   GstVaapiSurface *surface;
   guint i;
 
-  for (i = 0; i < formats->len; i++) {
-    GstVideoFormat format = g_array_index (formats, GstVideoFormat, i);
-    if (format == gst_vaapi_video_format_from_chroma (chroma_type))
-      return gst_vaapi_surface_new (display, chroma_type, width, height);
+  if (formats) {
+    for (i = 0; i < formats->len; i++) {
+      GstVideoFormat format = g_array_index (formats, GstVideoFormat, i);
+      if (format == gst_vaapi_video_format_from_chroma (chroma_type))
+        return gst_vaapi_surface_new (display, chroma_type, width, height);
+    }
   }
 
   /* Fallback: if there's no format valid for the chroma type let's
