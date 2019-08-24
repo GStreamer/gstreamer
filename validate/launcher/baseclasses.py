@@ -1592,7 +1592,7 @@ class _TestsLauncher(Loggable):
         app_dirs = []
         env_dirs = os.environ["GST_VALIDATE_APPS_DIR"]
         if env_dirs is not None:
-            for dir_ in env_dirs.split(":"):
+            for dir_ in env_dirs.split(os.pathsep):
                 app_dirs.append(dir_)
 
         return app_dirs
