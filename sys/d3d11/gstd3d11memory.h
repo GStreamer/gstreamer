@@ -87,9 +87,9 @@ struct _GstD3D11Allocator
 {
   GstAllocator parent;
 
-  /*< private >*/
   GstD3D11Device *device;
 
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -117,6 +117,9 @@ GstD3D11Allocator * gst_d3d11_allocator_new       (GstD3D11Device *device);
 
 GstMemory *         gst_d3d11_allocator_alloc     (GstD3D11Allocator * allocator,
                                                    GstD3D11AllocationParams * params);
+
+gboolean            gst_is_d3d11_memory           (GstMemory * mem);
+
 
 G_END_DECLS
 

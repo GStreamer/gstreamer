@@ -403,3 +403,10 @@ error:
     gst_d3d11_device_release_texture (device, staging);
   return NULL;
 }
+
+gboolean
+gst_is_d3d11_memory (GstMemory * mem)
+{
+  return mem != NULL && mem->allocator != NULL &&
+      GST_IS_D3D11_ALLOCATOR (mem->allocator);
+}
