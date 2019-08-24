@@ -106,7 +106,11 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
         gst_msdk_get_va_rt_format_from_mfx_rt_format (req->Info.ChromaFormat);
 
     if (format == VA_RT_FORMAT_YUV420 && va_fourcc == VA_FOURCC_P010)
+#if VA_CHECK_VERSION(1, 2, 0)
       format = VA_RT_FORMAT_YUV420_10;
+#else
+      format = VA_RT_FORMAT_YUV420_10BPP;
+#endif
 
 #if VA_CHECK_VERSION(1, 4, 1)
     if (format == VA_RT_FORMAT_YUV444 && va_fourcc == VA_FOURCC_A2R10G10B10)
@@ -501,7 +505,11 @@ gst_msdk_export_dmabuf_to_vasurface (GstMsdkContext * context,
       va_fourcc = VA_FOURCC_YUY2;
       break;
     case GST_VIDEO_FORMAT_P010_10LE:
+#if VA_CHECK_VERSION(1, 2, 0)
       va_chroma = VA_RT_FORMAT_YUV420_10;
+#else
+      va_chroma = VA_RT_FORMAT_YUV420_10BPP;
+#endif
       va_fourcc = VA_FOURCC_P010;
       break;
     case GST_VIDEO_FORMAT_UYVY:
