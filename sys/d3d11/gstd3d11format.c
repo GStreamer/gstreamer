@@ -24,6 +24,7 @@
 #include "gstd3d11format.h"
 #include "gstd3d11utils.h"
 #include "gstd3d11device.h"
+#include "gstd3d11memory.h"
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -276,6 +277,9 @@ gst_d3d11_device_get_supported_caps_internal (GstD3D11Device * device,
       "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
   gst_caps_set_value (supported_caps, "format", &v_list);
   g_value_unset (&v_list);
+
+  gst_caps_set_features_simple (supported_caps,
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
 
   data->caps = supported_caps;
 }

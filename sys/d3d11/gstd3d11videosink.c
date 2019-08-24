@@ -39,14 +39,14 @@ enum
 #define DEFAULT_FORCE_ASPECT_RATIO        TRUE
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS  TRUE
 
+#define CAPS_FORMAT "{ BGRA, RGBA, RGB10A2_LE }"
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { BGRA, RGBA, RGB10A2_LE }, "
-        "framerate = (fraction) [ 0, MAX ], "
-        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
-    );
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, CAPS_FORMAT)
+    ));
 
 GST_DEBUG_CATEGORY (d3d11_video_sink_debug);
 #define GST_CAT_DEFAULT d3d11_video_sink_debug
