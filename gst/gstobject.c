@@ -635,7 +635,7 @@ gst_object_set_name (GstObject * object, const gchar * name)
     result = gst_object_set_name_default (object);
   }
 
-  g_object_notify (G_OBJECT (object), "name");
+  g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_NAME]);
   return result;
 
   /* error */
