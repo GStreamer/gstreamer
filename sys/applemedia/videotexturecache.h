@@ -46,7 +46,6 @@ GstVideoTextureCache *gst_video_texture_cache_new (GstGLContext * ctx);
 void gst_video_texture_cache_free (GstVideoTextureCache * cache);
 void gst_video_texture_cache_set_format (GstVideoTextureCache * cache,
     GstVideoFormat in_format, GstCaps * out_caps);
-gboolean gst_video_texture_cache_upload (GstVideoGLTextureUploadMeta * meta, guint texture_id[4]);
 GstMemory *gst_video_texture_cache_create_memory (GstVideoTextureCache * cache,
     GstAppleCoreVideoPixelBuffer *gpixbuf, guint plane, gsize size);
 
