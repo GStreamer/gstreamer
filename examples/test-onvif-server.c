@@ -22,6 +22,8 @@
 
 #include <gst/rtsp-server/rtsp-server.h>
 
+#include "test-onvif-server.h"
+
 GST_DEBUG_CATEGORY_STATIC (onvif_server_debug);
 #define GST_CAT_DEFAULT (onvif_server_debug)
 
@@ -48,9 +50,6 @@ G_STMT_START { \
 
 /* January the first, 2000 */
 #define END_DATE 3155673600 * GST_SECOND
-
-
-G_DECLARE_FINAL_TYPE (ReplayBin, replay_bin, REPLAY, BIN, GstBin);
 
 static gchar *filename;
 
@@ -343,9 +342,9 @@ translate_segment (GstPad * pad, GstEvent * ievent)
     gst_segment_init (&self->segment, self->incoming_segment->format);
 
     gst_segment_do_seek (&self->segment, self->incoming_segment->rate,
-        self->incoming_segment->format, self->incoming_segment->flags,
-        GST_SEEK_TYPE_SET, (guint64) istart, GST_SEEK_TYPE_SET, (guint64) istop,
-        &update);
+        self->incoming_segment->format,
+        (GstSeekFlags) self->incoming_segment->flags, GST_SEEK_TYPE_SET,
+        (guint64) istart, GST_SEEK_TYPE_SET, (guint64) istop, &update);
 
     self->min_pts = istart;
 
@@ -521,9 +520,6 @@ fail:
 }
 
 /* A simple factory to set up our replay bin */
-
-G_DECLARE_FINAL_TYPE (OnvifFactory, onvif_factory, ONVIF, FACTORY,
-    GstRTSPMediaFactory);
 
 struct _OnvifFactory
 {
