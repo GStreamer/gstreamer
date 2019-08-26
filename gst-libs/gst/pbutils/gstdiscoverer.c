@@ -270,8 +270,8 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
    */
   gst_discoverer_signals[SIGNAL_FINISHED] =
       g_signal_new ("finished", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstDiscovererClass, finished),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_STRUCT_OFFSET (GstDiscovererClass, finished), NULL, NULL, NULL,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
    * GstDiscoverer::starting:
@@ -281,8 +281,8 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
    */
   gst_discoverer_signals[SIGNAL_STARTING] =
       g_signal_new ("starting", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstDiscovererClass, starting),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_STRUCT_OFFSET (GstDiscovererClass, starting), NULL, NULL, NULL,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
    * GstDiscoverer::discovered:
@@ -302,8 +302,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
    */
   gst_discoverer_signals[SIGNAL_DISCOVERED] =
       g_signal_new ("discovered", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstDiscovererClass, discovered),
-      NULL, NULL, g_cclosure_marshal_generic,
+      G_STRUCT_OFFSET (GstDiscovererClass, discovered), NULL, NULL, NULL,
       G_TYPE_NONE, 2, GST_TYPE_DISCOVERER_INFO,
       G_TYPE_ERROR | G_SIGNAL_TYPE_STATIC_SCOPE);
 
@@ -323,7 +322,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
   gst_discoverer_signals[SIGNAL_SOURCE_SETUP] =
       g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDiscovererClass, source_setup),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 }
 
 static void

@@ -503,8 +503,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
   gst_uri_decode_bin_signals[SIGNAL_UNKNOWN_TYPE] =
       g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass, unknown_type),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
-      GST_TYPE_PAD, GST_TYPE_CAPS);
+      NULL, NULL, NULL, G_TYPE_NONE, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
    * GstURIDecodeBin::autoplug-continue:
@@ -528,8 +527,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_signal_new ("autoplug-continue", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass,
           autoplug_continue), _gst_boolean_accumulator, NULL,
-      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 2, GST_TYPE_PAD,
-      GST_TYPE_CAPS);
+      NULL, G_TYPE_BOOLEAN, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
    * GstURIDecodeBin::autoplug-factories:
@@ -558,8 +556,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_signal_new ("autoplug-factories", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass,
           autoplug_factories), _gst_array_accumulator, NULL,
-      g_cclosure_marshal_generic, G_TYPE_VALUE_ARRAY, 2,
-      GST_TYPE_PAD, GST_TYPE_CAPS);
+      NULL, G_TYPE_VALUE_ARRAY, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
    * GstURIDecodeBin::autoplug-sort:
@@ -588,8 +585,8 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_signal_new ("autoplug-sort", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass, autoplug_sort),
       _gst_array_hasvalue_accumulator, NULL,
-      g_cclosure_marshal_generic, G_TYPE_VALUE_ARRAY, 3, GST_TYPE_PAD,
-      GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY | G_SIGNAL_TYPE_STATIC_SCOPE);
+      NULL, G_TYPE_VALUE_ARRAY, 3, GST_TYPE_PAD, GST_TYPE_CAPS,
+      G_TYPE_VALUE_ARRAY | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
    * GstURIDecodeBin::autoplug-select:
@@ -628,8 +625,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass,
           autoplug_select), _gst_select_accumulator, NULL,
-      g_cclosure_marshal_generic,
-      GST_TYPE_AUTOPLUG_SELECT_RESULT, 3, GST_TYPE_PAD, GST_TYPE_CAPS,
+      NULL, GST_TYPE_AUTOPLUG_SELECT_RESULT, 3, GST_TYPE_PAD, GST_TYPE_CAPS,
       GST_TYPE_ELEMENT_FACTORY);
 
   /**
@@ -649,9 +645,8 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
   gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY] =
       g_signal_new ("autoplug-query", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass, autoplug_query),
-      _gst_boolean_or_accumulator, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 3, GST_TYPE_PAD, GST_TYPE_ELEMENT,
-      GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
+      _gst_boolean_or_accumulator, NULL, NULL, G_TYPE_BOOLEAN, 3, GST_TYPE_PAD,
+      GST_TYPE_ELEMENT, GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
    * GstURIDecodeBin::drained:
@@ -661,8 +656,8 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
   gst_uri_decode_bin_signals[SIGNAL_DRAINED] =
       g_signal_new ("drained", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstURIDecodeBinClass, drained), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_STRUCT_OFFSET (GstURIDecodeBinClass, drained), NULL, NULL, NULL,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
    * GstURIDecodeBin::source-setup:
@@ -677,8 +672,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
    */
   gst_uri_decode_bin_signals[SIGNAL_SOURCE_SETUP] =
       g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
   gst_element_class_set_static_metadata (gstelement_class,

@@ -96,8 +96,7 @@ gst_gl_src_bin_class_init (GstGLSrcBinClass * klass)
    */
   gst_gl_src_bin_signals[SIGNAL_CREATE_ELEMENT] =
       g_signal_new ("create-element", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      GST_TYPE_ELEMENT, 0);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_ELEMENT, 0);
 
   gst_element_class_set_metadata (element_class,
       "GL Src Bin", "Src/Video",

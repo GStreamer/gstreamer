@@ -180,7 +180,7 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
       g_signal_new ("transport-error", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstCdParanoiaSrcClass, transport_error),
-      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
   /**
    * GstCdParanoiaSrc::uncorrected-error:
    * @cdparanoia: The CdParanoia instance
@@ -193,7 +193,7 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
       g_signal_new ("uncorrected-error", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstCdParanoiaSrcClass, uncorrected_error),
-      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
 }
 
 static gboolean

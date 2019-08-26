@@ -212,8 +212,8 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
    */
   gst_gl_window_signals[EVENT_MOUSE_SIGNAL] =
       g_signal_new ("mouse-event", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 4, G_TYPE_STRING, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 4, G_TYPE_STRING,
+      G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
 
   /**
    * GstGLWindow::key-event:
@@ -227,8 +227,8 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
    */
   gst_gl_window_signals[EVENT_KEY_SIGNAL] =
       g_signal_new ("key-event", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_STRING,
+      G_TYPE_STRING);
 
   _init_debug ();
 }

@@ -461,8 +461,8 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
   gst_uri_decode_bin3_signals[SIGNAL_SELECT_STREAM] =
       g_signal_new ("select-stream", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBin3Class, select_stream),
-      _gst_int_accumulator, NULL, g_cclosure_marshal_generic,
-      G_TYPE_INT, 2, GST_TYPE_STREAM_COLLECTION, GST_TYPE_STREAM);
+      _gst_int_accumulator, NULL, NULL, G_TYPE_INT, 2,
+      GST_TYPE_STREAM_COLLECTION, GST_TYPE_STREAM);
 
   /**
    * GstURIDecodeBin3::source-setup:
@@ -476,8 +476,7 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
    */
   gst_uri_decode_bin3_signals[SIGNAL_SOURCE_SETUP] =
       g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
   /**
    * GstURIDecodeBin3::about-to-finish:
    *
@@ -486,8 +485,7 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
    */
   gst_uri_decode_bin3_signals[SIGNAL_ABOUT_TO_FINISH] =
       g_signal_new ("about-to-finish", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
-      0, G_TYPE_NONE);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
 
   gst_element_class_add_static_pad_template (gstelement_class,

@@ -413,8 +413,8 @@ gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
   gst_uri_source_bin_signals[SIGNAL_DRAINED] =
       g_signal_new ("drained", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstURISourceBinClass, drained), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_STRUCT_OFFSET (GstURISourceBinClass, drained), NULL, NULL, NULL,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
 
     /**
    * GstURISourceBin::about-to-finish:
@@ -424,8 +424,8 @@ gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
   gst_uri_source_bin_signals[SIGNAL_ABOUT_TO_FINISH] =
       g_signal_new ("about-to-finish", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstURISourceBinClass, about_to_finish), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_STRUCT_OFFSET (GstURISourceBinClass, about_to_finish), NULL, NULL, NULL,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
    * GstURISourceBin::source-setup:
@@ -442,8 +442,7 @@ gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
    */
   gst_uri_source_bin_signals[SIGNAL_SOURCE_SETUP] =
       g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));

@@ -455,7 +455,7 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
       g_signal_new ("clear", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiHandleSinkClass, clear), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0);
+      NULL, G_TYPE_NONE, 0);
 
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 

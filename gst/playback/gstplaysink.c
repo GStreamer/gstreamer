@@ -614,8 +614,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
 
   g_signal_new ("reconfigure", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstPlaySinkClass,
-          reconfigure), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_BOOLEAN,
-      0, G_TYPE_NONE);
+          reconfigure), NULL, NULL, NULL, G_TYPE_BOOLEAN, 0, G_TYPE_NONE);
   /**
    * GstPlaySink::convert-sample:
    * @playsink: a #GstPlaySink
@@ -634,7 +633,7 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
   g_signal_new ("convert-sample", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstPlaySinkClass, convert_sample), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
+      NULL, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
 
   gst_element_class_add_static_pad_template (gstelement_klass,
       &audiorawtemplate);

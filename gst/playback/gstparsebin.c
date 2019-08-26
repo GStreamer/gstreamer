@@ -638,8 +638,7 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
   gst_parse_bin_signals[SIGNAL_UNKNOWN_TYPE] =
       g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstParseBinClass, unknown_type),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
-      GST_TYPE_PAD, GST_TYPE_CAPS);
+      NULL, NULL, NULL, G_TYPE_NONE, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
    * GstParseBin::autoplug-continue:
@@ -662,8 +661,8 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
   gst_parse_bin_signals[SIGNAL_AUTOPLUG_CONTINUE] =
       g_signal_new ("autoplug-continue", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstParseBinClass, autoplug_continue),
-      _gst_boolean_accumulator, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
+      _gst_boolean_accumulator, NULL, NULL, G_TYPE_BOOLEAN, 2, GST_TYPE_PAD,
+      GST_TYPE_CAPS);
 
   /**
    * GstParseBin::autoplug-factories:
@@ -692,8 +691,7 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
       g_signal_new ("autoplug-factories", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstParseBinClass,
           autoplug_factories), _gst_array_accumulator, NULL,
-      g_cclosure_marshal_generic, G_TYPE_VALUE_ARRAY, 2,
-      GST_TYPE_PAD, GST_TYPE_CAPS);
+      NULL, G_TYPE_VALUE_ARRAY, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
    * GstParseBin::autoplug-sort:
@@ -722,8 +720,8 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
       g_signal_new ("autoplug-sort", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstParseBinClass, autoplug_sort),
       _gst_array_hasvalue_accumulator, NULL,
-      g_cclosure_marshal_generic, G_TYPE_VALUE_ARRAY, 3, GST_TYPE_PAD,
-      GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY | G_SIGNAL_TYPE_STATIC_SCOPE);
+      NULL, G_TYPE_VALUE_ARRAY, 3, GST_TYPE_PAD, GST_TYPE_CAPS,
+      G_TYPE_VALUE_ARRAY | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
    * GstParseBin::autoplug-select:
@@ -761,10 +759,8 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
   gst_parse_bin_signals[SIGNAL_AUTOPLUG_SELECT] =
       g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstParseBinClass, autoplug_select),
-      _gst_select_accumulator, NULL,
-      g_cclosure_marshal_generic,
-      GST_TYPE_AUTOPLUG_SELECT_RESULT, 3, GST_TYPE_PAD, GST_TYPE_CAPS,
-      GST_TYPE_ELEMENT_FACTORY);
+      _gst_select_accumulator, NULL, NULL, GST_TYPE_AUTOPLUG_SELECT_RESULT, 3,
+      GST_TYPE_PAD, GST_TYPE_CAPS, GST_TYPE_ELEMENT_FACTORY);
 
   /**
    * GstParseBin::autoplug-query:
@@ -784,9 +780,8 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
   gst_parse_bin_signals[SIGNAL_AUTOPLUG_QUERY] =
       g_signal_new ("autoplug-query", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstParseBinClass, autoplug_query),
-      _gst_boolean_or_accumulator, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 3, GST_TYPE_PAD, GST_TYPE_ELEMENT,
-      GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
+      _gst_boolean_or_accumulator, NULL, NULL, G_TYPE_BOOLEAN, 3, GST_TYPE_PAD,
+      GST_TYPE_ELEMENT, GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
    * GstParseBin::drained:
@@ -797,7 +792,7 @@ gst_parse_bin_class_init (GstParseBinClass * klass)
   gst_parse_bin_signals[SIGNAL_DRAINED] =
       g_signal_new ("drained", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstParseBinClass, drained),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+      NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   g_object_class_install_property (gobject_klass, PROP_SUBTITLE_ENCODING,
       g_param_spec_string ("subtitle-encoding", "subtitle encoding",

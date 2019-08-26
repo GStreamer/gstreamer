@@ -399,8 +399,7 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
   gst_encode_bin_signals[SIGNAL_REQUEST_PAD] =
       g_signal_new ("request-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstEncodeBinClass,
-          request_pad), NULL, NULL, g_cclosure_marshal_generic,
-      GST_TYPE_PAD, 1, GST_TYPE_CAPS);
+          request_pad), NULL, NULL, NULL, GST_TYPE_PAD, 1, GST_TYPE_CAPS);
 
   /**
    * GstEncodeBin::request-profile-pad
@@ -417,8 +416,8 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
   gst_encode_bin_signals[SIGNAL_REQUEST_PROFILE_PAD] =
       g_signal_new ("request-profile-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstEncodeBinClass,
-          request_profile_pad), NULL, NULL, g_cclosure_marshal_generic,
-      GST_TYPE_PAD, 1, G_TYPE_STRING);
+          request_profile_pad), NULL, NULL, NULL, GST_TYPE_PAD, 1,
+      G_TYPE_STRING);
 
   klass->request_pad = gst_encode_bin_request_pad_signal;
   klass->request_profile_pad = gst_encode_bin_request_profile_pad_signal;

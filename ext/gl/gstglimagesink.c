@@ -290,13 +290,13 @@ gst_gl_image_sink_bin_class_init (GstGLImageSinkBinClass * klass)
 
   gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_DRAW] =
       g_signal_new ("client-draw", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 2,
-      GST_TYPE_GL_CONTEXT, GST_TYPE_SAMPLE);
+      0, NULL, NULL, NULL, G_TYPE_BOOLEAN, 2, GST_TYPE_GL_CONTEXT,
+      GST_TYPE_SAMPLE);
 
   gst_gl_image_sink_bin_signals[SIGNAL_BIN_CLIENT_RESHAPE] =
       g_signal_new ("client-reshape", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 3, GST_TYPE_GL_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_BOOLEAN, 3,
+      GST_TYPE_GL_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
 }
 
 #define GST_GLIMAGE_SINK_GET_LOCK(glsink) \
@@ -719,8 +719,8 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
    */
   gst_glimage_sink_signals[CLIENT_DRAW_SIGNAL] =
       g_signal_new ("client-draw", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 2, GST_TYPE_GL_CONTEXT, GST_TYPE_SAMPLE);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_BOOLEAN, 2,
+      GST_TYPE_GL_CONTEXT, GST_TYPE_SAMPLE);
 
   /**
    * GstGLImageSink::client-reshape:
@@ -736,8 +736,8 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
    */
   gst_glimage_sink_signals[CLIENT_RESHAPE_SIGNAL] =
       g_signal_new ("client-reshape", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 3, GST_TYPE_GL_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_BOOLEAN, 3,
+      GST_TYPE_GL_CONTEXT, G_TYPE_UINT, G_TYPE_UINT);
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_glimage_sink_template);

@@ -127,12 +127,7 @@ gst_overlay_composition_class_init (GstOverlayCompositionClass * klass)
    */
   overlay_composition_signals[SIGNAL_DRAW] =
       g_signal_new ("draw",
-      G_TYPE_FROM_CLASS (klass),
-      0,
-      0,
-      NULL,
-      NULL,
-      g_cclosure_marshal_generic,
+      G_TYPE_FROM_CLASS (klass), 0, 0, NULL, NULL, NULL,
       GST_TYPE_VIDEO_OVERLAY_COMPOSITION, 1, GST_TYPE_SAMPLE);
 
   /**
@@ -150,10 +145,8 @@ gst_overlay_composition_class_init (GstOverlayCompositionClass * klass)
    */
   overlay_composition_signals[SIGNAL_CAPS_CHANGED] =
       g_signal_new ("caps-changed",
-      G_TYPE_FROM_CLASS (klass),
-      0,
-      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 3, GST_TYPE_CAPS,
-      G_TYPE_UINT, G_TYPE_UINT);
+      G_TYPE_FROM_CLASS (klass), 0, 0, NULL, NULL, NULL, G_TYPE_NONE, 3,
+      GST_TYPE_CAPS, G_TYPE_UINT, G_TYPE_UINT);
 }
 
 static void

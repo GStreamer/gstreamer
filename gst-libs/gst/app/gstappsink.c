@@ -264,7 +264,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   gst_app_sink_signals[SIGNAL_EOS] =
       g_signal_new ("eos", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstAppSinkClass, eos),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
    * GstAppSink::new-preroll:
    * @appsink: the appsink element that emitted the signal

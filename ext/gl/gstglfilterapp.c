@@ -108,7 +108,7 @@ gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
    */
   gst_gl_filter_app_signals[CLIENT_DRAW_SIGNAL] =
       g_signal_new ("client-draw", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 3, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT);
 
   gst_element_class_set_metadata (element_class,

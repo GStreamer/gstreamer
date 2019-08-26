@@ -986,7 +986,7 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
       g_signal_new ("about-to-finish", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPlayBin3Class, about_to_finish), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+      NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
 
   /**
@@ -1005,8 +1005,7 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
    */
   gst_play_bin3_signals[SIGNAL_SOURCE_SETUP] =
       g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
    * GstPlayBin3::element-setup:
@@ -1026,8 +1025,7 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
    */
   gst_play_bin3_signals[SIGNAL_ELEMENT_SETUP] =
       g_signal_new ("element-setup", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
    * GstPlayBin3::convert-sample
@@ -1048,7 +1046,7 @@ gst_play_bin3_class_init (GstPlayBin3Class * klass)
       g_signal_new ("convert-sample", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstPlayBin3Class, convert_sample), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
+      NULL, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
 
   klass->convert_sample = gst_play_bin3_convert_sample;
 

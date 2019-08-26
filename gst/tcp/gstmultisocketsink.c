@@ -272,7 +272,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
       g_signal_new ("add", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiSocketSinkClass, add), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_SOCKET);
+      NULL, G_TYPE_NONE, 1, G_TYPE_SOCKET);
   /**
    * GstMultiSocketSink::add-full:
    * @gstmultisocketsink: the multisocketsink element to emit this signal on
@@ -292,9 +292,8 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
       g_signal_new ("add-full", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstMultiSocketSinkClass, add_full), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 6,
-      G_TYPE_SOCKET, GST_TYPE_SYNC_METHOD, GST_TYPE_FORMAT, G_TYPE_UINT64,
-      GST_TYPE_FORMAT, G_TYPE_UINT64);
+      NULL, G_TYPE_NONE, 6, G_TYPE_SOCKET, GST_TYPE_SYNC_METHOD,
+      GST_TYPE_FORMAT, G_TYPE_UINT64, GST_TYPE_FORMAT, G_TYPE_UINT64);
   /**
    * GstMultiSocketSink::remove:
    * @gstmultisocketsink: the multisocketsink element to emit this signal on
@@ -305,8 +304,8 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gst_multi_socket_sink_signals[SIGNAL_REMOVE] =
       g_signal_new ("remove", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstMultiSocketSinkClass, remove), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_SOCKET);
+      G_STRUCT_OFFSET (GstMultiSocketSinkClass, remove), NULL, NULL, NULL,
+      G_TYPE_NONE, 1, G_TYPE_SOCKET);
   /**
    * GstMultiSocketSink::remove-flush:
    * @gstmultisocketsink: the multisocketsink element to emit this signal on
@@ -318,8 +317,8 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gst_multi_socket_sink_signals[SIGNAL_REMOVE_FLUSH] =
       g_signal_new ("remove-flush", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstMultiSocketSinkClass, remove_flush), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_SOCKET);
+      G_STRUCT_OFFSET (GstMultiSocketSinkClass, remove_flush), NULL, NULL, NULL,
+      G_TYPE_NONE, 1, G_TYPE_SOCKET);
 
   /**
    * GstMultiSocketSink::get-stats:
@@ -338,8 +337,8 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gst_multi_socket_sink_signals[SIGNAL_GET_STATS] =
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstMultiSocketSinkClass, get_stats), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_STRUCTURE, 1, G_TYPE_SOCKET);
+      G_STRUCT_OFFSET (GstMultiSocketSinkClass, get_stats), NULL, NULL, NULL,
+      GST_TYPE_STRUCTURE, 1, G_TYPE_SOCKET);
 
   /**
    * GstMultiSocketSink::client-added:
@@ -352,8 +351,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
    */
   gst_multi_socket_sink_signals[SIGNAL_CLIENT_ADDED] =
       g_signal_new ("client-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, G_TYPE_OBJECT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_OBJECT);
   /**
    * GstMultiSocketSink::client-removed:
    * @gstmultisocketsink: the multisocketsink element that emitted this signal
@@ -370,8 +368,8 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
    */
   gst_multi_socket_sink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 2, G_TYPE_SOCKET, GST_TYPE_CLIENT_STATUS);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_SOCKET,
+      GST_TYPE_CLIENT_STATUS);
   /**
    * GstMultiSocketSink::client-socket-removed:
    * @gstmultisocketsink: the multisocketsink element that emitted this signal
@@ -387,8 +385,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
    */
   gst_multi_socket_sink_signals[SIGNAL_CLIENT_SOCKET_REMOVED] =
       g_signal_new ("client-socket-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, G_TYPE_SOCKET);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_SOCKET);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Multi socket sink", "Sink/Network",

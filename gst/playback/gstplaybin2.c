@@ -1039,8 +1039,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_ABOUT_TO_FINISH] =
       g_signal_new ("about-to-finish", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBinClass, about_to_finish), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_STRUCT_OFFSET (GstPlayBinClass, about_to_finish), NULL, NULL, NULL,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
    * GstPlayBin::video-changed:
@@ -1058,8 +1058,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_VIDEO_CHANGED] =
       g_signal_new ("video-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBinClass, video_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_STRUCT_OFFSET (GstPlayBinClass, video_changed), NULL, NULL, NULL,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
    * GstPlayBin::audio-changed
    * @playbin: a #GstPlayBin
@@ -1076,8 +1076,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_AUDIO_CHANGED] =
       g_signal_new ("audio-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBinClass, audio_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_STRUCT_OFFSET (GstPlayBinClass, audio_changed), NULL, NULL, NULL,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
   /**
    * GstPlayBin::text-changed:
    * @playbin: a #GstPlayBin
@@ -1094,8 +1094,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_TEXT_CHANGED] =
       g_signal_new ("text-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBinClass, text_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_STRUCT_OFFSET (GstPlayBinClass, text_changed), NULL, NULL, NULL,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
    * GstPlayBin::video-tags-changed:
@@ -1112,8 +1112,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_VIDEO_TAGS_CHANGED] =
       g_signal_new ("video-tags-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBinClass, video_tags_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
+      G_STRUCT_OFFSET (GstPlayBinClass, video_tags_changed), NULL, NULL, NULL,
+      G_TYPE_NONE, 1, G_TYPE_INT);
 
   /**
    * GstPlayBin::audio-tags-changed:
@@ -1130,8 +1130,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_AUDIO_TAGS_CHANGED] =
       g_signal_new ("audio-tags-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBinClass, audio_tags_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
+      G_STRUCT_OFFSET (GstPlayBinClass, audio_tags_changed), NULL, NULL, NULL,
+      G_TYPE_NONE, 1, G_TYPE_INT);
 
   /**
    * GstPlayBin::text-tags-changed:
@@ -1148,8 +1148,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_TEXT_TAGS_CHANGED] =
       g_signal_new ("text-tags-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstPlayBinClass, text_tags_changed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_INT);
+      G_STRUCT_OFFSET (GstPlayBinClass, text_tags_changed), NULL, NULL, NULL,
+      G_TYPE_NONE, 1, G_TYPE_INT);
 
   /**
    * GstPlayBin::source-setup:
@@ -1167,8 +1167,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    */
   gst_play_bin_signals[SIGNAL_SOURCE_SETUP] =
       g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
    * GstPlayBin::element-setup:
@@ -1188,8 +1187,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    */
   gst_play_bin_signals[SIGNAL_ELEMENT_SETUP] =
       g_signal_new ("element-setup", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
    * GstPlayBin::get-video-tags:
@@ -1205,8 +1203,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_GET_VIDEO_TAGS] =
       g_signal_new ("get-video-tags", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBinClass, get_video_tags), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
+      G_STRUCT_OFFSET (GstPlayBinClass, get_video_tags), NULL, NULL, NULL,
+      GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
    * GstPlayBin::get-audio-tags:
    * @playbin: a #GstPlayBin
@@ -1221,8 +1219,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_GET_AUDIO_TAGS] =
       g_signal_new ("get-audio-tags", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBinClass, get_audio_tags), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
+      G_STRUCT_OFFSET (GstPlayBinClass, get_audio_tags), NULL, NULL, NULL,
+      GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
    * GstPlayBin::get-text-tags:
    * @playbin: a #GstPlayBin
@@ -1237,8 +1235,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_GET_TEXT_TAGS] =
       g_signal_new ("get-text-tags", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBinClass, get_text_tags), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
+      G_STRUCT_OFFSET (GstPlayBinClass, get_text_tags), NULL, NULL, NULL,
+      GST_TYPE_TAG_LIST, 1, G_TYPE_INT);
   /**
    * GstPlayBin::convert-sample:
    * @playbin: a #GstPlayBin
@@ -1257,8 +1255,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_CONVERT_SAMPLE] =
       g_signal_new ("convert-sample", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBinClass, convert_sample), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
+      G_STRUCT_OFFSET (GstPlayBinClass, convert_sample), NULL, NULL, NULL,
+      GST_TYPE_SAMPLE, 1, GST_TYPE_CAPS);
 
   /**
    * GstPlayBin::get-video-pad:
@@ -1275,8 +1273,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_GET_VIDEO_PAD] =
       g_signal_new ("get-video-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBinClass, get_video_pad), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_PAD, 1, G_TYPE_INT);
+      G_STRUCT_OFFSET (GstPlayBinClass, get_video_pad), NULL, NULL, NULL,
+      GST_TYPE_PAD, 1, G_TYPE_INT);
   /**
    * GstPlayBin::get-audio-pad:
    * @playbin: a #GstPlayBin
@@ -1292,8 +1290,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_GET_AUDIO_PAD] =
       g_signal_new ("get-audio-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBinClass, get_audio_pad), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_PAD, 1, G_TYPE_INT);
+      G_STRUCT_OFFSET (GstPlayBinClass, get_audio_pad), NULL, NULL, NULL,
+      GST_TYPE_PAD, 1, G_TYPE_INT);
   /**
    * GstPlayBin::get-text-pad:
    * @playbin: a #GstPlayBin
@@ -1309,8 +1307,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gst_play_bin_signals[SIGNAL_GET_TEXT_PAD] =
       g_signal_new ("get-text-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstPlayBinClass, get_text_pad), NULL, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_PAD, 1, G_TYPE_INT);
+      G_STRUCT_OFFSET (GstPlayBinClass, get_text_pad), NULL, NULL, NULL,
+      GST_TYPE_PAD, 1, G_TYPE_INT);
 
   klass->get_video_tags = gst_play_bin_get_video_tags;
   klass->get_audio_tags = gst_play_bin_get_audio_tags;

@@ -724,8 +724,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE] =
       g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, unknown_type),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
-      GST_TYPE_PAD, GST_TYPE_CAPS);
+      NULL, NULL, NULL, G_TYPE_NONE, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
    * GstDecodeBin::autoplug-continue:
@@ -748,8 +747,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gst_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE] =
       g_signal_new ("autoplug-continue", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_continue),
-      _gst_boolean_accumulator, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
+      _gst_boolean_accumulator, NULL, NULL, G_TYPE_BOOLEAN, 2, GST_TYPE_PAD,
+      GST_TYPE_CAPS);
 
   /**
    * GstDecodeBin::autoplug-factories:
@@ -778,8 +777,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       g_signal_new ("autoplug-factories", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass,
           autoplug_factories), _gst_array_accumulator, NULL,
-      g_cclosure_marshal_generic, G_TYPE_VALUE_ARRAY, 2,
-      GST_TYPE_PAD, GST_TYPE_CAPS);
+      NULL, G_TYPE_VALUE_ARRAY, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
    * GstDecodeBin::autoplug-sort:
@@ -808,8 +806,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       g_signal_new ("autoplug-sort", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_sort),
       _gst_array_hasvalue_accumulator, NULL,
-      g_cclosure_marshal_generic, G_TYPE_VALUE_ARRAY, 3, GST_TYPE_PAD,
-      GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY | G_SIGNAL_TYPE_STATIC_SCOPE);
+      NULL, G_TYPE_VALUE_ARRAY, 3, GST_TYPE_PAD, GST_TYPE_CAPS,
+      G_TYPE_VALUE_ARRAY | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
    * GstDecodeBin::autoplug-select:
@@ -848,8 +846,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_select),
       _gst_select_accumulator, NULL,
-      g_cclosure_marshal_generic,
-      GST_TYPE_AUTOPLUG_SELECT_RESULT, 3, GST_TYPE_PAD, GST_TYPE_CAPS,
+      NULL, GST_TYPE_AUTOPLUG_SELECT_RESULT, 3, GST_TYPE_PAD, GST_TYPE_CAPS,
       GST_TYPE_ELEMENT_FACTORY);
 
   /**
@@ -869,9 +866,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gst_decode_bin_signals[SIGNAL_AUTOPLUG_QUERY] =
       g_signal_new ("autoplug-query", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_query),
-      _gst_boolean_or_accumulator, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 3, GST_TYPE_PAD, GST_TYPE_ELEMENT,
-      GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
+      _gst_boolean_or_accumulator, NULL, NULL, G_TYPE_BOOLEAN, 3, GST_TYPE_PAD,
+      GST_TYPE_ELEMENT, GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
    * GstDecodeBin::drained
@@ -882,7 +878,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gst_decode_bin_signals[SIGNAL_DRAINED] =
       g_signal_new ("drained", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, drained),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+      NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   g_object_class_install_property (gobject_klass, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps", "The caps on which to stop decoding.",

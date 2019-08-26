@@ -441,7 +441,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   gst_app_src_signals[SIGNAL_ENOUGH_DATA] =
       g_signal_new ("enough-data", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstAppSrcClass, enough_data),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
    * GstAppSrc::seek-data:

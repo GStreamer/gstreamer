@@ -567,7 +567,7 @@ gst_decodebin3_class_init (GstDecodebin3Class * klass)
   gst_decodebin3_signals[SIGNAL_SELECT_STREAM] =
       g_signal_new ("select-stream", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodebin3Class, select_stream),
-      _gst_int_accumulator, NULL, g_cclosure_marshal_generic,
+      _gst_int_accumulator, NULL, NULL,
       G_TYPE_INT, 2, GST_TYPE_STREAM_COLLECTION, GST_TYPE_STREAM);
 
   /**
@@ -578,8 +578,7 @@ gst_decodebin3_class_init (GstDecodebin3Class * klass)
    */
   gst_decodebin3_signals[SIGNAL_ABOUT_TO_FINISH] =
       g_signal_new ("about-to-finish", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
-      0, G_TYPE_NONE);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
 
   element_class->request_new_pad =
