@@ -313,8 +313,8 @@ scan_codecs (GstPlugin * plugin)
       gst_codec_type->profile_levels =
           gst_amc_codec_capabilities_handle_get_profile_levels (capabilities,
           &gst_codec_type->n_profile_levels, &error);
-      if (!gst_codec_type->profile_levels) {
-        GST_ERROR ("Failed to get profile/levels");
+      if (error) {
+        GST_ERROR ("Failed to get profile/levels: %s", error->message);
         valid_codec = FALSE;
         goto next_supported_type;
       }
