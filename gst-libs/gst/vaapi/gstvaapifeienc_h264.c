@@ -1747,6 +1747,22 @@ set_default_ids:
   }
 }
 
+static void
+get_view_ids (GstVaapiFeiEncH264 * const encoder, GValue * value)
+{
+  guint i;
+  GValue id = G_VALUE_INIT;
+
+  g_value_reset (value);
+  g_value_init (&id, G_TYPE_UINT);
+
+  for (i = 0; i < encoder->num_views; i++) {
+    g_value_set_uint (&id, encoder->view_ids[i]);
+    gst_value_array_append_value (value, &id);
+  }
+  g_value_unset (&id);
+}
+
 GstVaapiEncoderStatus
 gst_vaapi_feienc_h264_set_property (GstVaapiEncoder * base_encoder,
     gint prop_id, const GValue * value)
@@ -2029,8 +2045,7 @@ gst_vaapi_feienc_h264_get_property (GObject * object, guint prop_id,
       g_value_set_uint (value, feienc->num_views);
       break;
     case FEI_H264_ENC_PROP_VIEW_IDS:
-      // TODO:
-      //get_view_ids (feienc, value);
+      get_view_ids (feienc, value);
       break;
     case FEI_H264_ENC_PROP_NUM_REF:
       g_value_set_uint (value, feienc->num_ref_frames);
