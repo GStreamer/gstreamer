@@ -412,7 +412,7 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
   av1enc->aom_cfg.rc_superres_kf_denominator = DEFAULT_SUPERRES_KF_DENOMINATOR;
   av1enc->aom_cfg.rc_superres_qthresh = DEFAULT_SUPERRES_QTHRESH;
   av1enc->aom_cfg.rc_superres_kf_qthresh = DEFAULT_SUPERRES_KF_QTHRESH;
-  av1enc->aom_cfg.rc_end_usage = DEFAULT_END_USAGE;
+  av1enc->aom_cfg.rc_end_usage = (enum aom_rc_mode) DEFAULT_END_USAGE;
   av1enc->aom_cfg.rc_target_bitrate = DEFAULT_TARGET_BITRATE;
   av1enc->aom_cfg.rc_min_quantizer = DEFAULT_MIN_QUANTIZER;
   av1enc->aom_cfg.rc_max_quantizer = DEFAULT_MAX_QUANTIZER;
