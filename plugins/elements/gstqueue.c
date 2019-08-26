@@ -273,7 +273,7 @@ gst_queue_class_init (GstQueueClass * klass)
   gst_queue_signals[SIGNAL_UNDERRUN] =
       g_signal_new ("underrun", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstQueueClass, underrun), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      NULL, G_TYPE_NONE, 0);
   /**
    * GstQueue::running:
    * @queue: the queue instance
@@ -285,7 +285,7 @@ gst_queue_class_init (GstQueueClass * klass)
   gst_queue_signals[SIGNAL_RUNNING] =
       g_signal_new ("running", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstQueueClass, running), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      NULL, G_TYPE_NONE, 0);
   /**
    * GstQueue::overrun:
    * @queue: the queue instance
@@ -298,7 +298,7 @@ gst_queue_class_init (GstQueueClass * klass)
   gst_queue_signals[SIGNAL_OVERRUN] =
       g_signal_new ("overrun", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstQueueClass, overrun), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      NULL, G_TYPE_NONE, 0);
   /**
    * GstQueue::pushing:
    * @queue: the queue instance
@@ -309,7 +309,7 @@ gst_queue_class_init (GstQueueClass * klass)
   gst_queue_signals[SIGNAL_PUSHING] =
       g_signal_new ("pushing", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
       G_STRUCT_OFFSET (GstQueueClass, pushing), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      NULL, G_TYPE_NONE, 0);
 
   /* properties */
   g_object_class_install_property (gobject_class, PROP_CUR_LEVEL_BYTES,

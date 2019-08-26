@@ -536,7 +536,7 @@ gst_child_proxy_base_init (gpointer g_class)
     signals[CHILD_ADDED] =
         g_signal_new ("child-added", G_TYPE_FROM_CLASS (g_class),
         G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstChildProxyInterface,
-            child_added), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
+            child_added), NULL, NULL, NULL, G_TYPE_NONE,
         2, G_TYPE_OBJECT, G_TYPE_STRING);
 
     /**
@@ -550,7 +550,7 @@ gst_child_proxy_base_init (gpointer g_class)
     signals[CHILD_REMOVED] =
         g_signal_new ("child-removed", G_TYPE_FROM_CLASS (g_class),
         G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstChildProxyInterface,
-            child_removed), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
+            child_removed), NULL, NULL, NULL, G_TYPE_NONE,
         2, G_TYPE_OBJECT, G_TYPE_STRING);
 
     initialized = TRUE;

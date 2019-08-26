@@ -364,7 +364,7 @@ gst_bin_class_init (GstBinClass * klass)
   gst_bin_signals[ELEMENT_ADDED] =
       g_signal_new ("element-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, element_added), NULL,
-      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
   /**
    * GstBin::element-removed:
    * @bin: the #GstBin
@@ -375,7 +375,7 @@ gst_bin_class_init (GstBinClass * klass)
   gst_bin_signals[ELEMENT_REMOVED] =
       g_signal_new ("element-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, element_removed), NULL,
-      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
   /**
    * GstBin::deep-element-added:
    * @bin: the #GstBin
@@ -389,8 +389,7 @@ gst_bin_class_init (GstBinClass * klass)
   gst_bin_signals[DEEP_ELEMENT_ADDED] =
       g_signal_new ("deep-element-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, deep_element_added),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, GST_TYPE_BIN,
-      GST_TYPE_ELEMENT);
+      NULL, NULL, NULL, G_TYPE_NONE, 2, GST_TYPE_BIN, GST_TYPE_ELEMENT);
   /**
    * GstBin::deep-element-removed:
    * @bin: the #GstBin
@@ -404,8 +403,7 @@ gst_bin_class_init (GstBinClass * klass)
   gst_bin_signals[DEEP_ELEMENT_REMOVED] =
       g_signal_new ("deep-element-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstBinClass, deep_element_removed),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, GST_TYPE_BIN,
-      GST_TYPE_ELEMENT);
+      NULL, NULL, NULL, G_TYPE_NONE, 2, GST_TYPE_BIN, GST_TYPE_ELEMENT);
   /**
    * GstBin::do-latency:
    * @bin: the #GstBin
@@ -425,8 +423,7 @@ gst_bin_class_init (GstBinClass * klass)
   gst_bin_signals[DO_LATENCY] =
       g_signal_new ("do-latency", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstBinClass, do_latency),
-      _gst_boolean_accumulator, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 0, G_TYPE_NONE);
+      _gst_boolean_accumulator, NULL, NULL, G_TYPE_BOOLEAN, 0, G_TYPE_NONE);
 
   /**
    * GstBin:message-forward:

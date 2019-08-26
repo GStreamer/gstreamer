@@ -760,8 +760,7 @@ gst_clock_class_init (GstClockClass * klass)
    */
   gst_clock_signals[SIGNAL_SYNCED] =
       g_signal_new ("synced", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
+      0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 }
 
 static void

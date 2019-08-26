@@ -146,7 +146,7 @@ gst_pad_template_class_init (GstPadTemplateClass * klass)
   gst_pad_template_signals[TEMPL_PAD_CREATED] =
       g_signal_new ("pad-created", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstPadTemplateClass, pad_created),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_PAD);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_PAD);
 
   gobject_class->dispose = gst_pad_template_dispose;
 

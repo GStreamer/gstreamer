@@ -232,7 +232,7 @@ gst_element_class_init (GstElementClass * klass)
   gst_element_signals[PAD_ADDED] =
       g_signal_new ("pad-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, pad_added), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_PAD);
+      NULL, G_TYPE_NONE, 1, GST_TYPE_PAD);
   /**
    * GstElement::pad-removed:
    * @gstelement: the object which received the signal
@@ -243,7 +243,7 @@ gst_element_class_init (GstElementClass * klass)
   gst_element_signals[PAD_REMOVED] =
       g_signal_new ("pad-removed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, pad_removed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_PAD);
+      NULL, G_TYPE_NONE, 1, GST_TYPE_PAD);
   /**
    * GstElement::no-more-pads:
    * @gstelement: the object which received the signal
@@ -255,7 +255,7 @@ gst_element_class_init (GstElementClass * klass)
   gst_element_signals[NO_MORE_PADS] =
       g_signal_new ("no-more-pads", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstElementClass, no_more_pads), NULL,
-      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 0);
+      NULL, NULL, G_TYPE_NONE, 0);
 
   gobject_class->dispose = gst_element_dispose;
   gobject_class->finalize = gst_element_finalize;

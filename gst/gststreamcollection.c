@@ -120,7 +120,7 @@ gst_stream_collection_class_init (GstStreamCollectionClass * klass)
       g_signal_new ("stream-notify", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
       G_SIGNAL_NO_HOOKS, G_STRUCT_OFFSET (GstStreamCollectionClass,
-          stream_notify), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
+          stream_notify), NULL, NULL, NULL, G_TYPE_NONE,
       2, GST_TYPE_STREAM, G_TYPE_PARAM);
 
   gobject_class->dispose = gst_stream_collection_dispose;
