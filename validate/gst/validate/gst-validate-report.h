@@ -277,7 +277,7 @@ void               gst_validate_print_action  (GstValidateAction *action, const 
 GST_VALIDATE_API
 void               gst_validate_printf_valist (gpointer source,
                                                const gchar      * format,
-                                               va_list            args) G_GNUC_NO_INSTRUMENT;
+                                               va_list            args) G_GNUC_PRINTF (2, 0) G_GNUC_NO_INSTRUMENT;
 GST_VALIDATE_API
 gboolean gst_validate_report_should_print (GstValidateReport * report);
 GST_VALIDATE_API

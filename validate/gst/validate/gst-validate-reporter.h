@@ -110,7 +110,7 @@ void gst_validate_report                       (GstValidateReporter * reporter, 
                                           const gchar * format, ...) G_GNUC_PRINTF (3, 4) G_GNUC_NO_INSTRUMENT;
 GST_VALIDATE_API
 void gst_validate_report_valist                (GstValidateReporter * reporter, GstValidateIssueId issue_id,
-                                          const gchar * format, va_list var_args);
+                                          const gchar * format, va_list var_args) G_GNUC_PRINTF (3, 0);
 GST_VALIDATE_API void
 gst_validate_reporter_report_simple (GstValidateReporter * reporter, GstValidateIssueId issue_id,
                                           const gchar * message);

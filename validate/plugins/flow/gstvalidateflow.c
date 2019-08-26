@@ -117,6 +117,10 @@ validate_flow_override_class_init (ValidateFlowOverrideClass * klass)
           GST_VALIDATE_REPORT_LEVEL_CRITICAL));
 }
 
+/* *INDENT-OFF* */
+G_GNUC_PRINTF (2, 0)
+/* *INDENT-ON* */
+
 static void
 validate_flow_override_vprintf (ValidateFlowOverride * flow, const char *format,
     va_list ap)
@@ -129,6 +133,10 @@ validate_flow_override_vprintf (ValidateFlowOverride * flow, const char *format,
   }
   g_mutex_unlock (&flow->output_file_mutex);
 }
+
+/* *INDENT-OFF* */
+G_GNUC_PRINTF (2, 3)
+/* *INDENT-ON* */
 
 static void
 validate_flow_override_printf (ValidateFlowOverride * flow, const char *format,
