@@ -2184,7 +2184,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
             sps->bit_depth_luma_minus8 + 8, "bit-depth-chroma", G_TYPE_UINT,
             bit_depth_chroma, NULL);
 
-      if (colorimetry && s && !gst_structure_has_field (s, "colorimetry")) {
+      if (colorimetry && (!s || !gst_structure_has_field (s, "colorimetry"))) {
         gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, colorimetry,
             NULL);
       }
