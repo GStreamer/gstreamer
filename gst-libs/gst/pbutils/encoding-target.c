@@ -18,7 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 /**
- * SECTION: encoding-target:
+ * SECTION:encoding-target
+ *
  * On top of the notion of profiles, we implement the notion of EncodingTarget.
  * Encoding Targets are basically a higher level of abstraction to define formats
  * for specific target types. Those can define several GstEncodingProfiles with
