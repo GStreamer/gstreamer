@@ -40,10 +40,27 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/allocators/allocators.h>
 
 #include <mfxvideo.h>
 
 G_BEGIN_DECLS
+
+#define GST_MSDK_CAPS_MAKE(format) \
+  GST_VIDEO_CAPS_MAKE (format) ", " \
+  "interlace-mode = (string) progressive"
+
+#ifndef _WIN32
+#define GST_MSDK_CAPS_MAKE_WITH_DMABUF_FEATURE(dmaformat) \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_DMABUF, dmaformat) ", " \
+  "interlace-mode = (string) progressive"
+#else
+#define GST_MSDK_CAPS_MAKE_WITH_DMABUF_FEATURE(dmaformat) ""
+#endif
+
+#define GST_MSDK_CAPS_STR(format,dmaformat) \
+  GST_MSDK_CAPS_MAKE (format) "; " \
+  GST_MSDK_CAPS_MAKE_WITH_DMABUF_FEATURE (dmaformat)
 
 mfxSession msdk_open_session (mfxIMPL impl);
 void msdk_close_session (mfxSession session);

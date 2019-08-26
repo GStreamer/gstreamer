@@ -42,16 +42,12 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp9enc_debug);
 #define GST_CAT_DEFAULT gst_msdkvp9enc_debug
 
+#define COMMON_FORMAT "{ NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE }"
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE }, "
-        "framerate = (fraction) [0/1, MAX], "
-        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ],"
-        "interlace-mode = (string) progressive" ";"
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
-            "{ NV12 }")));
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, "NV12")));
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

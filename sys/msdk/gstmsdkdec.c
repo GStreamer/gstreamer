@@ -44,21 +44,10 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkdec_debug);
 #define GST_CAT_DEFAULT gst_msdkdec_debug
 
-#ifndef _WIN32
-#define DMABUF_CAPS_STR \
-  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF, "{ NV12 }")
-#else
-#define DMABUF_CAPS_STR ""
-#endif
-
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { NV12 }, "
-        "framerate = (fraction) [0, MAX], "
-        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ],"
-        "interlace-mode = (string) progressive;" DMABUF_CAPS_STR)
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR ("NV12", "NV12"))
     );
 
 #define PROP_HARDWARE_DEFAULT            TRUE

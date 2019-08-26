@@ -54,13 +54,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { NV12, YUY2 }, "
-        "framerate = (fraction) [0, MAX], "
-        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ],"
-        "interlace-mode = (string) progressive;"
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
-            "{ NV12, YUY2 }") ";")
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR ("{ NV12, YUY2 }", "{ NV12, YUY2 }"))
     );
 
 #define gst_msdkmjpegdec_parent_class parent_class

@@ -44,6 +44,8 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp9dec_debug);
 #define GST_CAT_DEFAULT gst_msdkvp9dec_debug
 
+#define COMMON_FORMAT "{ NV12, P010_10LE, VUYA, Y410 }"
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -53,13 +55,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { NV12, P010_10LE, VUYA, Y410 }, "
-        "framerate = (fraction) [0, MAX], "
-        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ],"
-        "interlace-mode = (string) progressive;"
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
-            "{ NV12, P010_10LE, VUYA, Y410 }") ";")
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, COMMON_FORMAT))
     );
 
 #define gst_msdkvp9dec_parent_class parent_class
