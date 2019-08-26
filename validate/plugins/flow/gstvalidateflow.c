@@ -37,6 +37,8 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+#include "gstvalidateflow.h"
+
 #define VALIDATE_FLOW_MISMATCH g_quark_from_static_string ("validateflow::mismatch")
 #define VALIDATE_FLOW_NOT_ATTACHED g_quark_from_static_string ("validateflow::not-attached")
 
@@ -82,8 +84,6 @@ static void runner_stopping (GstValidateRunner * runner,
     ValidateFlowOverride * flow);
 
 #define VALIDATE_TYPE_FLOW_OVERRIDE validate_flow_override_get_type ()
-G_DECLARE_FINAL_TYPE (ValidateFlowOverride, validate_flow_override,
-    VALIDATE, FLOW_OVERRIDE, GstValidateOverride);
 G_DEFINE_TYPE (ValidateFlowOverride, validate_flow_override,
     GST_TYPE_VALIDATE_OVERRIDE);
 
