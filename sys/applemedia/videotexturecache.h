@@ -26,8 +26,18 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_VIDEO_TEXTURE_CACHE         (gst_video_texture_cache_get_type())
+#define GST_VIDEO_TEXTURE_CACHE(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_VIDEO_TEXTURE_CACHE, GstVideoTextureCache))
+#define GST_VIDEO_TEXTURE_CACHE_CLASS(k)     (G_TYPE_CHECK_CLASS_CAST((k), GST_TYPE_VIDEO_TEXTURE_CACHE, GstVideoTextureCacheClass))
+#define GST_IS_VIDEO_TEXTURE_CACHE(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_VIDEO_TEXTURE_CACHE))
+#define GST_IS_VIDEO_TEXTURE_CACHE_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_VIDEO_TEXTURE_CACHE))
+#define GST_VIDEO_TEXTURE_CACHE_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_VIDEO_TEXTURE_CACHE, GstVideoTextureCacheClass))
+GType gst_video_texture_cache_get_type     (void);
+
 typedef struct _GstVideoTextureCache
 {
+  GObject parent;
+
   GstGLContext *ctx;
 #if HAVE_IOS
   CVOpenGLESTextureCacheRef cache;
@@ -42,12 +52,19 @@ typedef struct _GstVideoTextureCache
   GstCaps *out_caps;
 } GstVideoTextureCache;
 
-GstVideoTextureCache *gst_video_texture_cache_new (GstGLContext * ctx);
-void gst_video_texture_cache_free (GstVideoTextureCache * cache);
-void gst_video_texture_cache_set_format (GstVideoTextureCache * cache,
-    GstVideoFormat in_format, GstCaps * out_caps);
-GstMemory *gst_video_texture_cache_create_memory (GstVideoTextureCache * cache,
-    GstAppleCoreVideoPixelBuffer *gpixbuf, guint plane, gsize size);
+typedef struct _GstVideoTextureCacheClass
+{
+  GObjectClass parent_class;
+} GstVideoTextureCacheClass;
+
+GstVideoTextureCache *  gst_video_texture_cache_new             (GstGLContext * ctx);
+void                    gst_video_texture_cache_set_format      (GstVideoTextureCache * cache,
+                                                                 GstVideoFormat in_format,
+                                                                 GstCaps * out_caps);
+GstMemory *             gst_video_texture_cache_create_memory   (GstVideoTextureCache * cache,
+                                                                 GstAppleCoreVideoPixelBuffer *gpixbuf,
+                                                                 guint plane,
+                                                                 gsize size);
 
 G_END_DECLS
 

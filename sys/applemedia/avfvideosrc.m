@@ -899,7 +899,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
   bufQueue = nil;
 
   if (textureCache)
-    gst_video_texture_cache_free (textureCache);
+    g_object_unref (textureCache);
   textureCache = NULL;
 
   if (ctxh)
@@ -1092,7 +1092,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     GST_INFO_OBJECT (element, "pushing textures, context %p old context %p",
         ctxh->context, textureCache ? textureCache->ctx : NULL);
     if (textureCache && textureCache->ctx != ctxh->context) {
-      gst_video_texture_cache_free (textureCache);
+      g_object_unref (textureCache);
       textureCache = NULL;
     }
     if (!textureCache)

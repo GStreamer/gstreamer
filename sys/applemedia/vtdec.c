@@ -198,7 +198,7 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
     gst_vtdec_invalidate_session (vtdec);
 
   if (vtdec->texture_cache)
-    gst_video_texture_cache_free (vtdec->texture_cache);
+    g_object_unref (vtdec->texture_cache);
   vtdec->texture_cache = NULL;
 
   if (vtdec->ctxh)
@@ -323,7 +323,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   }
 
   if (vtdec->texture_cache != NULL && !output_textures) {
-    gst_video_texture_cache_free (vtdec->texture_cache);
+    g_object_unref (vtdec->texture_cache);
     vtdec->texture_cache = NULL;
   }
 
@@ -341,7 +341,7 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
 
     if (vtdec->texture_cache
         && vtdec->texture_cache->ctx != vtdec->ctxh->context) {
-      gst_video_texture_cache_free (vtdec->texture_cache);
+      g_object_unref (vtdec->texture_cache);
       vtdec->texture_cache = NULL;
     }
     if (!vtdec->texture_cache)

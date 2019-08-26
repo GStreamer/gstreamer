@@ -31,6 +31,8 @@
 #include "corevideobuffer.h"
 #include "vtutil.h"
 
+G_DEFINE_TYPE (GstVideoTextureCache, gst_video_texture_cache, G_TYPE_OBJECT);
+
 typedef struct _ContextThreadData
 {
   GstVideoTextureCache *cache;
@@ -43,45 +45,33 @@ typedef struct _ContextThreadData
 typedef struct _TextureWrapper
 {
 #if HAVE_IOS
-    CVOpenGLESTextureCacheRef cache;
-    CVOpenGLESTextureRef texture;
+  CVOpenGLESTextureCacheRef cache;
+  CVOpenGLESTextureRef texture;
 #else
-    CVOpenGLTextureCacheRef cache;
-    CVOpenGLTextureRef texture;
+  CVOpenGLTextureCacheRef cache;
+  CVOpenGLTextureRef texture;
 #endif
-
 } TextureWrapper;
+
+enum
+{
+  PROP_0,
+  PROP_CONTEXT,
+};
 
 GstVideoTextureCache *
 gst_video_texture_cache_new (GstGLContext * ctx)
 {
-  g_return_val_if_fail (ctx != NULL, NULL);
+  g_return_val_if_fail (GST_IS_GL_CONTEXT (ctx), NULL);
 
-  GstVideoTextureCache *cache = g_new0 (GstVideoTextureCache, 1);
-
-  cache->ctx = gst_object_ref (ctx);
-  gst_video_info_init (&cache->input_info);
-
-#if HAVE_IOS
-  CFMutableDictionaryRef cache_attrs =
-      CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
-      &kCFTypeDictionaryValueCallBacks);
-  CVOpenGLESTextureCacheCreate (kCFAllocatorDefault, (CFDictionaryRef) cache_attrs,
-      (__bridge CVEAGLContext) (gpointer)gst_gl_context_get_gl_context (ctx), NULL, &cache->cache);
-#else
-  gst_ios_surface_memory_init ();
-#if 0
-  cache->pool = GST_BUFFER_POOL (gst_gl_buffer_pool_new (ctx));
-#endif
-#endif
-
-  return cache;
+  return g_object_new (GST_TYPE_VIDEO_TEXTURE_CACHE,
+      "context", ctx, NULL);
 }
 
-void
-gst_video_texture_cache_free (GstVideoTextureCache * cache)
+static void
+gst_video_texture_cache_finalize (GObject * object)
 {
-  g_return_if_fail (cache != NULL);
+  GstVideoTextureCache *cache = GST_VIDEO_TEXTURE_CACHE (object);
 
 #if HAVE_IOS
   CFRelease (cache->cache); /* iOS has no "CVOpenGLESTextureCacheRelease" */
@@ -97,6 +87,83 @@ gst_video_texture_cache_free (GstVideoTextureCache * cache)
   if (cache->out_caps)
     gst_caps_unref (cache->out_caps);
   g_free (cache);
+
+  G_OBJECT_CLASS (gst_video_texture_cache_parent_class)->finalize (object);
+}
+
+static void
+gst_video_texture_cache_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVideoTextureCache *cache = GST_VIDEO_TEXTURE_CACHE (object);
+
+  switch (prop_id) {
+    case PROP_CONTEXT:
+      cache->ctx = g_value_dup_object (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_video_texture_cache_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVideoTextureCache *cache = GST_VIDEO_TEXTURE_CACHE (object);
+
+  switch (prop_id) {
+    case PROP_CONTEXT:
+      g_value_set_object (value, cache->ctx);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_video_texture_cache_constructed (GObject * object)
+{
+  GstVideoTextureCache * cache = GST_VIDEO_TEXTURE_CACHE (object);
+
+  g_return_if_fail (GST_IS_GL_CONTEXT (cache->ctx));
+
+#if HAVE_IOS
+  CFMutableDictionaryRef cache_attrs =
+      CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+      &kCFTypeDictionaryValueCallBacks);
+  CVOpenGLESTextureCacheCreate (kCFAllocatorDefault, (CFDictionaryRef) cache_attrs,
+      (__bridge CVEAGLContext) (gpointer)gst_gl_context_get_gl_context (cache->ctx), NULL, &cache->cache);
+#else
+  gst_ios_surface_memory_init ();
+#if 0
+  cache->pool = GST_BUFFER_POOL (gst_gl_buffer_pool_new (ctx));
+#endif
+#endif
+}
+
+static void
+gst_video_texture_cache_init (GstVideoTextureCache * cache)
+{
+  gst_video_info_init (&cache->input_info);
+}
+
+static void
+gst_video_texture_cache_class_init (GstVideoTextureCacheClass *klass)
+{
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->set_property = gst_video_texture_cache_set_property;
+  gobject_class->get_property = gst_video_texture_cache_get_property;
+  gobject_class->constructed = gst_video_texture_cache_constructed;
+  gobject_class->finalize = gst_video_texture_cache_finalize;
+
+  g_object_class_install_property (gobject_class, PROP_CONTEXT,
+      g_param_spec_object ("context", "Context",
+          "Associated OpenGL context", GST_TYPE_GL_CONTEXT,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS));
 }
 
 void
@@ -139,10 +206,12 @@ gst_video_texture_cache_set_format (GstVideoTextureCache * cache,
 }
 
 #if HAVE_IOS
-void gst_video_texture_cache_release_texture(TextureWrapper *data) {
-    CFRelease(data->texture);
-    CFRelease(data->cache);
-    g_free(data);
+static void
+gst_video_texture_cache_release_texture (TextureWrapper *data)
+{
+  CFRelease(data->texture);
+  CFRelease(data->cache);
+  g_free(data);
 }
 
 static void
