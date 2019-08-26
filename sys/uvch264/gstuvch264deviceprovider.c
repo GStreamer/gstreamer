@@ -37,6 +37,7 @@
 
 #include "uvc_h264.h"
 #include <gst/gst.h>
+#include "gstuvch264deviceprovider.h"
 
 enum
 {
@@ -44,9 +45,6 @@ enum
 };
 
 /* *INDENT-OFF* */
-
-G_DECLARE_FINAL_TYPE (GstUvcH264Device, gst_uvc_h264_device, GST_,
-    UVC_H264_DEVICE, GstDevice)
 
 struct _GstUvcH264Device
 {
@@ -134,10 +132,7 @@ gst_uvc_h264_device_init (GstUvcH264Device * device)
 {
 }
 
-
 /* *INDENT-OFF* */
-G_DECLARE_FINAL_TYPE (GstUvcH264DeviceProvider, gst_uvc_h264_device_provider, GST, UVC_H264_DEVICE_PROVIDER, GstDeviceProvider)
-
 struct _GstUvcH264DeviceProvider
 {
   GstDeviceProvider parent;
