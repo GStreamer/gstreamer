@@ -202,6 +202,7 @@ gst_vaapi_config_surface_attributes_get (GstVaapiDisplay * display,
     }
   }
 
+  g_free (surface_attribs);
   return attribs;
 
   /* ERRORS */
