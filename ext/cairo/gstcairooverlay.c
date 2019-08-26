@@ -545,11 +545,7 @@ gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
   gst_cairo_overlay_signals[SIGNAL_DRAW] =
       g_signal_new ("draw",
       G_TYPE_FROM_CLASS (klass),
-      0,
-      0,
-      NULL,
-      NULL,
-      g_cclosure_marshal_generic,
+      0, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 3, CAIRO_GOBJECT_TYPE_CONTEXT, G_TYPE_UINT64, G_TYPE_UINT64);
 
   /**
@@ -562,8 +558,7 @@ gst_cairo_overlay_class_init (GstCairoOverlayClass * klass)
   gst_cairo_overlay_signals[SIGNAL_CAPS_CHANGED] =
       g_signal_new ("caps-changed",
       G_TYPE_FROM_CLASS (klass),
-      0,
-      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_CAPS);
+      0, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_CAPS);
 
   gst_element_class_set_static_metadata (element_class, "Cairo overlay",
       "Filter/Editor/Video",

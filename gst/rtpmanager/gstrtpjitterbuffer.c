@@ -897,8 +897,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   gst_rtp_jitter_buffer_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpJitterBufferClass,
-          request_pt_map), NULL, NULL, g_cclosure_marshal_generic,
-      GST_TYPE_CAPS, 1, G_TYPE_UINT);
+          request_pt_map), NULL, NULL, NULL, GST_TYPE_CAPS, 1, G_TYPE_UINT);
   /**
    * GstRtpJitterBuffer::handle-sync:
    * @buffer: the object which received the signal
@@ -909,7 +908,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   gst_rtp_jitter_buffer_signals[SIGNAL_HANDLE_SYNC] =
       g_signal_new ("handle-sync", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpJitterBufferClass,
-          handle_sync), NULL, NULL, g_cclosure_marshal_VOID__BOXED,
+          handle_sync), NULL, NULL, NULL,
       G_TYPE_NONE, 1, GST_TYPE_STRUCTURE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
@@ -922,8 +921,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   gst_rtp_jitter_buffer_signals[SIGNAL_ON_NPT_STOP] =
       g_signal_new ("on-npt-stop", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpJitterBufferClass,
-          on_npt_stop), NULL, NULL, g_cclosure_marshal_VOID__VOID,
-      G_TYPE_NONE, 0, G_TYPE_NONE);
+          on_npt_stop), NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
    * GstRtpJitterBuffer::clear-pt-map:
@@ -936,7 +934,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstRtpJitterBufferClass, clear_pt_map), NULL, NULL,
-      g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   /**
    * GstRtpJitterBuffer::set-active:
@@ -951,8 +949,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
       g_signal_new ("set-active", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstRtpJitterBufferClass, set_active), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_UINT64, 2, G_TYPE_BOOLEAN,
-      G_TYPE_UINT64);
+      NULL, G_TYPE_UINT64, 2, G_TYPE_BOOLEAN, G_TYPE_UINT64);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_change_state);

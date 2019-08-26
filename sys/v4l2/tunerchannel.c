@@ -69,9 +69,8 @@ gst_tuner_channel_class_init (GstTunerChannelClass * klass)
   signals[SIGNAL_FREQUENCY_CHANGED] =
       g_signal_new ("frequency-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstTunerChannelClass,
-          frequency_changed),
-      NULL, NULL, g_cclosure_marshal_VOID__ULONG, G_TYPE_NONE, 1, G_TYPE_ULONG);
+      G_STRUCT_OFFSET (GstTunerChannelClass, frequency_changed),
+      NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_ULONG);
   /**
    * GstTunerChannel::signal-changed:
    * @tunerchannel: The #GstTunerChannel
@@ -84,9 +83,8 @@ gst_tuner_channel_class_init (GstTunerChannelClass * klass)
   signals[SIGNAL_SIGNAL_CHANGED] =
       g_signal_new ("signal-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstTunerChannelClass,
-          signal_changed),
-      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      G_STRUCT_OFFSET (GstTunerChannelClass, signal_changed),
+      NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
 
   object_klass->dispose = gst_tuner_channel_dispose;
 }

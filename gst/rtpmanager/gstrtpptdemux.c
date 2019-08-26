@@ -195,7 +195,7 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
   gst_rtp_pt_demux_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpPtDemuxClass, request_pt_map),
-      NULL, NULL, g_cclosure_marshal_generic, GST_TYPE_CAPS, 1, G_TYPE_UINT);
+      NULL, NULL, NULL, GST_TYPE_CAPS, 1, G_TYPE_UINT);
 
   /**
    * GstRtpPtDemux::new-payload-type:
@@ -208,8 +208,7 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
   gst_rtp_pt_demux_signals[SIGNAL_NEW_PAYLOAD_TYPE] =
       g_signal_new ("new-payload-type", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpPtDemuxClass, new_payload_type),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
-      GST_TYPE_PAD);
+      NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_UINT, GST_TYPE_PAD);
 
   /**
    * GstRtpPtDemux::payload-type-change:
@@ -221,8 +220,7 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
   gst_rtp_pt_demux_signals[SIGNAL_PAYLOAD_TYPE_CHANGE] =
       g_signal_new ("payload-type-change", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpPtDemuxClass,
-          payload_type_change), NULL, NULL, g_cclosure_marshal_VOID__UINT,
-      G_TYPE_NONE, 1, G_TYPE_UINT);
+          payload_type_change), NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
 
   /**
    * GstRtpPtDemux::clear-pt-map:
@@ -234,8 +232,7 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
   gst_rtp_pt_demux_signals[SIGNAL_CLEAR_PT_MAP] =
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_ACTION | G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpPtDemuxClass,
-          clear_pt_map), NULL, NULL, g_cclosure_marshal_VOID__VOID,
-      G_TYPE_NONE, 0, G_TYPE_NONE);
+          clear_pt_map), NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   gobject_klass->set_property = gst_rtp_pt_demux_set_property;
   gobject_klass->get_property = gst_rtp_pt_demux_get_property;

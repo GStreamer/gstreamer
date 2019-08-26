@@ -67,8 +67,7 @@ rtp_storage_class_init (RtpStorageClass * klass)
 
   rtp_storage_signals[SIGNAL_PACKET_RECOVERED] =
       g_signal_new ("packet-recovered", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_BUFFER);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_BUFFER);
 
   gobject_class->dispose = rtp_storage_dispose;
 }

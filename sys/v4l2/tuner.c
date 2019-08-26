@@ -96,8 +96,7 @@ gst_tuner_default_init (GstTunerInterface * iface)
         g_signal_new ("norm-changed",
         GST_TYPE_TUNER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstTunerInterface, norm_changed),
-        NULL, NULL,
-        g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_TUNER_NORM);
+        NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_TUNER_NORM);
     /**
      * GstTuner::channel-changed:
      * @tuner: The element providing the GstTuner interface
@@ -109,9 +108,7 @@ gst_tuner_default_init (GstTunerInterface * iface)
         g_signal_new ("channel-changed",
         GST_TYPE_TUNER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstTunerInterface, channel_changed),
-        NULL, NULL,
-        g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-        GST_TYPE_TUNER_CHANNEL);
+        NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_TUNER_CHANNEL);
     /**
      * GstTuner::frequency-changed:
      * @tuner: The element providing the GstTuner interface
@@ -123,9 +120,7 @@ gst_tuner_default_init (GstTunerInterface * iface)
         g_signal_new ("frequency-changed",
         GST_TYPE_TUNER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstTunerInterface, frequency_changed),
-        NULL, NULL,
-        g_cclosure_marshal_generic, G_TYPE_NONE, 2, GST_TYPE_TUNER_CHANNEL,
-        G_TYPE_ULONG);
+        NULL, NULL, NULL, G_TYPE_NONE, 2, GST_TYPE_TUNER_CHANNEL, G_TYPE_ULONG);
     /**
      * GstTuner::signal-changed:
      * @tuner: The element providing the GstTuner interface
@@ -140,9 +135,7 @@ gst_tuner_default_init (GstTunerInterface * iface)
         g_signal_new ("signal-changed",
         GST_TYPE_TUNER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstTunerInterface, signal_changed),
-        NULL, NULL,
-        g_cclosure_marshal_generic, G_TYPE_NONE, 2, GST_TYPE_TUNER_CHANNEL,
-        G_TYPE_INT);
+        NULL, NULL, NULL, G_TYPE_NONE, 2, GST_TYPE_TUNER_CHANNEL, G_TYPE_INT);
 
     initialized = TRUE;
   }

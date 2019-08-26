@@ -172,7 +172,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_GET_SOURCE_BY_SSRC] =
       g_signal_new ("get-source-by-ssrc", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (RTPSessionClass,
-          get_source_by_ssrc), NULL, NULL, g_cclosure_marshal_generic,
+          get_source_by_ssrc), NULL, NULL, NULL,
       RTP_TYPE_SOURCE, 1, G_TYPE_UINT);
 
   /**
@@ -185,8 +185,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_NEW_SSRC] =
       g_signal_new ("on-new-ssrc", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_new_ssrc),
-      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      RTP_TYPE_SOURCE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-ssrc-collision:
    * @session: the object which received the signal
@@ -197,8 +196,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SSRC_COLLISION] =
       g_signal_new ("on-ssrc-collision", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_collision),
-      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      RTP_TYPE_SOURCE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-ssrc-validated:
    * @session: the object which received the signal
@@ -209,8 +207,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SSRC_VALIDATED] =
       g_signal_new ("on-ssrc-validated", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_validated),
-      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      RTP_TYPE_SOURCE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-ssrc-active:
    * @session: the object which received the signal
@@ -221,8 +218,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SSRC_ACTIVE] =
       g_signal_new ("on-ssrc-active", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_active),
-      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      RTP_TYPE_SOURCE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-ssrc-sdes:
    * @session: the object which received the signal
@@ -233,8 +229,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SSRC_SDES] =
       g_signal_new ("on-ssrc-sdes", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_sdes),
-      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      RTP_TYPE_SOURCE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-bye-ssrc:
    * @session: the object which received the signal
@@ -245,8 +240,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_BYE_SSRC] =
       g_signal_new ("on-bye-ssrc", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_bye_ssrc),
-      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      RTP_TYPE_SOURCE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-bye-timeout:
    * @session: the object which received the signal
@@ -257,8 +251,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_BYE_TIMEOUT] =
       g_signal_new ("on-bye-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_bye_timeout),
-      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      RTP_TYPE_SOURCE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-timeout:
    * @session: the object which received the signal
@@ -269,8 +262,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_TIMEOUT] =
       g_signal_new ("on-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_timeout),
-      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      RTP_TYPE_SOURCE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-sender-timeout:
    * @session: the object which received the signal
@@ -281,8 +273,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SENDER_TIMEOUT] =
       g_signal_new ("on-sender-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sender_timeout),
-      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      RTP_TYPE_SOURCE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
 
   /**
    * RTPSession::on-sending-rtcp
@@ -299,7 +290,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SENDING_RTCP] =
       g_signal_new ("on-sending-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sending_rtcp),
-      accumulate_trues, NULL, g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 2,
+      accumulate_trues, NULL, NULL, G_TYPE_BOOLEAN, 2,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, G_TYPE_BOOLEAN);
 
   /**
@@ -316,8 +307,8 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_APP_RTCP] =
       g_signal_new ("on-app-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_app_rtcp),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 4,
-      G_TYPE_UINT, G_TYPE_UINT, G_TYPE_STRING, GST_TYPE_BUFFER);
+      NULL, NULL, NULL, G_TYPE_NONE, 4, G_TYPE_UINT, G_TYPE_UINT,
+      G_TYPE_STRING, GST_TYPE_BUFFER);
 
   /**
    * RTPSession::on-feedback-rtcp:
@@ -335,8 +326,8 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP] =
       g_signal_new ("on-feedback-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_feedback_rtcp),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 5, G_TYPE_UINT,
-      G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT, GST_TYPE_BUFFER);
+      NULL, NULL, NULL, G_TYPE_NONE, 5, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT,
+      G_TYPE_UINT, GST_TYPE_BUFFER);
 
   /**
    * RTPSession::send-rtcp:
@@ -353,7 +344,7 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_signal_new ("send-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (RTPSessionClass, send_rtcp), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_UINT64);
+      NULL, G_TYPE_NONE, 1, G_TYPE_UINT64);
 
   /**
    * RTPSession::send-rtcp-full:
@@ -375,7 +366,7 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_signal_new ("send-rtcp-full", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (RTPSessionClass, send_rtcp), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 1, G_TYPE_UINT64);
+      NULL, G_TYPE_BOOLEAN, 1, G_TYPE_UINT64);
 
   /**
    * RTPSession::on-receiving-rtcp
@@ -390,7 +381,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_RECEIVING_RTCP] =
       g_signal_new ("on-receiving-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_receiving_rtcp),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      NULL, NULL, NULL, G_TYPE_NONE, 1,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
@@ -405,8 +396,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_NEW_SENDER_SSRC] =
       g_signal_new ("on-new-sender-ssrc", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_new_sender_ssrc),
-      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      RTP_TYPE_SOURCE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
 
   /**
    * RTPSession::on-sender-ssrc-active:
@@ -420,7 +410,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SENDER_SSRC_ACTIVE] =
       g_signal_new ("on-sender-ssrc-active", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass,
-          on_sender_ssrc_active), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+          on_sender_ssrc_active), NULL, NULL, NULL,
       G_TYPE_NONE, 1, RTP_TYPE_SOURCE);
 
   /**
@@ -452,7 +442,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SENDING_NACKS] =
       g_signal_new ("on-sending-nacks", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sending_nacks),
-      g_signal_accumulator_first_wins, NULL, g_cclosure_marshal_generic,
+      g_signal_accumulator_first_wins, NULL, NULL,
       G_TYPE_UINT, 4, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_ARRAY,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 

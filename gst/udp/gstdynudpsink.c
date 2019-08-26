@@ -105,8 +105,7 @@ gst_dynudpsink_class_init (GstDynUDPSinkClass * klass)
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstDynUDPSinkClass, get_stats),
-      NULL, NULL, g_cclosure_marshal_generic, GST_TYPE_STRUCTURE, 2,
-      G_TYPE_STRING, G_TYPE_INT);
+      NULL, NULL, NULL, GST_TYPE_STRUCTURE, 2, G_TYPE_STRING, G_TYPE_INT);
 
   g_object_class_install_property (gobject_class, PROP_SOCKET,
       g_param_spec_object ("socket", "Socket",

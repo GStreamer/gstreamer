@@ -1013,8 +1013,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    */
   gst_rtspsrc_signals[SIGNAL_HANDLE_REQUEST] =
       g_signal_new ("handle-request", G_TYPE_FROM_CLASS (klass), 0,
-      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
-      G_TYPE_POINTER, G_TYPE_POINTER);
+      0, NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_POINTER);
 
   /**
    * GstRTSPSrc::on-sdp:
@@ -1034,7 +1033,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    */
   gst_rtspsrc_signals[SIGNAL_ON_SDP] =
       g_signal_new ("on-sdp", G_TYPE_FROM_CLASS (klass), 0,
-      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      0, NULL, NULL, NULL, G_TYPE_NONE, 1,
       GST_TYPE_SDP_MESSAGE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
@@ -1054,9 +1053,8 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gst_rtspsrc_signals[SIGNAL_SELECT_STREAM] =
       g_signal_new_class_handler ("select-stream", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP,
-      (GCallback) default_select_stream, select_stream_accum, NULL,
-      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 2, G_TYPE_UINT,
-      GST_TYPE_CAPS);
+      (GCallback) default_select_stream, select_stream_accum, NULL, NULL,
+      G_TYPE_BOOLEAN, 2, G_TYPE_UINT, GST_TYPE_CAPS);
   /**
    * GstRTSPSrc::new-manager:
    * @rtspsrc: a #GstRTSPSrc
@@ -1069,8 +1067,8 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    */
   gst_rtspsrc_signals[SIGNAL_NEW_MANAGER] =
       g_signal_new_class_handler ("new-manager", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL, NULL,
+      G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
    * GstRTSPSrc::request-rtcp-key:
@@ -1127,9 +1125,8 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gst_rtspsrc_signals[SIGNAL_BEFORE_SEND] =
       g_signal_new_class_handler ("before-send", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP,
-      (GCallback) default_before_send, before_send_accum, NULL,
-      g_cclosure_marshal_generic, G_TYPE_BOOLEAN,
-      1, GST_TYPE_RTSP_MESSAGE | G_SIGNAL_TYPE_STATIC_SCOPE);
+      (GCallback) default_before_send, before_send_accum, NULL, NULL,
+      G_TYPE_BOOLEAN, 1, GST_TYPE_RTSP_MESSAGE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
    * GstRTSPSrc::push-backchannel-buffer:
@@ -1141,8 +1138,8 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gst_rtspsrc_signals[SIGNAL_PUSH_BACKCHANNEL_BUFFER] =
       g_signal_new ("push-backchannel-buffer", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
-          push_backchannel_buffer), NULL, NULL, NULL, GST_TYPE_FLOW_RETURN, 2,
-      G_TYPE_UINT, GST_TYPE_BUFFER);
+          push_backchannel_buffer), NULL, NULL, NULL,
+      GST_TYPE_FLOW_RETURN, 2, G_TYPE_UINT, GST_TYPE_BUFFER);
 
   /**
    * GstRTSPSrc::get-parameter:
@@ -1159,7 +1156,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gst_rtspsrc_signals[SIGNAL_GET_PARAMETER] =
       g_signal_new ("get-parameter", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
-          get_parameter), NULL, NULL, g_cclosure_marshal_generic,
+          get_parameter), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 3, G_TYPE_STRING, G_TYPE_STRING, GST_TYPE_PROMISE);
 
   /**
@@ -1177,7 +1174,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gst_rtspsrc_signals[SIGNAL_GET_PARAMETERS] =
       g_signal_new ("get-parameters", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
-          get_parameters), NULL, NULL, g_cclosure_marshal_generic,
+          get_parameters), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 3, G_TYPE_STRV, G_TYPE_STRING, GST_TYPE_PROMISE);
 
   /**
@@ -1196,9 +1193,8 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gst_rtspsrc_signals[SIGNAL_SET_PARAMETER] =
       g_signal_new ("set-parameter", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
-          set_parameter), NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_BOOLEAN, 4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING,
-      GST_TYPE_PROMISE);
+          set_parameter), NULL, NULL, NULL, G_TYPE_BOOLEAN, 4, G_TYPE_STRING,
+      G_TYPE_STRING, G_TYPE_STRING, GST_TYPE_PROMISE);
 
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->provide_clock = gst_rtspsrc_provide_clock;
