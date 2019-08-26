@@ -147,6 +147,12 @@ build static nodebug fedora x86_64:
   variables:
     MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
 
+build clang fedora x86_64:
+  extends: 'build fedora x86_64'
+  variables:
+    CC: 'ccache clang'
+    CXX: 'ccache clang++'
+
 .test:
   stage: 'test'
   variables:
