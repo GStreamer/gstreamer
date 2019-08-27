@@ -246,13 +246,17 @@ gst_vaapipostproc_ensure_filter_caps (GstVaapiPostproc * postproc)
   if (!gst_vaapipostproc_ensure_filter (postproc))
     return FALSE;
 
-  postproc->filter_ops = gst_vaapi_filter_get_operations (postproc->filter);
-  if (!postproc->filter_ops)
-    return FALSE;
+  if (!postproc->filter_ops) {
+    postproc->filter_ops = gst_vaapi_filter_get_operations (postproc->filter);
+    if (!postproc->filter_ops)
+      return FALSE;
+  }
 
-  postproc->filter_formats = gst_vaapi_filter_get_formats (postproc->filter);
-  if (!postproc->filter_formats)
-    return FALSE;
+  if (!postproc->filter_formats) {
+    postproc->filter_formats = gst_vaapi_filter_get_formats (postproc->filter);
+    if (!postproc->filter_formats)
+      return FALSE;
+  }
   return TRUE;
 }
 
