@@ -124,10 +124,9 @@ build fedora x86_64:
   stage: 'build'
   image: $FEDORA_IMAGE
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic ${MESON_BUILDTYPE_ARGS} --werror"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled ${MESON_BUILDTYPE_ARGS} --werror"
   except:
     variables:
-      - $CI_PROJECT_NAME == "gst-docs"
       - $CI_PROJECT_NAME == "cerbero"
 
 build nodebug fedora x86_64:
@@ -135,23 +134,39 @@ build nodebug fedora x86_64:
   stage: 'build'
   image: $FEDORA_IMAGE
   variables:
-    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic -Ddoc=enabled ${MESON_BUILDTYPE_ARGS} --werror"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic ${MESON_BUILDTYPE_ARGS} --werror"
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 build static fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
     MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 build static nodebug fedora x86_64:
   extends: 'build nodebug fedora x86_64'
   variables:
     MESON_BUILDTYPE_ARGS: "--default-library=static -Dintrospection=disabled -Ddoc=disabled"
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 build clang fedora x86_64:
   extends: 'build fedora x86_64'
   variables:
     CC: 'ccache clang'
     CXX: 'ccache clang++'
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 .test:
   stage: 'test'
@@ -403,6 +418,7 @@ valgrind ges:
       - $CI_PROJECT_NAME == "cerbero"
       - $CI_PROJECT_NAME == "gst-omx"
       - $CI_PROJECT_NAME == "gstreamer-vaapi"
+      - $CI_PROJECT_NAME == "gst-docs"
 
 build vs2017 amd64:
   extends: '.build windows'
@@ -434,7 +450,7 @@ build msys2 :
 # Template for Cerbero GStreamer Deps
 #
 # This template is used by cerbero/ project to pre-built the GStreamer
-# depedencies. When available, the .cerbero jobs will download this artifact
+# dependencies. When available, the .cerbero jobs will download this artifact
 # in order to speed up the build.
 #
 # Parameters:
@@ -796,10 +812,10 @@ build cerbero ios universal:
 documentation:
   image: $FEDORA_IMAGE
   needs:
-    - "build nodebug fedora x86_64"
+    - "build fedora x86_64"
     - "manifest"
   dependencies:
-    - 'build nodebug fedora x86_64'
+    - 'build fedora x86_64'
   stage: integrate
 
   script:
