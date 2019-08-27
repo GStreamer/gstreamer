@@ -77,6 +77,8 @@ gst indent:
 
 .build:
   stage: 'build'
+  needs:
+    - "manifest"
   dependencies:
     - "manifest"
   variables:
@@ -188,6 +190,8 @@ build static nodebug fedora x86_64:
 .test fedora x86_64:
   image: $FEDORA_IMAGE
   extends: '.test'
+  needs:
+    - 'build fedora x86_64'
   dependencies:
     - build fedora x86_64
 
@@ -287,6 +291,8 @@ valgrind ges:
 .cerbero:
   stage: "build"
   image: $CERBERO_IMAGE
+  needs:
+    - "manifest"
   dependencies:
     - "manifest"
   variables:
@@ -349,6 +355,8 @@ valgrind ges:
 .build windows:
   image: $WINDOWS_IMAGE
   stage: 'build'
+  needs:
+    - 'manifest'
   dependencies:
     - 'manifest'
   tags:
@@ -472,6 +480,9 @@ cerbero deps fedora x86_64:
 
 cerbero fedora x86_64:
   extends: '.cerbero fedora x86_64'
+  needs:
+    - "cerbero deps fedora x86_64"
+    - "manifest"
   dependencies:
     - "cerbero deps fedora x86_64"
   only:
@@ -506,6 +517,9 @@ cerbero deps android universal:
 
 cerbero android universal:
   extends: '.cerbero android universal'
+  needs:
+    - "cerbero deps android universal"
+    - "manifest"
   dependencies:
     - "cerbero deps android universal"
   only:
@@ -538,6 +552,9 @@ cerbero deps windows x86:
 
 cerbero cross win32:
   extends: '.cerbero cross win32'
+  needs:
+    - "cerbero deps windows x86"
+    - "manifest"
   dependencies:
     - "cerbero deps windows x86"
   only:
@@ -567,6 +584,9 @@ cerbero deps windows x86_64:
 
 cerbero cross win64:
   extends: '.cerbero cross win64'
+  needs:
+    - "cerbero deps windows x86_64"
+    - "manifest"
   dependencies:
     - "cerbero deps windows x86_64"
   only:
@@ -627,6 +647,9 @@ build cerbero cross win64:
 
 android universal examples:
   extends: ".android universal examples"
+  needs:
+    - "build cerbero android universal"
+    - "manifest"
   dependencies:
     - "build cerbero android universal"
   except:
@@ -640,6 +663,9 @@ android universal examples:
 
 cerbero android universal examples:
   extends: ".android universal examples"
+  needs:
+    - "cerbero android universal"
+    - "manifest"
   dependencies:
     - "cerbero android universal"
   only:
@@ -683,6 +709,9 @@ cerbero deps macos x86_64:
 
 cerbero macos x86_64:
   extends: '.cerbero macos x86_64'
+  needs:
+    - "cerbero deps macos x86_64"
+    - "manifest"
   dependencies:
     - "cerbero deps macos x86_64"
   only:
@@ -735,6 +764,9 @@ cerbero deps ios universal:
 
 cerbero ios universal:
   extends: '.cerbero ios universal'
+  needs:
+    - "cerbero deps ios universal"
+    - "manifest"
   dependencies:
     - "cerbero deps ios universal"
   only:
@@ -756,6 +788,9 @@ build cerbero ios universal:
 
 documentation:
   image: $FEDORA_IMAGE
+  needs:
+    - "build nodebug fedora x86_64"
+    - "manifest"
   dependencies:
     - 'build nodebug fedora x86_64'
   stage: integrate

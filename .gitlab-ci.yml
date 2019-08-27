@@ -115,6 +115,8 @@ include: "gitlab/ci_template.yml"
 .build local:
   extends: '.build'
   when: 'manual'
+  needs:
+    - 'manifest'
 
 # Test the build job against the latest build image tag and the local manifest
 build fedora x86_64 local:
@@ -161,7 +163,7 @@ build cerbero cross win64 local:
   image: '${CI_REGISTRY_IMAGE}/amd64/fedora:latest'
   extends: '.test'
   dependencies:
-    - build fedora x86_64 local
+    - 'build fedora x86_64 local'
   when: 'manual'
   except:
     refs:
