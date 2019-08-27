@@ -928,6 +928,10 @@ struct _GstH264SliceHdr
 
   /* Number of emulation prevention bytes (EPB) in this slice_header() */
   guint n_emulation_prevention_bytes;
+
+  /* Since: 1.18 */
+  guint8 num_ref_idx_active_override_flag;
+  guint8 sp_for_switch_flag;
 };
 
 

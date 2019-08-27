@@ -2226,10 +2226,8 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
 
   if (GST_H264_IS_P_SLICE (slice) || GST_H264_IS_SP_SLICE (slice) ||
       GST_H264_IS_B_SLICE (slice)) {
-    guint8 num_ref_idx_active_override_flag;
-
-    READ_UINT8 (&nr, num_ref_idx_active_override_flag, 1);
-    if (num_ref_idx_active_override_flag) {
+    READ_UINT8 (&nr, slice->num_ref_idx_active_override_flag, 1);
+    if (slice->num_ref_idx_active_override_flag) {
       READ_UE_MAX (&nr, slice->num_ref_idx_l0_active_minus1, 31);
 
       if (GST_H264_IS_B_SLICE (slice))
@@ -2261,10 +2259,8 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
   READ_SE_ALLOWED (&nr, slice->slice_qp_delta, -87, 77);
 
   if (GST_H264_IS_SP_SLICE (slice) || GST_H264_IS_SI_SLICE (slice)) {
-    guint8 sp_for_switch_flag;
-
     if (GST_H264_IS_SP_SLICE (slice))
-      READ_UINT8 (&nr, sp_for_switch_flag, 1);
+      READ_UINT8 (&nr, slice->sp_for_switch_flag, 1);
     READ_SE_ALLOWED (&nr, slice->slice_qs_delta, -51, 51);
   }
 
