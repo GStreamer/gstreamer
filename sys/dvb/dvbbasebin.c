@@ -458,8 +458,8 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
   dvb_base_bin_signals[SIGNAL_TUNE] =
       g_signal_new ("tune", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (DvbBaseBinClass, do_tune),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      G_STRUCT_OFFSET (DvbBaseBinClass, do_tune), NULL, NULL, NULL,
+      G_TYPE_NONE, 0);
 }
 
 static void

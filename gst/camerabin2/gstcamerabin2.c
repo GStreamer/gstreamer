@@ -833,7 +833,7 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstCameraBin2Class, start_capture),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   /**
    * GstCameraBin2::capture-stop:
@@ -844,7 +844,7 @@ gst_camera_bin_class_init (GstCameraBin2Class * klass)
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstCameraBin2Class, stop_capture),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      NULL, NULL, NULL, G_TYPE_NONE, 0);
 }
 
 static void

@@ -217,12 +217,12 @@ gst_sctp_enc_class_init (GstSctpEncClass * klass)
       g_signal_new ("sctp-association-established",
       G_TYPE_FROM_CLASS (gobject_class), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstSctpEncClass, on_sctp_association_is_established),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 
   signals[SIGNAL_GET_STREAM_BYTES_SENT] = g_signal_new ("bytes-sent",
       G_TYPE_FROM_CLASS (gobject_class), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstSctpEncClass, on_get_stream_bytes_sent), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_UINT64, 1, G_TYPE_UINT);
+      NULL, G_TYPE_UINT64, 1, G_TYPE_UINT);
 
   klass->on_get_stream_bytes_sent =
       GST_DEBUG_FUNCPTR (on_get_stream_bytes_sent);

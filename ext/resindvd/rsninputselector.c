@@ -1221,8 +1221,8 @@ gst_input_selector_class_init (RsnInputSelectorClass * klass)
   gst_input_selector_signals[SIGNAL_BLOCK] =
       g_signal_new ("block", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (RsnInputSelectorClass, block), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_INT64, 0);
+      G_STRUCT_OFFSET (RsnInputSelectorClass, block), NULL, NULL, NULL,
+      G_TYPE_INT64, 0);
 
   gst_element_class_set_static_metadata (gstelement_class, "Input selector",
       "Generic", "N-to-1 input stream selector",

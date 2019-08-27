@@ -110,18 +110,17 @@ gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
 
   d3d11_window_signals[SIGNAL_KEY_EVENT] =
       g_signal_new ("key-event", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
 
   d3d11_window_signals[SIGNAL_MOUSE_EVENT] =
       g_signal_new ("mouse-event", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 4, G_TYPE_STRING, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
 
   d3d11_window_signals[SIGNAL_GOT_WINDOW_HANDLE] =
       g_signal_new ("got-window-handle", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, G_TYPE_POINTER);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_POINTER);
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_window_debug, "d3d11window", 0,
       "d3d11 window");

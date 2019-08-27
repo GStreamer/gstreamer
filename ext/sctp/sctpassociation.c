@@ -141,8 +141,7 @@ gst_sctp_association_class_init (GstSctpAssociationClass * klass)
   signals[SIGNAL_STREAM_RESET] =
       g_signal_new ("stream-reset", G_OBJECT_CLASS_TYPE (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GstSctpAssociationClass,
-          on_sctp_stream_reset), NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, G_TYPE_UINT);
+          on_sctp_stream_reset), NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
 
   properties[PROP_ASSOCIATION_ID] = g_param_spec_uint ("association-id",
       "The SCTP association-id", "The SCTP association-id.", 0, G_MAXUSHORT,

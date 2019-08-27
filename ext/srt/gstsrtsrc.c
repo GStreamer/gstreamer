@@ -278,8 +278,7 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
   signals[SIG_CALLER_ADDED] =
       g_signal_new ("caller-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSRTSrcClass, caller_added),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
-      2, G_TYPE_INT, G_TYPE_SOCKET_ADDRESS);
+      NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_INT, G_TYPE_SOCKET_ADDRESS);
 
   /**
    * GstSRTSrc::caller-removed:
@@ -292,7 +291,7 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
   signals[SIG_CALLER_REMOVED] =
       g_signal_new ("caller-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSRTSrcClass,
-          caller_added), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
+          caller_added), NULL, NULL, NULL, G_TYPE_NONE,
       2, G_TYPE_INT, G_TYPE_SOCKET_ADDRESS);
 
   gst_srt_object_install_properties_helper (gobject_class);

@@ -208,7 +208,7 @@ gst_sctp_dec_class_init (GstSctpDecClass * klass)
   signals[SIGNAL_RESET_STREAM] = g_signal_new ("reset-stream",
       G_TYPE_FROM_CLASS (gobject_class), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstSctpDecClass, on_reset_stream), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_UINT);
+      NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
 
   gst_element_class_set_static_metadata (element_class,
       "SCTP Decoder",

@@ -532,14 +532,14 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_base_camera_src_start_capture),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   basecamerasrc_signals[STOP_CAPTURE_SIGNAL] =
       g_signal_new_class_handler ("stop-capture",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_base_camera_src_stop_capture),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   gstelement_class->change_state = gst_base_camera_src_change_state;
 

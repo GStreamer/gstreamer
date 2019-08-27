@@ -134,20 +134,17 @@ gst_dtls_connection_class_init (GstDtlsConnectionClass * klass)
 
   signals[SIGNAL_ON_DECODER_KEY] =
       g_signal_new ("on-decoder-key", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 3,
-      G_TYPE_POINTER, G_TYPE_UINT, G_TYPE_UINT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
+      G_TYPE_NONE, 3, G_TYPE_POINTER, G_TYPE_UINT, G_TYPE_UINT);
 
   signals[SIGNAL_ON_ENCODER_KEY] =
       g_signal_new ("on-encoder-key", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 3,
-      G_TYPE_POINTER, G_TYPE_UINT, G_TYPE_UINT);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
+      G_TYPE_NONE, 3, G_TYPE_POINTER, G_TYPE_UINT, G_TYPE_UINT);
 
   signals[SIGNAL_ON_PEER_CERTIFICATE] =
       g_signal_new ("on-peer-certificate", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
 
   properties[PROP_AGENT] =
       g_param_spec_object ("agent",

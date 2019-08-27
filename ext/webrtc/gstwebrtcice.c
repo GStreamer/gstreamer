@@ -948,7 +948,7 @@ gst_webrtc_ice_class_init (GstWebRTCICEClass * klass)
    */
   gst_webrtc_ice_signals[ON_ICE_CANDIDATE_SIGNAL] =
       g_signal_new ("on-ice-candidate", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_STRING);
 }
 

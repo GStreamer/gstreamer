@@ -116,8 +116,7 @@ gst_vulkan_instance_class_init (GstVulkanInstanceClass * klass)
    */
   gst_vulkan_instance_signals[SIGNAL_CREATE_DEVICE] =
       g_signal_new ("create-device", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      GST_TYPE_VULKAN_DEVICE, 0);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, GST_TYPE_VULKAN_DEVICE, 0);
 
   G_OBJECT_CLASS (klass)->finalize = gst_vulkan_instance_finalize;
 }

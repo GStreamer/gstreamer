@@ -163,13 +163,13 @@ gst_ipc_pipeline_src_class_init (GstIpcPipelineSrcClass * klass)
       g_signal_new ("forward-message", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstIpcPipelineSrcClass, forward_message), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 1, GST_TYPE_MESSAGE);
+      NULL, G_TYPE_BOOLEAN, 1, GST_TYPE_MESSAGE);
 
   gst_ipc_pipeline_src_signals[SIGNAL_DISCONNECT] =
       g_signal_new ("disconnect", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstIpcPipelineSrcClass, disconnect),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      G_STRUCT_OFFSET (GstIpcPipelineSrcClass, disconnect), NULL, NULL, NULL,
+      G_TYPE_NONE, 0);
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Inter-process Pipeline Source",

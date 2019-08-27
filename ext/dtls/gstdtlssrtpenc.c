@@ -126,8 +126,7 @@ gst_dtls_srtp_enc_class_init (GstDtlsSrtpEncClass * klass)
 
   signals[SIGNAL_ON_KEY_SET] =
       g_signal_new ("on-key-set", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 
   properties[PROP_IS_CLIENT] =
       g_param_spec_boolean ("is-client",

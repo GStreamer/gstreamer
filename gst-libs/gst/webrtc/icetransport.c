@@ -189,8 +189,8 @@ gst_webrtc_ice_transport_class_init (GstWebRTCICETransportClass * klass)
    */
   gst_webrtc_ice_transport_signals[ON_SELECTED_CANDIDATE_PAIR_CHANGE_SIGNAL] =
       g_signal_new ("on-selected-candidate-pair-change",
-      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0);
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
+      G_TYPE_NONE, 0);
 
   /**
    * GstWebRTC::on-new-candidate:
@@ -198,8 +198,8 @@ gst_webrtc_ice_transport_class_init (GstWebRTCICETransportClass * klass)
    */
   gst_webrtc_ice_transport_signals[ON_NEW_CANDIDATE_SIGNAL] =
       g_signal_new ("on-new-candidate",
-      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_STRING);
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
+      G_TYPE_NONE, 1, G_TYPE_STRING);
 }
 
 static void

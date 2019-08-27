@@ -1009,8 +1009,8 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   gst_dvbsrc_signals[SIGNAL_TUNE] =
       g_signal_new ("tune", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstDvbSrcClass, do_tune),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      G_STRUCT_OFFSET (GstDvbSrcClass, do_tune), NULL, NULL, NULL,
+      G_TYPE_NONE, 0);
 
 }
 
