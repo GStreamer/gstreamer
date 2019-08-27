@@ -2223,12 +2223,14 @@ gst_omx_video_enc_set_format (GstVideoEncoder * encoder,
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
   GstVideoInfo *info = &state->info;
   GList *negotiation_map = NULL, *l;
+  GstCaps *caps;
 
   self = GST_OMX_VIDEO_ENC (encoder);
   klass = GST_OMX_VIDEO_ENC_GET_CLASS (encoder);
 
-  GST_DEBUG_OBJECT (self, "Setting new format %s",
-      gst_video_format_to_string (info->finfo->format));
+  caps = gst_video_info_to_caps (info);
+  GST_DEBUG_OBJECT (self, "Setting new input format: %" GST_PTR_FORMAT, caps);
+  gst_caps_unref (caps);
 
   gst_omx_port_get_port_definition (self->enc_in_port, &port_def);
 
