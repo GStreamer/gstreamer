@@ -51,7 +51,7 @@ sitemap = configure_file(command: [sitemap_gen, '@INPUT@', '@OUTPUT@',
   input: 'sitemap.txt',
   output: 'sitemap.txt')
 
-html_theme = 'https://github.com/hotdoc/hotdoc_lumen_theme/releases/download/0.99/hotdoc_lumen_theme-0.99.tar.xz?sha256=25d4b9f0d615d4920a45c57b59a4483b1bc7da9910fc75c1a62670d1e7d37cce'
+html_theme = 'https://github.com/hotdoc/hotdoc_lumen_theme/releases/download/0.999/hotdoc_lumen_theme-0.999.tar.xz?sha256=61088e983e7a5d171f2afc4e270c82f1ca251e38e375658ef230666691418629'
 
 gstreamer_doc = hotdoc.generate_doc('GStreamer',
     project_version: apiversion,
