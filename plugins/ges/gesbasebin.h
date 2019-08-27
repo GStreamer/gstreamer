@@ -30,8 +30,9 @@
 
 G_BEGIN_DECLS
 
-G_DECLARE_DERIVABLE_TYPE(GESBaseBin, ges_base_bin, GES, BASE_BIN, GstBin)
+#define SUPRESS_UNUSED_WARNING(a) (void)a
 
+G_DECLARE_DERIVABLE_TYPE(GESBaseBin, ges_base_bin, GES, BASE_BIN, GstBin)
 struct _GESBaseBinClass
 {
   GstBinClass parent_class;

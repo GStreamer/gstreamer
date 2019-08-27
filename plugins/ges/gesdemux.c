@@ -47,7 +47,7 @@
 GST_DEBUG_CATEGORY_STATIC (gesdemux);
 #define GST_CAT_DEFAULT gesdemux
 
-G_DECLARE_FINAL_TYPE (GESDemux, ges_demux, GES, Demux, GESBaseBin);
+G_DECLARE_FINAL_TYPE (GESDemux, ges_demux, GES, DEMUX, GESBaseBin);
 
 struct _GESDemux
 {
@@ -625,6 +625,9 @@ static void
 ges_demux_init (GESDemux * self)
 {
   ges_init ();
+
+  SUPRESS_UNUSED_WARNING (GES_DEMUX);
+  SUPRESS_UNUSED_WARNING (GES_IS_DEMUX);
 
   self->sinkpad =
       gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
