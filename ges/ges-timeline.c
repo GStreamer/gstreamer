@@ -691,18 +691,6 @@ ges_timeline_init (GESTimeline * self)
 
 /* Private methods */
 
-static inline GESContainer *
-get_toplevel_container (gpointer element)
-{
-  GESTimelineElement *ret =
-      ges_timeline_element_get_toplevel_parent ((GESTimelineElement
-          *) (element));
-
-  /*  We own a ref to the elements ourself */
-  gst_object_unref (ret);
-  return (GESContainer *) ret;
-}
-
 /* Sorting utils*/
 static gint
 sort_layers (gpointer a, gpointer b)
