@@ -110,26 +110,21 @@ pad_added_cb (GstElement * element, GstPad * pad, gpointer user_data)
       gst_static_pad_template_get (&src_template));
   gst_pad_set_active (ghost, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (self), ghost);
+  g_object_set_data (G_OBJECT (pad), "GstSdpSrc.ghostpad", ghost);
 }
 
 static void
 pad_removed_cb (GstElement * element, GstPad * pad, gpointer user_data)
 {
   GstSdpSrc *self = GST_SDP_SRC_CAST (user_data);
-  GstPad *peer;
+  GstPad *ghost;
 
-  peer = gst_pad_get_peer (pad);
-  if (peer) {
-    GstPad *ghost =
-        GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD (peer)));
+  ghost = g_object_get_data (G_OBJECT (pad), "GstSdpSrc.ghostpad");
+  if (ghost) {
+    g_object_set_data (G_OBJECT (pad), "GstSdpSrc.ghostpad", NULL);
 
-    if (ghost) {
-      gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (ghost), NULL);
-      gst_element_remove_pad (GST_ELEMENT_CAST (self), ghost);
-      gst_object_unref (ghost);
-    }
-
-    gst_object_unref (peer);
+    gst_pad_set_active (ghost, FALSE);
+    gst_element_remove_pad (GST_ELEMENT_CAST (self), ghost);
   }
 }
 
