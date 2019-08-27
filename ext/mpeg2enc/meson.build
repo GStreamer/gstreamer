@@ -4,6 +4,17 @@
 # if someone complains.
 mjpegtools_dep = dependency('mjpegtools', version : '>=2.0.0', required : get_option('mpeg2enc'))
 mpeg2enc_dep = cxx.find_library('mpeg2encpp', required : get_option('mpeg2enc'))
+
+no_warn_args = []
+foreach arg : [
+    '-Wno-mismatched-tags', # mjpeg headers get class/struct mixed up
+    '-Wno-header-guard',
+  ]
+  if cxx.has_argument(arg)
+    no_warn_args += [arg]
+  endif
+endforeach
+
 if mjpegtools_dep.found() and mpeg2enc_dep.found()
   gstmpeg2enc = library('gstmpeg2enc',
     'gstmpeg2enc.cc',
@@ -11,7 +22,7 @@ if mjpegtools_dep.found() and mpeg2enc_dep.found()
     'gstmpeg2encoder.cc',
     'gstmpeg2encstreamwriter.cc',
     'gstmpeg2encpicturereader.cc',
-    cpp_args : gst_plugins_bad_args + ['-DGST_MJPEGTOOLS_API=20000'],
+    cpp_args : gst_plugins_bad_args + ['-DGST_MJPEGTOOLS_API=20000'] + no_warn_args,
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc],
     dependencies : [gstvideo_dep, mjpegtools_dep, mpeg2enc_dep],
