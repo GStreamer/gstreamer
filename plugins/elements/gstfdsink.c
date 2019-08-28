@@ -69,10 +69,14 @@
 #define off_t guint64
 #endif
 
+#define struct_stat struct stat
+
 #if defined(__BIONIC__)         /* Android */
 #if defined(__ANDROID_API__) && __ANDROID_API__ >= 21
 #undef fstat
 #define fstat fstat64
+#undef struct_stat
+#define struct_stat struct stat64
 #endif
 #endif
 
@@ -327,7 +331,7 @@ gst_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 static gboolean
 gst_fd_sink_check_fd (GstFdSink * fdsink, int fd, GError ** error)
 {
-  struct stat stat_results;
+  struct_stat stat_results;
   off_t result;
 
   /* see that it is a valid file descriptor */

@@ -65,10 +65,14 @@
 #  include <unistd.h>
 #endif
 
+#define struct_stat struct stat
+
 #ifdef __BIONIC__               /* Android */
 #if defined(__ANDROID_API__) && __ANDROID_API__ >= 21
 #undef fstat
 #define fstat fstat64
+#undef struct_stat
+#define struct_stat struct stat64
 #endif
 #endif
 
@@ -430,7 +434,7 @@ gst_file_src_is_seekable (GstBaseSrc * basesrc)
 static gboolean
 gst_file_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 {
-  struct stat stat_results;
+  struct_stat stat_results;
   GstFileSrc *src;
 
   src = GST_FILE_SRC (basesrc);
@@ -460,7 +464,7 @@ static gboolean
 gst_file_src_start (GstBaseSrc * basesrc)
 {
   GstFileSrc *src = GST_FILE_SRC (basesrc);
-  struct stat stat_results;
+  struct_stat stat_results;
 
   if (src->filename == NULL || src->filename[0] == '\0')
     goto no_filename;

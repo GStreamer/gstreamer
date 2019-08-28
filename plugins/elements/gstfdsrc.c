@@ -80,10 +80,14 @@
 
 #include "gstfdsrc.h"
 
+#define struct_stat struct stat
+
 #ifdef __BIONIC__               /* Android */
 #if defined(__ANDROID_API__) && __ANDROID_API__ >= 21
 #undef fstat
 #define fstat fstat64
+#undef struct_stat
+#define struct_stat struct stat64
 #endif
 #endif
 
@@ -208,7 +212,7 @@ gst_fd_src_dispose (GObject * obj)
 static void
 gst_fd_src_update_fd (GstFdSrc * src, guint64 size)
 {
-  struct stat stat_results;
+  struct_stat stat_results;
 
   GST_DEBUG_OBJECT (src, "fdset %p, old_fd %d, new_fd %d", src->fdset, src->fd,
       src->new_fd);
@@ -544,7 +548,7 @@ static gboolean
 gst_fd_src_get_size (GstBaseSrc * bsrc, guint64 * size)
 {
   GstFdSrc *src = GST_FD_SRC (bsrc);
-  struct stat stat_results;
+  struct_stat stat_results;
 
   if (src->size != -1) {
     *size = src->size;
