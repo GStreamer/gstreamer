@@ -21,7 +21,6 @@
 #define __GST_CORE_VIDEO_TEXTURE_CACHE_H__
 
 #include <gst/video/gstvideometa.h>
-#include <gst/gl/gl.h>
 #include "corevideomemory.h"
 
 G_BEGIN_DECLS
@@ -38,12 +37,6 @@ typedef struct _GstVideoTextureCache
 {
   GObject parent;
 
-  GstGLContext *ctx;
-#if HAVE_IOS
-  CVOpenGLESTextureCacheRef cache;
-#else
-  GstBufferPool *pool;
-#endif
   GstVideoInfo input_info;
   GstVideoInfo output_info;
 
@@ -55,9 +48,17 @@ typedef struct _GstVideoTextureCache
 typedef struct _GstVideoTextureCacheClass
 {
   GObjectClass parent_class;
+
+  void              (*set_format)           (GstVideoTextureCache * cache,
+                                             GstVideoFormat in_format,
+                                             GstCaps * out_caps);
+
+  GstMemory *       (*create_memory)        (GstVideoTextureCache * cache,
+                                             GstAppleCoreVideoPixelBuffer *gpixbuf,
+                                             guint plane,
+                                             gsize size);
 } GstVideoTextureCacheClass;
 
-GstVideoTextureCache *  gst_video_texture_cache_new             (GstGLContext * ctx);
 void                    gst_video_texture_cache_set_format      (GstVideoTextureCache * cache,
                                                                  GstVideoFormat in_format,
                                                                  GstCaps * out_caps);

@@ -32,7 +32,7 @@
 #include <gst/video/video.h>
 #include <gst/gl/gstglcontext.h>
 #include "coremediabuffer.h"
-#include "videotexturecache.h"
+#include "videotexturecache-gl.h"
 
 #define DEFAULT_DEVICE_INDEX  -1
 #define DEFAULT_POSITION      GST_AVF_VIDEO_SOURCE_POSITION_DEFAULT
@@ -1088,15 +1088,19 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   gst_query_parse_allocation (query, &alloc_caps, NULL);
   features = gst_caps_get_features (alloc_caps, 0);
   if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+    GstVideoTextureCacheGL *cache_gl;
+
+    cache_gl = textureCache ? GST_VIDEO_TEXTURE_CACHE_GL (textureCache) : NULL;
+
     gst_gl_context_helper_ensure_context (ctxh);
     GST_INFO_OBJECT (element, "pushing textures, context %p old context %p",
-        ctxh->context, textureCache ? textureCache->ctx : NULL);
-    if (textureCache && textureCache->ctx != ctxh->context) {
+        ctxh->context, cache_gl ? cache_gl->ctx : NULL);
+    if (cache_gl && cache_gl->ctx != ctxh->context) {
       g_object_unref (textureCache);
       textureCache = NULL;
     }
     if (!textureCache)
-      textureCache = gst_video_texture_cache_new (ctxh->context);
+      textureCache = gst_video_texture_cache_gl_new (ctxh->context);
     gst_video_texture_cache_set_format (textureCache, format, alloc_caps);
   }
 

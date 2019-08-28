@@ -25,6 +25,7 @@
 #if !HAVE_IOS
 #include "iosurfacememory.h"
 #endif
+#include "videotexturecache-gl.h"
 
 static const GstMetaInfo *gst_core_video_meta_get_info (void);
 
@@ -107,13 +108,15 @@ _create_glmem (GstAppleCoreVideoPixelBuffer * gpixbuf,
   return gst_video_texture_cache_create_memory (cache, gpixbuf, plane, size);
 #else
   GstIOSurfaceMemory *mem;
-  GstGLFormat tex_format =
-      gst_gl_format_from_video_info (cache->ctx, info, plane);
   CVPixelBufferRef pixel_buf = gpixbuf->buf;
   IOSurfaceRef surface = CVPixelBufferGetIOSurface (pixel_buf);
+  GstGLFormat tex_format;
+  GstVideoTextureCacheGL *cache_gl = GST_VIDEO_TEXTURE_CACHE_GL (cache);
+
+  tex_format = gst_gl_format_from_video_info (cache_gl->ctx, info, plane);
 
   CFRetain (pixel_buf);
-  mem = gst_io_surface_memory_wrapped (cache->ctx,
+  mem = gst_io_surface_memory_wrapped (cache_gl->ctx,
       surface, GST_GL_TEXTURE_TARGET_RECTANGLE, tex_format,
       info, plane, NULL, pixel_buf, (GDestroyNotify) CFRelease);
   return GST_MEMORY_CAST (mem);
@@ -132,7 +135,7 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf,
   UInt32 size;
   GstAppleCoreVideoPixelBuffer *gpixbuf;
   GstMemory *mem = NULL;
-  gboolean do_gl = cache != NULL;
+  gboolean do_gl = GST_IS_VIDEO_TEXTURE_CACHE_GL (cache);
 
   gpixbuf = gst_apple_core_video_pixel_buffer_new (pixel_buf);
 

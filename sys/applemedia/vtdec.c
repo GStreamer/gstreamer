@@ -44,6 +44,7 @@
 #include "vtutil.h"
 #include "corevideobuffer.h"
 #include "coremediabuffer.h"
+#include "videotexturecache-gl.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vtdec_debug_category);
 #define GST_CAT_DEFAULT gst_vtdec_debug_category
@@ -222,7 +223,7 @@ setup_texture_cache (GstVtdec * vtdec, GstGLContext * context)
   g_return_if_fail (vtdec->texture_cache == NULL);
 
   output_state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
-  vtdec->texture_cache = gst_video_texture_cache_new (context);
+  vtdec->texture_cache = gst_video_texture_cache_gl_new (context);
   gst_video_texture_cache_set_format (vtdec->texture_cache,
       GST_VIDEO_FORMAT_NV12, output_state->caps);
   gst_video_codec_state_unref (output_state);
@@ -328,6 +329,11 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
   }
 
   if (err == noErr && output_textures) {
+    GstVideoTextureCacheGL *cache_gl = NULL;
+
+    if (vtdec->texture_cache)
+      cache_gl = GST_VIDEO_TEXTURE_CACHE_GL (vtdec->texture_cache);
+
     /* call this regardless of whether caps have changed or not since a new
      * local context could have become available
      */
@@ -336,11 +342,9 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
     gst_gl_context_helper_ensure_context (vtdec->ctxh);
 
     GST_INFO_OBJECT (vtdec, "pushing textures, context %p old context %p",
-        vtdec->ctxh->context,
-        vtdec->texture_cache ? vtdec->texture_cache->ctx : NULL);
+        vtdec->ctxh->context, cache_gl ? cache_gl->ctx : NULL);
 
-    if (vtdec->texture_cache
-        && vtdec->texture_cache->ctx != vtdec->ctxh->context) {
+    if (cache_gl && cache_gl->ctx != vtdec->ctxh->context) {
       g_object_unref (vtdec->texture_cache);
       vtdec->texture_cache = NULL;
     }

@@ -5,6 +5,7 @@ applemedia_sources = [
     'corevideobuffer.c',
     'coremediabuffer.c',
     'videotexturecache.m',
+    'videotexturecache-gl.m',
     'atdec.c',
     'glcontexthelper.c'
 ]
