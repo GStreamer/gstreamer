@@ -66,7 +66,7 @@ gst_init (&argc, &argv);
 ```
 
 This must always be your first GStreamer command. Among other things,
-`gst_init()`:
+[gst_init]\():
 
 -   Initializes all internal structures
 
@@ -75,19 +75,22 @@ This must always be your first GStreamer command. Among other things,
 -   Executes any command-line option intended for GStreamer
 
 If you always pass your command-line parameters
-`argc` and `argv` to `gst_init()` your application will automatically
+`argc` and `argv` to [gst_init]\() your application will automatically
 benefit from the GStreamer standard command-line options (more on this
 in [Basic tutorial 10: GStreamer tools])
 
 ``` c
 /* Build the pipeline */
-pipeline = gst_parse_launch ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
+pipeline =
+    gst_parse_launch
+    ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm",
+    NULL);
 ```
 
 This line is the heart of this tutorial, and exemplifies **two** key
-points: `gst_parse_launch()` and `playbin`.
+points: [gst_parse_launch]\() and [playbin].
 
-### gst\_parse\_launch
+### [gst_parse_launch]
 
 GStreamer is a framework designed to handle multimedia flows. Media
 travels from the “source” elements (the producers), down to the “sink”
@@ -98,22 +101,23 @@ interconnected elements is called a “pipeline”.
 In GStreamer you usually build the pipeline by manually assembling the
 individual elements, but, when the pipeline is easy enough, and you do
 not need any advanced features, you can take the shortcut:
-`gst_parse_launch()`.
+[gst_parse_launch]\().
 
 This function takes a textual representation of a pipeline and turns it
 into an actual pipeline, which is very handy. In fact, this function is
 so handy there is a tool built completely around it which you will get
 very acquainted with (see [Basic tutorial 10: GStreamer tools][Basic
-tutorial 10: GStreamer tools] to learn about `gst-launch-1.0` and the
-`gst-launch-1.0` syntax).
+tutorial 10: GStreamer tools] to learn about
+[gst-launch-1.0] and the
+[gst-launch-1.0] syntax).
 
-### playbin
+### [playbin]
 
-So, what kind of pipeline are we asking `gst_parse_launch()`to build for
+So, what kind of pipeline are we asking [gst_parse_launch]\() to build for
 us? Here enters the second key point: We are building a pipeline
-composed of a single element called `playbin`.
+composed of a single element called [playbin].
 
-`playbin` is a special element which acts as a source and as a sink, and
+[playbin] is a special element which acts as a source and as a sink, and
 is a whole pipeline. Internally, it creates and connects all the
 necessary elements to play your media, so you do not have to worry about
 it.
@@ -122,9 +126,9 @@ It does not allow the control granularity that a manual pipeline does,
 but, still, it permits enough customization to suffice for a wide range
 of applications. Including this tutorial.
 
-In this example, we are only passing one parameter to `playbin`, which
+In this example, we are only passing one parameter to [playbin], which
 is the URI of the media we want to play. Try changing it to something
-else! Whether it is an `http://` or `file://` URI, `playbin` will
+else! Whether it is an `http://` or `file://` URI, [playbin] will
 instantiate the appropriate GStreamer source transparently!
 
 If you mistype the URI, or the file does not exist, or you are missing a
@@ -143,18 +147,20 @@ think of as the Play/Pause button in your regular DVD player. For now,
 suffice to say that playback will not start unless you set the pipeline
 to the `PLAYING` state.
 
-In this line, `gst_element_set_state()` is setting `pipeline` (our only
+In this line, [gst_element_set_state]\() is setting `pipeline` (our only
 element, remember) to the `PLAYING` state, thus initiating playback.
 
 ``` c
 /* Wait until error or EOS */
 bus = gst_element_get_bus (pipeline);
-gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE, GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+msg =
+    gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+    GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
 ```
 
 These lines will wait until an error occurs or the end of the stream is
-found. `gst_element_get_bus()` retrieves the pipeline's bus, and
-`gst_bus_timed_pop_filtered()` will block until you receive either an
+found. [gst_element_get_bus]\() retrieves the pipeline's bus, and
+[gst_bus_timed_pop_filtered]\() will block until you receive either an
 ERROR or an `EOS` (End-Of-Stream) through that bus. Do not worry much
 about this line, the GStreamer bus is explained in [Basic tutorial 2:
 GStreamer concepts].
@@ -174,7 +180,6 @@ we need to do to tidy up correctly after ourselves.
 /* Free resources */
 if (msg != NULL)
   gst_message_unref (msg);
-
 gst_object_unref (bus);
 gst_element_set_state (pipeline, GST_STATE_NULL);
 gst_object_unref (pipeline);
@@ -183,13 +188,13 @@ gst_object_unref (pipeline);
 Always read the documentation of the functions you use, to know if you
 should free the objects they return after using them.
 
-In this case, `gst_bus_timed_pop_filtered()` returned a message which
-needs to be freed with `gst_message_unref()` (more about messages in
+In this case, [gst_bus_timed_pop_filtered]\() returned a message which
+needs to be freed with [gst_message_unref]\() (more about messages in
 [Basic tutorial 2: GStreamer concepts][Basic tutorial 2: GStreamer
 concepts]).
 
-`gst_element_get_bus()` added a reference to the bus that must be freed
-with `gst_object_unref()`. Setting the pipeline to the NULL state will
+[gst_element_get_bus]\() added a reference to the bus that must be freed
+with [gst_object_unref]\(). Setting the pipeline to the NULL state will
 make sure it frees any resources it has allocated (More about states in
 [Basic tutorial 3: Dynamic pipelines]). Finally, unreferencing the
 pipeline will destroy it, and all its contents.
@@ -203,18 +208,18 @@ serves as an example of how powerful this framework is!
 
 Let's recap a bit. Today we have learned:
 
--   How to initialize GStreamer using `gst_init()`.
+-   How to initialize GStreamer using [gst_init]\().
 
 -   How to quickly build a pipeline from a textual description using
-    `gst_parse_launch()`.
+    [gst_parse_launch]\().
 
--   How to create an automatic playback pipeline using `playbin`.
+-   How to create an automatic playback pipeline using [playbin].
 
 -   How to signal GStreamer to start playback using
-    `gst_element_set_state()`.
+    [gst_element_set_state]\().
 
 -   How to sit back and relax, while GStreamer takes care of everything,
-    using `gst_element_get_bus()` and `gst_bus_timed_pop_filtered()`.
+    using [gst_element_get_bus]\() and [gst_bus_timed_pop_filtered]\().
 
 The next tutorial will keep introducing more basic GStreamer elements,
 and show you how to build a pipeline manually.
@@ -235,3 +240,12 @@ It has been a pleasure having you here, and see you soon!
   [Basic tutorial 10: GStreamer tools]: tutorials/basic/gstreamer-tools.md
   [Basic tutorial 2: GStreamer concepts]: tutorials/basic/concepts.md
   [Basic tutorial 3: Dynamic pipelines]: tutorials/basic/dynamic-pipelines.md
+  [gst_bus_timed_pop_filtered]: gst_bus_timed_pop_filtered
+  [gst_element_get_bus]: gst_element_get_bus
+  [gst_element_set_state]: gst_element_set_state
+  [gst_init]: gst_init
+  [gst_message_unref]: gst_message_unref
+  [gst_object_unref]: gst_object_unref
+  [gst_parse_launch]: gst_parse_launch
+  [playbin]: playbin
+  [gst-launch-1.0]: tools/gst-launch.md
