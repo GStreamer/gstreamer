@@ -1095,7 +1095,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       gst_video_texture_cache_free (textureCache);
       textureCache = NULL;
     }
-    textureCache = gst_video_texture_cache_new (ctxh->context);
+    if (!textureCache)
+      textureCache = gst_video_texture_cache_new (ctxh->context);
     gst_video_texture_cache_set_format (textureCache, format, alloc_caps);
   }
 
