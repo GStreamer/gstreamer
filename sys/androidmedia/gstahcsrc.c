@@ -67,6 +67,7 @@
 #endif
 
 #include <gst/video/video.h>
+#define GST_USE_UNSTABLE_API
 #include <gst/interfaces/photography.h>
 
 #include "gstjniutils.h"
