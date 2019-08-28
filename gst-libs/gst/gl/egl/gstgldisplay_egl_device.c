@@ -42,6 +42,10 @@
 #include "gstegl.h"
 #include "gstglmemoryegl.h"
 
+#ifndef EGL_DEVICE_EXT
+typedef void *EGLDeviceEXT;
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 #define GST_CAT_DEFAULT gst_gl_display_debug
 
