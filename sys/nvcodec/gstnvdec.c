@@ -806,6 +806,8 @@ gst_nvdec_stop (GstVideoDecoder * decoder)
     nvdec->output_state = NULL;
   }
 
+  gst_clear_buffer (&nvdec->codec_data);
+
   return TRUE;
 }
 
@@ -867,6 +869,19 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   }
 
   gst_cuda_context_pop (NULL);
+
+  /* store codec data */
+  if (ret && nvdec->input_state->caps) {
+    const GValue *codec_data_value;
+    GstStructure *str;
+
+    str = gst_caps_get_structure (nvdec->input_state->caps, 0);
+    codec_data_value = gst_structure_get_value (str, "codec_data");
+    if (codec_data_value && GST_VALUE_HOLDS_BUFFER (codec_data_value)) {
+      GstBuffer *codec_data = gst_value_get_buffer (codec_data_value);
+      gst_buffer_replace (&nvdec->codec_data, codec_data);
+    }
+  }
 
   return ret;
 }
@@ -1077,16 +1092,28 @@ static GstFlowReturn
 gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 {
   GstNvDec *nvdec = GST_NVDEC (decoder);
+  GstNvDecClass *klass = GST_NVDEC_GET_CLASS (nvdec);
   GstMapInfo map_info = GST_MAP_INFO_INIT;
   CUVIDSOURCEDATAPACKET packet = { 0, };
+  GstBuffer *in_buffer;
 
   GST_LOG_OBJECT (nvdec, "handle frame");
 
   /* initialize with zero to keep track of frames */
   gst_video_codec_frame_set_user_data (frame, GUINT_TO_POINTER (0), NULL);
 
-  if (!gst_buffer_map (frame->input_buffer, &map_info, GST_MAP_READ)) {
+  in_buffer = gst_buffer_ref (frame->input_buffer);
+  if (GST_BUFFER_IS_DISCONT (frame->input_buffer)) {
+    packet.flags = CUVID_PKT_DISCONTINUITY;
+    if (nvdec->codec_data && klass->codec_type == cudaVideoCodec_MPEG4) {
+      in_buffer = gst_buffer_append (gst_buffer_ref (nvdec->codec_data),
+          in_buffer);
+    }
+  }
+
+  if (!gst_buffer_map (in_buffer, &map_info, GST_MAP_READ)) {
     GST_ERROR_OBJECT (nvdec, "failed to map input buffer");
+    gst_buffer_unref (in_buffer);
     gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
@@ -1094,10 +1121,7 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   packet.payload_size = (gulong) map_info.size;
   packet.payload = map_info.data;
   packet.timestamp = frame->pts;
-  packet.flags = CUVID_PKT_TIMESTAMP;
-
-  if (GST_BUFFER_IS_DISCONT (frame->input_buffer))
-    packet.flags |= CUVID_PKT_DISCONTINUITY;
+  packet.flags |= CUVID_PKT_TIMESTAMP;
 
   nvdec->state = GST_NVDEC_STATE_PARSE;
   nvdec->last_ret = GST_FLOW_OK;
@@ -1105,7 +1129,8 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   if (!gst_cuda_result (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
 
-  gst_buffer_unmap (frame->input_buffer, &map_info);
+  gst_buffer_unmap (in_buffer, &map_info);
+  gst_buffer_unref (in_buffer);
   gst_video_codec_frame_unref (frame);
 
   return nvdec->last_ret;

@@ -87,6 +87,8 @@ struct _GstNvDec
   GstFlowReturn last_ret;
   GstNvDecState state;
   GstNvDecMemType mem_type;
+
+  GstBuffer *codec_data;
 };
 
 struct _GstNvDecClass
