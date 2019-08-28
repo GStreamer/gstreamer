@@ -377,8 +377,11 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
             "%s port %u got buffer flags 0x%08x (%s)", comp->name, port->index,
             (guint) flags, gst_omx_buffer_flags_to_string (flags));
         if ((flags & OMX_BUFFERFLAG_EOS)
-            && port->port_def.eDir == OMX_DirOutput)
+            && port->port_def.eDir == OMX_DirOutput && !port->eos) {
+          GST_DEBUG_OBJECT (comp->parent, "%s port %u is EOS", comp->name,
+              port->index);
           port->eos = TRUE;
+        }
 
         break;
       }
@@ -412,8 +415,11 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
               buf, buf->omx_buf->pBuffer);
 
           if ((buf->omx_buf->nFlags & OMX_BUFFERFLAG_EOS)
-              && port->port_def.eDir == OMX_DirOutput)
+              && port->port_def.eDir == OMX_DirOutput && !port->eos) {
+            GST_DEBUG_OBJECT (comp->parent, "%s port %u is EOS", comp->name,
+                port->index);
             port->eos = TRUE;
+          }
         }
 
         /* If an input port is managed by a pool, the buffer will be ready to be
