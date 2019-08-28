@@ -227,6 +227,8 @@ _gst_egl_image_free (GstMiniObject * object)
         (GstGLContextThreadFunc) _gst_egl_image_free_thread, image);
     gst_object_unref (image->context);
   }
+
+  g_free (image);
 }
 
 static GstMiniObject *
