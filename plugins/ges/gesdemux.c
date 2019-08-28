@@ -628,6 +628,9 @@ ges_demux_init (GESDemux * self)
 
   SUPRESS_UNUSED_WARNING (GES_DEMUX);
   SUPRESS_UNUSED_WARNING (GES_IS_DEMUX);
+#if defined(g_autoptr)
+  SUPRESS_UNUSED_WARNING (glib_autoptr_cleanup_GESDemux);
+#endif
 
   self->sinkpad =
       gst_pad_new_from_template (gst_element_get_pad_template (GST_ELEMENT
