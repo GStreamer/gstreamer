@@ -270,7 +270,7 @@ gst_gl_context_egl_dump_config (GstGLContextEGL * egl, EGLConfig config)
     g_assert (i < MAX_SURFACE);
 
     surface_str = g_strjoinv ("|", (char **) surface_values);
-    GST_DEBUG_OBJECT (egl, "Surface for %s", surface_str);
+    GST_DEBUG_OBJECT (egl, "Surface for (0x%x) %s", surface, surface_str);
     g_free (surface_str);
 #undef MAX_RENDERABLE
   }
@@ -405,7 +405,7 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
 {
   gboolean create_context;
   EGLint numConfigs;
-  gint i = 0;
+  gint i;
   EGLint config_attrib[20];
   EGLint egl_api = 0;
   EGLBoolean ret = EGL_FALSE;
@@ -441,6 +441,8 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
   } else
     egl_api = EGL_OPENGL_BIT;
 
+try_again:
+  i = 0;
   config_attrib[i++] = EGL_SURFACE_TYPE;
   config_attrib[i++] = surface_type;
   config_attrib[i++] = EGL_RENDERABLE_TYPE;
@@ -464,17 +466,33 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GstGLAPI gl_api,
   ret = eglChooseConfig (egl->egl_display, config_attrib,
       &egl->egl_config, 1, &numConfigs);
 
+  if (ret && numConfigs == 0) {
+    if (surface_type == EGL_PBUFFER_BIT) {
+      surface_type = EGL_WINDOW_BIT;
+      GST_TRACE_OBJECT (egl, "Retrying config with window bit");
+      goto try_again;
+    }
+  }
+
   if (ret && numConfigs == 1) {
     GST_INFO ("config set: %" G_GUINTPTR_FORMAT ", %u",
         (guintptr) egl->egl_config, (unsigned int) numConfigs);
   } else {
-    g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
-        "Failed to set window configuration: %s",
-        gst_egl_get_error_string (eglGetError ()));
+    if (!ret) {
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_WRONG_CONFIG, "Failed to choose EGLConfig: %s",
+          gst_egl_get_error_string (eglGetError ()));
+    } else if (numConfigs <= 1) {
+      g_set_error_literal (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
+          "Could not find a compatible EGLConfig:");
+    } else {
+      g_warn_if_reached ();
+    }
     goto failure;
   }
 
-  GST_DEBUG_OBJECT (egl, "chosen EGLConfig");
+  GST_DEBUG_OBJECT (egl, "chosen EGLConfig:");
   gst_gl_context_egl_dump_config (egl, egl->egl_config);
 
   return TRUE;
@@ -612,6 +630,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   }
 
   egl->egl_exts = eglQueryString (egl->egl_display, EGL_EXTENSIONS);
+  GST_DEBUG_OBJECT (egl, "Have EGL extensions: %s", egl->egl_exts);
 
   gst_gl_context_egl_dump_all_configs (egl);
 
