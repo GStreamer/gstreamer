@@ -48,7 +48,7 @@ typedef enum _ValidateFlowMode
   VALIDATE_FLOW_MODE_WRITING_ACTUAL_RESULTS
 } ValidateFlowMode;
 
-typedef struct _ValidateFlowOverride
+struct _ValidateFlowOverride
 {
   GstValidateOverride parent;
 
@@ -72,7 +72,7 @@ typedef struct _ValidateFlowOverride
   FILE *output_file;
   GMutex output_file_mutex;
 
-} ValidateFlowOverride;
+};
 
 GList *all_overrides = NULL;
 
