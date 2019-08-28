@@ -835,3 +835,70 @@ documentation:
       - $CI_PROJECT_NAME == "gst-python"
       - $CI_PROJECT_NAME == "gst-sharp"
       - $CI_PROJECT_NAME == "gst-build"
+
+#
+# Build an iOS App using the iOS binaries
+#
+.ios universal examples:
+  stage: 'integrate'
+  when: 'manual'
+  variables:
+    EXAMPLES_HOME: ${CI_PROJECT_DIR}/examples
+    # disable codesigning so we don't need developer identities on the CI
+    # machines
+    XCODE_BUILD_ARGS: >
+      CODE_SIGNING_REQUIRED="NO"
+      CODE_SIGN_IDENTITY=""
+      CODE_SIGNING_ALLOWED="NO"
+      CODE_SIGN_ENTITLEMENTS=""
+  script:
+    # install the binaries
+    - installer -pkg gstreamer-1.0-devel-*-ios-universal.pkg -target CurrentUserHomeDirectory -verbose
+
+    - curl -o clone_manifest_ref.py https://gitlab.freedesktop.org/gstreamer/gst-ci/raw/${GST_UPSTREAM_BRANCH}/gitlab/clone_manifest_ref.py
+    - chmod +x clone_manifest_ref.py
+    - ./clone_manifest_ref.py --manifest manifest.xml --project gst-examples --destination ${EXAMPLES_HOME}/gst-examples
+    - ./clone_manifest_ref.py --manifest manifest.xml --project gst-docs --destination ${EXAMPLES_HOME}/gst-docs
+    - rm clone_manifest_ref.py
+
+    # dump some useful information
+    - xcodebuild -version
+    - xcodebuild -showsdks
+
+    # gst-docs ios tutorials
+    - xcodebuild -showBuildSettings -alltargets -project ${EXAMPLES_HOME}/gst-docs/examples/tutorials/xcode\ iOS/GStreamer\ iOS\ Tutorials.xcodeproj
+    - xcodebuild -alltargets -destination generic/platform=iOS -project ${EXAMPLES_HOME}/gst-docs/examples/tutorials/xcode\ iOS/GStreamer\ iOS\ Tutorials.xcodeproj ${XCODE_BUILD_ARGS}
+
+    # gst-examples
+    - xcodebuild -showBuildSettings -alltargets -project ${EXAMPLES_HOME}/gst-examples/playback/player/ios/GstPlay.xcodeproj
+    - xcodebuild -alltargets -destination generic/platform=iOS -project ${EXAMPLES_HOME}/gst-examples/playback/player/ios/GstPlay.xcodeproj ${XCODE_BUILD_ARGS}
+  after_script:
+    - rm -rf ${EXAMPLES_HOME}/gst-examples ${EXAMPLES_HOME}/gst-docs
+  tags:
+    - gst-ios-12.2
+
+ios universal examples:
+  extends: ".ios universal examples"
+  needs:
+    - "build cerbero ios universal"
+    - "manifest"
+  dependencies:
+    - "build cerbero ios universal"
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-build"
+      - $CI_PROJECT_NAME == "gst-omx"
+      - $CI_PROJECT_NAME == "gst-integration-testsuites"
+      - $CI_PROJECT_NAME == "gstreamer-vaapi"
+
+cerbero ios universal examples:
+  extends: ".ios universal examples"
+  needs:
+    - "cerbero ios universal"
+    - "manifest"
+  dependencies:
+    - "cerbero ios universal"
+  only:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
