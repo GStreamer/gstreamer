@@ -2177,7 +2177,8 @@ retry:
   if (port->port_def.eDir == OMX_DirOutput && port->eos) {
     if (!g_queue_is_empty (&port->pending_buffers)) {
       GST_DEBUG_OBJECT (comp->parent, "%s output port %u is EOS but has "
-          "buffers pending", comp->name, port->index);
+          "%d buffers pending", comp->name, port->index,
+          g_queue_get_length (&port->pending_buffers));
       _buf = g_queue_pop_head (&port->pending_buffers);
 
       ret = GST_OMX_ACQUIRE_BUFFER_OK;
