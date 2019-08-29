@@ -3587,77 +3587,6 @@ enum
 
 static GParamSpec *properties[ENCODER_H264_N_PROPERTIES];
 
-static GstVaapiEncoderStatus
-_gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
-    gint prop_id, const GValue * value)
-{
-  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
-
-  switch (prop_id) {
-    case GST_VAAPI_ENCODER_H264_PROP_MAX_BFRAMES:
-      encoder->num_bframes = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_INIT_QP:
-      encoder->init_qp = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_MIN_QP:
-      encoder->min_qp = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_QP_IP:
-      encoder->qp_ip = g_value_get_int (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_QP_IB:
-      encoder->qp_ib = g_value_get_int (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_NUM_SLICES:
-      encoder->num_slices = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_CABAC:
-      encoder->use_cabac = g_value_get_boolean (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_DCT8X8:
-      encoder->use_dct8x8 = g_value_get_boolean (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_CPB_LENGTH:
-      encoder->cpb_length = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_NUM_VIEWS:
-      encoder->num_views = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_VIEW_IDS:
-      set_view_ids (encoder, value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_AUD:
-      encoder->use_aud = g_value_get_boolean (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_COMPLIANCE_MODE:
-      encoder->compliance_mode = g_value_get_enum (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_NUM_REF_FRAMES:
-      encoder->num_ref_frames = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_MBBRC:
-      encoder->mbbrc = g_value_get_enum (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_TEMPORAL_LEVELS:
-      encoder->temporal_levels = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_PREDICTION_TYPE:
-      encoder->prediction_type = g_value_get_enum (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_MAX_QP:
-      encoder->max_qp = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H264_PROP_QUALITY_FACTOR:
-      encoder->quality_factor = g_value_get_uint (value);
-      break;
-
-    default:
-      return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
-  }
-  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
-}
-
 static void
 gst_vaapi_encoder_h264_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -3830,7 +3759,6 @@ gst_vaapi_encoder_h264_class_init (GstVaapiEncoderH264Class * klass)
   encoder_class->reordering = gst_vaapi_encoder_h264_reordering;
   encoder_class->encode = gst_vaapi_encoder_h264_encode;
   encoder_class->flush = gst_vaapi_encoder_h264_flush;
-  encoder_class->set_property = _gst_vaapi_encoder_h264_set_property;
   encoder_class->get_codec_data = gst_vaapi_encoder_h264_get_codec_data;
   encoder_class->get_pending_reordered =
       gst_vaapi_encoder_h264_get_pending_reordered;
