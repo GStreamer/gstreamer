@@ -238,10 +238,6 @@ GPtrArray *
 gst_vaapi_encoder_properties_append (GPtrArray * props, gint prop_id,
     GParamSpec *pspec);
 
-G_GNUC_INTERNAL
-GPtrArray *
-gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClassData *cdata);
-
 struct _GstVaapiEncoder
 {
   /*< private >*/
