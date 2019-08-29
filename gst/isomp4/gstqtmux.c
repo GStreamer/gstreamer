@@ -5579,7 +5579,8 @@ gst_qt_mux_video_sink_set_caps (GstQTPad * qtpad, GstCaps * caps)
     GstVideoMultiviewFlags flags = 0;
 
     mode = gst_video_multiview_mode_from_caps_string (multiview_mode);
-    gst_structure_get_flagset (structure, "multiview-flags", &flags, NULL);
+    gst_structure_get_flagset (structure,
+        "multiview-flags", (guint *) & flags, NULL);
     switch (mode) {
       case GST_VIDEO_MULTIVIEW_MODE_SIDE_BY_SIDE:
         qtpad->trak->mdia.minf.stbl.svmi =
