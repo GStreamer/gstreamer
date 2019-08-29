@@ -889,8 +889,6 @@ gst_vaapi_encoder_mpeg2_class_init (GstVaapiEncoderMpeg2Class * klass)
 
   encoder_class->class_data = &g_class_data;
   encoder_class->reconfigure = gst_vaapi_encoder_mpeg2_reconfigure;
-  encoder_class->get_default_properties =
-      gst_vaapi_encoder_mpeg2_get_default_properties;
   encoder_class->reordering = gst_vaapi_encoder_mpeg2_reordering;
   encoder_class->encode = gst_vaapi_encoder_mpeg2_encode;
   encoder_class->flush = gst_vaapi_encoder_mpeg2_flush;
@@ -956,43 +954,6 @@ GstVaapiEncoder *
 gst_vaapi_encoder_mpeg2_new (GstVaapiDisplay * display)
 {
   return g_object_new (GST_TYPE_VAAPI_ENCODER_MPEG2, "display", display, NULL);
-}
-
-/**
- * gst_vaapi_encoder_mpeg2_get_default_properties:
- *
- * Determines the set of common and MPEG-2 specific encoder properties.
- * The caller owns an extra reference to the resulting array of
- * #GstVaapiEncoderPropInfo elements, so it shall be released with
- * g_ptr_array_unref() after usage.
- *
- * Return value: the set of encoder properties for #GstVaapiEncoderMpeg2,
- *   or %NULL if an error occurred.
- */
-GPtrArray *
-gst_vaapi_encoder_mpeg2_get_default_properties (void)
-{
-  const GstVaapiEncoderClassData *class_data = &g_class_data;
-  GPtrArray *props;
-
-  props = gst_vaapi_encoder_properties_get_default (class_data);
-  if (!props)
-    return NULL;
-
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_MPEG2_PROP_QUANTIZER,
-      g_param_spec_uint ("quantizer",
-          "Constant Quantizer",
-          "Constant quantizer (if rate-control mode is CQP)",
-          2, 62, 8, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_MPEG2_PROP_MAX_BFRAMES,
-      g_param_spec_uint ("max-bframes", "Max B-Frames",
-          "Number of B-frames between I and P",
-          0, 16, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  return props;
 }
 
 static struct
