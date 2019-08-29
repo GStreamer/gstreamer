@@ -37,20 +37,6 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiEncoderVP8 GstVaapiEncoderVP8;
 typedef struct _GstVaapiEncoderVP8Class GstVaapiEncoderVP8Class;
 
-/**
- * GstVaapiEncoderVP8Prop:
- * @GST_VAAPI_ENCODER_VP8_PROP_LOOP_FILTER_LEVEL: Loop Filter Level(uint).
- * @GST_VAAPI_ENCODER_VP8_PROP_LOOP_SHARPNESS_LEVEL: Sharpness Level(uint).
- * @GST_VAAPI_ENCODER_VP8_PROP_YAC_Q_INDEX: Quantization table index for luma AC(uint).
- *
- * The set of VP8 encoder specific configurable properties.
- */
-typedef enum {
-  GST_VAAPI_ENCODER_VP8_PROP_LOOP_FILTER_LEVEL = -1,
-  GST_VAAPI_ENCODER_VP8_PROP_SHARPNESS_LEVEL = -2,
-  GST_VAAPI_ENCODER_VP8_PROP_YAC_Q_INDEX = -3
-} GstVaapiEncoderVP8Prop;
-
 GType
 gst_vaapi_encoder_vp8_get_type (void) G_GNUC_CONST;
 
