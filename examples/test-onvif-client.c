@@ -156,6 +156,27 @@ done:
   return ret;
 }
 
+static GstClockTime
+get_current_position (Context * ctx, gboolean reverse)
+{
+  GstSample *sample;
+  GstBuffer *buffer;
+  GstClockTime ret;
+
+  g_object_get (ctx->sink, "last-sample", &sample, NULL);
+
+  buffer = gst_sample_get_buffer (sample);
+
+  ret = GST_BUFFER_PTS (buffer);
+
+  if (reverse && GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)))
+    ret += GST_BUFFER_DURATION (buffer);
+
+  gst_sample_unref (sample);
+
+  return ret;
+}
+
 static GstEvent *
 translate_seek_parameters (Context * ctx, SeekParameters * seek_params)
 {
@@ -188,19 +209,22 @@ translate_seek_parameters (Context * ctx, SeekParameters * seek_params)
   stop_type = GST_SEEK_TYPE_SET;
 
   if (!ctx->new_range) {
+    GstClockTime current_position =
+        get_current_position (ctx, seek_params->reverse);
     gst_element_query_position (ctx->pipe, GST_FORMAT_TIME, &cur_pos);
+
     if (seek_params->reverse) {
       stop_type = GST_SEEK_TYPE_SET;
-      stop = cur_pos;
+      stop = current_position;
     } else {
       start_type = GST_SEEK_TYPE_SET;
-      start = cur_pos;
+      start = current_position;
     }
   }
 
   ctx->new_range = FALSE;
 
-  flags = GST_SEEK_FLAG_FLUSH;
+  flags = GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE;
 
   split = g_strsplit (seek_params->frames, "/", 2);
 
