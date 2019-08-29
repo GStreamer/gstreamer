@@ -651,8 +651,6 @@ gst_vaapi_encoder_vp8_class_init (GstVaapiEncoderVP8Class * klass)
 
   encoder_class->class_data = &g_class_data;
   encoder_class->reconfigure = gst_vaapi_encoder_vp8_reconfigure;
-  encoder_class->get_default_properties =
-      gst_vaapi_encoder_vp8_get_default_properties;
   encoder_class->reordering = gst_vaapi_encoder_vp8_reordering;
   encoder_class->encode = gst_vaapi_encoder_vp8_encode;
   encoder_class->flush = gst_vaapi_encoder_vp8_flush;
@@ -717,53 +715,4 @@ GstVaapiEncoder *
 gst_vaapi_encoder_vp8_new (GstVaapiDisplay * display)
 {
   return g_object_new (GST_TYPE_VAAPI_ENCODER_VP8, "display", display, NULL);
-}
-
-/**
- * gst_vaapi_encoder_vp8_get_default_properties:
- *
- * Determines the set of common and vp8 specific encoder properties.
- * The caller owns an extra reference to the resulting array of
- * #GstVaapiEncoderPropInfo elements, so it shall be released with
- * g_ptr_array_unref() after usage.
- *
- * Return value: the set of encoder properties for #GstVaapiEncoderVP8,
- *   or %NULL if an error occurred.
- */
-GPtrArray *
-gst_vaapi_encoder_vp8_get_default_properties (void)
-{
-  const GstVaapiEncoderClassData *class_data = &g_class_data;
-  GPtrArray *props;
-
-  props = gst_vaapi_encoder_properties_get_default (class_data);
-  if (!props)
-    return NULL;
-
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_VP8_PROP_LOOP_FILTER_LEVEL,
-      g_param_spec_uint ("loop-filter-level",
-          "Loop Filter Level",
-          "Controls the deblocking filter strength",
-          0, 63, DEFAULT_LOOP_FILTER_LEVEL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_VP8_PROP_SHARPNESS_LEVEL,
-      g_param_spec_uint ("sharpness-level",
-          "Sharpness Level",
-          "Controls the deblocking filter sensitivity",
-          0, 7, DEFAULT_SHARPNESS_LEVEL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_VP8_PROP_YAC_Q_INDEX,
-      g_param_spec_uint ("yac-qi",
-          "Luma AC Quant Table index",
-          "Quantization Table index for Luma AC Coefficients,"
-          " (in default case, yac_qi=4 for key frames and yac_qi=40"
-          " for P frames)",
-          0, 127, DEFAULT_YAC_QI, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  return props;
 }
