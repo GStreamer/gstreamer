@@ -2663,53 +2663,6 @@ gst_vaapi_encoder_h265_finalize (GObject * object)
   G_OBJECT_CLASS (gst_vaapi_encoder_h265_parent_class)->finalize (object);
 }
 
-static GstVaapiEncoderStatus
-_gst_vaapi_encoder_h265_set_property (GstVaapiEncoder * base_encoder,
-    gint prop_id, const GValue * value)
-{
-  GstVaapiEncoderH265 *const encoder = GST_VAAPI_ENCODER_H265 (base_encoder);
-
-  switch (prop_id) {
-    case GST_VAAPI_ENCODER_H265_PROP_MAX_BFRAMES:
-      encoder->num_bframes = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H265_PROP_INIT_QP:
-      encoder->init_qp = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H265_PROP_MIN_QP:
-      encoder->min_qp = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H265_PROP_QP_IP:
-      encoder->qp_ip = g_value_get_int (value);
-      break;
-    case GST_VAAPI_ENCODER_H265_PROP_QP_IB:
-      encoder->qp_ib = g_value_get_int (value);
-      break;
-    case GST_VAAPI_ENCODER_H265_PROP_NUM_SLICES:
-      encoder->num_slices = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H265_PROP_CPB_LENGTH:
-      encoder->cpb_length = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H265_PROP_NUM_REF_FRAMES:
-      encoder->num_ref_frames = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_H265_PROP_MBBRC:
-      encoder->mbbrc = g_value_get_enum (value);
-      break;
-    case GST_VAAPI_ENCODER_H265_PROP_LOW_DELAY_B:
-      encoder->low_delay_b = g_value_get_boolean (value);
-      break;
-    case GST_VAAPI_ENCODER_H265_PROP_MAX_QP:
-      encoder->max_qp = g_value_get_uint (value);
-      break;
-
-    default:
-      return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
-  }
-  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
-}
-
 /**
  * @ENCODER_H265_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
  * @ENCODER_H265_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
@@ -2873,7 +2826,6 @@ gst_vaapi_encoder_h265_class_init (GstVaapiEncoderH265Class * klass)
   encoder_class->reordering = gst_vaapi_encoder_h265_reordering;
   encoder_class->encode = gst_vaapi_encoder_h265_encode;
   encoder_class->flush = gst_vaapi_encoder_h265_flush;
-  encoder_class->set_property = _gst_vaapi_encoder_h265_set_property;
   encoder_class->get_codec_data = gst_vaapi_encoder_h265_get_codec_data;
   encoder_class->get_pending_reordered =
       gst_vaapi_encoder_h265_get_pending_reordered;

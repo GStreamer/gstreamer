@@ -38,38 +38,6 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiEncoderH265 GstVaapiEncoderH265;
 typedef struct _GstVaapiEncoderH265Class GstVaapiEncoderH265Class;
 
-/**
- * GstVaapiEncoderH265Prop:
- * @GST_VAAPI_ENCODER_H265_PROP_MAX_BFRAMES: Number of B-frames between I
- *   and P (uint).
- * @GST_VAAPI_ENCODER_H265_PROP_INIT_QP: Initial quantizer value (uint).
- * @GST_VAAPI_ENCODER_H265_PROP_MIN_QP: Minimal quantizer value (uint).
- * @GST_VAAPI_ENCODER_H265_PROP_NUM_SLICES: Number of slices per frame (uint).
- * @GST_VAAPI_ENCODER_H265_PROP_NUM_REF_FRAMES: Maximum number of reference frames.
- * @GST_VAAPI_ENCODER_H265_PROP_CPB_LENGTH: Length of the CPB buffer
- *   in milliseconds (uint).
- * @GST_VAAPI_ENCODER_H265_PROP_MBBRC: Macroblock level Bitrate Control.
- * @GST_VAAPI_ENCODER_H265_PROP_QP_IP: Difference of QP between I and P frame.
- * @GST_VAAPI_ENCODER_H265_PROP_QP_IB: Difference of QP between I and B frame.
- * @GST_VAAPI_ENCODER_H265_PROP_LOW_DELAY_B: use low delay b feature.
- * @GST_VAAPI_ENCODER_H265_PROP_MAX_QP: Maximal quantizer value (uint).
- *
- * The set of H.265 encoder specific configurable properties.
- */
-typedef enum {
-  GST_VAAPI_ENCODER_H265_PROP_MAX_BFRAMES = -1,
-  GST_VAAPI_ENCODER_H265_PROP_INIT_QP = -2,
-  GST_VAAPI_ENCODER_H265_PROP_MIN_QP = -3,
-  GST_VAAPI_ENCODER_H265_PROP_NUM_SLICES = -4,
-  GST_VAAPI_ENCODER_H265_PROP_NUM_REF_FRAMES = -5,
-  GST_VAAPI_ENCODER_H265_PROP_CPB_LENGTH = -7,
-  GST_VAAPI_ENCODER_H265_PROP_MBBRC = -8,
-  GST_VAAPI_ENCODER_H265_PROP_QP_IP = -9,
-  GST_VAAPI_ENCODER_H265_PROP_QP_IB = -10,
-  GST_VAAPI_ENCODER_H265_PROP_LOW_DELAY_B = -11,
-  GST_VAAPI_ENCODER_H265_PROP_MAX_QP = -12,
-} GstVaapiEncoderH265Prop;
-
 GType
 gst_vaapi_encoder_h265_get_type (void) G_GNUC_CONST;
 
