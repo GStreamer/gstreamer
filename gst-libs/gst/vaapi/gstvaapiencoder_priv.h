@@ -321,12 +321,6 @@ struct _GstVaapiEncoderClass
   const GstVaapiEncoderClassData *class_data;
 
   GstVaapiEncoderStatus (*reconfigure)  (GstVaapiEncoder * encoder);
-
-  GPtrArray *           (*get_default_properties) (void);
-  GstVaapiEncoderStatus (*set_property) (GstVaapiEncoder * encoder,
-                                         gint prop_id,
-                                         const GValue * value);
-
   GstVaapiEncoderStatus (*reordering)   (GstVaapiEncoder * encoder,
                                          GstVideoCodecFrame * in,
                                          GstVaapiEncPicture ** out);
