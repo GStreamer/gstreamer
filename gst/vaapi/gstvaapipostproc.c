@@ -1142,7 +1142,8 @@ ensure_allowed_sinkpad_caps (GstVaapiPostproc * postproc)
     if (!structure)
       continue;
 
-    gst_vaapi_filter_append_caps (postproc->filter, structure);
+    if (postproc->filter)
+      gst_vaapi_filter_append_caps (postproc->filter, structure);
   }
 
   postproc->allowed_sinkpad_caps = out_caps;
