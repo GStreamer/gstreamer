@@ -123,32 +123,6 @@ typedef enum {
 } GstVaapiEncoderMbbrc;
 
 /**
- * GstVaapiEncoderProp:
- * @GST_VAAPI_ENCODER_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
- * @GST_VAAPI_ENCODER_PROP_BITRATE: Bitrate expressed in kbps (uint).
- * @GST_VAAPI_ENCODER_PROP_TARGET_PERCENTAGE: Desired target percentage of
- *  bitrate for variable rate controls.
- * @GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD: The maximal distance
- *   between two keyframes (uint).
- * @GST_VAAPI_ENCODER_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
- * @GST_VAAPI_ENCODER_PROP_DEFAULT_ROI_VALUE: The default delta qp to apply
- *   to each region of interest.
- * @GST_VAAPI_ENCODER_PROP_TRELLIS: Use trellis quantization method (gboolean).
- *
- * The set of configurable properties for the encoder.
- */
-typedef enum {
-  GST_VAAPI_ENCODER_PROP_RATECONTROL = 1,
-  GST_VAAPI_ENCODER_PROP_BITRATE,
-  GST_VAAPI_ENCODER_PROP_TARGET_PERCENTAGE,
-  GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD,
-  GST_VAAPI_ENCODER_PROP_TUNE,
-  GST_VAAPI_ENCODER_PROP_QUALITY_LEVEL,
-  GST_VAAPI_ENCODER_PROP_DEFAULT_ROI_VALUE,
-  GST_VAAPI_ENCODER_PROP_TRELLIS
-} GstVaapiEncoderProp;
-
-/**
  * GstVaapiEncoderPropInfo:
  * @prop: the #GstVaapiEncoderProp
  * @pspec: the #GParamSpec describing the associated configurable value
@@ -183,10 +157,6 @@ gst_vaapi_encoder_get_codec_data (GstVaapiEncoder * encoder,
 GstVaapiEncoderStatus
 gst_vaapi_encoder_set_codec_state (GstVaapiEncoder * encoder,
     GstVideoCodecState * state);
-
-GstVaapiEncoderStatus
-gst_vaapi_encoder_set_property (GstVaapiEncoder * encoder, gint prop_id,
-    const GValue * value);
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_set_rate_control (GstVaapiEncoder * encoder,

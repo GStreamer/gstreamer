@@ -67,8 +67,9 @@ prop_free (GstVaapiEncoderPropData * prop)
 }
 
 /* Helper function to lookup the supplied property specification */
-static GParamSpec *
-prop_find_pspec (GstVaapiEncoder * encoder, gint prop_id)
+__attribute__ ((unused))
+     static GParamSpec *prop_find_pspec (GstVaapiEncoder * encoder,
+    gint prop_id)
 {
   GPtrArray *const props = encoder->properties;
   guint i;
@@ -1045,116 +1046,6 @@ gst_vaapi_encoder_set_codec_state (GstVaapiEncoder * encoder,
   return gst_vaapi_encoder_reconfigure_internal (encoder);
 }
 
-/**
- * gst_vaapi_encoder_set_property:
- * @encoder: a #GstVaapiEncoder
- * @prop_id: the id of the property to change
- * @value: the new value to set
- *
- * Update the requested property, designed by @prop_id, with the
- * supplied @value. A @NULL value argument resets the property to its
- * default value.
- *
- * Return value: a #GstVaapiEncoderStatus
- */
-static GstVaapiEncoderStatus
-set_property (GstVaapiEncoder * encoder, gint prop_id, const GValue * value)
-{
-  GstVaapiEncoderStatus status =
-      GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
-
-  g_assert (value != NULL);
-
-  /* Handle codec-specific properties */
-  if (prop_id < 0) {
-    GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
-
-    if (klass->set_property) {
-      if (encoder->num_codedbuf_queued > 0)
-        goto error_operation_failed;
-      status = klass->set_property (encoder, prop_id, value);
-    }
-    return status;
-  }
-
-  /* Handle common properties */
-  switch (prop_id) {
-    case GST_VAAPI_ENCODER_PROP_RATECONTROL:
-      status = gst_vaapi_encoder_set_rate_control (encoder,
-          g_value_get_enum (value));
-      break;
-    case GST_VAAPI_ENCODER_PROP_BITRATE:
-      status = gst_vaapi_encoder_set_bitrate (encoder,
-          g_value_get_uint (value));
-      break;
-    case GST_VAAPI_ENCODER_PROP_TARGET_PERCENTAGE:
-      status = gst_vaapi_encoder_set_target_percentage (encoder,
-          g_value_get_uint (value));
-      break;
-    case GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD:
-      status = gst_vaapi_encoder_set_keyframe_period (encoder,
-          g_value_get_uint (value));
-      break;
-    case GST_VAAPI_ENCODER_PROP_TUNE:
-      status = gst_vaapi_encoder_set_tuning (encoder, g_value_get_enum (value));
-      break;
-    case GST_VAAPI_ENCODER_PROP_QUALITY_LEVEL:
-      status = gst_vaapi_encoder_set_quality_level (encoder,
-          g_value_get_uint (value));
-      break;
-    case GST_VAAPI_ENCODER_PROP_DEFAULT_ROI_VALUE:
-      encoder->default_roi_value = g_value_get_int (value);
-      status = GST_VAAPI_ENCODER_STATUS_SUCCESS;
-      break;
-    case GST_VAAPI_ENCODER_PROP_TRELLIS:
-      status =
-          gst_vaapi_encoder_set_trellis (encoder, g_value_get_boolean (value));
-      break;
-  }
-  return status;
-
-  /* ERRORS */
-error_operation_failed:
-  {
-    GST_ERROR ("could not change codec state after encoding started");
-    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
-  }
-}
-
-GstVaapiEncoderStatus
-gst_vaapi_encoder_set_property (GstVaapiEncoder * encoder, gint prop_id,
-    const GValue * value)
-{
-  GstVaapiEncoderStatus status;
-  GValue default_value = G_VALUE_INIT;
-
-  g_return_val_if_fail (encoder != NULL,
-      GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER);
-
-  if (!value) {
-    GParamSpec *const pspec = prop_find_pspec (encoder, prop_id);
-    if (!pspec)
-      goto error_invalid_property;
-
-    g_value_init (&default_value, pspec->value_type);
-    g_param_value_set_default (pspec, &default_value);
-    value = &default_value;
-  }
-
-  status = set_property (encoder, prop_id, value);
-
-  if (default_value.g_type)
-    g_value_unset (&default_value);
-  return status;
-
-  /* ERRORS */
-error_invalid_property:
-  {
-    GST_ERROR ("unsupported property (%d)", prop_id);
-    return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
-  }
-}
-
 /* Determine the supported rate control modes */
 static guint
 get_rate_control_mask (GstVaapiEncoder * encoder)
@@ -1454,7 +1345,7 @@ enum
 static GParamSpec *properties[ENCODER_N_PROPERTIES];
 
 static void
-_gst_vaapi_encoder_set_property (GObject * object, guint prop_id,
+gst_vaapi_encoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
@@ -1505,7 +1396,7 @@ _gst_vaapi_encoder_set_property (GObject * object, guint prop_id,
 }
 
 static void
-_gst_vaapi_encoder_get_property (GObject * object, guint prop_id,
+gst_vaapi_encoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
@@ -1580,50 +1471,13 @@ gst_vaapi_encoder_finalize (GObject * object)
   G_OBJECT_CLASS (gst_vaapi_encoder_parent_class)->finalize (object);
 }
 
-__attribute__ ((unused))
-     static void
-         encoder_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
-
-  switch (prop_id) {
-    case ENCODER_PROP_DISPLAY:
-      g_assert (encoder->display == NULL);
-      encoder->display = g_value_dup_object (value);
-      g_assert (encoder->display != NULL);
-      encoder->va_display = GST_VAAPI_DISPLAY_VADISPLAY (encoder->display);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-__attribute__ ((unused))
-     static void
-         encoder_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
-
-  switch (prop_id) {
-    case ENCODER_PROP_DISPLAY:
-      g_value_set_object (value, encoder->display);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
 static void
 gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
 {
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
 
-  object_class->set_property = _gst_vaapi_encoder_set_property;
-  object_class->get_property = _gst_vaapi_encoder_get_property;
+  object_class->set_property = gst_vaapi_encoder_set_property;
+  object_class->get_property = gst_vaapi_encoder_get_property;
   object_class->finalize = gst_vaapi_encoder_finalize;
 
   /**
