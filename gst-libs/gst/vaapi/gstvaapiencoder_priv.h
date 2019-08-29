@@ -221,23 +221,6 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiEncoderClass GstVaapiEncoderClass;
 typedef struct _GstVaapiEncoderClassData GstVaapiEncoderClassData;
 
-/* Private GstVaapiEncoderPropInfo definition */
-typedef struct {
-  gint prop;
-  GParamSpec *pspec;
-} GstVaapiEncoderPropData;
-
-#define GST_VAAPI_ENCODER_PROPERTIES_APPEND(props, id, pspec) do {      \
-    props = gst_vaapi_encoder_properties_append (props, id, pspec);     \
-    if (!props)                                                         \
-      return NULL;                                                      \
-  } while (0)
-
-G_GNUC_INTERNAL
-GPtrArray *
-gst_vaapi_encoder_properties_append (GPtrArray * props, gint prop_id,
-    GParamSpec *pspec);
-
 struct _GstVaapiEncoder
 {
   /*< private >*/

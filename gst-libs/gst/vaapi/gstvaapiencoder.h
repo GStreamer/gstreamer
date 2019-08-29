@@ -122,18 +122,6 @@ typedef enum {
   GST_VAAPI_ENCODER_MBBRC_OFF = 2,
 } GstVaapiEncoderMbbrc;
 
-/**
- * GstVaapiEncoderPropInfo:
- * @prop: the #GstVaapiEncoderProp
- * @pspec: the #GParamSpec describing the associated configurable value
- *
- * A #GstVaapiEncoderProp descriptor.
- */
-typedef struct {
-  const gint prop;
-  GParamSpec *const pspec;
-} GstVaapiEncoderPropInfo;
-
 GType
 gst_vaapi_encoder_tune_get_type (void) G_GNUC_CONST;
 
