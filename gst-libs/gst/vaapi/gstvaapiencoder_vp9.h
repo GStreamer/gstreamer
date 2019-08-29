@@ -61,8 +61,5 @@ gst_vaapi_encoder_vp9_get_type (void) G_GNUC_CONST;
 GstVaapiEncoder *
 gst_vaapi_encoder_vp9_new (GstVaapiDisplay * display);
 
-GPtrArray *
-gst_vaapi_encoder_vp9_get_default_properties (void);
-
 G_END_DECLS
 #endif /*GST_VAAPI_ENCODER_VP9_H */

@@ -694,8 +694,6 @@ gst_vaapi_encoder_vp9_class_init (GstVaapiEncoderVP9Class * klass)
 
   encoder_class->class_data = &g_class_data;
   encoder_class->reconfigure = gst_vaapi_encoder_vp9_reconfigure;
-  encoder_class->get_default_properties =
-      gst_vaapi_encoder_vp9_get_default_properties;
   encoder_class->reordering = gst_vaapi_encoder_vp9_reordering;
   encoder_class->encode = gst_vaapi_encoder_vp9_encode;
   encoder_class->flush = gst_vaapi_encoder_vp9_flush;
@@ -784,75 +782,4 @@ GstVaapiEncoder *
 gst_vaapi_encoder_vp9_new (GstVaapiDisplay * display)
 {
   return g_object_new (GST_TYPE_VAAPI_ENCODER_VP9, "display", display, NULL);
-}
-
-/**
- * gst_vaapi_encoder_vp9_get_default_properties:
- *
- * Determines the set of common and vp9 specific encoder properties.
- * The caller owns an extra reference to the resulting array of
- * #GstVaapiEncoderPropInfo elements, so it shall be released with
- * g_ptr_array_unref() after usage.
- *
- * Return value: the set of encoder properties for #GstVaapiEncoderVP9,
- *   or %NULL if an error occurred.
- */
-GPtrArray *
-gst_vaapi_encoder_vp9_get_default_properties (void)
-{
-  const GstVaapiEncoderClassData *class_data = &g_class_data;
-  GPtrArray *props;
-
-  props = gst_vaapi_encoder_properties_get_default (class_data);
-  if (!props)
-    return NULL;
-
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_VP9_PROP_LOOP_FILTER_LEVEL,
-      g_param_spec_uint ("loop-filter-level",
-          "Loop Filter Level",
-          "Controls the deblocking filter strength",
-          0, 63, DEFAULT_LOOP_FILTER_LEVEL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_VP9_PROP_SHARPNESS_LEVEL,
-      g_param_spec_uint ("sharpness-level",
-          "Sharpness Level",
-          "Controls the deblocking filter sensitivity",
-          0, 7, DEFAULT_SHARPNESS_LEVEL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_VP9_PROP_YAC_Q_INDEX,
-      g_param_spec_uint ("yac-qi",
-          "Luma AC Quant Table index",
-          "Quantization Table index for Luma AC Coefficients",
-          0, 255, DEFAULT_YAC_QINDEX,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_VP9_PROP_REF_PIC_MODE,
-      g_param_spec_enum ("ref-pic-mode",
-          "RefPic Selection",
-          "Reference Picture Selection Modes",
-          gst_vaapi_encoder_vp9_ref_pic_mode_type (),
-          GST_VAAPI_ENCODER_VP9_REF_PIC_MODE_0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * GstVaapiEncoderVP9:cpb-length:
-   *
-   * The size of the Coded Picture Buffer , which means
-   * the window size in milliseconds.
-   *
-   */
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_VP9_PROP_CPB_LENGTH,
-      g_param_spec_uint ("cpb-length",
-          "CPB Length", "Length of the CPB_buffer/window_size in milliseconds",
-          1, 10000, DEFAULT_CPB_LENGTH,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  return props;
 }
