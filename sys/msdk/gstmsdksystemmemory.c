@@ -199,13 +199,21 @@ gst_msdk_system_memory_new (GstAllocator * base_allocator)
 
   mem->surface = gst_msdk_system_allocator_create_surface (base_allocator);
 
+  if (!mem->surface) {
+    g_slice_free (GstMsdkSystemMemory, mem);
+    return NULL;
+  }
+
   vip = &allocator->image_info;
   gst_memory_init (&mem->parent_instance, 0,
       base_allocator, NULL, GST_VIDEO_INFO_SIZE (vip), 0, 0,
       GST_VIDEO_INFO_SIZE (vip));
 
-  if (!ensure_data (mem))
+  if (!ensure_data (mem)) {
+    g_slice_free (mfxFrameSurface1, mem->surface);
+    g_slice_free (GstMsdkSystemMemory, mem);
     return NULL;
+  }
 
   return GST_MEMORY_CAST (mem);
 }
@@ -278,6 +286,7 @@ gst_msdk_system_allocator_free (GstAllocator * allocator, GstMemory * base_mem)
 
   _aligned_free (mem->cache);
   g_slice_free (mfxFrameSurface1, mem->surface);
+  g_slice_free (GstMsdkSystemMemory, mem);
 }
 
 static GstMemory *

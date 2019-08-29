@@ -166,8 +166,10 @@ gst_msdk_video_memory_new (GstAllocator * base_allocator)
     return NULL;
 
   mem->surface = gst_msdk_video_allocator_get_surface (base_allocator);
-  if (!mem->surface)
+  if (!mem->surface) {
+    g_slice_free (GstMsdkVideoMemory, mem);
     return NULL;
+  }
 
   vip = &allocator->image_info;
   gst_memory_init (&mem->parent_instance, 0,
@@ -366,6 +368,14 @@ gst_msdk_video_allocator_finalize (GObject * object)
 }
 
 static void
+gst_msdk_video_allocator_free (GstAllocator * allocator, GstMemory * base_mem)
+{
+  GstMsdkVideoMemory *const mem = GST_MSDK_VIDEO_MEMORY_CAST (base_mem);
+
+  g_slice_free (GstMsdkVideoMemory, mem);
+}
+
+static void
 gst_msdk_video_allocator_class_init (GstMsdkVideoAllocatorClass * klass)
 {
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
@@ -374,6 +384,7 @@ gst_msdk_video_allocator_class_init (GstMsdkVideoAllocatorClass * klass)
   object_class->finalize = gst_msdk_video_allocator_finalize;
 
   allocator_class->alloc = gst_msdk_video_allocator_alloc;
+  allocator_class->free = gst_msdk_video_allocator_free;
 }
 
 static void
