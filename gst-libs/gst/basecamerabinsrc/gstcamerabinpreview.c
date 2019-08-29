@@ -194,8 +194,6 @@ gst_camerabin_create_preview_pipeline (GstElement * element,
   gst_bus_add_watch (bus, bus_callback, data);
   gst_object_unref (bus);
 
-  g_object_set (data->appsink, "sync", FALSE, NULL);
-
   data->element = element;
   data->filter = filter;
   data->vscale = vscale;
