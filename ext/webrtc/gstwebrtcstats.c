@@ -353,6 +353,7 @@ _get_stats_from_dtls_transport (GstWebRTCBin * webrtc,
   GstStructure *stats;
   gchar *id;
   double ts;
+  gchar *ice_id;
 
   gst_structure_get_double (s, "timestamp", &ts);
 
@@ -395,7 +396,8 @@ _get_stats_from_dtls_transport (GstWebRTCBin * webrtc,
   gst_structure_set (s, id, GST_TYPE_STRUCTURE, stats, NULL);
   gst_structure_free (stats);
 
-  _get_stats_from_ice_transport (webrtc, transport->transport, s);
+  ice_id = _get_stats_from_ice_transport (webrtc, transport->transport, s);
+  g_free (ice_id);
 
   return id;
 }
