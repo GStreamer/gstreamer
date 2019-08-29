@@ -158,6 +158,9 @@ static gboolean gst_nvdec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_nvdec_drain (GstVideoDecoder * decoder);
 static GstFlowReturn gst_nvdec_finish (GstVideoDecoder * decoder);
 static gboolean gst_nvdec_negotiate (GstVideoDecoder * decoder);
+#ifdef HAVE_NVCODEC_GST_GL
+static gboolean gst_nvdec_ensure_gl_context (GstNvDec * nvdec);
+#endif
 
 #define gst_nvdec_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstNvDec, gst_nvdec, GST_TYPE_VIDEO_DECODER);
@@ -471,6 +474,13 @@ gst_nvdec_negotiate (GstVideoDecoder * decoder)
       }
     }
     gst_clear_caps (&caps);
+  }
+
+  if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_GL &&
+      !gst_nvdec_ensure_gl_context (nvdec)) {
+    GST_WARNING_OBJECT (nvdec,
+        "OpenGL context cannot support PBO memory, fallback to system memory");
+    nvdec->mem_type = GST_NVDEC_MEM_TYPE_SYSTEM;
   }
 
   if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_GL) {
@@ -1157,24 +1167,16 @@ gst_nvdec_finish (GstVideoDecoder * decoder)
   return gst_nvdec_drain (decoder);
 }
 
-static gboolean
-gst_nvdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
-{
 #ifdef HAVE_NVCODEC_GST_GL
-  GstNvDec *nvdec = GST_NVDEC (decoder);
-  GstCaps *outcaps;
-  GstBufferPool *pool = NULL;
-  guint n, size, min, max;
-  GstVideoInfo vinfo = { 0, };
-  GstStructure *config;
+static gboolean
+gst_nvdec_ensure_gl_context (GstNvDec * nvdec)
+{
+  if (!nvdec->gl_display) {
+    GST_DEBUG_OBJECT (nvdec, "No available OpenGL display");
+    return FALSE;
+  }
 
-  GST_DEBUG_OBJECT (nvdec, "decide allocation");
-
-  if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_SYSTEM)
-    return GST_VIDEO_DECODER_CLASS (gst_nvdec_parent_class)->decide_allocation
-        (decoder, query);
-
-  if (!gst_gl_query_local_gl_context (GST_ELEMENT (decoder), GST_PAD_SRC,
+  if (!gst_gl_query_local_gl_context (GST_ELEMENT (nvdec), GST_PAD_SRC,
           &nvdec->gl_context)) {
     GST_INFO_OBJECT (nvdec, "failed to query local OpenGL context");
     if (nvdec->gl_context)
@@ -1200,9 +1202,31 @@ gst_nvdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 
   if (!gst_gl_context_check_gl_version (nvdec->gl_context,
           SUPPORTED_GL_APIS, 3, 0)) {
-    GST_ERROR_OBJECT (nvdec, "OpenGL context could not support PBO download");
+    GST_WARNING_OBJECT (nvdec, "OpenGL context could not support PBO download");
     return FALSE;
   }
+
+  return TRUE;
+}
+
+#endif
+
+static gboolean
+gst_nvdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
+{
+#ifdef HAVE_NVCODEC_GST_GL
+  GstNvDec *nvdec = GST_NVDEC (decoder);
+  GstCaps *outcaps;
+  GstBufferPool *pool = NULL;
+  guint n, size, min, max;
+  GstVideoInfo vinfo = { 0, };
+  GstStructure *config;
+
+  GST_DEBUG_OBJECT (nvdec, "decide allocation");
+
+  if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_SYSTEM)
+    return GST_VIDEO_DECODER_CLASS (gst_nvdec_parent_class)->decide_allocation
+        (decoder, query);
 
   gst_query_parse_allocation (query, &outcaps, NULL);
   n = gst_query_get_n_allocation_pools (query);
