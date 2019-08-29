@@ -928,30 +928,6 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   venc_class->sink_query = GST_DEBUG_FUNCPTR (gst_vaapiencode_sink_query);
 }
 
-static inline GPtrArray *
-get_properties (GstVaapiEncodeClass * klass)
-{
-  return klass->get_properties ? klass->get_properties () : NULL;
-}
-
-gboolean
-gst_vaapiencode_class_init_properties (GstVaapiEncodeClass * klass)
-{
-  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
-  GPtrArray *const props = get_properties (klass);
-  guint i;
-
-  if (!props)
-    return FALSE;
-
-  for (i = 0; i < props->len; i++) {
-    GstVaapiEncoderPropInfo *const prop = g_ptr_array_index (props, i);
-    g_object_class_install_property (object_class, PROP_BASE + i, prop->pspec);
-  }
-  g_ptr_array_unref (props);
-  return TRUE;
-}
-
 /* Only used by the drived class */
 void
 gst_vaapiencode_set_property_subclass (GObject * object,

@@ -74,7 +74,6 @@ struct _GstVaapiEncodeClass
   GstVaapiPluginBaseClass parent_class;
 
   guint               prop_num;
-  GPtrArray *         (*get_properties) (void);
   gboolean            (*set_config)     (GstVaapiEncode * encode);
   GstCaps *           (*get_caps)       (GstVaapiEncode * encode);
   GstVaapiEncoder *   (*alloc_encoder)  (GstVaapiEncode * encode,
@@ -98,10 +97,6 @@ struct _GstVaapiEncodeClass
 
 GType
 gst_vaapiencode_get_type (void) G_GNUC_CONST;
-
-G_GNUC_INTERNAL
-gboolean
-gst_vaapiencode_class_init_properties (GstVaapiEncodeClass * encode_class);
 
 G_GNUC_INTERNAL
 void
