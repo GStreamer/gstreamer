@@ -1189,11 +1189,11 @@ done:
  * implementation uses another internal buffer between the audio
  * device.
  *
- * For playback ringbuffers this is the amount of samples transfered from the
+ * For playback ringbuffers this is the amount of samples transferred from the
  * ringbuffer to the device but still not played.
  *
  * For capture ringbuffers this is the amount of samples in the device that are
- * not yet transfered to the ringbuffer.
+ * not yet transferred to the ringbuffer.
  *
  * Returns: The number of samples queued in the audio device.
  *

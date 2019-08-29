@@ -219,7 +219,7 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     priv->gl_params->target = tex_target;
   }
 
-  /* Recalulate the size and offset as we don't add padding between planes. */
+  /* Recalculate the size and offset as we don't add padding between planes. */
   priv->gl_params->v_info->size = 0;
   for (p = 0; p < GST_VIDEO_INFO_N_PLANES (priv->gl_params->v_info); p++) {
     priv->gl_params->v_info->offset[p] = priv->gl_params->v_info->size;

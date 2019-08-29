@@ -158,9 +158,9 @@ _shader_type_to_string (GLenum type)
     case GL_FRAGMENT_SHADER:
       return "fragment";
     case GL_TESS_CONTROL_SHADER:
-      return "tesselation control";
+      return "tessellation control";
     case GL_TESS_EVALUATION_SHADER:
-      return "tesselation evaluation";
+      return "tessellation evaluation";
     case GL_GEOMETRY_SHADER:
       return "geometry";
     case GL_COMPUTE_SHADER:
@@ -526,7 +526,7 @@ _compile_shader (GstGLContext * context, struct compile *data)
  * @stage: a #GstGLSLStage
  * @error: a #GError to use on failure
  *
- * Returns: whether the compilation suceeded
+ * Returns: whether the compilation succeeded
  *
  * Since: 1.8
  */

@@ -26,7 +26,7 @@
  * different names, for example one for transcoding in full HD, another one for
  * low res, etc.. which are defined in the same encoding target.
  *
- * Basically if you wan to encode a stream to send it to, say, youtube you should
+ * Basically if you want to encode a stream to send it to, say, youtube you should
  * have a Youtube encoding target defined in the "online-service" category.
  *
  * ## Encoding target serialization format
@@ -758,7 +758,7 @@ empty_name:
 /**
  * gst_encoding_target_load_from_file:
  * @filepath: (type filename): The file location to load the #GstEncodingTarget from
- * @error: If an error occured, this field will be filled in.
+ * @error: If an error occurred, this field will be filled in.
  *
  * Opens the provided file and returns the contained #GstEncodingTarget.
  *
@@ -862,7 +862,7 @@ gst_encoding_target_subload (gchar * path, const gchar * category,
  * valid for target names).
  * @category: (allow-none): the name of the target category, like
  * #GST_ENCODING_CATEGORY_DEVICE. Can be %NULL
- * @error: If an error occured, this field will be filled in.
+ * @error: If an error occurred, this field will be filled in.
  *
  * Searches for the #GstEncodingTarget with the given name, loads it
  * and returns it.
@@ -975,7 +975,7 @@ invalid_category:
  * gst_encoding_target_save_to_file:
  * @target: a #GstEncodingTarget
  * @filepath: (type filename): the location to store the @target at.
- * @error: If an error occured, this field will be filled in.
+ * @error: If an error occurred, this field will be filled in.
  *
  * Saves the @target to the provided file location.
  *
@@ -1042,7 +1042,7 @@ write_failed:
 /**
  * gst_encoding_target_save:
  * @target: a #GstEncodingTarget
- * @error: If an error occured, this field will be filled in.
+ * @error: If an error occurred, this field will be filled in.
  *
  * Saves the @target to a default user-local directory.
  *

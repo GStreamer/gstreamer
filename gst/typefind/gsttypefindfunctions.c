@@ -3452,7 +3452,7 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
     size = GST_READ_UINT32_BE (data);
     if (size + offset >= G_MAXINT64)
       break;
-    /* check compatible brands rather than ever expaning major brands above */
+    /* check compatible brands rather than ever expanding major brands above */
     if ((STRNCMP (&data[4], "ftyp", 4) == 0) && (size >= 16)) {
       data = gst_type_find_peek (tf, offset, size);
       if (data == NULL)
@@ -4150,7 +4150,7 @@ static GstStaticCaps tiff_le_caps = GST_STATIC_CAPS ("image/tiff, "
     "endianness = (int) LITTLE_ENDIAN");
 #define TIFF_LE_CAPS (gst_static_caps_get(&tiff_le_caps))
 static void
-tiff_type_find (GstTypeFind * tf, gpointer ununsed)
+tiff_type_find (GstTypeFind * tf, gpointer unused)
 {
   const guint8 *data = gst_type_find_peek (tf, 0, 8);
   guint8 le_header[4] = { 0x49, 0x49, 0x2A, 0x00 };
@@ -4169,7 +4169,7 @@ tiff_type_find (GstTypeFind * tf, gpointer ununsed)
 static GstStaticCaps exr_caps = GST_STATIC_CAPS ("image/x-exr");
 #define EXR_CAPS (gst_static_caps_get(&exr_caps))
 static void
-exr_type_find (GstTypeFind * tf, gpointer ununsed)
+exr_type_find (GstTypeFind * tf, gpointer unused)
 {
   const guint8 *data = gst_type_find_peek (tf, 0, 8);
 
@@ -4204,7 +4204,7 @@ static GstStaticCaps pnm_caps = GST_STATIC_CAPS ("image/x-portable-bitmap; "
     ((c) == ' ' || (c) == '\r' || (c) == '\n' || (c) == 't')
 
 static void
-pnm_type_find (GstTypeFind * tf, gpointer ununsed)
+pnm_type_find (GstTypeFind * tf, gpointer unused)
 {
   const gchar *media_type = NULL;
   DataScanCtx c = { 0, NULL, 0 };
@@ -4303,7 +4303,7 @@ static GstStaticCaps sds_caps = GST_STATIC_CAPS ("audio/x-sds");
 
 #define SDS_CAPS (gst_static_caps_get(&sds_caps))
 static void
-sds_type_find (GstTypeFind * tf, gpointer ununsed)
+sds_type_find (GstTypeFind * tf, gpointer unused)
 {
   const guint8 *data = gst_type_find_peek (tf, 0, 4);
   guint8 mask[4] = { 0xFF, 0xFF, 0x80, 0xFF };
@@ -4324,7 +4324,7 @@ static GstStaticCaps ircam_caps = GST_STATIC_CAPS ("audio/x-ircam");
 
 #define IRCAM_CAPS (gst_static_caps_get(&ircam_caps))
 static void
-ircam_type_find (GstTypeFind * tf, gpointer ununsed)
+ircam_type_find (GstTypeFind * tf, gpointer unused)
 {
   const guint8 *data = gst_type_find_peek (tf, 0, 4);
   guint8 mask[4] = { 0xFF, 0xFF, 0xF8, 0xFF };
@@ -4553,7 +4553,7 @@ static GstStaticCaps matroska_caps = GST_STATIC_CAPS ("video/x-matroska");
 
 #define MATROSKA_CAPS (gst_static_caps_get(&matroska_caps))
 static void
-matroska_type_find (GstTypeFind * tf, gpointer ununsed)
+matroska_type_find (GstTypeFind * tf, gpointer unused)
 {
   GstTypeFindProbability prob;
   GstMatroskaInfo info = { 0, };
@@ -4622,7 +4622,7 @@ static GstStaticCaps mxf_caps = GST_STATIC_CAPS ("application/mxf");
  * not contain the partition pack key.
  */
 static void
-mxf_type_find (GstTypeFind * tf, gpointer ununsed)
+mxf_type_find (GstTypeFind * tf, gpointer unused)
 {
   static const guint8 partition_pack_key[] =
       { 0x06, 0x0e, 0x2b, 0x34, 0x02, 0x05, 0x01, 0x01, 0x0d, 0x01, 0x02, 0x01,

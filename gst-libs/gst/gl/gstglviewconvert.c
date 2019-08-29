@@ -1889,7 +1889,7 @@ _do_view_convert_draw (GstGLContext * context, GstGLViewConvert * viewconvert)
 
   gst_gl_shader_use (viewconvert->shader);
 
-  /* FIXME: the auxillary buffer could have a different transform matrix */
+  /* FIXME: the auxiliary buffer could have a different transform matrix */
   {
     GstVideoAffineTransformationMeta *af_meta;
     gfloat matrix[16];
@@ -2079,7 +2079,7 @@ _do_view_convert (GstGLContext * context, GstGLViewConvert * viewconvert)
         || out_tex->tex_format == GST_GL_LUMINANCE_ALPHA
         || out_width != width || out_height != height) {
       /* Luminance formats are not color renderable */
-      /* renderering to a framebuffer only renders the intersection of all
+      /* rendering to a framebuffer only renders the intersection of all
        * the attachments i.e. the smallest attachment size */
       if (!priv->out_tex[j]) {
         GstGLVideoAllocationParams *params;
@@ -2227,7 +2227,7 @@ gst_gl_view_convert_submit_input_buffer (GstGLViewConvert * viewconvert,
   target = &viewconvert->priv->primary_in;
 
   /* For frame-by-frame mode, we need to collect the 2nd eye into
-   * our auxilliary buffer */
+   * our auxiliary buffer */
   if (mode == GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME) {
     if (!GST_BUFFER_FLAG_IS_SET (input, GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE))
       target = &viewconvert->priv->auxilliary_in;

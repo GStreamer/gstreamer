@@ -38,7 +38,7 @@ G_BEGIN_DECLS
  *     any of the requested plugins could be found. Only return this if nothing
  *     has been installed. Return #GST_INSTALL_PLUGINS_PARTIAL_SUCCESS if
  *     some (but not all) of the requested plugins could be installed.
- * @GST_INSTALL_PLUGINS_ERROR: an error occured during the installation. If
+ * @GST_INSTALL_PLUGINS_ERROR: an error occurred during the installation. If
  *     this happens, the  user has already seen an error message and another
  *     one should not be displayed
  * @GST_INSTALL_PLUGINS_CRASHED: the installer had an unclean exit code
@@ -51,7 +51,7 @@ G_BEGIN_DECLS
  *     indicate that everything went fine so far and the provided callback
  *     will be called with the result of the installation later
  * @GST_INSTALL_PLUGINS_INTERNAL_FAILURE: some internal failure has
- *     occured when trying to start the installer
+ *     occurred when trying to start the installer
  * @GST_INSTALL_PLUGINS_HELPER_MISSING: the helper script to call the
  *     actual installer is not installed
  * @GST_INSTALL_PLUGINS_INSTALL_IN_PROGRESS: a previously-started plugin

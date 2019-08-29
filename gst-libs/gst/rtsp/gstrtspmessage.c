@@ -1377,7 +1377,7 @@ parse_auth_credentials (GPtrArray * auth_credentials, const gchar * header,
       continue;
     }
 
-    /* Basic Authorization request has only an unformated blurb following, all
+    /* Basic Authorization request has only an unformatted blurb following, all
      * other variants have comma-separated name=value pairs */
     if (end[0] != '\0' && field == GST_RTSP_HDR_AUTHORIZATION
         && auth_credential->scheme == GST_RTSP_AUTH_BASIC) {

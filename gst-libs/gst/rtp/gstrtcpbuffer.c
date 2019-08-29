@@ -121,7 +121,7 @@ gst_rtcp_buffer_validate_data_internal (guint8 * data, guint len,
     if (data_len < header_len)
       goto wrong_length;
 
-    /* move to next compount packet */
+    /* move to next compound packet */
     data += header_len;
     data_len -= header_len;
 
@@ -561,7 +561,7 @@ gst_rtcp_buffer_add_packet (GstRTCPBuffer * rtcp, GstRTCPType type,
   maxsize = rtcp->map.maxsize;
 
   /* packet->offset is now pointing to the next free offset in the buffer to
-   * start a compount packet. Next we figure out if we have enough free space in
+   * start a compound packet. Next we figure out if we have enough free space in
    * the buffer to continue. */
   len = rtcp_packet_min_length (type);
   if (len == -1)

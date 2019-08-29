@@ -225,7 +225,7 @@ GstEncodingContainerProfile *  gst_encoding_container_profile_new (const gchar *
                                                                    const gchar *preset);
 
 
-/* Invidual stream encodingprofile API */
+/* Individual stream encodingprofile API */
 
 GST_PBUTILS_API
 GstEncodingVideoProfile * gst_encoding_video_profile_new (GstCaps *format,

@@ -632,7 +632,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
             beyond = ipad->map.n_index
                 && ipad->map.index[ipad->map.n_index - 1].offset >= length;
             if (beyond) {
-              GST_WARNING_OBJECT (pad, "Index offsets beyong byte length");
+              GST_WARNING_OBJECT (pad, "Index offsets beyond byte length");
               if (ipad->discont) {
                 /* hole - the index is most likely screwed up */
                 GST_WARNING_OBJECT (ogg, "Discarding entire index");
@@ -1511,7 +1511,7 @@ gst_ogg_demux_estimate_bisection_target (GstOggDemux * ogg, float seek_quality)
   GST_DEBUG_OBJECT (ogg, "Raw best guess: %" G_GINT64_FORMAT, best);
 
   /* offset the guess down as we need to capture the start of the
-     page we are targetting - but only do so if we did not undershoot
+     page we are targeting - but only do so if we did not undershoot
      last time, as we're likely to still do this time */
   if (!ogg->seek_undershot) {
     /* very small packets are packed on pages, so offset by at least
@@ -4026,7 +4026,7 @@ gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
       "bisect begin: %" G_GINT64_FORMAT ", searched: %" G_GINT64_FORMAT
       ", end %" G_GINT64_FORMAT ", chain: %p", begin, searched, end, chain);
 
-  /* the below guards against garbage seperating the last and
+  /* the below guards against garbage separating the last and
    * first pages of two links. */
   while (searched < endsearched) {
     gint64 bisect;

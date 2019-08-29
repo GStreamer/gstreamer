@@ -38,9 +38,9 @@ GQuark gst_glsl_error_quark (void);
 
 /**
  * GstGLSLError:
- * @GST_GLSL_ERROR_COMPILE: Compilation error occured
- * @GST_GLSL_ERROR_LINK: Link error occured
- * @GST_GLSL_ERROR_PROGRAM: General program error occured
+ * @GST_GLSL_ERROR_COMPILE: Compilation error occurred
+ * @GST_GLSL_ERROR_LINK: Link error occurred
+ * @GST_GLSL_ERROR_PROGRAM: General program error occurred
  *
  * Compilation stage that caused an error
  *

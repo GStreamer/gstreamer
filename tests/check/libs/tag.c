@@ -1131,7 +1131,7 @@ GST_START_TEST (test_xmp_formatting)
 
   /* test data */
   list = gst_tag_list_new (GST_TAG_TITLE, "test title",
-      GST_TAG_DESCRIPTION, "test decription",
+      GST_TAG_DESCRIPTION, "test description",
       GST_TAG_KEYWORDS, "keyword1", GST_TAG_KEYWORDS, "keyword2", NULL);
 
   buf = gst_tag_list_to_xmp_buffer (list, FALSE, NULL);
@@ -1144,7 +1144,7 @@ GST_START_TEST (test_xmp_formatting)
   /* check the content */
   fail_unless (g_strrstr_len (text, len, "<?xpacket begin") == text);
   fail_unless (g_strrstr_len (text, len, ">test title<") != NULL);
-  fail_unless (g_strrstr_len (text, len, ">test decription<") != NULL);
+  fail_unless (g_strrstr_len (text, len, ">test description<") != NULL);
   fail_unless (g_strrstr_len (text, len, ">keyword1<") != NULL);
   fail_unless (g_strrstr_len (text, len, ">keyword2<") != NULL);
   fail_unless (g_strrstr_len (text, len, "<?xpacket end") != NULL);

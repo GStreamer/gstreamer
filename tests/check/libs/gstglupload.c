@@ -376,7 +376,7 @@ GST_START_TEST (test_upload_gl_memory)
       "2D");
   gst_caps_unref (out_caps);
 
-  /* try setting the wrong type first tho */
+  /* try setting the wrong type first */
   out_caps = gst_caps_from_string ("video/x-raw(memory:GLMemory),"
       "format=RGBA,width=10,height=10,texture-target=RECTANGLE");
   gst_gl_upload_set_caps (upload, in_caps, out_caps);

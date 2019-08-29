@@ -291,7 +291,7 @@ gst_gl_ensure_element_data (gpointer element, GstGLDisplay ** display_ptr,
   if (gst_gl_display_found (element, *display_ptr))
     goto get_gl_context;
 
-  /* If no neighboor, or application not interested, use system default */
+  /* If no neighbor, or application not interested, use system default */
   display = gst_gl_display_new ();
 
   *display_ptr = display;
@@ -837,7 +837,7 @@ gst_gl_multiply_matrix4 (const gfloat * a, const gfloat * b, gfloat * result)
  * Retrieves the stored 4x4 affine transformation matrix stored in @meta in
  * NDC coordinates. if @meta is NULL, an identity matrix is returned.
  *
- * NDC is a left-handed coordinate sytem
+ * NDC is a left-handed coordinate system
  * - x - [-1, 1] - +ve X moves right
  * - y - [-1, 1] - +ve Y moves up
  * - z - [-1, 1] - +ve Z moves into

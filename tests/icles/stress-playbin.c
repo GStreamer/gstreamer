@@ -42,7 +42,7 @@ play_file (const gint delay, const gchar * uri)
         g_printerr ("Got EOS\n");
         break;
       default:
-        g_printerr ("Got unexpected %s messge\n", GST_MESSAGE_TYPE_NAME (msg));
+        g_printerr ("Got unexpected %s message\n", GST_MESSAGE_TYPE_NAME (msg));
         break;
     }
     gst_message_unref (msg);

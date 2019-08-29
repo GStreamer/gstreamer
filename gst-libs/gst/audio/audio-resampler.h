@@ -117,9 +117,9 @@ typedef enum {
  * GstAudioResamplerFilterInterpolation:
  * @GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_NONE: no interpolation
  * @GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_LINEAR: linear interpolation of the
- *   filter coeficients.
+ *   filter coefficients.
  * @GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC: cubic interpolation of the
- *   filter coeficients.
+ *   filter coefficients.
  *
  * The different filter interpolation methods.
  */
@@ -131,7 +131,7 @@ typedef enum {
 /**
  * GST_AUDIO_RESAMPLER_OPT_FILTER_INTERPOLATION:
  *
- * GST_TYPE_AUDIO_RESAMPLER_INTERPOLATION: how the filter coeficients should be
+ * GST_TYPE_AUDIO_RESAMPLER_INTERPOLATION: how the filter coefficients should be
  *    interpolated.
  * GST_AUDIO_RESAMPLER_FILTER_INTERPOLATION_CUBIC is default.
  */

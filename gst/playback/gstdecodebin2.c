@@ -180,7 +180,7 @@ struct _GstDecodeBin
   gboolean shutdown;            /* if we are shutting down */
   GList *blocked_pads;          /* pads that have set to block */
 
-  gboolean expose_allstreams;   /* Whether to expose unknow type streams or not */
+  gboolean expose_allstreams;   /* Whether to expose unknown type streams or not */
 
   GList *filtered;              /* elements for which error messages are filtered */
   GList *filtered_errors;       /* filtered error messages */
@@ -2442,7 +2442,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         } else {
           GST_WARNING_OBJECT (dbin,
               "The connection speed property %" G_GUINT64_FORMAT " of type %s"
-              " is not usefull not setting it", speed,
+              " is not useful not setting it", speed,
               g_type_name (G_PARAM_SPEC_TYPE (pspec)));
           wrong_type = TRUE;
         }
@@ -3239,7 +3239,7 @@ gst_decode_bin_reset_buffering (GstDecodeBin * dbin)
   if (!dbin->use_buffering)
     return;
 
-  GST_DEBUG_OBJECT (dbin, "Reseting multiqueues buffering");
+  GST_DEBUG_OBJECT (dbin, "Resetting multiqueues buffering");
   if (dbin->decode_chain) {
     CHAIN_MUTEX_LOCK (dbin->decode_chain);
     gst_decode_chain_reset_buffering (dbin->decode_chain);

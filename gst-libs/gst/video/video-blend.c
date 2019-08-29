@@ -319,7 +319,7 @@ gst_video_blend (GstVideoFrame * dest,
   GST_LOG ("blend src %dx%d onto dest %dx%d @ %d,%d", src_width, src_height,
       dest_width, dest_height, x, y);
 
-  /* In case overlay is completely outside the video, dont render */
+  /* In case overlay is completely outside the video, don't render */
   if (x + src_width <= 0 || y + src_height <= 0
       || x >= dest_width || y >= dest_height) {
     goto nothing_to_do;

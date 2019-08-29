@@ -438,7 +438,7 @@ gst_gl_shader_detach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
   g_return_if_fail (GST_IS_GLSL_STAGE (stage));
 
   if (!_gst_glsl_funcs_fill (&shader->priv->vtable, shader->context)) {
-    GST_WARNING_OBJECT (shader, "Failed to retreive required GLSL functions");
+    GST_WARNING_OBJECT (shader, "Failed to retrieve required GLSL functions");
     return;
   }
 
@@ -519,7 +519,7 @@ gst_gl_shader_attach_unlocked (GstGLShader * shader, GstGLSLStage * stage)
   g_return_val_if_fail (GST_IS_GLSL_STAGE (stage), FALSE);
 
   if (!_gst_glsl_funcs_fill (&shader->priv->vtable, shader->context)) {
-    GST_WARNING_OBJECT (shader, "Failed to retreive required GLSL functions");
+    GST_WARNING_OBJECT (shader, "Failed to retrieve required GLSL functions");
     gst_object_ref_sink (stage);
     gst_object_unref (stage);
     return FALSE;
@@ -661,7 +661,7 @@ gst_gl_shader_link (GstGLShader * shader, GError ** error)
 
   if (!_gst_glsl_funcs_fill (&shader->priv->vtable, shader->context)) {
     g_set_error (error, GST_GLSL_ERROR, GST_GLSL_ERROR_PROGRAM,
-        "Failed to retreive required GLSL functions");
+        "Failed to retrieve required GLSL functions");
     GST_OBJECT_UNLOCK (shader);
     return FALSE;
   }
@@ -1279,7 +1279,7 @@ gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)
       shader->context->gl_vtable->GetAttribLocation (shader->priv->
       program_handle, name);
 
-  GST_TRACE_OBJECT (shader, "retreived program %i attribute \'%s\' location %i",
+  GST_TRACE_OBJECT (shader, "retrieved program %i attribute \'%s\' location %i",
       (int) shader->priv->program_handle, name, ret);
 
   return ret;

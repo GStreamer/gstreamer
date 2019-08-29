@@ -134,7 +134,7 @@ static const gchar color_balance_frag_templ[] =
   "void main () {\n"
   "  vec3 yuv;\n"
   /* operations translated from videobalanceand tested with glvideomixer
-   * with one pad's paremeters blend-equation-rgb={subtract,reverse-subtract},
+   * with one pad's parameters blend-equation-rgb={subtract,reverse-subtract},
    * blend-function-src-rgb=src-color and blend-function-dst-rgb=dst-color */
   "  float hue_cos = cos (PI * hue);\n"
   "  float hue_sin = sin (PI * hue);\n"

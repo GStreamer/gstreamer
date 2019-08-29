@@ -4833,7 +4833,7 @@ unpack_NV12_10LE32 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
        * code is a reduce version of:
        * 0: - Read first UV word (UVU)
        *      Unpack U and V
-       * 1: - Resued U/V from 1 (sub-sampling)
+       * 1: - Reused U/V from 1 (sub-sampling)
        * 2: - Unpack remaining U value
        *    - Read following UV word (VUV)
        *    - Unpack V value
@@ -4986,7 +4986,7 @@ unpack_NV16_10LE32 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
        * code is a reduce version of:
        * 0: - Read first UV word (UVU)
        *      Unpack U and V
-       * 1: - Resued U/V from 1 (sub-sampling)
+       * 1: - Reused U/V from 1 (sub-sampling)
        * 2: - Unpack remaining U value
        *    - Read following UV word (VUV)
        *    - Unpack V value

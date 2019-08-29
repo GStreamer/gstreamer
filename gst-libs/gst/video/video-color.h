@@ -244,7 +244,7 @@ void         gst_video_color_range_offsets     (GstVideoColorRange range,
 
 /* conversion between GStreamer color{matrix,transfer,primaries} enum and
  * values defined by ISO/IEC 23001-8 and ITU-T H.273 specification.
- * Also H264 and H265 specifications follow the color{matrix,trasfer,primaries}
+ * Also H264 and H265 specifications follow the color{matrix,transfer,primaries}
  * values */
 
 GST_VIDEO_API

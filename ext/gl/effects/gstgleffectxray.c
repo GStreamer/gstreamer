@@ -75,7 +75,7 @@ gst_gl_effects_xray (GstGLEffects * effects)
   gst_gl_filter_render_to_target_with_shader (filter, effects->intexture,
       effects->midtexture[3], shader);
 
-  /* horizonal convolution */
+  /* horizontal convolution */
   shader = gst_gl_effects_get_fragment_shader (effects, "sobel_hconv3",
       sep_sobel_hconv3_fragment_source_gles2);
   gst_gl_shader_use (shader);

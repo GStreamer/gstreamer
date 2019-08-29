@@ -1158,7 +1158,7 @@ unescape_newlines_br (gchar * read)
 {
   gchar *write = read;
 
-  /* Replace all occurences of '[br]' with a newline as version 2
+  /* Replace all occurrences of '[br]' with a newline as version 2
    * of the subviewer format uses this for newlines */
 
   if (read[0] == '\0' || read[1] == '\0' || read[2] == '\0' || read[3] == '\0')

@@ -1305,7 +1305,7 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
     for (i = 0; i < n_planes; i++) {
       gint hedge;
 
-      /* this is the amout of pixels to add as left padding */
+      /* this is the amount of pixels to add as left padding */
       hedge = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, i, align->padding_left);
       hedge *= GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, i);
 

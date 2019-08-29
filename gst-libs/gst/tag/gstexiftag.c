@@ -609,7 +609,7 @@ gst_tag_list_has_ifd_tags (const GstTagList * taglist,
  * The tag entry is the tag id, the tag type,
  * the count and the offset.
  *
- * The offset is the on the amount of data writen so far, as one
+ * The offset is the on the amount of data written so far, as one
  * can't predict the total bytes that the tag entries will take.
  * This means those fields requires being updated later.
  */

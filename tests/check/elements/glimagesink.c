@@ -244,7 +244,7 @@ GST_START_TEST (test_query_drain)
   gst_object_unref (originpool);
 
   /* At this point the gl pool contains all its buffers. We can
-   * inactivate it to release the textures. Note that only the gl
+   * deactivate it to release the textures. Note that only the gl
    * pool can release the textures properly because it has a
    * reference on the gl context. */
   fail_unless (gst_buffer_pool_set_active (pool, FALSE));

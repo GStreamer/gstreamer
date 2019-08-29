@@ -140,7 +140,7 @@ gst_gl_window_viv_fb_egl_open (GstGLWindow * window, GError ** error)
       window_egl->window_height);
 
   GST_DEBUG
-      ("Opened Vivante FB display succesfully, resolution is (%dx%d), display %p, window %p.",
+      ("Opened Vivante FB display successfully, resolution is (%dx%d), display %p, window %p.",
       window_egl->window_width, window_egl->window_height, (gpointer) display,
       (gpointer) window_egl->win_id);
 

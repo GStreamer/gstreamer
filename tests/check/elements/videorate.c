@@ -231,7 +231,7 @@ GST_START_TEST (test_more)
   fail_unless_equals_int (g_list_length (buffers), 0);
   assert_videorate_stats (videorate, "first buffer", 1, 0, 0, 0);
 
-  /* second buffer; inbetween second and third output frame's timestamp */
+  /* second buffer; in between second and third output frame's timestamp */
   second = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (second) = GST_SECOND * 3 / 50;
   GST_BUFFER_OFFSET (second) = g_rand_int (rand);

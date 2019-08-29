@@ -69,7 +69,7 @@
 }
 
 {
-   <ALSA unitialized access>
+   <ALSA uninitialized access>
    Memcheck:Cond
    obj:/usr/lib/libasound.so.*
    obj:/usr/lib/libasound.so.*
@@ -602,7 +602,7 @@
    ...
 }
 {
-   <unitialized values in nvidia driver>
+   <uninitialized values in nvidia driver>
    Memcheck:Cond
    obj:*libnvidia-glcore.so.*
 }

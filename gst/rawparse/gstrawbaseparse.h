@@ -90,7 +90,7 @@ struct _GstRawBaseParse
  * @get_current_config:        Gets the current configuration. All return values except
  *                             except GST_RAW_BASE_PARSE_CONFIG_CURRENT are valid.
  * @set_config_from_caps:      Parses the caps and copies its information to the configuration.
- *                             Returns FALSE if this failed, TRUE otheriwse. Specified caps
+ *                             Returns FALSE if this failed, TRUE otherwise. Specified caps
  *                             are not unref'd.
  * @get_caps_from_config:      Creates a new caps structure out of the information from the
  *                             specified configuration. Ownership over the returned caps are

@@ -1289,7 +1289,7 @@ gst_audio_aggregator_sink_query (GstAggregator * agg, GstAggregatorPad * aggpad,
  *
  * We don't do synchronized mixing so this really depends on where the
  * streams where punched in and what their relative offsets are against
- * eachother which we can get from the first timestamps we see.
+ * each other which we can get from the first timestamps we see.
  *
  * When we add a new stream (or remove a stream) the duration might
  * also become invalid again and we need to post a new DURATION
@@ -1878,7 +1878,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
    *        the running time.
    *
    * 2) If the current pad's offset/offset_end overlaps with the output
-   *    offset/offset_end, mix it at the appropiate position in the output
+   *    offset/offset_end, mix it at the appropriate position in the output
    *    buffer and advance the pad's position. Remember if this pad needs
    *    a new buffer to advance behind the output offset_end.
    *

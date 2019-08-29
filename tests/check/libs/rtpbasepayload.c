@@ -701,7 +701,7 @@ destroy_payloader (State * state)
 /* push two buffers to the payloader which should successfully payload them
  * into RTP packets. the first packet will have a random rtptime and sequence
  * number, but the last packet should have an rtptime incremented by
- * DEFAULT_CLOCK_RATE and a sequence number incremented by one becuase the
+ * DEFAULT_CLOCK_RATE and a sequence number incremented by one because the
  * packets are sequential. besides the two payloaded RTP packets there should
  * be the three events initial events: stream-start, caps and segment.
  */
@@ -1022,7 +1022,7 @@ GST_START_TEST (rtp_base_payload_ssrc_collision_test)
 
 GST_END_TEST;
 
-/* validate that an upstream event different from GstRTPCollision is succesfully
+/* validate that an upstream event different from GstRTPCollision is successfully
  * forwarded to upstream elements. in this test a caps reconfiguration event is
  * pushed upstream to validate the behaviour.
  */
@@ -1748,7 +1748,7 @@ GST_END_TEST;
  * timestamp updates that are not based on input buffer offsets as expected.
  * lastly two buffers are pushed and the stats property retrieved after each
  * time. here it is expected that the sequence numbers values are restarted at
- * the inital value while the timestamps and running-time reflect the input
+ * the initial value while the timestamps and running-time reflect the input
  * buffers.
  */
 GST_START_TEST (rtp_base_payload_property_stats_test)

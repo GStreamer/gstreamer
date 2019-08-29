@@ -272,7 +272,7 @@ gst_overlay_composition_negotiate (GstOverlayComposition * self, GstCaps * caps)
   }
 
   if (upstream_has_meta || caps_has_meta) {
-    /* Send caps immediatly, it's needed by GstBaseTransform to get a reply
+    /* Send caps immediately, it's needed by GstBaseTransform to get a reply
      * from allocation query */
     ret = gst_pad_set_caps (self->srcpad, overlay_caps);
 

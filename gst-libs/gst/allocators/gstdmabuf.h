@@ -41,17 +41,17 @@ G_BEGIN_DECLS
  *
  * When the memory is mappable for read and write requests then it is assumes
  * to be a fast path and so this caps feature should not be used. Though
- * according to the dma-buf protocal, while it is mapped it prevents the
+ * according to the dma-buf protocol, while it is mapped it prevents the
  * exporter to migrate the buffer.
  *
  * This caps feature should not serve at all the purpose of selecting the
  * @GST_ALLOCATOR_DMABUF allocator during caps negotiation.
  * When the exporter is the upstream element from the importer point of view,
- * the exporter should try to map the dma buffer at runtime (preferrably during
+ * the exporter should try to map the dma buffer at runtime (preferably during
  * decide_allocation phase). When it succeeds for #GST_MAP_READWRITE this caps
  * feature should not be used. This allows scalers, color converts and any image
  * processing filters to work directly on the dma buffer.
- * In this case the importer element should check all incomming memory using
+ * In this case the importer element should check all incoming memory using
  * gst_is_dmabuf_memory().
  *
  * Since: 1.12

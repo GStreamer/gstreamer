@@ -192,7 +192,7 @@ static GstRTSPWatchFuncs watch_funcs = {
   tunnel_lost
 };
 
-/* setts up a new tunnel, then disconnects the read connection and creates it
+/* sets up a new tunnel, then disconnects the read connection and creates it
  * again */
 GST_START_TEST (test_rtspconnection_tunnel_setup)
 {
@@ -354,7 +354,7 @@ GST_START_TEST (test_rtspconnection_tunnel_setup)
 
 GST_END_TEST;
 
-/* setts up a new tunnel, starting with the read channel,
+/* sets up a new tunnel, starting with the read channel,
  * then disconnects the read connection and creates it again
  * ideally this test should be merged with test_rtspconnection_tunnel_setup but
  * but it became quite messy */

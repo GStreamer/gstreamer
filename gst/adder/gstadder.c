@@ -416,7 +416,7 @@ invalid_format:
  *
  * We don't do synchronized mixing so this really depends on where the
  * streams where punched in and what their relative offsets are against
- * eachother which we can get from the first timestamps we see.
+ * each other which we can get from the first timestamps we see.
  *
  * When we add a new stream (or remove a stream) the duration might
  * also become invalid again and we need to post a new DURATION
@@ -1582,7 +1582,7 @@ gst_adder_child_proxy_init (gpointer g_iface, gpointer iface_data)
 {
   GstChildProxyInterface *iface = g_iface;
 
-  GST_INFO ("intializing child proxy interface");
+  GST_INFO ("initializing child proxy interface");
   iface->get_child_by_index = gst_adder_child_proxy_get_child_by_index;
   iface->get_children_count = gst_adder_child_proxy_get_children_count;
 }

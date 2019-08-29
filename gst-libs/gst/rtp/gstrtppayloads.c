@@ -211,7 +211,7 @@ gst_rtp_payload_info_for_pt (guint8 payload_type)
  * mostly used to get the default clock-rate and bandwidth for dynamic payload
  * types specified with @media and @encoding name.
  *
- * The search for @encoding_name will be performed in a case insensitve way.
+ * The search for @encoding_name will be performed in a case insensitive way.
  *
  * Returns: a #GstRTPPayloadInfo or NULL when no info could be found.
  */

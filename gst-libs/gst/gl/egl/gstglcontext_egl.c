@@ -839,7 +839,7 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     egl->egl_surface =
         eglCreateWindowSurface (egl->egl_display, egl->egl_config,
         (EGLNativeWindowType) window_handle, attrs);
-    /* Store window handle for later comparision */
+    /* Store window handle for later comparison */
     egl->window_handle = window_handle;
   } else if (!gst_gl_check_extension ("EGL_KHR_surfaceless_context",
           egl->egl_exts)) {

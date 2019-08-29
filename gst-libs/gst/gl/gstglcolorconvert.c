@@ -117,7 +117,7 @@ static const gfloat from_rgb_bt709_ucoeff[] = {-0.100640f, -0.338688f, 0.439327f
 static const gfloat from_rgb_bt709_vcoeff[] = {0.440654f, -0.400285f, -0.040370f};
 
 /* GRAY16 to RGB conversion
- *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
+ *  data transferred as GL_LUMINANCE_ALPHA then convert back to GRAY16 
  *  high byte weight as : 255*256/65535 
  *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
  *  low byte weight as : 255/65535 (similar)
@@ -181,7 +181,7 @@ static const struct shader_templ templ_REORDER =
   };
 
 /* GRAY16 to RGB conversion
- *  data transfered as GL_LUMINANCE_ALPHA then convert back to GRAY16 
+ *  data transferred as GL_LUMINANCE_ALPHA then convert back to GRAY16 
  *  high byte weight as : 255*256/65535 
  *  ([0~1] denormalize to [0~255],shift to high byte,normalize to [0~1])
  *  low byte weight as : 255/65535 (similar)
@@ -2369,7 +2369,7 @@ _do_convert_one_view (GstGLContext * context, GstGLColorConvert * convert,
         || out_tex->tex_format == GST_GL_LUMINANCE_ALPHA
         || out_width != mem_width || out_height != mem_height) {
       /* Luminance formats are not color renderable */
-      /* renderering to a framebuffer only renders the intersection of all
+      /* rendering to a framebuffer only renders the intersection of all
        * the attachments i.e. the smallest attachment size */
       if (!convert->priv->out_tex[j]) {
         GstGLVideoAllocationParams *params;

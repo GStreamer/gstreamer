@@ -209,7 +209,7 @@ _align_data (gpointer data, gsize align)
  * gst_gl_base_memory_alloc_data:
  * @gl_mem: a #GstGLBaseMemory
  *
- * Note: only intended for subclass usage to allocate the sytem memory buffer
+ * Note: only intended for subclass usage to allocate the system memory buffer
  * on demand.  If there is already a non-NULL data pointer in @gl_mem->data,
  * then this function imply returns TRUE.
  *
@@ -567,7 +567,7 @@ gst_is_gl_base_memory (GstMemory * mem)
  * @offset: the offset to start at
  * @size: the number of bytes to copy
  *
- * Returns: whether the copy suceeded.
+ * Returns: whether the copy succeeded.
  *
  * Since: 1.8
  */
@@ -623,7 +623,7 @@ gst_gl_base_memory_memcpy (GstGLBaseMemory * src, GstGLBaseMemory * dest,
  * @notify will be called once for each allocated memory using these @params
  * when freeing the memory.
  *
- * Returns: whether the paramaters could be initialized
+ * Returns: whether the parameters could be initialized
  *
  * Since: 1.8
  */
@@ -704,7 +704,7 @@ gst_gl_allocation_params_free (GstGLAllocationParams * params)
  * @params: the source #GstGLAllocationParams
  *
  * Frees the dynamically allocated data in @params.  Direct subclasses
- * should call this function in their own overriden free function.
+ * should call this function in their own overridden free function.
  *
  * Since: 1.8
  */
@@ -723,7 +723,7 @@ gst_gl_allocation_params_free_data (GstGLAllocationParams * params)
  * @dest: the destination #GstGLAllocationParams
  *
  * Copies the dynamically allocated data from @src to @dest.  Direct subclasses
- * should call this function in their own overriden copy function.
+ * should call this function in their own overridden copy function.
  *
  * Since: 1.8
  */

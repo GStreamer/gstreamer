@@ -25,7 +25,7 @@
  * pages. 
  * Before extracting the packets out of the ogg pages, we push the raw vorbis
  * header packets to the decoder.
- * We don't use the incomming timestamps but use the ganulepos on the ogg pages
+ * We don't use the incoming timestamps but use the ganulepos on the ogg pages
  * directly.
  * This parser only does ogg/vorbis for now.
  */

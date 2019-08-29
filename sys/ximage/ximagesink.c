@@ -1527,7 +1527,7 @@ gst_x_image_sink_navigation_send_event (GstNavigation * navigation,
 
   /* We are not converting the pointer coordinates as there's no hardware
      scaling done here. The only possible scaling is done by videoscale and
-     videoscale will have to catch those events and tranform the coordinates
+     videoscale will have to catch those events and transform the coordinates
      to match the applied scaling. So here we just add the offset if the image
      is centered in the window.  */
 

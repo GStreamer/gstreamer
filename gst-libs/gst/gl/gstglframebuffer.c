@@ -485,7 +485,7 @@ gst_gl_framebuffer_attach (GstGLFramebuffer * fb, guint attachment_point,
  * @width: (out) (allow-none): output width
  * @height: (out) (allow-none): output height
  *
- * Retreive the effective dimensions from the current attachments attached to
+ * Retrieve the effective dimensions from the current attachments attached to
  * @fb.
  *
  * Since: 1.10

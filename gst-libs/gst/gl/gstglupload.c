@@ -495,7 +495,7 @@ struct DmabufUpload
 
   gboolean direct;
   GstVideoInfo out_info;
-  /* only used for pointer comparision */
+  /* only used for pointer comparison */
   gpointer out_caps;
 };
 
@@ -792,7 +792,7 @@ static const UploadMethod _dma_buf_upload = {
   &_dma_buf_upload_free
 };
 
-/* a variant of the DMABuf uploader that relies on HW color convertion instead
+/* a variant of the DMABuf uploader that relies on HW color conversion instead
  * of shaders */
 
 static gpointer

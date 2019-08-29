@@ -449,7 +449,7 @@ GType gst_video_vbi_parser_get_type (void);
  * GstVideoVBIParserResult:
  * @GST_VIDEO_VBI_PARSER_RESULT_DONE: No line were provided, or no more Ancillary data was found.
  * @GST_VIDEO_VBI_PARSER_RESULT_OK: A #GstVideoAncillary was found.
- * @GST_VIDEO_VBI_PARSER_RESULT_ERROR: An error occured
+ * @GST_VIDEO_VBI_PARSER_RESULT_ERROR: An error occurred
  *
  * Return values for #GstVideoVBIParser
  *

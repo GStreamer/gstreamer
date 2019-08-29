@@ -173,7 +173,7 @@ typedef enum
  * @GST_AUDIO_PACK_FLAG_NONE: No flag
  * @GST_AUDIO_PACK_FLAG_TRUNCATE_RANGE: When the source has a smaller depth
  *   than the target format, set the least significant bits of the target
- *   to 0. This is likely sightly faster but less accurate. When this flag
+ *   to 0. This is likely slightly faster but less accurate. When this flag
  *   is not specified, the most significant bits of the source are duplicated
  *   in the least significant bits of the destination.
  *

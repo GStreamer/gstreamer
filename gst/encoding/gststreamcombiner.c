@@ -87,7 +87,7 @@ gst_stream_combiner_class_init (GstStreamCombinerClass * klass)
 
   gst_element_class_set_static_metadata (gstelement_klass,
       "streamcombiner", "Generic",
-      "Recombines streams splitted by the streamsplitter element",
+      "Recombines streams split by the streamsplitter element",
       "Edward Hervey <edward.hervey@collabora.co.uk>");
 }
 

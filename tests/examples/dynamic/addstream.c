@@ -204,7 +204,7 @@ perform_step (gpointer pstep)
           GINT_TO_POINTER (6));
       break;
     case 6:
-      g_print ("quiting\n");
+      g_print ("quitting\n");
       g_main_loop_quit (loop);
       break;
     default:

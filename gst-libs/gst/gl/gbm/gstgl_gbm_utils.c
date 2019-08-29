@@ -467,7 +467,7 @@ gst_gl_gbm_find_and_open_drm_node (void)
    * unclear how to do that. By trying to create an EGL context? */
   g_udev_enumerator_add_match_subsystem (gudev_enum, "drm");
   devlist = g_udev_enumerator_execute (gudev_enum);
-  GST_DEBUG ("Scanned for udev devices with a drm subsytem");
+  GST_DEBUG ("Scanned for udev devices with a drm subsystem");
 
   if (devlist == NULL) {
     GST_WARNING ("Found no matching DRM devices");

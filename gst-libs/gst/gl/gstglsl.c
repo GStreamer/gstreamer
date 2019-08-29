@@ -410,7 +410,7 @@ _gst_glsl_shader_string_find_version (const gchar * str)
 
   _init_debug ();
 
-  /* search for #version while allowing for preceeding comments/whitespace as
+  /* search for #version while allowing for preceding comments/whitespace as
    * permitted by the GLSL specification */
   while (str && str[i] != '\0' && i < 1024) {
     if (str[i] == '\n' || str[i] == '\r') {
@@ -576,7 +576,7 @@ gst_gl_context_supports_glsl_profile_version (GstGLContext * context,
       if ((profile & GST_GLSL_PROFILE_COMPATIBILITY) == 0)
         return FALSE;
     } else if ((gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL3) != 0) {
-      /* GL_ARB_es2_compatibility is requried for GL3 contexts */
+      /* GL_ARB_es2_compatibility is required for GL3 contexts */
       if ((profile & (GST_GLSL_PROFILE_CORE | GST_GLSL_PROFILE_ES)) == 0)
         return FALSE;
     } else {
@@ -608,7 +608,7 @@ gst_gl_context_supports_glsl_profile_version (GstGLContext * context,
       return FALSE;
 
     if (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 1, 0))
-      /* GL_ARB_es2_compatibility is requried for GL3 contexts */
+      /* GL_ARB_es2_compatibility is required for GL3 contexts */
       if (version < GST_GLSL_VERSION_150 && version != GST_GLSL_VERSION_100)
         return FALSE;
 

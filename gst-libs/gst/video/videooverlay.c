@@ -591,7 +591,7 @@ wrong_format:
     g_value_init (&string, G_TYPE_STRING);
     g_value_transform (value, &string);
 
-    g_critical ("Badly formated rectangle, must contains four gint (got '%s')",
+    g_critical ("Badly formatted rectangle, must contains four gint (got '%s')",
         g_value_get_string (&string));
 
     g_value_unset (&string);

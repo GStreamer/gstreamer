@@ -74,7 +74,7 @@ typedef void (*GstGLWindowResizeCB) (gpointer data, guint width, guint height);
  * GST_GL_WINDOW_CB:
  * @f: the function to cast
  *
- * Cast to the currect function type for generic window callbacks
+ * Cast to the current function type for generic window callbacks
  */
 #define	GST_GL_WINDOW_CB(f)			 ((GstGLWindowCB) (f))
 
@@ -82,7 +82,7 @@ typedef void (*GstGLWindowResizeCB) (gpointer data, guint width, guint height);
  * GST_GL_WINDOW_RESIZE_CB:
  * @f: the function to cast
  *
- * Cast to the currect function type for window resize callbacks
+ * Cast to the current function type for window resize callbacks
  */
 #define	GST_GL_WINDOW_RESIZE_CB(f)		 ((GstGLWindowResizeCB) (f))
 

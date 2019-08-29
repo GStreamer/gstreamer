@@ -578,7 +578,7 @@ GST_START_TEST (videodecoder_playback_first_frames_not_decoded)
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
 
   /* push a buffer, to have the segment attached to it.
-   * unfortunatelly this buffer can't be decoded as it isn't a keyframe */
+   * unfortunately this buffer can't be decoded as it isn't a keyframe */
   buffer = create_test_buffer (i++);
   GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
@@ -769,7 +769,7 @@ GST_START_TEST (videodecoder_backwards_playback)
      * every number that is divisible by 10 is set as a discont,
      * if it is divisible by 20 it is also a keyframe
      *
-     * The logic here is that hte current i is the target, and then
+     * The logic here is that the current i is the target, and then
      * it pushes buffers from 'target - 10' up to target.
      */
     for (j = MAX (target - 10, 0); j < target; j++) {
@@ -856,7 +856,7 @@ GST_START_TEST (videodecoder_backwards_buffer_after_segment)
      * every number that is divisible by 10 is set as a discont,
      * if it is divisible by 20 it is also a keyframe
      *
-     * The logic here is that hte current i is the target, and then
+     * The logic here is that the current i is the target, and then
      * it pushes buffers from 'target - 10' up to target.
      */
     for (j = MAX (target - 10, 0); j < target; j++) {

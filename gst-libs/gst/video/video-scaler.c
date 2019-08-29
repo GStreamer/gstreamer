@@ -1414,7 +1414,7 @@ no_func:
 
 /**
  * gst_video_scaler_2d:
- * @hscale: a horzontal #GstVideoScaler
+ * @hscale: a horizontal #GstVideoScaler
  * @vscale: a vertical #GstVideoScaler
  * @format: a #GstVideoFormat for @srcs and @dest
  * @src: source pixels

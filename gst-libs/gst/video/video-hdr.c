@@ -219,7 +219,7 @@ gst_video_mastering_display_info_is_equal (const
  * gst_video_mastering_display_info_is_valid:
  * @minfo: a #GstVideoMasteringDisplayInfo
  *
- * Checks the minumum validity of @mininfo (not theoretical validation).
+ * Checks the minimum validity of @mininfo (not theoretical validation).
  *
  * Each x and y chromaticity coordinate should be in the range of [0, 1]
  * min_luma should be less than max_luma.

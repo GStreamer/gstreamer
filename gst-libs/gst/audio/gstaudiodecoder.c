@@ -1350,7 +1350,7 @@ gst_audio_decoder_finish_frame_or_subframe (GstAudioDecoder * dec,
   /* sanity checking */
   if (G_LIKELY (buf && ctx->info.bpf)) {
     if (!meta || meta->info.layout == GST_AUDIO_LAYOUT_INTERLEAVED) {
-      /* output shoud be whole number of sample frames */
+      /* output should be whole number of sample frames */
       if (size % ctx->info.bpf)
         goto wrong_buffer;
       /* output should have no additional padding */
@@ -1844,7 +1844,7 @@ gst_audio_decoder_clear_queues (GstAudioDecoder * dec)
  * arrives out of order.
  *
  * we first gather buffers in the gather queue until we get a DISCONT. We
- * prepend each incomming buffer so that they are in reversed order.
+ * prepend each incoming buffer so that they are in reversed order.
  *
  *    gather queue:    9  8  7
  *    decode queue:

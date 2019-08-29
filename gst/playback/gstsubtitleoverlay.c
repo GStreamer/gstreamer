@@ -922,7 +922,7 @@ _link_renderer (GstSubtitleOverlay * self, GstElement * renderer,
         return FALSE;
       }
     } else {
-      /* Set src ghostpad target in the harware accelerated case */
+      /* Set src ghostpad target in the hardware accelerated case */
 
       src = gst_element_get_static_pad (renderer, "src");
       if (G_UNLIKELY (!src)) {

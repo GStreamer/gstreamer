@@ -113,7 +113,7 @@ struct _GstURIDecodeBin
 
   gboolean async_pending;       /* async-start has been emitted */
 
-  gboolean expose_allstreams;   /* Whether to expose unknow type streams or not */
+  gboolean expose_allstreams;   /* Whether to expose unknown type streams or not */
 
   guint64 ring_buffer_max_size; /* 0 means disabled */
 };
@@ -1345,7 +1345,7 @@ gen_source_element (GstURIDecodeBin * decoder)
     } else {
       GST_WARNING_OBJECT (decoder,
           "The connection speed property %" G_GUINT64_FORMAT
-          " of type %s is not usefull not setting it", speed,
+          " of type %s is not useful not setting it", speed,
           g_type_name (G_PARAM_SPEC_TYPE (pspec)));
       wrong_type = TRUE;
     }
@@ -1489,7 +1489,7 @@ post_missing_plugin_error (GstElement * dec, const gchar * element_name)
  * @is_dynamic: TRUE if the element will create (more) pads dynamically later
  * on.
  *
- * Returns: FALSE if a fatal error occured while scanning.
+ * Returns: FALSE if a fatal error occurred while scanning.
  */
 static gboolean
 analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
@@ -1515,7 +1515,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
     switch (gst_iterator_next (pads_iter, &item)) {
       case GST_ITERATOR_ERROR:
         res = FALSE;
-        /* FALLTROUGH */
+        /* FALLTHROUGH */
       case GST_ITERATOR_DONE:
         done = TRUE;
         break;
@@ -1528,7 +1528,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
         break;
       case GST_ITERATOR_OK:
         pad = g_value_dup_object (&item);
-        /* we now officially have an ouput pad */
+        /* we now officially have an output pad */
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */

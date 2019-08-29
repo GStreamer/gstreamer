@@ -1202,7 +1202,7 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
 
       if (slot->linked_info) {
         if (slot->is_eos) {
-          /* linked_info is old input which is stil linked without removal */
+          /* linked_info is old input which is still linked without removal */
           GST_DEBUG_OBJECT (pad, "push actual EOS");
           seqnum = gst_event_get_seqnum (event);
           eos = gst_event_new_eos ();
@@ -1618,7 +1618,7 @@ post_missing_plugin_error (GstElement * urisrc, const gchar * element_name)
  * @is_dynamic: TRUE if the element will create (more) pads dynamically later
  * on.
  *
- * Returns: FALSE if a fatal error occured while scanning.
+ * Returns: FALSE if a fatal error occurred while scanning.
  */
 static gboolean
 analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
@@ -1640,7 +1640,7 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
     switch (gst_iterator_next (pads_iter, &item)) {
       case GST_ITERATOR_ERROR:
         res = FALSE;
-        /* FALLTROUGH */
+        /* FALLTHROUGH */
       case GST_ITERATOR_DONE:
         done = TRUE;
         break;
@@ -1653,7 +1653,7 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
         break;
       case GST_ITERATOR_OK:
         pad = g_value_dup_object (&item);
-        /* we now officially have an ouput pad */
+        /* we now officially have an output pad */
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */
@@ -2194,7 +2194,7 @@ setup_source (GstURISourceBin * urisrc)
           case GST_ITERATOR_ERROR:
             GST_WARNING_OBJECT (urisrc,
                 "Error iterating pads on source element");
-            /* FALLTROUGH */
+            /* FALLTHROUGH */
           case GST_ITERATOR_DONE:
             done = TRUE;
             break;

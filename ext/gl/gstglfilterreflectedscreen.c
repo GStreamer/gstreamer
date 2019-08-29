@@ -380,7 +380,7 @@ gst_gl_filter_reflected_screen_callback (gint width, gint height, guint texture,
 
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-  //load identity befor tracing
+  //load identity before tracing
   glLoadIdentity ();
   //camera translation
   glTranslatef (0.0f, 0.1f, -1.3f);

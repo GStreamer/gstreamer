@@ -882,7 +882,7 @@ gst_base_text_overlay_negotiate (GstBaseTextOverlay * overlay, GstCaps * caps)
   }
 
   if (upstream_has_meta || caps_has_meta) {
-    /* Send caps immediatly, it's needed by GstBaseTransform to get a reply
+    /* Send caps immediately, it's needed by GstBaseTransform to get a reply
      * from allocation query */
     ret = gst_pad_set_caps (overlay->srcpad, overlay_caps);
 
@@ -1855,7 +1855,7 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
     overlay->ink_rect.y = tmp.x;
     overlay->ink_rect.width = tmp.height;
     overlay->ink_rect.height = tmp.width;
-    /* We want the top left corect, but we now have the top right */
+    /* We want the top left correct, but we now have the top right */
     overlay->ink_rect.x += overlay->ink_rect.width;
 
     tmp = overlay->logical_rect;
@@ -1901,7 +1901,7 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   if (overlay->use_vertical_render) {
     gint tmp;
 
-    /* tranlate to the center of the image, rotate, and tranlate the rotated
+    /* translate to the center of the image, rotate, and translate the rotated
      * image back to the right place */
     cairo_matrix_translate (&cairo_matrix, unscaled_height / 2.0l,
         unscaled_width / 2.0l);

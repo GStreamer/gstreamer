@@ -933,7 +933,7 @@ gst_alsasrc_get_timestamp (GstAlsaSrc * asrc)
     return GST_CLOCK_TIME_NONE;
   }
 
-  /* in case an xrun condition has occured we need to handle this */
+  /* in case an xrun condition has occurred we need to handle this */
   if (snd_pcm_status_get_state (status) != SND_PCM_STATE_RUNNING) {
     if (xrun_recovery (asrc, asrc->handle, err) < 0) {
       GST_WARNING_OBJECT (asrc, "Could not recover from xrun condition !");

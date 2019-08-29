@@ -304,7 +304,7 @@ GST_START_TEST (test_matrix_vertex_y_invert)
         expected[i]);
   }
 
-  /* now test the [0, 1]^3 matrix and update the test values acoordingly */
+  /* now test the [0, 1]^3 matrix and update the test values accordingly */
   gst_gl_set_affine_transformation_meta_from_ndc (aff_meta, y_invert);
   expected[1] = 0.;
 

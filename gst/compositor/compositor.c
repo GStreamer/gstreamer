@@ -65,7 +65,7 @@
  *   compositor name=comp ! videoconvert ! ximagesink \
  *   videotestsrc !  \
  *   video/x-raw, framerate=\(fraction\)5/1, width=320, height=240 ! comp.
- * ]| A pipeline to demostrate bgra comping. (This does not demonstrate alpha blending).
+ * ]| A pipeline to demonstrate bgra comping. (This does not demonstrate alpha blending).
  * |[
  * gst-launch-1.0 videotestsrc pattern=1 ! \
  *   video/x-raw,format =I420, framerate=\(fraction\)10/1, width=100, height=100 ! \

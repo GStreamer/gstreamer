@@ -108,7 +108,7 @@ struct _GstXvImageFormat
  * @heightmm: the height in millimeters of Display @disp
  * @par: the pixel aspect ratio calculated from @width, @widthmm and @height,
  * @heightmm ratio
- * @use_xshm: used to known wether of not XShm extension is usable or not even
+ * @use_xshm: used to known whether of not XShm extension is usable or not even
  * if the Extension is present
  * @xv_port_id: the XVideo port ID
  * @im_format: used to store at least a valid format for XShm calls checks
@@ -116,7 +116,7 @@ struct _GstXvImageFormat
  * @channels_list: list of #GstColorBalanceChannels
  * @caps: the #GstCaps that Display @disp can accept
  *
- * Structure used to store various informations collected/calculated for a
+ * Structure used to store various information collected/calculated for a
  * Display.
  */
 struct _GstXvContext
@@ -214,7 +214,7 @@ typedef struct _GstXWindow GstXWindow;
  * through the #GstVideoOverlay interface
  * @gc: the Graphical Context of Window @win
  *
- * Structure used to store informations about a Window.
+ * Structure used to store information about a Window.
  */
 struct _GstXWindow
 {

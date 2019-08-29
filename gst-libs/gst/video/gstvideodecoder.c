@@ -3654,7 +3654,7 @@ gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
     /* If change are not acceptable, fallback to generic pool */
     if (!gst_buffer_pool_config_validate_params (config, outcaps, size, min,
             max)) {
-      GST_DEBUG_OBJECT (decoder, "unsuported pool, making new pool");
+      GST_DEBUG_OBJECT (decoder, "unsupported pool, making new pool");
 
       gst_object_unref (pool);
       pool = gst_video_buffer_pool_new ();

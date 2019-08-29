@@ -524,7 +524,7 @@ gst_encoding_profile_get_presence (GstEncodingProfile * profile)
  * gst_encoding_profile_get_enabled:
  * @profile: a #GstEncodingProfile
  *
- * Returns: Whther @profile is enabled or not
+ * Returns: Whether @profile is enabled or not
  *
  * Since: 1.6
  */

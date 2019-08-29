@@ -1462,7 +1462,7 @@ do_async_done (GstPlaySink * playsink)
 
 /* try to change the state of an element. This function returns the element when
  * the state change could be performed. When this function returns NULL an error
- * occured and the element is unreffed if @unref is TRUE. */
+ * occurred and the element is unreffed if @unref is TRUE. */
 static GstElement *
 try_element (GstPlaySink * playsink, GstElement * element, gboolean unref)
 {

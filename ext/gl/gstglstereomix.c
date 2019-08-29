@@ -363,7 +363,7 @@ gst_gl_stereo_mix_aggregate_frames (GstVideoAggregator * vagg,
   GstGLStereoMix *mix = GST_GL_STEREO_MIX (vagg);
   /* If we're operating in frame-by-frame mode, push
    * the primary view now, and let the parent class
-   * push the remaining auxilliary view */
+   * push the remaining auxiliary view */
   if (GST_VIDEO_INFO_MULTIVIEW_MODE (&vagg->info) ==
       GST_VIDEO_MULTIVIEW_MODE_FRAME_BY_FRAME) {
     /* Transfer the timestamps video-agg put on the aux buffer */

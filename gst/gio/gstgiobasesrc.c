@@ -239,7 +239,7 @@ gst_gio_base_src_get_size (GstBaseSrc * base_src, guint64 * size)
               err->message);
         g_clear_error (&err);
       } else {
-        GST_ERROR_OBJECT (src, "Seeking to the old position faile");
+        GST_ERROR_OBJECT (src, "Seeking to the old position failed");
       }
       return FALSE;
     }

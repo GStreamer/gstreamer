@@ -162,7 +162,7 @@ struct _GstVideoEncoderPrivate
   gboolean tags_changed;
 
   GstClockTime min_pts;
-  /* adjustment needed on pts, dts, segment start and stop to accomodate
+  /* adjustment needed on pts, dts, segment start and stop to accommodate
    * min_pts */
   GstClockTime time_adjustment;
 
@@ -2667,7 +2667,7 @@ gst_video_encoder_get_allocator (GstVideoEncoder * encoder,
  * Request minimal value for PTS passed to handle_frame.
  *
  * For streams with reordered frames this can be used to ensure that there
- * is enough time to accomodate first DTS, which may be less than first PTS
+ * is enough time to accommodate first DTS, which may be less than first PTS
  *
  * Since: 1.6
  */

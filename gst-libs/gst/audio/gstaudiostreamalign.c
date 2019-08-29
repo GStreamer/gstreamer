@@ -144,7 +144,7 @@ gst_audio_stream_align_free (GstAudioStreamAlign * align)
  * @rate: a new sample rate
  *
  * Sets @rate as new sample rate for the following processing. If the sample
- * rate differs this implicitely marks the next data as discontinuous.
+ * rate differs this implicitly marks the next data as discontinuous.
  *
  * Since: 1.14
  */

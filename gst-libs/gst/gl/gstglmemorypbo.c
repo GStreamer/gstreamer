@@ -73,7 +73,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 
 static GstAllocator *_gl_allocator;
 
-/* compatability definitions... */
+/* compatibility definitions... */
 #ifndef GL_PIXEL_PACK_BUFFER
 #define GL_PIXEL_PACK_BUFFER 0x88EB
 #endif
@@ -715,7 +715,7 @@ gst_gl_memory_pbo_allocator_init (GstGLMemoryPBOAllocator * allocator)
  * using glCopyTexImage.  See the OpenGL specification for details on the
  * mappings between texture formats.
  *
- * Returns: Whether the copy suceeded
+ * Returns: Whether the copy succeeded
  *
  * Since: 1.8
  */

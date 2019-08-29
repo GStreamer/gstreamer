@@ -335,7 +335,7 @@ ximage_memory_alloc (GstXImageBufferPool * xpool)
     align = 15;
     mem->ximage->data = g_malloc (allocsize + align);
     GST_LOG_OBJECT (ximagesink,
-        "non-XShm image size is %" G_GSIZE_FORMAT " (alloced: %u), width %d, "
+        "non-XShm image size is %" G_GSIZE_FORMAT " (allocated: %u), width %d, "
         "stride %d", mem->size, allocsize, width, mem->ximage->bytes_per_line);
 
     XSync (xcontext->disp, FALSE);

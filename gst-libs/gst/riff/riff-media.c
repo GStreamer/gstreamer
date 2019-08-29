@@ -42,7 +42,7 @@ GST_DEBUG_CATEGORY_EXTERN (riff_debug);
  *        data that is within the range of strf.size, but excluding any
  *        additional data withint this chunk but outside strf.size.
  * @strf_data: a #GstBuffer containing the additional data in the strf
- *             chunk outside reach of strf.size. Ususally a palette.
+ *             chunk outside reach of strf.size. Usually a palette.
  * @strd_data: a #GstBuffer containing the data in the strd stream header
  *             chunk. Usually codec initialization data.
  * @codec_name: if given, will be filled with a human-readable codec name.

@@ -220,7 +220,7 @@ audioringbuffer_thread_func (GstAudioRingBuffer * buf)
       left = len;
       do {
         read = readfunc (src, readptr, left, &timestamp);
-        GST_LOG_OBJECT (src, "transfered %d bytes of %d to segment %d", read,
+        GST_LOG_OBJECT (src, "transferred %d bytes of %d to segment %d", read,
             left, readseg);
         if (read < 0 || read > left) {
           GST_WARNING_OBJECT (src,
@@ -463,7 +463,7 @@ gst_audio_src_ring_buffer_stop (GstAudioRingBuffer * buf)
 #if 0
   GST_DEBUG ("stop, waiting...");
   GST_AUDIO_SRC_RING_BUFFER_WAIT (buf);
-  GST_DEBUG ("stoped");
+  GST_DEBUG ("stopped");
 #endif
 
   return TRUE;

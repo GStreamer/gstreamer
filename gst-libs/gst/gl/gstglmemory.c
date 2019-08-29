@@ -60,7 +60,7 @@ static GstAllocator *_gl_memory_allocator;
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 #define GST_CAT_DEFAULT GST_CAT_GL_MEMORY
 
-/* compatability definitions... */
+/* compatibility definitions... */
 #ifndef GL_UNPACK_ROW_LENGTH
 #define GL_UNPACK_ROW_LENGTH 0x0CF2
 #endif
@@ -985,7 +985,7 @@ gst_gl_memory_allocator_init (GstGLMemoryAllocator * allocator)
  * Copies @gl_mem into the texture specfified by @tex_id.  The format of @tex_id
  * is specified by @tex_format, @width and @height.
  *
- * Returns: Whether the copy suceeded
+ * Returns: Whether the copy succeeded
  *
  * Since: 1.8
  */

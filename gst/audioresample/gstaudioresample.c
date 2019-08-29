@@ -287,7 +287,7 @@ gst_audio_resample_transform_caps (GstBaseTransform * base,
 
   /* transform single caps into input_caps + input_caps with the rate
    * field set to our supported range. This ensures that upstream knows
-   * about downstream's prefered rate(s) and can negotiate accordingly. */
+   * about downstream's preferred rate(s) and can negotiate accordingly. */
   res = gst_caps_new_empty ();
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {

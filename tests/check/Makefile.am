@@ -15,7 +15,7 @@ AM_TESTS_ENVIRONMENT += \
 	GST_TAG_LICENSE_TRANSLATIONS_DICT="$(top_srcdir)/gst-libs/gst/tag/license-translations.dict"
 
 
-# ths core dumps of some machines have PIDs appended
+# the core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.*
 
 clean-local: clean-local-check

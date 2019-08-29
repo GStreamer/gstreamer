@@ -571,7 +571,7 @@ gst_multi_fd_sink_hash_changed (GstMultiHandleSink * mhsink)
 
 /* handle a read on a client fd,
  * which either indicates a close or should be ignored
- * returns FALSE if some error occured or the client closed. */
+ * returns FALSE if some error occurred or the client closed. */
 static gboolean
 gst_multi_fd_sink_handle_client_read (GstMultiFdSink * sink,
     GstTCPClient * client)
@@ -664,7 +664,7 @@ ioctl_failed:
  * When the sending returns a partial buffer we stop sending more data as
  * the next send operation could block.
  *
- * This functions returns FALSE if some error occured.
+ * This functions returns FALSE if some error occurred.
  */
 static gboolean
 gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,

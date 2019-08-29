@@ -840,7 +840,7 @@ sort_fre_profile_matches (FormatRangeExtensionProfileMatch * a,
 }
 
 static const GstH265FormatRangeExtensionProfile h265_ext_profiles[] = {
-  /* FIXME 2.0: Consider ':' seperated subsampling notation for consistency
+  /* FIXME 2.0: Consider ':' separated subsampling notation for consistency
    * https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/merge_requests/23
    */
   /* *INDENT-OFF* */
@@ -1066,9 +1066,9 @@ gst_codec_utils_h265_get_profile (const guint8 * profile_tier_level, guint len)
       guint extra_constraints = 0;
       FormatRangeExtensionProfileMatch *m;
 
-      /* Filter out all the profiles having constraints not satisified by
+      /* Filter out all the profiles having constraints not satisfied by
        * @ext_profile.
-       * Then pick the one having the least extra contraints. This allow us
+       * Then pick the one having the least extra constraints. This allow us
        * to match the closet profile if bitstream contains not standard
        * constraints. */
       if (p.max_14bit_constraint_flag != ext_profile.max_14bit_constraint_flag) {

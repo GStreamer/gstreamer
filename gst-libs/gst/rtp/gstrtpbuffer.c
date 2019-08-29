@@ -1516,7 +1516,7 @@ get_onebyte_header_end_offset (guint8 * pdata, guint wordlen)
  * RTP header. If there is already a RFC 5285 header extension with a one byte
  * header, the new extension will be appended.
  * It will not work if there is already a header extension that does not follow
- * the mecanism described in RFC 5285 or if there is a header extension with
+ * the mechanism described in RFC 5285 or if there is a header extension with
  * a two bytes header as described in RFC 5285. In that case, use
  * gst_rtp_buffer_add_extension_twobytes_header()
  *
@@ -1615,7 +1615,7 @@ get_twobytes_header_end_offset (const guint8 * pdata, guint wordlen)
  * RTP header. If there is already a RFC 5285 header extension with a two bytes
  * header, the new extension will be appended.
  * It will not work if there is already a header extension that does not follow
- * the mecanism described in RFC 5285 or if there is a header extension with
+ * the mechanism described in RFC 5285 or if there is a header extension with
  * a one byte header as described in RFC 5285. In that case, use
  * gst_rtp_buffer_add_extension_onebyte_header()
  *

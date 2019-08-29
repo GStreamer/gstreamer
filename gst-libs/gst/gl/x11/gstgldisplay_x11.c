@@ -116,7 +116,7 @@ gst_gl_display_x11_new (const gchar * name)
 
   ret->xcb_connection = XGetXCBConnection (ret->display);
   if (!ret->xcb_connection) {
-    GST_ERROR ("Failed to open retieve XCB connection from X11 Display");
+    GST_ERROR ("Failed to retrieve XCB connection from X11 Display");
     gst_object_unref (ret);
     return NULL;
   }
@@ -155,7 +155,7 @@ gst_gl_display_x11_new_with_display (Display * display)
 
   ret->xcb_connection = XGetXCBConnection (ret->display);
   if (!ret->xcb_connection) {
-    GST_ERROR ("Failed to open retieve XCB connection from X11 Display");
+    GST_ERROR ("Failed to retrieve XCB connection from X11 Display");
     gst_object_unref (ret);
     return NULL;
   }

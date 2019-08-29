@@ -1147,7 +1147,7 @@ gst_mikey_message_get_payload (const GstMIKEYMessage * msg, guint idx)
  * @type: a #GstMIKEYPayloadType
  * @nth: payload to find
  *
- * Find the @nth occurence of the payload with @type in @msg.
+ * Find the @nth occurrence of the payload with @type in @msg.
  *
  * Returns: the @nth #GstMIKEYPayload of @type.
  *

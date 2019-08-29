@@ -65,20 +65,20 @@ G_STMT_START { \
 /**
  * GstRTSPResult:
  * @GST_RTSP_OK: no error
- * @GST_RTSP_ERROR: some unspecified error occured
+ * @GST_RTSP_ERROR: some unspecified error occurred
  * @GST_RTSP_EINVAL: invalid arguments were provided to a function
  * @GST_RTSP_EINTR: an operation was canceled
  * @GST_RTSP_ENOMEM: no memory was available for the operation
- * @GST_RTSP_ERESOLV: a host resolve error occured
+ * @GST_RTSP_ERESOLV: a host resolve error occurred
  * @GST_RTSP_ENOTIMPL: function not implemented
- * @GST_RTSP_ESYS: a system error occured, errno contains more details
- * @GST_RTSP_EPARSE: a parsing error occured
+ * @GST_RTSP_ESYS: a system error occurred, errno contains more details
+ * @GST_RTSP_EPARSE: a parsing error occurred
  * @GST_RTSP_EWSASTART: windows networking could not start
  * @GST_RTSP_EWSAVERSION: windows networking stack has wrong version
  * @GST_RTSP_EEOF: end-of-file was reached
- * @GST_RTSP_ENET: a network problem occured, h_errno contains more details
+ * @GST_RTSP_ENET: a network problem occurred, h_errno contains more details
  * @GST_RTSP_ENOTIP: the host is not an IP host
- * @GST_RTSP_ETIMEOUT: a timeout occured
+ * @GST_RTSP_ETIMEOUT: a timeout occurred
  * @GST_RTSP_ETGET: the tunnel GET request has been performed
  * @GST_RTSP_ETPOST: the tunnel POST request has been performed
  * @GST_RTSP_ELAST: last error
@@ -267,7 +267,7 @@ typedef enum {
   GST_RTSP_HDR_PROXY_REQUIRE,       /* Proxy-Require        R      req.      all */
   GST_RTSP_HDR_PUBLIC,              /* Public               r      opt.      all */
   GST_RTSP_HDR_RANGE,               /* Range                Rr     opt.      PLAY, PAUSE, RECORD */
-  GST_RTSP_HDR_REFERER,             /* Referer              R      opt.      all */
+  GST_RTSP_HDR_REFERER,             /* Referrer              R      opt.      all */
   GST_RTSP_HDR_REQUIRE,             /* Require              R      req.      all */
   GST_RTSP_HDR_RETRY_AFTER,         /* Retry-After          r      opt.      all */
   GST_RTSP_HDR_RTP_INFO,            /* RTP-Info             r      req.      PLAY */

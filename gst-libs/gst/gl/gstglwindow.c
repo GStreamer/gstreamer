@@ -622,7 +622,7 @@ gst_gl_window_default_send_message (GstGLWindow * window,
  * @callback: (scope async): function to invoke
  * @data: (closure): data to invoke @callback with
  *
- * Invoke @callback with data on the window thread.  @callback is guarenteed to
+ * Invoke @callback with data on the window thread.  @callback is guaranteed to
  * have executed when this function returns.
  *
  * Since: 1.4
@@ -739,7 +739,7 @@ gst_gl_window_send_message_async (GstGLWindow * window, GstGLWindowCB callback,
  * @data: (closure): data to invoke @callback with
  * @destroy_notify: called when @data is not needed any more
  *
- * Sets the draw callback called everytime gst_gl_window_draw() is called
+ * Sets the draw callback called every time gst_gl_window_draw() is called
  *
  * Since: 1.4
  */
@@ -768,7 +768,7 @@ gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
  * @data: (closure): data to invoke @callback with
  * @destroy_notify: called when @data is not needed any more
  *
- * Sets the resize callback called everytime a resize of the window occurs.
+ * Sets the resize callback called every time a resize of the window occurs.
  *
  * Since: 1.4
  */

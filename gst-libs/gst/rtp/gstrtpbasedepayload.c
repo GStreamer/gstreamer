@@ -843,7 +843,7 @@ set_headers (GstBuffer ** buffer, guint idx, GstRTPBaseDepayload * depayload)
   dts = GST_BUFFER_DTS (*buffer);
   duration = GST_BUFFER_DURATION (*buffer);
 
-  /* apply last incomming timestamp and duration to outgoing buffer if
+  /* apply last incoming timestamp and duration to outgoing buffer if
    * not otherwise set. */
   if (!GST_CLOCK_TIME_IS_VALID (pts))
     GST_BUFFER_PTS (*buffer) = priv->pts;
@@ -899,7 +899,7 @@ gst_rtp_base_depayload_prepare_push (GstRTPBaseDepayload * filter,
  * Push @out_buf to the peer of @filter. This function takes ownership of
  * @out_buf.
  *
- * This function will by default apply the last incomming timestamp on
+ * This function will by default apply the last incoming timestamp on
  * the outgoing buffer when it didn't have a timestamp already.
  *
  * Returns: a #GstFlowReturn.

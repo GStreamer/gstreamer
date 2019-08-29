@@ -818,7 +818,7 @@ dnl GST_*:              flags shared by built objects to link against GStreamer
 dnl GST_PLUGINS_BASE_CFLAGS: to link internally against the plugins base libs
 dnl                          (compare to other modules) or for i18n
 dnl GST_ALL_LDFLAGS:    linker flags shared by all
-dnl GST_LIB_LDFLAGS:    additional linker flags for all libaries
+dnl GST_LIB_LDFLAGS:    additional linker flags for all libraries
 dnl GST_LT_LDFLAGS:     library versioning of our libraries
 dnl GST_PLUGIN_LDFLAGS: flags to be used for all plugins
 

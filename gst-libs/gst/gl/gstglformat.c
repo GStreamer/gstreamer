@@ -491,7 +491,7 @@ gst_gl_texture_target_to_string (GstGLTextureTarget target)
 
 /**
  * gst_gl_texture_target_from_string:
- * @str: a string equivalant to one of the GST_GL_TEXTURE_TARGET_*_STR values
+ * @str: a string equivalent to one of the GST_GL_TEXTURE_TARGET_*_STR values
  *
  * Returns: the #GstGLTextureTarget represented by @str or
  *          %GST_GL_TEXTURE_TARGET_NONE

@@ -596,7 +596,7 @@ gst_multi_socket_sink_handle_hash_key (GstMultiSinkHandle handle)
 
 /* handle a read on a client socket,
  * which either indicates a close or should be ignored
- * returns FALSE if some error occured or the client closed. */
+ * returns FALSE if some error occurred or the client closed. */
 static gboolean
 gst_multi_socket_sink_handle_client_read (GstMultiSocketSink * sink,
     GstSocketClient * client)
@@ -814,7 +814,7 @@ gst_multi_socket_sink_write (GstMultiSocketSink * sink,
  * When the sending returns a partial buffer we stop sending more data as
  * the next send operation could block.
  *
- * This functions returns FALSE if some error occured.
+ * This functions returns FALSE if some error occurred.
  */
 static gboolean
 gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,

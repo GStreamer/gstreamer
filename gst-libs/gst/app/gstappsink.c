@@ -1201,7 +1201,7 @@ gst_app_sink_set_emit_signals (GstAppSink * appsink, gboolean emit)
  *
  * Check if appsink will emit the "new-preroll" and "new-sample" signals.
  *
- * Returns: %TRUE if @appsink is emiting the "new-preroll" and "new-sample"
+ * Returns: %TRUE if @appsink is emitting the "new-preroll" and "new-sample"
  * signals.
  */
 gboolean

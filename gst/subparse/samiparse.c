@@ -417,7 +417,7 @@ unescape_string (const gchar * text)
         }
 
         if (text == end || errno != 0) {
-          /* error occured. pass it */
+          /* error occurred. pass it */
           goto next;
         }
         unescaped = g_string_append_unichar (unescaped, l);

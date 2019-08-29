@@ -992,7 +992,7 @@ static const ProcessFunc tick_funcs[] = {
 
 /* Gaussian white noise using Box-Muller algorithm.  unit variance
  * normally-distributed random numbers are generated in pairs as the real
- * and imaginary parts of a compex random variable with
+ * and imaginary parts of a complex random variable with
  * uniformly-distributed argument and \chi^{2}-distributed modulus.
  */
 

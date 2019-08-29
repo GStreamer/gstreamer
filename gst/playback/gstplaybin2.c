@@ -55,12 +55,12 @@
  * Playback can be initiated by setting the element to PLAYING state using
  * gst_element_set_state(). Note that the state change will take place in
  * the background in a separate thread, when the function returns playback
- * is probably not happening yet and any errors might not have occured yet.
+ * is probably not happening yet and any errors might not have occurred yet.
  * Applications using playbin should ideally be written to deal with things
  * completely asynchroneous.
  *
  * When playback has finished (an EOS message has been received on the bus)
- * or an error has occured (an ERROR message has been received on the bus) or
+ * or an error has occurred (an ERROR message has been received on the bus) or
  * the user wants to play a different track, playbin should be set back to
  * READY or NULL state, then the #GstPlayBin:uri property should be set to the
  * new location and then playbin be set to PLAYING state again.
@@ -5798,7 +5798,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       /* also do missed state change down to READY */
       if (do_save)
         save_current_group (playbin);
-      /* Deactive the groups, set the uridecodebins to NULL
+      /* Deactivate the groups, set the uridecodebins to NULL
        * and unref them.
        */
       for (i = 0; i < 2; i++) {

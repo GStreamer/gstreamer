@@ -2338,7 +2338,7 @@ invalid_format:
  *  GST_RTSP_OK when a complete message was read.
  *  GST_RTSP_EEOF: when the read socket is closed
  *  GST_RTSP_EINTR: when more data is needed.
- *  GST_RTSP_..: some other error occured.
+ *  GST_RTSP_..: some other error occurred.
  */
 static GstRTSPResult
 build_next (GstRTSPBuilder * builder, GstRTSPMessage * message,
@@ -3122,7 +3122,7 @@ str_case_equal (gconstpointer v1, gconstpointer v2)
  * @param: authentication directive
  * @value: value
  *
- * Setup @conn with authentication directives. This is not necesary for
+ * Setup @conn with authentication directives. This is not necessary for
  * methods #GST_RTSP_AUTH_NONE and #GST_RTSP_AUTH_BASIC. For
  * #GST_RTSP_AUTH_DIGEST, directives should be taken from the digest challenge
  * in the WWW-Authenticate response header and can include realm, domain,

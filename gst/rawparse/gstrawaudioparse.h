@@ -75,7 +75,7 @@ struct _GstRawAudioParseConfig
 
   /* Array of channel positions, one position per channel; its first
    * num_channels values are valid. They are computed out of the number
-   * of channels if no positions are explicitely given. */
+   * of channels if no positions are explicitly given. */
   GstAudioChannelPosition channel_positions[64];
 
   /* If the channel_positions are in a valid GStreamer channel order, then

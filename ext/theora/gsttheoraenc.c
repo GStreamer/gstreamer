@@ -879,7 +879,7 @@ theora_enc_handle_frame (GstVideoEncoder * benc, GstVideoCodecFrame * frame)
   enc = GST_THEORA_ENC (benc);
 
   /* we keep track of two timelines.
-   * - The timestamps from the incomming buffers, which we copy to the outgoing
+   * - The timestamps from the incoming buffers, which we copy to the outgoing
    *   encoded buffers as-is. We need to do this as we simply forward the
    *   newsegment events.
    * - The running_time of the buffers, which we use to construct the granulepos

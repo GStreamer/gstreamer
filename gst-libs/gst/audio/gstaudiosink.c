@@ -241,7 +241,7 @@ audioringbuffer_thread_func (GstAudioRingBuffer * buf)
       left = len;
       do {
         written = writefunc (sink, readptr, left);
-        GST_LOG_OBJECT (sink, "transfered %d bytes of %d from segment %d",
+        GST_LOG_OBJECT (sink, "transferred %d bytes of %d from segment %d",
             written, left, readseg);
         if (written < 0 || written > left) {
           /* might not be critical, it e.g. happens when aborting playback */

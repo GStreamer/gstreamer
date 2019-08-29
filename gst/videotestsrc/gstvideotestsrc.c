@@ -286,7 +286,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_KY,
       g_param_spec_int ("ky", "Zoneplate 1st order y phase",
-          "Zoneplate 1st order y phase, for generating contant vertical frequencies",
+          "Zoneplate 1st order y phase, for generating content vertical frequencies",
           G_MININT32, G_MAXINT32, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_KT,

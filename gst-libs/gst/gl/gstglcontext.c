@@ -146,7 +146,7 @@ load_self_module (gpointer user_data)
  * can share GL resources, this is the next best thing.
  *
  * XXX: we may need a way to associate two wrapped GstGLContext's as being
- * shared however I have not come across a use case that requries this yet.
+ * shared however I have not come across a use case that requires this yet.
  */
 struct ContextShareGroup
 {
@@ -528,7 +528,7 @@ gst_gl_context_get_current_gl_context (GstGLPlatform context_type)
  * @name: the name of the function to retrieve
  *
  * Attempts to use the @context_type specific GetProcAddress implementations
- * to retreive @name.
+ * to retrieve @name.
  *
  * See also gst_gl_context_get_proc_address().
  *
@@ -843,7 +843,7 @@ gst_gl_context_get_gl_api (GstGLContext * context)
  * Get a function pointer to a specified opengl function, @name.  If the the
  * specific function does not exist, NULL is returned instead.
  *
- * Platform specfic functions (names starting 'egl', 'glX', 'wgl', etc) can also
+ * Platform specific functions (names starting 'egl', 'glX', 'wgl', etc) can also
  * be retrieved using this method.
  *
  * Note: This function may return valid function pointers that may not be valid
@@ -1604,7 +1604,7 @@ gst_gl_context_thread_add (GstGLContext * context,
  * @min: (out): resulting minor version
  *
  * Returns the OpenGL version implemented by @context.  See
- * gst_gl_context_get_gl_api() for retreiving the OpenGL api implemented by
+ * gst_gl_context_get_gl_api() for retrieving the OpenGL api implemented by
  * @context.
  *
  * Since: 1.4

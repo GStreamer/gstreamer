@@ -1224,7 +1224,7 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
-  /* input shoud be whole number of sample frames */
+  /* input should be whole number of sample frames */
   if (size % ctx->info.bpf)
     goto wrong_buffer;
 

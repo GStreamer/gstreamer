@@ -969,7 +969,7 @@ GST_START_TEST (rtp_base_depayload_packet_lost_before_first_buffer_test)
               "duration", G_TYPE_UINT64, (guint64) 10 * GST_MSECOND, NULL)));
 
   /* When a buffer is pushed, an updated (and more accurate) segment event
-   * should aslo be sent. */
+   * should also be sent. */
   gst_harness_push (h, gst_rtp_buffer_new_allocate (0, 0, 0));
 
   /* Verify that setup events are sent before gap event */
@@ -1071,7 +1071,7 @@ GST_END_TEST
  * it should save these timestamps as they should affect the next segment event
  * being pushed by the depayloader. a new segment event is not pushed by the
  * depayloader until a flush_stop event and a succeeding segment event are
- * received. of course the intial event are unaffected, as is the incoming caps
+ * received. of course the initial event are unaffected, as is the incoming caps
  * event.
  */
 GST_START_TEST (rtp_base_depayload_npt_test)
@@ -1136,7 +1136,7 @@ GST_END_TEST
  * this rate as it should affect the next segment event being pushed by the
  * depayloader. a new segment event is not pushed by the depayloader until a
  * flush_stop event and a succeeding segment event are received. of course the
- * intial event are unaffected, as is the incoming caps event.
+ * initial event are unaffected, as is the incoming caps event.
  */
 GST_START_TEST (rtp_base_depayload_play_scale_test)
 {
@@ -1197,7 +1197,7 @@ GST_END_TEST
  * this rate as it should affect the next segment event being pushed by the
  * depayloader. a new segment event is not pushed by the depayloader until a
  * flush_stop event and a succeeding segment event are received. of course the
- * intial event are unaffected, as is the incoming caps event.
+ * initial event are unaffected, as is the incoming caps event.
  */
 GST_START_TEST (rtp_base_depayload_play_speed_test)
 {
@@ -1256,8 +1256,8 @@ GST_START_TEST (rtp_base_depayload_play_speed_test)
 GST_END_TEST
 /* when a depayloader receives new caps events with npt-start, npt-stop and
  * clock-base it should save these timestamps as they should affect the next
- * segment event being pushed by the depayloader. the produce segment should
- * make the positon of the stream reflect the postion form clock-base instead
+ * segment event being pushed by the depayloader. the produced segment should
+ * make the position of the stream reflect the position from clock-base instead
  * of reflecting the running time (for RTSP).
  */
 GST_START_TEST (rtp_base_depayload_clock_base_test)

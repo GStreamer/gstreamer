@@ -169,7 +169,7 @@ struct _OutputPad
   /* Downstream event probe id */
   gulong probe_id;
 
-  /* TRUE if the pad saw EOS. Resetted to FALSE on STREAM_START */
+  /* TRUE if the pad saw EOS. Reset to FALSE on STREAM_START */
   gboolean is_eos;
 
   /* The last seen (i.e. current) group_id
@@ -481,7 +481,7 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
    * GstURIDecodeBin3::about-to-finish:
    *
    * This signal is emitted when the data for the selected URI is
-   * entirely buffered and it is safe to specify anothe URI.
+   * entirely buffered and it is safe to specify another URI.
    */
   gst_uri_decode_bin3_signals[SIGNAL_ABOUT_TO_FINISH] =
       g_signal_new ("about-to-finish", G_TYPE_FROM_CLASS (klass),

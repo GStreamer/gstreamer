@@ -250,13 +250,13 @@ typedef struct _GstRTSPWatch GstRTSPWatch;
  * @message_received: callback when a message was received
  * @message_sent: callback when a message was sent
  * @closed: callback when the connection is closed
- * @error: callback when an error occured
+ * @error: callback when an error occurred
  * @tunnel_start: a client started a tunneled connection. The tunnelid of the
  *   connection must be saved.
  * @tunnel_complete: a client finished a tunneled connection. In this callback
  *   you usually pair the tunnelid of this connection with the saved one using
  *   gst_rtsp_connection_do_tunnel().
- * @error_full: callback when an error occured with more information than
+ * @error_full: callback when an error occurred with more information than
  *   the @error callback.
  * @tunnel_lost: callback when the post connection of a tunnel is closed.
  * @tunnel_http_response: callback when an HTTP response to the GET request

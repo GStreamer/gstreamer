@@ -28,7 +28,7 @@
  * @see_also: #GstContext, #GstGLContext, #GstGLWindow
  *
  * #GstGLDisplay represents a connection to the underlying windowing system.
- * Elements are required to make use of #GstContext to share and propogate
+ * Elements are required to make use of #GstContext to share and propagate
  * a #GstGLDisplay.
  *
  * There are a number of environment variables that influence the choice of
@@ -402,7 +402,7 @@ gst_gl_display_default_get_foreign_display (GstGLDisplay * display)
  *
  * limit the use of OpenGL to the requested @gl_api.  This is intended to allow
  * application and elements to request a specific set of OpenGL API's based on
- * what they support.  See gst_gl_context_get_gl_api() for the retreiving the
+ * what they support.  See gst_gl_context_get_gl_api() for the retrieving the
  * API supported by a #GstGLContext.
  */
 void
@@ -637,7 +637,7 @@ gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
  * @compare_func: (scope call): a comparison function to run
  *
  * Execute @compare_func over the list of windows stored by @display.  The
- * first argment to @compare_func is the #GstGLWindow being checked and the
+ * first argument to @compare_func is the #GstGLWindow being checked and the
  * second argument is @data.
  *
  * Returns: (transfer none): The first #GstGLWindow that causes a match

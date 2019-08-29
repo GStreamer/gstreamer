@@ -78,7 +78,7 @@ typedef enum
  * @GST_MIKEY_PT_ID: ID payload
  * @GST_MIKEY_PT_CERT: Certificate Payload
  * @GST_MIKEY_PT_CHASH: Cert hash payload
- * @GST_MIKEY_PT_V: Verfication message payload
+ * @GST_MIKEY_PT_V: Verification message payload
  * @GST_MIKEY_PT_SP: Security Policy payload
  * @GST_MIKEY_PT_RAND: RAND payload
  * @GST_MIKEY_PT_ERR: Error payload
@@ -361,7 +361,7 @@ gboolean   gst_mikey_payload_t_set   (GstMIKEYPayload *payload,
  * @len: specifies the length of @val
  * @val: specifies the value of the parameter
  *
- * A Type/Length/Value field for security paramaters
+ * A Type/Length/Value field for security parameters
  */
 typedef struct {
   guint8  type;

@@ -1219,7 +1219,7 @@ child_is_raw_stream (const GstCaps * parent, const GstCaps * child)
 }
 
 /* If a parent is non-NULL, collected stream information will be appended to it
- * (and where the information exists, it will be overriden)
+ * (and where the information exists, it will be overridden)
  */
 static GstDiscovererStreamInfo *
 parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
@@ -1247,7 +1247,7 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
 
     if (nval == NULL) {
       /* FIXME : aggregate with information from main streams */
-      GST_DEBUG ("Coudn't find 'next' ! might be the last entry");
+      GST_DEBUG ("Couldn't find 'next' ! might be the last entry");
     } else {
       GstPad *srcpad;
 

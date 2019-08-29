@@ -72,7 +72,7 @@ typedef enum {
  * @buffer: the mapped buffer
  * @meta: pointer to metadata if any
  * @id: id of the mapped frame. the id can for example be used to
- *   indentify the frame in case of multiview video.
+ *   identify the frame in case of multiview video.
  * @data: pointers to the plane data
  * @map: mappings of the planes
  *
@@ -165,7 +165,7 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
  *                                     such as left or right eye view. This flags is set on
  *                                     any buffer that contains non-mono content - even for
  *                                     streams that contain only a single viewpoint. In mixed
- *                                     mono / non-mono streams, the absense of the flag marks
+ *                                     mono / non-mono streams, the absence of the flag marks
  *                                     mono buffers.
  * @GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE: When conveying stereo/multiview content with
  *                                     frame-by-frame methods, this flag marks the first buffer

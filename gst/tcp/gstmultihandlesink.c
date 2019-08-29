@@ -1183,7 +1183,7 @@ find_syncframe (GstMultiHandleSink * sink, gint idx, gint direction)
 /* Get the number of buffers from the buffer queue needed to satisfy
  * the maximum max in the configured units.
  * If units are not BUFFERS, and there are insufficient buffers in the
- * queue to satify the limit, return len(queue) + 1 */
+ * queue to satisfy the limit, return len(queue) + 1 */
 gint
 get_buffers_max (GstMultiHandleSink * sink, gint64 max)
 {
@@ -1241,7 +1241,7 @@ get_buffers_max (GstMultiHandleSink * sink, gint64 max)
  * is satisfied
  */
 /* count the amount of data in the buffers and return the index
- * that satifies the given limits.
+ * that satisfies the given limits.
  *
  * Returns: index @idx in the buffer queue so that the given limits are
  * satisfied. TRUE if all the limits could be satisfied, FALSE if not

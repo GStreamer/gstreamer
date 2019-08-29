@@ -16,7 +16,7 @@ informal standard is released so that implementors could have a set standard
 before a formal standard is set. The formal standard will use another version
 or revision number if not identical to what is described in this document. The
 contents in this document may change for clarifications but never for added or
-altered functionallity.
+altered functionality.
 Distribution of this document is unlimited.
 
 1.2. Abstract
@@ -316,7 +316,7 @@ defined as follows.
 
 
   j - Encryption
-      This flag indicates wether or not the frame is enrypted. If set one byte
+      This flag indicates whether or not the frame is encrypted. If set one byte
       indicating with which method it was encrypted will be appended to the
       frame header. See section_4.26. for more information about encryption
       method registration.
@@ -338,7 +338,7 @@ defined as follows.
 Some flags indicates that the frame header is extended with additional
 information. This information will be added to the frame header in the same
 order as the flags indicating the additions. I.e. the four bytes of
-decompressed size will preceed the encryption method byte. These additions to
+decompressed size will precede the encryption method byte. These additions to
 the frame header, while not included in the frame header size but are included
 in the 'frame size' field, are not subject to encryption or compression.
 
@@ -503,7 +503,7 @@ text information frames have the following format:
 
   TCOM
       The 'Composer(s)' frame is intended for the name of the composer(s). They
-      are seperated with the "/" character.
+      are separated with the "/" character.
 
 
 
@@ -563,7 +563,7 @@ text information frames have the following format:
 
   TEXT
       The 'Lyricist(s)/Text writer(s)' frame is intended for the writer(s) of
-      the text or lyrics in the recording. They are seperated with the "/
+      the text or lyrics in the recording. They are separated with the "/
       " character.
 
 
@@ -751,7 +751,7 @@ parentheses. If this frame is not present audio type is assumed to be "MPG".
       The 'Original lyricist(s)/text writer(s)' frame is intended for the text
       writer(s) of the original recording, if for example the music in the file
       should be a cover of a previously released song. The text writers are
-      seperated with the "/" character.
+      separated with the "/" character.
 
 
 
@@ -759,7 +759,7 @@ parentheses. If this frame is not present audio type is assumed to be "MPG".
       The 'Original artist(s)/performer(s)' frame is intended for the performer
       (s) of the original recording, if for example the music in the file
       should be a cover of a previously released song. The performers are
-      seperated with the "/" character.
+      separated with the "/" character.
 
 
 
@@ -779,7 +779,7 @@ parentheses. If this frame is not present audio type is assumed to be "MPG".
 
   TPE1
       The 'Lead artist(s)/Lead performer(s)/Soloist(s)/Performing group' is
-      used for the main artist(s). They are seperated with the "/" character.
+      used for the main artist(s). They are separated with the "/" character.
 
 
 
@@ -819,7 +819,7 @@ parentheses. If this frame is not present audio type is assumed to be "MPG".
       The 'Track number/Position in set' frame is a numeric string containing
       the order number of the audio-file on its original recording. This may be
       extended with a "/" character and a numeric string containing the total
-      numer of tracks/elements on the original recording. E.g. "4/9".
+      number of tracks/elements on the original recording. E.g. "4/9".
 
 
 
@@ -1206,7 +1206,7 @@ language and content descriptor.
 
 4.11. Comments
 
-This frame is indended for any kind of full text information that does not fit
+This frame is intended for any kind of full text information that does not fit
 in any other frame. It consists of a frame header followed by encoding,
 language and content descriptors and is ended with the actual comment as a text
 string. Newline characters are allowed in the comment text string. There may be
@@ -1361,7 +1361,7 @@ Picture type:
   $03     Cover (front)
   $04     Cover (back)
   $05     Leaflet page
-  $06     Media (e.g. lable side of CD)
+  $06     Media (e.g. label side of CD)
   $07     Lead artist/lead performer/soloist
   $08     Artist/performer
   $09     Conductor
@@ -1490,7 +1490,7 @@ To keep space waste as low as possible this frame may be used to link
 information from another ID3v2 tag that might reside in another audio file or
 alone in a binary file. It is recommended that this method is only used when
 the files are stored on a CD-ROM or other circumstances when the risk of file
-seperation is low. The frame contains a frame identifier, which is the frame
+separation is low. The frame contains a frame identifier, which is the frame
 that should be linked into this tag, a URL field, where a reference to the file
 where the frame is given, and additional ID data, if needed. Data should be
 retrieved from the first tag found in the file to which this link points. There
@@ -1551,7 +1551,7 @@ signed, as proof. Note that the "USER" and "TOWN" frames are good to use in
 conjunction with this one. The frame begins, after the frame ID, size and
 encoding fields, with a 'price payed' field. The first three characters of this
 field contains the currency used for the transaction, encoded according to ISO-
-4217 alphabetic currency code. Concatenated to this is the actual price payed,
+4217 alphabetic currency code. Concatenated to this is the actual price paid,
 as a numerical string using "." as the decimal separator. Next is an 8
 character date string (YYYYMMDD) followed by a string with the name of the
 seller as the last field in the frame. There may only be one "OWNE" frame in a
@@ -1559,7 +1559,7 @@ tag.
 
   <Header for 'Ownership frame', ID: "OWNE">
   Text encoding   $xx
-  Price payed     <text string> $00
+  Price paid     <text string> $00
   Date of purch.  <text string>
   Seller          <text string according to encoding>
 
@@ -1572,8 +1572,8 @@ solution than if one tries to achieve the same result with several frames. The
 frame begins, after the frame ID, size and encoding fields, with a price string
 field. A price is constructed by one three character currency code, encoded
 according to ISO-4217 alphabetic currency code, followed by a numerical value
-where "." is used as decimal seperator. In the price string several prices may
-be concatenated, seperated by a "/" character, but there may only be one
+where "." is used as decimal separator. In the price string several prices may
+be concatenated, separated by a "/" character, but there may only be one
 currency of each type.
 The price string is followed by an 8 character date string in the format
 YYYYMMDD, describing for how long the price is valid. After that is a contact
@@ -1850,7 +1850,7 @@ The following genres is defined in ID3v1
    64. Native American
    65. Cabaret
    66. New Wave
-   67. Psychadelic
+   67. Psychedelic
    68. Rave
    69. Showtunes
    70. Trailer

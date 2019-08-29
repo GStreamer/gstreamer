@@ -221,7 +221,7 @@ setup_rawvideoparse (gboolean use_sink_caps,
     g_value_init (&plane_strides_array, GST_TYPE_ARRAY);
 
     if (set_properties) {
-      /* When properties are explicitely set, we use Y444 as video format,
+      /* When properties are explicitly set, we use Y444 as video format,
        * so in that case, plane stride values are all the same */
       plane_offsets[0] = properties_ctx.plane_size * 0;
       plane_offsets[1] = properties_ctx.plane_size * 1;

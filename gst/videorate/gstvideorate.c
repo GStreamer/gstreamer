@@ -475,7 +475,7 @@ gst_video_rate_transform_caps (GstBaseTransform * trans,
           gst_structure_set (s3, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
         }
       } else if (max_num != 0 || max_denom != 1) {
-        /* We can provide everything upto the maximum framerate at the src */
+        /* We can provide everything up to the maximum framerate at the src */
         gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE,
             0, 1, max_num, max_denom, NULL);
       }
@@ -1424,7 +1424,7 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
           (videorate->segment.rate < 0.0 && intime <= videorate->next_ts)) {
         GstFlowReturn r;
 
-        /* The buffer received from basetransform is garanteed to be writable.
+        /* The buffer received from basetransform is guaranteed to be writable.
          * It just needs to be reffed so the buffer won't be consumed once pushed and
          * GstBaseTransform can get its reference back. */
         if ((r = gst_video_rate_push_buffer (videorate,
@@ -1568,7 +1568,7 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
     }
     while (diff1 < diff2);
 
-    /* if we outputed the first buffer more then once, we have dups */
+    /* if we outputted the first buffer more then once, we have dups */
     if (count > 1) {
       videorate->dup += count - 1;
       if (!videorate->silent)

@@ -26,7 +26,7 @@ The RTP libraries
   It is now possible to use all the gst_rtp_buffer_get_*() or
   gst_rtp_buffer_set_*() functions to read or write the different parts of the
   RTP header such as the payload type, the sequence number or the RTP
-  timestamp. The use can also retreive a pointer to the actual RTP payload data
+  timestamp. The use can also retrieve a pointer to the actual RTP payload data
   using the gst_rtp_buffer_get_payload() function.
 
   RTP Base Payloader Class (GstBaseRTPPayload)

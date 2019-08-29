@@ -2029,7 +2029,7 @@ gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
     frag_stage = gst_glsl_stage_new_default_fragment (gl_sink->context);
   }
   if (!vert_stage || !frag_stage) {
-    GST_ERROR_OBJECT (gl_sink, "Failed to retreive fragment shader for "
+    GST_ERROR_OBJECT (gl_sink, "Failed to retrieve fragment shader for "
         "texture target");
     if (vert_stage)
       gst_object_unref (vert_stage);
@@ -2240,7 +2240,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
     gst_gl_sync_meta_wait (gl_sink->stored_sync_meta,
         gst_gl_context_get_current ());
 
-  /* make sure that the environnement is clean */
+  /* make sure that the environment is clean */
   gst_gl_context_clear_shader (gl_sink->context);
   gl->BindTexture (gl_target, 0);
 

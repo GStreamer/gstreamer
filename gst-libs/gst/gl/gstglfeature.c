@@ -57,7 +57,7 @@ _init_debug (void)
  * @name: the extension to search for
  * @ext: the list of possible extensions
  *
- * Returns: whether @name is in the space seperated list of @ext
+ * Returns: whether @name is in the space separated list of @ext
  */
 gboolean
 gst_gl_check_extension (const char *name, const gchar * ext)

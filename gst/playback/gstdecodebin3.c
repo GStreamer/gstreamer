@@ -53,7 +53,7 @@
  * and only creates new elements when streams change and an existing decoder
  * is not capable of handling the new format.
  *
- * * supports multiple input pads for the parallel decoding of auxilliary streams
+ * * supports multiple input pads for the parallel decoding of auxiliary streams
  * not muxed with the primary stream.
  *
  * * does not handle network stream buffering. decodebin3 expects that network stream
@@ -216,7 +216,7 @@ struct _GstDecodebin3
   /* counter for input */
   guint32 input_counter;
   /* Current stream group_id (default : GST_GROUP_ID_INVALID) */
-  /* FIXME : Needs to be resetted appropriately (when upstream changes ?) */
+  /* FIXME : Needs to be reset appropriately (when upstream changes ?) */
   guint32 current_group_id;
   /* End of variables protected by input_lock */
 
@@ -574,7 +574,7 @@ gst_decodebin3_class_init (GstDecodebin3Class * klass)
    * GstDecodebin3::about-to-finish:
    *
    * This signal is emitted when the data for the selected URI is
-   * entirely buffered and it is safe to specify anothe URI.
+   * entirely buffered and it is safe to specify another URI.
    */
   gst_decodebin3_signals[SIGNAL_ABOUT_TO_FINISH] =
       g_signal_new ("about-to-finish", G_TYPE_FROM_CLASS (klass),

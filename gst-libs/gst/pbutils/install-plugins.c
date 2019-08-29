@@ -124,7 +124,7 @@
  * line arguments passed by GStreamer to the helper application into
  * arguments that are understood by the real installer.
  *
- * The helper application path defined at compile time can be overriden at
+ * The helper application path defined at compile time can be overridden at
  * runtime by setting the GST_INSTALL_PLUGINS_HELPER environment
  * variable. This can be useful for testing/debugging purposes.
  *
@@ -216,7 +216,7 @@
  * -   1 if no appropriate installation candidate for any of the requested
  *     plugins could be found. Only return this if nothing has been
  *     installed (#GST_INSTALL_PLUGINS_NOT_FOUND)
- * -   2 if an error occured during the installation. The application will
+ * -   2 if an error occurred during the installation. The application will
  *     assume that the user will already have seen an error message by the
  *     installer in this case and will usually not show another one
  *     (#GST_INSTALL_PLUGINS_ERROR)

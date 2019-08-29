@@ -31,7 +31,7 @@
  * elements.
  *
  * Applications can set the tags to write using the #GstTagSetter interface.
- * Tags contained withing the vorbis bitstream will be picked up
+ * Tags contained within the vorbis bitstream will be picked up
  * automatically (and merged according to the merge mode set via the tag
  * setter interface).
  *

@@ -387,7 +387,7 @@ _set_uniform (GQuark field_id, const GValue * value, gpointer user_data)
 #endif
   } else {
     /* FIXME: Add support for unsigned ints, non 4x4 matrices, etc */
-    GST_FIXME ("Don't know how to set the \'%s\' paramater.  Unknown type",
+    GST_FIXME ("Don't know how to set the \'%s\' parameter.  Unknown type",
         field_name);
     return TRUE;
   }
@@ -530,7 +530,7 @@ gst_gl_filtershader_hcallback (GstGLFilter * filter, GstGLMemory * in_tex,
 
   gst_gl_shader_use (shader);
 
-  /* FIXME: propertise these */
+  /* FIXME: turn these into properties */
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
   gst_gl_shader_set_uniform_1f (shader, "width",
       GST_VIDEO_INFO_WIDTH (&filter->out_info));
@@ -538,7 +538,7 @@ gst_gl_filtershader_hcallback (GstGLFilter * filter, GstGLMemory * in_tex,
       GST_VIDEO_INFO_HEIGHT (&filter->out_info));
   gst_gl_shader_set_uniform_1f (shader, "time", filtershader->time);
 
-  /* FIXME: propertise these */
+  /* FIXME: turn these into properties */
   filter->draw_attr_position_loc =
       gst_gl_shader_get_attribute_location (shader, "a_position");
   filter->draw_attr_texture_loc =

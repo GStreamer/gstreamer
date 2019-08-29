@@ -306,7 +306,7 @@ main (int argc, gchar ** argv)
       g_object_set (data->pipeline, "suburi", uri, NULL);
       g_free (uri);
     } else {
-      g_warning ("Could not parse auxilliary file argument. Ignoring");
+      g_warning ("Could not parse auxiliary file argument. Ignoring");
     }
   }
 

@@ -58,7 +58,7 @@ GQuark gst_gl_base_memory_error_quark (void);
 
 /**
  * GstGLBaseMemoryError:
- * @GST_GL_BASE_MEMORY_ERROR_FAILED: generic faliure
+ * @GST_GL_BASE_MEMORY_ERROR_FAILED: generic failure
  * @GST_GL_BASE_MEMORY_ERROR_OLD_LIBS: the implementation is too old and doesn't
  *                                     implement enough features
  * @GST_GL_BASE_MEMORY_ERROR_RESOURCE_UNAVAILABLE: a resource could not be found

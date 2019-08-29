@@ -350,7 +350,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   /**
    * GstAppSrc::max-latency:
    *
-   * The maximum latency of the source. A value of -1 means an unlimited amout
+   * The maximum latency of the source. A value of -1 means an unlimited amount
    * of latency.
    */
   g_object_class_install_property (gobject_class, PROP_MAX_LATENCY,
@@ -1937,9 +1937,9 @@ gst_app_src_push_sample_internal (GstAppSrc * appsrc, GstSample * sample)
  * When the block property is TRUE, this function can block until free
  * space becomes available in the queue.
  *
- * Returns: #GST_FLOW_OK when the buffer was successfuly queued.
+ * Returns: #GST_FLOW_OK when the buffer was successfully queued.
  * #GST_FLOW_FLUSHING when @appsrc is not PAUSED or PLAYING.
- * #GST_FLOW_EOS when EOS occured.
+ * #GST_FLOW_EOS when EOS occurred.
  */
 GstFlowReturn
 gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
@@ -1959,9 +1959,9 @@ gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
  * When the block property is TRUE, this function can block until free
  * space becomes available in the queue.
  *
- * Returns: #GST_FLOW_OK when the buffer list was successfuly queued.
+ * Returns: #GST_FLOW_OK when the buffer list was successfully queued.
  * #GST_FLOW_FLUSHING when @appsrc is not PAUSED or PLAYING.
- * #GST_FLOW_EOS when EOS occured.
+ * #GST_FLOW_EOS when EOS occurred.
  *
  * Since: 1.14
  */
@@ -1988,9 +1988,9 @@ gst_app_src_push_buffer_list (GstAppSrc * appsrc, GstBufferList * buffer_list)
  * When the block property is TRUE, this function can block until free
  * space becomes available in the queue.
  *
- * Returns: #GST_FLOW_OK when the buffer was successfuly queued.
+ * Returns: #GST_FLOW_OK when the buffer was successfully queued.
  * #GST_FLOW_FLUSHING when @appsrc is not PAUSED or PLAYING.
- * #GST_FLOW_EOS when EOS occured.
+ * #GST_FLOW_EOS when EOS occurred.
  *
  * Since: 1.6
  *
@@ -2033,7 +2033,7 @@ gst_app_src_push_sample_action (GstAppSrc * appsrc, GstSample * sample)
  * Indicates to the appsrc element that the last buffer queued in the
  * element is the last buffer of the stream.
  *
- * Returns: #GST_FLOW_OK when the EOS was successfuly queued.
+ * Returns: #GST_FLOW_OK when the EOS was successfully queued.
  * #GST_FLOW_FLUSHING when @appsrc is not PAUSED or PLAYING.
  */
 GstFlowReturn

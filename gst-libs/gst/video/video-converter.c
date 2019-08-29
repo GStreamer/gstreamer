@@ -2590,7 +2590,7 @@ copy_config (GQuark field_id, const GValue * value, gpointer user_data)
  * @convert: a #GstVideoConverter
  * @config: (transfer full): a #GstStructure
  *
- * Set @config as extra configuraion for @convert.
+ * Set @config as extra configuration for @convert.
  *
  * If the parameters in @config can not be set exactly, this function returns
  * %FALSE and will try to update as much state as possible. The new state can
