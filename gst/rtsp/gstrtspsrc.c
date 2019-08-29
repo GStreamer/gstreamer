@@ -2452,6 +2452,7 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
   }
 
   src->need_segment = FALSE;
+  src->clip_out_segment = FALSE;
 
   if (src->provided_clock) {
     gst_object_unref (src->provided_clock);
@@ -2899,6 +2900,10 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     else if (flags & GST_SEEK_FLAG_KEY_UNIT && flags & GST_SEEK_FLAG_SNAP_AFTER)
       seek_style = "Next";
   }
+
+  /* If an accurate seek was requested, we want to clip the segment we
+   * output in ONVIF mode to the requested bounds */
+  src->clip_out_segment = flags & GST_SEEK_FLAG_ACCURATE;
 
   if (playing)
     gst_rtspsrc_play (src, &seeksegment, FALSE, seek_style);
@@ -8433,6 +8438,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async,
   gchar *hval;
   gint hval_idx;
   const gchar *control;
+  GstSegment requested;
 
   GST_DEBUG_OBJECT (src, "PLAY...");
 
@@ -8448,6 +8454,8 @@ restart:
 
   if (!src->conninfo.connection || !src->conninfo.connected)
     goto done;
+
+  requested = *segment;
 
   /* send some dummy packets before we activate the receive in the
    * udp sources */
@@ -8643,6 +8651,18 @@ restart:
   }
 
   memcpy (&src->out_segment, segment, sizeof (GstSegment));
+
+  if (src->clip_out_segment) {
+    /* Only clip the output segment when the server has answered with valid
+     * values, we cannot know otherwise whether the requested bounds were
+     * available */
+    if (GST_CLOCK_TIME_IS_VALID (src->segment.start) &&
+        GST_CLOCK_TIME_IS_VALID (requested.start))
+      src->out_segment.start = MAX (src->out_segment.start, requested.start);
+    if (GST_CLOCK_TIME_IS_VALID (src->segment.stop) &&
+        GST_CLOCK_TIME_IS_VALID (requested.stop))
+      src->out_segment.stop = MIN (src->out_segment.stop, requested.stop);
+  }
 
   /* configure the caps of the streams after we parsed all headers. Only reset
    * the manager object when we set a new Range header (we did a seek) */

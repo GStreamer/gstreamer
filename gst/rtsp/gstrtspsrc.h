@@ -211,6 +211,7 @@ struct _GstRTSPSrc {
   GstClockTime     trickmode_interval;
   gint             free_channel;
   gboolean         need_segment;
+  gboolean         clip_out_segment;
   GstSegment       out_segment;
   GstClockTime     base_time;
 
