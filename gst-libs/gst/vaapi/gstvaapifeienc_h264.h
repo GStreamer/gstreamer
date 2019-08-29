@@ -94,9 +94,6 @@ gst_vaapi_feienc_h264_get_type (void) G_GNUC_CONST;
 GstVaapiEncoder *
 gst_vaapi_feienc_h264_new (GstVaapiDisplay * display);
 
-GPtrArray *
-gst_vaapi_feienc_h264_get_default_properties (void);
-
 gboolean
 gst_vaapi_feienc_h264_set_max_profile (GstVaapiFeiEncH264 * feienc,
     GstVaapiProfile profile);
