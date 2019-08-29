@@ -257,13 +257,13 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
 
   gst_rtsp_client_signals[SIGNAL_CLOSED] =
       g_signal_new ("closed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstRTSPClientClass, closed), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_STRUCT_OFFSET (GstRTSPClientClass, closed), NULL, NULL, NULL,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
 
   gst_rtsp_client_signals[SIGNAL_NEW_SESSION] =
       g_signal_new ("new-session", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstRTSPClientClass, new_session), NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_RTSP_SESSION);
+      G_STRUCT_OFFSET (GstRTSPClientClass, new_session), NULL, NULL, NULL,
+      G_TYPE_NONE, 1, GST_TYPE_RTSP_SESSION);
 
   /**
    * GstRTSPClient::pre-options-request:
@@ -278,9 +278,8 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_PRE_OPTIONS_REQUEST] =
       g_signal_new ("pre-options-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          pre_options_request), pre_signal_accumulator, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+          pre_options_request), pre_signal_accumulator, NULL, NULL,
+      GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::options-request:
@@ -290,8 +289,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_OPTIONS_REQUEST] =
       g_signal_new ("options-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, options_request),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::pre-describe-request:
@@ -306,9 +304,8 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_PRE_DESCRIBE_REQUEST] =
       g_signal_new ("pre-describe-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          pre_describe_request), pre_signal_accumulator, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+          pre_describe_request), pre_signal_accumulator, NULL, NULL,
+      GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::describe-request:
@@ -318,8 +315,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_DESCRIBE_REQUEST] =
       g_signal_new ("describe-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, describe_request),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::pre-setup-request:
@@ -334,9 +330,8 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_PRE_SETUP_REQUEST] =
       g_signal_new ("pre-setup-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          pre_setup_request), pre_signal_accumulator, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+          pre_setup_request), pre_signal_accumulator, NULL, NULL,
+      GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::setup-request:
@@ -346,8 +341,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_SETUP_REQUEST] =
       g_signal_new ("setup-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, setup_request),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::pre-play-request:
@@ -363,8 +357,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_signal_new ("pre-play-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
           pre_play_request), pre_signal_accumulator, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+      NULL, GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::play-request:
@@ -374,8 +367,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_PLAY_REQUEST] =
       g_signal_new ("play-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, play_request),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::pre-pause-request:
@@ -390,9 +382,8 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_PRE_PAUSE_REQUEST] =
       g_signal_new ("pre-pause-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          pre_pause_request), pre_signal_accumulator, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+          pre_pause_request), pre_signal_accumulator, NULL, NULL,
+      GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::pause-request:
@@ -402,8 +393,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_PAUSE_REQUEST] =
       g_signal_new ("pause-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, pause_request),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::pre-teardown-request:
@@ -418,9 +408,8 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_PRE_TEARDOWN_REQUEST] =
       g_signal_new ("pre-teardown-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          pre_teardown_request), pre_signal_accumulator, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+          pre_teardown_request), pre_signal_accumulator, NULL, NULL,
+      GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::teardown-request:
@@ -430,8 +419,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST] =
       g_signal_new ("teardown-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, teardown_request),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::pre-set-parameter-request:
@@ -446,8 +434,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_PRE_SET_PARAMETER_REQUEST] =
       g_signal_new ("pre-set-parameter-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          pre_set_parameter_request), pre_signal_accumulator, NULL,
-      g_cclosure_marshal_generic,
+          pre_set_parameter_request), pre_signal_accumulator, NULL, NULL,
       GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
@@ -458,7 +445,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_SET_PARAMETER_REQUEST] =
       g_signal_new ("set-parameter-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          set_parameter_request), NULL, NULL, g_cclosure_marshal_generic,
+          set_parameter_request), NULL, NULL, NULL,
       G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
@@ -474,9 +461,8 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_PRE_GET_PARAMETER_REQUEST] =
       g_signal_new ("pre-get-parameter-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          pre_get_parameter_request), pre_signal_accumulator, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+          pre_get_parameter_request), pre_signal_accumulator, NULL, NULL,
+      GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::get-parameter-request:
@@ -486,7 +472,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_GET_PARAMETER_REQUEST] =
       g_signal_new ("get-parameter-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          get_parameter_request), NULL, NULL, g_cclosure_marshal_generic,
+          get_parameter_request), NULL, NULL, NULL,
       G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
@@ -497,7 +483,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_HANDLE_RESPONSE] =
       g_signal_new ("handle-response", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          handle_response), NULL, NULL, g_cclosure_marshal_generic,
+          handle_response), NULL, NULL, NULL,
       G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
@@ -509,7 +495,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_SEND_MESSAGE] =
       g_signal_new ("send-message", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          send_message), NULL, NULL, g_cclosure_marshal_generic,
+          send_message), NULL, NULL, NULL,
       G_TYPE_NONE, 2, GST_TYPE_RTSP_CONTEXT, G_TYPE_POINTER);
 
   /**
@@ -525,9 +511,8 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_PRE_ANNOUNCE_REQUEST] =
       g_signal_new ("pre-announce-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          pre_announce_request), pre_signal_accumulator, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+          pre_announce_request), pre_signal_accumulator, NULL, NULL,
+      GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::announce-request:
@@ -537,8 +522,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_ANNOUNCE_REQUEST] =
       g_signal_new ("announce-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, announce_request),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::pre-record-request:
@@ -553,9 +537,8 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_PRE_RECORD_REQUEST] =
       g_signal_new ("pre-record-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          pre_record_request), pre_signal_accumulator, NULL,
-      g_cclosure_marshal_generic, GST_TYPE_RTSP_STATUS_CODE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+          pre_record_request), pre_signal_accumulator, NULL, NULL,
+      GST_TYPE_RTSP_STATUS_CODE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::record-request:
@@ -565,8 +548,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_RECORD_REQUEST] =
       g_signal_new ("record-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, record_request),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      GST_TYPE_RTSP_CONTEXT);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_RTSP_CONTEXT);
 
   /**
    * GstRTSPClient::check-requirements:
@@ -583,7 +565,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gst_rtsp_client_signals[SIGNAL_CHECK_REQUIREMENTS] =
       g_signal_new ("check-requirements", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
-          check_requirements), NULL, NULL, g_cclosure_marshal_generic,
+          check_requirements), NULL, NULL, NULL,
       G_TYPE_STRING, 2, GST_TYPE_RTSP_CONTEXT, G_TYPE_STRV);
 
   tunnels =

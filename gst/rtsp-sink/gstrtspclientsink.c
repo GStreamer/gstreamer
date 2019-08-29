@@ -739,8 +739,7 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
    */
   gst_rtsp_client_sink_signals[SIGNAL_HANDLE_REQUEST] =
       g_signal_new ("handle-request", G_TYPE_FROM_CLASS (klass), 0,
-      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
-      G_TYPE_POINTER, G_TYPE_POINTER);
+      0, NULL, NULL, NULL, G_TYPE_NONE, 2, G_TYPE_POINTER, G_TYPE_POINTER);
 
   /**
    * GstRTSPClientSink::new-manager:
@@ -753,8 +752,8 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
    */
   gst_rtsp_client_sink_signals[SIGNAL_NEW_MANAGER] =
       g_signal_new_class_handler ("new-manager", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL, NULL,
+      G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
    * GstRTSPClientSink::new-payloader:
@@ -767,8 +766,8 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
    */
   gst_rtsp_client_sink_signals[SIGNAL_NEW_PAYLOADER] =
       g_signal_new_class_handler ("new-payloader", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL,
-      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_RUN_CLEANUP, 0, NULL, NULL, NULL,
+      G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
    * GstRTSPClientSink::request-rtcp-key:

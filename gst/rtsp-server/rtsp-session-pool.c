@@ -114,8 +114,8 @@ gst_rtsp_session_pool_class_init (GstRTSPSessionPoolClass * klass)
   gst_rtsp_session_pool_signals[SIGNAL_SESSION_REMOVED] =
       g_signal_new ("session-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPSessionPoolClass,
-          session_removed), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
-      1, GST_TYPE_RTSP_SESSION);
+          session_removed), NULL, NULL, NULL, G_TYPE_NONE, 1,
+      GST_TYPE_RTSP_SESSION);
 
   klass->create_session_id = create_session_id;
   klass->create_session = create_session;
