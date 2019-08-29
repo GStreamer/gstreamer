@@ -371,26 +371,6 @@ struct _GstVaapiEncoderClass
                                                   gpointer * state);
 };
 
-#define GST_VAAPI_ENCODER_CLASS_HOOK(codec, func) \
-  .func = G_PASTE (G_PASTE (G_PASTE (gst_vaapi_encoder_,codec),_), func)
-
-#define GST_VAAPI_ENCODER_CLASS_INIT_BASE(CODEC)                \
-  .parent_class = {                                             \
-    .size = sizeof (G_PASTE (GstVaapiEncoder, CODEC)),          \
-    .finalize = (GDestroyNotify) gst_vaapi_encoder_finalize     \
-  }
-
-#define GST_VAAPI_ENCODER_CLASS_INIT(CODEC, codec)              \
-  GST_VAAPI_ENCODER_CLASS_INIT_BASE (CODEC),                    \
-    .class_data = &g_class_data,                                \
-    GST_VAAPI_ENCODER_CLASS_HOOK (codec, init),                 \
-    GST_VAAPI_ENCODER_CLASS_HOOK (codec, finalize),             \
-    GST_VAAPI_ENCODER_CLASS_HOOK (codec, reconfigure),          \
-    GST_VAAPI_ENCODER_CLASS_HOOK (codec, get_default_properties), \
-    GST_VAAPI_ENCODER_CLASS_HOOK (codec, reordering),           \
-    GST_VAAPI_ENCODER_CLASS_HOOK (codec, encode),               \
-    GST_VAAPI_ENCODER_CLASS_HOOK (codec, flush)
-
 G_GNUC_INTERNAL
 GstVaapiSurfaceProxy *
 gst_vaapi_encoder_create_surface (GstVaapiEncoder *
