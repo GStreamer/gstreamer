@@ -389,6 +389,15 @@ GST_API
 const gchar   * gst_debug_message_get    (GstDebugMessage  * message);
 
 GST_API
+gchar         * gst_debug_log_get_line    (GstDebugCategory * category,
+                                           GstDebugLevel      level,
+                                           const gchar      * file,
+                                           const gchar      * function,
+                                           gint               line,
+                                           GObject          * object,
+                                           GstDebugMessage  * message) G_GNUC_NO_INSTRUMENT;
+
+GST_API
 void            gst_debug_log_default    (GstDebugCategory * category,
                                           GstDebugLevel      level,
                                           const gchar      * file,
@@ -397,6 +406,7 @@ void            gst_debug_log_default    (GstDebugCategory * category,
                                           GObject          * object,
                                           GstDebugMessage  * message,
                                           gpointer           user_data) G_GNUC_NO_INSTRUMENT;
+
 GST_API
 const gchar *   gst_debug_level_get_name (GstDebugLevel level);
 

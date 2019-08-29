@@ -1079,6 +1079,7 @@ gst_debug_construct_win_color (guint colorinfo)
 #endif
 #define PID_FMT "%5d"
 #define CAT_FMT "%20s %s:%d:%s:%s"
+#define NOCOLOR_PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
 
 #ifdef G_OS_WIN32
 static const guchar levelcolormap_w32[GST_LEVEL_COUNT] = {
@@ -1123,6 +1124,81 @@ static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
   "\033[37m"                    /* GST_LEVEL_MEMDUMP */
 };
 
+static void
+_gst_debug_log_preamble (GstDebugMessage * message, GObject * object,
+    const gchar ** file, const gchar ** message_str, gchar ** obj_str,
+    GstClockTime * elapsed)
+{
+  gchar c;
+
+  /* Get message string first because printing it might call into our custom
+   * printf format extension mechanism which in turn might log something, e.g.
+   * from inside gst_structure_to_string() when something can't be serialised.
+   * This means we either need to do this outside of any critical section or
+   * use a recursive lock instead. As we always need the message string in all
+   * code paths, we might just as well get it here first thing and outside of
+   * the win_print_mutex critical section. */
+  *message_str = gst_debug_message_get (message);
+
+  /* __FILE__ might be a file name or an absolute path or a
+   * relative path, irrespective of the exact compiler used,
+   * in which case we want to shorten it to the filename for
+   * readability. */
+  c = (*file)[0];
+  if (c == '.' || c == '/' || c == '\\' || (c != '\0' && (*file)[1] == ':')) {
+    *file = gst_path_basename (*file);
+  }
+
+  if (object) {
+    *obj_str = gst_debug_print_object (object);
+  } else {
+    *obj_str = (gchar *) "";
+  }
+
+  *elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
+}
+
+/**
+ * gst_debug_log_get_line:
+ * @category: category to log
+ * @level: level of the message
+ * @file: the file that emitted the message, usually the __FILE__ identifier
+ * @function: the function that emitted the message
+ * @line: the line from that the message was emitted, usually __LINE__
+ * @object: (transfer none) (allow-none): the object this message relates to,
+ *     or %NULL if none
+ * @message: the actual message
+ *
+ * Returns the string representation for the specified debug log message
+ * formatted in the same way as gst_debug_log_default() (the default handler),
+ * without color. The purpose is to make it easy for custom log output
+ * handlers to get a log output that is identical to what the default handler
+ * would write out.
+ *
+ * Since: 1.18
+ */
+gchar *
+gst_debug_log_get_line (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    GObject * object, GstDebugMessage * message)
+{
+  GstClockTime elapsed;
+  gchar *ret, *obj_str = NULL;
+  const gchar *message_str;
+
+  _gst_debug_log_preamble (message, object, &file, &message_str, &obj_str,
+      &elapsed);
+
+  ret = g_strdup_printf ("%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT,
+      GST_TIME_ARGS (elapsed), getpid (), g_thread_self (),
+      gst_debug_level_get_name (level), gst_debug_category_get_name
+      (category), file, line, function, obj_str, message_str);
+
+  if (object != NULL)
+    g_free (obj_str);
+  return ret;
+}
+
 /**
  * gst_debug_log_default:
  * @category: category to log
@@ -1156,36 +1232,12 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   GstDebugColorMode color_mode;
   const gchar *message_str;
   FILE *log_file = user_data ? user_data : stderr;
-  gchar c;
 
-  /* Get message string first because printing it might call into our custom
-   * printf format extension mechanism which in turn might log something, e.g.
-   * from inside gst_structure_to_string() when something can't be serialised.
-   * This means we either need to do this outside of any critical section or
-   * use a recursive lock instead. As we always need the message string in all
-   * code paths, we might just as well get it here first thing and outside of
-   * the win_print_mutex critical section. */
-  message_str = gst_debug_message_get (message);
-
-  /* __FILE__ might be a file name or an absolute path or a
-   * relative path, irrespective of the exact compiler used,
-   * in which case we want to shorten it to the filename for
-   * readability. */
-  c = file[0];
-  if (c == '.' || c == '/' || c == '\\' || (c != '\0' && file[1] == ':')) {
-    file = gst_path_basename (file);
-  }
+  _gst_debug_log_preamble (message, object, &file, &message_str, &obj,
+      &elapsed);
 
   pid = getpid ();
   color_mode = gst_debug_get_color_mode ();
-
-  if (object) {
-    obj = gst_debug_print_object (object);
-  } else {
-    obj = (gchar *) "";
-  }
-
-  elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
 
   if (color_mode != GST_DEBUG_COLOR_MODE_OFF) {
 #ifdef G_OS_WIN32
@@ -1251,13 +1303,11 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 #endif
   } else {
     /* no color, all platforms */
-#define PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
-    fprintf (log_file, "%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
-        pid, g_thread_self (), gst_debug_level_get_name (level),
+    fprintf (log_file, "%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT, GST_TIME_ARGS
+        (elapsed), pid, g_thread_self (), gst_debug_level_get_name (level),
         gst_debug_category_get_name (category), file, line, function, obj,
         message_str);
     fflush (log_file);
-#undef PRINT_FMT
   }
 
   if (object != NULL)
