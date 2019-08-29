@@ -106,10 +106,6 @@ gst_vaapiencode_get_type (void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapiencode_init_properties (GstVaapiEncode * encode);
-
-G_GNUC_INTERNAL
-gboolean
 gst_vaapiencode_class_init_properties (GstVaapiEncodeClass * encode_class);
 
 G_GNUC_INTERNAL

@@ -109,28 +109,6 @@ typedef struct
   GValue value;
 } PropValue;
 
-static PropValue *
-prop_value_new (GstVaapiEncoderPropInfo * prop)
-{
-  static const GValue default_value = G_VALUE_INIT;
-  PropValue *prop_value;
-
-  if (!prop || !prop->pspec)
-    return NULL;
-
-  prop_value = g_slice_new (PropValue);
-  if (!prop_value)
-    return NULL;
-
-  prop_value->id = prop->prop;
-  prop_value->pspec = g_param_spec_ref (prop->pspec);
-
-  memcpy (&prop_value->value, &default_value, sizeof (prop_value->value));
-  g_value_init (&prop_value->value, prop->pspec->value_type);
-  g_param_value_set_default (prop->pspec, &prop_value->value);
-  return prop_value;
-}
-
 static void
 prop_value_free (PropValue * prop_value)
 {
@@ -1001,34 +979,6 @@ static inline GPtrArray *
 get_properties (GstVaapiEncodeClass * klass)
 {
   return klass->get_properties ? klass->get_properties () : NULL;
-}
-
-gboolean
-gst_vaapiencode_init_properties (GstVaapiEncode * encode)
-{
-  GPtrArray *const props = get_properties (GST_VAAPIENCODE_GET_CLASS (encode));
-  guint i;
-
-  /* XXX: use base_init()/base_finalize() to avoid multiple initializations */
-  if (!props)
-    return FALSE;
-
-  encode->prop_values =
-      g_ptr_array_new_full (props->len, (GDestroyNotify) prop_value_free);
-  if (!encode->prop_values) {
-    g_ptr_array_unref (props);
-    return FALSE;
-  }
-
-  for (i = 0; i < props->len; i++) {
-    PropValue *const prop_value = prop_value_new ((GstVaapiEncoderPropInfo *)
-        g_ptr_array_index (props, i));
-    if (!prop_value)
-      return FALSE;
-    g_ptr_array_add (encode->prop_values, prop_value);
-  }
-  g_ptr_array_unref (props);
-  return TRUE;
 }
 
 gboolean
