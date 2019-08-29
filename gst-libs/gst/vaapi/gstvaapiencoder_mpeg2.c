@@ -782,26 +782,6 @@ gst_vaapi_encoder_mpeg2_finalize (GObject * object)
   G_OBJECT_CLASS (gst_vaapi_encoder_mpeg2_parent_class)->finalize (object);
 }
 
-static GstVaapiEncoderStatus
-_gst_vaapi_encoder_mpeg2_set_property (GstVaapiEncoder * base_encoder,
-    gint prop_id, const GValue * value)
-{
-  GstVaapiEncoderMpeg2 *const encoder =
-      GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
-
-  switch (prop_id) {
-    case GST_VAAPI_ENCODER_MPEG2_PROP_QUANTIZER:
-      encoder->cqp = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_MPEG2_PROP_MAX_BFRAMES:
-      encoder->ip_period = g_value_get_uint (value);
-      break;
-    default:
-      return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
-  }
-  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
-}
-
 /**
  * @ENCODER_MPEG2_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
  * @ENCODER_MPEG2_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
@@ -892,7 +872,6 @@ gst_vaapi_encoder_mpeg2_class_init (GstVaapiEncoderMpeg2Class * klass)
   encoder_class->reordering = gst_vaapi_encoder_mpeg2_reordering;
   encoder_class->encode = gst_vaapi_encoder_mpeg2_encode;
   encoder_class->flush = gst_vaapi_encoder_mpeg2_flush;
-  encoder_class->set_property = _gst_vaapi_encoder_mpeg2_set_property;
 
   object_class->set_property = gst_vaapi_encoder_mpeg2_set_property;
   object_class->get_property = gst_vaapi_encoder_mpeg2_get_property;

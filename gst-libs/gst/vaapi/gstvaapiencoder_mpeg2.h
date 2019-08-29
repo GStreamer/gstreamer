@@ -38,19 +38,6 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiEncoderMpeg2 GstVaapiEncoderMpeg2;
 typedef struct _GstVaapiEncoderMpeg2Class GstVaapiEncoderMpeg2Class;
 
-/**
- * GstVaapiEncoderMpeg2Prop:
- * @GST_VAAPI_ENCODER_MPEG2_PROP_QUANTIZER: Constant quantizer value (uint).
- * @GST_VAAPI_ENCODER_MPEG2_PROP_MAX_BFRAMES: Number of B-frames between I
- *   and P (uint).
- *
- * The set of MPEG-2 encoder specific configurable properties.
- */
-typedef enum {
-  GST_VAAPI_ENCODER_MPEG2_PROP_QUANTIZER = -1,
-  GST_VAAPI_ENCODER_MPEG2_PROP_MAX_BFRAMES = -2,
-} GstVaapiEncoderMpeg2Prop;
-
 GType
 gst_vaapi_encoder_mpeg2_get_type (void) G_GNUC_CONST;
 
