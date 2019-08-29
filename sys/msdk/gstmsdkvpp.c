@@ -718,6 +718,7 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     out_surface->surface = gst_msdk_get_surface_from_buffer (outbuf);
   } else {
     GST_ERROR ("Failed to get msdk outsurface!");
+    free_msdk_surface (in_surface);
     return GST_FLOW_ERROR;
   }
 
@@ -770,30 +771,29 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     }
   } while (status == MFX_ERR_MORE_SURFACE);
 
-  free_msdk_surface (in_surface);
-  return ret;
+  goto transform_end;
 
 vpp_error:
   GST_ERROR_OBJECT (thiz, "MSDK Failed to do VPP");
-  free_msdk_surface (in_surface);
-  free_msdk_surface (out_surface);
-  return GST_FLOW_ERROR;
+  ret = GST_FLOW_ERROR;
+  goto transform_end;
 
 error_more_data:
   GST_WARNING_OBJECT (thiz,
       "MSDK Requries additional input for processing, "
       "Retruning FLOW_DROPPED since no output buffer was generated");
-  free_msdk_surface (in_surface);
-  return GST_BASE_TRANSFORM_FLOW_DROPPED;
+  ret = GST_BASE_TRANSFORM_FLOW_DROPPED;
+  goto transform_end;
 
 error_push_buffer:
-  {
-    free_msdk_surface (in_surface);
-    free_msdk_surface (out_surface);
-    GST_DEBUG_OBJECT (thiz, "failed to push output buffer: %s",
-        gst_flow_get_name (ret));
-    return ret;
-  }
+  GST_DEBUG_OBJECT (thiz, "failed to push output buffer: %s",
+      gst_flow_get_name (ret));
+
+transform_end:
+  free_msdk_surface (in_surface);
+  free_msdk_surface (out_surface);
+
+  return ret;
 }
 
 static void
