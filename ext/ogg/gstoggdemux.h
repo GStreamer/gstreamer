@@ -203,7 +203,7 @@ struct _GstOggDemux
   ogg_sync_state sync;
   long chunk_size;
 
-  /* Seek events set up by the streaming thread in push mode */
+  /* Seek events set up by the streaming thread */
   GstEvent *seek_event;
   GThread *seek_event_thread;
   GMutex seek_event_mutex;
