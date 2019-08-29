@@ -149,7 +149,7 @@ nle_operation_class_init (NleOperationClass * klass)
   nle_operation_signals[INPUT_PRIORITY_CHANGED] =
       g_signal_new ("input-priority-changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (NleOperationClass,
-          input_priority_changed), NULL, NULL, g_cclosure_marshal_generic,
+          input_priority_changed), NULL, NULL, NULL,
       G_TYPE_NONE, 2, GST_TYPE_PAD, G_TYPE_UINT);
 
   gstelement_class->request_new_pad =

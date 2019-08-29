@@ -427,7 +427,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
   ges_timeline_element_signals[DEEP_NOTIFY] =
       g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
-      G_SIGNAL_NO_HOOKS, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_NO_HOOKS, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 2, G_TYPE_OBJECT, G_TYPE_PARAM);
 
   object_class->dispose = ges_timeline_element_dispose;

@@ -177,7 +177,7 @@ ges_marker_list_class_init (GESMarkerListClass * klass)
   */
   ges_marker_list_signals[MARKER_ADDED] =
       g_signal_new ("marker-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 2, G_TYPE_UINT64, GES_TYPE_MARKER);
 
 /**
@@ -190,8 +190,7 @@ ges_marker_list_class_init (GESMarkerListClass * klass)
   */
   ges_marker_list_signals[MARKER_REMOVED] =
       g_signal_new ("marker-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
-      G_TYPE_NONE, 1, GES_TYPE_MARKER);
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_MARKER);
 
 /**
   * GESMarkerList::marker-moved:
@@ -205,7 +204,7 @@ ges_marker_list_class_init (GESMarkerListClass * klass)
   */
   ges_marker_list_signals[MARKER_MOVED] =
       g_signal_new ("marker-moved", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 3, G_TYPE_UINT64, G_TYPE_UINT64, GES_TYPE_MARKER);
 }
 

@@ -718,7 +718,7 @@ ges_track_class_init (GESTrackClass * klass)
    */
   ges_track_signals[TRACK_ELEMENT_ADDED] =
       g_signal_new ("track-element-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_ELEMENT);
 
   /**
@@ -730,7 +730,7 @@ ges_track_class_init (GESTrackClass * klass)
    */
   ges_track_signals[TRACK_ELEMENT_REMOVED] =
       g_signal_new ("track-element-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 1, GES_TYPE_TRACK_ELEMENT);
 
   /**

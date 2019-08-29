@@ -1064,8 +1064,7 @@ nle_composition_class_init (NleCompositionClass * klass)
 
   _signals[COMMITED_SIGNAL] =
       g_signal_new ("commited", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_FIRST,
-      0, NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      G_TYPE_BOOLEAN);
+      0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 
   GST_DEBUG_REGISTER_FUNCPTR (_seek_pipeline_func);
   GST_DEBUG_REGISTER_FUNCPTR (_remove_object_func);

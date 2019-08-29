@@ -503,7 +503,7 @@ ges_project_class_init (GESProjectClass * klass)
   _signals[ASSET_ADDED_SIGNAL] =
       g_signal_new ("asset-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GESProjectClass, asset_added),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_ASSET);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_ASSET);
 
   /**
    * GESProject::asset-loading:
@@ -515,7 +515,7 @@ ges_project_class_init (GESProjectClass * klass)
   _signals[ASSET_LOADING_SIGNAL] =
       g_signal_new ("asset-loading", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GESProjectClass, asset_loading),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_ASSET);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_ASSET);
 
   /**
    * GESProject::asset-removed:
@@ -525,7 +525,7 @@ ges_project_class_init (GESProjectClass * klass)
   _signals[ASSET_REMOVED_SIGNAL] =
       g_signal_new ("asset-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GESProjectClass, asset_removed),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_ASSET);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_ASSET);
 
   /**
    * GESProject::loading:
@@ -537,8 +537,7 @@ ges_project_class_init (GESProjectClass * klass)
   _signals[LOADING_SIGNAL] =
       g_signal_new ("loading", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESProjectClass, loading),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
-      1, GES_TYPE_TIMELINE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_TIMELINE);
 
   /**
    * GESProject::loaded:
@@ -548,8 +547,7 @@ ges_project_class_init (GESProjectClass * klass)
   _signals[LOADED_SIGNAL] =
       g_signal_new ("loaded", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESProjectClass, loaded),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
-      1, GES_TYPE_TIMELINE);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_TIMELINE);
 
   /**
    * GESProject::missing-uri:
@@ -581,7 +579,7 @@ ges_project_class_init (GESProjectClass * klass)
   _signals[MISSING_URI_SIGNAL] =
       g_signal_new ("missing-uri", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GESProjectClass, missing_uri),
-      _uri_missing_accumulator, NULL, g_cclosure_marshal_generic,
+      _uri_missing_accumulator, NULL, NULL,
       G_TYPE_STRING, 2, G_TYPE_ERROR, GES_TYPE_ASSET);
 
   /**
@@ -599,7 +597,7 @@ ges_project_class_init (GESProjectClass * klass)
   _signals[ERROR_LOADING_ASSET] =
       g_signal_new ("error-loading-asset", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GESProjectClass, loading_error),
-      NULL, NULL, g_cclosure_marshal_generic,
+      NULL, NULL, NULL,
       G_TYPE_NONE, 3, G_TYPE_ERROR, G_TYPE_STRING, G_TYPE_GTYPE);
 
   /**
@@ -612,9 +610,8 @@ ges_project_class_init (GESProjectClass * klass)
    */
   _signals[ERROR_LOADING] =
       g_signal_new ("error-loading", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0,
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, GES_TYPE_TIMELINE,
-      G_TYPE_ERROR);
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
+      G_TYPE_NONE, 2, GES_TYPE_TIMELINE, G_TYPE_ERROR);
 
   object_class->dispose = _dispose;
   object_class->finalize = _finalize;

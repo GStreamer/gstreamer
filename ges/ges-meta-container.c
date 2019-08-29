@@ -76,7 +76,7 @@ ges_meta_container_default_init (GESMetaContainerInterface * iface)
   _signals[NOTIFY_SIGNAL] =
       g_signal_new ("notify-meta", G_TYPE_FROM_INTERFACE (iface),
       G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
-      G_SIGNAL_NO_HOOKS, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_NO_HOOKS, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_VALUE);
 }
 

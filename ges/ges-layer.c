@@ -196,7 +196,7 @@ ges_layer_class_init (GESLayerClass * klass)
   ges_layer_signals[OBJECT_ADDED] =
       g_signal_new ("clip-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESLayerClass, object_added),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_CLIP);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_CLIP);
 
   /**
    * GESLayer::clip-removed:
@@ -208,8 +208,7 @@ ges_layer_class_init (GESLayerClass * klass)
   ges_layer_signals[OBJECT_REMOVED] =
       g_signal_new ("clip-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESLayerClass,
-          object_removed), NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE,
-      1, GES_TYPE_CLIP);
+          object_removed), NULL, NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_CLIP);
 }
 
 static void

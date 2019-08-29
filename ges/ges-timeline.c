@@ -533,7 +533,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   ges_timeline_signals[TRACK_ADDED] =
       g_signal_new ("track-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, track_added), NULL,
-      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_TRACK);
+      NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_TRACK);
 
   /**
    * GESTimeline::track-removed:
@@ -545,7 +545,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   ges_timeline_signals[TRACK_REMOVED] =
       g_signal_new ("track-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, track_removed),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_TRACK);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_TRACK);
 
   /**
    * GESTimeline::layer-added:
@@ -557,7 +557,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   ges_timeline_signals[LAYER_ADDED] =
       g_signal_new ("layer-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_added), NULL,
-      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_LAYER);
+      NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_LAYER);
 
   /**
    * GESTimeline::layer-removed:
@@ -569,7 +569,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   ges_timeline_signals[LAYER_REMOVED] =
       g_signal_new ("layer-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, layer_removed),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_LAYER);
+      NULL, NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_LAYER);
 
   /**
    * GESTimeline::group-added
@@ -581,7 +581,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   ges_timeline_signals[GROUP_ADDED] =
       g_signal_new ("group-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, group_added), NULL,
-      NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_GROUP);
+      NULL, NULL, G_TYPE_NONE, 1, GES_TYPE_GROUP);
 
   /**
    * GESTimeline::group-removed
@@ -594,8 +594,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   ges_timeline_signals[GROUP_REMOVED] =
       g_signal_new ("group-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST, G_STRUCT_OFFSET (GESTimelineClass, group_removed),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, GES_TYPE_GROUP,
-      G_TYPE_PTR_ARRAY);
+      NULL, NULL, NULL, G_TYPE_NONE, 2, GES_TYPE_GROUP, G_TYPE_PTR_ARRAY);
 
   /**
    * GESTimeline::snapping-started:

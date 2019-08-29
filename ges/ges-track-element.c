@@ -297,7 +297,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    */
   ges_track_element_signals[CONTROL_BINDING_ADDED] =
       g_signal_new ("control-binding-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 1, GST_TYPE_CONTROL_BINDING);
 
   /**
@@ -310,7 +310,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    */
   ges_track_element_signals[CONTROL_BINDING_REMOVED] =
       g_signal_new ("control-binding-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_SIGNAL_RUN_FIRST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 1, GST_TYPE_CONTROL_BINDING);
 
   element_class->set_start = _set_start;
