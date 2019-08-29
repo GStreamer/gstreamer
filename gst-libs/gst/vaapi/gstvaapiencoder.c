@@ -1621,14 +1621,6 @@ gst_vaapi_encoder_finalize (GObject * object)
   G_OBJECT_CLASS (gst_vaapi_encoder_parent_class)->finalize (object);
 }
 
-/* Helper function to create new GstVaapiEncoder instances (internal) */
-GstVaapiEncoder *
-gst_vaapi_encoder_new (const GstVaapiEncoderClass * klass,
-    GstVaapiDisplay * display)
-{
-  return NULL;
-}
-
 static void
 encoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)

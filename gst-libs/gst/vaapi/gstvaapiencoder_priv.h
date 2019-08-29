@@ -392,11 +392,6 @@ struct _GstVaapiEncoderClass
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, flush)
 
 G_GNUC_INTERNAL
-GstVaapiEncoder *
-gst_vaapi_encoder_new (const GstVaapiEncoderClass * klass,
-    GstVaapiDisplay * display);
-
-G_GNUC_INTERNAL
 GstVaapiSurfaceProxy *
 gst_vaapi_encoder_create_surface (GstVaapiEncoder *
     encoder);
