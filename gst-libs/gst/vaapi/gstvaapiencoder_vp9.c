@@ -556,34 +556,6 @@ gst_vaapi_encoder_vp9_init (GstVaapiEncoderVP9 * encoder)
   encoder->ref_list_idx = 0;
 }
 
-static GstVaapiEncoderStatus
-_gst_vaapi_encoder_vp9_set_property (GstVaapiEncoder * base_encoder,
-    gint prop_id, const GValue * value)
-{
-  GstVaapiEncoderVP9 *const encoder = GST_VAAPI_ENCODER_VP9 (base_encoder);
-
-  switch (prop_id) {
-    case GST_VAAPI_ENCODER_VP9_PROP_LOOP_FILTER_LEVEL:
-      encoder->loop_filter_level = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_VP9_PROP_SHARPNESS_LEVEL:
-      encoder->sharpness_level = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_VP9_PROP_YAC_Q_INDEX:
-      encoder->yac_qi = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_ENCODER_VP9_PROP_REF_PIC_MODE:
-      encoder->ref_pic_mode = g_value_get_enum (value);
-      break;
-    case GST_VAAPI_ENCODER_VP9_PROP_CPB_LENGTH:
-      encoder->cpb_length = g_value_get_uint (value);
-      break;
-    default:
-      return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
-  }
-  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
-}
-
 /**
  * @ENCODER_VP9_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
  * @ENCODER_VP9_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
@@ -697,7 +669,6 @@ gst_vaapi_encoder_vp9_class_init (GstVaapiEncoderVP9Class * klass)
   encoder_class->reordering = gst_vaapi_encoder_vp9_reordering;
   encoder_class->encode = gst_vaapi_encoder_vp9_encode;
   encoder_class->flush = gst_vaapi_encoder_vp9_flush;
-  encoder_class->set_property = _gst_vaapi_encoder_vp9_set_property;
 
   object_class->set_property = gst_vaapi_encoder_vp9_set_property;
   object_class->get_property = gst_vaapi_encoder_vp9_get_property;
