@@ -398,6 +398,11 @@ valgrind ges:
   # Gitlab Runner issue: https://gitlab.com/gitlab-org/gitlab-runner/issues/4291
   # Blocked upgrade issue: https://gitlab.freedesktop.org/gstreamer/gst-ci/issues/6#note_192780
   after_script:
+  except:
+    variables:
+      - $CI_PROJECT_NAME == "cerbero"
+      - $CI_PROJECT_NAME == "gst-omx"
+      - $CI_PROJECT_NAME == "gstreamer-vaapi"
 
 build vs2017 amd64:
   extends: '.build windows'
