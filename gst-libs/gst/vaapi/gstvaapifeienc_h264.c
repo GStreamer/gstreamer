@@ -1763,94 +1763,6 @@ get_view_ids (GstVaapiFeiEncH264 * const encoder, GValue * value)
   g_value_unset (&id);
 }
 
-GstVaapiEncoderStatus
-gst_vaapi_feienc_h264_set_property (GstVaapiEncoder * base_encoder,
-    gint prop_id, const GValue * value)
-{
-  GstVaapiFeiEncH264 *const feienc = GST_VAAPI_FEI_ENC_H264_CAST (base_encoder);
-
-  switch (prop_id) {
-    case GST_VAAPI_FEI_H264_ENC_PROP_MAX_BFRAMES:
-      feienc->num_bframes = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_INIT_QP:
-      feienc->init_qp = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_MIN_QP:
-      feienc->min_qp = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_NUM_SLICES:
-      feienc->num_slices = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_CABAC:
-      feienc->use_cabac = g_value_get_boolean (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_DCT8X8:
-      feienc->use_dct8x8 = g_value_get_boolean (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_CPB_LENGTH:
-      feienc->cpb_length = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_NUM_VIEWS:
-      feienc->num_views = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_VIEW_IDS:
-      set_view_ids (feienc, value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_NUM_REF:
-      feienc->num_ref_frames = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_NUM_MV_PREDICT_L0:
-      feienc->num_mv_predictors_l0 = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_NUM_MV_PREDICT_L1:
-      feienc->num_mv_predictors_l1 = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_SEARCH_WINDOW:
-      feienc->search_window = g_value_get_enum (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_LEN_SP:
-      feienc->len_sp = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_SEARCH_PATH:
-      feienc->search_path = g_value_get_enum (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_REF_WIDTH:
-      feienc->ref_width = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_REF_HEIGHT:
-      feienc->ref_height = g_value_get_uint (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_SUBMB_MASK:
-      feienc->submb_part_mask = g_value_get_flags (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_SUBPEL_MODE:
-      feienc->subpel_mode = g_value_get_enum (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_INTRA_PART_MASK:
-      feienc->intra_part_mask = g_value_get_flags (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_INTRA_SAD:
-      feienc->intra_sad = g_value_get_enum (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_INTER_SAD:
-      feienc->inter_sad = g_value_get_enum (value);
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_ADAPT_SEARCH:
-      feienc->adaptive_search = g_value_get_boolean (value) ? 1 : 0;
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_MULTI_PRED_L0:
-      feienc->multi_predL0 = g_value_get_boolean (value) ? 1 : 0;
-      break;
-    case GST_VAAPI_FEI_H264_ENC_PROP_MULTI_PRED_L1:
-      feienc->multi_predL1 = g_value_get_boolean (value) ? 1 : 0;
-      break;
-    default:
-      return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
-  }
-  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
-}
-
 /**
  * @FEI_H264_ENC_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
  * @FEI_H264_ENC_PROP_TUNE: The tuning options (#GstVaapiEncoderTune).
@@ -1906,7 +1818,7 @@ enum
 static GParamSpec *properties[FEI_H264_ENC_N_PROPERTIES];
 
 static void
-_gst_vaapi_feienc_h264_set_property (GObject * object, guint prop_id,
+gst_vaapi_feienc_h264_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER (object);
@@ -2122,10 +2034,9 @@ gst_vaapi_feienc_h264_class_init (GstVaapiFeiEncH264Class * klass)
   encoder_class->reordering = gst_vaapi_feienc_h264_reordering;
   encoder_class->encode = gst_vaapi_feienc_h264_fake_encode;
   encoder_class->flush = gst_vaapi_feienc_h264_flush;
-  encoder_class->set_property = gst_vaapi_feienc_h264_set_property;
   encoder_class->get_codec_data = gst_vaapi_feienc_h264_get_codec_data;
 
-  object_class->set_property = _gst_vaapi_feienc_h264_set_property;
+  object_class->set_property = gst_vaapi_feienc_h264_set_property;
   object_class->get_property = gst_vaapi_feienc_h264_get_property;
   object_class->finalize = gst_vaapi_feienc_h264_finalize;
 
