@@ -856,8 +856,6 @@ gst_vaapi_encoder_jpeg_class_init (GstVaapiEncoderJpegClass * klass)
 
   encoder_class->class_data = &g_class_data;
   encoder_class->reconfigure = gst_vaapi_encoder_jpeg_reconfigure;
-  encoder_class->get_default_properties =
-      gst_vaapi_encoder_jpeg_get_default_properties;
   encoder_class->reordering = gst_vaapi_encoder_jpeg_reordering;
   encoder_class->encode = gst_vaapi_encoder_jpeg_encode;
   encoder_class->flush = gst_vaapi_encoder_jpeg_flush;
@@ -906,34 +904,4 @@ GstVaapiEncoder *
 gst_vaapi_encoder_jpeg_new (GstVaapiDisplay * display)
 {
   return g_object_new (GST_TYPE_VAAPI_ENCODER_JPEG, "display", display, NULL);
-}
-
-/**
- * gst_vaapi_encoder_jpeg_get_default_properties:
- *
- * Determines the set of common and jpeg specific encoder properties.
- * The caller owns an extra reference to the resulting array of
- * #GstVaapiEncoderPropInfo elements, so it shall be released with
- * g_ptr_array_unref() after usage.
- *
- * Return value: the set of encoder properties for #GstVaapiEncoderJpeg,
- *   or %NULL if an error occurred.
- */
-GPtrArray *
-gst_vaapi_encoder_jpeg_get_default_properties (void)
-{
-  const GstVaapiEncoderClassData *class_data = &g_class_data;
-  GPtrArray *props;
-
-  props = gst_vaapi_encoder_properties_get_default (class_data);
-  if (!props)
-    return NULL;
-
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_JPEG_PROP_QUALITY,
-      g_param_spec_uint ("quality",
-          "Quality factor",
-          "Quality factor",
-          0, 100, 50, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  return props;
 }
