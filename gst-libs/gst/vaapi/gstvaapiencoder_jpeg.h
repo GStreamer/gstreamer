@@ -37,16 +37,6 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiEncoderJpeg GstVaapiEncoderJpeg;
 typedef struct _GstVaapiEncoderJpegClass GstVaapiEncoderJpegClass;
 
-/**
- * GstVaapiEncoderJpegProp:
- * @GST_VAAPI_ENCODER_JPEG_PROP_QUALITY: Quality Factor value (uint).
- *
- * The set of JPEG encoder specific configurable properties.
- */
-typedef enum {
-  GST_VAAPI_ENCODER_JPEG_PROP_QUALITY = -1
-} GstVaapiEncoderJpegProp;
-
 GType
 gst_vaapi_encoder_jpeg_get_type (void) G_GNUC_CONST;
 
