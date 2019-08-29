@@ -125,17 +125,6 @@ prop_value_free (PropValue * prop_value)
   g_slice_free (PropValue, prop_value);
 }
 
-static inline PropValue *
-prop_value_lookup (GstVaapiEncode * encode, guint prop_id)
-{
-  GPtrArray *const prop_values = encode->prop_values;
-
-  if (prop_values &&
-      (prop_id >= PROP_BASE && prop_id < PROP_BASE + prop_values->len))
-    return g_ptr_array_index (prop_values, prop_id - PROP_BASE);
-  return NULL;
-}
-
 static PropValue *
 prop_value_new_entry (guint id, GParamSpec * pspec, const GValue * value)
 {
@@ -174,40 +163,6 @@ prop_value_lookup_entry (GPtrArray * prop_values, guint prop_id)
   }
 
   return NULL;
-}
-
-
-static gboolean
-gst_vaapiencode_default_get_property (GstVaapiEncode * encode, guint prop_id,
-    GValue * value)
-{
-  PropValue *const prop_value = prop_value_lookup (encode, prop_id);
-
-  if (prop_value) {
-    g_value_copy (&prop_value->value, value);
-    return TRUE;
-  }
-  return FALSE;
-}
-
-static gboolean
-gst_vaapiencode_default_set_property (GstVaapiEncode * encode, guint prop_id,
-    const GValue * value)
-{
-  PropValue *const prop_value = prop_value_lookup (encode, prop_id);
-  GstVaapiEncoder *encoder = encode->encoder;
-
-  if (prop_value) {
-    g_value_copy (value, &prop_value->value);
-
-    if (encoder)
-      return (gst_vaapi_encoder_set_property (encoder, prop_value->id,
-              value) == GST_VAAPI_ENCODER_STATUS_SUCCESS);
-
-    return TRUE;
-  }
-
-  return FALSE;
 }
 
 static GstFlowReturn
@@ -967,8 +922,6 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   venc_class->flush = GST_DEBUG_FUNCPTR (gst_vaapiencode_flush);
   venc_class->sink_event = GST_DEBUG_FUNCPTR (gst_vaapiencode_sink_event);
 
-  klass->get_property = gst_vaapiencode_default_get_property;
-  klass->set_property = gst_vaapiencode_default_set_property;
   klass->alloc_buffer = gst_vaapiencode_default_alloc_buffer;
 
   venc_class->src_query = GST_DEBUG_FUNCPTR (gst_vaapiencode_src_query);
