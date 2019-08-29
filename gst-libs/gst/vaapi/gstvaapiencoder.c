@@ -1546,31 +1546,6 @@ error_operation_failed:
   }
 }
 
-/* Initialize default values for configurable properties */
-__attribute__ ((unused))
-     static void gst_vaapi_encoder_constructed (GObject * object)
-{
-  GstVaapiEncoder *encoder = GST_VAAPI_ENCODER (object);
-  GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
-  GPtrArray *props;
-  guint i;
-
-  props = klass->get_default_properties ();
-  if (!props)
-    return;
-
-  encoder->properties = props;
-  for (i = 0; i < props->len; i++) {
-    GstVaapiEncoderPropInfo *const prop = g_ptr_array_index (props, i);
-
-    if (gst_vaapi_encoder_set_property (encoder, prop->prop,
-            NULL) != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-      return;
-  }
-
-  return;
-}
-
 G_DEFINE_ABSTRACT_TYPE (GstVaapiEncoder, gst_vaapi_encoder, GST_TYPE_OBJECT);
 
 /**
