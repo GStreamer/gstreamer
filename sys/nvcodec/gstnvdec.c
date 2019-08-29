@@ -1082,13 +1082,6 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   GST_LOG_OBJECT (nvdec, "handle frame");
 
-  if (nvdec->last_ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (nvdec,
-        "return last flow %s", gst_flow_get_name (nvdec->last_ret));
-    gst_video_codec_frame_unref (frame);
-    return nvdec->last_ret;
-  }
-
   /* initialize with zero to keep track of frames */
   gst_video_codec_frame_set_user_data (frame, GUINT_TO_POINTER (0), NULL);
 
@@ -1107,6 +1100,7 @@ gst_nvdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     packet.flags |= CUVID_PKT_DISCONTINUITY;
 
   nvdec->state = GST_NVDEC_STATE_PARSE;
+  nvdec->last_ret = GST_FLOW_OK;
 
   if (!gst_cuda_result (CuvidParseVideoData (nvdec->parser, &packet)))
     GST_WARNING_OBJECT (nvdec, "parser failed");
@@ -1130,6 +1124,7 @@ gst_nvdec_flush (GstVideoDecoder * decoder)
   packet.flags = CUVID_PKT_ENDOFSTREAM;
 
   nvdec->state = GST_NVDEC_STATE_PARSE;
+  nvdec->last_ret = GST_FLOW_OK;
 
   if (nvdec->parser
       && !gst_cuda_result (CuvidParseVideoData (nvdec->parser, &packet)))
@@ -1151,6 +1146,7 @@ gst_nvdec_drain (GstVideoDecoder * decoder)
   packet.flags = CUVID_PKT_ENDOFSTREAM;
 
   nvdec->state = GST_NVDEC_STATE_PARSE;
+  nvdec->last_ret = GST_FLOW_OK;
 
   if (nvdec->parser
       && !gst_cuda_result (CuvidParseVideoData (nvdec->parser, &packet)))
