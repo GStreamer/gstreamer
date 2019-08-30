@@ -61,7 +61,8 @@ typedef enum
 {
   GST_NVDEC_MEM_TYPE_SYSTEM = 0,
   GST_NVDEC_MEM_TYPE_GL,
-  /* FIXME: add support CUDA, D3D11 memory */
+  GST_NVDEC_MEM_TYPE_CUDA,
+  /* FIXME: add support D3D11 memory */
 } GstNvDecMemType;
 
 struct _GstNvDec
