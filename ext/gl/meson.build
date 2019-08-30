@@ -52,6 +52,7 @@ if get_option('gl').disabled() or not gstgl_dep.found()
 endif
 
 optional_deps = []
+gl_objc_args = []
 
 if gl_dep.found() # have desktop GL
   opengl_sources += [
@@ -112,9 +113,23 @@ if egl_dep.found() and cc.has_header('libdrm/drm_fourcc.h')
   optional_deps += allocators_dep
 endif
 
+if ['darwin', 'ios'].contains(host_system)
+  if not have_objc
+    error('No ObjC compiler found')
+  endif
+
+  objc = meson.get_compiler('objc')
+  if not objc.has_argument('-fobjc-arc')
+    error('ARC is required for building')
+  endif
+
+  gl_objc_args += ['-fobjc-arc']
+endif
+
 gstopengl = library('gstopengl',
   opengl_sources,
   c_args : gst_plugins_base_args,
+  objc_args : gst_plugins_base_args + gl_objc_args,
   link_args : noseh_link_args,
   include_directories : [configinc],
   dependencies : [gstgl_dep, video_dep,
