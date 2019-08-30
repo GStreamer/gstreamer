@@ -41,6 +41,11 @@ typedef struct _GstVaapiEncoder GstVaapiEncoder;
 GType
 gst_vaapi_encoder_get_type (void) G_GNUC_CONST;
 
+/* This user defined flag is added when the internal encoder
+   class wants to expose its property gparam spec to the according
+   encode class. */
+#define G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE (1 << 29)
+
 /**
  * GstVaapiEncoderStatus:
  * @GST_VAAPI_ENCODER_STATUS_SUCCESS: Success.

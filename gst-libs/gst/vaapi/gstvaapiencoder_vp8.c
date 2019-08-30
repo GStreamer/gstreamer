@@ -667,23 +667,29 @@ gst_vaapi_encoder_vp8_class_init (GstVaapiEncoderVP8Class * klass)
       "Rate Control", "Rate control mode",
       g_class_data.rate_control_get_type (),
       g_class_data.default_rate_control,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
 
   properties[ENCODER_VP8_PROP_TUNE] =
       g_param_spec_enum ("tune", "Encoder Tuning", "Encoder tuning option",
       g_class_data.encoder_tune_get_type (),
       g_class_data.default_encoder_tune,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
 
   properties[ENCODER_VP8_PROP_LOOP_FILTER_LEVEL] =
       g_param_spec_uint ("loop-filter-level", "Loop Filter Level",
       "Controls the deblocking filter strength", 0, 63,
-      DEFAULT_LOOP_FILTER_LEVEL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      DEFAULT_LOOP_FILTER_LEVEL,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
 
   properties[ENCODER_VP8_PROP_SHARPNESS_LEVEL] =
       g_param_spec_uint ("sharpness-level", "Sharpness Level",
       "Controls the deblocking filter sensitivity", 0, 7,
-      DEFAULT_SHARPNESS_LEVEL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      DEFAULT_SHARPNESS_LEVEL,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
 
   properties[ENCODER_VP8_PROP_YAC_Q_INDEX] =
       g_param_spec_uint ("yac-qi",
@@ -691,7 +697,9 @@ gst_vaapi_encoder_vp8_class_init (GstVaapiEncoderVP8Class * klass)
       "Quantization Table index for Luma AC Coefficients,"
       " (in default case, yac_qi=4 for key frames and yac_qi=40"
       " for P frames)",
-      0, 127, DEFAULT_YAC_QI, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      0, 127, DEFAULT_YAC_QI,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
 
   g_object_class_install_properties (object_class, ENCODER_VP8_N_PROPERTIES,
       properties);

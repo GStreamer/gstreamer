@@ -910,7 +910,8 @@ gst_vaapi_encoder_mpeg2_class_init (GstVaapiEncoderMpeg2Class * klass)
       "Rate Control", "Rate control mode",
       g_class_data.rate_control_get_type (),
       g_class_data.default_rate_control,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
 
   /**
    * GstVaapiEncoderMpeg2:tune:
@@ -923,18 +924,21 @@ gst_vaapi_encoder_mpeg2_class_init (GstVaapiEncoderMpeg2Class * klass)
       "Encoder tuning option",
       g_class_data.encoder_tune_get_type (),
       g_class_data.default_encoder_tune,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
 
   properties[ENCODER_MPEG2_PROP_QUANTIZER] =
       g_param_spec_uint ("quantizer",
       "Constant Quantizer",
       "Constant quantizer (if rate-control mode is CQP)",
-      2, 62, 8, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      2, 62, 8, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
 
   properties[ENCODER_MPEG2_PROP_MAX_BFRAMES] =
       g_param_spec_uint ("max-bframes", "Max B-Frames",
       "Number of B-frames between I and P", 0, 16, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
+      G_PARAM_FLAG_VAAPI_ENCODER_EXPOSURE);
 
   g_object_class_install_properties (object_class, ENCODER_MPEG2_N_PROPERTIES,
       properties);
