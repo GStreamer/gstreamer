@@ -34,10 +34,6 @@
 #include <gst/gl/gl.h>
 #endif
 
-/* TODO:
- *  - reset last_flow on FLUSH_STOP (seeking)
- */
-
 /* This currently supports both 5.x and 6.x versions of the NvEncodeAPI.h
  * header which are mostly API compatible. */
 
@@ -234,6 +230,8 @@ static void gst_nv_base_enc_set_context (GstElement * element,
     GstContext * context);
 static gboolean gst_nv_base_enc_sink_query (GstVideoEncoder * enc,
     GstQuery * query);
+static gboolean gst_nv_base_enc_sink_event (GstVideoEncoder * enc,
+    GstEvent * event);
 static gboolean gst_nv_base_enc_set_format (GstVideoEncoder * enc,
     GstVideoCodecState * state);
 static GstFlowReturn gst_nv_base_enc_handle_frame (GstVideoEncoder * enc,
@@ -276,6 +274,7 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_nv_base_enc_handle_frame);
   videoenc_class->finish = GST_DEBUG_FUNCPTR (gst_nv_base_enc_finish);
   videoenc_class->sink_query = GST_DEBUG_FUNCPTR (gst_nv_base_enc_sink_query);
+  videoenc_class->sink_event = GST_DEBUG_FUNCPTR (gst_nv_base_enc_sink_event);
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
       g_param_spec_uint ("cuda-device-id",
@@ -558,6 +557,26 @@ gst_nv_base_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
   }
 
   return GST_VIDEO_ENCODER_CLASS (parent_class)->sink_query (enc, query);
+}
+
+static gboolean
+gst_nv_base_enc_sink_event (GstVideoEncoder * enc, GstEvent * event)
+{
+  GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
+  gboolean ret;
+
+  ret = GST_VIDEO_ENCODER_CLASS (parent_class)->sink_event (enc, event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+    case GST_EVENT_FLUSH_STOP:
+      nvenc->last_flow = GST_FLOW_OK;
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 static gboolean
@@ -2239,6 +2258,17 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
   GstNvEncInputResource *resource = NULL;
 
   g_assert (nvenc->encoder != NULL);
+
+  /* check last flow and if it's not OK, just return the last flow,
+   * non-OK flow means that encoding thread was terminated */
+  flow = g_atomic_int_get (&nvenc->last_flow);
+  if (flow != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (nvenc, "last flow was %s", gst_flow_get_name (flow));
+    /* just drop this frame */
+    gst_video_encoder_finish_frame (enc, frame);
+
+    return flow;
+  }
 
   if (g_atomic_int_compare_and_exchange (&nvenc->reconfig, TRUE, FALSE)) {
     if (!gst_nv_base_enc_set_format (enc, nvenc->input_state)) {
