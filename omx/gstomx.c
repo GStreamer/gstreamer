@@ -2387,7 +2387,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
 
   gst_omx_component_handle_messages (comp);
 
-  if (! !flush == ! !port->flushing) {
+  if (flush == port->flushing) {
     GST_DEBUG_OBJECT (comp->parent, "%s port %u was %sflushing already",
         comp->name, port->index, (flush ? "" : "not "));
     goto done;
@@ -2427,7 +2427,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, GstClockTime timeout,
       goto done;
     }
 
-    if (! !port->flushing != ! !flush) {
+    if (port->flushing != flush) {
       GST_ERROR_OBJECT (comp->parent, "%s: another flush happened in the "
           " meantime", comp->name);
       goto done;
