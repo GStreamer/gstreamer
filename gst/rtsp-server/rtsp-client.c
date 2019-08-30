@@ -1830,7 +1830,8 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   }
 
   /* grab RTPInfo from the media now */
-  rtpinfo = gst_rtsp_session_media_get_rtpinfo (sessmedia);
+  if (!(rtpinfo = gst_rtsp_session_media_get_rtpinfo (sessmedia)))
+    goto rtp_info_error;
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
@@ -1838,9 +1839,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
       gst_rtsp_status_as_text (code), ctx->request);
 
   /* add the RTP-Info header */
-  if (rtpinfo)
-    gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RTP_INFO,
-        rtpinfo);
+  gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RTP_INFO, rtpinfo);
   if (seek_style)
     gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_SEEK_STYLE,
         seek_style);
@@ -1925,6 +1924,12 @@ unsupported_mode:
   {
     GST_ERROR ("client %p: media does not support PLAY", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
+    return FALSE;
+  }
+rtp_info_error:
+  {
+    GST_ERROR ("client %p: failed to add RTP-Info", client);
+    send_generic_response (client, GST_RTSP_STS_INTERNAL_SERVER_ERROR, ctx);
     return FALSE;
   }
 }
