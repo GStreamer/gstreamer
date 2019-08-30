@@ -153,6 +153,13 @@ void      gst_encoding_profile_set_allow_dynamic_output (GstEncodingProfile *pro
                                                          gboolean allow_dynamic_output);
 
 GST_PBUTILS_API
+gboolean  gst_encoding_profile_get_single_segment       (GstEncodingProfile *profile);
+
+GST_PBUTILS_API
+void      gst_encoding_profile_set_single_segment       (GstEncodingProfile *profile,
+                                                         gboolean single_segment);
+
+GST_PBUTILS_API
 const gchar *   gst_encoding_profile_get_preset         (GstEncodingProfile *profile);
 
 GST_PBUTILS_API

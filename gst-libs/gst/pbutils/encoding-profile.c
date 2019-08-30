@@ -54,31 +54,31 @@
  *
  * #### Using encoders and muxer element factory name:
  *
- * |[
+ * ```
  *   muxer_factory_name:video_encoder_factory_name:audio_encoder_factory_name
- * ]|
+ * ```
  *
  * For example to encode a stream into a WebM container, with an OGG audio
  * stream and a VP8 video stream, the serialized #GstEncodingProfile looks
  * like:
  *
- * |[
+ * ```
  *   webmmux:vp8enc:vorbisenc
- * ]|
+ * ```
  *
  * #### Define the encoding profile in a generic way using caps:
  *
- * |[
+ * ```
  *   muxer_source_caps:video_encoder_source_caps:audio_encoder_source_caps
- * ]|
+ * ```
  *
  * For example to encode a stream into a WebM container, with an OGG audio
  * stream and a VP8 video stream, the serialized #GstEncodingProfile looks
  * like:
  *
- * |[
+ * ```
  *   video/webm:video/x-vp8:audio/x-vorbis
- * ]|
+ * ```
  *
  * It is possible to mix caps and element type names so you can specify a specific
  * video encoder while using caps for other encoders/muxer.
@@ -88,16 +88,16 @@
  * You can also set the preset name of the encoding profile using the
  * caps+preset_name syntax as in:
  *
- * |[
+ * ```
  *   video/webm:video/x-vp8+youtube-preset:audio/x-vorbis
- * ]|
+ * ```
  *
- * Moreover, you can set the `presence` property of an
- * encoding profile using the `|presence` syntax as in:
+ * Moreover, you can set extra properties `presence` and `single-segment` of an
+ * encoding profile using the `|presence=` syntax as in:
  *
- *  |[
- *   video/webm:video/x-vp8|1:audio/x-vorbis
- * ]|
+ * ```
+ *   video/webm:video/x-vp8|presence=1|single-segment=true:audio/x-vorbis
+ * ```
  *
  * This field allows specifies the maximum number of times a
  * #GstEncodingProfile can be used inside an encodebin. If 0, it is not a
@@ -117,59 +117,59 @@
  * as the container format, VP8 as the video codec and Vorbis as the audio
  * codec), you should use:
  *
- * |[
+ * ```
  *   "video/webm:video/x-raw,width=1920,height=1080->video/x-vp8:audio/x-vorbis"
- * ]|
+ * ```
  *
  * > NOTE: Make sure to enclose into quotes to avoid '>' to be reinterpreted by
  * > the shell.
  *
  * In the case you are using encoder types, the following is also possible:
  *
- * |[
+ * ```
  *   "matroskamux:x264enc,width=1920,height=1080:audio/x-vorbis"
- * ]|
+ * ```
  *
  * ## Some serialized encoding formats examples:
  *
  * MP3 audio and H264 in MP4:
  *
- * |[
+ * ```
  *   video/quicktime,variant=iso:video/x-h264:audio/mpeg,mpegversion=1,layer=3
- * ]|
+ * ```
  *
  * Vorbis and theora in OGG:
  *
- * |[
+ * ```
  *   application/ogg:video/x-theora:audio/x-vorbis
- * ]|
+ * ```
  *
  * AC3 and H264 in MPEG-TS:
  *
- * |[
+ * ```
  *   video/mpegts:video/x-h264:audio/x-ac3
- * ]|
+ * ```
  *
  * ## Loading a profile from encoding targets
  *
  * Anywhere where you have to use a string to define a #GstEncodingProfile,
  * you can use load it from a #GstEncodingTarget using the following syntaxes:
  *
- * |[
+ * ```
  *   target_name[/profilename/category]
- * ]|
+ * ```
  *
  * or
  *
- * |[
+ * ```
  *   /path/to/target.gep:profilename
- * ]|
+ * ```
  *
  * ## Examples
  *
  * ### Creating a profile
  *
- * |[<!-- language="c" -->
+ * ``` c
  * #include <gst/pbutils/encoding-profile.h>
  * ...
  * GstEncodingProfile *
@@ -197,11 +197,11 @@
  *  return (GstEncodingProfile*) prof;
  *}
  *
- * ]|
+ * ```
  *
  * ### Example: Using an encoder preset with a profile
  *
- * |[ <!-- language="c" -->
+ * ``` c
  * #include <gst/pbutils/encoding-profile.h>
  * ...
  * GstEncodingProfile *
@@ -239,11 +239,11 @@
  *  return (GstEncodingProfile*) prof;
  *}
  *
- * ]|
+ * ```
  *
  * ### Listing categories, targets and profiles
  *
- * |[ <!-- language="C" -->
+ * ``` c
  * #include <gst/pbutils/encoding-profile.h>
  * ...
  * GstEncodingProfile *prof;
@@ -271,7 +271,7 @@
  * g_list_free (categories);
  *
  * ...
- * ]|
+ * ```
  */
 
 #ifdef HAVE_CONFIG_H
@@ -299,6 +299,7 @@ struct _GstEncodingProfile
   GstCaps *restriction;
   gboolean allow_dynamic_output;
   gboolean enabled;
+  gboolean single_segment;
 };
 
 struct _GstEncodingProfileClass
@@ -639,6 +640,40 @@ gst_encoding_profile_set_allow_dynamic_output (GstEncodingProfile * profile,
   g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
 
   profile->allow_dynamic_output = allow_dynamic_output;
+}
+
+/**
+ * gst_encoding_profile_get_single_segment:
+ * @profile: a #GstEncodingProfile
+ *
+ * Returns: #TRUE if the stream represented by @profile should use a single
+ * segment before the encoder, #FALSE otherwise. This means that buffers will be retimestamped
+ * and segments will be eat so as to appear as one segment.
+ */
+gboolean
+gst_encoding_profile_get_single_segment (GstEncodingProfile * profile)
+{
+  g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), FALSE);
+
+  return profile->single_segment;
+}
+
+/**
+ * gst_encoding_profile_set_single_segment:
+ * @profile: a #GstEncodingProfile
+ * @single_segment: #TRUE if the stream represented by @profile should use a single
+ * segment before the encoder #FALSE otherwise.
+ *
+ * If using a single segment, buffers will be retimestamped
+ * and segments will be eat so as to appear as one segment.
+ */
+void
+gst_encoding_profile_set_single_segment (GstEncodingProfile * profile,
+    gboolean single_segment)
+{
+  g_return_if_fail (GST_IS_ENCODING_PROFILE (profile));
+
+  profile->single_segment = single_segment;
 }
 
 /**
@@ -1529,8 +1564,8 @@ done:
 
 static GstEncodingProfile *
 create_encoding_profile_from_caps (GstCaps * caps, gchar * preset_name,
-    GstCaps * restrictioncaps, gint presence, gchar * factory_name,
-    GList * muxers_and_encoders, GstCaps * raw_audio_caps,
+    GstCaps * restrictioncaps, gint presence, gboolean single_segment,
+    gchar * factory_name, GList * muxers_and_encoders, GstCaps * raw_audio_caps,
     GstCaps * raw_video_caps)
 {
   GstEncodingProfile *profile = NULL;
@@ -1571,6 +1606,7 @@ create_encoding_profile_from_caps (GstCaps * caps, gchar * preset_name,
 
   if (factory_name && profile)
     gst_encoding_profile_set_preset_name (profile, factory_name);
+  gst_encoding_profile_set_single_segment (profile, single_segment);
 
   g_free (factory_name);
 
@@ -1584,7 +1620,8 @@ create_encoding_stream_profile (gchar * serialized_profile,
 {
   GstCaps *caps;
   guint presence = 0;
-  gchar *strcaps, *strpresence, **strpresence_v, **restriction_format,
+  gboolean single_segment = FALSE;
+  gchar *strcaps, *strpresence, **strprops_v, **restriction_format,
       **preset_v, *preset_name = NULL, *factory_name = NULL;
   GstCaps *restrictioncaps = NULL;
   GstEncodingProfile *profile = NULL;
@@ -1608,22 +1645,56 @@ create_encoding_stream_profile (gchar * serialized_profile,
     strpresence = preset_v[0];
   }
 
-  strpresence_v = g_strsplit (strpresence, "|", 0);
-  if (strpresence_v[1]) {       /* We have a presence */
+  strprops_v = g_strsplit (strpresence, "|", 0);
+  if (strprops_v[1]) {          /* We have a properties */
     gchar *endptr;
+    guint propi;
 
-    if (preset_v[1]) {          /* We have preset and presence */
-      preset_name = g_strdup (strpresence_v[0]);
-    } else {                    /* We have a presence but no preset */
+    if (preset_v[1]) {          /* We have preset and properties */
+      preset_name = g_strdup (strprops_v[0]);
+    } else {                    /* We have a properties but no preset */
       g_free (strcaps);
-      strcaps = g_strdup (strpresence_v[0]);
+      strcaps = g_strdup (strprops_v[0]);
     }
 
-    presence = g_ascii_strtoll (strpresence_v[1], &endptr, 10);
-    if (endptr == strpresence_v[1]) {
-      GST_ERROR ("Wrong presence %s", strpresence_v[1]);
+    for (propi = 1; strprops_v[propi]; propi++) {
+      gchar **propv = g_strsplit (strprops_v[propi], "=", -1);
+      gchar *presence_str = NULL;
 
-      return NULL;
+      if (propv[1] && propv[2]) {
+        g_warning ("Wrong format for property: %s, only 1 `=` is expected",
+            strprops_v[propi]);
+
+        return NULL;
+      }
+
+      if (!propv[1]) {
+        presence_str = propv[0];
+      } else if (!g_strcmp0 (propv[0], "presence")) {
+        presence_str = propv[1];
+      } else if (!g_strcmp0 (propv[0], "single-segment")) {
+        GValue v = G_VALUE_INIT;
+
+        g_value_init (&v, G_TYPE_BOOLEAN);
+        if (!gst_value_deserialize (&v, propv[1])) {
+          g_warning ("Invalid value for property 'single-segment': %s",
+              propv[1]);
+
+          return NULL;
+        }
+
+        single_segment = g_value_get_boolean (&v);
+        g_value_reset (&v);
+      }
+
+      if (presence_str) {
+        presence = g_ascii_strtoll (presence_str, &endptr, 10);
+
+        if (endptr == strprops_v[1]) {
+          g_warning ("Wrong presence %s", presence_str);
+          return NULL;
+        }
+      }
     }
   } else {                      /* We have no presence */
     if (preset_v[1]) {          /* Not presence but preset */
@@ -1632,7 +1703,7 @@ create_encoding_stream_profile (gchar * serialized_profile,
       strcaps = g_strdup (preset_v[0]);
     }                           /* Else we have no presence nor preset */
   }
-  g_strfreev (strpresence_v);
+  g_strfreev (strprops_v);
   g_strfreev (preset_v);
 
   GST_DEBUG ("Creating preset with restrictions: %" GST_PTR_FORMAT
@@ -1642,8 +1713,8 @@ create_encoding_stream_profile (gchar * serialized_profile,
   caps = gst_caps_from_string (strcaps);
   if (caps) {
     profile = create_encoding_profile_from_caps (caps, preset_name,
-        restrictioncaps, presence, NULL, muxers_and_encoders, raw_audio_caps,
-        raw_video_caps);
+        restrictioncaps, presence, single_segment, NULL, muxers_and_encoders,
+        raw_audio_caps, raw_video_caps);
     gst_caps_unref (caps);
   }
 
@@ -1652,8 +1723,8 @@ create_encoding_stream_profile (gchar * serialized_profile,
         &factory_name, restrictioncaps ? NULL : &restrictioncaps);
     if (caps) {
       profile = create_encoding_profile_from_caps (caps, preset_name,
-          restrictioncaps, presence, factory_name, muxers_and_encoders,
-          raw_audio_caps, raw_video_caps);
+          restrictioncaps, presence, single_segment, factory_name,
+          muxers_and_encoders, raw_audio_caps, raw_video_caps);
       gst_caps_unref (caps);
     }
   }

@@ -198,7 +198,8 @@ struct _StreamGroup
   GstEncodeBin *ebin;
   GstEncodingProfile *profile;
   GstPad *ghostpad;             /* Sink ghostpad */
-  GstElement *inqueue;          /* Queue just after the ghostpad */
+  GstElement *identity;         /* Identity just after the ghostpad */
+  GstElement *inqueue;          /* Queue just after the identity */
   GstElement *splitter;
   GList *converters;            /* List of conversion GstElement */
   GstElement *capsfilter;       /* profile->restriction (if non-NULL/ANY) */
@@ -1328,6 +1329,13 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   gst_bin_add (GST_BIN (ebin), sgroup->splitter);
   tosync = g_list_append (tosync, sgroup->splitter);
 
+  if (gst_encoding_profile_get_single_segment (sprof)) {
+    sgroup->identity = gst_element_factory_make ("identity", NULL);
+    g_object_set (sgroup->identity, "single-segment", TRUE, NULL);
+    gst_bin_add (GST_BIN (ebin), sgroup->identity);
+    tosync = g_list_append (tosync, sgroup->identity);
+  }
+
   /* Input queue
    * FIXME : figure out what max-size to use for the input queue */
   sgroup->inqueue = gst_element_factory_make ("queue", NULL);
@@ -1338,11 +1346,11 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
 
   gst_bin_add (GST_BIN (ebin), sgroup->inqueue);
   tosync = g_list_append (tosync, sgroup->inqueue);
-  if (G_UNLIKELY (!fast_element_link (sgroup->inqueue, sgroup->splitter)))
-    goto splitter_link_failure;
 
-  /* Expose input queue sink pad as ghostpad */
-  sinkpad = gst_element_get_static_pad (sgroup->inqueue, "sink");
+  /* Expose input queue or identity sink pad as ghostpad */
+  sinkpad =
+      gst_element_get_static_pad (sgroup->identity ? sgroup->
+      identity : sgroup->inqueue, "sink");
   if (sinkpadname == NULL) {
     gchar *pname =
         g_strdup_printf ("%s_%u", gst_encoding_profile_get_type_nick (sprof),
@@ -1353,6 +1361,13 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   } else
     sgroup->ghostpad = gst_ghost_pad_new (sinkpadname, sinkpad);
   gst_object_unref (sinkpad);
+
+  if (sgroup->identity
+      && G_UNLIKELY (!fast_element_link (sgroup->identity, sgroup->inqueue)))
+    goto queue_link_failure;
+
+  if (G_UNLIKELY (!fast_element_link (sgroup->inqueue, sgroup->splitter)))
+    goto splitter_link_failure;
 
 
   /* Path 1 : Already-encoded data */
@@ -1667,6 +1682,10 @@ no_combiner_sinkpad:
 
 splitter_link_failure:
   GST_ERROR_OBJECT (ebin, "Failure linking to the splitter");
+  goto cleanup;
+
+queue_link_failure:
+  GST_ERROR_OBJECT (ebin, "Failure linking to the inqueue");
   goto cleanup;
 
 combiner_link_failure:
