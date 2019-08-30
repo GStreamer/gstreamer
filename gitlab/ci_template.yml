@@ -684,7 +684,6 @@ cerbero deps macos x86_64:
   variables:
     ARCH: "darwin_x86_64"
     CONFIG: "osx-x86-64.cbc"
-    CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS} -v nowerror"
     HAVE_CCACHE: ""
     CERBERO_OVERRIDDEN_DIST_DIR: "/Library/Frameworks/GStreamer.framework/Versions/1.0"
   tags:
@@ -695,7 +694,6 @@ cerbero deps macos x86_64:
   variables:
     ARCH: "darwin_x86_64"
     CONFIG: "osx-x86-64.cbc"
-    CERBERO_ARGS: "${DEFAULT_CERBERO_ARGS} -v nowerror"
     CERBERO_PACKAGE_ARGS: ""
     HAVE_CCACHE: ""
     CERBERO_OVERRIDDEN_DIST_DIR: "/Library/Frameworks/GStreamer.framework/Versions/1.0"
