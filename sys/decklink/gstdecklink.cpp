@@ -1700,7 +1700,7 @@ Device *
 gst_decklink_find_device_by_persistent_id (int64_t persistent_id)
 {
   GST_DEBUG ("Searching Device by persistent ID %" G_GINT64_FORMAT,
-      persistent_id);
+      (gint64) persistent_id);
 
   for (guint index = 0; index < devices->len; index++) {
     Device *device = (Device *) g_ptr_array_index (devices, index);
