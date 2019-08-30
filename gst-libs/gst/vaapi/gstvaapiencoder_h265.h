@@ -76,9 +76,6 @@ gst_vaapi_encoder_h265_get_type (void) G_GNUC_CONST;
 GstVaapiEncoder *
 gst_vaapi_encoder_h265_new (GstVaapiDisplay * display);
 
-GPtrArray *
-gst_vaapi_encoder_h265_get_default_properties (void);
-
 gboolean
 gst_vaapi_encoder_h265_set_max_profile (GstVaapiEncoderH265 * encoder,
     GstVaapiProfile profile);
