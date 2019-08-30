@@ -28,6 +28,10 @@
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_context_debug);
 #define GST_CAT_DEFAULT gst_cuda_context_debug
 
+/* store all context object with weak ref */
+static GList *context_list = NULL;
+G_LOCK_DEFINE_STATIC (list_lock);
+
 enum
 {
   PROP_0,
@@ -41,6 +45,8 @@ struct _GstCudaContextPrivate
   CUcontext context;
   CUdevice device;
   gint device_id;
+
+  GHashTable *accessible_peer;
 };
 
 #define gst_cuda_context_parent_class parent_class
@@ -52,6 +58,10 @@ static void gst_cuda_context_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_cuda_context_constructed (GObject * object);
 static void gst_cuda_context_finalize (GObject * object);
+static void gst_cuda_context_weak_ref_notify (gpointer data,
+    GstCudaContext * context);
+static void gst_cuda_context_enable_peer_access (GstCudaContext * context,
+    GstCudaContext * peer);
 
 static void
 gst_cuda_context_class_init (GstCudaContextClass * klass)
@@ -80,6 +90,7 @@ gst_cuda_context_init (GstCudaContext * context)
 
   priv->context = NULL;
   priv->device_id = DEFAULT_DEVICE_ID;
+  priv->accessible_peer = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   context->priv = priv;
 }
@@ -131,6 +142,7 @@ gst_cuda_context_constructed (GObject * object)
   gchar name[256];
   gint min = 0, maj = 0;
   gint i;
+  GList *iter;
 
   if (g_once_init_enter (&once)) {
     if (CuInit (0) != CUDA_SUCCESS) {
@@ -183,6 +195,101 @@ gst_cuda_context_constructed (GObject * object)
 
   priv->context = cuda_ctx;
   priv->device = cuda_dev;
+
+  G_LOCK (list_lock);
+  g_object_weak_ref (G_OBJECT (object),
+      (GWeakNotify) gst_cuda_context_weak_ref_notify, NULL);
+  for (iter = context_list; iter; iter = g_list_next (iter)) {
+    GstCudaContext *peer = (GstCudaContext *) iter->data;
+
+    /* EnablePeerAccess is unidirectional */
+    gst_cuda_context_enable_peer_access (context, peer);
+    gst_cuda_context_enable_peer_access (peer, context);
+  }
+
+  context_list = g_list_append (context_list, context);
+  G_UNLOCK (list_lock);
+}
+
+/* must be called with list_lock taken */
+static void
+gst_cuda_context_enable_peer_access (GstCudaContext * context,
+    GstCudaContext * peer)
+{
+  GstCudaContextPrivate *priv = context->priv;
+  GstCudaContextPrivate *peer_priv = peer->priv;
+  CUdevice device = priv->device;
+  CUdevice other_dev = peer_priv->device;
+  CUresult cuda_ret;
+  gint can_access = 0;
+
+  cuda_ret = CuDeviceCanAccessPeer (&can_access, device, other_dev);
+
+  if (!gst_cuda_result (cuda_ret) || !can_access) {
+    GST_DEBUG_OBJECT (context,
+        "Peer access to %" GST_PTR_FORMAT " is not allowed", peer);
+    return;
+  }
+
+  gst_cuda_context_push (context);
+  if (gst_cuda_result (CuCtxEnablePeerAccess (peer_priv->context, 0))) {
+    GST_DEBUG_OBJECT (context, "Enable peer access to %" GST_PTR_FORMAT, peer);
+    g_hash_table_add (priv->accessible_peer, peer);
+  }
+
+  gst_cuda_context_pop (NULL);
+}
+
+static void
+gst_cuda_context_weak_ref_notify (gpointer data, GstCudaContext * context)
+{
+  GList *iter;
+
+  G_LOCK (list_lock);
+  context_list = g_list_remove (context_list, context);
+
+  /* disable self -> peer access */
+  if (context->priv->accessible_peer) {
+    GHashTableIter iter;
+    gpointer key;
+    g_hash_table_iter_init (&iter, context->priv->accessible_peer);
+    if (gst_cuda_context_push (context)) {
+      while (g_hash_table_iter_next (&iter, &key, NULL)) {
+        GstCudaContext *peer = GST_CUDA_CONTEXT (key);
+        CUcontext peer_handle = gst_cuda_context_get_handle (peer);
+        GST_DEBUG_OBJECT (context,
+            "Disable peer access to %" GST_PTR_FORMAT, peer);
+        gst_cuda_result (CuCtxDisablePeerAccess (peer_handle));
+      }
+      gst_cuda_context_pop (NULL);
+    }
+
+    g_hash_table_destroy (context->priv->accessible_peer);
+    context->priv->accessible_peer = NULL;
+  }
+
+  /* disable peer -> self access */
+  for (iter = context_list; iter; iter = g_list_next (iter)) {
+    GstCudaContext *other = (GstCudaContext *) iter->data;
+    GstCudaContextPrivate *other_priv = other->priv;
+    CUcontext self_handle;
+
+    if (!other_priv->accessible_peer)
+      continue;
+
+    if (g_hash_table_lookup (other_priv->accessible_peer, context)) {
+      if (gst_cuda_context_push (other)) {
+        self_handle = gst_cuda_context_get_handle (context);
+        GST_DEBUG_OBJECT (other,
+            "Disable peer access to %" GST_PTR_FORMAT, context);
+        gst_cuda_result (CuCtxDisablePeerAccess (self_handle));
+        gst_cuda_context_pop (NULL);
+      }
+
+      g_hash_table_remove (other_priv->accessible_peer, context);
+    }
+  }
+  G_UNLOCK (list_lock);
 }
 
 static void
@@ -273,4 +380,31 @@ gst_cuda_context_get_handle (GstCudaContext * ctx)
   g_return_val_if_fail (GST_IS_CUDA_CONTEXT (ctx), NULL);
 
   return ctx->priv->context;
+}
+
+/**
+ * gst_cuda_context_can_access_peer:
+ * @ctx: a #GstCudaContext
+ * @peer: a #GstCudaContext
+ *
+ * Query whether @ctx can access any memory which belongs to @peer directly.
+
+ * Returns: %TRUE if @ctx can access @peer directly
+ */
+gboolean
+gst_cuda_context_can_access_peer (GstCudaContext * ctx, GstCudaContext * peer)
+{
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (ctx), FALSE);
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (peer), FALSE);
+
+  G_LOCK (list_lock);
+  if (ctx->priv->accessible_peer &&
+      g_hash_table_lookup (ctx->priv->accessible_peer, peer)) {
+    ret = TRUE;
+  }
+  G_UNLOCK (list_lock);
+
+  return ret;
 }

@@ -72,6 +72,10 @@ gboolean         gst_cuda_context_pop         (CUcontext * cuda_ctx);
 G_GNUC_INTERNAL
 gpointer         gst_cuda_context_get_handle  (GstCudaContext * ctx);
 
+G_GNUC_INTERNAL
+gboolean         gst_cuda_context_can_access_peer (GstCudaContext * ctx,
+                                                   GstCudaContext * peer);
+
 G_END_DECLS
 
 #endif /* __GST_CUDA_CONTEXT_H__ */

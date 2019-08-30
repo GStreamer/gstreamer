@@ -56,6 +56,13 @@ G_GNUC_INTERNAL
 CUresult CUDAAPI CuCtxPushCurrent   (CUcontext ctx);
 
 G_GNUC_INTERNAL
+CUresult CUDAAPI CuCtxEnablePeerAccess (CUcontext peerContext,
+                                             unsigned int Flags);
+
+G_GNUC_INTERNAL
+CUresult CUDAAPI CuCtxDisablePeerAccess (CUcontext peerContext);
+
+G_GNUC_INTERNAL
 CUresult CUDAAPI CuGraphicsMapResources     (unsigned int count,
                                              CUgraphicsResource * resources,
                                              CUstream hStream);
@@ -132,6 +139,11 @@ G_GNUC_INTERNAL
 CUresult CUDAAPI CuDeviceGetAttribute (int *pi,
                                        CUdevice_attribute attrib,
                                        CUdevice dev);
+
+G_GNUC_INTERNAL
+CUresult CUDAAPI CuDeviceCanAccessPeer (int *canAccessPeer,
+                                        CUdevice dev,
+                                        CUdevice peerDev);
 
 /* cudaGL.h */
 G_GNUC_INTERNAL

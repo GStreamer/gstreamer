@@ -54,6 +54,9 @@ typedef struct _GstNvCodecCudaVTable
     CUresult (CUDAAPI * CuCtxPopCurrent) (CUcontext * pctx);
     CUresult (CUDAAPI * CuCtxPushCurrent) (CUcontext ctx);
 
+    CUresult (CUDAAPI * CuCtxEnablePeerAccess) (CUcontext peerContext,
+      unsigned int Flags);
+    CUresult (CUDAAPI * CuCtxDisablePeerAccess) (CUcontext peerContext);
     CUresult (CUDAAPI * CuGraphicsMapResources) (unsigned int count,
       CUgraphicsResource * resources, CUstream hStream);
     CUresult (CUDAAPI * CuGraphicsUnmapResources) (unsigned int count,
@@ -87,6 +90,8 @@ typedef struct _GstNvCodecCudaVTable
     CUresult (CUDAAPI * CuDeviceGetName) (char *name, int len, CUdevice dev);
     CUresult (CUDAAPI * CuDeviceGetAttribute) (int *pi,
       CUdevice_attribute attrib, CUdevice dev);
+    CUresult (CUDAAPI * CuDeviceCanAccessPeer) (int *canAccessPeer,
+      CUdevice dev, CUdevice peerDev);
 
     CUresult (CUDAAPI * CuGraphicsGLRegisterImage) (CUgraphicsResource *
       pCudaResource, unsigned int image, unsigned int target,
@@ -129,6 +134,8 @@ gst_cuda_load_library (void)
   LOAD_SYMBOL (cuCtxDestroy, CuCtxDestroy);
   LOAD_SYMBOL (cuCtxPopCurrent, CuCtxPopCurrent);
   LOAD_SYMBOL (cuCtxPushCurrent, CuCtxPushCurrent);
+  LOAD_SYMBOL (cuCtxEnablePeerAccess, CuCtxEnablePeerAccess);
+  LOAD_SYMBOL (cuCtxDisablePeerAccess, CuCtxDisablePeerAccess);
 
   LOAD_SYMBOL (cuGraphicsMapResources, CuGraphicsMapResources);
   LOAD_SYMBOL (cuGraphicsUnmapResources, CuGraphicsUnmapResources);
@@ -155,6 +162,7 @@ gst_cuda_load_library (void)
   LOAD_SYMBOL (cuDeviceGetCount, CuDeviceGetCount);
   LOAD_SYMBOL (cuDeviceGetName, CuDeviceGetName);
   LOAD_SYMBOL (cuDeviceGetAttribute, CuDeviceGetAttribute);
+  LOAD_SYMBOL (cuDeviceCanAccessPeer, CuDeviceCanAccessPeer);
 
   /* cudaGL.h */
   LOAD_SYMBOL (cuGraphicsGLRegisterImage, CuGraphicsGLRegisterImage);
@@ -226,6 +234,22 @@ CuCtxPushCurrent (CUcontext ctx)
   g_assert (gst_cuda_vtable.CuCtxPushCurrent != NULL);
 
   return gst_cuda_vtable.CuCtxPushCurrent (ctx);
+}
+
+CUresult CUDAAPI
+CuCtxEnablePeerAccess (CUcontext peerContext, unsigned int Flags)
+{
+  g_assert (gst_cuda_vtable.CuCtxEnablePeerAccess != NULL);
+
+  return gst_cuda_vtable.CuCtxEnablePeerAccess (peerContext, Flags);
+}
+
+CUresult CUDAAPI
+CuCtxDisablePeerAccess (CUcontext peerContext)
+{
+  g_assert (gst_cuda_vtable.CuCtxDisablePeerAccess != NULL);
+
+  return gst_cuda_vtable.CuCtxDisablePeerAccess (peerContext);
 }
 
 CUresult CUDAAPI
@@ -386,6 +410,14 @@ CuDeviceGetAttribute (int *pi, CUdevice_attribute attrib, CUdevice dev)
   g_assert (gst_cuda_vtable.CuDeviceGetAttribute != NULL);
 
   return gst_cuda_vtable.CuDeviceGetAttribute (pi, attrib, dev);
+}
+
+CUresult CUDAAPI
+CuDeviceCanAccessPeer (int *canAccessPeer, CUdevice dev, CUdevice peerDev)
+{
+  g_assert (gst_cuda_vtable.CuDeviceCanAccessPeer != NULL);
+
+  return gst_cuda_vtable.CuDeviceCanAccessPeer (canAccessPeer, dev, peerDev);
 }
 
 /* cudaGL.h */
