@@ -61,6 +61,14 @@ typedef enum {
   GST_NV_RC_MODE_VBR_HQ,
 } GstNvRCMode;
 
+typedef enum
+{
+  GST_NVENC_MEM_TYPE_SYSTEM = 0,
+  GST_NVENC_MEM_TYPE_GL,
+  GST_NVENC_MEM_TYPE_CUDA,
+  /* FIXME: add support D3D11 memory */
+} GstNvEncMemType;
+
 typedef struct {
   gboolean weighted_prediction;
   gint rc_modes;
@@ -112,7 +120,7 @@ typedef struct {
 
   GstVideoCodecState *input_state;
   volatile gint       reconfig;                   /* ATOMIC */
-  gboolean            gl_input;
+  GstNvEncMemType     mem_type;
 
   /* array of allocated input/output buffers (GstNvEncFrameState),
    * and hold the ownership of the GstNvEncFrameState. */
@@ -137,6 +145,7 @@ typedef struct {
 
   GstObject      *display;            /* GstGLDisplay */
   GstObject      *other_context;      /* GstGLContext */
+  GstObject      *gl_context;         /* GstGLContext */
 
   GstVideoInfo        input_info;     /* buffer configuration for buffers sent to NVENC */
 

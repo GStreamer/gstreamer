@@ -23,6 +23,7 @@
 
 #include "gstnvbaseenc.h"
 #include "gstcudautils.h"
+#include "gstcudabufferpool.h"
 
 #include <gst/pbutils/codec-utils.h>
 
@@ -249,6 +250,8 @@ static GstCaps *gst_nv_base_enc_getcaps (GstVideoEncoder * enc,
 static gboolean gst_nv_base_enc_stop_bitstream_thread (GstNvBaseEnc * nvenc,
     gboolean force);
 static gboolean gst_nv_base_enc_drain_encoder (GstNvBaseEnc * nvenc);
+static gboolean gst_nv_base_enc_propose_allocation (GstVideoEncoder * enc,
+    GstQuery * query);
 
 static void
 gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
@@ -276,6 +279,8 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
   videoenc_class->finish = GST_DEBUG_FUNCPTR (gst_nv_base_enc_finish);
   videoenc_class->sink_query = GST_DEBUG_FUNCPTR (gst_nv_base_enc_sink_query);
   videoenc_class->sink_event = GST_DEBUG_FUNCPTR (gst_nv_base_enc_sink_event);
+  videoenc_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_nv_base_enc_propose_allocation);
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_ID,
       g_param_spec_uint ("cuda-device-id",
@@ -564,6 +569,129 @@ gst_nv_base_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
   return GST_VIDEO_ENCODER_CLASS (parent_class)->sink_query (enc, query);
 }
 
+#ifdef HAVE_NVCODEC_GST_GL
+static gboolean
+gst_nv_base_enc_ensure_gl_context (GstNvBaseEnc * nvenc)
+{
+  if (!nvenc->display) {
+    GST_DEBUG_OBJECT (nvenc, "No available OpenGL display");
+    return FALSE;
+  }
+
+  if (!gst_gl_query_local_gl_context (GST_ELEMENT (nvenc), GST_PAD_SINK,
+          (GstGLContext **) & nvenc->gl_context)) {
+    GST_INFO_OBJECT (nvenc, "failed to query local OpenGL context");
+    if (nvenc->gl_context)
+      gst_object_unref (nvenc->gl_context);
+    nvenc->gl_context =
+        (GstObject *) gst_gl_display_get_gl_context_for_thread ((GstGLDisplay *)
+        nvenc->display, NULL);
+    if (!nvenc->gl_context
+        || !gst_gl_display_add_context ((GstGLDisplay *) nvenc->display,
+            (GstGLContext *) nvenc->gl_context)) {
+      if (nvenc->gl_context)
+        gst_object_unref (nvenc->gl_context);
+      if (!gst_gl_display_create_context ((GstGLDisplay *) nvenc->display,
+              (GstGLContext *) nvenc->other_context,
+              (GstGLContext **) & nvenc->gl_context, NULL)) {
+        GST_ERROR_OBJECT (nvenc, "failed to create OpenGL context");
+        return FALSE;
+      }
+      if (!gst_gl_display_add_context ((GstGLDisplay *) nvenc->display,
+              (GstGLContext *) nvenc->gl_context)) {
+        GST_ERROR_OBJECT (nvenc,
+            "failed to add the OpenGL context to the display");
+        return FALSE;
+      }
+    }
+  }
+
+  if (!gst_gl_context_check_gl_version ((GstGLContext *) nvenc->gl_context,
+          SUPPORTED_GL_APIS, 3, 0)) {
+    GST_WARNING_OBJECT (nvenc, "OpenGL context could not support PBO download");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+#endif
+
+static gboolean
+gst_nv_base_enc_propose_allocation (GstVideoEncoder * enc, GstQuery * query)
+{
+  GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
+  GstCaps *caps;
+  GstVideoInfo info;
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstCapsFeatures *features;
+
+  GST_DEBUG_OBJECT (nvenc, "propose allocation");
+
+  gst_query_parse_allocation (query, &caps, NULL);
+
+  if (caps == NULL)
+    return FALSE;
+
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_WARNING_OBJECT (nvenc, "failed to get video info");
+    return FALSE;
+  }
+
+  features = gst_caps_get_features (caps, 0);
+#if HAVE_NVCODEC_GST_GL
+  if (features && gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+    GST_DEBUG_OBJECT (nvenc, "upsteram support GL memory");
+    if (!gst_nv_base_enc_ensure_gl_context (nvenc)) {
+      GST_WARNING_OBJECT (nvenc, "Could not get gl context");
+      goto done;
+    }
+
+    pool = gst_gl_buffer_pool_new ((GstGLContext *) nvenc->gl_context);
+  } else
+#endif
+  if (features && gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY)) {
+    GST_DEBUG_OBJECT (nvenc, "upstream support CUDA memory");
+    pool = gst_cuda_buffer_pool_new (nvenc->cuda_ctx);
+  } else {
+    GST_DEBUG_OBJECT (nvenc, "use system memory");
+    goto done;
+  }
+
+  if (G_UNLIKELY (pool == NULL)) {
+    GST_WARNING_OBJECT (nvenc, "cannot create buffer pool");
+    goto done;
+  }
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, GST_VIDEO_INFO_SIZE (&info),
+      nvenc->items->len, nvenc->items->len);
+
+  gst_query_add_allocation_pool (query, pool, GST_VIDEO_INFO_SIZE (&info),
+      nvenc->items->len, nvenc->items->len);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  if (!gst_buffer_pool_set_config (pool, config))
+    goto error_pool_config;
+
+  gst_object_unref (pool);
+
+done:
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (enc,
+      query);
+
+error_pool_config:
+  {
+    if (pool)
+      gst_object_unref (pool);
+    GST_WARNING_OBJECT (nvenc, "failed to set config");
+    return FALSE;
+  }
+}
+
 static gboolean
 gst_nv_base_enc_sink_event (GstVideoEncoder * enc, GstEvent * event)
 {
@@ -648,6 +776,10 @@ gst_nv_base_enc_stop (GstVideoEncoder * enc)
   if (nvenc->other_context) {
     gst_object_unref (nvenc->other_context);
     nvenc->other_context = NULL;
+  }
+  if (nvenc->gl_context) {
+    gst_object_unref (nvenc->gl_context);
+    nvenc->gl_context = NULL;
   }
 
   if (nvenc->items) {
@@ -1717,7 +1849,6 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 
   if (!reconfigure) {
     nvenc->input_info = *info;
-    nvenc->gl_input = FALSE;
   }
 
   if (nvenc->input_state)
@@ -1727,9 +1858,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 
   /* now allocate some buffers only on first configuration */
   if (!reconfigure) {
-#if HAVE_NVCODEC_GST_GL
     GstCapsFeatures *features;
-#endif
     guint i;
     guint input_width, input_height;
     guint n_bufs;
@@ -1744,11 +1873,17 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     /* input buffers */
     g_array_set_size (nvenc->items, n_bufs);
 
-#if HAVE_NVCODEC_GST_GL
+    nvenc->mem_type = GST_NVENC_MEM_TYPE_SYSTEM;
+
     features = gst_caps_get_features (state->caps, 0);
     if (gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY)) {
+      nvenc->mem_type = GST_NVENC_MEM_TYPE_CUDA;
+    }
+#if HAVE_NVCODEC_GST_GL
+    else if (gst_caps_features_contains (features,
             GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
-      nvenc->gl_input = TRUE;
+      nvenc->mem_type = GST_NVENC_MEM_TYPE_GL;
     }
 #endif
 
@@ -2090,16 +2225,21 @@ _map_gl_input_buffer (GstGLContext * context, GstNvEncGLMapData * data)
 
 static gboolean
 gst_nv_base_enc_upload_frame (GstNvBaseEnc * nvenc, GstVideoFrame * frame,
-    GstNvEncInputResource * resource)
+    GstNvEncInputResource * resource, gboolean use_device_memory)
 {
   gint i;
   CUdeviceptr dst = resource->cuda_pointer;
   GstVideoInfo *info = &frame->info;
   CUresult cuda_ret;
+  GstCudaMemory *cuda_mem = NULL;
 
   if (!gst_cuda_context_push (nvenc->cuda_ctx)) {
     GST_ERROR_OBJECT (nvenc, "cannot push context");
     return FALSE;
+  }
+
+  if (use_device_memory) {
+    cuda_mem = (GstCudaMemory *) gst_buffer_peek_memory (frame->buffer, 0);
   }
 
   for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (frame); i++) {
@@ -2107,9 +2247,15 @@ gst_nv_base_enc_upload_frame (GstNvBaseEnc * nvenc, GstVideoFrame * frame,
     guint dest_stride = _get_cuda_device_stride (&nvenc->input_info, i,
         resource->cuda_stride);
 
-    param.srcMemoryType = CU_MEMORYTYPE_HOST;
-    param.srcHost = GST_VIDEO_FRAME_PLANE_DATA (frame, i);
-    param.srcPitch = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
+    if (use_device_memory) {
+      param.srcMemoryType = CU_MEMORYTYPE_DEVICE;
+      param.srcDevice = cuda_mem->data + cuda_mem->offset[i];
+      param.srcPitch = cuda_mem->stride;
+    } else {
+      param.srcMemoryType = CU_MEMORYTYPE_HOST;
+      param.srcHost = GST_VIDEO_FRAME_PLANE_DATA (frame, i);
+      param.srcPitch = GST_VIDEO_FRAME_PLANE_STRIDE (frame, i);
+    }
 
     param.dstMemoryType = CU_MEMORYTYPE_DEVICE;
     param.dstDevice = dst;
@@ -2268,6 +2414,7 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
   GstMapFlags in_map_flags = GST_MAP_READ;
   GstNvEncFrameState *state = NULL;
   GstNvEncInputResource *resource = NULL;
+  gboolean use_device_memory = FALSE;
 
   g_assert (nvenc->encoder != NULL);
 
@@ -2292,9 +2439,26 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
     GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME (frame);
   }
 #if HAVE_NVCODEC_GST_GL
-  if (nvenc->gl_input)
+  if (nvenc->mem_type == GST_NVENC_MEM_TYPE_GL)
     in_map_flags |= GST_MAP_GL;
 #endif
+
+  if (nvenc->mem_type == GST_NVENC_MEM_TYPE_CUDA) {
+    GstMemory *mem;
+
+    if ((mem = gst_buffer_peek_memory (frame->input_buffer, 0)) &&
+        gst_is_cuda_memory (mem)) {
+      GstCudaMemory *cmem = GST_CUDA_MEMORY_CAST (mem);
+
+      /* FIXME: enhance CUDA memory copy over multiple-gpu */
+      if (cmem->context == nvenc->cuda_ctx ||
+          gst_cuda_context_get_handle (cmem->context) ==
+          gst_cuda_context_get_handle (nvenc->cuda_ctx)) {
+        use_device_memory = TRUE;
+        in_map_flags |= GST_MAP_CUDA;
+      }
+    }
+  }
 
   if (!gst_video_frame_map (&vframe, info, frame->input_buffer, in_map_flags)) {
     goto drop;
@@ -2315,7 +2479,7 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
   resource = state->in_buf;
 
 #if HAVE_NVCODEC_GST_GL
-  if (nvenc->gl_input) {
+  if (nvenc->mem_type == GST_NVENC_MEM_TYPE_GL) {
     GstGLMemory *gl_mem;
     GstNvEncGLMapData data;
 
@@ -2335,7 +2499,8 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
     }
   } else
 #endif
-  if (!gst_nv_base_enc_upload_frame (nvenc, &vframe, resource)) {
+  if (!gst_nv_base_enc_upload_frame (nvenc,
+          &vframe, resource, use_device_memory)) {
     flow = GST_FLOW_ERROR;
     goto unmap_and_drop;
   }

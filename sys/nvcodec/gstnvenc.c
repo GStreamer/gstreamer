@@ -24,6 +24,8 @@
 #include "gstnvenc.h"
 #include "gstnvh264enc.h"
 #include "gstnvh265enc.h"
+#include "gstcudabufferpool.h"
+
 #include <gmodule.h>
 
 #if HAVE_NVCODEC_GST_GL
@@ -787,14 +789,20 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
       g_value_unset (interlace_modes);
       g_free (interlace_modes);
     }
-#if HAVE_NVCODEC_GST_GL
+
     {
+      GstCaps *cuda_caps = gst_caps_copy (sink_templ);
+#if HAVE_NVCODEC_GST_GL
       GstCaps *gl_caps = gst_caps_copy (sink_templ);
       gst_caps_set_features_simple (gl_caps,
           gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
       gst_caps_append (sink_templ, gl_caps);
-    }
 #endif
+
+      gst_caps_set_features_simple (cuda_caps,
+          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
+      gst_caps_append (sink_templ, cuda_caps);
+    }
 
     name = g_strdup_printf ("video/x-%s", codec);
     src_templ = gst_caps_new_simple (name,
