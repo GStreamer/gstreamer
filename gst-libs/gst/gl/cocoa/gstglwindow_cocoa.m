@@ -157,6 +157,7 @@ gst_gl_window_cocoa_finalize (GObject * object)
 #if OS_OBJECT_USE_OBJC
   /* Let ARC clean up our queue */
   dispatch_queue_t queue = (__bridge_transfer dispatch_queue_t) window->priv->gl_queue;
+  (void) queue;
 #else
   dispatch_release (window->priv->gl_queue);
 #endif
