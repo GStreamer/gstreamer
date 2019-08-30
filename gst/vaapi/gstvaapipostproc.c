@@ -1443,7 +1443,7 @@ gst_vaapipostproc_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf_ptr)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
-  const GstVideoCropMeta *crop_meta;
+  const GstVideoMeta *video_meta;
   GstVideoInfo info;
 
   if (gst_base_transform_is_passthrough (trans)) {
@@ -1453,11 +1453,17 @@ gst_vaapipostproc_prepare_output_buffer (GstBaseTransform * trans,
 
   /* If we are not using vpp crop (i.e. forwarding crop meta to downstream)
    * then, ensure our output buffer pool is sized for uncropped output */
-  crop_meta = gst_buffer_get_video_crop_meta (inbuf);
-  if (crop_meta && !use_vpp_crop (postproc)) {
+  if (gst_buffer_get_video_crop_meta (inbuf) && !use_vpp_crop (postproc)) {
+    /* The video meta is required since the caps width/height are smaller,
+     * which would not result in a usable GstVideoInfo for mapping the
+     * buffer. */
+    video_meta = gst_buffer_get_video_meta (inbuf);
+    if (!video_meta)
+      return GST_FLOW_ERROR;
+
     info = postproc->srcpad_info;
-    info.width += crop_meta->x;
-    info.height += crop_meta->y;
+    info.width = video_meta->width;
+    info.height = video_meta->height;
     ensure_buffer_pool (postproc, &info);
   }
 
