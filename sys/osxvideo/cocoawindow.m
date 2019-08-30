@@ -397,6 +397,7 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
   gdouble frame_par, view_par;
   gint view_height, view_width, c_height, c_width, c_x, c_y;
 
+  [super reshape];
 
   GST_LOG ("reshaping");
 
