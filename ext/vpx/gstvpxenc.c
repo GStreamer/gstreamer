@@ -1720,7 +1720,8 @@ gst_vpx_enc_process (GstVPXEnc * encoder)
           encoder->cfg.g_timebase.den,
           encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND);
       GST_TRACE_OBJECT (encoder, "vpx pts: %" G_GINT64_FORMAT
-          ", gst frame pts: %" G_GINT64_FORMAT, pkt->data.frame.pts, pts);
+          ", gst frame pts: %" G_GINT64_FORMAT, (gint64) pkt->data.frame.pts,
+          (gint64) pts);
     } while (pkt->data.frame.pts > pts);
 
     g_assert (frame != NULL);
