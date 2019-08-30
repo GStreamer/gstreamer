@@ -1068,7 +1068,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
   }
 
   GST_DEBUG_OBJECT (ogg, "%p packet has granulepos %" G_GINT64_FORMAT, pad,
-      packet->granulepos);
+      (gint64) packet->granulepos);
   granule =
       gst_ogg_stream_granulepos_to_granule (&pad->map, packet->granulepos);
   if (granule > 0) {
@@ -1309,7 +1309,7 @@ gst_ogg_pad_stream_out (GstOggPad * pad, gint npackets)
         if (packet.granulepos < -1) {
           GST_WARNING_OBJECT (ogg,
               "Invalid granulepos (%" G_GINT64_FORMAT "), resetting stream",
-              packet.granulepos);
+              (gint64) packet.granulepos);
           gst_ogg_pad_reset (pad);
           break;
         }
