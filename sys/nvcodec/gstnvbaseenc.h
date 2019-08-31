@@ -74,6 +74,8 @@ typedef struct {
   GstCudaContext * cuda_ctx;
   CUstream         cuda_stream;
   void          * encoder;
+  NV_ENC_INITIALIZE_PARAMS init_params;
+  NV_ENC_CONFIG            config;
 
   /* the supported input formats */
   GValue        * input_formats;                  /* OBJECT LOCK */
@@ -102,10 +104,6 @@ typedef struct {
   void           *display;            /* GstGLDisplay */
   void           *other_context;      /* GstGLContext */
 
-  /* the maximum buffer size the encoder is configured for */
-  guint               max_encode_width;
-  guint               max_encode_height;
-
   GstVideoInfo        input_info;     /* buffer configuration for buffers sent to NVENC */
 
   GstFlowReturn   last_flow;          /* ATOMIC */
@@ -129,14 +127,6 @@ typedef struct {
 
 G_GNUC_INTERNAL
 GType gst_nv_base_enc_get_type (void);
-
-
-void gst_nv_base_enc_get_max_encode_size      (GstNvBaseEnc * nvenc,
-                                               guint * max_width,
-                                               guint * max_height);
-void gst_nv_base_enc_set_max_encode_size      (GstNvBaseEnc * nvenc,
-                                               guint max_width,
-                                               guint max_height);
 
 void gst_nv_base_enc_register                 (GstPlugin * plugin,
                                                GType type,

@@ -213,6 +213,7 @@ static GstCaps *gst_nv_base_enc_getcaps (GstVideoEncoder * enc,
     GstCaps * filter);
 static gboolean gst_nv_base_enc_stop_bitstream_thread (GstNvBaseEnc * nvenc,
     gboolean force);
+static gboolean gst_nv_base_enc_drain_encoder (GstNvBaseEnc * nvenc);
 
 static void
 gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
@@ -287,6 +288,21 @@ gst_nv_base_enc_class_init (GstNvBaseEncClass * klass)
 }
 
 static gboolean
+gst_nv_base_enc_open_encode_session (GstNvBaseEnc * nvenc)
+{
+  NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS params = { 0, };
+  NVENCSTATUS nv_ret;
+
+  params.version = gst_nvenc_get_open_encode_session_ex_params_version ();
+  params.apiVersion = gst_nvenc_get_api_version ();
+  params.device = gst_cuda_context_get_handle (nvenc->cuda_ctx);
+  params.deviceType = NV_ENC_DEVICE_TYPE_CUDA;
+  nv_ret = NvEncOpenEncodeSessionEx (&params, &nvenc->encoder);
+
+  return nv_ret == NV_ENC_SUCCESS;
+}
+
+static gboolean
 gst_nv_base_enc_open (GstVideoEncoder * enc)
 {
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
@@ -310,22 +326,13 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
     gst_cuda_context_pop (NULL);
   }
 
-  {
-    NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS params = { 0, };
-    NVENCSTATUS nv_ret;
-
-    params.version = gst_nvenc_get_open_encode_session_ex_params_version ();
-    params.apiVersion = gst_nvenc_get_api_version ();
-    params.device = gst_cuda_context_get_handle (nvenc->cuda_ctx);
-    params.deviceType = NV_ENC_DEVICE_TYPE_CUDA;
-    nv_ret = NvEncOpenEncodeSessionEx (&params, &nvenc->encoder);
-    if (nv_ret != NV_ENC_SUCCESS) {
-      GST_ERROR ("Failed to create NVENC encoder session, ret=%d", nv_ret);
-      gst_clear_object (&nvenc->cuda_ctx);
-      return FALSE;
-    }
-    GST_INFO ("created NVENC encoder %p", nvenc->encoder);
+  if (!gst_nv_base_enc_open_encode_session (nvenc)) {
+    GST_ERROR ("Failed to create NVENC encoder session");
+    gst_clear_object (&nvenc->cuda_ctx);
+    return FALSE;
   }
+
+  GST_INFO ("created NVENC encoder %p", nvenc->encoder);
 
   /* query supported input formats */
   if (!gst_nvenc_get_supported_input_formats (nvenc->encoder, klass->codec_id,
@@ -408,6 +415,8 @@ gst_nv_base_enc_start (GstVideoEncoder * enc)
   nvenc->in_bufs_pool = g_async_queue_new ();
 
   nvenc->last_flow = GST_FLOW_OK;
+  memset (&nvenc->init_params, 0, sizeof (NV_ENC_INITIALIZE_PARAMS));
+  memset (&nvenc->config, 0, sizeof (NV_ENC_CONFIG));
 
 #if HAVE_NVCODEC_GST_GL
   {
@@ -1103,22 +1112,22 @@ _get_frame_data_height (GstVideoInfo * info)
   return ret;
 }
 
-void
-gst_nv_base_enc_set_max_encode_size (GstNvBaseEnc * nvenc, guint max_width,
-    guint max_height)
-{
-  nvenc->max_encode_width = max_width;
-  nvenc->max_encode_height = max_height;
-}
-
-void
-gst_nv_base_enc_get_max_encode_size (GstNvBaseEnc * nvenc, guint * max_width,
-    guint * max_height)
-{
-  *max_width = nvenc->max_encode_width;
-  *max_height = nvenc->max_encode_height;
-}
-
+/* GstVideoEncoder::set_format or by nvenc self if new properties were set.
+ *
+ * NvEncReconfigureEncoder with following conditions are not allowed
+ * 1) GOP structure change
+ * 2) sync-Async mode change (Async mode is Windows only and we didn't support it)
+ * 3) MaxWidth, MaxHeight
+ * 4) PTDmode (Picture Type Decision mode)
+ *
+ * So we will force to re-init the encode session if
+ * 1) New resolution is larger than previous config
+ * 2) GOP size changed
+ * 3) Input pixel format change
+ *    pre-allocated CUDA memory could not ensure stride, width and height
+ *
+ * TODO: bframe also considered as force re-init case
+ */
 static gboolean
 gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 {
@@ -1127,19 +1136,60 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   GstVideoInfo *info = &state->info;
   GstVideoCodecState *old_state = nvenc->input_state;
   NV_ENC_RECONFIGURE_PARAMS reconfigure_params = { 0, };
-  NV_ENC_INITIALIZE_PARAMS init_params = { 0, };
-  NV_ENC_INITIALIZE_PARAMS *params;
+  NV_ENC_INITIALIZE_PARAMS *params = &nvenc->init_params;
   NV_ENC_PRESET_CONFIG preset_config = { 0, };
   NVENCSTATUS nv_ret;
   gint dar_n, dar_d;
+  gboolean reconfigure = FALSE;
 
   g_atomic_int_set (&nvenc->reconfig, FALSE);
 
   if (old_state) {
-    reconfigure_params.version = gst_nvenc_get_reconfigure_params_version ();
-    params = &reconfigure_params.reInitEncodeParams;
-  } else {
-    params = &init_params;
+    gboolean larger_resolution;
+    gboolean format_changed;
+    gboolean gop_size_changed;
+
+    larger_resolution =
+        (GST_VIDEO_INFO_WIDTH (info) > nvenc->init_params.maxEncodeWidth ||
+        GST_VIDEO_INFO_HEIGHT (info) > nvenc->init_params.maxEncodeHeight);
+    format_changed =
+        GST_VIDEO_INFO_FORMAT (info) !=
+        GST_VIDEO_INFO_FORMAT (&old_state->info);
+
+    if (nvenc->config.gopLength == NVENC_INFINITE_GOPLENGTH
+        && nvenc->gop_size == -1) {
+      gop_size_changed = FALSE;
+    } else if (nvenc->config.gopLength != nvenc->gop_size) {
+      gop_size_changed = TRUE;
+    } else {
+      gop_size_changed = FALSE;
+    }
+
+    if (larger_resolution || format_changed || gop_size_changed) {
+      GST_DEBUG_OBJECT (nvenc,
+          "resolution %dx%d -> %dx%d, format %s -> %s, re-init",
+          nvenc->init_params.maxEncodeWidth, nvenc->init_params.maxEncodeHeight,
+          GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&old_state->info)),
+          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+
+      gst_nv_base_enc_drain_encoder (nvenc);
+      gst_nv_base_enc_stop_bitstream_thread (nvenc, FALSE);
+      gst_nv_base_enc_free_buffers (nvenc);
+      NvEncDestroyEncoder (nvenc->encoder);
+      nvenc->encoder = NULL;
+
+      if (!gst_nv_base_enc_open_encode_session (nvenc)) {
+        GST_ERROR_OBJECT (nvenc, "Failed to open encode session");
+        return FALSE;
+      }
+    } else {
+      reconfigure_params.version = gst_nvenc_get_reconfigure_params_version ();
+      /* reset rate control state and start from IDR */
+      reconfigure_params.resetEncoder = TRUE;
+      reconfigure_params.forceIDR = TRUE;
+      reconfigure = TRUE;
+    }
   }
 
   params->version = gst_nvenc_get_initialize_params_version ();
@@ -1187,25 +1237,11 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   }
 
   params->enablePTD = 1;
-  if (!old_state) {
+  if (!reconfigure) {
     /* this sets the required buffer size and the maximum allowed size on
      * subsequent reconfigures */
-    /* FIXME: propertise this */
     params->maxEncodeWidth = GST_VIDEO_INFO_WIDTH (info);
     params->maxEncodeHeight = GST_VIDEO_INFO_HEIGHT (info);
-    gst_nv_base_enc_set_max_encode_size (nvenc, params->maxEncodeWidth,
-        params->maxEncodeHeight);
-  } else {
-    guint max_width, max_height;
-
-    gst_nv_base_enc_get_max_encode_size (nvenc, &max_width, &max_height);
-
-    if (GST_VIDEO_INFO_WIDTH (info) > max_width
-        || GST_VIDEO_INFO_HEIGHT (info) > max_height) {
-      GST_ELEMENT_ERROR (nvenc, STREAM, FORMAT, ("%s", "Requested stream "
-              "size is larger than the maximum configured size"), (NULL));
-      return FALSE;
-    }
   }
 
   preset_config.version = gst_nvenc_get_preset_config_version ();
@@ -1288,8 +1324,12 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     return FALSE;
   }
 
+  /* store the last config to reconfig/re-init decision in the next time */
+  nvenc->config = *params->encodeConfig;
+
   G_LOCK (initialization_lock);
-  if (old_state) {
+  if (reconfigure) {
+    reconfigure_params.reInitEncodeParams = nvenc->init_params;
     nv_ret = NvEncReconfigureEncoder (nvenc->encoder, &reconfigure_params);
   } else {
     nv_ret = NvEncInitializeEncoder (nvenc->encoder, params);
@@ -1298,12 +1338,11 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 
   if (nv_ret != NV_ENC_SUCCESS) {
     GST_ELEMENT_ERROR (nvenc, LIBRARY, SETTINGS, (NULL),
-        ("Failed to %sinit encoder: %d", old_state ? "re" : "", nv_ret));
+        ("Failed to %sinit encoder: %d", reconfigure ? "re" : "", nv_ret));
     return FALSE;
   }
-  GST_INFO_OBJECT (nvenc, "configured encoder");
 
-  if (!old_state) {
+  if (!reconfigure) {
     nvenc->input_info = *info;
     nvenc->gl_input = FALSE;
   }
@@ -1311,10 +1350,10 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
   if (nvenc->input_state)
     gst_video_codec_state_unref (nvenc->input_state);
   nvenc->input_state = gst_video_codec_state_ref (state);
-  GST_INFO_OBJECT (nvenc, "configured encoder");
+  GST_INFO_OBJECT (nvenc, "%sconfigured encoder", reconfigure ? "re" : "");
 
   /* now allocate some buffers only on first configuration */
-  if (!old_state) {
+  if (!reconfigure) {
 #if HAVE_NVCODEC_GST_GL
     GstCapsFeatures *features;
 #endif
@@ -1816,6 +1855,9 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
   if (g_atomic_int_compare_and_exchange (&nvenc->reconfig, TRUE, FALSE)) {
     if (!gst_nv_base_enc_set_format (enc, nvenc->input_state))
       return GST_FLOW_ERROR;
+
+    /* reconfigured encode session should start from keyframe */
+    GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME (frame);
   }
 #if HAVE_NVCODEC_GST_GL
   if (nvenc->gl_input)
