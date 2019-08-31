@@ -18,6 +18,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -273,6 +274,120 @@ GST_START_TEST (test_caps_interlace_mode)
 
 GST_END_TEST;
 
+#define MAX_PUSH_BUFFER 64
+
+static void
+resolution_change_common (gint from_width, gint from_height, gint to_width,
+    gint to_height)
+{
+  GstHarness *h;
+  GstCaps *caps;
+  GstEvent *event;
+  GstBuffer *in_buf, *out_buf = NULL;
+  GstFlowReturn ret;
+  gint i = 0;
+
+  h = gst_harness_new_parse ("nvh264enc ! h264parse");
+  fail_unless (h != NULL);
+
+  gst_harness_play (h);
+
+  caps = gst_caps_from_string ("video/x-raw,format=NV12");
+  gst_caps_set_simple (caps, "width", G_TYPE_INT, from_width,
+      "height", G_TYPE_INT, from_height, NULL);
+  gst_harness_set_src_caps (h, caps);
+
+  in_buf = gst_buffer_new_and_alloc ((from_width * from_height) * 3 / 2);
+  gst_buffer_memset (in_buf, 0, 0, -1);
+
+  GST_BUFFER_DURATION (in_buf) = GST_SECOND;
+  GST_BUFFER_DTS (in_buf) = GST_CLOCK_TIME_NONE;
+
+  /* Push buffers until get encoder output */
+  do {
+    fail_if (i > MAX_PUSH_BUFFER);
+
+    GST_BUFFER_PTS (in_buf) = i * GST_SECOND;
+
+    ret = gst_harness_push (h, gst_buffer_ref (in_buf));
+    fail_unless (ret == GST_FLOW_OK, "GstFlowReturn was %s",
+        gst_flow_get_name (ret));
+
+    out_buf = gst_harness_try_pull (h);
+    i++;
+  } while (out_buf == NULL);
+  gst_buffer_unref (out_buf);
+  gst_buffer_unref (in_buf);
+
+  /* change resolution */
+  caps = gst_caps_from_string ("video/x-raw,format=NV12");
+  gst_caps_set_simple (caps, "width", G_TYPE_INT, to_width,
+      "height", G_TYPE_INT, to_width, NULL);
+
+  GST_DEBUG ("Set new resolution %dx%d", to_width, to_height);
+  gst_harness_set_src_caps (h, caps);
+  in_buf = gst_buffer_new_and_alloc ((to_width * to_height) * 3 / 2);
+  gst_buffer_memset (in_buf, 0, 0, -1);
+
+  GST_BUFFER_PTS (in_buf) = i * GST_SECOND;
+
+  ret = gst_harness_push (h, gst_buffer_ref (in_buf));
+  fail_unless (ret == GST_FLOW_OK, "GstFlowReturn was %s",
+      gst_flow_get_name (ret));
+
+  /* push EOS to drain all buffers */
+  fail_unless (gst_harness_push_event (h, gst_event_new_eos ()));
+
+  do {
+    gboolean term = FALSE;
+    event = gst_harness_pull_event (h);
+    /* wait until get EOS event */
+    if (event) {
+      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+        term = TRUE;
+
+      gst_event_unref (event);
+
+      if (term)
+        break;
+    }
+  } while (out_buf == NULL);
+
+  /* check the last resolution from caps */
+  caps = gst_pad_get_current_caps (h->sinkpad);
+  fail_unless (caps != NULL);
+
+  GST_DEBUG ("last encoder src caps %" GST_PTR_FORMAT, caps);
+  {
+    gint val;
+    GstStructure *s;
+
+    s = gst_caps_get_structure (caps, 0);
+    fail_unless_equals_string (gst_structure_get_name (s), "video/x-h264");
+    fail_unless (gst_structure_get_int (s, "width", &val));
+    fail_unless_equals_int (val, to_width);
+    fail_unless (gst_structure_get_int (s, "height", &val));
+    fail_unless_equals_int (val, to_height);
+  }
+  gst_caps_unref (caps);
+
+  gst_harness_teardown (h);
+}
+
+GST_START_TEST (test_resolution_change_to_larger)
+{
+  resolution_change_common (64, 64, 128, 128);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_resolution_change_to_smaller)
+{
+  resolution_change_common (128, 128, 64, 64);
+}
+
+GST_END_TEST;
+
 static gboolean
 check_nvenc_available (void)
 {
@@ -320,6 +435,8 @@ nvenc_suite (void)
   tcase_add_test (tc_chain, test_encode_simple);
   tcase_add_test (tc_chain, test_reuse);
   tcase_add_test (tc_chain, test_caps_interlace_mode);
+  tcase_add_test (tc_chain, test_resolution_change_to_larger);
+  tcase_add_test (tc_chain, test_resolution_change_to_smaller);
 
 end:
   return s;
