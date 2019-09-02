@@ -2903,7 +2903,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 
   /* If an accurate seek was requested, we want to clip the segment we
    * output in ONVIF mode to the requested bounds */
-  src->clip_out_segment = !!(flags & GST_SEEK_FLAG_ACCURATE);
+  src->clip_out_segment = ! !(flags & GST_SEEK_FLAG_ACCURATE);
 
   if (playing)
     gst_rtspsrc_play (src, &seeksegment, FALSE, seek_style);
