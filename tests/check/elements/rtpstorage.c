@@ -299,7 +299,7 @@ _single_ssrc_test (GstHarness * h, guint32 ssrc,
   g_ptr_array_add (bufs_in, create_rtp_packet (96, ssrc, RTP_TSTAMP (6),
           seq_start + 11));
 
-  /* Loosing one */
+  /* Losing one */
   g_ptr_array_remove_index (bufs_in, nth_to_loose);
 
   /* Push all of them through */

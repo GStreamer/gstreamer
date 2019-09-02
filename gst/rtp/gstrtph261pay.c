@@ -773,7 +773,7 @@ find_gob (GstRtpH261Pay * pay, const guint8 * data, guint size, guint pos)
   return ret;
 }
 
-/* Scans after all GOB start codes and initalizes the GOB structure with start
+/* Scans after all GOB start codes and initializes the GOB structure with start
  * and end positions. */
 static ParseReturn
 gst_rtp_h261_pay_init_gobs (GstRtpH261Pay * pay, Gob * gobs, gint num_gobs,
@@ -947,7 +947,7 @@ gst_rtp_h261_pay_shift_buffer (GstRtpH261Pay * pay, const guint8 * data,
     gsize size, gint offset, gsize * newsize)
 {
   /* In order to read variable length codes at the very end of the buffer
-   * wihout peeking into possibly unallocated data, we pad with extra 0's
+   * without peeking into possibly unallocated data, we pad with extra 0's
    * which will generate an invalid code at the end of the buffer. */
   guint pad = 4;
   gsize allocsize = size + pad;

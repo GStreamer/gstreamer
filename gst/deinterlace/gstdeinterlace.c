@@ -524,7 +524,7 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
    *
    * Some methods provide parameters which can be set by getting
    * the "method" child via the #GstChildProxy interface and
-   * setting the appropiate properties on it.
+   * setting the appropriate properties on it.
    *
    * * tomsmocomp  Motion Adaptive: Motion Search
    * * greedyh Motion Adaptive: Advanced Detection
@@ -1444,7 +1444,7 @@ gst_deinterlace_get_pattern_lock (GstDeinterlace * self, gboolean * flush_one)
           break;
       }
 
-      /* make complete matches more signficant */
+      /* make complete matches more significant */
       if (k == length)
         k += GST_DEINTERLACE_MAX_BUFFER_STATE_HISTORY;
 

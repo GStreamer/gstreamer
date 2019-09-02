@@ -599,7 +599,7 @@ no_output:
 
   return NULL;
 
-  /* ERORRS */
+  /* ERRORS */
 switch_failed:
   {
     GST_ELEMENT_WARNING (rtptheoradepay, STREAM, DECODE,

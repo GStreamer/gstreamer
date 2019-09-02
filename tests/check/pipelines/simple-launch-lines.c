@@ -193,7 +193,7 @@ GST_START_TEST (test_rtp_payloaders)
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN, target_state);
 
-  /* Cannot be tested with fakesrc becouse speex payloader requires a valid header?! */
+  /* Cannot be tested with fakesrc because speex payloader requires a valid header?! */
   /*
      s = PIPELINE_STRING(DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpspeexpay", "rtpspeexdepay");
      run_pipeline (setup_pipeline (s), s,

@@ -63,7 +63,7 @@ struct _GstAudioFXBaseFIRFilter {
   gboolean low_latency;         /* work in slower low latency mode */
 
   gboolean drain_on_changes;    /* If the filter should be drained when
-                                 * coeficients change */
+                                 * coefficients change */
 
   /* < private > */
   GstAudioFXBaseFIRFilterProcessFunc process;

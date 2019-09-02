@@ -1361,7 +1361,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
   avc = rtph264pay->stream_format == GST_H264_STREAM_FORMAT_AVC;
 
   if (avc) {
-    /* In AVC mode, there is no adapter, so nothign to drain */
+    /* In AVC mode, there is no adapter, so nothing to drain */
     if (draining)
       return GST_FLOW_OK;
     gst_buffer_map (buffer, &map, GST_MAP_READ);

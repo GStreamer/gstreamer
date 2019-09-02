@@ -632,7 +632,7 @@ GST_START_TEST (test_reference_level)
       GST_TAG_TRACK_GAIN, 0.00, GST_TAG_TRACK_PEAK, 0.2,
       GST_TAG_REFERENCE_LEVEL, 83., NULL);
   fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
-  /* Because our authorative reference is 89 dB, we bump it up by +6 dB. */
+  /* Because our authoritative reference is 89 dB, we bump it up by +6 dB. */
   fail_unless_gain (element, +6.00);    /* pre-amp + track gain */
   send_eos_event (element);
 

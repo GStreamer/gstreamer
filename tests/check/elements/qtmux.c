@@ -1271,7 +1271,7 @@ GST_START_TEST (test_muxing)
   test_input_data_init (&input2);
 
   /* Create the inputs, after calling the run below, all this data is
-   * transfered to it and we have no need to clean up */
+   * transferred to it and we have no need to clean up */
   input1.input = NULL;
   input1.input =
       g_list_append (input1.input, gst_event_new_stream_start ("test-1"));
@@ -1328,7 +1328,7 @@ GST_START_TEST (test_muxing_non_zero_segment)
   test_input_data_init (&input2);
 
   /* Create the inputs, after calling the run below, all this data is
-   * transfered to it and we have no need to clean up */
+   * transferred to it and we have no need to clean up */
   input1.input = NULL;
   input1.input =
       g_list_append (input1.input, gst_event_new_stream_start ("test-1"));
@@ -1390,7 +1390,7 @@ GST_START_TEST (test_muxing_non_zero_segment_different)
   test_input_data_init (&input2);
 
   /* Create the inputs, after calling the run below, all this data is
-   * transfered to it and we have no need to clean up */
+   * transferred to it and we have no need to clean up */
   input1.input = NULL;
   input1.input =
       g_list_append (input1.input, gst_event_new_stream_start ("test-1"));
@@ -1451,7 +1451,7 @@ GST_START_TEST (test_muxing_dts_outside_segment)
   test_input_data_init (&input2);
 
   /* Create the inputs, after calling the run below, all this data is
-   * transfered to it and we have no need to clean up */
+   * transferred to it and we have no need to clean up */
   input1.input = NULL;
   input1.input =
       g_list_append (input1.input, gst_event_new_stream_start ("test-1"));
@@ -1515,7 +1515,7 @@ GST_START_TEST (test_muxing_initial_gap)
   test_input_data_init (&input2);
 
   /* Create the inputs, after calling the run below, all this data is
-   * transfered to it and we have no need to clean up */
+   * transferred to it and we have no need to clean up */
   input1.input = NULL;
   input1.input =
       g_list_append (input1.input, gst_event_new_stream_start ("test-1"));

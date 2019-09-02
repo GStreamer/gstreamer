@@ -472,7 +472,7 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
     GstRTPBuffer rtp = { NULL };
     GstBuffer *paybuf;
 
-    /* this will be the total lenght of the packet */
+    /* this will be the total length of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (avail, 0, 0);
 
     /* fill one MTU or all available bytes, we need 4 spare bytes for

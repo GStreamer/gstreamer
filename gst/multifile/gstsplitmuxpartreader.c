@@ -136,7 +136,7 @@ handle_buffer_measuring (GstSplitMuxPartReader * reader,
   if (reader->prep_state == PART_STATE_PREPARING_COLLECT_STREAMS &&
       !part_pad->seen_buffer) {
     /* If this is the first buffer on the pad in the collect_streams state,
-     * then calculate inital offset based on running time of this segment */
+     * then calculate initial offset based on running time of this segment */
     part_pad->initial_ts_offset =
         part_pad->orig_segment.start + part_pad->orig_segment.base -
         part_pad->orig_segment.time;

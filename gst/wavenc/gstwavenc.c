@@ -1089,7 +1089,7 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
       wavenc->audio_length = 0x7FFF0000;
       wavenc->meta_length = 0;
       wavenc->sent_header = FALSE;
-      /* its true because we haven't writen anything */
+      /* its true because we haven't written anything */
       wavenc->finished_properly = TRUE;
       break;
     default:

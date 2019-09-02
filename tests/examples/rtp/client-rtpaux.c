@@ -370,7 +370,7 @@ main (int argc, char **argv)
 
   g_main_loop_run (loop);
 
-  g_print ("stoping client pipeline\n");
+  g_print ("stopping client pipeline\n");
   gst_element_set_state (GST_ELEMENT (pipe), GST_STATE_NULL);
 
   gst_object_unref (pipe);

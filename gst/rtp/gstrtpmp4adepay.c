@@ -389,7 +389,7 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
       skip += data_len;
       pos += data_len;
 
-      /* update our pointers whith what we consumed */
+      /* update our pointers with what we consumed */
       data += skip;
       avail -= skip;
 

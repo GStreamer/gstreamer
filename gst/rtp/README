@@ -17,7 +17,7 @@ The following fields can or must (*) be specified in the structure:
 
  * payload: (int) [0, 127]
      For audio and video, these will normally be a media payload type as 
-     defined in the RTP Audio/Video Profile. For dynamicaly allocated 
+     defined in the RTP Audio/Video Profile. For dynamically allocated 
      payload types, this value will be >= 96 and the encoding-name must be
      set.
 
@@ -296,7 +296,7 @@ Some gst-launch-1.0 lines:
 
  The receiver now displays an h263 image. Since there is no jitterbuffer in the
  pipeline, frames will be displayed at the time when they are received. This can
- result in jerky playback in the case of high network jitter or currupted video
+ result in jerky playback in the case of high network jitter or corrupted video
  when packets are dropped or reordered.
 
  Stream a quicktime file with mpeg4 video and AAC audio on port 5000 and port
@@ -342,7 +342,7 @@ Some gst-launch-1.0 lines:
  recommended to use a gstrtpjitterbuffer after the udpsrc elements. 
  
  Even when sync is enabled, the two different streams will not play synchronised
- against eachother because the receiver does not have enough information to
+ against each other because the receiver does not have enough information to
  perform this task. For this you need to add the rtpbin element in both the
  sender and receiver pipeline and use additional sources and sinks to transmit
  RTCP packets used for inter-stream synchronisation.

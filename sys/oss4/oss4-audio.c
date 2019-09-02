@@ -58,7 +58,7 @@ typedef struct
 
 /* *INDENT-OFF* */
 static const GstOss4AudioFormat fmt_map[] = {
-  /* note: keep sorted by preference, prefered formats first */
+  /* note: keep sorted by preference, preferred formats first */
   {
   GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW, 0,
       AFMT_MU_LAW, "audio/x-mulaw"}, {

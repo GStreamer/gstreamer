@@ -3,7 +3,7 @@
  *  Copyright (C) 1998-2001 Andy Lo A Foe <andy@alsaplayer.org>
  *  Original code by Tinic Uro
  *
- *  This code is copied from Alsaplayer. The orginal code was by Tinic Uro and under
+ *  This code is copied from Alsaplayer. The original code was by Tinic Uro and under
  *  the BSD license without a advertisig clause. Andy Lo A Foe then relicensed the
  *  code when he used it for Alsaplayer to GPL with Tinic's permission. Richard Boulton
  *  then took this code and made a GPL plugin out of it.

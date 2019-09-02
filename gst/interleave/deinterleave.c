@@ -493,7 +493,7 @@ set_caps_failed:
   }
 info_from_caps_failed:
   {
-    GST_ERROR_OBJECT (self, "coud not get info from caps");
+    GST_ERROR_OBJECT (self, "could not get info from caps");
     return FALSE;
   }
 }
@@ -552,7 +552,7 @@ gst_deinterleave_sink_acceptcaps (GstPad * pad, GstObject * parent,
 
 info_from_caps_failed:
   {
-    GST_ERROR_OBJECT (self, "coud not get info from caps");
+    GST_ERROR_OBJECT (self, "could not get info from caps");
     return FALSE;
   }
 }
@@ -583,7 +583,7 @@ gst_deinterleave_getcaps (GstPad * pad, GstObject * parent, GstCaps * filter)
    * to get all formats that are possible up- and downstream.
    *
    * For the pad for which the caps are requested we don't remove the channel
-   * informations as they must be in the returned caps and incompatibilities
+   * information as they must be in the returned caps and incompatibilities
    * will be detected here already
    */
   ret = gst_caps_new_any ();

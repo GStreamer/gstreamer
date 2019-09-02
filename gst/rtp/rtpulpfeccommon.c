@@ -358,7 +358,7 @@ rtp_ulpfec_map_info_map (GstBuffer * buffer, RtpUlpFecMapInfo * info)
  * @info: #RtpUlpFecMapInfo
  *
  * Unmap @info previously mapped with rtp_ulpfec_map_info_map() and unrefs the
- * buffer. For convinience can even be called even if rtp_ulpfec_map_info_map
+ * buffer. For convenience can even be called even if rtp_ulpfec_map_info_map
  * returned FALSE
  **/
 void

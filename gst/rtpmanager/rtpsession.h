@@ -404,7 +404,7 @@ GstClockTime    rtp_session_next_timeout           (RTPSession *sess, GstClockTi
 GstFlowReturn   rtp_session_on_timeout             (RTPSession *sess, GstClockTime current_time,
                                                     guint64 ntpnstime, GstClockTime running_time);
 
-/* request the transmittion of an early RTCP packet */
+/* request the transmission of an early RTCP packet */
 gboolean        rtp_session_request_early_rtcp     (RTPSession * sess, GstClockTime current_time,
                                                     GstClockTime max_delay);
 

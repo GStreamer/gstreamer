@@ -43,7 +43,7 @@ G_BEGIN_DECLS
 
 /* This flow return is used to indicated that the last buffer of a
  * drain or a resoltuion change has been found. This should normally
- * only occure for mem-2-mem devices. */
+ * only occur for mem-2-mem devices. */
 #define GST_V4L2_FLOW_LAST_BUFFER GST_FLOW_CUSTOM_SUCCESS
 
 /* This flow return is used to indicated that the returned buffer was marked

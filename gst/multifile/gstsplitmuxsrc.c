@@ -1408,7 +1408,7 @@ splitmux_src_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       SPLITMUX_SRC_UNLOCK (splitmux);
     }
     case GST_EVENT_RECONFIGURE:{
-      GST_DEBUG_OBJECT (splitmux, "reconfigure evnet on pad %" GST_PTR_FORMAT,
+      GST_DEBUG_OBJECT (splitmux, "reconfigure event on pad %" GST_PTR_FORMAT,
           pad);
 
       SPLITMUX_SRC_PADS_RLOCK (splitmux);

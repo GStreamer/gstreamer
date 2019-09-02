@@ -332,7 +332,7 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
 
-  /* We don't allow renegotiation without carefull disabling the pool */
+  /* We don't allow renegotiation without careful disabling the pool */
   if (self->v4l2capture->pool &&
       gst_buffer_pool_is_active (GST_BUFFER_POOL (self->v4l2capture->pool)))
     return TRUE;
@@ -409,7 +409,7 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
   }
 
   /* and ensure the processing thread has stopped in case another error
-   * occured. */
+   * occurred. */
   gst_v4l2_object_unlock (self->v4l2capture);
   gst_pad_stop_task (decoder->srcpad);
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
@@ -605,7 +605,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     /* We are running in byte-stream mode, so we don't know the headers, but
      * we need to send something, otherwise the decoder will refuse to
-     * intialize.
+     * initialize.
      */
     if (codec_data) {
       gst_buffer_ref (codec_data);
@@ -741,7 +741,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     }
   }
 
-  /* No need to keep input arround */
+  /* No need to keep input around */
   tmp = frame->input_buffer;
   frame->input_buffer = gst_buffer_new ();
   gst_buffer_copy_into (frame->input_buffer, tmp,
@@ -1119,7 +1119,7 @@ G_STMT_START { \
     SET_META ("PWC2");
   } else {
     /* This code should be kept on sync with the exposed CODEC type of format
-     * from gstv4l2object.c. This warning will only occure in case we forget
+     * from gstv4l2object.c. This warning will only occur in case we forget
      * to also add a format here. */
     gchar *s_str = gst_structure_to_string (s);
     g_warning ("Missing fixed name mapping for caps '%s', this is a GStreamer "

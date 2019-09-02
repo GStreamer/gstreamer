@@ -51,7 +51,7 @@
  * To use #GstRtpBin as a sender, request a send_rtp_sink_\%u pad, which will
  * automatically create a send_rtp_src_\%u pad. If the session number is not provided,
  * the pad from the lowest available session will be returned. The session manager will modify the
- * SSRC in the RTP packets to its own SSRC and wil forward the packets on the
+ * SSRC in the RTP packets to its own SSRC and will forward the packets on the
  * send_rtp_src_\%u pad after updating its internal state.
  *
  * The session manager needs the clock-rate of the payload types it is handling
@@ -394,7 +394,7 @@ static GstElement *session_request_element (GstRtpBinSession * session,
 
 /* Manages the RTP stream for one SSRC.
  *
- * We pipe the stream (comming from the SSRC demuxer) into a jitterbuffer.
+ * We pipe the stream (coming from the SSRC demuxer) into a jitterbuffer.
  * If we see an SDES RTCP packet that links multiple SSRCs together based on a
  * common CNAME, we create a GstRtpBinClient structure to group the SSRCs
  * together (see below).
@@ -890,7 +890,7 @@ get_pt_map (GstRtpBinSession * session, guint pt)
 
   bin = session->bin;
 
-  GST_DEBUG ("emiting signal for pt %u in session %u", pt, session->id);
+  GST_DEBUG ("emitting signal for pt %u in session %u", pt, session->id);
 
   /* not in cache, send signal to request caps */
   g_value_init (&args[0], GST_TYPE_ELEMENT);
@@ -1413,7 +1413,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     /* For NTP sync we need to first get a snapshot of running_time and NTP
      * time. We know at what running_time we play a certain RTP time, we also
      * calculated when we would play the RTP time in the SR packet. Now we need
-     * to know how the running_time and the NTP time relate to eachother. */
+     * to know how the running_time and the NTP time relate to each other. */
     get_current_times (bin, &local_running_time, &local_ntpnstime);
 
     /* see how far away the NTP time is. This is the difference between the
@@ -1454,9 +1454,9 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     /* calculate the min of all deltas, ignoring streams that did not yet have a
      * valid rt_delta because we did not yet receive an SR packet for those
      * streams.
-     * We calculate the mininum because we would like to only apply positive
+     * We calculate the minimum because we would like to only apply positive
      * offsets to streams, delaying their playback instead of trying to speed up
-     * other streams (which might be imposible when we have to create negative
+     * other streams (which might be impossible when we have to create negative
      * latencies).
      * The stream that has the smallest diff is selected as the reference stream,
      * all other streams will have a positive offset to this difference. */
@@ -1469,7 +1469,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
       guint64 ext_base;
 
       use_rtp = TRUE;
-      /* signed version for convienience */
+      /* signed version for convenience */
       clock_base = base_rtptime;
       /* deal with possible wrap-around */
       ext_base = base_rtptime;
@@ -1837,7 +1837,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   /* ERRORS */
 max_streams:
   {
-    GST_WARNING_OBJECT (rtpbin, "stream exeeds maximum (%d)",
+    GST_WARNING_OBJECT (rtpbin, "stream exceeds maximum (%d)",
         rtpbin->max_streams);
     return NULL;
   }
@@ -3452,7 +3452,7 @@ fec_decoder_link_failed:
   }
 }
 
-/* a new pad (SSRC) was created in @session. This signal is emited from the
+/* a new pad (SSRC) was created in @session. This signal is emitted from the
  * payload demuxer. */
 static void
 new_payload_found (GstElement * element, guint pt, GstPad * pad,
@@ -3547,7 +3547,7 @@ static void
 payload_type_change (GstElement * element, guint pt, GstRtpBinSession * session)
 {
   GST_DEBUG_OBJECT (session->bin,
-      "emiting signal for pt type changed to %u in session %u", pt,
+      "emitting signal for pt type changed to %u in session %u", pt,
       session->id);
 
   g_signal_emit (session->bin, gst_rtp_bin_signals[SIGNAL_PAYLOAD_TYPE_CHANGE],
@@ -4617,7 +4617,7 @@ remove_rtcp (GstRtpBin * rtpbin, GstRtpBinSession * session)
 }
 
 /* If the requested name is NULL we should create a name with
- * the session number assuming we want the lowest posible session
+ * the session number assuming we want the lowest possible session
  * with a free pad like the template */
 static gchar *
 gst_rtp_bin_get_free_pad_name (GstElement * element, GstPadTemplate * templ)

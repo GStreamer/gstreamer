@@ -15,7 +15,7 @@ if ( x )
   AC_MSG_RESULT($_cv_gst_fionread_in_sys_ioctl)
 
   if test "$_cv_gst_fionread_in_sys_ioctl" = "yes"; then
-    AC_DEFINE([HAVE_FIONREAD_IN_SYS_IOCTL], 1, [FIONREAD ioctl found in sys/ioclt.h])
+    AC_DEFINE([HAVE_FIONREAD_IN_SYS_IOCTL], 1, [FIONREAD ioctl found in sys/ioctl.h])
 
   else
 

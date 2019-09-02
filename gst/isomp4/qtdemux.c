@@ -133,7 +133,7 @@ struct _QtDemuxSample
 #define QTSAMPLE_DTS(stream,sample) (QTSTREAMTIME_TO_GSTTIME((stream), (sample)->timestamp))
 /* timestamp + offset + cslg_shift is the outgoing PTS */
 #define QTSAMPLE_PTS(stream,sample) (QTSTREAMTIME_TO_GSTTIME((stream), (sample)->timestamp + (stream)->cslg_shift + (sample)->pts_offset))
-/* timestamp + offset is the PTS used for internal seek calcuations */
+/* timestamp + offset is the PTS used for internal seek calculations */
 #define QTSAMPLE_PTS_NO_CSLG(stream,sample) (QTSTREAMTIME_TO_GSTTIME((stream), (sample)->timestamp + (sample)->pts_offset))
 /* timestamp + duration - dts is the duration */
 #define QTSAMPLE_DUR_DTS(stream, sample, dts) (QTSTREAMTIME_TO_GSTTIME ((stream), (sample)->timestamp + (sample)->duration) - (dts))
@@ -2231,7 +2231,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
 
 
 /* Maps the @segment to the qt edts internal segments and pushes
- * the correspnding segment event.
+ * the corresponding segment event.
  *
  * If it ends up being at a empty segment, a gap will be pushed and the next
  * edts segment will be activated in sequence.
@@ -4270,7 +4270,7 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
   if (!qtdemux->upstream_format_is_time && !qtdemux->first_moof_already_parsed
       && !qtdemux->received_seek && GST_CLOCK_TIME_IS_VALID (min_dts)
       && min_dts != 0) {
-    /* Unless the user has explictly requested another seek, perform an
+    /* Unless the user has explicitly requested another seek, perform an
      * internal seek to the time specified in the tfdt.
      *
      * This way if the user opens a file where the first tfdt is 1 hour
@@ -5690,7 +5690,7 @@ extract_cc_from_data (QtDemuxStream * stream, const guint8 * data, gsize size,
 
   GST_DEBUG_OBJECT (stream->pad, "here");
 
-  /* Check if we have somethig compatible */
+  /* Check if we have something compatible */
   stsd_entry = CUR_STREAM (stream);
   switch (stsd_entry->fourcc) {
     case FOURCC_c608:{
@@ -7229,7 +7229,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
              *
              * To keep track of the current buffer timestamp and starting point
              * we use gst_adapter_prev_pts that gives us the PTS and the distance
-             * from the beggining of the buffer, with the distance and demux->offset
+             * from the beginning of the buffer, with the distance and demux->offset
              * we know if it is still the same buffer or not.
              */
             prev_pts = gst_adapter_prev_pts (demux->adapter, &dist);
@@ -8062,7 +8062,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
          * the same format. */
         /* video sample description size is 86 bytes without extension.
          * node_length have to be bigger than 86 bytes because video sample
-         * description can include extenstions such as esds, fiel, glbl, etc. */
+         * description can include extensions such as esds, fiel, glbl, etc. */
         if (node_length < 86) {
           GST_WARNING_OBJECT (qtdemux, "%" GST_FOURCC_FORMAT
               " sample description length too short (%u < 86)",
@@ -9336,7 +9336,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
     }
   } else {
     /* Ensure the cslg_shift value is consistent so we can use it
-     * unconditionnally to produce TS and Segment */
+     * unconditionally to produce TS and Segment */
     stream->cslg_shift = 0;
   }
 
@@ -13813,7 +13813,7 @@ qtdemux_tag_add_blob (GNode * node, GstQtDemuxTagList * qtdemuxtaglist)
   else
     style = "iso";
 
-  /* santize the name for the caps. */
+  /* sanitize the name for the caps. */
   for (i = 0; i < 4; i++) {
     guint8 d = data[4 + i];
     if (g_ascii_isalnum (d))

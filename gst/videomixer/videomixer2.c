@@ -55,7 +55,7 @@
  *   videomixer name=mix ! videoconvert ! ximagesink \
  *   videotestsrc !  \
  *   video/x-raw, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
- * ]| A pipeline to demostrate bgra mixing. (This does not demonstrate alpha blending).
+ * ]| A pipeline to demonstrate bgra mixing. (This does not demonstrate alpha blending).
  * |[
  * gst-launch-1.0 videotestsrc pattern=1 ! \
  *   video/x-raw,format =I420, framerate=\(fraction\)10/1, width=100, height=100 ! \
@@ -1354,7 +1354,7 @@ done_unlocked:
  *
  * We don't do synchronized mixing so this really depends on where the
  * streams where punched in and what their relative offsets are against
- * eachother which we can get from the first timestamps we see.
+ * each other which we can get from the first timestamps we see.
  *
  * When we add a new stream (or remove a stream) the duration might
  * also become invalid again and we need to post a new DURATION
@@ -2178,7 +2178,7 @@ gst_videomixer2_child_proxy_init (gpointer g_iface, gpointer iface_data)
 {
   GstChildProxyInterface *iface = g_iface;
 
-  GST_INFO ("intializing child proxy interface");
+  GST_INFO ("initializing child proxy interface");
   iface->get_child_by_index = gst_videomixer2_child_proxy_get_child_by_index;
   iface->get_children_count = gst_videomixer2_child_proxy_get_children_count;
 }

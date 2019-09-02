@@ -38,12 +38,12 @@ G_BEGIN_DECLS
 #define RTP_ULPFEC_SEQ_BASE_OFFSET_MAX(L)      (RTP_ULPFEC_PROTECTED_PACKETS_MAX(L) - 1)
 
 /**
- * RtpUlpFecMapInfo: Helper wraper around GstRTPBuffer
+ * RtpUlpFecMapInfo: Helper wrapper around GstRTPBuffer
  *
  * @rtp: mapped RTP buffer
  **/
 typedef struct {
-  // FIXME: it used to contain more fileds now we are left with only GstRTPBuffer.
+  // FIXME: it used to contain more fields now we are left with only GstRTPBuffer.
   //        it will be nice to use it directly
   GstRTPBuffer rtp;
 } RtpUlpFecMapInfo;

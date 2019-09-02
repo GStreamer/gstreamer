@@ -1259,7 +1259,7 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
    * known to work better with remote displays.
    */
   g_object_class_install_property (gc, PROP_REMOTE,
-      g_param_spec_boolean ("remote", "Remote dispay",
+      g_param_spec_boolean ("remote", "Remote display",
           "Whether the display is remote", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**

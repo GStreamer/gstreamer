@@ -336,7 +336,7 @@ gst_multi_file_src_set_property (GObject * object, guint prop_id,
           (st = gst_caps_get_structure (new_caps, 0))
           && gst_structure_get_fraction (st, "framerate", &src->fps_n,
               &src->fps_d)) {
-        GST_INFO_OBJECT (src, "Seting framerate to %d/%d", src->fps_n,
+        GST_INFO_OBJECT (src, "Setting framerate to %d/%d", src->fps_n,
             src->fps_d);
       } else {
         src->fps_n = -1;

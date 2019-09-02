@@ -1105,7 +1105,7 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
       rank = DV_BASE_RANK;
       break;
 
-    case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
+    case V4L2_PIX_FMT_WNVA:    /* Winnov hw compress */
       rank = 0;
       break;
 
@@ -1539,7 +1539,7 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
       structure = gst_structure_new ("video/mpegts",
           "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
-    case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
+    case V4L2_PIX_FMT_WNVA:    /* Winnov hw compress */
       break;
     case V4L2_PIX_FMT_SBGGR8:
     case V4L2_PIX_FMT_SGBRG8:
@@ -3314,7 +3314,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   fps_d = GST_VIDEO_INFO_FPS_D (&info);
 
   /* if encoded format (GST_VIDEO_INFO_N_PLANES return 0)
-   * or if contiguous is prefered */
+   * or if contiguous is preferred */
   n_v4l_planes = GST_VIDEO_INFO_N_PLANES (&info);
   if (!n_v4l_planes || !v4l2object->prefered_non_contiguous)
     n_v4l_planes = 1;
@@ -3442,7 +3442,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       break;
     default:
       GST_WARNING_OBJECT (v4l2object->dbg_obj,
-          "Unknown colorimetry tranfer %d", info.colorimetry.transfer);
+          "Unknown colorimetry transfer %d", info.colorimetry.transfer);
       break;
   }
 
@@ -3483,7 +3483,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     format.fmt.pix_mp.field = field;
     format.fmt.pix_mp.num_planes = n_v4l_planes;
 
-    /* try to ask our prefered stride but it's not a failure if not
+    /* try to ask our preferred stride but it's not a failure if not
      * accepted */
     for (i = 0; i < n_v4l_planes; i++) {
       gint stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, i);
@@ -3511,7 +3511,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       stride = GST_VIDEO_TILE_X_TILES (stride) <<
           GST_VIDEO_FORMAT_INFO_TILE_WS (info.finfo);
 
-    /* try to ask our prefered stride */
+    /* try to ask our preferred stride */
     format.fmt.pix.bytesperline = stride;
 
     if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_ENCODED)
@@ -3926,8 +3926,8 @@ gst_v4l2_object_try_format (GstV4l2Object * v4l2object, GstCaps * caps,
  * @v4l2object: the object
  * @info: a GstVideoInfo to be filled
  *
- * Acquire the driver choosen format. This is useful in decoder or encoder elements where
- * the output format is choosen by the HW.
+ * Acquire the driver chosen format. This is useful in decoder or encoder elements where
+ * the output format is chosen by the HW.
  *
  * Returns: %TRUE on success, %FALSE on failure.
  */

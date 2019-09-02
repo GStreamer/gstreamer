@@ -26,7 +26,7 @@
 G_BEGIN_DECLS
 
 /* Reference level (in dBSPL).  The 2001 proposal specifies 83.  This was
- * changed later in all implementations to 89, which is the new, offical value:
+ * changed later in all implementations to 89, which is the new, official value:
  * David Robinson acknowledged the change but didn't update the website yet. */
 
 #define RG_REFERENCE_LEVEL 89.

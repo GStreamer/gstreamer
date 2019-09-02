@@ -137,7 +137,7 @@ gst_rnd_buffer_size_class_init (GstRndBufferSizeClass * klass)
           0, G_MAXUINT32, DEFAULT_SEED,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MINIMUM,
-      g_param_spec_int ("min", "mininum", "mininum buffer size",
+      g_param_spec_int ("min", "minimum", "minimum buffer size",
           0, G_MAXINT32, DEFAULT_MIN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_MAXIMUM,

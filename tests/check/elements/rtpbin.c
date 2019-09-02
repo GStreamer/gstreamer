@@ -803,7 +803,7 @@ GST_START_TEST (test_sender_eos)
   fail_unless_equals_pointer (buffers->data, rtp_buffer);
   gst_check_drop_buffers ();
 
-  /* Advance clock twice and we shoudl have one RTCP packet at least */
+  /* Advance clock twice and we should have one RTCP packet at least */
   gst_test_clock_crank (tclock);
   gst_test_clock_crank (tclock);
 

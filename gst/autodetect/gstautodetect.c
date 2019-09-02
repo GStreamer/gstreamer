@@ -154,7 +154,7 @@ gst_auto_detect_attach_ghost_pad (GstAutoDetect * self)
   return res;
 }
 
-/* Hack to make initial linking work; ideally, this'd work even when
+/* Hack to make initial linking work; ideally, this would work even when
  * no target has been assigned to the ghostpad yet. */
 static void
 gst_auto_detect_reset (GstAutoDetect * self)

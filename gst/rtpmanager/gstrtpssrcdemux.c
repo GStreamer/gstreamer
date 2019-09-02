@@ -367,7 +367,7 @@ gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
    * @ssrc: the SSRC of the pad
    * @pad: the new pad.
    *
-   * Emited when a new SSRC pad has been created.
+   * Emitted when a new SSRC pad has been created.
    */
   gst_rtp_ssrc_demux_signals[SIGNAL_NEW_SSRC_PAD] =
       g_signal_new ("new-ssrc-pad",
@@ -382,7 +382,7 @@ gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
    * @ssrc: the SSRC of the pad
    * @pad: the removed pad.
    *
-   * Emited when a SSRC pad has been removed.
+   * Emitted when a SSRC pad has been removed.
    */
   gst_rtp_ssrc_demux_signals[SIGNAL_REMOVED_SSRC_PAD] =
       g_signal_new ("removed-ssrc-pad",

@@ -370,7 +370,8 @@ gst_gdk_pixbuf_dec_flush (GstGdkPixbufDec * filter)
   /* ERRORS */
 no_pixbuf:
   {
-    GST_ELEMENT_ERROR (filter, STREAM, DECODE, (NULL), ("error geting pixbuf"));
+    GST_ELEMENT_ERROR (filter, STREAM, DECODE, (NULL),
+        ("error getting pixbuf"));
     return GST_FLOW_ERROR;
   }
 channels_not_supported:

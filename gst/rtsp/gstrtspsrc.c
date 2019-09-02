@@ -812,7 +812,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_TLS_INTERACTION,
       g_param_spec_object ("tls-interaction", "TLS interaction",
-          "A GTlsInteraction object to promt the user for password or certificate",
+          "A GTlsInteraction object to prompt the user for password or certificate",
           G_TYPE_TLS_INTERACTION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -5701,7 +5701,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
         }
         continue;
       case GST_RTSP_ENET:
-        GST_DEBUG_OBJECT (src, "An ethernet problem occured.");
+        GST_DEBUG_OBJECT (src, "An ethernet problem occurred.");
       default:
         GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
             ("Unhandled return value %d.", res));
@@ -6554,7 +6554,7 @@ gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
           version_retry++;
           break;
         }
-        /* falltrough */
+        /* fallthrough */
       default:
         break;
     }
@@ -8805,7 +8805,7 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean async)
     gst_rtsp_message_unset (&request);
     gst_rtsp_message_unset (&response);
 
-    /* exit early when we did agregate control */
+    /* exit early when we did aggregate control */
     if (control)
       break;
   }

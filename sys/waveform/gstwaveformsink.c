@@ -346,7 +346,7 @@ gst_waveform_sink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
   MMRESULT mmresult;
   guint index;
 
-  /* setup waveformex struture with the input ringbuffer specs */
+  /* setup waveformex structure with the input ringbuffer specs */
   memset (&wfx, 0, sizeof (wfx));
   wfx.cbSize = 0;
   wfx.wFormatTag = WAVE_FORMAT_PCM;
@@ -493,7 +493,7 @@ gst_waveform_sink_write (GstAudioSink * asink, gpointer data, guint length)
       if (mmresult != MMSYSERR_NOERROR) {
         waveOutGetErrorText (mmresult, wfsink->error_string, ERROR_LENGTH - 1);
         GST_CAT_WARNING_OBJECT (waveformsink_debug, wfsink,
-            "gst_waveform_sink_write: Error writting buffer to the device => %s",
+            "gst_waveform_sink_write: Error writing buffer to the device => %s",
             wfsink->error_string);
       }
 
@@ -506,7 +506,7 @@ gst_waveform_sink_write (GstAudioSink * asink, gpointer data, guint length)
       waveheader->dwUser = 0;
       wfsink->bytes_in_queue = 0;
       GST_CAT_LOG_OBJECT (waveformsink_debug, wfsink,
-          "gst_waveform_sink_write: Writting a buffer to the device (free buffers remaining=%d, write buffer=%d)",
+          "gst_waveform_sink_write: Writing a buffer to the device (free buffers remaining=%d, write buffer=%d)",
           wfsink->free_buffers_count, wfsink->write_buffer);
     }
   }
@@ -535,7 +535,7 @@ gst_waveform_sink_reset (GstAudioSink * asink)
   if (mmresult != MMSYSERR_NOERROR) {
     waveOutGetErrorText (mmresult, wfsink->error_string, ERROR_LENGTH - 1);
     GST_CAT_WARNING_OBJECT (waveformsink_debug, wfsink,
-        "gst_waveform_sink_reset: Error reseting waveform-audio device => %s",
+        "gst_waveform_sink_reset: Error resetting waveform-audio device => %s",
         wfsink->error_string);
   }
 }

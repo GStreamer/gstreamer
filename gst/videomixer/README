@@ -6,7 +6,7 @@ a new buffer. The new buffer has by default a checkerboard pattern but
 its color can be changed with a property.
 The mixer can mix streams with different framerates and video sizes. It
 uses the duration value of the buffer to schedule the rendering of the
-buffers. For streams with a different resoltion than the final output
+buffers. For streams with a different resolution than the final output
 resolution one can specify the position of the top left corner where this
 image should be placed with the pad properties xpos and ypos.
 The overall alpha value of a stream can also be specified with a pad

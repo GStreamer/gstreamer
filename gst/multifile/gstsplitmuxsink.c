@@ -2181,7 +2181,7 @@ check_completed_gop (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
 
   /* On ENDING_FILE, the reference stream sends a command to start a new
    * fragment, then releases the GOP for output in the new fragment.
-   *  If somes streams received no buffer during the last GOP that overran,
+   *  If some streams received no buffer during the last GOP that overran,
    * because its next buffer has a timestamp bigger than
    * ctx->max_in_running_time, its queue is empty. In that case the only
    * way to wakeup the output thread is by injecting an event in the

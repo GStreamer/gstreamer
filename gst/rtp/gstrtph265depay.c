@@ -1367,7 +1367,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
           nalu_size = (payload[0] << 8) | payload[1];
 
-          /* dont include nalu_size */
+          /* don't include nalu_size */
           if (nalu_size > (payload_len - 2))
             nalu_size = payload_len - 2;
 

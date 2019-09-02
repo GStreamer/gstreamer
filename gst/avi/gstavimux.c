@@ -1382,7 +1382,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
 
     gst_tag_list_foreach (tags, gst_avi_mux_write_tag, &bw);
     if (info + 8 == gst_byte_writer_get_pos (&bw)) {
-      /* no tags writen, remove the empty INFO LIST as it is useless
+      /* no tags written, remove the empty INFO LIST as it is useless
        * and prevents playback in vlc */
       gst_byte_writer_set_pos (&bw, info - 4);
     } else {

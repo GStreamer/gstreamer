@@ -165,7 +165,7 @@ main (gint argc, gchar ** argv)
     return -1;
   }
 
-  /* programm a pattern of events */
+  /* program a pattern of events */
 #if 0
   prog = gst_structure_from_string ("program"
       ", image00=(structure)\"image\\,contrast\\=0.0\\;\""

@@ -2864,7 +2864,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi)
   if (map.size < 8)
     goto too_small;
 
-  /* check tag first before blindy trying to read 'size' bytes */
+  /* check tag first before blindly trying to read 'size' bytes */
   tag = GST_READ_UINT32_LE (map.data);
   size = GST_READ_UINT32_LE (map.data + 4);
   if (tag == GST_RIFF_TAG_LIST) {
@@ -3377,7 +3377,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
         if (!gst_avi_demux_parse_avih (avi, sub, &avi->avih))
           goto header_wrong_avih;
 
-        GST_DEBUG_OBJECT (avi, "AVI header ok, reading elemnts from header");
+        GST_DEBUG_OBJECT (avi, "AVI header ok, reading elements from header");
 
         /* now, read the elements from the header until the end */
         while (gst_riff_parse_chunk (GST_ELEMENT_CAST (avi), buf, &offset, &tag,
@@ -5267,7 +5267,7 @@ gst_avi_demux_loop_data (GstAviDemux * avi)
     }
 
     if (avi->segment.rate > 0.0) {
-      /* only check this for fowards playback for now */
+      /* only check this for forwards playback for now */
       if (keyframe && GST_CLOCK_TIME_IS_VALID (avi->segment.stop)
           && (timestamp > avi->segment.stop)) {
         goto eos_stop;

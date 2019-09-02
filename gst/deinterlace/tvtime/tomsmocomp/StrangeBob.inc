@@ -1,7 +1,7 @@
 // -*- c++ -*-
 		
 		// First, get and save our possible Bob values
-		// Assume our pixels are layed out as follows with x the calc'd bob value
+		// Assume our pixels are laid out as follows with x the calc'd bob value
 		// and the other pixels are from the current field
 		//  
 		//	  j a b c k		current field

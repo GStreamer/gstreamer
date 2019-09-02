@@ -308,7 +308,7 @@ gst_level_get_property (GObject * object, guint prop_id,
  * input sample data enters in *in_data and is not modified
  * this filter only accepts signed audio data, so mid level is always 0
  *
- * for integers, this code considers the non-existant positive max value to be
+ * for integers, this code considers the non-existent positive max value to be
  * full-scale; so max-1 will not map to 1.0
  */
 

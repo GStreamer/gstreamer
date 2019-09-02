@@ -3209,7 +3209,7 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
           atom_moov_get_trak_count (qtmux->moov));
       GST_OBJECT_UNLOCK (qtmux);
 
-      /* Now that we know how much reserved space is targetted,
+      /* Now that we know how much reserved space is targeted,
        * output a free atom to fill the extra reserved */
       ret = gst_qt_mux_send_free_atom (qtmux, &qtmux->header_size,
           qtmux->reserved_moov_size - qtmux->base_moov_size, FALSE);

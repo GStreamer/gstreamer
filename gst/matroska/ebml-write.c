@@ -863,7 +863,7 @@ gst_ebml_write_buffer_header (GstEbmlWrite * ebml, guint32 id, guint64 length)
 /**
  * gst_ebml_write_buffer:
  * @ebml: #GstEbmlWrite
- * @buf: #GstBuffer cointaining the data.
+ * @buf: #GstBuffer containing the data.
  *
  * Write  binary element (see gst_ebml_write_buffer_header).
  */

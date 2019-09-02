@@ -1777,7 +1777,7 @@ invalid_bps:
 no_bytes_per_sample:
   {
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
-        ("Could not caluclate bytes per sample - invalid data"));
+        ("Could not calculate bytes per sample - invalid data"));
     goto fail;
   }
 unknown_format:
@@ -1986,7 +1986,7 @@ iterate_adapter:
       G_GINT64_FORMAT, wav->offset, wav->end_offset, wav->dataleft);
 
   if ((wav->dataleft == 0 || wav->dataleft < wav->blockalign)) {
-    /* In case chunk size is not declared in the begining get size from the
+    /* In case chunk size is not declared in the beginning get size from the
      * file size directly */
     if (wav->chunk_size == 0) {
       gint64 upstream_size = 0;
@@ -1999,7 +1999,7 @@ iterate_adapter:
       if (upstream_size < wav->offset + wav->datastart)
         goto found_eos;
 
-      /* If file has updated since the beggining continue reading the file */
+      /* If file has updated since the beginning continue reading the file */
       wav->dataleft = upstream_size - wav->offset - wav->datastart;
       wav->end_offset = upstream_size;
 

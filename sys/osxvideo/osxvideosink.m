@@ -576,12 +576,12 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
   /**
    * GstOSXVideoSink:embed
    *
-   * For ABI comatibility onyl, do not use
+   * For ABI comatibility only, do not use
    *
    **/
 
   g_object_class_install_property (gobject_class, ARG_EMBED,
-      g_param_spec_boolean ("embed", "embed", "For ABI compatiblity only, do not use",
+      g_param_spec_boolean ("embed", "embed", "For ABI compatibility only, do not use",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -748,7 +748,7 @@ gst_osx_video_sink_get_type (void)
 
 - (void)windowWillClose:(NSNotification *)notification {
   /* Only handle close events if the window was closed manually by the user
-   * and not becuase of a state change state to READY */
+   * and not because of a state change state to READY */
   if (osxvideosink->osxwindow == NULL) {
     return;
   }

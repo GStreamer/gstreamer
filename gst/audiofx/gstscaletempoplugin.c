@@ -53,7 +53,7 @@
  * register the element factories and pad templates
  * register the features
  *
- * exchange the string 'plugin' with your elemnt name
+ * exchange the string 'plugin' with your element name
  */
 
 static gboolean

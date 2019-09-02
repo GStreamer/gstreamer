@@ -26,7 +26,7 @@
  *
  * The progressreport element can be put into a pipeline to report progress,
  * which is done by doing upstream duration and position queries in regular
- * (real-time) intervals. Both the interval and the prefered query format
+ * (real-time) intervals. Both the interval and the preferred query format
  * can be specified via the #GstProgressReport:update-freq and the
  * #GstProgressReport:format property.
  *

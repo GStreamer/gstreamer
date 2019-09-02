@@ -557,7 +557,7 @@ gst_rtp_ulpfec_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   ret = gst_rtp_ulpfec_enc_stream_ctx_process (ctx, buffer);
 
-  /* FIXME: does not work for mulitple ssrcs */
+  /* FIXME: does not work for multiple ssrcs */
   fec->num_packets_protected = ctx->num_packets_protected;
 
   return ret;

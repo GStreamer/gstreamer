@@ -220,7 +220,7 @@ gst_rtp_g726_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
     encoding_name =
         g_strdup (gst_structure_get_string (structure, "encoding-name"));
 
-    /* if we managed to negotiate to AAL2, we definatly are going to do AAL2
+    /* if we managed to negotiate to AAL2, we definitely are going to do AAL2
      * encoding. Else we only encode AAL2 when explicitly set by the
      * property. */
     if (g_str_has_prefix (encoding_name, "AAL2-"))

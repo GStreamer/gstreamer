@@ -133,7 +133,7 @@ setup_gst_pipeline (CairoOverlayState * overlay_state)
   /* If failing, the element could not be created */
   g_assert (cairo_overlay);
 
-  /* Hook up the neccesary signals for cairooverlay */
+  /* Hook up the necessary signals for cairooverlay */
   g_signal_connect (cairo_overlay, "draw",
       G_CALLBACK (draw_overlay), overlay_state);
   g_signal_connect (cairo_overlay, "caps-changed",

@@ -284,7 +284,7 @@ gst_v4l2_video_enc_finish (GstVideoEncoder * encoder)
   }
 
   /* and ensure the processing thread has stopped in case another error
-   * occured. */
+   * occurred. */
   gst_v4l2_object_unlock (self->v4l2capture);
   gst_pad_stop_task (encoder->srcpad);
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
@@ -856,7 +856,7 @@ gst_v4l2_video_enc_decide_allocation (GstVideoEncoder *
   }
 
   /* FIXME This may not be entirely correct, as encoder may keep some
-   * observation withouth delaying the encoding. Linux Media API need some
+   * observation without delaying the encoding. Linux Media API need some
    * more work to explicitly expressed the decoder / encoder latency. This
    * value will then become max latency, and the reported driver latency would
    * become the min latency. */

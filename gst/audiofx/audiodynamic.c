@@ -457,7 +457,7 @@ gst_audio_dynamic_transform_soft_knee_compressor_float (GstAudioDynamic *
    * f(x) = ax^2 + bx + c
    */
 
-  /* FIXME: If treshold is the same as the maximum
+  /* FIXME: If threshold is the same as the maximum
    * we need to raise it a bit to prevent
    * division by zero. */
   if (threshold == 1.0)

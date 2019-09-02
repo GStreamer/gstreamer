@@ -4337,7 +4337,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   if (!is_rtcp_time (sess, current_time, &data))
     goto done;
 
-  /* check if all the buffers are empty afer generation */
+  /* check if all the buffers are empty after generation */
   all_empty = TRUE;
 
   GST_DEBUG

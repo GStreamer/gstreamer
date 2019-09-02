@@ -277,7 +277,7 @@ GST_START_TEST (rtpreddec_redundant_block_not_pushed)
   gst_rtp_buffer_unmap (&rtp);
   _push_and_check_cant_pull_twice (h, bufinp, 3);
 
-  /* Now we ts_offset points to the previous buffer we didnt loose */
+  /* Now we ts_offset points to the previous buffer we didn't loose */
   ts_offset = TIMESTAMP_DIFF;
   red_in[1] = ts_offset >> 6;
   red_in[2] = (ts_offset & 0x3f) << 2;

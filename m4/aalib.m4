@@ -161,7 +161,7 @@ int main (int argc, char *argv[])
           echo "*** If you have an old version installed, it is best to remove it, although"
           echo "*** you may also be able to get things to work by modifying LD_LIBRARY_PATH"],
         [ echo "*** The test program failed to compile or link. See the file config.log for the"
-          echo "*** exact error that occured. This usually means AALIB was incorrectly installed"
+          echo "*** exact error that occurred. This usually means AALIB was incorrectly installed"
           echo "*** or that you have moved AALIB since it was installed. In the latter case, you"
           echo "*** may want to edit the aalib-config script: $AALIB_CONFIG" ])
           CFLAGS="$ac_save_CFLAGS"

@@ -677,7 +677,7 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
     v = gst_structure_get_value (structure, "width");
     if (!gst_video_crop_transform_dimension_value (v, dx, &w_val, direction,
             w_dynamic)) {
-      GST_WARNING_OBJECT (vcrop, "could not tranform width value with dx=%d"
+      GST_WARNING_OBJECT (vcrop, "could not transform width value with dx=%d"
           ", caps structure=%" GST_PTR_FORMAT, dx, structure);
       continue;
     }
@@ -686,7 +686,7 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
     if (!gst_video_crop_transform_dimension_value (v, dy, &h_val, direction,
             h_dynamic)) {
       g_value_unset (&w_val);
-      GST_WARNING_OBJECT (vcrop, "could not tranform height value with dy=%d"
+      GST_WARNING_OBJECT (vcrop, "could not transform height value with dy=%d"
           ", caps structure=%" GST_PTR_FORMAT, dy, structure);
       continue;
     }

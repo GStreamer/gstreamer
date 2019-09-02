@@ -4529,7 +4529,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
 
       /* QoS for video track with an index. the assumption is that
          index entries point to keyframes, but if that is not true we
-         will instad skip until the next keyframe. */
+         will instead skip until the next keyframe. */
       if (GST_CLOCK_TIME_IS_VALID (lace_time) &&
           stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO &&
           stream->index_table && demux->common.segment.rate > 0.0) {
@@ -5091,7 +5091,7 @@ gst_matroska_demux_check_read_size (GstMatroskaDemux * demux, guint64 bytes)
   }
 }
 
-/* returns TRUE if we truely are in error state, and should give up */
+/* returns TRUE if we truly are in error state, and should give up */
 static inline GstFlowReturn
 gst_matroska_demux_check_parse_error (GstMatroskaDemux * demux)
 {

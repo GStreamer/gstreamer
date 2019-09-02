@@ -754,7 +754,7 @@ gst_v4l2_transform_fixate_caps (GstBaseTransform * trans,
         goto done;
       }
 
-      /* If all this failed, keep the height that was nearest to the orignal
+      /* If all this failed, keep the height that was nearest to the original
        * height and the nearest possible width. This changes the DAR but
        * there's not much else to do here.
        */

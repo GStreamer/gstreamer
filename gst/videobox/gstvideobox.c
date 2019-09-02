@@ -45,7 +45,7 @@
  * involves either cropping or padding.
  *
  * If you use autocrop there is little point in setting the other
- * properties manually because they will be overriden if the caps change,
+ * properties manually because they will be overridden if the caps change,
  * but nothing stops you from doing so.
  *
  * Sample pipeline:
@@ -2829,7 +2829,7 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
       v = gst_structure_get_value (structure, "width");
       if (!gst_video_box_transform_dimension_value (v, dw, &w_val)) {
         GST_WARNING_OBJECT (video_box,
-            "could not tranform width value with dw=%d" ", caps structure=%"
+            "could not transform width value with dw=%d" ", caps structure=%"
             GST_PTR_FORMAT, dw, structure);
         goto bail;
       }
@@ -2839,7 +2839,7 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
       if (!gst_video_box_transform_dimension_value (v, dh, &h_val)) {
         g_value_unset (&w_val);
         GST_WARNING_OBJECT (video_box,
-            "could not tranform height value with dh=%d" ", caps structure=%"
+            "could not transform height value with dh=%d" ", caps structure=%"
             GST_PTR_FORMAT, dh, structure);
         goto bail;
       }

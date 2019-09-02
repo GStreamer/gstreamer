@@ -6,7 +6,7 @@
  * use of the latest version is strongly recommended.
  *
  * {!notice This header file contains many obsolete definitions
- * (for compatibility with older applications that still ned them).
+ * (for compatibility with older applications that still need them).
  * Do not use this file as a reference manual of OSS.
  * Please check the OSS Programmer's guide for descriptions
  * of the supported API details (http://manuals.opensound.com/developer).}
@@ -301,7 +301,7 @@ struct sysex_info
 #define SEQ_MIDIPUTC		5
 #define SEQ_DRUMON		6		/*** OBSOLETE ***/
 #define SEQ_DRUMOFF		7		/*** OBSOLETE ***/
-#define SEQ_ECHO		TMR_ECHO	/* For synching programs with output */
+#define SEQ_ECHO		TMR_ECHO	/* For syncing programs with output */
 #define SEQ_AFTERTOUCH		9
 #define SEQ_CONTROLLER		10
 #define SEQ_BALANCE		11
@@ -771,7 +771,7 @@ EXTERNC int OSS_write_patch2 (int fd, unsigned char *buf, int len);
 	SEQ_CONTROL(dev, voice, CTL_PAN, (pos+128) / 2)
 
 /*
- * Timing and syncronization macros
+ * Timing and synchronization macros
  */
 
 #define _TIMER_EVENT(ev, parm)	{_SEQ_NEEDBUF(8);\
@@ -1442,7 +1442,7 @@ typedef unsigned short oss_peaks_t[MAX_PEAK_CHANNELS];
  * The SOUND_MIXER_READ_DEVMASK returns a bitmask which tells
  * the devices supported by the particular mixer.
  *
- * {!notice This "legacy" mixer API is obsolete. It has been superceded
+ * {!notice This "legacy" mixer API is obsolete. It has been superseded
  * by a new one (see below).
  */
 
@@ -1723,7 +1723,7 @@ typedef struct oss_sysinfo
   int numaudios;		/* # of audio/dsp devices */
   int openedaudio[8];		/* Bit mask telling which audio devices are busy */
 
-  int numsynths;		/* # of availavle synth devices */
+  int numsynths;		/* # of available synth devices */
   int nummidis;			/* # of available MIDI ports */
   int numtimers;		/* # of available timer devices */
   int nummixers;		/* # of mixer devices */

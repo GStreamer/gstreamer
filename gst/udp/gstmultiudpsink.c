@@ -326,7 +326,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
   /**
    * GstMultiUDPSink::send-duplicates:
    *
-   * When a host/port pair is added mutliple times, send the packet to the host
+   * When a host/port pair is added multiple times, send the packet to the host
    * multiple times as well.
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEND_DUPLICATES,
@@ -795,7 +795,7 @@ gst_multiudpsink_render_buffers (GstMultiUDPSink * sink, GstBuffer ** buffers,
   sink->bytes_to_serve += size;
 
   /* now copy the pre-filled num_buffer messages over to the next num_buffer
-   * messages for the next client, where we also change the target adddress */
+   * messages for the next client, where we also change the target address */
   for (i = 1; i < num_addr; ++i) {
     for (j = 0; j < num_buffers; ++j) {
       msgs[i * num_buffers + j] = msgs[j];

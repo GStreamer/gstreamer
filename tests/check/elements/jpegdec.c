@@ -26,7 +26,7 @@
 #include <gst/app/gstappsink.h>
 #include <gst/pbutils/gstdiscoverer.h>
 
-/* Verify jpegdec is working when explictly requested by a pipeline. */
+/* Verify jpegdec is working when explicitly requested by a pipeline. */
 GST_START_TEST (test_jpegdec_explicit)
 {
   GstElement *pipeline, *source, *dec, *sink;

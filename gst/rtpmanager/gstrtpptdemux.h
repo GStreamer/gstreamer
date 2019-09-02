@@ -49,7 +49,7 @@ struct _GstRtpPtDemuxClass
   /* get the caps for pt */
   GstCaps* (*request_pt_map)      (GstRtpPtDemux *demux, guint pt);
 
-  /* signal emmited when a new PT is found from the incoming stream */
+  /* signal emitted when a new PT is found from the incoming stream */
   void     (*new_payload_type)    (GstRtpPtDemux *demux, guint pt, GstPad * pad);
 
   /* signal emitted when the payload type changes */

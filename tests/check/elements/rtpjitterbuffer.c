@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * Copyright (C) 2009 Nokia Corporation and its subsidary(-ies)
+ * Copyright (C) 2009 Nokia Corporation and its subsidiary(-ies)
  *               contact: <stefan.kost@nokia.com>
  * Copyright (C) 2012 Cisco Systems, Inc
  *               Authors: Kelley Rogers <kelro@cisco.com>
@@ -2716,7 +2716,7 @@ GST_START_TEST (test_rtx_does_not_affect_pts_calculation)
   gst_harness_push (h, buffer);
 
   /* now push in the next regular buffer at its ideal time, and verify the
-     rouge RTX-buffer did not mess things up */
+     rogue RTX-buffer did not mess things up */
   push_test_buffer (h, next_seqnum);
   now = gst_clock_get_time (GST_ELEMENT_CLOCK (h->element));
   buffer = gst_harness_pull (h);

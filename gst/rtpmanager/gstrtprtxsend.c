@@ -535,7 +535,7 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         GST_OBJECT_LOCK (rtx);
 
-        /* choose another ssrc for our retransmited stream */
+        /* choose another ssrc for our retransmitted stream */
         if (g_hash_table_contains (rtx->rtx_ssrcs, GUINT_TO_POINTER (ssrc))) {
           guint master_ssrc;
           SSRCRtxData *data;

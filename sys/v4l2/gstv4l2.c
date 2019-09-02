@@ -253,7 +253,7 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (v4l2_debug, "v4l2", 0, "V4L2 API calls");
 
-  /* Add some depedency, so the dynamic features get updated upon changes in
+  /* Add some dependency, so the dynamic features get updated upon changes in
    * /dev/video* */
   gst_plugin_add_dependency (plugin,
       NULL, paths, names, GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX);

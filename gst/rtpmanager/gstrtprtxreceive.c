@@ -137,7 +137,7 @@
  * It is an error, according to RFC4588 to have two retransmission requests for
  * packets belonging to two different streams but with the same sequence number.
  * Note that the default seqnum-offset value (-1, which means random) would
- * work just fine, but it is overriden here for illustration purposes.
+ * work just fine, but it is overridden here for illustration purposes.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -361,7 +361,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
         if (g_hash_table_lookup_extended (rtx->ssrc2_ssrc1_map,
                 GUINT_TO_POINTER (ssrc), NULL, &ssrc2)
             && GPOINTER_TO_UINT (ssrc2) != GPOINTER_TO_UINT (ssrc)) {
-          GST_TRACE_OBJECT (rtx, "Retransmited stream %X already associated "
+          GST_TRACE_OBJECT (rtx, "Retransmitted stream %X already associated "
               "to its master, %X", GPOINTER_TO_UINT (ssrc2), ssrc);
         } else {
           SsrcAssoc *assoc;
@@ -378,7 +378,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
                * The jitter may be too impatient of the rtx packet has been
                * lost too.
                * It does not mean we reject the event, we still want to forward
-               * the request to the gstrtpsession to be translater into a FB NACK
+               * the request to the gstrtpsession to be translator into a FB NACK
                */
               GST_LOG_OBJECT (rtx, "Duplicate request: seqnum: %u, ssrc: %X",
                   seqnum, ssrc);
@@ -430,7 +430,7 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
         GST_OBJECT_UNLOCK (rtx);
       }
 
-      /* Transfer event upstream so that the request can acutally by translated
+      /* Transfer event upstream so that the request can actually by translated
        * through gstrtpsession through the network */
       res = gst_pad_event_default (pad, parent, event);
       break;

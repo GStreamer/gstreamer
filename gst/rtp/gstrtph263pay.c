@@ -1708,7 +1708,7 @@ gst_rtp_h263_pay_flush (GstRtpH263Pay * rtph263pay)
 
     GST_DEBUG_OBJECT (rtph263pay, "Frame too large for MTU");
     /*
-     * Let's go trough all the data and fragment it untill end is reached
+     * Let's go trough all the data and fragment it until end is reached
      */
 
     gst_rtp_h263_pay_boundry_init (&bound, NULL, rtph263pay->data - 1, 0, 0);

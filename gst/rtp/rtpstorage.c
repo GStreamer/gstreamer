@@ -92,7 +92,7 @@ rtp_storage_get_packets_for_recovery (RtpStorage * self, gint fec_pt,
   STORAGE_UNLOCK (self);
 
   if (NULL == stream) {
-    GST_ERROR_OBJECT (self, "Cant find ssrc = 0x08%x", ssrc);
+    GST_ERROR_OBJECT (self, "Can't find ssrc = 0x08%x", ssrc);
   } else {
     STREAM_LOCK (stream);
     if (stream->queue.length > 0) {
@@ -128,7 +128,7 @@ rtp_storage_get_redundant_packet (RtpStorage * self, guint32 ssrc,
   STORAGE_UNLOCK (self);
 
   if (NULL == stream) {
-    GST_ERROR_OBJECT (self, "Cant find ssrc = 0x%x", ssrc);
+    GST_ERROR_OBJECT (self, "Can't find ssrc = 0x%x", ssrc);
   } else {
     STREAM_LOCK (stream);
     if (stream->queue.length > 0) {

@@ -598,7 +598,7 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
             rtpmp4gdepay->last_AU_index = AU_index;
           }
 
-          /* keep track of the higest AU_index */
+          /* keep track of the highest AU_index */
           if (rtpmp4gdepay->max_AU_index != -1
               && rtpmp4gdepay->max_AU_index <= AU_index) {
             GST_DEBUG_OBJECT (rtpmp4gdepay, "new interleave group, flushing");

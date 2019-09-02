@@ -50,7 +50,7 @@ typedef struct _GstDV1394SrcClass GstDV1394SrcClass;
 struct _GstDV1394Src {
   GstPushSrc element;
 
-  // consecutive=2, skip=4 will skip 4 frames, then let 2 consecutive ones thru
+  // consecutive=2, skip=4 will skip 4 frames, then let 2 consecutive ones through
   gint consecutive;
   gint skip;
   gboolean drop_incomplete;

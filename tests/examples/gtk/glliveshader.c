@@ -152,7 +152,7 @@ _add_stage_to_shader (GstGLShader * shader, struct shader_state *state,
     return TRUE;
 
   if (!gst_glsl_string_get_version_profile (src, &version, &profile)) {
-    g_print ("Warning: failed to retreive GLSL version and profile for "
+    g_print ("Warning: failed to retrieve GLSL version and profile for "
         "shader type 0x%x\nsrc:\n%s\n", type, src);
   }
 

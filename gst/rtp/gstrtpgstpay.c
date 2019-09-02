@@ -289,7 +289,7 @@ gst_rtp_gst_pay_create_from_adapter (GstRtpGSTPay * rtpgstpay,
     GstBuffer *paybuf;
 
 
-    /* this will be the total lenght of the packet */
+    /* this will be the total length of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (8 + avail, 0, 0);
 
     /* fill one MTU or all available bytes */

@@ -243,7 +243,7 @@ GST_START_TEST (test_rtxsend_rtxreceive_with_packet_loss)
   gst_event_unref (gst_harness_pull_upstream_event (hrecv));
   fail_unless_equals_int (gst_harness_upstream_events_in_queue (hrecv), 0);
 
-  /* Push 'packets_num' packets through rtxsend to rtxreceive loosing every
+  /* Push 'packets_num' packets through rtxsend to rtxreceive losing every
      'drop_every_n_packets' packet. When we loose the packet we send RTX event
      through rtxreceive to rtxsend, and verify the packet was retransmitted */
   for (drop_nth_packet = 2; drop_nth_packet < 10; ++drop_nth_packet) {
@@ -539,14 +539,14 @@ test_rtxsender_packet_retention (gboolean test_with_time)
       gst_harness_push_upstream_event (h,
           create_rtx_event (master_ssrc, master_pt, rtx_seqnum));
 
-      /* Pull only the ones supposed to be retransmited */
+      /* Pull only the ones supposed to be retransmitted */
       if (j >= i - half_buffers)
         pull_and_verify (h, TRUE, rtx_ssrc, rtx_pt, rtx_seqnum);
     }
     /* Check there no extra buffers in the harness queue */
     fail_unless_equals_int (gst_harness_buffers_in_queue (h), 0);
 
-    /* We create RTP buffers with timestamps that will eventualy wrap around 0
+    /* We create RTP buffers with timestamps that will eventually wrap around 0
        to be sure, rtprtxsend can handle it properly */
     push_pull_and_verify (h,
         create_rtp_buffer_with_timestamp (master_ssrc, master_pt, 0x100 + i,

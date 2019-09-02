@@ -43,7 +43,7 @@
  *
  * The #GstUDPSrc:caps property is mainly used to give a type to the UDP packet
  * so that they can be autoplugged in GStreamer pipelines. This is very useful
- * for RTP implementations where the contents of the UDP packets is transfered
+ * for RTP implementations where the contents of the UDP packets is transferred
  * out-of-bounds using SDP or other means.
  *
  * The #GstUDPSrc:buffer-size property is used to change the default kernel
@@ -78,7 +78,7 @@
  *
  * A custom file descriptor can be configured with the
  * #GstUDPSrc:socket property. The socket will be closed when setting
- * the element to READY by default. This behaviour can be overriden
+ * the element to READY by default. This behaviour can be overridden
  * with the #GstUDPSrc:close-socket property, in which case the
  * application is responsible for closing the file descriptor.
  *
@@ -555,7 +555,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_MULTICAST_IFACE,
       g_param_spec_string ("multicast-iface", "Multicast Interface",
           "The network interface on which to join the multicast group."
-          "This allows multiple interfaces seperated by comma. (\"eth0,eth1\")",
+          "This allows multiple interfaces separated by comma. (\"eth0,eth1\")",
           UDP_DEFAULT_MULTICAST_IFACE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_URI,

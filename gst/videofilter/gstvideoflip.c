@@ -169,7 +169,7 @@ gst_video_flip_transform_caps (GstBaseTransform * trans,
               "height", G_TYPE_INT, height, NULL);
           break;
         case GST_VIDEO_ORIENTATION_CUSTOM:
-          GST_WARNING_OBJECT (videoflip, "unsuported custom orientation");
+          GST_WARNING_OBJECT (videoflip, "unsupported custom orientation");
           break;
         default:
           g_assert_not_reached ();

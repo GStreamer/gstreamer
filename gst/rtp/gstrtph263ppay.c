@@ -680,7 +680,7 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
    *  This algorithm separates large frames at synchronisation points (Segments)
    *  (See RFC 4629 section 6). It would be interesting to have a property such as network
    *  quality to select between both packetization methods */
-  /* TODO Add VRC supprt (See RFC 4629 section 5.2) */
+  /* TODO Add VRC support (See RFC 4629 section 5.2) */
 
   while (avail > 0) {
     guint towrite;

@@ -1003,7 +1003,7 @@ gst_flv_demux_update_resync (GstFlvDemux * demux, guint32 dts, gboolean discont,
   gboolean ret = FALSE;
   gint32 ddts = dts - *last;
   if (!discont && ddts <= -RESYNC_THRESHOLD) {
-    /* Theoretically, we should use substract the duration of the last buffer,
+    /* Theoretically, we should use subtract the duration of the last buffer,
        but this demuxer sends no durations on buffers, not sure if it cannot
        know, or just does not care to calculate. */
     *offset -= ddts * GST_MSECOND;
@@ -3047,7 +3047,7 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
       demux->seek_event = gst_event_ref (event);
       demux->seek_time = seeksegment.position;
       demux->state = FLV_STATE_SEEK;
-      /* do not know about succes yet, but we did care and handled it */
+      /* do not know about success yet, but we did care and handled it */
       ret = TRUE;
       goto exit;
     }
@@ -3123,7 +3123,7 @@ wrong_format:
   }
 }
 
-/* If we can pull that's prefered */
+/* If we can pull that's preferred */
 static gboolean
 gst_flv_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {

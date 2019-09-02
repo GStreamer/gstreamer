@@ -416,7 +416,7 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps, GstStructure * pref_s)
     gst_structure_free (pref_s);
   }
 
-  GST_DEBUG_OBJECT (basesrc, "Prefered size %ix%i", pref.width, pref.height);
+  GST_DEBUG_OBJECT (basesrc, "Preferred size %ix%i", pref.width, pref.height);
 
   /* Sort the structures to get the caps that is nearest to our preferences,
    * first. Use single struct caps for sorting so we preserve the features.  */

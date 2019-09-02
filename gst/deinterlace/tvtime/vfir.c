@@ -57,7 +57,7 @@ typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodVFIRClass;
 /*
  * The MPEG2 spec uses a slightly harsher filter, they specify
  * [-1 8 2 8 -1].  ffmpeg uses a similar filter but with more of
- * a tendancy to blur than to use the local information.  The
+ * a tendency to blur than to use the local information.  The
  * filter taps here are: [-1 4 2 4 -1].
  */
 

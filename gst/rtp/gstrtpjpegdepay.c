@@ -418,7 +418,7 @@ MakeHeaders (guint8 * p, int type, int width, int height, guint8 * qt,
   *p++ = 0x11;                  /* huffman table 1 */
   *p++ = 0;                     /* first DCT coeff */
   *p++ = 63;                    /* last DCT coeff */
-  *p++ = 0;                     /* sucessive approx. */
+  *p++ = 0;                     /* successive approx. */
 
   return (p - start);
 };

@@ -48,7 +48,7 @@
 #include "gstquark.h"
 #include "gsteffectv.h"
 
-/* number of frames of time-buffer. It should be as a configurable paramater */
+/* number of frames of time-buffer. It should be as a configurable parameter */
 /* This number also must be 2^n just for the speed. */
 #define PLANES 16
 

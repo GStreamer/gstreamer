@@ -1,5 +1,5 @@
 /* GStreamer RTP payloader unit tests
- * Copyright (C) 2008 Nokia Corporation and its subsidary(-ies)
+ * Copyright (C) 2008 Nokia Corporation and its subsidiary(-ies)
  *               contact: <stefan.kost@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -144,7 +144,7 @@ rtp_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 
 /*
  * Creates a RTP pipeline for one test.
- * @param frame_data Pointer to the frame data which is used to pass thru pay/depayloaders.
+ * @param frame_data Pointer to the frame data which is used to pass through pay/depayloaders.
  * @param frame_data_size Frame data size in bytes.
  * @param frame_count Frame count.
  * @param filtercaps Caps filters.
@@ -380,7 +380,7 @@ rtp_pipeline_enable_lists (rtp_pipeline * p)
 
 /*
  * Creates the RTP pipeline and runs the test using the pipeline.
- * @param frame_data Pointer to the frame data which is used to pass thru pay/depayloaders.
+ * @param frame_data Pointer to the frame data which is used to pass through pay/depayloaders.
  * @param frame_data_size Frame data size in bytes.
  * @param frame_count Frame count.
  * @param filtercaps Caps filters.

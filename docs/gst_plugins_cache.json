@@ -1700,7 +1700,7 @@
                 },
                 "properties": {
                     "drain-on-changes": {
-                        "blurb": "Drains the filter when its coeficients change",
+                        "blurb": "Drains the filter when its coefficients change",
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
@@ -2120,7 +2120,7 @@
                 },
                 "properties": {
                     "drain-on-changes": {
-                        "blurb": "Drains the filter when its coeficients change",
+                        "blurb": "Drains the filter when its coefficients change",
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
@@ -2289,7 +2289,7 @@
                         "writable": true
                     },
                     "drain-on-changes": {
-                        "blurb": "Drains the filter when its coeficients change",
+                        "blurb": "Drains the filter when its coefficients change",
                         "construct": false,
                         "construct-only": false,
                         "default": "true",
@@ -4563,7 +4563,7 @@
                         "writable": true
                     },
                     "min": {
-                        "blurb": "mininum buffer size",
+                        "blurb": "minimum buffer size",
                         "construct": true,
                         "construct-only": false,
                         "default": "1",
@@ -29808,7 +29808,7 @@
                         "writable": true
                     },
                     "tls-interaction": {
-                        "blurb": "A GTlsInteraction object to promt the user for password or certificate",
+                        "blurb": "A GTlsInteraction object to prompt the user for password or certificate",
                         "construct": false,
                         "construct-only": false,
                         "type-name": "GTlsInteraction",
@@ -33823,7 +33823,7 @@
                         "writable": true
                     },
                     "multicast-iface": {
-                        "blurb": "The network interface on which to join the multicast group.This allows multiple interfaces seperated by comma. (\"eth0,eth1\")",
+                        "blurb": "The network interface on which to join the multicast group.This allows multiple interfaces separated by comma. (\"eth0,eth1\")",
                         "construct": false,
                         "construct-only": false,
                         "default": "NULL",

@@ -644,7 +644,7 @@ gst_matroska_pad_free (GstPad * collect_pad)
 
 /**
  * gst_matroska_mux_reset:
- * @element: #GstMatroskaMux that should be reseted.
+ * @element: #GstMatroskaMux that should be reset.
  *
  * Reset matroska muxer back to initial state.
  */
@@ -2494,7 +2494,7 @@ gst_matroska_mux_release_pad (GstElement * element, GstPad * pad)
     if (cdata->pad == pad) {
       /*
        * observed duration, this will remain GST_CLOCK_TIME_NONE
-       * only if the pad is resetted
+       * only if the pad is reset
        */
       GstClockTime collected_duration = GST_CLOCK_TIME_NONE;
 
@@ -3581,7 +3581,7 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     GstMatroskaPad *collect_pad;
     /*
      * observed duration, this will never remain GST_CLOCK_TIME_NONE
-     * since this means buffer without timestamps that is not possibile
+     * since this means buffer without timestamps that is not possible
      */
     GstClockTime collected_duration = GST_CLOCK_TIME_NONE;
 

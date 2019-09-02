@@ -288,7 +288,7 @@ foreach_metadata_drop (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
 
 /* Process one RTP packet. Accumulate RTP payload in the proper place in a DV
  * frame, and return that frame if we detect a new frame, or NULL otherwise.
- * We assume a DV frame is 144000 bytes. That should accomodate PAL as well as
+ * We assume a DV frame is 144000 bytes. That should accommodate PAL as well as
  * NTSC.
  */
 static GstBuffer *

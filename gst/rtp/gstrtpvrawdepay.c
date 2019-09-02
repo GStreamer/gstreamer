@@ -456,7 +456,7 @@ gst_rtp_vraw_depay_process_packet (GstRTPBaseDepayload * depayload,
       goto next;
     }
 
-    /* calculate the maximim amount of bytes we can use per line */
+    /* calculate the maximum amount of bytes we can use per line */
     if (offs + ((length / pgroup) * xinc) > width) {
       plen = ((width - offs) * pgroup) / xinc;
       GST_WARNING_OBJECT (depayload, "clipping length %d, offset %d, plen %d",

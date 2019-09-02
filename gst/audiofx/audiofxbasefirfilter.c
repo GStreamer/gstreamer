@@ -267,7 +267,7 @@ process_fft_##channels##_##width (GstAudioFXBaseFIRFilter * self, const g##ctype
    * plus some more space for the inverse FFT below. \
    * \
    * The samples are put at offset kernel_length, the inverse FFT \
-   * overwrites everthing from offset 0 to length-kernel_length+1, keeping \
+   * overwrites everything from offset 0 to length-kernel_length+1, keeping \
    * the last kernel_length-1 samples for copying to the next processing \
    * step. \
    */ \
@@ -558,14 +558,14 @@ gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
   /**
    * GstAudioFXBaseFIRFilter:drain-on-changes:
    *
-   * Whether the filter should be drained when its coeficients change
+   * Whether the filter should be drained when its coefficients change
    *
    * Note: Currently this only works if the kernel size is not changed!
    * Support for drainless kernel size changes will be added in the future.
    */
   g_object_class_install_property (gobject_class, PROP_DRAIN_ON_CHANGES,
       g_param_spec_boolean ("drain-on-changes", "Drain on changes",
-          "Drains the filter when its coeficients change",
+          "Drains the filter when its coefficients change",
           DEFAULT_DRAIN_ON_CHANGES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 

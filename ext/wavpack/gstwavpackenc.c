@@ -436,7 +436,7 @@ static void
 gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
 {
   enc->wp_config = g_new0 (WavpackConfig, 1);
-  /* set general stream informations in the WavpackConfig */
+  /* set general stream information in the WavpackConfig */
   enc->wp_config->bytes_per_sample = GST_ROUND_UP_8 (enc->depth) / 8;
   enc->wp_config->bits_per_sample = enc->depth;
   enc->wp_config->num_channels = enc->channels;
@@ -708,7 +708,7 @@ gst_wavpack_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
       WavpackCloseFile (enc->wp_context);
       goto config_failed;
     }
-    GST_DEBUG_OBJECT (enc, "setup of encoding context successfull");
+    GST_DEBUG_OBJECT (enc, "setup of encoding context successful");
   }
 
   if (enc->need_channel_remap) {

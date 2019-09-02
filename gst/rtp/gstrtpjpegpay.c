@@ -97,7 +97,7 @@ typedef enum _RtpJpegMarker RtpJpegMarker;
  * @JPEG_MARKER_DRI: Define Restart Interval marker
  * @JPEG_MARKER_H264: H264 marker
  *
- * Identifers for markers in JPEG header
+ * Identifiers for markers in JPEG header
  */
 enum _RtpJpegMarker
 {

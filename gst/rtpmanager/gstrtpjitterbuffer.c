@@ -1039,7 +1039,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   g_queue_init (&priv->gap_packets);
   gst_segment_init (&priv->segment, GST_FORMAT_TIME);
 
-  /* reset skew detection initialy */
+  /* reset skew detection initially */
   rtp_jitter_buffer_reset_skew (priv->jbuf);
   rtp_jitter_buffer_set_delay (priv->jbuf, priv->latency_ns);
   rtp_jitter_buffer_set_buffering (priv->jbuf, FALSE);
@@ -1931,7 +1931,7 @@ gst_rtp_jitter_buffer_sink_rtcp_event (GstPad * pad, GstObject * parent,
 }
 
 /*
- * Must be called with JBUF_LOCK held, will release the LOCK when emiting the
+ * Must be called with JBUF_LOCK held, will release the LOCK when emitting the
  * signal. The function returns GST_FLOW_ERROR when a parsing error happened and
  * GST_FLOW_FLUSHING when the element is shutting down. On success
  * GST_FLOW_OK is returned.
@@ -2198,7 +2198,7 @@ get_rtx_delay (GstRtpJitterBufferPrivate * priv)
   if (priv->rtx_delay == -1) {
     /* the maximum delay for any RTX-packet is given by the latency, since
        anything after that is considered lost. For various calulcations,
-       (given large avg_jitter and/or packet_spacing), the resuling delay
+       (given large avg_jitter and/or packet_spacing), the resulting delay
        could exceed the configured latency, ending up issuing an RTX-request
        that would never arrive in time. To help this we cap the delay
        for any RTX with the last possible time it could still arrive in time. */
@@ -3889,7 +3889,7 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, RtpTimer * timer,
    * lost items (so that we can set discont flags and such) */
   if (priv->do_lost) {
     GstClockTime duration, timestamp;
-    /* create paket lost event */
+    /* create packet lost event */
     timestamp = apply_offset (jitterbuffer, get_pts_timeout (timer));
     duration = timer->duration;
     if (duration == GST_CLOCK_TIME_NONE && priv->packet_spacing > 0)
@@ -4130,7 +4130,7 @@ stopping:
 }
 
 /*
- * This funcion implements the main pushing loop on the source pad.
+ * This function implements the main pushing loop on the source pad.
  *
  * It first tries to push as many buffers as possible. If there is a seqnum
  * mismatch, we wait for the next timeouts.
@@ -4184,7 +4184,7 @@ pause:
   }
 }
 
-/* collect the info from the lastest RTCP packet and the jitterbuffer sync, do
+/* collect the info from the latest RTCP packet and the jitterbuffer sync, do
  * some sanity checks and then emit the handle-sync signal with the parameters.
  * This function must be called with the LOCK */
 static void

@@ -5,7 +5,7 @@
 #ifndef IS_C
 
 #ifdef SKIP_SEARCH
-            "movq    %%mm6, %%mm0\n\t"            // just use the results of our wierd bob
+            "movq    %%mm6, %%mm0\n\t"            // just use the results of our weird bob
 #else
 
 
@@ -114,7 +114,7 @@
     return 0;
 #else
 #ifdef SKIP_SEARCH
-            out[0] = best[0];            // just use the results of our wierd bob
+            out[0] = best[0];            // just use the results of our weird bob
 	    out[1] = best[1];
 #else
             diff[0] = diff[0] - MIN (diff[0], 10) - 4;

@@ -83,8 +83,8 @@ An RTSP session is created as follows:
   Transport header field. The server also includes its ports where RTP and RTCP
   messages can be sent to.
 
-  In the above example UDP was choosen as a transport. At this point the RTSPSrc element
-  will furter configure its elements to process this stream.
+  In the above example UDP was chosen as a transport. At this point the RTSPSrc element
+  will further configure its elements to process this stream.
 
   The RTSPSrc will create and connect an RTP session manager element and will
   connect it to the src pads of the udp element. The data pad from the RTP session 

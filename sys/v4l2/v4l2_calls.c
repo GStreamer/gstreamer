@@ -81,7 +81,7 @@ gst_v4l2_get_capabilities (GstV4l2Object * v4l2object)
   GST_LOG_OBJECT (e, "card:        '%s'", v4l2object->vcap.card);
   GST_LOG_OBJECT (e, "bus_info:    '%s'", v4l2object->vcap.bus_info);
   GST_LOG_OBJECT (e, "version:     %08x", v4l2object->vcap.version);
-  GST_LOG_OBJECT (e, "capabilites: %08x", v4l2object->device_caps);
+  GST_LOG_OBJECT (e, "capabilities: %08x", v4l2object->device_caps);
 
   return TRUE;
 
@@ -234,7 +234,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,
             (_("Failed to query norm on device '%s'."),
                 v4l2object->videodev),
-            ("Failed to get attributes for norm %d on devide '%s'. (%d - %s)",
+            ("Failed to get attributes for norm %d on divide '%s'. (%d - %s)",
                 n, v4l2object->videodev, errno, strerror (errno)));
         return FALSE;
       }

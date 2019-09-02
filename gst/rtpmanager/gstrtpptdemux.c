@@ -203,7 +203,7 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
    * @pt: the payload type
    * @pad: the pad with the new payload
    *
-   * Emited when a new payload type pad has been created in @demux.
+   * Emitted when a new payload type pad has been created in @demux.
    */
   gst_rtp_pt_demux_signals[SIGNAL_NEW_PAYLOAD_TYPE] =
       g_signal_new ("new-payload-type", G_TYPE_FROM_CLASS (klass),
@@ -216,7 +216,7 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
    * @demux: the object which received the signal
    * @pt: the new payload type
    *
-   * Emited when the payload type changed.
+   * Emitted when the payload type changed.
    */
   gst_rtp_pt_demux_signals[SIGNAL_PAYLOAD_TYPE_CHANGE] =
       g_signal_new ("payload-type-change", G_TYPE_FROM_CLASS (klass),

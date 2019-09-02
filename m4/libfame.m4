@@ -82,7 +82,7 @@ main ()
              libfame_major_version, libfame_minor_version, libfame_micro_version);
       printf ("*** was found! If libfame-config was correct, then it is best\n");
       printf ("*** to remove the old version of libfame. You may also be able to fix the error\n");
-      printf("*** by modifying your LD_LIBRARY_PATH enviroment variable, or by editing\n");
+      printf("*** by modifying your LD_LIBRARY_PATH environment variable, or by editing\n");
       printf("*** /etc/ld.so.conf. Make sure you have run ldconfig if that is\n");
       printf("*** required on your system.\n");
       printf("*** If libfame-config was wrong, set the environment variable LIBFAME_CONFIG\n");
@@ -121,7 +121,7 @@ main ()
         printf("*** being found. The easiest way to fix this is to remove the old version\n");
         printf("*** of libfame, but you can also set the LIBFAME_CONFIG environment to point to the\n");
         printf("*** correct copy of libfame-config. (In this case, you will have to\n");
-        printf("*** modify your LD_LIBRARY_PATH enviroment variable, or edit /etc/ld.so.conf\n");
+        printf("*** modify your LD_LIBRARY_PATH environment variable, or edit /etc/ld.so.conf\n");
         printf("*** so that the correct libraries are found at run-time))\n");
       }
     }
@@ -164,7 +164,7 @@ main ()
           echo "*** you may also be able to get things to work by modifying LD_LIBRARY_PATH"
           echo "***" ],
         [ echo "*** The test program failed to compile or link. See the file config.log for the"
-          echo "*** exact error that occured. This usually means libfame was incorrectly installed"
+          echo "*** exact error that occurred. This usually means libfame was incorrectly installed"
           echo "*** or that you have moved libfame since it was installed. In the latter case, you"
           echo "*** may want to edit the libfame-config script: $LIBFAME_CONFIG" ])
           CFLAGS="$ac_save_CFLAGS"

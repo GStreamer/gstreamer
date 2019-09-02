@@ -1288,7 +1288,7 @@ rtp_source_process_rtp (RTPSource * src, RTPPacketInfo * pinfo)
  * @reason: the reason for leaving
  *
  * Mark @src in the BYE state. This can happen when the source wants to
- * leave the sesssion or when a BYE packets has been received.
+ * leave the session or when a BYE packets has been received.
  *
  * This will make the source inactive.
  */

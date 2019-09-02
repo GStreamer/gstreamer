@@ -31,7 +31,7 @@
  *
  *   * RTP packet validation based on consecutive sequence numbers.
  *
- *   * Maintainance of the SSRC participant database.
+ *   * Maintenance of the SSRC participant database.
  *
  *   * Keeping per participant statistics based on received RTCP packets.
  *

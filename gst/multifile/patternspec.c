@@ -107,7 +107,7 @@ pattern_ph_match (const gchar * match_pattern, MatchMode match_mode,
             return TRUE;
           if (next_wildcard_reached)
             /* the forthcoming pattern substring up to the next wildcard has
-             * been matched, but a mismatch occoured for the rest of the
+             * been matched, but a mismatch occurred for the rest of the
              * pattern, following the next wildcard.
              * there's no need to advance the current match position any
              * further if the rest pattern will not match.

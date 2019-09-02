@@ -27,7 +27,7 @@
  *       chained oggs. Fixes #334082
  * TODO: Test samples: http://www.matroska.org/samples/matrix/index.html
  *                     http://samples.mplayerhq.hu/Matroska/
- * TODO: check if parseing is done correct for all codecs according to spec
+ * TODO: check if parsing is done correct for all codecs according to spec
  * TODO: seeking with incomplete or without CUE
  */
 
@@ -1870,7 +1870,7 @@ gst_matroska_parse_parse_blockgroup_or_simpleblock (GstMatroskaParse * parse,
 
       /* QoS for video track with an index. the assumption is that
          index entries point to keyframes, but if that is not true we
-         will instad skip until the next keyframe. */
+         will instead skip until the next keyframe. */
       if (GST_CLOCK_TIME_IS_VALID (lace_time) &&
           stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO &&
           stream->index_table && parse->common.segment.rate > 0.0) {
@@ -2301,7 +2301,7 @@ gst_matroska_parse_check_read_size (GstMatroskaParse * parse, guint64 bytes)
 }
 
 #if 0
-/* returns TRUE if we truely are in error state, and should give up */
+/* returns TRUE if we truly are in error state, and should give up */
 static inline gboolean
 gst_matroska_parse_check_parse_error (GstMatroskaParse * parse)
 {

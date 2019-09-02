@@ -504,7 +504,7 @@ update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
  *    Cri    : The time of the clock at the receiver for packet i
  *    D + ni : The jitter when receiving packet i
  *
- * We see that the network delay is irrelevant here as we can elliminate D:
+ * We see that the network delay is irrelevant here as we can eliminate D:
  *
  *  recv_diff(i) = (Cri + ni) - (Cr0 + n0))
  *

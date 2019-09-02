@@ -346,7 +346,7 @@ GST_START_TEST (test_splitmuxsink)
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
-  /* unlink manually and relase request pad to ensure that we *can* do that
+  /* unlink manually and release request pad to ensure that we *can* do that
    * - https://bugzilla.gnome.org/show_bug.cgi?id=753622 */
   sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
   fail_if (sink == NULL);
@@ -358,7 +358,7 @@ GST_START_TEST (test_splitmuxsink)
   gst_object_unref (enc_src_pad);
   gst_element_release_request_pad (sink, splitmux_sink_pad);
   gst_object_unref (splitmux_sink_pad);
-  /* at this point the pad must be releaased - try to find it again to verify */
+  /* at this point the pad must be released - try to find it again to verify */
   splitmux_sink_pad = gst_element_get_static_pad (sink, "video");
   fail_if (splitmux_sink_pad != NULL);
   g_object_unref (sink);
@@ -385,7 +385,7 @@ GST_START_TEST (test_splitmuxsink_multivid)
   gchar *in_pattern;
 
   /* This pipeline should start a new file every GOP, ie 1 second,
-   * driven by the primary video stream and with 2 auxilliary video streams */
+   * driven by the primary video stream and with 2 auxiliary video streams */
   pipeline =
       gst_parse_launch
       ("splitmuxsink name=splitsink "
@@ -465,7 +465,7 @@ GST_START_TEST (test_splitmuxsink_async)
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
-  /* unlink manually and relase request pad to ensure that we *can* do that
+  /* unlink manually and release request pad to ensure that we *can* do that
    * - https://bugzilla.gnome.org/show_bug.cgi?id=753622 */
   sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
   fail_if (sink == NULL);
@@ -477,7 +477,7 @@ GST_START_TEST (test_splitmuxsink_async)
   gst_object_unref (enc_src_pad);
   gst_element_release_request_pad (sink, splitmux_sink_pad);
   gst_object_unref (splitmux_sink_pad);
-  /* at this point the pad must be releaased - try to find it again to verify */
+  /* at this point the pad must be released - try to find it again to verify */
   splitmux_sink_pad = gst_element_get_static_pad (sink, "video");
   fail_if (splitmux_sink_pad != NULL);
   g_object_unref (sink);

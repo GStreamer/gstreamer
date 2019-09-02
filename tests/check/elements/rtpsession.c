@@ -2134,7 +2134,7 @@ GST_START_TEST (test_disable_probation)
   fail_unless_equals_int (GST_FLOW_OK,
       session_harness_recv_rtp (h, generate_test_buffer (0, 0x12345678)));
 
-  /* When probation is disable, the packet should be produced immediatly */
+  /* When probation is disabled, the packet should be produced immediately */
   fail_unless_equals_int (1, gst_harness_buffers_in_queue (h->recv_rtp_h));
 
   session_harness_free (h);
@@ -2162,7 +2162,7 @@ GST_START_TEST (test_request_late_nack)
   gst_buffer_unref (session_harness_pull_rtcp (h));
 
   /* request NACK immediately, but also advance the clock, so the request is
-   * now late, but it should be kept to avoid sendign an early rtcp without
+   * now late, but it should be kept to avoid sending an early rtcp without
    * NACK. This would otherwise lead to a stall if the late packet was cause
    * by high RTT, we need to send some RTX in order to update that statistic. */
   session_harness_rtp_retransmission_request (h, 0x12345678, 1234, 0, 0, 0);

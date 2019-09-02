@@ -599,7 +599,7 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
 done:
   ret = GST_BUFFER_POOL_CLASS (parent_class)->set_config (bpool, config);
 
-  /* If anything was changed documentation recommand to return FALSE */
+  /* If anything was changed documentation recommend to return FALSE */
   return !updated && ret;
 
   /* ERRORS */
@@ -651,7 +651,7 @@ gst_v4l2_buffer_pool_streamon (GstV4l2BufferPool * pool)
     case GST_V4L2_IO_DMABUF_IMPORT:
       if (!V4L2_TYPE_IS_OUTPUT (pool->obj->type)) {
         /* For captures, we need to enqueue buffers before we start streaming,
-         * so the driver don't underflow immediatly. As we have put then back
+         * so the driver don't underflow immediately. As we have put then back
          * into the base class queue, resurrect them, then releasing will queue
          * them back. */
         while (gst_v4l2_buffer_pool_resurrect_buffer (pool) == GST_FLOW_OK)
@@ -800,7 +800,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
       /* V4L2 buffer pool are often very limited in the amount of buffers it
        * can offer. The copy_threshold will workaround this limitation by
        * falling back to copy if the pipeline needed more buffers. This also
-       * prevent having to do REQBUFS(N)/REQBUFS(0) everytime configure is
+       * prevent having to do REQBUFS(N)/REQBUFS(0) every time configure is
        * called. */
       if (count != min_buffers || pool->enable_copy_threshold) {
         GST_WARNING_OBJECT (pool,
@@ -1496,7 +1496,7 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
                 gst_v4l2_buffer_pool_qbuf (pool, buffer, group) != GST_FLOW_OK)
               pclass->release_buffer (bpool, buffer);
           } else {
-            /* Simply release invalide/modified buffer, the allocator will
+            /* Simply release invalid/modified buffer, the allocator will
              * give it back later */
             GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
             pclass->release_buffer (bpool, buffer);
@@ -1526,7 +1526,7 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
           guint index;
 
           if (!gst_v4l2_is_buffer_valid (buffer, &group)) {
-            /* Simply release invalide/modified buffer, the allocator will
+            /* Simply release invalid/modified buffer, the allocator will
              * give it back later */
             GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_TAG_MEMORY);
             pclass->release_buffer (bpool, buffer);
@@ -1988,7 +1988,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf)
               goto prepare_failed;
             }
 
-            /* retreive the group */
+            /* retrieve the group */
             gst_v4l2_is_buffer_valid (to_queue, &group);
           }
 

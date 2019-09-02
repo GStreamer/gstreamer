@@ -53,7 +53,7 @@
  * for the best overlap position.  Scaletempo uses a statistical cross
  * correlation (roughly a dot-product).  Scaletempo consumes most of its CPU
  * cycles here. One can use the #GstScaletempo:search propery to tune how far
- * the algoritm looks.
+ * the algorithm looks.
  *
  */
 

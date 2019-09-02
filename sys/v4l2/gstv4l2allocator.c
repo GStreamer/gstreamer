@@ -640,7 +640,7 @@ gst_v4l2_allocator_new (GstObject * parent, GstV4l2Object * v4l2object)
   /* Save everything */
   allocator->obj = v4l2object;
 
-  /* Keep a ref on the elemnt so obj does not disapear */
+  /* Keep a ref on the element so obj does not disappear */
   gst_object_ref (allocator->obj->element);
 
   flags |= GST_V4L2_ALLOCATOR_PROBE (allocator, MMAP);
@@ -1172,7 +1172,7 @@ gst_v4l2_allocator_import_userptr (GstV4l2Allocator * allocator,
   for (i = 0; i < group->n_mem; i++) {
     gsize maxsize, psize;
 
-    /* TODO request used size and maxsize seperatly */
+    /* TODO request used size and maxsize separately */
     if (V4L2_TYPE_IS_MULTIPLANAR (obj->type))
       maxsize = psize = size[i];
     else

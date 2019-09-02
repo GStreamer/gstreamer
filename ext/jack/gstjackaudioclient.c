@@ -591,7 +591,7 @@ gst_jack_audio_client_get_client (GstJackAudioClient * client)
  * @client: a #GstJackAudioClient
  * @active: new mode for the client
  *
- * Activate or deactive @client. When a client is activated it will receive
+ * Activate or deactivate @client. When a client is activated it will receive
  * callbacks when data should be processed.
  *
  * Returns: 0 if all ok.

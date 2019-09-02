@@ -154,7 +154,7 @@ static guint mainloop_ref_ct = 0;
 static GMutex pa_shared_resource_mutex;
 
 /* We keep a custom ringbuffer that is backed up by data allocated by
- * pulseaudio. We must also overide the commit function to write into
+ * pulseaudio. We must also override the commit function to write into
  * pulseaudio memory instead. */
 struct _GstPulseRingBuffer
 {
@@ -545,7 +545,7 @@ gst_pulseringbuffer_open_device (GstAudioRingBuffer * buf)
         gst_pulsering_context_subscribe_cb, pctx);
 
     /* try to connect to the server and wait for completion, we don't want to
-     * autospawn a deamon */
+     * autospawn a daemon */
     GST_LOG_OBJECT (psink, "connect to server %s",
         GST_STR_NULL (psink->server));
     if (pa_context_connect (pctx->context, psink->server,
@@ -685,7 +685,7 @@ gst_pulsering_stream_request_cb (pa_stream * s, size_t length, void *userdata)
 
   if (pbuf->in_commit && (length >= rbuf->spec.segsize)) {
     /* only signal when we are waiting in the commit thread
-     * and got request for atleast a segment */
+     * and got request for at least a segment */
     pa_threaded_mainloop_signal (mainloop, 0);
   }
 }
@@ -2431,7 +2431,7 @@ gst_pulsesink_set_volume (GstPulseSink * psink, gdouble volume)
   if (pbuf->is_pcm)
     gst_pulse_cvolume_from_linear (&v, pbuf->channels, volume);
   else
-    /* FIXME: this will eventually be superceded by checks to see if the volume
+    /* FIXME: this will eventually be superseded by checks to see if the volume
      * is readable/writable */
     goto unlock;
 
@@ -3003,7 +3003,7 @@ gst_pulsesink_change_props (GstPulseSink * psink, GstTagList * l)
   static const gchar *const map[] = {
     GST_TAG_TITLE, PA_PROP_MEDIA_TITLE,
 
-    /* might get overriden in the next iteration by GST_TAG_ARTIST */
+    /* might get overridden in the next iteration by GST_TAG_ARTIST */
     GST_TAG_PERFORMER, PA_PROP_MEDIA_ARTIST,
 
     GST_TAG_ARTIST, PA_PROP_MEDIA_ARTIST,

@@ -1441,7 +1441,7 @@ gst_matroska_read_common_parse_header (GstMatroskaReadCommon * common,
       goto exit_error;
 
     switch (id) {
-        /* is our read version uptodate? */
+        /* is our read version up-to-date? */
       case GST_EBML_ID_EBMLREADVERSION:{
         guint64 num;
 
@@ -2125,18 +2125,18 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
       /* ICRA The ICRA content rating for parental control. (Previously RSACi) */
 
       /* Temporal Information */
-    GST_MATROSKA_TAG_ID_DATE_RELEASED, GST_TAG_DATE}, { /* The time that the item was originaly released. This is akin to the TDRL tag in ID3. */
+    GST_MATROSKA_TAG_ID_DATE_RELEASED, GST_TAG_DATE}, { /* The time that the item was originally released. This is akin to the TDRL tag in ID3. */
     GST_MATROSKA_TAG_ID_DATE_RECORDED, GST_TAG_DATE}, { /* The time that the recording began. This is akin to the TDRC tag in ID3. */
     GST_MATROSKA_TAG_ID_DATE_ENCODED, GST_TAG_DATE}, {  /* The time that the encoding of this item was completed began. This is akin to the TDEN tag in ID3. */
     GST_MATROSKA_TAG_ID_DATE_TAGGED, GST_TAG_DATE}, {   /* The time that the tags were done for this item. This is akin to the TDTG tag in ID3. */
-    GST_MATROSKA_TAG_ID_DATE_DIGITIZED, GST_TAG_DATE}, {        /* The time that the item was tranfered to a digital medium. This is akin to the IDIT tag in RIFF. */
+    GST_MATROSKA_TAG_ID_DATE_DIGITIZED, GST_TAG_DATE}, {        /* The time that the item was transferred to a digital medium. This is akin to the IDIT tag in RIFF. */
     GST_MATROSKA_TAG_ID_DATE_WRITTEN, GST_TAG_DATE}, {  /* The time that the writing of the music/script began. */
     GST_MATROSKA_TAG_ID_DATE_PURCHASED, GST_TAG_DATE}, {        /* Information on when the file was purchased (see also purchase tags). */
     GST_MATROSKA_TAG_ID_DATE, GST_TAG_DATE}, {  /* Matroska spec does NOT have this tag! Dunno what it was doing here, probably for compatibility. */
 
       /* Spacial Information */
     GST_MATROSKA_TAG_ID_RECORDING_LOCATION, GST_TAG_GEO_LOCATION_NAME}, {       /* The location where the item was recorded. The countries corresponding to the string, same 2 octets as in Internet domains, or possibly ISO-3166. This code is followed by a comma, then more detailed information such as state/province, another comma, and then city. For example, "US, Texas, Austin". This will allow for easy sorting. It is okay to only store the country, or the country and the state/province. More detailed information can be added after the city through the use of additional commas. In cases where the province/state is unknown, but you want to store the city, simply leave a space between the two commas. For example, "US, , Austin". */
-      /* COMPOSITION_LOCATION Location that the item was originaly designed/written. The countries corresponding to the string, same 2 octets as in Internet domains, or possibly ISO-3166. This code is followed by a comma, then more detailed information such as state/province, another comma, and then city. For example, "US, Texas, Austin". This will allow for easy sorting. It is okay to only store the country, or the country and the state/province. More detailed information can be added after the city through the use of additional commas. In cases where the province/state is unknown, but you want to store the city, simply leave a space between the two commas. For example, "US, , Austin". */
+      /* COMPOSITION_LOCATION Location that the item was originally designed/written. The countries corresponding to the string, same 2 octets as in Internet domains, or possibly ISO-3166. This code is followed by a comma, then more detailed information such as state/province, another comma, and then city. For example, "US, Texas, Austin". This will allow for easy sorting. It is okay to only store the country, or the country and the state/province. More detailed information can be added after the city through the use of additional commas. In cases where the province/state is unknown, but you want to store the city, simply leave a space between the two commas. For example, "US, , Austin". */
       /* COMPOSER_NATIONALITY Nationality of the main composer of the item, mostly for classical music. The countries corresponding to the string, same 2 octets as in Internet domains, or possibly ISO-3166. */
 
       /* Personal */
@@ -2150,7 +2150,7 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
       /* ENCODER_SETTINGS A list of the settings used for encoding this item. No specific format. */
     GST_MATROSKA_TAG_ID_BPS, GST_TAG_BITRATE}, {
     GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {     /* Matroska spec does NOT have this tag! Dunno what it was doing here, probably for compatibility. */
-      /* WONTFIX (already handled in another way): FPS The average frames per second of the specified item. This is typically the average number of Blocks per second. In the event that lacing is used, each laced chunk is to be counted as a seperate frame. */
+      /* WONTFIX (already handled in another way): FPS The average frames per second of the specified item. This is typically the average number of Blocks per second. In the event that lacing is used, each laced chunk is to be counted as a separate frame. */
     GST_MATROSKA_TAG_ID_BPM, GST_TAG_BEATS_PER_MINUTE}, {
       /* MEASURE In music, a measure is a unit of time in Western music like "4/4". It represents a regular grouping of beats, a meter, as indicated in musical notation by the time signature.. The majority of the contemporary rock and pop music you hear on the radio these days is written in the 4/4 time signature. */
       /* TUNING It is saved as a frequency in hertz to allow near-perfect tuning of instruments to the same tone as the musical piece (e.g. "441.34" in Hertz). The default value is 440.0 Hz. */

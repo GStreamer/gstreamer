@@ -39,7 +39,7 @@
  *
  * * `type` (G_TYPE_INT, 0-1): The application uses this field to specify which of the two methods
  *   specified in RFC 2833 to use. The value should be 0 for tones and 1 for
- *   named events. Tones are specified by their frequencies and events are specied
+ *   named events. Tones are specified by their frequencies and events are specified
  *   by their number. This element can only take events as input. Do not confuse
  *   with "method" which specified the output.
  *
