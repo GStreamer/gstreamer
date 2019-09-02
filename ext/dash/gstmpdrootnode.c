@@ -23,7 +23,143 @@
 
 G_DEFINE_TYPE (GstMPDRootNode, gst_mpd_root_node, GST_TYPE_MPD_NODE);
 
+enum
+{
+  PROP_MPD_ROOT_0,
+  PROP_MPD_ROOT_DEFAULT_NAMESPACE,
+  PROP_MPD_ROOT_NAMESPACE_XSI,
+  PROP_MPD_ROOT_NAMESPACE_EXT,
+  PROP_MPD_ROOT_SCHEMA_LOCATION,
+  PROP_MPD_ROOT_ID,
+  PROP_MPD_ROOT_PROFILES,
+  PROP_MPD_ROOT_TYPE,
+  PROP_MPD_ROOT_PUBLISH_TIME,
+  PROP_MPD_ROOT_AVAILABILTY_START_TIME,
+  PROP_MPD_ROOT_AVAILABILTY_END_TIME,
+  PROP_MPD_ROOT_MEDIA_PRESENTATION_DURATION,
+  PROP_MPD_ROOT_MINIMUM_UPDATE_PERIOD,
+  PROP_MPD_ROOT_MIN_BUFFER_TIME,
+  PROP_MPD_ROOT_TIMESHIFT_BUFFER_DEPTH,
+  PROP_MPD_ROOT_SUGGESTED_PRESENTATION_DELAY,
+  PROP_MPD_ROOT_MAX_SEGMENT_DURATION,
+  PROP_MPD_ROOT_MAX_SUBSEGMENT_DURATION,
+};
+
 /* GObject VMethods */
+
+static void
+gst_mpd_root_node_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMPDRootNode *self = GST_MPD_ROOT_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_ROOT_DEFAULT_NAMESPACE:
+      g_free (self->default_namespace);
+      self->default_namespace = g_value_dup_string (value);
+      break;
+    case PROP_MPD_ROOT_NAMESPACE_XSI:
+      g_free (self->namespace_xsi);
+      self->namespace_xsi = g_value_dup_string (value);
+      break;
+    case PROP_MPD_ROOT_NAMESPACE_EXT:
+      g_free (self->namespace_ext);
+      self->namespace_ext = g_value_dup_string (value);
+      break;
+    case PROP_MPD_ROOT_SCHEMA_LOCATION:
+      g_free (self->schemaLocation);
+      self->schemaLocation = g_value_dup_string (value);
+      break;
+    case PROP_MPD_ROOT_ID:
+      g_free (self->id);
+      self->id = g_value_dup_string (value);
+      break;
+    case PROP_MPD_ROOT_PROFILES:
+      g_free (self->profiles);
+      self->profiles = g_value_dup_string (value);
+      break;
+    case PROP_MPD_ROOT_TYPE:
+      self->type = (GstMPDFileType) g_value_get_int (value);
+      break;
+    case PROP_MPD_ROOT_AVAILABILTY_START_TIME:
+      if (self->availabilityStartTime)
+        gst_date_time_unref (self->availabilityStartTime);
+      self->availabilityStartTime = g_value_get_boxed (value);
+      break;
+    case PROP_MPD_ROOT_AVAILABILTY_END_TIME:
+      if (self->availabilityEndTime)
+        gst_date_time_unref (self->availabilityEndTime);
+      self->availabilityEndTime = g_value_get_boxed (value);
+      break;
+    case PROP_MPD_ROOT_PUBLISH_TIME:
+      if (self->publishTime)
+        gst_date_time_unref (self->publishTime);
+      self->publishTime = g_value_get_boxed (value);
+      break;
+    case PROP_MPD_ROOT_MEDIA_PRESENTATION_DURATION:
+      self->mediaPresentationDuration = g_value_get_uint64 (value);
+      break;
+    case PROP_MPD_ROOT_MINIMUM_UPDATE_PERIOD:
+      self->minimumUpdatePeriod = g_value_get_uint64 (value);
+      break;
+    case PROP_MPD_ROOT_MIN_BUFFER_TIME:
+      self->minBufferTime = g_value_get_uint64 (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpd_root_node_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMPDRootNode *self = GST_MPD_ROOT_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_ROOT_DEFAULT_NAMESPACE:
+      g_value_set_string (value, self->default_namespace);
+      break;
+    case PROP_MPD_ROOT_NAMESPACE_XSI:
+      g_value_set_string (value, self->namespace_xsi);
+      break;
+    case PROP_MPD_ROOT_NAMESPACE_EXT:
+      g_value_set_string (value, self->namespace_ext);
+      break;
+    case PROP_MPD_ROOT_SCHEMA_LOCATION:
+      g_value_set_string (value, self->schemaLocation);
+      break;
+    case PROP_MPD_ROOT_ID:
+      g_value_set_string (value, self->id);
+      break;
+    case PROP_MPD_ROOT_PROFILES:
+      g_value_set_string (value, self->profiles);
+      break;
+    case PROP_MPD_ROOT_TYPE:
+      g_value_set_int (value, self->type);
+      break;
+    case PROP_MPD_ROOT_AVAILABILTY_START_TIME:
+      g_value_set_boxed (value, self->availabilityStartTime);
+      break;
+    case PROP_MPD_ROOT_AVAILABILTY_END_TIME:
+      g_value_set_boxed (value, self->availabilityEndTime);
+      break;
+    case PROP_MPD_ROOT_PUBLISH_TIME:
+      g_value_set_boxed (value, self->publishTime);
+      break;
+    case PROP_MPD_ROOT_MEDIA_PRESENTATION_DURATION:
+      g_value_set_uint64 (value, self->mediaPresentationDuration);
+      break;
+    case PROP_MPD_ROOT_MINIMUM_UPDATE_PERIOD:
+      g_value_set_uint64 (value, self->minimumUpdatePeriod);
+      break;
+    case PROP_MPD_ROOT_MIN_BUFFER_TIME:
+      g_value_set_uint64 (value, self->minBufferTime);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_mpd_root_node_finalize (GObject * object)
@@ -41,6 +177,8 @@ gst_mpd_root_node_finalize (GObject * object)
     gst_date_time_unref (self->availabilityStartTime);
   if (self->availabilityEndTime)
     gst_date_time_unref (self->availabilityEndTime);
+  if (self->publishTime)
+    gst_date_time_unref (self->publishTime);
 
   g_list_free_full (self->ProgramInfos,
       (GDestroyNotify) gst_mpd_program_information_node_free);
@@ -88,6 +226,8 @@ gst_mpd_root_get_xml_node (GstMPDNode * node)
 
   gst_xml_helper_set_prop_date_time (root_xml_node, "availabilityEndTime",
       self->availabilityEndTime);
+  gst_xml_helper_set_prop_date_time (root_xml_node, "publishTime",
+      self->publishTime);
 
   if (self->mediaPresentationDuration)
     gst_xml_helper_set_prop_duration (root_xml_node,
@@ -95,7 +235,7 @@ gst_mpd_root_get_xml_node (GstMPDNode * node)
   if (self->minimumUpdatePeriod)
     gst_xml_helper_set_prop_duration (root_xml_node, "minimumUpdatePeriod",
         self->minimumUpdatePeriod);
-  if (self->minimumUpdatePeriod)
+  if (self->minBufferTime)
     gst_xml_helper_set_prop_duration (root_xml_node, "minBufferTime",
         self->minBufferTime);
   if (self->timeShiftBufferDepth)
@@ -148,13 +288,73 @@ gst_mpd_root_node_class_init (GstMPDRootNodeClass * klass)
   GObjectClass *object_class;
   GstMPDNodeClass *m_klass;
 
+
   object_class = G_OBJECT_CLASS (klass);
   m_klass = GST_MPD_NODE_CLASS (klass);
 
   object_class->finalize = gst_mpd_root_node_finalize;
+  object_class->set_property = gst_mpd_root_node_set_property;
+  object_class->get_property = gst_mpd_root_node_get_property;
 
   m_klass->get_xml_buffer = gst_mpd_root_get_xml_buffer;
   m_klass->get_xml_node = gst_mpd_root_get_xml_node;
+
+  g_object_class_install_property (object_class,
+      PROP_MPD_ROOT_DEFAULT_NAMESPACE, g_param_spec_string ("default-namespace",
+          "default namespace", "default namespace", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_MPD_ROOT_NAMESPACE_XSI,
+      g_param_spec_string ("namespace-xsi", "namespace xsi", "namespace xsi",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_MPD_ROOT_NAMESPACE_EXT,
+      g_param_spec_string ("namespace-ext", "namespace ext", "namespace ext",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_MPD_ROOT_SCHEMA_LOCATION,
+      g_param_spec_string ("schema-location", "schema location",
+          "schema location for period", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_MPD_ROOT_ID,
+      g_param_spec_string ("id", "id", "unique id for period", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_MPD_ROOT_PROFILES,
+      g_param_spec_string ("profiles", "profiles", "profiles", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_MPD_ROOT_TYPE,
+      g_param_spec_int ("type", "MPD type",
+          "MPD type",
+          GST_MPD_FILE_TYPE_STATIC, GST_MPD_FILE_TYPE_DYNAMIC,
+          GST_MPD_FILE_TYPE_STATIC,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class,
+      PROP_MPD_ROOT_AVAILABILTY_START_TIME,
+      g_param_spec_boxed ("availability-start-time", "Availability start time",
+          "MPD availability start time", GST_TYPE_DATE_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_ROOT_AVAILABILTY_END_TIME,
+      g_param_spec_boxed ("availability-end-time", "Availability end time",
+          "MPD availability end time", GST_TYPE_DATE_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_ROOT_PUBLISH_TIME,
+      g_param_spec_boxed ("publish-time", "publish time",
+          "MPD publish time", GST_TYPE_DATE_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_ROOT_MEDIA_PRESENTATION_DURATION,
+      g_param_spec_uint64 ("media-presentation-duration",
+          "media presentation duration", "media presentation duration", 0,
+          G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_ROOT_MINIMUM_UPDATE_PERIOD,
+      g_param_spec_uint64 ("minimum-update-period",
+          "minimum update period", "minimum update period", 0,
+          G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_ROOT_MIN_BUFFER_TIME,
+      g_param_spec_uint64 ("min-buffer-time", "mininim buffer time",
+          "mininim buffer time", 0,
+          G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -169,6 +369,7 @@ gst_mpd_root_node_init (GstMPDRootNode * self)
   self->type = GST_MPD_FILE_TYPE_STATIC;
   self->availabilityStartTime = NULL;
   self->availabilityEndTime = NULL;
+  self->publishTime = NULL;
   self->mediaPresentationDuration = 0;  /* [ms] */
   self->minimumUpdatePeriod = 0;        /* [ms] */
   self->minBufferTime = 2000;   /* [ms] */

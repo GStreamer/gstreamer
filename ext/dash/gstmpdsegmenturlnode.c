@@ -25,7 +25,44 @@
 G_DEFINE_TYPE (GstMPDSegmentURLNode, gst_mpd_segment_url_node,
     GST_TYPE_MPD_NODE);
 
+enum
+{
+  PROP_MPD_SEGMENT_URL_0,
+  PROP_MPD_SEGMENT_URL_MEDIA,
+};
+
 /* GObject VMethods */
+
+static void
+gst_mpd_segment_url_node_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMPDSegmentURLNode *self = GST_MPD_SEGMENT_URL_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_SEGMENT_URL_MEDIA:
+      g_free (self->media);
+      self->media = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpd_segment_url_node_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMPDSegmentURLNode *self = GST_MPD_SEGMENT_URL_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_SEGMENT_URL_MEDIA:
+      g_value_set_string (value, self->media);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_mpd_segment_url_node_finalize (GObject * object)
@@ -79,8 +116,15 @@ gst_mpd_segment_url_node_class_init (GstMPDSegmentURLNodeClass * klass)
   m_klass = GST_MPD_NODE_CLASS (klass);
 
   object_class->finalize = gst_mpd_segment_url_node_finalize;
+  object_class->set_property = gst_mpd_segment_url_node_set_property;
+  object_class->get_property = gst_mpd_segment_url_node_get_property;
 
   m_klass->get_xml_node = gst_mpd_segment_url_get_xml_node;
+
+  g_object_class_install_property (object_class,
+      PROP_MPD_SEGMENT_URL_MEDIA, g_param_spec_string ("media",
+          "media", "media description", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

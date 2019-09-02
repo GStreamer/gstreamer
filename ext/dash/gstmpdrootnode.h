@@ -41,6 +41,7 @@ struct _GstMPDRootNode
   GstMPDFileType type;
   GstDateTime *availabilityStartTime;
   GstDateTime *availabilityEndTime;
+  GstDateTime *publishTime;
   guint64 mediaPresentationDuration;  /* [ms] */
   guint64 minimumUpdatePeriod;        /* [ms] */
   guint64 minBufferTime;              /* [ms] */

@@ -23,7 +23,60 @@
 
 G_DEFINE_TYPE (GstMPDBaseURLNode, gst_mpd_baseurl_node, GST_TYPE_MPD_NODE);
 
+enum
+{
+  PROP_MPD_BASEURL_0,
+  PROP_MPD_BASEURL_URL,
+  PROP_MPD_BASEURL_SERVICE_LOCATION,
+  PROP_MPD_BASEURL_BYTE_RANGE,
+};
+
 /* GObject VMethods */
+
+static void
+gst_mpd_baseurl_node_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMPDBaseURLNode *self = GST_MPD_BASEURL_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_BASEURL_URL:
+      g_free (self->baseURL);
+      self->baseURL = g_value_dup_string (value);
+      break;
+    case PROP_MPD_BASEURL_SERVICE_LOCATION:
+      g_free (self->serviceLocation);
+      self->serviceLocation = g_value_dup_string (value);
+      break;
+    case PROP_MPD_BASEURL_BYTE_RANGE:
+      g_free (self->byteRange);
+      self->byteRange = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpd_baseurl_node_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMPDBaseURLNode *self = GST_MPD_BASEURL_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_BASEURL_URL:
+      g_value_set_string (value, self->baseURL);
+      break;
+    case PROP_MPD_BASEURL_SERVICE_LOCATION:
+      g_value_set_string (value, self->serviceLocation);
+      break;
+    case PROP_MPD_BASEURL_BYTE_RANGE:
+      g_value_set_string (value, self->byteRange);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_mpd_baseurl_node_finalize (GObject * object)
@@ -71,8 +124,24 @@ gst_mpd_baseurl_node_class_init (GstMPDBaseURLNodeClass * klass)
   m_klass = GST_MPD_NODE_CLASS (klass);
 
   object_class->finalize = gst_mpd_baseurl_node_finalize;
+  object_class->set_property = gst_mpd_baseurl_node_set_property;
+  object_class->get_property = gst_mpd_baseurl_node_get_property;
 
   m_klass->get_xml_node = gst_mpd_baseurl_get_xml_node;
+
+  g_object_class_install_property (object_class, PROP_MPD_BASEURL_URL,
+      g_param_spec_string ("url", "base url",
+          "url of the base url", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_BASEURL_SERVICE_LOCATION,
+      g_param_spec_string ("service-location", "service location",
+          "service location", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_MPD_BASEURL_BYTE_RANGE,
+      g_param_spec_string ("byte-range", "byte range", "byte range", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 }
 
 static void

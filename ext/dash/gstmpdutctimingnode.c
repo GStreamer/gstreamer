@@ -21,14 +21,7 @@
 #include "gstmpdutctimingnode.h"
 #include "gstmpdparser.h"
 
-enum
-{
-  PROP_MPD_UTCTIMING_0,
-};
-
 G_DEFINE_TYPE (GstMPDUTCTimingNode, gst_mpd_utctiming_node, GST_TYPE_MPD_NODE);
-
-/* GObject VMethods */
 
 static const struct GstMPDUTCTimingMethod gst_mpd_utctiming_methods[] = {
   {"urn:mpeg:dash:utc:ntp:2014", GST_MPD_UTCTIMING_TYPE_NTP},
@@ -52,6 +45,8 @@ static const struct GstMPDUTCTimingMethod gst_mpd_utctiming_methods[] = {
   {"urn:mpeg:dash:utc:direct:2012", GST_MPD_UTCTIMING_TYPE_DIRECT},
   {NULL, 0}
 };
+
+/* GObject VMethods */
 
 static void
 gst_mpd_utctiming_node_finalize (GObject * object)

@@ -24,7 +24,58 @@
 G_DEFINE_TYPE (GstMPDRepresentationNode, gst_mpd_representation_node,
     GST_TYPE_MPD_REPRESENTATION_BASE_NODE);
 
+enum
+{
+  PROP_MPD_REPRESENTATION_0,
+  PROP_MPD_REPRESENTATION_ID,
+  PROP_MPD_REPRESENTATION_BANDWIDTH,
+  PROP_MPD_REPRESENTATION_QUALITY_RANKING,
+};
+
 /* GObject VMethods */
+
+static void
+gst_mpd_representation_node_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMPDRepresentationNode *self = GST_MPD_REPRESENTATION_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_REPRESENTATION_ID:
+      g_free (self->id);
+      self->id = g_value_dup_string (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BANDWIDTH:
+      self->bandwidth = g_value_get_uint (value);
+      break;
+    case PROP_MPD_REPRESENTATION_QUALITY_RANKING:
+      self->qualityRanking = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpd_representation_node_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMPDRepresentationNode *self = GST_MPD_REPRESENTATION_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_REPRESENTATION_ID:
+      g_value_set_string (value, self->id);
+      break;
+    case PROP_MPD_REPRESENTATION_BANDWIDTH:
+      g_value_set_uint (value, self->bandwidth);
+      break;
+    case PROP_MPD_REPRESENTATION_QUALITY_RANKING:
+      g_value_set_uint (value, self->qualityRanking);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_mpd_representation_node_finalize (GObject * object)
@@ -102,8 +153,20 @@ gst_mpd_representation_node_class_init (GstMPDRepresentationNodeClass * klass)
   m_klass = GST_MPD_NODE_CLASS (klass);
 
   object_class->finalize = gst_mpd_representation_node_finalize;
+  object_class->set_property = gst_mpd_representation_node_set_property;
+  object_class->get_property = gst_mpd_representation_node_get_property;
 
   m_klass->get_xml_node = gst_mpd_representation_get_xml_node;
+
+  g_object_class_install_property (object_class,
+      PROP_MPD_REPRESENTATION_BANDWIDTH, g_param_spec_uint ("bandwidth",
+          "bandwidth", "representation bandwidth", 0, G_MAXUINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_REPRESENTATION_QUALITY_RANKING,
+      g_param_spec_uint ("quality-ranking", "quality ranking",
+          "representation quality ranking", 0, G_MAXUINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

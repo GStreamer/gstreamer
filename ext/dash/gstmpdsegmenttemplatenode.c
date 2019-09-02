@@ -24,7 +24,64 @@
 G_DEFINE_TYPE (GstMPDSegmentTemplateNode, gst_mpd_segment_template_node,
     GST_TYPE_MPD_MULT_SEGMENT_BASE_NODE);
 
+enum
+{
+  PROP_MPD_SEGMENT_TEMPLATE_0,
+  PROP_MPD_SEGMENT_TEMPLATE_MEDIA,
+  PROP_MPD_SEGMENT_TEMPLATE_INDEX,
+  PROP_MPD_SEGMENT_TEMPLATE_INITIALIZATION,
+  PROP_MPD_SEGMENT_TEMPLATE_BITSTREAM_SWITCHING,
+};
+
 /* GObject VMethods */
+
+static void
+gst_mpd_segment_template_node_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMPDSegmentTemplateNode *self = GST_MPD_SEGMENT_TEMPLATE_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_SEGMENT_TEMPLATE_MEDIA:
+      self->media = g_value_dup_string (value);
+      break;
+    case PROP_MPD_SEGMENT_TEMPLATE_INDEX:
+      self->index = g_value_dup_string (value);
+      break;
+    case PROP_MPD_SEGMENT_TEMPLATE_INITIALIZATION:
+      self->initialization = g_value_dup_string (value);
+      break;
+    case PROP_MPD_SEGMENT_TEMPLATE_BITSTREAM_SWITCHING:
+      self->bitstreamSwitching = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpd_segment_template_node_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMPDSegmentTemplateNode *self = GST_MPD_SEGMENT_TEMPLATE_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_SEGMENT_TEMPLATE_MEDIA:
+      g_value_set_string (value, self->media);
+      break;
+    case PROP_MPD_SEGMENT_TEMPLATE_INDEX:
+      g_value_set_string (value, self->index);
+      break;
+    case PROP_MPD_SEGMENT_TEMPLATE_INITIALIZATION:
+      g_value_set_string (value, self->initialization);
+      break;
+    case PROP_MPD_SEGMENT_TEMPLATE_BITSTREAM_SWITCHING:
+      g_value_set_string (value, self->bitstreamSwitching);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_mpd_segment_template_node_finalize (GObject * object)
@@ -84,8 +141,26 @@ gst_mpd_segment_template_node_class_init (GstMPDSegmentTemplateNodeClass *
   m_klass = GST_MPD_NODE_CLASS (klass);
 
   object_class->finalize = gst_mpd_segment_template_node_finalize;
+  object_class->set_property = gst_mpd_segment_template_node_set_property;
+  object_class->get_property = gst_mpd_segment_template_node_get_property;
 
   m_klass->get_xml_node = gst_mpd_segment_template_get_xml_node;
+
+  g_object_class_install_property (object_class,
+      PROP_MPD_SEGMENT_TEMPLATE_MEDIA, g_param_spec_string ("media",
+          "media", "media", NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_SEGMENT_TEMPLATE_INDEX, g_param_spec_string ("index",
+          "index", "index", NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_SEGMENT_TEMPLATE_INITIALIZATION,
+      g_param_spec_string ("initialization", "initialization", "initialization",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_SEGMENT_TEMPLATE_BITSTREAM_SWITCHING,
+      g_param_spec_string ("bitstream-switching", "bitstream switching",
+          "bitstream switching", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

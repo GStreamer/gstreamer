@@ -24,7 +24,165 @@
 G_DEFINE_TYPE (GstMPDRepresentationBaseNode, gst_mpd_representation_base_node,
     GST_TYPE_MPD_NODE);
 
+enum
+{
+  PROP_MPD_REPRESENTATION_BASE_0 = 100,
+  PROP_MPD_REPRESENTATION_BASE_PROFILES,
+  PROP_MPD_REPRESENTATION_BASE_WIDTH,
+  PROP_MPD_REPRESENTATION_BASE_HEIGHT,
+  PROP_MPD_REPRESENTATION_BASE_SAR,
+  PROP_MPD_REPRESENTATION_BASE_MIN_FRAME_RATE,
+  PROP_MPD_REPRESENTATION_BASE_MAX_FRAME_RATE,
+  PROP_MPD_REPRESENTATION_BASE_FRAME_RATE,
+  PROP_MPD_REPRESENTATION_BASE_AUDIO_SAMPLING_RATE,
+  PROP_MPD_REPRESENTATION_BASE_MIMETYPE,
+  PROP_MPD_REPRESENTATION_BASE_SEGMENT_PROFILES,
+  PROP_MPD_REPRESENTATION_BASE_CODECS,
+  PROP_MPD_REPRESENTATION_BASE_MAX_SAP_PERIOD,
+  PROP_MPD_REPRESENTATION_BASE_START_WITH_SAP,
+  PROP_MPD_REPRESENTATION_BASE_MAX_PLAYOUT_RATE,
+  PROP_MPD_REPRESENTATION_BASE_CODING_DEPENDENCY,
+  PROP_MPD_REPRESENTATION_BASE_SCAN_TYPE,
+};
+
 /* GObject VMethods */
+
+static void
+gst_mpd_representation_base_node_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMPDRepresentationBaseNode *self =
+      GST_MPD_REPRESENTATION_BASE_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_REPRESENTATION_BASE_PROFILES:
+      g_free (self->profiles);
+      self->profiles = g_value_dup_string (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_WIDTH:
+      self->width = g_value_get_uint (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_HEIGHT:
+      self->height = g_value_get_uint (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_SAR:
+      g_slice_free (GstXMLRatio, self->sar);
+      self->sar = gst_xml_helper_clone_ratio (g_value_get_pointer (value));
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_MIN_FRAME_RATE:
+      g_slice_free (GstXMLFrameRate, self->minFrameRate);
+      self->minFrameRate =
+          gst_xml_helper_clone_frame_rate (g_value_get_pointer (value));
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_MAX_FRAME_RATE:
+      g_slice_free (GstXMLFrameRate, self->maxFrameRate);
+      self->maxFrameRate =
+          gst_xml_helper_clone_frame_rate (g_value_get_pointer (value));
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_FRAME_RATE:
+      g_slice_free (GstXMLFrameRate, self->frameRate);
+      self->frameRate =
+          gst_xml_helper_clone_frame_rate (g_value_get_pointer (value));
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_AUDIO_SAMPLING_RATE:
+      g_free (self->audioSamplingRate);
+      self->audioSamplingRate =
+          g_strdup_printf ("%u", g_value_get_uint (value));
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_MIMETYPE:
+      g_free (self->mimeType);
+      self->mimeType = g_value_dup_string (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_SEGMENT_PROFILES:
+      g_free (self->segmentProfiles);
+      self->segmentProfiles = g_value_dup_string (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_CODECS:
+      g_free (self->codecs);
+      self->codecs = g_value_dup_string (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_MAX_SAP_PERIOD:
+      self->maximumSAPPeriod = g_value_get_double (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_START_WITH_SAP:
+      self->startWithSAP = g_value_get_int (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_MAX_PLAYOUT_RATE:
+      self->maxPlayoutRate = g_value_get_double (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_CODING_DEPENDENCY:
+      self->codingDependency = g_value_get_boolean (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_SCAN_TYPE:
+      g_free (self->scanType);
+      self->scanType = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpd_representation_base_node_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMPDRepresentationBaseNode *self =
+      GST_MPD_REPRESENTATION_BASE_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_REPRESENTATION_BASE_PROFILES:
+      g_value_set_string (value, self->profiles);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_WIDTH:
+      g_value_set_uint (value, self->width);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_HEIGHT:
+      g_value_set_uint (value, self->height);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_SAR:
+      g_value_set_pointer (value, self->sar);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_MIN_FRAME_RATE:
+      g_value_set_pointer (value, self->minFrameRate);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_MAX_FRAME_RATE:
+      g_value_set_pointer (value, self->maxFrameRate);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_FRAME_RATE:
+      g_value_set_pointer (value, self->frameRate);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_AUDIO_SAMPLING_RATE:
+      g_value_set_uint (value, atoi (self->audioSamplingRate));
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_MIMETYPE:
+      g_value_set_string (value, self->mimeType);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_SEGMENT_PROFILES:
+      g_value_set_string (value, self->segmentProfiles);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_CODECS:
+      g_value_set_string (value, self->codecs);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_MAX_SAP_PERIOD:
+      g_value_set_double (value, self->maximumSAPPeriod);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_START_WITH_SAP:
+      g_value_set_int (value, self->startWithSAP);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_MAX_PLAYOUT_RATE:
+      g_value_set_double (value, self->maxPlayoutRate);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_CODING_DEPENDENCY:
+      g_value_set_boolean (value, self->codingDependency);
+      self->codingDependency = g_value_get_boolean (value);
+      break;
+    case PROP_MPD_REPRESENTATION_BASE_SCAN_TYPE:
+      g_value_set_string (value, self->scanType);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_mpd_representation_base_node_finalize (GObject * object)
@@ -126,6 +284,31 @@ gst_mpd_representation_base_node_class_init (GstMPDRepresentationBaseNodeClass *
   object_class = G_OBJECT_CLASS (klass);
 
   object_class->finalize = gst_mpd_representation_base_node_finalize;
+  object_class->set_property = gst_mpd_representation_base_node_set_property;
+  object_class->get_property = gst_mpd_representation_base_node_get_property;
+
+
+  g_object_class_install_property (object_class,
+      PROP_MPD_REPRESENTATION_BASE_WIDTH, g_param_spec_uint ("width",
+          "width", "representation width", 0, G_MAXUINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_REPRESENTATION_BASE_HEIGHT, g_param_spec_uint ("height",
+          "height", "representation height", 0, G_MAXUINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_REPRESENTATION_BASE_MIMETYPE, g_param_spec_string ("mime-type",
+          "mimetype", "representation mimetype", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_REPRESENTATION_BASE_CODECS, g_param_spec_string ("codecs",
+          "codecs", "representation codec", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_REPRESENTATION_BASE_AUDIO_SAMPLING_RATE,
+      g_param_spec_uint ("audio-sampling-rate", "audio sampling rate",
+          "representation audio sampling rate", 0, G_MAXUINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

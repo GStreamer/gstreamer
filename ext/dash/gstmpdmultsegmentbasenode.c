@@ -24,7 +24,50 @@
 G_DEFINE_TYPE (GstMPDMultSegmentBaseNode, gst_mpd_mult_segment_base_node,
     GST_TYPE_MPD_NODE);
 
+enum
+{
+  PROP_MPD_MULT_SEGMENT_BASE_0 = 100,
+  PROP_MPD_MULT_SEGMENT_BASE_DURATION,
+  PROP_MPD_MULT_SEGMENT_BASE_START_NUMBER,
+};
+
 /* GObject VMethods */
+
+static void
+gst_mpd_mult_segment_base_node_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMPDMultSegmentBaseNode *self = GST_MPD_MULT_SEGMENT_BASE_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_MULT_SEGMENT_BASE_DURATION:
+      self->duration = g_value_get_uint (value);
+      break;
+    case PROP_MPD_MULT_SEGMENT_BASE_START_NUMBER:
+      self->startNumber = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpd_mult_segment_base_node_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMPDMultSegmentBaseNode *self = GST_MPD_MULT_SEGMENT_BASE_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_MULT_SEGMENT_BASE_DURATION:
+      g_value_set_uint (value, self->duration);
+      break;
+    case PROP_MPD_MULT_SEGMENT_BASE_START_NUMBER:
+      g_value_set_uint (value, self->startNumber);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_mpd_mult_segment_base_node_finalize (GObject * object)
@@ -73,6 +116,19 @@ gst_mpd_mult_segment_base_node_class_init (GstMPDMultSegmentBaseNodeClass *
   object_class = G_OBJECT_CLASS (klass);
 
   object_class->finalize = gst_mpd_mult_segment_base_node_finalize;
+  object_class->set_property = gst_mpd_mult_segment_base_node_set_property;
+  object_class->get_property = gst_mpd_mult_segment_base_node_get_property;
+
+  g_object_class_install_property (object_class,
+      PROP_MPD_MULT_SEGMENT_BASE_DURATION, g_param_spec_uint ("duration",
+          "duration", "duration of segment", 0, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class,
+      PROP_MPD_MULT_SEGMENT_BASE_START_NUMBER,
+      g_param_spec_uint ("start-number", "start number",
+          "start number in the segment list", 0, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

@@ -22,7 +22,66 @@
 #include "gstmpdparser.h"
 
 G_DEFINE_TYPE (GstMPDPeriodNode, gst_mpd_period_node, GST_TYPE_MPD_NODE);
+
+enum
+{
+  PROP_MPD_PERIOD_0,
+  PROP_MPD_PERIOD_ID,
+  PROP_MPD_PERIOD_START,
+  PROP_MPD_PERIOD_DURATION,
+  PROP_MPD_PERIOD_BITSTREAM_SWITCHING,
+};
+
 /* GObject VMethods */
+
+static void
+gst_mpd_period_node_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMPDPeriodNode *self = GST_MPD_PERIOD_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_PERIOD_ID:
+      g_free (self->id);
+      self->id = g_value_dup_string (value);
+      break;
+    case PROP_MPD_PERIOD_START:
+      self->start = g_value_get_uint64 (value);
+      break;
+    case PROP_MPD_PERIOD_DURATION:
+      self->duration = g_value_get_uint64 (value);
+      break;
+    case PROP_MPD_PERIOD_BITSTREAM_SWITCHING:
+      self->bitstreamSwitching = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpd_period_node_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMPDPeriodNode *self = GST_MPD_PERIOD_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_PERIOD_ID:
+      g_value_set_string (value, self->id);
+      break;
+    case PROP_MPD_PERIOD_START:
+      g_value_set_uint64 (value, self->start);
+      break;
+    case PROP_MPD_PERIOD_DURATION:
+      g_value_set_uint64 (value, self->duration);
+      break;
+    case PROP_MPD_PERIOD_BITSTREAM_SWITCHING:
+      g_value_set_boolean (value, self->bitstreamSwitching);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_mpd_period_node_finalize (GObject * object)
@@ -90,12 +149,38 @@ gst_mpd_period_node_class_init (GstMPDPeriodNodeClass * klass)
   GObjectClass *object_class;
   GstMPDNodeClass *m_klass;
 
+
   object_class = G_OBJECT_CLASS (klass);
   m_klass = GST_MPD_NODE_CLASS (klass);
 
   object_class->finalize = gst_mpd_period_node_finalize;
+  object_class->set_property = gst_mpd_period_node_set_property;
+  object_class->get_property = gst_mpd_period_node_get_property;
 
   m_klass->get_xml_node = gst_mpd_period_get_xml_node;
+
+  g_object_class_install_property (object_class, PROP_MPD_PERIOD_ID,
+      g_param_spec_string ("id", "id",
+          "unique id for period", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class, PROP_MPD_PERIOD_START,
+      g_param_spec_uint64 ("start", "Period start",
+          "Period start",
+          0, G_MAXUINT64, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_MPD_PERIOD_DURATION,
+      g_param_spec_uint64 ("duration", "period duration",
+          "Period duration",
+          0, G_MAXUINT64, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class,
+      PROP_MPD_PERIOD_BITSTREAM_SWITCHING,
+      g_param_spec_boolean ("bitstream-switching", "Bitstream switching",
+          "Bitstream switching", FALSE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void

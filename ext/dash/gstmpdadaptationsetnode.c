@@ -24,7 +24,51 @@
 G_DEFINE_TYPE (GstMPDAdaptationSetNode, gst_mpd_adaptation_set_node,
     GST_TYPE_MPD_REPRESENTATION_BASE_NODE);
 
+enum
+{
+  PROP_MPD_ADAPTATION_SET_0,
+  PROP_MPD_ADAPTATION_SET_ID,
+  PROP_MPD_ADAPTATION_SET_CONTENT_TYPE,
+};
+
 /* GObject VMethods */
+
+static void
+gst_mpd_adaptation_set_node_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMPDAdaptationSetNode *self = GST_MPD_ADAPTATION_SET_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_ADAPTATION_SET_ID:
+      self->id = g_value_get_int (value);
+      break;
+    case PROP_MPD_ADAPTATION_SET_CONTENT_TYPE:
+      g_free (self->contentType);
+      self->contentType = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_mpd_adaptation_set_node_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstMPDAdaptationSetNode *self = GST_MPD_ADAPTATION_SET_NODE (object);
+  switch (prop_id) {
+    case PROP_MPD_ADAPTATION_SET_ID:
+      g_value_set_int (value, self->id);
+      break;
+    case PROP_MPD_ADAPTATION_SET_CONTENT_TYPE:
+      g_value_set_string (value, self->contentType);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
 
 static void
 gst_mpd_adaptation_set_node_finalize (GObject * object)
@@ -157,8 +201,19 @@ gst_mpd_adaptation_set_node_class_init (GstMPDAdaptationSetNodeClass * klass)
   m_klass = GST_MPD_NODE_CLASS (klass);
 
   object_class->finalize = gst_mpd_adaptation_set_node_finalize;
+  object_class->set_property = gst_mpd_adaptation_set_node_set_property;
+  object_class->get_property = gst_mpd_adaptation_set_node_get_property;
 
   m_klass->get_xml_node = gst_mpd_adaptation_set_get_xml_node;
+
+  g_object_class_install_property (object_class, PROP_MPD_ADAPTATION_SET_ID,
+      g_param_spec_int ("id", "id",
+          "adaptation set id", 0, G_MAXINT, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class,
+      PROP_MPD_ADAPTATION_SET_CONTENT_TYPE, g_param_spec_string ("content-type",
+          "content type", "content type of the adaptation set", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
