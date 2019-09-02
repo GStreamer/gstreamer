@@ -104,25 +104,30 @@ typedef struct {
   volatile gint       reconfig;                   /* ATOMIC */
   gboolean            gl_input;
 
-  /* allocated buffers */
-  gpointer          *input_bufs;   /* array of n_allocs input buffers  */
-  NV_ENC_OUTPUT_PTR *output_bufs;  /* array of n_allocs output buffers */
+  /* array of allocated input/output buffers (GstNvEncFrameState),
+   * and hold the ownership of the GstNvEncFrameState. */
+  GArray            *items;
   guint              n_bufs;
 
-  /* input and output buffers currently available */
-  GAsyncQueue    *in_bufs_pool;
-  GAsyncQueue    *bitstream_pool;
+  /* (GstNvEncFrameState) available empty items which could be submitted
+   * to encoder */
+  GAsyncQueue       *available_queue;
 
-  /* output bufs in use (input bufs in use are tracked via the codec frames) */
-  GAsyncQueue    *bitstream_queue;
+  /* (GstNvEncFrameState) submitted to encoder but not ready to finish
+   * (due to bframe or lookhead operation) */
+  GAsyncQueue       *pending_queue;
+
+  /* (GstNvEncFrameState) submitted to encoder and ready to finish.
+   * finished items will go back to available item queue */
+  GAsyncQueue       *bitstream_queue;
 
   /* we spawn a thread that does the (blocking) waits for output buffers
    * to become available, so we can continue to feed data to the encoder
    * while we wait */
   GThread        *bitstream_thread;
 
-  void           *display;            /* GstGLDisplay */
-  void           *other_context;      /* GstGLContext */
+  GstObject      *display;            /* GstGLDisplay */
+  GstObject      *other_context;      /* GstGLContext */
 
   GstVideoInfo        input_info;     /* buffer configuration for buffers sent to NVENC */
 
